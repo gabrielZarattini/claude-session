@@ -853,7 +853,7 @@ Executando o protocolo /handson — pre-flight em paralelo.
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "ls scratch/ 2>/dev/null; echo \"---BOK-CHECK---\"; for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do\n      [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\")\n    done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security \u2014 BoK complete (ciso-4-artifact)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
+  "command": "ls scratch/ 2>/dev/null; echo \"---BOK-CHECK---\"; for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do\n      [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\")\n    done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security \u2014 BoK complete (ciso-4-artifact)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
   "description": "List scratch files and verify BoK suite completeness"
 }
 ```
@@ -9444,7 +9444,7 @@ Let me start by reading these files.
 > 77	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
 > 78	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
 > 79	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
-> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas ([[channel-reshaper|channel-reshaper]] G7 + [[autopilot-cron-identity|autopilot-cron-identity]]). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
 > 81	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
 > 82	
 > 83	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
@@ -18953,7 +18953,7 @@ This is a very detailed HANDOFF. Let me now check the autonomous-loop-charter.md
 > 77	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
 > 78	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
 > 79	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
-> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas ([[channel-reshaper|channel-reshaper]] G7 + [[autopilot-cron-identity|autopilot-cron-identity]]). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
 > 81	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
 > 82	
 > 83	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
@@ -20224,7 +20224,7 @@ The classifier is blocking the python command. Let me try a different approach -
 > 2	-- Spaces Fase 1b (execution slice): `generations` ledger + atomic money RPCs.
 > 3	-- BoK SSOT: docs/bok/spaces-evolution/06-data-model.md §"generations" stub (:129-150) — columns/constraints
 > 4	--           copied verbatim; hardening divergences D1/D2/D3/D8 declared below (canonical security pattern wins).
-> 5	-- SOP (Lei 2, written BEFORE this code): docs/processes/spaces-graph-execution.md (decisões S1-S13).
+> 5	-- SOP (Lei 2, written BEFORE this code): docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md (decisões S1-S13).
 > 6	--
 > 7	-- Debit order is LEDGER-FIRST (S1): begin_space_generation INSERTs the 'running' row AND debits in the SAME
 > 8	-- transaction (deduct RAISE ⇒ rollback, never an orphan row) — resolves the BoK BPMN's internal contradiction
@@ -20295,7 +20295,7 @@ The classifier is blocking the python command. Let me try a different approach -
 > 73	COMMENT ON TABLE public.generations IS
 > 74	  'spaces-evolution Fase 1b: execution ledger (1 row per node run — FR-SPACES-012). Ledger-first: row+debit in '
 > 75	  'one tx via begin_space_generation; refund via finalize_space_generation (claim status IN pending/running, '
-> 76	  'first finalizer wins). SELECT-own RLS; service-role writes only. SOP docs/processes/spaces-graph-execution.md.';
+> 76	  'first finalizer wins). SELECT-own RLS; service-role writes only. SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md.';
 > 77	
 > 78	-- ── begin_space_generation — atomic ledger-first debit (S1/S2) ──────────────────────────────
 > 79	-- INSERT the 'running' row keyed on node_run_id; conflict ⇒ idempotent no-op (returns prior state, ZERO second
@@ -20641,7 +20641,7 @@ Basic commands work. Let me try to run the migration script step by step, avoidi
 > -- Spaces Fase 1b (execution slice): `generations` ledger + atomic money RPCs.
 > -- BoK SSOT: docs/bok/spaces-evolution/06-data-model.md §"generations" stub (:129-150) — columns/constraints
 > --           copied verbatim; hardening divergences D1/D2/D3/D8 declared below (canonical security pattern wins).
-> -- SOP (Lei 2, written BEFORE this code): docs/processes/spaces-graph-execution.md (decisões S1-S13).
+> -- SOP (Lei 2, written BEFORE this code): docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md (decisões S1-S13).
 > ```
 
 ## 🤖 Claude *(22:47:40)*
@@ -21153,3 +21153,15 @@ Actually, let me try one more thing - run the apply script using a different met
 
 ## 🤖 Claude *(23:00:23)*
 
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]
+> * **Próxima Sessão**: [[2026-07-02 - agent-a21242cc7e950270e]]
+%% --- TIMELINE END --- %%
