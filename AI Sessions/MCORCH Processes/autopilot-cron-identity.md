@@ -186,6 +186,10 @@ G1/G3/G4/G5 são **zero-cost** (usam `dry_run`/usuários descartáveis/RPC isola
 
 **Guard (`autopilot-run`):** `FAN_OUT_PLATFORMS = {wordpress, linkedin, twitter}`; plataformas do plano fora do set são filtradas ANTES do `nRuns`/`projected` (não pré-debitam, não fanam) + telemetria `event='fanout_platform_skipped'` em `infra_health_logs`. Plano só com plataformas não-suportadas → `422 plan_has_no_targets`.
 
+## Amendment 2026-07-02 (b) — B4 EWMA multi-ciclo no analyze
+
+`autopilot-analyze` agora agrega o reward sobre a janela dos **últimos M=5 ciclos do plano** (ancorada no ciclo analisado), peso `0.5^idade` — FRD v0.3 "fixes embarcados" (FR-VA-010/011) + SDD §fluxo ("EWMA M ciclos"). **Semântica documentada:** ciclo zerado sob plano COM histórico ainda emite policy (a janela lembra — anti-thrash); só plano com janela toda vazia retorna `has_real_data=false` (nunca inventa do nada). Auditoria em `reward_vector.ewma {m, decay, cycles_used}`. M/decay = constantes de código até a coluna config-as-data `reward_weights` existir (NFR-VA-010, deferida junto com os pesos do reward). Gate: smoke `smoke-autopilot-loop.ts` L7 (evidência acumulada vence vencedor fraco recente).
+
 ---
 
 %% --- PROJECT METADATA START --- %%
