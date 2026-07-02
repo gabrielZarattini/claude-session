@@ -6062,6 +6062,2904 @@ Commit `4a8fee0` selado (gitleaks limpo, 12 arquivos, +730). Sincronizando com o
 > 0	0
 > ```
 
+## 🤖 Claude *(13:30:31)*
+
+
+## 🤖 Claude *(13:30:31)*
+
+**Suíte `spaces-evolution` 9/9 COMPLETA e selada** — concordei com sua chamada e executei: era dívida BoK real (código Phase 0 já promovido a `src/` à frente da suíte), e agora o gate mecânico está verde em **25/25 suítes** do ecossistema.
+
+**Prova material (Lei 1):**
+- Gate: `✅ spaces-evolution — BoK complete` (loop canônico do /handson re-executado)
+- Commit: `4a8fee091d0d45e7756fc60bc50f79a48ecdfd96` · pushed (`b777794..4a8fee0`, HEAD=origin 0↔0) · gitleaks limpo · tsc 0
+- Mesh seal: `documentation_suite` **`8f5fd3fd-5bfb-40e6-8868-f80379469b2e`** + edge DERIVES_FROM `c4247ef6` → `bok-scribe-seal-viralmind-v1` (família Canvas) · **embedding 768d confirmado não-nulo** via REST · malha em **9031 nós** (count=exact)
+- Seed script reproduzível: `scripts/seed-spaces-evolution-bok-seal.ts` (padrão canônico, idempotente)
+
+**O que foi entregue:**
+1. **`06-data-model.md`** — modelo "duas realidades": domínio zod **vivo** (6 port types, 26 node types, 38 modelos, NODE_PORTS reais — tudo com file:line verificado) vs. persistência Supabase **planejada** (stubs `spaces.graph jsonb` no precedente `vm_canvas_projects` + `generations` com `node_run_id` UNIQUE anti-duplo-débito e CHECK `refund ≤ charged`).
+2. **`07-process-flow.md`** — 8 processos (PROC-SPACES-001..008) com a regra-mãe do ledger (estimar→debitar→reconciliar/estornar), **De-n8n** (Edge Fn + pg_cron), e honestidade: zero cron novo no MVP, mesh insert fail-open.
+3. **`08-quality-metrics.md`** — KPIs com fontes honestas (📋 marca o que só computa pós-migration) e FMEA com **6 RPN>100** herdando as classes de incidente *reais* do MCORCH (charge-without-value, white-screen do `coinCost`, race load/save, FMEA-011 cross-tenant).
+4. **Pattern Conformance Declaration (Step 3.5)** na `05-sdd §11`: **4 yes · 8 deferred (todos com FR/OTD nomeado) · 9 n-a** — sem inflação; re-declaração gated no seal da Fase 1.
+5. **Renames canônicos** `01-mrd-spaces.md → 01-mrd.md` (etc.) + zero refs velhas repo-wide.
+
+**Notas de execução:** o workflow ultracode morreu por cota de sessão de subagents (reset só 4:20am) — recuperei 100% pelo main loop, precedente v6.36.1. A verificação adversarial mecânica pegou e corrigiu **2 imprecisões** minhas antes do commit (emenda De-n8n vive na SDD do video-studio; `self-heal-viral-autopilot.sh` é stub documental, não arquivo).
+
+**BoK Gate ABERTO para a Fase 1 do Spaces** (rota `/dashboard/spaces` + canvas 72/28 + ledger via `canvas-execute`) — o `IMPLEMENTATION-PROMPT.md` da suíte já é auto-suficiente para essa fatia. Dívida nomeada: `OTD-SPACES-001` (LGPD erase RPC). Com a suíte fechada, o caminho de volta aos próximos passos do roadmap (B5 pauta de receita · witness G7 · cutover Universo) está desimpedido — sua direção.
+
+## 👤 User *(13:42:35)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(13:42:35)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(13:42:57)*
+
+
+## 🤖 Claude *(13:42:58)*
+
+Rearmando o loop autônomo em modo dinâmico. Iteração 1 começa agora: charter + fetch + verificação de concorrência (anticorpo de instância dupla).
+
+## 🤖 Claude *(13:42:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Autonomous Loop Charter — MCORCH Malha Fechada
+> 2	
+> 3	> Fonte da verdade do `/loop` auto-ritmado. Lida no início de CADA iteração.
+> 4	> Atualizada pelo loop ao fechar cada Fatia (marcar ✅ / mover item pra Fila Sovereign).
+> 5	> Criada 2026-06-30 a partir do estado selado (handoff `c138539f`, mesh 8996).
+> 6	
+> 7	---
+> 8	
+> 9	## Identidade & Leis (não-negociável)
+> 10	- Opero como **MCORCH Master Execution Agent**. Penso em inglês, reporto em **PT-BR**.
+> 11	- **Protocolo de Malha Fechada:** módulo novo/feature/integração ⇒ BoK Gate (`docs/bok/<slug>/`) + Pattern Conformance Declaration ANTES de código.
+> 12	- **Survival Laws:** Lei 1 prova material · Lei 2 SOP antes de código · Lei 3 poda+selo a ~95% · Lei 4 ORO declarado.
+> 13	- **Reviewer = Sovereign (Gabriel).** Nada que precise do físico dele (dado/credencial/DNS/GO/decisão arquitetural) é improvisado — vai pra **Fila de Ação Sovereign**.
+> 14	- **Doutrina open-source-first (Diretiva Sovereign 2026-06-30):** tudo que dá pra construir open-source/self-hosted **DENTRO do MCORCH** vira microserviço/módulo/menu/página da infra própria (não SaaS pago externo) — cada peça agrega **equity**. Default = open-source/self-hosted/BYOK-grátis; SaaS pago só com **OTD** justificando. **Custo USD real ao Sovereign = 0** é meta de projeto. Aplica direto a `OTD-AC-015` (preferir InsightFace self-host no Mesh a API paga) e ao gate do GO de gasto. (memória `feedback_opensource_first_zero_cost_equity`)
+> 15	
+> 16	## Ritual por iteração
+> 17	1. `git fetch` + reler **Pending Actions** do `HANDOFF.md` + esta charter.
+> 18	2. Escolher o item de MAIOR valor **DESBLOQUEADO** (pular Sovereign-gated; registrá-los na Fila).
+> 19	3. Ciclo fechado: **BoK Gate → SOP Lei 2 → código → prova material Lei 1 (UUID/hash/curl/build/test) → `/security-review` se houver migration → commit granular.**
+> 20	4. Ao bater num portão físico: registrar na **Fila de Ação Sovereign** com o destravador exato, e seguir pro próximo desbloqueado.
+> 21	5. **Survival Laws self-audit** (1/2/3/4).
+> 22	6. `/handoff` incremental ao fechar cada Fatia. **Selo final + PARAR** quando: janela ~95% · OU backlog desbloqueado vazio · OU GO/stop do Sovereign.
+> 23	
+> 24	## Padrão de execução
+> 25	- Tarefa substantiva ⇒ **Workflow** (ultracode on): decompor + verificar adversarialmente antes de commitar.
+> 26	- Mecânico/trivial ⇒ solo.
+> 27	- Sempre Vision QA (`scripts/qa/vision-qa.ts`) em print de inspeção + criativo antes de declarar pronto.
+> 28	- UI ⇒ browser-verify real (vite preview do dist + sessão injetada) antes de "pronto".
+> 29	
+> 30	---
+> 31	
+> 32	## Backlog (ordem de valor — só DESBLOQUEADOS executam)
+> 33	
+> 34	### ✅ Smart-Delete MVP — SHIPPED (loop it.1-3, 2026-07-01) — gate BoK selado `33fadb0`
+> 35	- ✅ **FR-SD-001 `check-post-existence`** (commit `174d30c`): edge fn read-only, resolve id das 2 fontes, `deletable_via_api` derivado no SERVIDOR (Matriz), sinal correto por API (X data-vs-errors, YT items=[], WP/Pin 200/404, FB/IG code 100). Per-user fail-closed (501 deletáveis) / honestidade non-deletable. WP per-user PURO (o smoke pegou o probe cross-tenant do fallback global → corrigido). deno check · deployed 63.65kB · smoke **9/9** zero-cost · /security-review **NO FINDINGS**.
+> 36	- ✅ **FR-SD-002 `delete-remote-post`** (commit `358d825`): destrutivo, golden-rule (zero flag do cliente), DELETE idempotente WP(force=false Trash)/X/Pinterest, nó Mesh no 1º delete, NÃO apaga local (502 mantém âncora). **Workflow adversarial 4-lentes `wf_ad2b6722` pegou HIGH false-success** (X devolve errors[] p/ 401/403/429 → reportava deleted com tweet no ar) → classificadores puros `_shared/smart-delete-classify.ts` **deno test 15/15** (inclui a regressão 403). deployed 64.57kB · smoke **8/8** zero-cost NÃO-destrutivo.
+> 37	- ✅ **FR-SD-003 UI 3-ramos** (commit `edc27df`): `useSmartDelete` (hook) + `SmartDeleteDialog` (display) + `smart-delete.ts` (branchFor/labels). Fiado nos 2 call-sites do calendário. tsc 0 · eslint 0 novo · build ok · branchFor **7/7** · **browser-verified** (dist servido, sessão User 0 injetada — ramo transparência LinkedIn correto) · **Vision QA confidence high** (sem tela branca/quebra).
+> 38	- 🔒 **Fila Sovereign:** E2E destrutivo REAL (deletar post vivo WP/X/Pinterest + re-verify `exists=false`) — irreversível, Owner=Sovereign, precisa post descartável real + GO. · OTD-SD-001/002 (re-OAuth FB/YT p/ delete) · OTD-SD-006 (WP force=true permanente).
+> 39	
+> 40	### ✅ B4 EWMA multi-ciclo no analyze — SHIPPED (loop 2026-07-02 it.4, commit `bbc7ad9`)
+> 41	- FRD v0.3 "fixes embarcados" implementado: reward sobre janela dos últimos M=5 ciclos do plano, peso `0.5^idade` (anti-thrash); semântica documentada (janela lembra; plano virgem → `has_real_data=false`); auditoria `reward_vector.ewma`. Provas: deno check · deployado · **smoke 13/13** (L7: WIN 2+10·0,5=7 vence NEW=3 — single-cycle teria flipado). **Restam do arco Learning:** B5 pauta de receita (FR-VA-031, UI/HITL Should) · V4-2 experimento · coluna `reward_weights` config-as-data (NFR-VA-010).
+> 42	
+> 43	### ✅ Vision-gate mecânico nos 2 harnesses — SHIPPED (loop 2026-07-02 it.2-3, commits `8a41457`+`e511862`)
+> 44	- Diretiva Sovereign 2026-06-26 (regra comportamental) virou **gate mecânico**: **(it.2)** `audit-canvas-ui.ts` — screenshot em memória → bucket privado `qa-audits/` → signed URL 1h → `vision-qa.ts` com veredito estruturado APROVADO/REPROVADO bloqueando o exit; fail-closed sem `VISION_MCP_PAT` (`--no-vision` = exceção explícita); **fix de segurança em passing:** removida a cópia pública `dist/canvas_e2e_latest.png` (print de dashboard LOGADO servido pelo nginx). Provado LIVE em prod (29 nós → APROVADO high, cost 0). **(it.3)** `e2e-user-zero` — `lib/vision-gate.ts` julga até 3 screenshots do flow; REPROVADO → **Finding P1/ux** (flipa o NO-GO); fecha a heurística deferida (c) do classifier. tsc 0 · vitest 6/6 · **prova adversarial LIVE: PNG branco 1920×1080 → REPROVADO → P1**. SOP `creative-qa-vision-gate.md` Amendment 2026-07-02.
+> 45	
+> 46	### 0. Direção fresca do Sovereign (docs committados `c880fcf`/`a29627b`, 2026-06-30) — PRIORIDADE
+> 47	- ✅ **Observability gap FECHADO (it.9 + loop 2026-07-01 it.4):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id — infra_health_logs é global-read) fiado em `orchestrate-step` (article @325 + atomizer @431) + `lead-score`. Emite `event='llm_usage'`. **Provado LIVE** (lead-score → row). **+ `logImageUsage(fn,model,count)` (commit `282edf3`):** imagens não têm token usage (custo por-imagem) → `generate-image` emite `event='image_usage'` {fn/model/image_count} pós-sucesso, taggeando o modelo por branch (flux-1.1-pro/gemini-2.5-flash-image/dall-e-3). **Provado LIVE** (helper real → row `{model:black-forest-labs/flux-1.1-pro, image_count:1}`). Custo texto+imagem agora **MEDIDO** → destrava o GO $0. **✅ STREAMING FECHADO (commit `c5614f7`):** `generate-content` pede `stream_options.include_usage` + tee TransformStream passthrough fareja o `usage` do chunk final → `logLlmUsage` no flush (bytes ao cliente inalterados). E2E provado (HTTP 200, 12720 chars, row `{fn:generate-content, total_tokens:208}`). **Arco de observability zero-USD 100% COMPLETO** (texto não-streaming + imagem + texto streaming).
+> 48	- 🔧 **Swaps doutrina (pós-observability):** **IMAGEM — NÃO suprimir (correção it.10, Lei 1):** a suposição do audit ("desperdício puro, não entra no MP4") estava **incompleta** — o `reshape-pillar` **consome a imagem gerada** (`content_library type=image` por `campaign_id`, `reshape-pillar:274-276`) e a **reframa** em variantes por canal (IG photo · Pinterest pin · FB photo, `:42-43`/`:132-136`). Suprimir quebraria os posts de imagem sociais. Caminho $0 da IMAGE = **rotear `pref_image_provider='replicate'` FLUX self-host** (infra, Fila) — NÃO suprimir. **TEXTO** → `:free`/Ollama só no autopilot (D) = decisão de qualidade do Sovereign (Fila).
+> 49	- ✅ **HyperFrames nativo SHIPPED (loop 2026-07-01, commits `c422de7` docs + `2ce09b3` código):** render de studio-project agora roda **NATIVO sobre `@hyperframes/core` (Apache-2.0, LICENSE shipado no tarball — verificado Lei 1)** — `bundleToSingleHtml` → Playwright dirige `__player.renderSeek(i/fps)` → FFmpeg bitexact compartilhado. **Elimina `HF_CLI`/`HF_NODE`/trap ARM64 do caminho default** (wrap CLI preservado só como rollback `STUDIO_RENDER_ENGINE=cli`; deletar após 1º render editor-initiated). SDD **§VS-UI-C (Amendment v0.6)**: OTD-VS-020 (substrato B) + FR-VS-050; fundamentado no Workflow 4-lentes `wf_bbc8402d-096` (achado-chave: runtime core = CLI **byte-idêntico** sha256 `1bc431f0…`; o "engine do CLI" é só harness de injeção). **Gates todos verdes:** frame-diff sha256-distinto t=1s/t=6s · byte-determinismo 2× `c721f8f4…` (386.795B) · Vision-QA confidence **high** "Aprovado" · **A/B SSIM 0.9934** vs referência CLI (PSNR 46.8dB) · guard smoke 4/4 · tsc 0 · **worker E2E** `video_renders 020e9bef` done → bucket HTTP 200 **byte-idêntico ao render local** (determinismo cross-run). ⚠️ Honesto: o CLI global segue instalado — o **editor vanilla (Fase A)** ainda roda `hyperframes preview`; sai só quando a Fase B swapar o service (container próprio).
+> 50	
+> 51	
+> 52	
+> 53	### 1. Gabriel AI — Fatia 3b (avatarIdentity + Identity Gate)  ⟶ programa-topo, estende a seal de hoje
+> 54	- ✅ **Emenda BoK VLM-soft SHIPPED (it.1, commit `7b81bfd`):** `10-amendment-3b-identity-gate-vlm-soft.md` — Identity Gate dual-mode (VLM-soft MVP / ArcFace-hard deferido), verificado adversarialmente (wf_188ce24c-881 APPROVE, 6 issues dobradas). FR-AC-013b compare enum + gate_mode discriminador + telemetry key-migration definidos.
+> 55	- ✅ **Fundação 3b SHIPPED (it.2, commit `541f707`):** lib de compare VLM-soft `src/lib/avatar-identity.ts` (FR-AC-013b — parse fail-soft + bands + reconcile N≥2 anti-oscilação, 15/15 testes) + migration `gate_mode` `20260630140000` (§4b, /security-review NO FINDINGS, aplicação deferida ao GO 3b). tsc 0.
+> 56	- ✅ **Nó avatarIdentity SHIPPED + DEPLOYED (it.3, commit `12d06c0`):** FR-AC-012 — type+factory+componente+inspector+registry+nodeTypes+dispatch; upload multi-retrato (canvas-assets `user_id/`), ConsentWizard (train_lora+face_embedding Art.11), provider/tier, botão "Treinar" fail-closed honesto (OTD-AC-017). tsc 0 · eslint 0 · vite build 0. **Browser-verificado** (Usuário Zero, preview): nó no palette Cmd+K + render no canvas + inspector íntegro + zero crash/console-error. **Deployed** ao `dist/` servido (chunk `CanvasEditorPage-DEjSoHib.js` 165.844B contém o nó; env baked). Valor visível ao Sovereign LIVE.
+> 57	- 🔒 **3b DESBLOQUEADO ESGOTADO** — o que resta é todo Sovereign-gated: edge `avatar-identity-train` (OTD-AC-017), gate-into-pipeline + telemetry migration §4b.2 (dependem do train+geração), calibração biométrica (OTD-AC-015). Próximo item do loop = **backlog #2 (YT/TikTok)** OU /handoff seal se janela ~95%.
+> 58	- **HALT (Fila Sovereign):** edge `avatar-identity-train` (OTD-AC-017 Higgsfield) · treino/calibração com **frames biométricos reais do Gabriel** (OTD-AC-015) · GO de produção.
+> 59	
+> 60	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
+> 61	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
+> 62	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
+> 63	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 64	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
+> 65	
+> 66	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
+> 67	- ✅ **Gate Lei 2 SHIPPED (it.2, 2026-06-30):** emenda BoK `video-studio` SDD **§VS-UI-B (Amendment v0.5)** (FR-VS-047/048/049) — verificação empírica Lei 1 dos pacotes **publicados** @hyperframes/studio@0.7.5 + core@0.7.5 (`npm pack` do dist) + Workflow adversarial `wf_b0a6c005-8c2` (APPROVE_WITH_FIXES). Contrato McorchAdapter completeness **PROVADA** (13 métodos = 13 call-sites reais; rotas de arquivo são FS-based → materialização Storage↔volume mandatória). **Deploy = reuso do `video.mcorch.com`** (swap do `video-studio.service` na mesma porta 3210) → **DNS `studio.mcorch.com` NÃO é mais necessário** (portão Sovereign evitado).
+> 68	- ✅ **render-parity RESOLVIDO por prova material (it.3):** em vez de reimplementar seek (risco de MP4-branco), **envolver `hyperframes render`** (renderer de referência local, USD=0) → paridade **definitional**. **Provado E2E:** projeto studio real → `ref-render.mp4` **505.761 B · 1080×1920 · 24fps · 192 frames**; frames t=1s (195.693 B)/t=6s (355.388 B) com **sha256 distintos** = animado + não-branco. Trap ARM64 resolvido (`HYPERFRAMES_BROWSER_PATH`→chromium Playwright). §B.3 emendada.
+> 69	- ✅ **Wiring SHIPPED + provado E2E (it.4):** `renderStudioProject` (render-core.ts, envolve `hyperframes render` + path-safety) + branch `studio-project` no `video-bridge.ts`. Render real `9069bb7d` → bucket 720.678 B (HTTP 200) → `video_assets`+`creative_assets`(1080×1920/8s)+mesh. **Bônus:** achei+corrigi bug TDZ (`ap` usado antes da declaração) que fazia o dual-write de vídeo→`creative_assets` SEMPRE pular silenciosamente; agora renders do editor entram na Biblioteca de Assets. serviço reiniciado (código vivo). `tsc` 0.
+> 70	- ✅ **Guard de segurança blindado (it.6):** `scripts/qa/smoke-studio-project-guard.ts` 4/4 (sub-segundo, sem render) — path-safety do `renderStudioProject` rejeita execução de dir arbitrário (escape absoluto/traversal/vazio) antes de qualquer spawn. Lei 2 hardening do código shipped.
+> 71	- ✅ **GATE FR-VS-047 TOTALMENTE VERDE (it.5):** (a) determinismo → 2 renders args-idênticos **sha256-idêntico** (`1db99067…`, 465.054 B) = NFR-VS-016 mantido; (b) **Vision-QA** (diretiva Sovereign, cost 0) `vision_analyze_video` confidence **high** = composição 9:16 correta (gradiente/logo/título/CTA fade-in, não-branco). Render-parity provado em 3 níveis (frame-diff · byte-determinismo · semântico). **worker-side COMPLETO.**
+> 72	- ✅ **Sub-fatia 2a SHIPPED (loop 2026-07-01, commit `2123a79`):** `scripts/video-studio-host/` — servidor `createStudioApi(mcorchAdapter)` loopback 3211 (vanilla 3210 intocado até o swap 2c) + **McorchAdapter 13 métodos** (§B.2; FS local canônico v1) + **FR-VS-048 (A) PROVADO E2E PAGO**: startRender minta JWT User 0 → `video-render` (chokepoint) → **202 (12 mco, row `b25838a0`)** → worker **nativo FR-VS-050** → done → MP4 materializado em `renders/` **386.795B sha `c721f8f4` (4º render byte-idêntico em 4 contextos)** → download HTTP 200 → SSE `complete`. Smoke **6/6** zero-cost (`smoke-studio-host.ts`) + SOP Lei 2 (`video-studio-host-fase-b.md`). **ACHADO: `VIDEO_HYPERFRAMES_WEBHOOK=poll://` JÁ ESTÁ ATIVO** (billing do editor-render vivo — item da Fila era stale; débito real testemunhado 4636→4624).
+> 73	- ✅ **Sub-fatia 2b SHIPPED (loop 2026-07-01 it.4, commit `4fd9b89`):** FR-VS-049 durabilidade Storage↔volume — sweep write-back periódico+SIGTERM (`sync.ts`: mtime-delta upsert p/ bucket privado `video-studio-projects`, exclui `renders/`+temp, best-effort nunca bloqueia o editor) + materialização no `resolveProject` (staging+rename atômico, negative-cache 60s). Migration `20260701120000` aplicada via Management API (bucket `public:false` verificado). **Provas:** smoke **7/7** (round-trip sha256-igual · renders/ excluído · ghost honesto) · journal `[sync] uploaded 14 files` · `mcorch-video` espelhado no bucket · **/security-review NO FINDINGS** (guard `..` do forward-note aplicado como anticorpo) · tsc 0.
+> 74	- ✅ **Sub-fatia 2c SHIPPED — EDITOR BILLÁVEL VIVO NO 3210 (loop 2026-07-01, commit `e8979e2`):** achado decisivo = `@hyperframes/studio` shipa o **app inteiro pré-buildado** em `dist/` (React 19 bundlado DENTRO; Apache-2.0 LICENSE no tarball; telemetria só same-origin) → zero build próprio; carrier isolado `packages/video-studio-host-ui/` (react@19 NUNCA hoisted no SPA React 18). `server.ts` serve o SPA estático (jail+fallback) same-origin com `/api`. **`video-studio.service` SWAPADO** (vanilla `hyperframes preview` license-None → nosso host, MESMA porta 3210 = mesmo vhost; rollback comentado no unit file). **Provas:** browser-verify no 3210 `#project/mcorch-video` (formato do hash corrigido empiricamente — é `#project/<id>` não `#project=`) → file-tree + preview 9:16 + timeline com tracks reais Glow/Brand/Hook + **0 erros console** · **Vision-QA confidence high "Aprovado"** · multi-projeto (upgrade vs vanilla single) · systemd active + **self-healed** pós-kill. **Fase B restante:** deletar wrap CLI + desinstalar `hyperframes` global (pós uso real do editor pelo Sovereign) · `/dashboard/canvas/video` iframe já existe (vhost cert = Fila OTD-VS-015).
+> 75	- ✅ **OTD-VS-015 FECHADA (verificada it.5, 2026-07-01):** `video.mcorch.com` LIVE ponta-a-ponta (CF+cert+gate+proxy→3210). Fase B toda entregue e PÚBLICA (SSO-gated).
+> 76	
+> 77	### 4. Unified Sensorial Canvas — Fases 3.5-3.10  ⟶ engenharia pura, SEM portão Sovereign (filler sempre disponível)
+> 78	- ✅ **3.5 SINAPSES + 3.6 FLY-TO SHIPPED (loop 2026-07-01 it.6, commit `645a16e`):** sinapses = arestas REAIS de `mcorch_edges` ancoradas por membership dos 2 sets renderizados (**25 vivas**; censo por node_type=7 — ambos honestos, membership é a verdade do render); fetch escopado a DERIVES_FROM/observes (~3k rows) + classificação client-side; matemática de layout extraída p/ `lib/universe-layout.ts` (fonte única: layers+sinapses+fly-to). CameraRig: clique em nó (2 redes) → seleção + órbita próxima (getState em handler/useFrame, guarda Error #185). **Provas:** browser-verify (8.599 nós/8.816 arestas/775 comunidades; clique sintético → `memory · af33a839…` + câmera voou; 0 erros console) · **Vision-QA high** ("linhas de sinapse visíveis, layout íntegro") · tsc 0 · deployado (chunk `UnifiedCanvasPage-oTw8MRCw.js`). **✅ 3.7 PERF + 3.8 PODA SHIPPED (loop 2026-07-02 it.7, commit `5cc1022`):** load do universo **21-25s → 2.496ms** (medido in-browser; janela REST 2.181ms/31 reqs). 3 fixes compostos provados por resource-timing forense: páginas paralelas pós-count · memo graphology+Louvain gated até TODOS os inputs (rodava 3× com dado parcial bloqueando o main thread) · **MegaBrainVisualizer montado só pós-load** (compile do shader raymarch stallava ~10s até fetches alheias). 3.8: query `crew_module_ownership` morta (0 rows, Decisão B) → `enableOwnership` opt-in default-off (Matrix legado passa true, backup intacto). Vision-QA high (backdrop presente pós-load) · 0 erros console · tsc 0 · deployado. **✅ 3.9-PARIDADE SHIPPED (loop 2026-07-02 it.8, commit pós-5cc1022):** painel de inteligência on-select no Terminal Tático (nome/tipo/estab/comunidade/calls + conteúdo real fetch grátis + botão "Analisar (IA)" explícito — paridade com o NodeDetailsPanel do Matrix legado). QA handle `window.__unifiedCanvas` (padrão __hf; raycast headless flaky a 1920 — click path provado na it.6). Browser-verify 1920×1080 (gate E2E): nó real `835c8a43` → painel com conteúdo "[HANDOFF SEAL]…" · 0 erros · Vision-QA high · deployado. **Paridade restante (declarada honesta):** crew-overlay de agentes no universo (Matrix tem; follow-up) · toggles no Sidebar (in-page existe). **🔒 CUTOVER DE NAV = DECISÃO SOVEREIGN (Fila)** · 3.10 seal após. Plano: `.claude/context/unified-core-sensorial-canvas-plan.md`.
+> 79	- **ACHADO 3.5 (loop 2026-07-01 it.6, Lei 1 — GO/NO-GO respondido via SQL live):** só **7 arestas cross-partition reais** em `mcorch_edges` (4 `DERIVES_FROM` + 3 `observes`; partição = `node_type like 'ast_%'` ~8.2k vs conhecimento; colunas: `source_id`/`target_id`/`relation_type`). Fase A da 3.5 = 7 linhas (trivial, payoff visual baixo); riqueza real = Fase B `OTD-SYNAPSE-EMBEDDING` (similaridade 768d, rotulada como similarity — nunca relação fabricada). Implementar 3.5-A junto com 3.6 fly-to numa iteração só (mesmos arquivos).
+> 80	- ⚠️ **Evento 2026-07-01 ~20:20: session limit Anthropic** (subagentes rejeitados, reset 23:10 BRT) matou o Workflow `wf_4674cd50-64c` — loop pausado até o reset; retomar com understand solo dos 4 arquivos do canvas (CodeNetworkLayer/MemoryNetworkLayer/UnifiedCanvasPage/useUnifiedCanvasStore) OU re-rodar o Workflow (script salvo: `workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js`).
+> 81	- **HALT:** nenhum até cutover de nav (3.9) — aí confirmar com Sovereign.
+> 82	
+> 83	### 5. Security — OTD-SEC-006 (sentinel-wiring) + OTD-SEC-007 (lefthook/gitleaks)  ⟶ hardening
+> 84	- ✅ **OTD-SEC-007 já estava FECHADA** (`lefthook.yml` + `.gitleaks.toml` ativos — provado nos pre-commit desta sessão).
+> 85	- ✅ **OTD-SEC-006 sentinel-wiring FECHADO (it.7):** `generate-content` (inspeciona `prompt` antes do LLM) + `lead-score` (inspeciona `intent_signal`+`context` antes do débito de 1 mco) fiados+deployados+**provados LIVE** — injeção→403 `prompt_injection_suspected`, legítimo→não-403 (sem FP), lead-score bloqueia com **saldo intacto** (sem charge-without-value).
+> 86	- ✅ **FR-SEC-014 parte 1 FECHADA (it.8):** migration `20260701000000_security_events_ledger.sql` (ledger imutável) + `logSentinelBlock`. `/security-review` NO FINDINGS. Provado LIVE.
+> 87	- ✅ **FR-SEC-014 parte 2 FECHADA + P0 DE MINT PRÉ-EXISTENTE FECHADO (loop 2026-07-01, commit `9fe1e36`):** migration `20260701010000` — freeze econômico (`is_frozen` + `deduct_mco_coins`+Guard 3 [byte-VERBATIM provado vs corpo vivo, só o guard adicionado] + trigger `quarantine_on_critical_event` [critical→freeze na mesma txn + n8n pg_net Vault-gated] + `admin_set_frozen` has_role-gated). **BÔNUS decisivo:** o smoke desenterrou um **P0 pré-existente de MINT** — cliente cunhava o próprio `mco_balance` direto (grant UPDATE table-level + RLS own-row; `REVOKE(col)` é no-op) → **FECHADO** com trigger `BEFORE UPDATE` por `current_user` (memória [[reference_profiles_column_guard_mint_hole]]). Aplicada à prod + **smoke 11/11** funcional+segurança (freeze/42501/regressão/privesc/RLS/mint-block/no-over-block). ✅ **`/security-review` independente de backstop = CLEAN** (commit `bb5d600`; sub-agente pós-reset varreu todas as fns que escrevem balance→só deduct[guarded]/admin_set_frozen[has_role] client-reachable, resto service-role-only, overload legado dropado; privesc/RLS/Vault/over-under-block/search_path todos fechados). Aplicada a 1 observação non-blocking: `BEGIN/EXCEPTION` no `PERFORM net.http_post` do trigger (falha do webhook nunca reverte o freeze). **Item da Fila FECHADO.**
+> 88	
+> 89	---
+> 90	
+> 91	## Fila de Ação Sovereign (SÓ você destrava — preenchida pelo loop)
+> 92	- [ ] **Smart-Delete — E2E destrutivo REAL (witness):** com um post descartável REAL publicado (WP/X/Pinterest), clicar "Deletar da rede + MCORCH" e confirmar `check-post-existence` pós-delete → `exists=false` (SOP success signal). Irreversível (Owner=Sovereign) → precisa GO + post descartável. O código está pronto+provado (fail-closed/idempotente/golden-rule); só o witness destrutivo é gated.
+> 93	- [ ] **OTD-AC-015 (Gabriel AI 3b — ArcFace-HARD):** decidir/provisionar motor de embedding facial (InsightFace self-host no Mesh OU API paga Rekognition/Azure/Face++) + custo/credencial. Sem isso o Identity Gate fica VLM-soft (human-review-assist, não anti-impersonation automático).
+> 94	- [ ] **OTD-AC-015b — biometria calibração-grade:** frames reais do Gabriel rotulados (mesma/diferente) p/ FAR/FRR/EER — só após o motor ArcFace existir.
+> 95	- [ ] **OTD-AC-017 (Soul ID train):** credencial Higgsfield + confirmar API self-serve de treino (≥20 fotos); senão fallback Tier1/Tier2 ou LoRA-FLUX (gated commercial-license).
+> 96	- [ ] **Licença comercial (FM-AC-001/OTD-AC-011):** confirmar checkpoint comercial da base de geração (FLUX.1-dev é non-commercial) — Sovereign + jurídico flipam `commercial_license_ok`.
+> 97	- [ ] **GO de produção 3b** sobre o Usuário Zero + GO de gasto do loop de verificação caso não use BYOK openrouter (com BYOK = cost 0).
+> 98	- [x] **Editor render user-initiated (FR-VS-048/VS-009): JÁ ATIVO — achado material 2026-07-01.** `VIDEO_HYPERFRAMES_WEBHOOK=poll://` estava setado (desde a fatia autopilot-vídeo); o loop testemunhou débito real 12 mco (4636→4624, row `b25838a0`) + render nativo + refund-path intacto. Item era stale — nenhuma ação restante.
+> 99	- [x] **GO de gasto — 1º ciclo PAGO de vídeo: FEITO E TESTEMUNHADO (2026-07-01).** GO Sovereign dado; `video_enabled=true` no plano `640b3b67`; ciclo `77e02fca` completed (actual **32 mco**, saldo 4669→4637); render `561a31df` done (MP4 **776.522B** 1080×1920 5s no bucket `video-studio-assets`); reconciliação FR-VA-025 → `content_library e27a09e7` type=video. Título trend-informed ("Do iPhone de 2007 ao Roborock de 2024"). **Doutrina reconciliada** (audit `wf_6d3bdbd6-eb7`, memória `feedback_opensource_first_zero_cost_equity`): render HyperFrames self-hosted USD=0; texto/imagem ~$0.05/ciclo na BYOK OpenRouter do Sovereign → **Gemini 2.5 Pro MANTIDO** (qualidade brand-first vale). Ollama self-host = hardening diferido. **Próximo (opcional):** `is_active=true` liga a cadência pg_cron (vídeo autônomo a cada 3 dias) · telemetria `llm_usage` p/ tornar o USD visível · cortar imagem AI redundante.
+> 100	- [x] **DNS/vhost `video.mcorch.com`: VERIFICADO LIVE (loop 2026-07-01 it.5)** — cadeia pública E2E provada: CF (SSL válido) → nginx origem (302 sem cookie) → sso-auth-gate ES256 (cookie=JWT User 0 mintado) → 127.0.0.1:3210 nosso host (`/healthz {ok,ui:true}` + `/api/projects` + SPA **rebrandada 'MCORCH Studio'** via sub_filter do vhost, logo HeyGen oculto — Apache-2.0 §6 ok). **Editor billável acessível ao Sovereign**: `video.mcorch.com` ou `/dashboard/canvas/video`. Pendente só `design.mcorch.com`.
+> 101	- [ ] **App registration (STEP 0 — o unlock de TODO o #2, ainda NÃO feito, lead ~horas-2d):** registrar apps TikTok (Content Posting API Direct Post + add persona como sandbox user) · YouTube/Google Cloud (canal Brand + OAuth consent External) · Pinterest (Business + Developer Terms + privacy URL → Trial). Sem `client_id`/`secret` nenhum OAuth começa. Submeter os audits no MESMO dia (lead-time corre em paralelo ao código).
+> 102	- [ ] **OAuth/App Review (após registration, lead semanas):** TikTok Content Posting audit (~2-6sem — levanta SELF_ONLY) · YouTube gate A (OAuth verify ~10d) + gate B (API Audit & Quota, serial+independente) · Pinterest Trial→Standard · Instagram App Review · Twitter Basic tier · re-OAuth IG insights (analytics visível).
+> 103	- [ ] **Universe 3.9 — GO de cutover de nav (ÚNICO passo restante, zero gaps):** paridade TOTAL atingida (render+sinapses+fly-to+painel de inteligência+**crew overlay 19 agentes**+**entrada 'Universo' no Sidebar** — it.9 2026-07-02, Vision-QA high). Você já pode ABRIR: Constelação→Universo. Decisão: trocar os destinos da nav legada pro `/universe` (legadas ficam de backup) → depois 3.10 seal fecha a Phase Epsilon V9.
+> 104	- [ ] **scheduled_posts do ciclo 77e02fca sumiram (4 posts de vídeo, criados 2026-07-01 01:13):** tabela `scheduled_posts` está VAZIA apesar de `channel_variants.scheduled_post_id` preenchidos. `auto-publish` só faz UPDATE (nunca delete); smokes deletam escopado a throwaway; sem audit trail. **Confirmar:** você limpou o calendário manualmente? (Se sim, mistério fechado; se não, investigar deleção não-rastreada.)
+> 105	- [ ] **Postback ML definitivo:** IP residencial / portal ML (matt_tool/meli.la).
+> 106	- [ ] **Stripe live keys:** ao primeiro cliente externo.
+> 107	
+> 108	---
+> 109	
+> 110	## Parar quando
+> 111	janela ~95% (selo final) · OU backlog desbloqueado vazio · OU GO/stop explícito do Sovereign.
+> 112	
+> 113	---
+> 114	
+> 115	## Como religar / continuar o loop (prompt canônico STATELESS)
+> 116	
+> 117	> O loop se re-agenda sozinho via `ScheduleWakeup` ao fechar cada ciclo — **não precisa re-colar entre ciclos**. Cole o prompt abaixo SÓ para **religar após um stop**. É *stateless* de propósito: o estado vive nesta charter + no HANDOFF.md, então este texto nunca apodrece (nunca embuta "Estado: it.X / Próximo = …", que fica obsoleto).
+> 118	
+> 119	```
+> 120	/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia
+> 121	.claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git
+> 122	fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada
+> 123	iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo
+> 124	fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review
+> 125	se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao
+> 126	bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise —
+> 127	registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff
+> 128	incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog
+> 129	desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+> 130	```
+> 131	
+> 132	**Redirecionar/parar:** mande PT-BR normal ("pula pra YT/TikTok", "para e mostra a Fila Sovereign", "stop") — interrompe o laço e reabsorvo a direção.
+> 133	
+> ```
+
+## 🤖 Claude *(13:43:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git fetch origin --quiet; git rev-list --left-right --count HEAD...origin/main; git log --oneline -3; echo \"--- procs ccd/claude ---\"; ps aux | grep -E \"ccd-cli|claude\" | grep -v grep | wc -l; ps aux | grep -E \"ccd-cli|claude\" | grep -v grep | awk '{print $2, $11, $12}' | head -8",
+  "description": "Fetch origin, check sync and running claude processes for loop concurrency"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0	0
+> 4a8fee0 docs(bok): spaces-evolution 9/9 selada — 06/07/08 + Pattern Conformance §11 + renames canônicos
+> b777794 docs(handoff+readme+sprint): v6.73.4 — selo final do loop: it.4 B4 EWMA — mesh 9023 — loop parado
+> 51017b5 docs(loop): charter — it.4 B4 EWMA shipped
+> --- procs ccd/claude ---
+> 8
+> 323805 /home/ubuntu/.claude/remote/srv/d20a77da22b7d4822f758654b226299ad7021c22/server --serve
+> 347011 /home/ubuntu/.claude/remote/srv/d20a77da22b7d4822f758654b226299ad7021c22/server --serve
+> 347894 /home/ubuntu/.claude/remote/ccd-cli/2.1.197 --output-format
+> 576742 /home/ubuntu/.local/bin/claude 
+> 766139 /home/ubuntu/.claude/remote/srv/d20a77da22b7d4822f758654b226299ad7021c22/server --bridge
+> 1685298 python3 /home/ubuntu/claude-sessions-repo/AI
+> 1747592 python3 /home/ubuntu/claude-sessions-repo/AI
+> 1767247 /home/ubuntu/.claude/remote/ccd-cli/2.1.197 --output-format
+> ```
+
+## 🤖 Claude *(13:43:50)*
+
+
+## 🤖 Claude *(13:43:50)*
+
+
+## 🤖 Claude *(13:43:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"FR-VA-031\" docs/bok/viral-autopilot/ docs/processes/ | head -10; echo \"---\"; grep -rln \"pauta\" docs/bok/viral-autopilot/ | head -5",
+  "description": "Locate FR-VA-031 spec in viral-autopilot BoK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> docs/bok/viral-autopilot/09-pattern-conformance.md:19:| 13 | Human-in-the-Loop | yes | pauta de receita (FR-VA-031) + GO Sovereign + ORO |
+> docs/bok/viral-autopilot/04-frd.md:224:| FR-VA-031 | Pauta de oportunidades de receita (HITL) | Superfície que lista criativos de alto engajamento como **candidatos a monetização** para decisão consciente do Sovereign (retorno × esforço × prioridade). Receita = pauta humana, **não** otimização cega. | Should | UI/HITL | AT-VA-031 |
+> ---
+> docs/bok/viral-autopilot/04-frd.md
+> docs/bok/viral-autopilot/03-prd.md
+> docs/bok/viral-autopilot/09-pattern-conformance.md
+> ```
+
+## 🤖 Claude *(13:43:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -B3 -A15 \"FR-VA-031\\|pauta\" docs/bok/viral-autopilot/04-frd.md | head -60; echo \"===PRD===\"; grep -n -B3 -A12 \"pauta\" docs/bok/viral-autopilot/03-prd.md | head -50",
+  "description": "Read full FR-VA-031 context in FRD and PRD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 44-| FR-VA-015 | Autopilot dashboard | `AutopilotPage` (display-only): editor de plano, timeline de ciclos, cards de criativo com ROI, criativo "vencedor", insight de lift ciclo-a-ciclo. | High | PR-VA-007 | UI | AT-VA-015 |
+> 45-| FR-VA-016 | Honor product/affiliate param + cron identity | `orchestrate-content` passa a (a) desestruturar e honrar o produto-alvo (hoje dropado em `:79`), propagando ao `orchestrate-step`; (b) **aceitar o caminho cron** — service-role + header `x-autopilot-user-id` (server-trusted) + `prepaid=true` (sub-run não cobra; já pré-debitado em FR-VA-007). Sanitiza valores externos (produto/trend) antes do prompt. | Critical | PR-VA-001, PR-VA-002 | EdgeFunction | AT-VA-016 |
+> 46-| FR-VA-017 | Revenue attribution per creative | `handle-ml-postback` credita `revenue_cents` na `affiliate_links` cujo `content_id = content_variant_id` (FR-VA-004); o coletor (FR-VA-008) reflete em `creative_metrics` por `content_variant_id`. Caminho: postback → `order_id`/`click_id` → `affiliate_links.content_id` → criativo. Depende de OTD-VA-007 (secret per-user). | High | PR-VA-004, PR-VA-007 | EdgeFunction | AT-VA-017 |
+> 47:| FR-VA-018 | Trend-informed angle | `autopilot-run` lê `vm_trends` (de `fetch-trends`) para pautar o ângulo viral do ciclo (reconecta a ilha de trends). Texto de trend é **fonte não-confiável** → sanitizado antes do prompt (NFR-VA-008). | High | PR-VA-011 | EdgeFunction | AT-VA-018 |
+> 48-| FR-VA-019 | A/B variant generation | Gera N variantes por criativo por ciclo (config no plano); a vencedora é escolhida pelo desempenho do ciclo anterior (`creative_metrics`) e promovida no próximo. Reusa a geração; sob o mesmo teto de custo (FR-VA-007). | Should (v1.0) | PR-VA-012 | EdgeFunction | AT-VA-019 |
+> 49-| FR-VA-020 | HITL approval gate (opcional) | Quando `plan.hitl_required=true`, criativos entram em estado `pending_review` antes de publicar; aprovação humana reusa o policy-engine do `intent-execute`. Default off (autônomo). | Should (v1.0) | PR-VA-013 | EdgeFunction | AT-VA-020 |
+> 50-| FR-VA-021 | Daily global mcoCoins cap | Safety cap **diário por tenant** (espelha `vision-mcp`): `autopilot-run` soma `spend_mco` dos `autopilot_cycles` do tenant no dia (UTC); se `acumulado + projetado > daily_cap_mco` → aborta (`aborted_daily_cap`), sem deduzir. Computado de `autopilot_cycles` (sem tabela nova). Fecha a ação de FMEA-VA-001 (RPN 128) / BR-RISK-001. | High | PR-VA-006 | EdgeFunction | AT-VA-021 |
+> 51-
+> 52----
+> 53-
+> 54-## 2.A Amendment v0.2 — PR-VA-020 Video creative 9:16 (decomposição)
+> 55-
+> 56-> **Selada por:** Diretiva Sovereign 2026-06-24. **Motor:** HyperFrames determinístico (`video-studio` FR-VS-024 — `video-hyperframes-render`/`video-render` engine=`hyperframes`; HTML→MP4 1080×1920 via Chrome headless + FFmpeg), **não** IA-DoP (OTD-VA-009). **Cobrança:** `VIDEO_HYPERFRAMES_RENDER` (~12 mco) **dentro do pré-débito do ciclo** (FR-VA-007 estendido — OTD-VA-010, contabilizado UMA vez, sub-render `prepaid`). **Tenancy:** o autopilot do Usuário Zero renderiza **seus próprios templates** (single-tenant) — hardening multi-tenant do sandbox (FR-VS-025 / FMEA-VS-001 RPN 200) **diferido** para o Usuário 1 (OTD-VA-011). O Autopilot **chama** o motor do `video-studio`; **não** o constrói (motor = Fatia VS-2, BoK `video-studio` já selada).
+> 57-
+> 58-| ID | Title | Description | Priority | PR Traced | Category | Test ID |
+> 59-|----|-------|-------------|----------|-----------|----------|---------|
+> 60-| FR-VA-022 | Plan video opt-in | `autopilot_plans` ganha `video_enabled boolean DEFAULT false` + `video_format text DEFAULT '9:16' CHECK (video_format IN ('9:16'))` (extensível). Opt-in por plano (default off = backward-compat com ciclos texto+imagem). Quando `true`, cada sub-run product-aware ganha **um** render de vídeo 9:16. Exposto no `useAutopilot`/`AutopilotPage` (FR-VA-014/015). | High | PR-VA-020 | DB/UI | AT-VA-022 |
+> 61-| FR-VA-023 | Product-aware 9:16 composition | Em `orchestrate-step`, quando `video_enabled`, monta uma **composição HTML 1080×1920** a partir do produto-alvo (imagem do produto — reusa o asset de FR-VA-013 — + gancho viral + caption + CTA + branding) usando um **template de short determinístico**. As 3 fontes não-confiáveis (nome/desc de produto, texto de trend FR-VA-018, `optimization_policy` FR-VA-011) são **sanitizadas/escapadas** antes de entrar no HTML (NFR-VA-008 + Cyber-Sentinel fail-closed, espelha `orchestrate-content:92`). | High | PR-VA-020 | Lib/EdgeFunction | AT-VA-023 |
+> 62-| FR-VA-024 | Enqueue HyperFrames render (prepaid) | O ciclo enfileira **um** `video_render(engine='hyperframes', prepaid=true)` via o motor `video-studio` por sub-run com vídeo. O motor **não cobra** no caminho `prepaid` (espelha `orchestrate-content` FR-VA-016 — débito já feito no pré-débito do ciclo FR-VA-007). Identidade do caminho cron = service-role + `user_id` server-trusted derivado da linha (`autopilot_cycles`/`autopilot_plans`, **nunca do body** — OTD-VA-008). `video_render.product_id` = produto-alvo do sub-run. | Critical | PR-VA-020 | EdgeFunction | AT-VA-024 |
+> --
+> 221-| FR-VA-028 | Coletor de métricas de publicação | `collect-publication-metrics`: resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG+FB** por post → snapshot. **Fail-soft por plataforma** (LinkedIn pessoal = clicks-only por bloqueio de plataforma; IG exige escopo `instagram_business_manage_insights`; YT/TikTok quando a frente B existir). **Nunca fabrica** (Lei 1 — `skipped_no_scope`). | Critical | EdgeFn+Cron | AT-VA-028 |
+> 222-| FR-VA-029 | Reward multi-métrica brand-first | `autopilot-analyze` troca `pick(clicks)`/`reward:totalClicks` por `R = w_reach·z(reach)+w_eng·z(eng/impr)+w_brand·z(brand_signal)+w_rev·z(revenue)` (z-score+taxa = anti-Goodhart). Grava `action_details.reward_vector` (auditável). Pesos default `0.40/0.30/0.20/0.10` (brand-first, configuráveis por plano = dado, não código). | Critical | EdgeFn | AT-VA-029 |
+> 223-| FR-VA-030 | Realocação de esforço (bandit) | `autopilot-run` pondera o fan-out pela policy — mais variantes ao vencedor, poda o perdedor, **ε-greedy** (1 das N sempre exploração). A política passa a mexer em `tasks[]`, não só no prompt. Usa `autopilot_plans.ab_variants`. | High | EdgeFn | AT-VA-030 |
+> 224:| FR-VA-031 | Pauta de oportunidades de receita (HITL) | Superfície que lista criativos de alto engajamento como **candidatos a monetização** para decisão consciente do Sovereign (retorno × esforço × prioridade). Receita = pauta humana, **não** otimização cega. | Should | UI/HITL | AT-VA-031 |
+> 225-
+> 226-**Fixes embarcados (bug latente do loop, isentos de FR novo — features documentadas FR-VA-010/011):** read filtrado por `scope=viral_autopilot:<plan_id>` em `orchestrate-step` (o write já grava o scope); `applied=true` no consumo da policy (trilha auditável); EWMA multi-ciclo no `analyze` (ler últimos M ciclos, não só 1).
+> 227-
+> 228-**NFR adicionados:** NFR-VA-009 (coletor **fail-soft**, nunca fabrica — degrada honestamente por plataforma) · NFR-VA-010 (pesos do reward são dado configurável por plano, versionados como os pesos do Dreaming).
+> 229-
+> 230-**Verdade de plataforma (Lei 1):** IG/FB dão métricas reais (IG após re-OAuth com insights scope = ação Sovereign); **LinkedIn perfil pessoal NÃO expõe** alcance/engajamento agregado via API (só clique — métricas reais exigiriam Company Page do Gabriel AI); **YouTube/TikTok = a fonte mais rica** (chegam com a expansão de canais da persona). Dependências = ações Sovereign, **não bloqueiam** o build (coletor fail-soft).
+> 231-
+> 232-**Traceability:** FR-VA-027..031 → PR-VA-023 _(Amendment v0.3 — Learning & Adaptation sensorial)_. FR-VA-027/029 também fecham **OTD-AG-002** (doutrina agentic-governance) e consomem o **Collective Efficiency Ledger** (`20260626120000`) como medidor de composição (`R̄(N+1) > R̄(N)`).
+> 233-
+> 234-> Cobertura pós-v0.3: **31 FR (FR-VA-001..031)** · 10 NFR.
+> 235-
+> 236----
+> 237-
+> 238-_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> ===PRD===
+> 55-> No disparo, o custo projetado excede `budget_cap_mco` ou o saldo está abaixo do mínimo → ciclo **não inicia**, plano não cobra, toast PT-BR "Saldo/teto insuficiente para este ciclo" + plano marcado `paused`.
+> 56-
+> 57-#### Edge Case 2: Métricas ainda não chegaram (ciclo 1)
+> 58:> No primeiro ciclo não há desempenho anterior → o analisador usa baseline (sem dado, não cobra) e o gerador roda com **framework viral padrão sobre os 3 SKUs semente do plano** (a pauta por trends/auto-seleção é v1.0 — MR-VA-008/FR-VA-018, fora do MVP); o insight card sinaliza "coletando desempenho — melhoria a partir do ciclo 2".
+> 59-
+> 60----
+> 61-
+> 62-## 4. Feature Inventory (MoSCoW)
+> 63-
+> 64-> Effort: S=hours, M=days, L=week, XL=sprint
+> 65-
+> 66-### Must Have (MVP — texto + imagem nas redes atuais)
+> 67-
+> 68-| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 69-|----|---------|---------|-----------|--------|-------------|-------|
+> 70-| PR-VA-001 | **Autopilot Plan** — criar/editar plano (produtos-alvo, redes, modo all-at-once vs cada-N-dias, teto) | P1, P2 | BR-VA-002, BR-VA-007, BR-VA-008 | L | 0 | Entidade `autopilot_plans` per-user; default `interval_days=3` |
+> --
+> 81-| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 82-|----|---------|---------|-----------|--------|-------------|-------|
+> 83-| PR-VA-010 | **Auto product selection** — selecionar produto do catálogo por `commission_value`+`trend_score` (além dos 3 semente) | P1, P2 | BR-VA-008 | M | 0 | OTD-VA-006: auto-score em v1.0 |
+> 84:| PR-VA-011 | **Trend-informed angle** — `fetch-trends`/`vm_trends` pautam o ângulo viral | P1 | BR-VA-008 | M | 0 | Reconecta a ilha de trends ao gerador |
+> 85-| PR-VA-012 | **A/B variant generation** — N variações por criativo por ciclo, escolhe vencedora pelo desempenho | P1 | BR-VA-003 | M | herda geração | Acelera o aprendizado do loop |
+> 86-| PR-VA-013 | **HITL gate opcional** — aprovação humana antes de publicar (plano configura) | P2 | BR-VA-004 | S | 0 | Reusa policy-engine do `intent-execute` |
+> 87-
+> 88-### Could Have (Future / Fase 2)
+> 89-
+> 90-| ID | Feature | Persona | BR Traced | Effort | mcoCoins/run | Notes |
+> 91-|----|---------|---------|-----------|--------|-------------|-------|
+> 92-| PR-VA-020 | **Video creative 9:16** (TikTok/Reels/Shorts) | P1 | BR-VA-001 | XL | ~12 mco (HyperFrames) | **DECOMPOSTO — FRD Amendment v0.2 (2026-06-24): FR-VA-022..025.** Motor = HyperFrames determinístico (`video-studio` FR-VS-024), não `generate-video` IA (OTD-VA-009). Single-tenant Usuário Zero (OTD-VA-011) |
+> 93-| PR-VA-021 | **TikTok/Instagram/YouTube publishing** | P1 | BR-VA-001 | XL | 0 | Fase 2; OAuth + publish novos destinos |
+> 94-| PR-VA-022 | **Catalog auto-discovery cron** — produtiza `discover-affiliate-products.ts` (hoje CLI manual) | P2 | BR-VA-008 | L | 0 | Score por comissão/trend real, não só log10(preço) |
+> 95-
+> 96-### Won't Have (This Cycle)
+> ```
+
+## 🤖 Claude *(13:44:45)*
+
+
+## 🤖 Claude *(13:44:45)*
+
+
+## 🤖 Claude *(13:44:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== AT-VA-031 ===\"; grep -rn \"AT-VA-031\" docs/bok/viral-autopilot/ | head -5\necho \"=== creative_metrics cols (types.ts) ===\"; python3 - <<'EOF'\nimport re\nsrc = open('src/integrations/supabase/types.ts').read()\nfor t in ['creative_metrics', 'publication_metrics']:\n    i = src.find(f'{t}: {{')\n    if i == -1:\n        print(f'{t}: NOT FOUND'); continue\n    row = src.find('Row: {', i)\n    end = src.find('}', row)\n    print(f'--- {t} Row ---')\n    print(src[row:end+1][:900])\nEOF\necho \"=== affiliate_links cols ===\"; python3 -c \"\nsrc = open('src/integrations/supabase/types.ts').read()\ni = src.find('affiliate_links: {')\nrow = src.find('Row: {', i); end = src.find('}', row)\nprint(src[row:end+1][:700])\"\necho \"=== AutopilotPage size/hook ===\"; wc -l src/pages/AutopilotPage.tsx src/hooks/useAutopilot.ts 2>/dev/null",
+  "description": "Inspect creative_metrics, publication_metrics, affiliate_links schemas and autopilot UI files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === AT-VA-031 ===
+> docs/bok/viral-autopilot/04-frd.md:224:| FR-VA-031 | Pauta de oportunidades de receita (HITL) | Superfície que lista criativos de alto engajamento como **candidatos a monetização** para decisão consciente do Sovereign (retorno × esforço × prioridade). Receita = pauta humana, **não** otimização cega. | Should | UI/HITL | AT-VA-031 |
+> === creative_metrics cols (types.ts) ===
+> --- creative_metrics Row ---
+> Row: {
+>           affiliate_clicks: number
+>           collected_at: string
+>           content_variant_id: string
+>           created_at: string
+>           cycle_id: string | null
+>           engagements: number
+>           hook_rate: number | null
+>           id: string
+>           impressions: number
+>           platform: string | null
+>           product_id: string | null
+>           revenue_cents: number
+>           source: string
+>           user_id: string
+>         }
+> --- publication_metrics Row ---
+> Row: {
+>           collected_at: string
+>           comments: number
+>           content_variant_id: string | null
+>           external_post_id: string | null
+>           id: string
+>           impressions: number
+>           likes: number
+>           platform: string
+>           reach: number
+>           reposts: number
+>           saves: number
+>           shares: number
+>           snapshot_at: string
+>           user_id: string
+>           views: number
+>         }
+> === affiliate_links cols ===
+> Row: {
+>           campaign_id: string | null
+>           clicks: number
+>           content_id: string | null
+>           conversions: number
+>           created_at: string
+>           id: string
+>           metadata: Json | null
+>           original_url: string
+>           platform: string
+>           product_id: string | null
+>           revenue_cents: number
+>           short_url: string | null
+>           updated_at: string
+>           user_id: string
+>         }
+> === AutopilotPage size/hook ===
+>   266 src/pages/AutopilotPage.tsx
+>   120 src/hooks/useAutopilot.ts
+>   386 total
+> ```
+
+## 🤖 Claude *(13:45:12)*
+
+
+## 🤖 Claude *(13:45:12)*
+
+
+## 🤖 Claude *(13:45:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// useAutopilot — Viral Autopilot data harness (FR-VA-014). All server state via TanStack Query (Harness Engineering).
+> 2	// CRUD of autopilot_plans (RLS own), cycle history, "run now" (invokes autopilot-run on the user-JWT path), and
+> 3	// activate/pause. The cadence cron / paid execution live server-side; this hook is the display-only data layer.
+> 4	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 5	import { supabase } from '@/integrations/supabase/client';
+> 6	import { useAuth } from '@/hooks/useAuth';
+> 7	import { edgeErrorMessage } from '@/lib/edge';
+> 8	import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+> 9	
+> 10	export type AutopilotPlan = Tables<'autopilot_plans'>;
+> 11	export type AutopilotCycle = Tables<'autopilot_cycles'>;
+> 12	
+> 13	export const AUTOPILOT_PLATFORMS = [
+> 14	  { id: 'wordpress', label: 'WordPress' },
+> 15	  { id: 'linkedin', label: 'LinkedIn' },
+> 16	  { id: 'twitter', label: 'X / Twitter' },
+> 17	] as const;
+> 18	
+> 19	export interface AutopilotPlanInput {
+> 20	  name: string;
+> 21	  mode: 'all_at_once' | 'every_n_days';
+> 22	  interval_days: number;
+> 23	  target_product_ids: string[];
+> 24	  platforms: string[];
+> 25	  budget_cap_mco: number;
+> 26	  daily_cap_mco: number;
+> 27	  min_balance_mco: number;
+> 28	  ab_variants: number;
+> 29	}
+> 30	
+> 31	export function useAutopilotPlans() {
+> 32	  const { user } = useAuth();
+> 33	  return useQuery({
+> 34	    queryKey: ['autopilot-plans'],
+> 35	    enabled: !!user,
+> 36	    queryFn: async (): Promise<AutopilotPlan[]> => {
+> 37	      const { data, error } = await supabase
+> 38	        .from('autopilot_plans').select('*').order('created_at', { ascending: false });
+> 39	      if (error) throw error;
+> 40	      return (data ?? []) as AutopilotPlan[];
+> 41	    },
+> 42	  });
+> 43	}
+> 44	
+> 45	export function useAutopilotCycles(planId?: string) {
+> 46	  return useQuery({
+> 47	    queryKey: ['autopilot-cycles', planId],
+> 48	    enabled: !!planId,
+> 49	    queryFn: async (): Promise<AutopilotCycle[]> => {
+> 50	      const { data, error } = await supabase
+> 51	        .from('autopilot_cycles').select('*').eq('plan_id', planId!)
+> 52	        .order('cycle_number', { ascending: false }).limit(20);
+> 53	      if (error) throw error;
+> 54	      return (data ?? []) as AutopilotCycle[];
+> 55	    },
+> 56	  });
+> 57	}
+> 58	
+> 59	export function useCreateAutopilotPlan() {
+> 60	  const qc = useQueryClient();
+> 61	  const { user } = useAuth();
+> 62	  return useMutation({
+> 63	    mutationFn: async (input: AutopilotPlanInput): Promise<string> => {
+> 64	      if (!user) throw new Error('Sessão expirada — faça login novamente.');
+> 65	      const row: TablesInsert<'autopilot_plans'> = {
+> 66	        user_id: user.id,
+> 67	        name: input.name,
+> 68	        mode: input.mode,
+> 69	        interval_days: input.mode === 'every_n_days' ? input.interval_days : null,
+> 70	        target_product_ids: input.target_product_ids,
+> 71	        platforms: input.platforms,
+> 72	        budget_cap_mco: input.budget_cap_mco,
+> 73	        daily_cap_mco: input.daily_cap_mco,
+> 74	        min_balance_mco: input.min_balance_mco,
+> 75	        ab_variants: input.ab_variants,
+> 76	        is_active: false,
+> 77	      };
+> 78	      const { data, error } = await supabase.from('autopilot_plans').insert(row).select('id').single();
+> 79	      if (error) throw error;
+> 80	      return data.id;
+> 81	    },
+> 82	    onSuccess: () => qc.invalidateQueries({ queryKey: ['autopilot-plans'] }),
+> 83	  });
+> 84	}
+> 85	
+> 86	export function useSetPlanActive() {
+> 87	  const qc = useQueryClient();
+> 88	  return useMutation({
+> 89	    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+> 90	      const patch: Record<string, unknown> = { is_active: active };
+> 91	      // Activate → arm next_run_at to now so the cadence cron picks the plan up on its next tick.
+> 92	      if (active) patch.next_run_at = new Date().toISOString();
+> 93	      const { error } = await supabase.from('autopilot_plans').update(patch).eq('id', id);
+> 94	      if (error) throw error;
+> 95	    },
+> 96	    onSuccess: () => qc.invalidateQueries({ queryKey: ['autopilot-plans'] }),
+> 97	  });
+> 98	}
+> 99	
+> 100	export interface RunResult {
+> 101	  ok?: boolean; dry_run?: boolean; n_runs?: number; projected_mco?: number;
+> 102	  cycle_id?: string; succeeded?: number; actual_mco?: number; refunded_mco?: number; reason?: string;
+> 103	}
+> 104	
+> 105	export function useRunAutopilot() {
+> 106	  const qc = useQueryClient();
+> 107	  return useMutation({
+> 108	    mutationFn: async ({ planId, dryRun }: { planId: string; dryRun?: boolean }): Promise<RunResult> => {
+> 109	      const { data, error } = await supabase.functions.invoke('autopilot-run', {
+> 110	        body: { plan_id: planId, dry_run: !!dryRun },
+> 111	      });
+> 112	      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao executar o Autopilot'));
+> 113	      return data as RunResult;
+> 114	    },
+> 115	    onSuccess: (_d, vars) => {
+> 116	      qc.invalidateQueries({ queryKey: ['autopilot-plans'] });
+> 117	      qc.invalidateQueries({ queryKey: ['autopilot-cycles', vars.planId] });
+> 118	    },
+> 119	  });
+> 120	}
+> 121	
+> ```
+
+## 🤖 Claude *(13:45:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// AutopilotPage (FR-VA-014/015) — display-only cockpit for the Viral Autopilot cadence engine. All data/logic
+> 2	// lives in useAutopilot (Harness Engineering). Create plans, activate/pause cadence, "run now" (with a zero-cost
+> 3	// dry-run), and review cycle history. The autonomous cron + paid execution run server-side.
+> 4	import { useState } from 'react';
+> 5	import {
+> 6	  useAutopilotPlans, useAutopilotCycles, useCreateAutopilotPlan, useSetPlanActive, useRunAutopilot,
+> 7	  AUTOPILOT_PLATFORMS, type AutopilotPlan, type AutopilotPlanInput,
+> 8	} from '@/hooks/useAutopilot';
+> 9	import { useAffiliateProducts } from '@/hooks/useAffiliateProducts';
+> 10	import { toast } from '@/hooks/use-toast';
+> 11	import { Button } from '@/components/ui/button';
+> 12	import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 13	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+> 14	import { Input } from '@/components/ui/input';
+> 15	import { Label } from '@/components/ui/label';
+> 16	import { Checkbox } from '@/components/ui/checkbox';
+> 17	import { Badge } from '@/components/ui/badge';
+> 18	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> 19	import { Rocket, Play, Pause, FlaskConical, Loader2, Plus, History } from 'lucide-react';
+> 20	
+> 21	const DEFAULT_FORM: AutopilotPlanInput = {
+> 22	  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],
+> 23	  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,
+> 24	};
+> 25	const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+> 26	
+> 27	const REASON_LABEL: Record<string, string> = {
+> 28	  aborted_budget: 'Custo projetado acima do teto por ciclo do plano.',
+> 29	  aborted_daily_cap: 'Teto diário de mcoCoins do dia já atingido.',
+> 30	  insufficient_balance: 'Saldo de mcoCoins insuficiente.',
+> 31	};
+> 32	const CYCLE_BADGE: Record<string, string> = {
+> 33	  running: 'bg-blue-500/15 text-blue-400',
+> 34	  completed: 'bg-emerald-500/15 text-emerald-400',
+> 35	  failed: 'bg-red-500/15 text-red-400',
+> 36	  aborted_budget: 'bg-amber-500/15 text-amber-400',
+> 37	  aborted_daily_cap: 'bg-amber-500/15 text-amber-400',
+> 38	};
+> 39	
+> 40	function CreatePlanDialog() {
+> 41	  const [open, setOpen] = useState(false);
+> 42	  const [form, setForm] = useState<AutopilotPlanInput>(DEFAULT_FORM);
+> 43	  const { products, isLoading } = useAffiliateProducts();
+> 44	  const create = useCreateAutopilotPlan();
+> 45	  const set = (patch: Partial<AutopilotPlanInput>) => setForm((f) => ({ ...f, ...patch }));
+> 46	
+> 47	  const submit = async () => {
+> 48	    if (!form.name.trim()) return toast({ title: 'Dê um nome ao plano', variant: 'destructive' });
+> 49	    if (form.target_product_ids.length === 0) return toast({ title: 'Selecione ao menos um produto', variant: 'destructive' });
+> 50	    if (form.platforms.length === 0) return toast({ title: 'Selecione ao menos uma rede', variant: 'destructive' });
+> 51	    try {
+> 52	      await create.mutateAsync(form);
+> 53	      toast({ title: 'Plano criado', description: 'Ative-o para a cadência começar a gerar.' });
+> 54	      setForm(DEFAULT_FORM); setOpen(false);
+> 55	    } catch (e) {
+> 56	      toast({ title: 'Falha ao criar plano', description: (e as Error).message, variant: 'destructive' });
+> 57	    }
+> 58	  };
+> 59	
+> 60	  return (
+> 61	    <Dialog open={open} onOpenChange={setOpen}>
+> 62	      <DialogTrigger asChild>
+> 63	        <Button><Plus className="mr-2 h-4 w-4" />Novo Plano</Button>
+> 64	      </DialogTrigger>
+> 65	      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+> 66	        <DialogHeader><DialogTitle>Novo Plano de Autopilot</DialogTitle></DialogHeader>
+> 67	        <div className="space-y-4">
+> 68	          <div className="space-y-1.5">
+> 69	            <Label htmlFor="ap-name">Nome do plano</Label>
+> 70	            <Input id="ap-name" value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ex.: Smart Home — review semanal" />
+> 71	          </div>
+> 72	
+> 73	          <div className="space-y-1.5">
+> 74	            <Label>Produtos-alvo</Label>
+> 75	            <div className="max-h-40 overflow-y-auto rounded-md border border-border p-2 space-y-1.5">
+> 76	              {isLoading ? <span className="text-sm text-muted-foreground">Carregando catálogo…</span>
+> 77	                : products.length === 0 ? <span className="text-sm text-muted-foreground">Nenhum produto no catálogo.</span>
+> 78	                : products.map((p) => (
+> 79	                  <label key={p.external_id} className="flex items-center gap-2 text-sm cursor-pointer">
+> 80	                    <Checkbox checked={form.target_product_ids.includes(p.external_id)}
+> 81	                      onCheckedChange={() => set({ target_product_ids: toggle(form.target_product_ids, p.external_id) })} />
+> 82	                    <span className="truncate">{p.name}{p.price != null ? ` — R$ ${Number(p.price).toLocaleString('pt-BR')}` : ''}</span>
+> 83	                  </label>
+> 84	                ))}
+> 85	            </div>
+> 86	          </div>
+> 87	
+> 88	          <div className="space-y-1.5">
+> 89	            <Label>Redes</Label>
+> 90	            <div className="flex flex-wrap gap-3">
+> 91	              {AUTOPILOT_PLATFORMS.map((pl) => (
+> 92	                <label key={pl.id} className="flex items-center gap-2 text-sm cursor-pointer">
+> 93	                  <Checkbox checked={form.platforms.includes(pl.id)} onCheckedChange={() => set({ platforms: toggle(form.platforms, pl.id) })} />
+> 94	                  {pl.label}
+> 95	                </label>
+> 96	              ))}
+> 97	            </div>
+> 98	          </div>
+> 99	
+> 100	          <div className="grid grid-cols-2 gap-3">
+> 101	            <div className="space-y-1.5">
+> 102	              <Label>Cadência</Label>
+> 103	              <Select value={form.mode} onValueChange={(v) => set({ mode: v as AutopilotPlanInput['mode'] })}>
+> 104	                <SelectTrigger><SelectValue /></SelectTrigger>
+> 105	                <SelectContent>
+> 106	                  <SelectItem value="every_n_days">A cada N dias</SelectItem>
+> 107	                  <SelectItem value="all_at_once">Uma vez</SelectItem>
+> 108	                </SelectContent>
+> 109	              </Select>
+> 110	            </div>
+> 111	            {form.mode === 'every_n_days' && (
+> 112	              <div className="space-y-1.5">
+> 113	                <Label htmlFor="ap-interval">Intervalo (dias)</Label>
+> 114	                <Input id="ap-interval" type="number" min={1} max={30} value={form.interval_days}
+> 115	                  onChange={(e) => set({ interval_days: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })} />
+> 116	              </div>
+> 117	            )}
+> 118	          </div>
+> 119	
+> 120	          <div className="grid grid-cols-3 gap-3">
+> 121	            <div className="space-y-1.5">
+> 122	              <Label htmlFor="ap-budget">Teto/ciclo</Label>
+> 123	              <Input id="ap-budget" type="number" min={12} value={form.budget_cap_mco}
+> 124	                onChange={(e) => set({ budget_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />
+> 125	            </div>
+> 126	            <div className="space-y-1.5">
+> 127	              <Label htmlFor="ap-daily">Teto/dia</Label>
+> 128	              <Input id="ap-daily" type="number" min={12} value={form.daily_cap_mco}
+> 129	                onChange={(e) => set({ daily_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />
+> 130	            </div>
+> 131	            <div className="space-y-1.5">
+> 132	              <Label htmlFor="ap-variants">Variantes A/B</Label>
+> 133	              <Input id="ap-variants" type="number" min={1} max={5} value={form.ab_variants}
+> 134	                onChange={(e) => set({ ab_variants: Math.max(1, Math.min(5, Number(e.target.value) || 1)) })} />
+> 135	            </div>
+> 136	          </div>
+> 137	          <p className="text-xs text-muted-foreground">
+> 138	            Custo projetado por ciclo = produtos × redes × variantes × 10 mcoCoins (+2 de análise). Os tetos são o
+> 139	            kill-switch — a cadência nunca gasta acima deles.
+> 140	          </p>
+> 141	        </div>
+> 142	        <DialogFooter>
+> 143	          <Button onClick={submit} disabled={create.isPending}>
+> 144	            {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Criar plano
+> 145	          </Button>
+> 146	        </DialogFooter>
+> 147	      </DialogContent>
+> 148	    </Dialog>
+> 149	  );
+> 150	}
+> 151	
+> 152	function CycleList({ planId }: { planId: string }) {
+> 153	  const { data: cycles = [], isLoading } = useAutopilotCycles(planId);
+> 154	  if (isLoading) return <div className="text-sm text-muted-foreground py-2">Carregando ciclos…</div>;
+> 155	  if (cycles.length === 0) return <div className="text-sm text-muted-foreground py-2">Nenhum ciclo ainda.</div>;
+> 156	  return (
+> 157	    <div className="space-y-1.5 pt-2">
+> 158	      {cycles.map((c) => (
+> 159	        <div key={c.id} className="flex items-center justify-between text-sm rounded-md bg-muted/30 px-3 py-1.5">
+> 160	          <span className="font-mono text-xs">#{c.cycle_number}</span>
+> 161	          <Badge variant="secondary" className={CYCLE_BADGE[c.status] ?? ''}>{c.status}</Badge>
+> 162	          <span className="text-muted-foreground">{c.planned_units} criativos</span>
+> 163	          <span className="text-muted-foreground">−{c.spend_mco} / +{c.refunded_mco} mco</span>
+> 164	          <span className="text-xs text-muted-foreground">{c.completed_at ? new Date(c.completed_at).toLocaleDateString('pt-BR') : '—'}</span>
+> 165	        </div>
+> 166	      ))}
+> 167	    </div>
+> 168	  );
+> 169	}
+> 170	
+> 171	function PlanCard({ plan }: { plan: AutopilotPlan }) {
+> 172	  const setActive = useSetPlanActive();
+> 173	  const run = useRunAutopilot();
+> 174	  const [showCycles, setShowCycles] = useState(false);
+> 175	
+> 176	  const doRun = async (dryRun: boolean) => {
+> 177	    try {
+> 178	      const r = await run.mutateAsync({ planId: plan.id, dryRun });
+> 179	      if (dryRun) {
+> 180	        toast({ title: 'Simulação (sem gasto)', description: `${r.n_runs} criativos · ${r.projected_mco} mcoCoins projetados.` });
+> 181	      } else if (r.ok) {
+> 182	        toast({ title: 'Ciclo executado', description: `${r.succeeded}/${r.n_runs} ok · ${r.actual_mco} gastos · ${r.refunded_mco} estornados.` });
+> 183	      } else {
+> 184	        toast({ title: 'Ciclo abortado', description: REASON_LABEL[r.reason ?? ''] ?? r.reason, variant: 'destructive' });
+> 185	      }
+> 186	    } catch (e) {
+> 187	      toast({ title: 'Falha ao executar', description: (e as Error).message, variant: 'destructive' });
+> 188	    }
+> 189	  };
+> 190	
+> 191	  const togglePause = async () => {
+> 192	    try {
+> 193	      await setActive.mutateAsync({ id: plan.id, active: !plan.is_active });
+> 194	      toast({ title: plan.is_active ? 'Plano pausado' : 'Plano ativado', description: plan.is_active ? '' : 'A cadência o executará no próximo ciclo do cron.' });
+> 195	    } catch (e) {
+> 196	      toast({ title: 'Falha', description: (e as Error).message, variant: 'destructive' });
+> 197	    }
+> 198	  };
+> 199	
+> 200	  return (
+> 201	    <Card>
+> 202	      <CardHeader className="pb-3">
+> 203	        <div className="flex items-start justify-between gap-3">
+> 204	          <CardTitle className="text-base flex items-center gap-2">
+> 205	            <Rocket className="h-4 w-4 text-primary" />{plan.name}
+> 206	          </CardTitle>
+> 207	          <Badge className={plan.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-muted text-muted-foreground'}>
+> 208	            {plan.is_active ? 'Ativo' : 'Pausado'}
+> 209	          </Badge>
+> 210	        </div>
+> 211	      </CardHeader>
+> 212	      <CardContent className="space-y-3">
+> 213	        <div className="flex flex-wrap gap-1.5">
+> 214	          {(plan.platforms ?? []).map((p) => <Badge key={p} variant="outline">{p}</Badge>)}
+> 215	          <Badge variant="outline">{(plan.target_product_ids ?? []).length} produtos</Badge>
+> 216	          <Badge variant="outline">{plan.mode === 'every_n_days' ? `a cada ${plan.interval_days}d` : 'uma vez'}</Badge>
+> 217	        </div>
+> 218	        <div className="text-xs text-muted-foreground">
+> 219	          Tetos: {plan.budget_cap_mco} mco/ciclo · {plan.daily_cap_mco} mco/dia · piso {plan.min_balance_mco} · A/B {plan.ab_variants}
+> 220	          {plan.next_run_at && <> · próximo: {new Date(plan.next_run_at).toLocaleString('pt-BR')}</>}
+> 221	        </div>
+> 222	        <div className="flex flex-wrap gap-2">
+> 223	          <Button size="sm" variant="secondary" onClick={() => doRun(true)} disabled={run.isPending}>
+> 224	            <FlaskConical className="mr-1.5 h-3.5 w-3.5" />Simular
+> 225	          </Button>
+> 226	          <Button size="sm" onClick={() => doRun(false)} disabled={run.isPending}>
+> 227	            {run.isPending ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1.5 h-3.5 w-3.5" />}Rodar agora
+> 228	          </Button>
+> 229	          <Button size="sm" variant="outline" onClick={togglePause} disabled={setActive.isPending}>
+> 230	            {plan.is_active ? <><Pause className="mr-1.5 h-3.5 w-3.5" />Pausar</> : <><Play className="mr-1.5 h-3.5 w-3.5" />Ativar</>}
+> 231	          </Button>
+> 232	          <Button size="sm" variant="ghost" onClick={() => setShowCycles((s) => !s)}>
+> 233	            <History className="mr-1.5 h-3.5 w-3.5" />{showCycles ? 'Ocultar' : 'Ciclos'}
+> 234	          </Button>
+> 235	        </div>
+> 236	        {showCycles && <CycleList planId={plan.id} />}
+> 237	      </CardContent>
+> 238	    </Card>
+> 239	  );
+> 240	}
+> 241	
+> 242	export default function AutopilotPage() {
+> 243	  const { data: plans = [], isLoading } = useAutopilotPlans();
+> 244	  return (
+> 245	    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+> 246	      <header className="flex items-center justify-between gap-4">
+> 247	        <div>
+> 248	          <h1 className="text-2xl font-bold flex items-center gap-2"><Rocket className="h-6 w-6 text-primary" />Viral Autopilot</h1>
+> 249	          <p className="text-sm text-muted-foreground">Conteúdo viral monetizado, gerado e agendado em piloto automático — que melhora a cada ciclo.</p>
+> 250	        </div>
+> 251	        <CreatePlanDialog />
+> 252	      </header>
+> 253	
+> 254	      {isLoading ? (
+> 255	        <div className="flex items-center justify-center py-16 text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin" /></div>
+> 256	      ) : plans.length === 0 ? (
+> 257	        <Card><CardContent className="py-12 text-center space-y-2">
+> 258	          <Rocket className="h-8 w-8 mx-auto text-muted-foreground" />
+> 259	          <p className="text-muted-foreground">Nenhum plano ainda. Crie um para a constelação começar a produzir sozinha.</p>
+> 260	        </CardContent></Card>
+> 261	      ) : (
+> 262	        <div className="grid gap-4">{plans.map((p) => <PlanCard key={p.id} plan={p} />)}</div>
+> 263	      )}
+> 264	    </div>
+> 265	  );
+> 266	}
+> 267	
+> ```
+
+## 🤖 Claude *(13:45:46)*
+
+
+## 🤖 Claude *(13:45:47)*
+
+
+## 🤖 Claude *(13:45:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nsrc = open('src/integrations/supabase/types.ts').read()\ni = src.find('content_library: {')\nrow = src.find('Row: {', i); end = src.find('}', row)\nprint(src[row:end+1][:800])\"; ls src/components/ | head -20; ls src/test/ | head",
+  "description": "Check content_library schema and component/test dirs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Row: {
+>           ai_model: string | null
+>           ai_prompt: string | null
+>           body: string | null
+>           campaign_id: string | null
+>           created_at: string
+>           id: string
+>           is_favorite: boolean | null
+>           media_url: string | null
+>           metadata: Json | null
+>           operation_id: string | null
+>           status: Database["public"]["Enums"]["content_status"]
+>           tags: string[] | null
+>           thumbnail_url: string | null
+>           title: string | null
+>           type: Database["public"]["Enums"]["content_type"]
+>           updated_at: string
+>           user_id: string
+>           version: number | null
+>         }
+> admin
+> ads
+> avatar
+> blocks
+> calendar
+> canvas
+> core
+> core-fable
+> creative
+> dashboard
+> gestures
+> graph
+> HUD.tsx
+> icons
+> kanban
+> landing
+> Legend.tsx
+> marketing
+> NavLink.tsx
+> orchestrator
+> agentic-workspace.test.ts
+> aios-sql-bridge-smoke.test.ts
+> avatar-identity.test.ts
+> avatar-voice.test.ts
+> billing.test.ts
+> canvas-dag.test.ts
+> canvas-handles.test.ts
+> canvas-video-async-smoke.test.ts
+> dashboard-html-sanitize.test.ts
+> e2e-user-zero-selftest.test.ts
+> ```
+
+## 🤖 Claude *(13:46:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/revenue-opportunity-pauta.md",
+  "content": "# SOP \u2014 Pauta de Oportunidades de Receita (FR-VA-031 \u00b7 HITL)\n\n> **Lei 2 (Processo Antecipado).** SOP do processo humano que a superf\u00edcie `RevenuePauta`\n> (AutopilotPage) automatiza a *apresenta\u00e7\u00e3o* \u2014 a **decis\u00e3o permanece humana** por design\n> (\"Receita = pauta humana, n\u00e3o otimiza\u00e7\u00e3o cega\", `docs/bok/viral-autopilot/04-frd.md` FR-VA-031).\n> Criada 2026-07-02, antes do c\u00f3digo (loop aut\u00f4nomo).\n\n## Operator\n\n**Sovereign (Gabriel)** \u2014 \u00fanico decisor de monetiza\u00e7\u00e3o. A UI apenas ranqueia e apresenta;\nnenhuma a\u00e7\u00e3o de monetiza\u00e7\u00e3o \u00e9 executada automaticamente.\n\n## Sequence (como o operator decide HOJE, manualmente)\n\n1. Abrir `/dashboard/autopilot` \u2192 se\u00e7\u00e3o **\"Pauta de Receita\"**.\n2. Ler os candidatos ranqueados \u2014 cada linha \u00e9 um criativo com desempenho REAL coletado\n   (`creative_metrics`: impress\u00f5es, engajamentos, hook rate, cliques de afiliado) e o\n   status de monetiza\u00e7\u00e3o derivado de `affiliate_links.content_id`:\n   - **candidato** \u2014 engajamento alto e NENHUM link de afiliado anexado (a oportunidade);\n   - **monetizado** \u2014 tem link, ainda sem convers\u00e3o (`revenue_cents = 0`);\n   - **convertendo** \u2014 tem link E receita real (`revenue_cents > 0`).\n3. Avaliar **retorno \u00d7 esfor\u00e7o \u00d7 prioridade** (colunas da UI):\n   - *Retorno* = sinal de engajamento real (taxa + volume) \u2014 nunca proje\u00e7\u00e3o fabricada;\n   - *Esfor\u00e7o* = \"Baixo \u2014 anexar link ML\" quando o criativo j\u00e1 tem `product_id` rastreado;\n     \"M\u00e9dio \u2014 definir produto\" quando n\u00e3o tem;\n   - *Prioridade* = posi\u00e7\u00e3o no rank (candidatos primeiro, por engajamento).\n4. Decidir por criativo: monetizar (anexar link ML via fluxo vigente `process-affiliate-link`\n   / painel de afiliados) \u00b7 re-amplificar (nova varia\u00e7\u00e3o no plano) \u00b7 ignorar.\n\n## Verification gates\n\n| Gate | Crit\u00e9rio material |\n|---|---|\n| G1 \u2014 dado real | Toda linha da pauta corresponde a rows reais de `creative_metrics` do tenant (RLS own); lista vazia mostra empty-state honesto, nunca placeholder fabricado. |\n| G2 \u2014 status correto | `monetizado`/`convertendo` batem com `affiliate_links` (join client-side por `content_id`); um criativo com link nunca aparece como `candidato`. |\n| G3 \u2014 zero side-effect | A pauta \u00e9 read-only: nenhuma muta\u00e7\u00e3o/d\u00e9bito ao renderizar ou ranquear. |\n| G4 \u2014 ranking puro testado | `rankRevenueCandidates()` \u00e9 fun\u00e7\u00e3o pura com testes vitest (agrega\u00e7\u00e3o, ordena\u00e7\u00e3o candidato-primeiro, guard divis\u00e3o-por-zero). |\n\n## Recovery path\n\n- Query falhou \u2192 card mostra erro pt-BR + bot\u00e3o de recarregar (TanStack `refetch`); nunca\n  lista parcial silenciosa.\n- M\u00e9tricas ausentes (coletor FR-VA-028 ainda n\u00e3o rodou) \u2192 empty-state \"coletando desempenho\"\n  (espelha o insight card do ciclo 1) \u2014 **n\u00e3o** degradar para dados de outra fonte.\n\n## Success signal\n\nO Sovereign abre a pauta e v\u00ea criativos reais ranqueados com status de monetiza\u00e7\u00e3o correto\n(provado por browser-verify + confer\u00eancia de 1 linha contra o DB). A decis\u00e3o de monetizar\ncontinua sendo dele \u2014 a superf\u00edcie s\u00f3 elimina a garimpagem manual de m\u00e9tricas.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/revenue-opportunity-pauta.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:46:48)*
+
+
+## 🤖 Claude *(13:46:48)*
+
+
+## 🤖 Claude *(13:47:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/revenue-pauta.ts",
+  "content": "// revenue-pauta.ts \u2014 pure ranking logic for the Revenue Opportunity Pauta (FR-VA-031, HITL).\n// Aggregates real collected performance (creative_metrics) and derives monetization status from\n// affiliate_links. Pure + display-only math: no fabricated projections, no side effects \u2014 the\n// monetization DECISION stays human (SOP docs/processes/revenue-opportunity-pauta.md).\n\nexport interface CreativeMetricRow {\n  content_variant_id: string;\n  impressions: number;\n  engagements: number;\n  hook_rate: number | null;\n  affiliate_clicks: number;\n  revenue_cents: number;\n  platform: string | null;\n  product_id: string | null;\n  collected_at: string;\n}\n\nexport interface AffiliateLinkRow {\n  content_id: string | null;\n  revenue_cents: number;\n  clicks: number;\n  conversions: number;\n}\n\n/** candidato = high-signal creative with NO affiliate link yet (the opportunity) \u00b7\n *  monetizado = link attached, no revenue yet \u00b7 convertendo = real revenue attributed. */\nexport type PautaStatus = 'candidato' | 'monetizado' | 'convertendo';\n\nexport interface PautaEntry {\n  contentId: string;\n  impressions: number;\n  engagements: number;\n  /** engagements / impressions (0 when impressions = 0 \u2014 never NaN) */\n  engagementRate: number;\n  hookRate: number | null;\n  affiliateClicks: number;\n  revenueCents: number;\n  platforms: string[];\n  productId: string | null;\n  status: PautaStatus;\n  /** low = product already tracked (attach ML link) \u00b7 medium = product still undefined */\n  effort: 'low' | 'medium';\n  lastCollectedAt: string;\n}\n\nconst STATUS_ORDER: Record<PautaStatus, number> = { candidato: 0, monetizado: 1, convertendo: 2 };\n\nexport function rankRevenueCandidates(\n  metrics: CreativeMetricRow[],\n  links: AffiliateLinkRow[],\n): PautaEntry[] {\n  const linksByContent = new Map<string, { revenue: number; clicks: number; conversions: number }>();\n  for (const l of links) {\n    if (!l.content_id) continue;\n    const acc = linksByContent.get(l.content_id) ?? { revenue: 0, clicks: 0, conversions: 0 };\n    acc.revenue += l.revenue_cents ?? 0;\n    acc.clicks += l.clicks ?? 0;\n    acc.conversions += l.conversions ?? 0;\n    linksByContent.set(l.content_id, acc);\n  }\n\n  const byCreative = new Map<string, PautaEntry>();\n  for (const m of metrics) {\n    if (!m.content_variant_id) continue;\n    const prev = byCreative.get(m.content_variant_id);\n    const entry: PautaEntry = prev ?? {\n      contentId: m.content_variant_id,\n      impressions: 0,\n      engagements: 0,\n      engagementRate: 0,\n      hookRate: null,\n      affiliateClicks: 0,\n      revenueCents: 0,\n      platforms: [],\n      productId: null,\n      status: 'candidato',\n      effort: 'medium',\n      lastCollectedAt: m.collected_at,\n    };\n    entry.impressions += m.impressions ?? 0;\n    entry.engagements += m.engagements ?? 0;\n    entry.affiliateClicks += m.affiliate_clicks ?? 0;\n    entry.revenueCents += m.revenue_cents ?? 0;\n    if (m.hook_rate != null) entry.hookRate = Math.max(entry.hookRate ?? 0, m.hook_rate);\n    if (m.platform && !entry.platforms.includes(m.platform)) entry.platforms.push(m.platform);\n    if (m.product_id && !entry.productId) entry.productId = m.product_id;\n    if (m.collected_at > entry.lastCollectedAt) entry.lastCollectedAt = m.collected_at;\n    byCreative.set(m.content_variant_id, entry);\n  }\n\n  const entries = [...byCreative.values()];\n  for (const e of entries) {\n    const link = linksByContent.get(e.contentId);\n    e.revenueCents += link?.revenue ?? 0;\n    e.engagementRate = e.impressions > 0 ? e.engagements / e.impressions : 0;\n    e.status = e.revenueCents > 0 ? 'convertendo' : link ? 'monetizado' : 'candidato';\n    e.effort = e.productId ? 'low' : 'medium';\n  }\n\n  return entries.sort((a, b) => {\n    const s = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];\n    if (s !== 0) return s;\n    if (b.engagementRate !== a.engagementRate) return b.engagementRate - a.engagementRate;\n    if (b.engagements !== a.engagements) return b.engagements - a.engagements;\n    return b.impressions - a.impressions;\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/revenue-pauta.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts",
+  "old_string": "export interface RunResult {",
+  "new_string": "export interface RevenuePautaData {\n  entries: PautaEntry[];\n  titles: Record<string, string>;\n}\n\n// FR-VA-031 \u2014 Revenue Opportunity Pauta (HITL). Read-only: real collected metrics + link status;\n// ranking is pure (src/lib/revenue-pauta.ts). The monetization decision stays with the Sovereign.\nexport function useRevenuePauta(limit = 8) {\n  const { user } = useAuth();\n  return useQuery({\n    queryKey: ['revenue-pauta', limit],\n    enabled: !!user,\n    staleTime: 60_000,\n    queryFn: async (): Promise<RevenuePautaData> => {\n      const [metricsRes, linksRes] = await Promise.all([\n        supabase\n          .from('creative_metrics')\n          .select('content_variant_id, impressions, engagements, hook_rate, affiliate_clicks, revenue_cents, platform, product_id, collected_at')\n          .order('collected_at', { ascending: false })\n          .limit(500),\n        supabase\n          .from('affiliate_links')\n          .select('content_id, revenue_cents, clicks, conversions')\n          .not('content_id', 'is', null),\n      ]);\n      if (metricsRes.error) throw metricsRes.error;\n      if (linksRes.error) throw linksRes.error;\n      const entries = rankRevenueCandidates(\n        (metricsRes.data ?? []) as CreativeMetricRow[],\n        (linksRes.data ?? []) as AffiliateLinkRow[],\n      ).slice(0, limit);\n\n      let titles: Record<string, string> = {};\n      const ids = entries.map((e) => e.contentId);\n      if (ids.length > 0) {\n        const { data: rows, error } = await supabase\n          .from('content_library').select('id, title').in('id', ids);\n        if (error) throw error;\n        titles = Object.fromEntries((rows ?? []).map((r) => [r.id, r.title ?? '(sem t\u00edtulo)']));\n      }\n      return { entries, titles };\n    },\n  });\n}\n\nexport interface RunResult {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts",
+  "old_string": "import { edgeErrorMessage } from '@/lib/edge';\nimport type { Tables, TablesInsert } from '@/integrations/supabase/types';",
+  "new_string": "import { edgeErrorMessage } from '@/lib/edge';\nimport { rankRevenueCandidates, type CreativeMetricRow, type AffiliateLinkRow, type PautaEntry } from '@/lib/revenue-pauta';\nimport type { Tables, TablesInsert } from '@/integrations/supabase/types';\n\nexport type { PautaEntry, PautaStatus } from '@/lib/revenue-pauta';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:19)*
+
+
+## 🤖 Claude *(13:47:19)*
+
+
+## 🤖 Claude *(13:47:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "old_string": "import {\n  useAutopilotPlans, useAutopilotCycles, useCreateAutopilotPlan, useSetPlanActive, useRunAutopilot,\n  AUTOPILOT_PLATFORMS, type AutopilotPlan, type AutopilotPlanInput,\n} from '@/hooks/useAutopilot';",
+  "new_string": "import {\n  useAutopilotPlans, useAutopilotCycles, useCreateAutopilotPlan, useSetPlanActive, useRunAutopilot,\n  useRevenuePauta, AUTOPILOT_PLATFORMS, type AutopilotPlan, type AutopilotPlanInput, type PautaStatus,\n} from '@/hooks/useAutopilot';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "old_string": "import { Rocket, Play, Pause, FlaskConical, Loader2, Plus, History } from 'lucide-react';",
+  "new_string": "import { Rocket, Play, Pause, FlaskConical, Loader2, Plus, History, TrendingUp, RefreshCw } from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "old_string": "export default function AutopilotPage() {",
+  "new_string": "const PAUTA_STATUS_META: Record<PautaStatus, { label: string; cls: string }> = {\n  candidato: { label: 'Candidato', cls: 'bg-amber-500/15 text-amber-400' },\n  monetizado: { label: 'Monetizado', cls: 'bg-blue-500/15 text-blue-400' },\n  convertendo: { label: 'Convertendo', cls: 'bg-emerald-500/15 text-emerald-400' },\n};\nconst pct = (v: number) => `${(v * 100).toFixed(1)}%`;\n\n// FR-VA-031 \u2014 Pauta de Receita (HITL): ranked read-only surface; the monetization decision is human.\nfunction RevenuePauta() {\n  const { data, isLoading, isError, refetch, isRefetching } = useRevenuePauta();\n  const entries = data?.entries ?? [];\n  return (\n    <Card>\n      <CardHeader className=\"pb-3\">\n        <div className=\"flex items-start justify-between gap-3\">\n          <div>\n            <CardTitle className=\"text-base flex items-center gap-2\">\n              <TrendingUp className=\"h-4 w-4 text-primary\" />Pauta de Receita\n            </CardTitle>\n            <p className=\"text-xs text-muted-foreground mt-1\">\n              Criativos de alto engajamento como candidatos a monetiza\u00e7\u00e3o \u2014 a decis\u00e3o \u00e9 sua, n\u00e3o do algoritmo.\n            </p>\n          </div>\n          <Button size=\"sm\" variant=\"ghost\" onClick={() => refetch()} disabled={isRefetching} aria-label=\"Recarregar pauta\">\n            <RefreshCw className={`h-3.5 w-3.5 ${isRefetching ? 'animate-spin' : ''}`} />\n          </Button>\n        </div>\n      </CardHeader>\n      <CardContent>\n        {isLoading ? (\n          <div className=\"text-sm text-muted-foreground py-4\">Carregando desempenho\u2026</div>\n        ) : isError ? (\n          <div className=\"text-sm py-4 space-y-2\">\n            <p className=\"text-destructive\">Falha ao carregar a pauta.</p>\n            <Button size=\"sm\" variant=\"outline\" onClick={() => refetch()}>Tentar novamente</Button>\n          </div>\n        ) : entries.length === 0 ? (\n          <div className=\"text-sm text-muted-foreground py-4\">\n            Coletando desempenho \u2014 a pauta nasce dos ciclos e das m\u00e9tricas coletadas.\n          </div>\n        ) : (\n          <div className=\"space-y-1.5\">\n            {entries.map((e, i) => (\n              <div key={e.contentId} className=\"flex items-center gap-3 text-sm rounded-md bg-muted/30 px-3 py-2\">\n                <span className=\"font-mono text-xs text-muted-foreground w-6 shrink-0\">#{i + 1}</span>\n                <div className=\"min-w-0 flex-1\">\n                  <p className=\"truncate\">{data?.titles[e.contentId] ?? e.contentId.slice(0, 8)}</p>\n                  <p className=\"text-xs text-muted-foreground\">\n                    {e.impressions.toLocaleString('pt-BR')} impr \u00b7 {e.engagements.toLocaleString('pt-BR')} eng ({pct(e.engagementRate)})\n                    {e.hookRate != null && <> \u00b7 hook {pct(e.hookRate)}</>}\n                    {e.affiliateClicks > 0 && <> \u00b7 {e.affiliateClicks} cliques</>}\n                    {e.revenueCents > 0 && <> \u00b7 R$ {(e.revenueCents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</>}\n                  </p>\n                </div>\n                <div className=\"hidden sm:flex flex-wrap gap-1 shrink-0\">\n                  {e.platforms.map((p) => <Badge key={p} variant=\"outline\" className=\"text-xs\">{p}</Badge>)}\n                </div>\n                <span className=\"text-xs text-muted-foreground shrink-0 hidden md:inline\">\n                  {e.effort === 'low' ? 'Baixo \u2014 anexar link ML' : 'M\u00e9dio \u2014 definir produto'}\n                </span>\n                <Badge variant=\"secondary\" className={`shrink-0 ${PAUTA_STATUS_META[e.status].cls}`}>\n                  {PAUTA_STATUS_META[e.status].label}\n                </Badge>\n              </div>\n            ))}\n          </div>\n        )}\n      </CardContent>\n    </Card>\n  );\n}\n\nexport default function AutopilotPage() {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "old_string": "      ) : (\n        <div className=\"grid gap-4\">{plans.map((p) => <PlanCard key={p.id} plan={p} />)}</div>\n      )}\n    </div>\n  );\n}",
+  "new_string": "      ) : (\n        <div className=\"grid gap-4\">{plans.map((p) => <PlanCard key={p.id} plan={p} />)}</div>\n      )}\n\n      <RevenuePauta />\n    </div>\n  );\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:47:49)*
+
+Testes vitest da lógica pura (gate G4 do SOP):
+
+## 🤖 Claude *(13:48:06)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/revenue-pauta.test.ts",
+  "content": "// revenue-pauta.test.ts \u2014 FR-VA-031 pure ranking logic (SOP gate G4: aggregation, candidate-first\n// ordering, division-by-zero guard, status/effort derivation).\nimport { describe, it, expect } from 'vitest';\nimport { rankRevenueCandidates, type CreativeMetricRow, type AffiliateLinkRow } from '@/lib/revenue-pauta';\n\nconst metric = (over: Partial<CreativeMetricRow>): CreativeMetricRow => ({\n  content_variant_id: 'c1',\n  impressions: 0,\n  engagements: 0,\n  hook_rate: null,\n  affiliate_clicks: 0,\n  revenue_cents: 0,\n  platform: null,\n  product_id: null,\n  collected_at: '2026-07-01T00:00:00Z',\n  ...over,\n});\nconst link = (over: Partial<AffiliateLinkRow>): AffiliateLinkRow => ({\n  content_id: 'c1', revenue_cents: 0, clicks: 0, conversions: 0, ...over,\n});\n\ndescribe('rankRevenueCandidates (FR-VA-031)', () => {\n  it('aggregates multiple snapshots per creative (sums, max hook, platform union, latest timestamp)', () => {\n    const out = rankRevenueCandidates([\n      metric({ impressions: 100, engagements: 10, hook_rate: 0.2, platform: 'linkedin', affiliate_clicks: 1 }),\n      metric({ impressions: 300, engagements: 30, hook_rate: 0.5, platform: 'instagram', affiliate_clicks: 2, collected_at: '2026-07-02T00:00:00Z' }),\n      metric({ impressions: 100, engagements: 5, platform: 'linkedin' }),\n    ], []);\n    expect(out).toHaveLength(1);\n    const e = out[0];\n    expect(e.impressions).toBe(500);\n    expect(e.engagements).toBe(45);\n    expect(e.engagementRate).toBeCloseTo(45 / 500);\n    expect(e.hookRate).toBe(0.5);\n    expect(e.affiliateClicks).toBe(3);\n    expect(e.platforms.sort()).toEqual(['instagram', 'linkedin']);\n    expect(e.lastCollectedAt).toBe('2026-07-02T00:00:00Z');\n  });\n\n  it('derives status: no link \u2192 candidato \u00b7 link without revenue \u2192 monetizado \u00b7 revenue \u2192 convertendo', () => {\n    const out = rankRevenueCandidates([\n      metric({ content_variant_id: 'a', impressions: 10, engagements: 1 }),\n      metric({ content_variant_id: 'b', impressions: 10, engagements: 1 }),\n      metric({ content_variant_id: 'c', impressions: 10, engagements: 1 }),\n    ], [\n      link({ content_id: 'b' }),\n      link({ content_id: 'c', revenue_cents: 990 }),\n    ]);\n    const byId = Object.fromEntries(out.map((e) => [e.contentId, e]));\n    expect(byId['a'].status).toBe('candidato');\n    expect(byId['b'].status).toBe('monetizado');\n    expect(byId['c'].status).toBe('convertendo');\n    expect(byId['c'].revenueCents).toBe(990);\n  });\n\n  it('metrics-attributed revenue alone flips to convertendo (a creative with a link never shows as candidato)', () => {\n    const out = rankRevenueCandidates([metric({ revenue_cents: 100, impressions: 10 })], []);\n    expect(out[0].status).toBe('convertendo');\n  });\n\n  it('orders candidato first, then by engagement rate desc, engagements desc', () => {\n    const out = rankRevenueCandidates([\n      metric({ content_variant_id: 'lowRate', impressions: 1000, engagements: 10 }),\n      metric({ content_variant_id: 'highRate', impressions: 100, engagements: 30 }),\n      metric({ content_variant_id: 'earning', impressions: 100, engagements: 90, revenue_cents: 500 }),\n    ], []);\n    expect(out.map((e) => e.contentId)).toEqual(['highRate', 'lowRate', 'earning']);\n  });\n\n  it('guards division by zero (0 impressions \u2192 rate 0, never NaN)', () => {\n    const out = rankRevenueCandidates([metric({ impressions: 0, engagements: 5 })], []);\n    expect(out[0].engagementRate).toBe(0);\n    expect(Number.isNaN(out[0].engagementRate)).toBe(false);\n  });\n\n  it('derives effort from tracked product: product_id \u2192 low (anexar link) \u00b7 null \u2192 medium', () => {\n    const out = rankRevenueCandidates([\n      metric({ content_variant_id: 'p', product_id: 'MLB123', impressions: 10, engagements: 2 }),\n      metric({ content_variant_id: 'q', impressions: 10, engagements: 1 }),\n    ], []);\n    const byId = Object.fromEntries(out.map((e) => [e.contentId, e]));\n    expect(byId['p'].effort).toBe('low');\n    expect(byId['q'].effort).toBe('medium');\n  });\n\n  it('skips rows without content_variant_id and ignores links without content_id', () => {\n    const out = rankRevenueCandidates(\n      [metric({ content_variant_id: '' }), metric({ content_variant_id: 'ok', impressions: 1 })],\n      [link({ content_id: null, revenue_cents: 999 })],\n    );\n    expect(out).toHaveLength(1);\n    expect(out[0].contentId).toBe('ok');\n    expect(out[0].status).toBe('candidato');\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/test/revenue-pauta.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:48:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test src/test/revenue-pauta.test.ts 2>&1 | tail -12 && npx tsc --noEmit 2>&1 | tail -3; echo \"tsc exit: $?\"; npx eslint src/lib/revenue-pauta.ts src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx src/test/revenue-pauta.test.ts 2>&1 | tail -5; echo \"eslint exit: $?\"",
+  "description": "Run pauta tests, TypeScript check, and eslint on touched files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> $ vitest run src/test/revenue-pauta.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ src/test/revenue-pauta.test.ts (7 tests) 9ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  7 passed (7)
+>    Start at  10:48:12
+>    Duration  2.20s (transform 131ms, setup 109ms, collect 110ms, tests 9ms, environment 696ms, prepare 213ms)
+> 
+> tsc exit: 0
+> eslint exit: 0
+> ```
+
+## 🤖 Claude *(13:48:40)*
+
+
+## 🤖 Claude *(13:48:40)*
+
+
+## 🤖 Claude *(13:48:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "which agent-browser; ls scripts/qa/gen-user-session.ts 2>/dev/null && head -30 scripts/qa/gen-user-session.ts; echo \"===\"; grep -n \"usage\\|Usage\\|--url\\|args\" scripts/qa/vision-qa.ts | head -10",
+  "description": "Check agent-browser CLI, session generator, and vision-qa usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.nvm/versions/node/v22.22.3/bin/agent-browser
+> scripts/qa/gen-user-session.ts
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL Supabase browser session (the full localStorage value) for logged-in UI E2E
+>  * without OAuth redirect — bypasses the single-use magic-link + Cloudflare-challenge trap that
+>  * kills gen-magiclink.ts when driving from a datacenter IP. Admin generateLink (magiclink) →
+>  * verifyOtp(token_hash) → session, printed as the JSON string supabase-js stores under
+>  * `sb-<ref>-auth-token`. Inject it into localStorage and the app boots already authenticated.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-session.ts <email>
+>  *   → prints ONLY the localStorage value (JSON) on stdout, or an error on stderr + exit 1.
+>  *   e.g. SESSION=$(bun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com)
+>  *
+>  * Pair with agent-browser:
+>  *   localStorage.setItem('sb-<ref>-auth-token', SESSION) then reload → logged in.
+>  * Pattern extends gen-user-jwt.ts (v6.20.4 lineage). Session is ~1h-lived; mint right before use.
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-session.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> ===
+> 46:async function callTool(name: string, args: Record<string, unknown>) {
+> 49:  const res = await client.callTool({ name, arguments: args });
+> 75:    const args: Record<string, unknown> = { video_url };
+> 76:    if (question) args.question = question;
+> 77:    if (minutes) args.duration_minutes = minutes;
+> 78:    const r = await callTool("vision_analyze_video", args);
+> ```
+
+## 🤖 Claude *(13:48:55)*
+
+
+## 🤖 Claude *(13:48:55)*
+
+Ferramental completo. Build (repo principal = deploy) + help do agent-browser + modos do vision-qa:
+
+## 🤖 Claude *(13:48:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -4",
+  "description": "Build frontend (main repo \u2014 nginx serves dist directly)",
+  "timeout": 180000
+}
+```
+
+## 🤖 Claude *(13:48:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser --help 2>&1 | head -30; echo \"===vision-qa modes===\"; sed -n '55,80p' scripts/qa/vision-qa.ts",
+  "description": "Show agent-browser CLI usage and vision-qa modes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 46.52s
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agent-browser - fast browser automation CLI for AI agents
+> 
+> Usage: agent-browser <command> [args] [options]
+> 
+> Start here (for AI agents):
+>   agent-browser skills get core --full
+> 
+>   Skills ship with the CLI (always version-matched) and include workflow
+>   patterns, ref/selector usage, and copy-paste examples. Prefer this over
+>   guessing commands from flag docs alone. Specialized skills cover Electron
+>   apps, Slack, exploratory testing, and cloud browser providers.
+> 
+>   skills [list]                List available skills
+>   skills get core              Core usage guide (overview + common patterns)
+>   skills get core --full       Include full command reference and templates
+>   skills get <name>            Load a specialized skill (electron, slack, ...)
+>   skills path [name]           Print skill directory path
+> 
+> Core Commands:
+>   open <url>                 Navigate to URL
+>   click <sel>                Click element (or @ref)
+>   dblclick <sel>             Double-click element
+>   type <sel> <text>          Type into element
+>   fill <sel> <text>          Clear and fill
+>   press <key>                Press key (Enter, Tab, Control+a)
+>   keyboard type <text>       Type text with real keystrokes (no selector)
+>   keyboard inserttext <text> Insert text without key events
+>   hover <sel>                Hover element
+>   focus <sel>                Focus element
+> ===vision-qa modes===
+>   if (mode === "image") {
+>     const image_url = process.argv[3];
+>     const question = process.argv[4];
+>     if (!image_url) { console.error("falta image_url"); process.exit(2); }
+>     const r = await callTool("vision_describe_image", question ? { image_url, question } : { image_url });
+>     console.log(r.isError ? "❌ vision_describe_image — isError" : "✅ vision_describe_image");
+>     if (r.parsed) {
+>       console.log(`   confidence: ${r.parsed.confidence}  cost_mco: ${r.parsed.cost_mco}`);
+>       console.log(`   ${String(r.parsed.description).replace(/\n/g, " ")}`);
+>     } else {
+>       console.log("   " + r.text.slice(0, 600));
+>     }
+>     process.exit(r.isError ? 1 : 0);
+>   }
+> 
+>   if (mode === "video") {
+>     const video_url = process.argv[3];
+>     const question = process.argv[4];
+>     const minutes = process.argv[5] ? parseInt(process.argv[5], 10) : undefined;
+>     if (!video_url) { console.error("falta video_url"); process.exit(2); }
+>     const args: Record<string, unknown> = { video_url };
+>     if (question) args.question = question;
+>     if (minutes) args.duration_minutes = minutes;
+>     const r = await callTool("vision_analyze_video", args);
+>     console.log(r.isError ? "❌ vision_analyze_video — isError" : "✅ vision_analyze_video");
+>     if (r.parsed) {
+> ```
+
+## 🤖 Claude *(13:50:03)*
+
+
+## 🤖 Claude *(13:50:03)*
+
+
+## 🤖 Claude *(13:50:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser --help 2>&1 | sed -n '30,80p'",
+  "description": "Show remaining agent-browser commands (eval, screenshot, console)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   focus <sel>                Focus element
+>   check <sel>                Check checkbox
+>   uncheck <sel>              Uncheck checkbox
+>   select <sel> <val...>      Select dropdown option
+>   drag <src> <dst>           Drag and drop
+>   upload <sel> <files...>    Upload files
+>   download <sel> <path>      Download file by clicking element
+>   scroll <dir> [px]          Scroll (up/down/left/right)
+>   scrollintoview <sel>       Scroll element into view
+>   wait <sel|ms>              Wait for element or time
+>   screenshot [path]          Take screenshot
+>   pdf <path>                 Save as PDF
+>   snapshot                   Accessibility tree with refs (for AI)
+>   eval <js>                  Run JavaScript
+>   connect <port|url>         Connect to browser via CDP
+>   close [--all]              Close browser (--all closes every session)
+> 
+> Navigation:
+>   back                       Go back
+>   forward                    Go forward
+>   reload                     Reload page
+> 
+> Get Info:  agent-browser get <what> [selector]
+>   text, html, value, attr <name>, title, url, count, box, styles, cdp-url
+> 
+> Check State:  agent-browser is <what> <selector>
+>   visible, enabled, checked
+> 
+> Find Elements:  agent-browser find <locator> <value> <action> [text]
+>   role, text, label, placeholder, alt, title, testid, first, last, nth
+> 
+> Mouse:  agent-browser mouse <action> [args]
+>   move <x> <y>, down [btn], up [btn], wheel <dy> [dx]
+> 
+> Browser Settings:  agent-browser set <setting> [value]
+>   viewport <w> <h>, device <name>, geo <lat> <lng>
+>   offline [on|off], headers <json>, credentials <user> <pass>
+>   media [dark|light] [reduced-motion]
+> 
+> Network:  agent-browser network <action>
+>   route <url> [--abort|--body <json>] [--resource-type <csv>]
+>   unroute [url]
+>   requests [--clear] [--filter <pattern>]
+>   har <start|stop> [path]
+> 
+> Storage:
+>   cookies [get|set|clear]    Manage cookies (set supports --url, --domain, --path, --httpOnly, --secure, --sameSite, --expires)
+>                              Or:  cookies set --curl <file> [--domain <host>] (auto-detects JSON/cURL/Cookie-header files)
+>   storage <local|session>    Manage web storage
+> 
+> Tabs:
+> ```
+
+## 🤖 Claude *(13:50:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "(bunx vite preview --port 4173 --strictPort >/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/preview.log 2>&1 &) && sleep 2 && curl -s -o /dev/null -w \"preview HTTP %{http_code}\\n\" http://localhost:4173/",
+  "description": "Start vite preview of dist on port 4173 in background"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> preview HTTP 200
+> ```
+
+## 🤖 Claude *(13:50:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSESSION=$(bun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com) || { echo \"MINT FAILED\"; exit 1; }\necho \"session bytes: ${#SESSION}\"\nprintf '%s' \"$SESSION\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/session.json\nagent-browser set viewport 1920 1080\nagent-browser open \"http://localhost:4173/\"\nagent-browser storage local set sb-bcyvddsykvehvpwstlfa-auth-token \"$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/session.json)\" 2>/dev/null || agent-browser eval \"localStorage.setItem('sb-bcyvddsykvehvpwstlfa-auth-token', $(python3 -c \"import json;print(json.dumps(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/session.json').read()))\"))\"\nagent-browser open \"http://localhost:4173/dashboard/autopilot\"\nagent-browser wait 4000\nagent-browser get url",
+  "description": "Mint User 0 session, inject into localStorage, open autopilot page"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> session bytes: 3333
+> ✓ Done
+> ✓ Magic Constellation
+>   http://localhost:4173/
+> ✓ Done
+> ✓ Magic Constellation
+>   http://localhost:4173/dashboard/autopilot
+> ✓ Done
+> http://localhost:4173/dashboard/autopilot
+> ```
+
+## 🤖 Claude *(13:51:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser wait 2500\nagent-browser find text \"Pauta de Receita\" first > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/find.txt 2>&1; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/find.txt\necho \"=== texto da se\u00e7\u00e3o ===\"\nagent-browser eval \"const el=[...document.querySelectorAll('*')].find(e=>e.textContent?.trim().startsWith('Pauta de Receita') && e.tagName!=='BODY' && e.tagName!=='DIV'); const card=el?.closest('.rounded-lg, [class*=card], div'); document.body.innerText.includes('Pauta de Receita')\"\nagent-browser eval \"document.body.innerText.split('Pauta de Receita')[1]?.slice(0,400)\"\necho \"=== console errors ===\"\nagent-browser console 2>/dev/null | grep -iE \"error\" | head -5; echo \"(fim console)\"\nagent-browser screenshot /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/pauta-1920.png\nls -la /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/pauta-1920.png",
+  "description": "Verify Pauta de Receita rendered, check console errors, take 1920x1080 screenshot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> ✗ Element not found. Verify the selector is correct and the element exists in the DOM.
+> === texto da seção ===
+> true
+> "\n\nCriativos de alto engajamento como candidatos a monetização — a decisão é sua, não do algoritmo.\n\n#1\n\nVídeo 9:16: Do iPhone de 2007 ao Roborock de 2024: A Revolução da Automação Chegou à Sua Casa\n\n0 impr · 0 eng (0.0%)\n\nBaixo — anexar link ML\nCandidato\n#2\n\nVídeo 9:16: Roborock S8 Pro Ultra: O Fim da Faxina e o Começo do Seu Tempo Livre. Um Investimento em Produtividade?\n\n0 impr · 0 eng (0.0%)\n\nB"
+> === console errors ===
+> (fim console)
+> ✓ Screenshot saved to /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/pauta-1920.png
+> -rw-rw-r-- 1 ubuntu ubuntu 219304 Jul  2 10:51 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/pauta-1920.png
+> ```
+
+## 🤖 Claude *(13:51:22)*
+
+
+## 🤖 Claude *(13:51:22)*
+
+
+## 🤖 Claude *(13:51:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env 2>/dev/null; set +a\necho \"=== DB: creative_metrics content_variant_ids do User 0 ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/creative_metrics?select=content_variant_id,impressions,engagements,platform&limit=5\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -m json.tool | head -20\necho \"=== DB: t\u00edtulos correspondentes ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/content_library?select=id,title&title=ilike.*Roborock*&limit=3\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; [print(r['id'][:8], r['title'][:70]) for r in json.load(sys.stdin)]\"\necho \"=== upload screenshot \u2192 signed URL ===\"\nSHOT=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/pauta-1920.png\ncurl -s -X POST \"$VITE_SUPABASE_URL/storage/v1/object/generated-images/qa-audits/pauta-fr-va-031-1920.png\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: image/png\" -H \"x-upsert: true\" --data-binary @$SHOT | head -c 200; echo\nSIGNED=$(curl -s -X POST \"$VITE_SUPABASE_URL/storage/v1/object/sign/generated-images/qa-audits/pauta-fr-va-031-1920.png\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"expiresIn\":3600}' | python3 -c \"import json,sys; print(json.load(sys.stdin)['signedURL'])\")\necho \"signed: ${SIGNED:0:60}...\"\necho \"$VITE_SUPABASE_URL/storage/v1$SIGNED\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/signed-url.txt",
+  "description": "Cross-check pauta rows against live DB and upload screenshot for Vision QA"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DB: creative_metrics content_variant_ids do User 0 ===
+> [
+>     {
+>         "content_variant_id": "a22f4e13-01c9-4020-8b28-659df05b2f2d",
+>         "impressions": 0,
+>         "engagements": 0,
+>         "platform": "wordpress"
+>     },
+>     {
+>         "content_variant_id": "80a14e36-e895-4393-85ba-b7ca45e83d0f",
+>         "impressions": 0,
+>         "engagements": 0,
+>         "platform": "wordpress"
+>     },
+>     {
+>         "content_variant_id": "a7921b07-6dc7-4c19-a7cc-cdbf07735afa",
+>         "impressions": 0,
+>         "engagements": 0,
+>         "platform": "wordpress"
+>     },
+>     {
+> === DB: títulos correspondentes ===
+> e27a09e7 Vídeo 9:16: Do iPhone de 2007 ao Roborock de 2024: A Revolução da Auto
+> a22f4e13 Vale a pena o Roborock S8 Pro Ultra em 2026? Meu Review Honesto (e Sur
+> 81a487b3 Reels: Roteiro de Reels (vertical, 30s) para divulgar o Roborock S8
+> === upload screenshot → signed URL ===
+> {"statusCode":"403","error":"Unauthorized","message":"Invalid Compact JWS"}
+> Traceback (most recent call last):
+>   File "<string>", line 1, in <module>
+> KeyError: 'signedURL'
+> signed: ...
+> ```
+
+## 🤖 Claude *(13:51:47)*
+
+
+## 🤖 Claude *(13:51:47)*
+
+
+## 🤖 Claude *(13:51:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -A8 \"qa-audits\\|createSignedUrl\\|upload\" scripts/qa/audit-canvas-ui.ts | head -30",
+  "description": "See how audit-canvas-ui uploads screenshot and signs URL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 165:    const shotKey = `qa-audits/canvas-e2e-${Date.now()}.png`;
+> 166:    const up = await supa.storage.from('generated-images').upload(shotKey, shotBuffer, { contentType: 'image/png', upsert: true });
+> 167-    if (up.error) {
+> 168:      console.error("❌ Vision gate: upload do screenshot falhou:", up.error.message);
+> 169-      process.exit(1);
+> 170-    }
+> 171:    const { data: signed } = await supa.storage.from('generated-images').createSignedUrl(shotKey, 3600);
+> 172-    if (!signed?.signedUrl) {
+> 173-      console.error("❌ Vision gate: signed URL falhou");
+> 174-      process.exit(1);
+> 175-    }
+> 176-    console.log(`🔗 Screenshot (signed, 1h): ${signed.signedUrl}`);
+> 177-    const question = "Print 1920x1080 do Canvas Studio (dashboard MCORCH). Avalie SO problemas visuais objetivos: tela branca/vazia, mensagem de erro visivel, layout quebrado/sobreposto, texto ilegivel. Comece a resposta com exatamente APROVADO ou REPROVADO, seguido do motivo em 1 frase.";
+> 178-    console.log("👁️ Vision QA gate — julgando o screenshot real...");
+> 179-    const vq = spawnSync('bun', ['run', join(ROOT, 'scripts/qa/vision-qa.ts'), 'image', signed.signedUrl, question], {
+> ```
+
+## 🤖 Claude *(13:52:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst supa = createClient(process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY);\nconst buf = await Bun.file('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/pauta-1920.png').arrayBuffer();\nconst key = 'qa-audits/pauta-fr-va-031-1920.png';\nconst up = await supa.storage.from('generated-images').upload(key, buf, { contentType: 'image/png', upsert: true });\nif (up.error) { console.error('upload fail:', up.error.message); process.exit(1); }\nconst { data } = await supa.storage.from('generated-images').createSignedUrl(key, 3600);\nconsole.log(data.signedUrl);\n\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/signed-url.txt && SIGNED=$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3/scratchpad/signed-url.txt) && echo \"signed ok: ${SIGNED:0:80}...\" && bun run scripts/qa/vision-qa.ts image \"$SIGNED\" \"Print 1920x1080 da pagina Viral Autopilot (dashboard MCORCH) com a nova secao 'Pauta de Receita' listando criativos ranqueados com badges de status. Avalie SO problemas visuais objetivos: tela branca/vazia, mensagem de erro visivel, layout quebrado/sobreposto, texto ilegivel. Comece a resposta com exatamente APROVADO ou REPROVADO, seguido do motivo em 1 frase.\"",
+  "description": "Upload screenshot via supabase-js, sign URL, run Vision QA gate",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> signed ok: https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/generated-images...
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    APROVADO. A imagem apresenta um dashboard com a seção "Viral Autopilot" e uma nova subseção "Pauta de Receita", listando criativos com badges de status, sem problemas visuais objetivos como tela branca, mensagens de erro, layout quebrado ou texto ilegível.
+> ```
+
+## 🤖 Claude *(13:52:45)*
+
+
+## 🤖 Claude *(13:52:45)*
+
+
+## 🤖 Claude *(13:52:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/processes/revenue-opportunity-pauta.md src/lib/revenue-pauta.ts src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx src/test/revenue-pauta.test.ts && git commit -m \"feat(autopilot): FR-VA-031 Pauta de Receita (HITL) \u2014 candidatos a monetiza\u00e7\u00e3o ranqueados\n\nB5 do arco Learning (Amendment v0.3): superf\u00edcie read-only que lista criativos\ncom desempenho REAL coletado como candidatos a monetiza\u00e7\u00e3o \u2014 a decis\u00e3o \u00e9 humana,\nn\u00e3o do algoritmo (retorno \u00d7 esfor\u00e7o \u00d7 prioridade).\n- SOP Lei 2 ANTES do c\u00f3digo: docs/processes/revenue-opportunity-pauta.md (4 gates)\n- src/lib/revenue-pauta.ts: ranking puro (agrega creative_metrics por criativo,\n  deriva status de affiliate_links.content_id: candidato/monetizado/convertendo;\n  candidato-primeiro, guard divis\u00e3o-por-zero) \u2014 vitest 7/7\n- useRevenuePauta (harness useAutopilot): 2 queries RLS-own + t\u00edtulos; zero muta\u00e7\u00e3o\n- AutopilotPage: se\u00e7\u00e3o 'Pauta de Receita' (empty-state honesto + retry no erro)\nProva: tsc 0 \u00b7 eslint 0 \u00b7 build+deploy \u00b7 browser-verify preview+sess\u00e3o User 0\n(linha #1 \u2194 content_library e27a09e7 do ciclo pago, 0 erros console) \u00b7 Vision-QA\nAPROVADO confidence high cost 0. Sem migration (sem /security-review).\" && git log -1 --format=%h && git push origin main 2>&1 | tail -1",
+  "description": "Commit and push FR-VA-031 Revenue Pauta"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:52AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:52AM[0m [32mINF[0m scan completed in 24.7ms
+> [90m10:52AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.05 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 367db9b] feat(autopilot): FR-VA-031 Pauta de Receita (HITL) — candidatos a monetização ranqueados
+>  5 files changed, 376 insertions(+), 2 deletions(-)
+>  create mode 100644 docs/processes/revenue-opportunity-pauta.md
+>  create mode 100644 src/lib/revenue-pauta.ts
+>  create mode 100644 src/test/revenue-pauta.test.ts
+> 367db9b
+>    4a8fee0..367db9b  main -> main
+> ```
+
+## 🤖 Claude *(13:53:07)*
+
+
+## 🤖 Claude *(13:53:07)*
+
+
+## 🤖 Claude *(13:53:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "### \u2705 B4 EWMA multi-ciclo no analyze \u2014 SHIPPED (loop 2026-07-02 it.4, commit `bbc7ad9`)\n- FRD v0.3 \"fixes embarcados\" implementado: reward sobre janela dos \u00faltimos M=5 ciclos do plano, peso `0.5^idade` (anti-thrash); sem\u00e2ntica documentada (janela lembra; plano virgem \u2192 `has_real_data=false`); auditoria `reward_vector.ewma`. Provas: deno check \u00b7 deployado \u00b7 **smoke 13/13** (L7: WIN 2+10\u00b70,5=7 vence NEW=3 \u2014 single-cycle teria flipado). **Restam do arco Learning:** B5 pauta de receita (FR-VA-031, UI/HITL Should) \u00b7 V4-2 experimento \u00b7 coluna `reward_weights` config-as-data (NFR-VA-010).",
+  "new_string": "### \u2705 B4 EWMA multi-ciclo no analyze \u2014 SHIPPED (loop 2026-07-02 it.4, commit `bbc7ad9`)\n- FRD v0.3 \"fixes embarcados\" implementado: reward sobre janela dos \u00faltimos M=5 ciclos do plano, peso `0.5^idade` (anti-thrash); sem\u00e2ntica documentada (janela lembra; plano virgem \u2192 `has_real_data=false`); auditoria `reward_vector.ewma`. Provas: deno check \u00b7 deployado \u00b7 **smoke 13/13** (L7: WIN 2+10\u00b70,5=7 vence NEW=3 \u2014 single-cycle teria flipado). **Restam do arco Learning:** ~~B5 pauta de receita~~ \u2705 \u00b7 V4-2 experimento \u00b7 coluna `reward_weights` config-as-data (NFR-VA-010).\n\n### \u2705 B5 Pauta de Receita FR-VA-031 (HITL) \u2014 SHIPPED (loop re-armado 2026-07-02 it.1, commit `367db9b`)\n- Superf\u00edcie read-only na `AutopilotPage`: criativos com desempenho REAL (`creative_metrics` agregado) ranqueados como candidatos a monetiza\u00e7\u00e3o; status derivado de `affiliate_links.content_id` (candidato/monetizado/convertendo); esfor\u00e7o = product_id rastreado (\"Baixo \u2014 anexar link ML\"). Decis\u00e3o permanece humana. **SOP Lei 2 ANTES do c\u00f3digo** (`docs/processes/revenue-opportunity-pauta.md`, 4 gates). Provas: ranking puro `src/lib/revenue-pauta.ts` vitest **7/7** \u00b7 tsc 0 \u00b7 eslint 0 \u00b7 build+deploy \u00b7 **browser-verify** (preview+sess\u00e3o User 0; linha #1 \u2194 `content_library e27a09e7` do ciclo pago; 0 erros console) \u00b7 **Vision-QA APROVADO high cost 0**. Sem migration. Nota honesta: m\u00e9tricas hoje = 0 impress\u00f5es (coletor aguarda re-OAuth IG insights \u2014 Fila); a pauta j\u00e1 ordena e mostra status corretos.\n- **Contexto da sess\u00e3o:** su\u00edte BoK `spaces-evolution` completada ANTES do loop re-armar (pedido direto do Sovereign): 06/07/08 + Pattern Conformance \u00a711 + renames can\u00f4nicos + seal `8f5fd3fd` (commit `4a8fee0`) \u2192 **25/25 su\u00edtes verdes; BoK Gate do Spaces Fase 1 ABERTO** (novo item desbloqueado de alto valor: MVP canvas 72/28). \u26a0\ufe0f Cota de subagents esgotada at\u00e9 4:20am BRT \u2192 Workflows indispon\u00edveis; itera\u00e7\u00f5es rodam inline (precedente v6.36.1)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:53:47)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff",
+  "args": "selo incremental do loop it.1 (re-armado 2026-07-02): B5 Pauta de Receita FR-VA-031 (commit 367db9b) + su\u00edte BoK spaces-evolution 9/9 completada pr\u00e9-loop (commit 4a8fee0, seal 8f5fd3fd)"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(13:53:47)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print incremental"/"do}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(13:54:02)*
+
+
+## 🤖 Claude *(13:54:02)*
+
+Executando o ritual `/handoff` — pre-flight + auditoria de segurança (Fase 1) em paralelo:
+
+## 🤖 Claude *(13:54:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short; echo \"---\"; git log --oneline -5; echo \"---TSC---\"; npx tsc --noEmit 2>&1 | tail -3; echo \"tsc exit: $?\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat; echo",
+  "description": "Handoff pre-flight: git state, tsc, containers, chroma"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M .claude/context/autonomous-loop-charter.md
+> ---
+> 367db9b feat(autopilot): FR-VA-031 Pauta de Receita (HITL) — candidatos a monetização ranqueados
+> 4a8fee0 docs(bok): spaces-evolution 9/9 selada — 06/07/08 + Pattern Conformance §11 + renames canônicos
+> b777794 docs(handoff+readme+sprint): v6.73.4 — selo final do loop: it.4 B4 EWMA — mesh 9023 — loop parado
+> 51017b5 docs(loop): charter — it.4 B4 EWMA shipped
+> bbc7ad9 feat(autopilot): B4 EWMA multi-cycle reward window in analyze (FRD v0.3 embedded fix)
+> ---TSC---
+> tsc exit: 0
+> mcorch_vision_mcp: Up 2 days (healthy)
+> mcorch_claude_mem: Up 2 weeks (healthy)
+> mcorch_chroma: Up 2 weeks (healthy)
+> mega-brain-dashboard: Up 2 weeks
+> mega-brain-webhook: Up 2 weeks (healthy)
+> mega-brain-daemon: Up 2 weeks (healthy)
+> {"nanosecond heartbeat":1783000449246332035}
+> ```
+
+## 🤖 Claude *(13:54:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 1a secret leak (diff) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\" | head -5; echo \"(fim 1a)\"\necho \"=== 1c client coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5; echo \"(fim 1c)\"\necho \"=== 1e sensitive console.log (arquivos tocados) ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*key\\|console\\.log.*secret\\|console\\.log.*password\" src/lib/revenue-pauta.ts src/hooks/useAutopilot.ts src/pages/AutopilotPage.tsx 2>/dev/null | head -5; echo \"(fim 1e)\"",
+  "description": "Phase 1 security audit: secret leak, coin deduction, sensitive logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a secret leak (diff) ===
+> (fim 1a)
+> === 1c client coin deduction ===
+> (fim 1c)
+> === 1e sensitive console.log (arquivos tocados) ===
+> (fim 1e)
+> ```
+
+## 🤖 Claude *(13:54:30)*
+
+
+## 🤖 Claude *(13:54:30)*
+
+
+## 🤖 Claude *(13:54:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add .claude/context/autonomous-loop-charter.md && git commit -q -m \"docs(loop): charter \u2014 it.1 B5 Pauta de Receita shipped (+ spaces-evolution 9/9 pr\u00e9-loop)\n\nMarca B5 (FR-VA-031) como SHIPPED no arco Learning com provas; registra o contexto\nda sess\u00e3o: su\u00edte spaces-evolution completada a pedido do Sovereign antes do re-arme\n(25/25 su\u00edtes verdes, BoK Gate do Spaces Fase 1 aberto) e a constraint de cota de\nsubagents (itera\u00e7\u00f5es inline at\u00e9 4:20am BRT).\" && git log -1 --format=%h",
+  "description": "Commit charter update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:54AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:54AM[0m [32mINF[0m scan completed in 7.45ms
+> [90m10:54AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 707d9ab
+> ```
+
+## 🤖 Claude *(13:54:41)*
+
+
+## 🤖 Claude *(13:54:41)*
+
+Fase 3 — handoff node na Knowledge Mesh + embedding + proof manifest:
+
+## 🤖 Claude *(13:54:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env 2>/dev/null; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"loop-it1-b5-revenue-pauta-spaces-bok-seal\"\nSESSION_SUMMARY=\"Loop re-armado it.1: B5 Pauta de Receita FR-VA-031 (HITL) shipped \u2014 ranking puro vitest 7/7, browser-verify User 0 (linha #1 = content_library e27a09e7 do ciclo pago), Vision-QA APROVADO high, SOP revenue-opportunity-pauta.md Lei 2 antes do c\u00f3digo (commit 367db9b). Pr\u00e9-loop: su\u00edte BoK spaces-evolution 9/9 completada a pedido do Sovereign \u2014 06/07/08 + Pattern Conformance \u00a711 (4 yes \u00b7 8 deferred nomeados \u00b7 9 n-a) + renames can\u00f4nicos + seal documentation_suite 8f5fd3fd DERIVES_FROM viralmind (commit 4a8fee0); 25/25 su\u00edtes verdes, BoK Gate do Spaces Fase 1 ABERTO. Workflows quota-blocked ate 4:20am - execucao inline (precedente v6.36.1).\"\nNODE_ID=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null,\n    \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"${SESSION_PHASE}\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -4 | tr '\\n' '|' | sed 's/\\\"/ /g')\\\"\n    }\n  }\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERROR'))\")\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\nsleep 6\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?id=eq.${NODE_ID}&embedding=not.is.null&select=id\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded \u2705' if d else 'Embedding pendente (trigger async)')\"\necho \"--- count exato ---\"\ncurl -s -I \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" | grep -i content-range",
+  "description": "Insert handoff milestone node, write proof manifest, verify embedding and count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 10d8c70b-1e6a-4ca5-a8bf-83687b3f6b28
+> Embedded ✅
+> --- count exato ---
+> content-range: 0-0/9032
+> ```
+
+## 🤖 Claude *(13:55:12)*
+
+
+## 🤖 Claude *(13:55:12)*
+
+Node `10d8c70b` embedado · malha **9032**. Fase 4 — README (badges + What's New):
+
+## 🤖 Claude *(13:55:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.73.4--loop--it4%3A--B4--EWMA--multi--cycle--reward-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-9023_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 8	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 9	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 10	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 11	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 12	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 13	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 14	  <img src="https://img.shields.io/badge/social--connect-TikTok%2FYouTube_proven_E2E_%C2%B7_in_review-brightgreen?style=for-the-badge" alt="Social Connect" />
+> 15	  <img src="https://img.shields.io/badge/channel--format-FR--CP--001_live_(8_canais)-brightgreen?style=for-the-badge" alt="Channel Format Intelligence" />
+> 16	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.4_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 17	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 18	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 19	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 20	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 21	  <img src="https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge" alt="BoK Suite" />
+> 22	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 23	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 24	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 25	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 26	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 27	  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 28	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 29	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 30	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 31	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 32	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 33	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 34	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 35	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 36	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 37	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 38	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 39	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 40	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> ```
+
+## 🤖 Claude *(13:55:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"## \ufffdfire\\|What's New\\|### \\[v6.7\" README.md | head -6; grep -n \"^## \" README.md | head -12",
+  "description": "Locate What's New section anchor in README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 849:### [v6.7.9] — Canvas Studio Magic Prompt & E2E Audit (2026-05-24)
+> 854:### [v6.7.8] — Canvas Studio Postgres Enum & Pricing Adjustment (2026-05-24)
+> 860:### [v6.7.6] — Canvas Studio Video Tiers & Error Propagation (2026-05-24)
+> 866:### [v6.7.5] — Canvas Studio Evolution: Take Pipeline, Re-execution, CRUD and Asset Import (2026-05-24)
+> 872:### [v6.7.3] — BoK aios-sql-bridge + OE-661 Flywheel + Canvas Design Submenu (2026-05-23)
+> 878:### [v6.7.1] — Customization Directory & Workflow Alignment (2026-05-23)
+> 79:## 🆕 What's new in v6.73.4 (2026-07-02)
+> 83:## 🆕 What's new in v6.73.3 (2026-07-02)
+> 88:## 🆕 What's new in v6.73.2 (2026-07-02)
+> 94:## 🆕 What's new in v6.73.0 (2026-07-02)
+> 101:## 🆕 What's new in v6.72.0 (2026-07-01)
+> 107:## 🆕 What's new in v6.71.0 (2026-07-01)
+> 116:## 🆕 What's new in v6.62.0 (2026-06-30)
+> 124:## 🆕 What's new in v6.61.0 (2026-06-30)
+> 131:## 🆕 What's new in v6.60.0 (2026-06-30)
+> 138:## 🆕 What's new in v6.59.0 (2026-06-29)
+> 145:## 🆕 What's new in v6.58.1 (2026-06-28)
+> 150:## 🆕 What's new in v6.58.0 (2026-06-28)
+> ```
+
+## 🤖 Claude *(13:55:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 79,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 79	## 🆕 What's new in v6.73.4 (2026-07-02)
+> 80	
+> 81	- **B4 — reward EWMA multi-ciclo no `autopilot-analyze` (`bbc7ad9`):** o reward agrega a janela dos **últimos 5 ciclos do plano** (peso `0.5^idade`) em vez de 1 ciclo — a policy para de thrashear em ruído de ciclo único. Semântica honesta: a janela lembra (ciclo zerado sob plano com histórico ainda gera policy); plano com janela vazia nunca inventa. Auditoria em `reward_vector.ewma`. **Smoke 13/13** — o gate L7 prova a estabilização ao vivo (evidência acumulada `7` vence vencedor fraco recente `3`, onde o single-cycle teria flipado).
+> 82	
+> 83	## 🆕 What's new in v6.73.3 (2026-07-02)
+> 84	
+> 85	- **Vision QA vira gate MECÂNICO nos 2 harnesses (diretiva 2026-06-26 fechada):** `audit-canvas-ui.ts` agora sobe o print 1920×1080 pro bucket **privado** (`qa-audits/`), assina 1h e exige veredito **APROVADO** do olho criativo (Vision MCP, custo 0 BYOK) para sair com exit 0 — fail-closed sem `VISION_MCP_PAT`; e o `e2e-user-zero` ganhou `lib/vision-gate.ts` (REPROVADO → **Finding P1/ux** → NO-GO), fechando a heurística deferida (c) do classifier. **Prova adversarial LIVE:** PNG branco 1920×1080 → REPROVADO ("tela completamente branca") → P1. (`8a41457` + `e511862`)
+> 86	- **Fix de segurança em passing:** removida a cópia pública `dist/canvas_e2e_latest.png` — era um print do dashboard **logado** servido pelo nginx em URL pública; a visualização usa o signed URL (1h) impresso no output da auditoria.
+> 87	
+> 88	## 🆕 What's new in v6.73.2 (2026-07-02)
+> ```
+
+## 🤖 Claude *(13:55:42)*
+
+
+## 🤖 Claude *(13:55:42)*
+
+Editando README (badges + What's New v6.74.0):
+
+## 🤖 Claude *(13:55:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.73.4--loop--it4%3A--B4--EWMA--multi--cycle--reward-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.74.0--spaces--BoK--9%2F9--%2B--B5--pauta--de--receita-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:55:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9023_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9032_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:55:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/BoK_Suite-v1_sealed-fuchsia?style=for-the-badge\" alt=\"BoK Suite\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/BoK_Suites-25%2F25_sealed-fuchsia?style=for-the-badge\" alt=\"BoK Suites\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:55:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.73.4 (2026-07-02)",
+  "new_string": "## \ud83c\udd95 What's new in v6.74.0 (2026-07-02)\n\n- **Su\u00edte BoK `spaces-evolution` 9/9 COMPLETA (`4a8fee0`):** a \u00fanica su\u00edte incompleta do ecossistema foi fechada a pedido do Sovereign \u2014 `06-data-model` (duas realidades: dom\u00ednio zod VIVO promovido a `src/` vs persist\u00eancia Supabase PLANEJADA), `07-process-flow` (8 processos, ledger-first, De-n8n) e `08-quality-metrics` (FMEA com 6 RPN>100 herdando as classes de incidente reais) + **Pattern Conformance Declaration** (Step 3.5) na `05-sdd \u00a711` + renames can\u00f4nicos. Seal `8f5fd3fd` DERIVES_FROM viralmind. **25/25 su\u00edtes verdes \u2014 BoK Gate do Spaces Fase 1 (canvas infinito 72/28) ABERTO.**\n- **B5 \u2014 Pauta de Receita FR-VA-031 (HITL) na AutopilotPage (`367db9b`):** criativos com desempenho REAL coletado ranqueados como candidatos a monetiza\u00e7\u00e3o (status candidato/monetizado/convertendo derivado de `affiliate_links.content_id`; esfor\u00e7o \"Baixo \u2014 anexar link ML\" quando o produto j\u00e1 \u00e9 rastreado). A decis\u00e3o \u00e9 humana, n\u00e3o do algoritmo. Ranking puro vitest 7/7 \u00b7 browser-verify com sess\u00e3o do User 0 (linha #1 \u2194 `content_library e27a09e7` do ciclo pago) \u00b7 Vision-QA APROVADO high cost 0 \u00b7 SOP `revenue-opportunity-pauta.md` Lei 2 antes do c\u00f3digo.\n\n## \ud83c\udd95 What's new in v6.73.4 (2026-07-02)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:56:10)*
+
+
+## 🤖 Claude *(13:56:10)*
+
+
+## 🤖 Claude *(13:56:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.4 (selo final): B4 EWMA Multi-Ciclo + Wrap da Sess\u00e3o de Loop",
+  "new_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Spaces-Evolution BoK 9/9 + Loop re-armado it.1: B5 Pauta de Receita (FR-VA-031)\n\nSelo incremental (`/handoff`, fronteira de Fatia) \u2014 sess\u00e3o que **completou a su\u00edte BoK pendente a pedido direto do Sovereign** e depois **re-armou o loop aut\u00f4nomo** (prompt can\u00f4nico da charter). **ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (Gabriel) \u00b7 Owner = Sovereign (risco = docs 06/07/08 divergirem do c\u00f3digo promovido [mitigado por grounding file:line + verifica\u00e7\u00e3o mec\u00e2nica que corrigiu 2 imprecis\u00f5es pr\u00e9-commit] + superf\u00edcie HITL ler dado errado [mitigado por ranking puro testado + cross-check UI\u2194DB]).\n\n| Fatia | Prova material (Lei 1) | Commits |\n|-------|------------------------|---------|\n| **spaces-evolution BoK 9/9 (pr\u00e9-loop)** | \u00danica su\u00edte incompleta do ecossistema fechada: `06-data-model` (duas realidades \u2014 zod vivo em `src/` vs tabelas planejadas; `generations` com `node_run_id` UNIQUE + CHECK refund\u2264charged) \u00b7 `07-process-flow` (PROC-SPACES-001..008, ledger-first, De-n8n) \u00b7 `08-quality-metrics` (KPI-SPACES-001..008 fontes honestas + FMEA 6 RPN>100 herdando incidentes reais) \u00b7 **Pattern Conformance \u00a711 na 05-sdd** (4 yes \u00b7 8 deferred com FR/OTD \u00b7 9 n-a) \u00b7 renames can\u00f4nicos (zero refs velhas repo-wide). **Gate mec\u00e2nico 25/25 verde.** Seal `8f5fd3fd-5bfb-40e6-8868-f80379469b2e` documentation_suite + DERIVES_FROM `c4247ef6` \u2192 viralmind; embedding 768d confirmado. Verifica\u00e7\u00e3o adversarial mec\u00e2nica pegou 2 imprecis\u00f5es minhas ANTES do commit (De-n8n vive na SDD do video-studio:165; self-heal-VA \u00e9 stub documental). **BoK Gate do Spaces Fase 1 ABERTO.** | `4a8fee0` |\n| **it.1 \u2014 B5 Pauta de Receita FR-VA-031 (HITL)** | SOP Lei 2 ANTES do c\u00f3digo (`docs/processes/revenue-opportunity-pauta.md`, 4 gates). Ranking puro `src/lib/revenue-pauta.ts` (agrega `creative_metrics` por criativo; status candidato/monetizado/convertendo via `affiliate_links.content_id`; candidato-primeiro; guard div-zero) **vitest 7/7** \u00b7 `useRevenuePauta` (2 queries RLS-own, zero muta\u00e7\u00e3o) \u00b7 se\u00e7\u00e3o na `AutopilotPage` (empty-state honesto + retry). **tsc 0 \u00b7 eslint 0 \u00b7 build+deploy** \u00b7 **browser-verify** (vite preview do dist + sess\u00e3o User 0 injetada: linha #1 \u2194 `content_library e27a09e7` do ciclo pago; 0 erros console) \u00b7 **Vision-QA APROVADO confidence high cost 0** (signed URL 1h, bucket privado). Sem migration (leitura RLS-own \u2014 sem /security-review). Nota honesta: m\u00e9tricas atuais = 0 impress\u00f5es (coletor aguarda re-OAuth IG insights, Fila). | `367db9b` (+charter `707d9ab`) |\n\nHandoff node `10d8c70b-1e6a-4ca5-a8bf-83687b3f6b28` inserido + embedado (768d). Mesh **9032 n\u00f3s** (count=exact). \u26a0\ufe0f Constraint da sess\u00e3o: cota de subagents esgotada (reset 4:20am BRT) \u2192 1\u00ba Workflow morreu com 5 readers rejeitados; recupera\u00e7\u00e3o 100% inline pelo main loop (precedente v6.36.1). Loop segue ATIVO (ScheduleWakeup) \u2014 pr\u00f3ximos desbloqueados: `reward_weights` config-as-data (NFR-VA-010) \u00b7 Spaces Fase 1 MVP \u00b7 V4-2.\n\n**Survival Laws Self-audit:** Lei 1 \u2705 (todas as claims acima com UUID/hash/output citado; zero fabrica\u00e7\u00e3o \u2014 2 imprecis\u00f5es corrigidas pela verifica\u00e7\u00e3o antes do commit) \u00b7 Lei 2 \u2705 (SOP `revenue-opportunity-pauta.md` antes do c\u00f3digo; su\u00edte BoK completada antes de abrir o gate da Fase 1) \u00b7 Lei 3 \u2705 (janela ~35-40% \u2014 seal incremental de fronteira de Fatia, loop continua; poda por refer\u00eancia a path/hash nas leituras explorat\u00f3rias) \u00b7 Lei 4 \u2705 (ORO declarado neste selo e na task da su\u00edte).\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.4 (selo final): B4 EWMA Multi-Ciclo + Wrap da Sess\u00e3o de Loop"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:56:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **9023 total nodes** (verificado live 2026-07-02 via REST count=exact, loop-it4-b4-ewma-final-seal:",
+  "new_string": "- **9032 total nodes** (verificado live 2026-07-02 via REST count=exact, spaces-bok-seal-and-loop-it1-b5 seal: +handoff `10d8c70b-1e6a-4ca5-a8bf-83687b3f6b28` embedded 768d \u2014 su\u00edte BoK spaces-evolution 9/9 completada [seal `8f5fd3fd` documentation_suite + DERIVES_FROM `c4247ef6`\u2192viralmind; 25/25 su\u00edtes verdes; Pattern Conformance \u00a711] + B5 Pauta de Receita FR-VA-031 HITL na AutopilotPage [vitest 7/7 \u00b7 browser-verify User 0 \u00b7 Vision-QA APROVADO]; commits `4a8fee0`/`367db9b`/`707d9ab`; prev 9023)\n- **9023 total nodes** (verificado live 2026-07-02 via REST count=exact, loop-it4-b4-ewma-final-seal:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:56:56)*
+
+
+## 🤖 Claude *(13:56:56)*
+
+Fase 5b — varredura de segredos no HANDOFF.md antes do commit:
+
+## 🤖 Claude *(13:56:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -5; echo \"(5b-1 fim)\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -3; echo \"(5b-2 fim)\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\" | head -3; echo \"(5b-3 fim)\"",
+  "description": "Phase 5b secret scan on HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (5b-1 fim)
+> (5b-2 fim)
+> 1825:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 5298:**SSP-01 REPAIR & REM CYCLE v6.6.0 SHIPPED (2026-05-17). Quatro Ordens Executivas Sovereign do mesmo dia entregues em sequência estrita, fechando o P0 selado em v6.5.0 e desbloqueando Canvas Studio Phase 4.2c. (OE01 Prova de Vida) Admin role do Sovereign `ada39fae-67e1-4e53-af1c-5a18e1c108e8` confirmado materialmente em `user_roles` via service-role REST (HTTP 200, `role='admin'`, `created_at='2026-04-17T05:57:46.249257+00:00'` — divergência com claim "ZERO admin" de v6.5.0 documentada). Bridge end-to-end com JWT admin segue como Cérebro sem mãos — Sovereign pode validar curl quando convier. (OE02 Reconciliação do Ledger) Insert sintético em `mcoin_transactions` para Sovereign: UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context` com source/audit_ref/sop_ref. Drift agora `mco_balance(5533) − Σledger(5533) = 0` confirmado via REST direto. Pillar 3 (Cost Discipline) parte 1 fechada. (OE03 Ciclo Circadiano v1.0) Refator das rotinas noturnas: 02:30 + 03:30 (sequenciais sobrepostos) → 03:00 Stage 1 Light Sleep (`scripts/nightly-stage1-light-sleep.sh`, ~130 LOC — log rotation gzip>7d, temp cleanup `/tmp/openclaw-incidents` + `/tmp/mcorch-*.log` + tg-response, infra spot check docker+chroma+pulse `infra_health_logs`) · 05:00 Stage 2 Deep Sleep (`scripts/nightly-stage2-deep-sleep.sh`, ~130 LOC — wrapper para `nightly-bridge-refresh.sh` + ledger drift watch alert-only + VACUUM ANALYZE quando pooler disponível) · 07:00 Stage 3 REM Cycle (`scripts/nightly-stage3-rem.sh`, ~110 LOC — `scripts/news-impact-analyzer.ts` 173 LOC com OpenRouter `perplexity/sonar` web-grounded + `scripts/morning-briefing.sh` ao Telegram bot `@claw_gcrux`). Espaçamento 2h entre stages para isolamento CPU/IO + thermal recovery. Server timezone `America/Sao_Paulo (-03)` confirmado via `timedatectl` — crontab usa horários BRT direto. OpenClaw native cron 03:00 Memory Dreaming Promotion sobrepõe Stage 1 (daemon próprio, sem race). Crontab swap atômico (backup `/tmp/crontab.backup-*.txt`). Smoke tests: Stage 1 EXIT 0 status=healthy · Stage 2 EXIT 0 detectou pre-existing OpenClaw CLI drift (OTD-V660-002 RPN 150 — `openclaw memory index` não existe em v2026.5.14) + drift do user `924cb32e` (balance 50, ledger 0) · Stage 3 EXIT 0 com 2 news_pulse UUIDs `fbebabdb-...` + `8ee97502-...` + briefing DELIVERED. SOP `docs/processes/nightly-circadian-cycle.md` (140+ linhas) escrita ANTES dos scripts (Lei 2). (OE04 P0.3 Daily Cap + Balance Toast + Re-audit) `supabase/functions/canvas-execute/index.ts` ganhou daily cap 100 mcoCoins/24h por user (`mcoin_transactions` query com `action LIKE 'canvas_%spend'` + `created_at >= now-24h`), HTTP 402 estruturado com `cap/spent_today/required/resets_at`, fail-open em query error. Action tagging na chamada `deduct_mco_coins`: `canvas_image_spend` ou `canvas_video_spend` + context com `execution_id/provider/model/node_type`. Fallback direct update removido (race condition). Deploy `canvas-execute` **132.6 kB** (+0.4 kB sobre v6.5.0). `src/components/dashboard/DashboardLayout.tsx` ganhou import sonner + `LOW_BALANCE_THRESHOLD=50` + toast.warning na carga inicial e no Realtime UPDATE quando cruza threshold (id='low-balance' dedupe) + amber pill no header quando `mco_balance < 50`. TS zero erros. 122/122 testes passam em 4.71s. Build em 20.38s sem regressão de chunk. SOP `docs/processes/canvas-daily-cap-handling.md` (90+ linhas) escrita ANTES do código (Lei 2). **Survival Audit v2** (`.claude/context/survival-audit-v2.md`, 170 linhas) re-scored: Memory 5/5 · Skill 4/5 · **Cost Discipline 4/5** ⬆ · Observability 3/5 · **SOP 5/5** ⬆. Min 3/5 · Média 4.2/5. Por diretiva Sovereign OE04 explícita ("Se o score for ≥ 4, a restrição de Phase 4.2c estará automaticamente revogada"): **Canvas Studio Phase 4.2c DESBLOQUEADO**. 9 commits granulares + handoff seal. 4 OTDs novos (V660-001 outros users drift · V660-002 OpenClaw CLI drift · V660-003 pooler URL ausente · V660-004 Perplexity Sonar low signal). Próximo deliverable: (a) confirmar bridge end-to-end com JWT Sovereign (fecha Cérebro sem mãos v6.5.0); (b) resolver OpenClaw CLI drift; (c) Canvas Studio Phase 4.2c implementation (fork canvas-execute para vídeo async + wire useCanvasJobsRealtime + watchdog polling + enable ImageToVideo).**
+> 5703:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> (5b-3 fim)
+> ```
+
+## 🤖 Claude *(13:57:12)*
+
+
+## 🤖 Claude *(13:57:12)*
+
+
+## 🤖 Claude *(13:57:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add README.md && git commit -q -m \"docs(readme): v6.74.0 \u2014 spaces-evolution BoK 9/9 (25/25 su\u00edtes) + B5 Pauta de Receita \u2014 mesh 9032\" && git add HANDOFF.md && git commit -q -m \"docs(handoff): seal spaces-bok-9/9 + loop it.1 B5 pauta de receita \u2014 mesh 9032\" && git log --oneline -4 && git status --short | head -5",
+  "description": "Commit README and HANDOFF seal separately"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:57AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:57AM[0m [32mINF[0m scan completed in 8.91ms
+> [90m10:57AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:57AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:57AM[0m [32mINF[0m scan completed in 17.1ms
+> [90m10:57AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 34a0097 docs(handoff): seal spaces-bok-9/9 + loop it.1 B5 pauta de receita — mesh 9032
+> 00f05d0 docs(readme): v6.74.0 — spaces-evolution BoK 9/9 (25/25 suítes) + B5 Pauta de Receita — mesh 9032
+> 707d9ab docs(loop): charter — it.1 B5 Pauta de Receita shipped (+ spaces-evolution 9/9 pré-loop)
+> 367db9b feat(autopilot): FR-VA-031 Pauta de Receita (HITL) — candidatos a monetização ranqueados
+>  M proof-manifest.json
+> ```
+
+## 🤖 Claude *(13:57:30)*
+
+
+## 🤖 Claude *(13:57:30)*
+
+
+## 🤖 Claude *(13:57:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -30; echo \"AUDIT EXIT: $?\"",
+  "description": "Run Phase 5c material proof audit on HANDOFF.md",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 8f5fd3fd | mesh_node | 8f5fd3fd-5bfb-40e6-8868-f80379469b2e | 8f5fd3fd-5bfb-40e6-8868-f80379469b2e | ✅ |
+> | mesh node 10d8c70b | mesh_node | 10d8c70b-1e6a-4ca5-a8bf-83687b3f6b28 | 10d8c70b-1e6a-4ca5-a8bf-83687b3f6b28 | ✅ |
+> | commit 4a8fee0 | git_commit | 4a8fee0 | 4a8fee0 | ✅ |
+> | commit 367db9b | git_commit | 367db9b | 367db9b | ✅ |
+> | commit 707d9ab | git_commit | 707d9ab | 707d9ab | ✅ |
+> | file docs/processes/revenue-opportunity-pauta.md | file_exists | docs/processes/revenue-opportunity-pauta.md | docs/processes/revenue-opportunity-pauta.md | ✅ |
+> | file src/lib/revenue-pauta.ts | file_exists | src/lib/revenue-pauta.ts | src/lib/revenue-pauta.ts | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovere | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovere | ✅ |
+> 
+> QA VERDICT: 8 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.2s)
+> AUDIT EXIT: 0
+> ```
+
+## 🤖 Claude *(13:57:47)*
+
+
+## 🤖 Claude *(13:57:47)*
+
+
+## 🤖 Claude *(13:57:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.73.4 \u2014 Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)**",
+  "new_string": "**Sprint v6.74.0 \u2014 spaces-evolution BoK 9/9 + loop re-armado it.1: B5 Pauta de Receita (2026-07-02)** \u2014 **(1)** A pedido direto do Sovereign, a \u00fanica su\u00edte BoK incompleta foi fechada ANTES de continuar o roadmap: 06/07/08 grounded no scaffold Phase 0 promovido + **Pattern Conformance \u00a711** (4 yes \u00b7 8 deferred nomeados \u00b7 9 n-a) + renames can\u00f4nicos \u2192 **25/25 su\u00edtes verdes**, seal `8f5fd3fd` DERIVES_FROM viralmind, **BoK Gate do Spaces Fase 1 ABERTO** (`4a8fee0`). Verifica\u00e7\u00e3o mec\u00e2nica corrigiu 2 imprecis\u00f5es pr\u00e9-commit (Lei 1). **(2)** Loop aut\u00f4nomo re-armado (prompt can\u00f4nico) \u2014 it.1 = **B5 Pauta de Receita FR-VA-031 (HITL)**: SOP Lei 2 \u2192 ranking puro vitest 7/7 \u2192 se\u00e7\u00e3o na AutopilotPage \u2192 browser-verify User 0 (linha #1 \u2194 `content_library e27a09e7`) \u2192 **Vision-QA APROVADO high** (`367db9b`). **Prova:** tsc 0 \u00b7 Phase 5c **SEAL ALLOWED** (8/8) \u00b7 mesh **9032** \u00b7 handoff `10d8c70b`. \u26a0\ufe0f Workflows quota-blocked at\u00e9 4:20am \u2192 execu\u00e7\u00e3o inline. **Pending:** `reward_weights` config-as-data (NFR-VA-010) \u00b7 Spaces Fase 1 MVP \u00b7 V4-2 \u00b7 witness G7 imagem multi-canal no pr\u00f3ximo ciclo pago.\n\n**Sprint v6.73.4 \u2014 Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)**"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(13:57:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls scratch/ 2>/dev/null | head -3; echo \"(scratch)\"; git push origin main 2>&1 | tail -1",
+  "description": "Check scratch dir and push seal commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (scratch)
+>    367db9b..34a0097  main -> main
+> ```
+
+## 🤖 Claude *(13:58:08)*
+
+
+## 🤖 Claude *(13:58:08)*
+
+Push ok (`367db9b..34a0097`). Re-lendo o sprint-priorities para aplicar a entrada:
+
+## 🤖 Claude *(13:58:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	**Sprint v6.73.4 — Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)** — reward sobre janela M=5 ciclos peso 0.5^idade (anti-thrash; janela lembra, plano virgem não inventa; auditoria `reward_vector.ewma`). Smoke **13/13** (L7: evidência acumulada 7 vence recente 3 — single-cycle flipava) · deployado · SOP amendada · Phase 5c SEAL ALLOWED · mesh **9023** · handoff `1ddd4e86`. **Loop PARADO (janela ~95%).** Restam desbloqueados: B5 pauta de receita (FR-VA-031) · V4-2 · `reward_weights` config-as-data.
+> 8	
+> ```
+
+## 🤖 Claude *(13:58:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.73.4 \u2014 Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)** \u2014 reward",
+  "new_string": "**Sprint v6.74.0 \u2014 spaces-evolution BoK 9/9 + loop re-armado it.1: B5 Pauta de Receita (2026-07-02)** \u2014 **(1)** A pedido direto do Sovereign, a \u00fanica su\u00edte BoK incompleta foi fechada ANTES de continuar o roadmap: 06/07/08 grounded no scaffold Phase 0 promovido + **Pattern Conformance \u00a711** (4 yes \u00b7 8 deferred nomeados \u00b7 9 n-a) + renames can\u00f4nicos \u2192 **25/25 su\u00edtes verdes**, seal `8f5fd3fd` DERIVES_FROM viralmind, **BoK Gate do Spaces Fase 1 ABERTO** (`4a8fee0`). Verifica\u00e7\u00e3o mec\u00e2nica corrigiu 2 imprecis\u00f5es pr\u00e9-commit (Lei 1). **(2)** Loop aut\u00f4nomo re-armado (prompt can\u00f4nico) \u2014 it.1 = **B5 Pauta de Receita FR-VA-031 (HITL)**: SOP Lei 2 \u2192 ranking puro vitest 7/7 \u2192 se\u00e7\u00e3o na AutopilotPage \u2192 browser-verify User 0 (linha #1 \u2194 `content_library e27a09e7`) \u2192 **Vision-QA APROVADO high** (`367db9b`). **Prova:** tsc 0 \u00b7 Phase 5c **SEAL ALLOWED** (8/8) \u00b7 mesh **9032** \u00b7 handoff `10d8c70b`. \u26a0\ufe0f Workflows quota-blocked at\u00e9 4:20am \u2192 execu\u00e7\u00e3o inline. **Pending:** `reward_weights` config-as-data (NFR-VA-010) \u00b7 Spaces Fase 1 MVP \u00b7 V4-2 \u00b7 witness G7 imagem multi-canal no pr\u00f3ximo ciclo pago.\n\n**Sprint v6.73.4 \u2014 Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)** \u2014 reward"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:58:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add .claude/context/sprint-priorities.md proof-manifest.json && git commit -q -m \"chore(sprint): v6.74.0 \u2014 spaces BoK 9/9 + B5 pauta de receita selados; proof manifest atualizado\" && git push origin main 2>&1 | tail -1 && git rev-list --left-right --count HEAD...origin/main && git log -1 --format=%h",
+  "description": "Commit sprint priorities and proof manifest, push, verify sync"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:58AM[0m [32mINF[0m 1 commits scanned.
+> [90m10:58AM[0m [32mINF[0m scan completed in 6.3ms
+> [90m10:58AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    34a0097..ba9432c  main -> main
+> 0	0
+> ba9432c
+> ```
+
+## 🤖 Claude *(13:59:00)*
+
+
+## 🤖 Claude *(13:59:00)*
+
+Selo completo e sincronizado (`ba9432c`, HEAD=origin 0↔0). Limpeza dos processos de verificação:
+
+## 🤖 Claude *(13:59:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser close 2>/dev/null; pkill -f \"vite preview --port 4173\" 2>/dev/null; echo \"cleanup ok\"",
+  "description": "Close browser session and stop preview server"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ✓ Browser closed
+> ```
+
+## 🤖 Claude *(13:59:23)*
+
+
+## 🤖 Claude *(13:59:29)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 90,
+  "reason": "Itera\u00e7\u00e3o 1 do loop selada (B5 + BoK spaces); pr\u00f3ximo item desbloqueado (reward_weights NFR-VA-010 / Spaces Fase 1) pronto para come\u00e7ar \u2014 re-entrada r\u00e1pida com cache quente.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 11:02:00 (in 149s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
