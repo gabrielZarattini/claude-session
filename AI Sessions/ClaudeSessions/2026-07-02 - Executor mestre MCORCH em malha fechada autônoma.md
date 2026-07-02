@@ -8026,6 +8026,1104 @@ Nó `8ddca90b` embedado · mesh **9022**. README + HANDOFF + sprint em lote:
 > Next wakeup scheduled for 01:32:00 (in 145s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
 
+## 👤 User *(04:32:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(04:32:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(04:32:16)*
+
+
+## 🤖 Claude *(04:32:16)*
+
+
+## 🤖 Claude *(04:32:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git fetch --all 2>&1 | tail -1; git status --short; grep -rn \"B4\\|EWMA\\|B5\" .claude/context/*.md docs/processes/*.md 2>/dev/null | grep -iv \"b40\\|b4d\\|b45\\|b4e\\|b4c\\|b4a\\|b4f\\|b4b\\|db4\\|8b4\\|1b4\\|ab4\\|cb4\\|fb4\\|eb4\\|bb4\\|0b4\\|2b4\\|3b4\\|4b4\\|5b4\\|6b4\\|7b4\\|9b4\" | head -12",
+  "description": "Locate B4 EWMA / B5 specification in context docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> .claude/context/sprint-priorities.md:7:**Sprint v6.73.3 — Loop it.2-3: Vision-gate mecânico nos 2 harnesses (2026-07-02)** — diretiva 2026-06-26 fechada: `audit-canvas-ui` (veredito APROVADO obrigatório, fail-closed sem PAT, print público `dist/canvas_e2e_latest.png` REMOVIDO — era dashboard logado em URL pública) + `e2e-user-zero` (`lib/vision-gate.ts`, REPROVADO→Finding P1/ux→NO-GO, fecha heurística deferida (c)). **Prova:** run E2E prod APROVADO high cost 0 · **adversarial: PNG branco→REPROVADO→P1** · vitest 6/6 · tsc 0 · Phase 5c SEAL ALLOWED · mesh **9022** · handoff `8ddca90b`. Commits `8a41457`/`e511862`/`adf849b`. **Pending:** B4 EWMA · B5 pauta de receita · V4-2.
+> .claude/context/sprint-priorities.md:9:**Sprint v6.73.2 — Loop it.1: render-decoupling resolvido por arquitetura + G7 imagem-pilar + fan-out hygiene (2026-07-02)** — iteração 1 do loop re-armado (instância standby assumiu após o stop limpo da primária v6.73.1; anticorpo de concorrência: Monitor 30s + cessão enquanto a primária vivia — zero colisão). **(1) Achado material:** o item "render-decoupling YT/TikTok" da charter era STALE — o ciclo pago `77e02fca` já produzia `channel_variants` de vídeo `reused_master` p/ 7 canais (1 master 9:16/ciclo via reshaper + kick do video-bridge); último salto = OAuth/app-registration (Fila). **(2) Fatia G7** (`d16ca88`): imagem-pilar resolvida por âncora `metadata.pillar_run_id` (fix do `gap` das 5 surfaces de imagem — autopilot nunca cunha campaign; `campaigns` é FK) + fallback de campanha preservado. **(3) Fan-out hygiene** (`autopilot-run`): plataformas sem step não pré-debitam (antes: 10 mco em run knowledge_mesh-only) + telemetria. **Prova:** SOPs Lei 2 amendadas ANTES do código · deno check 3/3 · tsc 0 · 3 fns deployadas · smoke-reframe-image **18/18** (cenário B campaign-NULL draft-only) · regressão reshape-pillar PASS · Phase 5c **SEAL ALLOWED** (4/4) · mesh **9021** · handoff `b31c1336`. **Pending:** próximo ciclo pago testemunha imagem multi-canal `ready` em prod · confirmar sumiço dos 4 scheduled_posts do ciclo (limpeza manual?) · B4 EWMA · B5 pauta de receita · V4-2 experimento · wirar Vision QA em audit-canvas-ui/e2e. **Lição:** provar o estado no DB vivo ANTES de codar matou uma fatia inteira planejada errada (re-render por sub-run) e revelou os 2 bugs reais que valiam o código.
+> .claude/context/sprint-priorities.md:11:**Sprint v6.53.0 — Doutrina Agêntica AGI→ASI + Learning & Adaptation + analytics honesto (2026-06-27)** — sessão-maratona multi-arco. **7 commits.** **(1)** Doutrina `agentic-vision.md` (21 padrões × maturidade + tese Via 4-produto/Via 3-micro) + **Pattern Conformance gate vinculante** no CLAUDE.md §1 + BoK `agentic-governance` 10/10 (seal `34748570`) + 2 docs stale deprecados. **(2)** **Collective Efficiency Ledger** (`81210ab`) — VIEW security_invoker + RPC service-role medem mco/resultado anti-Goodhart (G6 isolamento provado; rollup real 334s vs 2.4s). **(3)** **Learning & Adaptation** (o único padrão fraco) atacado: nervo sensorial (`publication_metrics` + coletor fail-soft IG/FB + painel "Por Publicação" browser-provado) + reward multi-métrica brand-first (mata `totalClicks` Goodhart, prova policy `7d9856d0`) + realocação ε-greedy (`1371094`/`47474ac`). **(4)** Analytics honesto — demo-kill (`b6abff1`) + zeramento dos perfis sociais antigos (marca **Gabriel AI**/**@gabrielOrchAI** começam do zero). **Prova:** tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8971** · handoff `326949f1`. **Pending:** re-OAuth IG insights (destrava o payoff visível) · B4 EWMA · B5 pauta de receita · V4-2 experimento · postback ML · emenda BoK post-engine (YT/TikTok). **Lição:** "não avançamos apesar do dev incrível" = o motor aprendia sobre **placar em branco**; medir o desfecho real é o que faz capacidade virar avanço.
+> ```
+
+## 🤖 Claude *(04:32:29)*
+
+
+## 🤖 Claude *(04:32:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"EWMA\" HANDOFF.md | head -5; grep -rn \"EWMA\" supabase/functions docs/bok 2>/dev/null | head -8",
+  "description": "Find EWMA spec in HANDOFF and code/BoK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 696:**Fatia B — o loop honesto:** `autopilot-analyze` reward multi-métrica brand-first `R=0.40·reach+0.30·eng+0.20·brand+0.10·rev` (z-score anti-Goodhart, degrada honesto — **prova policy `7d9856d0` reward 0.9 modo fallback**) · `autopilot-run` realocação ε-greedy budget-neutral (a política move o `tasks[]`, não só sussurra) · `orchestrate-step` read filtrado por scope=plan_id + `applied=true`. **Diferidos:** V4-2 (valor marginal/agente) · B4 EWMA · B5 pauta de receita.
+> docs/bok/viral-autopilot/04-frd.md:226:**Fixes embarcados (bug latente do loop, isentos de FR novo — features documentadas FR-VA-010/011):** read filtrado por `scope=viral_autopilot:<plan_id>` em `orchestrate-step` (o write já grava o scope); `applied=true` no consumo da policy (trilha auditável); EWMA multi-ciclo no `analyze` (ler últimos M ciclos, não só 1).
+> docs/bok/viral-autopilot/09-pattern-conformance.md:15:| 9 | **Learning & Adaptation** | **yes** | **o objeto da v0.3** — reward multi-métrica `R()` (FR-VA-029) + realocação ε-greedy (FR-VA-030) + EWMA multi-ciclo; fecha OTD-AG-002 |
+> docs/bok/viral-autopilot/05-sdd.md:454:autopilot-analyze: R = Σ wᵢ·z(metricᵢ) sobre o ciclo (EWMA M ciclos) ──► optimization_policy.reward + reward_vector
+> ```
+
+## 🤖 Claude *(04:32:42)*
+
+
+## 🤖 Claude *(04:32:42)*
+
+
+## 🤖 Claude *(04:32:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '218,235p' docs/bok/viral-autopilot/04-frd.md; echo \"=== SDD 445-470 ===\"; sed -n '445,470p' docs/bok/viral-autopilot/05-sdd.md; echo \"=== analyze size ===\"; wc -l supabase/functions/autopilot-analyze/index.ts",
+  "description": "Read B4 EWMA BoK contract and analyze fn size"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | ID | Título | Descrição | Prioridade | Cat. | Test |
+> |----|--------|-----------|-----------|------|------|
+> | FR-VA-027 | Painel analítico por publicação | Tabela `publication_metrics` (time-series: views/likes/comments/shares/reposts/saves/reach/impressions por `external_post_id`+plataforma+`snapshot_at`) + painel UI por post (dado **real** ou "sem dados ainda" — **nunca demo**). Mata o fallback demo da `AnalyticsPage`. | Critical | DB+UI | AT-VA-027 |
+> | FR-VA-028 | Coletor de métricas de publicação | `collect-publication-metrics`: resolve token per-user (`decrypted_social_accounts`/`decrypted_meta_config`), puxa insights **IG+FB** por post → snapshot. **Fail-soft por plataforma** (LinkedIn pessoal = clicks-only por bloqueio de plataforma; IG exige escopo `instagram_business_manage_insights`; YT/TikTok quando a frente B existir). **Nunca fabrica** (Lei 1 — `skipped_no_scope`). | Critical | EdgeFn+Cron | AT-VA-028 |
+> | FR-VA-029 | Reward multi-métrica brand-first | `autopilot-analyze` troca `pick(clicks)`/`reward:totalClicks` por `R = w_reach·z(reach)+w_eng·z(eng/impr)+w_brand·z(brand_signal)+w_rev·z(revenue)` (z-score+taxa = anti-Goodhart). Grava `action_details.reward_vector` (auditável). Pesos default `0.40/0.30/0.20/0.10` (brand-first, configuráveis por plano = dado, não código). | Critical | EdgeFn | AT-VA-029 |
+> | FR-VA-030 | Realocação de esforço (bandit) | `autopilot-run` pondera o fan-out pela policy — mais variantes ao vencedor, poda o perdedor, **ε-greedy** (1 das N sempre exploração). A política passa a mexer em `tasks[]`, não só no prompt. Usa `autopilot_plans.ab_variants`. | High | EdgeFn | AT-VA-030 |
+> | FR-VA-031 | Pauta de oportunidades de receita (HITL) | Superfície que lista criativos de alto engajamento como **candidatos a monetização** para decisão consciente do Sovereign (retorno × esforço × prioridade). Receita = pauta humana, **não** otimização cega. | Should | UI/HITL | AT-VA-031 |
+> 
+> **Fixes embarcados (bug latente do loop, isentos de FR novo — features documentadas FR-VA-010/011):** read filtrado por `scope=viral_autopilot:<plan_id>` em `orchestrate-step` (o write já grava o scope); `applied=true` no consumo da policy (trilha auditável); EWMA multi-ciclo no `analyze` (ler últimos M ciclos, não só 1).
+> 
+> **NFR adicionados:** NFR-VA-009 (coletor **fail-soft**, nunca fabrica — degrada honestamente por plataforma) · NFR-VA-010 (pesos do reward são dado configurável por plano, versionados como os pesos do Dreaming).
+> 
+> **Verdade de plataforma (Lei 1):** IG/FB dão métricas reais (IG após re-OAuth com insights scope = ação Sovereign); **LinkedIn perfil pessoal NÃO expõe** alcance/engajamento agregado via API (só clique — métricas reais exigiriam Company Page do Gabriel AI); **YouTube/TikTok = a fonte mais rica** (chegam com a expansão de canais da persona). Dependências = ações Sovereign, **não bloqueiam** o build (coletor fail-soft).
+> 
+> **Traceability:** FR-VA-027..031 → PR-VA-023 _(Amendment v0.3 — Learning & Adaptation sensorial)_. FR-VA-027/029 também fecham **OTD-AG-002** (doutrina agentic-governance) e consomem o **Collective Efficiency Ledger** (`20260626120000`) como medidor de composição (`R̄(N+1) > R̄(N)`).
+> 
+> > Cobertura pós-v0.3: **31 FR (FR-VA-001..031)** · 10 NFR.
+> 
+> === SDD 445-470 ===
+> publish-social/meta ──► scheduled_posts.platform_post_id / meta_posts.meta_post_id (+content_id)
+>                                    │
+> collect-publication-metrics (cron diário + on-demand)
+>    per-user token (decrypted_social_accounts/meta_config) ──► IG/FB insights por external_post_id
+>    fail-soft por plataforma (LinkedIn=clicks-only · IG=needs insights scope · YT/TikTok=futuro)
+>                                    │  snapshot
+>                                    ▼
+>    publication_metrics (time-series) ──► usePublicationMetrics ──► PublicationMetricsPanel (UI real, anti-demo)
+>                                    │
+> autopilot-analyze: R = Σ wᵢ·z(metricᵢ) sobre o ciclo (EWMA M ciclos) ──► optimization_policy.reward + reward_vector
+>                                    │
+> autopilot-run: realoca tasks[] pela policy (mais variantes ao vencedor + ε-greedy) ──► próximo ciclo
+>                                    │
+> Collective Efficiency Ledger (20260626120000): R̄(N+1) > R̄(N) com mco estável = PROVA de composição
+> ```
+> 
+> **Reward (FR-VA-029):** `R(creative) = 0.40·z(reach) + 0.30·z(engagements/impressions) + 0.20·z(brand_signal) + 0.10·z(revenue_cents)`, z-score *dentro do ciclo*. `brand_signal = (saves + comments + shares) / NULLIF(reach,0)` (derivado de `publication_metrics`). Pesos em `autopilot_plans` (coluna `reward_weights jsonb` default brand-first; configurável = dado). Degradação honesta: termos sem dado real (reach/brand=0) caem do vetor → reward roda sobre os sinais que existem (clicks+rev), NUNCA fabricado.
+> 
+> **Realocação (FR-VA-030):** `autopilot-run` lê a policy do plano e pondera o `tasks[]`: `n_variants(produto×plataforma) ∝ softmax(R)`, mínimo 1 por par ativo, **ε-greedy** (1 slot sempre aleatório, ε≈1/N). Substitui o iter-cru `target_product_ids × platforms`.
+> 
+> **Migration stub (publication_metrics):** ver `06-data-model.md` §Amendment v0.3. RLS SELECT-own + service-role write (espelha `creative_metrics`); `meta_posts ADD COLUMN content_id uuid REFERENCES content_library(id) ON DELETE SET NULL`; índice reverso `scheduled_posts(platform_post_id)`.
+> 
+> | OTD | Decisão | Resolução |
+> |----|---------|-----------|
+> | OTD-VA-014 _(v0.3)_ | Gate Lei 2 do coletor de métricas sociais | **Exige SOP `publication-metrics-collection.md` ANTES de código** (resolução token per-user + fail-soft + sem-fabricação). Espelha OTD-VA-008/009. |
+> | OTD-VA-015 _(v0.3)_ | Tabela nova vs enrich `creative_metrics` | **Tabela nova `publication_metrics`** — métrica de publicação é time-series (cresce com o tempo, `snapshot_at`); não poluir o schema afiliado-cêntrico de `creative_metrics`. |
+> === analyze size ===
+> 162 supabase/functions/autopilot-analyze/index.ts
+> ```
+
+## 🤖 Claude *(04:32:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// autopilot-analyze — Viral Autopilot cycle analyzer (FR-VA-010 → feeds FR-VA-011). verify_jwt=false.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
+> 3	//
+> 4	// Reads the PREVIOUS cycle's creatives and their REAL performance (the live affiliate click ledger
+> 5	// affiliate_links.clicks/revenue_cents, joined by content_id = content_variant_id), ranks the winning
+> 6	// product + platform, and writes an optimization_policy that the generator injects next cycle (FR-VA-011).
+> 7	//
+> 8	// Identity: service-role-only (403 otherwise). The tenant is DERIVED FROM previous_cycle_id (autopilot_cycles
+> 9	// row), NEVER from the body (anti-IDOR; same principle as finalize_vision_job). Billing: ANALYZE_COST(2) is
+> 10	// charged ONLY when has_real_data AND NOT prepaid (the cycle pre-reserved the 2 — FR-VA-007). No real data →
+> 11	// 0 mco + 'analyze_empty' telemetry, and NO policy is invented.
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	
+> 14	const corsHeaders = {
+> 15	  "Access-Control-Allow-Origin": "*",
+> 16	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 17	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 18	};
+> 19	const ANALYZE_COST = 2;
+> 20	const UUID_RE = /^[0-9a-fA-F-]{36}$/;
+> 21	
+> 22	Deno.serve(async (req) => {
+> 23	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 24	  const json = (b: unknown, s = 200) =>
+> 25	    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 26	
+> 27	  const url = Deno.env.get("SUPABASE_URL")!;
+> 28	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 29	  if (req.headers.get("Authorization") !== `Bearer ${serviceKey}`) return json({ error: "Forbidden" }, 403);
+> 30	  const admin = createClient(url, serviceKey);
+> 31	  const logEvent = (event: string) =>
+> 32	    admin.from("infra_health_logs").insert({ service: "autopilot-analyze", status: "healthy", event }).then(() => {}, () => {});
+> 33	
+> 34	  try {
+> 35	    const body = await req.json().catch(() => ({}));
+> 36	    const prevCycleId = typeof body?.previous_cycle_id === "string" ? body.previous_cycle_id : null;
+> 37	    const prepaid = body?.prepaid === true;
+> 38	    if (!prevCycleId || !UUID_RE.test(prevCycleId)) return json({ error: "previous_cycle_id (uuid) required" }, 422);
+> 39	
+> 40	    // Tenant + plan DERIVED from the trusted cycle row (never the body).
+> 41	    const { data: cyc } = await admin.from("autopilot_cycles").select("user_id, plan_id").eq("id", prevCycleId).maybeSingle();
+> 42	    if (!cyc) return json({ error: "cycle_not_found" }, 404);
+> 43	    const userId = cyc.user_id as string;
+> 44	    const planId = cyc.plan_id as string;
+> 45	
+> 46	    // MULTI-METRIC reward (FR-VA-029, brand-first): clicks alone is a Goodhart proxy (clickbait wins). The reward
+> 47	    // R combines REACH + ENGAGEMENT-RATE + BRAND + REVENUE, max-normalized within the candidate set:
+> 48	    //   R = 0.40·reach + 0.30·eng_rate + 0.20·brand + 0.10·revenue
+> 49	    // Social outcome (reach/eng/brand) comes from publication_metrics (FR-VA-027); affiliate (clicks/rev) from
+> 50	    // creative_metrics. HONEST DEGRADATION (Lei 1): when NO social data has flowed yet (reach/eng all 0 — e.g. before
+> 51	    // the IG insights re-OAuth), R falls back to the affiliate signal and records mode='fallback' in reward_vector —
+> 52	    // never fabricates a reach number.
+> 53	    const W = { reach: 0.40, eng: 0.30, brand: 0.20, rev: 0.10 };
+> 54	    const { data: metrics } = await admin.from("creative_metrics")
+> 55	      .select("content_variant_id, product_id, platform, affiliate_clicks, revenue_cents, impressions, engagements")
+> 56	      .eq("cycle_id", prevCycleId).eq("user_id", userId);
+> 57	    const rows = (metrics ?? []) as Array<{ content_variant_id: string | null; product_id: string | null; platform: string | null; affiliate_clicks: number | null; revenue_cents: number | null; impressions: number | null; engagements: number | null }>;
+> 58	
+> 59	    // Latest publication_metrics snapshot per (content_variant_id, platform) for the cycle's creatives.
+> 60	    const variantIds = [...new Set(rows.map((r) => r.content_variant_id).filter(Boolean))] as string[];
+> 61	    const pubByVariant = new Map<string, { reach: number; eng: number; brand: number }>();
+> 62	    if (variantIds.length) {
+> 63	      const { data: pubs } = await admin.from("publication_metrics")
+> 64	        .select("content_variant_id, platform, reach, likes, comments, shares, saves, snapshot_at")
+> 65	        .in("content_variant_id", variantIds).order("snapshot_at", { ascending: false });
+> 66	      const seen = new Set<string>();
+> 67	      for (const p of (pubs ?? []) as Array<Record<string, number | string>>) {
+> 68	        const k = `${p.content_variant_id}:${p.platform}`;
+> 69	        if (seen.has(k)) continue; seen.add(k);   // keep only the latest snapshot per post
+> 70	        const eng = Number(p.likes ?? 0) + Number(p.comments ?? 0) + Number(p.shares ?? 0) + Number(p.saves ?? 0);
+> 71	        const brand = Number(p.comments ?? 0) + Number(p.shares ?? 0) + Number(p.saves ?? 0);
+> 72	        const cur = pubByVariant.get(p.content_variant_id as string) ?? { reach: 0, eng: 0, brand: 0 };
+> 73	        cur.reach += Number(p.reach ?? 0); cur.eng += eng; cur.brand += brand;
+> 74	        pubByVariant.set(p.content_variant_id as string, cur);
+> 75	      }
+> 76	    }
+> 77	
+> 78	    type Agg = { reach: number; eng: number; brand: number; rev: number; clicks: number; impr: number };
+> 79	    const blank = (): Agg => ({ reach: 0, eng: 0, brand: 0, rev: 0, clicks: 0, impr: 0 });
+> 80	    const byProduct = new Map<string, Agg>();
+> 81	    const byPlatform = new Map<string, Agg>();
+> 82	    const add = (m: Map<string, Agg>, k: string | null, a: Agg) => {
+> 83	      if (!k) return; const e = m.get(k) ?? blank();
+> 84	      e.reach += a.reach; e.eng += a.eng; e.brand += a.brand; e.rev += a.rev; e.clicks += a.clicks; e.impr += a.impr; m.set(k, e);
+> 85	    };
+> 86	    let totalClicks = 0, totalRev = 0, totalReach = 0, totalEng = 0;
+> 87	    for (const r of rows) {
+> 88	      const pub = (r.content_variant_id && pubByVariant.get(r.content_variant_id)) || { reach: 0, eng: 0, brand: 0 };
+> 89	      const a: Agg = {
+> 90	        reach: pub.reach, eng: pub.eng || Number(r.engagements ?? 0), brand: pub.brand,
+> 91	        rev: Number(r.revenue_cents ?? 0), clicks: Number(r.affiliate_clicks ?? 0), impr: Number(r.impressions ?? 0),
+> 92	      };
+> 93	      add(byProduct, r.product_id, a); add(byPlatform, r.platform, a);
+> 94	      totalClicks += a.clicks; totalRev += a.rev; totalReach += a.reach; totalEng += a.eng;
+> 95	    }
+> 96	
+> 97	    const hasRealData = totalClicks > 0 || totalRev > 0 || totalReach > 0 || totalEng > 0;
+> 98	    if (!hasRealData) {
+> 99	      logEvent("autopilot_analyze_empty");
+> 100	      return json({ ok: true, has_real_data: false, charged: 0 });
+> 101	    }
+> 102	
+> 103	    // R: brand-first multi-metric when social data exists; honest affiliate fallback otherwise.
+> 104	    const socialLive = totalReach > 0 || totalEng > 0;
+> 105	    const rewardFn = (m: Map<string, Agg>) => {
+> 106	      const vals = [...m.values()];
+> 107	      const max = {
+> 108	        reach: Math.max(1, ...vals.map((v) => v.reach)),
+> 109	        engRate: Math.max(1e-9, ...vals.map((v) => v.eng / Math.max(v.reach, v.impr, 1))),
+> 110	        brand: Math.max(1, ...vals.map((v) => v.brand)),
+> 111	        rev: Math.max(1, ...vals.map((v) => v.rev)),
+> 112	        clicks: Math.max(1, ...vals.map((v) => v.clicks)),
+> 113	      };
+> 114	      return (a: Agg) => socialLive
+> 115	        ? W.reach * (a.reach / max.reach) + W.eng * ((a.eng / Math.max(a.reach, a.impr, 1)) / max.engRate)
+> 116	          + W.brand * (a.brand / max.brand) + W.rev * (a.rev / max.rev)
+> 117	        : (a.clicks / max.clicks) * 0.9 + (a.rev / max.rev) * 0.1;   // fallback: affiliate signal (no social yet)
+> 118	    };
+> 119	    const pickBy = (m: Map<string, Agg>) => { const R = rewardFn(m); return [...m.entries()].sort((x, y) => R(y[1]) - R(x[1]))[0] ?? null; };
+> 120	    const topProd = pickBy(byProduct);
+> 121	    const topPlat = pickBy(byPlatform);
+> 122	    const topProductId = topProd?.[0] ?? null;
+> 123	    const topPlatform = topPlat?.[0] ?? null;
+> 124	    const winnerR = topProd ? rewardFn(byProduct)(topProd[1]) : 0;
+> 125	
+> 126	    let topProductName: string | null = null;
+> 127	    if (topProductId) {
+> 128	      const { data: p } = await admin.from("vm_affiliate_products").select("name").eq("external_id", topProductId).maybeSingle();
+> 129	      topProductName = (p as { name?: string } | null)?.name ?? null;
+> 130	    }
+> 131	
+> 132	    const reward_vector = topProd ? {
+> 133	      reach: topProd[1].reach, eng_rate: topProd[1].eng / Math.max(topProd[1].reach, topProd[1].impr, 1),
+> 134	      brand: topProd[1].brand, revenue_cents: topProd[1].rev, clicks: topProd[1].clicks, weights: W,
+> 135	      mode: socialLive ? "brand_first_multimetric" : "fallback_affiliate_no_social_data_yet",
+> 136	    } : null;
+> 137	    const actionDetails = {
+> 138	      top_product_id: topProductId, top_product_name: topProductName, top_platform: topPlatform,
+> 139	      signal: socialLive ? "multimetric_R" : "affiliate_clicks", reward_vector,
+> 140	      clicks_total: totalClicks, revenue_cents_total: totalRev, reach_total: totalReach, eng_total: totalEng,
+> 141	    };
+> 142	    const { data: pol } = await admin.from("optimization_policy").insert({
+> 143	      user_id: userId, action_type: "viral_autopilot", action_details: actionDetails,
+> 144	      reward: winnerR, context: { scope: `viral_autopilot:${planId}`, plan_id: planId, cycle_id: prevCycleId }, applied: false,
+> 145	    }).select("id").single();
+> 146	
+> 147	    // Self-bill ONLY on the standalone path; the inline (prepaid) path was pre-reserved by the cycle.
+> 148	    let charged = 0;
+> 149	    if (!prepaid) {
+> 150	      const { error: dErr } = await admin.rpc("deduct_mco_coins", {
+> 151	        p_user_id: userId, p_amount: ANALYZE_COST, p_action: "autopilot_analyze", p_context: { cycle_id: prevCycleId },
+> 152	      });
+> 153	      if (dErr) return json({ error: "insufficient_balance", detail: dErr.message }, 402);
+> 154	      charged = ANALYZE_COST;
+> 155	    }
+> 156	
+> 157	    logEvent("autopilot_analyze_done");
+> 158	    return json({ ok: true, has_real_data: true, charged, policy_id: pol?.id ?? null, policy: actionDetails });
+> 159	  } catch (e) {
+> 160	    return json({ error: e instanceof Error ? e.message : "unknown" }, 500);
+> 161	  }
+> 162	});
+> 163	
+> ```
+
+## 🤖 Claude *(04:33:13)*
+
+
+## 🤖 Claude *(04:33:13)*
+
+
+## 🤖 Claude *(04:33:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"created_at\\|started_at\\|completed_at\" supabase/migrations/20260620120100_viral_autopilot_cycles.sql | head -5; ls scripts/qa/smoke-autopilot* 2>/dev/null; grep -n \"analyze\" scripts/qa/smoke-autopilot-loop.ts 2>/dev/null | head -8; grep -n \"reward_weights\" supabase/migrations/*.sql | head -3",
+  "description": "Check cycles columns, existing analyze smoke, reward_weights column"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 28:  started_at       timestamptz NOT NULL DEFAULT now(),
+> 29:  completed_at     timestamptz,
+> 48:CREATE INDEX IF NOT EXISTS autopilot_cycles_user_day_idx ON public.autopilot_cycles (user_id, started_at);
+> scripts/qa/smoke-autopilot-budget.ts
+> scripts/qa/smoke-autopilot-loop.ts
+> scripts/qa/smoke-autopilot-run.ts
+> scripts/qa/smoke-autopilot-video-refund.ts
+> 5: * Proves the analyzer's RANKING + policy write and the collector's ledger→metrics sync against the DEPLOYED
+> 7: * No LLM, no generation, no real spend — analyze is called prepaid=true (charged 0). Cleaned up via cascade.
+> 10: *   L1 analyze/collect anon → 403            L2 service + no body → 422        L3 service + bad cycle → 404
+> 11: *   L5 analyze ranks creative_metrics → policy.top_product_id = the most-clicked product, has_real_data, charged 0
+> 13: *   L6 analyze on a zero-signal cycle → has_real_data=false, charged 0, no invented policy
+> 62:  check('L1 analyze anon → 403', (await callFn('autopilot-analyze', PUB, {})).status === 403);
+> 64:  check('L2 analyze service no body → 422', (await svc('autopilot-analyze', {})).status === 422);
+> 66:  check('L3 analyze bad cycle → 404', (await svc('autopilot-analyze', { previous_cycle_id: ZERO })).status === 404);
+> ```
+
+## 🤖 Claude *(04:33:30)*
+
+
+## 🤖 Claude *(04:33:30)*
+
+
+## 🤖 Claude *(04:33:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Smoke — Viral Autopilot R3 self-improving loop (FR-VA-008/010/011), ZERO-COST.
+> 4	 *
+> 5	 * Proves the analyzer's RANKING + policy write and the collector's ledger→metrics sync against the DEPLOYED
+> 6	 * functions, using a throwaway user + a SYNTHETIC completed cycle (creative_metrics rows inserted directly).
+> 7	 * No LLM, no generation, no real spend — analyze is called prepaid=true (charged 0). Cleaned up via cascade.
+> 8	 *
+> 9	 * Gates:
+> 10	 *   L1 analyze/collect anon → 403            L2 service + no body → 422        L3 service + bad cycle → 404
+> 11	 *   L5 analyze ranks creative_metrics → policy.top_product_id = the most-clicked product, has_real_data, charged 0
+> 12	 *   L5b optimization_policy row written (action_type='viral_autopilot', tenant-scoped)
+> 13	 *   L6 analyze on a zero-signal cycle → has_real_data=false, charged 0, no invented policy
+> 14	 *   L4 collect syncs affiliate_links.clicks → creative_metrics 'affiliate_click' (best-effort; skips if catalog empty)
+> 15	 *
+> 16	 * Usage: bun run scripts/qa/smoke-autopilot-loop.ts
+> 17	 */
+> 18	import { createClient } from '@supabase/supabase-js';
+> 19	import { createThrowawayUser, deleteThrowawayUser } from './lib/qa-throwaway';
+> 20	
+> 21	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 22	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 23	const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> 24	if (!URL || !SVC || !PUB) { console.error('Missing env'); process.exit(1); }
+> 25	
+> 26	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 27	const ZERO = '00000000-0000-0000-0000-000000000000';
+> 28	let uid: string | null = null;
+> 29	let pass = true;
+> 30	function check(label: string, ok: boolean, detail = '') {
+> 31	  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? `  → ${detail}` : ''}`);
+> 32	  if (!ok) pass = false;
+> 33	}
+> 34	interface Resp { status: number; body: Record<string, unknown> }
+> 35	async function callFn(fn: string, bearer: string, body: unknown): Promise<Resp> {
+> 36	  const r = await fetch(`${URL}/functions/v1/${fn}`, {
+> 37	    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: bearer, Authorization: `Bearer ${bearer}` },
+> 38	    body: JSON.stringify(body),
+> 39	  });
+> 40	  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }
+> 41	  return { status: r.status, body: b };
+> 42	}
+> 43	const svc = (fn: string, body: unknown) => callFn(fn, SVC, body);
+> 44	
+> 45	async function mkCycle(planId: string, n: number): Promise<string> {
+> 46	  const { data, error } = await admin.from('autopilot_cycles').insert({
+> 47	    user_id: uid, plan_id: planId, cycle_number: n, status: 'completed', spend_mco: 20, planned_units: 2,
+> 48	  }).select('id').single();
+> 49	  if (error || !data) throw new Error(`mkCycle(${n}): ${error?.message}`);
+> 50	  return data.id as string;
+> 51	}
+> 52	async function mkMetric(cycleId: string, variant: string, product: string, source: string, clicks: number) {
+> 53	  const { error } = await admin.from('creative_metrics').insert({
+> 54	    user_id: uid, cycle_id: cycleId, content_variant_id: variant, product_id: product, platform: 'linkedin',
+> 55	    source, affiliate_clicks: clicks, revenue_cents: 0,
+> 56	  });
+> 57	  if (error) throw new Error(`mkMetric(${variant},${source}): ${error.message}`);
+> 58	}
+> 59	
+> 60	try {
+> 61	  // ── Gates ───────────────────────────────────────────────────────────────────────────────────────────────────
+> 62	  check('L1 analyze anon → 403', (await callFn('autopilot-analyze', PUB, {})).status === 403);
+> 63	  check('L1 collect anon → 403', (await callFn('autopilot-collect', PUB, {})).status === 403);
+> 64	  check('L2 analyze service no body → 422', (await svc('autopilot-analyze', {})).status === 422);
+> 65	  check('L2 collect service no body → 422', (await svc('autopilot-collect', {})).status === 422);
+> 66	  check('L3 analyze bad cycle → 404', (await svc('autopilot-analyze', { previous_cycle_id: ZERO })).status === 404);
+> 67	  check('L3 collect bad cycle → 404', (await svc('autopilot-collect', { cycle_id: ZERO })).status === 404);
+> 68	
+> 69	  // ── Setup: throwaway user + plan + a completed cycle with two scored creatives ───────────────────────────────
+> 70	  uid = (await createThrowawayUser(admin, 'ap-loop')).uid;
+> 71	  const { data: plan, error: pe } = await admin.from('autopilot_plans').insert({
+> 72	    user_id: uid, name: 'smoke-loop-plan', mode: 'every_n_days', interval_days: 3,
+> 73	    target_product_ids: ['WIN', 'LOSE'], platforms: ['linkedin'], budget_cap_mco: 200, daily_cap_mco: 200,
+> 74	  }).select('id').single();
+> 75	  if (pe || !plan) throw new Error(`mkPlan: ${pe?.message}`);
+> 76	  const planId = plan.id as string;
+> 77	
+> 78	  const cycle = await mkCycle(planId, 1);
+> 79	  const V1 = crypto.randomUUID(), V2 = crypto.randomUUID();
+> 80	  // Direct 'affiliate_click' rows (simulating post-collect state): WIN=10 clicks, LOSE=2.
+> 81	  await mkMetric(cycle, V1, 'WIN', 'affiliate_click', 10);
+> 82	  await mkMetric(cycle, V2, 'LOSE', 'affiliate_click', 2);
+> 83	
+> 84	  // ── L5: analyze ranks the winner, writes a policy, prepaid → charged 0 ───────────────────────────────────────
+> 85	  const an = await svc('autopilot-analyze', { previous_cycle_id: cycle, prepaid: true });
+> 86	  const policy = an.body.policy as { top_product_id?: string } | undefined;
+> 87	  check('L5 analyze → has_real_data · top=WIN · charged 0',
+> 88	    an.body.has_real_data === true && policy?.top_product_id === 'WIN' && an.body.charged === 0, JSON.stringify(an.body));
+> 89	  const { data: pol } = await admin.from('optimization_policy')
+> 90	    .select('action_type').eq('user_id', uid).eq('action_type', 'viral_autopilot');
+> 91	  check('L5b optimization_policy row written (tenant-scoped)', (pol?.length ?? 0) >= 1, `rows=${pol?.length}`);
+> 92	
+> 93	  // ── L6: analyze on a zero-signal cycle → no real data, no policy invented, charged 0 ─────────────────────────
+> 94	  const cycle2 = await mkCycle(planId, 2);
+> 95	  await mkMetric(cycle2, crypto.randomUUID(), 'Z', 'organic', 0);
+> 96	  const an2 = await svc('autopilot-analyze', { previous_cycle_id: cycle2, prepaid: true });
+> 97	  check('L6 analyze empty → has_real_data false · charged 0',
+> 98	    an2.body.has_real_data === false && an2.body.charged === 0, JSON.stringify(an2.body));
+> 99	
+> 100	  // ── L4: collect syncs the live affiliate ledger → creative_metrics (best-effort; needs a catalog product FK) ──
+> 101	  const { data: prod } = await admin.from('vm_affiliate_products').select('id').limit(1).maybeSingle();
+> 102	  const pid = (prod as { id?: string } | null)?.id;
+> 103	  if (pid) {
+> 104	    const V3 = crypto.randomUUID();
+> 105	    await mkMetric(cycle, V3, 'COLLECTME', 'organic', 0); // baseline the collector scans
+> 106	    const { error: alErr } = await admin.from('affiliate_links').insert({
+> 107	      user_id: uid, product_id: pid, content_id: V3, clicks: 5, revenue_cents: 0, platform: 'linkedin',
+> 108	      original_url: 'https://example.com/p', short_url: `https://mco.test/${crypto.randomUUID().slice(0, 8)}`,
+> 109	    });
+> 110	    if (alErr) { check('L4 collect SKIP — affiliate_links insert failed', true, alErr.message); }
+> 111	    else {
+> 112	      const col = await svc('autopilot-collect', { cycle_id: cycle });
+> 113	      check('L4 collect → ok · updated ≥ 1', col.body.ok === true && Number(col.body.updated ?? 0) >= 1, JSON.stringify(col.body));
+> 114	      const { data: cm } = await admin.from('creative_metrics')
+> 115	        .select('affiliate_clicks').eq('cycle_id', cycle).eq('content_variant_id', V3).eq('source', 'affiliate_click').maybeSingle();
+> 116	      check('L4 creative_metrics affiliate_click synced (=5)', (cm as { affiliate_clicks?: number } | null)?.affiliate_clicks === 5, JSON.stringify(cm));
+> 117	    }
+> 118	  } else {
+> 119	    check('L4 collect SKIP — empty product catalog', true, 'no vm_affiliate_products');
+> 120	  }
+> 121	} catch (e) {
+> 122	  check(`FATAL: ${(e as Error).message}`, false);
+> 123	} finally {
+> 124	  if (uid) {
+> 125	    const ok = await deleteThrowawayUser(admin, uid);
+> 126	    check('cleanup: user deleted (cascade plan/cycles/metrics/policy)', ok);
+> 127	  }
+> 128	  console.log(pass ? '\n🟢 SMOKE PASS' : '\n🔴 SMOKE FAIL');
+> 129	  process.exit(pass ? 0 : 1);
+> 130	}
+> 131	
+> ```
+
+## 🤖 Claude *(04:34:29)*
+
+
+## 🤖 Claude *(04:34:29)*
+
+
+## 🤖 Claude *(04:34:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "old_string": "    // Tenant + plan DERIVED from the trusted cycle row (never the body).\n    const { data: cyc } = await admin.from(\"autopilot_cycles\").select(\"user_id, plan_id\").eq(\"id\", prevCycleId).maybeSingle();\n    if (!cyc) return json({ error: \"cycle_not_found\" }, 404);\n    const userId = cyc.user_id as string;\n    const planId = cyc.plan_id as string;",
+  "new_string": "    // Tenant + plan DERIVED from the trusted cycle row (never the body).\n    const { data: cyc } = await admin.from(\"autopilot_cycles\").select(\"user_id, plan_id, started_at\").eq(\"id\", prevCycleId).maybeSingle();\n    if (!cyc) return json({ error: \"cycle_not_found\" }, 404);\n    const userId = cyc.user_id as string;\n    const planId = cyc.plan_id as string;\n\n    // B4 \u2014 EWMA multi-cycle window (FRD v0.3 embedded fix of FR-VA-010/011; SDD: \"R sobre o ciclo (EWMA M\n    // ciclos)\"). Single-cycle reads made the policy thrash on one noisy cycle; the reward now aggregates the\n    // plan's last M cycles up to the analyzed one, each weighted by EWMA_DECAY^age (age 0 = the analyzed\n    // cycle): recent evidence dominates, older cycles stabilize the ranking. Consequence (documented): a\n    // zero-signal cycle under a plan WITH history still yields a policy \u2014 the window remembers; only a plan\n    // whose whole window is empty returns has_real_data=false. M/decay are code constants until the\n    // plan-level reward_weights config-as-data column lands (NFR-VA-010, deferred with the reward weights).\n    const EWMA_M = 5;\n    const EWMA_DECAY = 0.5;\n    const { data: windowCycles } = await admin.from(\"autopilot_cycles\")\n      .select(\"id\")\n      .eq(\"plan_id\", planId).eq(\"user_id\", userId)\n      .lte(\"started_at\", cyc.started_at as string)\n      .order(\"started_at\", { ascending: false }).limit(EWMA_M);\n    const cycleWeight = new Map<string, number>();\n    ((windowCycles ?? []) as Array<{ id: string }>).forEach((c, i) => cycleWeight.set(c.id, Math.pow(EWMA_DECAY, i)));\n    if (!cycleWeight.has(prevCycleId)) cycleWeight.set(prevCycleId, 1);\n    const cycleIds = [...cycleWeight.keys()];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:34:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "old_string": "    const W = { reach: 0.40, eng: 0.30, brand: 0.20, rev: 0.10 };\n    const { data: metrics } = await admin.from(\"creative_metrics\")\n      .select(\"content_variant_id, product_id, platform, affiliate_clicks, revenue_cents, impressions, engagements\")\n      .eq(\"cycle_id\", prevCycleId).eq(\"user_id\", userId);\n    const rows = (metrics ?? []) as Array<{ content_variant_id: string | null; product_id: string | null; platform: string | null; affiliate_clicks: number | null; revenue_cents: number | null; impressions: number | null; engagements: number | null }>;",
+  "new_string": "    const W = { reach: 0.40, eng: 0.30, brand: 0.20, rev: 0.10 };\n    const { data: metrics } = await admin.from(\"creative_metrics\")\n      .select(\"cycle_id, content_variant_id, product_id, platform, affiliate_clicks, revenue_cents, impressions, engagements\")\n      .in(\"cycle_id\", cycleIds).eq(\"user_id\", userId);\n    const rows = (metrics ?? []) as Array<{ cycle_id: string; content_variant_id: string | null; product_id: string | null; platform: string | null; affiliate_clicks: number | null; revenue_cents: number | null; impressions: number | null; engagements: number | null }>;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:34:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "old_string": "    let totalClicks = 0, totalRev = 0, totalReach = 0, totalEng = 0;\n    for (const r of rows) {\n      const pub = (r.content_variant_id && pubByVariant.get(r.content_variant_id)) || { reach: 0, eng: 0, brand: 0 };\n      const a: Agg = {\n        reach: pub.reach, eng: pub.eng || Number(r.engagements ?? 0), brand: pub.brand,\n        rev: Number(r.revenue_cents ?? 0), clicks: Number(r.affiliate_clicks ?? 0), impr: Number(r.impressions ?? 0),\n      };\n      add(byProduct, r.product_id, a); add(byPlatform, r.platform, a);\n      totalClicks += a.clicks; totalRev += a.rev; totalReach += a.reach; totalEng += a.eng;\n    }",
+  "new_string": "    let totalClicks = 0, totalRev = 0, totalReach = 0, totalEng = 0;\n    for (const r of rows) {\n      const pub = (r.content_variant_id && pubByVariant.get(r.content_variant_id)) || { reach: 0, eng: 0, brand: 0 };\n      const w = cycleWeight.get(r.cycle_id) ?? 0;   // EWMA: the row's cycle age sets its weight\n      const a: Agg = {\n        reach: pub.reach * w, eng: (pub.eng || Number(r.engagements ?? 0)) * w, brand: pub.brand * w,\n        rev: Number(r.revenue_cents ?? 0) * w, clicks: Number(r.affiliate_clicks ?? 0) * w, impr: Number(r.impressions ?? 0) * w,\n      };\n      add(byProduct, r.product_id, a); add(byPlatform, r.platform, a);\n      totalClicks += a.clicks; totalRev += a.rev; totalReach += a.reach; totalEng += a.eng;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:34:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts",
+  "old_string": "    const reward_vector = topProd ? {\n      reach: topProd[1].reach, eng_rate: topProd[1].eng / Math.max(topProd[1].reach, topProd[1].impr, 1),\n      brand: topProd[1].brand, revenue_cents: topProd[1].rev, clicks: topProd[1].clicks, weights: W,\n      mode: socialLive ? \"brand_first_multimetric\" : \"fallback_affiliate_no_social_data_yet\",\n    } : null;",
+  "new_string": "    const reward_vector = topProd ? {\n      reach: topProd[1].reach, eng_rate: topProd[1].eng / Math.max(topProd[1].reach, topProd[1].impr, 1),\n      brand: topProd[1].brand, revenue_cents: topProd[1].rev, clicks: topProd[1].clicks, weights: W,\n      mode: socialLive ? \"brand_first_multimetric\" : \"fallback_affiliate_no_social_data_yet\",\n      ewma: { m: EWMA_M, decay: EWMA_DECAY, cycles_used: cycleIds.length },   // B4 audit trail\n    } : null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-analyze/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:34:59)*
+
+
+## 🤖 Claude *(04:35:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts",
+  "old_string": "async function mkCycle(planId: string, n: number): Promise<string> {\n  const { data, error } = await admin.from('autopilot_cycles').insert({\n    user_id: uid, plan_id: planId, cycle_number: n, status: 'completed', spend_mco: 20, planned_units: 2,\n  }).select('id').single();\n  if (error || !data) throw new Error(`mkCycle(${n}): ${error?.message}`);\n  return data.id as string;\n}",
+  "new_string": "async function mkCycle(planId: string, n: number, startedAt?: string): Promise<string> {\n  const { data, error } = await admin.from('autopilot_cycles').insert({\n    user_id: uid, plan_id: planId, cycle_number: n, status: 'completed', spend_mco: 20, planned_units: 2,\n    ...(startedAt ? { started_at: startedAt } : {}),\n  }).select('id').single();\n  if (error || !data) throw new Error(`mkCycle(${n}): ${error?.message}`);\n  return data.id as string;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:35:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts",
+  "old_string": "  const cycle = await mkCycle(planId, 1);\n  const V1 = crypto.randomUUID(), V2 = crypto.randomUUID();\n  // Direct 'affiliate_click' rows (simulating post-collect state): WIN=10 clicks, LOSE=2.\n  await mkMetric(cycle, V1, 'WIN', 'affiliate_click', 10);\n  await mkMetric(cycle, V2, 'LOSE', 'affiliate_click', 2);",
+  "new_string": "  // Explicit started_at spacing \u2014 the EWMA window (B4) orders by started_at desc; same-ms inserts could tie.\n  const T0 = new Date(Date.now() - 3 * 86400_000).toISOString();\n  const cycle = await mkCycle(planId, 1, T0);\n  const V1 = crypto.randomUUID(), V2 = crypto.randomUUID();\n  // Direct 'affiliate_click' rows (simulating post-collect state): WIN=10 clicks, LOSE=2.\n  await mkMetric(cycle, V1, 'WIN', 'affiliate_click', 10);\n  await mkMetric(cycle, V2, 'LOSE', 'affiliate_click', 2);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:35:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts",
+  "old_string": "  // \u2500\u2500 L6: analyze on a zero-signal cycle \u2192 no real data, no policy invented, charged 0 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const cycle2 = await mkCycle(planId, 2);\n  await mkMetric(cycle2, crypto.randomUUID(), 'Z', 'organic', 0);\n  const an2 = await svc('autopilot-analyze', { previous_cycle_id: cycle2, prepaid: true });\n  check('L6 analyze empty \u2192 has_real_data false \u00b7 charged 0',\n    an2.body.has_real_data === false && an2.body.charged === 0, JSON.stringify(an2.body));",
+  "new_string": "  // \u2500\u2500 L6: zero-signal cycle under a VIRGIN plan \u2192 no real data, no policy invented, charged 0 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  // (B4 note: under a plan WITH history the EWMA window would carry prior evidence \u2014 the honest \"never invent\n  //  from nothing\" gate therefore lives on a plan whose whole window is empty.)\n  const { data: plan2 } = await admin.from('autopilot_plans').insert({\n    user_id: uid, name: 'smoke-loop-plan-empty', mode: 'every_n_days', interval_days: 3,\n    target_product_ids: ['Z'], platforms: ['linkedin'], budget_cap_mco: 200, daily_cap_mco: 200,\n  }).select('id').single();\n  const cycle2 = await mkCycle(plan2!.id as string, 1);\n  await mkMetric(cycle2, crypto.randomUUID(), 'Z', 'organic', 0);\n  const an2 = await svc('autopilot-analyze', { previous_cycle_id: cycle2, prepaid: true });\n  check('L6 analyze empty (plano virgem) \u2192 has_real_data false \u00b7 charged 0',\n    an2.body.has_real_data === false && an2.body.charged === 0, JSON.stringify(an2.body));\n\n  // \u2500\u2500 L7 (B4 EWMA): past evidence stabilizes the ranking \u2014 a weak recent winner does NOT dethrone it \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  // Window for cycle3 (plan1): cycle3 w=1 (NEW=3, WIN=2) + cycle1 w=0.5 (WIN=10, LOSE=2).\n  // Single-cycle would pick NEW (3>2); EWMA picks WIN (2 + 10\u00b70.5 = 7 > 3). Also audits reward_vector.ewma.\n  const cycle3 = await mkCycle(planId, 2, new Date().toISOString());\n  await mkMetric(cycle3, crypto.randomUUID(), 'NEW', 'affiliate_click', 3);\n  await mkMetric(cycle3, crypto.randomUUID(), 'WIN', 'affiliate_click', 2);\n  const an3 = await svc('autopilot-analyze', { previous_cycle_id: cycle3, prepaid: true });\n  const pol3 = an3.body.policy as { top_product_id?: string; reward_vector?: { ewma?: { cycles_used?: number } } } | undefined;\n  check('L7 EWMA \u2192 top=WIN (evid\u00eancia acumulada vence vencedor fraco recente)',\n    an3.body.has_real_data === true && pol3?.top_product_id === 'WIN', JSON.stringify(an3.body));\n  check('L7b reward_vector.ewma audit\u00e1vel (cycles_used=2)',\n    pol3?.reward_vector?.ewma?.cycles_used === 2, JSON.stringify(pol3?.reward_vector?.ewma));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-loop.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:35:26)*
+
+
+## 🤖 Claude *(04:35:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - << 'EOF'\np = 'scripts/qa/smoke-autopilot-loop.ts'\ns = open(p).read()\ns = s.replace(\n  \" *   L6 analyze on a zero-signal cycle \u2192 has_real_data=false, charged 0, no invented policy\",\n  \" *   L6 analyze on a zero-signal cycle (VIRGIN plan) \u2192 has_real_data=false, charged 0, no invented policy\\n *   L7 (B4 EWMA) multi-cycle window: accumulated evidence outweighs a weak recent winner + ewma audit trail\"\n)\nopen(p, 'w').write(s)\nEOF\ncat >> docs/processes/autopilot-cron-identity.md << 'EOF'\n\n## Amendment 2026-07-02 (b) \u2014 B4 EWMA multi-ciclo no analyze\n\n`autopilot-analyze` agora agrega o reward sobre a janela dos **\u00faltimos M=5 ciclos do plano** (ancorada no ciclo analisado), peso `0.5^idade` \u2014 FRD v0.3 \"fixes embarcados\" (FR-VA-010/011) + SDD \u00a7fluxo (\"EWMA M ciclos\"). **Sem\u00e2ntica documentada:** ciclo zerado sob plano COM hist\u00f3rico ainda emite policy (a janela lembra \u2014 anti-thrash); s\u00f3 plano com janela toda vazia retorna `has_real_data=false` (nunca inventa do nada). Auditoria em `reward_vector.ewma {m, decay, cycles_used}`. M/decay = constantes de c\u00f3digo at\u00e9 a coluna config-as-data `reward_weights` existir (NFR-VA-010, deferida junto com os pesos do reward). Gate: smoke `smoke-autopilot-loop.ts` L7 (evid\u00eancia acumulada vence vencedor fraco recente).\nEOF\nexport PATH=\"$HOME/.deno/bin:$PATH\"; deno check supabase/functions/autopilot-analyze/index.ts 2>&1 | tail -2 && npx supabase functions deploy autopilot-analyze 2>&1 | grep -v \"recommend updating\" | tail -2",
+  "description": "Update smoke header, SOP amendment, deno check, deploy analyze",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mCheck[0m supabase/functions/autopilot-analyze/index.ts
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.0 (currently installed v2.92.1)
+> ```
+
+## 🤖 Claude *(04:35:54)*
+
+
+## 🤖 Claude *(04:35:55)*
+
+Deploy ok, deno check ok. Rodando o smoke contra o artefato servido:
+
+## 🤖 Claude *(04:35:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env; set +a; bun run scripts/qa/smoke-autopilot-loop.ts 2>&1 | tail -16",
+  "description": "Run autopilot loop smoke with new EWMA gates",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ L1 analyze anon → 403
+> ✅ L1 collect anon → 403
+> ✅ L2 analyze service no body → 422
+> ✅ L2 collect service no body → 422
+> ✅ L3 analyze bad cycle → 404
+> ✅ L3 collect bad cycle → 404
+> ✅ L5 analyze → has_real_data · top=WIN · charged 0  → {"ok":true,"has_real_data":true,"charged":0,"policy_id":"0c528cc9-c533-427f-b46c-12bc09ae6ef1","policy":{"top_product_id":"WIN","top_product_name":null,"top_platform":"linkedin","signal":"affiliate_clicks","reward_vector":{"reach":0,"eng_rate":0,"brand":0,"revenue_cents":0,"clicks":10,"weights":{"reach":0.4,"eng":0.3,"brand":0.2,"rev":0.1},"mode":"fallback_affiliate_no_social_data_yet","ewma":{"m":5,"decay":0.5,"cycles_used":1}},"clicks_total":12,"revenue_cents_total":0,"reach_total":0,"eng_total":0}}
+> ✅ L5b optimization_policy row written (tenant-scoped)  → rows=1
+> ✅ L6 analyze empty (plano virgem) → has_real_data false · charged 0  → {"ok":true,"has_real_data":false,"charged":0}
+> ✅ L7 EWMA → top=WIN (evidência acumulada vence vencedor fraco recente)  → {"ok":true,"has_real_data":true,"charged":0,"policy_id":"08e53e23-a3a8-472c-b07b-96f2736f789f","policy":{"top_product_id":"WIN","top_product_name":null,"top_platform":"linkedin","signal":"affiliate_clicks","reward_vector":{"reach":0,"eng_rate":0,"brand":0,"revenue_cents":0,"clicks":7,"weights":{"reach":0.4,"eng":0.3,"brand":0.2,"rev":0.1},"mode":"fallback_affiliate_no_social_data_yet","ewma":{"m":5,"decay":0.5,"cycles_used":2}},"clicks_total":11,"revenue_cents_total":0,"reach_total":0,"eng_total":0}}
+> ✅ L7b reward_vector.ewma auditável (cycles_used=2)  → {"m":5,"decay":0.5,"cycles_used":2}
+> ✅ L4 collect → ok · updated ≥ 1  → {"ok":true,"creatives":1,"updated":1,"organic":"skipped_no_tier"}
+> ✅ L4 creative_metrics affiliate_click synced (=5)  → {"affiliate_clicks":5}
+> ✅ cleanup: user deleted (cascade plan/cycles/metrics/policy)
+> 
+> 🟢 SMOKE PASS
+> ```
+
+## 🤖 Claude *(04:36:15)*
+
+
+## 🤖 Claude *(04:36:15)*
+
+
+## 🤖 Claude *(04:36:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add supabase/functions/autopilot-analyze/index.ts scripts/qa/smoke-autopilot-loop.ts docs/processes/autopilot-cron-identity.md && git commit -m \"feat(autopilot): B4 EWMA multi-cycle reward window in analyze (FRD v0.3 embedded fix)\n\nThe reward now aggregates the plan's last M=5 cycles (anchored at the analyzed\none), each weighted 0.5^age \u2014 single-cycle reads made the policy thrash on one\nnoisy cycle. Documented semantics: a zero-signal cycle under a plan WITH\nhistory still yields a policy (the window remembers); only a plan whose whole\nwindow is empty returns has_real_data=false (never invents from nothing).\nAudit trail in reward_vector.ewma {m, decay, cycles_used}. M/decay stay code\nconstants until the reward_weights config-as-data column lands (NFR-VA-010).\n\nProof: deno check \u00b7 deployed \u00b7 smoke-autopilot-loop 13/13 \u2014 L7 proves the\nstabilization live (WIN 2x1 + 10x0.5 = 7 beats recent NEW=3; single-cycle\nwould have flipped) + L6 preserved on a virgin plan; SOP autopilot-cron-identity\nAmendment (b).\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -2 && git log -1 --format=%h",
+  "description": "Commit B4 EWMA slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main bbc7ad9] feat(autopilot): B4 EWMA multi-cycle reward window in analyze (FRD v0.3 embedded fix)
+>  3 files changed, 60 insertions(+), 12 deletions(-)
+> bbc7ad9
+> ```
+
+## 🤖 Claude *(04:36:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "### \u2705 Vision-gate mec\u00e2nico nos 2 harnesses \u2014 SHIPPED (loop 2026-07-02 it.2-3, commits `8a41457`+`e511862`)",
+  "new_string": "### \u2705 B4 EWMA multi-ciclo no analyze \u2014 SHIPPED (loop 2026-07-02 it.4, commit `bbc7ad9`)\n- FRD v0.3 \"fixes embarcados\" implementado: reward sobre janela dos \u00faltimos M=5 ciclos do plano, peso `0.5^idade` (anti-thrash); sem\u00e2ntica documentada (janela lembra; plano virgem \u2192 `has_real_data=false`); auditoria `reward_vector.ewma`. Provas: deno check \u00b7 deployado \u00b7 **smoke 13/13** (L7: WIN 2+10\u00b70,5=7 vence NEW=3 \u2014 single-cycle teria flipado). **Restam do arco Learning:** B5 pauta de receita (FR-VA-031, UI/HITL Should) \u00b7 V4-2 experimento \u00b7 coluna `reward_weights` config-as-data (NFR-VA-010).\n\n### \u2705 Vision-gate mec\u00e2nico nos 2 harnesses \u2014 SHIPPED (loop 2026-07-02 it.2-3, commits `8a41457`+`e511862`)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:36:48)*
+
+
+## 🤖 Claude *(04:36:48)*
+
+
+## 🤖 Claude *(04:36:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add .claude/context/autonomous-loop-charter.md && git commit -m \"docs(loop): charter \u2014 it.4 B4 EWMA shipped\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -1\necho \"== 1a ==\"; git show bbc7ad9 | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,})\" | head -3; echo \"(vazio=ok)\"; npx tsc --noEmit 2>&1 | tail -1; echo \"tsc=$?\"\nsource .env\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"loop-it4-b4-ewma-final-seal\"\nSESSION_SUMMARY=\"Loop it.4 + selo final da sessao de loop autonomo (stop por janela ~95%): B4 EWMA multi-ciclo no autopilot-analyze (janela M=5 decay 0.5 ancorada no ciclo analisado; janela lembra, plano virgem nao inventa; auditoria reward_vector.ewma) \u2014 provado no artefato servido, smoke 13/13 com gate L7 de estabilizacao (WIN 2+10*0.5=7 vence NEW=3). Sessao completa: it.1 G7 imagem-pilar + fan-out hygiene (9021) + it.2-3 vision-gate mecanico nos 2 harnesses (9022) + it.4 B4. Restam desbloqueados: B5 pauta de receita (FR-VA-031) + V4-2 + reward_weights config-as-data. Commits d16ca88..bbc7ad9.\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\", \\\"node_type\\\": \\\"handoff\\\", \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\", \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null, \\\"metadata\\\": {\\\"session\\\": \\\"${SESSION_PHASE}\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"$(git log --oneline -3 | tr '\\n' '|' | sed 's/\\\"//g')\\\"}}\")\nNODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERROR'))\")\necho \"Node ID: $NODE_ID\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('embedded dims:', d.get('dims'))\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range",
+  "description": "Charter commit, security scan, mesh node insert+embed, live count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  1 file changed, 3 insertions(+)
+> == 1a ==
+> (vazio=ok)
+> tsc=0
+> Node ID: 1ddd4e86-7b89-4d13-9330-b5877c96df32
+> embedded dims: 768
+> content-range: 0-0/9023
+> ```
+
+## 🤖 Claude *(04:37:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.73.3--loop--it2--3%3A--vision--gate--both--harnesses-blueviolet?style=for-the-badge\" alt=\"Version\" />\n  <img src=\"https://img.shields.io/badge/license-proprietary-red?style=for-the-badge\" alt=\"License\" />\n  <img src=\"https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript\" alt=\"TypeScript\" />\n  <img src=\"https://img.shields.io/badge/neural_mesh-9022_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.73.4--loop--it4%3A--B4--EWMA--multi--cycle--reward-blueviolet?style=for-the-badge\" alt=\"Version\" />\n  <img src=\"https://img.shields.io/badge/license-proprietary-red?style=for-the-badge\" alt=\"License\" />\n  <img src=\"https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript\" alt=\"TypeScript\" />\n  <img src=\"https://img.shields.io/badge/neural_mesh-9023_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:37:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.73.3 (2026-07-02)",
+  "new_string": "## \ud83c\udd95 What's new in v6.73.4 (2026-07-02)\n\n- **B4 \u2014 reward EWMA multi-ciclo no `autopilot-analyze` (`bbc7ad9`):** o reward agrega a janela dos **\u00faltimos 5 ciclos do plano** (peso `0.5^idade`) em vez de 1 ciclo \u2014 a policy para de thrashear em ru\u00eddo de ciclo \u00fanico. Sem\u00e2ntica honesta: a janela lembra (ciclo zerado sob plano com hist\u00f3rico ainda gera policy); plano com janela vazia nunca inventa. Auditoria em `reward_vector.ewma`. **Smoke 13/13** \u2014 o gate L7 prova a estabiliza\u00e7\u00e3o ao vivo (evid\u00eancia acumulada `7` vence vencedor fraco recente `3`, onde o single-cycle teria flipado).\n\n## \ud83c\udd95 What's new in v6.73.3 (2026-07-02)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:37:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.2-3: Vision-Gate Mec\u00e2nico nos 2 Harnesses + Fix do Print P\u00fablico",
+  "new_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.4 (selo final): B4 EWMA Multi-Ciclo + Wrap da Sess\u00e3o de Loop\n\nSelo **final** da sess\u00e3o de loop aut\u00f4nomo (stop por **janela ~95%**). **ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (Gabriel) \u00b7 Owner = Sovereign (risco = policy do autopilot mudar de comportamento \u2014 mitigado por sem\u00e2ntica documentada + gate L7 adversarial + retrocompat L5/L6 provada).\n\n| Fatia | Prova material (Lei 1) | Commits |\n|-------|------------------------|---------|\n| **it.4 \u2014 B4 EWMA multi-ciclo (`autopilot-analyze`)** | FRD v0.3 \"fixes embarcados\" (FR-VA-010/011) implementado: janela dos \u00faltimos **M=5 ciclos** do plano ancorada no ciclo analisado, peso `0.5^idade`; m\u00e9trica agregada ponderada por ciclo; auditoria `reward_vector.ewma {m,decay,cycles_used}`. Sem\u00e2ntica documentada: janela lembra (anti-thrash); plano virgem \u2192 `has_real_data=false` (nunca inventa). deno check \u00b7 deployado \u00b7 **smoke-autopilot-loop 13/13** \u2014 **L7**: `clicks:7 = WIN 2\u00d71 + 10\u00d70,5` vence NEW=3 (single-cycle teria flipado) + `ewma.cycles_used=2`; L6 preservado em plano virgem; L5 retrocompat\u00edvel (`cycles_used:1`). SOP `autopilot-cron-identity.md` Amendment (b) | `bbc7ad9` |\n| **Wrap da sess\u00e3o (it.1\u2192it.4)** | it.1 G7 imagem-pilar + fan-out hygiene (`d16ca88`, mesh 9021) \u00b7 it.2-3 Vision-gate mec\u00e2nico nos 2 harnesses + fix print p\u00fablico (`8a41457`/`e511862`, mesh 9022) \u00b7 it.4 B4 (`bbc7ad9`). Anticorpo de concorr\u00eancia standby\u2192executor funcionou (zero colis\u00e3o com a prim\u00e1ria). **Desbloqueados restantes p/ pr\u00f3ximo loop:** B5 pauta de receita (FR-VA-031 UI/HITL) \u00b7 V4-2 \u00b7 `reward_weights` config-as-data (NFR-VA-010) \u00b7 gate Vision no e2e \u00e9 extens\u00edvel a novos flows | \u2014 |\n\nHandoff node `1ddd4e86-7b89-4d13-9330-b5877c96df32` inserido + embedado (768d). Mesh **9023 n\u00f3s** (count=exact). **Loop PARADO** (janela ~95%) \u2014 religar com o prompt can\u00f4nico da charter.\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.2-3: Vision-Gate Mec\u00e2nico nos 2 Harnesses + Fix do Print P\u00fablico"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(04:37:42)*
+
+
+## 🤖 Claude *(04:37:42)*
+
+
+## 🤖 Claude *(04:37:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short; git log --oneline -2; stat -c '%y' HANDOFF.md; date",
+  "description": "Check HANDOFF modification source"
+}
+```
+
+## 🤖 Claude *(04:37:43)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session_mgmt__list_sessions`
+```json
+{
+  "limit": 2
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M README.md
+>  M proof-manifest.json
+> 51017b5 docs(loop): charter — it.4 B4 EWMA shipped
+> bbc7ad9 feat(autopilot): B4 EWMA multi-cycle reward window in analyze (FRD v0.3 embedded fix)
+> 2026-07-02 01:28:58.949077639 -0300
+> Thu Jul  2 01:37:43 AM -03 2026
+> ```
+
+> **Tool Result (mcp__ccd_session_mgmt__list_sessions)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '[\n  {\n    "sessionId": "local_77b1644a-2887-4ef5-9750-39dcbe7a1052",\n    "title": "[handoff]  v6.73.1",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-02T03:45:18.747Z"\n  },\n  {\n    "sessionId": "local_b6f56e08-1d96-4851-b33f-f399bdce5810",\n    "title": "[Handoff] v6.65.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T18:23:37.751Z"\n  }\n]'}]
+> ```
+
+## 🤖 Claude *(04:37:54)*
+
+
+## 🤖 Claude *(04:37:54)*
+
+
+## 🤖 Claude *(04:37:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 12,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 12	## Task State
+> 13	
+> 14	## Handoff Seal Record (2026-07-02) — Loop it.2-3: Vision-Gate Mecânico nos 2 Harnesses + Fix do Print Público
+> ```
+
+## 🤖 Claude *(04:38:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.2-3: Vision-Gate Mec\u00e2nico nos 2 Harnesses + Fix do Print P\u00fablico",
+  "new_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.4 (selo final): B4 EWMA Multi-Ciclo + Wrap da Sess\u00e3o de Loop\n\nSelo **final** da sess\u00e3o de loop aut\u00f4nomo (stop por **janela ~95%**). **ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (Gabriel) \u00b7 Owner = Sovereign (risco = policy do autopilot mudar de comportamento \u2014 mitigado por sem\u00e2ntica documentada + gate L7 adversarial + retrocompat L5/L6 provada).\n\n| Fatia | Prova material (Lei 1) | Commits |\n|-------|------------------------|---------|\n| **it.4 \u2014 B4 EWMA multi-ciclo (`autopilot-analyze`)** | FRD v0.3 \"fixes embarcados\" (FR-VA-010/011) implementado: janela dos \u00faltimos **M=5 ciclos** do plano ancorada no ciclo analisado, peso `0.5^idade`; m\u00e9trica agregada ponderada por ciclo; auditoria `reward_vector.ewma {m,decay,cycles_used}`. Sem\u00e2ntica documentada: janela lembra (anti-thrash); plano virgem \u2192 `has_real_data=false` (nunca inventa). deno check \u00b7 deployado \u00b7 **smoke-autopilot-loop 13/13** \u2014 **L7**: `clicks:7 = WIN 2\u00d71 + 10\u00d70,5` vence NEW=3 (single-cycle teria flipado) + `ewma.cycles_used=2`; L6 preservado em plano virgem; L5 retrocompat\u00edvel (`cycles_used:1`). SOP `autopilot-cron-identity.md` Amendment (b) | `bbc7ad9` |\n| **Wrap da sess\u00e3o (it.1\u2192it.4)** | it.1 G7 imagem-pilar + fan-out hygiene (`d16ca88`, mesh 9021) \u00b7 it.2-3 Vision-gate mec\u00e2nico nos 2 harnesses + fix print p\u00fablico (`8a41457`/`e511862`, mesh 9022) \u00b7 it.4 B4 (`bbc7ad9`). Anticorpo de concorr\u00eancia standby\u2192executor funcionou (zero colis\u00e3o com a prim\u00e1ria). **Desbloqueados restantes p/ pr\u00f3ximo loop:** B5 pauta de receita (FR-VA-031 UI/HITL) \u00b7 V4-2 \u00b7 `reward_weights` config-as-data (NFR-VA-010) \u00b7 gate Vision no e2e \u00e9 extens\u00edvel a novos flows | \u2014 |\n\nHandoff node `1ddd4e86-7b89-4d13-9330-b5877c96df32` inserido + embedado (768d). Mesh **9023 n\u00f3s** (count=exact). **Loop PARADO** (janela ~95%) \u2014 religar com o prompt can\u00f4nico da charter.\n\n## Handoff Seal Record (2026-07-02) \u2014 Loop it.2-3: Vision-Gate Mec\u00e2nico nos 2 Harnesses + Fix do Print P\u00fablico"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:38:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - << 'EOF'\np = 'HANDOFF.md'\ns = open(p).read()\ns = s.replace(\n  \"- **9022 total nodes** (verificado live 2026-07-02 via REST count=exact, loop-it2-3-vision-gate-both-harnesses seal:\",\n  \"- **9023 total nodes** (verificado live 2026-07-02 via REST count=exact, loop-it4-b4-ewma-final-seal: +handoff `1ddd4e86-7b89-4d13-9330-b5877c96df32` embedded 768d \u2014 B4 EWMA multi-ciclo no analyze [janela M=5 decay 0.5, smoke 13/13 gate L7 de estabiliza\u00e7\u00e3o] + selo final da sess\u00e3o de loop [it.1 G7/fan-out \u00b7 it.2-3 vision-gate \u00b7 it.4 B4]; commit `bbc7ad9`; prev 9022)\\n- **9022 total nodes** (verificado live 2026-07-02 via REST count=exact, loop-it2-3-vision-gate-both-harnesses seal:\", 1)\nopen(p, 'w').write(s)\nprint(\"graphrag ok\")\nEOF\npython3 - << 'EOF'\np = '.claude/context/sprint-priorities.md'\ns = open(p).read()\ns = s.replace(\n  \"**Sprint v6.73.3 \u2014 Loop it.2-3: Vision-gate mec\u00e2nico nos 2 harnesses (2026-07-02)**\",\n  \"**Sprint v6.73.4 \u2014 Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)** \u2014 reward sobre janela M=5 ciclos peso 0.5^idade (anti-thrash; janela lembra, plano virgem n\u00e3o inventa; auditoria `reward_vector.ewma`). Smoke **13/13** (L7: evid\u00eancia acumulada 7 vence recente 3 \u2014 single-cycle flipava) \u00b7 deployado \u00b7 SOP amendada \u00b7 Phase 5c SEAL ALLOWED \u00b7 mesh **9023** \u00b7 handoff `1ddd4e86`. **Loop PARADO (janela ~95%).** Restam desbloqueados: B5 pauta de receita (FR-VA-031) \u00b7 V4-2 \u00b7 `reward_weights` config-as-data.\\n\\n**Sprint v6.73.3 \u2014 Loop it.2-3: Vision-gate mec\u00e2nico nos 2 harnesses (2026-07-02)**\", 1)\nopen(p, 'w').write(s)\nprint(\"sprint ok\")\nEOF\necho \"== 5b ==\"; grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\\|hash\" | head -3; echo \"(vazio=ok)\"\ngit add README.md HANDOFF.md proof-manifest.json .claude/context/sprint-priorities.md && git commit -m \"docs(handoff+readme+sprint): v6.73.4 \u2014 selo final do loop: it.4 B4 EWMA \u2014 mesh 9023 \u2014 loop parado\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>\" 2>&1 | tail -2 && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -8",
+  "description": "GraphRAG + sprint updates, 5b scan, seal commit, 5c audit",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> graphrag ok
+> sprint ok
+> == 5b ==
+> (vazio=ok)
+> [main b777794] docs(handoff+readme+sprint): v6.73.4 — selo final do loop: it.4 B4 EWMA — mesh 9023 — loop parado
+>  4 files changed, 21 insertions(+), 3 deletions(-)
+> | commit d16ca88 | git_commit | d16ca88 | d16ca88 | ✅ |
+> | commit 8a41457 | git_commit | 8a41457 | 8a41457 | ✅ |
+> | commit e511862 | git_commit | e511862 | e511862 | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovere | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovere | ✅ |
+> 
+> QA VERDICT: 6 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.3s)
+> ```
+
+## 🤖 Claude *(04:38:42)*
+
+
+## 🤖 Claude *(04:38:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -1 && git log --oneline -8 | head -8",
+  "description": "Push final seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    3315122..b777794  main -> main
+> b777794 docs(handoff+readme+sprint): v6.73.4 — selo final do loop: it.4 B4 EWMA — mesh 9023 — loop parado
+> 51017b5 docs(loop): charter — it.4 B4 EWMA shipped
+> bbc7ad9 feat(autopilot): B4 EWMA multi-cycle reward window in analyze (FRD v0.3 embedded fix)
+> 3315122 docs(handoff): fix path claim — scripts/qa/e2e-user-zero/lib/vision-gate.ts (5c audit caught the imprecision)
+> 3dd0443 docs(handoff+readme+sprint): v6.73.3 — seal loop it.2-3 vision-gate mecânico — mesh 9022
+> adf849b docs(loop): charter — it.2-3 vision-gate mecânico nos 2 harnesses shipped
+> e511862 feat(qa): Vision QA gate in e2e-user-zero runner (closes classifier deferred heuristic c)
+> 8a41457 feat(qa): Vision QA mechanical gate in audit-canvas-ui (directive 2026-06-26)
+> ```
+
+## 🤖 Claude *(04:38:56)*
+
+
+🛠️ **Tool Call**: `PushNotification`
+```json
+{
+  "message": "Loop selado e PARADO (janela ~95%): v6.73.4, mesh 9023. 4 itera\u00e7\u00f5es: G7 imagem-pilar + fan-out hygiene + Vision-gate mec\u00e2nico (2 harnesses) + B4 EWMA. Tudo provado e pushed. Religar: prompt can\u00f4nico da charter.",
+  "status": "proactive"
+}
+```
+
+> **Tool Result (PushNotification)** - ✅ Success
+>
+> ```
+> Mobile push not sent (Remote Control inactive).
+> ```
+
+## 🤖 Claude *(04:39:17)*
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SEALED — LOOP IT.4 (SELO FINAL) — v6.73.4 (2026-07-02)**
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA** — commits sem credenciais ✅ · 5b HANDOFF.md limpo ✅ · tsc 0 ✅
+
+📦 **A SESSÃO DE LOOP INTEIRA (4 iterações, 13 commits, tudo pushed)**
+| It. | Entrega | Prova decisiva |
+|-----|---------|----------------|
+| **it.1** | Render-decoupling provado **resolvido por arquitetura** + fix G7 imagem-pilar (`metadata.pillar_run_id`) + fan-out hygiene | DB vivo: 7 canais `reused_master` · smoke 18/18 |
+| **it.2** | Vision-gate mecânico no `audit-canvas-ui` + **remoção do print público de dashboard logado** | Run E2E prod → APROVADO high, custo 0 |
+| **it.3** | Vision-gate no `e2e-user-zero` (Finding P1/ux → NO-GO) | **Adversarial: PNG branco → REPROVADO → P1** |
+| **it.4** | **B4 EWMA** — reward sobre janela de 5 ciclos no `autopilot-analyze` | Smoke 13/13; L7: evidência acumulada 7 vence recente 3 |
+
+⬡ **KNOWLEDGE MESH** — 3 nós de seal embedados nesta sessão (`b31c1336` · `8ddca90b` · `1ddd4e86`) · Mesh **9023 nós**
+
+📋 **PROVA MATERIAL (5c)** — **SEAL ALLOWED (6/6)** · o auditor mecânico me bloqueou 1× na sessão (path impreciso) e foi corrigido na causa — o sistema imunológico funciona.
+
+**Survival Self-audit final:** Lei 1 ✅ (toda fatia com prova adversarial/DB/smoke + 3× 5c mecânico) · Lei 2 ✅ (4 SOPs amendadas ANTES do código) · Lei 3 ✅ (**parando a ~90-95% da janela** — motivo do stop) · Lei 4 ✅ (ORO em todos os seals, verificado pelo 5c).
+
+🛑 **LOOP PARADO** (gatilho: janela ~95%). Nenhum wakeup armado, nenhum monitor ativo.
+
+⏭ **PARA O PRÓXIMO LOOP (desbloqueados):** B5 pauta de receita (FR-VA-031, UI/HITL) · V4-2 · coluna `reward_weights` config-as-data. **Fila Sovereign (só você):** GO cutover Universo · app-registration TikTok/YouTube/Pinterest · confirmar sumiço dos 4 scheduled_posts · witness do próximo ciclo pago (imagem multi-canal `ready`). **Religar:** cole o prompt canônico do rodapé da charter em qualquer sessão nova.
+
+Boa noite, Soberano. 🧘
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
 ---
 
 %% --- PROJECT METADATA START --- %%

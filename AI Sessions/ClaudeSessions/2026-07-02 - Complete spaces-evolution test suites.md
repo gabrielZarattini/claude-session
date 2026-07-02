@@ -1960,3 +1960,16 @@ Carregando a definição do agente BoK Scribe e os templates dos 3 documentos fa
 ## 🤖 Claude *(04:49:55)*
 
 You've hit your session limit · resets 4:20am (America/Sao_Paulo)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - 1fcf4f44-862e-491c-aef0-14b8fa74be9f]]
+> * **Próxima Sessão**: [[2026-07-02 - Executar loop autônomo MCORCH com charter]]
+%% --- TIMELINE END --- %%

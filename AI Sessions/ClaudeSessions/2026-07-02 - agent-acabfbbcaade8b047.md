@@ -26,3 +26,16 @@ Return raw data; your final text is consumed by another agent, not a human.
 ## 🤖 Claude *(04:49:55)*
 
 You've hit your session limit · resets 4:20am (America/Sao_Paulo)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - agent-ab83a40bce8f8071c]]
+> * **Próxima Sessão**: [[2026-07-02 - agent-af1210adb0c8d34e2]]
+%% --- TIMELINE END --- %%
