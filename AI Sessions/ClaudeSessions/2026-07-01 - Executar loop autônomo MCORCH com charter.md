@@ -1,4 +1,4 @@
-# Executar loop autônomo MCORCH com charter
+# [[2026-07-02 - Executar loop autônomo MCORCH com charter|Executar loop autônomo MCORCH com charter]]
 **Date:** 2026-07-01 | **Session ID:** `28820a11-b589-46cb-b09c-1d1f5a4e56ed`
 
 ---
