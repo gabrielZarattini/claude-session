@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 64
-> * **Total de Sessões**: 1760
+> * **Total de Processos**: 65
+> * **Total de Sessões**: 1762
 
 ---
 
@@ -64,6 +64,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[revenue-opportunity-pauta]]` - *Processo*
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[smart-delete-remote]]` - *Processo*
+*   `[[spaces-canvas-persistence]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
 *   `[[tiktok-publish-credential-resolution]]` - *Processo*
@@ -99,6 +100,8 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-02 - agent-a6ad657d09bc1cfff]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a5fc2379c033db856]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - agent-a5a79c320e0997619]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-a4b225217e4334389]]` (ClaudeSessions) - *2026-07-02*
+*   `[[2026-07-02 - agent-a21242cc7e950270e]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - Complete spaces-evolution test suites]]` (ClaudeSessions) - *2026-07-02*

@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1765
-> * **Sessões do Claude**: 1721
+> * **Total de Sessões Registradas**: 1767
+> * **Sessões do Claude**: 1723
 > * **Sessões do Gemini**: 44
 
 ---
@@ -82,7 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-02 - agent-a6ad657d09bc1cfff]]` - *2026-07-02*
 *   `[[2026-07-02 - agent-a5fc2379c033db856]]` - *2026-07-02*
 *   `[[2026-07-02 - agent-a5a79c320e0997619]]` - *2026-07-02*
-*   *... e mais 1717 sessões nessa categoria.*
+*   *... e mais 1719 sessões nessa categoria.*
 
 ---
 
@@ -1750,6 +1750,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-02 - agent-a6ad657d09bc1cfff]]` (ClaudeSessions)
 *   `[[2026-07-02 - agent-a5fc2379c033db856]]` (ClaudeSessions)
 *   `[[2026-07-02 - agent-a5a79c320e0997619]]` (ClaudeSessions)
+*   `[[2026-07-02 - agent-a4b225217e4334389]]` (ClaudeSessions)
+*   `[[2026-07-02 - agent-a21242cc7e950270e]]` (ClaudeSessions)
 *   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions)
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions)
 *   `[[2026-07-02 - Complete spaces-evolution test suites]]` (ClaudeSessions)
