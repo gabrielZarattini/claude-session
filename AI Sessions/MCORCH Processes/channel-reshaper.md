@@ -36,6 +36,20 @@ Publishers audit-gated (TikTok SELF_ONLY · YouTube forced-private pré-Gate-B �
 
 ---
 
+## Amendment 2026-07-02 — Resolução da imagem-pilar por âncora de run (fix do `gap` do autopilot)
+
+**Incidente material (Lei 1):** o ciclo pago `77e02fca` (2026-07-01) produziu a imagem-pilar (`content_library` type=image, 01:12) mas TODAS as 5 surfaces de imagem saíram `asset_status='gap'` — a resolução casava só por `campaign_id` (`reshape-pillar:276`), e o autopilot nunca cunha um (`content_library.campaign_id` é FK de `campaigns` do Marketing Hub; o run do ciclo carrega `campaign_id` NULL → o lookup nem dispara).
+
+**Contrato (novo):** `reshape-pillar` resolve a imagem-pilar em 2 passos:
+1. **Âncora de run (primária):** `content_library.metadata->>pillar_run_id == <run>` — tag server-set gravada pelo `orchestrate-step` (FR-VA-013) no insert da imagem. 1:1 com o pilar; imune a bleed entre produtos do mesmo ciclo.
+2. **Fallback por campanha:** lookup legado por `campaign_id` (fluxos Marketing Hub + linhas anteriores ao fix).
+
+**Gate G7 (novo, material):** run autopilot-shaped (`campaign_id` NULL) com imagem taggeada → surfaces de imagem `asset_status='ready'` (não `gap`). Provado zero-cost por `scripts/qa/smoke-reframe-image.ts` (cenário B, throwaway user, `auto_publish=false` ⇒ draft — sem side effect outward).
+
+**Nota de índice:** o filtro `metadata->>pillar_run_id` roda sem índice (escala Usuário Zero ok); se `content_library` crescer ordens de magnitude, criar índice por expressão.
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]

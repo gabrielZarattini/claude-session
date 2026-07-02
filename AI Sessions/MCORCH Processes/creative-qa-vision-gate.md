@@ -122,6 +122,20 @@ frames que passaram pelo portão de consistência. Assets reais persistidos em `
 
 ---
 
+## Amendment 2026-07-02 — Gate mecânico no `audit-canvas-ui.ts` (regra comportamental → automação)
+
+A diretiva Sovereign 2026-06-26 ("todo print de inspeção passa pelo olho criativo") era regra comportamental. Agora é **gate mecânico** dentro de `scripts/qa/audit-canvas-ui.ts`:
+
+1. Pós-asserts estruturais, o screenshot 1920×1080 é capturado **em memória** e sobe pro bucket **privado** `generated-images` (`qa-audits/canvas-e2e-<ts>.png`) → signed URL 1h (o Vision MCP exige URL, não path local).
+2. `scripts/qa/vision-qa.ts image <signed_url> "<pergunta>"` roda como sub-processo; a pergunta força veredito estruturado (`Comece com exatamente APROVADO ou REPROVADO`).
+3. **Gate:** exit ≠ 0 do vision-qa OU resposta sem `APROVADO` OU com `REPROVADO` ⇒ auditoria **FALHA** (exit 1). O objeto sobe e é removido do bucket após o veredito (best-effort).
+4. **Fail-closed:** sem `VISION_MCP_PAT` no `.env` a auditoria falha com instrução — exceção só por flag explícita `--no-vision` (registrar o porquê no seal).
+5. **Mudança de segurança:** a cópia pública do print em `dist/canvas_e2e_latest.png` (servida pelo nginx em URL pública — print de dashboard LOGADO) foi **removida**; a visualização usa o signed URL impresso no output (TTL 1h). Reverter é trivial se o Sovereign preferir a cópia pública.
+
+**✅ e2e-user-zero (mesmo dia):** gate fiado no `runner.ts` pós-classifier — `lib/vision-gate.ts` julga até 3 screenshots do flow (bucket privado→signed URL→vision-qa); REPROVADO vira **Finding P1/ux** (flipa o exit NO-GO existente). Fail-closed sem PAT (exit 2 infra) + `--no-vision`. Provado LIVE: canvas real→APROVADO · PNG branco 1920×1080→REPROVADO→P1 (fecha a heurística deferida (c) do classifier).
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]

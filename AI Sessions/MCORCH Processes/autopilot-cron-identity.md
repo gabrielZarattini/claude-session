@@ -180,6 +180,14 @@ G1/G3/G4/G5 são **zero-cost** (usam `dry_run`/usuários descartáveis/RPC isola
 
 ---
 
+## Amendment 2026-07-02 — Fan-out hygiene (plataformas sem step não fanam)
+
+`orchestrate-content` só tem steps reais p/ `wordpress`/`linkedin`/`twitter` (stepsOrder; `knowledge_mesh` é fallback universal — `orchestrate-content:244-246`). Um sub-run de `youtube`/`tiktok`/`pinterest`/`instagram` cairia direto no `knowledge_mesh` e AINDA contaria `ORCH_COST` (10) no actual — charge-com-valor-mínimo. A distribuição p/ essas redes é responsabilidade do **reshaper** (FR-CP-003) sobre o master 9:16 do pilar wordpress (provado no DB: `channel_variants` `reused_master` p/ tiktok/youtube/pinterest/instagram no ciclo `77e02fca`) — não do fan-out.
+
+**Guard (`autopilot-run`):** `FAN_OUT_PLATFORMS = {wordpress, linkedin, twitter}`; plataformas do plano fora do set são filtradas ANTES do `nRuns`/`projected` (não pré-debitam, não fanam) + telemetria `event='fanout_platform_skipped'` em `infra_health_logs`. Plano só com plataformas não-suportadas → `422 plan_has_no_targets`.
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]
