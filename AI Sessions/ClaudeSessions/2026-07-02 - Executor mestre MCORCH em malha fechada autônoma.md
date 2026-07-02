@@ -9571,6 +9571,154 @@ Mapa completo do seu setup — **quase tudo vai junto no CLI**, porque a arquite
 
 Para conferir dentro do CLI a qualquer momento: `/mcp` (servidores conectados + auth), `/plugin` (plugins), e as skills aparecem no autocomplete do `/`. Detalhe: o `github` MCP desta sessão Desktop não está no `.mcp.json` do projeto — se quiser ele no CLI também: `claude mcp add github` (ou adicione ao `.mcp.json` pra valer em todo cliente).
 
+## 👤 User *(17:35:38)*
+
+Então eu posso continuar os loop pelo CLI e só usar o app desktop quando precisar do browser ou vision para um E2E ?
+
+## 🤖 Claude *(17:36:04)*
+
+
+## 🤖 Claude *(17:36:19)*
+
+Sim — esse é exatamente o desenho certo, com **uma correção a seu favor: nem o browser nem o vision exigem o Desktop.**
+
+**O que o loop no CLI já faz sozinho (provado nas últimas noites):**
+- **Vision-QA**: roda pelo `vision-mcp` do `.mcp.json` + `scripts/qa/vision-qa.ts` (custo 0 BYOK) — os gates mecânicos que selei ontem (`audit-canvas-ui` + `e2e-user-zero`) são scripts bun que o loop CLI executa direto.
+- **Browser E2E**: a receita canônica é **headless** (`vite preview` do dist + sessão injetada + `agent-browser`/Playwright) — todos os "browser-verified" dos seals, incluindo os do loop CLI, foram feitos assim, sem nenhuma janela aberta.
+
+**Quando o Desktop realmente vale a pena:**
+1. **Quando a tarefa precisa do SEU browser real, com seus logins** — e olha que isso casa perfeitamente com a Fila de Ação Sovereign: o **app-registration TikTok/YouTube/Pinterest**, App Reviews, OAuth flows, portal do Mercado Livre (IP residencial)… aqui o `claude-in-chrome` me deixa **guiar/automatizar o seu Chrome** com você presente — é o jeito mais rápido de queimar essa fila.
+2. **computer-use** — apps nativos da máquina.
+3. **Supervisão visual** — quando você quer ver o que está acontecendo, widgets, artifacts, ou conversar comigo enquanto o CLI trabalha (como agora — funcionamos bem como executor + auditor).
+
+**Setup recomendado (o que você já quase tem):**
+```bash
+tmux new -s loop
+claude --resume fc54f2bd-db07-4bb1-86c9-4f15891e35e3   # retoma e manda continuar o loop
+# Ctrl+B, D pra soltar — o loop sobrevive a qualquer queda de conexão
+```
+E o Desktop fica como cockpit: abrir quando quiser auditar (eu leio os transcripts do CLI a qualquer momento, como fiz hoje), dar GOs da Fila, ou atacar os itens que precisam do seu browser.
+
+Único cuidado que as últimas 24h ensinaram: **um executor por vez**. O CLI é o executor; se você pedir loop aqui no Desktop de novo, eu detecto a duplicidade e viro watchdog — mas melhor nem precisar do anticorpo.
+
+## 👤 User *(18:42:17)*
+
+Show entendi tudo, aproveitando para aplicar e aprender  com os erros, o CLI terminal acabou de voltar pois tinha travado no limite, quero saber se ele conseguiu recuperar, até que nivel ele cacheou e conseguiu otimizar isso para não ter retrabalho ou algo perdindo. E como podemos otimizar isso para comer o minimo de tokens possivel aproveitando as duas ifra desktop e servidor
+
+## 🤖 Claude *(18:42:58)*
+
+
+## 🤖 Claude *(18:42:59)*
+
+Deixa eu auditar a recuperação de verdade (Lei 1) — processo, transcript novo, o que sobreviveu e quanto custou a retomada:
+
+## 🤖 Claude *(18:43:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== processos claude CLI ===\"; ps aux | grep -E \"\\.local/bin/claude|bin/claude$|claude --resume|claude --continue\" | grep -v grep | awk '{print $2, $9, substr($0, index($0,$11), 80)}'\necho; echo \"=== transcripts mais recentes ===\"; ls -lat /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/*.jsonl 2>/dev/null | head -5\necho; echo \"=== git: a fatia it.2 (reward_weights) fechou? ===\"; git status --short; git log --oneline -5; date",
+  "description": "Check CLI recovery: process, new transcript, mid-flight slice state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === processos claude CLI ===
+> 2269793 14:38 claude --resume
+> 
+> === transcripts mais recentes ===
+> -rw------- 1 ubuntu ubuntu 2754398 Jul  2 15:43 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91.jsonl
+> -rw------- 1 ubuntu ubuntu  482763 Jul  2 15:38 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/186e41ef-e58a-4d93-8830-a34846884c8c.jsonl
+> -rw------- 1 ubuntu ubuntu 3169126 Jul  2 14:34 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fc54f2bd-db07-4bb1-86c9-4f15891e35e3.jsonl
+> -rw------- 1 ubuntu ubuntu    3617 Jul  2 01:05 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/1fcf4f44-862e-491c-aef0-14b8fa74be9f.jsonl
+> -rw------- 1 ubuntu ubuntu 8435840 Jul  2 00:45 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/28820a11-b589-46cb-b09c-1d1f5a4e56ed.jsonl
+> 
+> === git: a fatia it.2 (reward_weights) fechou? ===
+> 93b3bdb docs(handoff): ritual de confirmação delta-zero pós-selo final v6.75.0
+> 16624dc chore(sprint): v6.75.0 — loop it.2-3 reward_weights + Spaces Fase 1a selados (mesh 9033)
+> cad909d docs(handoff+readme): v6.75.0 — selo final loop it.2-3: reward_weights + Spaces Fase 1a — mesh 9033
+> 3bedef9 docs(loop): charter — it.3 Spaces Fase 1a canvas 72/28 vivo
+> 9ea6ac0 feat(spaces): Fase 1a — canvas 72/28 vivo (BoK Gate spaces-evolution aberto)
+> Thu Jul  2 03:43:03 PM -03 2026
+> ```
+
+## 🤖 Claude *(18:43:30)*
+
+
+## 🤖 Claude *(18:43:30)*
+
+
+## 🤖 Claude *(18:43:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - << 'EOF'\nimport json\n\npath = \"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/186e41ef-e58a-4d93-8830-a34846884c8c.jsonl\"\nfirst_usages = []\nout = inp = cr = cc = assist = wakeups = 0\nfirst_ts = last_ts = None\nlast_texts = []\nwith open(path, encoding=\"utf-8\") as f:\n    for line in f:\n        try: d = json.loads(line)\n        except: continue\n        ts = d.get(\"timestamp\")\n        if ts: first_ts = first_ts or ts; last_ts = ts\n        if d.get(\"type\") != \"assistant\": continue\n        m = d.get(\"message\") or {}\n        u = m.get(\"usage\") or {}\n        assist += 1\n        if len(first_usages) < 3: first_usages.append({k: u.get(k, 0) for k in (\"input_tokens\",\"output_tokens\",\"cache_read_input_tokens\",\"cache_creation_input_tokens\")})\n        out += u.get(\"output_tokens\", 0); inp += u.get(\"input_tokens\", 0)\n        cr += u.get(\"cache_read_input_tokens\", 0); cc += u.get(\"cache_creation_input_tokens\", 0)\n        for b in (m.get(\"content\") or []):\n            if isinstance(b, dict):\n                if b.get(\"type\") == \"tool_use\" and b.get(\"name\") == \"ScheduleWakeup\": wakeups += 1\n                elif b.get(\"type\") == \"text\" and b.get(\"text\",\"\").strip(): last_texts.append(b[\"text\"][:150])\n\ntotal_in = inp + cr + cc\nprint(f\"sess\u00e3o 186e41ef: {first_ts} \u2192 {last_ts} \u00b7 {assist} msgs assistant\")\nprint(f\"1\u00aa msg p\u00f3s-resume (custo frio): {first_usages[0] if first_usages else '?'}\")\nprint(f\"totais \u2014 output {out:,} \u00b7 input cheio {inp:,} \u00b7 cache_read {cr:,} \u00b7 cache_write {cc:,} \u00b7 hit {cr/max(total_in,1)*100:.1f}%\")\nprint(f\"ScheduleWakeup armados: {wakeups}\")\nprint(\"--- \u00faltimas falas ---\")\nfor t in last_texts[-3:]: print(\" \u00b7\", t.replace(chr(10),\" \"))\nEOF",
+  "description": "Measure resume cold-cost, cache efficiency, loop state of the recovered session"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sessão 186e41ef: 2026-07-02T17:34:54.346Z → 2026-07-02T18:37:52.067Z · 39 msgs assistant
+> 1ª msg pós-resume (custo frio): {'input_tokens': 9620, 'output_tokens': 799, 'cache_read_input_tokens': 18118, 'cache_creation_input_tokens': 41897}
+> totais — output 44,471 · input cheio 78,457 · cache_read 3,466,151 · cache_write 1,105,890 · hit 74.5%
+> ScheduleWakeup armados: 1
+> --- últimas falas ---
+>  · You've hit your session limit · resets 3:10pm (America/Sao_Paulo)
+>  · **ORO triplet desta task (loop autônomo re-armado):** - Operator: MCORCH Master Execution Agent (main loop + Workflows ultracode) - Reviewer: Sovereig
+>  · Tabela vazia (space de teste foi deletado no selo). Colunas pela migration:
+> ```
+
+## 🤖 Claude *(18:44:31)*
+
+
+## 🤖 Claude *(18:44:31)*
+
+## ✅ Recuperou 100% — zero retrabalho, zero perda
+
+**Prova (git + transcript):**
+- A fatia que estava no meio do voo (`reward_weights`) foi **terminada, provada e selada**: **v6.75.0** (`cad909d`/`16624dc`) — reward_weights + **Spaces Fase 1a (canvas 72/28 vivo)** — mesh **9033**, working tree limpo, delta-zero confirmado (`93b3bdb`).
+- A sessão atual (`186e41ef`, fork do resume às 14:34) **travou no limite às ~14:37** ("resets 3:10pm"), o processo ficou vivo esperando, e **retomou sozinha após o reset** — às 15:37 ela já tinha **re-armado o loop (1 ScheduleWakeup ativo)** e está trabalhando na sequência do Spaces (probe de tabela da migration). **O loop está ATIVO agora no CLI.**
+
+## 📉 Quanto custou a retomada (medido)
+
+| Momento | Custo |
+|---|---|
+| 1º turno pós-resume (partida fria) | **só ~42k cache-write + 9,6k input** — o resume carrega o histórico *compactado*, não os 3MB crus |
+| Sessão desde então | output 44k · cache hit **74,5%** (baixo temporariamente — o freeze do limite esfriou o cache; volta aos ~97% em regime) |
+| Perda de trabalho | **Zero** — estado vivia em git + charter + HANDOFF + working tree |
+
+**Lição-chave que esse episódio provou:** *queda de conexão* mata o processo (perde wakeup, precisa `--resume`); *limite de sessão* com o processo vivo é só uma **pausa auto-retomável**. Por isso o tmux é a vacina: transforma toda interrupção no tipo barato.
+
+## 🎯 Playbook de tokens mínimos nas duas infras
+
+1. **Um executor, um contexto** — loop no CLI/tmux; Desktop abre sob demanda. (Auditar daqui é barato: eu parseio o transcript com python e só pago o output do parse, nunca o transcript inteiro.)
+2. **Cadência cache-aware** — trabalho ativo: wakeups ≤270s (cache quente); ocioso: 1200s+ (1 miss amortizado). O loop já faz isso.
+3. **Sessão nova > resume, quando a fatia fechou** — a charter é stateless de propósito: estado no git/HANDOFF ⇒ sessão nova custa ~50k de baseline. **Resume só com trabalho não-commitado no meio do voo** (como hoje — e valeu cada token).
+4. **`/compact` no CLI** quando o contexto encher de tool-results velhos (Lei 3 na prática).
+5. **Fan-out em modelo barato** — os Workflows já rodam leitores em Haiku automaticamente (o mapeamento da it.1: 6 leitores × Haiku = 398k tokens de subagente a fração do preço); o modelo grande só decide.
+6. **Dieta de baseline** — Desktop: desligar plugins que não usa (é o grosso dos ~15% extras); CLI: `.mcp.json` só com o essencial.
+7. **Selar a ~95% e morrer limpo** — cada seal deixa o estado externo (git/mesh/charter), então a próxima sessão nasce enxuta em vez de herdar contexto gordo.
+
+Resumindo o teste de hoje: o desenho anti-frágil funcionou de ponta a ponta — caiu, retomou sem perder um byte, travou no limite, voltou sozinho e re-armou. Com tmux, esse ciclo inteiro vira não-evento.
+
+## 👤 User *(18:52:17)*
+
+ótimo agora quero que resuma o projeto como um todo com no maximo 1000 caracteres.
+
+## 🤖 Claude *(18:52:31)*
+
+
+## 🤖 Claude *(18:52:36)*
+
+**MCORCH — Constellation Orchestra**: um AIOS soberano de marketing autônomo. SaaS multi-tenant (React + Supabase + Deno Edge) onde agentes de IA geram, distribuem e monetizam conteúdo com economia própria (mcoCoins, débito atômico) e memória viva (Knowledge Mesh GraphRAG, 9.033 nós embedados). O motor: **Viral Autopilot** cria artigos, imagens e vídeo 9:16 (HyperFrames self-hosted, USD=0) em ciclos pagos com refund; o **Reshaper** transforma 1 pilar em posts nativos para 8 canais; publica (WordPress/LinkedIn/IG) e **aprende** com métricas reais (reward multi-métrica brand-first + EWMA + realocação ε-greedy). Módulos: Canvas Studio criativo, editor de vídeo billável, Vision MCP (QA visual + deepsearch), Marketing Hub agentic, avatar Gabriel AI (voz/rosto LGPD-gated), Universo 3D sensorial. Governança: BoK Gate (25 suítes), 4 Leis de Sobrevivência (prova material, SOP antes de código), RLS/BYOK per-user, loops autônomos que planejam, selam e se auto-auditam. Meta: 1º R$ real como Usuário Zero → escala multi-tenant.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
