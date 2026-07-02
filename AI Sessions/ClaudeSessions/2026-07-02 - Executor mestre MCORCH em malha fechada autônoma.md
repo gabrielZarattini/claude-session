@@ -9729,5 +9729,5 @@ Resumindo o teste de hoje: o desenho anti-frágil funcionou de ponta a ponta —
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-02 - Executar loop autônomo MCORCH com charter]]
-> * **Próxima Sessão**: [[2026-07-02 - agent-a21242cc7e950270e]]
+> * **Próxima Sessão**: [[2026-07-02 - Resolver alertas de produção e migrations]]
 %% --- TIMELINE END --- %%
