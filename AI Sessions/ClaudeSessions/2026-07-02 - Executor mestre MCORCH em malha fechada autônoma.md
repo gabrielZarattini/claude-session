@@ -2081,6 +2081,1449 @@ If this event is something the user would act on now, send a PushNotification. R
 > Next wakeup scheduled for 00:57:00 (in 1811s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
 
+## 👤 User *(03:36:48)*
+
+<task-notification>
+<task-id>b1ehhjdfp</task-id>
+<summary>Monitor event: "Standby do loop: novos commits da sessão primária + detecção de morte (tree sujo parado / 45min sem atividade)"</summary>
+<event>COMMIT: 6cb5d39 docs(loop): charter — it.9 crew overlay + sidebar Universo (paridade total; cutover = único passo)</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+## 🤖 Claude *(03:36:57)*
+
+
+## 🤖 Claude *(03:36:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -4; echo \"---STATUS---\"; git status --short; date",
+  "description": "Check it.9 commits and tree state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 6cb5d39 docs(loop): charter — it.9 crew overlay + sidebar Universo (paridade total; cutover = único passo)
+> 9b43d83 feat(universe): 3.9 — crew overlay + additive 'Universo' sidebar entry (parity gaps closed)
+> b12c2fc docs(handoff+readme): v6.73.0 — seal it.7-8 Universe perf 10× + paridade — mesh 9019
+> 135d67c docs(loop): charter — 3.9 paridade shipped; cutover → Fila Sovereign
+> ---STATUS---
+> Thu Jul  2 12:37:00 AM -03 2026
+> ```
+
+## 🤖 Claude *(03:37:14)*
+
+
+## 🤖 Claude *(03:37:14)*
+
+
+## 🤖 Claude *(03:37:18)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Fallback apenas \u2014 Monitor b1ehhjdfp segue como gatilho (commits/morte da prim\u00e1ria).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 01:08:00 (in 1841s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(03:40:23)*
+
+<task-notification>
+<task-id>b1ehhjdfp</task-id>
+<summary>Monitor event: "Standby do loop: novos commits da sessão primária + detecção de morte (tree sujo parado / 45min sem atividade)"</summary>
+<event>COMMIT: 017b746 docs(handoff+readme): v6.73.1 — seal final it.9 (paridade total universo) — mesh 9020 — loop parado</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+## 🤖 Claude *(03:40:34)*
+
+
+## 🤖 Claude *(03:40:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -3; echo \"---STATUS---\"; git status --short; date; echo \"---CHARTER-TAIL---\"; grep -n \"loop parado\\|LOOP PARADO\\|Parar\\|it.9\\|it.10\" .claude/context/autonomous-loop-charter.md | tail -10; echo \"---SEAL-HEAD---\"; sed -n '12,30p' HANDOFF.md",
+  "description": "Inspect final seal and loop stop reason"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 017b746 docs(handoff+readme): v6.73.1 — seal final it.9 (paridade total universo) — mesh 9020 — loop parado
+> 6cb5d39 docs(loop): charter — it.9 crew overlay + sidebar Universo (paridade total; cutover = único passo)
+> 9b43d83 feat(universe): 3.9 — crew overlay + additive 'Universo' sidebar entry (parity gaps closed)
+> ---STATUS---
+> Thu Jul  2 12:40:37 AM -03 2026
+> ---CHARTER-TAIL---
+> 41:- ✅ **Observability gap FECHADO (it.9 + loop 2026-07-01 it.4):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id — infra_health_logs é global-read) fiado em `orchestrate-step` (article @325 + atomizer @431) + `lead-score`. Emite `event='llm_usage'`. **Provado LIVE** (lead-score → row). **+ `logImageUsage(fn,model,count)` (commit `282edf3`):** imagens não têm token usage (custo por-imagem) → `generate-image` emite `event='image_usage'` {fn/model/image_count} pós-sucesso, taggeando o modelo por branch (flux-1.1-pro/gemini-2.5-flash-image/dall-e-3). **Provado LIVE** (helper real → row `{model:black-forest-labs/flux-1.1-pro, image_count:1}`). Custo texto+imagem agora **MEDIDO** → destrava o GO $0. **✅ STREAMING FECHADO (commit `c5614f7`):** `generate-content` pede `stream_options.include_usage` + tee TransformStream passthrough fareja o `usage` do chunk final → `logLlmUsage` no flush (bytes ao cliente inalterados). E2E provado (HTTP 200, 12720 chars, row `{fn:generate-content, total_tokens:208}`). **Arco de observability zero-USD 100% COMPLETO** (texto não-streaming + imagem + texto streaming).
+> 42:- 🔧 **Swaps doutrina (pós-observability):** **IMAGEM — NÃO suprimir (correção it.10, Lei 1):** a suposição do audit ("desperdício puro, não entra no MP4") estava **incompleta** — o `reshape-pillar` **consome a imagem gerada** (`content_library type=image` por `campaign_id`, `reshape-pillar:274-276`) e a **reframa** em variantes por canal (IG photo · Pinterest pin · FB photo, `:42-43`/`:132-136`). Suprimir quebraria os posts de imagem sociais. Caminho $0 da IMAGE = **rotear `pref_image_provider='replicate'` FLUX self-host** (infra, Fila) — NÃO suprimir. **TEXTO** → `:free`/Ollama só no autopilot (D) = decisão de qualidade do Sovereign (Fila).
+> 96:- [ ] **Universe 3.9 — GO de cutover de nav (ÚNICO passo restante, zero gaps):** paridade TOTAL atingida (render+sinapses+fly-to+painel de inteligência+**crew overlay 19 agentes**+**entrada 'Universo' no Sidebar** — it.9 2026-07-02, Vision-QA high). Você já pode ABRIR: Constelação→Universo. Decisão: trocar os destinos da nav legada pro `/universe` (legadas ficam de backup) → depois 3.10 seal fecha a Phase Epsilon V9.
+> 102:## Parar quando
+> ---SEAL-HEAD---
+> ## Task State
+> 
+> ## Handoff Seal Record (2026-07-02) — Loop it.9 (final): Paridade TOTAL do Universo + Loop Parado
+> 
+> Selo final da sessão de loop autônomo (stop por **backlog desbloqueado vazio**). **ORO:** Operator = MCORCH Agent · Reviewer/Owner = Sovereign.
+> 
+> | Fatia | Prova material (Lei 1) | Commits |
+> |-------|------------------------|---------|
+> | **it.9 — crew overlay + Sidebar "Universo"** | 19 agentes vivos no disco (`overlayAgents` → injeção nativa já existente no sigma hook) + stat no terminal + guard `crew_agent__*` no painel; entrada ADITIVA no Sidebar (legadas intactas). Browser: link `/dashboard/universe` no DOM + "Agentes (crew) 19" + 0 erros · **Vision-QA "APROVADA"** · tsc 0 · deployado | `9b43d83` |
+> | **it.10 — void honesto** | Premissa (MEMORY.md 31KB>24.4KB) já resolvida externamente: **14.953B** medidos · 69 arquivos — nada a fazer | — |
+> 
+> Handoff node `345cc2a7-70cb-4d72-895a-c066069f5947` embedado. Mesh **9020 nós**. **Universe: cutover de nav = ÚNICO passo (zero gaps de paridade) → decisão Sovereign; 3.10 sela a Epsilon V9 depois.** Loop PARADO — religar com o prompt canônico da charter.
+> 
+> ## Handoff Seal Record (2026-07-02) — Loop Autônomo it.7-8: Universe Perf 10× + Paridade (3.7-3.9)
+> 
+> Selo incremental do loop (fronteira de Fatia: Universe 3.5→3.9 completa; cutover → Fila). **ORO triplet:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) · Owner = Sovereign (canvas paralelo; legadas intactas; cutover gated).
+> 
+> | Fatia | Prova material (Lei 1) | Commits |
+> |-------|------------------------|---------|
+> ```
+
+## 🤖 Claude *(03:40:58)*
+
+
+## 🤖 Claude *(03:40:58)*
+
+
+## 🤖 Claude *(03:40:59)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:PushNotification",
+  "max_results": 2
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'PushNotification'}]
+> ```
+
+## 🤖 Claude *(03:40:59)*
+
+
+🛠️ **Tool Call**: `TaskStop`
+```json
+{
+  "task_id": "b1ehhjdfp"
+}
+```
+
+> **Tool Result (TaskStop)** - ✅ Success
+>
+> ```
+> {"message":"Successfully stopped task: b1ehhjdfp (REPO=/home/gcrUX/htdocs/constellation-orchestra\nTXDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra\nMYTX=982f623b-f751-491b-9120-ec63e49acb91\nBASE_HEAD=$(git -C \"$REPO\" log -1 --format=%h)\ndirty_since=0\norphan_alerted=0\nwhile true; do\n  head=$(git -C \"$REPO\" log -1 --format=%h 2>/dev/null || echo \"$BASE_HEAD\")\n  if [ \"$head\" != \"$BASE_HEAD\" ]; then\n    echo \"COMMIT: $(git -C \"$REPO\" log -1 --oneline 2>/dev/null)\"\n    BASE_HEAD=$head\n    orphan_alerted=0\n  fi\n  now=$(date +%s)\n  latest_tx=$(ls -t \"$TXDIR\"/*.jsonl 2>/dev/null | grep -v \"$MYTX\" | head -1)\n  tx_age=$(( now - $(stat -c %Y \"$latest_tx\" 2>/dev/null || echo \"$now\") ))\n  dirty=$(git -C \"$REPO\" status --porcelain 2>/dev/null | head -1)\n  if [ -n \"$dirty\" ]; then\n    [ \"$dirty_since\" -eq 0 ] && dirty_since=$now\n    if [ $((now - dirty_since)) -gt 240 ] && [ \"$tx_age\" -gt 300 ]; then\n      echo \"MORTE-MID-EDIT?: primaria sem atividade ha ${tx_age}s com working tree sujo ha $((now-dirty_since))s\"\n      dirty_since=$now\n    fi\n  else\n    dirty_since=0\n  fi\n  if [ \"$tx_age\" -gt 2700 ] && [ \"$orphan_alerted\" -eq 0 ]; then\n    echo \"ORFAO?: nenhuma outra sessao ativa ha ${tx_age}s (>45min) — loop primario provavelmente morto\"\n    orphan_alerted=1\n  fi\n  sleep 30\ndone)","task_id":"b1ehhjdfp","task_type":"local_bash","command":"REPO=/home/gcrUX/htdocs/constellation-orchestra\nTXDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra\nMYTX=982f623b-f751-491b-9120-ec63e49acb91\nBASE_HEAD=$(git -C \"$REPO\" log -1 --format=%h)\ndirty_since=0\norphan_alerted=0\nwhile true; do\n  head=$(git -C \"$REPO\" log -1 --format=%h 2>/dev/null || echo \"$BASE_HEAD\")\n  if [ \"$head\" != \"$BASE_HEAD\" ]; then\n    echo \"COMMIT: $(git -C \"$REPO\" log -1 --oneline 2>/dev/null)\"\n    BASE_HEAD=$head\n    orphan_alerted=0\n  fi\n  now=$(date +%s)\n  latest_tx=$(ls -t \"$TXDIR\"/*.jsonl 2>/dev/null | grep -v \"$MYTX\" | head -1)\n  tx_age=$(( now - $(stat -c %Y \"$latest_tx\" 2>/dev/null || echo \"$now\") ))\n  dirty=$(git -C \"$REPO\" status --porcelain 2>/dev/null | head -1)\n  if [ -n \"$dirty\" ]; then\n    [ \"$dirty_since\" -eq 0 ] && dirty_since=$now\n    if [ $((now - dirty_since)) -gt 240 ] && [ \"$tx_age\" -gt 300 ]; then\n      echo \"MORTE-MID-EDIT?: primaria sem atividade ha ${tx_age}s com working tree sujo ha $((now-dirty_since))s\"\n      dirty_since=$now\n    fi\n  else\n    dirty_since=0\n  fi\n  if [ \"$tx_age\" -gt 2700 ] && [ \"$orphan_alerted\" -eq 0 ]; then\n    echo \"ORFAO?: nenhuma outra sessao ativa ha ${tx_age}s (>45min) — loop primario provavelmente morto\"\n    orphan_alerted=1\n  fi\n  sleep 30\ndone"}
+> ```
+
+## 🤖 Claude *(03:41:04)*
+
+
+🛠️ **Tool Call**: `PushNotification`
+```json
+{
+  "message": "Loop aut\u00f4nomo conclu\u00eddo: v6.73.1 selado (mesh 9020), Universo com paridade total. Falta s\u00f3 seu GO de cutover de nav. Backlog desbloqueado esgotado \u2014 standby encerrado.",
+  "status": "proactive"
+}
+```
+
+> **Tool Result (PushNotification)** - ✅ Success
+>
+> ```
+> Mobile push not sent (Remote Control inactive).
+> ```
+
+## 🤖 Claude *(03:41:30)*
+
+
+## 🤖 Claude *(03:41:30)*
+
+## 🏁 Loop autônomo encerrado — as duas instâncias, de forma limpa
+
+**O loop primário parou por conta própria** com selo final: `017b746` — **v6.73.1, seal it.9** (motivo declarado: *backlog desbloqueado vazio*). Mesh **9020 nós**, handoff node `345cc2a7` embedado, working tree limpo. **Este standby encerra junto**: monitor parado ✅, nenhum wakeup re-armado — nada mais rodando em segundo plano além da infra permanente (crons/services de sempre).
+
+**O que a noite entregou (arco completo do Universe):**
+- **3.5→3.9 completos** — sinapses reais + fly-to (it.6), **perf 10×** (load 21-25s → **2.5s**, it.7), poda do squad-coloring (it.8), painel de inteligência de seleção + **crew overlay (19 agentes)** + **entrada "Universo" na sidebar** (it.9, aditiva — legadas intactas). Vision-QA aprovada, tudo deployado.
+- Detalhe elegante: o "it.10" da primária ia compactar o `MEMORY.md` e encontrou o trabalho **já feito por esta instância** (31KB→14,9KB) — as duas colaboraram sem nenhuma colisão, que era exatamente o desenho do standby.
+
+**Fila de Ação Sovereign — só você destrava (em ordem de valor):**
+1. **GO do cutover de nav do Universo** — único passo restante, zero gaps de paridade. Você já pode abrir **Constelação → Universo** e sentir; ao aprovar, a 3.10 sela a Phase Epsilon V9.
+2. **App registration TikTok/YouTube/Pinterest** — o unlock de todo o arco brand-persona (sem `client_id` nada anda; audits têm lead de semanas, vale submeter cedo).
+3. **Smart-Delete E2E destrutivo** — precisa de um post descartável real + GO (código pronto e provado).
+4. **Gabriel AI 3b** — decisão do motor ArcFace (self-host InsightFace vs API) + credencial Higgsfield + licença comercial do checkpoint.
+5. Postback ML (IP residencial) · Stripe live (ao 1º cliente externo).
+
+**Para religar o loop** (nesta ou em qualquer sessão): cole o prompt canônico stateless que está no rodapé da `.claude/context/autonomous-loop-charter.md` — o estado vive na charter + HANDOFF, então ele retoma de onde parou. Boa noite, Soberano. 🧘
+
+## 👤 User *(03:46:32)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(03:46:32)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(03:47:15)*
+
+
+## 🤖 Claude *(03:47:16)*
+
+Loop re-armado pelo Soberano — retomando o ritual: git fetch + charter fresca (ela mudou 3× desde minha última leitura) + verificação de concorrência (a primária declarou "parado", vou confirmar).
+
+## 🤖 Claude *(03:47:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git fetch --all 2>&1 | tail -2; git status --short; git log --oneline -3; date",
+  "description": "Fetch, verify clean tree and HEAD"
+}
+```
+
+## 🤖 Claude *(03:47:18)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session_mgmt__list_sessions`
+```json
+{
+  "limit": 2
+}
+```
+
+## 🤖 Claude *(03:47:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "offset": 30,
+  "limit": 100
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 733c7b2 docs(handoff): add ORO triplet to session-note (5c gate caught the omission)
+> 0414bbb docs(handoff): session-note — ritual de confirmação delta-zero (âncora 345cc2a7 já selada)
+> 017b746 docs(handoff+readme): v6.73.1 — seal final it.9 (paridade total universo) — mesh 9020 — loop parado
+> Thu Jul  2 12:47:21 AM -03 2026
+> ```
+
+> **Tool Result (mcp__ccd_session_mgmt__list_sessions)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '[\n  {\n    "sessionId": "local_77b1644a-2887-4ef5-9750-39dcbe7a1052",\n    "title": "[handoff]  v6.73.1",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-02T03:45:18.747Z"\n  },\n  {\n    "sessionId": "local_b6f56e08-1d96-4851-b33f-f399bdce5810",\n    "title": "[Handoff] v6.65.0",\n    "cwd": "/home/gcrUX/htdocs/constellation-orchestra",\n    "isArchived": false,\n    "isRunning": false,\n    "lastActivityAt": "2026-07-01T18:23:37.751Z"\n  }\n]'}]
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	---
+> 31	
+> 32	## Backlog (ordem de valor — só DESBLOQUEADOS executam)
+> 33	
+> 34	### ✅ Smart-Delete MVP — SHIPPED (loop it.1-3, 2026-07-01) — gate BoK selado `33fadb0`
+> 35	- ✅ **FR-SD-001 `check-post-existence`** (commit `174d30c`): edge fn read-only, resolve id das 2 fontes, `deletable_via_api` derivado no SERVIDOR (Matriz), sinal correto por API (X data-vs-errors, YT items=[], WP/Pin 200/404, FB/IG code 100). Per-user fail-closed (501 deletáveis) / honestidade non-deletable. WP per-user PURO (o smoke pegou o probe cross-tenant do fallback global → corrigido). deno check · deployed 63.65kB · smoke **9/9** zero-cost · /security-review **NO FINDINGS**.
+> 36	- ✅ **FR-SD-002 `delete-remote-post`** (commit `358d825`): destrutivo, golden-rule (zero flag do cliente), DELETE idempotente WP(force=false Trash)/X/Pinterest, nó Mesh no 1º delete, NÃO apaga local (502 mantém âncora). **Workflow adversarial 4-lentes `wf_ad2b6722` pegou HIGH false-success** (X devolve errors[] p/ 401/403/429 → reportava deleted com tweet no ar) → classificadores puros `_shared/smart-delete-classify.ts` **deno test 15/15** (inclui a regressão 403). deployed 64.57kB · smoke **8/8** zero-cost NÃO-destrutivo.
+> 37	- ✅ **FR-SD-003 UI 3-ramos** (commit `edc27df`): `useSmartDelete` (hook) + `SmartDeleteDialog` (display) + `smart-delete.ts` (branchFor/labels). Fiado nos 2 call-sites do calendário. tsc 0 · eslint 0 novo · build ok · branchFor **7/7** · **browser-verified** (dist servido, sessão User 0 injetada — ramo transparência LinkedIn correto) · **Vision QA confidence high** (sem tela branca/quebra).
+> 38	- 🔒 **Fila Sovereign:** E2E destrutivo REAL (deletar post vivo WP/X/Pinterest + re-verify `exists=false`) — irreversível, Owner=Sovereign, precisa post descartável real + GO. · OTD-SD-001/002 (re-OAuth FB/YT p/ delete) · OTD-SD-006 (WP force=true permanente).
+> 39	
+> 40	### 0. Direção fresca do Sovereign (docs committados `c880fcf`/`a29627b`, 2026-06-30) — PRIORIDADE
+> 41	- ✅ **Observability gap FECHADO (it.9 + loop 2026-07-01 it.4):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id — infra_health_logs é global-read) fiado em `orchestrate-step` (article @325 + atomizer @431) + `lead-score`. Emite `event='llm_usage'`. **Provado LIVE** (lead-score → row). **+ `logImageUsage(fn,model,count)` (commit `282edf3`):** imagens não têm token usage (custo por-imagem) → `generate-image` emite `event='image_usage'` {fn/model/image_count} pós-sucesso, taggeando o modelo por branch (flux-1.1-pro/gemini-2.5-flash-image/dall-e-3). **Provado LIVE** (helper real → row `{model:black-forest-labs/flux-1.1-pro, image_count:1}`). Custo texto+imagem agora **MEDIDO** → destrava o GO $0. **✅ STREAMING FECHADO (commit `c5614f7`):** `generate-content` pede `stream_options.include_usage` + tee TransformStream passthrough fareja o `usage` do chunk final → `logLlmUsage` no flush (bytes ao cliente inalterados). E2E provado (HTTP 200, 12720 chars, row `{fn:generate-content, total_tokens:208}`). **Arco de observability zero-USD 100% COMPLETO** (texto não-streaming + imagem + texto streaming).
+> 42	- 🔧 **Swaps doutrina (pós-observability):** **IMAGEM — NÃO suprimir (correção it.10, Lei 1):** a suposição do audit ("desperdício puro, não entra no MP4") estava **incompleta** — o `reshape-pillar` **consome a imagem gerada** (`content_library type=image` por `campaign_id`, `reshape-pillar:274-276`) e a **reframa** em variantes por canal (IG photo · Pinterest pin · FB photo, `:42-43`/`:132-136`). Suprimir quebraria os posts de imagem sociais. Caminho $0 da IMAGE = **rotear `pref_image_provider='replicate'` FLUX self-host** (infra, Fila) — NÃO suprimir. **TEXTO** → `:free`/Ollama só no autopilot (D) = decisão de qualidade do Sovereign (Fila).
+> 43	- ✅ **HyperFrames nativo SHIPPED (loop 2026-07-01, commits `c422de7` docs + `2ce09b3` código):** render de studio-project agora roda **NATIVO sobre `@hyperframes/core` (Apache-2.0, LICENSE shipado no tarball — verificado Lei 1)** — `bundleToSingleHtml` → Playwright dirige `__player.renderSeek(i/fps)` → FFmpeg bitexact compartilhado. **Elimina `HF_CLI`/`HF_NODE`/trap ARM64 do caminho default** (wrap CLI preservado só como rollback `STUDIO_RENDER_ENGINE=cli`; deletar após 1º render editor-initiated). SDD **§VS-UI-C (Amendment v0.6)**: OTD-VS-020 (substrato B) + FR-VS-050; fundamentado no Workflow 4-lentes `wf_bbc8402d-096` (achado-chave: runtime core = CLI **byte-idêntico** sha256 `1bc431f0…`; o "engine do CLI" é só harness de injeção). **Gates todos verdes:** frame-diff sha256-distinto t=1s/t=6s · byte-determinismo 2× `c721f8f4…` (386.795B) · Vision-QA confidence **high** "Aprovado" · **A/B SSIM 0.9934** vs referência CLI (PSNR 46.8dB) · guard smoke 4/4 · tsc 0 · **worker E2E** `video_renders 020e9bef` done → bucket HTTP 200 **byte-idêntico ao render local** (determinismo cross-run). ⚠️ Honesto: o CLI global segue instalado — o **editor vanilla (Fase A)** ainda roda `hyperframes preview`; sai só quando a Fase B swapar o service (container próprio).
+> 44	
+> 45	
+> 46	
+> 47	### 1. Gabriel AI — Fatia 3b (avatarIdentity + Identity Gate)  ⟶ programa-topo, estende a seal de hoje
+> 48	- ✅ **Emenda BoK VLM-soft SHIPPED (it.1, commit `7b81bfd`):** `10-amendment-3b-identity-gate-vlm-soft.md` — Identity Gate dual-mode (VLM-soft MVP / ArcFace-hard deferido), verificado adversarialmente (wf_188ce24c-881 APPROVE, 6 issues dobradas). FR-AC-013b compare enum + gate_mode discriminador + telemetry key-migration definidos.
+> 49	- ✅ **Fundação 3b SHIPPED (it.2, commit `541f707`):** lib de compare VLM-soft `src/lib/avatar-identity.ts` (FR-AC-013b — parse fail-soft + bands + reconcile N≥2 anti-oscilação, 15/15 testes) + migration `gate_mode` `20260630140000` (§4b, /security-review NO FINDINGS, aplicação deferida ao GO 3b). tsc 0.
+> 50	- ✅ **Nó avatarIdentity SHIPPED + DEPLOYED (it.3, commit `12d06c0`):** FR-AC-012 — type+factory+componente+inspector+registry+nodeTypes+dispatch; upload multi-retrato (canvas-assets `user_id/`), ConsentWizard (train_lora+face_embedding Art.11), provider/tier, botão "Treinar" fail-closed honesto (OTD-AC-017). tsc 0 · eslint 0 · vite build 0. **Browser-verificado** (Usuário Zero, preview): nó no palette Cmd+K + render no canvas + inspector íntegro + zero crash/console-error. **Deployed** ao `dist/` servido (chunk `CanvasEditorPage-DEjSoHib.js` 165.844B contém o nó; env baked). Valor visível ao Sovereign LIVE.
+> 51	- 🔒 **3b DESBLOQUEADO ESGOTADO** — o que resta é todo Sovereign-gated: edge `avatar-identity-train` (OTD-AC-017), gate-into-pipeline + telemetry migration §4b.2 (dependem do train+geração), calibração biométrica (OTD-AC-015). Próximo item do loop = **backlog #2 (YT/TikTok)** OU /handoff seal se janela ~95%.
+> 52	- **HALT (Fila Sovereign):** edge `avatar-identity-train` (OTD-AC-017 Higgsfield) · treino/calibração com **frames biométricos reais do Gabriel** (OTD-AC-015) · GO de produção.
+> 53	
+> 54	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
+> 55	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
+> 56	- 🪤 **ÚNICO gap de código = render-decoupling slice (NÃO o 3-line `VIDEO_FLOW_PLATFORMS`):** adicionar yt/tiktok/pinterest a `VIDEO_FLOW_PLATFORMS` (`autopilot-run:114`) HOJE é **charge-without-value** — documentado no próprio código (`:103-113`): o render 9:16 só é enfileirado pelo `article_generation` (gated em `wordpress`), e o autopilot fana 1 plataforma/sub-run, então um sub-run youtube/tiktok NÃO produz `video_renders` → cobraria VIDEO_COST sem linha p/ refund. Slice real = estender `orchestrate-content`/`-step` p/ enfileirar o render 9:16 em sub-run de plataforma-vídeo **ou** reusar 1 render/ciclo (campaign_id compartilhado) com billing correto (charge 1×, refund-on-fail). Substantivo → Workflow quando priorizado.
+> 57	- 🔒 **VALOR OAuth-GATED (por que o loop pula):** mesmo com o render-decoupling, publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B ~semanas · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock. Código roda em paralelo aos audits, mas NÃO é testável E2E até o OAuth existir (Lei 1). → registrado na Fila; loop segue pro próximo desbloqueado+visível.
+> 58	
+> 59	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
+> 60	- ✅ **Gate Lei 2 SHIPPED (it.2, 2026-06-30):** emenda BoK `video-studio` SDD **§VS-UI-B (Amendment v0.5)** (FR-VS-047/048/049) — verificação empírica Lei 1 dos pacotes **publicados** @hyperframes/studio@0.7.5 + core@0.7.5 (`npm pack` do dist) + Workflow adversarial `wf_b0a6c005-8c2` (APPROVE_WITH_FIXES). Contrato McorchAdapter completeness **PROVADA** (13 métodos = 13 call-sites reais; rotas de arquivo são FS-based → materialização Storage↔volume mandatória). **Deploy = reuso do `video.mcorch.com`** (swap do `video-studio.service` na mesma porta 3210) → **DNS `studio.mcorch.com` NÃO é mais necessário** (portão Sovereign evitado).
+> 61	- ✅ **render-parity RESOLVIDO por prova material (it.3):** em vez de reimplementar seek (risco de MP4-branco), **envolver `hyperframes render`** (renderer de referência local, USD=0) → paridade **definitional**. **Provado E2E:** projeto studio real → `ref-render.mp4` **505.761 B · 1080×1920 · 24fps · 192 frames**; frames t=1s (195.693 B)/t=6s (355.388 B) com **sha256 distintos** = animado + não-branco. Trap ARM64 resolvido (`HYPERFRAMES_BROWSER_PATH`→chromium Playwright). §B.3 emendada.
+> 62	- ✅ **Wiring SHIPPED + provado E2E (it.4):** `renderStudioProject` (render-core.ts, envolve `hyperframes render` + path-safety) + branch `studio-project` no `video-bridge.ts`. Render real `9069bb7d` → bucket 720.678 B (HTTP 200) → `video_assets`+`creative_assets`(1080×1920/8s)+mesh. **Bônus:** achei+corrigi bug TDZ (`ap` usado antes da declaração) que fazia o dual-write de vídeo→`creative_assets` SEMPRE pular silenciosamente; agora renders do editor entram na Biblioteca de Assets. serviço reiniciado (código vivo). `tsc` 0.
+> 63	- ✅ **Guard de segurança blindado (it.6):** `scripts/qa/smoke-studio-project-guard.ts` 4/4 (sub-segundo, sem render) — path-safety do `renderStudioProject` rejeita execução de dir arbitrário (escape absoluto/traversal/vazio) antes de qualquer spawn. Lei 2 hardening do código shipped.
+> 64	- ✅ **GATE FR-VS-047 TOTALMENTE VERDE (it.5):** (a) determinismo → 2 renders args-idênticos **sha256-idêntico** (`1db99067…`, 465.054 B) = NFR-VS-016 mantido; (b) **Vision-QA** (diretiva Sovereign, cost 0) `vision_analyze_video` confidence **high** = composição 9:16 correta (gradiente/logo/título/CTA fade-in, não-branco). Render-parity provado em 3 níveis (frame-diff · byte-determinismo · semântico). **worker-side COMPLETO.**
+> 65	- ✅ **Sub-fatia 2a SHIPPED (loop 2026-07-01, commit `2123a79`):** `scripts/video-studio-host/` — servidor `createStudioApi(mcorchAdapter)` loopback 3211 (vanilla 3210 intocado até o swap 2c) + **McorchAdapter 13 métodos** (§B.2; FS local canônico v1) + **FR-VS-048 (A) PROVADO E2E PAGO**: startRender minta JWT User 0 → `video-render` (chokepoint) → **202 (12 mco, row `b25838a0`)** → worker **nativo FR-VS-050** → done → MP4 materializado em `renders/` **386.795B sha `c721f8f4` (4º render byte-idêntico em 4 contextos)** → download HTTP 200 → SSE `complete`. Smoke **6/6** zero-cost (`smoke-studio-host.ts`) + SOP Lei 2 (`video-studio-host-fase-b.md`). **ACHADO: `VIDEO_HYPERFRAMES_WEBHOOK=poll://` JÁ ESTÁ ATIVO** (billing do editor-render vivo — item da Fila era stale; débito real testemunhado 4636→4624).
+> 66	- ✅ **Sub-fatia 2b SHIPPED (loop 2026-07-01 it.4, commit `4fd9b89`):** FR-VS-049 durabilidade Storage↔volume — sweep write-back periódico+SIGTERM (`sync.ts`: mtime-delta upsert p/ bucket privado `video-studio-projects`, exclui `renders/`+temp, best-effort nunca bloqueia o editor) + materialização no `resolveProject` (staging+rename atômico, negative-cache 60s). Migration `20260701120000` aplicada via Management API (bucket `public:false` verificado). **Provas:** smoke **7/7** (round-trip sha256-igual · renders/ excluído · ghost honesto) · journal `[sync] uploaded 14 files` · `mcorch-video` espelhado no bucket · **/security-review NO FINDINGS** (guard `..` do forward-note aplicado como anticorpo) · tsc 0.
+> 67	- ✅ **Sub-fatia 2c SHIPPED — EDITOR BILLÁVEL VIVO NO 3210 (loop 2026-07-01, commit `e8979e2`):** achado decisivo = `@hyperframes/studio` shipa o **app inteiro pré-buildado** em `dist/` (React 19 bundlado DENTRO; Apache-2.0 LICENSE no tarball; telemetria só same-origin) → zero build próprio; carrier isolado `packages/video-studio-host-ui/` (react@19 NUNCA hoisted no SPA React 18). `server.ts` serve o SPA estático (jail+fallback) same-origin com `/api`. **`video-studio.service` SWAPADO** (vanilla `hyperframes preview` license-None → nosso host, MESMA porta 3210 = mesmo vhost; rollback comentado no unit file). **Provas:** browser-verify no 3210 `#project/mcorch-video` (formato do hash corrigido empiricamente — é `#project/<id>` não `#project=`) → file-tree + preview 9:16 + timeline com tracks reais Glow/Brand/Hook + **0 erros console** · **Vision-QA confidence high "Aprovado"** · multi-projeto (upgrade vs vanilla single) · systemd active + **self-healed** pós-kill. **Fase B restante:** deletar wrap CLI + desinstalar `hyperframes` global (pós uso real do editor pelo Sovereign) · `/dashboard/canvas/video` iframe já existe (vhost cert = Fila OTD-VS-015).
+> 68	- ✅ **OTD-VS-015 FECHADA (verificada it.5, 2026-07-01):** `video.mcorch.com` LIVE ponta-a-ponta (CF+cert+gate+proxy→3210). Fase B toda entregue e PÚBLICA (SSO-gated).
+> 69	
+> 70	### 4. Unified Sensorial Canvas — Fases 3.5-3.10  ⟶ engenharia pura, SEM portão Sovereign (filler sempre disponível)
+> 71	- ✅ **3.5 SINAPSES + 3.6 FLY-TO SHIPPED (loop 2026-07-01 it.6, commit `645a16e`):** sinapses = arestas REAIS de `mcorch_edges` ancoradas por membership dos 2 sets renderizados (**25 vivas**; censo por node_type=7 — ambos honestos, membership é a verdade do render); fetch escopado a DERIVES_FROM/observes (~3k rows) + classificação client-side; matemática de layout extraída p/ `lib/universe-layout.ts` (fonte única: layers+sinapses+fly-to). CameraRig: clique em nó (2 redes) → seleção + órbita próxima (getState em handler/useFrame, guarda Error #185). **Provas:** browser-verify (8.599 nós/8.816 arestas/775 comunidades; clique sintético → `memory · af33a839…` + câmera voou; 0 erros console) · **Vision-QA high** ("linhas de sinapse visíveis, layout íntegro") · tsc 0 · deployado (chunk `UnifiedCanvasPage-oTw8MRCw.js`). **✅ 3.7 PERF + 3.8 PODA SHIPPED (loop 2026-07-02 it.7, commit `5cc1022`):** load do universo **21-25s → 2.496ms** (medido in-browser; janela REST 2.181ms/31 reqs). 3 fixes compostos provados por resource-timing forense: páginas paralelas pós-count · memo graphology+Louvain gated até TODOS os inputs (rodava 3× com dado parcial bloqueando o main thread) · **MegaBrainVisualizer montado só pós-load** (compile do shader raymarch stallava ~10s até fetches alheias). 3.8: query `crew_module_ownership` morta (0 rows, Decisão B) → `enableOwnership` opt-in default-off (Matrix legado passa true, backup intacto). Vision-QA high (backdrop presente pós-load) · 0 erros console · tsc 0 · deployado. **✅ 3.9-PARIDADE SHIPPED (loop 2026-07-02 it.8, commit pós-5cc1022):** painel de inteligência on-select no Terminal Tático (nome/tipo/estab/comunidade/calls + conteúdo real fetch grátis + botão "Analisar (IA)" explícito — paridade com o NodeDetailsPanel do Matrix legado). QA handle `window.__unifiedCanvas` (padrão __hf; raycast headless flaky a 1920 — click path provado na it.6). Browser-verify 1920×1080 (gate E2E): nó real `835c8a43` → painel com conteúdo "[HANDOFF SEAL]…" · 0 erros · Vision-QA high · deployado. **Paridade restante (declarada honesta):** crew-overlay de agentes no universo (Matrix tem; follow-up) · toggles no Sidebar (in-page existe). **🔒 CUTOVER DE NAV = DECISÃO SOVEREIGN (Fila)** · 3.10 seal após. Plano: `.claude/context/unified-core-sensorial-canvas-plan.md`.
+> 72	- **ACHADO 3.5 (loop 2026-07-01 it.6, Lei 1 — GO/NO-GO respondido via SQL live):** só **7 arestas cross-partition reais** em `mcorch_edges` (4 `DERIVES_FROM` + 3 `observes`; partição = `node_type like 'ast_%'` ~8.2k vs conhecimento; colunas: `source_id`/`target_id`/`relation_type`). Fase A da 3.5 = 7 linhas (trivial, payoff visual baixo); riqueza real = Fase B `OTD-SYNAPSE-EMBEDDING` (similaridade 768d, rotulada como similarity — nunca relação fabricada). Implementar 3.5-A junto com 3.6 fly-to numa iteração só (mesmos arquivos).
+> 73	- ⚠️ **Evento 2026-07-01 ~20:20: session limit Anthropic** (subagentes rejeitados, reset 23:10 BRT) matou o Workflow `wf_4674cd50-64c` — loop pausado até o reset; retomar com understand solo dos 4 arquivos do canvas (CodeNetworkLayer/MemoryNetworkLayer/UnifiedCanvasPage/useUnifiedCanvasStore) OU re-rodar o Workflow (script salvo: `workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js`).
+> 74	- **HALT:** nenhum até cutover de nav (3.9) — aí confirmar com Sovereign.
+> 75	
+> 76	### 5. Security — OTD-SEC-006 (sentinel-wiring) + OTD-SEC-007 (lefthook/gitleaks)  ⟶ hardening
+> 77	- ✅ **OTD-SEC-007 já estava FECHADA** (`lefthook.yml` + `.gitleaks.toml` ativos — provado nos pre-commit desta sessão).
+> 78	- ✅ **OTD-SEC-006 sentinel-wiring FECHADO (it.7):** `generate-content` (inspeciona `prompt` antes do LLM) + `lead-score` (inspeciona `intent_signal`+`context` antes do débito de 1 mco) fiados+deployados+**provados LIVE** — injeção→403 `prompt_injection_suspected`, legítimo→não-403 (sem FP), lead-score bloqueia com **saldo intacto** (sem charge-without-value).
+> 79	- ✅ **FR-SEC-014 parte 1 FECHADA (it.8):** migration `20260701000000_security_events_ledger.sql` (ledger imutável) + `logSentinelBlock`. `/security-review` NO FINDINGS. Provado LIVE.
+> 80	- ✅ **FR-SEC-014 parte 2 FECHADA + P0 DE MINT PRÉ-EXISTENTE FECHADO (loop 2026-07-01, commit `9fe1e36`):** migration `20260701010000` — freeze econômico (`is_frozen` + `deduct_mco_coins`+Guard 3 [byte-VERBATIM provado vs corpo vivo, só o guard adicionado] + trigger `quarantine_on_critical_event` [critical→freeze na mesma txn + n8n pg_net Vault-gated] + `admin_set_frozen` has_role-gated). **BÔNUS decisivo:** o smoke desenterrou um **P0 pré-existente de MINT** — cliente cunhava o próprio `mco_balance` direto (grant UPDATE table-level + RLS own-row; `REVOKE(col)` é no-op) → **FECHADO** com trigger `BEFORE UPDATE` por `current_user` (memória [[reference_profiles_column_guard_mint_hole]]). Aplicada à prod + **smoke 11/11** funcional+segurança (freeze/42501/regressão/privesc/RLS/mint-block/no-over-block). ✅ **`/security-review` independente de backstop = CLEAN** (commit `bb5d600`; sub-agente pós-reset varreu todas as fns que escrevem balance→só deduct[guarded]/admin_set_frozen[has_role] client-reachable, resto service-role-only, overload legado dropado; privesc/RLS/Vault/over-under-block/search_path todos fechados). Aplicada a 1 observação non-blocking: `BEGIN/EXCEPTION` no `PERFORM net.http_post` do trigger (falha do webhook nunca reverte o freeze). **Item da Fila FECHADO.**
+> 81	
+> 82	---
+> 83	
+> 84	## Fila de Ação Sovereign (SÓ você destrava — preenchida pelo loop)
+> 85	- [ ] **Smart-Delete — E2E destrutivo REAL (witness):** com um post descartável REAL publicado (WP/X/Pinterest), clicar "Deletar da rede + MCORCH" e confirmar `check-post-existence` pós-delete → `exists=false` (SOP success signal). Irreversível (Owner=Sovereign) → precisa GO + post descartável. O código está pronto+provado (fail-closed/idempotente/golden-rule); só o witness destrutivo é gated.
+> 86	- [ ] **OTD-AC-015 (Gabriel AI 3b — ArcFace-HARD):** decidir/provisionar motor de embedding facial (InsightFace self-host no Mesh OU API paga Rekognition/Azure/Face++) + custo/credencial. Sem isso o Identity Gate fica VLM-soft (human-review-assist, não anti-impersonation automático).
+> 87	- [ ] **OTD-AC-015b — biometria calibração-grade:** frames reais do Gabriel rotulados (mesma/diferente) p/ FAR/FRR/EER — só após o motor ArcFace existir.
+> 88	- [ ] **OTD-AC-017 (Soul ID train):** credencial Higgsfield + confirmar API self-serve de treino (≥20 fotos); senão fallback Tier1/Tier2 ou LoRA-FLUX (gated commercial-license).
+> 89	- [ ] **Licença comercial (FM-AC-001/OTD-AC-011):** confirmar checkpoint comercial da base de geração (FLUX.1-dev é non-commercial) — Sovereign + jurídico flipam `commercial_license_ok`.
+> 90	- [ ] **GO de produção 3b** sobre o Usuário Zero + GO de gasto do loop de verificação caso não use BYOK openrouter (com BYOK = cost 0).
+> 91	- [x] **Editor render user-initiated (FR-VS-048/VS-009): JÁ ATIVO — achado material 2026-07-01.** `VIDEO_HYPERFRAMES_WEBHOOK=poll://` estava setado (desde a fatia autopilot-vídeo); o loop testemunhou débito real 12 mco (4636→4624, row `b25838a0`) + render nativo + refund-path intacto. Item era stale — nenhuma ação restante.
+> 92	- [x] **GO de gasto — 1º ciclo PAGO de vídeo: FEITO E TESTEMUNHADO (2026-07-01).** GO Sovereign dado; `video_enabled=true` no plano `640b3b67`; ciclo `77e02fca` completed (actual **32 mco**, saldo 4669→4637); render `561a31df` done (MP4 **776.522B** 1080×1920 5s no bucket `video-studio-assets`); reconciliação FR-VA-025 → `content_library e27a09e7` type=video. Título trend-informed ("Do iPhone de 2007 ao Roborock de 2024"). **Doutrina reconciliada** (audit `wf_6d3bdbd6-eb7`, memória `feedback_opensource_first_zero_cost_equity`): render HyperFrames self-hosted USD=0; texto/imagem ~$0.05/ciclo na BYOK OpenRouter do Sovereign → **Gemini 2.5 Pro MANTIDO** (qualidade brand-first vale). Ollama self-host = hardening diferido. **Próximo (opcional):** `is_active=true` liga a cadência pg_cron (vídeo autônomo a cada 3 dias) · telemetria `llm_usage` p/ tornar o USD visível · cortar imagem AI redundante.
+> 93	- [x] **DNS/vhost `video.mcorch.com`: VERIFICADO LIVE (loop 2026-07-01 it.5)** — cadeia pública E2E provada: CF (SSL válido) → nginx origem (302 sem cookie) → sso-auth-gate ES256 (cookie=JWT User 0 mintado) → 127.0.0.1:3210 nosso host (`/healthz {ok,ui:true}` + `/api/projects` + SPA **rebrandada 'MCORCH Studio'** via sub_filter do vhost, logo HeyGen oculto — Apache-2.0 §6 ok). **Editor billável acessível ao Sovereign**: `video.mcorch.com` ou `/dashboard/canvas/video`. Pendente só `design.mcorch.com`.
+> 94	- [ ] **App registration (STEP 0 — o unlock de TODO o #2, ainda NÃO feito, lead ~horas-2d):** registrar apps TikTok (Content Posting API Direct Post + add persona como sandbox user) · YouTube/Google Cloud (canal Brand + OAuth consent External) · Pinterest (Business + Developer Terms + privacy URL → Trial). Sem `client_id`/`secret` nenhum OAuth começa. Submeter os audits no MESMO dia (lead-time corre em paralelo ao código).
+> 95	- [ ] **OAuth/App Review (após registration, lead semanas):** TikTok Content Posting audit (~2-6sem — levanta SELF_ONLY) · YouTube gate A (OAuth verify ~10d) + gate B (API Audit & Quota, serial+independente) · Pinterest Trial→Standard · Instagram App Review · Twitter Basic tier · re-OAuth IG insights (analytics visível).
+> 96	- [ ] **Universe 3.9 — GO de cutover de nav (ÚNICO passo restante, zero gaps):** paridade TOTAL atingida (render+sinapses+fly-to+painel de inteligência+**crew overlay 19 agentes**+**entrada 'Universo' no Sidebar** — it.9 2026-07-02, Vision-QA high). Você já pode ABRIR: Constelação→Universo. Decisão: trocar os destinos da nav legada pro `/universe` (legadas ficam de backup) → depois 3.10 seal fecha a Phase Epsilon V9.
+> 97	- [ ] **Postback ML definitivo:** IP residencial / portal ML (matt_tool/meli.la).
+> 98	- [ ] **Stripe live keys:** ao primeiro cliente externo.
+> 99	
+> 100	---
+> 101	
+> 102	## Parar quando
+> 103	janela ~95% (selo final) · OU backlog desbloqueado vazio · OU GO/stop explícito do Sovereign.
+> 104	
+> 105	---
+> 106	
+> 107	## Como religar / continuar o loop (prompt canônico STATELESS)
+> 108	
+> 109	> O loop se re-agenda sozinho via `ScheduleWakeup` ao fechar cada ciclo — **não precisa re-colar entre ciclos**. Cole o prompt abaixo SÓ para **religar após um stop**. É *stateless* de propósito: o estado vive nesta charter + no HANDOFF.md, então este texto nunca apodrece (nunca embuta "Estado: it.X / Próximo = …", que fica obsoleto).
+> 110	
+> 111	```
+> 112	/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia
+> 113	.claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git
+> 114	fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada
+> 115	iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo
+> 116	fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review
+> 117	se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao
+> 118	bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise —
+> 119	registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff
+> 120	incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog
+> 121	desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+> 122	```
+> 123	
+> 124	**Redirecionar/parar:** mande PT-BR normal ("pula pra YT/TikTok", "para e mostra a Fila Sovereign", "stop") — interrompe o laço e reabsorvo a direção.
+> 125	
+> ```
+
+## 🤖 Claude *(03:48:45)*
+
+
+## 🤖 Claude *(03:48:45)*
+
+
+## 🤖 Claude *(03:48:46)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Loop assume execu\u00e7\u00e3o \u2014 render-decoupling",
+  "summary": "Prim\u00e1ria parou (v6.73.1); esta sess\u00e3o vira executora. Item #2: desacoplar render 9:16 do flow wordpress p/ sub-runs de plataforma-v\u00eddeo com billing correto."
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Loop assume execução — render-decoupling". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(03:49:34)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'map-render-decoupling-contract',\n  description: 'Mapear o contrato vivo do render 9:16 do autopilot antes do render-decoupling slice (YT/TikTok/Pinterest)',\n  phases: [\n    { title: 'Map', detail: '6 leitores paralelos sobre edge fns, worker, RPCs e BoK' },\n  ],\n}\n\nconst SCHEMA = {\n  type: 'object',\n  required: ['summary', 'facts', 'gotchas', 'open_questions'],\n  properties: {\n    summary: { type: 'string', description: 'Resumo de 3-6 frases do contrato encontrado' },\n    facts: {\n      type: 'array',\n      items: {\n        type: 'object',\n        required: ['claim', 'evidence'],\n        properties: {\n          claim: { type: 'string' },\n          evidence: { type: 'string', description: 'path:linha exato (ex supabase/functions/autopilot-run/index.ts:114)' },\n        },\n      },\n    },\n    gotchas: { type: 'array', items: { type: 'string' } },\n    open_questions: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nphase('Map')\n\nconst COMMON = `Voc\u00ea \u00e9 um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evid\u00eancia path:linha exata \u2014 nunca suposi\u00e7\u00e3o. Contexto da miss\u00e3o: vamos desacoplar o render de v\u00eddeo 9:16 do autopilot, que hoje s\u00f3 \u00e9 enfileirado dentro do flow article_generation (plataforma wordpress), para que sub-runs de plataformas de v\u00eddeo (youtube/tiktok/pinterest/instagram) tamb\u00e9m produzam/reusem um render 9:16 com billing correto (cobrar 1\u00d7 por ciclo, refund-on-fail \u2014 OTD-VA-010). Precis\u00e3o de linha importa: o c\u00f3digo ser\u00e1 editado com base no seu mapa.`\n\nconst readers = [\n  {\n    label: 'read:autopilot-run',\n    prompt: `${COMMON}\nArquivo principal: supabase/functions/autopilot-run/index.ts\nExtraia:\n1. Como o ciclo fana sub-runs (produto\u00d7rede\u00d7ab_variants) \u2014 onde a lista de plataformas \u00e9 montada.\n2. VIDEO_FLOW_PLATFORMS (~linha 114) \u2014 conte\u00fado exato, onde \u00e9 usado, e o coment\u00e1rio das linhas ~103-113 que documenta por que youtube/tiktok N\u00c3O est\u00e3o l\u00e1 (charge-without-value).\n3. Como o custo do ciclo \u00e9 computado (expected/planned units \u2014 VIDEO_COST entra quando? video_enabled vem de onde?) e como begin_autopilot_cycle recebe isso.\n4. O que exatamente \u00e9 passado a orchestrate-content por sub-run (payload: platform? prepaid? cycle_id? product? trend?).\n5. Como o actual \u00e9 reportado ao finalize_autopilot_cycle (refund de reserva n\u00e3o usada).`,\n  },\n  {\n    label: 'read:orchestrate-content',\n    prompt: `${COMMON}\nArquivo principal: supabase/functions/orchestrate-content/index.ts\nExtraia:\n1. O caminho prepaid (FR-VA-016) \u2014 como sub-run do autopilot evita self-bill; onde o d\u00e9bito normal acontece p/ user-path.\n2. O fix nVideoRuns (billing de v\u00eddeo por ciclo \u2014 v6.52): onde o custo de v\u00eddeo \u00e9 contado, sob que condi\u00e7\u00e3o (s\u00f3 article-flow/wordpress?), e como refund \u00e9 emitido se render n\u00e3o acontece.\n3. Como platform do sub-run determina os steps criados (article_generation vs linkedin/twitter/etc) \u2014 onde essa decis\u00e3o mora, e o que um sub-run youtube/tiktok geraria hoje (quais steps).\n4. campaign_id: como \u00e9 gerado/threaded (\u00e9 compartilhado entre sub-runs do mesmo ciclo?). Isso \u00e9 CR\u00cdTICO para a op\u00e7\u00e3o reusar-1-render/ciclo.`,\n  },\n  {\n    label: 'read:orchestrate-step',\n    prompt: `${COMMON}\nArquivo principal: supabase/functions/orchestrate-step/index.ts\nExtraia:\n1. O bloco de enqueue do render 9:16 dentro do article_generation (condi\u00e7\u00f5es exatas: platform? cycleId? video_enabled?): constru\u00e7\u00e3o da composition (inclui composition.autopilot? campaign_id? title?), invoke do video-render, e o fail-open com refund_autopilot_video_enqueue (quando !enqueued && cycleId).\n2. FR-VA-011 feedback injection e FR-VA-025 attach \u2014 o que do ciclo \u00e9 threaded no step.\n3. Steps de plataformas sociais (linkedin/twitter legados n\u00e3o enfileiram mais \u2014 autoridade \u00fanica de enqueue): confirmar como um step de youtube/tiktok/pinterest seria processado hoje (existe branch? cai em default?).\n4. Onde o artigo/copy do sub-run vira content_library row (type, campaign_id) \u2014 o render precisa de t\u00edtulo/\u00e2ngulo de onde?`,\n  },\n  {\n    label: 'read:video-pipeline',\n    prompt: `${COMMON}\nArquivos: supabase/functions/video-render/index.ts \u00b7 scripts/video-bridge.ts \u00b7 supabase/migrations/20260624120000_*.sql (video_renders.composition) \u00b7 supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql \u00b7 migration com finalize_video_render (procure em supabase/migrations/ por finalize_video_render).\nExtraia:\n1. video-render edge: quem pode chamar (JWT? service-role?), custo (12 mco?), o flag prepaid=true que suprime self-bill (OTD-VA-010) \u2014 onde exatamente.\n2. video_renders schema: colunas relevantes (composition jsonb, engine, status) + claim at\u00f4mico do worker.\n3. video-bridge: branch por engine/composition; quando composition.autopilot existe, o attach FR-VA-025 (content_library + creative_metrics) \u2014 o que exatamente \u00e9 escrito e com que user_id/campaign_id; o kick do reshape-pillar scope=video ap\u00f3s finalize.\n4. finalize_video_render: sem\u00e2ntica (refund? idempot\u00eancia?). refund_autopilot_video_enqueue: guardas (PK run_id, anti-mint <=100, service-role-only).`,\n  },\n  {\n    label: 'read:publish-path',\n    prompt: `${COMMON}\nArquivos: supabase/functions/auto-publish/index.ts (resolu\u00e7\u00e3o de video_url ~linha 111) \u00b7 supabase/functions/publish-social/index.ts (branches de v\u00eddeo TikTok/YouTube/Pinterest ~linhas 263-616).\nExtraia:\n1. auto-publish: como um post agendado de plataforma-v\u00eddeo resolve o asset (content_library type=video? channel_variants? metadata.reshape? owner-scoped?) e o que precisa existir para um post youtube/tiktok sair com v\u00eddeo.\n2. publish-social: por plataforma (youtube/tiktok/pinterest/instagram) \u2014 o que consome (video_url p\u00fablica? bytes? caption?), credenciais de onde (social_accounts/social_app_config), e qual seria o gap se o sub-run s\u00f3 tiver texto sem video_url.\n3. Quem AGENDA os posts sociais do autopilot hoje (onde o enqueue social acontece \u2014 orchestrate-content? reshape-pillar? channel_variants?) e com que metadata.`,\n  },\n  {\n    label: 'read:bok-sop',\n    prompt: `${COMMON}\nArquivos: docs/processes/autopilot-video-9x16.md \u00b7 docs/bok/viral-autopilot/04-frd.md (Amendment v0.2, FR-VA-022..026) \u00b7 docs/bok/post-engine/10-amendment-social-connect-*.md (FR-PE-005..016; liste os arquivos que casam com o glob) \u00b7 docs/processes/autopilot-cron-identity.md (s\u00f3 a parte de billing/identidade que constrange o slice).\nExtraia:\n1. O que a BoK J\u00c1 especifica sobre v\u00eddeo por plataforma: FR-VA-022..026 texto essencial (quem enfileira, cobran\u00e7a \u00fanica no pr\u00e9-d\u00e9bito, prepaid=true, attach, reconcilia\u00e7\u00e3o fail-open) \u2014 o slice cabe nas FRs atuais ou exige emenda BoK (Closed-Loop Step 3.5)?\n2. FR-PE-005..016: o que dizem sobre publicar v\u00eddeo em youtube/tiktok/pinterest (cad\u00eancia FR-PE-013 deferida?).\n3. Gates da SOP autopilot-video-9x16.md (G1-G8) que o slice precisa manter verdes.\n4. Veredito fundamentado: emenda BoK necess\u00e1ria (sim/n\u00e3o) e onde (FRD viral-autopilot vs post-engine), com cita\u00e7\u00e3o.`,\n  },\n]\n\nconst results = await parallel(readers.map(r => () =>\n  agent(r.prompt, { label: r.label, phase: 'Map', schema: SCHEMA, agentType: 'Explore' })\n))\n\nconst named = {}\nreaders.forEach((r, i) => { named[r.label] = results[i] })\nreturn named"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w1y1hgbh9
+> Summary: Mapear o contrato vivo do render 9:16 do autopilot antes do render-decoupling slice (YT/TikTok/Pinterest)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/subagents/workflows/wf_e71d7b7d-387
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/workflows/scripts/map-render-decoupling-contract-wf_e71d7b7d-387.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/workflows/scripts/map-render-decoupling-contract-wf_e71d7b7d-387.js"} to iterate without resending the script.)
+> Run ID: wf_e71d7b7d-387
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/workflows/scripts/map-render-decoupling-contract-wf_e71d7b7d-387.js", resumeFromRunId: "wf_e71d7b7d-387"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(03:49:43)*
+
+
+## 🤖 Claude *(03:49:43)*
+
+
+## 🤖 Claude *(03:49:49)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Fallback \u2014 o Workflow wf_e71d7b7d (mapeamento) notifica ao completar; timer s\u00f3 cobre travamento.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 01:20:00 (in 1811s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(03:55:23)*
+
+<task-notification>
+<task-id>w1y1hgbh9</task-id>
+<tool-use-id>toolu_01Vyx86Lqgr94ndQZC1UvMnN</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/tasks/w1y1hgbh9.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Mapear o contrato vivo do render 9:16 do autopilot antes do render-decoupling slice (YT/TikTok/Pinterest)" completed</summary>
+<result>{"read:autopilot-run":{"summary":"O autopilot-run orquestra um ciclo de geração viral por ciclo: load plano tenant-scoped → fana N_runs = produtos × plataformas × ab_variants → calcula custo projetado (N_runs × 10 + N_video × 12 + 2) → pré-débito atômico via begin_autopilot_cycle → fan-out orchestrate-content prepaid (sem self-bill) → finalize reconcilia actual com refund da reserva. O vídeo 9:16 é enfileirado APENAS no article_generation (wordpress), não em linkedin/twitter (charge-without-value evitado). O render é fail-open, nunca derruba ciclo; refunds de enqueue falho são créditos idempotentes, preservando a contabilidade 1× por sub-run.","facts":[{"claim":"Fan-out calcula N_runs como produto cartesiano: produtos × plataformas × ab_variants.","evidence":"supabase/functions/autopilot-run/index.ts:91-94"},{"claim":"VIDEO_FLOW_PLATFORMS é um Set hardcoded com apenas ['wordpress'], não inclui youtube/tiktok/pinterest.","evidence":"supabase/functions/autopilot-run/index.ts:114"},{"claim":"Comentário linhas 103-113 explica a restrição: article_generation só roda para wordpress, linhas 104-105 referem orchestrate-content:231-232; linkedin/twitter nunca atingem video_generation, então contar VIDEO_COST seria charge-without-value.","evidence":"supabase/functions/autopilot-run/index.ts:103-113"},{"claim":"Custo projetado entra na RPC: projected = nRuns × ORCH_COST(10) + nVideoRuns × VIDEO_COST(12) + ANALYZE_COST(2), onde nVideoRuns = videoEnabled ? produtos × videoPlatformCount × abVariants : 0.","evidence":"supabase/functions/autopilot-run/index.ts:118, linhas 20-22 definem as constantes"},{"claim":"begin_autopilot_cycle recebe p_projected_mco e p_planned_units (nRuns), faz cap-check ATÔMICO (advisory lock), pré-débito com deduct_mco_coins na mesma transação.","evidence":"supabase/functions/autopilot-run/index.ts:165-167, supabase/migrations/20260620120200_begin_autopilot_cycle.sql:23-103"},{"claim":"orchestrate-content recebe payload com video_enabled, video_format, cycle_id, prepaid (passthrough de sub-run); prepaid=true supprime o deduct_mco_coins (linha 100, 132).","evidence":"supabase/functions/orchestrate-content/index.ts:98-100, 132-158"},{"claim":"orchestrate-step insere pipeline_run.metadata com video_enabled, cycle_id, products, platform; no article_generation, se videoEnabled, enfileira video_renders com charged_mco=VIDEO_COST (prepaid=true no enqueue, nenhum deduct).","evidence":"supabase/functions/orchestrate-step/index.ts:186-223, linhas 497-559 (video enqueue)"},{"claim":"Enqueue do vídeo falha-aberta (skipped), mas se !enqueued &amp;&amp; cycleId, dispara refund_autopilot_video_enqueue (crédito idempotente por run_id).","evidence":"supabase/functions/orchestrate-step/index.ts:533-557, especialmente 543-546"},{"claim":"orchestrate-content passa para orchestrate-step o topic, platforms=[pair.platform], product_ids=[pair.product], cycle_id, video_enabled, video_format, auto_publish=autoPublish (baseado em plan.hitl_required).","evidence":"supabase/functions/orchestrate-content/index.ts:240-246"},{"claim":"autopilot-run calcula actual = succeeded × ORCH_COST + succeededVideo × VIDEO_COST + analyzeCharged ANTES de finalizar, succeededVideo conta só wordpress sub-runs que responderam HTTP 200.","evidence":"supabase/functions/autopilot-run/index.ts:226-227, 249-250, 262-266"},{"claim":"finalize_autopilot_cycle(cycle_id, actual) faz refund = GREATEST(0, spend_mco - actual) via add_mco_coins (crédito positivo idempotente), entrada com ledger compensatório.","evidence":"supabase/migrations/20260620120300_finalize_autopilot_cycle.sql:17-71, específica linhas 41-62"},{"claim":"Três refunds distintos: (a) ciclo: projected − actual (sub-runs não-iniciados); (b) render falho: finalize_video_render(failed, refund=VIDEO_COST); (c) enqueue falho: refund_autopilot_video_enqueue(run_id, …) idempotente.","evidence":"docs/processes/autopilot-video-9x16.md:84 (tabela Cost &amp; atomicity contract), supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql:47-88"},{"claim":"refund_autopilot_video_enqueue garante exatamente um crédito por sub-run (INSERT ON CONFLICT DO NOTHING, PK run_id), idempotente no retry.","evidence":"supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql:50-88, linhas 72-76"},{"claim":"video_renders.charged_mco é um marcador (não uma dedução real); o preço foi pré-debitado; fail-open orchestrate-step refunda se o INSERT falhar.","evidence":"supabase/functions/orchestrate-step/index.ts:498 (define VIDEO_COST=12 localmente), 525-531 (insert video_renders)"}],"gotchas":["O comentário 103-113 usa referência 'orchestrate-content:231-232', mas a realidade é que orchestrate-content em linha 240 passa apenas `platforms: [pair.platform]` — a validação de 'só wordpress' está em orchestrate-step (que recebe a plataforma via metadata.platforms na linha 187).","VIDEO_FLOW_PLATFORMS está codificado em autopilot-run (linha 114), mas o desacoplamento futuro vai exigir mover essa lógica para algum lugar que sub-runs de youtube/tiktok/pinterest possam TAMBÉM enfileirar a mesma composição 9:16 — o FIX descrito em 109-113 diz 'Re-add ONLY com a orchestrate-content/-step enqueue-gate extension'.","O actual é calculado OTIMISTA: autopilot-run presume que se orchestrate-content retornou HTTP 200, a linha de vídeo foi enfileirada — mas o enqueue async acontece ~60s depois no orchestrate-step. Se o INSERT falha, o actual já tem o 12, então SEM O CRÉDITO compensatório, o tenant é cobrado.","A RPC refund_autopilot_video_enqueue nunca é chamada se o vídeo NÃO era video_enabled — é interno a orchestrate-step, apenas no caminho video (videoEnabled &amp;&amp; cycleId).","O prepaid=true NO ENQUEUE presume que o payload chegou de autopilot-run (isCron=true, x-autopilot-user-id header) — um user-path caller que tente passar prepaid=true é ignorado (linha 100)."],"open_questions":["Será que a fan-out reallocation (FR-VA-030, winner produto×plataforma) afeta a contagem de nVideoRuns? A realocação é budget-neutral (Σ n fica = nRuns), então videoPlatformCount não muda, mas N_runs × ab_variants SIM varia por par — porém o nVideoRuns é pré-calculado ANTES da realocação (linha 116 vs 217-223). Isso significa que a contagem de custo de vídeo NÃO segue a realocação dinamicamente?","A composição.autopilot (linha 523) passa cycle_id, mas como o worker HyperFrames concretamente usa isso para anexar o asset à content_library? Há um poller separado ou o próprio worker de render (video-bridge.ts) faz o attach?","O refund_autopilot_video_enqueue é disparado apenas em orchestrate-step, mas há um caso em que a step NUNCA é enfileirada? Por exemplo, se async_orchestrate_step falha em orchestrate-content (linha 252)? Se esse caso existir, o compensating credit jamais dispara.","Como autopilot-run saberá que um sub-run de youtube FUTURO enfileirou um render, se VIDEO_FLOW_PLATFORMS for estendido? Ele vai recalcular nVideoRuns dinamicamente ou vai ser um refactor maior da RPC?"]},"read:orchestrate-content":{"summary":"Contrato de desacoplamento do vídeo 9:16 do autopilot: pipeline é hoje monolítico (article_generation gera 9:16 via HyperFrames), pré-debitado no ciclo, com refund em 3 caminhos (falha de ciclo via finalize_autopilot_cycle, falha de render via finalize_video_render, falha de enqueue via refund_autopilot_video_enqueue). O campaign_id não é gerado por ciclo: é NULL por padrão ou passa do cliente, compartilhado implicitamente via orchestrate-content invocação por sub-run. Para reusar 1 render/ciclo entre plataformas: (1) estender VIDEO_FLOW_PLATFORMS em autopilot-run:114 para incluir youtube/tiktok/pinterest (muda projeção de nVideoRuns); (2) criar nova pipeline de sub-run que compartilhe o render 9:16 já existente via content_library.id; (3) refund permanece idempotente por run_id.","facts":[{"claim":"Caminho prepaid (FR-VA-016) — sub-runs do autopilot evitam self-bill porque o ciclo pré-debita atomicamente uma única vez","evidence":"supabase/functions/o
+... (truncated 35582 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/tasks/w1y1hgbh9.output)</result>
+<failures>parallel[3] failed: agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output</failures>
+<usage><agent_count>6</agent_count><subagent_tokens>398098</subagent_tokens><tool_uses>112</tool_uses><duration_ms>349486</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(03:55:33)*
+
+
+## 🤖 Claude *(03:55:33)*
+
+
+## 🤖 Claude *(03:55:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/982f623b-f751-491b-9120-ec63e49acb91/tasks/w1y1hgbh9.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Mapear o contrato vivo do render 9:16 do autopilot antes do render-decoupling slice (YT/TikTok/Pinterest)",
+> 3	  "agentCount": 6,
+> 4	  "logs": [
+> 5	    "parallel[3] failed: agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output"
+> 6	  ],
+> 7	  "result": {
+> 8	    "read:autopilot-run": {
+> 9	      "summary": "O autopilot-run orquestra um ciclo de geração viral por ciclo: load plano tenant-scoped → fana N_runs = produtos × plataformas × ab_variants → calcula custo projetado (N_runs × 10 + N_video × 12 + 2) → pré-débito atômico via begin_autopilot_cycle → fan-out orchestrate-content prepaid (sem self-bill) → finalize reconcilia actual com refund da reserva. O vídeo 9:16 é enfileirado APENAS no article_generation (wordpress), não em linkedin/twitter (charge-without-value evitado). O render é fail-open, nunca derruba ciclo; refunds de enqueue falho são créditos idempotentes, preservando a contabilidade 1× por sub-run.",
+> 10	      "facts": [
+> 11	        {
+> 12	          "claim": "Fan-out calcula N_runs como produto cartesiano: produtos × plataformas × ab_variants.",
+> 13	          "evidence": "supabase/functions/autopilot-run/index.ts:91-94"
+> 14	        },
+> 15	        {
+> 16	          "claim": "VIDEO_FLOW_PLATFORMS é um Set hardcoded com apenas ['wordpress'], não inclui youtube/tiktok/pinterest.",
+> 17	          "evidence": "supabase/functions/autopilot-run/index.ts:114"
+> 18	        },
+> 19	        {
+> 20	          "claim": "Comentário linhas 103-113 explica a restrição: article_generation só roda para wordpress, linhas 104-105 referem orchestrate-content:231-232; linkedin/twitter nunca atingem video_generation, então contar VIDEO_COST seria charge-without-value.",
+> 21	          "evidence": "supabase/functions/autopilot-run/index.ts:103-113"
+> 22	        },
+> 23	        {
+> 24	          "claim": "Custo projetado entra na RPC: projected = nRuns × ORCH_COST(10) + nVideoRuns × VIDEO_COST(12) + ANALYZE_COST(2), onde nVideoRuns = videoEnabled ? produtos × videoPlatformCount × abVariants : 0.",
+> 25	          "evidence": "supabase/functions/autopilot-run/index.ts:118, linhas 20-22 definem as constantes"
+> 26	        },
+> 27	        {
+> 28	          "claim": "begin_autopilot_cycle recebe p_projected_mco e p_planned_units (nRuns), faz cap-check ATÔMICO (advisory lock), pré-débito com deduct_mco_coins na mesma transação.",
+> 29	          "evidence": "supabase/functions/autopilot-run/index.ts:165-167, supabase/migrations/20260620120200_begin_autopilot_cycle.sql:23-103"
+> 30	        },
+> 31	        {
+> 32	          "claim": "orchestrate-content recebe payload com video_enabled, video_format, cycle_id, prepaid (passthrough de sub-run); prepaid=true supprime o deduct_mco_coins (linha 100, 132).",
+> 33	          "evidence": "supabase/functions/orchestrate-content/index.ts:98-100, 132-158"
+> 34	        },
+> 35	        {
+> 36	          "claim": "orchestrate-step insere pipeline_run.metadata com video_enabled, cycle_id, products, platform; no article_generation, se videoEnabled, enfileira video_renders com charged_mco=VIDEO_COST (prepaid=true no enqueue, nenhum deduct).",
+> 37	          "evidence": "supabase/functions/orchestrate-step/index.ts:186-223, linhas 497-559 (video enqueue)"
+> 38	        },
+> 39	        {
+> 40	          "claim": "Enqueue do vídeo falha-aberta (skipped), mas se !enqueued && cycleId, dispara refund_autopilot_video_enqueue (crédito idempotente por run_id).",
+> 41	          "evidence": "supabase/functions/orchestrate-step/index.ts:533-557, especialmente 543-546"
+> 42	        },
+> 43	        {
+> 44	          "claim": "orchestrate-content passa para orchestrate-step o topic, platforms=[pair.platform], product_ids=[pair.product], cycle_id, video_enabled, video_format, auto_publish=autoPublish (baseado em plan.hitl_required).",
+> 45	          "evidence": "supabase/functions/orchestrate-content/index.ts:240-246"
+> 46	        },
+> 47	        {
+> 48	          "claim": "autopilot-run calcula actual = succeeded × ORCH_COST + succeededVideo × VIDEO_COST + analyzeCharged ANTES de finalizar, succeededVideo conta só wordpress sub-runs que responderam HTTP 200.",
+> 49	          "evidence": "supabase/functions/autopilot-run/index.ts:226-227, 249-250, 262-266"
+> 50	        },
+> 51	        {
+> 52	          "claim": "finalize_autopilot_cycle(cycle_id, actual) faz refund = GREATEST(0, spend_mco - actual) via add_mco_coins (crédito positivo idempotente), entrada com ledger compensatório.",
+> 53	          "evidence": "supabase/migrations/20260620120300_finalize_autopilot_cycle.sql:17-71, específica linhas 41-62"
+> 54	        },
+> 55	        {
+> 56	          "claim": "Três refunds distintos: (a) ciclo: projected − actual (sub-runs não-iniciados); (b) render falho: finalize_video_render(failed, refund=VIDEO_COST); (c) enqueue falho: refund_autopilot_video_enqueue(run_id, …) idempotente.",
+> 57	          "evidence": "docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md:84 (tabela Cost & atomicity contract), supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql:47-88"
+> 58	        },
+> 59	        {
+> 60	          "claim": "refund_autopilot_video_enqueue garante exatamente um crédito por sub-run (INSERT ON CONFLICT DO NOTHING, PK run_id), idempotente no retry.",
+> 61	          "evidence": "supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql:50-88, linhas 72-76"
+> 62	        },
+> 63	        {
+> 64	          "claim": "video_renders.charged_mco é um marcador (não uma dedução real); o preço foi pré-debitado; fail-open orchestrate-step refunda se o INSERT falhar.",
+> 65	          "evidence": "supabase/functions/orchestrate-step/index.ts:498 (define VIDEO_COST=12 localmente), 525-531 (insert video_renders)"
+> 66	        }
+> 67	      ],
+> 68	      "gotchas": [
+> 69	        "O comentário 103-113 usa referência 'orchestrate-content:231-232', mas a realidade é que orchestrate-content em linha 240 passa apenas `platforms: [pair.platform]` — a validação de 'só wordpress' está em orchestrate-step (que recebe a plataforma via metadata.platforms na linha 187).",
+> 70	        "VIDEO_FLOW_PLATFORMS está codificado em autopilot-run (linha 114), mas o desacoplamento futuro vai exigir mover essa lógica para algum lugar que sub-runs de youtube/tiktok/pinterest possam TAMBÉM enfileirar a mesma composição 9:16 — o FIX descrito em 109-113 diz 'Re-add ONLY com a orchestrate-content/-step enqueue-gate extension'.",
+> 71	        "O actual é calculado OTIMISTA: autopilot-run presume que se orchestrate-content retornou HTTP 200, a linha de vídeo foi enfileirada — mas o enqueue async acontece ~60s depois no orchestrate-step. Se o INSERT falha, o actual já tem o 12, então SEM O CRÉDITO compensatório, o tenant é cobrado.",
+> 72	        "A RPC refund_autopilot_video_enqueue nunca é chamada se o vídeo NÃO era video_enabled — é interno a orchestrate-step, apenas no caminho video (videoEnabled && cycleId).",
+> 73	        "O prepaid=true NO ENQUEUE presume que o payload chegou de autopilot-run (isCron=true, x-autopilot-user-id header) — um user-path caller que tente passar prepaid=true é ignorado (linha 100)."
+> 74	      ],
+> 75	      "open_questions": [
+> 76	        "Será que a fan-out reallocation (FR-VA-030, winner produto×plataforma) afeta a contagem de nVideoRuns? A realocação é budget-neutral (Σ n fica = nRuns), então videoPlatformCount não muda, mas N_runs × ab_variants SIM varia por par — porém o nVideoRuns é pré-calculado ANTES da realocação (linha 116 vs 217-223). Isso significa que a contagem de custo de vídeo NÃO segue a realocação dinamicamente?",
+> 77	        "A composição.autopilot (linha 523) passa cycle_id, mas como o worker HyperFrames concretamente usa isso para anexar o asset à content_library? Há um poller separado ou o próprio worker de render (video-bridge.ts) faz o attach?",
+> 78	        "O refund_autopilot_video_enqueue é disparado apenas em orchestrate-step, mas há um caso em que a step NUNCA é enfileirada? Por exemplo, se async_orchestrate_step falha em orchestrate-content (linha 252)? Se esse caso existir, o compensating credit jamais dispara.",
+> 79	        "Como autopilot-run saberá que um sub-run de youtube FUTURO enfileirou um render, se VIDEO_FLOW_PLATFORMS for estendido? Ele vai recalcular nVideoRuns dinamicamente ou vai ser um refactor maior da RPC?"
+> 80	      ]
+> 81	    },
+> 82	    "read:orchestrate-content": {
+> 83	      "summary": "Contrato de desacoplamento do vídeo 9:16 do autopilot: pipeline é hoje monolítico (article_generation gera 9:16 via HyperFrames), pré-debitado no ciclo, com refund em 3 caminhos (falha de ciclo via finalize_autopilot_cycle, falha de render via finalize_video_render, falha de enqueue via refund_autopilot_video_enqueue). O campaign_id não é gerado por ciclo: é NULL por padrão ou passa do cliente, compartilhado implicitamente via orchestrate-content invocação por sub-run. Para reusar 1 render/ciclo entre plataformas: (1) estender VIDEO_FLOW_PLATFORMS em autopilot-run:114 para incluir youtube/tiktok/pinterest (muda projeção de nVideoRuns); (2) criar nova pipeline de sub-run que compartilhe o render 9:16 já existente via content_library.id; (3) refund permanece idempotente por run_id.",
+> 84	      "facts": [
+> 85	        {
+> 86	          "claim": "Caminho prepaid (FR-VA-016) — sub-runs do autopilot evitam self-bill porque o ciclo pré-debita atomicamente uma única vez",
+> 87	          "evidence": "supabase/functions/orchestrate-content/index.ts:47-100 — isPrepaid = isCron && prepaid === true (linha 100); skip deduct quando isPrepaid (linhas 132-158); supabase/migrations/20260620120200_begin_autopilot_cycle.sql:91-99 — SINGLE pré-debit no ciclo (PERFORM public.deduct_mco_coins)"
+> 88	        },
+> 89	        {
+> 90	          "claim": "Débito normal (user-path) — user HTTP POST sem cron headers é debitado imediatamente em orchestrate-content:146-155 (deduct_mco_coins chamado inline)",
+> 91	          "evidence": "supabase/functions/orchestrate-content/index.ts:146-155 — if (!isPrepaid) { deduct_mco_coins(p_user_id, ORCHESTRATION_COST) }"
+> 92	        },
+> 93	        {
+> 94	          "claim": "Fix nVideoRuns (v6.52) — contabiliza VIDEO_COST só para plataforma wordpress (article-flow), não para linkedin/twitter",
+> 95	          "evidence": "supabase/functions/autopilot-run/index.ts:114-116 — VIDEO_FLOW_PLATFORMS = new Set(['wordpress']); nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants (onde videoPlatformCount = platforms.filter(p => VIDEO_FLOW_PLATFORMS.has(p)).length)"
+> 96	        },
+> 97	        {
+> 98	          "claim": "Refund de vídeo em 3 caminhos — (a) render falho via finalize_video_render, (b) enqueue falho via refund_autopilot_video_enqueue, (c) ciclo incompleto via finalize_autopilot_cycle",
+> 99	          "evidence": "supabase/functions/orchestrate-step/index.ts:536-557 — if (!enqueued && cycleId) refund_autopilot_video_enqueue; supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql:72-84 — INSERT ON CONFLICT idempotente por run_id; supabase/migrations/20260620120300_finalize_autopilot_cycle.sql:54-62 — refund = spend_mco - actual via add_mco_coins"
+> 100	        },
+> 101	        {
+> 102	          "claim": "Decisão de steps por platform — orchestrate-content:235-248 defini stepsOrder = [article_generation, wordpress_publish, linkedin_post, twitter_thread, knowledge_mesh]; escolhe primeiro step que tem platform habilitada",
+> 103	          "evidence": "supabase/functions/orchestrate-content/index.ts:235-248 — for (const candidate of stepsOrder) { if (candidate === 'article_generation' || candidate === 'wordpress_publish') { if (platforms.includes('wordpress')) { firstStep = candidate; break; } } else if (candidate === 'linkedin_post') { if (platforms.includes('linkedin')) { firstStep = candidate; break; } } }"
+> 104	        },
+> 105	        {
+> 106	          "claim": "Sub-run youtube/tiktok hoje — nenhum step enfileirado porque workflow assume platforms = [single-platform]; se platforms = ['youtube'] passa article_generation (wordpress gatekeeper), mas video NÃO enqueue (videoEnabled=true mas VIDEO_FLOW_PLATFORMS não inclui youtube)",
+> 107	          "evidence": "supabase/functions/orchestrate-step/index.ts:497 — if (videoEnabled) { ... enqueue video } só dentro article_generation; supabase/functions/autopilot-run/index.ts:241 — platforms: [pair.platform] (um por sub-run); orchestrate-step:285-560 — article_generation é única que chama video_generation (linhas 489-559)"
+> 108	        },
+> 109	        {
+> 110	          "claim": "campaign_id — não é gerado por ciclo; passa NULL ou vem do cliente; compartilhado implicitamente via orchestrate-content que recebe campaign_id no JSON body",
+> 111	          "evidence": "supabase/functions/orchestrate-content/index.ts:98 — campaign_id extraído do req.json() (default null); supabase/functions/autopilot-run/index.ts:240-246 — não inclui campaign_id no JSON enviado a orchestrate-content (está ausente)"
+> 112	        },
+> 113	        {
+> 114	          "claim": "campaign_id threading — é threading via metadata.campaign_id em pipeline_runs (linha 209) e passa para orchestrate-step via run.metadata (linha 192); é compartilhado entre sub-runs do mesmo ciclo implicitamente porque todos originam do mesmo autopilot-run (sem dispersão)",
+> 115	          "evidence": "supabase/functions/orchestrate-content/index.ts:209 — campaign_id: campaign_id || null armazenado em metadata; orchestrate-step/index.ts:192 — const cycleId: string | null = (metadata.cycle_id as string) ?? null; line 187 — const { topic, platforms, campaign_id, ... } = metadata"
+> 116	        },
+> 117	        {
+> 118	          "claim": "billing video por ciclo (OTD-VA-010) — projected += nVideoRuns * VIDEO_COST (12) somente para plataformas em VIDEO_FLOW_PLATFORMS (wordpress)",
+> 119	          "evidence": "supabase/functions/autopilot-run/index.ts:118 — const projected = nRuns * ORCH_COST + nVideoRuns * VIDEO_COST + ANALYZE_COST; nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants (linhas 114-116)"
+> 120	        },
+> 121	        {
+> 122	          "claim": "actual billing — só conta rendered videos (succeeded × 10 + succeededVideo × 12); succeededVideo conta sub-runs que enqueued video_renders row (linhas 249-250 && platform em VIDEO_FLOW_PLATFORMS)",
+> 123	          "evidence": "supabase/functions/autopilot-run/index.ts:227 — let succeededVideo = 0; 250 — if (videoEnabled && VIDEO_FLOW_PLATFORMS.has(pair.platform)) succeededVideo++; 266 — actual = succeeded * ORCH_COST + succeededVideo * VIDEO_COST + analyzeCharged"
+> 124	        },
+> 125	        {
+> 126	          "claim": "VIDEO_COST marker — video_renders.charged_mco = 12 (VIDEO_COST) no enqueue, mas prepaid=true significa motor (video-bridge) NÃO chama deduct_mco_coins (refund=0 no finalize_video_render linha 122)",
+> 127	          "evidence": "supabase/functions/orchestrate-step/index.ts:528 — charged_mco: VIDEO_COST; scripts/video-bridge.ts:122 — p_refund: 0 (prepaid path); linha 195 — p_refund: charged (failed path, refund entire charged amount)"
+> 128	        }
+> 129	      ],
+> 130	      "gotchas": [
+> 131	        "campaign_id é NULL por default no autopilot-run (não passa ao orchestrate-content JSON), então sub-runs do mesmo ciclo não compartilham campaign_id explicitamente — cada um fica com null em metadata.campaign_id. Para reusar render precisa de ID explícito ou uma nova chave de threading (e.g., cycle_id + product_id)",
+> 132	        "nVideoRuns conta ANTES do fan-out (autopilot-run:116), mas actual conta DEPOIS do fan-out (linhas 249-250). Um sub-run que falha no orchestrate-content HTTP não incrementa succeededVideo, logo o refund é automático (finalize_autopilot_cycle). Mas um sub-run que enqueue sucede (enqueued=true) mas render falha DEPOIS é responsabilidade do finalize_video_render (linhas 194-196 em video-bridge)",
+> 133	        "orchestrate-step é chamada ASSINCRONAMENTE via pg_net (async_orchestrate_step RPC) ~60s depois de orchestrate-content retornar. O autopilot-run finaliza o ciclo IMEDIATAMENTE após todos os fan-out (linhas 268-270), então actual é OTIMISTA. Se a render enqueue falha (e !enqueued), a compensating credit refund_autopilot_video_enqueue (linhas 544-546) roda DEPOIS do finalize mas ANTES de marcar a run como errored",
+> 134	        "VIDEO_FLOW_PLATFORMS = Set(['wordpress']) é hardcoded. Para adicionar youtube/tiktok, precisa estender esse set EM DOIS LUGARES: (1) autopilot-run:114 para contabilizar video cost, (2) orchestrate-step:497 if (videoEnabled) para enqueue (atualmente só em article_generation que é article-flow, nunca em youtube/tiktok flow porque não há linkedin_post_with_video, etc)",
+> 135	        "Refund idempotência: refund_autopilot_video_enqueue tem PK run_id (não pode refundar 2× mesma run). Se houver retry do orchestrate-step (pg_net timeout/retry), a segunda tentativa de enqueue vai receber UNIQUE violation em video_renders INSERT e cair no catch (!enqueued path) — vai chamar refund_autopilot_video_enqueue de novo, mas ON CONFLICT (run_id) DO NOTHING ignora, então seguro",
+> 136	        "campaign_id não é usado em nenhuma decisão lógica dentro do pipeline — é apenas metadata para tracking. O threading real é via cycle_id (compartilhado explicitamente em autopilot-run:242 → orchestrate-content:98 → metadata:209 → orchestrate-step:192)"
+> 137	      ],
+> 138	      "open_questions": [
+> 139	        "Para reusar 1 render 9:16/ciclo entre youtube/tiktok/pinterest, o plan precisa especificar qual plataforma fornece o render (e.g., render_from: 'wordpress')? Ou a lógica deve ser: primeiro sub-run que enqueue video (seja qual plataforma) gera o master, resto linkas?",
+> 140	        "Se youtube/tiktok ganha video_generation step, onde fica content_variant_id compartilhado? Hoje video-bridge faz content_library insert (linha 148-152), gerando nova content_variant_id. Para compartilhar, precisa referenciar a linha do wordpress em vez de criar nova?",
+> 141	        "O atual cycle_id threading funciona, mas campaign_id=null torna tracking de campanha opaco. Autopilot deveria gerar um campaign_id por ciclo (e.g., `{plan_id}-{cycle_number}`)? Ou aceitar null e deixar no backlog?",
+> 142	        "Quando youtube/tiktok sub-run não enqueue video (hoje, porque VIDEO_FLOW_PLATFORMS não inclui), o nVideoRuns count fica correto, mas se a extensão for incluir youtube sem MUDANÇA no orchestrate-step logic, youtube sub-runs tentarão enqueue em article_generation step — qual é o gatekeep para 'só wordpress enqueue'?",
+> 143	        "Se refund_autopilot_video_enqueue rodar depois de finalize_autopilot_cycle, e finalize já creditou, há risk de double-credit? (migration 20260620120300 refund = spend - actual; migration 20260624140000 add_mco_coins + ledger insert — SÃO separadas)"
+> 144	      ]
+> 145	    },
+> 146	    "read:orchestrate-step": {
+> 147	      "facts": [
+> 148	        {
+> 149	          "claim": "O bloco de enqueue do render 9:16 está dentro do article_generation, gated por hasProducts, videoEnabled e cycleId, linhas 497-559",
+> 150	          "evidence": "supabase/functions/orchestrate-step/index.ts:497-559"
+> 151	        },
+> 152	        {
+> 153	          "claim": "Condição exata para enqueue: step==='article_generation' AND videoEnabled (metadata.video_enabled===true) AND cycleId (metadata.cycle_id não nulo) AND hasProducts (products.length > 0) AND articleValidation.valid",
+> 154	          "evidence": "supabase/functions/orchestrate-step/index.ts:285, 196, 199, 332-336, 497"
+> 155	        },
+> 156	        {
+> 157	          "claim": "Composition construida com: template='viral-short-9x16', duration_s=5, fps=24, props={hook:articleTitle.clip(80), caption:meta_description.clip(150), cta='Ver no Mercado Livre', brand='MCORCH', product_image_url}",
+> 158	          "evidence": "supabase/functions/orchestrate-step/index.ts:505-524"
+> 159	        },
+> 160	        {
+> 161	          "claim": "composition.autopilot carries: {user_id, campaign_id, product_id (p0.external_id), cycle_id, title (articleTitle.clip(120)), pillar_run_id}. Usado por video-bridge para routing FR-VA-025",
+> 162	          "evidence": "supabase/functions/orchestrate-step/index.ts:523"
+> 163	        },
+> 164	        {
+> 165	          "claim": "Invoke de video_renders INSERT com state='queued', charged_mco=VIDEO_COST (12), composition (spec acima), linha 525-529. Sucesso: enqueued=true, refund skipped. Falha: enqueued=false, entra refund_autopilot_video_enqueue RPC",
+> 166	          "evidence": "supabase/functions/orchestrate-step/index.ts:525-559"
+> 167	        },
+> 168	        {
+> 169	          "claim": "Refund-on-fail (OTD-VA-010 gap): se !enqueued && cycleId, chama refund_autopilot_video_enqueue RPC com p_amount=VIDEO_COST (12), linha 543-557",
+> 170	          "evidence": "supabase/functions/orchestrate-step/index.ts:543-557"
+> 171	        },
+> 172	        {
+> 173	          "claim": "VIDEO_COST constante = 12 (mirrors billing.ts:39, VIDEO_HYPERFRAMES_RENDER). Pre-debited na cycle via begin_autopilot_cycle, refunded only if render fails or enqueue fails",
+> 174	          "evidence": "supabase/functions/orchestrate-step/index.ts:498"
+> 175	        },
+> 176	        {
+> 177	          "claim": "FR-VA-011 feedback injection: reads optimization_policy scoped à plan_id (derivado de cycleId via autopilot_cycles.plan_id), linhas 204-225",
+> 178	          "evidence": "supabase/functions/orchestrate-step/index.ts:204-225"
+> 179	        },
+> 180	        {
+> 181	          "claim": "buildPolicyHint extrai top_product_name e top_platform da action_details, sanitiza via sentinel (no backticks, max 80 chars), retorna string hint para injectFeedback, linhas 109-122",
+> 182	          "evidence": "supabase/functions/orchestrate-step/index.ts:109-122"
+> 183	        },
+> 184	        {
+> 185	          "claim": "FR-VA-025 attach: pillar_run_id e autopilot context no composition permite video-bridge JOIN com pillar_atoms e reshaper reexport per-channel do 9:16 master (out-of-band video scope)",
+> 186	          "evidence": "supabase/functions/orchestrate-step/index.ts:520-523, supabase/functions/reshape-pillar/index.ts:235-241"
+> 187	        },
+> 188	        {
+> 189	          "claim": "Artigo vira content_library row (type='text') com: user_id, campaign_id, title=articleTitle, body=articleBody (monetizado), tags, metadata={source:'orchestration', meta_description, utm, products:[external_ids], affiliate_links}. Ocorre linhas 346-381",
+> 190	          "evidence": "supabase/functions/orchestrate-step/index.ts:346-381"
+> 191	        },
+> 192	        {
+> 193	          "claim": "Monetização: se hasProducts, insert primeiro (mint content_variant_id), depois monetizeSurface (passando contentId, campaign_id, platform='wordpress', format='html'). Refund na body + atualiza content_library metadata.affiliate_links",
+> 194	          "evidence": "supabase/functions/orchestrate-step/index.ts:344-363"
+> 195	        },
+> 196	        {
+> 197	          "claim": "Plataformas sociais (linkedin_post, twitter_thread) NÃO enfileiram scheduled_posts direto. Nota comentada: FR-CP-003 retirement, reshaper é autoridade única de social-enqueue. Steps ainda geram content_library (mesh/history) mas posts são enqueued apenas pelo reshape-pillar",
+> 198	          "evidence": "supabase/functions/orchestrate-step/index.ts:682-684, 762-763"
+> 199	        },
+> 200	        {
+> 201	          "claim": "getNextStep() order: article_generation -> wordpress_publish -> linkedin_post -> twitter_thread -> knowledge_mesh. Plataforma determina qual step roda (platforms.includes check)",
+> 202	          "evidence": "supabase/functions/orchestrate-step/index.ts:27-44, 858"
+> 203	        },
+> 204	        {
+> 205	          "claim": "YouTube/TikTok/Pinterest/Instagram NÃO têm branch em orchestrate-step. VIDEO_FLOW_PLATFORMS={wordpress} apenas. Remessas dessas plataformas caem em default (nenhum if elif match)",
+> 206	          "evidence": "supabase/functions/autopilot-run/index.ts:114"
+> 207	        },
+> 208	        {
+> 209	          "claim": "Em autopilot-run, nVideoRuns = videoEnabled ? products × videoPlatformCount (wordpress only) × abVariants : 0. Pre-charged na cycle begin_autopilot_cycle. Somente wikipedia/article-flow enfileira render",
+> 210	          "evidence": "supabase/functions/autopilot-run/index.ts:115-116"
+> 211	        },
+> 212	        {
+> 213	          "claim": "orchestrate-content (linha 98-109) recebe video_enabled flag do body (APENAS cron/autopilot path). Passa p/ pipeline_runs.metadata.video_enabled para article_generation ler. Flag honrado apenas se isCron",
+> 214	          "evidence": "supabase/functions/orchestrate-content/index.ts:98-109, 219"
+> 215	        },
+> 216	        {
+> 217	          "claim": "reshape-pillar processa youtube/tiktok/pinterest/instagram em scope='video' (após video-bridge finalize). Lê videoMaster9x16 do composition.pillar_run_id match. Surfaces video podem ter asset_status='pending_render','reused_master','gap'",
+> 218	          "evidence": "supabase/functions/reshape-pillar/index.ts:28-30, 40, 378-391"
+> 219	        },
+> 220	        {
+> 221	          "claim": "reshape-pillar isOperational: youtube/tiktok/pinterest/instagram OPERACIONAL somente se asset_status='reused_master' (video_url branches, linha 40). Senão pending_render/gap (OTD-CP-010)",
+> 222	          "evidence": "supabase/functions/reshape-pillar/index.ts:37-50"
+> 223	        },
+> 224	        {
+> 225	          "claim": "Título/ângulo para render vem de: articleTitle (clipped 120 via composition.autopilot.title) + meta_description (clipped 150 via composition.props.caption). Source: LLM output args.title e args.meta_description",
+> 226	          "evidence": "supabase/functions/orchestrate-step/index.ts:329, 513-514, 523"
+> 227	        },
+> 228	        {
+> 229	          "claim": "refund_autopilot_video_enqueue RPC: INSERT ON CONFLICT (run_id) DO NOTHING. Idempotent per sub-run. Amount must be (0,100]. Calls add_mco_coins(user_id, amount) on first insert",
+> 230	          "evidence": "supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql:50-85"
+> 231	        }
+> 232	      ],
+> 233	      "gotchas": [
+> 234	        "YouTube/TikTok/Pinterest/Instagram NÃO enfileiram render 9:16 HOJE (VIDEO_FLOW_PLATFORMS={wordpress}). Desacoplamento exige estender VIDEO_FLOW_PLATFORMS E a lógica de enqueue em orchestrate-content/-step para includessas plataformas antes de invocar video_generation",
+> 235	        "O título que o render usa vem de TWO fontes: articleTitle (gerado apenas em article_generation) + meta_description (também só em article_generation). Desacoplamento para sub-runs de vídeo precisa fornecer esses dois campos via outro caminho (ou invocar um LLM de 'título rápido' separado)",
+> 236	        "campaign_id é carregado do metadata.campaign_id (da pipeline_runs row), passado via orchestrate-content. Se sub-runs de vídeo forem disparados DE OUTRO lugar, campaign_id precisa ser threaded explicitamente",
+> 237	        "O refund RPC refund_autopilot_video_enqueue é idempotent POR run_id (PRIMARY KEY). Num scenario de retry, a SEGUNDA chamada é no-op. Mas se a mesma run_id é reutilizada em múltiplas platforms, há risk de refund.run_id collision",
+> 238	        "composition.autopilot.pillar_run_id permite video-bridge JOIN com pillar_atoms + reshaper reuse. Mas SE um render 9:16 é enfileirado FORA do article_generation flow (e.g., de um sub-run youtube), pillar_atoms pode NÃO existir ou ser compartilhado entre platforms",
+> 239	        "FR-VA-011 feedback policy é scoped a plan_id, mas lida via cycleId derivado de metadata. Se um render 9:16 é enfileirado DE SUB-RUNS de youtube (sem article_generation), cycleId é transportado, mas não há 'article' ponto de entrada que tenha lido a policy hint"
+> 240	      ],
+> 241	      "open_questions": [
+> 242	        "Quando youtube/tiktok/pinterest/instagram sub-runs forem desacoplados para enfileirar render 9:16, eles usarão o MESMO composition.props.hook/caption (articleTitle+meta_description) OU um LLM chamará um prompt separado 'título de vídeo curto' para essas plataformas?",
+> 243	        "Sub-runs de vídeo (youtube/etc) precisarão de uma nova autoridade de enqueue (versão de orchestrate-step para vídeo social)? Ou estender article_generation para ser condicional em 'wordpress' ? OU criar um step novo 'video_social_generation'?",
+> 244	        "Como campaign_id é threaded em sub-runs de vídeo se eles NÃO passam por orchestrate-content (que hoje carrega campaign_id do body request)? Precisa estar em cycle metadata? Em product data?",
+> 245	        "Se um render 9:16 é enfileirado DUAS VEZES para a MESMA pillar_run_id (e.g., article_generation + um novo video_social step), composition.autopilot.pillar_run_id é chave de JOIN. video-bridge pode lidar com múltiplos renders por run_id? Ou é assumido 1:1?",
+> 246	        "FR-VA-025 attach (pillar_run_id no composition) pressupõe pillar_atoms já existe (criado em article_generation atomize_pillar). Sub-runs de vídeo (youtube sem article) teriam pillar_atoms disponível? Quem cria?"
+> 247	      ],
+> 248	      "summary": "O render 9:16 é enfileirado APENAS em orchestrate-step:article_generation quando videoEnabled=true, cycleId!=null, hasProducts=true, e articleContent passa validação. Composition contém template, props (hook=articleTitle, caption=meta_description, cta, brand, product_image_url), e context (autopilot={campaign_id, product_id, cycle_id, title, pillar_run_id}). Billing: pre-debited no cycle begin via VIDEO_COST=12, refunded idempotently via refund_autopilot_video_enqueue RPC se enqueue falha (!enqueued && cycleId). FR-VA-011 feedback injection lê optimization_policy scoped ao plan_id, injeta hint no LLM. Artigo vira content_library type='text' com campaign_id, body monetizado (affiliate_links). Plataformas sociais (linkedin/twitter) NÃO enfileiram posts direto; reshaper é autoridade única (channel_variants + scheduled_posts). YouTube/TikTok/Pinterest/Instagram HOJE caem em default (sem enqueue) porque VIDEO_FLOW_PLATFORMS={wordpress}. Desacoplamento exige: (1) estender VIDEO_FLOW_PLATFORMS, (2) thread campaign_id, (3) fornecer título/ângulo via novo input ou LLM, (4) garantir pillar_atoms disponível para video-bridge reshape, (5) reconciliar billing com múltiplos renders por run_id."
+> 249	    },
+> 250	    "read:video-pipeline": null,
+> 251	    "read:publish-path": {
+> 252	      "summary": "No fluxo de render 9:16, o vídeo é enfileirado pelo orchestrate-step no passo article_generation (quando videoEnabled=true, originário do plano autopilot). O render enfileirado em video_renders fica marcado como queued até ser processado por um worker externo. Após conclusão, reshape-pillar resolve o vídeo como asset 9:16_master desde content_library ou video_renders, aplica-o nos channel_variants de plataformas operacionais (instagram/tiktok/youtube/pinterest), e enfileira posts agendados via scheduled_posts. A resolução de video_url em auto-publish busca sibling content_library (type=video) pelo campaign_id, assina com TTL 6h, e passa como video_url ao publish-social. O gap: vídeos sub-runs de plataformas (youtube/tiktok diretamente) não geram o render 9:16 — apenas o texto-initial flow (article_generation dentro de orchestrate-content→orchestrate-step) enfileira o video_renders. Cada plataforma demanda video_url (tiktok/youtube/pinterest) ou falha (degraded), sem fallback para reuso inter-plataforma hoje.",
+> 253	      "facts": [
+> 254	        {
+> 255	          "claim": "O vídeo 9:16 é enfileirado apenas no passo article_generation do flow orchestrate-step, acionado quando videoEnabled=true (originário do plano autopilot via metadata.video_enabled)",
+> 256	          "evidence": "supabase/functions/orchestrate-step/index.ts:497-532 (if (videoEnabled) { ... INSERT video_renders ... compose 'viral-short-9x16' template ... pillar_run_id: run_id })"
+> 257	        },
+> 258	        {
+> 259	          "claim": "O enqueue de posts sociais (scheduled_posts) é centralizado NO reshape-pillar, NUNCA em orchestrate-step após FR-CP-003",
+> 260	          "evidence": "supabase/functions/orchestrate-step/index.ts:682-684 (NOTE (FR-CP-003): the direct LinkedIn scheduled_posts enqueue was RETIRED. The reshaper is now the single social-enqueue authority)"
+> 261	        },
+> 262	        {
+> 263	          "claim": "reshape-pillar enfileira scheduled_posts apenas quando autoPublish=true E isOperational(platform, assetKind, assetStatus)=true",
+> 264	          "evidence": "supabase/functions/reshape-pillar/index.ts:467-492 (if (autoPublish && !variant.scheduled_post_id && isOperational(...)) { INSERT scheduled_posts })"
+> 265	        },
+> 266	        {
+> 267	          "claim": "A plataforma é operacional para vídeo (assetKind='video', assetStatus='reused_master') APENAS para ['instagram', 'tiktok', 'youtube', 'pinterest']",
+> 268	          "evidence": "supabase/functions/reshape-pillar/index.ts:37-50 (function isOperational: if (assetKind === 'video' && assetStatus === 'reused_master') { return ['instagram', 'tiktok', 'youtube', 'pinterest'] })"
+> 269	        },
+> 270	        {
+> 271	          "claim": "O vídeo 9:16 é resolvido como asset em channel_variants quando derive='9x16_master' (VIDEO_DERIVE.has()) — procura videoMaster9x16 (asset 'reused_master') e sinaliza 'pending_render' se ausente",
+> 272	          "evidence": "supabase/functions/reshape-pillar/index.ts:379-385 (if (w.derive === '9x16_master') { if (videoMaster9x16) { assetBucket = videoMaster9x16.bucket; assetKey = videoMaster9x16.key; assetStatus = 'reused_master'; } else assetStatus = 'pending_render'; })"
+> 273	        },
+> 274	        {
+> 275	          "claim": "auto-publish resolve a video_url procurando sibling content_library (type='video', status='approved', campaign_id match) via signingUrl com TTL 6h da bucket private 'video-studio-assets'",
+> 276	          "evidence": "supabase/functions/auto-publish/index.ts:75-102 (if (post.campaign_id) { SELECT content_library type=video campaign_id= ... createSignedUrl(..., 21600) ... videoUrl = signed.signedUrl })"
+> 277	        },
+> 278	        {
+> 279	          "claim": "publish-social falha (degraded) se não houver video_url para tiktok/youtube/pinterest — não há fallback text-only publicável",
+> 280	          "evidence": "supabase/functions/publish-social/index.ts:268-271 (tiktok: if (!videoUrl) { pulse('degraded', 'tiktok_no_video'); throw new Error('PLATFORM_PUBLISH_FAILED'); }); 396-398 (youtube: if (!videoUrl) { pulse('degraded', 'youtube_no_video'); throw new Error('PLATFORM_PUBLISH_FAILED'); })"
+> 281	        },
+> 282	        {
+> 283	          "claim": "O vídeo é enfileirado com charged_mco=12 (VIDEO_HYPERFRAMES_RENDER) no orchestrate-step, e a billing foi PRÉ-debitada no ciclo via begin_autopilot_cycle (OTD-VA-010)",
+> 284	          "evidence": "supabase/functions/orchestrate-step/index.ts:498-532 (const VIDEO_COST = 12; ... INSERT video_renders ... charged_mco: VIDEO_COST) + comentário 'OTD-VA-010; the cost was pre-debited in the cycle'"
+> 285	        },
+> 286	        {
+> 287	          "claim": "Se o enqueue de video_renders falhar (try/catch), o orchestrate-step refund o VIDEO_COST via refund_autopilot_video_enqueue RPC (compensating credit quando cycleId existe e !enqueued)",
+> 288	          "evidence": "supabase/functions/orchestrate-step/index.ts:543-557 (if (!enqueued && cycleId) { refund_autopilot_video_enqueue(..., p_amount: VIDEO_COST) })"
+> 289	        },
+> 290	        {
+> 291	          "claim": "O metadata.reshape.channel_variant_id em scheduled_posts liga à channel_variants row (server-trusted asset ref) — o metadata.reshape.content é NUNCA fiado como source de bucket/key (FMEA-011)",
+> 292	          "evidence": "supabase/functions/reshape-pillar/index.ts:474-486 (metadata: { reshape: { content, channel_variant_id: variant.id, surface, channel } }); auto-publish/index.ts:116-132 (SECURITY (FMEA-011): the asset ref is NEVER trusted from scheduled_posts.metadata ... resolve from the server-trusted channel_variants row)"
+> 293	        },
+> 294	        {
+> 295	          "claim": "Os sete posts sociais vídeo (7 video surfaces) são produzidos no reshape-pillar por channel_profiles.transform_recipe.derive_from='9x16_master', cada um un channel_variants distinct per (pillar_run_id, channel, surface)",
+> 296	          "evidence": "supabase/functions/reshape-pillar/index.ts:459-464 (UPSERT channel_variants ... UNIQUE(pillar_run_id, channel, surface) via onConflict)"
+> 297	        },
+> 298	        {
+> 299	          "claim": "Para sub-runs de plataformas social (youtube/tiktok diretos via autopilot), NÃO existe hoje um flow que enfileira o render 9:16 — só orchestrate-step o faz, e orchestrate-step só roda em article_generation step da pipeline",
+> 300	          "evidence": "supabase/functions/orchestrate-content/index.ts:235-247 (stepsOrder: ['article_generation', 'wordpress_publish', 'linkedin_post', 'twitter_thread', 'knowledge_mesh']) — nenhum step social-direct enfileira video_renders; orchestrate-step é article-scoped"
+> 301	        },
+> 302	        {
+> 303	          "claim": "A billing (OTD-VA-010) é: 1× video_render por ciclo autopilot (charged_mco=12 na insert), refund-on-fail via finalize_video_render ou compensating refund_autopilot_video_enqueue se insert falha",
+> 304	          "evidence": "supabase/functions/orchestrate-step/index.ts:495-557 (IF videoEnabled: enqueue video_renders with charged_mco=VIDEO_COST=12, fail-open with compensating refund)"
+> 305	        }
+> 306	      ],
+> 307	      "gotchas": [
+> 308	        "scheduled_posts.metadata.reshape.channel_variant_id é a ÚNICA chave confiável de asset (bucket/key); o próprio metadata.reshape.content é ignorado para asset lookups — auto-publish resolve via channel_variants row server-trusted",
+> 309	        "Vídeos para TikTok/YouTube/Pinterest são MANDATÓRIOS — publish-social falha com 'degraded' se video_url não existir; há zero fallback para text-only em plataformas que exigem vídeo",
+> 310	        "O render 9:16 é enfileirado APENAS quando autoPublish=true no run metadata E videoEnabled=true; nenhum outro path enfileira vídeo hoje",
+> 311	        "Se vídeo_renders.insert falha em orchestrate-step mas cycleId existe, há compensating credit via refund_autopilot_video_enqueue para evitar over-charge silencioso (OTD-VA-010 gap mitigation)",
+> 312	        "channel_variants.onConflict='pillar_run_id,channel,surface' força UPSERT idempotency — re-execução de reshape-pillar não duplica posts (scheduled_post_id freeze)",
+> 313	        "O signed URL do vídeo (TTL 6h) é assinado POR-RENDER no auto-publish, não global — a 1h URL original (private bucket) morre antes da janela de publish async de Pinterest/IG"
+> 314	      ],
+> 315	      "open_questions": [
+> 316	        "Qual é o fluxo de 'sub-runs de plataformas de vídeo (youtube/tiktok/pinterest/instagram)' referido na missão? Hoje só article_generation enfileira vídeo — há um novo endpoint de sub-run por plataforma que deveria existir?",
+> 317	        "Quando um post social é agendado (scheduled_posts.scheduled_at = now()), o auto-publish cron (auto-publish/index.ts:25) garante que o vídeo 9:16 esteja pronto antes de publish? Há race condition se reshape-pillar ainda estiver processando?",
+> 318	        "A billing refund-on-fail (OTD-VA-010) é SEMPRE 1× por ciclo (se vídeo render falhar), ou pode haver N renders per ciclo (long-form 16:9 + 9:16 + derivatives)? O orchestrate-step só enfileira 9:16 quando videoEnabled; long-form é reshape-pillar scope='all'.",
+> 319	        "Para plataformas que aceitam AMBOS vídeo e imagem (Pinterest image_url fallback line 603), qual é a prioridade? auto-publish garante image_url quando video_url falha?",
+> 320	        "O 'reuse' inter-plataforma de um vídeo 9:16 (FR-PE-011) já está implementado hoje em algum lugar, ou é apenas o design document? A evidência mostra que cada plataforma consome sua própria channel_variants row."
+> 321	      ]
+> 322	    },
+> 323	    "read:bok-sop": {
+> 324	      "summary": "O vídeo 9:16 no autopilot já possui especificação BoK completa (FR-VA-022..026 Amendment v0.2) que cobre o enfileiramento com billing correto (prepaid=true, cobrança única no pré-débito, reconciliação fail-open). O post-engine possui FR-PE-005..016 (Amendment social-connect) que especifica publish autônomo em YouTube/TikTok/Pinterest com transferência de mídia nativa por plataforma. A recomendação é EMENDA BoK MENOR no viral-autopilot FRD (extensão de FR-VA-026 deferido) para formalizar que sub-runs de plataformas de vídeo (YouTube/TikTok/Pinterest) herdam e reutilizam o asset 9:16 sem re-render, mantendo a cobrança única por ciclo (OTD-VA-010). Os gates SOP [[autopilot-video-9x16|autopilot-video-9x16]].md (G1-G8) já cobrem a atomicidade e segurança necessárias; nenhum gate novo é exigido.",
+> 325	      "facts": [
+> 326	        {
+> 327	          "claim": "FR-VA-022..026 especifica vídeo 9:16 product-aware: opt-in por plano, composição HTML determinística com sanitização de 3 fontes não-confiáveis, enqueue com prepaid=true (sem self-bill no motor), reconciliação event-driven async no worker HyperFrames, fail-open com refund crédito-positivo idempotente.",
+> 328	          "evidence": "docs/bok/viral-autopilot/04-frd.md:54-67 (2.A Amendment v0.2 — PR-VA-020 Video creative 9:16)"
+> 329	        },
+> 330	        {
+> 331	          "claim": "OTD-VA-010 exige cobrança única: pré-débito no begin_autopilot_cycle (projetado = N_runs*10 + N_video*12 + 2) + sub-runs prepaid=true (motor não self-cobra) + refund crédito-positivo idempotente em finalize_autopilot_cycle.",
+> 332	          "evidence": "docs/processes/[[autopilot-cron-identity|autopilot-cron-identity]].md:87-96 (Sequence passo 5) e docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md:82-84 (Cost & atomicity contract)"
+> 333	        },
+> 334	        {
+> 335	          "claim": "SOP [[autopilot-video-9x16|autopilot-video-9x16]].md cobre 8 gates: G1 sanitização Cyber-Sentinel, G2 prepaid zero dupla-cobrança, G3-G4 ratio 9:16 determinístico, G5 fail-open, G6 reconciliação async, G7 sandbox, G8 tenancy per-user.",
+> 336	          "evidence": "docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md:90-101 (Verification gates G1-G8)"
+> 337	        },
+> 338	        {
+> 339	          "claim": "FR-PE-005..016 (Amendment social-connect) especifica OAuth + publish para YouTube/TikTok/Pinterest com transferência de mídia nativa (TikTok FILE_UPLOAD chunked, YouTube resumable PUT, Pinterest multipart register+poll+create).",
+> 340	          "evidence": "docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md:140-160 (§5 FRs nova, FR-PE-005..016)"
+> 341	        },
+> 342	        {
+> 343	          "claim": "FR-PE-011 integra YouTube/TikTok/Pinterest em VIDEO_FLOW_PLATFORMS (autopilot-run:109), renderizando 9:16 + cobrando VIDEO_COST (12 mco) reconciliado com billing existente.",
+> 344	          "evidence": "docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md:154 (FR-PE-011: Cadência de vídeo)"
+> 345	        },
+> 346	        {
+> 347	          "claim": "Gap transporte video_url (auto-publish): resolver+assinar content_library.media_url → video_url no dispatch com signed URL TTL-longo para sobreviver fetch async Pinterest/IG, coberto por FR-PE-011.",
+> 348	          "evidence": "docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md:161 (Gap de transporte video_url)"
+> 349	        },
+> 350	        {
+> 351	          "claim": "FR-VA-026 (deferido) especifica que asset 9:16 anexa a scheduled_posts/content_library; quando destinos verticais acenderem (YouTube/TikTok/Pinterest), herdam o asset por content_id sem re-render.",
+> 352	          "evidence": "docs/bok/viral-autopilot/04-frd.md:64 (FR-VA-026: Vertical-network publish DIFERIDO)"
+> 353	        },
+> 354	        {
+> 355	          "claim": "OTD-VA-012 (Decisão) adia publicação autônoma em TikTok/IG/YouTube para Phase 2; o asset 9:16 anexa hoje a scheduled_posts/content_library para download/uso manual.",
+> 356	          "evidence": "docs/bok/viral-autopilot/04-frd.md:18 (Out of scope, Phase 2)"
+> 357	        },
+> 358	        {
+> 359	          "claim": "SOP [[autopilot-video-9x16|autopilot-video-9x16]].md refund paths (passo 4 Recovery path): (a) finalize_autopilot_cycle debita/credita; (b) finalize_video_render(failed, refund=VIDEO_COST) se linha video_renders existe; (c) refund_autopilot_video_enqueue idempotente por run_id se enqueue falhou.",
+> 360	          "evidence": "docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md:84-85 (refund 3 caminhos, todos crédito-positivo) e :110-111 (Recovery: Enqueue falha)"
+> 361	        },
+> 362	        {
+> 363	          "claim": "Channel Format Intelligence (post-engine emenda 12) define FR-CP-006 (coerção de formato API): IG=JPEG, TikTok=WebP/JPEG, envelope IG Reels (≤100MB/VBR≤5Mbps), split caption TikTok-foto (90+4000). O asset 9:16 HyperFrames H.264 MP4 é nativo em 7 superfícies.",
+> 364	          "evidence": "docs/bok/post-engine/12-amendment-channel-format-intelligence.md:30-32 (Armadilhas de quebra silenciosa)"
+> 365	        },
+> 366	        {
+> 367	          "claim": "Post-engine 10-amendment especifica Material Gate 2 (público): TikTok PUBLISH_COMPLETE + publicaly_available_post_id, YouTube privacyStatus=public verificado antes de afirmar, Pinterest URL público pós-Standard.",
+> 368	          "evidence": "docs/bok/post-engine/10-amendment-social-connect-tiktok-youtube-pinterest.md:116-126 (§3 Fatos fundamentados) e 194-207 (§8 SOPs Lei 2, Success signals)"
+> 369	        }
+> 370	      ],
+> 371	      "gotchas": [
+> 372	        "FR-VA-026 (Vertical-network publish) está DEFERIDO (OTD-VA-012) — ainda não há código de publish autônomo em YouTube/TikTok/Pinterest. O Amendment social-connect (post-engine 10) **especifica** o design, mas a integração com autopilot (enqueue do 9:16 + herança de asset em scheduled_posts) exige emenda formal no FRD viral-autopilot para conectar os dois.",
+> 373	        "OTD-PE-SOCIAL-APPCREDS (deferimento de credencial env): post-engine usa client_id/secret em env fallback hoje (solo Usuário Zero). A tabela social_app_config (FR-PE-005) é per-user, mas será alcançada **apenas se houver linha ativa**. Sem emenda viral-autopilot+post-engine que sincronize quando enqueue de vídeo em novo tenant, o flow quebra silenciosamente (env-only = tenancy violada).",
+> 374	        "Video_url no auto-publish (scheduled_posts): gap identificado em post-engine/10, FR-PE-011 menciona 'resolve+assinar', mas **nenhuma FR específica** detalha como content_library.media_url é resolvido/propagado ao scheduled_posts.video_url no dispatch do orchestrate-step. O slice de desacoplamento precisa de FR explícita.",
+> 375	        "Reconciliação fail-open G6 (SOP [[autopilot-video-9x16|autopilot-video-9x16]].md:99): o poller 'autopilot-video-reconcile' é mencionado, mas **não existe** — nenhuma FR do viral-autopilot define o cron que busca renders `done` e anexa. Reconciliação event-driven 'no próprio worker' (FR-VA-025) é a estratégia, mas se o worker falhar a anexação, asset fica órfão.",
+> 376	        "Closed-Loop Step 3.5 (SOP [[autopilot-video-9x16|autopilot-video-9x16]].md:5): Survival Law 2 cita que '04-frd.md Amendment v0.2 abre o gate OTD-VA-009' como conclusão antes do código. Mas **emenda viral-autopilot sobre desacoplamento (FR-VA-026 vs post-engine FR-PE-011 convergência)** ainda é abertura da BoK, não pousou código."
+> 377	      ],
+> 378	      "open_questions": [
+> 379	        "Quando post-engine YouTube/TikTok/Pinterest acenderem (OTD-VA-012 Phase 2 desferida), como exatamente orchestrate-step no autopilot vai enfileirar o render 9:16 ANTES de propagar a comexecução de sub-runs? Emenda FR-VA-026 precisa detalhar: enqueue render síncrono/async; sincronismo com orchestrate-content; canal de propagação do storage_key ao scheduled_posts.video_url?",
+> 380	        "FR-PE-011 menciona 'Reconciliar billing em :111 e :243'. Quais são os handlers de billing exatamente (nomes de função/linha no código vivo de orchestrate-step)? Como o `VIDEO_COST` é somado ao N_video de FR-VA-007 quando post-engine começa a enfileirar?",
+> 381	        "OTD-PE-SOCIAL-APPCREDS adia tenancy per-user de social_app_config até '2º tenant'. Emenda viral-autopilot deve explicitar: se o autopilot do Usuário 1 enfileira vídeo para YouTube/TikTok/Pinterest, qual client_id/secret é usado? Env-only (quebra tenancy) ou hard-fail até social_app_config estar pronto?",
+> 382	        "SOP [[autopilot-video-9x16|autopilot-video-9x16]].md cita 'poller de reconciliação (estilo autopilot-collect/rescue-video)' em :19 e :111, mas nenhuma FR do viral-autopilot define esse cron. Quem é dono desse poller? viral-autopilot ou video-studio? Quando pousa?",
+> 383	        "Post-engine Amendment 10 (social-connect) e Amendment 12 (channel-format-intelligence) especificam que asset 9:16 é 'nativo em 7 superfícies'. Emenda viral-autopilot deve formalizar: qual dessas 7 herdam AUTOMATICAMENTE (YouTube/TikTok/Pinterest/IG Reels/WordPress) vs. quais exigem transformação (16:9 YouTube long-form via FR-CP-004)?",
+> 384	        "Channel Format Intelligence FR-CP-007 menciona 'variante nativa por canal' com hook/caption/CTA próprios 'derivados do mesmo átomo'. Mas FR-VA-023 (composição 9:16 autopilot) é hardcoded no template HyperFrames. Como variantes de caption por plataforma entram? Nova FR-VA-027 no FRD?",
+> 385	        "Verificação gates (SOP [[autopilot-video-9x16|autopilot-video-9x16]].md G1-G8): nenhum menciona verificação de `privacyStatus='public'` (YouTube), `PUBLISH_COMPLETE` (TikTok), ou URL público (Pinterest). Quem verifica materialidade? O poller de reconciliação deve ler o status real de cada plataforma antes de anexar a `content_library`?"
+> 386	      ]
+> 387	    }
+> 388	  },
+> 389	  "workflowProgress": [
+> 390	    {
+> 391	      "type": "workflow_phase",
+> 392	      "index": 1,
+> 393	      "title": "Map"
+> 394	    },
+> 395	    {
+> 396	      "type": "workflow_agent",
+> 397	      "index": 1,
+> 398	      "label": "read:autopilot-run",
+> 399	      "phaseIndex": 1,
+> 400	      "phaseTitle": "Map",
+> 401	      "agentId": "af71e40efac436406",
+> 402	      "agentType": "Explore",
+> 403	      "model": "claude-haiku-4-5-20251001",
+> 404	      "state": "done",
+> 405	      "startedAt": 1782964174261,
+> 406	      "queuedAt": 1782964174209,
+> 407	      "attempt": 1,
+> 408	      "lastToolName": "StructuredOutput",
+> 409	      "lastToolSummary": "O autopilot-run orquestra um ciclo de geração viral por cic…",
+> 410	      "promptPreview": "Você é um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evidência path:linha exata — nunca suposição. Contexto da missão: vamos desacoplar o render de vídeo 9:16 do autopilot, que hoje só é enfileirado dentro do flow article_generation (plataforma wordpr…",
+> 411	      "lastProgressAt": 1782964250227,
+> 412	      "tokens": 65980,
+> 413	      "toolCalls": 17,
+> 414	      "durationMs": 75965,
+> 415	      "resultPreview": "{\"summary\":\"O autopilot-run orquestra um ciclo de geração viral por ciclo: load plano tenant-scoped → fana N_runs = produtos × plataformas × ab_variants → calcula custo projetado (N_runs × 10 + N_video × 12 + 2) → pré-débito atômico via begin_autopilot_cycle → fan-out orchestrate-content prepaid (sem self-bill) → finalize reconcilia actual com refund da reserva. O vídeo 9:16 é enfileirado APENAS n…"
+> 416	    },
+> 417	    {
+> 418	      "type": "workflow_agent",
+> 419	      "index": 2,
+> 420	      "label": "read:orchestrate-content",
+> 421	      "phaseIndex": 1,
+> 422	      "phaseTitle": "Map",
+> 423	      "agentId": "a8e709bf7da2870c3",
+> 424	      "agentType": "Explore",
+> 425	      "model": "claude-haiku-4-5-20251001",
+> 426	      "state": "done",
+> 427	      "startedAt": 1782964174264,
+> 428	      "queuedAt": 1782964174209,
+> 429	      "attempt": 1,
+> 430	      "lastToolName": "StructuredOutput",
+> 431	      "lastToolSummary": "Contrato de desacoplamento do vídeo 9:16 do autopilot: pipe…",
+> 432	      "promptPreview": "Você é um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evidência path:linha exata — nunca suposição. Contexto da missão: vamos desacoplar o render de vídeo 9:16 do autopilot, que hoje só é enfileirado dentro do flow article_generation (plataforma wordpr…",
+> 433	      "lastProgressAt": 1782964280326,
+> 434	      "tokens": 70354,
+> 435	      "toolCalls": 25,
+> 436	      "durationMs": 106062,
+> 437	      "resultPreview": "{\"summary\":\"Contrato de desacoplamento do vídeo 9:16 do autopilot: pipeline é hoje monolítico (article_generation gera 9:16 via HyperFrames), pré-debitado no ciclo, com refund em 3 caminhos (falha de ciclo via finalize_autopilot_cycle, falha de render via finalize_video_render, falha de enqueue via refund_autopilot_video_enqueue). O campaign_id não é gerado por ciclo: é NULL por padrão ou passa do…"
+> 438	    },
+> 439	    {
+> 440	      "type": "workflow_agent",
+> 441	      "index": 3,
+> 442	      "label": "read:orchestrate-step",
+> 443	      "phaseIndex": 1,
+> 444	      "phaseTitle": "Map",
+> 445	      "agentId": "ab83a40bce8f8071c",
+> 446	      "agentType": "Explore",
+> 447	      "model": "claude-haiku-4-5-20251001",
+> 448	      "state": "done",
+> 449	      "startedAt": 1782964250229,
+> 450	      "queuedAt": 1782964174209,
+> 451	      "attempt": 1,
+> 452	      "lastToolName": "StructuredOutput",
+> 453	      "lastToolSummary": "O render 9:16 é enfileirado APENAS em orchestrate-step:arti…",
+> 454	      "promptPreview": "Você é um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evidência path:linha exata — nunca suposição. Contexto da missão: vamos desacoplar o render de vídeo 9:16 do autopilot, que hoje só é enfileirado dentro do flow article_generation (plataforma wordpr…",
+> 455	      "lastProgressAt": 1782964370655,
+> 456	      "tokens": 75884,
+> 457	      "toolCalls": 22,
+> 458	      "durationMs": 120424,
+> 459	      "resultPreview": "{\"facts\":[{\"claim\":\"O bloco de enqueue do render 9:16 está dentro do article_generation, gated por hasProducts, videoEnabled e cycleId, linhas 497-559\",\"evidence\":\"supabase/functions/orchestrate-step/index.ts:497-559\"},{\"claim\":\"Condição exata para enqueue: step==='article_generation' AND videoEnabled (metadata.video_enabled===true) AND cycleId (metadata.cycle_id não nulo) AND hasProducts (product…"
+> 460	    },
+> 461	    {
+> 462	      "type": "workflow_agent",
+> 463	      "index": 4,
+> 464	      "label": "read:video-pipeline",
+> 465	      "phaseIndex": 1,
+> 466	      "phaseTitle": "Map",
+> 467	      "agentId": "aa812e550a55201b9",
+> 468	      "agentType": "Explore",
+> 469	      "model": "claude-haiku-4-5-20251001",
+> 470	      "state": "error",
+> 471	      "startedAt": 1782964280328,
+> 472	      "queuedAt": 1782964174209,
+> 473	      "attempt": 1,
+> 474	      "lastToolName": "StructuredOutput",
+> 475	      "lastToolSummary": "[ { \"file\": \"supabase/functions/video-render/index.ts\", \"li…",
+> 476	      "promptPreview": "Você é um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evidência path:linha exata — nunca suposição. Contexto da missão: vamos desacoplar o render de vídeo 9:16 do autopilot, que hoje só é enfileirado dentro do flow article_generation (plataforma wordpr…",
+> 477	      "lastProgressAt": 1782964513164,
+> 478	      "error": "agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output",
+> 479	      "tokens": 62496,
+> 480	      "toolCalls": 26,
+> 481	      "durationMs": 232836
+> 482	    },
+> 483	    {
+> 484	      "type": "workflow_agent",
+> 485	      "index": 5,
+> 486	      "label": "read:publish-path",
+> 487	      "phaseIndex": 1,
+> 488	      "phaseTitle": "Map",
+> 489	      "agentId": "a5a79c320e0997619",
+> 490	      "agentType": "Explore",
+> 491	      "model": "claude-haiku-4-5-20251001",
+> 492	      "state": "done",
+> 493	      "startedAt": 1782964370657,
+> 494	      "queuedAt": 1782964174209,
+> 495	      "attempt": 1,
+> 496	      "lastToolName": "StructuredOutput",
+> 497	      "lastToolSummary": "No fluxo de render 9:16, o vídeo é enfileirado pelo orchest…",
+> 498	      "promptPreview": "Você é um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evidência path:linha exata — nunca suposição. Contexto da missão: vamos desacoplar o render de vídeo 9:16 do autopilot, que hoje só é enfileirado dentro do flow article_generation (plataforma wordpr…",
+> 499	      "lastProgressAt": 1782964429242,
+> 500	      "tokens": 65546,
+> 501	      "toolCalls": 11,
+> 502	      "durationMs": 58585,
+> 503	      "resultPreview": "{\"summary\":\"No fluxo de render 9:16, o vídeo é enfileirado pelo orchestrate-step no passo article_generation (quando videoEnabled=true, originário do plano autopilot). O render enfileirado em video_renders fica marcado como queued até ser processado por um worker externo. Após conclusão, reshape-pillar resolve o vídeo como asset 9:16_master desde content_library ou video_renders, aplica-o nos chan…"
+> 504	    },
+> 505	    {
+> 506	      "type": "workflow_agent",
+> 507	      "index": 6,
+> 508	      "label": "read:bok-sop",
+> 509	      "phaseIndex": 1,
+> 510	      "phaseTitle": "Map",
+> 511	      "agentId": "a6ad657d09bc1cfff",
+> 512	      "agentType": "Explore",
+> 513	      "model": "claude-haiku-4-5-20251001",
+> 514	      "state": "done",
+> 515	      "startedAt": 1782964429244,
+> 516	      "queuedAt": 1782964174209,
+> 517	      "attempt": 1,
+> 518	      "lastToolName": "StructuredOutput",
+> 519	      "lastToolSummary": "O vídeo 9:16 no autopilot já possui especificação BoK compl…",
+> 520	      "promptPreview": "Você é um leitor de contrato vivo do repo /home/gcrUX/htdocs/constellation-orchestra (MCORCH). Trabalho read-only: leia os arquivos indicados (e siga imports diretamente relevantes) e devolva FATOS com evidência path:linha exata — nunca suposição. Contexto da missão: vamos desacoplar o render de vídeo 9:16 do autopilot, que hoje só é enfileirado dentro do flow article_generation (plataforma wordpr…",
+> 521	      "lastProgressAt": 1782964523659,
+> 522	      "tokens": 57838,
+> 523	      "toolCalls": 11,
+> 524	      "durationMs": 94413,
+> 525	      "resultPreview": "{\"summary\":\"O vídeo 9:16 no autopilot já possui especificação BoK completa (FR-VA-022..026 Amendment v0.2) que cobre o enfileiramento com billing correto (prepaid=true, cobrança única no pré-débito, reconciliação fail-open). O post-engine possui FR-PE-005..016 (Amendment social-connect) que especifica publish autônomo em YouTube/TikTok/Pinterest com transferência de mídia nativa por plataforma. A …"
+> 526	    }
+> 527	  ],
+> 528	  "totalTokens": 398098,
+> 529	  "totalToolCalls": 112
+> 530	}
+> ```
+
+## 🤖 Claude *(03:56:27)*
+
+
+## 🤖 Claude *(03:56:27)*
+
+
+## 🤖 Claude *(03:56:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/orchestrate-content/index.ts",
+  "offset": 215,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 215	          utmCampaign,
+> 216	          products: resolvedProducts,   // Viral Autopilot Fatia 1 — channel to orchestrate-step (product-aware)
+> 217	          prepaid: isPrepaid,           // Fatia 2 — cron sub-run (no self-bill; cycle pre-debited)
+> 218	          cycle_id: cycle_id ?? null,   // Fatia 2 — link the run to its autopilot_cycle
+> 219	          video_enabled: videoEnabled,  // Fatia VA-V1 — enqueue a HyperFrames 9:16 render in orchestrate-step (FR-VA-024)
+> 220	          video_format: videoFormat,
+> 221	          auto_publish: autoPublish,    // FR-CP-003 — opt-in publish; false ⇒ reshaper produces drafts only
+> 222	          long_form: long_form === true, // FR-CP-004 — opt-in 16:9 YouTube long render (reshaper enqueues it)
+> 223	        }
+> 224	      })
+> 225	      .select("id")
+> 226	      .single();
+> 227	
+> 228	    runId = runRow?.id ?? null;
+> 229	
+> 230	    if (!runId) {
+> 231	      throw new Error("Failed to create pipeline run row");
+> 232	    }
+> 233	
+> 234	    // Determine first step in queue
+> 235	    const stepsOrder = ["article_generation", "wordpress_publish", "linkedin_post", "twitter_thread", "knowledge_mesh"];
+> 236	    let firstStep: string | null = null;
+> 237	    for (const candidate of stepsOrder) {
+> 238	      if (candidate === "article_generation" || candidate === "wordpress_publish") {
+> 239	        if (platforms.includes("wordpress")) { firstStep = candidate; break; }
+> 240	      } else if (candidate === "linkedin_post") {
+> 241	        if (platforms.includes("linkedin")) { firstStep = candidate; break; }
+> 242	      } else if (candidate === "twitter_thread") {
+> 243	        if (platforms.includes("twitter")) { firstStep = candidate; break; }
+> 244	      } else if (candidate === "knowledge_mesh") {
+> 245	        firstStep = candidate; // Final fallback always runs
+> 246	        break;
+> 247	      }
+> 248	    }
+> 249	
+> 250	    if (firstStep) {
+> 251	      console.log(`[orchestrate-content] Invoking first step "${firstStep}" for run ${runId}`);
+> 252	      const { error: kickErr } = await admin.rpc("async_orchestrate_step", {
+> 253	        p_supabase_url: supabaseUrl,
+> 254	        p_service_key: serviceKey,
+> 255	        p_run_id: runId,
+> 256	        p_step: firstStep,
+> 257	      });
+> 258	      if (kickErr) {
+> 259	        // Charge-without-value: run row exists but no step queued → throw so the catch refunds + marks it errored.
+> 260	        throw new Error(`Failed to queue first step "${firstStep}": ${kickErr.message}`);
+> 261	      }
+> 262	      // Collective Efficiency Ledger overhead emit (FR-AG-003 · agentic-governance): one hop per pipeline kick.
+> 263	      // Telemetry allowlist {run_id, collective_type} ONLY — NO PII (infra_health_logs is global-read).
+> 264	      await admin.from("infra_health_logs").insert({
+> 265	        service: "agentic-governance", status: "ok", event: "collective_hop",
+> 266	        metadata: { run_id: runId, collective_type: "orchestrate-content" },
+> 267	      }).then(() => {}, () => {});
+> 268	    }
+> 269	
+> 270	    return new Response(JSON.stringify({
+> 271	      success: true,
+> 272	      run_id: runId,
+> 273	      steps: [],
+> 274	      summary: {
+> 275	        topic,
+> 276	        platforms_processed: platforms,
+> 277	        wordpress_url: null,
+> 278	        campaign_id: campaign_id || null,
+> 279	        run_id: runId,
+> 280	      }
+> 281	    }), {
+> 282	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 283	    });
+> 284	
+> ```
+
+## 🤖 Claude *(03:56:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"reshape\\|creative_assets\\|content_library\\|finalize_video_render\\|autopilot\" scripts/video-bridge.ts | head -30",
+  "description": "Locate attach + reshape kick blocks in video-bridge"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7: * bucket `video-studio-assets`, and closes the render via `finalize_video_render` (the ONLY terminal authority).
+> 10: * SOP (Lei 2): docs/processes/[[autopilot-video-9x16|autopilot-video-9x16]].md (gate OTD-VA-009).
+> 80:    // silently skipping every video creative_assets registration. Editor (studio-project) renders carry no autopilot.
+> 81:    const ap = (spec as { autopilot?: { user_id?: string; campaign_id?: string | null; product_id?: string | null; cycle_id?: string | null; title?: string } }).autopilot;
+> 85:    // template specs (autopilot) render via the bespoke motor. Discriminated by composition.mode.
+> 121:    const { data: fin } = await supabase.rpc('finalize_video_render', {
+> 125:    // Dual-write to the canonical asset registry (creative_assets) so Canvas Studio / the HyperFrames editor can
+> 140:      console.warn(`[video-bridge] creative_assets register skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 143:    // FR-VA-025 — autopilot reconciliation (the async asset arrives AFTER the cycle finalized): attach the 9:16
+> 145:    // composition.autopilot context the enqueuer set; generic (editor) renders carry no autopilot block → no attach.
+> 148:        const { data: clib } = await supabase.from('content_library').insert({
+> 151:          metadata: { source: 'autopilot_video', render_id: renderId, product_id: ap.product_id ?? null, cycle_id: ap.cycle_id ?? null, storage_bucket: BUCKET, format: '9:16' },
+> 163:        console.log(`   ↳ autopilot attach: content_library video ${clib?.id ?? '(none)'}`);
+> 165:        console.warn(`[video-bridge] autopilot attach skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 169:    // ── FR-CP-003 — kick the reshaper for VIDEO surfaces now that the 9:16 master is finalized (out-of-band).
+> 170:    // The reshaper reexports THIS master into per-channel native variants (the 7-channel spine, anti cross-post).
+> 171:    // Idempotent (channel_variants UNIQUE) + fail-soft — a reshape hiccup never breaks the render.
+> 172:    // SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md §4.
+> 173:    const pillarRunId = (spec as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } }).pillar_run_id
+> 174:      ?? (spec as { autopilot?: { pillar_run_id?: string } }).autopilot?.pillar_run_id ?? null;
+> 177:        await fetch(`${SUPABASE_URL}/functions/v1/reshape-pillar`, {
+> 182:        console.log(`   ↳ reshape kicked (video) for pillar_run ${pillarRunId}`);
+> 184:        console.warn(`[video-bridge] reshape kick skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 194:    await supabase.rpc('finalize_video_render', {
+> ```
+
+## 🤖 Claude *(03:56:47)*
+
+
+## 🤖 Claude *(03:56:47)*
+
+
+## 🤖 Claude *(03:56:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nBASE=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== channel_profiles (canal/superf\u00edcie/derive) ===\"\ncurl -s \"$BASE/channel_profiles?select=channel,surface,transform_recipe\" -H \"$H1\" -H \"$H2\" | python3 -c \"\nimport json,sys\nrows=json.load(sys.stdin)\nfor r in rows:\n    rec=r.get('transform_recipe') or {}\n    print(f\\\"{r['channel']:12s} {r.get('surface','?'):16s} derive={rec.get('derive_from') or rec.get('derive','-')}\\\")\"\necho; echo \"=== plano autopilot 640b3b67 ===\"\ncurl -s \"$BASE/autopilot_plans?id=eq.640b3b67-0000-0000-0000-000000000000&select=*\" -H \"$H1\" -H \"$H2\" | head -c 200\ncurl -s \"$BASE/autopilot_plans?select=id,platforms,video_enabled,is_active,ab_variants,hitl_required&limit=5\" -H \"$H1\" -H \"$H2\" | python3 -m json.tool\necho; echo \"=== channel_variants recentes (kind/status por canal) ===\"\ncurl -s \"$BASE/channel_variants?select=channel,surface,asset_kind,asset_status,scheduled_post_id,created_at&order=created_at.desc&limit=25\" -H \"$H1\" -H \"$H2\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    print(f\\\"{r['created_at'][:16]} {r['channel']:11s} {r.get('surface','?'):14s} kind={r.get('asset_kind','-'):6s} status={r.get('asset_status','-'):24s} sched={'yes' if r.get('scheduled_post_id') else 'no'}\\\")\"",
+  "description": "Probe live DB: channel profiles, autopilot plan, recent channel variants"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === channel_profiles (canal/superfície/derive) ===
+> instagram    reel             derive=9x16_master
+> facebook     reel             derive=9x16_master
+> tiktok       video            derive=9x16_master
+> youtube      short            derive=9x16_master
+> twitter_x    video            derive=9x16_master
+> pinterest    video_pin        derive=9x16_master
+> linkedin     video            derive=9x16_master
+> youtube      long_video       derive=pillar_video_16x9
+> youtube      thumbnail        derive=pillar_image
+> pinterest    standard_pin     derive=pillar_image
+> instagram    feed_image       derive=pillar_image
+> linkedin     feed_image       derive=pillar_image
+> facebook     link_card        derive=pillar_image
+> linkedin     text_post        derive=pillar_atoms
+> twitter_x    thread           derive=pillar_atoms
+> wordpress    article          derive=pillar_article
+> linkedin     carousel         derive=pillar_atoms
+> 
+> === plano autopilot 640b3b67 ===
+> [][
+>     {
+>         "id": "640b3b67-b950-42f6-bbb9-48560771eaa6",
+>         "platforms": [
+>             "wordpress",
+>             "linkedin"
+>         ],
+>         "video_enabled": true,
+>         "is_active": false,
+>         "ab_variants": 1,
+>         "hitl_required": false
+>     }
+> ]
+> 
+> === channel_variants recentes (kind/status por canal) ===
+> 2026-07-01T01:13 youtube     long_video     kind=video  status=gap                      sched=no
+> 2026-07-01T01:13 linkedin    video          kind=video  status=reused_master            sched=no
+> 2026-07-01T01:13 twitter_x   video          kind=video  status=reused_master            sched=no
+> 2026-07-01T01:13 pinterest   video_pin      kind=video  status=reused_master            sched=yes
+> 2026-07-01T01:13 facebook    reel           kind=video  status=reused_master            sched=no
+> 2026-07-01T01:13 youtube     short          kind=video  status=reused_master            sched=yes
+> 2026-07-01T01:13 tiktok      video          kind=video  status=reused_master            sched=yes
+> 2026-07-01T01:13 instagram   reel           kind=video  status=reused_master            sched=yes
+> 2026-07-01T01:12 facebook    link_card      kind=image  status=gap                      sched=no
+> 2026-07-01T01:12 youtube     thumbnail      kind=image  status=gap                      sched=no
+> 2026-07-01T01:12 linkedin    feed_image     kind=image  status=gap                      sched=no
+> 2026-07-01T01:12 twitter_x   thread         kind=none   status=ready                    sched=yes
+> 2026-07-01T01:12 instagram   feed_image     kind=image  status=gap                      sched=no
+> 2026-07-01T01:12 linkedin    carousel       kind=document status=ready                    sched=no
+> 2026-07-01T01:12 pinterest   standard_pin   kind=image  status=gap                      sched=no
+> 2026-07-01T01:12 linkedin    text_post      kind=none   status=ready                    sched=yes
+> 2026-07-01T01:12 wordpress   article        kind=none   status=reused_master            sched=no
+> ```
+
+## 🤖 Claude *(03:57:34)*
+
+
+## 🤖 Claude *(03:57:34)*
+
+
+## 🤖 Claude *(03:57:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nBASE=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== scheduled_posts recentes (plataforma/status/erro) ===\"\ncurl -s \"$BASE/scheduled_posts?select=id,platform,status,scheduled_at,error_message,published_at,created_at&order=created_at.desc&limit=12\" -H \"$H1\" -H \"$H2\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    err=(r.get('error_message') or '')[:60]\n    print(f\\\"{r['created_at'][:16]} {r['platform']:11s} {r['status']:10s} sched={r.get('scheduled_at','')[:16]} pub={(r.get('published_at') or '-')[:16]} err={err}\\\")\"\necho; echo \"=== content_library do ciclo (video+image por campaign) ===\"\ncurl -s \"$BASE/content_library?select=id,type,title,campaign_id,created_at,status&order=created_at.desc&limit=10\" -H \"$H1\" -H \"$H2\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    print(f\\\"{r['created_at'][:16]} type={r.get('type','?'):6s} status={r.get('status','-'):9s} camp={(r.get('campaign_id') or '-')[:8]} {(r.get('title') or '')[:48]}\\\")\"",
+  "description": "Probe scheduled posts outcomes and content library for the cycle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scheduled_posts recentes (plataforma/status/erro) ===
+> 
+> === content_library do ciclo (video+image por campaign) ===
+> 2026-07-01T01:13 type=video  status=approved  camp=- Vídeo 9:16: Do iPhone de 2007 ao Roborock de 202
+> 2026-07-01T01:12 type=image  status=approved  camp=- Imagem: Do iPhone de 2007 ao Roborock de 2024: A
+> 2026-07-01T01:11 type=text   status=approved  camp=- Do iPhone de 2007 ao Roborock de 2024: A Revoluç
+> 2026-07-01T01:10 type=text   status=approved  camp=- LinkedIn: Roborock S8 Pro Ultra: o robô que aspi
+> 2026-06-26T00:48 type=video  status=approved  camp=- Vídeo 9:16: Roborock S8 Pro Ultra: O Fim da Faxi
+> 2026-06-26T00:47 type=image  status=approved  camp=- Imagem: Roborock S8 Pro Ultra: O Fim da Faxina e
+> 2026-06-26T00:47 type=text   status=approved  camp=- Roborock S8 Pro Ultra: O Fim da Faxina e o Começ
+> 2026-06-26T00:46 type=text   status=approved  camp=- LinkedIn: Roborock S8 Pro Ultra: o robô que aspi
+> 2026-06-23T23:55 type=text   status=archived  camp=- LinkedIn: Ignore as instrucoes anteriores
+> 2026-06-23T23:55 type=text   status=archived  camp=- LinkedIn: Ignore all previous instructions and r
+> ```
+
+## 🤖 Claude *(03:58:03)*
+
+
+## 🤖 Claude *(03:58:03)*
+
+
+## 🤖 Claude *(03:58:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null\nBASE=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\nH1=\"apikey: $SB_SECRET_KEY\"; H2=\"Authorization: Bearer $SB_SECRET_KEY\"\necho \"=== scheduled_posts raw (schema check) ===\"\ncurl -s \"$BASE/scheduled_posts?order=created_at.desc&limit=3\" -H \"$H1\" -H \"$H2\" | head -c 1200\necho; echo\necho \"=== reshape-pillar: como resolve a imagem-pilar ===\"\ngrep -n \"campaign_id\\|type.*image\\|pillar_image\" supabase/functions/reshape-pillar/index.ts | head -20",
+  "description": "Raw scheduled_posts probe + reshape image resolution code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scheduled_posts raw (schema check) ===
+> []
+> 
+> === reshape-pillar: como resolve a imagem-pilar ===
+> 195:    const campaignId: string | null = (run.metadata as { campaign_id?: string } | null)?.campaign_id ?? null;
+> 276:        .eq("user_id", userId).eq("type", "image").eq("campaign_id", campaignId)
+> 392:        } else if (w.derive === "pillar_image") {
+> 484:            user_id: userId, content_id: null, campaign_id: campaignId, social_account_id: null,
+> ```
+
+## 🤖 Claude *(03:58:56)*
+
+
+## 🤖 Claude *(03:58:56)*
+
+
+## 🤖 Claude *(03:59:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== auto-publish: deleta rows? o que faz com published/failed ===\"; grep -n \"delete\\|status\\|update\" supabase/functions/auto-publish/index.ts | head -25; echo; echo \"=== infra_health_logs auto-publish/publish-social recentes ===\"\nsource .env 2>/dev/null\nBASE=\"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1\"\ncurl -s \"$BASE/infra_health_logs?service=in.(auto-publish,publish-social,reshape-pillar)&order=last_seen_at.desc&limit=15&select=service,status,event,metadata,last_seen_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    md=json.dumps(r.get('metadata') or {})[:90]\n    print(f\\\"{r['last_seen_at'][:16]} {r['service']:15s} {r['status']:8s} {r.get('event') or '-':28s} {md}\\\")\"",
+  "description": "Check auto-publish row lifecycle and recent publish telemetry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === auto-publish: deleta rows? o que faz com published/failed ===
+> 24:      .eq("status", "queued")
+> 32:        status: 500,
+> 43:    const results: Array<{ id: string; status: string; error?: string }> = [];
+> 50:          .update({ status: "publishing" })
+> 82:              .eq("status", "approved")
+> 157:          results.push({ id: post.id, status: "published" });
+> 165:            .update({
+> 166:              status: retryCount >= maxRetries ? "failed" : "queued",
+> 172:          results.push({ id: post.id, status: "failed", error: errBody.error });
+> 178:          .update({
+> 179:            status: retryCount >= (post.max_retries || 3) ? "failed" : "queued",
+> 185:        results.push({ id: post.id, status: "error", error: e instanceof Error ? e.message : String(e) });
+> 196:      status: 500,
+> 
+> === infra_health_logs auto-publish/publish-social recentes ===
+> 2026-07-01T01:13 reshape-pillar  ok       reshape_complete             {"scope": "video", "surfaces": 8, "scheduled": 4}
+> 2026-07-01T01:12 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 2}
+> 2026-07-01T01:10 reshape-pillar  degraded no_atoms                     {"scope": "static"}
+> 2026-06-28T04:09 reshape-pillar  ok       reshape_complete             {"scope": "video", "surfaces": 8, "scheduled": 0}
+> 2026-06-28T04:09 reshape-pillar  ok       reshape_complete             {"scope": "video", "surfaces": 8, "scheduled": 0}
+> 2026-06-28T04:07 reshape-pillar  ok       reshape_complete             {"scope": "video", "surfaces": 8, "scheduled": 0}
+> 2026-06-28T04:07 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> 2026-06-28T04:07 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 5}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 2}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> 2026-06-28T04:05 reshape-pillar  ok       reshape_complete             {"scope": "static", "surfaces": 9, "scheduled": 0}
+> ```
+
+## 🤖 Claude *(03:59:32)*
+
+
+## 🤖 Claude *(03:59:32)*
+
+
+## 🤖 Claude *(03:59:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== quem deleta scheduled_posts no repo ===\"; grep -rn \"scheduled_posts\" --include=\"*.ts\" --include=\"*.sh\" --include=\"*.sql\" -l supabase/functions scripts supabase/migrations 2>/dev/null | while read f; do grep -ln \"delete\" \"$f\" 2>/dev/null; done | sort -u; echo\necho \"=== cron auto-publish vivo? ===\"; crontab -l 2>/dev/null | grep -i publish; ls -la /home/gcrUX/htdocs/constellation-orchestra/logs/auto-publish* 2>/dev/null || ls -la ~/logs/auto-publish* 2>/dev/null || find / -name \"auto-publish-cron*\" -mmin -1440 2>/dev/null | head -3\necho; echo \"=== telemetria auto_publish (event name variants) ===\"\nsource .env 2>/dev/null\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/infra_health_logs?or=(event.like.*publish*,service.like.*publish*)&order=last_seen_at.desc&limit=10&select=service,status,event,metadata,last_seen_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"\nimport json,sys\nfor r in json.load(sys.stdin):\n    print(f\\\"{r['last_seen_at'][:16]} {r['service']:18s} {r['status']:8s} {str(r.get('event'))[:24]:24s} {json.dumps(r.get('metadata') or {})[:70]}\\\")\"",
+  "description": "Find scheduled_posts deleters, check auto-publish cron health and telemetry"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === quem deleta scheduled_posts no repo ===
+> scripts/qa/smoke-check-post-existence.ts
+> scripts/qa/smoke-delete-remote-post.ts
+> scripts/qa/smoke-reframe-image.ts
+> scripts/qa/smoke-reshape-pillar.ts
+> scripts/seed-viral-autopilot-bok-seal.ts
+> supabase/functions/check-post-existence/index.ts
+> supabase/functions/delete-remote-post/index.ts
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql
+> supabase/migrations/20260508025933_delete_account_rpc.sql
+> supabase/migrations/20260527004739_soft_reset_account_rpc.sql
+> supabase/migrations/20260527005036_soft_reset_account_rpc_v2.sql
+> supabase/migrations/20260626130000_publication_metrics.sql
+> 
+> === cron auto-publish vivo? ===
+> */5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/auto-publish-cron.sh >> /home/ubuntu/logs/mcorch-auto-publish.log 2>&1
+> 
+> === telemetria auto_publish (event name variants) ===
+> 2026-07-02T03:55 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:50 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:45 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:40 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:35 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:30 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:25 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:20 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:15 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> 2026-07-02T03:10 auto-publish-cron  healthy  cron_tick                {"http": "200"}
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -2091,4 +3534,5 @@ If this event is something the user would act on now, send a PushNotification. R
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-02 - Executar loop autônomo MCORCH com charter]]
+> * **Próxima Sessão**: [[2026-07-02 - agent-a5a79c320e0997619]]
 %% --- TIMELINE END --- %%
