@@ -4445,6 +4445,6 @@ Loop parado. Selo final completo.
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-03 - Resolver alertas de produção e migrations]]
-> * **Próxima Sessão**: [[2026-07-03 - aced5ac9-b7e1-4508-aafa-8d1da8c0fa0a]]
+> * **Sessão Anterior**: [[2026-07-03 - Resolver expiração frequente de token Google OAuth]]
+> * **Próxima Sessão**: [[2026-07-03 - Verificar sinais de negociação no Telegram]]
 %% --- TIMELINE END --- %%

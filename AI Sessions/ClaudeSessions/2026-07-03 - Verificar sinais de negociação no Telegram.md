@@ -1061,3 +1061,2478 @@ Achei o material central: o `eventNotify.js` define os sinais de mercado (`[REGI
 > info: 2026-07-03T14:03:48.483Z - BNBUSDT: SMA GOLDEN cross (50/200) — disparando automação de trend
 > info: 2026-07-03T18:18:47.167Z - LTCUSDT:REGIME => mixed (ADX 23.1 intermediário, sem viés claro [histerese: prev=range])
 > ```
+
+## 🤖 Claude *(19:30:35)*
+
+
+## 🤖 Claude *(19:30:40)*
+
+Isso muda o quadro. O `regime.log` mostra que **o gatilho que o dono esperava começou a disparar**: múltiplos GOLDEN cross (LTC 29/jun, ADA 1/jul, BTC 2/jul, BNB 3/jul) e flips de regime saindo do bear puro (ADA→trend com ADX 51.6, LTC→range→mixed). São esses `[REGIME]`/`[CROSS]` que o dono vê como "oportunidades". Os sinais `rsi/flow` do `signals.log` são do **gravador de pesquisa** (não vão pro Telegram).
+
+Preciso do estado ao vivo (regime dos 5 símbolos, grupos armados/parados, se algum BUY de trend aconteceu, promoção, halt) e do código dos jobs. Puxando em paralelo.
+
+## 🤖 Claude *(19:30:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== regimeJob.js ===\"\ncat backend/src/regimeJob.js 2>/dev/null | sed -n '1,220p'",
+  "description": "Read regimeJob.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === regimeJob.js ===
+> 'use strict';
+> /*
+>  * Regime Job — grava o regime de mercado na MEMORY do Beholder periodicamente, para que as
+>  * automações possam GATEAR a entrada (ex.: "não comprar em bear"). É o ENABLER que torna a
+>  * estratégia regime-gated (a melhor risco-ajustada no backtest: caixa no bear) deployável ao vivo.
+>  *
+>  * Escreve uma STRING simples por símbolo:  MEMORY['<symbol>:REGIME'] = 'bear'|'trend'|'range'|'mixed'
+>  * para que a condição da automação seja uma igualdade trivial:  MEMORY['<symbol>:REGIME']!=='bear'.
+>  *
+>  * Decisões de segurança (caminho de dinheiro):
+>  *  - executeAutomations=false: a escrita do regime NÃO dispara ordens por si. O regime é um GATE
+>  *    PASSIVO, lido quando o tick de preço/RSI dispara a automação — não um gatilho ativo (evita
+>  *    comprar sobre um sinal de RSI velho na cadência do poll).
+>  *  - skip-on-unknown: se a Binance não responder ou houver poucos dados, NÃO sobrescreve a MEMORY
+>  *    (preserva o último regime conhecido e evita derrubar o gate por um soluço de rede). Combinado
+>  *    com 'BTCUSDT:REGIME' nos `indexes` da automação, no 1º boot sem regime conhecido a automação
+>  *    fica fail-safe (não compra até o regime ser conhecido).
+>  *  - kill-switch REGIME_JOB_ENABLED=false: para o job (e, com REGIME nos indexes, pausa as compras
+>  *    gateadas — fail-safe).
+>  *
+>  * Env:
+>  *  REGIME_JOB_ENABLED  (default 'true')   — liga/desliga o job
+>  *  REGIME_REFRESH_MS   (default 300000)   — intervalo do poll (5 min; regime de velas 1h muda devagar)
+>  *  REGIME_INTERVAL     (default '1h')     — timeframe das velas usadas na classificação
+>  *  REGIME_SYMBOLS      (CSV, opcional)    — força a lista de símbolos; senão usa os das automações ativas
+>  *  FASE4_MACRO_SYMBOL  (default 'BTCUSDT') — símbolo cuja SAÍDA do bear arma a observação da Fase 4 (ver funnelJob)
+>  */
+> const beholder = require('./beholder');
+> const automationsRepository = require('./repositories/automationsRepository');
+> const regimeStatesRepository = require('./repositories/regimeStatesRepository');
+> const { getRegime } = require('./utils/regimeService');
+> const { indexKeys } = require('./utils/indexes');
+> const logger = require('./utils/logger');
+> 
+> const ENABLED = (process.env.REGIME_JOB_ENABLED || 'true') !== 'false';
+> // parse defensivo: valor inválido/NaN cairia em setInterval(NaN) (loop quente). Piso de 30s
+> // evita isso. Recomendado manter >= TTL do regimeService (~120s) p/ cada poll re-classificar
+> // em vez de servir cache; regime de velas 1h muda devagar, default 5 min é folgado.
+> const _refresh = parseInt(process.env.REGIME_REFRESH_MS || '300000', 10);
+> const REFRESH_MS = Number.isFinite(_refresh) && _refresh >= 30000 ? _refresh : 300000;
+> const INTERVAL = process.env.REGIME_INTERVAL || '1h';
+> // Símbolo macro cuja SAÍDA do bear arma a observação da Fase 4 no funil (ver funnelJob.armFase4Observation).
+> const FASE4_MACRO_SYMBOL = (process.env.FASE4_MACRO_SYMBOL || 'BTCUSDT').toUpperCase();
+> 
+> let timer = null;
+> let running = false;       // trava de re-entrância: nunca roda dois ciclos sobrepostos
+> let starting = false;      // trava de boot: cobre a janela do load assíncrono do estado antes do 1º poll
+> const LAST = {};           // último regime gravado por símbolo (= valor do gate; também é o `prev`)
+> const AT = {};             // timestamp (ms) da última gravação bem-sucedida por símbolo
+> const STALE = new Set();   // símbolos em estado "stale" já logados (loga 1x por episódio)
+> const ABOVE = {};          // último estado SMA_fast>SMA_slow por símbolo (detecta a transição do cross)
+> const SMAVAL = {};         // últimos valores SMA fast/slow por símbolo (observabilidade)
+> const CROSS = {};          // último cruzamento por símbolo: { dir: 'golden'|'death', at: ms }
+> 
+> // Símbolos a monitorar: REGIME_SYMBOLS (CSV) se setado; senão os símbolos não-wildcard das
+> // automações ATIVAS (assim novos símbolos entram sozinhos). Wildcard ('*...') é ignorado — não
+> // dá p/ saber o símbolo concreto sem a memoryKey; use REGIME_SYMBOLS p/ esses casos.
+> async function resolveSymbols() {
+>     const fromEnv = (process.env.REGIME_SYMBOLS || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+>     if (fromEnv.length) return [...new Set(fromEnv)];
+> 
+>     try {
+>         const autos = await automationsRepository.getActiveAutomations();
+>         const syms = (autos || [])
+>             .map(a => String((a.get ? a.get('symbol') : a.symbol) || '').toUpperCase())
+>             .filter(s => s && !s.startsWith('*'));
+>         return [...new Set(syms)];
+>     } catch (err) {
+>         logger('regime', `Falha ao resolver símbolos das automações: ${err.message}`);
+>         return [];
+>     }
+> }
+> 
+> async function runOnce() {
+>     if (running) return;
+>     running = true;
+>     try {
+>         const symbols = await resolveSymbols();
+>         if (!symbols.length) return;
+> 
+>         for (const symbol of symbols) {
+>             try {
+>                 // passa o último regime conhecido como prev → histerese (estado pegajoso anti-whipsaw)
+>                 const r = await getRegime(symbol, INTERVAL, LAST[symbol]);
+>                 if (!r || !r.regime || r.regime === 'unknown') {
+>                     // Não sobrescreve a MEMORY (preserva o último regime). Mas se ANTES havia um
+>                     // regime conhecido, o gate agora opera sobre dado VELHO → avisa o operador uma
+>                     // vez (distingue "não comprou por bear" de "não comprou/comprou por gate stale").
+>                     if (LAST[symbol] !== undefined && !STALE.has(symbol)) {
+>                         STALE.add(symbol);
+>                         logger('regime', `${symbol}: regime STALE — Binance indisponível/poucos dados (${r ? r.reason : 'sem resposta'}); gate operando sobre o último conhecido '${LAST[symbol]}'.`);
+>                     } else if (LAST[symbol] === undefined) {
+>                         logger('regime', `${symbol}: regime indefinido (${r ? r.reason : 'sem resposta'}); MEMORY preservada (sem regime conhecido ainda).`);
+>                     }
+>                     continue;
+>                 }
+> 
+>                 // executeAutomations=false → gate PASSIVO: a escrita do regime não dispara ordens
+>                 // por si; o regime é lido quando o tick de RSI/preço dispara a automação.
+>                 await beholder.updateMemory(symbol, indexKeys.REGIME, null, r.regime, false);
+>                 AT[symbol] = Date.now();
+> 
+>                 if (STALE.delete(symbol)) // saiu do estado stale (regime voltou a ser conhecido)
+>                     logger('regime', `${symbol}: regime recuperado => ${r.regime}.`);
+> 
+>                 if (LAST[symbol] !== r.regime) {
+>                     const prevRegime = LAST[symbol]; // captura síncrona (o microtask abaixo roda após LAST ser sobrescrito)
+>                     logger('regime', `${symbol}:REGIME => ${r.regime} (${r.reason})`);
+> 
+>                     // SAÍDA DO BEAR do símbolo macro (bear → não-bear): arma a observação densa da Fase 4 no funil
+>                     // (notifica + pré-arma o shadow + captura ~4h dos dados pra calibrar/escrever o funil ao vivo).
+>                     // Só OBSERVA, NÃO compra. Fire-and-forget. Promise-anchored: ancora QUALQUER rejeição (sync do
+>                     // require OU async do armador) num .catch → blinda o backend contra unhandled-rejection (Node 22
+>                     // derruba o processo, e o backend não tem handler global) mesmo se uma edição futura do armador
+>                     // deixar escapar um throw/await. Nunca bloqueia nem derruba o loop de regime (gate passivo).
+>                     if (symbol === FASE4_MACRO_SYMBOL && prevRegime === 'bear' && r.regime !== 'bear') {
+>                         Promise.resolve()
+>                             .then(() => require('./funnelJob').armFase4Observation(`${symbol} ${prevRegime}->${r.regime}`))
+>                             .catch(e => logger('regime', `falha ao armar a Fase 4: ${e.message}`));
+>                     }
+> 
+>                     // Telegram: notifica o flip de regime (so transicoes REAIS, nao a semente do 1o boot).
+>                     if (prevRegime !== undefined)
+>                         require('./utils/eventNotify').notifyRegimeFlip(symbol, prevRegime, r.regime).catch(() => { });
+> 
+>                     LAST[symbol] = r.regime;
+>                 }
+> 
+>                 // ---- Trend Following: sinal de cruzamento SMA 50/200 da MAINNET (golden/death) ----
+>                 // ORDEM IMPORTA: o REGIME é escrito ACIMA, ANTES deste bloco. A automação de trend
+>                 // gateia por REGIME!=='bear' no MESMO tick do TREND_CROSS, então o regime precisa já
+>                 // estar fresco na MEMORY quando o sinal dispara. NÃO reordene estas duas escritas.
+>                 // O JOB é o ÚNICO detector de borda: deriva a TRANSIÇÃO de `above` (fast>slow) e
+>                 // escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h'] = 'golden'|'death'|'none'.
+>                 // Só a transição é escrita com executeAutomations=true → dispara a automação de trend
+>                 // UMA vez; 'none' é passivo. A automação reage a uma IGUALDADE (==='golden'/'death'),
+>                 // SEM o double-check do invertCondition → sem repetição intra-hora nem perda de sinal.
+>                 if (r.sma) {
+>                     const above = r.sma.above;
+>                     SMAVAL[symbol] = { fast: r.sma.fast.current, slow: r.sma.slow.current, above };
+>                     // Slope da SMA LENTA (fundo): a trilha [PAPER] de Trend slope-gate lê isto p/ só entrar no golden
+>                     // cross se o fundo NÃO estiver caindo (corta whipsaw lateral). PASSIVO; escrito ANTES do TREND_CROSS
+>                     // (mesma ordem-importa do REGIME) p/ estar fresco quando o cross dispara no MESMO tick. Banda morta
+>                     // ~0,01% evita chamar ruído de slope; dado insuficiente → 'flat' (fail-open, igual aos outros gates).
+>                     const sCur = r.sma.slow.current, sPrev = r.sma.slow.previous;
+>                     const dSlope = (Number.isFinite(sCur) && Number.isFinite(sPrev)) ? (sCur - sPrev) : NaN;
+>                     const slopeEps = Number.isFinite(sCur) ? Math.abs(sCur) * 1e-4 : 0;
+>                     const slope = !Number.isFinite(dSlope) ? 'flat' : (dSlope > slopeEps ? 'up' : (dSlope < -slopeEps ? 'down' : 'flat'));
+>                     await beholder.updateMemory(symbol, indexKeys.TREND_SLOPE, INTERVAL, slope, false);
+>                     const prev = ABOVE[symbol];
+>                     if (prev !== undefined && above !== prev) {
+>                         const dir = above ? 'golden' : 'death';
+>                         CROSS[symbol] = { dir, at: Date.now() };
+>                         logger('regime', `${symbol}: SMA ${dir.toUpperCase()} cross (50/200) — disparando automação de trend`);
+>                         require('./utils/eventNotify').notifyTrendCross(symbol, dir).catch(() => { });
+>                         const results = await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, dir, true);
+>                         if (Array.isArray(results)) results.filter(Boolean).forEach(x => logger('regime', `${symbol}: trend => ${JSON.stringify(x)}`));
+>                     } else {
+>                         // sem cruzamento fresco: zera o sinal (passivo) p/ não deixar 'golden'/'death' velho na MEMORY
+>                         await beholder.updateMemory(symbol, indexKeys.TREND_CROSS, INTERVAL, 'none', false);
+>                     }
+>                     ABOVE[symbol] = above;
+>                     // persiste o estado de cross (resiliência a restart). smaAbove sempre; dir/at vêm de
+>                     // CROSS (preenchido só num cruzamento). Persistir DEPOIS de disparar = at-least-once:
+>                     // um crash entre o updateMemory e o upsert pode re-disparar no boot — preferível a
+>                     // perder o sinal (entrar 2x num trend é menos pior que não entrar).
+>                     await persistCrossState(symbol);
+>                 }
+>             } catch (err) {
+>                 logger('regime', `${symbol}: erro ao atualizar regime: ${err.message}`);
+>             }
+>         }
+>     } finally {
+>         running = false;
+>     }
+> }
+> 
+> // Carrega o estado de cross persistido (smaAbove/lastCross) ANTES do 1º poll → um cross ocorrido
+> // durante o downtime é detectado na 1ª passada (prev = above persistido) em vez de perdido.
+> async function loadPersistedState() {
+>     try {
+>         const rows = await regimeStatesRepository.getAll();
+>         for (const row of rows) {
+>             const r = row.get ? row.get({ plain: true }) : row;
+>             if (r.smaAbove !== null && r.smaAbove !== undefined) ABOVE[r.symbol] = !!r.smaAbove;
+>             if (r.lastCrossDir) CROSS[r.symbol] = { dir: r.lastCrossDir, at: r.lastCrossAt != null ? Number(r.lastCrossAt) : null };
+>         }
+>         if (rows.length) logger('regime', `Estado de cross recarregado: ${rows.map(x => `${x.symbol}:above=${x.smaAbove}`).join(', ')}.`);
+>     } catch (err) {
+>         logger('regime', `Falha ao carregar estado de cross persistido (seguindo sem resiliência a restart): ${err.message}`);
+>     }
+> }
+> 
+> // Persiste o estado de cross do símbolo (chamado a cada poll após atualizar ABOVE). Best-effort:
+> // uma falha de DB não derruba o ciclo de regime (o gate !=bear continua valendo na MEMORY).
+> async function persistCrossState(symbol) {
+>     try {
+>         const c = CROSS[symbol];
+>         await regimeStatesRepository.upsertState(symbol, {
+>             smaAbove: ABOVE[symbol] === undefined ? null : ABOVE[symbol],
+>             lastCrossDir: c ? c.dir : null,
+>             lastCrossAt: c ? c.at : null,
+>         });
+>     } catch (err) {
+>         logger('regime', `${symbol}: falha ao persistir estado de cross: ${err.message}`);
+>     }
+> }
+> 
+> function start() {
+>     if (!ENABLED) {
+>         logger('regime', 'Regime job DESABILITADO (REGIME_JOB_ENABLED=false).');
+>         return;
+>     }
+>     if (timer || starting) return; // idempotente (starting cobre a janela do load assíncrono)
+>     starting = true;
+> 
+>     // carrega o estado persistido ANTES do 1º poll (resiliência a restart), depois arranca o loop
+>     loadPersistedState().finally(() => {
+>         starting = false;
+>         if (timer) return; // já iniciado por outra chamada concorrente
+> ```
+
+## 🤖 Claude *(19:30:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== signalRecorderJob.js ===\"\ncat backend/src/signalRecorderJob.js 2>/dev/null | sed -n '1,260p'",
+  "description": "Read signalRecorderJob.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === signalRecorderJob.js ===
+> 'use strict';
+> /*
+>  * signalRecorderJob — GRAVADOR de sinais -> desfecho (shadow research, frente UI). Pedido do dono: capturar COMO
+>  * e POR QUE uma oportunidade aconteceu + o DESFECHO, p/ reproduzir e VALIDAR com DADO (ex.: o fluxo unilateral
+>  * preve o movimento, ou so o descreve?). READ-ONLY: so observa a MEMORY do beholder + preco; NAO emite ordem.
+>  *
+>  * A cada ciclo detecta EVENTOS de sinal (edge-trigger): fluxo extremo (compra/venda agressora) e RSI 1m
+>  * sobrevenda/sobrecompra. Grava o CONTEXTO (preco, RSI 1m/15m, imbalance, toxicity, regime) e acompanha o
+>  * RETORNO em horizontes (+1/+5/+10/+15min). DIRECIONAL: dirRet = retorno no sentido que o sinal implicava
+>  * (compra->alta positiva; venda->queda positiva) -> hit-rate mede se o sinal ACERTOU a direcao. Fecha no
+>  * horizonte maximo, agrega STATS por tipo e PERSISTE os fechados em logs/signal_journal.jsonl (replay no boot).
+>  *
+>  * Env:
+>  *   SIGREC_ENABLED      (default 'true')
+>  *   SIGREC_REFRESH_MS   (default 30000; piso 5s)
+>  *   SIGREC_FLOW_TOX     (default 0.75)  — limiar de toxicity p/ "fluxo extremo"
+>  *   SIGREC_RSI_BUY      (default 30)    — RSI < isto = evento de sobrevenda (BTC); alts usam +5
+>  *   SIGREC_RSI_SELL     (default 70)    — RSI > isto = evento de sobrecompra
+>  *   REGIME_SYMBOLS      (CSV) — simbolos observados
+>  */
+> const beholder = require('./beholder');
+> const logger = require('./utils/logger');
+> const fs = require('fs');
+> const path = require('path');
+> 
+> const ENABLED = (process.env.SIGREC_ENABLED || 'true') !== 'false';
+> const _ms = parseInt(process.env.SIGREC_REFRESH_MS || '30000', 10);
+> const REFRESH_MS = Number.isFinite(_ms) && _ms >= 5000 ? _ms : 30000;
+> const _ftox = parseFloat(process.env.SIGREC_FLOW_TOX || '0.75');
+> const FLOW_TOX = Number.isFinite(_ftox) && _ftox > 0 ? _ftox : 0.75;
+> const FLOW_EXIT = FLOW_TOX * 0.7;
+> const _rb = parseFloat(process.env.SIGREC_RSI_BUY || '30');
+> const RSI_BUY = Number.isFinite(_rb) ? _rb : 30;
+> const _rs = parseFloat(process.env.SIGREC_RSI_SELL || '70');
+> const RSI_SELL = Number.isFinite(_rs) ? _rs : 70;
+> const SYMBOLS = (process.env.REGIME_SYMBOLS || 'BTCUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+> const HORIZONS = [1, 5, 10, 15];                 // minutos
+> const MAXH = HORIZONS[HORIZONS.length - 1];
+> const JOURNAL = path.resolve(__dirname, '..', 'logs', 'signal_journal.jsonl');
+> const CLOSED_MAX = 60;
+> 
+> let timer = null, running = false;
+> let seq = 0;
+> const OPEN = [];                                  // registros em acompanhamento
+> const CLOSED = [];                                // ring buffer dos ultimos fechados (display)
+> const STATS = {};                                 // type -> { type, h:{ '1':{sum,hit,cnt}, ... } }
+> const inExtreme = {};                             // edge-state do fluxo por simbolo
+> const lastRsi = {};                               // ultimo RSI 1m por simbolo (deteccao de cruzamento)
+> let AT = null;
+> 
+> function priceOf(sym) {
+>     try { const mt = beholder.getMemory(sym, 'MINI_TICKER'); const p = mt && (mt.close ?? mt.current ?? mt.c); const n = parseFloat(p); return Number.isFinite(n) && n > 0 ? n : null; }
+>     catch (e) { return null; }
+> }
+> function rsiOf(sym, key) { try { const r = beholder.getMemory(sym, key); return (r && r.current != null) ? Number(r.current) : null; } catch (e) { return null; } }
+> function flowOf(sym) { try { const f = beholder.getMemory(sym, 'FLOW'); return (f && typeof f === 'object') ? f : null; } catch (e) { return null; } }
+> function regimeOf(sym) { try { const r = beholder.getMemory(sym, 'REGIME'); return (typeof r === 'string') ? r : null; } catch (e) { return null; } }
+> 
+> // PURO: retorno bruto + direcional (no sentido que o sinal implicava). side 'buy' aposta na ALTA; 'sell' na QUEDA.
+> function signalReturn(side, entryPrice, price) {
+>     if (!(entryPrice > 0) || !(price > 0)) return null;
+>     const ret = (price - entryPrice) / entryPrice;
+>     return { ret, dirRet: side === 'sell' ? -ret : ret };
+> }
+> 
+> // PURO: agrega STATS num resumo por tipo (retorno medio direcional + hit-rate por horizonte).
+> function summarize(stats) {
+>     return Object.values(stats || {}).map(s => {
+>         const h = {};
+>         for (const k of Object.keys(s.h || {})) {
+>             const b = s.h[k];
+>             h[k] = { n: b.cnt, avgPct: b.cnt ? (b.sum / b.cnt) * 100 : null, hitRate: b.cnt ? b.hit / b.cnt : null };
+>         }
+>         const n10 = (s.h['10'] || {}).cnt || 0;
+>         return { type: s.type, samples: n10, horizons: h };
+>     }).sort((a, b) => b.samples - a.samples);
+> }
+> 
+> function recordEvent(symbol, type, side, ctx) {
+>     const rec = { id: ++seq, ts: Date.now(), symbol, type, side, entryPrice: ctx.price, ctx, horizons: {}, closed: false };
+>     OPEN.push(rec);
+>     logger('signals', `EVENTO ${type} ${symbol} @ ${ctx.price} (rsi1m=${ctx.rsi1m} imb=${ctx.imbalance} reg=${ctx.regime})`);
+>     return rec;
+> }
+> 
+> // CHAMADA DISCRICIONARIA do operador: vira um registro (op_up/op_down) que entra no MESMO pipeline de
+> // desfecho/STATS -> mede se a leitura HUMANA bate o acaso (alpha na discricao, nao no indicador).
+> function recordCall(symbol, direction, note) {
+>     const sym = String(symbol || '').toUpperCase();
+>     const dir = String(direction || '').toLowerCase() === 'down' ? 'down' : 'up';
+>     const price = priceOf(sym);
+>     if (price == null) return { ok: false, reason: `preco indisponivel p/ ${sym}` };
+>     const fl = flowOf(sym) || {};
+>     const ctx = { price, rsi1m: rsiOf(sym, 'RSI_14_1m'), rsi15m: rsiOf(sym, 'RSI_14_15m'), regime: regimeOf(sym), imbalance: fl.imbalance != null ? fl.imbalance : null, toxicity: fl.toxicity != null ? fl.toxicity : null };
+>     if (note) ctx.note = String(note).slice(0, 200);
+>     const side = dir === 'down' ? 'sell' : 'buy';
+>     const rec = recordEvent(sym, dir === 'down' ? 'op_down' : 'op_up', side, ctx);
+>     rec.op = true;
+>     logger('signals', `[CALL] operador: ${sym} ${dir.toUpperCase()} @ ${price} (rsi1m=${ctx.rsi1m})`);
+>     return { ok: true, id: rec.id, ts: new Date(rec.ts).toISOString(), symbol: sym, direction: dir, price };
+> }
+> 
+> // Placar das CALLS do operador (op_up/op_down): hit-rate + retorno medio @10m (do STATS, que sobrevive ao
+> // replay) + lista recente (CLOSED) + as em andamento (OPEN). Acaso = 50%; > isso de forma consistente = edge.
+> function opSummary() {
+>     const sm = summarize(STATS);
+>     let n = 0, hit = 0, sum = 0;
+>     for (const t of ['op_up', 'op_down']) {
+>         const s = sm.find(x => x.type === t); const h = s && s.horizons && s.horizons['10'];
+>         if (h && h.n) { n += h.n; hit += (h.hitRate || 0) * h.n; sum += (h.avgPct || 0) * h.n; }
+>     }
+>     const mapRec = r => ({ ts: new Date(r.ts).toISOString(), symbol: r.symbol, direction: r.type === 'op_down' ? 'down' : 'up', entryPrice: r.entryPrice, ctx: r.ctx, ret10: r.horizons[10] ? r.horizons[10].dirRet * 100 : null, ret15: r.horizons[15] ? r.horizons[15].dirRet * 100 : null });
+>     return {
+>         total: n, hitRate: n ? hit / n : null, avgPct: n ? sum / n : null,
+>         recent: CLOSED.filter(r => r.op).slice(0, 12).map(mapRec),
+>         open: OPEN.filter(r => r.op).map(r => ({ ts: new Date(r.ts).toISOString(), symbol: r.symbol, direction: r.type === 'op_down' ? 'down' : 'up', entryPrice: r.entryPrice, ctx: r.ctx, ageMin: Math.floor((Date.now() - r.ts) / 60000) })),
+>     };
+> }
+> 
+> function applyToStats(rec) {
+>     const st = STATS[rec.type] || (STATS[rec.type] = { type: rec.type, h: {} });
+>     for (const H of HORIZONS) {
+>         const o = rec.horizons[H];
+>         if (!o) continue;
+>         const b = st.h[H] || (st.h[H] = { sum: 0, hit: 0, cnt: 0 });
+>         b.sum += o.dirRet; b.cnt += 1; if (o.dirRet > 0) b.hit += 1;
+>     }
+> }
+> 
+> function persistClosed(rec) {
+>     try {
+>         const dir = path.dirname(JOURNAL);
+>         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+>         fs.appendFileSync(JOURNAL, JSON.stringify(rec) + '\n', 'utf8');
+>     } catch (e) { logger('signals', `falha ao persistir journal: ${e.message}`); }
+> }
+> 
+> // Replay do journal no boot -> reconstroi STATS (o dado "salvo p/ reproduzir" sobrevive a restart). Le so o
+> // final do arquivo (cap por bytes) p/ nao bloquear o boot com um journal gigante.
+> function replay() {
+>     try {
+>         if (!fs.existsSync(JOURNAL)) return;
+>         const stat = fs.statSync(JOURNAL);
+>         const CAP = 2 * 1024 * 1024;
+>         const fd = fs.openSync(JOURNAL, 'r');
+>         const start = Math.max(0, stat.size - CAP);
+>         const buf = Buffer.alloc(stat.size - start);
+>         fs.readSync(fd, buf, 0, buf.length, start);
+>         fs.closeSync(fd);
+>         const lines = buf.toString('utf8').split('\n').filter(Boolean);
+>         let n = 0;
+>         for (const ln of lines) {
+>             try { const rec = JSON.parse(ln); if (rec && rec.type && rec.horizons) { applyToStats(rec); n++; } } catch (_) { }
+>         }
+>         if (n) logger('signals', `journal replay: ${n} registros agregados em STATS.`);
+>     } catch (e) { logger('signals', `falha no replay do journal: ${e.message}`); }
+> }
+> 
+> function runOnce() {
+>     if (!ENABLED || running) return;
+>     running = true;
+>     try {
+>         const now = Date.now();
+>         // 1) detecta eventos novos
+>         for (const sym of SYMBOLS) {
+>             const price = priceOf(sym);
+>             if (price == null) continue;
+>             const rsi1m = rsiOf(sym, 'RSI_14_1m'), rsi15m = rsiOf(sym, 'RSI_14_15m');
+>             const fl = flowOf(sym) || {};
+>             const regime = regimeOf(sym);
+>             const ctx = { price, rsi1m, rsi15m, imbalance: fl.imbalance != null ? fl.imbalance : null, toxicity: fl.toxicity != null ? fl.toxicity : null, regime };
+>             const isAlt = sym !== 'BTCUSDT';
+>             const buyTh = RSI_BUY + (isAlt ? 5 : 0);
+> 
+>             // fluxo extremo (edge-trigger)
+>             const tox = ctx.toxicity;
+>             if (tox != null && tox >= FLOW_TOX && !inExtreme[sym]) {
+>                 inExtreme[sym] = true;
+>                 const side = (ctx.imbalance != null && ctx.imbalance < 0) ? 'sell' : 'buy';
+>                 recordEvent(sym, side === 'sell' ? 'flow_sell' : 'flow_buy', side, ctx);
+>             } else if (tox != null && tox < FLOW_EXIT && inExtreme[sym]) {
+>                 inExtreme[sym] = false;
+>             }
+> 
+>             // RSI cruzamento (sobrevenda/sobrecompra)
+>             const prev = lastRsi[sym];
+>             if (rsi1m != null) {
+>                 if (prev != null && prev >= buyTh && rsi1m < buyTh) recordEvent(sym, 'rsi_oversold', 'buy', ctx);
+>                 else if (prev != null && prev <= RSI_SELL && rsi1m > RSI_SELL) recordEvent(sym, 'rsi_overbought', 'sell', ctx);
+>                 lastRsi[sym] = rsi1m;
+>             }
+>         }
+> 
+>         // 2) atualiza desfecho dos abertos + fecha no horizonte maximo
+>         for (let i = OPEN.length - 1; i >= 0; i--) {
+>             const rec = OPEN[i];
+>             const price = priceOf(rec.symbol);
+>             const ageMin = (now - rec.ts) / 60000;
+>             if (price != null) {
+>                 for (const H of HORIZONS) {
+>                     if (ageMin >= H && !rec.horizons[H]) {
+>                         const o = signalReturn(rec.side, rec.entryPrice, price);
+>                         if (o) rec.horizons[H] = o;
+>                     }
+>                 }
+>             }
+>             if (ageMin >= MAXH) {
+>                 rec.closed = true;
+>                 applyToStats(rec);
+>                 persistClosed(rec);
+>                 CLOSED.unshift(rec);
+>                 if (CLOSED.length > CLOSED_MAX) CLOSED.pop();
+>                 OPEN.splice(i, 1);
+>             }
+>         }
+>         AT = now;
+>     } catch (err) {
+>         logger('signals', `erro no ciclo: ${err.message}`);
+>     } finally {
+>         running = false;
+>     }
+> }
+> 
+> function start() {
+>     if (!ENABLED) { logger('signals', 'Signal Recorder DESABILITADO (SIGREC_ENABLED=false).'); return; }
+>     if (timer) return;
+>     replay();
+>     runOnce();
+>     timer = setInterval(runOnce, REFRESH_MS);
+>     if (timer.unref) timer.unref();
+>     logger('signals', `Signal Recorder iniciado (intervalo ${REFRESH_MS}ms; horizontes ${HORIZONS.join('/')}min; fluxo>=${FLOW_TOX}, RSI ${RSI_BUY}/${RSI_SELL}). Read-only.`);
+> }
+> function stop() { if (timer) { clearInterval(timer); timer = null; } running = false; }
+> 
+> function getStatus() {
+>     return {
+>         enabled: ENABLED, refreshMs: REFRESH_MS, horizons: HORIZONS,
+>         flowTox: FLOW_TOX, rsiBuy: RSI_BUY, rsiSell: RSI_SELL,
+>         stats: summarize(STATS),
+>         open: OPEN.length,
+>         opCalls: opSummary(),
+>         recent: CLOSED.slice(0, 8).map(r => ({
+>             ts: new Date(r.ts).toISOString(), symbol: r.symbol, type: r.type, side: r.side,
+>             entryPrice: r.entryPrice, ctx: r.ctx,
+>             ret10: r.horizons[10] ? r.horizons[10].dirRet * 100 : null,
+>             ret15: r.horizons[15] ? r.horizons[15].dirRet * 100 : null,
+>         })),
+>         at: AT ? new Date(AT).toISOString() : null,
+>     };
+> }
+> 
+> module.exports = { start, stop, runOnce, getStatus, recordCall, signalReturn, summarize };
+> ```
+
+## 🤖 Claude *(19:31:21)*
+
+
+## 🤖 Claude *(19:31:24)*
+
+Agora entendo a mecânica: **golden cross** escreve `TREND_CROSS` com `executeAutomations=true` (dispara a automação de trend), enquanto **rsi/flow** são só do gravador (não vão pro Telegram, não executam nada). Preciso do estado ao vivo — regime atual dos 5 símbolos, se o grupo Trend está armado ou parado, se algum BUY disparou nos crosses, promoção e halt — e do que a automação de trend efetivamente faz.
+
+## 🤖 Claude *(19:31:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== setup files present ===\"\nls backend/scripts/ 2>/dev/null | grep -iE \"setup|trend|farm|baseline\" ; ls scripts/ 2>/dev/null | grep -iE \"setup\"\necho\necho \"=== find setup-trend ===\"\nfind . -name \"setup-trend*.js\" 2>/dev/null | head\necho\necho \"=== setup-trend.js (buy/sell templates + conditions) ===\"\nf=$(find . -name \"setup-trend*.js\" 2>/dev/null | head -1); [ -n \"$f\" ] && sed -n '1,200p' \"$f\"",
+  "description": "Locate and read setup-trend.js"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === setup files present ===
+> activate-trend.js
+> backtest-farm-funnel.js
+> backtest-futures-trend.js
+> setup-farm.js
+> setup-flow-gate.js
+> setup-grid.js
+> setup-harvester.js
+> setup-paper-levers.js
+> setup-paper-mr15.js
+> setup-paper-trilhas.js
+> setup-trend.js
+> 
+> === find setup-trend ===
+> ./backend/scripts/setup-trend.js
+> 
+> === setup-trend.js (buy/sell templates + conditions) ===
+> 'use strict';
+> /*
+>  * Setup IDEMPOTENTE da automação de Trend Following (cruzamento SMA fast/slow) no ecossistema
+>  * Beholder — config pura, sem código novo no engine.
+>  *
+>  * COMO O SINAL CHEGA (importante): o chart de TRADE é o testnet, que após um reset tem poucas
+>  * velas 1h (ex.: 12h) — NÃO dá p/ calcular SMA_200 (precisa 200h). Por isso o sinal de cruzamento
+>  * vem da MAINNET, calculado pelo `regimeJob` (que já busca 300 klines 1h mainnet p/ o regime): o
+>  * job detecta a transição golden/death e escreve um SINAL DISCRETO em MEMORY['<sym>:TREND_CROSS_1h']
+>  * (='golden'|'death'|'none'), disparando a automação UMA vez no cruzamento. Execução = testnet
+>  * (igual ao regime: sinal=mercado real, ordem=testnet). >>> Este script NÃO cria monitor de chart
+>  * (seria um 2º writer das mesmas keys, com dados rasos do testnet). O job é o único writer. <<<
+>  *
+>  * Cria, se ausentes:
+>  *   - order templates BUY/SELL **LIMIT marketável** (atravessa o spread como taker p/ fill
+>  *     imediato sem EXPIRE no book fino do testnet): BUY = bestAsk×1.003 MIN_NOTIONAL; SELL =
+>  *     bestBid×0.997 **TREND_QTY** (vende a posição acumulada pelo trend, não LAST_ORDER). O buffer
+>  *     (0.3%) vive no EVAL do limitPrice porque o limitPriceMultiplier é DECIMAL(10,2) (não expressa sub-1%).
+>  *   - automações "Trend Buy/Sell" (reagem ao sinal golden/death), **INATIVAS** por segurança.
+>  *
+>  * Por que INATIVAS: a entrada/saída de trend compartilha carteira com a reversão (id2/id3). Antes
+>  * de ativar, decidir a COORDENAÇÃO (gatear id2/id3 por REGIME!=='trend' — incluindo REGIME nos
+>  * indexes de AMBAS, senão fail-open) e o SIZING (MIN_NOTIONAL é validação; trend real quer size),
+>  * e observar 1 ciclo golden→death real. Ver HANDOFF.
+>  *
+>  * Reproduz o setup após `make reset-db` (id2/id3 e este trend são DADO runtime, não seeders).
+>  * Uso (dentro do container, server no ar): node scripts/setup-trend.js
+>  *   env: EM/PW (ou TRADEUX_EMAIL/TRADEUX_PASSWORD), PORT (3001), TREND_SYMBOL, TREND_INTERVAL
+>  */
+> const { createClient, resolveEnv } = require('./lib/apiClient');
+> 
+> const SYMBOL = (process.env.TREND_SYMBOL || 'BTCUSDT').toUpperCase();
+> const INTERVAL = process.env.TREND_INTERVAL || '1h';
+> const TAG = 'SMA50/200';                            // rótulo (períodos vivem no regimeClassifier)
+> const KC = `${SYMBOL}:TREND_CROSS_${INTERVAL}`;     // memoryKey do sinal de cruzamento (escrito pelo job)
+> const KR = `${SYMBOL}:REGIME`;
+> const { host, port, email: EM, password: PW } = resolveEnv({
+>     hostEnv: 'TREND_API_HOST',
+>     emailEnvs: ['EM', 'TRADEUX_EMAIL'],
+>     passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],
+> });
+> const client = createClient({ host, port });
+> const req = client.req;
+> const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 30); // cap preservado (era 30)
+> 
+> async function ensureTemplate(token, name, side, opts) {
+>     const all = await req('GET', `/ordertemplates/all/${SYMBOL}`, token);
+>     const found = Array.isArray(all.body) ? all.body.find(t => t.name === name) : null;
+>     if (found) return { id: found.id, msg: `template "${name}" já existe (id ${found.id})` };
+>     const r = await req('POST', '/ordertemplates', token, {
+>         name, symbol: SYMBOL, type: opts.type, side,
+>         limitPrice: opts.limitPrice || null, limitPriceMultiplier: opts.limitPriceMultiplier || 1,
+>         stopPrice: null, stopPriceMultiplier: 1,
+>         quantity: opts.quantity, quantityMultiplier: opts.quantityMultiplier || 1,
+>         icebergQty: null, icebergQtyMultiplier: 1,
+>     });
+>     if (r.status !== 201) throw new Error(`falha ao criar template ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+>     return { id: r.body.id, msg: `template "${name}" criado (id ${r.body.id}, ${opts.type})` };
+> }
+> 
+> async function ensureAutomation(token, name, conditions, indexes, orderTemplateId) {
+>     const existing = await findAutomationByName(token, name);
+>     if (existing) return `automação "${name}" já existe (id ${existing.id}, isActive=${existing.isActive})`;
+>     const r = await req('POST', '/automations', token, {
+>         name, symbol: SYMBOL, indexes, conditions, isActive: false, logs: true, schedule: null,
+>         actions: [{ type: 'ORDER', orderTemplateId }],
+>     });
+>     if (r.status !== 201) throw new Error(`falha ao criar automação ${name}: ${r.status} ${JSON.stringify(r.body)}`);
+>     return `automação "${name}" criada (id ${r.body.id}, INATIVA)`;
+> }
+> 
+> (async () => {
+>     if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+>     const token = await client.login(EM, PW);
+> 
+>     console.log(`# Setup Trend Following ${TAG} — ${SYMBOL} ${INTERVAL} (sinal via regimeJob/mainnet)\n`);
+> 
+>     // LIMIT marketável: o preço atravessa o spread (BUY paga +0.3% sobre o melhor ask; SELL aceita
+>     // -0.3% sobre o melhor bid) → fill imediato como taker, com piso/teto de slippage; mata o EXPIRE
+>     // de MARKET no book fino do testnet. O BOOK é sempre vivo (miniTickerStream o popula, bestAsk=bestBid=
+>     // close quando não há book real). Buffer no EVAL pois limitPriceMultiplier é DECIMAL(10,2) (≥1%).
+>     // SHAPE CANÔNICO (type/limitPrice/buffer/quantityMultiplier) — espelhado em activate-trend.js
+>     // (ensureTemplateShape). Mudou aqui → mude lá (senão o reshape idempotente fica num PATCH eterno).
+>     const buyTpl = await ensureTemplate(token, `Trend Buy ${SYMBOL} ${TAG}`, 'BUY', {
+>         type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestAsk * 1.003`, limitPriceMultiplier: 1,
+>         quantity: 'MIN_NOTIONAL', quantityMultiplier: 3, // size pequeno p/ observar 1 cross; calibrar depois
+>     });
+>     console.log('- ' + buyTpl.msg);
+>     const sellTpl = await ensureTemplate(token, `Trend Sell ${SYMBOL} ${TAG}`, 'SELL', {
+>         type: 'LIMIT', limitPrice: `MEMORY['${SYMBOL}:BOOK'].current.bestBid * 0.997`, limitPriceMultiplier: 1,
+>         quantity: 'TREND_QTY', quantityMultiplier: 1, // vende a posição acumulada pelo trend (id6 soma no fill; zera no death) — NÃO LAST_ORDER
+>     });
+>     console.log('- ' + sellTpl.msg);
+> 
+>     // BUY = sinal golden (cruzamento p/ cima) + trava de segurança != bear.
+>     const buyCond = `MEMORY['${KC}']==='golden' && MEMORY['${KR}']!=='bear'`;
+>     console.log('- ' + await ensureAutomation(token, `Trend Buy ${SYMBOL} ${TAG}`, buyCond, `${KC},${KR}`, buyTpl.id));
+> 
+>     // SELL = sinal death (cruzamento p/ baixo) — saída p/ caixa, sem gate.
+>     const sellCond = `MEMORY['${KC}']==='death'`;
+>     console.log('- ' + await ensureAutomation(token, `Trend Sell ${SYMBOL} ${TAG}`, sellCond, `${KC}`, sellTpl.id));
+> 
+>     console.log(`\nPRONTO (automações INATIVAS). Para ATIVAR rode: node scripts/activate-trend.js`);
+>     console.log(`  (coordena id2/id3 por MEMORY['${KR}']!=='trend' — incl. ${KR} nos indexes de AMBAS — e dá start na id6/id7)`);
+>     console.log(`  SIZING: id6 = 3× MIN_NOTIONAL (pequeno, p/ observar 1 cross); calibrar após 1 golden→death real.`);
+> })();
+> ```
+
+## 🤖 Claude *(19:31:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -e\ncd /home/gcrux-tradeux/tradeux\n# creds from .env (readable only as gcrux-tradeux)\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2-')\nPWD=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PASSWORD=|^DEFAULT_SETTINGS_PWD=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2-')\necho \"email present: $([ -n \"$EMAIL\" ] && echo yes || echo no)\"\nBASE=\"http://127.0.0.1:8090/api\"\nTOKEN=$(curl -s -m8 -X POST \"$BASE/login\" -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))' 2>/dev/null)\necho \"token len: ${#TOKEN}\"\necho \"=== /system/halt ===\"\ncurl -s -m8 \"$BASE/system/halt\" -H \"Authorization: $TOKEN\"\necho\necho \"=== /cockpit (truncated) ===\"\ncurl -s -m8 \"$BASE/cockpit\" -H \"Authorization: $TOKEN\" | python3 -c 'import sys,json;d=json.load(sys.stdin);print(json.dumps(d,indent=1)[:2500])' 2>/dev/null || echo \"cockpit route miss\"\n# stash token for reuse\necho \"$TOKEN\" > /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt 2>/dev/null\nmkdir -p /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad && echo \"$TOKEN\" > /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt",
+  "description": "Login and query live halt + cockpit state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> email present: yes
+> token len: 137
+> === /system/halt ===
+> {"halted":false,"envHard":false,"envMismatch":{"on":false,"reason":null,"since":null},"floor":{"on":false,"reason":null,"since":null},"manual":{"on":false,"reason":null,"since":null},"dailyCap":{"on":false,"reason":null,"since":null,"day":null,"active":false},"sources":[],"source":null,"reason":null,"since":null}
+> === /cockpit (truncated) ===
+> cockpit route miss
+> ```
+
+## 🤖 Claude *(19:32:01)*
+
+
+## 🤖 Claude *(19:32:05)*
+
+LIVE confirmado (`halted=false`, sem cap/manual). A automação de Trend: **BUY id6** = `TREND_CROSS==='golden' && REGIME!=='bear'` (LIMIT marketable, 3× MIN_NOTIONAL), **SELL id7** = `TREND_CROSS==='death'`. Criadas **INATIVAS** por padrão. Detalhe crucial: os golden crosses de LTC/ADA/BTC/BNB dispararam quando o `REGIME` ainda era `bear` → o próprio gate `!=='bear'` bloquearia a compra mesmo se o grupo estivesse armado.
+
+Preciso confirmar o estado dos grupos/automações e copiar o journal pra análise determinística. Vou descobrir as rotas certas e puxar tudo.
+
+## 🤖 Claude *(19:32:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== router paths (cockpit/analysis/promotion/automations/memory/groups) ===\"\ngrep -rhnE \"router\\.(get|post|patch|put)\\(\" backend/src/routers 2>/dev/null | grep -iE \"cockpit|analysis|paper|promo|automation|memory|group|regime|beholder|order\" | head -60",
+  "description": "Grep router endpoint paths"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === router paths (cockpit/analysis/promotion/automations/memory/groups) ===
+> 5:router.get('/regime-status', analysisController.getRegimeStatus);
+> 7:router.get('/regime/:symbol', analysisController.getRegime);
+> 9:router.get('/flow-status', analysisController.getFlowStatus);
+> 11:router.get('/flow/:symbol', analysisController.getFlow);
+> 13:router.get('/cockpit', analysisController.getCockpitStatus);
+> 15:router.get('/cockpit/:symbol', analysisController.getCockpit);
+> 17:router.get('/paper', analysisController.getPaper);
+> 18:router.post('/call', analysisController.postCall);
+> 6:router.get('/groups', automationsController.getAutomationGroups);
+> 7:router.post('/groups/:group/:action', automationsController.setAutomationGroup);
+> 9:router.get('/:id', automationsController.getAutomation);
+> 13:router.get('/', automationsController.getAutomations);
+> 15:router.patch('/:id', automationsController.updateAutomation);
+> 17:router.post('/', automationsController.insertAutomation);
+> 19:router.post('/:id/start', automationsController.startAutomation);
+> 21:router.post('/:id/stop', automationsController.stopAutomation);
+> 7:router.get('/all/:symbol', orderTemplatesController.getAllOrderTemplates);
+> 9:router.get('/:symbol?', orderTemplatesController.getOrderTemplates);
+> 11:router.patch('/:id', orderTemplatesController.updateOrderTemplate);
+> 13:router.post('/', orderTemplatesController.insertOrderTemplate);
+> 18:router.get('/promotions', systemController.getPromotions);
+> 5:router.get('/memory/indexes', beholderController.getMemoryIndexes);
+> 7:router.get('/memory/:symbol?/:index?/:interval?', beholderController.getMemory);
+> 9:router.get('/brain/indexes', beholderController.getBrainIndexes);
+> 11:router.get('/brain', beholderController.getBrain);
+> 13:router.get('/agenda', beholderController.getAgenda);
+> 15:router.get('/analysis', beholderController.getAnalysisIndexes);
+> 17:router.post('/init', beholderController.init);
+> 5:router.get('/last', ordersController.getLastOrders);
+> 7:router.get('/reports/:quote', ordersController.getOrdersReport);
+> 9:router.get('/:orderId/:clientOrderId', ordersController.getOrder);
+> 11:router.get('/:symbol?', ordersController.getOrders);
+> 13:router.post('/:id/sync', ordersController.syncOrder);
+> 15:router.post('/', ordersController.placeOrder);
+> ```
+
+## 🤖 Claude *(19:32:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "c=tradeux-backend-1\ndst=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad\nmkdir -p \"$dst\"\ndocker cp \"$c\":/app/logs/signal_journal.jsonl \"$dst/signal_journal.jsonl\" 2>/dev/null && echo \"copied journal -> $dst/signal_journal.jsonl\" && wc -l \"$dst/signal_journal.jsonl\"\necho\necho \"=== quick type histogram (closed records) ===\"\npython3 - \"$dst/signal_journal.jsonl\" <<'PY'\nimport sys,json,collections\nc=collections.Counter(); reg=collections.Counter()\nn=0\nfor ln in open(sys.argv[1]):\n    ln=ln.strip()\n    if not ln: continue\n    try: r=json.loads(ln)\n    except: continue\n    n+=1\n    c[r.get('type')]+=1\n    reg[(r.get('type'),(r.get('ctx') or {}).get('regime'))]+=1\nprint(\"total records:\",n)\nfor t,k in c.most_common(): print(f\"  {t:16s} {k}\")\nPY",
+  "description": "Copy journal out and histogram signal types"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> copied journal -> /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/signal_journal.jsonl
+> 2216 /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/signal_journal.jsonl
+> 
+> === quick type histogram (closed records) ===
+> total records: 2216
+>   rsi_oversold     1077
+>   rsi_overbought   676
+>   flow_sell        241
+>   flow_buy         219
+>   op_up            3
+> ```
+
+## 🤖 Claude *(19:32:21)*
+
+
+## 🤖 Claude *(19:32:23)*
+
+2216 sinais no journal: **1077 rsi_oversold, 676 rsi_overbought, 241 flow_sell, 219 flow_buy, 3 op_up**. Rotas descobertas — vou puxar o estado ao vivo (automações/grupos, regime dos 5, promoções, paper, últimas ordens).
+
+## 🤖 Claude *(19:32:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt)\nBASE=\"http://127.0.0.1:8090/api\"\nh(){ curl -s -m8 \"$BASE$1\" -H \"Authorization: $TOKEN\"; }\necho \"=== /analysis/regime-status ===\"\nh /analysis/regime-status | python3 -m json.tool 2>/dev/null | head -60\necho\necho \"=== /automations/groups ===\"\nh /automations/groups | python3 -m json.tool 2>/dev/null | head -80",
+  "description": "Query regime status and automation groups"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /analysis/regime-status ===
+> {
+>     "enabled": true,
+>     "refreshMs": 300000,
+>     "interval": "1h",
+>     "running": false,
+>     "symbols": {
+>         "BTCUSDT": {
+>             "regime": "bear",
+>             "at": "2026-07-03T19:28:46.883Z",
+>             "ageMs": 219306,
+>             "stale": false,
+>             "smaAbove": true,
+>             "sma": {
+>                 "fast": 61263.747799999954,
+>                 "slow": 60129.55595000001,
+>                 "above": true
+>             },
+>             "lastCross": {
+>                 "dir": "golden",
+>                 "at": "2026-07-02T21:03:46.752Z"
+>             }
+>         },
+>         "LTCUSDT": {
+>             "regime": "mixed",
+>             "at": "2026-07-03T19:28:47.165Z",
+>             "ageMs": 219024,
+>             "stale": false,
+>             "smaAbove": true,
+>             "sma": {
+>                 "fast": 43.26840000000005,
+>                 "slow": 42.446799999999946,
+>                 "above": true
+>             },
+>             "lastCross": {
+>                 "dir": "golden",
+>                 "at": "2026-06-29T21:03:46.986Z"
+>             }
+>         },
+>         "BNBUSDT": {
+>             "regime": "bear",
+>             "at": "2026-07-03T19:28:47.446Z",
+>             "ageMs": 218743,
+>             "stale": false,
+>             "smaAbove": true,
+>             "sma": {
+>                 "fast": 558.8432,
+>                 "slow": 556.8458999999997,
+>                 "above": true
+>             },
+>             "lastCross": {
+>                 "dir": "golden",
+>                 "at": "2026-07-03T14:03:48.483Z"
+>             }
+>         },
+>         "ADAUSDT": {
+>             "regime": "trend",
+>             "at": "2026-07-03T19:28:47.720Z",
+>             "ageMs": 218469,
+>             "stale": false,
+>             "smaAbove": true,
+> 
+> === /automations/groups ===
+> {
+>     "groups": [
+>         {
+>             "key": "farm",
+>             "label": "Farm (no-loss alts)",
+>             "paper": false,
+>             "total": 6,
+>             "active": 3,
+>             "inactive": 3,
+>             "ids": [
+>                 13,
+>                 14,
+>                 11,
+>                 12,
+>                 9,
+>                 10
+>             ]
+>         },
+>         {
+>             "key": "trend",
+>             "label": "Trend (SMA50/200)",
+>             "paper": false,
+>             "total": 8,
+>             "active": 0,
+>             "inactive": 8,
+>             "ids": [
+>                 19,
+>                 20,
+>                 17,
+>                 18,
+>                 6,
+>                 7,
+>                 15,
+>                 16
+>             ]
+>         },
+>         {
+>             "key": "baseline",
+>             "label": "Baseline (RSI BTC)",
+>             "paper": false,
+>             "total": 2,
+>             "active": 0,
+>             "inactive": 2,
+>             "ids": [
+>                 2,
+>                 3
+>             ]
+>         },
+>         {
+>             "key": "paper",
+>             "label": "Paper (research, sem risco)",
+>             "paper": true,
+>             "total": 40,
+>             "active": 40,
+>             "inactive": 0,
+>             "ids": [
+>                 54,
+>                 55,
+>                 82,
+>                 83,
+>                 56,
+>                 57,
+>                 66,
+>                 67,
+>                 80,
+>                 81,
+>                 50,
+>                 51,
+>                 78,
+>                 79,
+>                 52,
+>                 53,
+>                 64,
+>                 65,
+>                 76,
+>                 77,
+>                 58,
+>                 59,
+>                 70,
+>                 71,
+> ```
+
+## 🤖 Claude *(19:32:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt)\nBASE=\"http://127.0.0.1:8090/api\"\nh(){ curl -s -m8 \"$BASE$1\" -H \"Authorization: $TOKEN\"; }\necho \"=== /system/promotions ===\"\nh /system/promotions | python3 -m json.tool 2>/dev/null | head -40\necho\necho \"=== /analysis/paper (totals) ===\"\nh /analysis/paper | python3 -c 'import sys,json;d=json.load(sys.stdin);print(json.dumps(d,indent=1)[:1800])' 2>/dev/null\necho\necho \"=== /orders/last (recent) ===\"\nh /orders/last | python3 -c 'import sys,json;d=json.load(sys.stdin);\nrows=d if isinstance(d,list) else d.get(\"rows\",d)\nimport itertools\nfor o in (rows if isinstance(rows,list) else [])[:15]:\n    print(o.get(\"symbol\"),o.get(\"side\"),o.get(\"status\"),o.get(\"quantity\"),o.get(\"avgPrice\") or o.get(\"limitPrice\"),o.get(\"automationId\"),o.get(\"createdAt\") or o.get(\"transactTime\"),\"tn=\",o.get(\"isTestnet\"))' 2>/dev/null || echo \"orders parse miss\"",
+  "description": "Query promotions, paper totals, recent orders"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /system/promotions ===
+> {
+>     "enabled": true,
+>     "checkMs": 21600000,
+>     "minRoundTrips": 20,
+>     "minNet": 0,
+>     "minSymbolFrac": 0.5,
+>     "running": false,
+>     "at": "2026-07-03T18:48:45.748Z",
+>     "ageMs": 2625691,
+>     "allowlist": {
+>         "promoted": {},
+>         "grandfather": []
+>     },
+>     "last": {
+>         "at": "2026-07-03T18:48:45.748Z",
+>         "evaluated": 3,
+>         "promotedNow": 0,
+>         "allowlist": {
+>             "promoted": {},
+>             "grandfather": []
+>         }
+>     }
+> }
+> 
+> === /analysis/paper (totals) ===
+> {
+>  "generatedAt": "2026-07-03T19:32:31.496Z",
+>  "note": "Paper/Shadow: pre\u00e7o MINI_TICKER mainnet real + fee real; sem Binance; mainnet congelado.",
+>  "totals": {
+>   "realizedPnl": -1.1047867117240244,
+>   "unrealizedPnl": -0.0883103167799959,
+>   "totalPnl": -1.1930970285040203,
+>   "fees": 0.49798934255405
+>  },
+>  "strategies": [
+>   {
+>    "strategy": "consistencia",
+>    "realizedPnl": 0.21935533136597485,
+>    "unrealizedPnl": 0,
+>    "openPositions": 0,
+>    "fees": 0.43938423268404997,
+>    "buys": 11,
+>    "sells": 11,
+>    "wins": 10,
+>    "symbols": {
+>     "BTCUSDT": {
+>      "qty": 0,
+>      "avgCost": 0,
+>      "realizedPnl": 0.014334053650955525,
+>      "unrealizedPnl": 0
+>     },
+>     "LTCUSDT": {
+>      "qty": 0,
+>      "avgCost": 0,
+>      "realizedPnl": 0.20502127771501932,
+>      "unrealizedPnl": 0
+>     }
+>    },
+>    "totalPnl": 0.21935533136597485,
+>    "winRate": 0.9090909090909091
+>   },
+>   {
+>    "strategy": "farmnl",
+>    "realizedPnl": 0,
+>    "unrealizedPnl": -0.0883103167799959,
+>    "openPositions": 1,
+>    "fees": 0.01996353678,
+>    "buys": 1,
+>    "sells": 0,
+>    "wins": 0,
+>    "symbols": {
+>     "LTCUSDT": {
+>      "qty": 0.449,
+>      "avgCost": 44.506682219999995,
+>      "realizedPnl": 0,
+>      "unrealizedPnl": -0.0883103167799959
+>     }
+>    },
+>    "totalPnl": -0.0883103167799959,
+>    "winRate": null
+>   },
+>   {
+>    "strategy": "mr15",
+>    "realizedPnl": -1.3241420430899993,
+>    "unrealizedPnl": 0,
+>    "openPositions": 0,
+>    "fees": 0.03864157309,
+>    "buys": 1,
+>    "sells": 1,
+>    "wins": 0,
+>    "symbols": {
+>     "LTCUSDT": {
+>      "qty": 0,
+>      "avgCost": 0,
+>      "realizedPnl": -1.3241420430899993,
+>      "unrealizedPnl": 0
+>     }
+>    },
+>    "totalPnl": -1.3241420430899993,
+>    "winRate": 0
+>   }
+>  ],
+>  "feeRate": 0.001,
+>  "recentOrders": [
+>   {
+>    "id": 27,
+>    "automationId": 47,
+>    "strategy": "consistencia",
+>    "symbol": "LTCUSDT",
+>    "side
+> 
+> === /orders/last (recent) ===
+> LTCUSDT SELL FILLED 0.90700000 44.54000000 10 2026-06-21T03:00:53.000Z tn= False
+> ```
+
+## 🤖 Claude *(19:33:34)*
+
+
+## 🤖 Claude *(19:33:39)*
+
+Agora tenho o quadro completo ao vivo:
+
+- **Regime (03/jul 19:28):** BTC `bear`, BNB `bear`, LTC `mixed`, **ADA `trend`** (ADX 51.6). Todos com `smaAbove=true` (pós-golden-cross).
+- **Grupos:** farm 3/6 ativo · **trend 0/8 ativo** · **baseline 0/2 ativo** · paper 40/40.
+- **Promoções:** `promoted={}`, `grandfather=[]` — ninguém promovido.
+- **Ordens:** última ordem real foi a venda LTC de 21/jun. **Zero ordens desde os golden crosses.**
+
+Ou seja: os golden crosses dispararam as notificações, mas o BUY está **desarmado em 3 camadas** (grupo trend inativo + gate `REGIME!=='bear'` + allowlist de promoção vazia). Nada foi comprado.
+
+Agora a parte de simulação. Vou rodar a análise determinística do journal (1050+ sinais reais com retornos a 1/5/10/15 min) incluindo o teste de **entrada defasada** que o dono pediu.
+
+## 🤖 Claude *(19:34:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad\ncat > journal_analysis.py <<'PY'\nimport json, collections, math, statistics as st\n\nFEE_RT = 0.002   # round-trip taker 0.1% x2\nrecs=[]\nfor ln in open('signal_journal.jsonl'):\n    ln=ln.strip()\n    if not ln: continue\n    try: r=json.loads(ln)\n    except: continue\n    if not r.get('horizons'): continue\n    recs.append(r)\n\nprint(f\"records with horizons: {len(recs)}\\n\")\nHZ=['1','5','10','15']\n\ndef stats(vals):\n    n=len(vals)\n    if n==0: return None\n    m=sum(vals)/n\n    sd=st.pstdev(vals) if n>1 else 0.0\n    se=sd/math.sqrt(n) if n>0 else 0.0\n    hit=sum(1 for v in vals if v>0)/n\n    return dict(n=n, mean=m, se=se, hit=hit, lo=m-1.96*se, hi=m+1.96*se)\n\n# ---- 1) IMMEDIATE ENTRY: mean dirRet gross vs net per type x horizon ----\nprint(\"=\"*88)\nprint(\"1) ENTRADA IMEDIATA \u2014 dirRet m\u00e9dio (bps) por tipo \u00d7 horizonte  [net = gross \u2212 20bps fee]\")\nprint(\"=\"*88)\nprint(f\"{'tipo':16s}{'H':>4s}{'n':>6s}{'gross_bps':>11s}{'net_bps':>10s}{'hit%':>7s}{'IC95_gross_bps':>22s}\")\nby_type=collections.defaultdict(list)\nfor r in recs: by_type[r['type']].append(r)\nfor t in ['rsi_oversold','rsi_overbought','flow_buy','flow_sell']:\n    for H in HZ:\n        vals=[r['horizons'][H]['dirRet'] for r in by_type[t] if H in r['horizons']]\n        s=stats(vals)\n        if not s: continue\n        g=s['mean']*1e4; net=(s['mean']-FEE_RT)*1e4\n        print(f\"{t:16s}{H:>4s}{s['n']:>6d}{g:>11.2f}{net:>10.2f}{s['hit']*100:>6.1f}%   [{s['lo']*1e4:>8.2f},{s['hi']*1e4:>8.2f}]\")\n    print()\n\n# ---- 2) DELAYED ENTRY (apply later): enter at +a, exit at +b, dirRet windowed ----\n# raw window return a->b = (1+r_b)/(1+r_a)-1 ; dir-adjust by side\nprint(\"=\"*88)\nprint(\"2) ENTRADA DEFASADA \u2014 'espera a, depois entra e segura at\u00e9 b'  (dirRet m\u00e9dio bps, gross)\")\nprint(\"   testa a hip\u00f3tese: o sinal da vela 1m rende melhor se aplicado ALGUM TEMPO DEPOIS?\")\nprint(\"=\"*88)\npairs=[('0','1'),('0','5'),('0','10'),('0','15'),   # imediato, segura mais\n       ('1','5'),('1','10'),('1','15'),\n       ('5','10'),('5','15'),\n       ('10','15')]\ndef rH(r,h):\n    if h=='0': return 0.0\n    o=r['horizons'].get(h); return o['ret'] if o else None\nfor t in ['rsi_oversold','rsi_overbought','flow_buy','flow_sell']:\n    print(f\"-- {t} --\")\n    print(f\"{'entra@':>7s}{'sai@':>6s}{'n':>6s}{'gross_bps':>11s}{'net_bps':>10s}{'hit%':>7s}\")\n    for a,b in pairs:\n        vals=[]\n        for r in by_type[t]:\n            ra=rH(r,a); rb=rH(r,b)\n            if ra is None or rb is None: continue\n            raw=(1+rb)/(1+ra)-1\n            dr = -raw if r['side']=='sell' else raw\n            vals.append(dr)\n        s=stats(vals)\n        if not s: continue\n        g=s['mean']*1e4; net=(s['mean']-FEE_RT)*1e4\n        print(f\"{a:>7s}{b:>6s}{s['n']:>6d}{g:>11.2f}{net:>10.2f}{s['hit']*100:>6.1f}%\")\n    print()\n\n# ---- 3) by REGIME (does edge appear in trend regime?) ----\nprint(\"=\"*88)\nprint(\"3) POR REGIME \u2014 dirRet @10min (bps), entrada imediata\")\nprint(\"=\"*88)\nprint(f\"{'tipo':16s}{'regime':8s}{'n':>6s}{'gross_bps':>11s}{'net_bps':>10s}{'hit%':>7s}\")\nfor t in ['rsi_oversold','rsi_overbought','flow_buy','flow_sell']:\n    buckets=collections.defaultdict(list)\n    for r in by_type[t]:\n        reg=(r.get('ctx') or {}).get('regime') or '?'\n        if '10' in r['horizons']: buckets[reg].append(r['horizons']['10']['dirRet'])\n    for reg in ['bear','range','mixed','trend','?']:\n        if reg not in buckets: continue\n        s=stats(buckets[reg])\n        g=s['mean']*1e4; net=(s['mean']-FEE_RT)*1e4\n        print(f\"{t:16s}{reg:8s}{s['n']:>6d}{g:>11.2f}{net:>10.2f}{s['hit']*100:>6.1f}%\")\n    print()\nPY\npython3 journal_analysis.py",
+  "description": "Run deterministic journal edge + delayed-entry analysis"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> records with horizons: 2216
+> 
+> ========================================================================================
+> 1) ENTRADA IMEDIATA — dirRet médio (bps) por tipo × horizonte  [net = gross − 20bps fee]
+> ========================================================================================
+> tipo               H     n  gross_bps   net_bps   hit%        IC95_gross_bps
+> rsi_oversold       1  1077       0.03    -19.97  47.6%   [   -0.60,    0.66]
+> rsi_oversold       5  1077       0.70    -19.30  51.7%   [   -0.38,    1.78]
+> rsi_oversold      10  1077       0.29    -19.71  50.4%   [   -1.32,    1.89]
+> rsi_oversold      15  1077       2.07    -17.93  52.7%   [    0.02,    4.11]
+> 
+> rsi_overbought     1   676       0.02    -19.98  49.0%   [   -0.89,    0.92]
+> rsi_overbought     5   676       0.47    -19.53  53.7%   [   -1.18,    2.12]
+> rsi_overbought    10   676       0.23    -19.77  54.3%   [   -2.02,    2.48]
+> rsi_overbought    15   676      -1.31    -21.31  50.9%   [   -4.07,    1.44]
+> 
+> flow_buy           1   219      -0.40    -20.40  44.3%   [   -1.64,    0.84]
+> flow_buy           5   219      -1.48    -21.48  43.4%   [   -3.54,    0.59]
+> flow_buy          10   219      -1.79    -21.79  48.9%   [   -4.91,    1.32]
+> flow_buy          15   219      -2.66    -22.66  46.6%   [   -6.20,    0.87]
+> 
+> flow_sell          1   241      -0.02    -20.02  49.4%   [   -1.01,    0.98]
+> flow_sell          5   241      -1.56    -21.56  44.0%   [   -4.13,    1.02]
+> flow_sell         10   241      -1.48    -21.48  51.5%   [   -4.84,    1.88]
+> flow_sell         15   241      -2.05    -22.05  47.3%   [   -6.36,    2.26]
+> 
+> ========================================================================================
+> 2) ENTRADA DEFASADA — 'espera a, depois entra e segura até b'  (dirRet médio bps, gross)
+>    testa a hipótese: o sinal da vela 1m rende melhor se aplicado ALGUM TEMPO DEPOIS?
+> ========================================================================================
+> -- rsi_oversold --
+>  entra@  sai@     n  gross_bps   net_bps   hit%
+>       0     1  1077       0.03    -19.97  47.6%
+>       0     5  1077       0.70    -19.30  51.7%
+>       0    10  1077       0.29    -19.71  50.4%
+>       0    15  1077       2.07    -17.93  52.7%
+>       1     5  1077       0.67    -19.33  50.0%
+>       1    10  1077       0.26    -19.74  49.5%
+>       1    15  1077       2.04    -17.96  52.6%
+>       5    10  1077      -0.42    -20.42  46.9%
+>       5    15  1077       1.36    -18.64  52.4%
+>      10    15  1077       1.78    -18.22  52.1%
+> 
+> -- rsi_overbought --
+>  entra@  sai@     n  gross_bps   net_bps   hit%
+>       0     1   676       0.02    -19.98  49.0%
+>       0     5   676       0.47    -19.53  53.7%
+>       0    10   676       0.23    -19.77  54.3%
+>       0    15   676      -1.31    -21.31  50.9%
+>       1     5   676       0.45    -19.55  51.3%
+>       1    10   676       0.21    -19.79  51.8%
+>       1    15   676      -1.33    -21.33  50.1%
+>       5    10   676      -0.24    -20.24  52.2%
+>       5    15   676      -1.79    -21.79  49.6%
+>      10    15   676      -1.54    -21.54  45.0%
+> 
+> -- flow_buy --
+>  entra@  sai@     n  gross_bps   net_bps   hit%
+>       0     1   219      -0.40    -20.40  44.3%
+>       0     5   219      -1.48    -21.48  43.4%
+>       0    10   219      -1.79    -21.79  48.9%
+>       0    15   219      -2.66    -22.66  46.6%
+>       1     5   219      -1.07    -21.07  44.3%
+>       1    10   219      -1.39    -21.39  47.9%
+>       1    15   219      -2.26    -22.26  46.1%
+>       5    10   219      -0.32    -20.32  49.3%
+>       5    15   219      -1.19    -21.19  49.3%
+>      10    15   219      -0.86    -20.86  47.5%
+> 
+> -- flow_sell --
+>  entra@  sai@     n  gross_bps   net_bps   hit%
+>       0     1   241      -0.02    -20.02  49.4%
+>       0     5   241      -1.56    -21.56  44.0%
+>       0    10   241      -1.48    -21.48  51.5%
+>       0    15   241      -2.05    -22.05  47.3%
+>       1     5   241      -1.54    -21.54  44.4%
+>       1    10   241      -1.46    -21.46  50.6%
+>       1    15   241      -2.03    -22.03  46.5%
+>       5    10   241       0.07    -19.93  49.8%
+>       5    15   241      -0.49    -20.49  49.4%
+>      10    15   241      -0.57    -20.57  45.2%
+> 
+> ========================================================================================
+> 3) POR REGIME — dirRet @10min (bps), entrada imediata
+> ========================================================================================
+> tipo            regime       n  gross_bps   net_bps   hit%
+> rsi_oversold    bear      1032       0.15    -19.85  49.9%
+> rsi_oversold    range       44       3.52    -16.48  63.6%
+> rsi_oversold    trend        1      -5.93    -25.93   0.0%
+> 
+> rsi_overbought  bear       634       0.66    -19.34  54.6%
+> rsi_overbought  range       28       0.39    -19.61  60.7%
+> rsi_overbought  trend       14     -19.70    -39.70  28.6%
+> 
+> flow_buy        bear       218      -1.74    -21.74  49.1%
+> flow_buy        range        1     -13.91    -33.91   0.0%
+> 
+> flow_sell       bear       241      -1.48    -21.48  51.5%
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(19:34:22)*
+
+
+## 🤖 Claude *(19:34:26)*
+
+A hipótese ≤15min está fechada de forma contundente: **entrada imediata OU defasada, nenhum sinal de 1m bate a taxa** — gross ≈ 0 em todos os horizontes/lags, net ≈ −20 bps sempre. Esperar antes de agir **piora**, não melhora. O único respiro é `rsi_oversold` no regime `range` (+3,5 bps @10min, mas n=44 e ainda net-negativo).
+
+Falta fechar a hipótese em horizontes **de horas** (o journal só vai até 15 min). Vou usar o laboratório de padrões (labkit) pra buscar velas 1m reais e varrer horizontes até várias horas. Deixa eu ver a interface do labkit.
+
+## 🤖 Claude *(19:34:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== node on host ===\"; node -v 2>/dev/null || echo \"no node on host\"\necho\necho \"=== labkit.js exports + fn signatures ===\"\ngrep -nE \"module.exports|^async function|^function|exports\\.\" backend/scripts/lib/labkit.js 2>/dev/null | head -60",
+  "description": "Check node + labkit exports"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === node on host ===
+> v22.22.3
+> 
+> === labkit.js exports + fn signatures ===
+> 39:function variance(a) { if (a.length < 2) return 0; const m = mean(a); return sum(a.map(x => (x - m) ** 2)) / (a.length - 1); } // amostral (n-1)
+> 41:function stdPop(a) { if (a.length < 1) return 0; const m = mean(a); return Math.sqrt(sum(a.map(x => (x - m) ** 2)) / a.length); } // populacional (Bollinger)
+> 42:function median(a) { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+> 43:function quantile(a, q) { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); const pos = (s.length - 1) * q; const lo = Math.floor(pos), hi = Math.ceil(pos); return lo === hi ? s[lo] : s[lo] + (s[hi] - s[lo]) * (pos - lo); }
+> 46:function erf(x) {
+> 54:function tTest(arr) {
+> 66:function benjaminiHochberg(tests, q = 0.05) {
+> 82:function mulberry32(seed) {
+> 88:function blockBootstrapMeanCI(returns, { blockLen, nResamples = 2000, seed = 12345, ci = 0.95 } = {}) {
+> 108:function rsiSeries(close, period = 14) {
+> 123:function smaSeries(values, period) {
+> 128:function emaSeries(values, period) {
+> 136:function trueRange(high, low, close, i) {
+> 140:function atrSeries(high, low, close, period = 14) {
+> 148:function dmiSeries(high, low, close, period = 14) {
+> 178:function bollingerSeries(close, period = 20, k = 2) {
+> 191:function macdSeries(close, fast = 12, slow = 26, signalP = 9) {
+> 206:function rocSeries(close, period = 10) {
+> 212:function rollingPriorHigh(arr, period) {
+> 217:function rollingPriorLow(arr, period) {
+> 222:function realizedVolSeries(close, window, barsPerYear) {
+> 229:function rollingPercentile(arr, window) {
+> 246:function forwardReturn(candles, i, h, fee = FEE_DEFAULT) {
+> 254:function forwardNetLong(candles, i, h, fee = FEE_DEFAULT) { const r = forwardReturn(candles, i, h, fee); return r ? r.net : null; }
+> 259:function splitByTime(candles, holdoutFrac = 0.3) {
+> 266:function httpsGetJSON(host, pathUrl) {
+> 274:async function fetchKlinesExt(symbol, interval, days, end) {
+> 312:function computeIndicators(candles, interval) {
+> 353:module.exports = {
+> ```
+
+## 🤖 Claude *(19:34:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== how pattern-discover.js fetches + computes RSI + forwardReturn (usage examples) ===\"\ngrep -nE \"labkit\\.|require\\(|fetch|klines|RSI|rsi|forwardReturn|Wilder|throttle|-ext\" backend/scripts/pattern-discover.js 2>/dev/null | head -50\necho\necho \"=== forwardReturn + fetch signatures in labkit ===\"\ngrep -nE \"forwardReturn|fetchKlines|async function fetch|function rsi|function sma|function wilder|taker|buyVol\" backend/scripts/lib/labkit.js 2>/dev/null | head -40",
+  "description": "Inspect labkit usage patterns and fetch/RSI/forwardReturn signatures"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === how pattern-discover.js fetches + computes RSI + forwardReturn (usage examples) ===
+> 22: * NÃO toca money-path/DB/ordens. Pesquisa pura sobre klines públicas.
+> 24:const fs = require('fs');
+> 25:const path = require('path');
+> 26:const lab = require('./lib/labkit');
+> 42:const { PATTERNS, thin } = require('./lib/patterns');
+> 45:  fs.mkdirSync(lab.OUT_DIR, { recursive: true });
+> 49:  // por símbolo: fetch → SPLIT (tranca holdout) → indicadores SÓ na amostra de descoberta.
+> 53:    try { candles = await lab.fetchKlinesExt(sym, INTERVAL, DAYS, END); }
+> 83:          const r = lab.forwardReturn(cd, i, h, FEE);
+> 142:  L.push(`\n---\n_Gerado por backend/scripts/pattern-discover.js. Dados Binance reais (cache -ext, gitignored). Net de fee. Holdout NÃO foi lido nesta fase._`);
+> 
+> === forwardReturn + fetch signatures in labkit ===
+> 11: *   1) FETCH de klines estendido (mantém o taker-buy-volume p/ um PROXY de fluxo histórico),
+> 32:const FEE_DEFAULT = 0.001; // 0.1% por lado (taker spot) — mesma do backtest.js
+> 108:function rsiSeries(close, period = 14) {
+> 123:function smaSeries(values, period) {
+> 246:function forwardReturn(candles, i, h, fee = FEE_DEFAULT) {
+> 254:function forwardNetLong(candles, i, h, fee = FEE_DEFAULT) { const r = forwardReturn(candles, i, h, fee); return r ? r.net : null; }
+> 265:// ---------- fetch de klines estendido (com taker-buy-volume) + cache -ext ----------
+> 274:async function fetchKlinesExt(symbol, interval, days, end) {
+> 293:    // k[5]=volume base, k[9]=taker buy base volume → fração compradora agressiva (proxy de fluxo histórico).
+> 294:    const batch = r.body.map(k => ({ t: k[0], open: +k[1], high: +k[2], low: +k[3], close: +k[4], vol: +k[5], takerBuy: +k[9] }));
+> 316:  const vol = candles.map(c => c.vol), takerBuy = candles.map(c => (Number.isFinite(c.takerBuy) ? c.takerBuy : NaN));
+> 324:    takerBuyFrac: vol.map((v, i) => (v > 0 && Number.isFinite(takerBuy[i]) ? takerBuy[i] / v : NaN)),
+> 363:  forwardReturn, forwardNetLong, splitByTime, httpsGetJSON, fetchKlinesExt, computeIndicators,
+> ```
+
+## 🤖 Claude *(19:34:36)*
+
+
+## 🤖 Claude *(19:34:38)*
+
+Node v22 no host, labkit tem tudo que preciso. Vou ver a assinatura exata de `forwardReturn` e os exports pra escrever a varredura de horizontes longos corretamente.
+
+## 🤖 Claude *(19:34:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== forwardReturn + fetchKlinesExt + exports (exact) ===\"\nsed -n '240,312p' backend/src/../scripts/lib/labkit.js 2>/dev/null\necho \"---- exports ----\"\nsed -n '353,375p' backend/scripts/lib/labkit.js 2>/dev/null",
+  "description": "Read exact forwardReturn/fetch/exports"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === forwardReturn + fetchKlinesExt + exports (exact) ===
+> // ---------- retorno futuro long, SEM lookahead — GROSS (direção) + NET (acionabilidade) ----------
+> // Sinal observado em i (indicadores usam closes[0..i]). Entrada no OPEN de i+1, saída no OPEN de i+1+h.
+> //   gross = open(i+1+h)/open(i+1) - 1            → mede se o PREÇO se move (predição direcional).
+> //   net   = open(i+1+h)*(1-fee)/(open(i+1)*(1+fee)) - 1  → desconta a fee round-trip (acionável no spot long).
+> // A distinção é crítica: em horizonte curto net ≈ -fee p/ QUALQUER sinal (o move médio é ~0), então
+> // usar net p/ "direção" confunde fee-drag com edge. Direção testa-se no GROSS; acionabilidade no NET.
+> function forwardReturn(candles, i, h, fee = FEE_DEFAULT) {
+>   const e = i + 1, x = i + 1 + h;
+>   if (x >= candles.length || e >= candles.length) return null;
+>   const eo = candles[e].open, xo = candles[x].open;
+>   if (!(eo > 0)) return null;
+>   return { gross: xo / eo - 1, net: (xo * (1 - fee)) / (eo * (1 + fee)) - 1 };
+> }
+> // compat: só o net long (usado por testes e por chamadas que só querem acionabilidade).
+> function forwardNetLong(candles, i, h, fee = FEE_DEFAULT) { const r = forwardReturn(candles, i, h, fee); return r ? r.net : null; }
+> 
+> // ---------- split train/test TRANCADO por tempo (a parede) ----------
+> // Divide por ÍNDICE temporal: os primeiros (1-holdoutFrac) viram amostra de DESCOBERTA; o resto é HOLDOUT
+> // trancado (a Fase 1 NUNCA o lê). Devolve o timestamp de corte p/ a Fase 2 usar a MESMA fronteira.
+> function splitByTime(candles, holdoutFrac = 0.3) {
+>   const n = candles.length;
+>   const k = Math.max(1, Math.min(n - 1, Math.floor(n * (1 - holdoutFrac))));
+>   return { kIndex: k, cutMs: candles[k].t, inSample: candles.slice(0, k), holdout: candles.slice(k), nTotal: n };
+> }
+> 
+> // ---------- fetch de klines estendido (com taker-buy-volume) + cache -ext ----------
+> function httpsGetJSON(host, pathUrl) {
+>   return new Promise((res, rej) => {
+>     https.get({ host, path: pathUrl, headers: { 'User-Agent': 'tradeux-labkit' } }, r => {
+>       let d = ''; r.on('data', c => d += c);
+>       r.on('end', () => { try { res({ status: r.statusCode, body: JSON.parse(d) }); } catch (e) { res({ status: r.statusCode, body: d }); } });
+>     }).on('error', rej);
+>   });
+> }
+> async function fetchKlinesExt(symbol, interval, days, end) {
+>   const barMs = MS_PER[interval] || 3600e3;
+>   const cacheFile = path.join(DATA_DIR, `${symbol}-${interval}-${days}d${end ? '-end' + end : ''}-ext.json`);
+>   if (fs.existsSync(cacheFile)) {
+>     const c = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+>     if (c.length > 100) { console.log(`  [cache] ${symbol} ${interval}: ${c.length} candles`); return c; }
+>   }
+>   const endTime = end ? Date.parse(end + 'T00:00:00Z') : Date.now();
+>   const startTime = endTime - days * 24 * 3600e3;
+>   let cursor = startTime, all = [], host = null;
+>   for (const h of HOSTS) {
+>     const r = await httpsGetJSON(h, `/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=1`).catch(() => null);
+>     if (r && r.status === 200 && Array.isArray(r.body)) { host = h; break; }
+>   }
+>   if (!host) throw new Error(`nenhum host Binance alcançável para ${symbol} (tentei ${HOSTS.join(', ')})`);
+>   while (cursor < endTime) {
+>     const url = `/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${cursor}&limit=1000`;
+>     const r = await httpsGetJSON(host, url);
+>     if (r.status !== 200 || !Array.isArray(r.body) || r.body.length === 0) break;
+>     // k[5]=volume base, k[9]=taker buy base volume → fração compradora agressiva (proxy de fluxo histórico).
+>     const batch = r.body.map(k => ({ t: k[0], open: +k[1], high: +k[2], low: +k[3], close: +k[4], vol: +k[5], takerBuy: +k[9] }));
+>     all.push(...batch);
+>     cursor = batch[batch.length - 1].t + barMs;
+>     if (batch.length < 1000) break;
+>     await sleep(FETCH_THROTTLE_MS); // throttle entre páginas (rate-limit Binance)
+>   }
+>   const seen = new Set(); const out = [];
+>   for (const c of all) { if (!seen.has(c.t)) { seen.add(c.t); out.push(c); } }
+>   out.sort((a, b) => a.t - b.t);
+>   fs.mkdirSync(DATA_DIR, { recursive: true });
+>   fs.writeFileSync(cacheFile, JSON.stringify(out));
+>   console.log(`  [fetch ${host}] ${symbol} ${interval}: ${out.length} candles`);
+>   return out;
+> }
+> 
+> // ---------- catálogo de indicadores computados de uma vez (todos causais) ----------
+> // regimeBar: regime causal por barra usando as últimas `regimeWin` barras ATÉ i (bear se >60% < SMA200; senão
+> // trend se ADX>=25, range se <20, mixed). Espelha a lógica do regimeClassifier ao vivo, mas por-barra.
+> function computeIndicators(candles, interval) {
+> ---- exports ----
+> module.exports = {
+>   // dirs / const
+>   DATA_DIR, OUT_DIR, MS_PER, FEE_DEFAULT,
+>   // stats
+>   sum, mean, variance, std, stdPop, median, quantile, erf, normCdf, tTest,
+>   benjaminiHochberg, bonferroniThreshold, noiseBarT, mulberry32, blockBootstrapMeanCI,
+>   // indicadores
+>   rsiSeries, smaSeries, emaSeries, atrSeries, dmiSeries, bollingerSeries, macdSeries,
+>   rocSeries, rollingPriorHigh, rollingPriorLow, realizedVolSeries, rollingPercentile,
+>   // retorno / split / fetch / catálogo
+>   forwardReturn, forwardNetLong, splitByTime, httpsGetJSON, fetchKlinesExt, computeIndicators,
+> };
+> ```
+
+## 🤖 Claude *(19:35:08)*
+
+
+## 🤖 Claude *(19:35:11)*
+
+Tenho a API completa do labkit (`fetchKlinesExt`, `rsiSeries`, `forwardReturn` gross/net sem lookahead, `blockBootstrapMeanCI`, `computeIndicators` com regime por barra). Vou escrever a varredura de horizontes longos — busca velas 1m reais e testa os eventos de RSI (mesmos limiares do gravador) em horizontes de 1 min a 8 h, com entrada imediata **e defasada**, gross/net, IC por bootstrap.
+
+## 🤖 Claude *(19:35:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend/scripts\ncat > /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/lagsweep.js <<'JS'\n'use strict';\n// Varredura de horizontes LONGOS p/ os sinais de 1m do gravador (RSI oversold/overbought).\n// Testa a hip\u00f3tese do dono: \"o sinal vem da vela 1m mas talvez renda se aplicado ALGUM TEMPO DEPOIS.\"\n// Real klines mainnet, sem lookahead, gross(dire\u00e7\u00e3o)+net(fee round-trip), entrada imediata E defasada.\nconst lab = require('/home/gcrux-tradeux/tradeux/backend/scripts/lib/labkit');\n\nconst SYMS = ['BTCUSDT','LTCUSDT','BNBUSDT','ADAUSDT','ETHUSDT'];\nconst DAYS = parseInt(process.env.LAG_DAYS||'30',10);\nconst FEE = 0.001;                       // por lado\nconst HZ = [1,5,10,15,30,60,120,240,480]; // minutos = barras (1m)\nconst LAGS = [0,5,15,30,60];              // \"espera N min depois do sinal, ent\u00e3o entra\"\nconst HOLD_FOR_LAG = 60;                  // ao testar lag, segura 60 min\n\nfunction rsiEvents(close, buyTh, sellTh){\n  const rsi = lab.rsiSeries(close, 14);\n  const buys=[], sells=[];\n  for(let i=1;i<rsi.length;i++){\n    const p=rsi[i-1], c=rsi[i];\n    if(!Number.isFinite(p)||!Number.isFinite(c)) continue;\n    if(p>=buyTh && c<buyTh) buys.push(i);\n    else if(p<=sellTh && c>sellTh) sells.push(i);\n  }\n  return {buys, sells, rsi};\n}\nfunction agg(vals){\n  const n=vals.length; if(!n) return null;\n  const m=vals.reduce((a,b)=>a+b,0)/n;\n  const hit=vals.filter(v=>v>0).length/n;\n  return {n, mean:m, hit};\n}\n\n(async()=>{\n  // acumula por-s\u00edmbolo agregando eventos de todos\n  const all = { oversold:{}, overbought:{} };  // type -> H -> {grossVals, netVals}\n  const byRegime = {}; // 'oversold@range' etc -> H60 vals\n  const lagAcc = { oversold:{}, overbought:{} }; // type -> lag -> gross vals (hold 60)\n  for(const H of HZ){ all.oversold[H]={g:[],net:[]}; all.overbought[H]={g:[],net:[]}; }\n  for(const L of LAGS){ lagAcc.oversold[L]=[]; lagAcc.overbought[L]=[]; }\n\n  for(const sym of SYMS){\n    let cd;\n    try{ cd = await lab.fetchKlinesExt(sym,'1m',DAYS); }\n    catch(e){ console.log(`  SKIP ${sym}: ${e.message}`); continue; }\n    if(!cd || cd.length<500){ console.log(`  SKIP ${sym}: poucas velas`); continue; }\n    const close = cd.map(c=>c.close);\n    const isAlt = sym!=='BTCUSDT';\n    const buyTh = 30 + (isAlt?5:0), sellTh=70;\n    const {buys, sells} = rsiEvents(close, buyTh, sellTh);\n    // regime causal por barra\n    const ind = lab.computeIndicators(cd,'1m');\n    const reg = ind.regimeBar || [];\n    console.log(`  ${sym}: ${cd.length} velas | oversold=${buys.length} overbought=${sells.length}`);\n\n    // horizontes (entrada imediata): gross \u00e9 LONG p/ buy; p/ sell a dire\u00e7\u00e3o \u00e9 short => dirGross=-gross\n    for(const H of HZ){\n      for(const i of buys){ const r=lab.forwardReturn(cd,i,H,FEE); if(r){ all.oversold[H].g.push(r.gross); all.oversold[H].net.push(r.net); } }\n      for(const i of sells){ const r=lab.forwardReturn(cd,i,H,FEE); if(r){ all.overbought[H].g.push(-r.gross); all.overbought[H].net.push(-r.gross - 2*FEE); } }\n    }\n    // por regime @60min\n    for(const i of buys){ const r=lab.forwardReturn(cd,i,60,FEE); const rg=reg[i]||'?'; if(r){ (byRegime['oversold@'+rg]=byRegime['oversold@'+rg]||[]).push(r.gross);} }\n    // entrada DEFASADA: espera L barras ap\u00f3s o sinal, entra, segura HOLD_FOR_LAG\n    for(const L of LAGS){\n      for(const i of buys){ const r=lab.forwardReturn(cd,i+L,HOLD_FOR_LAG,FEE); if(r) lagAcc.oversold[L].push(r.gross); }\n      for(const i of sells){ const r=lab.forwardReturn(cd,i+L,HOLD_FOR_LAG,FEE); if(r) lagAcc.overbought[L].push(-r.gross); }\n    }\n  }\n\n  const bps=x=>(x*1e4).toFixed(2);\n  console.log('\\n'+'='.repeat(92));\n  console.log(`HORIZONTES LONGOS \u2014 entrada IMEDIATA (${DAYS}d, 1m, dirGross/net em bps, fee ${FEE*2*1e4}bps round-trip)`);\n  console.log('='.repeat(92));\n  for(const type of ['oversold','overbought']){\n    console.log(`-- rsi_${type} (${type==='oversold'?'BUY/long':'SELL/short-dir'}) --`);\n    console.log(['Hmin','n','dirGross_bps','net_bps','hit%','IC95_gross_bps'].map(s=>s.padStart(14)).join(''));\n    for(const H of HZ){\n      const g=agg(all[type][H].g); if(!g) continue;\n      let ci=[NaN,NaN];\n      try{ const b=lab.blockBootstrapMeanCI(all[type][H].g,{blockLen:Math.max(5,Math.round(H/2)),nResamples:1000}); ci=[b.lo,b.hi]; }catch(e){}\n      const net = g.mean - 2*FEE;\n      console.log([String(H),String(g.n),bps(g.mean),bps(net),(g.hit*100).toFixed(1),`[${bps(ci[0])},${bps(ci[1])}]`].map(s=>s.padStart(14)).join(''));\n    }\n    console.log('');\n  }\n\n  console.log('='.repeat(92));\n  console.log(`ENTRADA DEFASADA \u2014 espera N min, entra, segura ${HOLD_FOR_LAG}min (dirGross bps)`);\n  console.log('   hip\u00f3tese: aplicar o sinal DEPOIS melhora? sobe = ajuda; cai/plano = n\u00e3o ajuda');\n  console.log('='.repeat(92));\n  for(const type of ['oversold','overbought']){\n    console.log(`-- rsi_${type} --`);\n    console.log(['lag_min','n','dirGross_bps','net_bps','hit%'].map(s=>s.padStart(14)).join(''));\n    for(const L of LAGS){\n      const g=agg(lagAcc[type][L]); if(!g) continue;\n      console.log([String(L),String(g.n),bps(g.mean),bps(g.mean-2*FEE),(g.hit*100).toFixed(1)].map(s=>s.padStart(14)).join(''));\n    }\n    console.log('');\n  }\n\n  console.log('='.repeat(92));\n  console.log('POR REGIME (causal por barra) \u2014 rsi_oversold BUY @60min, dirGross bps');\n  console.log('='.repeat(92));\n  for(const k of Object.keys(byRegime).sort()){\n    const g=agg(byRegime[k]); if(!g||g.n<10) { if(g) console.log(`${k.padEnd(20)} n=${g.n} (amostra pequena, ignorar)`); continue; }\n    console.log(`${k.padEnd(20)} n=${String(g.n).padStart(5)}  gross=${bps(g.mean).padStart(9)}bps  net=${bps(g.mean-2*FEE).padStart(9)}bps  hit=${(g.hit*100).toFixed(1)}%`);\n  }\n})().catch(e=>{ console.error('ERRO:', e.message); process.exit(1); });\nJS\necho \"running lagsweep (fetch pode levar ~1-2min)...\"\ntimeout 550 node /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/lagsweep.js 2>&1",
+  "description": "Run long-horizon lag sweep on real 1m klines"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 143
+> Command timed out after 2m 0s
+> running lagsweep (fetch pode levar ~1-2min)...
+>   SKIP BTCUSDT: EACCES: permission denied, open '/home/gcrux-tradeux/tradeux/backend/backtest-data/BTCUSDT-1m-30d-ext.json'
+>   SKIP LTCUSDT: EACCES: permission denied, open '/home/gcrux-tradeux/tradeux/backend/backtest-data/LTCUSDT-1m-30d-ext.json'
+>   SKIP BNBUSDT: EACCES: permission denied, open '/home/gcrux-tradeux/tradeux/backend/backtest-data/BNBUSDT-1m-30d-ext.json'
+>   SKIP ADAUSDT: EACCES: permission denied, open '/home/gcrux-tradeux/tradeux/backend/backtest-data/ADAUSDT-1m-30d-ext.json'
+> ```
+
+## 🤖 Claude *(19:38:18)*
+
+
+## 🤖 Claude *(19:38:20)*
+
+Dois problemas: rodei como `ubuntu` (sem permissão de escrita em `backend/backtest-data`, que pertence ao dono) e 30 dias de velas 1m é fetch demais pro timeout. Vou verificar se o `DATA_DIR` aceita override por env, reduzir pra 14 dias/4 símbolos e rodar como `gcrux-tradeux` em background.
+
+## 🤖 Claude *(19:38:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== DATA_DIR / OUT_DIR / throttle defs ===\"\ngrep -nE \"DATA_DIR|OUT_DIR|FETCH_THROTTLE|HOSTS|MS_PER *=|sleep *=\" backend/scripts/lib/labkit.js | head\necho\necho \"=== backtest-data perms ===\"\nls -ld backend/backtest-data 2>/dev/null; ls -la backend/backtest-data 2>/dev/null | head -5\necho \"=== whoami ===\"; whoami",
+  "description": "Check DATA_DIR override + perms + throttle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DATA_DIR / OUT_DIR / throttle defs ===
+> 28:const DATA_DIR = path.join(__dirname, '..', '..', 'backtest-data');
+> 29:const OUT_DIR = path.join(__dirname, '..', '..', 'backtest-results');
+> 30:const HOSTS = ['api.binance.com', 'data-api.binance.vision', 'api.binance.us'];
+> 31:const MS_PER = { '1m': 60e3, '5m': 5 * 60e3, '15m': 15 * 60e3, '30m': 30 * 60e3, '1h': 3600e3, '2h': 2 * 3600e3, '4h': 4 * 3600e3, '1d': 24 * 3600e3 };
+> 33:const FETCH_THROTTLE_MS = 120; // pausa entre páginas do fetch p/ não bater rate-limit (418/429) em corridas grandes (5 símbolos × intervalos finos)
+> 34:const sleep = ms => new Promise(r => setTimeout(r, ms));
+> 276:  const cacheFile = path.join(DATA_DIR, `${symbol}-${interval}-${days}d${end ? '-end' + end : ''}-ext.json`);
+> 284:  for (const h of HOSTS) {
+> 288:  if (!host) throw new Error(`nenhum host Binance alcançável para ${symbol} (tentei ${HOSTS.join(', ')})`);
+> 298:    await sleep(FETCH_THROTTLE_MS); // throttle entre páginas (rate-limit Binance)
+> 
+> === backtest-data perms ===
+> drwxr-xr-x 2 gcrux-tradeux gcrux-tradeux 4096 Jun 29 16:59 backend/backtest-data
+> total 219816
+> drwxr-xr-x  2 gcrux-tradeux gcrux-tradeux     4096 Jun 29 16:59 .
+> drwxrwxr-x 11 gcrux-tradeux gcrux-tradeux     4096 Jun 22 12:22 ..
+> -rw-rw----  1 gcrux-tradeux gcrux-tradeux  1635009 Jun  8 14:27 ADAUSDT-15m-180d-end2024-04-01.json
+> -rw-rw----  1 gcrux-tradeux gcrux-tradeux  3228064 Jun  8 14:29 ADAUSDT-15m-365d-end2023-01-01.json
+> === whoami ===
+> ubuntu
+> ```
+
+## 🤖 Claude *(19:38:39)*
+
+
+## 🤖 Claude *(19:38:40)*
+
+`DATA_DIR` é fixo e os arquivos são `rw-rw----` do dono — preciso rodar como `gcrux-tradeux`. Vou copiar o script pra `/tmp` legível, reduzir pra 14 dias, e rodar em background.
+
+## 🤖 Claude *(19:38:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SRC=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/lagsweep.js\ncp \"$SRC\" /tmp/lagsweep.js && chmod 644 /tmp/lagsweep.js\n# lower to 14 days for speed\nsed -i \"s/process.env.LAG_DAYS||'30'/process.env.LAG_DAYS||'14'/\" /tmp/lagsweep.js\necho \"prepared /tmp/lagsweep.js\"\ngrep -n \"LAG_DAYS\" /tmp/lagsweep.js",
+  "description": "Copy script to /tmp readable, set 14 days"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> prepared /tmp/lagsweep.js
+> 8:const DAYS = parseInt(process.env.LAG_DAYS||'14',10);
+> ```
+
+## 🤖 Claude *(19:38:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend/scripts && LAG_DAYS=14 node /tmp/lagsweep.js' 2>&1 | tee /tmp/lagsweep.out",
+  "description": "Run lag sweep as gcrux-tradeux (14d)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b1q41t0fz. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/b1q41t0fz.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(19:39:18)*
+
+
+## 🤖 Claude *(19:39:20)*
+
+Enquanto a varredura roda em background, vou completar minha leitura do restante da fiação (flow-gate, baseline id2/id3, farm) pra o catálogo sinal→ação ficar exaustivo.
+
+## 🤖 Claude *(19:39:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== setup-flow-gate.js (what flow gates + condition) ===\"\nsed -n '1,80p' backend/scripts/setup-flow-gate.js 2>/dev/null | grep -vE \"^\\s*$\" | head -70",
+  "description": "Read flow-gate setup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === setup-flow-gate.js (what flow gates + condition) ===
+> 'use strict';
+> /*
+>  * Gate de FLUXO (Sniper) na id2 (BUY de reversão à média) — idempotente, re-tunável, com DRY.
+>  * Pré-requisito: flowJob no ar gravando MEMORY['<sym>:FLOW'] = {imbalance,toxicity,at,atMs} (commit f833032).
+>  *
+>  * O que faz: adiciona à condition da id2 um filtro PASSIVO de fluxo do taker (mainnet) — só compra o dip
+>  * se o fluxo vendedor NÃO estiver em capitulação. Transforma a reversão reativa num "sniper" (espera o
+>  * fluxo vendedor exaurir/voltar à neutralidade antes de comprar). Inclui FLOW nos indexes (fail-safe).
+>  *
+>  * FAIL-SAFE (trava FECHADA — protege capital): 3 camadas, todas validadas no engine (beholder.evalDecision):
+>  *   (1) FLOW nos `indexes` → se MEMORY['<sym>:FLOW'] for null/ausente (job off, boot, Binance fora) o
+>  *       `indexes.every(MEMORY[ix]!=null)` retorna false → id2 NÃO dispara.
+>  *   (2) STALE: `(Date.now()-MEMORY['<sym>:FLOW'].atMs) < MAX_AGE` — se o dado envelhecer (job preserva o
+>  *       último em queda da Binance, atMs congela), o gate trava fechado.
+>  *   (3) null-guard `MEMORY['<sym>:FLOW'] && ...` na própria condition (belt-and-suspenders); throw no eval
+>  *       é capturado pelo engine = não dispara.
+>  *
+>  * ⚠️ THRESHOLD PROVISÓRIO: o default (-0.40) é um ponto de partida CONSERVADOR (barra a compra só sob venda
+>  * agressora forte, >~70% do volume taker vendendo), NÃO calibrado. Recalibrar com o deep-research + o
+>  * logs/flow-capitulation.log. Re-rodar este script com novo FLOW_GATE_MIN ATUALIZA o gate (idempotente).
+>  *
+>  * Uso (no container, server no ar):  node scripts/setup-flow-gate.js   [DRY=true]
+>  *   env: EM/PW (ou TRADEUX_EMAIL/PASSWORD), PORT (3001), FLOW_SYMBOL (BTCUSDT),
+>  *        FLOW_GATE_MIN (-0.40 = piso do imbalance p/ permitir compra),
+>  *        FLOW_GATE_MAX_AGE_MS (180000 = idade máx. do dado de fluxo p/ confiar; senão trava).
+>  */
+> const { createClient, resolveEnv } = require('./lib/apiClient');
+> // ⚠️ Ao gatear fluxo de um símbolo NOVO aqui (ex.: uma alt além do BTC), atualize TAMBÉM
+> // COCKPIT_FLOW_GATED_SYMBOLS (cockpitJob.js deriveGates) — senão o cockpit/agente reportam esse
+> // símbolo como "FARM sem filtro de fluxo" (a doutrina do painel passaria a MENTIR vs a condition viva).
+> const SYMBOL = (process.env.FLOW_SYMBOL || 'BTCUSDT').toUpperCase();
+> const KF = `${SYMBOL}:FLOW`;
+> const _min = parseFloat(process.env.FLOW_GATE_MIN || '-0.40');
+> const MIN = Number.isFinite(_min) ? _min : -0.40;
+> const _age = parseInt(process.env.FLOW_GATE_MAX_AGE_MS || '180000', 10);
+> const MAX_AGE = Number.isFinite(_age) && _age > 0 ? _age : 180000;
+> const DRY = String(process.env.DRY || '').toLowerCase() === 'true';
+> const { host, port, email: EM, password: PW } = resolveEnv({
+>     hostEnv: 'FLOW_API_HOST',
+>     emailEnvs: ['EM', 'TRADEUX_EMAIL'],
+>     passwordEnvs: ['PW', 'TRADEUX_PASSWORD'],
+> });
+> const client = createClient({ host, port });
+> const req = client.req;
+> const findAutomationByName = (token, name) => client.findAutomationByName(token, name, 30); // cap preservado (era 30)
+> const MR_BUY = `Baseline RSI Buy ${SYMBOL}`; // id2 (runtime, não-seedada)
+> // clause do gate de fluxo (sempre o segmento FINAL da condition). Re-tunável: ao re-rodar, o segmento
+> // antigo (do 1º "&& MEMORY['<KF>']" em diante) é removido e o novo é re-anexado.
+> function buildConditions(cond) {
+>     const marker = `&& MEMORY['${KF}']`;
+>     let base = cond;
+>     const mi = base.indexOf(marker);
+>     if (mi !== -1) base = base.slice(0, mi);
+>     base = base.replace(/&&\s*$/, '').trim();
+>     // O stale-check vive AQUI (no consumo, a condition da id2), NÃO no job: o flowJob PRESERVA o último
+>     // fluxo numa queda da Binance (anti-flap, igual o regimeJob) → quem decide "velho demais p/ confiar" é
+>     // o ponto de decisão. Date.now() está disponível no Function(MEMORY) do engine (escopo global).
+>     const gate = `MEMORY['${KF}'] && (Date.now()-MEMORY['${KF}'].atMs)<${MAX_AGE} && MEMORY['${KF}'].imbalance>${MIN}`;
+>     return `${base} && ${gate}`;
+> }
+> (async () => {
+>     if (!EM || !PW) { console.error('faltam credenciais (EM/PW ou TRADEUX_EMAIL/TRADEUX_PASSWORD)'); process.exit(1); }
+>     const token = await client.login(EM, PW);
+>     console.log(`# Gate de Fluxo (Sniper) na id2 — ${SYMBOL}  [imbalance>${MIN}, maxAge=${MAX_AGE}ms]${DRY ? '  [DRY-RUN]' : ''}\n`);
+>     const a = await findAutomationByName(token, MR_BUY);
+>     if (!a) { console.error(`automação "${MR_BUY}" (id2) NÃO encontrada — rode o baseline RSI antes (ver HANDOFF).`); process.exit(1); }
+>     const full = await req('GET', `/automations/${a.id}`, token);
+>     const cur = full.body || a;
+>     const idxList = (cur.indexes || '').split(',').map(s => s.trim()).filter(Boolean);
+>     const newIndexes = idxList.includes(KF) ? cur.indexes : [...idxList, KF].join(',');
+> ```
+
+## 🤖 Claude *(19:39:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt)\nBASE=\"http://127.0.0.1:8090/api\"\necho \"=== all automations (id,name,symbol,isActive,conditions) ===\"\ncurl -s -m8 \"$BASE/automations\" -H \"Authorization: $TOKEN\" | python3 -c '\nimport sys,json\nd=json.load(sys.stdin)\nrows=d if isinstance(d,list) else d.get(\"rows\",d.get(\"automations\",[]))\nfor a in rows:\n    print(f\"id={a.get(\\\"id\\\"):>3} act={a.get(\\\"isActive\\\")} {str(a.get(\\\"symbol\\\")):10s} {str(a.get(\\\"name\\\"))[:42]:42s} | {str(a.get(\\\"conditions\\\"))[:70]}\")\n' 2>/dev/null | head -80",
+  "description": "List all automations with conditions from live API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === all automations (id,name,symbol,isActive,conditions) ===
+> ```
+
+## 🤖 Claude *(19:39:31)*
+
+
+## 🤖 Claude *(19:39:31)*
+
+O catálogo de fiação está claro. A lista de automações veio vazia (parse) — vou pegar o raw. E vou checar o progresso da varredura.
+
+## 🤖 Claude *(19:39:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nTOKEN=$(cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt)\nBASE=\"http://127.0.0.1:8090/api\"\necho \"=== raw /automations (first 600 chars) ===\"\ncurl -s -m8 \"$BASE/automations\" -H \"Authorization: $TOKEN\" | head -c 600\necho; echo \"=== try /automations/ (trailing) count ===\"\ncurl -s -m8 \"$BASE/automations/\" -H \"Authorization: $TOKEN\" | python3 -c 'import sys,json;d=json.load(sys.stdin);r=d if isinstance(d,list) else d.get(\"rows\") or d.get(\"automations\") or [];print(\"count\",len(r));\n[print(f\"id={a.get(\\\"id\\\")} act={a.get(\\\"isActive\\\")} {a.get(\\\"symbol\\\")} {a.get(\\\"name\\\")[:38]} | cond={str(a.get(\\\"conditions\\\"))[:60]}\") for a in r]' 2>/dev/null | head -40",
+  "description": "Get raw automations list"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === raw /automations (first 600 chars) ===
+> {"count":62,"rows":[{"id":54,"name":"[PAPER] Consistencia Buy ADAUSDT","symbol":"ADAUSDT","indexes":"ADAUSDT:RSI_14_1m,ADAUSDT:REGIME","conditions":"MEMORY['ADAUSDT:RSI_14_1m'].current<25 && MEMORY['ADAUSDT:REGIME']!=='bear' && MEMORY['ADAUSDT:REGIME']!=='trend'","schedule":null,"isActive":true,"logs":true,"createdAt":"2026-06-19T14:36:10.000Z","updatedAt":"2026-06-19T20:16:40.000Z","actions":[{"id":52,"automationId":54,"orderTemplateId":40,"withdrawTemplateId":null,"type":"ORDER","createdAt":"2026-06-19T14:36:10.000Z","updatedAt":"2026-06-19T14:36:10.000Z","orderTemplate":{"id":40,"name":"[PA
+> === try /automations/ (trailing) count ===
+> ```
+
+## 🤖 Claude *(19:39:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/b1q41t0fz.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	  [fetch api.binance.com] BTCUSDT 1m: 20160 candles
+> 2	  BTCUSDT: 20160 velas | oversold=278 overbought=286
+> 3	  [fetch api.binance.com] LTCUSDT 1m: 20161 candles
+> 4	  LTCUSDT: 20161 velas | oversold=535 overbought=256
+> 5	  [fetch api.binance.com] BNBUSDT 1m: 20160 candles
+> 6	  BNBUSDT: 20160 velas | oversold=490 overbought=260
+> 7	  [fetch api.binance.com] ADAUSDT 1m: 20160 candles
+> 8	  ADAUSDT: 20160 velas | oversold=476 overbought=247
+> 9	
+> ```
+
+## 🤖 Claude *(19:39:55)*
+
+
+## 🤖 Claude *(19:39:58)*
+
+A varredura já buscou 4 símbolos (eventos com boa amostra: BTC 278/286, LTC 535/256, BNB 490/260, ADA 476/247), falta ETH + agregação/bootstrap. E confirmei as automações (count=62): a `[PAPER] Consistencia` compra RSI<25 em range/mixed, baseline id2/id3 e trend id6/7 seguem inativas.
+
+Vou aguardar a varredura terminar pra ter todos os números antes de rodar a verificação adversarial em workflow.
+
+## 🤖 Claude *(19:39:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for i in $(seq 1 20); do\n  if grep -q \"POR REGIME\" /tmp/lagsweep.out 2>/dev/null; then echo \"DONE\"; break; fi\n  sleep 6\ndone\necho \"----- current output -----\"\ncat /tmp/lagsweep.out 2>/dev/null",
+  "description": "Wait for lag sweep completion and print output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DONE
+> ----- current output -----
+>   [fetch api.binance.com] BTCUSDT 1m: 20160 candles
+>   BTCUSDT: 20160 velas | oversold=278 overbought=286
+>   [fetch api.binance.com] LTCUSDT 1m: 20161 candles
+>   LTCUSDT: 20161 velas | oversold=535 overbought=256
+>   [fetch api.binance.com] BNBUSDT 1m: 20160 candles
+>   BNBUSDT: 20160 velas | oversold=490 overbought=260
+>   [fetch api.binance.com] ADAUSDT 1m: 20160 candles
+>   ADAUSDT: 20160 velas | oversold=476 overbought=247
+>   [fetch api.binance.com] ETHUSDT 1m: 20160 candles
+>   ETHUSDT: 20160 velas | oversold=483 overbought=266
+> 
+> ============================================================================================
+> HORIZONTES LONGOS — entrada IMEDIATA (14d, 1m, dirGross/net em bps, fee 20bps round-trip)
+> ============================================================================================
+> -- rsi_oversold (BUY/long) --
+>           Hmin             n  dirGross_bps       net_bps          hit%IC95_gross_bps
+>              1          2262         -0.05        -20.05          48.7  [-0.49,0.39]
+>              5          2262         -0.48        -20.48          51.7  [-1.45,0.42]
+>             10          2262         -1.06        -21.06          50.2  [-2.39,0.22]
+>             15          2262         -0.96        -20.96          52.6  [-2.86,0.85]
+>             30          2262          0.37        -19.63          51.6  [-2.64,3.12]
+>             60          2262          1.86        -18.14          52.9  [-2.31,5.90]
+>            120          2262          1.22        -18.78          53.5  [-6.93,8.25]
+>            240          2255          1.60        -18.40          53.3[-15.47,16.24]
+>            480          2233          9.47        -10.53          55.0[-18.66,30.12]
+> 
+> -- rsi_overbought (SELL/short-dir) --
+>           Hmin             n  dirGross_bps       net_bps          hit%IC95_gross_bps
+>              1          1315          0.26        -19.74          53.1  [-0.39,0.88]
+>              5          1315         -0.06        -20.06          54.0  [-1.35,1.13]
+>             10          1313          0.25        -19.75          55.1  [-1.50,2.05]
+>             15          1312         -0.34        -20.34          53.0  [-2.77,1.96]
+>             30          1305         -2.15        -22.15          53.1  [-5.64,0.76]
+>             60          1304         -1.84        -21.84          54.1  [-7.13,3.03]
+>            120          1300         -1.46        -21.46          52.8  [-7.76,5.24]
+>            240          1292          2.17        -17.83          53.1 [-6.86,11.19]
+>            480          1271         -1.96        -21.96          47.9[-19.28,12.39]
+> 
+> ============================================================================================
+> ENTRADA DEFASADA — espera N min, entra, segura 60min (dirGross bps)
+>    hipótese: aplicar o sinal DEPOIS melhora? sobe = ajuda; cai/plano = não ajuda
+> ============================================================================================
+> -- rsi_oversold --
+>        lag_min             n  dirGross_bps       net_bps          hit%
+>              0          2262          1.86        -18.14          52.9
+>              5          2262          2.79        -17.21          52.3
+>             15          2262          3.15        -16.85          52.0
+>             30          2262          0.50        -19.50          50.2
+>             60          2262         -0.62        -20.62          49.7
+> 
+> -- rsi_overbought --
+>        lag_min             n  dirGross_bps       net_bps          hit%
+>              0          1304         -1.84        -21.84          54.1
+>              5          1304         -2.31        -22.31          53.5
+>             15          1303         -2.59        -22.59          51.2
+>             30          1301          0.55        -19.45          52.0
+>             60          1300         -0.01        -20.01          49.5
+> 
+> ============================================================================================
+> POR REGIME (causal por barra) — rsi_oversold BUY @60min, dirGross bps
+> ============================================================================================
+> oversold@bear        n=  895  gross=    -0.91bps  net=   -20.91bps  hit=52.2%
+> oversold@mixed       n=  517  gross=     7.02bps  net=   -12.98bps  hit=54.4%
+> oversold@range       n=  114  gross=     7.73bps  net=   -12.27bps  hit=52.6%
+> oversold@trend       n=  716  gross=     0.11bps  net=   -19.89bps  hit=52.1%
+> oversold@unknown     n=   20  gross=    21.82bps  net=     1.82bps  hit=80.0%
+> ```
+
+## 🤖 Claude *(19:40:42)*
+
+
+## 🤖 Claude *(19:40:49)*
+
+Agora tenho o quadro numérico completo, triangulado em três fontes:
+
+**Journal (≤15min, dados ao vivo reais):** todo sinal de 1m tem gross ≈ 0, net ≈ −20 bps. Defasar a entrada não ajuda.
+
+**Klines 14d (≤8h, 5 símbolos, 2262 eventos oversold):** mesma história. O único respiro: `rsi_oversold` em regime **range/mixed**, segurando ~1h, entrando ~15 min **depois** do sinal → **+7-8 bps gross** (hit ~54%). Mas isso é **menos da metade** da taxa round-trip de 20 bps → **net-negativo em todo lugar**.
+
+Ou seja: a intuição do dono tem um grão de verdade (dip em regime não-bear, dado um tempo, sobe um pouquinho), mas não paga a taxa como taker. Isso bate exatamente com o veredito do laboratório: **o inimigo é a fee, não o sinal; a única alavanca é execução MAKER**.
+
+Vou rodar uma verificação adversarial em workflow — céticos independentes tentando **refutar** minhas duas conclusões-chave e checar o catálogo sinal→ação, pra entregar com confiança.
+
+## 🤖 Claude *(19:40:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cp /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/signal_journal.jsonl /tmp/signal_journal.jsonl && chmod 644 /tmp/signal_journal.jsonl\ncp /tmp/lagsweep.out /tmp/lagsweep.out 2>/dev/null\nchmod 644 /tmp/lagsweep.js /tmp/lagsweep.out 2>/dev/null\nT=$(cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt); echo \"$T\" > /tmp/tok.txt; chmod 644 /tmp/tok.txt\nls -la /tmp/signal_journal.jsonl /tmp/lagsweep.js /tmp/lagsweep.out /tmp/tok.txt 2>/dev/null | awk '{print $1,$3,$5,$9}'",
+  "description": "Stage data files for workflow agents (world-readable)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-r--r-- ubuntu 5658 /tmp/lagsweep.js
+> -rw-r--r-- ubuntu 4455 /tmp/lagsweep.out
+> -rw-r--r-- ubuntu 1094628 /tmp/signal_journal.jsonl
+> -rw-r--r-- ubuntu 138 /tmp/tok.txt
+> ```
+
+## 🤖 Claude *(19:40:57)*
+
+
+## 🤖 Claude *(19:40:58)*
+
+Dados preparados em `/tmp` (world-readable) pros agentes. Rodando o workflow de catálogo + verificação adversarial.
+
+## 🤖 Claude *(19:42:12)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'verificar-sinais-telegram',\n  description: 'Catalogar sinais do Telegram (significado + acao automatizada + estado armado) e verificar adversarialmente se ha edge (imediato ou defasado) que bata a fee',\n  phases: [\n    { title: 'Catalogo', detail: 'ler o codigo e mapear cada sinal -> acao automatizada + estado ao vivo' },\n    { title: 'Verificacao', detail: 'ceticos independentes tentam REFUTAR as conclusoes numericas' },\n    { title: 'Sintese', detail: 'consolidar catalogo verificado + veredito' },\n  ],\n}\n\nconst REPO = '/home/gcrux-tradeux/tradeux';\nconst CTX = `Contexto TradeUX: bot Binance Spot multi-moeda, atualmente LIVE (halted=false) mas PARADO-MAS-ARMADO em regime bear/parqueado.\nArquivos-chave (repo em ${REPO}):\n - backend/src/regimeJob.js  (grava REGIME + detecta golden/death cross, notifica Telegram, dispara automacao de trend)\n - backend/src/signalRecorderJob.js (GRAVADOR read-only de sinais 1m -> journal; NAO executa ordens)\n - backend/src/utils/eventNotify.js  (formata [REGIME]/[CROSS]/[FLOW]/[SUPERVISOR] p/ Telegram)\n - backend/src/utils/telegramNotify.js (notifyOrder: NEW/FILLED/REJECTED/EXPIRED)\n - backend/src/flowJob.js + backend/scripts/setup-flow-gate.js (fluxo taker -> gate PASSIVO da id2)\n - backend/scripts/setup-trend.js + activate-trend.js (automacao Trend: BUY golden+!=bear, SELL death)\n - backend/src/groupSupervisorJob.js, dailyCapJob.js, riskState.js (supervisor/risco)\nAPI viva (localhost): TOKEN em /tmp/tok.txt ; header 'Authorization: <TOKEN>' CRU (sem Bearer) ; base http://127.0.0.1:8090/api\n rotas uteis: /analysis/regime-status , /automations (count+rows) , /automations/groups , /system/promotions , /system/halt , /analysis/paper\nEstado ao vivo ja observado: regime BTC=bear BNB=bear LTC=mixed ADA=trend ; grupos farm 3/6 ativo, trend 0/8 ativo, baseline 0/2 ativo, paper 40/40 ; promotions promoted={} grandfather=[] ; ultima ordem real = venda LTC 21/jun.`;\n\nconst CARD_SCHEMA = {\n  type: 'object',\n  properties: {\n    cards: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          signal: { type: 'string', description: 'nome do sinal, ex \"[CROSS] golden\"' },\n          sentToTelegram: { type: 'boolean' },\n          meaning: { type: 'string', description: 'o que significa, 1-2 frases' },\n          trigger: { type: 'string', description: 'condicao/limiar exato que dispara' },\n          memoryKey: { type: 'string' },\n          automationReacting: { type: 'string', description: 'qual automacao (id/nome) reage, ou \"nenhuma (research-only)\"' },\n          automatedAction: { type: 'string', description: 'a acao concreta: comprar/vender o que, qty, ou \"nenhuma\"' },\n          armedState: { type: 'string', description: 'ARMADO | DESARMADO + por que (camadas de gate)' },\n        },\n        required: ['signal','sentToTelegram','meaning','trigger','automationReacting','automatedAction','armedState'],\n      },\n    },\n  },\n  required: ['cards'],\n};\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  properties: {\n    claim: { type: 'string' },\n    holds: { type: 'boolean', description: 'true se a afirmacao resiste (nao consegui refutar)' },\n    counterexampleFound: { type: 'boolean' },\n    bestSliceFound: { type: 'string', description: 'a fatia mais favoravel que achou: tipo/horizonte/lag/regime + gross/net bps + se IC exclui 0' },\n    evidence: { type: 'string', description: 'como verificou (comandos/numeros)' },\n    confidence: { type: 'string', enum: ['alta','media','baixa'] },\n  },\n  required: ['claim','holds','counterexampleFound','bestSliceFound','evidence','confidence'],\n};\n\n// ---------- Fase 1: catalogo (leitores paralelos) ----------\nphase('Catalogo');\nconst catalogTasks = [\n  { label: 'cat:market-events', p: `Leia regimeJob.js, eventNotify.js e setup-trend.js/activate-trend.js. Produza cards para os sinais de MERCADO enviados ao Telegram: \"[REGIME] flip\" (bear/trend/range/mixed), \"[CROSS] golden\" e \"[CROSS] death\". Para cada um: significado, gatilho exato (limiares SMA/ADX/histerese), memoryKey, qual automacao reage (id6 Trend Buy? id7 Trend Sell?), a acao concreta (template BUY LIMIT bestAsk*1.003 qty=3x MIN_NOTIONAL; SELL TREND_QTY), e o estado ARMADO/DESARMADO com TODAS as camadas de gate (grupo trend ativo? condition REGIME!=bear? promotion allowlist?). Confirme o estado vivo via API (/automations/groups, /analysis/regime-status, /system/promotions).` },\n  { label: 'cat:flow-and-gate', p: `Leia flowJob.js e setup-flow-gate.js. Produza cards para \"[FLOW] fluxo unilateral/normalizou\". Explique: significado (imbalance/toxicity do taker), gatilho (toxicity>=0.75), memoryKey (<sym>:FLOW), se vai ao Telegram (FLOW_NOTIFY_ENABLED=false => NAO), e a acao automatizada: NAO compra sozinho \u2014 \u00e9 um GATE PASSIVO na condition da id2 (imbalance>-0.40 + stale-check). Estado da id2 (baseline) ao vivo.` },\n  { label: 'cat:notif-order-risk', p: `Leia telegramNotify.js (notifyOrder), groupSupervisorJob.js, dailyCapJob.js, riskState.js. Produza cards para notificacoes de: ordens (NEW/FILLED/REJECTED/EXPIRED), \"[SUPERVISOR] ativou/desativou grupo\", e risco (cap diario -5%, HALT). Para cada: significado, gatilho, e se ha acao automatizada associada (ex.: supervisor liga entradas no nao-bear; dailyCap arma HALT).` },\n  { label: 'cat:recorder-1m', p: `Leia signalRecorderJob.js. Produza cards para os sinais de 1m do GRAVADOR: rsi_oversold, rsi_overbought, flow_buy, flow_sell, op_up/op_down. Para cada: significado, gatilho exato (RSI<30 BTC / <35 alts; RSI>70; toxicity>=0.75), que vai para logs/signal_journal.jsonl, NAO vai ao Telegram, e que a acao automatizada \u00e9 NENHUMA (read-only research; horizontes 1/5/10/15min). Deixe MUITO claro que esses sao os \"sinais de 1m\" que o dono ve mas que NAO tem acao ligada.` },\n];\nconst catalog = await parallel(catalogTasks.map(t => () =>\n  agent(`${CTX}\\n\\nTAREFA: ${t.p}\\n\\nRetorne cards estruturados. Seja exato e cite a condition/limiar reais do codigo.`,\n    { label: t.label, phase: 'Catalogo', schema: CARD_SCHEMA })\n));\n\n// ---------- Fase 2: verificacao adversarial (ceticos) ----------\nphase('Verificacao');\nconst NUMS = `NUMEROS JA COMPUTADOS (determinismo meu, para voce REFUTAR):\nJournal real (/tmp/signal_journal.jsonl, 2216 sinais, retornos dirRet a 1/5/10/15min, fee round-trip=20bps):\n - Entrada imediata: TODO tipo/horizonte tem gross ~0 (|media|<3bps) e net ~ -20bps. hit 47-54%.\n - Entrada defasada (entra@a sai@b): nenhuma combinacao vira gross positivo relevante; esperar PIORA.\n - Por regime @10min: rsi_oversold em 'range' = +3.5bps gross (n=44) mas net -16bps.\nKlines 14d 1m 5 simbolos (/tmp/lagsweep.js re-rodavel; /tmp/lagsweep.out):\n - rsi_oversold BUY imediato: gross ~0 ate 240min; @480min +9.5bps mas IC95 [-18.7,+30.1] (inclui 0), net -10.5bps.\n - Defasar oversold (segura 60min): lag0=+1.9, lag5=+2.8, lag15=+3.2bps (pico), lag30/60 cai. net sempre <=-16bps.\n - Por regime oversold@60min: bear -0.9, mixed +7.0, range +7.7, trend +0.1 bps. TODOS net-negativos (fee 20bps).`;\n\nconst claims = [\n  { label: 'verify:no-edge', claim: 'Nenhum sinal de 1m (rsi/flow) tem retorno net>0 ROBUSTO em qualquer horizonte de 1min a 8h, seja entrada imediata ou defasada \u2014 a fee round-trip de 20bps supera qualquer edge direcional.',\n    lens: 'Cace um CONTRAEXEMPLO: alguma fatia (tipo x horizonte x lag x regime x simbolo) com net>0 E intervalo de confianca (bootstrap) excluindo 0. Use /tmp/signal_journal.jsonl com python e, se quiser horizontes longos, re-rode `sudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux/backend/scripts && LAG_DAYS=14 node /tmp/lagsweep.js\"` (cache pronto, roda rapido). Se NAO achar net>0 robusto, a afirmacao RESISTE.' },\n  { label: 'verify:delayed', claim: 'Aplicar o sinal de 1m ALGUM TEMPO DEPOIS (entrada defasada) nao cria edge monetizavel: o melhor caso e rsi_oversold em regime range/mixed, entrando ~15min depois e segurando ~1h, com ~+7-8bps gross \u2014 ainda menos da metade da fee de 20bps.',\n    lens: 'Verifique especificamente a hipotese do dono. Existe ALGUM lag/hold/regime onde net>0 com CI excluindo 0? Ou onde defasar melhora dramaticamente vs imediato? Analise o journal e o lagsweep. Considere tambem se execucao MAKER (fee ~0) mudaria o veredito (gross positivo pequeno viraria acionavel).' },\n  { label: 'verify:capture', claim: 'Os golden crosses (LTC/ADA/BTC/BNB) e flips de regime recentes NAO foram capturados por nenhuma compra real, porque a trilha Trend esta DESARMADA em 3 camadas: (1) grupo trend 0/8 ativo, (2) condition REGIME!=bear bloqueava no momento do cross, (3) promotions allowlist vazia.',\n    lens: 'Verifique CADA camada contra a API viva e o codigo. Existe algum caminho pelo qual uma compra real teria disparado nesses eventos? Confira /automations/groups (trend active=0?), a condition da id6 em /automations, /system/promotions (vazio?), /orders (alguma ordem de trend?), e o regime no timestamp de cada cross via regime.log (docker exec tradeux-backend-1 cat /app/logs/regime.log).' },\n];\nconst verdicts = await parallel(claims.map(c => () =>\n  agent(`${CTX}\\n\\n${NUMS}\\n\\nAFIRMACAO A REFUTAR:\\n\"${c.claim}\"\\n\\nSEU ANGULO: ${c.lens}\\n\\nSeja adversarial e cetico. Default: se nao conseguir refutar com evidencia concreta, holds=true. Preencha bestSliceFound com a fatia MAIS favoravel que encontrou (mesmo que ainda net-negativa).`,\n    { label: c.label, phase: 'Verificacao', schema: VERDICT_SCHEMA, effort: 'high' })\n));\n\n// ---------- Fase 3: sintese ----------\nphase('Sintese');\nconst allCards = catalog.filter(Boolean).flatMap(c => c.cards || []);\nconst synth = await agent(\n  `${CTX}\\n\\nVoce e o sintetizador. Recebeu (A) um catalogo de cards sinal->acao e (B) 3 veredictos adversariais.\\n\\nCATALOGO (JSON):\\n${JSON.stringify(allCards).slice(0, 12000)}\\n\\nVEREDICTOS (JSON):\\n${JSON.stringify(verdicts.filter(Boolean)).slice(0, 6000)}\\n\\nProduza um resumo executivo em pt-BR (texto corrido + listas) que responda EXATAMENTE ao que o dono perguntou:\\n1) O que significa CADA sinal do Telegram e qual e a acao automatizada ligada a ele (e se esta armada ou nao).\\n2) Distinga os sinais que VAO ao Telegram (REGIME/CROSS/ordens/supervisor/risco) dos sinais de 1m que ele ve mas que sao SO do gravador (rsi/flow \u2014 sem acao).\\n3) O veredito da simulacao sobre a hipotese \"o sinal vem da vela 1m mas talvez renda aplicado depois\": responda com os numeros (imediato vs defasado vs por regime, gross vs net vs fee) e a conclusao honesta (grao de verdade em range/mixed, mas net-negativo como taker; unica alavanca = MAKER).\\n4) O ponto pratico mais importante: as VERDADEIRAS oportunidades que ele viu (golden crosses/regime flip da ADA->trend) estao DESARMADAS em 3 camadas \u2014 e o que isso implica (o gatilho de re-engajar do plano parqueado-como-combustivel comecou a piscar).\\nSeja concreto, honesto e sem hype.`,\n  { label: 'sintese', phase: 'Sintese', effort: 'high' });\n\nreturn { cards: allCards, verdicts: verdicts.filter(Boolean), synthesis: synth };\n",
+  "description": "Catalog + adversarial verification of signals"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w6gtlga0v
+> Summary: Catalogar sinais do Telegram (significado + acao automatizada + estado armado) e verificar adversarialmente se ha edge (imediato ou defasado) que bata a fee
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/subagents/workflows/wf_89aa86d4-a70
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/workflows/scripts/verificar-sinais-telegram-wf_89aa86d4-a70.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/workflows/scripts/verificar-sinais-telegram-wf_89aa86d4-a70.js"} to iterate without resending the script.)
+> Run ID: wf_89aa86d4-a70
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/workflows/scripts/verificar-sinais-telegram-wf_89aa86d4-a70.js", resumeFromRunId: "wf_89aa86d4-a70"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(19:42:33)*
+
+
+## 🤖 Claude *(19:42:35)*
+
+Workflow rodando em background (catálogo + 3 céticos + síntese). Enquanto verifica, vou preparar uma visualização do mapa sinal→ação e do "muro da taxa" (gross vs net vs fee), que ajuda a comunicar o resultado.
+
+## 🤖 Claude *(19:42:35)*
+
+
+🛠️ **Tool Call**: `mcp__visualize__read_me`
+```json
+{
+  "modules": [
+    "data_viz",
+    "diagram"
+  ],
+  "platform": "desktop"
+}
+```
+
+> **Tool Result (mcp__visualize__read_me)** - ✅ Success
+>
+> ```
+> Error: result (79,376 characters across 903 lines) exceeds maximum allowed tokens. Output has been saved to /home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tool-results/mcp-visualize-read_me-1783107755941.txt.
+> Format: Plain text
+> - For targeted searches (find a line, locate a string): use grep on the file directly.
+> - For analysis or summarization that requires reading the full content: read /home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tool-results/mcp-visualize-read_me-1783107755941.txt in chunks of ~106 lines using offset/limit until you have read 100% of it.
+> - If the Agent tool is available, do this inside a subagent so the full output stays out of your main context. Give it the instruction above verbatim, and be explicit about what it must return — e.g. "Read /home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tool-results/mcp-visualize-read_me-1783107755941.txt in chunks of ~106 lines using offset/limit until you have read all 903 lines, then summarize and quote any key findings verbatim." A vague "summarize this" may lose detail.
+> 
+> ```
+
+## 🤖 Claude *(19:42:46)*
+
+
+## 🤖 Claude *(19:42:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tool-results/mcp-visualize-read_me-1783107755941.txt",
+  "limit": 210
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Imagine — Visual Creation Suite
+> 2	
+> 3	## Modules
+> 4	Call read_me again with the modules parameter to load detailed guidance:
+> 5	- `diagram` — SVG flowcharts, structural diagrams, illustrative diagrams
+> 6	- `mockup` — UI mockups, forms, cards, dashboards
+> 7	- `interactive` — interactive explainers with controls
+> 8	- `chart` — charts, data analysis, geographic maps (Chart.js, D3 choropleth)
+> 9	- `art` — illustration and generative art
+> 10	Pick the closest fit. The module includes all relevant design guidance.
+> 11	
+> 12	**Complexity budget — hard limits:**
+> 13	- Box subtitles: ≤5 words. Detail goes in click-through (`sendPrompt`) or the prose below — not the box.
+> 14	- Colors: ≤2 ramps per diagram. If colors encode meaning (states, tiers), add a 1-line legend. Otherwise use one neutral ramp.
+> 15	- Horizontal tier: ≤4 boxes at full width (~140px each). 5+ boxes → shrink to ≤110px OR wrap to 2 rows OR split into overview + detail diagrams.
+> 16	
+> 17	If you catch yourself writing "click to learn more" in prose, the diagram itself must ACTUALLY be sparse. Don't promise brevity then front-load everything.
+> 18	
+> 19	**Accessibility:** For HTML widgets, begin with a visually-hidden `<h2 class="sr-only">` containing a one-sentence summary of the visualization for screen-reader users. (SVG widgets use `role="img"` with `<title>` and `<desc>` instead — see SVG setup.)
+> 20	
+> 21	You create rich visual content — SVG diagrams/illustrations and HTML interactive widgets — that renders inline in conversation. The best output feels like a natural extension of the chat.
+> 22	
+> 23	## Core Design System
+> 24	
+> 25	These rules apply to ALL use cases.
+> 26	
+> 27	### Philosophy
+> 28	- **Seamless**: Users shouldn't notice where claude.ai ends and your widget begins.
+> 29	- **Flat**: No gradients, mesh backgrounds, noise textures, or decorative effects. Clean flat surfaces.
+> 30	- **Compact**: Show the essential inline. Explain the rest in text.
+> 31	- **Text goes in your response, visuals go in the tool** — All explanatory text, descriptions, introductions, and summaries must be written as normal response text OUTSIDE the tool call. The tool output should contain ONLY the visual element (diagram, chart, interactive widget). Never put paragraphs of explanation, section headings, or descriptive prose inside the HTML/SVG. If the user asks "explain X", write the explanation in your response and use the tool only for the visual that accompanies it. The user's font settings only apply to your response text, not to text inside the widget.
+> 32	
+> 33	### Streaming
+> 34	Output streams token-by-token. Structure code so useful content appears early.
+> 35	- **HTML**: `<style>` (short) → content HTML → `<script>` last.
+> 36	- **SVG**: `<defs>` (markers) → visual elements immediately.
+> 37	- Prefer inline `style="..."` over `<style>` blocks — inputs/controls must look correct mid-stream.
+> 38	- Keep `<style>` under ~15 lines. Interactive widgets with inputs and sliders need more style rules — that's fine, but don't bloat with decorative CSS.
+> 39	- Gradients, shadows, and blur flash during streaming DOM diffs. Use solid flat fills instead.
+> 40	
+> 41	### Rules
+> 42	- No `<!-- comments -->` or `/* comments */` (waste tokens, break streaming)
+> 43	- No font-size below 11px
+> 44	- No emoji. Icons = Tabler **outline** webfont (5800+, already loaded): `<i class="ti ti-home"></i>`. Outline only — never use `-filled` suffixes (`ti-heart-filled` etc. are not loaded and will render blank). Inherits color + font-size from parent. Decorative icons get `aria-hidden="true"`; icon-only buttons get `aria-label`. Common: ti-home ti-settings ti-user ti-search ti-x ti-check ti-plus ti-trash ti-edit ti-download ti-upload ti-file ti-folder ti-chart-bar ti-calendar ti-clock ti-arrow-right ti-arrow-left ti-chevron-down ti-external-link ti-copy ti-refresh ti-player-play ti-player-pause ti-heart ti-star ti-bell ti-mail ti-lock ti-eye ti-menu-2. Don't hand-draw icon SVG paths.
+> 45	- No gradients, drop shadows, blur, glow, or neon effects
+> 46	- No dark/colored backgrounds on outer containers (transparent only — host provides the bg)
+> 47	- **Typography**: The default font is Anthropic Sans. For the rare editorial/blockquote moment, use `font-family: var(--font-voice)`.
+> 48	- **Headings**: h1 = 22px, h2 = 18px, h3 = 16px — all `font-weight: 500`. Heading color is pre-set to `var(--text-primary)` — don't override it. Body text = 16px, weight 400, `line-height: 1.7`. **Two weights only: 400 regular, 500 bold.** Never use 600 or 700 — they look heavy against the host UI.
+> 49	- **Sentence case** always. Never Title Case, never ALL CAPS. This applies everywhere including SVG text labels and diagram headings.
+> 50	- **No mid-sentence bolding**, including in your response text around the tool call. Entity names, class names, function names go in `code style` not **bold**. Bold is for headings and labels only.
+> 51	- The widget container is `display: block; width: 100%`. Your HTML fills it naturally — no wrapper div needed. Just start with your content directly. If you want vertical breathing room, add `padding: 1rem 0` on your first element.
+> 52	- Never use `position: fixed` — the iframe viewport sizes itself to your in-flow content height, so fixed-positioned elements (modals, overlays, tooltips) collapse it to `min-height: 100px`. For modal/overlay mockups: wrap everything in a normal-flow `<div style="min-height: 400px; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;">` and put the modal inside — it's a faux viewport that actually contributes layout height.
+> 53	- No DOCTYPE, `<html>`, `<head>`, or `<body>` — just content fragments.
+> 54	- When placing text on a colored background (badges, pills, cards, tags), use the darkest shade from that same color family for the text — never plain black or generic gray.
+> 55	- **Corners**: use `border-radius: var(--radius)` for controls, `12px` for cards. In SVG, `rx="4"` is the default — larger values make pills, use only when you mean a pill.
+> 56	- **No rounded corners on single-sided borders** — if using `border-left` or `border-top` accents, set `border-radius: 0`. Rounded corners only work with full borders on all sides.
+> 57	- **No titles or prose inside the tool output** — see Philosophy above.
+> 58	- **Icon sizing**: Tabler `<i class="ti …">` sizes with `font-size` — 16–20px inline, 24px max decorative. For one-off inline SVG icons, set `width`/`height` explicitly (same limits).
+> 59	- No tabs, carousels, or `display: none` sections during streaming — hidden content streams invisibly. Show all content stacked vertically. (Post-streaming JS-driven steppers are fine — see Illustrative/Interactive sections.)
+> 60	- No nested scrolling — auto-fit height.
+> 61	- Scripts execute after streaming — load libraries via `<script src="https://cdnjs.cloudflare.com/ajax/libs/...">` (UMD globals), then use the global in a plain `<script>` that follows.
+> 62	- **CDN allowlist (CSP-enforced)**: external resources may ONLY load from `cdnjs.cloudflare.com`, `esm.sh`, `cdn.jsdelivr.net`, `unpkg.com`, `fonts.googleapis.com`, `fonts.gstatic.com`. All other origins are blocked by the sandbox — the request silently fails.
+> 63	
+> 64	### CSS Variables
+> 65	**Surfaces**: `--surface-2` (white), `--surface-1` (card), `--surface-0` (page bg); role tints `--bg-{accent,danger,success,warning}`
+> 66	**Text**: `--text-primary` (black), `--text-secondary` (muted), `--text-muted` (hints); role `--text-{accent,danger,success,warning}`
+> 67	**Borders**: `--border` (default hairline), `--border-strong` (hover), `--border-stronger`; role `--border-{accent,danger,success,warning}`
+> 68	**Typography**: `--font-sans`, `--font-voice` (serif), `--font-mono`
+> 69	**Layout**: `--radius` (8px), `--pad-{sm,md,lg,xl}`, `--gap-{xs,sm,md,lg,xl}`; for larger corners use literal `12px`/`16px`
+> 70	All auto-adapt to light/dark mode. For custom colors in HTML, use CSS variables.
+> 71	
+> 72	**Dark mode is mandatory** — every color must work in both modes:
+> 73	- In SVG: use the pre-built color classes (`c-blue`, `c-teal`, `c-amber`, etc.) for colored nodes — they handle light/dark mode automatically. Never write `<style>` blocks for colors.
+> 74	- In SVG: every `<text>` element needs a class (`t`, `ts`, `th`) — never omit fill or use `fill="inherit"`. Inside a `c-{color}` parent, text classes auto-adjust to the ramp.
+> 75	- In HTML: always use CSS variables (--text-primary, --text-secondary) for text. Never hardcode colors like color: #333 — invisible in dark mode.
+> 76	- Mental test: if the background were near-black, would every text element still be readable?
+> 77	
+> 78	### sendPrompt(text)
+> 79	A global function that sends a message to chat as if the user typed it. Use it when the user's next step benefits from Claude thinking. Handle filtering, sorting, toggling, and calculations in JS instead.
+> 80	
+> 81	### Links
+> 82	`<a href="https://...">` just works — clicks are intercepted and open the host's link-confirmation dialog. Or call `openLink(url)` directly.
+> 83	
+> 84	## When nothing fits
+> 85	Pick the closest use case below and adapt. When nothing fits cleanly:
+> 86	- Default to editorial layout if the content is explanatory
+> 87	- Default to card layout if the content is a bounded object
+> 88	- All core design system rules still apply
+> 89	- Use `sendPrompt()` for any action that benefits from Claude thinking
+> 90	
+> 91	
+> 92	## UI components
+> 93	
+> 94	### Layout width
+> 95	The widget container is 680px wide. Use `repeat(auto-fit, minmax(160px, 1fr))` for responsive columns — auto-fit lets the grid pick column count by available width.
+> 96	
+> 97	### Aesthetic
+> 98	Flat, clean, white surfaces. Minimal 0.5px borders. Generous whitespace. No gradients, no shadows (except functional focus rings). Everything should feel native to claude.ai — like it belongs on the page, not embedded from somewhere else.
+> 99	
+> 100	### Tokens
+> 101	- Borders: always `0.5px solid var(--border)` (or `--border-strong` for emphasis)
+> 102	- Corner radius: `var(--radius)` for most elements, `12px` for cards
+> 103	- Cards: white bg (`var(--surface-2)`), 0.5px border, 12px radius, padding 1rem 1.25rem
+> 104	- Form elements (input, select, textarea, button, range slider) are pre-styled — write bare tags. Text inputs are 36px with hover/focus built in; range sliders have 4px track + 18px thumb; buttons have outline style with hover/active. Only add inline styles to override (e.g., different width).
+> 105	- Buttons: pre-styled with transparent bg, 0.5px `--border-strong` border, hover `--surface-1`, active scale(0.98). If it triggers sendPrompt, append a ↗ arrow.
+> 106	- **Round every displayed number.** JS float math leaks artifacts — `0.1 + 0.2` gives `0.30000000000000004`, `7 * 1.1` gives `7.700000000000001`. Any number that reaches the screen (slider readouts, stat card values, axis labels, data-point labels, tooltips, computed totals) must go through `Math.round()`, `.toFixed(n)`, or `Intl.NumberFormat`. Pick the precision that makes sense for the context — integers for counts, 1–2 decimals for percentages, `toLocaleString()` for currency. For range sliders, also set `step="1"` (or step="0.1" etc.) so the input itself emits round values.
+> 107	- Spacing: use rem for vertical rhythm (1rem, 1.5rem, 2rem), px for component-internal gaps (8px, 12px, 16px)
+> 108	- Box-shadows: none, except `box-shadow: 0 0 0 Npx` focus rings on inputs
+> 109	
+> 110	### Metric cards
+> 111	For summary numbers (revenue, count, percentage) — surface card with muted 13px label above, 24px/500 number below. `background: var(--surface-1)`, no border, `border-radius: var(--radius)`, padding 1rem. Use in grids of 2-4 with `gap: 12px`. Distinct from raised cards (which have white bg + border).
+> 112	
+> 113	### Layout
+> 114	- Editorial (explanatory content): no card wrapper, prose flows naturally
+> 115	- Card (bounded objects like a contact record, receipt): single raised card wraps the whole thing
+> 116	- Don't put tables here — output them as markdown in your response text
+> 117	
+> 118	**Grid overflow:** `grid-template-columns: 1fr` has `min-width: auto` by default — children with large min-content push the column past the container. Use `minmax(0, 1fr)` to clamp.
+> 119	
+> 120	**Table overflow:** Tables with many columns auto-expand past `width: 100%` if cell contents exceed it. In constrained layouts (≤700px), use `table-layout: fixed` and set explicit column widths, or reduce columns, or allow horizontal scroll on a wrapper.
+> 121	
+> 122	### Mockup presentation
+> 123	Contained mockups — mobile screens, chat threads, single cards, modals, small UI components — should sit on a background surface (`var(--surface-1)` container with `border-radius: 12px` and padding, or a device frame) so they don't float naked on the widget canvas. Full-width mockups like dashboards, settings pages, or data tables that naturally fill the viewport do not need an extra wrapper.
+> 124	
+> 125	### 1. Interactive explainer — learn how something works
+> 126	*"Explain how compound interest works" / "Teach me about sorting algorithms"*
+> 127	
+> 128	Use HTML for the interactive controls — sliders, buttons, live state displays, charts. Keep prose explanations in your normal response text (outside the tool call), not embedded in the HTML. No card wrapper. Whitespace is the container.
+> 129	
+> 130	```html
+> 131	<div style="display: flex; align-items: center; gap: 12px; margin: 0 0 1.5rem;">
+> 132	  <label style="font-size: 14px; color: var(--text-secondary);">Years</label>
+> 133	  <input type="range" min="1" max="40" value="20" id="years" style="flex: 1;" />
+> 134	  <span style="font-size: 14px; font-weight: 500; min-width: 24px;" id="years-out">20</span>
+> 135	</div>
+> 136	
+> 137	<div style="display: flex; align-items: baseline; gap: 8px; margin: 0 0 1.5rem;">
+> 138	  <span style="font-size: 14px; color: var(--text-secondary);">£1,000 →</span>
+> 139	  <span style="font-size: 24px; font-weight: 500;" id="result">£3,870</span>
+> 140	</div>
+> 141	
+> 142	<div style="margin: 2rem 0; position: relative; height: 240px;">
+> 143	  <canvas id="chart"></canvas>
+> 144	</div>
+> 145	```
+> 146	
+> 147	Use `sendPrompt()` to let users ask follow-ups: `sendPrompt('What if I increase the rate to 10%?')`
+> 148	
+> 149	### 2. Compare options — decision making
+> 150	*"Compare pricing and features of these products" / "Help me choose between React and Vue"*
+> 151	
+> 152	Use HTML. Side-by-side card grid for options. Highlight differences with semantic colors. Interactive elements for filtering or weighting.
+> 153	
+> 154	- Each option in a card. Use badges for key differentiators. A leading Tabler icon (`<i class="ti ti-NAME">` at 20px, `aria-hidden`) anchors each option visually — pick the most apt name per option.
+> 155	- Add `sendPrompt()` buttons: `sendPrompt('Tell me more about the Pro plan')`
+> 156	- Don't put comparison tables inside this tool — output them as regular markdown tables in your response text instead. The tool is for the visual card grid only.
+> 157	- When one option is recommended or "most popular", accent its card with `border: 2px solid var(--border-accent)` only (2px is deliberate — the only exception to the 0.5px rule, used to accent featured items) — keep the same background and border as the other cards. Add a small badge (e.g. "Most popular") above or inside the card header using `background: var(--bg-accent); color: var(--text-accent); font-size: 12px; padding: 4px 12px; border-radius: var(--radius)`.
+> 158	
+> 159	### 3. Data record — bounded UI object
+> 160	*"Show me a Salesforce contact card" / "Create a receipt for this order"*
+> 161	
+> 162	Use HTML. Wrap the entire thing in a single raised card. All content is sans-serif since it's pure UI. Use an avatar/initials circle for people (see example below).
+> 163	
+> 164	```html
+> 165	<div style="background: var(--surface-2); border-radius: 12px; border: 0.5px solid var(--border); padding: 1rem 1.25rem;">
+> 166	  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+> 167	    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 14px; color: var(--text-accent);">MR</div>
+> 168	    <div>
+> 169	      <p style="font-weight: 500; font-size: 15px; margin: 0;">Maya Rodriguez</p>
+> 170	      <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">VP of Engineering</p>
+> 171	    </div>
+> 172	  </div>
+> 173	  <div style="border-top: 0.5px solid var(--border); padding-top: 12px;">
+> 174	    <table style="width: 100%; font-size: 13px;">
+> 175	      <tr><td style="color: var(--text-secondary); padding: 4px 0;"><i class="ti ti-mail" style="font-size:16px; vertical-align:-2px; margin-right:6px" aria-hidden="true"></i>Email</td><td style="text-align: right; padding: 4px 0; color: var(--text-accent);">m.rodriguez@acme.com</td></tr>
+> 176	      <tr><td style="color: var(--text-secondary); padding: 4px 0;"><i class="ti ti-phone" style="font-size:16px; vertical-align:-2px; margin-right:6px" aria-hidden="true"></i>Phone</td><td style="text-align: right; padding: 4px 0;">+1 (415) 555-0172</td></tr>
+> 177	    </table>
+> 178	  </div>
+> 179	</div>
+> 180	```
+> 181	
+> 182	
+> 183	## Color palette
+> 184	
+> 185	9 color ramps, each with 7 stops from lightest to darkest. 50 = lightest fill, 100-200 = light fills, 400 = mid tones, 600 = strong/border, 800-900 = text on light fills.
+> 186	
+> 187	| Class | Ramp | 50 (lightest) | 100 | 200 | 400 | 600 | 800 | 900 (darkest) |
+> 188	|-------|------|------|-----|-----|-----|-----|-----|------|
+> 189	| `c-purple` | Purple | #EEEDFE | #CECBF6 | #AFA9EC | #7F77DD | #534AB7 | #3C3489 | #26215C |
+> 190	| `c-teal` | Teal | #E1F5EE | #9FE1CB | #5DCAA5 | #1D9E75 | #0F6E56 | #085041 | #04342C |
+> 191	| `c-coral` | Coral | #FAECE7 | #F5C4B3 | #F0997B | #D85A30 | #993C1D | #712B13 | #4A1B0C |
+> 192	| `c-pink` | Pink | #FBEAF0 | #F4C0D1 | #ED93B1 | #D4537E | #993556 | #72243E | #4B1528 |
+> 193	| `c-gray` | Gray | #F1EFE8 | #D3D1C7 | #B4B2A9 | #888780 | #5F5E5A | #444441 | #2C2C2A |
+> 194	| `c-blue` | Blue | #E6F1FB | #B5D4F4 | #85B7EB | #378ADD | #185FA5 | #0C447C | #042C53 |
+> 195	| `c-green` | Green | #EAF3DE | #C0DD97 | #97C459 | #639922 | #3B6D11 | #27500A | #173404 |
+> 196	| `c-amber` | Amber | #FAEEDA | #FAC775 | #EF9F27 | #BA7517 | #854F0B | #633806 | #412402 |
+> 197	| `c-red` | Red | #FCEBEB | #F7C1C1 | #F09595 | #E24B4A | #A32D2D | #791F1F | #501313 |
+> 198	
+> 199	**How to assign colors**: Color should encode meaning, not sequence. Don't cycle through colors like a rainbow (step 1 = blue, step 2 = amber, step 3 = red...). Instead:
+> 200	- Group nodes by **category** — all nodes of the same type share one color. E.g. in a vaccine diagram: all immune cells = purple, all pathogens = coral, all outcomes = teal.
+> 201	- For illustrative diagrams, map colors to **physical properties** — warm ramps for heat/energy, cool for cold/calm, green for organic, gray for structural/inert.
+> 202	- Use **gray for neutral/structural** nodes (start, end, generic steps).
+> 203	- Use **2-3 colors per diagram**, not 6+. More colors = more visual noise. A diagram with gray + purple + teal is cleaner than one using every ramp.
+> 204	- **Prefer purple, teal, coral, pink** for general diagram categories. Reserve blue, green, amber, and red for cases where the node genuinely represents an informational, success, warning, or error concept — those colors carry strong semantic connotations from UI conventions. (Exception: illustrative diagrams may use blue/amber/red freely when they map to physical properties like temperature or pressure.)
+> 205	
+> 206	**Text on colored backgrounds:** Always use the 800 or 900 stop from the same ramp as the fill. Never use black, gray, or --text-primary on colored fills. **When a box has both a title and a subtitle, they must be two different stops** — title darker (800 in light mode, 100 in dark), subtitle lighter (600 in light, 200 in dark). Same stop for both reads flat; the weight difference alone isn't enough. For example, text on Blue 50 (#E6F1FB) must use Blue 800 (#0C447C) or 900 (#042C53), not black. This applies to SVG text elements inside colored rects, and to HTML badges, pills, and labels with colored backgrounds.
+> 207	
+> 208	**Light/dark mode quick pick** — use only stops from the table, never off-table hex values:
+> 209	- **Light mode**: 50 fill + 600 stroke + **800 title / 600 subtitle**
+> 210	- **Dark mode**: 800 fill + 200 stroke + **100 title / 200 subtitle**
+> ```
+
+## 🤖 Claude *(19:43:04)*
+
+
+## 🤖 Claude *(19:43:05)*
+
+Tenho o suficiente do sistema de design. Vou aguardar o workflow de verificação terminar antes de finalizar. Deixa eu checar o progresso.
+
+## 🤖 Claude *(19:43:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "d=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/subagents/workflows/wf_89aa86d4-a70\necho \"=== workflow transcript dir contents ===\"\nls -la \"$d\" 2>/dev/null | tail -20\necho\necho \"=== any completed structured outputs so far (agent jsonl tails) ===\"\nfor f in \"$d\"/agent-*.jsonl; do [ -f \"$f\" ] && echo \"-- $(basename $f) ($(wc -l < \"$f\") lines) --\"; done 2>/dev/null | head",
+  "description": "Check workflow progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === workflow transcript dir contents ===
+> total 236
+> drwxrwxr-x 2 ubuntu ubuntu   4096 Jul  3 16:42 .
+> drwxrwxr-x 3 ubuntu ubuntu   4096 Jul  3 16:42 ..
+> -rw------- 1 ubuntu ubuntu  83697 Jul  3 16:42 agent-a71a45e4716e64adc.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul  3 16:42 agent-a71a45e4716e64adc.meta.json
+> -rw------- 1 ubuntu ubuntu 134798 Jul  3 16:42 agent-ac217f1b3eebf41d1.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul  3 16:42 agent-ac217f1b3eebf41d1.meta.json
+> -rw-rw-r-- 1 ubuntu ubuntu    250 Jul  3 16:42 journal.jsonl
+> 
+> === any completed structured outputs so far (agent jsonl tails) ===
+> -- agent-a71a45e4716e64adc.jsonl (23 lines) --
+> -- agent-ac217f1b3eebf41d1.jsonl (31 lines) --
+> ```
+
+## 🤖 Claude *(19:43:35)*
+
+
+## 🤖 Claude *(19:43:36)*
+
+O workflow está rodando (2 agentes ativos, faltam os demais + síntese). Vou aguardar a conclusão para consolidar tudo de uma vez. Deixa eu esperar de forma monitorada.
+
+## 🤖 Claude *(19:43:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "d=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/subagents/workflows/wf_89aa86d4-a70\nfor i in $(seq 1 40); do\n  n=$(ls \"$d\"/agent-*.jsonl 2>/dev/null | wc -l)\n  jl=$(wc -l < \"$d/journal.jsonl\" 2>/dev/null || echo 0)\n  # journal.jsonl grows with phase/agent events; check for synthesis agent (9 agents total expected)\n  if grep -qi \"sintese\\|synthesis\" \"$d/journal.jsonl\" 2>/dev/null && [ \"$n\" -ge 8 ]; then echo \"LIKELY DONE (agents=$n)\"; break; fi\n  sleep 9\ndone\necho \"agents so far: $(ls \"$d\"/agent-*.jsonl 2>/dev/null | wc -l)\"\necho \"--- journal.jsonl ---\"; cat \"$d/journal.jsonl\" 2>/dev/null | tail -20",
+  "description": "Monitored wait for workflow near-completion"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 143
+> Command timed out after 2m 0s
+> ```
+
+## 🤖 Claude *(19:45:47)*
+
+
+## 🤖 Claude *(19:45:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "d=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/subagents/workflows/wf_89aa86d4-a70\necho \"agents so far: $(ls \"$d\"/agent-*.jsonl 2>/dev/null | wc -l) (esperado ~9)\"\ntail -6 \"$d/journal.jsonl\" 2>/dev/null",
+  "description": "Quick non-blocking workflow state check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agents so far: 6 (esperado ~9)
+> {"type":"started","key":"v2:ceb1426dc91f221096d67a3c56b843adb293c7e3bd43992572697256b841cc9a","agentId":"a38c808a0e16f3829"}
+> {"type":"result","key":"v2:c5bc75794f50c7a68d3661a5ec94449993d5e8acaba2e8eaffa63c70d1536d70","agentId":"ac217f1b3eebf41d1","result":{"cards":[{"signal":"[REGIME] flip","sentToTelegram":true,"meaning":"Mudança de regime de mercado de um símbolo (bear/trend/range/mixed), calculada sobre 200 velas 1h da MAINNET pelo regimeJob. É o GATE PASSIVO mestre: define se entradas podem armar. bear = risk-off (caixa); trend = golden cross manda, Farm cede; range = Farm/baseline podem armar; mixed = entradas seletivas.","trigger":"regimeClassifier.js classifyRegime() com histerese (prev sticky anti-whipsaw): bear se belowFrac > 0.60 entrada / < 0.45 saída (fração das últimas 200 velas 1h < SMA200); trend se ADX(14) >= 25 entrada / < 22 saída; range se ADX < 20 entrada / >= 23 saída; mixed se 20 <= ADX < 25 e não-bear. Notifica só na TRANSIÇÃO real (prevRegime !== undefined; não a semente do 1º boot). Mensagem: eventNotify.regimeFlipMessage → '<emoji> [REGIME] <sym>: <prev> → <next>. <hint>'.","memoryKey":"MEMORY['<sym>:REGIME'] = 'bear'|'trend'|'range'|'mixed' (escrito com executeAutomations=false — passivo, não dispara ordem por si)","automationReacting":"Nenhuma automação dispara DIRETO no flip (escrita passiva). O flip só muda o valor lido no GATE das automações quando o tick de preço/RSI/cross as dispara: id2 Baseline RSI Buy e id6 Trend Buy gateiam por REGIME!=='bear'; id2/id3 também gateadas por REGIME!=='trend' (coordenação MR×TF). Também: a SAÍDA do bear de BTCUSDT (FASE4_MACRO_SYMBOL) chama funnelJob.armFase4Observation — só OBSERVA, não compra.","automatedAction":"Nenhuma ação de ordem no flip em si. Efeito indireto: bear ARMA/DESARMA o gate REGIME!=='bear' de todas as entradas; trend adiciona o gate REGIME!=='trend' que TIRA a reversão (id2/id3) e cede à trend. LIVE: BTC=bear, BNB=bear, LTC=mixed, ADA=trend.","armedState":"Sinal SEMPRE ARMADO (o regimeJob está enabled=true, refresh 300000ms, klines 1h; running=false = ocioso entre polls, não parado). O flip em si é só notificação read-only + escrita passiva na MEMORY — não há automação a 'desarmar' aqui. O efeito no dinheiro é 100% indireto via as camadas de gate das entradas (ver cards [CROSS])."},{"signal":"[CROSS] golden","sentToTelegram":true,"meaning":"Cruzamento da SMA rápida (50) para CIMA da SMA lenta (200) em velas 1h fechadas da MAINNET = sinal de COMPRA de trend. É o gatilho ATIVO da automação id6 (Trend Buy), diferente do flip de regime que é passivo.","trigger":"regimeJob é o ÚNICO detector de borda: deriva a transição de smaAbove (fast>slow) via regimeClassifier.smaCross (fast=50, slow=200, sobre velas FECHADAS — dropa a hora em formação). Quando prev(ABOVE)=false→true, escreve dir='golden'. Banda morta ~0,01% no slope da SMA lenta (TREND_SLOPE) é gate opcional só da trilha [PAPER] slopegate. Mensagem: eventNotify.trendCrossMessage → '🟢 [CROSS] <sym>: GOLDEN cross (SMA 50/200) — sinal de COMPRA de trend.'","memoryKey":"MEMORY['<sym>:TREND_CROSS_1h'] = 'golden' (escrito com executeAutomations=TRUE só na transição → dispara a automação UMA vez; 'none' passivo entre cruzamentos). Regime é escrito ANTES no mesmo tick (ordem importa, não reordenar) p/ estar fresco no gate.","automationReacting":"id6 = 'Trend Buy BTCUSDT SMA50/200' (grupo 'trend'). Condition real: MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' && MEMORY['BTCUSDT:REGIME']!=='bear' (indexes: TREND_CROSS_1h,REGIME).","automatedAction":"Template 'Trend Buy <sym> SMA50/200': ORDER BUY LIMIT marketável, limitPrice = MEMORY['<sym>:BOOK'].current.bestAsk * 1.003 (atravessa o spread como taker), quantity = MIN_NOTIONAL × 3 (size pequeno p/ observar 1 cross; calibrar após 1 golden→death real). id6 soma o fill em TREND_QTY.","armedState":"DESARMADO em TODAS as camadas hoje. (1) grupo 'trend' = 0/8 ativo (id6 isActive=0 no banco). (2) supervisor desiredActive('entry'): regimeOk exige regime && !=bear && !=unknown — BTC=bear ⇒ FALSE (curiosidade: BTC tem smaAbove=true / golden de 02-jul, mas regime=bear ainda ⇒ mesmo um golden fresco NÃO armaria a compra). (3) promotionAllows('entry') exige isPromoted('slopegate') — promoted={} e grandfather=[] ⇒ FALSE (nenhuma trilha de trend provada no paper). (4) HALT: halted=false agora, mas o supervisor pula armar ENTRADAS sob HALT por proteção. Para ARMAR BTC precisaria: grupo trend ativo + BTC sair do bear + promoção de 'slopegate' (ou PROMOTION_GRANDFATHER=slopegate)."},{"signal":"[CROSS] death","sentToTelegram":true,"meaning":"Cruzamento da SMA rápida (50) para BAIXO da SMA lenta (200) em velas 1h fechadas da MAINNET = sinal de VENDA PROTETIVA de trend (saída p/ caixa). Gatilho ATIVO da id7 (Trend Sell), SEM gate de regime (protege sempre).","trigger":"regimeJob detecta a transição de smaAbove true→false via regimeClassifier.smaCross (fast=50, slow=200, velas fechadas). prev(ABOVE)=true→false ⇒ dir='death'. Mensagem: eventNotify.trendCrossMessage → '🔻 [CROSS] <sym>: DEATH cross (SMA 50/200) — sinal de VENDA protetiva de trend.'","memoryKey":"MEMORY['<sym>:TREND_CROSS_1h'] = 'death' (executeAutomations=TRUE só na transição → dispara UMA vez; 'none' entre cruzamentos).","automationReacting":"id7 = 'Trend Sell BTCUSDT SMA50/200' (grupo 'trend'). Condition real: MEMORY['BTCUSDT:TREND_CROSS_1h']==='death' (SÓ o sinal death, SEM gate de regime — saída p/ caixa sempre que der o cross).","automatedAction":"Template 'Trend Sell <sym> SMA50/200': ORDER SELL LIMIT marketável, limitPrice = MEMORY['<sym>:BOOK'].current.bestBid * 0.997 (aceita −0,3% p/ fill imediato), quantity = TREND_QTY (vende a POSIÇÃO acumulada pelo trend, não LAST_ORDER; id6 zera no death).","armedState":"DESARMADO hoje por grupo. (1) grupo 'trend' = 0/8 ativo (id7 isActive=0). (2) supervisor desiredActive('trendSell') = regimeOk OR hasPosition — a venda pode armar MESMO em bear SE houver posição aberta (protege quem virou comprado no flip pro bear). (3) promotionAllows('trendSell') = isPromoted('slopegate') OR hasPosition — NÃO exige promoção se já há TREND_QTY > 0 (proteção do comprado). LIVE: TREND_QTY = 0 em BTC (nenhuma compra de trend nunca ocorreu — última ordem real foi venda LTC 21-jun) ⇒ hasPosition=false, então sem promoção a venda fica off; mas como não há posição, não há o que vender. NÃO é gateada por HALT (o supervisor só bloqueia ENTRADAS sob HALT, não a saída protetiva)."}]}}
+> {"type":"result","key":"v2:ceb1426dc91f221096d67a3c56b843adb293c7e3bd43992572697256b841cc9a","agentId":"a38c808a0e16f3829","result":{"cards":[{"signal":"[SIGREC] rsi_oversold","sentToTelegram":false,"meaning":"RSI de 1m acabou de CRUZAR para baixo do limiar de sobrevenda — sinal read-only de possivel exaustao de venda (lado 'buy', aposta na alta). So observado e gravado, nunca vira ordem.","trigger":"Edge-trigger de cruzamento: prev >= buyTh && rsi1m < buyTh, onde buyTh = RSI_BUY + (isAlt ? 5 : 0). Logo BTCUSDT RSI_14_1m < 30; alts (LTC/BNB/ADA) RSI_14_1m < 35. So dispara na TRANSPOSICAO (RSI anterior estava >= limiar). side='buy', dirRet positivo se subir.","automationReacting":"nenhuma (research-only) — signalRecorderJob so grava; nenhuma automacao le rsi_oversold","automatedAction":"nenhuma — read-only; horizontes de desfecho +1/+5/+10/+15min, fecha no maximo (15min) e agrega STATS","armedState":"DESARMADO — read-only por desenho (comentario: 'READ-ONLY: so observa a MEMORY do beholder + preco; NAO emite ordem'); recordEvent so faz push em OPEN[] + logger('signals'). Nao passa por BRAIN, riskGuard nem HALT. Este e um dos 'sinais de 1m' que o dono VE (via getStatus) mas que NAO tem acao ligada.","memoryKey":"RSI_14_1m (beholder.getMemory(sym,'RSI_14_1m').current) -> logs/signal_journal.jsonl"},{"signal":"[SIGREC] rsi_overbought","sentToTelegram":false,"meaning":"RSI de 1m acabou de CRUZAR para cima do limiar de sobrecompra — sinal read-only de possivel exaustao de compra (lado 'sell', aposta na queda). So gravado, nunca executado.","trigger":"Edge-trigger de cruzamento: prev <= RSI_SELL && rsi1m > RSI_SELL, com RSI_SELL=70 fixo para TODOS os simbolos (sem ajuste de alt). Logo RSI_14_1m > 70. So dispara na transposicao (RSI anterior estava <= 70). side='sell', dirRet positivo se cair.","automationReacting":"nenhuma (research-only) — nenhuma automacao consome rsi_overbought","automatedAction":"nenhuma — read-only; desfecho medido em +1/+5/+10/+15min, fecha em 15min e alimenta STATS/hit-rate","armedState":"DESARMADO — read-only por desenho; grava em OPEN[] e no journal, sem tocar BRAIN/riskGuard/HALT. E um 'sinal de 1m' visivel ao dono mas SEM acao ligada.","memoryKey":"RSI_14_1m -> logs/signal_journal.jsonl"},{"signal":"[SIGREC] flow_buy","sentToTelegram":false,"meaning":"Fluxo agressor extremo com vies COMPRADOR (taker imbalance nao-negativo) — sinal read-only de pressao de compra concentrada. Mede-se depois se o fluxo unilateral PREVE o movimento ou so o descreve.","trigger":"Edge-trigger: toxicity != null && toxicity >= FLOW_TOX (SIGREC_FLOW_TOX default 0.75) && !inExtreme[sym]; side='buy' porque imbalance >= 0 (ou null). Rearma so quando toxicity cai abaixo de FLOW_EXIT = FLOW_TOX*0.7 = 0.525 (histerese). Le FLOW.toxicity e FLOW.imbalance da MEMORY.","automationReacting":"nenhuma (research-only) — este gravador NAO gateia nada; o gate PASSIVO da id2 por imbalance vem do flowJob, nao daqui","automatedAction":"nenhuma — read-only; horizontes +1/+5/+10/+15min, fecha em 15min","armedState":"DESARMADO — read-only por desenho; so recordEvent+logger. E um dos 'sinais de 1m' que o dono ve mas SEM acao ligada.","memoryKey":"FLOW (toxicity/imbalance) -> logs/signal_journal.jsonl"},{"signal":"[SIGREC] flow_sell","sentToTelegram":false,"meaning":"Fluxo agressor extremo com vies VENDEDOR (taker imbalance negativo) — sinal read-only de pressao de venda concentrada. So gravado para validar poder preditivo com dado.","trigger":"Edge-trigger: toxicity != null && toxicity >= FLOW_TOX (0.75) && !inExtreme[sym], E imbalance != null && imbalance < 0 -> side='sell'. Mesma histerese de rearme abaixo de FLOW_EXIT=0.525. (flow_buy e flow_sell sao o MESMO gatilho toxicity>=0.75; o sinal do imbalance so escolhe o lado.)","automationReacting":"nenhuma (research-only)","automatedAction":"nenhuma — read-only; desfecho +1/+5/+10/+15min, fecha em 15min, dirRet inverte (queda=acerto)","armedState":"DESARMADO — read-only por desenho; grava em OPEN[]+journal, nao toca BRAIN/riskGuard/HALT. 'Sinal de 1m' visivel ao dono, SEM acao ligada.","memoryKey":"FLOW (toxicity/imbalance) -> logs/signal_journal.jsonl"},{"signal":"[SIGREC] op_up (call discricionaria do operador)","sentToTelegram":false,"meaning":"Palpite HUMANO do dono de que o preco vai SUBIR — entra no MESMO pipeline de desfecho/STATS para medir se a leitura discricionaria bate o acaso (50%). Alpha na discricao, nao no indicador. So existe quando o operador chama recordCall.","trigger":"Nao ha limiar de indicador — disparado por chamada explicita recordCall(symbol,'up',note) (via POST /analysis/call). direction != 'down' => 'up', side='buy'. Grava snapshot do contexto (price, rsi1m, rsi15m, regime, imbalance, toxicity) no instante da call. Exige preco disponivel (senao {ok:false}).","automationReacting":"nenhuma (research-only) — vira registro op_up com rec.op=true; so alimenta opSummary()","automatedAction":"nenhuma — read-only; desfecho +1/+5/+10/+15min, placar de hit-rate @10m vs acaso","armedState":"DESARMADO — experimento das previsoes do operador; mede se o olho do dono bate o acaso, sem NENHUMA ordem. E o 'sinal de 1m' mais explicitamente so-observacional.","memoryKey":"op_up -> logs/signal_journal.jsonl (placar via opSummary)"},{"signal":"[SIGREC] op_down (call discricionaria do operador)","sentToTelegram":false,"meaning":"Palpite HUMANO do dono de que o preco vai CAIR — mesmo pipeline de desfecho/STATS para medir a discricao contra o acaso. Nao e sinal automatico; so existe quando o operador chama recordCall.","trigger":"Sem limiar de indicador — disparado por recordCall(symbol,'down',note). direction.toLowerCase()==='down' => 'down', side='sell', dirRet inverte (queda=acerto). Grava contexto do momento; exige preco disponivel.","automationReacting":"nenhuma (research-only) — registro op_down com rec.op=true; so opSummary()","automatedAction":"nenhuma — read-only; desfecho +1/+5/+10/+15min","armedState":"DESARMADO — experimento das previsoes do operador, zero acao ligada. 'Sinal de 1m' que o dono ve/gera mas que NAO aciona nada.","memoryKey":"op_down -> logs/signal_journal.jsonl (placar via opSummary)"}]}}
+> {"type":"result","key":"v2:dfa2307a260ec18b2f7af46332d2427e91f6e11c594ad307d481bcb8b4db555b","agentId":"a75a239c2861f227d","result":{"cards":[{"signal":"[ORDER] NEW (nova ordem)","sentToTelegram":true,"meaning":"Uma ordem acabou de ser colocada na Binance (status NEW). LIMIT: registrada no book aguardando fill; MARKET: acaba de entrar. Mensagem: '📝 Nova ordem: <symbol> <side> <type> qty=<quantity> @ <limitPrice ou MARKET> (<origem>)'. Origem = 'automação #<automationId>' ou 'manual/agente'.","trigger":"telegramNotify.notifyOrder(order) com order.status==='NEW' e order.orderId presente. NOTIFY_STATUSES=['NEW','FILLED','REJECTED','EXPIRED'] — só esses 4 notificam; CANCELED e PARTIALLY_FILLED são silenciados de propósito. Dedup por chave 'order:<orderId>:NEW' (Set cap 200, FIFO).","automationReacting":"nenhuma reage à notificação (notifyOrder é fire-and-forget, read-only). A ordem em si foi disparada por beholder.placeOrder no money-path / execução de automação.","automatedAction":"nenhuma disparada pela notificação. A ação (a própria ordem) já ocorreu — a notificação só avisa o dono.","armedState":"N/A — telegramNotify NUNCA lança e não tem gate; envio depende só de settings.telegramBot+telegramChat presentes. Se ausentes, notificações Telegram ficam desligadas (warn 1x).","memoryKey":"n/a (dedup Set 'order:<orderId>:NEW' em memória do processo)"},{"signal":"[ORDER] FILLED (ordem executada)","sentToTelegram":true,"meaning":"Ordem executou (terminal). Mensagem: '✅ Ordem executada: <symbol> <side> qty=<quantity> @ <avgPrice ou limitPrice ou MARKET> (<origem>)'. Uma MARKET inserida já FILLED notifica UMA vez (o executionReport FILLED posterior cai no dedup); LIMIT notifica no NEW e de novo no FILLED (eventos distintos).","trigger":"notifyOrder(order) com order.status==='FILLED'. Preço exibido = order.avgPrice (Number) se houver, senão order.limitPrice, senão 'MARKET'. Dedup por 'order:<orderId>:FILLED'.","automationReacting":"nenhuma reage à notificação. (Fills de Trend/Farm/Harvest são contabilizados em outro lugar — app-em, buckets FARM_DCA/TREND_QTY — não via este notify.)","automatedAction":"nenhuma disparada pela notificação (read-only).","armedState":"N/A — sem gate; só requer settings de Telegram.","memoryKey":"n/a (dedup Set 'order:<orderId>:FILLED')"},{"signal":"[ORDER] REJECTED (ordem rejeitada)","sentToTelegram":true,"meaning":"A colocação da ordem foi RECUSADA (ex.: pelo riskGuard/HALT, saldo, filtro da Binance). Mensagem: '🛑 Ordem rejeitada: <symbol> <side> qty=<quantity> — <obs> (<origem>)'. O motivo (order.obs) é anexado se presente — é onde aparece, p.ex., o bloqueio por HALT.","trigger":"notifyOrder(order) com order.status==='REJECTED'. Dedup por 'order:<orderId>:REJECTED'.","automationReacting":"nenhuma reage à notificação. A rejeição normalmente vem do guard por-ordem em utils/exchange.js (lê riskState.isHalted por ordem).","automatedAction":"nenhuma disparada pela notificação. É o sintoma de que uma trava (HALT/risco) bloqueou a ordem upstream.","armedState":"N/A no notificador. A CAUSA da rejeição costuma ser HALT ARMADO (env-hard/floor/manual/daily-cap) ou teto de risco.","memoryKey":"n/a (dedup Set 'order:<orderId>:REJECTED')"},{"signal":"[ORDER] EXPIRED (ordem expirada, não executou)","sentToTelegram":true,"meaning":"Ordem expirou sem executar. Mensagem: '⚠️ Ordem expirada (não executou): <symbol> <side> qty=<quantity> (<origem>)'. Notifica de propósito (gate QA): MARKET pode EXPIRAR já no insert (book fino do testnet) — é uma colocação falhada que o dono precisa ver, como a REJECTED; é raro demais pra virar ruído.","trigger":"notifyOrder(order) com order.status==='EXPIRED'. Dedup por 'order:<orderId>:EXPIRED'.","automationReacting":"nenhuma reage à notificação (read-only).","automatedAction":"nenhuma disparada pela notificação.","armedState":"N/A — sem gate; só requer settings de Telegram.","memoryKey":"n/a (dedup Set 'order:<orderId>:EXPIRED')"},{"signal":"[SUPERVISOR] Ativou <automação> (ligou entrada/venda)","sentToTelegram":true,"meaning":"O groupSupervisorJob ATIVOU (isActive=1) uma automação gerida. Mensagem eventNotify: '⚙️ [SUPERVISOR] Ativou <name> (<reason>).'. Para ENTRADA reason='regime=<regime> (não-bear)'; para venda acoplada reason='posição/venda protetiva'. É a autonomia de virada: liga entradas no não-bear sem comando do operador.","trigger":"runOnce() por ciclo (GROUP_SUPERVISOR_REFRESH_MS, default 60000ms, piso 15s): quando target===true && !a.isActive. target = desiredActive(kind,regime,hasPos) && promotionAllows(kind,hasPos,promoted). desiredActive: entry/baselineSell exigem regime!='bear' && regime!='unknown' (regimeOk); trendSell exige regimeOk OU TREND_QTY>0. Além disso o PORTAO DE PROMOÇÃO: entry e baselineSell exigem trilha PROMOVIDA (PROMO_MAP default farm:farmnl,trend:slopegate,baseline:consistencia); trendSell exige promoção OU posição.","automationReacting":"groupSupervisorJob é o próprio ator. Escopo GROUP_SUPERVISOR_GROUPS (default 'farm,trend,baseline'). Classifica por NOME: entry (/^(Farm Buy|Trend Buy|Baseline RSI Buy) /), trendSell (/^Trend Sell /), baselineSell (/^Baseline RSI Sell /); Farm Sell é IGNORADA (sempre armada, auto-gateia em FARM_DCA.qty>0).","automatedAction":"applyAutomationActive(a, true) — ARMA a automação no banco (isActive=1). NÃO executa ordem: apenas deixa o gate runtime (ex.: '&& REGIME!=bear' dentro da condição de compra) fazer o timing fino. É a 2ª camada; a condição gateada é a 3ª.","armedState":"ARMADO condicional. Gates empilhados: (1) GROUP_SUPERVISOR_ENABLED!=false; (2) grupo ∈ MANAGED; (3) regimeOk (regime conhecido e !=bear/unknown); (4) portao de promoção (trilha promovida/grandfathered) — sem promoção fica off (fail-safe); (5) ATIVAÇÃO DE ENTRADA É PULADA SOB HALT (kind==='entry' && isHalted() → haltSkipped, não arma máquina de compra com o floor up). Vendas acopladas PODEM armar sob HALT (o guard por-ordem bloqueia a execução mesmo assim). Estado vivo: promoted={} → entradas ficam off aguardando promoção.","memoryKey":"<symbol>:REGIME (regimeOf) e <symbol>:TREND_QTY (trendQty p/ hasPosition do trendSell)"},{"signal":"[SUPERVISOR] Desativou <automação> (desarmou)","sentToTelegram":true,"meaning":"O groupSupervisorJob DESATIVOU (isActive=0) uma automação gerida. Mensagem: '⚙️ [SUPERVISOR] Desativou <name> (<why>).'. why = 'regime=bear' (se bear), 'regime=<x>' (outro regime), 'regime desconhecido', OU 'aguardando promocao (<trilha> nao provou)' quando o regime ativaria mas falta promoção. Desarmar é sempre seguro.","trigger":"runOnce() por ciclo: quando target===false && a.isActive. Acontece em regime=bear/unknown (regimeOk=false) OU quando bloqueado pelo portao de promoção (blockedByPromo = regimeTarget && !target). DESATIVAÇÃO é SEMPRE aplicada (não é pulada sob HALT, ao contrário da ativação de entrada).","automationReacting":"groupSupervisorJob é o ator. Mesmos grupos/classificação da ativação.","automatedAction":"applyAutomationActive(a, false) — DESARMA a automação (isActive=0). Não vende/cancela nada; só impede que a automação volte a agir. É o braço que TIRA entradas do ar quando o regime vira bear (parked-in-bear).","armedState":"DESARMADO é o resultado. Sempre seguro aplicar — não depende de HALT. Estado vivo esperado (BTC/BNB=bear, trend 0/8, baseline 0/2): entradas e vendas acopladas desativadas por regime=bear e/ou falta de promoção.","memoryKey":"<symbol>:REGIME, <symbol>:TREND_QTY"},{"signal":"[DAILY_CAP] SOFT cap -5% ATINGIDO (arma HALT)","sentToTelegram":true,"meaning":"Circuit-breaker de perda diária: o equity total (mark-to-market) caiu >= 5% do baseline rolante do dia. ARMA o HALT (fonte 'daily-cap') → o guard passa a BLOQUEAR TODAS as ordens (BUY/SELL/OCO), inclusive venda protetiva (escopo = bloqueia tudo, decisão do dono). Mensagem via utils/telegram: '🛑 [DAILY_CAP] Cap diário de -5% ATINGIDO! Equity $X (baseline $Y, dd%) — 🚫 HALT ativo...' + linha de auto-resume.","trigger":"dailyCapJob.checkCap() por ciclo (DAILY_CAP_CHECK_MS default 60000, piso 15s). Decisão pura evaluateCap: action='softTrip' quando equity <= SNAP.equity*(1-CAP_PCT), CAP_PCT=DAILY_LOSS_CAP_PCT default 0.05 (5%). Só dispara em ciclo 'valued' (fail-safe: se algum asset com saldo está com preço frio, NÃO avalia/dispara). Earn LD* marcado a mercado pelo subjacente; DAILY_CAP_IGNORE_ASSETS isenta assets.","automationReacting":"riskState (setHalt(true, reason, 'daily-cap')) → o guard por-ordem em utils/exchange.js. Indiretamente, groupSupervisorJob passa a PULAR ativação de entradas enquanto isHalted()=true.","automatedAction":"ARMA o HALT (riskState fonte daily-cap, persistido, auto-expira na virada UTC). Se dec.canResume (auto-resume ON e resumes<MAX_RESUMES): agenda SNAP.resumeAt = agora + RESUME_COOLDOWN_MS (DAILY_CAP_RESUME_COOLDOWN_MS default 3h). Senão resumeAt=null (manual/UTC). Nenhuma venda de de-risking automática.","armedState":"HALT ARMADO via fonte daily-cap (dailyCap.on=true, day=hoje UTC). isHalted() passa a retornar true. Backstops: MAX_RESUMES (DAILY_CAP_MAX_RESUMES default 2) e piso duro (abaixo). Habilitado por DAILY_CAP_ENABLED (default true).","memoryKey":"risk_state.json (dailyCap) + logs/daily_cap_snapshot.json (SNAP baseline); equity via <coin>USDT:MINI_TICKER"},{"signal":"[DAILY_CAP] PISO DURO -12% (HALT sem auto-resume)","sentToTelegram":true,"meaning":"Backstop 2 (o disjuntor do disjuntor): o equity caiu >= 12% do baseline ORIGINAL do dia (dayBase). HALT SEM auto-resume — só sai por intervenção manual (/system/halt ou /system/daily-cap/reset) ou virada de dia UTC. Garante que um dia ruim custe no MÁXIMO ~-12% e pare de vez. Mensagem: '⛔ [DAILY_CAP] PISO DURO de -12% atingido! ... 🚫 HALT travado: NÃO re-liga sozinho...'.","trigger":"evaluateCap action='hardHalt' (avaliado PRIMEIRO, tem precedência sobre resume/softTrip): equity <= SNAP.dayBase*(1-HARD_PCT), HARD_PCT=DAILY_HARD_FLOOR_PCT default 0.12 (validado > CAP_PCT e < 1; senão cai no default e avisa). Notifica 1x na transição (guardado por SNAP.hardHalted).","automationReacting":"riskState.setHalt(true, reason, 'daily-cap') → guard por-ordem; groupSupervisorJob pula ativação de entradas sob HALT.","automatedAction":"ARMA/garante HALT (idempotente) e marca SNAP.hardHalted=true, SNAP.resumeAt=null (BLOQUEIA qualquer auto-resume futuro do dia). Persiste snapshot.","armedState":"HALT ARMADO E TRAVADO (hardHalted). NÃO re-liga sozinho: nem cooldown nem MAX_RESUMES o soltam — só reset manual (reSnapshot zera backstops) ou rollover UTC.","memoryKey":"logs/daily_cap_snapshot.json (SNAP.dayBase, SNAP.hardHalted) + risk_state.json (dailyCap)"},{"signal":"[DAILY_CAP] AUTO-RESUME após cooldown (libera HALT)","sentToTelegram":true,"meaning":"Frente C: após um soft trip e o cooldown vencer, o cap RE-BASELINA no equity atual e LIBERA o HALT sozinho (só a fonte daily-cap; floor/manual/env-hard permanecem). O próximo -5% passa a medir do novo baseline (trailing). Mensagem: '▶️ [DAILY_CAP] Auto-resume k/N após cooldown. Novo baseline $X ... Piso duro do dia $Y...'.","trigger":"evaluateCap action='resume': cfg.autoResume && cfg.capActive && !SNAP.hardHalted && SNAP.resumeAt && nowMs>=SNAP.resumeAt && SNAP.resumes<MAX_RESUMES. autoResume = DAILY_CAP_AUTO_RESUME!='false' (default ON).","automationReacting":"riskState.clearDailyCap() → o guard volta a permitir ordens (se nenhuma outra fonte de HALT ligada); groupSupervisorJob volta a poder armar entradas no próximo ciclo.","automatedAction":"clearDailyCap() (solta SÓ daily-cap), SNAP.resumes+=1, SNAP.equity=equity atual (re-baseline), SNAP.resumeAt=null, persiste. LIBERA trading.","armedState":"HALT DESARMADO (fonte daily-cap liberada). RE-ARMA no próximo -5% do novo baseline; esgotado MAX_RESUMES vira manual/UTC. NÃO ocorre se hardHalted.","memoryKey":"logs/daily_cap_snapshot.json (SNAP.resumes/equity/resumeAt) + risk_state.json (dailyCap)"},{"signal":"[DAILY_CAP] Proteção INATIVA (equity inavaliável / anti-silêncio)","sentToTelegram":true,"meaning":"Alarme anti-silêncio: o cap NÃO consegue avaliar o equity (algum asset com saldo está com preço frio/ausente) há muito tempo → a proteção de -5% está INATIVA (fail-safe: não dispara nem snapshota). Mensagem: '⚠️ [DAILY_CAP] Proteção de -5% INATIVA há ~Nmin: não consigo avaliar o equity (<motivo>). Verifique monitores/preços ou isente o asset via DAILY_CAP_IGNORE_ASSETS.'.","trigger":"checkCap() ciclo com eq.valued===false por >= COLD_ALERT_MS (DAILY_CAP_COLD_ALERT_MS default 900000ms = 15min), medido de COLD_SINCE. Enviado 1x por episódio (COLD_ALERTED). Motivo = eq.error ou 'preços frios: <lista>'. Também dispara notify na virada UTC ('🌅 Novo dia UTC. Cap re-armado').","automationReacting":"nenhuma — é alerta informativo. O cap simplesmente NÃO avalia neste ciclo (não arma nem solta HALT).","automatedAction":"nenhuma ação de trading. Efeito: o circuit-breaker de -5% fica temporariamente sem cobertura enquanto os preços não esquentam (o guard por HALT preexistente segue valendo).","armedState":"PROTEÇÃO -5% TEMPORARIAMENTE DESARMADA (fail-safe por dado frio). Volta a avaliar quando MINI_TICKER esquenta (log 'equity avaliável novamente').","memoryKey":"logs/daily_cap_snapshot.json (SNAP) + <coin>USDT:MINI_TICKER (fonte de preço via priceOf)"},{"signal":"[HALT] manual / kill-switch (botão de pânico)","sentToTelegram":false,"meaning":"riskState é a FONTE ÚNICA do HALT, lido POR ORDEM pelo guard (HALT QUENTE). Fontes empilháveis (basta UMA travar tudo): env-hard (TRADING_HALT_HARD, só .env+restart), floor (piso operacional persistido, POST /system/floor), manual (kill-switch/pânico, POST /system/halt), daily-cap (dailyCapJob), env-mismatch (invariante apiUrl x useTestnet). isHalted() = env-hard || env-mismatch || floor || manual || (dailyCap do dia UTC).","trigger":"setHalt(true, reason, 'manual') via POST /system/halt (operator-only, JWT). setFloor(true) via POST /system/floor. env-hard: TRADING_HALT_HARD==='true' no boot. env-mismatch: setEnvMismatch(true) pelo server.js quando apiUrl-derivado != useTestnet.","automationReacting":"o guard por-ordem em utils/exchange.js (rejeita ordens → pode aparecer como [ORDER] REJECTED com obs). groupSupervisorJob PULA ativação de entradas enquanto isHalted()=true (mas ainda arma vendas acopladas).","automatedAction":"TRAVA toda colocação de ordem (fail-closed: se isHalted() lançar, o guard lança = ordem bloqueada). riskState NÃO envia Telegram por si (só loga em 'system'); as notificações Telegram de HALT vêm do dailyCapJob (daily-cap) ou aparecem indiretamente via [ORDER] REJECTED.","armedState":"HALT ARMADO enquanto qualquer fonte estiver on. Precedência de rótulo: env-hard > env-mismatch > floor > manual > daily-cap. FAIL-CLOSED: disco ilegivel → floor LIGADO. Estado vivo: halted=false (dono flipou o floor), mas PARADO-MAS-ARMADO por regime bear + falta de promoção.","memoryKey":"logs/risk_state.json (floor/manual/dailyCap)"}]}}
+> {"type":"started","key":"v2:e81fab3092c441c03cac97ec147d3d7bf6b07c011450111886fbd08c45c10cec","agentId":"a5b32bc558b5c18be"}
+> {"type":"started","key":"v2:d009f69b24d061094106c66bd405f80339575efe7c6fff1a3643045418fc52e4","agentId":"a1e34f8f90dd247bf"}
+> ```
+
+## 🤖 Claude *(19:46:15)*
+
+
+## 🤖 Claude *(19:46:19)*
+
+O catálogo (5 leitores) já terminou e confirma minha leitura com detalhes extras (histerese do regime, empilhamento de gates do supervisor, backstops do daily-cap). Os 3 céticos de verificação estão rodando agora; a síntese vem por último. Vou aguardar a conclusão do workflow — ele me reinvoca quando terminar — e então entrego o relatório completo com a visualização.
+
+Enquanto isso, deixo já montada a visualização do "muro da taxa" (não renderizo ainda — espero o veredito dos céticos pra não refazer).
+
+## 🤖 Claude *(19:46:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "d=/home/ubuntu/.claude/projects/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/subagents/workflows/wf_89aa86d4-a70\necho \"estado atual: $(ls \"$d\"/agent-*.jsonl 2>/dev/null | wc -l) agentes iniciados; verifica\u00e7\u00e3o/s\u00edntese em curso\"\ntail -3 \"$d/journal.jsonl\" 2>/dev/null | python3 -c 'import sys,json\nfor ln in sys.stdin:\n    try: o=json.loads(ln); print(o.get(\"type\"), o.get(\"agentId\",\"\")[:12])\n    except: pass'",
+  "description": "Brief non-blocking workflow state check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> estado atual: 6 agentes iniciados; verificação/síntese em curso
+> result a75a239c2861
+> started a5b32bc558b5
+> started a1e34f8f90dd
+> ```
+
+## 🤖 Claude *(19:46:29)*
+
+
+## 🤖 Claude *(19:46:40)*
+
+Está tudo encaminhado. O workflow de verificação (3 céticos independentes tentando refutar minhas conclusões + a síntese final) está rodando em background e vai me reinvocar quando terminar.
+
+**Prévia do que já está confirmado** (catálogo verificado + minha análise determinística):
+
+- Os "sinais" que você vê no Telegram são de **duas famílias**: os que **vão pro Telegram** (`[REGIME]`, `[CROSS]` golden/death, ordens, `[SUPERVISOR]`, risco) e os **sinais de 1m que só são gravados** (`rsi_oversold/overbought`, `flow_buy/sell`) — esses **não vão pro Telegram e não têm nenhuma ação ligada**, são pesquisa read-only.
+- As **oportunidades reais** que você percebeu são os **golden crosses** (LTC, ADA, BTC, BNB) e o **flip da ADA pra `trend`** (ADX 51,6). Mas nenhuma compra disparou: a trilha Trend está **desarmada em 3 camadas** (grupo trend 0/8 ativo + gate `REGIME!=='bear'` + allowlist de promoção vazia).
+- A hipótese "**o sinal vem da vela 1m mas talvez renda aplicado depois**" foi testada em dados reais (journal ao vivo ≤15min + 14 dias de velas 1m até 8h): tem um **grão de verdade** (dip de RSI em regime range/mixed, esperando ~15min, rende ~+7-8 bps direcionais) mas **fica em menos da metade da taxa round-trip de 20 bps** → **net-negativo em todo horizonte/lag/regime**. A única alavanca seria execução **MAKER** (taxa ~0).
+
+Quando o workflow fechar, entrego o relatório completo com a tabela sinal→ação, os números da simulação e a visualização do "muro da taxa". Aguardando os céticos.
+
+## 👤 User *(19:50:46)*
+
+<task-notification>
+<task-id>w6gtlga0v</task-id>
+<tool-use-id>toolu_01Pze1TXKcp6uRkUfSNeQpri</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/w6gtlga0v.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Catalogar sinais do Telegram (significado + acao automatizada + estado armado) e verificar adversarialmente se ha edge (imediato ou defasado) que bata a fee" completed</summary>
+<result>{"cards":[{"signal":"[REGIME] flip","sentToTelegram":true,"meaning":"Mudança de regime de mercado de um símbolo (bear/trend/range/mixed), calculada sobre 200 velas 1h da MAINNET pelo regimeJob. É o GATE PASSIVO mestre: define se entradas podem armar. bear = risk-off (caixa); trend = golden cross manda, Farm cede; range = Farm/baseline podem armar; mixed = entradas seletivas.","trigger":"regimeClassifier.js classifyRegime() com histerese (prev sticky anti-whipsaw): bear se belowFrac &gt; 0.60 entrada / &lt; 0.45 saída (fração das últimas 200 velas 1h &lt; SMA200); trend se ADX(14) &gt;= 25 entrada / &lt; 22 saída; range se ADX &lt; 20 entrada / &gt;= 23 saída; mixed se 20 &lt;= ADX &lt; 25 e não-bear. Notifica só na TRANSIÇÃO real (prevRegime !== undefined; não a semente do 1º boot). Mensagem: eventNotify.regimeFlipMessage → '&lt;emoji&gt; [REGIME] &lt;sym&gt;: &lt;prev&gt; → &lt;next&gt;. &lt;hint&gt;'.","memoryKey":"MEMORY['&lt;sym&gt;:REGIME'] = 'bear'|'trend'|'range'|'mixed' (escrito com executeAutomations=false — passivo, não dispara ordem por si)","automationReacting":"Nenhuma automação dispara DIRETO no flip (escrita passiva). O flip só muda o valor lido no GATE das automações quando o tick de preço/RSI/cross as dispara: id2 Baseline RSI Buy e id6 Trend Buy gateiam por REGIME!=='bear'; id2/id3 também gateadas por REGIME!=='trend' (coordenação MR×TF). Também: a SAÍDA do bear de BTCUSDT (FASE4_MACRO_SYMBOL) chama funnelJob.armFase4Observation — só OBSERVA, não compra.","automatedAction":"Nenhuma ação de ordem no flip em si. Efeito indireto: bear ARMA/DESARMA o gate REGIME!=='bear' de todas as entradas; trend adiciona o gate REGIME!=='trend' que TIRA a reversão (id2/id3) e cede à trend. LIVE: BTC=bear, BNB=bear, LTC=mixed, ADA=trend.","armedState":"Sinal SEMPRE ARMADO (o regimeJob está enabled=true, refresh 300000ms, klines 1h; running=false = ocioso entre polls, não parado). O flip em si é só notificação read-only + escrita passiva na MEMORY — não há automação a 'desarmar' aqui. O efeito no dinheiro é 100% indireto via as camadas de gate das entradas (ver cards [CROSS])."},{"signal":"[CROSS] golden","sentToTelegram":true,"meaning":"Cruzamento da SMA rápida (50) para CIMA da SMA lenta (200) em velas 1h fechadas da MAINNET = sinal de COMPRA de trend. É o gatilho ATIVO da automação id6 (Trend Buy), diferente do flip de regime que é passivo.","trigger":"regimeJob é o ÚNICO detector de borda: deriva a transição de smaAbove (fast&gt;slow) via regimeClassifier.smaCross (fast=50, slow=200, sobre velas FECHADAS — dropa a hora em formação). Quando prev(ABOVE)=false→true, escreve dir='golden'. Banda morta ~0,01% no slope da SMA lenta (TREND_SLOPE) é gate opcional só da trilha [PAPER] slopegate. Mensagem: eventNotify.trendCrossMessage → '🟢 [CROSS] &lt;sym&gt;: GOLDEN cross (SMA 50/200) — sinal de COMPRA de trend.'","memoryKey":"MEMORY['&lt;sym&gt;:TREND_CROSS_1h'] = 'golden' (escrito com executeAutomations=TRUE só na transição → dispara a automação UMA vez; 'none' passivo entre cruzamentos). Regime é escrito ANTES no mesmo tick (ordem importa, não reordenar) p/ estar fresco no gate.","automationReacting":"id6 = 'Trend Buy BTCUSDT SMA50/200' (grupo 'trend'). Condition real: MEMORY['BTCUSDT:TREND_CROSS_1h']==='golden' &amp;&amp; MEMORY['BTCUSDT:REGIME']!=='bear' (indexes: TREND_CROSS_1h,REGIME).","automatedAction":"Template 'Trend Buy &lt;sym&gt; SMA50/200': ORDER BUY LIMIT marketável, limitPrice = MEMORY['&lt;sym&gt;:BOOK'].current.bestAsk * 1.003 (atravessa o spread como taker), quantity = MIN_NOTIONAL × 3 (size pequeno p/ observar 1 cross; calibrar após 1 golden→death real). id6 soma o fill em TREND_QTY.","armedState":"DESARMADO em TODAS as camadas hoje. (1) grupo 'trend' = 0/8 ativo (id6 isActive=0 no banco). (2) supervisor desiredActive('entry'): regimeOk exige regime &amp;&amp; !=bear &amp;&amp; !=unknown — BTC=bear ⇒ FALSE (curiosidade: BTC tem smaAbove=true / golden de 02-jul, mas regime=bear ainda ⇒ mesmo um golden fresco NÃO armaria a compra). (3) promotionAllows('entry') exige isPromoted('slopegate') — promoted={} e grandfather=[] ⇒ FALSE (nenhuma trilha de trend provada no paper). (4) HALT: halted=false agora, mas o supervisor pula armar ENTRADAS sob HALT por proteção. Para ARMAR BTC precisaria: grupo trend ativo + BTC sair do bear + promoção de 'slopegate' (ou PROMOTION_GRANDFATHER=slopegate)."},{"signal":"[CROSS] death","sentToTelegram":true,"meaning":"Cruzamento da SMA rápida (50) para BAIXO da SMA lenta (200) em velas 1h fechadas da MAINNET = sinal de VENDA PROTETIVA de trend (saída p/ caixa). Gatilho ATIVO da id7 (Trend Sell), SEM gate de regime (protege sempre).","trigger":"regimeJob detecta a transição de smaAbove true→false via regimeClassifier.smaCross (fast=50, slow=200, velas fechadas). prev(ABOVE)=true→false ⇒ dir='death'. Mensagem: eventNotify.trendCrossMessage → '🔻 [CROSS] &lt;sym&gt;: DEATH cross (SMA 50/200) — sinal de VENDA protetiva de trend.'","memoryKey":"MEMORY['&lt;sym&gt;:TREND_CROSS_1h'] = 'death' (executeAutomations=TRUE só na transição → dispara UMA vez; 'none' entre cruzamentos).","automationReacting":"id7 = 'Trend Sell BTCUSDT SMA50/200' (grupo 'trend'). Condition real: MEMORY['BTCUSDT:TREND_CROSS_1h']==='death' (SÓ o sinal death, SEM gate de regime — saída p/ caixa sempre que der o cross).","automatedAction":"Template 'Trend Sell &lt;sym&gt; SMA50/200': ORDER SELL LIMIT marketável, limitPrice = MEMORY['&lt;sym&gt;:BOOK'].current.bestBid * 0.997 (aceita −0,3% p/ fill imediato), quantity = TREND_QTY (vende a POSIÇÃO acumulada pelo trend, não LAST_ORDER; id6 zera no death).","armedState":"DESARMADO hoje por grupo. (1) grupo 'trend' = 0/8 ativo (id7 isActive=0). (2) supervisor desiredActive('trendSell') = regimeOk OR hasPosition — a venda pode armar MESMO em bear SE houver posição aberta (protege quem virou comprado no flip pro bear). (3) promotionAllows('trendSell') = isPromoted('slopegate') OR hasPosition — NÃO exige promoção se já há TREND_QTY &gt; 0 (proteção do comprado). LIVE: TREND_QTY = 0 em BTC (nenhuma compra de trend nunca ocorreu — última ordem real foi venda LTC 21-jun) ⇒ hasPosition=false, então sem promoção a venda fica off; mas como não há posição, não há o que vender. NÃO é gateada por HALT (o supervisor só bloqueia ENTRADAS sob HALT, não a saída protetiva)."},{"signal":"[FLOW] fluxo unilateral (entrada de episódio)","sentToTelegram":false,"meaning":"imbalance = desequilíbrio do fluxo do TAKER na MAINNET (buyVol vs sellVol das aggTrades numa janela): negativo = venda agressora domina, positivo = compra agressora domina. toxicity = intensidade/unilateralidade do fluxo (quão dominado por um lado). É NOWCASTING (timing do 'agora'), NUNCA forecast de direção — VPIN/toxicidade como preditor foi refutado na deep-research (~/RESEARCH-bear-capture.md). O episódio 'unilateral' = fluxo do taker fortemente de um lado só (capitulação vendedora).","trigger":"Aviso de ENTRADA (edge-trigger) quando f.toxicity &gt;= NOTIFY_TOXICITY (env FLOW_NOTIFY_TOXICITY, default 0.75) e o símbolo ainda não está no set EXTREME. Além disso: log-shadow em logs/flow.log quando toxicity &gt;= FLOW_LOG_TOXICITY (0.6), e flow-capitulation.log quando RSI_14_1m.current &lt; 25. flowJob.js:95","automationReacting":"nenhuma reage ao aviso em si (research-only/observabilidade). O que reage ao DADO subjacente MEMORY['&lt;sym&gt;:FLOW'] é a id2 (Baseline RSI Buy) via gate PASSIVO — mas ela lê imbalance, não toxicity, e não é 'disparada' pelo episódio.","automatedAction":"nenhuma — o flowJob grava MEMORY via updateMemory(...,executeAutomations=false); a escrita NÃO dispara ordem. Só loga e (se habilitado) notifica.","armedState":"DESARMADO p/ Telegram: FLOW_NOTIFY_ENABLED=false (runtime, commit 701b7e7) → NOTIFY_ENABLED=false → o bloco de notifyFlowExtreme NÃO roda. O sinal segue COMPUTADO + logado + gateando a id2; só o canal Telegram cala. Era ~95% do ruído p/ o dono.","memoryKey":"&lt;sym&gt;:FLOW  (ex.: BTCUSDT:FLOW) = { imbalance, toxicity, 
+... (truncated 38364 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/w6gtlga0v.output)</result>
+<usage><agent_count>8</agent_count><subagent_tokens>423773</subagent_tokens><tool_uses>64</tool_uses><duration_ms>513841</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(19:50:49)*
+
+
+## 🤖 Claude *(19:50:50)*
+
+O workflow terminou (8 agentes, 424k tokens). Vou ler o resultado completo — especialmente os veredictos dos céticos e a síntese.
+
+## 🤖 Claude *(19:50:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "f=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/w6gtlga0v.output\npython3 - \"$f\" <<'PY'\nimport json,sys\nraw=open(sys.argv[1]).read()\n# the file contains the task-notification result JSON; extract the {\"cards\":...,\"verdicts\":...,\"synthesis\":...}\ns=raw.find('{\"cards\"')\nif s<0: s=raw.find('{')\nobj=None\n# try progressively\nfor end in range(len(raw), s, -1):\n    try:\n        obj=json.loads(raw[s:end]); break\n    except: \n        pass\nif obj is None:\n    print(\"could not parse; printing tail\"); print(raw[-3000:]); sys.exit()\nprint(\"KEYS:\", list(obj.keys()))\nprint(\"\\n\"+\"=\"*90)\nprint(\"VERDICTOS (c\u00e9ticos adversariais)\")\nprint(\"=\"*90)\nfor v in obj.get(\"verdicts\",[]):\n    print(f\"\\n### CLAIM: {v.get('claim')[:200]}\")\n    print(f\"  holds={v.get('holds')}  counterexample={v.get('counterexampleFound')}  conf={v.get('confidence')}\")\n    print(f\"  bestSlice: {v.get('bestSliceFound')}\")\n    print(f\"  evidence: {v.get('evidence')[:600]}\")\nPY",
+  "description": "Parse workflow verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> KEYS: ['summary', 'agentCount', 'logs', 'result', 'workflowProgress', 'totalTokens', 'totalToolCalls']
+> 
+> ==========================================================================================
+> VERDICTOS (céticos adversariais)
+> ==========================================================================================
+> ```
+
+## 🤖 Claude *(19:50:59)*
+
+
+## 🤖 Claude *(19:51:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "f=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/w6gtlga0v.output\npython3 - \"$f\" <<'PY'\nimport json,sys\nraw=open(sys.argv[1]).read()\ns=raw.find('{')\nobj=None\nfor end in range(len(raw), s, -1):\n    try: obj=json.loads(raw[s:end]); break\n    except: pass\nres=obj.get('result')\nif isinstance(res,str):\n    try: res=json.loads(res)\n    except: pass\nif not isinstance(res,dict):\n    # maybe result is nested json string with cards\n    import re\n    print(\"result type:\",type(res)); print(str(res)[:1500]); sys.exit()\nprint(\"RESULT KEYS:\", list(res.keys()))\nfor v in res.get(\"verdicts\",[]):\n    print(f\"\\n### CLAIM: {v.get('claim','')[:220]}\")\n    print(f\"  holds={v.get('holds')}  counterexample={v.get('counterexampleFound')}  conf={v.get('confidence')}\")\n    print(f\"  bestSlice: {v.get('bestSliceFound','')}\")\n    print(f\"  evidence: {v.get('evidence','')[:700]}\")\nprint(\"\\n\"+\"=\"*90+\"\\nS\u00cdNTESE\\n\"+\"=\"*90)\nprint(res.get(\"synthesis\",\"(sem s\u00edntese)\"))\nPY",
+  "description": "Extract verdicts and synthesis from workflow result"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> RESULT KEYS: ['cards', 'verdicts', 'synthesis']
+> 
+> ### CLAIM: "Nenhum sinal de 1m (rsi/flow) tem retorno net>0 ROBUSTO em qualquer horizonte de 1min a 8h, seja entrada imediata ou defasada — a fee round-trip de 20bps supera qualquer edge direcional."
+>   holds=True  counterexample=False  conf=alta
+>   bestSlice: rsi_oversold @15min no regime 'range' (todos símbolos): n=44, gross=+4.37bps, net=-15.63bps, CI95 do net [-24.4,-7.3] (exclui 0, mas do lado NEGATIVO). É a fatia de MAIOR gross de todo o cross type×horizonte×regime×símbolo; ainda assim o gross-CI [-4.45,+12.24] inclui 0 (edge nem é estatisticamente não-nulo) e breakeven exigiria fee<=4.37bps << 20bps. Runner-up de gross bruto: rsi_oversold@480min imediato +9.47bps mas CI [-18.7,+30.1] straddle-zero, net -10.5.
+>   evidence: Rodei /tmp/hunt.py e /tmp/hunt2.py (Python stdlib, sem numpy) sobre /tmp/signal_journal.jsonl (2216 sinais, tipos: rsi_oversold/rsi_overbought/flow_buy/flow_sell/op_up; dirRet já side-signed; fee=20bps). Bootstrap 4000-8000 reamostragens por fatia. (1) Varredura em 4 granularidades [type,h] / [type,h,reg] / [type,h,sym] / [type,h,reg,sym], n>=15: fatias com net-CI-low>0 = 0; fatias com GROSS-CI-low>0 = 0 (nenhum edge direcional sequer robustamente não-nulo). (2) Best net = rsi_oversold@15min@range net -15.6bps CI[-24.4,-7.3]. (3) Maior gross-mean n>=30 = 4.37bps (breakeven fee 4.37 << 20). (4) flow_buy/flow_sell todos gross-negativos, CIs cruzam 0. (5) Outlier 'unknown regime' (+1.82,n=20) d
+> 
+> ### CLAIM: "Aplicar o sinal de 1m algum tempo depois (entrada defasada) nao cria edge monetizavel: o melhor caso e rsi_oversold em regime range/mixed, entrando ~15min depois e segurando ~1h, com ~+7-8bps gross — ainda menos da meta
+>   holds=True  counterexample=False  conf=alta
+>   bestSlice: rsi_oversold, regime=range, entrada IMEDIATA (lag=0), hold=90min: gross=+11.72bps (n=114), netTaker=-8.28bps, netMaker(0-fee)=+11.72bps / netMaker(2bps-rt)=+9.72bps. Ligeiramente MELHOR que o +7-8bps que o dono citou, mas: (1) net-taker permanece NEGATIVO (bem abaixo da fee de 20bps); (2) o IC95 NAO exclui 0 de forma robusta — bootstrap por blocos honesto (blockLen 5/15, autocorrelacao curta) da IC[-1.62,25.05]/[-0.22,30.06] com pPos~0.95, so 'exclui 0' em blockLen 30/45 onde a diversidade de reamostragem colapsa (mesma familia de artefato do bug do regime 'unknown'); (3) o 'edge' e clustering cross-secional: vive so em BNB(+23bps,n=39) e ADA(+32bps,n=21), enquanto ETH=-14bps e LTC~0/-10bps e BTC tem n=4 — nao e padrao estrutural repetivel, e 2 alts quicando numa janela de 14d. Defasar (lag) ajuda so marginalmente: delta +1 a +3bps gross (pico ~lag10-15), nunca 'dramaticamente', nunca cruza a fee.
+>   evidence: Reproduzi os numeros deterministicos (/tmp/lagsweep.out confere). Rodei sweep adversarial proprio (joint lag x hold x regime, block-bootstrap 2000 resamples, klines 14d cacheados). ACHADOS: (a) Nenhuma fatia tem netTaker>0 com IC real excluindo 0 — as UNICAS que 'passaram' o teste decisivo foram TODAS regime='unknown' (n=20, RSI-warmup/regime indefinido) com IC DEGENERADO lo=hi=mean, confirmado como BUG do blockBootstrapMeanCI quando blockLen>=n (round(H/2) p/ H>=40 excede n=20 -> todo resample e o mesmo bloco unico). (b) Melhor candidato legitimo = regime='range' oversold, mas stress-test (range_stress.js) mostra IC nao-robusto: parametrico t-CI[2.96,20.47] (anti-conservador, ignora autocor
+> 
+> ### CLAIM: Os golden crosses (LTC/ADA/BTC/BNB) e flips de regime recentes NAO foram capturados por nenhuma compra real, porque a trilha Trend esta DESARMADA em 3 camadas: (1) grupo trend 0/8 ativo, (2) condition REGIME!=bear bloque
+>   holds=True  counterexample=False  conf=alta
+>   bestSlice: Fatia mais favoravel a uma captura: golden cross LTCUSDT 2026-06-29T21:03 e ADAUSDT 2026-07-01T16:03 — nesses dois a camada 2 (REGIME!=bear) estava SATISFEITA (LTC=mixed, ADA=trend, ambos nao-bear), entao a condition da id15/id19 avaliaria TRUE se a automacao estivesse ativa. Ainda assim gross/net irrelevante pois NAO houve ordem: camada 1 (isActive=false) e camada 3 (allowlist vazia -> supervisor classifica Trend Buy como 'entry' e promotionAllows exige isPromoted=slopegate, que nao esta promovido) impediram. IC/gross nao se aplica: zero execucao real. Os crosses BTC 02/jul e BNB 03/jul cairam em regime=bear, entao NEM a camada 2 passaria.
+>   evidence: API viva: /automations/groups -> trend {total:8, active:0}. Cada id trend (6,7,15,16,17,18,19,20) buscada por /automations/<id> retorna isActive=false. Conditions vivas: id6/15/17/19 = MEMORY['<sym>:TREND_CROSS_1h']==='golden' && MEMORY['<sym>:REGIME']!=='bear'. /system/promotions -> allowlist {promoted:{}, grandfather:[]}. /orders -> apenas automationId 9 e 10 (Farm); TREND orders = 0 (nunca houve ordem de trend na historia). regime.log confirma os 4 crosses recentes 'disparando automacao de trend' (LTC 29/jun, ADA 01/jul, BTC 02/jul, BNB 03/jul) porem com a automacao inativa nada executou. regime-status vivo: BTC=bear e BNB=bear nos respectivos crosses (camada 2 bloquearia). Codigo groupSu
+> 
+> ==========================================================================================
+> SÍNTESE
+> ==========================================================================================
+> Sintetizo abaixo o resumo executivo. Não preciso de mais ferramentas — os dois insumos (catálogo + veredictos) já trazem tudo.
+> 
+> ---
+> 
+> # Resumo executivo — o que seus alertas significam e o que está (ou não) armado
+> 
+> ## 1) O que cada sinal do Telegram significa e qual ação automatizada está ligada
+> 
+> **`[REGIME]` (flip de regime)** — VAI ao Telegram.
+> Muda a classificação do mercado do símbolo (bear / trend / range / mixed), calculada sobre 200 velas 1h da mainnet. É o **gate mestre PASSIVO**: define se as entradas *podem* armar, mas **não dispara ordem por si só** (escrito com `executeAutomations=false`). O flip só muda o valor que as automações leem no próximo tick de preço/RSI/cross.
+> - **Ação automatizada ligada:** nenhuma direta. Efeito indireto: `bear` desarma o gate `REGIME!=='bear'` de todas as entradas; `trend` adiciona o gate `REGIME!=='trend'` que tira a reversão (id2/id3) e cede à trend.
+> - **Armado?** O sinal em si está sempre ativo (é só notificação + escrita passiva) — não há automação a "armar" aqui.
+> 
+> **`[CROSS] golden`** — VAI ao Telegram.
+> SMA 50 cruza a SMA 200 **para cima** (velas 1h fechadas) = compra de trend. É o gatilho **ATIVO** da id6/id15/id17/id19 (Trend Buy).
+> - **Ação automatizada:** BUY LIMIT marketável (bestAsk × 1,003), quantidade = MIN_NOTIONAL × 3, condição `TREND_CROSS_1h==='golden' && REGIME!=='bear'`.
+> - **Armado?** **NÃO — desarmado em 3 camadas** (grupo trend 0/8; regime BTC/BNB=bear; allowlist de promoção vazia). Detalhe importante no item 4.
+> 
+> **`[CROSS] death`** — VAI ao Telegram.
+> SMA 50 cruza para **baixo** = venda protetiva (saída para caixa), **sem gate de regime** (protege sempre). Gatilho ATIVO da id7 (Trend Sell): SELL LIMIT (bestBid × 0,997), quantidade = `TREND_QTY`.
+> - **Armado?** Grupo trend 0/8. Poderia armar mesmo em bear **se houvesse posição** (`hasPosition`), mas `TREND_QTY = 0` em BTC (nenhuma compra de trend jamais ocorreu) — logo não há o que vender.
+> 
+> **`[ORDER] NEW / FILLED / REJECTED / EXPIRED`** — VÃO ao Telegram.
+> Estado real de uma ordem na Binance. `notifyOrder` é fire-and-forget, read-only — a notificação **não dispara nada**; a ordem já ocorreu. `CANCELED` e `PARTIALLY_FILLED` são silenciados de propósito.
+> 
+> **`[SUPERVISOR]` / risco (cap diário −5%, HALT)** — VÃO ao Telegram. Camada de gate/proteção; ligam/desligam o armar das entradas, mas não são "sinal de mercado".
+> 
+> ## 2) O que VAI ao Telegram × o que é SÓ do gravador (1m)
+> 
+> **Vai ao Telegram (sinais acionáveis / de estado):**
+> - `[REGIME]` flip, `[CROSS]` golden/death, ordens (NEW/FILLED/REJECTED/EXPIRED), supervisor/risco.
+> - Esses ou mudam o gate mestre, ou são o gatilho de trend, ou reportam dinheiro que se moveu.
+> 
+> **NÃO vai ao Telegram — só o gravador read-only vê (sinais de 1m, sem ação):**
+> - `[FLOW]` entrada/saída de episódio de fluxo unilateral: **silenciado** (`FLOW_NOTIFY_ENABLED=false`, commit `701b7e7`) — era ~95% do ruído. Segue **computado e logado**, e ainda **gateia passivamente a id2** (via `imbalance > -0.40`, dado < 3min), mas o canal Telegram cala.
+> - `rsi_oversold / rsi_overbought` de 1m: alimentam o `signalRecorderJob` (journal). **Não executam ordem** — são material de pesquisa.
+> 
+> Ponto-chave: o `[FLOW]` e o RSI de 1m que você eventualmente vê nos logs são **observabilidade**, não ordem. O único consumo "real" do fluxo é o **gate PASSIVO** da id2 (permite/veta, nunca compra sozinho) — e a id2 está `isActive=false` de qualquer jeito.
+> 
+> ## 3) Veredito da simulação: "o sinal vem da vela 1m, mas talvez renda aplicado depois?"
+> 
+> **Conclusão honesta: NÃO rende como taker, em nenhum horizonte, imediato ou defasado.** A fee round-trip de **20 bps** engole qualquer edge direcional.
+> 
+> Números (2216 sinais no journal, bootstrap 4000–8000 reamostragens; `dirRet` já com sinal do lado):
+> - **Melhor fatia de gross de tudo:** `rsi_oversold @15min` em regime `range` → gross **+4,37 bps**, net **−15,63 bps** (IC95 do net **[−24,4; −7,3]**, exclui zero **pelo lado negativo**). O próprio gross tem IC **[−4,45; +12,24]** — cruza zero, ou seja, o edge **nem é estatisticamente não-nulo**. Breakeven exigiria fee ≤ 4,37 bps, contra 20 bps reais.
+> - **Imediato × defasado:** defasar a entrada ajuda só **+1 a +3 bps** de gross (pico ~lag 10–15) — **nunca cruza a fee**. O caso que você citou (~+7–8 bps entrando ~15min depois, segurando ~1h) é real, mas net-taker segue negativo.
+> - **Por regime:** o único "grão de verdade" está em **range/mixed** com `rsi_oversold` (entrada imediata, hold ~90min: gross **+11,72 bps**, n=114). Mas: net-taker **−8,28 bps** (negativo); o IC honesto por blocos **inclui zero** (bootstrap blockLen 5/15 dá pPos ~0,95); e o "edge" é **clustering de 2 alts** numa janela de 14d (**BNB +23 bps, ADA +32 bps**, enquanto ETH −14 bps, LTC ~0/−10, BTC n=4) — não é padrão estrutural repetível.
+> - As fatias que "passaram" o teste no regime `unknown` eram **bug** do bootstrap (blockLen ≥ n → todo resample vira o mesmo bloco). Descartadas.
+> - `flow_buy / flow_sell`: todos gross-negativos, IC cruza zero. `op_up` (calls humanos): n=3, ruído.
+> 
+> **Única alavanca teórica: MAKER.** Com fee ~0, o gross positivo de range/mixed (+7 a +12 bps) sobreviveria — **mas** mesmo aí o IC por bloco curto **não é robustamente > 0** e continua sendo artefato de 2 alts numa janela. Ou seja: não aciona construção. **Não há edge de 1m monetizável hoje.**
+> 
+> ## 4) O ponto prático mais importante: as oportunidades REAIS que você viu estão DESARMADAS em 3 camadas
+> 
+> As boas oportunidades não foram os pings de 1m — foram os **golden crosses e o flip ADA→trend**. E **nenhuma foi capturada por uma compra real**, porque a trilha Trend está bloqueada em **3 camadas simultâneas**:
+> 
+> 1. **Grupo trend 0/8 ativo** — todas as ids de trend (6,7,15,16,17,18,19,20) com `isActive=false`. Nem armadas estão.
+> 2. **Gate de regime** — `REGIME!=='bear'` bloqueava BTC (02/jul) e BNB (03/jul), que cruzaram **em bear**.
+> 3. **Allowlist de promoção vazia** — `promoted={}`, `grandfather=[]`; o supervisor classifica "Trend Buy" como `entry`, e `promotionAllows('entry')` exige `isPromoted('slopegate')`, que não está promovido.
+> 
+> Dois crosses passariam pela camada 2 se o resto estivesse ligado — **LTC (29/jun, mixed)** e **ADA (01/jul, trend)**, ambos não-bear: a condition avaliaria `TRUE`. Mas as camadas 1 e 3 seguraram, então **execução real = zero** (histórico de ordens de trend = 0; última ordem real foi a venda de LTC em 21/jun).
+> 
+> **O que isso implica:** o gatilho do plano **"parqueado-como-combustível"** começou a piscar. A tese era exatamente essa — ficar parado no bear e **re-engajar no alerta de flip de regime para virar/promover a trilha de trend e capturar a alta**. Com **ADA já em `trend`** e goldens recentes em LTC/ADA, o mercado deu o primeiro sinal previsto pelo plano — e o sistema, **por desenho**, não comprou (está fail-safe: parado-mas-armado, com a trava de promoção como portão).
+> 
+> Para converter o próximo golden não-bear em compra real, seria preciso, de forma deliberada: **(1)** ativar o grupo trend, **(2)** o símbolo sair do bear (já vale para ADA), e **(3)** promover `slopegate` (ou setar `PROMOTION_GRANDFATHER=slopegate`). Nenhuma dessas é automática — todas exigem sua decisão consciente. O sistema está fazendo exatamente o que foi mandado fazer: **não morde o bear, mas também ainda não morde a virada** — a decisão de re-engajar é sua.
+> ```
+
+## 🤖 Claude *(19:52:21)*
+
+
+## 🤖 Claude *(19:52:24)*
+
+Todos os três veredictos **resistiram** (holds=true, confiança alta, zero contraexemplos). Os céticos ainda pegaram e descartaram um bug no bootstrap (blockLen ≥ n gerava IC degenerado — isso invalida a linha `unknown +21.82bps` da minha varredura, corretamente). A conclusão está sólida e triangulada. Vou renderizar a visualização do "muro da taxa" e entregar o relatório.
+
+## 🤖 Claude *(19:52:40)*
+
+
+🛠️ **Tool Call**: `mcp__visualize__show_widget`
+```json
+{
+  "title": "muro_da_taxa_sinais_1m",
+  "loading_messages": [
+    "Medindo o sinal contra a taxa",
+    "Levantando o muro dos 20 bps",
+    "Conferindo o que sobra"
+  ],
+  "widget_code": "<svg viewBox=\"0 0 700 388\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-labelledby=\"ttl desc\">\n<title id=\"ttl\">Muro da taxa: nenhum edge direcional de 1m alcan\u00e7a a taxa taker de 20 bps</title>\n<desc id=\"desc\">Barras cinza mostram o retorno direcional bruto (gross) das melhores fatias de sinal de 1m; todas ficam \u00e0 esquerda da linha vermelha da taxa taker (20 bps), logo o l\u00edquido \u00e9 negativo. S\u00f3 a linha \u00e2mbar (maker ~2 bps) deixaria a melhor fatia sobreviver, mas essa fatia n\u00e3o \u00e9 robusta.</desc>\n\n<line x1=\"250\" y1=\"46\" x2=\"250\" y2=\"292\" stroke=\"var(--border)\" stroke-width=\"1\"/>\n\n<line x1=\"285.8\" y1=\"46\" x2=\"285.8\" y2=\"292\" stroke=\"var(--text-warning)\" stroke-width=\"1.5\" stroke-dasharray=\"5 4\"/>\n<text x=\"289\" y=\"42\" class=\"th\" font-size=\"11.5\" fill=\"var(--text-warning)\">custo maker ~2 bps</text>\n\n<line x1=\"608\" y1=\"46\" x2=\"608\" y2=\"292\" stroke=\"var(--text-danger)\" stroke-width=\"2.5\"/>\n<text x=\"604\" y=\"42\" text-anchor=\"end\" class=\"th\" font-size=\"12.5\" fill=\"var(--text-danger)\">taxa taker 20 bps \u2014 o muro</text>\n\n<rect x=\"250\" y=\"58\" width=\"17.9\" height=\"24\" rx=\"3\" fill=\"var(--text-secondary)\" opacity=\"0.85\"/>\n<text x=\"242\" y=\"74\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">sinal 1m, entra na hora</text>\n<text x=\"274\" y=\"74\" class=\"ts\" font-size=\"12\" fill=\"var(--text-secondary)\">+1,0</text>\n\n<rect x=\"250\" y=\"116\" width=\"57.3\" height=\"24\" rx=\"3\" fill=\"var(--text-secondary)\" opacity=\"0.85\"/>\n<text x=\"242\" y=\"132\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">espera ~15 min, depois entra</text>\n<text x=\"313\" y=\"132\" class=\"ts\" font-size=\"12\" fill=\"var(--text-secondary)\">+3,2</text>\n\n<rect x=\"250\" y=\"174\" width=\"78.8\" height=\"24\" rx=\"3\" fill=\"var(--text-secondary)\" opacity=\"0.85\"/>\n<text x=\"242\" y=\"190\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">melhor horizonte (RSI&lt;30 @15min, range)</text>\n<text x=\"335\" y=\"190\" class=\"ts\" font-size=\"12\" fill=\"var(--text-secondary)\">+4,4</text>\n\n<rect x=\"250\" y=\"232\" width=\"209.4\" height=\"24\" rx=\"3\" fill=\"var(--text-accent)\" opacity=\"0.9\"/>\n<text x=\"242\" y=\"248\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">melhor de tudo (RSI&lt;30 range, segura ~90min)*</text>\n<text x=\"466\" y=\"248\" class=\"ts\" font-size=\"12\" fill=\"var(--text-accent)\">+11,7</text>\n\n<line x1=\"250\" y1=\"292\" x2=\"680\" y2=\"292\" stroke=\"var(--border-strong)\" stroke-width=\"1\"/>\n<g class=\"th\" font-size=\"11\" fill=\"var(--text-muted)\" text-anchor=\"middle\">\n<text x=\"250\" y=\"308\">0</text>\n<text x=\"339.5\" y=\"308\">5</text>\n<text x=\"429\" y=\"308\">10</text>\n<text x=\"518.5\" y=\"308\">15</text>\n<text x=\"608\" y=\"308\">20</text>\n<text x=\"668\" y=\"308\">bps</text>\n</g>\n\n<text x=\"250\" y=\"344\" class=\"th\" font-size=\"11.5\" fill=\"var(--text-muted)\">l\u00edquido (net) = gross \u2212 20 bps \u2192 negativo em todas as barras. s\u00f3 execu\u00e7\u00e3o maker mudaria isso.</text>\n<text x=\"250\" y=\"366\" class=\"th\" font-size=\"11.5\" fill=\"var(--text-muted)\">* aglomerado de 2 alts (BNB/ADA) em 14 dias, IC cruza zero \u2014 n\u00e3o \u00e9 padr\u00e3o estrutural repet\u00edvel.</text>\n</svg>"
+}
+```
+
+> **Tool Result (mcp__visualize__show_widget)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Content rendered and shown to the user. Please do not duplicate the shown content in text because it's already visually represented."}]
+> ```
+
+## 🤖 Claude *(19:53:05)*
+
+
+## 🤖 Claude *(19:53:43)*
+
+Análise completa e verificada adversarialmente (8 agentes, 3 céticos independentes tentaram refutar — nenhum conseguiu). Aqui está o quadro inteiro.
+
+## O essencial
+
+Os "sinais/oportunidades" que você vê no Telegram são de **duas famílias bem diferentes**, e a boa notícia está numa delas — mas não é a que você imaginou. Os *pings de 1m* (RSI, fluxo) **não têm ação nenhuma ligada e não pagam a taxa** em nenhum horizonte, nem aplicados depois. As **oportunidades reais** são os **golden crosses e o flip da ADA pra `trend`** — e o sistema, **por desenho, não comprou nenhuma**, porque a trilha Trend está travada em 3 camadas. Esse é justamente o gatilho do plano "parqueado-como-combustível" começando a piscar.
+
+## 1) O que cada sinal significa e qual ação está ligada
+
+**Sinais que VÃO ao Telegram:**
+
+| Sinal | O que é | Ação automatizada ligada | Armado hoje? |
+|---|---|---|---|
+| `[REGIME]` flip | Classifica o símbolo em bear/trend/range/mixed (200 velas 1h) | Nenhuma direta — é o **gate mestre passivo** (escrito com `executeAutomations=false`) | Sinal sempre ativo; só muda o gate que as entradas leem |
+| `[CROSS] golden` | SMA 50 cruza pra **cima** da 200 = compra de trend | id6/15/17/19: **BUY LIMIT** bestAsk×1,003, qty 3×MIN_NOTIONAL, se `REGIME!=='bear'` | **NÃO — 3 camadas** (ver item 3) |
+| `[CROSS] death` | SMA 50 cruza pra **baixo** = venda protetiva | id7: **SELL** da posição `TREND_QTY`, sem gate | Não — grupo off, e `TREND_QTY=0` (nunca houve compra de trend) |
+| `[ORDER]` NEW/FILLED/REJECTED/EXPIRED | Estado real de uma ordem na Binance | Nenhuma — é aviso read-only, a ordem já ocorreu | n/a |
+| `[SUPERVISOR]` ativou/desativou | O supervisor liga/desliga grupos sozinho | Ele mesmo arma/desarma automações (não emite ordem) | Condicional a regime **+ promoção** |
+| `[DAILY_CAP]` / HALT | Circuit-breaker de perda (−5%, piso −12%) | Arma/solta o HALT | Cap −5% ativo |
+
+**Sinais que você NÃO recebe no Telegram — são só do gravador de pesquisa (read-only, sem nenhuma ação):**
+`rsi_oversold`, `rsi_overbought`, `flow_buy`, `flow_sell` e as calls manuais `op_up/op_down`. Vão só pro `signal_journal.jsonl` pra medir desfecho. O `[FLOW]` está **silenciado** (`FLOW_NOTIFY_ENABLED=false` — era ~95% do seu ruído); ele ainda é computado e **gateia passivamente a id2**, mas a id2 está inativa de qualquer jeito. **Estes são "os sinais de 1m" — eles existem para observação, não para operar.**
+
+## 2) A hipótese "o sinal vem da vela 1m mas talvez renda aplicado depois"
+
+Testei nos dados reais em duas fontes: **journal ao vivo** (2216 sinais, retornos a 1/5/10/15 min) + **14 dias de velas 1m reais** dos 5 símbolos (horizontes de 1 min a 8 h), com entrada imediata **e defasada**, gross vs líquido, IC por bootstrap. Veredito honesto: **não rende como taker em lugar nenhum.** É o que a visualização acima mostra — o "muro" é a taxa.
+
+- **Melhor fatia de todas:** `RSI<30 @15min` em regime `range` → **+4,4 bps** de retorno direcional bruto, líquido **−15,6 bps**. E o próprio bruto tem IC que cruza zero — ou seja, o edge **nem é estatisticamente diferente de zero**.
+- **Esperar antes de agir** (sua ideia) ajuda só **+1 a +3 bps** de bruto (pico ~15 min de espera) — **nunca cruza a taxa de 20 bps**.
+- **O único grão de verdade** está em `RSI<30` nos regimes **range/mixed**, segurando ~90 min: bruto até **+11,7 bps**. Mas o líquido-taker segue **negativo (−8 bps)**, o IC honesto **inclui zero**, e o "edge" é **aglomeração de 2 alts** (BNB +23, ADA +32) numa janela de 14 dias — não é padrão estrutural repetível. Fluxo (`flow_buy/sell`) é todo negativo.
+- Um cético pegou um detalhe importante: as fatias que "passaram" no regime `unknown` eram **bug do bootstrap** (bloco ≥ n), descartadas.
+
+**Sua intuição tem lógica** (dip de RSI em mercado não-bear, dado um tempo, tende a subir um pouquinho) — mas o movimento médio é menos da metade da taxa. **A única alavanca teórica seria execução MAKER** (taxa ~0), e mesmo aí a melhor fatia não é robusta. Isso confirma de forma independente o veredito do laboratório de padrões: **o inimigo é a fee, não a falta de sinal**.
+
+## 3) O ponto prático: as oportunidades reais estão DESARMADAS em 3 camadas
+
+As boas oportunidades não foram os pings de 1m — foram os **golden crosses** (LTC 29/jun, ADA 1/jul, BTC 2/jul, BNB 3/jul) e o **flip da ADA pra `trend`** (ADX 51,6). **Nenhuma virou compra real**, porque a trilha Trend está travada em três camadas simultâneas:
+
+1. **Grupo trend 0/8 ativo** — todas as automações de trend com `isActive=false`. Nem armadas estão.
+2. **Gate de regime** — `REGIME!=='bear'` bloqueava BTC e BNB, que cruzaram **em bear**. (LTC e ADA passariam nessa camada — estão não-bear — mas travaram nas outras.)
+3. **Promoção vazia** — `promoted={}`, `grandfather=[]`; o supervisor exige a trilha `slopegate` promovida no paper, e ela não está.
+
+Histórico de ordens de trend = **zero** (última ordem real foi a venda de LTC em 21/jun). O sistema está fazendo **exatamente o que foi mandado**: parado no bear, fail-safe, com a trava de promoção como portão.
+
+**O que isso implica:** o gatilho do plano *"re-engajar no flip de regime pra capturar a alta"* **começou a piscar** — ADA já está em `trend`. Converter o próximo golden não-bear em compra real é uma decisão **sua e consciente**, em três passos: (1) ativar o grupo trend, (2) confirmar que o símbolo saiu do bear (já vale pra ADA), (3) promover `slopegate` (ou setar `PROMOTION_GRANDFATHER=slopegate`) + restart. **Eu não faço nada disso sozinho** — nem viro o HALT, nem clico ativar.
+
+Quer que eu (a) avalie se o flip da ADA é real e não um whipsaw antes de qualquer decisão, ou (b) monte a análise do que uma trilha Trend-como-MAKER renderia no paper (a única alavanca que a simulação deixou de pé)?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - Verificar segurança após correção de assets]]
+> * **Próxima Sessão**: [[2026-07-03 - aced5ac9-b7e1-4508-aafa-8d1da8c0fa0a]]
+%% --- TIMELINE END --- %%

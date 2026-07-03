@@ -660,7 +660,7 @@ I have enough context. Let me confirm BoK completeness for the active modules (s
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "for slug in spaces-evolution post-engine viral-autopilot; do\n  required=(00-deepsearch-blueprint 01-mrd 02-brd 03-prd 04-frd 05-sdd)\n  missing=()\n  for doc in \"${required[@]}\"; do ls docs/bok/$slug/${doc}*.md >/dev/null 2>&1 || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 core BoK present\" || echo \"\u26a0\ufe0f $slug \u2014 missing core: ${missing[*]}\"\ndone\necho \"---spaces docs---\"; ls docs/bok/spaces-evolution/",
+  "command": "for slug in spaces-evolution post-engine viral-autopilot; do\n  required=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-mrd 02-brd 03-prd 04-frd 05-sdd)\n  missing=()\n  for doc in \"${required[@]}\"; do ls docs/bok/$slug/${doc}*.md >/dev/null 2>&1 || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 core BoK present\" || echo \"\u26a0\ufe0f $slug \u2014 missing core: ${missing[*]}\"\ndone\necho \"---spaces docs---\"; ls docs/bok/spaces-evolution/",
   "description": "BoK completeness for active modules"
 }
 ```
@@ -668,9 +668,9 @@ I have enough context. Let me confirm BoK completeness for the active modules (s
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> ⚠️ spaces-evolution — missing core: 00-deepsearch-blueprint
-> ⚠️ post-engine — missing core: 00-deepsearch-blueprint
-> ⚠️ viral-autopilot — missing core: 00-deepsearch-blueprint
+> ⚠️ spaces-evolution — missing core: 00-[[deepsearch-blueprint|deepsearch-blueprint]]
+> ⚠️ post-engine — missing core: 00-[[deepsearch-blueprint|deepsearch-blueprint]]
+> ⚠️ viral-autopilot — missing core: 00-[[deepsearch-blueprint|deepsearch-blueprint]]
 > ---spaces docs---
 > 00-index.md
 > 01-mrd.md
@@ -1066,3 +1066,16 @@ Se o app OAuth ainda estiver em **"Testing"** no Google Cloud Console (e não **
 Não é que "não adianta mais rodar" — o frontier autônomo estava vazio de itens *desbloqueados*, mas **este bug é exatamente um item novo, desbloqueado e de alto valor** (UX que assusta todo usuário conectado). A correção é pequena: fazer o badge refletir "precisa reautenticar" de verdade (presença/validade do refresh_token) em vez do access token de 1h — mostrar "Conectado" com uma nota discreta "renovado automaticamente", mantendo o botão Reconectar disponível mas sem o alarme vermelho.
 
 Quer que eu corrija agora? Posso rodar em malha fechada: patch no hook + página, expondo um booleano seguro `needs_reauth` a partir do refresh_token, com prova material E2E no browser (Lei 1) antes de dizer "pronto". É baixo risco e single-scope (isento do BoK Gate).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - Resolver alertas de produção e migrations]]
+> * **Próxima Sessão**: [[2026-07-03 - Verificar segurança após correção de assets]]
+%% --- TIMELINE END --- %%
