@@ -55,6 +55,16 @@ resolve `(bucket, key)` do asset → verifica que o usuário **possui** o objeto
 - **G6 (cross-tenant):** toda cláusula de posse é `= auth.uid()`; `/security-review` confirma zero rota que exponha
   objeto de outro tenant (o furo que a `20260702230000` fechou permanece fechado).
 
+### Anticorpo re-executável (Obstáculo→Síntese)
+
+`scripts/qa/smoke-asset-owner-signing.ts` (zero-custo, hermético) prova G1/G3/G6 de forma **automática e repetível** —
+minta o próprio owner + attacker throwaway + um objeto privado sob o prefixo `<project_id>/` (upload service-role,
+`owner=NULL`, exatamente como produção) e valida 6 gates: **S1** dono assina o próprio objeto → HTTP 200 · **S2**
+attacker não assina → BLOCKED · **S3** attacker não enumera o prefixo → 0 · **S4/S4b** id-squat de `vm_canvas_projects`
+neutralizado pelo trigger (id regenerado) e assinatura segue BLOCKED após o squat · **S5** invariante `is_public` em
+bucket privado = 0. Rodar **antes de qualquer mudança em storage RLS / policies de bucket** (`bun run
+scripts/qa/smoke-asset-owner-signing.ts`; exit 1 = regressão). Substitui o probe manual de assinatura cross-tenant.
+
 ## Recovery path
 
 - Signed URL falha p/ um prefixo → falta uma rota de posse: adicionar a cláusula `EXISTS` da tabela dona
