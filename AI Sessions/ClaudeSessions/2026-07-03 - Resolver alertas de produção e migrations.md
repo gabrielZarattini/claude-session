@@ -46746,6 +46746,1704 @@ Continue the conversation from where it left off without asking the user any fur
 }
 ```
 
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> Based on the provided documentation, the Higgsfield Soul API is a **text-to-image** endpoint, not a multi-image compose API. Here's what's documented:
+> 
+> **Endpoint:** `POST https://api.segmind.com/v1/higgsfield-text2image-soul` (sync) or `POST /v2/higgsfield-text2image-soul` (async)
+> 
+> **Parameters:**
+> - `prompt` (string, required) — "Guides the thematic direction of the image"
+> - `style_id` (string, required) — 80+ style UUIDs (default: `"b3c8075a-cb4c-42de-b8b3-7099dd2df672"`)
+> - `width_and_height` (string, required) — 13 size options like `"1536x2048"`
+> - `enhance_prompt` (boolean, required, default: `false`) — "Boosts prompt detail accuracy"
+> - `image_url` (string, optional) — "Enhance or adjust an existing image with a URL. Use for precise edits or style transfers"
+> - `quality` (string, optional, default: `"1080p"`) — `"720p"` or "1080p"`
+> - `seed` (integer, optional, 1-1000000)
+> - `style_strength` (number, optional, default: `1`, range 0-1)
+> 
+> **Async v2 flow:** Submit → poll `/v2/requests/{id}/status` → fetch `/v2/requests/{id}`
+> 
+> The documentation does **not** mention "reference," "character," "standard" modes, or a multi-image compose endpoint. The `image_url` parameter accepts a single image for style transfer/editing, not multiple images for composition.
+> ```
+
+## 🤖 Claude *(03:07:14)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://wavespeed.ai/docs/docs-api/higgsfield/higgsfield-soul-image-to-image",
+  "prompt": "Extract the API endpoint details, parameters, and supported modes for Higgsfield Soul Image to Image API. Look for compose, reference, character, standard modes and multi-image support."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> Based on the provided page, the **Higgsfield Soul Image to Image** API is documented at `/docs/docs-api/higgsfield/higgsfield-soul-image-to-image` with a playground at `wavespeed.ai/models/higgsfield/soul/image-to-image`.
+> 
+> The page structure lists these sections (content truncated):
+> - **Parameters** / **Task Submission Parameters** / **Request Parameters**
+> - **API Endpoints** → **Submit Task & Query Result**
+> - **Response Parameters** / **Result Request/Response Parameters**
+> 
+> **Visible details:**
+> - Model: "Higgsfield SOUL Image-to-Image" — "high-quality image transformation model built for realism, tasteful aesthetics, and strong character consistency"
+> - Designed for "reference-driven image editing workflows where you want to restyle, reframe, or evolve a [character/scene]"
+> 
+> **Not found in truncated content:** explicit `compose`, `reference`, `character`, `standard` mode names, or multi-image support flags. Those details would reside in the Parameters/Request Parameters sections which are cut off.
+> 
+> **Action:** Visit the playground or the full docs page to inspect the live parameter schema (likely includes `image`, `prompt`, `strength`, `seed`, `mode`/`type` fields, and possibly `reference_image`/`character_id` for consistency).
+> ```
+
+## 🤖 Claude *(03:08:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "offset": 480,
+  "limit": 100,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 480	          if (dlResp.ok) {
+> 481	            const ct = dlResp.headers.get("content-type") || "";
+> 482	            if (ct.startsWith("image/")) contentType = ct;
+> 483	            bytes = new Uint8Array(await dlResp.arrayBuffer());
+> 484	          } else {
+> 485	            console.error("[canvas-execute] provider URL fetch failed:", dlResp.status);
+> 486	          }
+> 487	        }
+> 488	
+> 489	        if (bytes && bytes.byteLength > 0) {
+> 490	          const ext = contentType.split("/")[1]?.split(";")[0] || "png";
+> 491	          const fileName = `${user.id}/${execution.id}.${ext}`;
+> 492	          const { error: uploadErr } = await admin.storage
+> 493	            .from("canvas-assets")
+> 494	            .upload(fileName, bytes, { contentType, upsert: true });
+> 495	          if (!uploadErr) {
+> 496	            const { data: urlData } = admin.storage
+> 497	              .from("canvas-assets")
+> 498	              .getPublicUrl(fileName);
+> 499	            storedUrl = urlData.publicUrl;
+> 500	            storedKey = fileName;
+> 501	            storedContentType = contentType;
+> 502	          } else {
+> 503	            console.error("[canvas-execute] upload error:", uploadErr);
+> 504	          }
+> 505	        }
+> 506	      } catch (uploadErr) {
+> 507	        console.error("Upload error:", uploadErr);
+> 508	      }
+> 509	    }
+> 510	
+> 511	    // ── Save asset record ────────────────────────────────────────────
+> 512	    let assetId: string | null = null;
+> 513	    if (!error && storedUrl) {
+> 514	      const { data: asset } = await admin
+> 515	        .from("vm_canvas_assets")
+> 516	        .insert({
+> 517	          user_id: user.id,
+> 518	          project_id: body.project_id,
+> 519	          asset_type: "image",
+> 520	          storage_key: storedKey ?? `${user.id}/${execution.id}.png`,
+> 521	          storage_bucket: "canvas-assets",
+> 522	          public_url: storedUrl,
+> 523	          mime_type: storedContentType,
+> 524	          provider: body.provider,
+> 525	          model_used: body.model,
+> 526	          node_type: dbNodeType,
+> 527	          prompt: body.prompt,
+> 528	          negative_prompt: body.negative_prompt,
+> 529	          parameters: body.parameters || {},
+> 530	          credits_cost: creditCost,
+> 531	          node_id: body.node_id,
+> 532	          input_asset_id: resolvedInputAssetId,
+> 533	        })
+> 534	        .select("id")
+> 535	        .single();
+> 536	      assetId = asset?.id;
+> 537	
+> 538	      // Dual-write to the canonical asset registry (creative_assets) so the HyperFrames editor / other modules can
+> 539	      // reuse this Canvas output bidirectionally (the "power of the outputs" spine). Fail-soft — never break exec.
+> 540	      try {
+> 541	        await admin.rpc("register_creative_asset", {
+> 542	          p_user_id: user.id,
+> 543	          p_kind: "image",
+> 544	          p_storage_bucket: "canvas-assets",
+> 545	          p_storage_key: storedKey ?? `${user.id}/${execution.id}.png`,
+> 546	          p_is_public: true,
+> 547	          p_source_module: "canvas-studio",
+> 548	          p_source_job_id: execution.id,
+> 549	          p_mime_type: storedContentType,
+> 550	          p_provider: body.provider,
+> 551	          p_model: body.model,
+> 552	          p_prompt: body.prompt,
+> 553	        });
+> 554	      } catch (e) {
+> 555	        console.error("[canvas-execute] creative_assets register skipped:", e);
+> 556	      }
+> 557	    }
+> 558	
+> 559	    // ── Update execution status ──────────────────────────────────────
+> 560	    const finalStatus = error ? "failed" : "success";
+> 561	    await admin
+> 562	      .from("vm_canvas_executions")
+> 563	      .update({
+> 564	        status: finalStatus,
+> 565	        output_url: storedUrl || null,
+> 566	        output_asset_id: assetId,
+> 567	        error_message: error || null,
+> 568	        completed_at: new Date().toISOString(),
+> 569	      })
+> 570	      .eq("id", execution.id);
+> 571	
+> 572	    // ── SSP-01 OE03 Pillar 4 (Observability) ─────────────────────────
+> 573	    // Best-effort health pulse; failure to log MUST NOT block the response.
+> 574	    await admin
+> 575	      .from("infra_health_logs")
+> 576	      .insert({ service: "canvas-execute", status: error ? "unhealthy" : "healthy" })
+> 577	      .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 578	
+> 579	    // ── Deduct credits on success ────────────────────────────────────
+> ```
+
+## 🤖 Claude *(03:08:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"scene_compose\\|compose\\|soul.*compose\\|higgsfield.*compose\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts | head -30",
+  "description": "Find scene_compose handling in canvas-execute"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 42:  "scene-compose": 18,
+> 231:    // outpaint, style_transfer, relight, remove_background, extend, remix, compose, export
+> 234:      scene_compose: "compose",
+> 245:      compose: "compose",
+> 1014:    body.node_type !== "scene_compose"
+> 1078:  if (body.node_type === "scene_compose") {
+> 1081:        error: "compose_prompt_required",
+> 1085:    const composeRefs = (body.reference_image_urls ?? []).filter(Boolean);
+> 1086:    if (composeRefs.length === 0) {
+> 1088:        error: "compose_image_required",
+> 1094:  // F1 (review 2c): pin voice/compose to the DECLARED price — a crafted provider/model must never
+> 1098:    : (body.node_type === "scene_compose"
+> 1099:      ? CREDIT_COSTS["scene-compose"]
+> 1137:  if ((body.node_type === "image_to_video" || body.node_type === "scene_compose") && (!keys.higgsfield || !keys.higgsfield_secret)) {
+> 1173:      : (body.node_type === "scene_compose" ? "higgsfield/scene-compose" : `${body.provider}/${body.model}`));
+> 1247:      } else if (body.node_type === "scene_compose") {
+> 1248:        // Amendment 2d (S30): sync Higgsfield Soul compose (submit + in-window poll).
+> 1702:  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> 1704:    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> 1715:    // upstream connected references so compose preserves identity automatically.
+> ```
+
+## 🤖 Claude *(03:09:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "limit": 100,
+  "offset": 1240,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1240	      if (body.node_type === "magic_prompt") {
+> 1241	        enhancedPrompt = await generateMagicPrompt(
+> 1242	          keys.openrouter, keys.gemini, body.prompt,
+> 1243	          body.parameters?.level || "curto",
+> 1244	          body.parameters?.target_model || "generic",
+> 1245	          "Nenhum contexto de campanha disponível.",
+> 1246	        );
+> 1247	      } else if (body.node_type === "scene_compose") {
+> 1248	        // Amendment 2d (S30): sync Higgsfield Soul compose (submit + in-window poll).
+> 1249	        const r = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> 1250	        outputUrl = r.url;
+> 1251	      } else if (body.provider === "openrouter") {
+> 1252	        const r = await generateOpenRouter(keys.openrouter, body);
+> 1253	        outputUrl = r.url; outputB64 = r.b64;
+> 1254	      } else {
+> 1255	        // Unreachable behind SPACES_IMAGE_MODELS (both pairs are openrouter) — kept as a hard stop.
+> 1256	        throw new Error(`Unknown Spaces provider: ${body.provider}`);
+> 1257	      }
+> 1258	      break;
+> 1259	    } catch (e: any) {
+> 1260	      provErr = e?.message || "Provider error";
+> 1261	      console.error(`[canvas-execute:spaces] provider attempt ${attempt + 1} failed:`, provErr);
+> 1262	      if (attempt === 0) await new Promise((r) => setTimeout(r, 5000));
+> 1263	    }
+> 1264	  }
+> 1265	
+> 1266	  const producedNothing = body.node_type === "magic_prompt"
+> 1267	    ? !enhancedPrompt
+> 1268	    : (!outputUrl && !outputB64);
+> 1269	
+> 1270	  if (provErr || producedNothing) {
+> 1271	    // ── finalize error + FULL refund in the SAME error flow (FMEA-SPACES-001 / SOP S6) ──
+> 1272	    // Honest reporting (security-review MEDIUM): only claim `refunded` when the RPC committed;
+> 1273	    // otherwise `refund_pending:true` — the row stays 'running' and self-heal-spaces.sh reconciles.
+> 1274	    const { data: fin, error: finErr } = await finalizeWithRetry(admin, {
+> 1275	      p_node_run_id: body.node_run_id,
+> 1276	      p_status: "error",
+> 1277	      p_refund: creditCost,
+> 1278	      p_latency_ms: Date.now() - t0,
+> 1279	    });
+> 1280	    await admin.from("infra_health_logs").insert({
+> 1281	      service: "canvas-execute", status: "unhealthy",
+> 1282	      event: "spaces_run_failure",
+> 1283	      metadata: { node_run_id: body.node_run_id, model: modelKey, refund_committed: !finErr },
+> 1284	    }).then(() => {}, (e: unknown) => console.error("[canvas-execute:spaces] health log failed:", e));
+> 1285	    return spacesJson(502, {
+> 1286	      error: "provider_failed",
+> 1287	      message: finErr
+> 1288	        ? "Falha do provedor de geração — o estorno será reconciliado automaticamente."
+> 1289	        : "Falha do provedor de geração — o valor debitado foi estornado.",
+> 1290	      execution_id: generationId,
+> 1291	      ...(finErr ? { refund_pending: true } : { refunded: fin?.refunded ?? creditCost }),
+> 1292	      detail: provErr || "empty output",
+> 1293	    }, corsHeaders);
+> 1294	  }
+> 1295	
+> 1296	  // ── Success materialization ──
+> 1297	  if (body.node_type === "magic_prompt") {
+> 1298	    const { error: doneErr } = await finalizeWithRetry(admin, {
+> 1299	      p_node_run_id: body.node_run_id,
+> 1300	      p_status: "done",
+> 1301	      p_refund: 0,
+> 1302	      p_result: { enhanced_prompt: enhancedPrompt },
+> 1303	      p_latency_ms: Date.now() - t0,
+> 1304	    });
+> 1305	    if (doneErr) {
+> 1306	      await materializeDoneFallback(admin, body.node_run_id!, { result: { enhanced_prompt: enhancedPrompt } });
+> 1307	    }
+> 1308	    await spacesFirstRunObservation(admin, user.id, body.space_id!);
+> 1309	    return spacesJson(200, {
+> 1310	      execution_id: generationId,
+> 1311	      status: "done",
+> 1312	      enhanced_prompt: enhancedPrompt,
+> 1313	      credits_charged: creditCost,
+> 1314	    }, corsHeaders);
+> 1315	  }
+> 1316	
+> 1317	  // Image: persist bytes to the canvas-assets bucket (provider URLs have short TTLs — legacy pattern).
+> 1318	  let storedUrl = outputUrl;
+> 1319	  let storedKey: string | null = null;
+> 1320	  let storedContentType = "image/png";
+> 1321	  try {
+> 1322	    let bytes: Uint8Array | null = null;
+> 1323	    if (outputB64) {
+> 1324	      bytes = Uint8Array.from(atob(outputB64), (c) => c.charCodeAt(0));
+> 1325	    } else if (outputUrl) {
+> 1326	      const dl = await fetch(outputUrl);
+> 1327	      if (dl.ok) {
+> 1328	        const ct = dl.headers.get("content-type") || "";
+> 1329	        if (ct.startsWith("image/")) storedContentType = ct;
+> 1330	        bytes = new Uint8Array(await dl.arrayBuffer());
+> 1331	      }
+> 1332	    }
+> 1333	    if (bytes && bytes.byteLength > 0) {
+> 1334	      const ext = storedContentType.split("/")[1]?.split(";")[0] || "png";
+> 1335	      const fileName = `${user.id}/spaces/${generationId}.${ext}`;
+> 1336	      const { error: upErr } = await admin.storage
+> 1337	        .from("canvas-assets").upload(fileName, bytes, { contentType: storedContentType, upsert: true });
+> 1338	      if (!upErr) {
+> 1339	        const { data: urlData } = admin.storage.from("canvas-assets").getPublicUrl(fileName);
+> ```
+
+## 🤖 Claude *(03:09:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"generateHiggsfield\\|higgsfield-ai/soul/compose\\|soul/compose\" /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts | head -20",
+  "description": "Find generateHiggsfield function and compose endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 451:        const result = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> 1249:        const r = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> 1669:async function generateHiggsfield(apiKey: string, apiSecret: string, body: ExecuteRequest) {
+> 1704:    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> ```
+
+## 🤖 Claude *(03:09:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 1665,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1665	
+> 1666	  return { url: outUrl, b64: outB64 };
+> 1667	}
+> 1668	
+> 1669	async function generateHiggsfield(apiKey: string, apiSecret: string, body: ExecuteRequest) {
+> 1670	  if (!apiKey || !apiSecret) {
+> 1671	    throw new Error("Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)");
+> 1672	  }
+> 1673	
+> 1674	  // Correct Higgsfield Platform API — base + auth + routes per the tested
+> 1675	  // viralmind integration (src/lib/higgsfield.server.ts). The previous
+> 1676	  // api.higgsfield.ai/v1/generations endpoint was wrong and never worked.
+> 1677	  const BASE_URL = "https://platform.higgsfield.ai";
+> 1678	  const authHeader = `Key ${apiKey}:${apiSecret}`;
+> 1679	  const POLL_INTERVAL_MS = 3000;
+> 1680	  const MAX_POLL_MS = 90_000;
+> 1681	
+> 1682	  // Derive Soul aspect ratio from incoming size / aspect_ratio params.
+> 1683	  // Canonical Higgsfield ARs (per /docs/guides/images): 16:9 · 9:16 · 1:1 · 4:5.
+> 1684	  const SIZE_TO_AR: Record<string, string> = {
+> 1685	    "1024x1024": "1:1",
+> 1686	    "1792x1024": "16:9",
+> 1687	    "1024x1792": "9:16",
+> 1688	    "1024x1280": "4:5",
+> 1689	    "1280x1024": "5:4",
+> 1690	  };
+> 1691	  const VALID_AR = new Set(["16:9", "9:16", "1:1", "4:5"]);
+> 1692	  const sizeKey = body.parameters?.size ? String(body.parameters.size) : "";
+> 1693	  const requestedAr = body.parameters?.aspect_ratio || SIZE_TO_AR[sizeKey] || "1:1";
+> 1694	  const aspectRatio = VALID_AR.has(requestedAr) ? requestedAr : "1:1";
+> 1695	  const resolution = body.parameters?.resolution === "720p" ? "720p" : "1080p";
+> 1696	
+> 1697	  // Video routes (DoP/Kling/Seedance) are handled by submitHiggsfieldVideo()
+> 1698	  // below — async path with `?hf_webhook=URL` query param. Soul (image) stays
+> 1699	  // sync because gens complete within the 90s edge function window.
+> 1700	
+> 1701	  // ── Submit Soul text-to-image job ──────────────────────────────────
+> 1702	  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> 1703	  const endpoint = isCompose
+> 1704	    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> 1705	    : `${BASE_URL}/higgsfield-ai/soul/standard`;
+> 1706	
+> 1707	  const payload: Record<string, any> = {
+> 1708	    prompt: body.prompt,
+> 1709	    aspect_ratio: aspectRatio,
+> 1710	    resolution,
+> 1711	  };
+> 1712	
+> 1713	  if (isCompose) {
+> 1714	    // Cross-node consistency: explicit input_image_* wins; otherwise fall back to
+> 1715	    // upstream connected references so compose preserves identity automatically.
+> 1716	    const refs = (body.reference_image_urls ?? []).filter(Boolean);
+> 1717	    const image1 = body.input_image_1 || refs[0];
+> 1718	    const image2 = body.input_image_2 || refs[1];
+> 1719	    if (image1) {
+> 1720	      payload.image_1_url = image1;
+> 1721	      payload.input_image_1 = image1;
+> 1722	    }
+> 1723	    if (image2) {
+> 1724	      payload.image_2_url = image2;
+> 1725	      payload.input_image_2 = image2;
+> 1726	    }
+> 1727	    if (body.input_layout) {
+> 1728	      payload.layout_url = body.input_layout;
+> 1729	      payload.input_layout = body.input_layout;
+> 1730	    }
+> 1731	  }
+> 1732	
+> 1733	  const submitResp = await fetch(endpoint, {
+> 1734	    method: "POST",
+> 1735	    headers: {
+> 1736	      Authorization: authHeader,
+> 1737	      "Content-Type": "application/json",
+> 1738	      Accept: "application/json",
+> 1739	    },
+> 1740	    body: JSON.stringify(payload),
+> 1741	  });
+> 1742	
+> 1743	  if (!submitResp.ok) {
+> 1744	    const t = await submitResp.text();
+> 1745	    if (submitResp.status === 401 || submitResp.status === 403) {
+> 1746	      throw new Error("Higgsfield: credenciais inválidas");
+> 1747	    }
+> 1748	    if (submitResp.status === 402) {
+> 1749	      throw new Error("Higgsfield: saldo de créditos esgotado");
+> 1750	    }
+> 1751	    if (submitResp.status === 429) {
+> 1752	      throw new Error("Higgsfield: limite de requisições atingido");
+> 1753	    }
+> 1754	    throw new Error(`Higgsfield submit error ${submitResp.status}: ${t.slice(0, 200)}`);
+> 1755	  }
+> 1756	
+> 1757	  const submitData = await submitResp.json();
+> 1758	  const requestId = submitData.request_id || submitData.id;
+> 1759	  if (!requestId) throw new Error("Higgsfield: resposta de submit inválida (sem request_id)");
+> 1760	
+> 1761	  // ── Poll until terminal state ──────────────────────────────────────
+> 1762	  const started = Date.now();
+> 1763	  while (Date.now() - started < MAX_POLL_MS) {
+> 1764	    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+> ```
+
+## 🤖 Claude *(03:10:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "limit": 80,
+  "offset": 1760,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1760	
+> 1761	  // ── Poll until terminal state ──────────────────────────────────────
+> 1762	  const started = Date.now();
+> 1763	  while (Date.now() - started < MAX_POLL_MS) {
+> 1764	    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+> 1765	    const statusResp = await fetch(`${BASE_URL}/requests/${requestId}/status`, {
+> 1766	      method: "GET",
+> 1767	      headers: { Authorization: authHeader, Accept: "application/json" },
+> 1768	    });
+> 1769	    if (!statusResp.ok) {
+> 1770	      const t = await statusResp.text();
+> 1771	      throw new Error(`Higgsfield status error ${statusResp.status}: ${t.slice(0, 200)}`);
+> 1772	    }
+> 1773	    const statusData = await statusResp.json();
+> 1774	    if (statusData.status === "completed") {
+> 1775	      const url = statusData.images?.[0]?.url || statusData.video?.url || "";
+> 1776	      if (!url) throw new Error("Higgsfield: geração concluída sem URL de saída");
+> 1777	      return { url };
+> 1778	    }
+> 1779	    if (statusData.status === "failed") throw new Error("Higgsfield: a geração falhou no provedor");
+> 1780	    if (statusData.status === "nsfw") throw new Error("Higgsfield: conteúdo bloqueado por moderação");
+> 1781	    if (statusData.status === "cancelled") throw new Error("Higgsfield: geração cancelada");
+> 1782	  }
+> 1783	  throw new Error("Higgsfield: geração demorou demais (timeout >90s)");
+> 1784	}
+> 1785	
+> 1786	// ═══════════════════════════════════════════════════════════════════════════
+> 1787	// Phase 4.2c — Async video submit (image_to_video)
+> 1788	// ═══════════════════════════════════════════════════════════════════════════
+> 1789	// Fire-and-forget: POST Higgsfield with `?hf_webhook=<callback>`, capture
+> 1790	// `request_id`, UPDATE execution.operation_id, return 200 with status='queued'.
+> 1791	// `higgsfield-webhook` finalizes atomically (download → upload → deduct → asset row).
+> 1792	// Lei 1 trail: every gate inserts a row visible via REST (execution row, asset row,
+> 1793	// ledger row, infra_health_logs pulse).
+> 1794	// SOP: docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md
+> 1795	// Validation doc: .claude/context/higgsfield-api-validation-2026-05-15.md
+> 1796	
+> 1797	interface SubmitVideoOpts {
+> 1798	  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> 1799	  admin: any; // SupabaseClient — looser type avoids createClient generic friction
+> 1800	  supabaseUrl: string;
+> 1801	  apiKey: string;
+> 1802	  apiSecret: string;
+> 1803	  body: ExecuteRequest;
+> 1804	  execution: { id: string; webhook_token: string; credits_charged: number };
+> 1805	  corsHeaders: Record<string, string>;
+> 1806	}
+> 1807	
+> 1808	async function submitHiggsfieldVideo(opts: SubmitVideoOpts): Promise<Response> {
+> 1809	  const { admin, supabaseUrl, apiKey, apiSecret, body, execution, corsHeaders } = opts;
+> 1810	
+> 1811	  const fail = async (msg: string, httpStatus: number) => {
+> 1812	    await admin
+> 1813	      .from("vm_canvas_executions")
+> 1814	      .update({
+> 1815	        status: "failed",
+> 1816	        error_message: msg,
+> 1817	        completed_at: new Date().toISOString(),
+> 1818	      })
+> 1819	      .eq("id", execution.id);
+> 1820	    await admin
+> 1821	      .from("infra_health_logs")
+> 1822	      .insert({ service: "canvas-execute", status: "unhealthy" })
+> 1823	      .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 1824	    return new Response(
+> 1825	      JSON.stringify({ error: msg, execution_id: execution.id, status: "failed" }),
+> 1826	      { status: httpStatus, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 1827	    );
+> 1828	  };
+> 1829	
+> 1830	  if (!apiKey || !apiSecret) {
+> 1831	    return fail(
+> 1832	      "Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)",
+> 1833	      500,
+> 1834	    );
+> 1835	  }
+> 1836	
+> 1837	  const imageUrl = body.input_asset_url;
+> 1838	  if (!imageUrl) {
+> 1839	    return fail(
+> ```
+
+## 🤖 Claude *(03:10:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"scene_compose\\|compose\" /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts | head -40",
+  "description": "Find scene_compose payload building in spaces-execution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 12:export const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator', 'video-generator', 'voice-over', 'composer']);
+> 78:/** Mirrors CREDIT_COSTS['scene-compose'] (S30) — mirror-parity tested. */
+> 104:  if (t === 'composer') return SPACES_COMPOSE_COST;  // S30 — single compose
+> 154:      // S31: composer handles — image-1 first (unshift), image-2 appended
+> 168:/** S31: a composer with no image at all (picker or threaded) is skipped as a no-op. */
+> 170:  if (nodeTypeId(node) !== 'composer') return false;
+> 191:  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video' | 'voice_over' | 'scene_compose';
+> 254:  if (t === 'composer') {
+> 258:      project_id: spaceId, node_id: node.id, node_type: 'scene_compose',
+> 259:      provider: 'higgsfield', model: 'scene-compose', prompt,
+> ```
+
+## 🤖 Claude *(03:10:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "limit": 80,
+  "offset": 240
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 240	      parameters: { duration: 5 }, // S18: only declared-price durations
+> 241	      input_asset_url: upstream.firstFrameImage,
+> 242	      space_id: spaceId, node_run_id: nodeRunId,
+> 243	    };
+> 244	  }
+> 245	  if (t === 'voice-over') {
+> 246	    const voice = (node.data.params?.voice as string) || 'Kore';
+> 247	    return {
+> 248	      project_id: spaceId, node_id: node.id, node_type: 'voice_over',
+> 249	      provider: 'google', model: 'gemini-2.5-flash-preview-tts', prompt,
+> 250	      parameters: { voice },
+> 251	      space_id: spaceId, node_run_id: nodeRunId,
+> 252	    };
+> 253	  }
+> 254	  if (t === 'composer') {
+> 255	    const refs = mergeReferenceUrls(node, upstream).slice(0, SPACES_MAX_COMPOSE_IMAGES); // S31: cap 2
+> 256	    if (refs.length === 0) return null; // missingComposeInput backstop
+> 257	    return {
+> 258	      project_id: spaceId, node_id: node.id, node_type: 'scene_compose',
+> 259	      provider: 'higgsfield', model: 'scene-compose', prompt,
+> 260	      parameters: {},
+> 261	      reference_image_urls: refs,
+> 262	      space_id: spaceId, node_run_id: nodeRunId,
+> 263	    };
+> 264	  }
+> 265	  return null;
+> 266	}
+> 267	
+> 268	/* ── Row → cluster-card mapper (C9 — zod card shape; server CHECKs own invariants) ─ */
+> 269	export interface GenerationRow {
+> 270	  id: string; space_id: string; node_id: string; node_run_id: string;
+> 271	  output_type: string; asset_id: string | null; model_key: string;
+> 272	  mco_charged: number; mco_refunded: number; usd_cost: number | null;
+> 273	  latency_ms: number | null; result: Record<string, unknown> | null;
+> 274	  status: string; created_at: string;
+> 275	}
+> 276	
+> 277	export function rowToGeneration(row: GenerationRow): Generation & { previewUrl?: string; previewText?: string; previewVideoUrl?: string; previewAudioUrl?: string } {
+> 278	  return {
+> 279	    id: row.id,
+> 280	    spaceId: row.space_id,
+> 281	    nodeId: row.node_id,
+> 282	    outputType: row.output_type as Generation['outputType'],
+> 283	    assetId: row.asset_id ?? undefined,
+> 284	    modelKey: row.model_key,
+> 285	    mcoCharged: Number(row.mco_charged) || 0,
+> 286	    mcoRefunded: Number(row.mco_refunded) || 0,
+> 287	    usdCost: row.usd_cost != null ? Number(row.usd_cost) : undefined,
+> 288	    latencyMs: row.latency_ms ?? undefined,
+> 289	    status: row.status as Generation['status'],
+> 290	    createdAt: row.created_at,
+> 291	    previewUrl: (row.result?.output_url as string) || undefined,
+> 292	    previewText: (row.result?.enhanced_prompt as string) || undefined,
+> 293	    previewVideoUrl: (row.result?.video_url as string) || undefined, // 2a async video (S16)
+> 294	    previewAudioUrl: (row.result?.audio_url as string) || undefined, // 2c voice (S29)
+> 295	  };
+> 296	}
+> 297	
+> ```
+
+## 👤 User *(03:12:28)*
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   - User invoked `/loop` autonomous mode to continue MCORCH Master Execution Agent in closed-loop
+   - Charter directive: pick highest-value unblocked backlog item → BoK Gate → SOP → code → material proof → security-review → granular commit
+   - Current focus: Spaces Fase 2d composer (code-complete, provider in drift OTD-SPACES-003)
+   - Also address storage enumeration hardening (OTD-SPACES-001/002) from 2c security-review
+
+2. Key Technical Concepts:
+   - MCORCH Architecture: Supabase (RLS, Edge Functions, pgvector), React/TanStack Query/Zustand, Sovereign Docker Mesh
+   - Harness Engineering: business logic in custom hooks, display-only components
+   - mcoCoins Economics: atomic RPC deduct_mco_coins/add_mco_coins, 4×-floor calibration
+   - Spaces Module Phases: 1a (canvas 72/28) → 1b (generations ledger + runGraph) → 2a (video) → 2b (references) → 2c (voice_over) → 2d (composer)
+   - Storage Tenancy: canvas-assets (was public, now private), generated-videos (public), video-studio-assets/projects (private)
+   - Security: per-user API keys (BYOK), service-role-only RPCs, RESTRICTIVE no-delete policies
+   - Survival Laws: Materiality (Law 1), Anticipated Process (Law 2), Pruning (Law 3), ORO (Law 4)
+
+3. Files and Code Sections:
+   - `supabase/migrations/20260702230000_spaces_storage_enumeration_hardening.sql` - Migration applying owner-scoped SELECT policies for canvas-assets/generated-videos buckets + server-side id trigger on spaces table
+   - `src/lib/spaces-execution.ts:277-296` - rowToGeneration maps generation row to preview URLs (previewUrl, previewText, previewVideoUrl, previewAudioUrl)
+   - `src/hooks/useGenerationLedger.ts` - runGraph (layer-by-layer execution), useGenerationCluster (lazy pagination), watchVideoGeneration poller
+   - `src/components/spaces/GenerationCluster.tsx:48-62` - Renders <audio>/<video>/<img> based on preview URLs from rowToGeneration
+   - `src/hooks/useReferenceUpload.ts:14-33` - Client uploads to canvas-assets under `${user.id}/spaces-refs/`, uses getPublicUrl
+   - `supabase/functions/canvas-execute/index.ts:1669-1784` - generateHiggsfield function with compose endpoint `/higgsfield-ai/soul/compose` and payload building for image_1_url, image_2_url, layout_url
+   - `scripts/qa/smoke-spaces-execution.ts` - 30 zero-cost gates covering T1-T8, V1-V4, W1-W5, A1-A4, C1-C3
+
+4. Errors and Fixes:
+   - **Migration not fully applied to remote**: Migration created locally but policies not active on prod DB. Fixed by manually running DROP/CREATE POLICY via `npx supabase db query`
+   - **canvas_assets_select policy missing**: Old policy allowed public read on private bucket. Fixed with owner-scoped policy requiring `auth.uid()` match on foldername[1] or owner
+   - **generated-videos public policy**: "Allow public read of generated videos" allowed anon enumeration. Replaced with `generated_videos_select_own` owner-scoped policy
+   - **Higgsfield compose API drift**: Endpoint rejects with "Input should be 'reference', 'character' or 'standard'" - researching correct multi-image compose parameters
+   - **ESLint pre-existing issues**: 5769 problems (5084 errors, 685 warnings) - not from our changes, pre-existing in codebase
+
+5. Problem Solving:
+   - ✅ Applied storage hardening migration (OTD-SPACES-001/002) - committed as `14bce08`
+   - ✅ Verified all 30 smoke gates pass (T1-T8 auth/validation, V1-V4 video guards, W1-W5 webhook lifecycle, A1-A4 voice guards, C1-C3 compose guards, T7 RLS, T8 RPC privilege)
+   - ✅ Full vitest 398 passed, TypeScript clean, production build successful
+   - ✅ Edge functions deployed (canvas-execute, higgsfield-webhook)
+   - 🔄 Higgsfield compose API research ongoing - need correct multi-image compose parameters
+
+6. All User Messages:
+   - "/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está..."
+   - "ok continue" (after model changes)
+   - "ok continue" (after context check)
+   - "Talvez seja melhor você procurar usar o próprio MCP sempre usar coisas oficiais, e as não oficiais somente para criatividade e referencia" - suggesting official MCP sources for research
+
+7. Pending Tasks:
+   - Fix Higgsfield compose API (OTD-SPACES-003) - find correct multi-image compose endpoint/parameters
+   - Sovereign Action Queue items: Smart-Delete E2E witness, OTD-AC-015/017 biometrics, App registrations (TikTok/YouTube/Pinterest), Universe 3.9 cutover, scheduled_posts investigation, ML postback, Stripe live keys
+   - Continue autonomous loop: next highest-value unblocked backlog item
+
+8. Current Work:
+   - Completed storage enumeration hardening (OTD-SPACES-001/002) - migration applied, policies verified, smoke tests 30/30 passing, committed
+   - All quality gates green: vitest 398, tsc clean, build successful
+   - Currently researching Higgsfield Soul multi-image compose API to resolve OTD-SPACES-003 provider drift
+   - The compose endpoint at `/higgsfield-ai/soul/compose` rejects current payload format - need to discover correct `mode` parameter and image parameter names
+
+9. Optional Next Step:
+   - Continue Higgsfield API research using official documentation sources to resolve OTD-SPACES-003
+   - Once resolved, update generateHiggsfield payload in canvas-execute/index.ts for scene_compose node_type
+   - Run smoke test C3 (compose fail → refund + custo pinado 18) to verify fix
+   - Proceed to next unblocked backlog item per autonomous loop charter (likely Unified Canvas 3.9 cutover decision or Security OTD-SEC-006/007)
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+## 🤖 Claude *(03:12:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "offset": 1660,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1660	        `O modelo respondeu com texto em vez de imagem (provável: prompt parece instrução). Reformule como descrição visual ou use o Magic Prompt. Prévia: ${message.content.slice(0, 150)}…`,
+> 1661	      );
+> 1662	    }
+> 1663	    throw new Error(`OpenRouter: resposta multimodal sem image_url. Response keys: ${Object.keys(data || {})}. Message keys: ${Object.keys(message || {})}. Raw response: ${JSON.stringify(data).slice(0, 400)}`);
+> 1664	  }
+> 1665	
+> 1666	  return { url: outUrl, b64: outB64 };
+> 1667	}
+> 1668	
+> 1669	async function generateHiggsfield(apiKey: string, apiSecret: string, body: ExecuteRequest) {
+> 1670	  if (!apiKey || !apiSecret) {
+> 1671	    throw new Error("Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)");
+> 1672	  }
+> 1673	
+> 1674	  // Correct Higgsfield Platform API — base + auth + routes per the tested
+> 1675	  // viralmind integration (src/lib/higgsfield.server.ts). The previous
+> 1676	  // api.higgsfield.ai/v1/generations endpoint was wrong and never worked.
+> 1677	  const BASE_URL = "https://platform.higgsfield.ai";
+> 1678	  const authHeader = `Key ${apiKey}:${apiSecret}`;
+> 1679	  const POLL_INTERVAL_MS = 3000;
+> 1680	  const MAX_POLL_MS = 90_000;
+> 1681	
+> 1682	  // Derive Soul aspect ratio from incoming size / aspect_ratio params.
+> 1683	  // Canonical Higgsfield ARs (per /docs/guides/images): 16:9 · 9:16 · 1:1 · 4:5.
+> 1684	  const SIZE_TO_AR: Record<string, string> = {
+> 1685	    "1024x1024": "1:1",
+> 1686	    "1792x1024": "16:9",
+> 1687	    "1024x1792": "9:16",
+> 1688	    "1024x1280": "4:5",
+> 1689	    "1280x1024": "5:4",
+> 1690	  };
+> 1691	  const VALID_AR = new Set(["16:9", "9:16", "1:1", "4:5"]);
+> 1692	  const sizeKey = body.parameters?.size ? String(body.parameters.size) : "";
+> 1693	  const requestedAr = body.parameters?.aspect_ratio || SIZE_TO_AR[sizeKey] || "1:1";
+> 1694	  const aspectRatio = VALID_AR.has(requestedAr) ? requestedAr : "1:1";
+> 1695	  const resolution = body.parameters?.resolution === "720p" ? "720p" : "1080p";
+> 1696	
+> 1697	  // Video routes (DoP/Kling/Seedance) are handled by submitHiggsfieldVideo()
+> 1698	  // below — async path with `?hf_webhook=URL` query param. Soul (image) stays
+> 1699	  // sync because gens complete within the 90s edge function window.
+> 1700	
+> 1701	  // ── Submit Soul text-to-image job ──────────────────────────────────
+> 1702	  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> 1703	  const endpoint = isCompose
+> 1704	    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> 1705	    : `${BASE_URL}/higgsfield-ai/soul/standard`;
+> 1706	
+> 1707	  const payload: Record<string, any> = {
+> 1708	    prompt: body.prompt,
+> 1709	    aspect_ratio: aspectRatio,
+> 1710	    resolution,
+> 1711	  };
+> 1712	
+> 1713	  if (isCompose) {
+> 1714	    // Cross-node consistency: explicit input_image_* wins; otherwise fall back to
+> 1715	    // upstream connected references so compose preserves identity automatically.
+> 1716	    const refs = (body.reference_image_urls ?? []).filter(Boolean);
+> 1717	    const image1 = body.input_image_1 || refs[0];
+> 1718	    const image2 = body.input_image_2 || refs[1];
+> 1719	    if (image1) {
+> 1720	      payload.image_1_url = image1;
+> 1721	      payload.input_image_1 = image1;
+> 1722	    }
+> 1723	    if (image2) {
+> 1724	      payload.image_2_url = image2;
+> 1725	      payload.input_image_2 = image2;
+> 1726	    }
+> 1727	    if (body.input_layout) {
+> 1728	      payload.layout_url = body.input_layout;
+> 1729	      payload.input_layout = body.input_layout;
+> 1730	    }
+> 1731	  }
+> 1732	
+> 1733	  const submitResp = await fetch(endpoint, {
+> 1734	    method: "POST",
+> 1735	    headers: {
+> 1736	      Authorization: authHeader,
+> 1737	      "Content-Type": "application/json",
+> 1738	      Accept: "application/json",
+> 1739	    },
+> 1740	    body: JSON.stringify(payload),
+> 1741	  });
+> 1742	
+> 1743	  if (!submitResp.ok) {
+> 1744	    const t = await submitResp.text();
+> 1745	    if (submitResp.status === 401 || submitResp.status === 403) {
+> 1746	      throw new Error("Higgsfield: credenciais inválidas");
+> 1747	    }
+> 1748	    if (submitResp.status === 402) {
+> 1749	      throw new Error("Higgsfield: saldo de créditos esgotado");
+> 1750	    }
+> 1751	    if (submitResp.status === 429) {
+> 1752	      throw new Error("Higgsfield: limite de requisições atingido");
+> 1753	    }
+> 1754	    throw new Error(`Higgsfield submit error ${submitResp.status}: ${t.slice(0, 200)}`);
+> 1755	  }
+> 1756	
+> 1757	  const submitData = await submitResp.json();
+> 1758	  const requestId = submitData.request_id || submitData.id;
+> 1759	  if (!requestId) throw new Error("Higgsfield: resposta de submit inválida (sem request_id)");
+> 1760	
+> 1761	  // ── Poll until terminal state ──────────────────────────────────────
+> 1762	  const started = Date.now();
+> 1763	  while (Date.now() - started < MAX_POLL_MS) {
+> 1764	    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+> 1765	    const statusResp = await fetch(`${BASE_URL}/requests/${requestId}/status`, {
+> 1766	      method: "GET",
+> 1767	      headers: { Authorization: authHeader, Accept: "application/json" },
+> 1768	    });
+> 1769	    if (!statusResp.ok) {
+> 1770	      const t = await statusResp.text();
+> 1771	      throw new Error(`Higgsfield status error ${statusResp.status}: ${t.slice(0, 200)}`);
+> 1772	    }
+> 1773	    const statusData = await statusResp.json();
+> 1774	    if (statusData.status === "completed") {
+> 1775	      const url = statusData.images?.[0]?.url || statusData.video?.url || "";
+> 1776	      if (!url) throw new Error("Higgsfield: geração concluída sem URL de saída");
+> 1777	      return { url };
+> 1778	    }
+> 1779	    if (statusData.status === "failed") throw new Error("Higgsfield: a geração falhou no provedor");
+> 1780	    if (statusData.status === "nsfw") throw new Error("Higgsfield: conteúdo bloqueado por moderação");
+> 1781	    if (statusData.status === "cancelled") throw new Error("Higgsfield: geração cancelada");
+> 1782	  }
+> 1783	  throw new Error("Higgsfield: geração demorou demais (timeout >90s)");
+> 1784	}
+> 1785	
+> 1786	// ═══════════════════════════════════════════════════════════════════════════
+> 1787	// Phase 4.2c — Async video submit (image_to_video)
+> 1788	// ═══════════════════════════════════════════════════════════════════════════
+> 1789	// Fire-and-forget: POST Higgsfield with `?hf_webhook=<callback>`, capture
+> 1790	// `request_id`, UPDATE execution.operation_id, return 200 with status='queued'.
+> 1791	// `higgsfield-webhook` finalizes atomically (download → upload → deduct → asset row).
+> 1792	// Lei 1 trail: every gate inserts a row visible via REST (execution row, asset row,
+> 1793	// ledger row, infra_health_logs pulse).
+> 1794	// SOP: docs/processes/[[canvas-video-async-execution|canvas-video-async-execution]].md
+> 1795	// Validation doc: .claude/context/higgsfield-api-validation-2026-05-15.md
+> 1796	
+> 1797	interface SubmitVideoOpts {
+> 1798	  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> 1799	  admin: any; // SupabaseClient — looser type avoids createClient generic friction
+> 1800	  supabaseUrl: string;
+> 1801	  apiKey: string;
+> 1802	  apiSecret: string;
+> 1803	  body: ExecuteRequest;
+> 1804	  execution: { id: string; webhook_token: string; credits_charged: number };
+> 1805	  corsHeaders: Record<string, string>;
+> 1806	}
+> 1807	
+> 1808	async function submitHiggsfieldVideo(opts: SubmitVideoOpts): Promise<Response> {
+> 1809	  const { admin, supabaseUrl, apiKey, apiSecret, body, execution, corsHeaders } = opts;
+> ```
+
+## 🤖 Claude *(03:12:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"higgsfield\" --include=\"*.ts\" --include=\"*.md\" | grep -i \"mode\\|compose\\|reference\" | head -30",
+  "description": "Search for Higgsfield mode/compose references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (32.5KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/tool-results/bj2lgt83u.txt
+> 
+> Preview (first 2KB):
+> README.md:2. **Canvas consistency + 4.2 (Stream A) — verified, not rebuilt**: a material code audit confirmed cross-node reference threading + seed-lock (`generateReplicate`/`generateOpenRouter` + inspectors/pipeline) and the 5 typed nodes / async video pipeline were **already shipped**. The only real gap closed: `higgsfield-webhook` now maps `nsfw`/`canceled` to a clear soft-fail reason (no overcharge).
+> README.md:- **`canvas-execute` tiering Soul** — helper `resolveHiggsfieldSoulKey()` mapeia provider×model×resolution×batch para 4 tiers precisos em `CREDIT_COSTS` (`higgsfield/soul-{720p,1080p}-{1,4}` = 20/26/40/65 mcoCoins); aspect ratio map expandido com validação de set canônico (incluindo 4:5); placeholders DoP/Kling para Phase 5.3. Deploy: 131.9 kB.
+> .claude/skills/canvas-studio-cinematic/SKILL.md:  "provider": "openrouter" | "higgsfield", "model": "google/gemini-2.5-flash-image" | "dop-standard",
+> HANDOFF.md:- **Stream A — consistência + Canvas 4.2 (VERIFICADO, não reconstruído):** auditoria material confirmou reference threading + seed-lock (`generateReplicate:675-690`·`generateOpenRouter:749-759` + inspectors/pipeline `findUpstreamImages` + toggle `fixedSeed`) e os 5 nós tipados + pipeline async de vídeo JÁ shipados. Único gap real fechado: `higgsfield-webhook` mapeia `nsfw`/`canceled` p/ razão clara de soft-fail (sem cobrança).
+> HANDOFF.md:*   **Resolução Dinâmica**: Chave de custos de vídeo na Edge Function configurada para ser resolvida a partir de `${body.provider}/${body.model}-${body.parameters?.duration || 5}s` (ex: `higgsfield/dop-lite-5s`), e o modelo `"higgsfield/seedance-v1-pro-5s"` foi adicionado a `CREDIT_COSTS` com custo de **130 💎**.
+> ...
+> </persisted-output>
+> ```
+
+## 🤖 Claude *(03:12:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -r \"input_image\\|image_1\\|image_2\\|mode\\|reference\\|character\" --include=\"*.ts\" supabase/functions/canvas-execute/index.ts | head -50",
+  "description": "Search for Higgsfield compose parameters in canvas-execute"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/functions/canvas-execute/index.ts:// Image models (Nano Banana 2, FLUX, DALL-E) read very long prompts as
+> supabase/functions/canvas-execute/index.ts:  if (body.model !== "soul" && body.model !== "generate") return undefined;
+> supabase/functions/canvas-execute/index.ts:  model: string;
+> supabase/functions/canvas-execute/index.ts:  input_image_1?: string;
+> supabase/functions/canvas-execute/index.ts:  input_image_2?: string;
+> supabase/functions/canvas-execute/index.ts:  // as reference images, + a locked seed propagated across the connected graph.
+> supabase/functions/canvas-execute/index.ts:  reference_image_urls?: string[];
+> supabase/functions/canvas-execute/index.ts:  // Spaces Fase 1b ledger mode (SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md S4): presence of BOTH
+> supabase/functions/canvas-execute/index.ts:// Spaces 1b executable allowlist (SOP S7/S8): provider/model pairs the Spaces branch accepts for
+> supabase/functions/canvas-execute/index.ts:    // providers fall back to the provider/model lookup or the node_type slug.
+> supabase/functions/canvas-execute/index.ts:          ? `${body.provider}/${body.model}-${body.parameters?.duration || 5}s`
+> supabase/functions/canvas-execute/index.ts:            ? `${body.provider}/${body.model}`
+> supabase/functions/canvas-execute/index.ts:    // ── Spaces Fase 1b ledger mode (SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md) ──────────
+> supabase/functions/canvas-execute/index.ts:    if (body.node_type === "image_to_video" && !ALLOWED_VIDEO_MODELS.includes(body.model)) {
+> supabase/functions/canvas-execute/index.ts:        error: "Tier indisponível — selecione um modelo de vídeo válido nesta fase",
+> supabase/functions/canvas-execute/index.ts:        model_requested: body.model,
+> supabase/functions/canvas-execute/index.ts:        model: body.model,
+> supabase/functions/canvas-execute/index.ts:        const modelName = body.parameters?.target_model || "generic";
+> supabase/functions/canvas-execute/index.ts:          modelName,
+> supabase/functions/canvas-execute/index.ts:          model_used: body.model,
+> supabase/functions/canvas-execute/index.ts:          p_model: body.model,
+> supabase/functions/canvas-execute/index.ts:          model: body.model,
+> supabase/functions/canvas-execute/index.ts:  // Routing based on model parameter (aligned with .claude/context/higgsfield-api-validation-2026-05-15.md)
+> supabase/functions/canvas-execute/index.ts:  let modelPath = "higgsfield-ai/dop/standard";
+> supabase/functions/canvas-execute/index.ts:  if (o.body.model === "dop-lite") {
+> supabase/functions/canvas-execute/index.ts:    modelPath = "higgsfield-ai/dop/lite";
+> supabase/functions/canvas-execute/index.ts:  } else if (o.body.model === "dop-turbo") {
+> supabase/functions/canvas-execute/index.ts:    modelPath = "higgsfield-ai/dop/turbo";
+> supabase/functions/canvas-execute/index.ts:  } else if (o.body.model === "kling-2.1-pro") {
+> supabase/functions/canvas-execute/index.ts:    modelPath = "kling-video/v2.1/pro/image-to-video";
+> supabase/functions/canvas-execute/index.ts:  } else if (o.body.model === "seedance-v1-pro") {
+> supabase/functions/canvas-execute/index.ts:    modelPath = "bytedance/seedance/v1/pro/image-to-video";
+> supabase/functions/canvas-execute/index.ts:  const submitUrl = new URL(`${BASE_URL}/${modelPath}`);
+> supabase/functions/canvas-execute/index.ts:    const pair = `${body.provider}/${body.model}`;
+> supabase/functions/canvas-execute/index.ts:    if (body.provider !== "higgsfield" || !SPACES_VIDEO_MODELS.has(body.model)) {
+> supabase/functions/canvas-execute/index.ts:        error: "spaces_model_unsupported",
+> supabase/functions/canvas-execute/index.ts:        model_requested: pair,
+> supabase/functions/canvas-execute/index.ts:    const costKey = `higgsfield/${body.model}-${duration}s`;
+> supabase/functions/canvas-execute/index.ts:    const composeRefs = (body.reference_image_urls ?? []).filter(Boolean);
+> supabase/functions/canvas-execute/index.ts:  // F1 (review 2c): pin voice/compose to the DECLARED price — a crafted provider/model must never
+> supabase/functions/canvas-execute/index.ts:    const pair = `${body.provider}/${body.model}`;
+> supabase/functions/canvas-execute/index.ts:        error: "spaces_model_unsupported",
+> supabase/functions/canvas-execute/index.ts:        model_requested: pair,
+> supabase/functions/canvas-execute/index.ts:  const modelKey = body.node_type === "magic_prompt"
+> supabase/functions/canvas-execute/index.ts:      : (body.node_type === "scene_compose" ? "higgsfield/scene-compose" : `${body.provider}/${body.model}`));
+> supabase/functions/canvas-execute/index.ts:    p_model_key: modelKey,
+> supabase/functions/canvas-execute/index.ts:    p_context: { provider: body.provider, model: body.model, node_type: body.node_type },
+> supabase/functions/canvas-execute/index.ts:          body.parameters?.target_model || "generic",
+> supabase/functions/canvas-execute/index.ts:      metadata: { node_run_id: body.node_run_id, model: modelKey, refund_committed: !finErr },
+> supabase/functions/canvas-execute/index.ts:        p_model: body.model,
+> ```
+
+## 🤖 Claude *(03:13:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/higgsfield-api-validation-2026-05-15.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Higgsfield API Validation — 2026-05-15
+> 2	
+> 3	> Validação read-only da API canônica antes da Fase 5 (Canvas Studio 4.2).
+> 4	> Fonte: `https://docs.higgsfield.ai/docs/llms-full.txt` (32 KB de docs concatenadas)
+> 5	> + `https://docs.higgsfield.ai/docs/pricing` (pricing tabulado).
+> 6	> Owner: Scientist agent (auditoria documental) + Engineer agent (implementação).
+> 7	
+> 8	---
+> 9	
+> 10	## TL;DR
+> 11	
+> 12	Implementação atual em `supabase/functions/canvas-execute/index.ts` (após commit `1209738`) está **majoritariamente alinhada** com a API canônica. **Duas divergências críticas** precisam ser corrigidas antes da Fase 5.3 (vídeo async):
+> 13	
+> 14	1. **Webhook é via query param `?hf_webhook=URL`, NÃO no body.** Cliente Deno do `_shared/higgsfield.ts` precisa concatenar `?hf_webhook=` na URL do submit — não enviar como campo JSON.
+> 15	2. **DoP renomeou `/preview` → `/standard`** (a doc lista `dop/preview` em "Available Models" mas todos os exemplos canônicos usam `dop/standard`; a página de pricing confirma: "Standard (ex. Preview)"). Catálogo deve usar `dop/standard` como canônico, manter `dop/preview` como alias deprecado.
+> 16	
+> 17	Tudo o mais está alinhado: base URL, auth header, status flow, refund automático em failed/nsfw, idempotência via `request_id`.
+> 18	
+> 19	---
+> 20	
+> 21	## Base URL & Auth (✅ alinhado)
+> 22	
+> 23	```
+> 24	Base API URL: https://platform.higgsfield.ai
+> 25	Auth header:  Authorization: Key {api_key}:{api_secret}
+> 26	```
+> 27	
+> 28	Confirmado em `canvas-execute/index.ts` linhas 159–197 (commit `1209738`).
+> 29	A divergência prévia (`api.higgsfield.ai/v1/generations` com `X-API-Key`/`X-API-Secret`) **já foi corrigida**.
+> 30	
+> 31	---
+> 32	
+> 33	## Endpoints canônicos
+> 34	
+> 35	### Queue management (✅ alinhado)
+> 36	
+> 37	| Endpoint | Method | Uso |
+> 38	|----------|--------|-----|
+> 39	| `POST /{model_id}` | POST | Submit generation request |
+> 40	| `GET /requests/{request_id}/status` | GET | Poll status |
+> 41	| `POST /requests/{request_id}/cancel` | POST | Cancel (apenas em `queued`) |
+> 42	
+> 43	`{model_id}` é o caminho completo após o host (e.g. `higgsfield-ai/soul/standard`).
+> 44	
+> 45	### Modelos relevantes para Canvas Studio
+> 46	
+> 47	| Caminho canônico | Tipo | Uso no Canvas |
+> 48	|------------------|------|---------------|
+> 49	| `higgsfield-ai/soul/standard` | text-to-image | GenerateImage node (modelo premium) |
+> 50	| `higgsfield-ai/dop/standard` | image-to-video | ImageToVideo node (qualidade max) |
+> 51	| `higgsfield-ai/dop/preview` | **alias** deprecado | NÃO usar (legado) |
+> 52	| `kling-video/v2.1/pro/image-to-video` | image-to-video | ImageToVideo node (cinematográfico) |
+> 53	| `bytedance/seedance/v1/pro/image-to-video` | image-to-video | ImageToVideo node (terceira opção, premium) |
+> 54	
+> 55	⚠️ **OTD-HF-001:** A página `/guides/video` cita `higgsfield-ai/dop/preview` na lista "Available Models" mas usa `dop/standard` no exemplo bash. A página de pricing esclarece: **"Standard (ex. Preview)"** — `preview` foi renomeado para `standard`. Usar `standard` em produção; `preview` provavelmente continua respondendo mas é nomenclatura legada.
+> 56	
+> 57	⚠️ **OTD-HF-002:** Seedance v1 Pro existe e é image-to-video premium — não estava no plano `floating-sleeping-sparrow.md`. Considerar adicionar como 3ª opção no catálogo do nó ImageToVideo.
+> 58	
+> 59	---
+> 60	
+> 61	## Request shape — Soul (text-to-image)
+> 62	
+> 63	```bash
+> 64	POST https://platform.higgsfield.ai/higgsfield-ai/soul/standard
+> 65	Authorization: Key {key}:{secret}
+> 66	Content-Type: application/json
+> 67	Accept: application/json
+> 68	
+> 69	{
+> 70	  "prompt": "string",
+> 71	  "aspect_ratio": "16:9" | "9:16" | "1:1" | "4:5",
+> 72	  "resolution": "720p" | "1080p" | "2K"
+> 73	}
+> 74	```
+> 75	
+> 76	Adicionais detectados via SDK Python (`higgsfield_client`):
+> 77	- `camera_fixed: bool` — controla movimento da câmera mesmo em imagem estática (provavelmente afeta o pose canvas)
+> 78	
+> 79	## Request shape — DoP / Kling (image-to-video)
+> 80	
+> 81	```bash
+> 82	POST https://platform.higgsfield.ai/higgsfield-ai/dop/standard
+> 83	Authorization: Key {key}:{secret}
+> 84	Content-Type: application/json
+> 85	Accept: application/json
+> 86	
+> 87	{
+> 88	  "image_url": "https://...",
+> 89	  "prompt": "string",
+> 90	  "duration": 5    # DoP aceita 5; Kling e Seedance podem variar
+> 91	}
+> 92	```
+> 93	
+> 94	⚠️ **OTD-HF-003:** Docs canônicas só mostram exemplos com `duration: 5`. O plano `floating-sleeping-sparrow.md` menciona 5/10/15s — confirmar via `cloud.higgsfield.ai/explore` (Models Gallery) ou via support se DoP suporta 10s/15s. Pricing tabulado só lista 5s para DoP.
+> 95	
+> 96	Parâmetros avançados (motion strength, aspect ratio, resolution para vídeo) **não estão documentados na llms-full** — provavelmente expostos no api-reference detalhado (não capturado nesta sessão). Recomendação: usar `image_url` + `prompt` + `duration` no v1; investigar params avançados via `/docs/api-reference` numa Phase 4.3 follow-up.
+> 97	
+> 98	---
+> 99	
+> 100	## Response shape
+> 101	
+> 102	### Queued (HTTP 200)
+> 103	```json
+> 104	{
+> 105	  "status": "queued",
+> 106	  "request_id": "d7e6c0f3-6699-4f6c-bb45-2ad7fd9158ff",
+> 107	  "status_url": "https://platform.higgsfield.ai/requests/.../status",
+> 108	  "cancel_url": "https://platform.higgsfield.ai/requests/.../cancel"
+> 109	}
+> 110	```
+> 111	
+> 112	### Completed (poll ou webhook)
+> 113	```json
+> 114	{
+> 115	  "status": "completed",
+> 116	  "request_id": "...",
+> 117	  "status_url": "...",
+> 118	  "cancel_url": "...",
+> 119	  "images": [{ "url": "..." }],      // se image gen
+> 120	  "video":  { "url": "..." }          // se video gen
+> 121	}
+> 122	```
+> 123	
+> 124	### Failed / NSFW
+> 125	```json
+> 126	{
+> 127	  "status": "failed" | "nsfw",
+> 128	  "request_id": "...",
+> 129	  "error": "Generation fail message"    // apenas em failed
+> 130	}
+> 131	```
+> 132	
+> 133	### Estados possíveis
+> 134	
+> 135	| Status | Significado | Crédito |
+> 136	|--------|-------------|---------|
+> 137	| `queued` | Na fila | reservado |
+> 138	| `in_progress` | Processando (não-cancelável) | reservado |
+> 139	| `completed` | Concluído com sucesso | **cobrado** |
+> 140	| `failed` | Erro técnico | **refund automático** |
+> 141	| `nsfw` | Bloqueado por moderação | **refund automático** |
+> 142	
+> 143	✅ **Confirma o invariante do plano:** debitar `mco_balance` SOMENTE após `completed` + upload OK. Failed/NSFW = sem cobrança (refund é automático no lado Higgsfield).
+> 144	
+> 145	---
+> 146	
+> 147	## Webhook spec — DIVERGÊNCIA CRÍTICA
+> 148	
+> 149	### Como passar a URL do webhook ❗
+> 150	
+> 151	**Não é via body.** A URL é passada como **query parameter** `hf_webhook` na URL do submit:
+> 152	
+> 153	```bash
+> 154	POST 'https://platform.higgsfield.ai/higgsfield-ai/soul/standard?hf_webhook=https://my.endpoint/callback'
+> 155	Authorization: Key {key}:{secret}
+> 156	...
+> 157	```
+> 158	
+> 159	**Implicação no código:**
+> 160	
+> 161	```typescript
+> 162	// _shared/higgsfield.ts (Deno) — pseudocódigo
+> 163	async function submitVideoJob(opts: {
+> 164	  modelPath: string;       // "higgsfield-ai/dop/standard"
+> 165	  imageUrl: string;
+> 166	  prompt: string;
+> 167	  duration: number;
+> 168	  webhookUrl: string;
+> 169	  apiKey: string;
+> 170	  apiSecret: string;
+> 171	}) {
+> 172	  const submitUrl = new URL(`https://platform.higgsfield.ai/${opts.modelPath}`);
+> 173	  submitUrl.searchParams.set("hf_webhook", opts.webhookUrl);   // ← query param
+> 174	
+> 175	  const res = await fetch(submitUrl.toString(), {
+> 176	    method: "POST",
+> 177	    headers: {
+> 178	      "Authorization": `Key ${opts.apiKey}:${opts.apiSecret}`,
+> 179	      "Content-Type": "application/json",
+> 180	      "Accept": "application/json",
+> 181	    },
+> 182	    body: JSON.stringify({
+> 183	      image_url: opts.imageUrl,
+> 184	      prompt: opts.prompt,
+> 185	      duration: opts.duration,
+> 186	    }),
+> 187	  });
+> 188	  // ...
+> 189	}
+> 190	```
+> 191	
+> 192	### Webhook payload (recebido pelo Edge Function MCORCH)
+> 193	
+> 194	POST request, JSON body, **sem assinatura HMAC** (docs não mencionam nenhum mecanismo de signing).
+> 195	
+> 196	```json
+> 197	// Completed (image)
+> 198	{ "status": "completed", "request_id": "...", "status_url": "...", "cancel_url": "...", "images": [{"url": "..."}] }
+> 199	
+> 200	// Completed (video)
+> 201	{ "status": "completed", "request_id": "...", "status_url": "...", "cancel_url": "...", "video": {"url": "..."} }
+> 202	
+> 203	// Failed
+> 204	{ "status": "failed", "request_id": "...", "error": "..." }
+> 205	
+> 206	// NSFW
+> 207	{ "status": "nsfw", "request_id": "..." }
+> 208	```
+> 209	
+> 210	### Retry policy
+> 211	
+> 212	- **2 horas** de retry até resposta 2xx
+> 213	- Se endpoint continuar falhando, retries cessam — `status_url` continua disponível para polling manual
+> 214	- **MUST** retornar `2xx` para acknowledgment (sob 10s)
+> 215	
+> 216	### Idempotência
+> 217	
+> 218	- Higgsfield pode entregar o mesmo webhook múltiplas vezes durante retries
+> 219	- **Edge Function MUST** ser idempotente via `request_id`:
+> 220	  ```sql
+> 221	  -- pseudocódigo
+> 222	  UPDATE vm_canvas_jobs
+> 223	  SET status = 'completed', result_url = ..., updated_at = NOW()
+> 224	  WHERE higgsfield_request_id = $1 AND status = 'pending';
+> 225	  -- Se status já = 'completed', UPDATE retorna 0 rows e nada acontece
+> 226	  ```
+> 227	
+> 228	### ⚠️ Webhook auth — Higgsfield NÃO assina o callback
+> 229	
+> 230	**Recomendação MCORCH:** proteger o endpoint via **token embutido na URL** do webhook:
+> 231	
+> 232	```typescript
+> 233	// Quando faz submit:
+> 234	const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/higgsfield-webhook?token=${Deno.env.get("HIGGSFIELD_WEBHOOK_SECRET")}`;
+> 235	```
+> 236	
+> 237	```typescript
+> 238	// No edge function higgsfield-webhook:
+> 239	const token = new URL(req.url).searchParams.get("token");
+> 240	if (token !== Deno.env.get("HIGGSFIELD_WEBHOOK_SECRET")) {
+> 241	  return new Response("Forbidden", { status: 403 });
+> 242	}
+> 243	```
+> 244	
+> 245	`HIGGSFIELD_WEBHOOK_SECRET` é um **secret novo no vault Supabase**, gerado uma vez (ex: `openssl rand -hex 32`). Engineer agent é owner desse secret.
+> 246	
+> 247	---
+> 248	
+> 249	## Pricing (CONFIRMADO via /docs/pricing)
+> 250	
+> 251	**Conversão:** `$1 USD = 16 credits` · pay-as-you-go · sem mínimo de volume
+> 252	
+> 253	### Soul (Text-to-Image)
+> 254	
+> 255	| Quality | Batch | Credits | USD | Comentário |
+> 256	|---------|-------|---------|-----|-----|
+> 257	| 720p | 1 | 1.5 | $0.09 | menor custo de validação |
+> 258	| 720p | 4 | 2 | $0.13 | batch dilui custo unitário |
+> 259	| 1080p | 1 | 3 | $0.19 | preview hi-res |
+> 260	| 1080p | 4 | 5 | $0.31 | mood board completo |
+> 261	
+> 262	### DoP (Image-to-Video, 5s)
+> 263	
+> 264	| Variant | Credits | USD | Notas |
+> 265	|---------|---------|-----|-------|
+> 266	| Lite | 2 | $0.125 | velocidade básica |
+> 267	| Turbo | 6.5 | $0.406 | 2× rápido, fila prioritária |
+> 268	| Standard | 9 | $0.563 | melhor qualidade, fila prioritária |
+> 269	
+> 270	### Character (Soul ID)
+> 271	
+> 272	40 credits = $2.50 — criação de personagem reutilizável (Phase 4.5 / pós-C4)
+> 273	
+> 274	### Speak V2 (Speech-to-Video) — fora do escopo Phase 4.2
+> 275	
+> 276	Mid/High × 5/10/15s — não usado no Canvas Studio v1.
+> 277	
+> 278	### ⚠️ OTD-HF-004: Kling 2.1 Pro pricing
+> 279	
+> 280	Não tabulado em `/docs/pricing` (página foca em modelos Higgsfield próprios). Kling é third-party. Capturar pricing via:
+> 281	- `cloud.higgsfield.ai/explore` (Models Gallery)
+> 282	- `/docs/api-reference/image-to-video/generate-using-kling-2-1-pro` (não verificado)
+> 283	- Suporte (`support@higgsfield.ai`)
+> 284	
+> 285	Sugerido para Phase 4.2: usar **placeholder de 12 credits / 5s** baseado no padrão DoP Standard (9 cr) + premium markup. **Confirmar no Cloud Dashboard antes de cobrar mcoCoins por essa via.**
+> 286	
+> 287	---
+> 288	
+> 289	## Cobrança & Refund (✅ alinhado com o plano)
+> 290	
+> 291	- ✅ **Failed/NSFW = refund automático** no lado Higgsfield. Cliente MCORCH só precisa NÃO debitar `mco_balance` quando webhook chegar com status != `completed`.
+> 292	- ✅ Sovereign não paga por requests cancelados via `/cancel` em `queued`.
+> 293	- ✅ Arquivos resultantes **só retidos por 7 dias** no Higgsfield. **MCORCH precisa baixar imediatamente após `completed`** para o bucket `canvas-assets` (lifetime do Sovereign).
+> 294	
+> 295	### Invariante de billing (alinhado com `floating-sleeping-sparrow.md`)
+> 296	
+> 297	```
+> 298	Submit (canvas-execute):
+> 299	  └── INSERT vm_canvas_jobs (status='pending', NÃO debita mco_balance)
+> 300	
+> 301	Webhook (higgsfield-webhook):
+> 302	  ├── status='completed':
+> 303	  │     ├── Download bytes do result_url Higgsfield
+> 304	  │     ├── Upload para bucket 'canvas-assets'  (se falhar → status='failed', sem débito)
+> 305	  │     ├── deduct_mco_coins(user_id, coin_cost)   ← débito atômico aqui
+> 306	  │     ├── INSERT vm_canvas_executions + vm_canvas_assets
+> 307	  │     └── UPDATE vm_canvas_jobs (status='completed', result_url=...)
+> 308	  │
+> 309	  ├── status='failed' OU 'nsfw':
+> 310	  │     └── UPDATE vm_canvas_jobs (status=<status>, error=...)
+> 311	  │     (Higgsfield refund é automático; nada a fazer no nosso lado)
+> 312	  │
+> 313	  └── (Idempotência: UPDATE somente quando job.status='pending')
+> 314	```
+> 315	
+> 316	---
+> 317	
+> 318	## Best Practices observadas (consolidar no client Deno)
+> 319	
+> 320	1. **Polling fallback:** se webhook falhar (2h sem 2xx), client deve poder fazer poll manual de `status_url`. Engineer agent monitora `vm_canvas_jobs.status='pending'` com `created_at > 2h ago` e dispara poll de recovery.
+> 321	2. **Resposta rápida do webhook:** ≤ 10s para acknowledgment. Não fazer upload síncrono dentro do handler — usar `queueMicrotask` ou Supabase Edge Background Tasks.
+> 322	3. **HTTPS obrigatório** — Supabase Edge Functions já HTTPS por padrão. ✅
+> 323	4. **`request_id` como identidade canônica** — usar como chave primária de idempotência em `vm_canvas_jobs.higgsfield_request_id` (UNIQUE constraint na migration).
+> 324	
+> 325	---
+> 326	
+> 327	## Deltas vs. `canvas-execute/index.ts` corrente (commit `1209738`)
+> 328	
+> 329	| Componente | Estado atual | Ação Phase 5 |
+> 330	|------------|--------------|--------------|
+> 331	| Base URL `platform.higgsfield.ai` | ✅ correto | manter |
+> 332	| Auth `Key key:secret` | ✅ correto | manter |
+> 333	| Soul endpoint `/higgsfield-ai/soul/standard` | ✅ correto | manter |
+> 334	| Submit + poll pattern | ✅ correto | manter |
+> 335	| RPC `deduct_mco_coins` (não `deduct_mco_balance`) | ✅ corrigido em `1209738` | manter |
+> 336	| Webhook param no body | ❌ usar **query param** `?hf_webhook=` | refatorar em `_shared/higgsfield.ts` |
+> 337	| DoP endpoint `preview` vs `standard` | ❓ confirmar uso | usar `standard` como canônico |
+> 338	| Webhook secret token | ❌ não existe | criar `HIGGSFIELD_WEBHOOK_SECRET` no vault |
+> 339	| Higgsfield credit balance UI | ❌ não existe | investigar endpoint `/credits/balance` ou similar (não documentado na llms-full) |
+> 340	| Kling pricing | ❌ desconhecido | placeholder 12 cr / 5s; confirmar via Cloud |
+> 341	
+> 342	---
+> 343	
+> 344	## OTDs registradas
+> 345	
+> 346	| ID | Tema | RPN estimado | Owner |
+> 347	|----|------|--------------|-------|
+> 348	| OTD-HF-001 | DoP `preview` vs `standard` ambiguity | 60 (baixo) | Engineer |
+> 349	| OTD-HF-002 | Seedance v1 Pro não no plano original | 30 (info) | Artisan (catalog UX) |
+> 350	| OTD-HF-003 | DoP duration > 5s não documentada | 80 (médio — se Sovereign quiser 10s/15s) | Engineer |
+> 351	| OTD-HF-004 | Kling 2.1 Pro pricing não tabulado | 120 (médio — fila prioridade) | Engineer |
+> 352	| OTD-HF-005 | Webhook sem HMAC nativo — depende de token na URL | 140 (médio-alto) | Engineer + Scientist (FMEA-VM-007) |
+> 353	
+> 354	Todas as OTDs serão refletidas no `08-quality-metrics.md` do BoK viralmind (debt sealing posterior).
+> 355	
+> 356	---
+> 357	
+> 358	## Gate de saída
+> 359	
+> 360	✅ **Sovereign aprovou plano (C + D).**
+> 361	✅ **Validação executada SEM gastar crédito.**
+> 362	
+> 363	**Next step:** Phase 5.1 — 1 chamada Soul real (720p, batch=1, 1.5 credits = $0.09) para validar o flywheel end-to-end com débito de 1 crédito Higgsfield + N mcoCoins (catálogo MCORCH). Total estimado para validar Phase 5.1: **≤ 5 credits Higgsfield** (margem de erro 3×).
+> 364	
+> ```
+
+## 🤖 Claude *(03:13:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"compose\" .claude/context/higgsfield-api-validation-2026-05-15.md",
+  "description": "Search for compose in the validation doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(03:13:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"scene_compose\\|higgsfield.*compose\\|soul.*compose\" --include=\"*.ts\" --include=\"*.md\" . | head -50",
+  "description": "Search for scene_compose references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README.md:879:- **Mapeamento de Enums no Backend**: Resolvida a falha de submissão do canvas mapeando as strings `image_to_video` e `scene_compose` para seus enums Postgres equivalentes (`generate_video` e `compose`) nas escritas do banco de dados.
+> .claude/context/autonomous-loop-charter.md:50:- **SOP S30-S32 ANTES:** scene_compose SYNC via generateHiggsfield legado; custo 18 PINADO (classe F1); guards prompt+≥1 imagem; cap 2 = verdade do server; `NODE_PORTS.composer` declarado (image-1/image-2/prompt, threading ordenado); picker parametrizado (designer=2, imagem=4); skip no-op.
+> .claude/context/canvas-consistency-validation-2026-05-29.md:104:- Soul **compose** (`/soul/compose`) já aceita `image_1_url`/`image_2_url`/`layout_url` ✅ —
+> src/lib/spaces-execution.ts:191:  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video' | 'voice_over' | 'scene_compose';
+> src/lib/spaces-execution.ts:258:      project_id: spaceId, node_id: node.id, node_type: 'scene_compose',
+> src/lib/spaces-execution.ts:259:      provider: 'higgsfield', model: 'scene-compose', prompt,
+> .claude/context/sprint-priorities.md:151:**Sprint v6.3.1 selado em 2026-05-16** — OpenClaw Neural Bridge + Departmental Army Pantheon: Zero-Memory Crisis do OpenClaw fechada. Bridge `scripts/bridge-mesh-to-openclaw.ts` (327 LOC, mirror do padrão `backfill-embeddings.ts`) exporta 8239 `mcorch_nodes` em Two-tier hybrid (Tier 1 = 375 strategy nodes com full content + YAML frontmatter; Tier 2 = 2527 AST symbols com path + signature + 200-char summary; `ast_variable` excluído como ruído — 5336 entradas triviais de `const x = ...`). `scripts/distribute-mesh-to-agents.ts` (275 LOC) materializa file copies (não symlinks — indexer não segue) com modelo "shared base + agent-specific overlay" aprovado pelo Sovereign: shared base de 4 dirs (decision/milestone/system/handoff) para os 6 agentes + overlays específicos (engineer ganha toda Tier 2 + architecture/observation; scientist ganha documentation_suite/requirement/conversation/vault_note/markdown_file; artisan ganha conversation/ui-ux/feature; marketing-growth ganha feature + `revenue-flagged/` materializado via filter regex; guardian ganha observation + `_meta/`; main lê `mcorch-export/` direto pois workspace IS o repo). Squad escalado de 4→6 agentes — Pantheon Architecture L1 (engineer · scientist · artisan · marketing-growth NOVO com SOUL focado em Apollo/Affiliates/GCRUX) + Coordination Layer (main synthesizer · guardian NOVO com SOUL focado em Nightly Dreaming + Telegram briefing + CLAUDE.md proposals PR-style). `~/.openclaw/openclaw.json` agents.list atualizado; AGENTS/HEARTBEAT/IDENTITY/TOOLS/USER copiados do engineer template. `.claude/agents/openclaw-soul-template.md` (236 linhas) codifica L1/L2 inheritance + scaffolding protocol. Bootstrap indexing rodado nos 6: **9185 chunks total** (main 4439 · engineer 2591 · scientist 1824 · artisan 113 · marketing-growth 60 · guardian 58). Cron pipeline triplo instalado: 02:30 `nightly-bridge-refresh.sh` → 03:00 OpenClaw nativo `Memory Dreaming Promotion` → 03:30 `morning-briefing.sh` (composto por `compose-morning-briefing.ts` com 6 seções markdown ≤4000 chars; POST plain-text ao Telegram bot 8668689828; primeira entrega ao Sovereign chat 5835174772 com msg_id 201). Failure paths espelham `watchdog-mcorch.sh:69-131` (incident JSON em `/tmp/openclaw-incidents/` + POST best-effort ao gateway). CLAUDE.md ganhou seção "Departmental Army (Pantheon Architecture)" + 11 novas Key Files Reference entries + warning explícito "NUNCA pnpm no repo" (descoberto: pnpm move pacotes bun-installed para `node_modules/.ignored/`). 4 commits granulares (271bc58 bridge · 7e709f4 distribute · fd66185 cron · 4f88e04 docs). TS check zero erros. Milestone node `c1dbc53b-3a27-4da7-aef3-debd5c4047a0` embedado. 4 OTDs registrados (destaque: OTD-V631-001 RPN 280 — OpenClaw BoK SLA 7d expandido por esta sprint, recomendado `/bok-scribe openclaw` imediato). **Próximo deliverable: (a) `/bok-scribe openclaw` (zera SLA do override consciente v6.2.0); (b) Canvas Studio Phase 4.2b (`vm_canvas_jobs` + `higgsfield-webhook`).**
+> HANDOFF.md:35:Iteração 6. SOP S30-S32 ANTES do código. Composer entrou no slice (4ª modalidade projetada): guards 422 (prompt + ≥1 imagem), custo 18 **pinado** contra params forjados (classe F1 — gate C3 prova), cap 2 imagens = verdade do server (`refs[0]/[1]`), handles `image-1`/`image-2` declarados, picker parametrizado. **ACHADO MATERIAL do E2E pago:** o Higgsfield atual rejeita `mode='compose'` (`Input should be 'reference', 'character' or 'standard'`) — ou seja, **o scene_compose LEGADO do Canvas Studio está quebrado hoje por API drift**, não é regressão desta fatia. O slice degrada honesto: toast de falha + **estorno integral provado ao vivo** (charged 18 → refunded 18, saldo 4581 intacto). Fix = **OTD-SPACES-003** (revalidar docs Higgsfield — candidato `soul/reference` — antes de flipar o endpoint; nunca chutar semântica de provider). Provas: smoke **30/30** · vitest **398** · tsc 0 · Estimar 18 exato + contador 1/2 browser-verificados. Commits `c66e6b5`+`cbebc9e`. Space de teste deletado.
+> HANDOFF.md:5133:    - `"scene_compose"` -> `"compose"`.
+> HANDOFF.md:5207:    - `"scene_compose"` -> `"compose"`.
+> src/test/spaces-execution.test.ts:339:    expect(p).toMatchObject({ node_type: 'scene_compose', provider: 'higgsfield' });
+> src/types/canvas.ts:844:        node_type: "scene_compose",
+> supabase/functions/canvas-execute/index.ts:234:      scene_compose: "compose",
+> supabase/functions/canvas-execute/index.ts:1014:    body.node_type !== "scene_compose"
+> supabase/functions/canvas-execute/index.ts:1078:  if (body.node_type === "scene_compose") {
+> supabase/functions/canvas-execute/index.ts:1098:    : (body.node_type === "scene_compose"
+> supabase/functions/canvas-execute/index.ts:1137:  if ((body.node_type === "image_to_video" || body.node_type === "scene_compose") && (!keys.higgsfield || !keys.higgsfield_secret)) {
+> supabase/functions/canvas-execute/index.ts:1173:      : (body.node_type === "scene_compose" ? "higgsfield/scene-compose" : `${body.provider}/${body.model}`));
+> supabase/functions/canvas-execute/index.ts:1247:      } else if (body.node_type === "scene_compose") {
+> supabase/functions/canvas-execute/index.ts:1702:  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> supabase/functions/canvas-execute/index.ts:1704:    ? `${BASE_URL}/higgsfield-ai/soul/compose`
+> docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md:155:| S30 | **`composer` → `scene_compose` entra no slice SYNC** via `generateHiggsfield` legado (submit+poll in-window ≤90s, endpoint compose). Custo declarado **18 mco** (`CREDIT_COSTS['scene-compose']`), **PINADO** contra provider/model forjado (mesma classe F1 do review 2c). BYOK Higgsfield fail-closed 402 pós-404. | 4ª modalidade; caminho server já existente e provado no Canvas Studio. |
+> docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md:157:| S32 | **Saída = imagem** (flui pelo caminho sync de upload+finalize já existente do slice); `model_key='higgsfield/scene-compose'`; threading downstream: a saída do composer é imagem `done` normal (vira first-frame de vídeo, ref de imagem etc.). | Reuso total do pós-provider. |
+> scripts/qa/smoke-spaces-execution.ts:262:  // ── C1-C3 — scene_compose slice (Amendment 2d G16; zero Higgsfield cost) ──
+> scripts/qa/smoke-spaces-execution.ts:264:    node_type: 'scene_compose', provider: 'higgsfield', model: 'scene-compose',
+> scripts/qa/smoke-spaces-execution.ts:276:    .eq('model_key', 'higgsfield/scene-compose').maybeSingle();
+> ```
+
+## 🤖 Claude *(03:13:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"reference\\|character\\|standard\\|mode\" --include=\"*.ts\" --include=\"*.md\" . | grep -i \"higgsfield\\|soul\" | head -50",
+  "description": "Search for Higgsfield mode parameters"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README.md:86:  - **2d Composer:** código-completo (custo 18 pinado, cap 2 imagens=verdade do server) + **ACHADO MATERIAL**: Higgsfield dropou `mode=compose` (API atual: `reference|character|standard`) ⇒ o compose LEGADO do Canvas Studio está quebrado por API drift — slice degrada honesto com **estorno integral provado** (18→18). **OTD-SPACES-003** (revalidar docs antes de flipar endpoint).
+> README.md:456:2. **Canvas consistency + 4.2 (Stream A) — verified, not rebuilt**: a material code audit confirmed cross-node reference threading + seed-lock (`generateReplicate`/`generateOpenRouter` + inspectors/pipeline) and the 5 typed nodes / async video pipeline were **already shipped**. The only real gap closed: `higgsfield-webhook` now maps `nsfw`/`canceled` to a clear soft-fail reason (no overcharge).
+> README.md:571:   - Researched the official docs of every image model first (`.claude/context/canvas-consistency-validation-2026-05-29.md`) — Gemini Nano Banana receives reference images, Replicate gets seed+img2img, OpenAI uses `input_fidelity`, Soul compose threads `image_1`.
+> README.md:576:2. **3 per-product ML affiliate campaigns** (Roborock S8, Samsung Neo QLED 8K, Family Hub): each a real Canvas project with a base image + reference-consistent variation (Nano Banana, cents) + a paid DoP Standard video (3× success, 6–10 MB mp4, lineage to the variation, **27 Higgsfield credits**).
+> README.md:875:- **Segregação de Provedores**: Higgsfield isolado exclusivamente para geração e processamento assíncrono de vídeo; Nano Banana 2 (Gemini Image via OpenRouter) definido como modelo de imagem padrão.
+> README.md:881:- **Resolução Dinâmica**: Habilitada chave dinâmica de precificação de vídeo Higgsfield com o modelo `seedance-v1-pro-5s` (130 💎) incorporado.
+> README.md:958:- **Phase 4.2c wiring shipped** — backbone async Higgsfield destravado pelo OE04 (v6.6.0) entra em produção. canvas-execute ganha branch dedicada para `image_to_video`: submete ao endpoint `higgsfield-ai/dop/standard` com `?hf_webhook=<URL-encoded callback>`, persiste `vm_canvas_executions.operation_id` + `webhook_token` (64 hex unique), retorna 200 com `{status: 'queued'}` em <2s; débito de mcoCoins acontece **apenas no webhook após upload-OK** (atômico via `deduct_mco_coins` com `action='canvas_video_spend'`). `useCanvasJobsRealtime` ganha callback que reconcilia Zustand store quando Higgsfield POSTa no `higgsfield-webhook` (já deployed v6.4.0). `ImageToVideoInspector` Run button habilitado com tier-gate conservador (apenas `dop-standard-5s` clicável; Lite/Turbo/Kling/Seedance disabled com tooltip "Aguardando validação tier — Phase 4.3"). SOP `docs/processes/canvas-video-async-execution.md` (~190 LOC) + watchdog cron `scripts/canvas-video-watchdog.sh` (poll Higgsfield a cada 5min, marca `timeout` em jobs travados >60min, idempotente).
+> README.md:962:- **Out of scope (follow-ups):** (a) smoke test pago Higgsfield DoP Standard 5s ($0.56 — Sovereign valida quando convier); (b) OTD-CV42C-001: picker dinâmico de modelos via OpenRouter `/v1/models` (inclui free tier) — Phase 4.3; (c) Pipeline chaining (SceneCompose/StyleTransfer não recebem upstream image yet — Higgsfield Soul Character chega Phase 4.5); (d) cron install `*/5 * * * * canvas-video-watchdog.sh` é decisão Sovereign após smoke test passar.
+> README.md:1031:- **API Higgsfield validada read-only ANTES de gastar crédito** — Firecrawl puxou 32 KB de docs canônicas + pricing tabulado em `.claude/context/higgsfield-api-validation-2026-05-15.md`. **Duas divergências críticas mapeadas para Phase 4.2b:** (1) webhook é **query param `?hf_webhook=URL`**, NÃO body; (2) DoP `/preview` foi renomeado para `/standard`. Pricing canônico: $1 = 16 credits; Soul 720p batch=1 = 1.5 cr = $0.09; DoP Standard 5s = 9 cr = $0.56.
+> README.md:1032:- **`canvas-execute` tiering Soul** — helper `resolveHiggsfieldSoulKey()` mapeia provider×model×resolution×batch para 4 tiers precisos em `CREDIT_COSTS` (`higgsfield/soul-{720p,1080p}-{1,4}` = 20/26/40/65 mcoCoins); aspect ratio map expandido com validação de set canônico (incluindo 4:5); placeholders DoP/Kling para Phase 5.3. Deploy: 131.9 kB.
+> .claude/skills/canvas-studio-cinematic/SKILL.md:95:  "provider": "openrouter" | "higgsfield", "model": "google/gemini-2.5-flash-image" | "dop-standard",
+> .claude/skills/canvas-studio-cinematic/SKILL.md:107:- **Vídeo:** `higgsfield` / `dop-standard` (DoP Standard 5s, 125 mco). Whitelist enforced front+back.
+> .claude/context/higgsfield-api-validation-2026-05-15.md:15:2. **DoP renomeou `/preview` → `/standard`** (a doc lista `dop/preview` em "Available Models" mas todos os exemplos canônicos usam `dop/standard`; a página de pricing confirma: "Standard (ex. Preview)"). Catálogo deve usar `dop/standard` como canônico, manter `dop/preview` como alias deprecado.
+> .claude/context/higgsfield-api-validation-2026-05-15.md:39:| `POST /{model_id}` | POST | Submit generation request |
+> .claude/context/higgsfield-api-validation-2026-05-15.md:43:`{model_id}` é o caminho completo após o host (e.g. `higgsfield-ai/soul/standard`).
+> .claude/context/higgsfield-api-validation-2026-05-15.md:49:| `higgsfield-ai/soul/standard` | text-to-image | GenerateImage node (modelo premium) |
+> .claude/context/higgsfield-api-validation-2026-05-15.md:50:| `higgsfield-ai/dop/standard` | image-to-video | ImageToVideo node (qualidade max) |
+> .claude/context/higgsfield-api-validation-2026-05-15.md:55:⚠️ **OTD-HF-001:** A página `/guides/video` cita `higgsfield-ai/dop/preview` na lista "Available Models" mas usa `dop/standard` no exemplo bash. A página de pricing esclarece: **"Standard (ex. Preview)"** — `preview` foi renomeado para `standard`. Usar `standard` em produção; `preview` provavelmente continua respondendo mas é nomenclatura legada.
+> .claude/context/higgsfield-api-validation-2026-05-15.md:64:POST https://platform.higgsfield.ai/higgsfield-ai/soul/standard
+> .claude/context/higgsfield-api-validation-2026-05-15.md:82:POST https://platform.higgsfield.ai/higgsfield-ai/dop/standard
+> .claude/context/higgsfield-api-validation-2026-05-15.md:96:Parâmetros avançados (motion strength, aspect ratio, resolution para vídeo) **não estão documentados na llms-full** — provavelmente expostos no api-reference detalhado (não capturado nesta sessão). Recomendação: usar `image_url` + `prompt` + `duration` no v1; investigar params avançados via `/docs/api-reference` numa Phase 4.3 follow-up.
+> .claude/context/higgsfield-api-validation-2026-05-15.md:141:| `nsfw` | Bloqueado por moderação | **refund automático** |
+> .claude/context/higgsfield-api-validation-2026-05-15.md:154:POST 'https://platform.higgsfield.ai/higgsfield-ai/soul/standard?hf_webhook=https://my.endpoint/callback'
+> .claude/context/higgsfield-api-validation-2026-05-15.md:164:  modelPath: string;       // "higgsfield-ai/dop/standard"
+> .claude/context/higgsfield-api-validation-2026-05-15.md:172:  const submitUrl = new URL(`https://platform.higgsfield.ai/${opts.modelPath}`);
+> .claude/context/higgsfield-api-validation-2026-05-15.md:280:Não tabulado em `/docs/pricing` (página foca em modelos Higgsfield próprios). Kling é third-party. Capturar pricing via:
+> .claude/context/higgsfield-api-validation-2026-05-15.md:282:- `/docs/api-reference/image-to-video/generate-using-kling-2-1-pro` (não verificado)
+> .claude/context/higgsfield-api-validation-2026-05-15.md:333:| Soul endpoint `/higgsfield-ai/soul/standard` | ✅ correto | manter |
+> .claude/context/higgsfield-api-validation-2026-05-15.md:337:| DoP endpoint `preview` vs `standard` | ❓ confirmar uso | usar `standard` como canônico |
+> .claude/context/higgsfield-api-validation-2026-05-15.md:348:| OTD-HF-001 | DoP `preview` vs `standard` ambiguity | 60 (baixo) | Engineer |
+> .claude/context/sprint-priorities.md:7:**Sprint v6.82.1 — Sprint Spaces 1b→2d SELADO: canvas pago com 4 modalidades (2026-07-02)** — 6 iterações autônomas do loop pós-GO Sovereign. **(1b LIVE)** GO executado: migration `20260702190000` aplicada+registrada+provada (DDL 8/8) · **drift do ledger de migrations FECHADO** (10 registradas por sonda DDL, audit exit 0) · fix ordem de guards · smoke 13/13 · E2E pago magic_prompt (saldo −1 exato, Vision QA high). **(2a vídeo)** ledger-first no submit + webhook hash-safe (SHA-256-only, migration `20260702210000`) + supressão do deduct legado; review **NO P0/HIGH** (MEDIUM+2 LOW corrigidos); **canvas→vídeo REAL** MP4 11.3MB via webhook Higgsfield, saldo −40 exato, Vision QA no vídeo (space-demo `51b229cf` vivo). **(2b)** References picker upload real, cap honesto 4 = verdade do server. **(2c voz)** 8 vozes stock via `tts-speak` com JWT do usuário; review **APPROVED** + F1 pinado (gate A4); WAV 9s real, saldo −2 exato (space-demo `1d77b500` vivo). **(2d composer)** código-completo + **ACHADO**: Higgsfield dropou `mode=compose` → compose legado do Canvas Studio quebrado por API drift; estorno integral provado; **OTD-SPACES-003**. **Prova:** smoke **30/30** · vitest **398** · tsc 0 · SOPs S14-S32 ANTES do código · Phase 5c **SEAL ALLOWED** · mesh **9043** · handoff `f85d3cf4`. **Pending:** OTD-SPACES-001/002/003 · Workflow Apps/FX/multi-page (Fase 2) · voz clonada (biometria, Fila) · app-registration YT/TikTok (Fila). **Lição:** parar no erro material do provider (compose 422) em vez de chutar semântica = Lei 1 aplicada a APIs externas; e o pin de custo contra payload forjado (F1/A4/C3) virou padrão obrigatório de todo custo declarado.
+> .claude/context/sprint-priorities.md:33:**Sprint v6.47.0 — Per-user 100% (env = só infra) + CF WP unblock + sweep per-user FECHADO (2026-06-22)** — `/handson` → "resolver CF WAF + secrets, depois os próximos passos". **(1) CF WP unblock RESOLVIDO:** o componente de skip que faltava no Cloudflare era **"Nível de segurança"** (challenge por reputação de IP de **datacenter** Oracle AS31898, não bot/UA) — diagnosticado via Security→Events (a regra Skip já disparava `Ignorar`, mas o Nível de segurança desafiava por cima). Regra CF header-gated + secrets `WP_PUBLISH_SECRET`/`_HOST`; E2E `publish-wordpress`→`post_id 18`. SOPs `wordpress-cf-publish-unblock.md` (atualizada) + `wordpress-cf-per-user-publish.md` (multi-tenant). **(2) Diretiva Sovereign env=só-infra:** auditoria per-user (workflow `wf_102ef5ac`, 49 fns; 30 per-user · 11 fallback-ok · 4 remediadas) → removido `|| Deno.env.get(<provider>)` de **25 fns user-facing** (47 ocorrências) → per-user PURO fail-closed; 2 fns de sistema (`embed-mcorch-node`/`search-constellation`) → `MESH_EMBED_*` dedicadas; secrets antigos mantidos (seed source) + `.env` anotado. **(3) Sweep per-user FECHADO:** #1 openrouter-swarm · #2 canvas-execute Higgsfield · #3 fetch-trends (migration `rapidapi_key` + UI + 402 provado) · + `aios-chat-gateway` token vazado fail-closed. BYOK do User 0 seedado do `.env`. **Prova:** `/security-review` SAFE 2× · 27 fns deployadas 0 falhas · embedding pós-rename 200 · OpenRouter autenticou com chave per-user do User 0 · tsc 0 · gitleaks limpo · Phase 5c **SEAL ALLOWED** (10) · mesh **8947** · handoff `4e57bf72`. **Pending (próxima):** segurança `social-auth-callback` HMAC + `instagram-webhook` signature · **C** 1º ciclo pago (CF desbloqueado!) · BYOK imagem opt-in · impl WP-CF per-user. **Lição:** o E2E "falhou bonito" (OpenRouter 404-de-modelo + `user_id`) PROVOU a chave per-user; o approach atômico do Higgsfield pegou o trap do row null/secret antes do deploy; o "Nível de segurança" só apareceu no Security→Events (não chutei checkbox).
+> .claude/context/sprint-priorities.md:51:**Sprint v6.37.0 — Vision MCP Fatia 2: 4 Billable Tools + BYOK Foundation (+ Fatia 1 handshake/interop close) (2026-06-15)** — diretiva começou em "fechar a última ponta não-provada da Fatia 1 (mesh.search E2E com JWT)" e o Sovereign mandou seguir até a Fatia 2 inteira ("algo completo", "você escolhe a ordem"). **(1) mesh.search E2E fechado + bug crítico de Fatia 1:** o E2E com cliente MCP real pegou que o servidor reusava **um** `StreamableHTTPServerTransport` stateless (SDK proíbe reuso → `notifications/initialized` **500**, nenhum cliente completava handshake) → fix fresh-per-request; provado **7/7** + adversarial **6/6** (forja ES256 ×3 + injeção PostgREST ×7). **(2) Interop de protocolo** (achado pelo `/security-review` independente): gate aceitava só `2025-11-25`, 400-ando clientes 3rd-party → ampliado p/ `SUPPORTED_PROTOCOL_VERSIONS`; cliente cru heterogêneo **8/8** (`2025-03-26`/`2025-06-18`). **(3) Fatia 2 — fundação** (SOP Lei 2 + `infra/billing.ts` + `auth/credentials.ts` + `safety/duty-of-care.ts`: BYOK→plataforma→402 · deduct-on-entry+refund-on-failure · sentinel · duty-of-care) + **4 tools billable provados:** `vision.describe_image` (FR-VM-018, 7/7), `vision.analyze_video` (FR-VM-024 Gemini — **não Higgsfield** — cobrança/min, 7/7), `deepsearch.scrape` (FR-VM-007 Firecrawl BYOK-only, 4/4), `mesh.consolidate_reference` (FR-VM-021 escrita tenant-escopada, 5/5). **(4)** migration `firecrawl_api_key` Vault (`/security-review` limpo · aplicada+registrada) + UI Settings **deployada** + SSRF redirect-fix (achado do review). pkg **34/34** · tsc 0 · Phase 5c **SEAL ALLOWED** (10) · mesh **8917** · handoff `7a45d8ef` · 7 commits. **Top Gap novo:** `deepsearch.run` async (a metade "google/gemini" — FR-VM-007 job/poll) · Fatia 3 (PAT/OAuth/Plugin/jobs/erase LGPD) · vhost nginx OTD-VM-013 · OTD orphan-sub. **Lição:** o `/security-review` independente pagou de novo (achou o SSRF por redirect + o defeito de interop de protocolo que o cliente do mesmo-SDK mascarava); testar contra o ARTEFATO SERVIDO pegou o bug de handshake.
+> .claude/context/sprint-priorities.md:141:**Sprint v6.6.2 selado em 2026-05-17** — Canvas Studio Phase 4.2c — Async Video Pipeline Live: três rounds em sessão única destravando todos os providers de imagem do Canvas + backbone async Higgsfield. **(Round 1)** Phase 4.2c wiring shipped — `canvas-execute` ganha branch dedicada `image_to_video` que submete ao endpoint `higgsfield-ai/dop/standard` com `?hf_webhook=<URL-encoded callback>` (per validation doc), persiste `vm_canvas_executions.operation_id` + `webhook_token` (64-hex unique), retorna `{status:'queued'}` em <2s; débito atômico só no webhook após upload-OK (`deduct_mco_coins` `action='canvas_video_spend'`). Hook `useCanvasJobsRealtime` extendido com callback `onUpdate(row)` que reconcilia Zustand store. `CanvasEditorPage` monta Realtime + Run-All BFS fire-and-forget para video. `ImageToVideoInspector` Run button real + tier-gate UI (apenas `dop-standard-5s` clicável; Lite/Turbo/Kling/Seedance disabled com tooltip "Aguardando validação tier — Phase 4.3"). SOP `docs/processes/canvas-video-async-execution.md` (~190 LOC) escrita ANTES do código (Lei 2). Watchdog cron `scripts/canvas-video-watchdog.sh` (~95 LOC, bash + PostgREST + jq) — poll Higgsfield a cada 5min, marca `timeout` em jobs travados >60min, idempotente via HTTP 409 do webhook. Dry-run validado material: `[2026-05-17 21:54:35] 0 jobs to check` + health UUID `38c860f5-8d8d-4ae7-b54d-316f26678410` em `infra_health_logs`. **(Round 2 — assertExecuteSuccess Lei 1)** Smoke test revelou inspector mentindo: toast `"Geração concluída — 15 💎 debitados"` quando backend marcava `status='failed'` (saldo Sovereign confirmou intacto em 5533 — frontend mentindo, backend correto). Causa raiz: `canvas-execute` retorna HTTP 200 + `error` field, `mutateAsync` não throw, frontend tratava qualquer 200 como sucesso. Novo util `src/lib/canvas-execute-result.ts` faz `assertExecuteSuccess<T>(result)` que THROW em `result.error` set OU `status ∈ {failed,timeout,cancelled}`. Aplicado em 4 inspectors + Run-All. Toast agora usa `result.credits_charged ?? cost` (zero quando falha). Migration `20260518012541_canvas_assets_update_policy.sql` adiciona UPDATE policy (necessária para `upload({upsert:true})` que vira `INSERT...ON CONFLICT DO UPDATE`). **(Round 3 — 4 bugs novos)** **(A)** OpenAI `dall-e-3` E `gpt-image-1` HTTP 400 `Unknown parameter: 'response_format'`. Removido o param fixo; upload block agora baixa URL provider→canvas-assets server-side (mirror `rescue-video:39-77` + `higgsfield-webhook:144-167`); `storedKey`/`storedContentType` propagados pro asset row. **(B)** OpenRouter `/v1/images/generations` retorna 404 HTML (endpoint deprecated). `generateOpenRouter` migrado para `/v1/chat/completions` com `modalities:["image","text"]` parseando `choices[0].message.content[].image_url.url` (+ fallback `message.images[]`). Catálogo `types/canvas.ts` ganha 2 entries OR funcionais (`openrouter-gemini-image` $0.039 + `openrouter-flux-pro` $0.04); `openrouter-dall-e-3` permanece deprecated com banner amber. `MODEL_GROUPS` restaurado. OTD-CV42C-001 registrada para Phase 4.3 (picker dinâmico via OR `/v1/models` com free tier). **(C)** Replicate "key not configured" — coluna `replicate_api_key` NUNCA existia em `user_api_keys`. Migration `20260518020028_user_api_keys_replicate.sql` adiciona. `types.ts` ganha campo manual em Row/Insert/Update (evita full regen). `SettingsPage` ganha KeyField. Inspector ganha banner per-provider (openai/openrouter/replicate) quando user key falta com link `/dashboard/settings`. **(D)** Storage RLS 403 persistente em character upload. Investigação revelou NOTICE crítico no `db push`: `policy "Public read canvas assets" does not exist, skipping` — confirma que migration original `20260514040200` aplicou apenas 3 de 4 policies no remoto. Migration `20260518020030_canvas_assets_rls_repair.sql` (idempotente, DROP IF EXISTS 8 nomes + recria 4 policies) usa `TO public + auth.uid() IS NOT NULL` (defensivo contra publishable key `sb_publishable_*` que pode não resolver `TO authenticated`) + `owner = auth.uid()` fallback em UPDATE/DELETE. **Material proofs:** TS zero erros · 122/122 testes em 4.40s · build em 23.55s · `CanvasEditorPage` chunk 113.66 kB · `canvas-execute` 138.3 kB · 4 commits granulares (`6554cb4` canvas src · `76c99e3` 3 migrations · `9615c69` readme · `0d7bc07` handoff) · push `cc828a0..0d7bc07` para origin/main · milestone node `eb0b3ae0-9ec1-4328-ad31-1b079d3f294e` embedado (768 dims) · saldo Sovereign **5533** intacto · mesh total **8336 nodes** (+8 desde v6.6.1). **Próximo deliverable:** (a) smoke test pago DoP Standard 5s ($0.56) — Sovereign valida gates 4-9 da SOP; (b) cron install do watchdog (`crontab -e` adicionando `*/5 * * * * scripts/canvas-video-watchdog.sh`) após smoke passar; (c) OTD-CV42C-001 dynamic OR model picker — Phase 4.3 spec dedicada.
+> .claude/context/sprint-priorities.md:151:**Sprint v6.3.1 selado em 2026-05-16** — OpenClaw Neural Bridge + Departmental Army Pantheon: Zero-Memory Crisis do OpenClaw fechada. Bridge `scripts/bridge-mesh-to-openclaw.ts` (327 LOC, mirror do padrão `backfill-embeddings.ts`) exporta 8239 `mcorch_nodes` em Two-tier hybrid (Tier 1 = 375 strategy nodes com full content + YAML frontmatter; Tier 2 = 2527 AST symbols com path + signature + 200-char summary; `ast_variable` excluído como ruído — 5336 entradas triviais de `const x = ...`). `scripts/distribute-mesh-to-agents.ts` (275 LOC) materializa file copies (não symlinks — indexer não segue) com modelo "shared base + agent-specific overlay" aprovado pelo Sovereign: shared base de 4 dirs (decision/milestone/system/handoff) para os 6 agentes + overlays específicos (engineer ganha toda Tier 2 + architecture/observation; scientist ganha documentation_suite/requirement/conversation/vault_note/markdown_file; artisan ganha conversation/ui-ux/feature; marketing-growth ganha feature + `revenue-flagged/` materializado via filter regex; guardian ganha observation + `_meta/`; main lê `mcorch-export/` direto pois workspace IS o repo). Squad escalado de 4→6 agentes — Pantheon Architecture L1 (engineer · scientist · artisan · marketing-growth NOVO com SOUL focado em Apollo/Affiliates/GCRUX) + Coordination Layer (main synthesizer · guardian NOVO com SOUL focado em Nightly Dreaming + Telegram briefing + CLAUDE.md proposals PR-style). `~/.openclaw/openclaw.json` agents.list atualizado; AGENTS/HEARTBEAT/IDENTITY/TOOLS/USER copiados do engineer template. `.claude/agents/openclaw-soul-template.md` (236 linhas) codifica L1/L2 inheritance + scaffolding protocol. Bootstrap indexing rodado nos 6: **9185 chunks total** (main 4439 · engineer 2591 · scientist 1824 · artisan 113 · marketing-growth 60 · guardian 58). Cron pipeline triplo instalado: 02:30 `nightly-bridge-refresh.sh` → 03:00 OpenClaw nativo `Memory Dreaming Promotion` → 03:30 `morning-briefing.sh` (composto por `compose-morning-briefing.ts` com 6 seções markdown ≤4000 chars; POST plain-text ao Telegram bot 8668689828; primeira entrega ao Sovereign chat 5835174772 com msg_id 201). Failure paths espelham `watchdog-mcorch.sh:69-131` (incident JSON em `/tmp/openclaw-incidents/` + POST best-effort ao gateway). CLAUDE.md ganhou seção "Departmental Army (Pantheon Architecture)" + 11 novas Key Files Reference entries + warning explícito "NUNCA pnpm no repo" (descoberto: pnpm move pacotes bun-installed para `node_modules/.ignored/`). 4 commits granulares (271bc58 bridge · 7e709f4 distribute · fd66185 cron · 4f88e04 docs). TS check zero erros. Milestone node `c1dbc53b-3a27-4da7-aef3-debd5c4047a0` embedado. 4 OTDs registrados (destaque: OTD-V631-001 RPN 280 — OpenClaw BoK SLA 7d expandido por esta sprint, recomendado `/bok-scribe openclaw` imediato). **Próximo deliverable: (a) `/bok-scribe openclaw` (zera SLA do override consciente v6.2.0); (b) Canvas Studio Phase 4.2b (`vm_canvas_jobs` + `higgsfield-webhook`).**
+> .claude/context/sprint-priorities.md:153:**Sprint v6.3.0 selado em 2026-05-15** — Canvas Studio Phase 4.2a — Typed Nodes & Inspectors: continuação direta do v6.2.0 (mesma sessão, 72% de janela disponível pós-seal anterior). Cinco nós tipados (GenerateImage · CharacterReference · SceneCompose · StyleTransfer · ImageToVideo) portados do `viralmind-builder` para MCORCH com discriminated union por `kind` em `src/types/canvas.ts` (101→622 LOC). Catálogos canônicos: `MODEL_INFO` (9 modelos image — Higgsfield Soul 4 tiers + DALL·E 3 + GPT Image 1 + FLUX 1.1 Pro/Schnell + SDXL + OpenRouter) + `VIDEO_MODEL_INFO` (5 modelos — DoP Lite/Turbo/Standard + Kling 2.1 Pro + Seedance v1) + `STYLE_TRANSFER_PRESETS` (8 presets pt-BR) + `ASPECT_RATIOS` (6 incluindo 4:5 e custom). Helper `resolveExecutePayload()` traduz o shape tipado → request body do `canvas-execute` (provider/model/parameters), aproveitando o `resolveHiggsfieldSoulKey` que adicionei em v6.2.0. Cinco typed node components em `src/components/canvas/nodes/` (~400 LOC). Recipes (`canvas-recipes.ts`) reescrita: 3 Pipeline (Col 0–2 → GenerateImage, Col 3 → ImageToVideo) + 6 Quick (chains lineares com AR por intent). RightPanel completo (`src/components/canvas/RightPanel/`, 8 arquivos, ~1100 LOC): aside fixo w-80 substituindo Sheet raso · 5 inspectors específicos (GenerateImage com modelo agrupado por provider + 5 controls com tooltips + seed; CharacterReference com upload signed URL 7d; SceneCompose com 4 Soul tiers + smart inheritance via InheritanceBadge/ApplyInheritanceButton; StyleTransfer com 8 presets via prompt suffix; ImageToVideo navegável mas exec **disabled** com aviso Phase 4.2b explícito) · StyleSettingsPanel (paleta 3-5 swatches + mood 280 + preset) · shared.tsx com primitivos (Section/CostPreview/InspectorHeader/InheritanceBadge + hook useUpstreamCharacterCandidate). AddNodeFab Popover bottom-right + AddNodeCommand Cmd+K palette via cmdk + canvas-node-registry com fuzzy search pt-BR (`personagem`/`cena`/`estilo`/`video`/`imagem`). CanvasEditorPage refactor: -365/+84 LOC (remove CanvasNodeCard inline + NODE_TYPES_CONFIG + Sheet overlay + estado local; adiciona 5 typed nodeTypes + RightPanel + AddNodeMenu). Run-All BFS reescrito sobre `resolveExecutePayload()` skipando CharacterReference (upload-only) e ImageToVideo (4.2b). Adaptações do port: tokens `bg-elevated → bg-muted`, `shadow-glow → ring-1 ring-primary/40`, `text-warning → text-amber-500`; imports `@/hooks/useCanvasStore → @/store/useCanvasStore`; bucket `canvas-outputs → canvas-assets`. **7 commits granulares · TypeScript zero erros · 122/122 testes passam · `bun run build` 21s · CanvasEditorPage chunk 110.27kB gzipped 32kB · ESLint 2 warnings minor (palette useMemo hint + fast refresh export shape) sem novos errors.** Próximo deliverable: Phase 4.2b (`vm_canvas_jobs` migration + `higgsfield-webhook` Edge Function com `?hf_webhook=` query param + `useCanvasJobsRealtime` Supabase Realtime hook + débito atômico só-após-upload-OK).
+> .claude/context/sprint-priorities.md:155:**Sprint v6.2.0 selado em 2026-05-15** — OpenClaw Bootstrap + Higgsfield Validation + Canvas Tiering: Agência Autônoma OpenClaw integrada ao território MCORCH (runtime pré-existente em `~/.openclaw/`, gateway local `:18789` healthy, ACPX wrappers Claude+Codex, squad scientist/engineer/artisan). Squad populado com SOUL.md em template MCORCH completo (Purpose · Core Capabilities · Skills · I/O · Decision Scope · Tools · KPIs · Collaboration Map · Operational Constraints); `agents.defaults.workspace` reapontado para `/home/gcrUX/htdocs/constellation-orchestra` com backup `.bak.pre-mcorch`. Watchdog `scripts/watchdog-mcorch.sh` ganhou Layer 2 escalation idempotente: fail counter em `/tmp/mcorch-watchdog-fail-counter`, em 3 ciclos consecutivos (≈15min) emite incident JSON em `/tmp/openclaw-incidents/` + POST best-effort ao gateway + linha `infra_health_logs(service=openclaw-escalation)`. Runbook em `.claude/context/openclaw-self-heal-runbook.md` documenta triage→diagnose→recover→postmortem do engineer agent. Validação read-only da API Higgsfield via Firecrawl ANTES de gastar crédito: `docs/higgsfield-api-validation-2026-05-15.md` consolida 32 KB de docs canônicas + pricing tabulado (\$1 = 16 credits; Soul 720p batch=1 = 1.5 cr = \$0.09; DoP Standard 5s = 9 cr = \$0.56) com 2 divergências críticas mapeadas (**webhook é query param `?hf_webhook=URL`, NÃO body** · **DoP `preview` foi renomeado para `standard`**) + 5 OTDs (OTD-HF-001..005). `canvas-execute/index.ts` ganhou tiering Soul preciso (`higgsfield/soul-{720p,1080p}-{1,4}` = 20/26/40/65 mcoCoins), aspect ratio expandida com validação de set canônico (incluindo 4:5), placeholders DoP/Kling para Phase 5.3, e TODO inline referenciando a doc de validação. Deploy: 131.9 kB. **Override consciente do BoK Gate do OpenClaw** autorizado pelo Sovereign com a tese de que a própria Agência quitará as dívidas BoK assincronamente — debt registry: openclaw 0/9 (SLA 7d) + gamificacao-nodes 4/9 (SLA 14d), ambas com scientist agent como owner. Phase 5.2 (nós tipados + inspectors) e Phase 5.3 (vídeo async + webhook + `vm_canvas_jobs`) deferidas para sessão nova (padrão Sprint 4.1 — contexto fresco para 8-12h de port viralmind→MCORCH).
+> .claude/context/canvas-consistency-validation-2026-05-29.md:22:| **Higgsfield / Soul standard** | `prompt` + `aspect_ratio` + `resolution` | Soul não expõe seed/referência na doc pública; consistência nativa é o fluxo pago **Character / Soul ID** (40 cr) — feature maior, deferida. |
+> .claude/context/canvas-consistency-validation-2026-05-29.md:37:   Confirma: Soul standard expõe apenas `prompt`/`aspect_ratio`/`resolution` na doc pública.
+> .claude/context/canvas-consistency-validation-2026-05-29.md:102:- Soul **standard** não expõe seed/referência publicamente. Consistência forte = **Character/Soul ID**
+> .claude/context/canvas-consistency-validation-2026-05-29.md:127:| Higgsfield / Soul standard | sem suporte → fallback: degrade gracioso + aviso UI |
+> .claude/context/canvas-consistency-validation-2026-05-29.md:158:| OTD-CONS-001 | Higgsfield Soul standard sem seed/reference públicos — consistência depende de Soul ID pago (Phase 4.5) | 80 | Engineer |
+> src/test/spaces-mirror-parity.test.ts:80:      const key = `higgsfield/${model}-5s`;
+> src/lib/canvas-node-registry.ts:34:    aliases: ["personagem", "soul", "ref", "character", "pessoa"],
+> src/lib/spaces-execution.ts:60:/** Client keys ARE the server model ids; costs mirror CREDIT_COSTS['higgsfield/<model>-5s']
+> src/lib/spaces-execution.ts:239:      provider: 'higgsfield', model: resolveSpacesVideoModel(node.data.modelKey), prompt,
+> src/lib/spaces-execution.ts:259:      provider: 'higgsfield', model: 'scene-compose', prompt,
+> src/test/spaces-execution.test.ts:213:      node_type: 'image_to_video', provider: 'higgsfield', model: 'dop-lite',
+> src/test/spaces-execution.test.ts:228:      output_type: 'video', asset_id: null, model_key: 'higgsfield/dop-lite',
+> src/types/canvas.ts:92: * Catálogo central de modelos image-to-text. Pricing Soul vem da
+> ```
+
+## 🤖 Claude *(03:13:54)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "Higgsfield AI soul compose API reference mode reference character standard"
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "Higgsfield AI soul compose API reference mode reference character standard"
+> 
+> Links: [{"title":"Higgsfield Reference × Soul ID Complete Strategy Guide: How to Generate ...","url":"https://note.com/aoaibusiness24/n/n9328eeda9ddd?hl=en"},{"title":"Higgsfield Soul 2.0 - High Aesthetic AI Photo Generation Model","url":"https://higgsfield.ai/soul-intro"},{"title":"Soul Reference Using Higgsfield AI - One","url":"https://www.withone.ai/knowledge/higgsfield-ai/conn_mod_def::GLMJmDJi4no::WNmMFh0lQwGoDDNlgv9Rlg"},{"title":"Soul ID — Character Training | higgsfield-ai/cli | DeepWiki","url":"https://deepwiki.com/higgsfield-ai/cli/2.4-soul-id-character-training"},{"title":"Higgsfield Text 2 Image Soul API Documentation | Segmind","url":"https://www.segmind.com/models/higgsfield-text2image-soul/api"},{"title":"Try The New Image Reference Tool Browser | Higgsfield Blog","url":"https://higgsfield.ai/blog/Try-the-New-Image-Reference-Tool-Browser-Extension"},{"title":"Higgsfield API - Documentation | PDF | Digital Technology | Imaging","url":"https://www.scribd.com/document/992401211/Higgsfield-API-Documentation"},{"title":"Higgsfield Soul Image To Image API - Best Higgsfield Soul Image To ...","url":"https://wavespeed.ai/docs/docs-api/higgsfield/higgsfield-soul-image-to-image"},{"title":"Higgsfield Text 2 Image Soul API | Segmind","url":"https://www.segmind.com/models/higgsfield-text2image-soul"},{"title":"higgsfield-ai-prompt-skill/skills/higgsfield-soul/SKILL.md at main ...","url":"https://github.com/OSideMedia/higgsfield-ai-prompt-skill/blob/main/skills/higgsfield-soul/SKILL.md"}]
+> 
+> Search results for: Higgsfield AI soul compose API reference mode reference character standard
+> 
+> 1. Higgsfield Reference × Soul ID Complete Strategy Guide: How to Generate ...
+> https://note.com/aoaibusiness24/n/n9328eeda9ddd?hl=en
+> 
+> 2. Higgsfield Soul 2.0 - High Aesthetic AI Photo Generation Model
+> https://higgsfield.ai/soul-intro
+> 
+> 3. Soul Reference Using Higgsfield AI - One
+> https://www.withone.ai/knowledge/higgsfield-ai/conn_mod_def::GLMJmDJi4no::WNmMFh0lQwGoDDNlgv9Rlg
+> 
+> 4. Soul ID — Character Training | higgsfield-ai/cli | DeepWiki
+> https://deepwiki.com/higgsfield-ai/cli/2.4-soul-id-character-training
+> 
+> 5. Higgsfield Text 2 Image Soul API Documentation | Segmind
+> https://www.segmind.com/models/higgsfield-text2image-soul/api
+> 
+> 6. Try The New Image Reference Tool Browser | Higgsfield Blog
+> https://higgsfield.ai/blog/Try-the-New-Image-Reference-Tool-Browser-Extension
+> 
+> 7. Higgsfield API - Documentation | PDF | Digital Technology | Imaging
+> https://www.scribd.com/document/992401211/Higgsfield-API-Documentation
+> 
+> 8. Higgsfield Soul Image To Image API - Best Higgsfield Soul Image To ...
+> https://wavespeed.ai/docs/docs-api/higgsfield/higgsfield-soul-image-to-image
+> 
+> 9. Higgsfield Text 2 Image Soul API | Segmind
+> https://www.segmind.com/models/higgsfield-text2image-soul
+> 
+> 10. higgsfield-ai-prompt-skill/skills/higgsfield-soul/SKILL.md at main ...
+> https://github.com/OSideMedia/higgsfield-ai-prompt-skill/blob/main/skills/higgsfield-soul/SKILL.md
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(03:14:10)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://www.segmind.com/models/higgsfield-text2image-soul/api",
+  "prompt": "Extract the API reference for the Higgsfield Soul compose endpoint, specifically the parameters it accepts (mode, image_1_url, image_2_url, layout_url, reference, character, standard)"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The provided documentation covers the **Higgsfield Text 2 Image Soul** endpoint (`POST /v1/higgsfield-text2image-soul`), not a "compose" endpoint. The parameters listed are:
+> 
+> - `prompt` (string, required)
+> - `style_id` (string, required) — e.g., `"b3c8075a-cb4c-42de-b8b3-7099dd2df672"`
+> - `width_and_height` (string, required) — e.g., `"1536x2048"`
+> - `enhance_prompt` (boolean, default `false`)
+> - `quality` (string, default `"1080p"`) — `"720p"` or `"1080p"`
+> - `style_strength` (number, default `1`, range 0–1)
+> - `seed` (integer, optional, 1–1,000,000)
+> - `image_url` (string URI, optional)
+> 
+> No `mode`, `image_1_url`, `image_2_url`, `layout_url`, `reference`, `character`, or `standard` parameters appear in this document.
+> ```
+
+## 🤖 Claude *(03:15:08)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "prompt": "Extract the API reference for the Higgsfield Soul compose endpoint, specifically looking for the \"mode\" parameter and what values it accepts (reference, character, standard), and the image parameters (image_1_url, image_2_url, layout_url)",
+  "url": "https://higgsfield.ai/blog/Try-the-New-Image-Reference-Tool-Browser-Extension"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The provided content is a **blog post** announcing the Image Reference Tool + Browser Extension — not API documentation. It contains **no API reference**, no "Soul compose endpoint," no `mode` parameter, and no `image_1_url` / `image_2_url` / `layout_url` parameters.
+> 
+> The page only describes a **browser extension** that lets users "right-click any image online and send it directly into Higgsfield" where "the image _is_ the prompt."
+> ```
+
+## 🤖 Claude *(03:15:50)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://wavespeed.ai/docs/docs-api/higgs/higgsfield/higgsfield-soul-image-to-image",
+  "prompt": "Extract the API reference for the Higgsfield Soul compose / image-to-image endpoint, specifically the parameters it accepts (mode, image_1_url, image_2_url, layout_url, reference, character, standard)"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> Theprovided documentation content only lists the Higgsfield Soul model in the navigation menu:
+> 
+> - **Higgsfield Soul Image To Image** — `/docs/docs-api/higgsfield/higgsfield-soul-image-to-image`
+> 
+> However, the actual API reference page with parameter details (mode, image_1_url, image_2_url, layout_url, reference, character, standard) is not included in this truncated content. You would need to visit the specific model documentation page directly to see the endpoint parameters.
+> ```
+
+## 🤖 Claude *(03:16:19)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://wavespeed.ai/docs/docs-api/higgsfield/higgsfield-soul-image-to-image",
+  "prompt": "Extract the API reference for the Higgsfield Soul image-to-image endpoint, specifically the parameters it accepts (mode, image_1_url, image_2_url, layout_url, reference, character, standard)"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> Based onthe provided content, the Higgsfield Soul Image To Image API documentation appears **truncated** — the "Parameters," "Task Submission Parameters," and "Request Parameters" sections are not fully visible. The page lists these sections in the table of contents but cuts off before showing the actual parameter definitions (e.g., `mode`, `image_1_url`, `image_2_url`, `layout_url`, `reference`, `character`, `standard`).
+> 
+> **What is visible:**
+> - Endpoint exists under Higgsfield models: `higgsfield/soul/image-to-image`
+> - Playground link: `https://wavespeed.ai/models/higgsfield/soul/image-to-image`
+> - Described as a "realistic image-to-image engine" with "Soul ID" for character consistency
+> 
+> **Missing from provided text:** The exact parameter schema, accepted values, and request/response formats.
+> 
+> To get the full API reference, you would need to access the complete documentation page or the WaveSpeedAI API docs directly.
+> ```
+
+## 🤖 Claude *(03:16:47)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://wavespeed.ai/models/higgsfield/soul/image-to-image",
+  "prompt": "Extract the API reference for the Higgsfield Soul image-to-image endpoint, specifically the parameters it accepts (mode, image_1_url, image_2_url, layout_url, reference, character, standard)"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> Based on the page content, the Higgsfield Soul image-to-image API accepts these parameters:
+> 
+> **From the Parameters table:**
+> - `image` (required) — "Reference image used as the source for the transformation."
+> - `prompt` (required) — "Text instruction describing the desired transformation, style, setting, mood, or visual direction."
+> - `quality` (optional) — "Output quality tier. Supported values: `medium`, `high`."
+> - `aspect_ratio` (optional) — "Output aspect ratio for the generated image."
+> - `strength` (optional) — "Controls how closely the result follows the source image versus allowing freer restyling."
+> 
+> **From the API code examples (HTTP/Node/Python):**
+> The request body also includes `size`, `style`, and `seed` fields.
+> 
+> The parameters you listed (`mode`, `image_1_url`, `image_2_url`, `layout_url`, `reference`, `character`, `standard`) do not appear in this documentation.
+> ```
+
+## 🤖 Claude *(03:18:10)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://docs.higgsfield.ai/docs/llms-full.txt",
+  "prompt": "Find the API documentation for the Higgsfield Soul compose endpoint at https://platform.higgsfield.ai/higgsfield-ai/soul/compose - extract the request body parameters including mode (reference, character, standard) and image_1_url, image_2_url, layout_url"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The provideddocumentation does not include any information about a **`higgsfield-ai/soul/compose`** endpoint or its request parameters (`mode`, `image_1_url`, `image_2_url`, `layout_url`).
+> 
+> The only `higgsfield-ai/soul` model documented is **`higgsfield-ai/soul/standard`** for text-to-image generation, which accepts parameters like `prompt`, `aspect_ratio`, and `resolution`.
+> 
+> For the compose endpoint you're asking about, you would need to consult the live API reference at `https://platform.higgsfield.ai/higgsfield-ai/soul/compose` or the Models Gallery at `https://cloud.higgsfield.ai/explore`.
+> ```
+
+## 🤖 Claude *(03:23:50)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "prompt": "Find the API documentation for the Higgsfield Soul compose endpoint - extract the request body parameters including mode (reference, character, standard) and image_1_url, image_2_url, layout_url",
+  "url": "https://cloud.higgsfield.ai/explore"
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

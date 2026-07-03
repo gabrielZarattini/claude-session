@@ -141,10 +141,3 @@ Materialmente observável que o flow 9:16 está completo e seguro:
 ## Sibling reference
 
 Esta SOP é a **camada de vídeo** sobre a base financeira de `autopilot-cron-identity.md` (que já cobre identidade do cron + pré-débito/refund + cap diário). Reusa o motor de `video-studio` (FR-VS-024/025) e o padrão de render async + reconciliação de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim atômico + execução em container) descrito na reconciliação de drift do `video-studio` SDD §2.3.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
