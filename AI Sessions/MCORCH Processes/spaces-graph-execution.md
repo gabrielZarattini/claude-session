@@ -127,6 +127,16 @@ para a fatia 2a-cliente com nota de GO.
 
 **Gate novo:** **G13** — vitest prova: classify(video-generator)=executable · estimate 1:1 com CREDIT_COSTS · payload com `input_asset_url` do first-frame · skip sem first-frame · batch ignorado p/ vídeo.
 
+### Amendment 2b — References picker no image-generator (2026-07-02, ANTES do código)
+
+| # | Decisão | Racional |
+|---|---------|----------|
+| S23 | **Fonte das referências = `node.data.references`** (ReferenceSchema já selado na 1a; `kind='style'` p/ upload MVP). Upload **client-side direto** ao bucket público `canvas-assets`, path `<auth.uid()>/spaces-refs/<uuid>.<ext>` — as policies de storage existentes já exigem `foldername[1] = auth.uid()` (INSERT/UPDATE/DELETE own; SELECT público). Zero migration, zero superfície server nova. Guardas client: só `image/*`, ≤8MB. | Mesmo padrão do upload multi-retrato do avatarIdentity (canvas-assets `user_id/`). |
+| S24 | **Cap ativo = 4 (verdade do server, não os 8 do BoK)**: `generateOpenRouter` anexa `slice(0, 4)` como partes multimodais (Gemini aceita ~4 character refs). O schema mantém `MAX_REFERENCES=8` (armazenamento), mas o payload envia `[...explícitas, ...upstream-threaded].slice(0,4)` e o HUD mostra "n/4 ativas" — nunca prometer ref que o server ignora (G7-classe). Divergência declarada do stub BoK (8). Refs provadas com Gemini; flux-1.1-pro via chat-completions pode ignorá-las (fail-open server, zero regressão). | C12: honestidade > aspiração. |
+| S25 | **Referências nunca cobram**: estimate/cobrança inalterados (refs são partes do MESMO run de imagem). Remoção de ref não deleta o objeto do bucket no MVP (órfãos ≤8MB toleráveis; limpeza = follow-up com o References node completo da Fase 2). | Zero mudança no dinheiro. |
+
+**Gate G14:** vitest prova o merge explícitas+upstream capado em 4 + payload sem refs quando vazio; browser-verify prova upload real ao bucket → chip → reload hidrata `references` do graph → Vision QA no print.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
