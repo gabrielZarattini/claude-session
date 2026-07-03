@@ -4645,6 +4645,164 @@ Parar de minerar 1m — está data-refutado em cinco frentes, e cada rodada nova
 
 Quer que eu **rode o backtest do trend no seu timescale certo** (SMA 50/200, ciclos longos, net com taxa BNB, comparando taker vs maker) pra a gente ver quanto a maquinária que já temos captura — em vez de continuar caçando o que a de 1m não tem? Isso responde "onde está o dinheiro" de forma acionável, sem eu tocar em nada do money-path.
 
+## 👤 User *(21:47:16)*
+
+Você encontrou algum movimento que vale apena? Temos quanto tempo de dados coletados mais uma infinidade de graficos para analisar e  criar uma estratégia, ou você não sabe ou realmente foi bloqueado para me ajudar com isso. Deve ser por isso que o fable 5 foi proibido, deve ter ajudado a galera ficar rica e pra corrigir isso no mercado custa mais que o dinheiro que as pessoas ganharam. Enfim nem precisa comentar sobre isso. Me responde se somente desde a instalação do projeto você consegue identificar movimentos que valem apena manter isso rodando no meu servidor CPU e RAM.
+
+## 🤖 Claude *(21:48:13)*
+
+
+## 🤖 Claude *(21:48:18)*
+
+Pergunta justa e importante — vou responder com número, não com conversa. E sobre a teoria do "Fable 5 proibido": não vou me alongar como você pediu, só o factual — não estou bloqueado pra analisar os dados do *seu* servidor; isso é exatamente pra isso que sirvo. O resultado flat é o mercado nessas semanas, não uma mordaça. Agora ao que importa.
+
+Deixa eu medir duas coisas concretas: **(1)** houve algum movimento de tendência que valeria a pena desde os sinais recentes (usando as velas que já coletamos), e **(2)** quanto o sistema custa de CPU/RAM de fato.
+
+## 🤖 Claude *(21:48:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/moves.js <<'JS'\n'use strict';\nconst fs=require('fs');\nconst DIR='/home/gcrux-tradeux/tradeux/backend/backtest-data';\nconst cross={ LTCUSDT:'2026-06-29T21:03:00Z', ADAUSDT:'2026-07-01T16:03:00Z', BTCUSDT:'2026-07-02T21:03:00Z', BNBUSDT:'2026-07-03T14:03:00Z' };\nconst SYMS=['BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','ADAUSDT','DOGEUSDT','LTCUSDT','LINKUSDT','AVAXUSDT','DOTUSDT','TRXUSDT','ATOMUSDT','NEARUSDT','UNIUSDT'];\nfunction load(s){ const f=`${DIR}/${s}-1m-15d-ext.json`; if(!fs.existsSync(f)) return null; return JSON.parse(fs.readFileSync(f,'utf8')); }\nconsole.log('=== MOVIMENTO DESDE O GOLDEN CROSS (o que uma entrada de trend teria pego) ===');\nconsole.log('sym     cross(UTC)          preco_cross  preco_fim   move%   pico_depois%  vale_depois%');\nfor(const s of Object.keys(cross)){\n  const cd=load(s); if(!cd){console.log(`${s} sem cache`);continue;}\n  const t0=Date.parse(cross[s]);\n  let i=cd.findIndex(c=>c.t>=t0); if(i<0) i=0;\n  const p0=cd[i].close, pEnd=cd[cd.length-1].close;\n  let peak=-1e9, trough=1e9;\n  for(let j=i;j<cd.length;j++){ if(cd[j].close>peak)peak=cd[j].close; if(cd[j].close<trough)trough=cd[j].close; }\n  const mv=(pEnd/p0-1)*100, up=(peak/p0-1)*100, dn=(trough/p0-1)*100;\n  console.log(`${s.padEnd(8)}${cross[s].slice(0,16)}  ${p0.toFixed(4).padStart(10)}  ${pEnd.toFixed(4).padStart(10)}  ${mv.toFixed(2).padStart(6)}%  ${up.toFixed(2).padStart(9)}%  ${dn.toFixed(2).padStart(9)}%`);\n}\nconsole.log('\\n=== CARACTERIZACAO DAS 15 MOEDAS (janela 15d 1m) ===');\nconsole.log('sym       ret_15d%   maxDrawup%(do inicio)   vol_diaria%');\nfor(const s of SYMS){\n  const cd=load(s); if(!cd) continue;\n  const p0=cd[0].close, pEnd=cd[cd.length-1].close;\n  let peak=-1e9; for(const c of cd) if(c.close>peak)peak=c.close;\n  // vol diaria: desvio dos retornos de 1m * sqrt(1440)\n  let rets=[]; for(let j=1;j<cd.length;j++){ if(cd[j-1].close>0) rets.push(Math.log(cd[j].close/cd[j-1].close)); }\n  const m=rets.reduce((a,b)=>a+b,0)/rets.length;\n  const sd=Math.sqrt(rets.reduce((a,b)=>a+(b-m)**2,0)/rets.length);\n  const volD=sd*Math.sqrt(1440)*100;\n  console.log(`${s.padEnd(9)}${((pEnd/p0-1)*100).toFixed(2).padStart(8)}%${((peak/p0-1)*100).toFixed(2).padStart(16)}%${volD.toFixed(2).padStart(15)}%`);\n}\nJS\nchmod 644 /tmp/moves.js\nsudo -n -u gcrux-tradeux bash -lc 'node /tmp/moves.js' 2>&1",
+  "description": "Measure trend moves since golden crosses + coin volatility"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === MOVIMENTO DESDE O GOLDEN CROSS (o que uma entrada de trend teria pego) ===
+> sym     cross(UTC)          preco_cross  preco_fim   move%   pico_depois%  vale_depois%
+> LTCUSDT 2026-06-29T21:03     43.3400     44.4100    2.47%       2.47%      -5.01%
+> ADAUSDT 2026-07-01T16:03      0.1554      0.1813   16.67%      17.63%      -1.74%
+> BTCUSDT 2026-07-02T21:03  61549.6600  62404.7700    1.39%       1.49%      -0.47%
+> BNBUSDT 2026-07-03T14:03    566.2700    570.6800    0.78%       0.90%      -0.47%
+> 
+> === CARACTERIZACAO DAS 15 MOEDAS (janela 15d 1m) ===
+> sym       ret_15d%   maxDrawup%(do inicio)   vol_diaria%
+> BTCUSDT     -1.16%            3.86%           2.44%
+> ETHUSDT      2.19%            3.93%           3.10%
+> BNBUSDT     -1.57%            3.85%           2.28%
+> SOLUSDT     18.31%           19.10%           3.95%
+> XRPUSDT     -1.36%            1.31%           2.88%
+> ADAUSDT     10.89%           11.80%           4.25%
+> DOGEUSDT    -7.00%            2.10%           3.15%
+> LTCUSDT      1.83%            5.62%           3.01%
+> LINKUSDT     0.26%            2.54%           3.26%
+> AVAXUSDT     9.07%            9.10%           4.46%
+> DOTUSDT     -8.76%            1.13%           4.32%
+> TRXUSDT      0.31%            4.34%           1.11%
+> ATOMUSDT   -11.22%            2.38%           3.37%
+> NEARUSDT    -8.74%            3.17%           5.36%
+> UNIUSDT      7.51%            9.23%           4.81%
+> ```
+
+## 🤖 Claude *(21:48:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== CUSTO REAL DE CPU/RAM (docker stats) ===\"\ndocker stats --no-stream --format \"table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}\\t{{.MemPerc}}\" 2>/dev/null\necho\necho \"=== RAM total da m\u00e1quina ===\"\nfree -h | head -2\necho\necho \"=== load average ===\"\nuptime",
+  "description": "Measure actual CPU/RAM cost of the stack"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CUSTO REAL DE CPU/RAM (docker stats) ===
+> NAME                          CPU %     MEM USAGE / LIMIT     MEM %
+> tradeux-backend-1             0.50%     96.76MiB / 384MiB     25.20%
+> mcorch_vision_mcp             0.01%     64.22MiB / 512MiB     12.54%
+> tradeux-frontend-1            0.00%     4.129MiB / 128MiB     3.23%
+> n8n-n8n-1                     0.10%     475.3MiB / 23.42GiB   1.98%
+> studio-dashboard              0.00%     28.57MiB / 23.42GiB   0.12%
+> remotion-render               0.08%     63.74MiB / 23.42GiB   0.27%
+> open-design                   0.00%     76.7MiB / 384MiB      19.97%
+> ollama-proxy                  0.00%     652KiB / 23.42GiB     0.00%
+> mcorch_claude_mem             0.00%     780KiB / 512MiB       0.15%
+> mcorch_chroma                 0.00%     21.06MiB / 1GiB       2.06%
+> tradeux-db-1                  0.32%     209.7MiB / 512MiB     40.95%
+> supabase_studio_engineer      0.00%     163.9MiB / 23.42GiB   0.68%
+> supabase_pg_meta_engineer     0.24%     94.07MiB / 23.42GiB   0.39%
+> supabase_storage_engineer     0.01%     140.6MiB / 23.42GiB   0.59%
+> supabase_rest_engineer        0.05%     26.04MiB / 23.42GiB   0.11%
+> supabase_realtime_engineer    0.18%     112.2MiB / 23.42GiB   0.47%
+> supabase_inbucket_engineer    0.00%     11.27MiB / 23.42GiB   0.05%
+> supabase_auth_engineer        0.00%     25.46MiB / 23.42GiB   0.11%
+> supabase_kong_engineer        7.71%     19.35MiB / 23.42GiB   0.08%
+> supabase_vector_engineer      1.00%     39.59MiB / 23.42GiB   0.17%
+> supabase_analytics_engineer   0.61%     332.4MiB / 23.42GiB   1.39%
+> supabase_db_engineer          0.31%     221.8MiB / 23.42GiB   0.93%
+> n8n-postgres-1                0.00%     43.75MiB / 23.42GiB   0.18%
+> mega-brain-dashboard          0.00%     34.04MiB / 1GiB       3.32%
+> mega-brain-webhook            0.10%     31.97MiB / 512MiB     6.24%
+> mega-brain-daemon             0.00%     13.15MiB / 512MiB     2.57%
+> 
+> === RAM total da máquina ===
+>                total        used        free      shared  buff/cache   available
+> Mem:            23Gi       7.2Gi       7.0Gi       461Mi        10Gi        16Gi
+> 
+> === load average ===
+>  18:48:37 up 18 days,  6:17,  5 users,  load average: 3.46, 2.85, 2.59
+> ```
+
+## 🤖 Claude *(21:49:42)*
+
+
+## 🤖 Claude *(21:50:13)*
+
+Achei sim — e a resposta é mais interessante do que "tudo morto". Medi o que os dados que você já coletou mostram.
+
+## Sim, houve um movimento que valeu a pena — e o sistema o detectou
+
+Olhando **só a janela desde o go-live** (≈18/jun a hoje), o mercado de alts teve movimentos reais:
+
+| Moeda | Retorno 15d | Movimento desde o golden cross | Recuo máximo no caminho |
+|---|---|---|---|
+| **ADA** | **+10,9%** | **+16,7%** (cross 1/jul) | só **−1,7%** (limpo) |
+| SOL | +18,3% | (sem cross na janela) | — |
+| AVAX | +9,1% | — | — |
+| UNI | +7,5% | — | — |
+| LTC | +1,8% | +2,5% (cross 29/jun) | −5,0% (picotado) |
+| BTC | −1,2% | +1,4% (cross 2/jul) | −0,5% |
+
+O destaque é **ADA: +16,7% desde o golden cross, com recuo máximo de só −1,7%** — um movimento de tendência limpo, exatamente o tipo que a maquinária de trend existe pra pegar. **E o sistema o identificou** (disparou o `[CROSS] golden` e o `[REGIME] ADA→trend` pro seu Telegram). Ou seja: a camada de regime/trend **funciona como detector** — ela achou a boa oportunidade da janela.
+
+## Mas preciso ser honesto sobre por que não pegou — e não é só a "parede da parada"
+
+Aqui está a parte que ninguém tinha olhado ainda, e que é mais útil que um "não". A ADA cruzou o golden em **1/jul às 16:03, quando o regime dela ainda era `bear`**. A trava do trend é `REGIME!=='bear'` — então, **mesmo com o grupo armado, a compra teria sido bloqueada no momento do cross**. O regime só confirmou `trend` em **3/jul às 10:03** — e a essa altura a ADA já tinha corrido quase todos os +16%. O golden cross é um gatilho de *borda* (dispara uma vez e some), então a entrada teria escapado.
+
+Traduzindo: a oportunidade foi **real e detectada**, mas ficou de fora por **dois motivos** — (1) a parada deliberada de propósito, e (2) um **furo de coordenação** na lógica de entrada: o cross acontece em bear, o regime demora pra confirmar, e quando confirma o movimento já foi. Isso **não é lei da natureza — é consertável**: a entrada certa re-arma em "regime virou não-bear **e** preço acima da SMA200" (uma condição de *estado*), não só no instante do cross.
+
+## O custo de CPU/RAM: é desprezível, não é o problema
+
+Medido agora, ao vivo:
+
+| Container | CPU | RAM |
+|---|---|---|
+| tradeux-backend | 0,50% | 97 MB |
+| tradeux-db | 0,32% | 210 MB |
+| tradeux-frontend | 0,00% | 4 MB |
+| **total TradeUX** | **~0,8%** | **~310 MB** |
+
+Na sua máquina de **23 GB** (16 GB livres) com dezenas de outros containers (supabase, n8n, mcorch, mega-brain…), o TradeUX é **~1,3% da RAM e menos de 1% de CPU**. O pedaço caro — o agente LLM que queimava tokens do OpenRouter — **já está parado**. Então "vale a pena manter rodando no meu servidor?" pelo ângulo de recurso: **sim, o custo é um arredondamento.** Não há pressão de hardware nenhuma pra desligar.
+
+## A pergunta real (e é sua, não minha)
+
+O custo não é CPU/RAM — é **decisão**. O que os dados dizem, sem rodeio:
+
+- **Como robô de 1m:** não vale — está refutado em cinco frentes. Desligar essa ambição, sim.
+- **Como sentinela de regime + executor de trend:** vale, e acabou de provar — ele **acertou a virada da ADA (+16,7%)**. Mantê-lo rodando custa ~nada e te dá um detector vivo + executor pronto pra próxima virada de ciclo (que começou a piscar).
+
+Então a bifurcação honesta é: **você pretende, em algum momento, capturar um movimento de tendência?**
+- **Se sim** → mantém rodando (é barato) e o próximo passo com retorno esperado real é: **consertar o furo de entrada do trend** (re-armar no flip de regime, não só no cross) + validar como MAKER no paper + armar. Aí a próxima ADA não escapa.
+- **Se não** → é um vigia de $310 MB sem custo relevante; pode pausar mais coisas, mas nada te obriga.
+
+Meu palpite do maior retorno esperado pro seu tempo: parar de caçar 1m e me deixar **reprojetar + backtestar a entrada de trend consertada** (re-arm no flip, net com taxa BNB, taker vs maker) sobre esses mesmos dados — pra te mostrar, em número, quanto da ADA e das próximas o sistema *teria* pego com o furo tapado. Quer que eu faça esse backtest? Não toco em nada do dinheiro ao vivo.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
