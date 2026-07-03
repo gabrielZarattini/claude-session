@@ -157,3 +157,10 @@ para a fatia 2a-cliente com nota de GO.
 | S32 | **Saída = imagem** (flui pelo caminho sync de upload+finalize já existente do slice); `model_key='higgsfield/scene-compose'`; threading downstream: a saída do composer é imagem `done` normal (vira first-frame de vídeo, ref de imagem etc.). | Reuso total do pós-provider. |
 
 **Gate G16:** vitest classify/estimate/payload-cap-2/skip-sem-imagem + mirror do custo; smoke C1 (422 sem prompt)/C2 (skip... n/a server — client) → C1 422 sem imagem · C2 402 BYOK · C3 custo pinado com payload forjado; E2E pago (18 mco) com ref do picker + Vision QA.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

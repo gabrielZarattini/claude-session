@@ -183,3 +183,10 @@ A UI da Constelação (`/dashboard/constellation`) deixou de ser teatro: antes `
 - Calibrar `MARGIN_FACTOR` com base em 7d+ data
 - Adicionar dimensão `task_category` em `agent_executions.metadata` para análise per-tipo-de-task
 - Webhook de provider rate-limit → bloquear cron temporariamente
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
