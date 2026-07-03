@@ -3111,6 +3111,2080 @@ Ainda **adianta** — este bug era exatamente um item novo desbloqueado que o lo
 
 Quer que eu já comece a **preparar o terreno do rebrand** (auditar onde ícone/favicon/nome "Magic Constellation" vs "MCORCH"/"Gabriel AI" aparecem hoje, pra o handoff do Claude Design cair num mapa pronto)? Isso é trabalho desbloqueado e adianta o gargalo real.
 
+## 👤 User *(20:48:24)*
+
+melhor fazer o rebrand agora? se sim já pode rodar com o seguinte Use the claude_design MCP (https://api.anthropic.com/v1/design/mcp, auth via /design-login) to import this project:
+https://claude.ai/design/p/019e0af3-920b-7a2f-8a53-87fb7ee9993a?file=landing-v2%2FMCORCH+Landing+V2.html
+
+Implement: landing-v2/MCORCH Landing V2.html; ou o arquivo zip em constellation-orchestra/miv/MCORCH-handoff.zip que contem tudo atualizado. Pode remover tudo da pasta miv e manter somente esse conteudo atualizado
+
+## 🤖 Claude *(20:48:43)*
+
+
+## 🤖 Claude *(20:48:46)*
+
+Sim — agora é a hora certa: o rebrand destrava o TikTok e é o gargalo declarado. Você já me deu o handoff, então vou executar. Mas **antes de remover qualquer coisa da `miv/`, eu olho o conteúdo** (nunca deleto às cegas — e preciso entender o que o handoff traz para mapear no repo). Reconhecimento primeiro:
+
+## 🤖 Claude *(20:48:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== miv/ tree ===\"; ls -la miv/ 2>/dev/null; echo; find miv/ -maxdepth 3 -type f 2>/dev/null | head -60\necho; echo \"=== zip contents ===\"; unzip -l miv/MCORCH-handoff.zip 2>/dev/null | head -80 || echo \"no zip / unzip missing\"",
+  "description": "Inspect miv folder and handoff zip"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === miv/ tree ===
+> total 18056
+> drwxrwxr-x  7 gcrUX  gcrUX     4096 Jul  3 17:46 .
+> drwx------ 31 ubuntu ubuntu    4096 Jul  3 17:17 ..
+> drwxrwxr-x  2 gcrUX  gcrUX     4096 May 17 14:26 artboards
+> -rw-rw-r--  1 gcrUX  gcrUX    48181 May 17 14:26 design-canvas.jsx
+> -rw-rw-r--  1 gcrUX  gcrUX       65 May 17 14:26 .design-canvas.state.json
+> drwxrwxr-x  2 gcrUX  gcrUX     4096 May 17 15:59 dist
+> -rw-rw-r--  1 gcrUX  gcrUX  2077340 May 17 17:31 index.html
+> -rw-rw-r--  1 gcrUX  gcrUX  2051266 May 17 16:40 Landing.html
+> -rw-r--r--  1 gcrUX  gcrUX  9995334 Jul  3 17:46 MCORCH-handoff.zip
+> -rw-rw-r--  1 gcrUX  gcrUX     5274 May 17 14:26 MCORCH Identity.html
+> -rw-rw-r--  1 gcrUX  gcrUX     5843 May 17 14:26 MCORCH Identity & Theater.html
+> -rw-rw-r--  1 gcrUX  gcrUX  2050254 May 17 15:58 MCORCH Landing.html
+> -rw-rw-r--  1 gcrUX  gcrUX    17033 May 17 14:26 MCORCH MIV.html
+> -rw-rw-r--  1 gcrUX  gcrUX  2076650 May 17 14:26 MCORCH-MIV.html
+> -rw-rw-r--  1 gcrUX  gcrUX    19414 May 17 14:26 MCORCH MIV (standalone source).html
+> drwxrwxr-x  2 gcrUX  gcrUX     4096 May 17 14:26 miv
+> -rw-rw-r--  1 gcrUX  gcrUX    22810 May 17 14:26 miv.css
+> drwxrwxr-x  2 gcrUX  gcrUX     4096 May 17 14:26 miv-sections
+> -rw-rw-r--  1 gcrUX  gcrUX    18561 May 17 14:26 particles.jsx
+> -rw-rw-r--  1 gcrUX  gcrUX    14802 May 17 14:26 styles.css
+> -rw-rw-r--  1 gcrUX  gcrUX    25739 May 17 14:26 tweaks-panel.jsx
+> drwxrwxr-x  2 gcrUX  gcrUX     4096 May 17 14:26 uploads
+> 
+> miv/MCORCH-MIV.html
+> miv/MCORCH-handoff.zip
+> miv/MCORCH Identity & Theater.html
+> miv/MCORCH MIV (standalone source).html
+> miv/design-canvas.jsx
+> miv/.design-canvas.state.json
+> miv/MCORCH Landing.html
+> miv/styles.css
+> miv/tweaks-panel.jsx
+> miv/miv.css
+> miv/Landing.html
+> miv/MCORCH Identity.html
+> miv/index.html
+> miv/particles.jsx
+> miv/MCORCH MIV.html
+> miv/uploads/pasted-1778734153900-0.png
+> miv/uploads/pasted-1778785143260-0.png
+> miv/miv-sections/02-seal.jsx
+> miv/miv-sections/01-hero-manifesto.jsx
+> miv/miv-sections/03-spectrum.jsx
+> miv/miv/hero-three.jsx
+> miv/miv/sec-1.jsx
+> miv/miv/sec-3.jsx
+> miv/miv/sec-4.jsx
+> miv/miv/sec-2.jsx
+> miv/artboards/login-v1.jsx
+> miv/artboards/login-v2.jsx
+> miv/artboards/seal.jsx
+> miv/artboards/dashboard.jsx
+> miv/artboards/identity.jsx
+> miv/artboards/agents.jsx
+> miv/dist/MCORCH-Landing.html
+> miv/dist/MCORCH-MIV.html
+> 
+> === zip contents ===
+> Archive:  miv/MCORCH-handoff.zip
+>   Length      Date    Time    Name
+> ---------  ---------- -----   ----
+>      1607  2026-07-03 17:45   mcorch/README.md
+>        65  2026-07-03 17:45   mcorch/project/.design-canvas.state.json
+>     12938  2026-07-03 17:45   mcorch/project/.thumbnail
+>     10964  2026-07-03 17:45   mcorch/project/MCORCH 404.html
+>      5843  2026-07-03 17:45   mcorch/project/MCORCH Identity & Theater.html
+>      5274  2026-07-03 17:45   mcorch/project/MCORCH Identity.html
+>   2050254  2026-07-03 17:45   mcorch/project/MCORCH Landing.html
+>      7763  2026-07-03 17:45   mcorch/project/MCORCH MIV II.html
+>     21944  2026-07-03 17:45   mcorch/project/MCORCH MIV.html
+>     11122  2026-07-03 17:45   mcorch/project/MCORCH.html
+>      3464  2026-07-03 17:45   mcorch/project/artboards/agents.jsx
+>     15831  2026-07-03 17:45   mcorch/project/artboards/dashboard.jsx
+>      9737  2026-07-03 17:45   mcorch/project/artboards/identity.jsx
+>      7567  2026-07-03 17:45   mcorch/project/artboards/login-v1.jsx
+>      6547  2026-07-03 17:45   mcorch/project/artboards/login-v2.jsx
+>      8027  2026-07-03 17:45   mcorch/project/artboards/seal.jsx
+>      7912  2026-07-03 17:45   mcorch/project/audit/01-flag-rest.png
+>     55579  2026-07-03 17:45   mcorch/project/audit/01-flag.png
+>     14748  2026-07-03 17:45   mcorch/project/audit/01-hero.png
+>     42518  2026-07-03 17:45   mcorch/project/audit/01-miv2-cover.png
+>     36992  2026-07-03 17:45   mcorch/project/audit/02-flag-rest.png
+>     30384  2026-07-03 17:45   mcorch/project/audit/02-flag.png
+>     16088  2026-07-03 17:45   mcorch/project/audit/02-miv2-cover.png
+>     32181  2026-07-03 17:45   mcorch/project/audit/03-flag-rest.png
+>     24912  2026-07-03 17:45   mcorch/project/audit/03-flag.png
+>     16568  2026-07-03 17:45   mcorch/project/audit/03-miv2-cover.png
+>     18012  2026-07-03 17:45   mcorch/project/audit/04-flag-rest.png
+>     25019  2026-07-03 17:45   mcorch/project/audit/04-flag.png
+>     23943  2026-07-03 17:45   mcorch/project/audit/04-miv2-cover.png
+>     29285  2026-07-03 17:45   mcorch/project/audit/05-flag-rest.png
+>     37980  2026-07-03 17:45   mcorch/project/audit/05-flag.png
+>     47513  2026-07-03 17:45   mcorch/project/audit/05-miv2-cover.png
+>     17272  2026-07-03 17:45   mcorch/project/audit/06-flag.png
+>     44233  2026-07-03 17:45   mcorch/project/audit/06-miv2-cover.png
+>     53613  2026-07-03 17:45   mcorch/project/audit/flag-hero.png
+>     53521  2026-07-03 17:45   mcorch/project/audit/flag3-hero.png
+>     53410  2026-07-03 17:45   mcorch/project/audit/flag4-hero.png
+>     12397  2026-07-03 17:45   mcorch/project/audit/hero-three.v1.jsx
+>     22517  2026-07-03 17:45   mcorch/project/audit/hero-top.png
+>      7915  2026-07-03 17:45   mcorch/project/audit/miv2-cover.png
+>     48181  2026-07-03 17:45   mcorch/project/design-canvas.jsx
+>      3879  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/DEPLOY.md
+>     10936  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/README.md
+>      3464  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/app-references/agents.jsx
+>     15831  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/app-references/dashboard.jsx
+>      9737  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/app-references/identity.jsx
+>      6547  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/app-references/login-v2.jsx
+>      8027  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/app-references/seal.jsx
+>      5146  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/design-system/DESIGN-SYSTEM.md
+>     25640  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/design-system/miv.css
+>     14802  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/design-system/styles.css
+>     21944  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/index.html
+>     25640  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv.css
+>      4468  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv/ambient.js
+>     21567  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv/hero-three.jsx
+>     18207  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv/sec-1.jsx
+>     15131  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv/sec-2.jsx
+>     20084  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv/sec-3.jsx
+>     25469  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/miv/sec-4.jsx
+>     18561  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/particles.jsx
+>     14802  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-miv/styles.css
+>      4805  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/01-nav-hero.jsx
+>     15456  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/02-problem-solution.jsx
+>     17538  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/03-proof-final.jsx
+>     21567  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/hero-three.jsx
+>     13617  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/index.html
+>     27644  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/landing.css
+>     14802  2026-07-03 17:45   mcorch/project/design_handoff_mcorch/site-root/styles.css
+>   2050254  2026-07-03 17:45   mcorch/project/dist/MCORCH-Landing.html
+>   2076650  2026-07-03 17:45   mcorch/project/dist/MCORCH-MIV.html
+>     12222  2026-07-03 17:45   mcorch/project/flagship/flagship.css
+>      6982  2026-07-03 17:45   mcorch/project/flagship/sections.jsx
+>      4622  2026-07-03 17:45   mcorch/project/flagship/signal.js
+>      4805  2026-07-03 17:45   mcorch/project/landing-v2/01-nav-hero.jsx
+>     15456  2026-07-03 17:45   mcorch/project/landing-v2/02-problem-solution.jsx
+>     17538  2026-07-03 17:45   mcorch/project/landing-v2/03-proof-final.jsx
+>     13627  2026-07-03 17:45   mcorch/project/landing-v2/MCORCH Landing V2.html
+> ```
+
+## 🤖 Claude *(20:49:17)*
+
+
+## 🤖 Claude *(20:49:20)*
+
+O zip (10MB, de hoje 17:45) é o handoff completo e estruturado — tem `design_handoff_mcorch/` com `DEPLOY.md`, `README.md`, `DESIGN-SYSTEM.md`, `app-references/`, `site-root/`, `landing-v2/`. Ele é a fonte da verdade ("contém tudo atualizado"). Antes de tocar em nada, vou extrair pra um local temporário e ler as instruções do designer + mapear a landing atual do app. Não deleto a `miv/` até entender e ter tudo salvo.
+
+## 🤖 Claude *(20:49:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nmkdir -p \"$SP/handoff\"\nunzip -oq miv/MCORCH-handoff.zip -d \"$SP/handoff\" && echo \"extracted \u2705\"\necho \"=== is miv/ git-tracked? ===\"; git ls-files miv/ | head -3; echo \"tracked count: $(git ls-files miv/ | wc -l)\"; git check-ignore miv/ 2>/dev/null && echo \"miv/ is gitignored\" || echo \"miv/ NOT gitignored\"\necho; echo \"=== current app landing structure ===\"; ls src/components/landing/ 2>/dev/null; echo \"--- pages ---\"; ls src/pages/ | grep -iE \"landing|index|home|Landing\" ; grep -rlE \"landing|Landing|Hero\" src/App.tsx src/pages/Index.tsx 2>/dev/null | head",
+  "description": "Extract zip, check miv tracking, map current landing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> extracted ✅
+> === is miv/ git-tracked? ===
+> miv/.design-canvas.state.json
+> miv/Landing.html
+> miv/MCORCH Identity & Theater.html
+> tracked count: 30
+> miv/ NOT gitignored
+> 
+> === current app landing structure ===
+> CTASection.tsx
+> FAQSection.tsx
+> FeaturesSection.tsx
+> Footer.tsx
+> HeroSection.tsx
+> HowItWorksSection.tsx
+> LandingConstellation.tsx
+> Navbar.tsx
+> PricingSection.tsx
+> TestimonialsSection.tsx
+> --- pages ---
+> DashboardHome.tsx
+> Index.tsx
+> Landing.tsx
+> SpacesHomePage.tsx
+> src/App.tsx
+> ```
+
+## 🤖 Claude *(20:49:37)*
+
+
+## 🤖 Claude *(20:49:40)*
+
+Entendido o mapa: app atual = `src/pages/Landing.tsx` + `src/components/landing/*` (Navbar, HeroSection, Features, HowItWorks, Pricing, Testimonials, FAQ, CTA, Footer). Handoff traz `landing-v2/` (01-nav-hero, 02-problem-solution, 03-proof-final + HTML montado) + `design-system/`. `miv/` é git-tracked (30 arquivos). Vou ler as instruções do designer (DEPLOY/README/DESIGN-SYSTEM) — são a SSOT do handoff:
+
+## 🤖 Claude *(20:49:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nH=\"$SP/handoff/mcorch/project/design_handoff_mcorch\"\necho \"############ DEPLOY.md ############\"; cat \"$H/DEPLOY.md\"\necho; echo \"############ DESIGN-SYSTEM.md ############\"; cat \"$H/design-system/DESIGN-SYSTEM.md\"",
+  "description": "Read handoff DEPLOY + DESIGN-SYSTEM docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ############ DEPLOY.md ############
+> # DEPLOY · MCORCH — `/` (Landing V2) + `/miv/` (MIV)
+> 
+> Servidor: host de `login.mcorch.com` (acesso SSH já disponível).
+> Duas rotas estáticas. Cada pasta é **autossuficiente** (traz seu próprio CSS/JS/deps).
+> 
+> ---
+> 
+> ## 1. Estrutura no servidor
+> 
+> ```
+> /var/www/mcorch/
+> ├── index.html            ← de site-root/   (Landing V2)  → GET /
+> ├── styles.css  landing.css  *.jsx  hero-three.jsx
+> └── miv/
+>     ├── index.html        ← de site-miv/    (MIV)         → GET /miv/
+>     ├── styles.css  miv.css  particles.jsx
+>     └── miv/  (ambient.js, hero-three.jsx, sec-1..4.jsx)
+> ```
+> 
+> ## 2. Envio por SSH (rsync)
+> 
+> ```bash
+> # a partir da raiz deste pacote (design_handoff_mcorch/)
+> rsync -avz --delete site-root/  USER@login.mcorch.com:/var/www/mcorch/
+> rsync -avz --delete site-miv/   USER@login.mcorch.com:/var/www/mcorch/miv/
+> ```
+> 
+> > `--delete` mantém o destino idêntico à origem. Remova se houver outros arquivos na raiz
+> > que precisem sobreviver (ex.: o app/login atual — ver §5).
+> 
+> ## 3. nginx
+> 
+> ```nginx
+> server {
+>     listen 443 ssl http2;
+>     server_name login.mcorch.com;
+> 
+>     # ... ssl_certificate / ssl_certificate_key ...
+> 
+>     root /var/www/mcorch;
+>     index index.html;
+> 
+>     # Landing V2 na raiz
+>     location = / {
+>         try_files /index.html =404;
+>     }
+> 
+>     # MIV em /miv/
+>     location /miv/ {
+>         alias /var/www/mcorch/miv/;
+>         index index.html;
+>         try_files $uri $uri/ /miv/index.html;
+>     }
+> 
+>     # estáticos (jsx é servido como texto para o Babel in-browser)
+>     location ~* \.(css|jsx|js|svg|woff2?)$ {
+>         expires 7d;
+>         add_header Cache-Control "public";
+>         types { text/babel jsx; }   # garante Content-Type utilizável p/ .jsx
+>     }
+> 
+>     location / {
+>         try_files $uri $uri/ /index.html;
+>     }
+> }
+> ```
+> 
+> Recarregue: `sudo nginx -t && sudo systemctl reload nginx`.
+> 
+> > **`.jsx` como texto:** as páginas usam Babel no navegador e carregam `.jsx` via
+> > `<script type="text/babel" src="...">`. O navegador só precisa que o arquivo seja
+> > baixável (o Babel compila). Se seu nginx retornar 404/tipo estranho para `.jsx`, o
+> > bloco `types { ... }` acima resolve. (Em produção, prefira pré-compilar — §6.)
+> 
+> ## 4. CTAs (decisão a resolver)
+> 
+> Na Landing, os botões "Ativar minha agência / Login / Aplicar" apontam para
+> `https://login.mcorch.com` (placeholder). Se `/` passa a ser a Landing, isso vira loop.
+> 
+> Escolha o destino real do app e ajuste (busque e substitua nos `.jsx` de `site-root/`):
+> 
+> ```bash
+> # exemplo: app numa subpasta /app
+> grep -rl "https://login.mcorch.com" site-root/*.jsx
+> sed -i 's#https://login.mcorch.com#/app#g' site-root/*.jsx
+> ```
+> 
+> Opções comuns: `/app`, `/login`, ou subdomínio `https://app.mcorch.com`.
+> 
+> ## 5. Convivência com o app/login atual
+> 
+> `login.mcorch.com` hoje serve o app. Ao colocar a Landing em `/`, decida:
+> - **App em subpasta** (`/app`) — sirva o build do app em `/var/www/mcorch/app/` e aponte
+>   os CTAs para `/app`.
+> - **App em subdomínio** (`app.mcorch.com`) — Landing fica em `login.mcorch.com`, app migra.
+> - **Preservar rotas do app** — mantenha os `location` do app ANTES do `location /` da
+>   Landing para não serem capturados pelo fallback.
+> 
+> ## 6. Endurecimento para produção (recomendado)
+> 
+> As páginas rodam de CDN + Babel no navegador (ótimo para revisão, não ideal para prod):
+> 1. **Pré-compile o JSX** (esbuild/vite) e remova o Babel Standalone + `type="text/babel"`.
+> 2. **Self-host as fontes** (Playfair Display + JetBrains Mono) e troque o `@import` do
+>    Google Fonts por `@font-face` local (`design-system/DESIGN-SYSTEM.md › Fontes`).
+> 3. **Self-host as libs** (React/Three/GSAP/Lenis) ou faça bundle.
+> 4. **CSP/SRI**: mantenha os hashes de integridade já presentes nas tags `<script>`.
+> 5. **Preload** da fonte display e do primeiro frame do WebGL para reduzir o flash.
+> 
+> Nada disso muda o visual — só a forma de servir.
+> 
+> ############ DESIGN-SYSTEM.md ############
+> # DESIGN SYSTEM · MCORCH — Tokens & Componentes
+> 
+> Fonte canônica: **`styles.css`** (nesta pasta). Estilos do MIV: **`miv.css`**.
+> Extraia daqui os valores exatos ao recriar em qualquer stack.
+> 
+> ---
+> 
+> ## 1. Cores (CSS custom properties, em `:root`)
+> 
+> ### Vácuo & matéria (fundos)
+> | Token | Valor |
+> |---|---|
+> | `--void` | `#000000` |
+> | `--void-2` | `#050507` |
+> | `--void-3` | `#0a0a0d` |
+> 
+> ### Cyan — luz tática (sistema / primário / "live")
+> | Token | Valor |
+> |---|---|
+> | `--cyan` | `#00F2FF` |
+> | `--cyan-dim` | `#0099a6` |
+> | `--cyan-veil` | `rgba(0,242,255,0.08)` |
+> | `--cyan-line` | `rgba(0,242,255,0.22)` |
+> 
+> ### Gold — metal precioso (VALOR / ROI — usar com parcimônia)
+> | Token | Valor |
+> |---|---|
+> | `--gold` | `#D4AF37` |
+> | `--gold-dim` | `#8a7223` |
+> | `--gold-veil` | `rgba(212,175,55,0.08)` |
+> 
+> ### Nebula — profundidade relacional (memória)
+> | Token | Valor |
+> |---|---|
+> | `--nebula` | `#4D00FF` |
+> | `--nebula-dim` | `#2d0099` |
+> | `--nebula-veil` | `rgba(77,0,255,0.10)` |
+> | _(variante clara usada em arte/partículas)_ | `#8C5AFF` |
+> 
+> ### Silver / Bone — bordas & texto (branco com alpha)
+> | Token | Valor | Uso |
+> |---|---|---|
+> | `--silver-1..4` | branco `0.04 / 0.08 / 0.14 / 0.22` | bordas, hairlines |
+> | `--bone` | branco `0.92` | texto primário |
+> | `--bone-2` | branco `0.72` | texto secundário |
+> | `--bone-3` | branco `0.48` | texto terciário / labels |
+> | `--bone-4` | branco `0.28` | texto desativado / marca d'água |
+> 
+> **Regra de uso da cor:** fundo preto absoluto; texto em *bone*; **cyan** para sistema,
+> estados ativos e ação primária; **gold** exclusivamente onde há **valor cristalizado**
+> (ROI, receita, destaque de plano); **nebula** para memória/relacional. Não distribua as
+> cores igualmente — dominância de preto+cyan, gold como acento raro.
+> 
+> ---
+> 
+> ## 2. Tipografia
+> 
+> ```css
+> --display: 'Playfair Display', 'EB Garamond', Georgia, serif;
+> --mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+> ```
+> 
+> - **Playfair Display** (serif) — títulos, números grandes, "voz". Muito usada em
+>   **itálico** (`.mc-display-i`) para ênfase poética. Pesos 400–800.
+> - **JetBrains Mono** — toda a UI, labels, eyebrows, corpo técnico. Pesos 300–700.
+> - Números/métricas usam `.mc-num` (Playfair, `tnum`/`lnum`).
+> 
+> Import atual (dev):
+> ```css
+> @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+> ```
+> Para produção, self-host essas duas famílias e sirva via `@font-face` local.
+> 
+> ---
+> 
+> ## 3. Catálogo de componentes (classes em `styles.css`)
+> 
+> ### Superfícies "Liquid Glass"
+> - `.lg` — vidro base (blur 40 + saturação + brilho de topo + halo colorido). Modificadores:
+>   `.lg-soft`, `.lg-strong`, `.lg-pill`, `.lg-tile`.
+> - `.mc-glass` / `.mc-glass-strong` / `.mc-glass-soft` — variações de HUD líquido.
+> - `.mc-glass-bar` — barra de cabeçalho de painel.
+> 
+> ### Estrutura / atmosfera
+> - `.mc-frame` — quadro base (fundo void, overflow hidden).
+> - `.mc-stars` — campo de estrelas ambiente (pseudo-elementos).
+> - `.mc-harness` — grade sutil (scaffolding), com máscara radial.
+> - `.mc-corners` / `.mc-cnr` (+ `.c.tl/.tr/.bl/.br`) — recortes de canto estilo HUD.
+> - `.mc-rule` — divisor hairline com gradiente.
+> 
+> ### Tipográficos
+> - `.mc-display` / `.mc-display-i` (itálico) — Playfair.
+> - `.mc-eyebrow` — label mono 10px, tracking largo, uppercase.
+> - `.mc-num` / `.mc-num-mono` — numerais.
+> - `.mc-wordmark` — lockup `M·C·O·R·C·H` (pontos em `--gold`).
+> - Cores utilitárias: `.mc-gold`, `.mc-cyan`, `.mc-nebula`, `.mc-fog` (bone-3).
+> 
+> ### Controles
+> - `.mc-btn` (base) · `.mc-btn-primary` (cyan) · `.mc-btn-gold` (gold).
+> - `.mc-input` — campo em vidro líquido (foco cyan glow).
+> - `.mc-tag` (+ `.gold` / `.nebula`) — pílula com ponto luminoso.
+> 
+> ### Movimento
+> - `.mc-pulse` (opacidade), `.mc-glow` (sombra cyan pulsante), `.mc-drift` (float),
+>   `.mc-caret` (cursor piscante do terminal).
+> 
+> ### Landing (em `site-root/landing.css`, prefixo `.lp-*`)
+> Camada sobre `styles.css`: `.lp-cta`, `.lp-nav`, `.lp-hero`, `.lp-section`, `.lp-pillar`,
+> `.lp-steps/.lp-step`, `.lp-term` (terminal), `.lp-results`, `.lp-pricing/.lp-plan`,
+> `.lp-vision*` (pin/scrub), `.lp-marquee`, `.lp-faq`, `.lp-final`, `.lp-footer`, `.lp-reveal`.
+> 
+> ---
+> 
+> ## 4. Marca — sigilo & wordmark
+> 
+> - **Sigilo** (SVG inline, sem arquivo): círculo externo cyan fino, núcleo `--gold`, dois
+>   nós cyan a leste/oeste. Ex. no `site-root/01-nav-hero.jsx` (`SigilMark`).
+> - **Wordmark**: `M·C·O·R·C·H`, Playfair, tracking `0.42em`, uppercase; separadores `·`
+>   em `--gold`.
+> 
+> ---
+> 
+> ## 5. Voz (Vol. I — 2026)
+> 
+> - **Núcleo**: a "agência autônoma" — **CEO + PMO + PMI** dedicados 100% e **integrados ao
+>   seu ecossistema**. "Orquestra", "constelação", "integração".
+> - **Público**: estúdios de design, video makers, social media, copy, web, tráfego (Google/
+>   Meta Ads).
+> - **Evitar** (mensagem antiga, aposentada): "soberania", "espécie", "humanidade",
+>   "devolver tempo/lucidez/saúde". Tom agora é concreto, confiante e operacional — não
+>   místico.
+> ```
+
+## 🤖 Claude *(20:50:25)*
+
+
+## 🤖 Claude *(20:50:29)*
+
+Isto é um handoff denso e bem-feito. Ponto **crítico** que muda tudo: o handoff é um **site estático** (HTML + JSX compilado por Babel no browser + CSS), e o `DEPLOY.md` assume servir arquivos estáticos em `/var/www/mcorch/` com o app **realocado** pra `/app` ou subdomínio — o que exige **reconfigurar nginx + mover o app + cert (mãos do Sovereign via SSH)**. Já o app atual é o SPA React/Vite servido em login.mcorch.com; a landing atual é React (`src/pages/Landing.tsx` + `src/components/landing/*`).
+
+Deixa eu ler o README do handoff + a Landing atual + o nav-hero V2 pra fundamentar a recomendação:
+
+## 🤖 Claude *(20:50:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nH=\"$SP/handoff/mcorch/project/design_handoff_mcorch\"\necho \"############ handoff README.md (head) ############\"; head -80 \"$H/README.md\"\necho; echo \"############ landing-v2 sections present ############\"; ls -la \"$SP/handoff/mcorch/project/landing-v2/\"\necho; echo \"############ site-root libs/deps used (CDN) ############\"; grep -oE \"src=\\\"https://[^\\\"]+\\\"|@import url\\([^)]+\\)|three|gsap|lenis|babel\" \"$SP/handoff/mcorch/project/design_handoff_mcorch/site-root/index.html\" | head -20",
+  "description": "Read handoff README + landing-v2 + deps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ############ handoff README.md (head) ############
+> # Handoff · MCORCH — Site oficial (Landing V2) + MIV + Rebrand do sistema
+> 
+> > Pacote de handoff para **Claude Code** (acesso SSH ao servidor de `login.mcorch.com`).
+> > Contém o novo site público, o Manual de Identidade Visual e o design system a ser
+> > aplicado em **todo o sistema**.
+> 
+> ---
+> 
+> ## 1. Visão geral
+> 
+> Este pacote entrega duas páginas prontas e o sistema de marca por trás delas:
+> 
+> | Entregável | Pasta | Rota de destino |
+> |---|---|---|
+> | **Landing V2** — nova página de vendas | `site-root/` | `https://login.mcorch.com/` |
+> | **MIV** — Manual de Identidade Visual (brand book vivo) | `site-miv/` | `https://login.mcorch.com/miv/` |
+> | **Design system** — tokens + CSS canônico | `design-system/` | (aplicado ao sistema todo) |
+> | **Referências de app** — telas internas no visual da marca | `app-references/` | (guia do rebrand) |
+> 
+> **A virada de mensagem da Landing V2** (o pedido central): saímos do apelo grandioso
+> "para a humanidade" e passamos a uma promessa concreta para negócios criativos e de
+> marketing — **você ativa uma agência inteira: um CEO, um PMO e um PMI, 100% dedicados
+> e integrados ao seu ecossistema.**
+> 
+> Público-alvo escrito na página: estúdios de design, video makers, social media,
+> copywriters, web designers e gestores de tráfego (Google & Meta Ads).
+> 
+> ---
+> 
+> ## 2. Sobre os arquivos deste pacote
+> 
+> Os arquivos aqui são **referências de design escritas em HTML** — protótipos hi-fi que
+> mostram aparência, movimento e comportamento pretendidos. Há **dois usos**, e eles convivem:
+> 
+> 1. **Deploy quase direto.** As duas rotas (`site-root/` e `site-miv/`) são páginas
+>    estáticas **autossuficientes** (cada pasta já tem seu CSS/JS/deps). Podem ir ao ar
+>    como estão — veja `DEPLOY.md`. Para produção séria, aplique o "endurecimento"
+>    (fontes self-hosted + JSX pré-compilado) descrito no fim do `DEPLOY.md`.
+> 
+> 2. **Fonte do rebrand.** O **design system** que essas páginas encarnam (tokens,
+>    componentes, voz) deve ser aplicado ao **resto de `login.mcorch.com`** — o app/login
+>    atual — substituindo o estilo vigente. O `MIV` é o norte; `design-system/styles.css`
+>    é a biblioteca de tokens e componentes canônica; `app-references/` mostra telas
+>    internas já no visual-alvo.
+> 
+> > Recriar em outro stack (React/Vue/etc.)? Trate os HTML como **especificação**: extraia
+> > os valores exatos (`design-system/DESIGN-SYSTEM.md`) e reconstrua com os componentes do
+> > app. Não porte o JSX-via-Babel como código de produção — ele é didático, não build.
+> 
+> ---
+> 
+> ## 3. Fidelidade: **Alta (hi-fi)**
+> 
+> Cores, tipografia, espaçamento e movimento são finais e intencionais. Recrie fielmente.
+> Todos os valores exatos estão em **`design-system/DESIGN-SYSTEM.md`**.
+> 
+> ---
+> 
+> ## 4. Rotas e roteamento
+> 
+> - `GET /` → `site-root/index.html` (Landing V2)
+> - `GET /miv/` → `site-miv/index.html` (MIV)
+> 
+> Config de servidor (nginx) e passos de deploy por SSH: **`DEPLOY.md`**.
+> 
+> > ⚠️ **Decisão de CTA a resolver no deploy.** Hoje os botões "Ativar / Login" da Landing
+> > apontam para `https://login.mcorch.com` (placeholder). Se `/` passa a servir a Landing,
+> > aponte esses CTAs para a rota real do app (ex.: `/app`, `/login` ou um subdomínio
+> > `app.mcorch.com`). Ver `DEPLOY.md › CTAs`.
+> 
+> ---
+> 
+> ## 5. Telas / Views
+> 
+> ### 5.1 Landing V2 — `site-root/index.html`
+> 
+> Componentes React (Babel in-browser), na ordem de renderização. Cada seção tem `id`
+> para o scroll suave da navegação.
+> 
+> | # | Componente | `id` | Propósito |
+> 
+> ############ landing-v2 sections present ############
+> total 96
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jul  3 17:49 .
+> drwxrwxr-x 16 ubuntu ubuntu  4096 Jul  3 17:49 ..
+> -rw-rw-r--  1 ubuntu ubuntu  4805 Jul  3 17:45 01-nav-hero.jsx
+> -rw-rw-r--  1 ubuntu ubuntu 15456 Jul  3 17:45 02-problem-solution.jsx
+> -rw-rw-r--  1 ubuntu ubuntu 17538 Jul  3 17:45 03-proof-final.jsx
+> -rw-rw-r--  1 ubuntu ubuntu 27644 Jul  3 17:45 landing.css
+> -rw-rw-r--  1 ubuntu ubuntu 13627 Jul  3 17:45 MCORCH Landing V2.html
+> 
+> ############ site-root libs/deps used (CDN) ############
+> src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+> src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+> src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+> src="https://unpkg.com/three@0.160.0/build/three.min.js"
+> src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"
+> src="https://unpkg.com/gsap@3.12.5/dist/ScrollTrigger.min.js"
+> src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"
+> babel
+> three
+> babel
+> babel
+> babel
+> babel
+> gsap
+> gsap
+> lenis
+> lenis
+> lenis
+> gsap
+> lenis
+> ```
+
+## 🤖 Claude *(20:51:21)*
+
+
+## 🤖 Claude *(20:51:26)*
+
+O README do handoff **resolve a arquitetura sem eu precisar perguntar** — o próprio designer manda:
+
+> *"Recriar em outro stack (React)? Trate os HTML como **especificação**… reconstrua com os componentes do app. **NÃO porte o JSX-via-Babel como código de produção — ele é didático, não build.**"* (§2–3)
+
+Ou seja: **reimplementar nativamente em React** com os tokens exatos do design-system, aplicando a marca ao app inteiro. Isso evita mexer em nginx/SSH/cert (respeita os portões Sovereign), faz deploy pelo `bun run build` normal que já provei, e é o que o designer pediz. Não há bifurcação a decidir.
+
+Vou ver o alvo visual (screenshot do hero no handoff) + ler a Landing atual e as seções V2 pra reconstruir fielmente:
+
+## 🤖 Claude *(20:51:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad/handoff/mcorch/project/audit/flag-hero.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCANKBZEDASIAAhEBAxEB/8QAGwABAQACAwEAAAAAAAAAAAAAAAEFBgIDBAf/xABMEAACAgEBBAUGCgkCBQMFAQEAAQIDBBEFEiExBhNBUXEiUmGRsdEUFTI1VHKBocHhFiMzNEJic5KTU6JkgqOy8CRDgyVEY9LxNuL/xAAaAQEBAQEBAQEAAAAAAAAAAAAAAQIEAwUG/8QALBEBAAICAAUDAwQDAQEAAAAAAAECAxEEEiExURMyMxRBcWGBkbEiQvBSI//aAAwDAQACEQMRAD8A13PzqsmiuFdTg49r7PQjHsakM1rFY1Dd7zedyAA0wAAAAAKQAAAAAAAAACkKQAAUACFAAAACFAEKAAAAEKAAA7QBCgAAAAAAAAAAAAAAAAAAAA+wAB4gAAAAAAAAAAAAAA1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAoAAAAAAAAAAAhQAIUACFAAACAoAAACFBABSACkAAAAAAAAAAFIAAAAAAAAAAAAAAAAAAAAAAAAABSACgACFIABQAAIUACFAAAACFAAAAAAAAAAAAAAADAADsAAAAAAAAAAdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHYAAHYAAAAADtAADmAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcgAAAAAAAAAAAAAdoAAAAAAAAAAAAAAAAAADmAAAAhQAAOddNli1hBtd/Z6wsRM9nAh3fBbPOq/yx95fg1nnVf5oe8m4Xkt4dJDu+DWedV/mh7x8Gs86r/ND3jcHJbw6iHd8Gs86r/ND3l+C2edV/mh7xuDkt4dBTu+DWedV/mh7yfBbPOq/zQ943ByW8OkHf8Fs86r/ADQ94+C2djqfhbH3jcHJbw6SHOyqyr9pBx15armcSpMa7oAAikAAAAAAAAAAAAAAAAAAAAAAZfZHR3L2xjzuxrKIxhPcask09dE+xPvAxAMxi9G83K2hk4UJ0xsx9N+UpPd9GnA4ZPR/Oo2nDZ6ULr5w311beiXHm2l3AYsGxz6FbUjW5KeNNpfJU3q/WtDGbP2JnbQybKKat2Vb0sc3ooP0gY8Gfyeh208amVi6m7dWrjXJ6/ekdOy+jObtXF+EUWUQipOOlkpJ6rwTAwxDYMvoftLExp3uVFqgtXGuTb0+1I6dm9F9o7Sx1fWq6q5fJdsmt7w0TAwwMvndG8/AvoruVbjdNVxsi24pt9vDX7jr2psLK2TdRVkWUyld8nck2ly56pd4GMBldr9H8rY9NduTZTONkt1dW23y9KRigAAAAEAoAAAAAAwAAAAAAAAAAHaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAByhB2TjBaayaSPXbsyyt3RjdTZZStZwi3ql38UtQPED1VYMp1V2TtqpVj0grG9ZepPh6WWrZ9s7L4TlCp0R3p7+vBfYmB5Ad+RiyohXZ1kLK7E3GUNdOHPmkzoAAAADlCO/OMNUt5pavkj0vZ90bsiuThHqI705NvT7PEDyA9cNn2ysxq1KGuRHWHF8PHgS3BlXTZZC6q1VSUZqG9rHXxSA8oPT8Ct+BfC/J6tS001492vhqcq8FzxoXzvpqhOW7Hf3uf2JgeQHe8O5ZnwVxXW727prw8fA45WPPFvlVZo5R7Vya70B1AAAAc6oO22FcWtZyUVr6QOBT2XbNnWrt22q10/tIw3tY+nilr9hxeDuUVW25FNatWsVLeb+6LA8gO94s/gryFKMoKe49NdU+evgdj2dcsr4PvV7yjvye9wgtNeIHkB6LsWVVMbo2V21Se7vQb4PuaaTOOVjzxcidNji5R01cXw4rX8QOkHsezblmPG3ob6hv66vTTTXuOFOHK2l3SsrqqUt1Ss14vuWibA83aD1wwbVm9ROMfI8qbctI7vfr3aHZn01Kmu7GrrjU24uVdkpce7SSTQHgB68nB+CznCzJp6yK4wSnr3+bp95yq2bbZCpuyqErk3XCTesvUtF9rA8QLKLhJxktJJ6NdxAAAAA91myr68iiluDletYtN6Lx4EWzbHdkVytqh8HWs5PXT7NFqB4gd8cV2XwposhdKfLc1S+9I53YUqqpWwtquhCW7Jwb8l/al6wPKD0PCtWCsvyerctNNePj4HL4vueLTkrdddstxc+D104geUHqlgWxlkxcoa468vi+PHsOdWzLbI1frKozuTddcm9ZL1aL7WB4geqOBbLEtyVu7lUt2UdXvdnvLds6+lYzajKWQvIjHn2c/WB5AeuzZ84RscLarZVftIwb1j61o/s1PIAAAAAAAAAAAAAAAO0AAAAHaAAAAAAAAAAAAAAAAAAAAAAAQoAAAAAAAAAAAAQFOdEFZdCD4Rb4+HaFiNzp2RjCqtWWLenLjCD5ad7Ouy2dr1nJvuXYvBC2x22Sm+Gr4LuXYjgSIWZ+0dgHZj0W5N8KaISssm9IxXNndlbNy8StWXVrq3Jx34TjOKa7G4t6PxKy8pDIS2LnwrlOVHyYb8ob8d9R73HXeXqOuOzMyWz3nqlvGT0c95d+nLXUDyEMjZsPaNWTRjTx9229N1x34+Ulz468PtPPkYV2Np1jpbct3Su6E3r4RbYHnIe+zY2fVTO2dGihFTnHfi5xi+1x11X2o66Nm5eTiXZVNLlRT+0lqloB5AevF2dk5dNl1MYdVW0pznZGCi3y4yaOvMw78K1VZMNybipLSSkmnyaa4MDhXdOrVResXzi+Kf2HO2EJV9bTqo8pRfHdfuOg7saSjcoy+RPyZeD/APNST5brO/8AGXSDlKLhJxfNPRkKwgAAAAACkAAAAAAAAAFIABSAAbx0Mt6jYGbb5lrl6oo0cyeBtzJ2fgX4dMKZV3NuTmnqtVpw0YH0OcK8Sy7LjpvZMq46/d+J1Vbn6TZGum/8Fr079N6Wv4Gk2dKc+yjGplCndolGSe69ZbvLXidOT0gzb9p17QThTfCCgurT0a4802+8DJwr21b0mzlhWyqu1lrKfydzXguKa8DPbBjk17Nzo3Pez1ZLrHqm3LdWnL0aGuz6bbTlW4qGNFtfKUHqvW9DGYG287Z+TZfTbvStetinxUvEDZeg3wrrM3r+t3OGu/r8rjrz7TK7HdCwdoNLWlZFuqXau01XK6Y7UyKZVJUU73Byri1L72zy4HSLL2fgTw6oUyrnq25puXHn2gbdmWV4PRiduxaIyolDXjJ+SnzfHXU6elTt/Ruj4Jr1Tcd/c83T2a6GsbN6R5mzcKWJXCm2lt8LYt6a81waOezulO0NnUdTV1VlS+TGyLe6u5cddAMhCjbkaNm2Zt2/h9dVpBtKUfKWmvBN/eZvpHdsqrKw1tPFtuslr1TreijxXPyl6DUc7pJn591FlzrSpmpxrjFqLa7+Ov3nXtXbuTtW6i3IhVGVHyVBNJ8Vz1b7gNm6e/N+Lp/qv2GjGV2v0gytsU11ZNdMY1y3k64tPl6WzFAAAAAIBQAAAAAAAAAAAAAAAAAAA7QAAAAAAAAAAAAAAABzAAAAAAAAAAAAAAOdElC+uUuCUk36zK25WNDLzMqGRG12wca4RjJPj2vVIw4AyEp4+Xj40bb1RKlbklKLesdea0T4+J3Q2jU8jPu+T1te7Wpx3tWtOa4rsMSAPdtDJryqsecJKMox3ZVKOkYvvXDTieEAAAABlc7PpuwYqp633KKu4Phur3mKAGVqzKI5GzpuzSNMNLHo/J5nG/NryMO6pyjXNW78dyG6rV6dFzXpMYAMz8PxN9YvD4N1PVu7SWuumuunj6DoU8e7ZlOPLJhVOFkpS3oyfB92iMaAMt8Px3tDIy/Nr3aYyT8p6acdOR5s2+nJx8ecd2F0FuSrinokuXF6+08QAABgDtxZxryqZyekYzi2/RqdQAy1uRjV2510L42yyIuMIxjJaJ829UhLJrnhYtdeRjwlXBqatpcnrr2PdZiQBktl5OPS7qsuf6qTUk0no3F6rh6Thj5sZ5OTLIbjHJi4uSWu7ry+w8AA91ttVOz3jV2q6U7N+TimoxS4acdOJdqSpyMq3IpyK5qWmkN2SlyS7Vp954ABmpZuN8MlmddrrTuqrde9vaad2mn2nnxtzNwYYfWKu2E3OO8m1JNcVw7TGnOq2ymW9VZKuWmmsXowPbRdjUZORVGU1RbW6+skuKffp3a9nM42W1U7OeNXarpTs35OKajFJaacdH9x4QBltpZNeRbbOrJxnCSWkXS9/ku3c/EmJk0RqojbkxdMeNlN1e+9f5Xpw18UYoAcrN1zk4JqDb3U+44gAAABsE9qYrhN7+s4xSr8l9qSl6tDohnY/wAL2hJXQiro6VynBuLfpWj9hhgBkaMmGNn13Tsqtjo4y6mvc0T4ctFxOi2nFrrluZPW2OXkbsWko971XPwPKAMy87E33i8FjdT1XXaS11566ePoOONtCmmjEpslvVpSjatOXlap/ZzMQNAMpZl0O3aTU9Vcv1fB+VxOWLk0RqpjbkqVEVrZTdXvvX+V6cF9qMSAMvgZmLVjSotk412Wy3lo21Bx5+vQuTtSqWRiXQ8rqrJtx0a0jqtPuMOAMkrMbG+FWV39a7oOEIqLTSl2y1Wnq1MaAAAAAAAAwAAAAAAAAAAAAAAAAAHIAAAAAAAAAAAAAAAAAAAAAAAAhQABCgAAAO7E/badrhNLx3WdJyrm67Izjzi00SezVZ1MS4g7L4KE9Yca5cYv0fkdZUmNTplejmXTibSbyJ9XG2uVam+UG+TZ1fBfi+2jIuyMW3dtT6uq1Tk0nrrw4aeLMeAjbYXY9O38ja0s3HlizrcopWJzlqtN3c56/Yd/R/NwY7Fx8bKyKYKdk96EppbvHVa6+BpYA3XI2li37d2RkfCadyKt331i0hrron3GByZQozqciWPhwrhepN0ZHWSktdeK35exGIAGe21s6zItytrQvpeFY9+uxz4zb/hS56+Ohk9m52z8DEwMGzKi1dGTv3d2UU5LlKW9w08GarLNvlhrEcoqlS3t2MIrV97aWr+06ANhwrcTB2XtOi+VOTFXwSr6z9pFS5rR93E83Sayu3Ornj5Fd2M6oqqMJJ9Wl/C+3Xx7zDACiKbkkubfAHdjLcbvl8mvivTLsX/ncSVrG5TKaeVc1yc5aes6SvjxZCwTO52ApAgAUCApAAAAAAAAABSACghQABABSAACgCFAAEKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAADtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5AAAAAAHaAAAAAAAAAAAADtDAAAAAAAAHYAAAAAAB2gAAAAAAAAAAgAAAAAAAAAAAAAAAgAA0AAAAAAAADAAAAAAAAAAAAAAAAAAAACFAAAAAAAAAAAhQAAA7a7koOuyO9W3r6YvvRXjufGmcbF3a6S9TOkE14a5vtLu+CZP0e3+xj4Jk/R7f7GdJB1N18f9/Dv+CZP0e3+xj4Jk/R7f7GdIHU3Xx/38O74Jk/R7f7GPgmT9Ht/sZ0gdTdfH/fw7vgmT9Ht/sY+CZP0e3+xnSB1N18f9/Du+CZP0e3+xj4JkdtFq8YM6QOpuvj/AL+HcqIw43zUf5YvWT932nG23rN2KShCPyYrs97Osg0TbpqAoIVkAAApAAAAFA+0ACAACgAAQAAAAKCAUhQABCgAAAAAEKCAUAAQpCgAABAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoEAAAAcgCAADxHaAAAAAAAAAAAAAAAAAAAAAAcwAA7AAAAAdoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUAAAAAAAAAAAAIUAAAAIUAAAAAAAAAQACkKQCkAAFIUAQpAKQAAAUCAAACkAAFAEAApCgAQoAEKQCkKAABAKAQCghQBCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaF8QICkAApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANABSBgAAAAAAAAAAAAAAAAAAAAAAAAAAAfIAAAAAAAAAAAAAAAAAAAAAHIAAAAAAAAAAAAAAAAAAAABCgAAAAAAEKAAAAAAAAABCgAAAIUhQBCgCAoAEKAHAAAQAAUhQAIUAAQoEAKBCggApABQABCgAAAAAAAAAAAAHaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+wAAUgADQoEBQAHYAAAAUAYAAAB2EKAiApAAA7AAAAAACkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGoAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAAAHYAAAAAAAAAAAAAAAAAAAEKAAAAAAAQoAEAKBCgAQFAAhSACkKBAAABSACggFBAAKCAAUAQFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgKAAAHMBQAAAXQgFIUaAAB2gAAA0IUAQFAEAAEKAECAAAAA7SkAAAAAUgAAAAAABQBEUgAaAajtApAO0AAAAAAAAAAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAABqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAoAAhQAAAAgAoIUCFAAhQQAAAALoAICgCFBABQABCgACFAAACAFAAAAAAAAAAAAQoAAAAAAAAAAAAAUCFAAgKAIAAAAAAAAAAAAAAAAAAAAAAAAUAB2gugCoUDwAaAAAAUCdoLoCKAAACkAAACAoCIACiApAACARAUgAFIAAAAAAAAAKQAOwAAAAAAAAAAAAAAAAFIAAAADkAAAAAAAAAAAAAABoAAAAAAAAAAAHaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAKAABCgAQoAhSFAgKQCgEApCkAAfYABSFAEKAAAAAACFAAAEAoBAL2gAAAAAAAEKAAAAAAAAAAAAAAAXQAKAAAAAICkCAAAAAAAAAAADmAAAAAAACkKA8SgBQF0GhFQoABgFAgBQIUDQAAUCAoCp2AoCIBoNAIQoAgKRlRAXiTkABSAAAEQFIAAAAAAAABSAAANQAAAAAACkKBAAAAAAcQAAA4gB2AAAAAAAAAAAAAAAAAcgAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIUACAoAhQAAIAKCAUAACAACkKBAABSFAEAKABCgAABCnd1Ff0mr1T/8A1HU1/SavVP8A/Um2uWf+l0kO/qa/pVXqn/8AqcZ1QjFtX1za/hSlq/Whs5ZdYB34stzrJbra3eMo84+lFZdAPTdq50Sb3tUtJNaN8e07IS3M3IlprpFsDxA9eTCMMaG5xg5Nx8NDn1a6jqNVvuO/p26//wAA8IO9fuMv6n4HQAB61uPGo35NeU9NFr2+Jzj84W+lP2AeEHe01grXts4eo9k4qU4WP/2l+HADGA9codZtCWvyU9X4I4ZaU1C5NPe4NrlqB5wZOSjO6clwlCLUl3rTgzyVuUMWU69VLf0bXNIDzg9GVx6qUl5bjrI6I6a+U2l6EBC9oAApChTQdgYIBO0oKIQo9AEAAQHYAAAAAAAAAAAAAAAUAoUKECKoAAg7CjQACgKnaVAAB2AoEBQBBoUAQFAEIUATQFAHEFIECcigIgAKBCgCApAIEUaBEAAAAAAOYADkAAAKBCk7AAAAFIAAAAAAAByA7AAAQAAAAAAAAAAAAAAAAABAAAAHYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQoAAAAQpAKQFAAAAAAICkAoBAKAAAAAAEAoBAAAAoAAAEAoAAHZTC1tunXWK1bT0Os9OHZGvrG2lwXPt4gdUo2yh10nJrXTebLCu6flrXyuGrlpve89F8q1jzrrlFqLWmj5nW0rq6d2yMdxaPWWmnpA6YxssfVreen8PcWathJTk3q+UlLXX7TsqlHW6DnxmtFKXDU4zahjRrck5b29weugHKNeTDhCTTa3tFNav7NTqjCd0np5T5tt/iex21u2KTgpdWlGevJ6eo89LTqtr1UZS00bfB6dgHCULU4VvXj8la8PsDhbvzfHfhxk9eKOSW5ZUnYpaNapPVR4953Stg5ZOigtVwab4/eB5J2Tm9ZylLTvepXZNrjOXH0nEAct+Wre89Xz48ybz3d3ee7rrpqQAct+e85bz1fBvXmSM5QesJOL709CACuTk9ZNt+kEAFKQoU0AKRTQdgAAhQBGQrIVE7AUgQAAAAAAAAAAAAAACgUBFQUKCoipoUAKAaFAgKAAAICAGgAFAEBRoBECgCApAICgohCgCEOXaT7wiDQpABCgCBlJoVEBWQCApAgCkADsAAAAAAwAAAFIAAAAAAAB2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcwgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABCgQoAAhQAAAAhQBCgAAAA9YGgAhQAIAUAQFAAAADa9n9FcPOwaMmOVb+sim0kuD7V6z0/oVi/SrvUibGlg3T9CsX6Vd6kP0KxfpV3qQ2NKKbjf0MpjRZKrJtlYotxTS0b7DTigAAAAAAGwbA6OQ2riTyLrZ1pT3YqKXHTmBr4N0/QrF+lXepD9CsX6Vd6kTY0sG6foVi/SrvUiS6GYkIuUsu1RitW9ENjTAWe6rJbjbjr5LfPQhQAAFA0CCqgCkAAoVAUAQFAEZxORAIQoKiAAIAAAAAAAAAAChA23o10ersp+F59ampr9XXJdnewrUyn0n4k2b9Cp/tHxLs36FT/aTY+blPoOb0ewMjFnXVRXTY15M4rTR+40PIx7MW+dN0d2cHo0Rp1gAAAUCAoAhQEFNAOQ7AAAAA9WBgZG0Luqxobz5tvkl6TYqOh0Nz9flS3v5I8PvCNTBtGT0Pmo64uSpPzbFp95gszZuXgvTIolBedpqn9oHkAM1sHYde1arZ22TrUGordS4hWEBuP6H430m31I1PKqVGVdUm2oTcU326MI6iFYAgKQogKAIQ5MgRAUgEIciMqIOJWQIgL9gAgDAApAAAKBACgQAACkAAAAAAAAAAAAAAA+wIAAAAAAAeIAAAAAAABSAAAAAAAMAAEDtxalflU1SeisnGLa7NXobf8AoXi/SrvUgNLBun6FYv0q71IfoVi/SrvUibGlg3T9CsX6Vd6kaZNbs5R56PQogAAAAAAAAAAAdoAAAAAAAAAAAAAAAAAAAAAABCkAoAAEKAAIUAAQC/aCACghQAAAAhQAIUDcehGdv034Unxg+sh4Pn9+nrNqPmew834BtWi5vSG9uz+q+D9/2H0wzKgAAHzTb2J8C2xk1JaRct+Pg+J9LNR6cYnHGzIrvqk/vX4iBqQIU0gAAB9O2PifAtl41DWkowTl4vi/vZoGw8T4btfGpa1jv70vBcX7D6YSVAAQDDdK834JseyMXpO99WvDt+4zJonTHN+EbTWPF+RjrT/mfP8AAQNfABpAAoApC9gU8SgcyKFAAFGgCoC6EAg7CkCIQpCogKQIAAAAAAAAAHv2PsyzamZGmGqguM5+agPf0Z2K9o3/AAi+P/pq3yf8cu73m+pJLRLRI6sbHqxceFFEVGuC0SO0yrjbZCmqVlklGEFrJvsR5tm7Sx9p0u3Hb0i9HF80at0o218KteFjS/UwflyT+W+7wRitk7Rs2ZmRureseU4ecgun0kwfSXY/w6j4RRH/ANRWuS/jj3eJl8bIry8eF9Mt6E1qmdoR8r04g2TpRsfqLHnY8f1c3+siv4X3+DNcDSDQoCoCgCApyVcpckwOA7T1Qw7J81oeqrZveBjNOJyhVOySjGLbb0RmobPhHmj27PxKlm0rRPSWoOjPbK2fXs7DhTBLe5zl5zPYDxbRzniKMYJOcu/sQYe0koxnFxnFSi+aa1TMTTtl6/rYRku+L0MhRmUX/ImtfNfBgeHI6O7NyJbzo6t//jeh7sPEpwaFTjw3ILj4s7wBJNRi5Pklqz5jk2ddlXWLlObl62bd0l21XTRPDx5qV01pNp/IXd4mmhqEAaAVBpxKQIEKCiAoYEIUAcSHLQgRNAVkKiApAgO0ACApAAAAAAAAADAAAAAAAAADAAAAAAAAAADQAAAAAAAAAAAAAAAajtAAAAAAPTs75xxf60Paj6kfLdnfOOL/AFoe1H1IkqAAgPkz5Pb+1n9Zn1h8mfJrf2s/rMsDiACoAAAAAAAABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAUACFAEKQoEKABCgAQ+k9Hc34dsimcnrOC6ufivy0Pm5svQrN6rNtxJPybo70frL8vYSRuwAIoY3pBifDNj5FaWs4x34+K4/kZIcwPkgPXtXE+BbSyMfTRQm936vNfceQ0gAANr6D4mtmRlyXBJVx+3i/wNwMZ0cxPgmxseLWkprrJeL4+zQyZlQAAdWXkRxcW2+z5NcXJnyy+2d99l1j1nOTk/Fm6dNM3qcCvFi/KulrL6q/M0gsIAHKMZTkoxTlJ8klq2UQGcweiu0MpKVqjjwf+pz9S/EzNHQzEil1+RbY+3d0ivxJtWllRv8Oi2yo86JS8bJfgzk+jGyWuGM14WS942PnyKbvb0QwJ/s7Lq36JJr70YzL6H5NacsW+F38sluv3BWtlO7Jxb8Szq8iqVc/5lz950hQDQAAABNB2HZTTbkWKuiuVk3yjFaszuJ0RzLkpZFkMdd3ypepcPvCNdZDd6uh2FHR23XWPt0aS9h6Y9FtlR50Sl42S942j58D6G+i+yWv3Z/5Je86LOiOzJryVdX9WevtGxoQNuyehS54uW/RGyP4r3GB2hsTP2cnK+lutfxw8qP5faVGPAGgAAAU7qMrIx1JUX21KXPcm1r6jpOyqmy6xV1QlOcuUYrVhXf8AGWf9Nyf8sveX4yzmmnm5D15/rZe8y2H0Rzb0pZE4Y8e5+VL1L3mXp6H4UEutuusfbxSXsIrSio36PRjZSWjx5Pxsl7w+jOymuGO14WS95DbSKcvJojuU5FtcdddITaR2fGOd9MyP8svebbZ0T2fL5EroeEk/ajxz6Gree5mtLsTq1/ELuGuzz8ycXGeXfKLWjTsk0/vPObFmdF5YmO7vhPWaNLd3NOf2nljs6OnLiF6MPoVRb5Jmz4nR2dyUppVwfa1x9RlaejuHXpv78346IhuGjwx7Jdh6KsCcuZvC2Pgx5U/7mcZ7Ix2vIc4P0PUqbapVs2K+UemGPVXz0PTtTBy8KDsjHrqlzlDmvFGv2Ztk+TIvdmJXVV9x57NoQjy0MRK2cucmcNe/iU6MjPaTb4HXHad1VkbK3uzi9UzxHow8HJzp7mLTKxrm1yXiwPd+km0/pH+yPuPPkbWy8qSlfZvtLRcEvYZbG6IXzSeTkQr/AJYLef4GQr6JYMf2ll1n2pL2BNtVhnWR7T107S5KXA2ePRnZa50Sl42S95f0a2V9Gf8Akl7wbYzH2pZolXfJejXU4Zt+bk1uPwqzd7ovd19Rl10d2dH5Fc4+FjOa2LRH5Nlq+1MG4aHdROqXlJ6HUbxlbA6yL3Jxb/mWhrO0dk34kvKraXf2ML3Y0BrR8VxAEBRoBCFPdg7Hzc/R0Uvcf8cuEQPADbMboctE8rKevdXH8X7j3V9FdmwWko22fWn7tAm2ik7T6B+jWyvoz/yS951WdFNmzWkY21+mM/eE20RkNuyOhseLxsp+FkfxXuOqPQyyUIuebGMtOKVeqT8dSjViG1/oXL6cv8X5j9CpfTl/i/MDUwza30Lkk38OX+L8zVNAiAzOzOjeZtGMbGlRS/45ri/BGwY/Q/ArS6+dtz7eO6vu942NGB9CfRfZOn7s/wDJL3nlyeh2FYn1FttMuzV7y9/3jaNGBltqdHs3Zqc5RV1K/wDch2eK7DElFAIABs+J0QeViU5CzVHra4z3eq101WunM7v0Jl9PX+L8xsakU2v9CZfT1/i/MkuhUkm3nrgtf2X5jY1QM5V1yssjCEXKcnoorm2bXs7odvQU9oWyi3/7dfZ4sDUgfQ10W2So6PHk33uyXvPHldDcOxN411lMuxS8pe/7ybGkAyG1dj5WypRWRuuE/kzi+D/Ex5RSAyuz+j+0M9KcKurrf8dnBP8AFgYoG5Y3QqpL/wBTlzk+6uKj7dT3V9FNlQXlVWT+tY/wJsfPwfQ/0X2R9Ff+SXvOuzolsua0jC2H1Z+8bGgFNwyOhVTX/psucX3WRUvZoYXO6N7Rwk5Orrq1zlU9fu5l2MQBxQAIAAAC82BCmXweje0c1KXVqmt/xW8NfBczN0dC6Ev/AFGVZN/yRUfbqNq00G/w6J7LilvV2T+tY/wOz9F9kfRX/kl7ybHzvtB9An0U2VLlVOHhY/xPHf0LxpL9RlWwf86Ul+A2jSwZ3N6K7QxU5VxjkQX+m+Pq9xhJRlBuMk1JcGmtNCjiCgC1zlVZGyt6Tg1KL7mjKfpNtf6Y/wDHH3GNx6evyaqd7d6yajrprpq9DaP0Il9PX+L8wMT+ku1/pb/xx9w/SXa/0x/44+4y36ES+nr/ABfmP0Il9PX+L8ydBif0l2v9Mf8Ajj7jFNuTbfNs2v8AQmX09f4vzNUkt2bjryehRAAABk9n7Az9oRUqqtyp/wDuWcE/DtZnsfoVWlrk5c5eiuKX3vUDTgb9X0S2ZBeVG2fplP3Hb+i+yPor/wAkveTY+eA+hvotsl8seS8LJe889vQ/Z0/kSvr+rNP2obGiA2rL6F2xi5YeTGfdCxafea5l4WRg3dVlVSrn6eT8H2lHQAAAAAA9+z9i520Unj0vq/8AUnwj+f2GexuhT0TystLvjXH8X7gNSBvlXQ/ZsPlu6z609PYjvXRbZKWjxm/GyXvJsfPAfQ/0X2R9Ff8Akl7zhLonstrhXZHwsY2Pn4N3s6GYTT6vIvg/To17DGZfQ7LqTeNbC9dz8l+4bGtg7b6Lca1131yrmucZLRnUUAAAAAAcgAAAAAAAO0AAB9gAAEApAAKAAAAAHdh5EsTLpyIfKrmpePoOkAfWKbY30wtg9YzipJ+hnM1/odm/CNluiT1nRLT/AJXxX4mwGVAABpfTfE3MujKiuFsd2Xivyf3GsH0TpRifCti3aLWVWli+zn92p87LCB6dnYrzNoUY6/jmk/Dt+48xsvQrE6zPtyZLyaYaJ+l/lqUbskopJLRLgkADKgB4tsZiwNmX366SUdI/WfBAaN0lzfhu17XF611/q4/Zz+8xRW222+b5nbiY1mZlV49K1nY9F7zSO7Zuzb9p5Kpx16ZTfKK72b7snYmLsuC6uO/dp5Vslxfh3I7tmbOp2ZiRopXHnOWnGT7z2GdqAAAAAAAA6snFpy6nVkVxsg+ySNL250dswG7sbWzGb4684ePo9JvJJRUouMkmnwafaB8yrxZS5nZLCaXAzm2sRbNuTgv1NnGPo9BjY5cJPTUNMXOuUHo0ZDZGx79q3aQ8imL8ux9nh3s9uPgLaV0aocNecu5d5uOJi1YePCiiO7CC0XvCbdWz9m42zqtzGrSb+VJ8ZS8WesAIAAAAAAaTWjWqAA1jb3RiFsZ5Oz4KFq4yqXKXh3M0xpxk01o09GmfWjT+mGyFXL4wojopPS1Lv7GWJGqgdp69l4Fm0s2vHr4a8ZS81drKj0bG2Nfta/SPkUx+XZpwXoXpN82fs3F2dVuY1ai+2T4yl4s7cTFqwsaFFEd2EFovT6X6TuMqAAADxXbXwqciGPK+LtnJRUY8dG+/uPaAAAElGM4uMkmnzTPJTs2irIdqTfmxfKJ7AAAAAAADT+lGx44svhmNHdqk9LIrlF9/gzcDpzMeOXiW0T5WRa8O5hYfMkCzi4TcZc4vRo5UUyyL66a/l2SUV9oaZbYOw3tObtubhjQfHTnN9yN2ooqxqo1UVxrhHkoo44mNXh4tdFS0hCOi9PpO4MyAAIA82XtHEwv3m+EHprut8X9hj30o2Ynp1lj8IMDMg8GFtnBzp7lF633yjJaNnvAHC2qF1bhbFSi+aZzAGnba2H8Hs3quMJfJfd6DX51yrlpJH0rNpV+LOOmrS1j4mp34teRDWPP0EaiWvljFzkoxTcm9Ekd+Rizpk+HA2joxseNNUc7IjrbNa1p/wrv8WVZ6JsbozCqMb9oRU7HxVXZHx72bIkkkktEuxABgAAAAAAAAAAEl8l+BqPRro8rVHNzoJw511v8Ai9L9Bt4SSWiWiQAAAAAAaTWjWqZpnSjYEcbXNw46Va/rK1yg+9eg3Mk4RshKE0pRktGn2oD5MQ9+2NnvZu0bMd6uCe9Bvti+R4TSPp2yPmjC/oQ/7Uew8myPmjC/oQ/7UesyocbP2cvBnIAaz0S2Oqa3nXx/WT1Vaf8ACu/7TZiRioxUYrRJaJdxQAB4tr5q2fs26/XyktIemT5Aab0rz/hm1JVwlrVQtxd2vb/56DD0U2ZF0aqYOdk3oku04NuUm3q23x9Jv3RnY0dn4qvuj/6m1avX+BdxeyOOxejVGDGNuUo3ZPPjxjDw95ngCKAHny87Gwob+TdCtdmr4vwQHoBhP0s2VvadZZ49WzJYe0MTPi3i3ws05pPivsA9IAAwu2ejmPtGMrKVGnJ57yXCXj7zRMnGtxL503wcLIPRpn1UwnSbY8do4buqj/6mpaxa/iXcWJHz8vYO8JNvRcWyo7cbHty74048HOyT4JG87F6OUbPjG29K7J56tcIeHvOfRzY8dm4issWuTatZvzV3GZJMqAAgAAAAABjdrbExdqVtzioXr5NsVx+3vRkgB8uz8G/Z+TKjIjuyXJ9kl3o8x9G29sqO1MGUYpdfX5VcvT3fafOpRcW4y1TT0aKO/Z3zji/1of8Acj6kfLdn/OOL/Wh7UfUhIAAgPkz5Pb+1n9Zn1h8mfJ7f2s/rMsDgbj0c6NwjXDMz4b05cYVSXCPc36TB9G8GOfteqNi1rh+smu/T89D6MJAAEAHg2ntjE2XFfCZvfl8mEVrJmHfTXG14Yl2nigNnBicDpHs/OnGuNjqsfKNi01+3kZYAdGbhUZ9EqcmtTg/WvSjvAHzTbOyrNk5brm96uXGufeveY8+lbd2dHaezrKtP1sVvVv0/mfNWmno+aLCBtfRzo3C2uGZnx1jLjXU+1d79xhtgYC2jtWqqa1rj5c16F/4j6SkkkktEhIkYqMVGKSS5JdhQCKAGPy9t7Pw5ON2TDfXOMfKa9QGQBg/0s2Xrp1lvj1bMlhbRxNoRcsW6NmnNcmvsA9QAA8e0tmY206HVkQ4/wzXyov0HzraODbs7MnjXc48n2SXYz6ia50zwVdgwy4ry6XpJ/wAr/PT1iBpBAU0IAAAKQIAAACgCAAB9gAAAhQBCkAoA7AIUAAAAMz0Wzfge164yeld36uXj2fefQj5LGTjJSi9GnqmfUNl5aztn0ZCfGcfK9D7fvJKvUACCThGyEoTWsZJprvR8szceWJmXY8uLrm4+J9UNG6Z4nU7TjkJeTfDj4rh7NCwNdPoPRPE+DbGhNrSdzc34ckaHjUyyMiqmHyrJKK+0+p01xpphVDhGEVFeCEjmACAaj02zeNGFF8v1k19y/E21tRTbeiXFs+Y7VzHn7RvyG/JnLyfRHs+4QPGbj0KwFGq3OmvKm9yvwXN/+dxp59P2TjrF2XjUpaONa1XpfF/eWR6wAQDxbV2lTsvFd1vGT4Qgucme00LpXlyydryq18ihbqXp5v8A89AHnztvbQzZtyvlVDshW91I6KNp52PPeryrU/TJtfeeQpVb1sDb0dpLqMhKGSlrw5TXo9PoM4fLsW+eLk131vSVclJH0+uatrhOPFSSaIOQACPBtrBW0Nm206azS3ofWX/mn2nznXTifVT5vtjH+D7WyaktErG4ruT4r2hYbV0SxXXs55E/lXPyfqr89TPHRg0/B8GirTTcrin46HeEAAB5NpbQp2biu+9+iMVzk+40nP6RZ+ZJ6WumvshW9Pv5nb0pzHk7VnWn5FHkJentMKFd0c/Lg96OVcn377M1sjpTkU3Rrz5dbTJ6b7XlQ9PpNeIyj6vFqUVKLTTWqa7SmjYnSvIxMGrGjRCcq1uqc5N6rs4HXb0s2nPVRlVX9WHv1JpG+nTl0V5WLbRd8iyLiz55bt3ady0nmWJfy6R9h5LMnIu162+2f1ptl0ON9Lovsqk/Krk4vTvTN06HYCowHlzX6y98PRFfmaTGO9JRXa9D6niUrHxaaUtFXBR9SEjtABANb6U7XnjJYeNLdsmtbJLml3I2Q0PbGFn5W1cm2OJkSi5tRarfFLggsPDs35yxNf8AWj7UfSj5/s/ZmdDaGNKeHfGMbYtt1vgtT6ACQABAAAcbXKNcnBKUkm0n2sxeytvY+0bOpcXTf5ku3wZlj57tJPA27c6uDrt34+0LD6EDjXPrK4zX8STOQQAAHznbMOr2vlx04dY36+JNk5dWDtGrIuhKcYa8I89dNDu6R/PWT4r2IxgabxX0r2dJeX1sPGGvsPRX0i2XZyyVH60Wj5/qAafSIbVwLGlHMpbfZvo6dr7VrwtnWXVWQnY/Jho0+L/81Pnn2gGnO2ydtkrLJOc5PVt82cT14+y87J06nFtkn27ui9b4GTxuiedbxvlXSvS95/dw+8DBwnKEoyg2pReqa7GfS8G95ODRe+DsgpP1GJw+iuDj6Svc8iS87hH1IzcIRrhGFcVGMVoklwSCS5AAIGh35MsPaWRS+EI2SS8NeBvh8929885X1w1DNbPrq2jfCDSaXlS8DaEklouCNY6GUvq8m996hF/e/wADZwkgACJKShFyk0opatvsNP2t0mvuslVgy6qpcN/+KXuMx0pvnXszqq+d0t1+HaaM009Gg1EO/wCG5W9vfCbte/fZmdkdJrqbY1Z8nbS+G+/lR96Nf07hoF0+oxkpRUotNNaprtKYXorlPI2X1c3rKmW6vDmjNBgAAA4XXV49M7bpqFcFrKT7Dmap0zzJb1OHF6R06yfp7F+IHXndMLXNxwaYxguUrFq39h14vTDJhYvhdNdkO3c8lo1xohV0+o4eXTm48b8ee9CX3ehncaV0OzJVZ88VvyLotpfzL8jdSIAADWemuIp4tOVFeVXLcl4P8/aaYfStuU/CNj5cP/xuS+zj+B810LA+m7I+aML+hD/tR7DybI+acL+hD/tR6yAAABr+0+leNh2ypx4PInHg2npFPx7T0dJ8+WDsqXVvS257kWuzvfqPnpYgbdR01Tl+vw2o98J6v1M8HSbbdW0+orxXLqoLelvLTWX5fiYAF0Mv0ZwFnbVhvrWuldZL06cl6z6Gaz0Jx9zCvv042T3V4JfmbMZkAAB5NqZ8Nm4FmTNauK0jHzpdiPm2XmXZt8r8ibnOX3eheg3HpjTlZNGNTjUW2x3nKW5BvTTly8Wap8UbR+gZP+KXuLCPGdmNkW4t8bqJuFkeKaPR8UbR+g5P+KQ+KNo/Qcn/ABS9xR9C2Tnx2ls+rJSSlJaTS7JLmew1zodTlY1GTTk0W1R3lKG/BrXXg+fgjYzKgAA+ddJML4Fte2MVpCz9ZH0a/nqd3RTBWXtVWTjrXQt969/Z/wCegyvTihOrFv7VJwft/A7uhNG5s+65rjZZon6EvzL9hsgAIBJSjCLlNqMYrVt9iKa70yzJUYFePBtSvk9dPNX/APUBjdr9K7rbJVbOfV1Lh1mnlS8O4wUs/LnLellXNvt32ecpRlMLpBtHDnHS+VsFzhZxT+3mbzszaNW08SN9PDslF84vuPmRlNjbat2RK3crVkbEvJctEmu0K+iA0ezpftCXyIUQX1W37Tx2dI9qWa/+qlFPsjFL8CaR9ENA6V4ccXarsr03L1v6LsfaY63aGZbr1mVdLXvmzzttvV8WUd2zvnHF/rQ9qPqR8u2d844v9aHtR9REgACA+TPk9v7Wf1mfWHyZ8nt/az+sywNk6DJfDcl9qrXtN0NA6I5ccbbChN6Rvi4fbzXs+838kgAANC6X418NrzvnCXVWKO5Ps4LkYE+szhCyDhZGM4vmpLVMx9+wNl3tueHWm/M1j7C7HzbkzZMfphlU41dUqIWShHdc5SesvSZizohs2fyXfDwmvxR4ruhMdG6cxruU4fjqEeKzplnyfkV0Q/5W/wATql0t2o+Uqo+EBk9E9pULWtV3rn5EuPqehhr8e7GnuZFU6pd046AZKfSXas3r8KcfRGK9xipzlOcpyespPVvvZAUZro5tfG2TZdO+qycrEknDTgu02WHS3Zcl5U7YeNb/AANABND6RV0i2VauGZCP1k17T0V7UwLXpXmUSfosR8vA0N36WbYeNiQx8W1dZdq5Si+Ufz/Bmkc2WMZSlpGLbfYkZDH2HtPJ06vDsS75rdX3lGPPbsjKnh7Tx7YPTy0n6U+ZmMXoZkz0eVkV1Luit5/gZ7B6NbOwmpdW7rE9VKx66Pw5E2rLgAgHm2nSr9m5NTWu9VLTx04HpONv7Kf1WB8n0BZ/Ll4kNAAO0B2kKABCkApCkAApALxA9QAgACAAAAAAAAAAAG39Cc3WN+FJ8v1kPx/A1A9ux8x4G0qL9dIqWkvqvgyK+nAJppNPVMEAwXS/E+EbIdqXlUSUvs5Mzp15FMcjHspn8myLi/tA0bohi/CNrK1ryaIuX2vgjfTBdFNnSwcO52rSydjX2Lh7zOiQAAGI6T5vwPY9u69J2/q4/bz+7U+eGxdMszrtoQxovyaI8frPj7NDXiwLXHesjHvaPrC4LRHyeD0nFp8nqfV4yUoqS5NaoSKACAfMdpylPaWU5PV9bL2n04+abWrdO1MqD5q2T9b1Cw8aKAkVXZTU7bFFcj6Rsz5uxl3VpfcaJRBY9G/LmzfNmxcNnY0ZfK6uOvqIkvSAAgaH0lS/SGz07mvqRvhoXSOal0ht05RcF9yCw30ABAAAfMM2TnmXylzdkvadDPRnVurNvhJeVGyS+86A04kOWhGURkKAiAunEIqO3DWuZQn22R9p9TPlmK93Kpk+ycX959TJIAAgAHRLNxYycZZNMZJ6NOxaoDvB1Qysex6V31Sf8s0ztAAAAAef4fh/S6P8iA9BovSuG5tmTS03oRf/AJ6jcvh+H9Lo/wAiNO6VW13bVUqrIWR6pLWMk1zYWG54X7lR/Tj7DuOnC/csf+nH2HcEAAB8+6RfPeT4r2Ixhkukfz3k+K9h5cDDsz8uvHp+VN8+yK7WGnXj412VaqseuVk32RRsGH0QvmlLMvjUvNgt5+vl7TZtnbPo2djqmiOnnSfOT72eoJth6OjGzKV5VUrX32Sf4aGSow8bG/YY9Vb74wSZ3AIA6cjLx8WG9kXQqX80tNTD5PSzAq1VMbL32aLdXrfuAzwNJy+lmbdqseMKI96W9L1v3G17KsndszGssk5TlWm2+1hXrAAQPnm3vnnK+ufQz55t755yvrhYbP0QjpshvzrZP7kZwwXQ+Wuypx14xtfsRnQSAAIw+3XFzphN8NGzBZGBCyOsdNT39MN+uWLbF8PKj7DC4+0ZRek2RuHkvxp0yeq4HSbD+qy4dmrMTmYcqZNpaxCs50Lb3stdmkX7TajWOhlbUcqzsbjH2+82crE9wABA0LpTJy23cn/DGKXqN9NF6V1uG2Zt/wAcIyXq0/ALDCaDQpNA09+wG47axNP9TQ+jHzvo9B2baxUk+EtX9iPogZkAAR05q1wshPinXL2Hy3Q+pZr0wshvl1cvYfLhCvpmyPmnC/oQ/wC1HrPJsj5pwv6EP+1HrCAAA03pvdvZeNTr8iDk14v8jWDPdMJb22mvNriva/xMFoUQaAFG/dEVpsOv0zl7TNmE6IPXYkF3TkvvM2ZAAAAdd2RTRp111devLfklr6zq+MML6Xj/AOWPvA9IPN8YYX0vH/yx94+MML6Zj/5Y+8D0g8/xhhfS8f8Ayx95PjDC+l4/+WPvA9IPP8YYX0vH/wAsfeT4wwvpeP8A5Y+8DF9MIKWxXLTjGyLXsOfRJabCq9M5e06elGZjXbFthVkUzk5R0jGabfE7uiT12HX6Jy9oGaAAA0rprNvaNEexU6+tv3G6ml9NoNbQos7JVaL7G/eBrZRoCqaAoCoC6ADiNPQXQgR37P8AnHF/qw9qPqJ8v2f84439WHtR9QJKAAAPkz5Pb+1n9Zn1h8mfJ7v2s/rMsDjCThJSi9JJ6prsPoWwNt17Ux1CxqOVBeXHzv5kfPDnVZOmyNlU3CcXqpRejRUfWAaXgdMb6oqGbSrkv44vdl6uT+4zmP0n2XfzudL7rItffyM6VmAdVOTRkfsLq7PqSTO0AAAB1ZONTl1OrIqjZB9klqdoA0XpB0blgJ5OJvTx/wCKL4uHvRrx9anGM4ShNKUZLRp9qPmu3Nn/ABbtO2iP7N+VX9VlhGPPXg7Ny9o2buLTKenOXKK+09XR/Y72rl6T1jRXxsku30I+hUUVY1MaqIRhXFaKKQmRq2H0LWieblP0xqX4v3GYo6N7Ko0axlZJdtknLX7ORlQRXXTj00R3aKoVruhFL2HYDyZe08LC/ecmuD83XWXqXED1g1rK6ZYsNVjUWXPvl5KMTZ0o2jl5FcYzjRBzSca48+Pexob2AABxs/Zz8GcjjZ+zn4MD5TP5cvE4nKfy5eJCiAAACgCArIUAAAAADT0sAAQABAAAAUgAFAEKQoEKAFfRejWb8N2RU5PWyr9XL7OX3aGVNH6GZvU7Qniyfk3x4fWX5am8GQAAAAADrvuhj0WXWPSFcXJ+COw1/pjmdRs2OPF6TyJaP6q4v79ANKybp5ORbfN+VZJyf2nWAVQ+lbCyVlbHxbE9WoKEvFcPwPmxs/Q7aSqung2PRWver187tX2/gBuIAIgaV0vwHTmrLiv1dySk+6S/I3U6snHqy6JU3wU65LimB8uPTh09ZZvS+SjO5nRC6M28O6M4a8Iz4NfadtHRvLVag5V198tdQ0xWPRLaW0qsWtPc11m12RXM+gJJJJckeHZeyqNl1ONXlWS+XY+cvyPcEAAEG1FNt6JcWz5jnZHwrOvyOyybkvDXgbp0o2gsPZsqoy0tvW4vRHtf4faaGFh9N2besnZ2PanrvVrXx04/eek1nodtBTongzflV+VD0p816/abMEAABpPSzZ8sfO+FQX6u/m+6RgD6hk49WVTKm+CnXLmmatm9EbVNywroyj2Rs4NfaGolrBNNeCM7DoptGUkpKqC73PUzuyejVGDZG6+XX3R4rh5MX+IHbsDZUMPZkY5FUXbZ5c1KOuncvUeueydn2NueHQ2+3cR7AGWLs6ObLsXHFjH6smjz2dE9myT3VbDwnr7TOHTmZVeFi2ZFr0jCOvj3ID55tjEp2ftKePj2SnGtLVy01159h9A2dkLK2fj3J678E349p81vunkX2XWPWdknJ/abZ0Nz1KqzBsl5UXv169q7UFbOAAgfP9v40qNs3x04Tlvx9OvE+gGO2tsqvaHV2crqvkvvXcwsNbwdMSeLD+KdsdfWjdTRbIX17cxoXVShu2xS1XPijegsgADKPkz5afUzDz6MbMm2+qnHwmwsS0QG4ZfRfZ1NE7XddVCC1bbT/A0+Wmr3dWuwNPpuF+5Y/wDTj7DuOnC/csf+nH2HcGAAAfPukfz1k+K9hmOhWMtzJymuLari+7tf4GG6R/PeT4r2I2Poa18UzS5q56+pBr7M+AAyGH6SbVns3EiqGlfa9Itr5K7WZg1zpjg2ZGLVkVpy6ltSS7n2/cBqF11l9jsuslOb5yk9WcCFjFyklFNyfJJcytCTbSWrb4H03Ap+DYOPS+cK1F+o1ro90esV0MvOhuRj5UK3zb733G2kSQABA+ebe+ecr659DPnm3/nnK+uFhl+hmQo25GO3xklOP2cH7TbD5rs7MlgZ1WRHjuPyku1dq9R9HpthfVC2uW9CaUovvQJcwAEYvpFgvO2ZJVrWyt78V3969RoR9RMDtXozVl2SuxZKm2XGUWvJb/ANRLU8fJnTJaPgZmqyvLq0fM6f0X2jvaaVad++ZvZHR6ODPrcizrZrlFfJXvIszD27FwVgYKh/FOTnL7fyPeAVgAAA1/pZs2eTjwyqY706U1JLm4/l+JsAA+WEN8zejWDlzc4qVE3z3OT+w6MfonhVWKVtllyX8L4L7g1t4uh+z5dZPOsi1FLcr17e9m2EhCNcFCEVGMVoklwRQgAAjw7buVGyMqb/ANNx9fD8T5ubl0yy1DEqxYvyrJb0vBfn7DTgsPpWyfmnD/oQ/wC1HrPJsn5pw/6EP+1HrCAAA0Lpb8+WfUj7DCma6WfPdn1I+wwxVQhdABt3QnI1qycZvjFqaXjwf4G0nzjYed8X7Squk/1b8mfg/wDzU+jpqSTTTT4poiAAA1rptjSsw6MiK4VTcZeD/wD4aUfVcnHryseyi5a12LRo0Da2wcrZtkmoSto18myK19fcWBiQXTQ9+z9kZm0bFGmpqGvGyS0iijwA+lYGx8TCxI0KqFrXGU5xTcn3ls2Ns6xtzw6W33R0JsfNAfQ7OjWyrP8A7bc+rJo88+iOzZfJd0H6JjY0TQ3ToVfvYeRQ3xhPeS9DX5GubZwsfAznj41srd1eU5acH3Hb0dz1s/acJTelVvkT9GvJ+sK+hgAiBhOlWz5ZuzlbWnKyhuSS7Yvn+D+wzYA+U6alN02p0Wpypu3DmqLHxcWvJfuMNLortJS0Uamu/fDTCGydEdmdbfLNujrXXrGGq5y7fUjuwOiDU1LOuW6v4K+37TaKqoUVRqqioQitFFdgSZdNmz8O39pi0y8YI889hbMs54da+rw9hkQEYWfRbZcuVU4+E3+JgukWxMTZdFdlNljnZPRRk01p2m7mhdJ89Zu0nCuWtVK3F6X2sKxuz/nDF/rQ9qPp58xwPnDF/rR9qPpwJAAEHyZ8nt062f1mfWHyZ8ot/az+sywOHAG7bE2HsrK2dRkSpdkpx8rem+a5mUjsPZkOWFV9q1Gx81OUKrJ/IhKXgj6jDCxa/kY1MfCCO6MIw+TFR8ENj5Q1OuTT3oSXNcmj1U7Wz6ElVmXRS7N5tGxdLNi2WWPPxYOXDS2KXHxNRZRncfpbtKp/rHXcu6UdH9xs2xdv07W1r3HVfFauDeqa70z54bL0P2dfLN+Gyi4Uwi1FtfKb4cCSN1ABANN6cxSycSXa4ST+xr3m5GkdNsiNm0KaVx6qvj4v/wDggZ/otirG2LS9PKt1sk/Hl92hmDxbF0ex8LTl1MfYe0AAANV6V7bux7lhYk3W93WycefHkl3GoNuUm5NtvnqbD0xwbKtorLUW6ropb2nKSWmhrpQPZsnHeVtTGqSb1sWvguLOiii3IsVdFcrJvkorVm79HNgvZqeRk6PImtEl/AveBngAQDjZ+zn4M5HGz9nPwYHymfypeJCz+XLxBVTQAAAAAAAQAAEAADUFAHEFBRAUATgC8wBAUgFICgAAB2Y188bIqurek65KS+w+pY90MjHruresLIqS+0+Um89Dc3r9nTxpPyseXD6r4r79SSNhABAAAA+fdKMz4XtixResKf1cfs5/fqbvtLLWDs+/IfOEeHjyX3nzKUnKTlJttvVtiFQAFA5QnKucZ1ycZReqa5pnEoH0HYO2YbUx1GbUcmC8uPf6UZY+WU3WUWxtpnKE4vVSi+RuGyelVNyjVn6VW8us/hl49xBsYJCcbIqUJKUXyaeqZQgAAAAAHnzs2nAxpX5Et2MeS7W+5Hi2n0gw9nqUVNXXL/24PXTxfYaVtLaeRtO/rMifBfJguUQqbSz7dpZk8i3hrwjHXhFdiPJ9gBVd2Jk2YeTXfTLdnB6r0n0TZe0adp4quqeklwnDtiz5qenBzr9n3q/GnuyXBrsku5og+mgw2y+keJnRUbZLHu82T4PwZmQyAAAAAAB0ZeZj4VfWZNsa49mr4vwXaB3t6LVmkdJtsrOuWNjy1x63xa/jl7htrpHbnKVGKnVjvg3/ABT9yMCFiEO7FyLMTIrvpe7OD1R1F0DT6TszaFW0sSN1T48px7YvuPWfNtnZ9+zshW48uPKUXyku5m7bM25ibRioqSqu7a5vj9neGZhkwAESUYy03op6PVaooAAAAA3otXyBpW2+kdmcpY+KnXQ+EpP5U/cgq9JdtLMn8Fxpa0QflSX8b9xr4AafTsL9yx/6cfYdx04X7lj/ANOPsO4MAAA+e9I/nvJ8V7EZLobmxryLcSctOtW9DxXNer2GN6R/PeT4r2GOrsnTZGyuTjODTi12MNPqYMNsPb1W0a413SjXlLg48lL0r3GZDIAAPDdsbZ189+zEqcn2paew7cbZ+JivXHx6633qPH1npHIADA7X6S4+HGVWI4338tVxjHxfb4Hk6JbRsyMnLryLHOyzSxNvn2P8ANpAAA+e9IYuO28pPzk/Wkz6EaZ0xxXVn15KXkXR0b/mX5aBYa8bH0Z20sWSw8qWlMn5Em+EH3eBrgDT6oDSdjdI7cFKnJUrqFyf8UPDvXoNuxM7Gza9/GtjYu1LmvFBnT0AAIAAAAAAAAAGHytuQwdrSxslaUuKamv4X6fQFZgHGuyFsFOuSnCXFSi9UzkEAAAOF10KKZ22yUYQWrb7Djk5VOJS7ciyNcF2vtNJ25tye05dVVrDGi9VHtl6WFiNvFtXOltHOsyJapPhGPmxXI8ehRoGn0jZPzTh/wBCH/aj1nk2T81Yf9GHsR6wwAADQ+lfz3Z9SPsMN2ma6V/Pdn1I+wwwacQUaFENw6K7ZVlccDJnpZHhU3/Eu41ARbi1KLaaeqa7APqoNX2N0pjKMaNovdkuCu7H4+82aE4WQU65RnF8pReqZGXIAAdPwTGct549WvfuI7kklologAABJSUU3JpJc2wKYfpBtqGzMd11yTypryV5vpZ5trdKKMaMqsJq+7lvfwR95pt91mRdK26bnZN6uT7QrrlJyk5SblKT1bfaByKUbn0Y22siqOFkz/XQWkJP+Nd3ibGfKouUWpRbTT1TXYbXsfpUtI07S58lcl7V+JDTagcKrq761ZTZGyD5Si9UcwgAAAAAAkpRhFynJRiubb0SNd2t0orpi6tntWWcusfyY+HeFd/SPbKwcd49El8JsXZ/Au80Y7LbJ3WSstk5Tk9XJ82cAunds/5wxtf9WPtR9OPmWAv/AKhjf1Y+1H00JIAAg+R8ot/az+sz6u+R8qt/az+sywNi6IbUVF0sG6WkLXrW32S7vtNzPk/FPVcNO027YnSmLjHH2lLSS4Ru7H9b3gbUDjCcLIKdcozg+KlF6pnIgHjyNk4GTLeuxKpS793R/cewAeCrYmzaZb0MOrX0rX2nvSSSSWiXYgAABj9pbawtmxfXWqVnZXDjL8vtA9GdmVYGJPIuekYrl2t9x8yy8ieXlW5Fr1nZLefo9B69r7YyNq3b1r3KovyK0+C97MeWBvfRDOjkbM+DuX6yh6afyvl7jPny/Z2fds3LhkUPylwcXyku5n0PZm1cbadCnRNKaXlVt+VH/wA7ySPaAAJOEbIOFkVKL5qS1TMfLYOy5S3nh16/aZEAdWPi0Ysd3HphUv5YpHacbLIVQc7ZxhCPFyk9EjVdt9KU4yx9mtvXhK7/APX3gbYDC9FMv4TsiMHLWdMnGWr48eKf3/cZoASS3otd60KAPlE01OS9JDIbdxHhbVvq00i5b0PB8TH+BVQoAEBQBAUAQNDiy6PuAgLuPuOSrYHXxB2dVLuAR1gAoApAA01H2ABoAAAGhQIUg7AB6cHPydn2uzEs6uco7reieq+084IMt+k21/pf/Tj7i/pNtb6X/wBOPuMSArLfpNtb6X/04+4fpLtb6X/04+4xIA9+ZtnPzqOpyb9+vXVrdiuP2I8BQAA0AUBQAAKB6MTOysOWuNfZXx10T4P7ORsGN0jzq6N7IVdnpcdH9xr2LV1k9XyR2Zlqf6uPJEGfj0ya+VhJ+Fmn4B9M+HDB9dv5GqgGmxW9MMyWvVUUwXp1bRi8vbOfmJq7Jm4PnGPkr7uZ4SAQrBCgXtAAFXMhSAj24u1M3DSWPk2QiuUddV6nwPGihWeq6W50FpZCmz0uLT+5mSxOlDvi97GW8uxT/I0878a11XKXZ2g02SXTDck4vBeqf+r+R1WdMbWv1eJCL/mm37jD7QqSatjykeJg1DL5HSfaVy0jOFK//HH36mKutsvm522Ssm+cpNtnAAQF0AERQVAEgvQD1YNHXXLX5K4sisrRtLL2fgp9fKTfJTe9p6zlV0uy46K2imfhqn7TF7Ru6y3cj8mJ4wmm0Lpjw44Xqt/IPplw4YP/AFfyNWBTUNjs6YZD/ZYtUX/M2/ceS3pPtOyXkWQr9EK0/bqYquqVr4cEubOx2V08K1vS72DTJQ21tmS1eUor01x9xjfgmv8A7kTpndOfypM4avs1A754tkeK0kvQdDWj4rRnKNs4PyZM71fXctLo6PzkB6q+kO1K4RhDJ0jFaJbkeXqL+km1fpX/AE4+4x9tEq/Kj5UO9HUEZX9JNrfSv+nH3D9JNq/Sv+nH3GKAHZkZFuVfO6+W/ZN6t6aHUUhQWq5MyuH0j2liRUVd10F2Wre+/mYogG01dM7Ev1uHCT/lm1+DOb6acOGDx/q/kamAjY7umOXL9jj0w+trJ/gYrM2xn5yccjIm4P8Agj5MX9iPCAB3Y2RbiXxuom4WQ5SSOlFCsr+ku1vpX/Tj7i/pJtb6V/04+4xIQGW/STa30r/px9x0Zm187PpVWVd1kE97TciuP2I8IIKAAqnOuydVinXOUJrk4vRo4FCsvjdJNpUJJ2xuS7LI6/fzPfX0vuSXW4kJP+WTXvNaBDUNq/TBfQf+r+R12dLrmv1eLXF/zSb9xrSKDUMtkdIto3ppWqqL7K46ffzNw2bKU9m40ptyk6ottvVvgfOj6Jsr5rxP6UfYEs9QAKwGk9KvniX1I+w3Y0npT87y+pH2Ear3Y/Dz8rBeuNdKGvOPNP7DMU9LcmC0uors9MW4v8TXgGtNn/TDhwwv+r+R5cjpXm2JqmuunXt03mvw+4wWg04A1DnkZN+XZv5Fs7Zd8nrp7jqLoTQCaA5E0AyNW3tp01QqrydIQioxW5Hgl9hy/SPav0r/AKcfcYwFNMn+ke1fpX/Tj7h+ke1fpX/Tj7jGaECaduXlXZl7uyJ79jWjlol7Dp0LoNAriDloQIg0KAOJ342Zk4ct7GvnV3qL4PxR0gDN09LNo1rSzqrvTKGj+7Q9kOmc0v1mHFv+WzT8DWNCNBNNr/TRfQf+r/8A8nCfTOx/Iworxs1/A1caA0zl3S3aNiagqavTGOr+9mLytoZmb+85Fli7m+Hq5Hm0KUTQFAEKEEQC6AoV2UZN+NPfx7Z1S7XCWmplaOlG0quE512/Xh7tDDFXMGmyw6YXJfrMWuT/AJZNHaumP/A/9X8jVS6A1DZ5dMZNeThJeNmv4Hlu6WZ001XCmvuai2/vZgikNQ78rPysx/8Aqb52Lub4L7OR5igKjIUFCucqrI2QekoSUk+5oyf6SbV+lf8ATj7jF6ECMp+km1fpX/Tj7g+km1vpX/Tj7jFMaBNMp+ku1vpX/Tj7jEybcm3zfEpNCiApNAjvxszJw5a419lXeoy0T8UZWjpZtOpaTlVd9eHH7tDBgDZ6+mlyX6zDrk/5ZtHb+mvfgf8AW/I1PmANrfTV9mBp42/kee3pnmP9lj0w+tq/xRrhNAjJZW39p5ScZ5U4RfZX5Ps4mNer4viUgAdo0AA5V2WUzU6pyhNcpRejRxKFZvG6V7SoSjY671/PHj60ZCHTWWnl4Kb9Fun4GqADa301f8OCl42/keS/pfn2JqqFNS70m395r4A9OXn5WbLXKvnbx1Sb4LwXJHmBQPThbQytnzlLEtdbmtJcE9fWez9JdrfS/wDpx9xijnCpzfo7wMn+ku1vpX/Tj7h+km1/pX/Tj7jyKmEVx5jeriAzc3L2jOM8qfWSitE91Lh9iPP1Uu473dFcjj8I7gOtUSOXwdh5DOPXSA5dR6S9Sl2nW7Zd5xc5d4Hd1URuQR07z7yNvvA7/IQ3oI84A7nbFEdp1eAA7Ou9AOriAIUAIhQAICgCApYxcnwA4nNVya5HLWMOXF95xc5PtA5Kp96I6pePgcNX3nJSafNhUa05oHYrNeElqg61LjB6+gDrCGmnMACgACkKFAAQAUAEWEHOSiglq9Ee7GpVcN+XMDlJrGo0XNox8m5NtnbkWu2xvsOkAAAIAABCgohSFAFIUgqKQoVUAggrJY0lk4zql8pcjHzi4ycX2HZjWum1Ps7T1Z9OqVsFwfMgx4L3gCAuiAEKAAS46IykUsPCb/jkefZ+P1lm+/kxJn39bbup+TEDyt6vV8yFIwIdtVW8t+b3YLt7xVWpJzm9IL7zjda7GklpFckUW27eW7DyYLsR0sAIgAAAADtqvdXDnF80zlZSpR6ynjHtXcdDOVdkqpaxCOIPRZXG2HWVc/4o9x5wIACiArAEAAAABApB2BQqIUAUhQKCFIqlRChVABFXsKEAKfRNlfNeJ/Sj7D50fRNlfNeJ/Sj7AzZ6wAVgNQ6UY8pbQdsV/CjbzX9rWQltCdUvNRGq92ovgDI5mC03OHLuMe1o9GiNoTQoKIAOwAQug0AhDloNAOJdB2DQCDQoCITQ5aADjoCsATQhyIUQmhyIBBoXtGgROZNDkQACjQCAvoGgADQ5wrlN6JahXHmVHrqwJy4y4HesGC5sgxpTITwIv5LPLbjTq7NUB0goCoC9pNH3AQF0JoERk0ORGUcWNC6ECITtOQaA46EORNCog0KRgQFYCICgCAaFAgBQIPQUaATQFCCgAAAp201b71fJAKad7jLkdllyhwgjjdb/AAQ5HQBZTlJ8WTUgAAAAwAAAARAUAQFIAAAE1A09IAAAAO0DsAAdhyjHV8eQEjHXj2d5ZT7I8EJS14LgjiAAAAAoAqbT1RAB270bFpLg+84yg4vRnE5xnw3ZcUBwL2nOVei1jxRw+wKAdpSAAVRb5ICcipdx2KmTPTRjKPGQHHGx/wCKQy7/AOCJ2ZF6hHdieFtviwOJQQKAAIgKTsAEKO0oAAB9pSFIKiogCuRSdheRFNDJYViupdM/sMadlVjqsUl2AW+p02Neo6jLXVxyqFOPykjFyi4tp8wOOgKAByrg7JqK5siTb0XMymHQqK+snzAt0o4mKor5TMS3qzvyrnda2+S5HQAOyqrf1lLhBc2Suvfb14RXNltsUvIjwguSA42277SXCK5I6ikKIwCBDkAAAACHiAAOVdkq5b0ez7ztsgrYu2pcf4o9x0HKuyVUlKP/APQOJD021xsj1tXL+KPcecCMFIUCFAE7AUAAABCgACkKAKQpFUpChVACIqlId2PTK+xRXLtYHLHx5Xy/lXNmwR25ZhUQpTrariorh3GKvvjjQ6qnn2sx8pOT1b1YO7YH0pyNeEK9Pq/mc49KLm9HGtf8prYBqG1w2/dYvJdevgY3PeRk5LyW1vaJeTwXAxEZNcU9D00Zs4cJcUDWuzI4+SrFuWrRnDJwIz8qJxjOnIWsWlI7Y2Tp4S4rvIn4Yq3GsrfI6WmuZsOtVy7DqswYT5FXbBAyNuzmvknmniWQ7CK85Dm4SXNHHQogKAiAo7AIChgTQmhyIBBoUAcQciaATQaF0ARx0GjKAICgo46AoAhUm+COddUrJaRRkasevGjvWaNgefHwnPyrOCPU7KMZaR01PNfmyn5MOCPI229W+JB67M6UuEeCOl32Pmzq0AV3QybItcT11ZkZpRsXMx/2AD25GKtN+rijyRhKUtEuJ6MS+akofKTMrHFriusS8QnZj6cHVJyPR8ChpoS7NjDhE83w6WoOrldgaLWJ4bK5VvykZOrNjLhI7LaYXx4A/LCg7bqZVS0fI6gITQ5MgHFg5E0KjjoGciaAQhQEQaFIBAciFEBQAIUdoAAoEA0GhABQk29EgOVVbnNJHbdNRXVw+05PSivRfKZ5Xz4sAAAA7R4EAeBWAUB4gICBAACFARAAgAAAcQNX/wCMAQAACkOSWr0ARjq/QJPsXIsnot2PLtZxAhQABCgAAABTlCudj0hCUn6Fqd8dnZsvk4mQ/CqQHmKer4szvoWR/il7jrniZMFrPHtiu9waCuuE3HlyObjGa1hwfcdWnYVNrlzIGmnNBceXE7otWvSS4956KsZQ4sDpqx3Li+R6oUxgiTujWtEeWeRKXID270F9h0XZPDSJ5XOT7TiDStuT1bIDsrx7rf2VVk1/LFsK6wer4tzn/wDZ5H+KXuOE8LLh8vFuj41tAefsBWmno00+5kAgACA7AAAAAFJ2FApe3UhYxcmlFOTfJJBVKjvWz83d1+CZGnf1cvcdMoSg2pxcZLsa0CgIikV68LJ6qW7J+Sz1ZOLG1b0DH10XWaOuqc/qxbMniV5qSUsW/Tv6t+4Ixc6ZwejQjTOT0SM+8Kya1ePav+RnF4zqWsqpLxiDbx4uGoLfmdWflb36uD4HLLzNNYwMc229XzAhzrrc33Jc33FrqdnF8Irmy22LTcr4RX3hS2xadXXwgvvOnkCBDsI2GCiciFIk5PRJtvsQQB6IYOXPjDFvl4Vtl+Ls5cXh5CX9KXuCPMDssx7qv2lVkPrRaOsAAAAACudVkq5b0X9nedtlUbI9bV/zR7jznOuyVct6L+wDgD0zqjfHfp+V2xPM1x0YAAFRAXmd1eHk3LWrHtmu+MGwOgHpls7NitZYeQl6apHnlGUZNSTTXNNaAQAoAIAAU7q8PJtWtWPbPXtjBs5y2fmQWssTIS9Ncl+BFecoaaejWjXYwFUAEHKMXKSSXFmQnKOFjqC42SXH0HXh1xqreRZ2fJPLbY7Zucu0Di2223xbBChVBABSkS1eiWr9B6I4OXNaxxb2u9VsK6YycXqnoe7Hzf4bVqu88tmNfSv1tNla/mg0dRBlp1by36JfYdSzLKpaTWh5KcidL4Ph3HvUqcuGj0Ugjtrz4S56Hep1WdxiL8SdTbjxR0q2cHzYNQzcsaqfLQ89mzk1wPHDOnHnroeqvaK7QdXms2fOPI88qLI84mahl1z5nPSqzuBtrzi0+K0IZ6zCrnyR55bItmtaq5yXojqDcMUTQ9l2zsinjOqcV6YtHllBx5phXEFAEDAKBPA7IU2W/s65z+rFs7vi/Na4Yl/+KXuCPKQ9MsHKh8vFuj41tHRKLi9JJp9zA46BlAEBQlrw7QOOh34+NO58tEd+Nha6Tt4I55GXGqPV1L1BHOVlWHDSPGRj7bpWy1k2cZSc5at6kAhTlCqyx/q65Tf8q1O9bPzGtViXteit+4K84PT8XZun7nkL/wCOXuOueNfWtbKbIrvlBoDqKk20lzIe/Axt59ZPl2Ad+Jjxpr358zhPaGlm6vk8mdedlbz3IPgeAGnryqVJdbXxT5nkPVi37j3J/JZxyqHXLej8lgefXTkenHypVtJ8UeYMDLzjDKq4czFW1OqbTO7EunCxKKcl3IyV2DblVb0aLNefyGE7MIQ9ctm5qbXwTIf/AMT9xwlg5cdd7GuWnfWwPMDnKucPlxlHxWhxA4kOROZRAUgRNAXQATQFIAAAABgANAAAAAHopiq49ZL7DhTXvy1fyVzF9m/LRfJQR1zm5ybZAAICkAAAAAAAAAAAogAAEKAiAAB/5yBOIA7p1acUdTTR6I2J8GWUFJcAPMlq9Dm/JWi59pZRdfidYAAAB2AAB2g2fonsaN7+H5MVKEXpVF8m+8Dz7J6L5GZGNuVJ0Uvilp5Ul4dhs+JsHZ2IluY0Zy86zyn95kgREjGMUlGKSXYkUAAAAOq7FoyI6X012L+aKZg9odFMW6Llht0Wea3rF+42EAfPrMGzBsdeRDdmvvOi3K3eETetrbOhtLElW9I2Ja1z7n7j53bXOm2ddsXGcG1JPsYah2OcLPlcGTqovlJHUd2Ji25mRCiiO9Ob4e8K5VYsrrFXVrOcuCjFatmxYHRLXSedY4//AI4Pj9rM1sjZFOy6NIpSukvLs7/QvQZAM7ePG2Tg4mnU4taa/ia1frZ7EtOQAQAAHC2iq6O7bXCce6UUzF5fRrZ2Sm41uiffW9F6uRlwBom0ujl+CnNS62lfxpcvFGL6iP8AqI+ntJrR8UzUekmwFTGWZhR0guNla7PSgu2vdRH/AFEOoj56OgBX0XF2VgSxaZPDx5Nwjq3WuPA7finZ/wBBx/8AGjuwv3LH/px9h3Bl4/inZ/0HH/xo68nZeBHGuaw8dNQejVa4cDIHXkxc8a2EVq5QaS+wDQ9l7GltLI3YWaVx4zlpyXvN2wtn42BWoY1Sj3y5yfizhsnZ8Nm4MKI8Zc5vvke0LMh1X41OTDcvqhZHulHU7QEYb9GNnde7Nyzd/wBPf8lfj95kaMDEx/2ONVB96itfWegBdgACAAA4WU1WrS2uE13SimY3K6O7PyOMaupl31vRerkZUBWi7Y2Xk7Pa1Sljt6RnH8e4xJ9OtrhdXKuyKlCS0afafP8AbGA9nZ86eLrflVt9sSNRO3gIUjCoe7Zux8vactaYbtafGyXBfme7YGw3tCayMhNY0XwXbN93gbrXXCqEYVxUYRWiSWiRWZlhcLotg46Tv1yJ9u9wj6jMU49OPHdpphXHujFI7AGQAANNTy5GzMLK16/Fqm327uj9Z6gBrOf0RqmnLBtdcuyE+Kf28195q+XiX4Vzqya5VzXf2+B9OPLtDZ+PtHHdWRDXzZdsX3oLt80B69pbPt2blyou49sZLlJd55Q0zXRTHpyNpWQyKoWx6lvScdVrqu8274q2f9Cx/wDGjVuhvzrb/RftibqGZeSOy8CL1jh0J+itCWy8CT1lhY7fprR6wEab0uxKMazF+DUV1JqW9uRS15Hm2P0ev2ilda3Tj9/bLw95tubs6OblUzuadVaesNPlPhp9h7klFJJJJcEkF28WHsjBwUuox4by/jktZetntACB1ZGLRlQ3MimFke6UdTtAGn7c6M/B4SyNnqUoLjKp8WvSu81o+qmDl0ZxZ7SlkSS6lve6vs3vcF21/Y3R+/aWltrdOPr8rtl4e82/D2ThYKXUY8VJfxyWsvWz2JKKSikkuCS7Cg2AAI6MnCxsyO7kUQsXe1xXg+w1XbPRuWJCWRhOVlS4yg+Mo+n0o3EBYl8tO7Gqd1sYrlzZmNv7Ox8HNWkXGu7yo6ck+1f+d50KiOPjPq5rrLOWpG9szsCrGy/hFdlNdkKnFLfin3mX+KsD6Fj/AONGG6IVzrjl765uP4myFYnu8nxVgfQsf/Gh8V4H0LH/AMaPWAjSOktNGPtNV1VRrj1aekFp39h6tkdGnkRjfmuUKnxjBcJPx7jN3bJryNrrNv0lCEEoQ9PHizJEa26MbCxsSO7j0wrXelxf2neAVk015mOzdiYWYnvVKub/AI61o/zMiANB2psm/Zli3/Lqk9I2Lk/Q+5nhi5RaaejPpGRRXk0zpuipQmtGmaDtPBns/MnRPiucZd67CPSJ27MfO/htWvpM9sPExMlXysprt+TpvRT05mpG09Dm3DLXYnD8QW7Mz8V4H0Oj/Gh8V4H0Oj/Gj1grG3lWzcJcsSj/ABo1jb6+D7VjVjVqKcI6RgtOPE3E8L2dCzavw2xauEEoL095FidOrZezOoqjPJ0nc+LXZEyYBUGteZjNpbMw7KJ2SrUJJc48NWZMwm38mzeroq5LypfgQjuwV2zlrrE8ssC3eUYRcm+SXaZaiVtk4wUW5SeiSNiw8OOPHeaTtfN9wbmdNewOi1liU82fVR8yPGXr7DPY2yMHFS6vGg2v4pLefrZ7QGJmZEkuS0ABUDjOquyO7ZCM13SWpyAGLyuj+z8lPSnqpd9fD7uRru0+juThJ2U/r6VxbS8peKN2BFiZh80rpnZLSKPfVj148d6x8TYdsbNVdM8nErW8uM4RXP0o1C6+dstZPh3BuJ27snLdnkw4RPIk5NJJtvgku0G29GdkRrqWbfFOyfGtNfJXf4sE9Hj2b0Wsuirc6Tqi+PVx+V9vcbDjbIwMVLqsavVfxSW8/Wz2grGxJLkkgAEAAB034eNkrS+iuz60U2YzP2GnjtYLUJJcISfB/aZkBdvml9VtF0q74uFkXxT5nWb1t7ZMdoYznXFfCa1rF+cu40Vpp8eZG4nYezGuU49TZ28meM2jovsiO4s7Ihq3+yi+z0gl58DovbfLfyZuqrsS+U/cZ7G2Hs/GS3ceM351nlP7zIgrG5cYwhBaQjGK7ktDkAEAABGk+aTPJkbKwclPrcWtt/xKOj9aPYANU2l0UcYys2fNy049VPn9jNalCUJOE4uMk9GnzR9QNf6T7JjkU/DKlpbD5en8Ue/7A1EtMB6OphH5U/UTShc22FdBOZ6NKPSHXU+U9APPoDveO/4WpHXKuUeaYHAF7QBNAOwoEAKBCxi5NJA9EIqmvfl8p8gJbJVVquL4vmebQ5SblJtkYEAAQAHMCMAAAAAAAEKAUQAAACBAHJRb7C7iS4sDhp6Qc/I7mAOK17DuhZuLR8zr4Q5cWcAPU0rEdE4OLLCbizvWliA8gOdlbi/QcQIAAB9RwqI4uFTRHlXBI+Xrg0z6tBpwi1xTSIKAAjx7Vz47NwZ5Eo7zXCMe9s0q/pHtO6bksh1rzYJJI3XauBHaWDPHlLcb0cZdzRpmT0a2lQ3pSror+Kt66/ZzCwlHSPadMtXkdYu6aTNr2HtqG1apKUeruh8qK5Nd6NJezsqt/rce2v60GjvrbxVrGUoPTTVPQD6I2ktW9EcHfVHnbBeMkfNbsu216OybXpkzoBp9Mnn4la1nlUpfXRp3Sl4l2bXkYl9djsjpNQeujXb6vYYTQBdBvHRfZixMJZFkf116149kexfialsnF+G7Sooa1jKWsvBcX9x9JSSWi4IEgADIYza+28fZaUZLrLmtVWny9L7j3ZV8cbGtvlyri5HzTIvnlXzutes5vVsLEMzb0s2hKTdaqhHsW7qejD6X3RmlmUxlDtlDg19hrIC6fUcfIqyqIXUTU65rVNHYah0NzXHItw5PyJrfiu5rn93sNvDIGlJNNap80AB882/s34t2jKEF+qs8uvw7jGG79MMVW7NjkJeVTNcfQ+D+/Q0kNPp+F+5Y/wDTj7DuOnC/csf+nH2HcGQAAAdOXk14eNZfc9IQWr9PoNF2ht7NzbZNXSpq/hhB6ff2hdPoAPnmLtraWMt2vIm4666SW97T3rpPtTX5FL/5H7waboDU6+leXFfrMWuXg2jur6XL/wB3Dkvqz1/AGpZ3Pz6NnY7uyJaLkkucn6DWsjpZkzb+D011r+bymY/be1PjTKjOMZQqhHSMX39r/wDO4xxGohml0o2inxdTXduGd2LtyO0pOm2CruS14PhJGkGY6O4eW9o0ZEKZqqLe9NrRaaAmIbuACsBr/S/FVmDXkJeVVLR+D/PQ2A8G3YdZsfKj/Jr6nqFh897z1bKwZbRz68daqLes33RXM8huHQ7EUMS3JkvKsluxfoX5+wNS2CqqFNUa64qMILRJdiOQAYCTlGEHOclGMVq23wSKaz0xzpV01Ydb06zyp+C5L1+wDhtDpduzlXgVKSXDrJ8n4Ix8elm0VLWXVSXduGDAa03rY/SOnaM1TdDqb38la6qXgZs+VxlKElKL0knqmuw+k7LyvhuzqMh6b04+Vp39oSXrAARi+kGzVtHZ8lFa3VeVW/avtPn+nE+qHzvbuKsTa2RXFaRct6Pg+Iah7+h3zrZ/Rf8A3RN1NK6HfO1n9B+2JuoSQABAA03bXSS626dODN10xejmuc/cgrcgfNatpZtU1OGXcmu+bZufR7bD2njyjckr6tN7TlJd4NMuAAgAAANP230kunfOjAn1dUHuua5yfo7kYWvaWbXNThl3by48ZthdPpQMP0e2y9p0yhdosivnp/Eu8zAQAAGK6RYsMjChZP8A9malr6P/ADQ0nKvd1zkuCXBG+bci57Hykue5r6j54Gobb0NnKdeUpPXRx0+82U1joX8jL8Y/ibOEnuAAIAk5RhCU5vSMVq2+xGjbW27ftC6UKZSrx9dIxT0cvSwsRtvCtrb0U4692pyPmMp+XrFvhyZsXR/btqvhiZk3OE3pCcucX3PvRFmrbAAVkMN0nwVk7Pd0V+so8r/l7ff9hmSThGyEoTWsZLRrvQWOj5mbR0N+Rl+MPxNayanj5FtMudc3H1M2Xob8nL8YfiRu3ZsoAK8wAAAa3t7b1lNssXCluyjwnZ3PuRr3w/L3t/4Vdvc9d9kaiu30O2yNNU7LHpCCcm/QjRb9q2X5Flsl8p66dyJbtrNuxJ41tu/CfNtcfWeXDoeVl1Ur+OSQaiNd239H6JPGWVatJWfIXcu8zBIQjXCMILSMVol6ClYkAJOarhKcnpGK1b9AR05WXXiw1lxk+UUYW7b90ZcIxgvDUxfxs8nInZbw3ny7l3HfKFWRDgRvWu72VdJN1rroxkvRwZncbJqy6VbRLeg/uNDycKVbbiuBkei2XKnaDx5PyLlyfnIbJrGujcAAVgNH6R7OWDnb9cdKbvKj6H2o3gxPSXGWRsqc0vKqamvxI1E9Wl41XX5NVT4b81HXxZ9JjFQioxWiS0SPnezmo7RxW3w62PtPooWwACsMdtrafxZiqcY79k3uwT5eLNSs29tKyTfwmUfRFJI23bWy1tTFUFPcsg96LfLwZql+wNo0a647mu+t72pG4054/SPaNMvKtVq7VNG27L2hDaWKrYxcJJ6Si+xmjw2fk9ao202Q796LR7MrIliVKqmTi3z0egJiG7tqK1bS8Tg76o/KtgvGSPm0rrJ/LnOWveziDlfRrNoYda1nlUr/AJ0aVt6OP8ZzsxLYWV2eW916pPt9/wBpjQFiNO7Gplk5NVMedklFfafSKq41VwrgtIwSil6EfNKLrMe2NtMnGyD1T7jJ19JdpQ4O2M/rQQSY23oGm19LM2L8uqmS8GvxPRDpfPVb+JH06T/IrOpbUa9tDpTXRZKrErVzi9HNvSP2d5MjbyzcC2vHrnXZOOmrfLvNYeLYnpLgRYjyykulG0G+HVRXduGS2f0jtt06+EZd+7wZrW5VD5Ut59yO3FnbK5RxaZSb7IrVhdQ+hRkpxUovVNaplPNs2NsMGqN0XGxLin2cT0lYCTipwlCS1jJaNFAHzPLoeNl3UPXWubjxOky3SWG5tq/T+Ldl9yMUR6IAACbXJnZG6S4PidYKjt1qnzW6/QSVL01i95HWWMpR+S9AI009GQ7utUlpYk/STq4yWsJLwA6hocpQlHmjlVU7JehAcqKk/Ll8lHG6x2S7kjnfYktyHBI6AIAAAAAgACICl3W+xgcQdipnLsO2GK/4gPMlryOShJnsVEY8y+REqbeRUyZepep6XZBHF3QQHndL7CdTI9PXIdYmB5uq05smsY9mp6XuyOEq0wOhzb5HFnc6TrlW0Bw19K9YLuvuAEAHpAHOE3FnAoHqUlZE6bKmuRwjJxPTCamtGB5R2nfZTrxR0uLT4oCH0Do1tBZuzIRb/W0pQmvY/UfPz17Oz7tm5Mb6Xx5Si+Ul3Mg+mA8GzNr4u0606pqNmnlVyflL3nvCAAAHXbRVctLaoWL+aKZ2ADG37B2bfq5YsIvvhrH2GJy+h8HrLDyHF9kbFqvWvcbQAr5pnbOytn2bmTU4a8pc4vwZ5j6hkY9WVTKm+CnXLmmaBtvZU9lZe4tZUz41zfsfpQWJe7obUp7Ssm+cKnp9rSN1NQ6FfveT9Re028JIAAjzbRxHnYNuMrOr6xab2munHuNf/QyP05/4vzNpAVqv6GL6c/8AF+Zf0Mj9Of8Ai/M2kA21/ZvRj4vzqsmOXv7mvk9Xprqmu/0mwABAAAeTa1XXbKyq+11S08dD5ofU7VvVTj3xaPlgWH1DD/cqP6cfYdx04X7lj/04+w7ggAANd6WSnbCjGg9It78vw/E16OJXDjJmQ6UZko7UlVH+CCXr4/iYGV05PjINQyO9RDuJ8KqXJIx9Vdl9sa64uc5PRJdptWzeicIpWbQm5S59VB6JeL9wGHjkVSeijxfYe2nZt+R8nFs49so7q+82vGwsbEju49EK/TFcX9p3hNtWj0Xts4zlCteOrPTT0TxY8brrJ+iOkV+JsABuXixtkYGLo6saG8v4peU/vPaDqlk0xtVTth1jeijrx9QR2gAAePa/zVlf02ew8e2PmrK/psD5yfQ9h1KrY+JFdtal6+P4nztn0nZfzZif0Y+wNS9QADIYTa/R740zPhEsp16QUVHq9fv19JmwBq36GL6c/wDF+Y/QyP05/wCL8zaQF21b9DF9Of8Ai/MzmydnvZmH8H63rUpNqW7pz+09oAAAIGndM6t3Nx7dOEq9PU/zNxNX6bL9XiP0y/ALDxdDvnWz+i/+6JuppXQ751s/oy/7om6gkAAR4ts3PH2TlWJ6PcaT9L4Hzk33pP8AMd/jH/uRoQagM70PbW1pJPg6nr60YLsM50Q+d5f0pe1BZbuAAwHl2pc8fZuTbF6SjXLR+nTgeo8G3fmbK+oB86AAbZronJx2zFL+KEkzejROivz3X9WXsN7DMgACPHtf5qyv6bPnB9H2v81ZX9N+w+cBqG19CvkZfjH8TaDV+hX7PL8Y/ibQEkAARjOkN6p2VYm9FY1Dn2PmaTOhKLlRLfT5vuNo6Z/NtP8AWXsZp8LJVvWLaDUD9RU3FqSfFcdTvVlV/Cxbku9HCzHnBaryl3ojT6NhXfCMOm7z4KX3HceLYvzRif00e0rzAABofSKtV7ayElom1L1pGW6G/Iy/GH4mM6UfPVv1Y+wyfQz5GX4w/Ejc9mzAArAdOZesbEuuf8EHI7jFdJbHXsa7T+JqP3hYaROTnOU5NuUm233shAZeqmX6MVqzbEG18iMpL2fiYcznRP51l/SftRUns3IAFeQdWXS8jFtpU9zrIOO9prpqdoA1r9EV9Nf+L8zvp6NypfDNb/8Aj/MzwI1zSxT2KmtJXa/8n5nVV0ehTl1ZEL2nXJS03Ofo5maATcgAKgdeTX1uNbXz3oNfcdgA+ZcYS56NPmj6FsvNjn4Ndya3tNJrul2mg5FclkWrR/LfZ6T1bK2ldsvI34pyrlwnDvXvI9JjbfwebCz8fPr38exPvi/lR8UekrzAAAOu3Gou/a012fWimdgAxl+wNm36646g32wbX5GKy+iT4yw8jX+WxfivcbQAu5fPMjZ88OzcytYS7n2+B0/+nj3yPoObhUZ+O6ciG9F8n2xfejQdpYFmzsydFnFLjGXnLvI1E7cOtoXKsddV/pnnMrsnYV+0/wBY31VGvy2ufggrxdbT/pndRXbf+74k7PTGLZuOHsHAxEnGlWTX8dnlP3GSS0Wi4IM7adjbG2rOSaqhTHvnJfhxMkujjtivhN617VBfizPgqbYnH6N7Operrla/55e4ydVNVEd2muFce6K0RzONltdMHO2cYRXbJ6IDkDhTdXkVK2manB66SXJ6PQ5hAAAaN0p+erPqR9hh2bH0hrrntSe9z3Y+wxMsSL5MjcS8RD0yxJLkdcqJp8grqBycJLmmTRrsAgGg0YAi9ByUJPkjvrxm+M+RUSnrJP0HdbbXBbiWj9BwttVcd2s8rbb48wOzq4yeqmTqZdjR1l1feBy6mWo6mXejjvS85kbfeBz6rTnJDq4dszr4s5KuTCOWlS7dRvQ5KOpzhjt8zuhTGIHTHWXKGh2xrfac5SjA6LMjuCO5tR5s653pdp5pWSkcG9eYHdK9vkdbsk+04kKq6smoADUur7ziPEI59Y0c1c1zOkAelXJ8zlvRaPIXVrkwPVwB5t996AHEAAAAAKpNEAHqruT4M5uEZI8evcdkLXEDsdHcceoZ30udzaqrlY1zUU3oe2OzM+a1WHb/AG6AY+ulxkpJtNcmnyMxjbczsZJO/rY91nH7+ZxhsPadiemPu/Wkkc/0X2lY/KdMF9bUg9lfS9R4X42vphLT7me2jpVs21pTlZU/54cPuNe2l0bydn4csmVsLFFpSUU+CfaYUD6VRtXAyP2WXU/Q5aP7z2JprVPVHyk9mFtLLwLFOi6SS5xb1i/FA0+lA6cPIWViU3pbvWQUtO7U7ggYrpJiLK2Pc9PLqXWRfdpz+7Uyp59otLZ2U3yVU9fUwNT6G2KG0rYN/Lq4fY0bofN9j5awtqUXSekVLSXg+DPpAWQABHm2jl/AcK3J6t2dWk91PTXjoYD9M4fQpf5PyNjy6I5WLbRLlZFxPmeRTPGvnTbHdnBtNBYbT+mcPoUv8n5D9M4fQpf5PyNRAXTbf0zr+hS/yfkP00r+hS/yfka7s/ZmVtKc44sFLcWsm3okeq3o3tSv/wC23vqyTCMz+mcPoUv8n5D9M4fQpf5PyNes2PtGtayw7kvRHU6HiZEX5VFi8YNAbPLplBxa+BS4r/U/I1NJyeiWp6a8Obfl8PE9CjVQuOjYVv2GtMOhf/jj7DuOrFeuJS++uPsO0MgAA+f9J3rtzI1/lX3IxRlek3z3kfZ7EYpdyDTdOiezI0YqzbI622rydf4Y/mbCdePXGnHrqitIwior7EdgZAAB5s7aGNs+vfybFHXlHm34I13L6XWSbWJjqK86x6v1GI25kTyNr5DsfyJuEV3JcDH8Q3EMhk7Yz8rVW5M93zY+SvuOWwnJ7YxdG3rMxxsHRLDlbmyypL9XUmk++TIs9m4gArzDzbSipbPyIvk4M9J49rtrZWU1z6tgaX8Bqfabrstp7Nx1F6qMFH1cD538Is85m3dEM3r8O3HnLWdUtV9V/nqGpbCAAyGOztqvDv6rqHPgnrvafgZE17pZTbCmvLp4qHk2ehdj/wDO8K7X0ikv/s2//k/I6pdJ5R/+wl/k/I1mG0prmjtjtKL+UgumdfS3TngT/wAn5HH9MYrngy/yfkYmOXRPmkZKGw7rqo2KlJSWqTaTB0c/0yh9Cl/k/IfplD6FL/J+R5p7Au+jy+w89mxJxfGqa/5WDoyP6ZQ+hS/yfkYvbm21taFMY0Orq23xlrrrp6DhLZWnNNeKItmx14yB0evob862f0X7Ym6mr9GsSNG0Jyi9W6mvvRtASQABGJ6T/Md/jH/uRoRvvSf5jv8AGP8A3I0INQIzvRD53l/Sl7UYIznRD53f9KXtQWW7gAMB4Nu/M2V9Q954Nu/M+V9QD52AA2zHRT56r+rL2G9midFfnuv6kvYb2GZAAEePa/zVlf0n7D5wfR9r/NWV/Sl7D5uGobZ0J+RmeMfxNoNX6E/Iy/GP4m0BJAAEYjpRQ79jWOK1dbU/s7fuNCPqc4RshKE0nGS0afajQ9s7ByNn2ynVCVuM3rGSWrj6GGoliUdtV1lb0i29ezvOnR66dvcbD0d2HbffDKyoOFMHvRUlxm+z7Au224dbpxKa3zjBJ+o7gAwAADROkst7bd+n8Kiv9qMr0M+Rl+MPxMNnZlORm32uGqlN6P0dhneiMq5QyurWnGOv3kbns2IAFYDC9LHpslem2P4maMP0nUJbMSsei6xexhY7tI1Lr3Ho6qj/AFB1NP8AqkejzmY6LWqG14pv5cJRXt/Ax/wet8rUd+FB4uZTfGafVzTfh2glv4JGSlFSi9U1qileQdWXf8Gxbb93f6uLlu66a6HacbIRsrlXNaxkmmvQwNd/S6H0OX+T8h+l0Pocv8n5GCydm242RZTY0t18+9d519TVH5dnqI9NQ2H9LofQ5f5PyOUelSk+GDN/8/5Guu2mHyIavvZ3YleXtC11Y0Vqlq+xJeINQ2GPSNfx4rj/APJ+R317eps5Q/3Gu27B2pHi6d/6s0zpWzdo0cfgtqS7ohNQ2me2lFarHcv+b8jyWdKOrfHCl/k/IxVN90VpbTZHxi0d8oV3LiuINRDEWZs52Slupbzb07jj8Ll2xTPfZsudjbphKXgjpew9oN+TjTfitA10dEM2VclKtbslyaejMhR0lzqtFrGxd01r95119HNpTXGpQ+tJHtxui+RGSdsq19uoTo9+F0gnfFdfjbvpjL8D1fH+z4y3bLXW/wCaL/AxO1sWezMWM9VKLe7quxmtTm5ycpcdQmol9Fp2hh3/ALLJql6N5a+o9J8vPfs7a+VgXRcLJSr18quT1TQTlfQQSL3oqS7VqUrIYHpdiK3Z0chLy6Zc/wCV8PboZ4xvSJpbDyte5f8AcgsNO2NgfGW0IUv9mvKm/Qv/ADQ+gwhGuEYQioxitElySNY6F1rdyrdOOsYp+jj+RtIJAAERtRi5SaSXFt9hg87pTi47cMaLyJLtT0j6+0nS7InTs6FcHorZ6Sfo56GmdoaiGZyOk20L9VCcaYvsgvxZi7r7b5791s7Jd8nqdRzqrndZGuuLlOT0SXayNN66NprYePr/ADf9zModGFjrEw6aFx6uCi33vtO8rAAAjR+lEmttWaP+GPsMVG6ce0zPSilvas5rzY+wwT4c+BHpHZ6I5clzOxZcXzR4yAe9XVPmX9SzwDXt4hNPc40+gaUruPDq9e05KE33g09btrguGh0WZEpcI8CwxpS5nfDES5lHh3ZPvOaplI96qhFBzhEG3kjjN8zksU7pZEV3HW8pdgTqnwVFWMkcXlHF5QOruVEV2F8iJ5JZEuw65WSfaB7J3xiuB555LfI6NWQDlKblxbOIZAAAKKQcwENSAAUgAAAAAOYAfaBx9IABEAFAAAAoAAAZropmLF2qoTekL1uce/s932m+nymLaaaejXJm/dH9sw2ljqu2SWVWvKXnelEGYAARxsrhbXKuyKlCS0kn2o03aXRTJqtlPB0tqfKLeko+83QAfOPiTaWunwK3+0yWzuiuVdbGWZpTVza11k/cbqAu3GuEaq4wgt2MVokuxHIAIGH6UZixdkzrT/WX+RFejt+72mUvvqxqpW3zUK482zSNrbSjtHKdj4Vx4Qj3IKwuj17TfOjW0vh2AqrH+voSjL0rsZp+9UejCzvgWRG+lpSXNdjXcB9BB5dn59G0KFbRLXThKPbF+k9QQMXtfYePtRb7fV3paKaXPx7zKADRruie0YTar6qxd6lp7TvxOiGROSeXbCuHaoeVL3G5ALt0YWFRgY8aMaG7BetvvZ3gBAAwXSDb8cCDx8aSlkyXF81X4+kDH9K9qQ6xYeOouUHrZJLt7jV5ScnxeolNyk5Sbcm9W32kDT6hhfuWP/Tj7DuOnC/csf8Apx9h3BkAAHz7pN8+ZH2exGL10Mp0m+fMj7PYjFBp9Sx7I3UV2wesZxUl9qOw13ontSN+KsK2WltXyNf4o/kbEGQAAaxt/o9dk5MsrCSk58Z1t6PXvRg1sXaTlp8Dt9R9DAXbT8DopfZJSzZKqC/hi9ZP3G142PViURpogoQjySO06MzMpwceV2RPdivW33IG9u8HGqyNtULIfJnFSXgzkEDx7Y+acr+mz2Hn2jW7dn5MIrVyqkkvToB8zPdsbaD2bnwu5wfk2LvizwANPqkJxshGcJKUZLVNdqKab0b28sXTDzJaUt+RN/wPufoNyTTWq4oMhJwjZBwnFSjJaNNcGigDVdodEd6Up4FqSfHq59ngzHx6K7TctHCuK73M3oBdsBsrovTh2Ruypq+2PFRS8lP8TPgBAA4XW10VSttmoQitXJ8kBwzMinExp35DSrgtXr2+g+e5W0rcnJst4Q33qorkkerb22pbUt3K9Y40H5MfOfezEBqGydEbp2bUsUnqupb+9G4mldDfnaz+i/bE3UJIAAjHbeq67ZN0NdNd32o0i3Ashy4m6dI5uvY10o804/8AcjUKtotcLEGoeCUZRfFNGb6IfO8v6UvajrUsfJXHTUyXR3EjTtN2Qeq6tr70FltIADAeDbvzNlfUPeeDbvzNlfUA+dAHZVVK2W7FBtluiifx1W/5Jew3o1Po7TDG2hXHX9ZKL9htgZkAAR49r/NWV/SfsPm2p9J2x805f9KXsPmoahtvQn5GX4x/E2k1boT8jM8Y/ibSEkAAQAbS01emvIAdfwene3uqr3u/dWp2AAAAAMbt/OWDsy2Selli3IeL7fsRkLbIU1ystkoQitW3yRoG3Nqy2pmb0dVTDhXF+37QsQx2ptfQv5GZ4w/E1PU2voV8jM8YfiGp7NoAAYDB9Lfmlf1Y+xmcMH0u+aF/Vj7GFju0vUakBHopdX3nEdoG6dF9pfCcX4LbL9bSvJ17Y/kZ0+aY2TZiZEL6Zbs4PVP8DfdlbUp2njqcGo2RXlw7U/cGJh7gAVl4dqbKo2lWlY3CyPyZx5r3o1q7ovnQlpU67V372ntNzBFiZhqGN0VypyTyLIVR7dHvM2bBwaNn0dVRHRc5SfOT9J6QCZmQAFQNd6SbThQ1i1KLsfGb05LsR7Nt7ar2bW662p5Mlwj5vpZpFlk7bJWWScpyerk+1karDauje0o2XSx5vRzWsfFGxnzOm2dF0La5bs4STi13m/bJ2nVtPGU4tRtjwnDtT9wLQ9wAKy6srGqy8edF0d6E1o0afndGc2ibeOlfX2NPR/ajdQFidPnq2NtFvT4Hbr4GW2V0Yu66NufpGEXr1aerl4m2ALsAAZDXOmOaq8OvEi/LtlvSX8q/P2Gbzs2jAx5XZE1GK5Ltk+5HzvaOdZtDMsyLecvkx7IrsQWGydCrY7uVVr5WsZJete42g+c7F2j8W7Qhc9XW/Jml3M+iVzjbCM65KUJLVNcmgS5AAI8W1dnx2lhSok92XOEtOTNNyNgbSonu/BpWLzq+KZv4CxOmh4/R3aN8knT1Ue1zen5mz7I2FRs39Y31t+mm+1wXgjKgGwHlxtoY+Vk3UUz35U6bzXLj3HqCAAA1bbk4vadkJdkY+wxVmLGXI9XSuMqtrqa4KdaevrRja8xrTeI3BLDevA4/BJHqjlQkuJfhMAdXlWHI5xw12na8qJ1yzF2A6uyONGPM5bsIrsPJLLb5HTK6cu0pp75XwjyOieX3HjbbZO0GndPIkzrc2+bOIANkAAEAAAgCAAKBO0AACAIpAO0AO0AACAAUngAAAAcQPUAAAAoRC6gAAAACApzqtnRZGyqbhOL1UovRo4agDbNm9LkoqvaFbbXDra1z8V7jPY21sDKS6nLqbfY3uv1M+cQg5PhyO9KFS1fMg+mp68gfMPhdsf2c5w8Hoc1tPOXLMyF4WyBp9MB80+NdofTsn/LL3nXZm5dq0sybpLuc2wafSb8vHxlrffXX9aSRhs7pXhUJrGUsifo8mPrZo/MA0920dq5W07N7In5K+TCPCKPFxICquvpGpAB6MTMvwr1djWOE13dq7mbXgdLsexKGdW6p9s4LWL/FfeaYUD6dj5+JlJfB8iqzXsjJa+o9B8oO6vMyalpVfbD6s2iJp9RB8z+NdofTsj/LL3ke0s6XyszIfja/eB9MlKMU3JpJdrZj8rbuzsVeXlQk/Nre8/uPnc7Z2PWycpPvb1OINNj2n0suyIyrwoOiD5zfyn7jXW3JtybbfFt9pAUUgAV9HxNp4McOhSzcdNVxTTtjw4eJ2/GmB9Oxv8sfefMwRNPpnxpgfTsb/LH3j402f9Oxv8sfefM9RqDTJ9Ibq79sZE6rI2QemkovVPgjGk1BVc6rZ02Rsqm4Ti9YyT5G4bL6V0WxjXtBdVZy6xLWMvcaYAj6pTfVfHepshZHvhJNHM+VQnKEt6EnF96eh6Y7Tz4ryczIS9FsveQ0+mHXdkU0R3rrYVx75ySPm8tpZs1pPMva9Njf4nncnJ6ybbfawabtn9KsTHTjiJ5FneuEV9vaannbQyNoXdbkz3n/AAxXKPgjyIoVuvR3bGNLZkKsm+uqynyfLmlquzmZX4zwPpuP/lj7z5rqQGn0v4zwPpuN/lj7x8aYH03G/wAsfefNNQ2E09e1aaqNo3Qx7IWVOW9BwkmtH2cO48YHaVQzGyekWTs5Kuf66hcoSfGPgzDgD6BidI9m5SSd3Uz823yfv5GUhZCyKlXOM4vti9UfKywnKD1hJxfenoRNPqoPmcdo50ElHMyI+FjRfjXaH07J/wAsveDT6WdV2Vj461vvrrX88kj5rZm5Vq0sybpL0zbOjV9oNN5zelWDjprH3sif8q0j63+Bqu09r5W0563z0rT1jXH5K954AFUEAGd6J304+07J32wqi6WtZyUVrqu82/4zwPpuN/lj7z5oOQNPpfxpgfTcb/LH3j4zwPpuP/lj7z5oAabv0jzsS7Y18KcqiybcdIxsTb4rsNJAAqk48mZ3oxmxq2g/hN0K6+rfGcklrqu8wICvpXxngfTcf/LH3lW0MJ8suh//ACI+aFUmuTCafTPhmK+WRV/ejy7Vuov2bkVQurblHRJSRoMciyPKTOxZ1y7QaeuGzEn5T4HOdtOJDSCTkeCWZdJaa6HRKTk9W9WFZjYGZCO2oW5Fsa4bslrN6JcDcfjPA+m43+WPvPmoCTD6V8Z4H03H/wAsfePjTA+m43+WPvPmpGE03/au0cKezMmMMuiUnW0oqxNs+fgjKrbuhHyMzxj+JtJqvQj9nmeMfxNqIyAADCdLZyr2Spwk4yjbFpp6NczwbJ6WxcY1bSTTXDrorg/Fe49vTD5m/wDlj+JohVfU8fKoyob+PdC2PfGSZ2nymMpQkpQk4tdqeh6Y7Tz4rRZuQl6LZe8mh9NMbnbdwMFNTuVli/gr8p/kaDbmZN/C7ItsX802zpBplNrbbyNqS3Zfq6E9Y1p/e+8xpOwBpdTZuiGVj40ctZF9VW84ab81HXn3msk1A+l/GeB9Nx/8sfePjPA+m4/+WPvPmoCafSvjPA+m4/8Alj7zDdKM3Fv2YoU5NVk+sT3YTTfJ9xp4Bpe0EAaUpxHYByOzHyLca2NtFjhNcnE6gQbbs/pZXKKhn1uMv9SC1T8UZzH2jh5SXUZNc2+ze4+rmfNkXUqafUQfM68q+r9lfZBfyyaO34zz0v33I/yyCcr6OG0lq3oj5w9pZ0ueZkPxsfvOidtlj1snKf1nqQ5X0HJ2xgYqfWZVbfmxe8/uMBtDpVOyLrwYOtP/ANyXP7F2Gt6gLqHKc5WTlOcnKUnq23rqziAGg7cbJuxLlbRY4TXajqIEbdgdK6ZpQzq3XLz4LWL+zmvvMzRtHDydOpyapN9m9o/UfONQE0+og+Y1321ca7Zw+rJo7VtPOXBZmQvCx+8qafSQfNntTP8ApuR/ll7zpty8i1aWX2zX802wmn0jIzsXGT6/Iqr07JSWvqMHn9LcapOOFB3z86S3Yr8Waa2QGnpzs/Iz7utybHN9i5KPgjzNkBVXUzOxNv27M/VWJ24747uvGPh7jCpgD6VhbXwc6K6jIhvP+CT0l6me0+U8jvqzcmlaVZF0F3Rm0RNPp4bSWr4HzX40z3zzcj/LL3nTbkXXftbZ2fWk2DT6Bl7b2fhp9ZkQlJfwwe8/u/E1javSXIzYurGTopfB6PypL0vsMEULplejufHA2nGVktKrFuSbfBdzN0+M8D6bj/5Y+8+alCzG30n4zwPpuP8A5Y+8fGeD9Nx/8sfefNtShNNs6Uzw8zDhbRlUTtqfyY2Jtp/+I1PtACwuo1ZxKFGwQBAAAACdgAAACAAOwgAQY1BCh7QNSBFIAA7QAABENQAAApAOwAAAgCAABx9IA5NNPRkO7hYjqlFxCoGAgL2gAAUh2RrlIDglryO6FPbI5JQrWrOudrly4Adk7VFaR5nRKTk9WQAAAAGoIBQQAUEAF1BABQQAXUgAFIABQQoAEAApABQCAUEAApAAKQAC6kGoHIEAVyIQoFJ2AdgAEAFIAEBqAAAHYBRzIAKCfaAqkKAAAAFIAKCFAIAEFIAFUakAFBABQOZAACHAIEAKIwCBG3dB/wBnmeMPxNqNV6D/ALPM8Y/ibURAAAYLpj8y/wDyx/E0Q3vpj8y//LH8TQywKCFChSFAo1IArkDjqUC68S66nHUActQQEVRqQAUEGoHIanHUuoFBAByGpNQFXkU4gDkNSajtAo1IABSagAORGOQAAmoRGAyahBkBCoDwBAKBqAKNfSTtCA5DUgCuQIUiqU4l1AoIOYFBBqBQQoAIgAANgAAQCkACBGAAIAUCABAeAAAAjApAOwAAAgO0EAFINQA7QAKQAoesE1AHNNp6o7YzjNaM6AQd0qu2Jwdcl2FjY0c1cu0K61CT7DnGlvmcncjjK5gdihGPyiSuS4ROmUnJ8WT7AOTbfM78bBuyoOVW7ono9WeYzmw/3az6/wCCMXtNa7h74KRkvyy8XxRlfyf3D4oyv5P7jPg5/Ws7/o8bAfFGV/J/cdGVh24u67d3ytdNHqbMYnbvyafF/gbpkta2peWbhqUpNoYcAHQ+cAEAo7CACgakAoJ4lAAhQAAAIAAB4lhGU2oxi5N9iMli7InPysh7i81czNrRXu9KY7ZJ1WGOhCdklCEXJvsRba50zcLI6SXNGzUY9WPHdqgo+ntZgtrfv9n2ewxTJzW09svD+lTmmerxjUg1PVyqCAAACoupAOwCjUgIKNdCF1CqCagC68DnTVK+2NcNN6XLU6z1bN/f6fF+wk9I23SOa0RLt+KMruh/cPijK7of3GfBy+tZ9P6PH+rAfFGV/J/cSeysmEJSluaRWr4mwHVk/u1v1H7CxmttJ4THEbasADqfKCkAFBEAKCACgIAAAAAAFBNRzCqU4lAoIALyBABQAAA1IBSDUAQBkbCBNQxqVG29CJxjXmb0kuMOb07zaeur/wBSH9yPlAJofV+tr/1If3IdbX/qQ/uR8oA0N76X2QlsbSM4t9bHgn4mikKAHYAUCogAoJ2FIqgmoAuoIALqUgCqCACgngAKUhAOWoINQLqU4lIqjxJqNQKU4jUDlqCDtAvEEGoFINSAUgIECajUjKADIEAQFRQQAUpAiCl1IAqlOJQqlOJUBdQTUrIBSAKoIwAA4AA2AAgwQNgACFAAmoFIO0eAQBABQyDUAARhFBAAABQBABQABCkAApABQQAUcwNQKCAgoACqCBAUzew/3az6/wCCMGe7B2h8DqlDq9/V6672h55Ima6h78PetMm7NhBh/jx/R1/f+Q+PH9H/AN/5HP6V/D6X1WLz/bMGI27yo8X+BPjx/R/9/wCR5M/P+GKH6vc3df4tdTdMdotuXjn4jHfHNaz1eQgB0vmGoACAINQKAAAAAD7AAHaOwAAZLD2TO6MbLZbkHxSXNmNNqxf3Wn6i9h5ZbTWOjr4XFXJaeb7JRjVY0dKoJd77WdwByTO31oiIjUBrm1vnCzwXsNjNc2t+/wBn2ew9sPucnG/HH5eMAh1vkqCDxAoIAA7AABSACggApTjyKAPVs39/p8fwPKduNd8HyIW7u9uvlroZtG4lukxF4mW1Aw/x4/o6/v8AyHx4/o6/v/I5PSv4fX+qxef7Zg6sn92t+o/YYz48f0f/AH/kcbNs9ZXKHUab0Wtd/wDIsYr77M24rFMT1YsgB2PjhSagCggIKAO0KF8CAAAAAAAFIAKCFAF1IAKCAKoHaAAJ2DUAAQIMhSMIEKQoAAIAAAAAoUg7QKAAAAAoJqAKCACjkQpABBqFUpxHrA5E1A1AoIAKXU4lAuoIAql5nHUAchqcSoCggArBAABCAACBAMjBUAAEAAAKQBV1BNRqByBARV1KQAXUak1LqFXUfaTUAVAgAo7CACkAAAEArIAEACACkAAAgRSAAAAUGAQCggAoJ2gIFIAAAAAAC6+j7wQAUEKFANeAAoICCgAAd9GJfkQcqYbyT05pHnM7sP8AdrPr/gjF7TWNw98GOMl+WWO+LMz/AEX/AHL3j4szP9F/3L3myA8PWs7vosfmWt/FmZ/ov+5e86b8W7HUeuhu73LinqbUYjb3yafF/gbplm1tPLNwtMdJtEyw5304WRfDfqr3o66a6o8/abDsb9xX1memS01jcObh8cZb8ssT8WZn+i/7l7wtmZn+i/7l7zZQeHrWd30WPzLWvizM/wBF/wBy955pwlXNwmtJJ6NG3Gt349mTtK6upatzer7j0x5Jt3c+fhoxxHL128aTb0Wrfce2nZWVatXFQX870Mxh4FWJFNLes7ZP8D1mbZv/AC9cfBRrd5YaOw5fxXpeEdSS2HJLybot+mOhmgefq38vf6XF4a3fs3JoTbhvR748Tyam3mN2ls2N0XbTHS1cWl/F+Z60zb6Wc2bg9RujAnbTRbkScaYbzS1Or8DKbC/ebPqfie1p1G3HipF7xWXn+LMz/Rf9y95sGPFwx64yWjUUmvsOwHHfJN+76+LBXFMzAADD3DCbRwcm7MnZXVvRemj1XcZsGq2ms7h55cUZa8sta+LMz/Qf9y951ZGLdjbvXQ3d7lxTNqMNt/nR/wA34HvTLNralw5uFpjpNomWIAEU5NJJtvkkdD54c66bLnpVCU36EZXC2OtFPK59kE/aZaEI1xUYRUYrsSPC2aI7O3FwdrdbdGAr2PkzXlKEPF+4747Cl/Fel4R1M0DynNZ1xweKO7DfET+kf7PzOE9iW/wWwfimjOAerdZ4TF4a5ZsvLr1fV76/lep45RlCW7OLi+1NaG3nXdRVfHdtgpL0m4zz93jfgo/1lqeoMjn7LnQnZTrOvtXbExx71tFo3D596Wxzqwc665XWKutaylyRwPVsz9/p8fwLM6jaUjmtES5fFmZ/ov8AuQ+LMz/Rf9y95sgOX1rPp/RY/Mtb+LMv/Rf9yJLZ2XCLlKlpJat7yNlOrJ/drfqP2FjNZJ4LHEb3LVTnVVO6xV1x3pPktTr1Pbsj5wr8H7DotOomXzsdea8Vn7p8WZn+j/uQ+LMz/Rf9yNkBzetZ9L6LH5lrfxZmf6L/ALl7zrvxLseKldXupvRcUzaDGbbTlTUorVueiRquWZnUvPLwlKUm0TLC1wnZNRhFyk+xGRq2NdJa2TjD0c2ZHAw44lS1SdkvlP8AA9ZL5p3/AItYuDrrd2GlsSSXk3Rb9MdDyX7OyaFrKG9FfxR4myHC2xVVSslyitWSMtnpfhMUx06NUIcrJuyyU3prJ6mSwNlOxK3I1UXxUe1+J02tFY3L5lMdsltVY6uudr3a4Sm/QtT1w2VlzXGKh9ZmfrrhXFRrioxXYkcjnnNP2fQpwVY90sLHYtv8VsF4LU5fEj0/eP8AZ+ZmAY9W71jhcXhh3sR9l6/s/M4y2Lb/AA2wfimjNAerc+lxeGAnsnKiuChPwl7zy20W0vS2uUfFG0klFSi4ySafNM1Gafu87cFSfbLUimWz9lqMXbjLTTi4e4xB0VtFo3D5+THbHOrKCMpp5gBAAAAhCk7SoAAIhSAC8gTQoAAAAAAACCgAAADmBQQAUEAFBABQCAUEKA1BCgXUEAFBAQUpxLqFUEAFBAgKCFAjAIAIUhUAAEAQAUEAFAIBfaAAA1ACqCDUDkCDUiqNRqAGoA9AFIAAA1AAEAFI+YGoQDIwUAAAGoIBQQAUgAQKQAAAAAAAEKAAAAAgFA9QAFIUKhR2gANSFApO0AAZ3YX7tZ9f8EYIzuwv3az6/wCCPLL7XVwnywyYAON9gMRt/wCTR4v8DLmH2/8AJo8X+B6YvfDn4r4pYc2DYv7ivrM182DYv7ivrM983tcHB/J+zIAA5H1w6qqIVSnKK8qct6TO0A1E9QHnvzcfHelliUu5cWcKtpYtst2NqT/mWheWdb0xOSkTrfV6wARsAAGu7Xx1TltxWkbPKXj2nbsL95s+p+J6NvQTpqn2qWn/AJ6jybHurpyJu2agnHTV+J1b5sb5U1inE/o2AHn+HYv+vX6zvi1KKlF6prVNHNMTHd9SLRPaVABFADpsy6KpuFl0IyXNNiI2kzEd3cYbb/8A7H2/gZH4di/69f8AcYrbV9V3U9VZGemuuj5cj1xRMWhy8Tes4piJYwz2y9nqiCutWtrXBeajHbJxvhGUpSWsK/Kfj2Gxnpmv/rDw4PDE/wD0n9gAHM+kEb05nVlZEMWiVs+S5LvZrmTm3ZMm7JNR7Irkj0pjm7nzcRXF07y2ZWQb0U4t+JzNO7eB78HaVmPNRsk51Pmn2eBu2GYjpLwpxsTOrRpsQImpJNPVPimU8HeGB2tgqiXXVLSuT4rzWZ44XVRuqlXNeTJaG6W5Z28c2KMtdfdqR6tmfv8AT4v2Hntg6rJVy4OL0PRsv9/p8fwOy3tl8fH0yR+WzAA4H3g6sn92t+o/Ydp1ZP7tb9R+wsd0t7Zaoe3ZHzhX4P2HiPbsj5wr8H7Duv7ZfCw/JX8tjABwPvBwnXGcoSktXB6o5gExsBG0lq3ojyT2piQlo7NfqpssRM9mbXrX3Tp7DFbbyN2qNEXxlxl4HuqzMe75FsX6G9Ga7mXvJyZ2djfDwPXFSebq5eKzRGPVZ7u/ZWKsjJ3prWEOL9LNiMXsiyirG0lbBTlLVpsySshLlOL8GTLMzZrha1rjjzLkADydQRyUflNLxZjNq7QlRJU0vSemsn3GFnZOb1nJyfe3qe1MU2jcuPLxdcc8sRttasg3opxf2nM1Dl2mX2NlznY6LJOS01jr2C+HljcJi4uL25ZjTMAA8XaGu7Ux+oynu8IT8pejvNiMbtutSxYz7Yy9p6Yp1ZzcVTmxzPhg9R9pAdj46hggRSDmQoAAIEAAoIABSAAXsBAKCACghQAAAAAAAAAAAAAAAAAAAdgAAAdoChSAC6jXuIAKCFQFGveQAXmQAACAAwCBAAAAAAAAAAAAABQQAUdhCgAAFUEKAABAA7QUAQdoFBAAAAAMgCBe3gCAXtIAAHYAA8AAAAAAAAQoAAAAACAUhQA+wAAAAAKQBVIUgFBAAM7sL91s+v8AgjBGd2F+62fX/BHll9rq4T5YZQAHG+wGH2/8mj7fwMwYfb/Kjxf4Hpi98OfivilhjYdi/uK+szXjYdi/uC+sz3ze1wcF8n7MgADkfXDx7Tyni4rlD5cnux9B7DC7fm9+mHZo2bxxu0Q8eIvNMczDEtuUm222+8gB3PhNh2PkSuxnCb1lW9NX3dhkDDbAflXrw/EzJw5I1aX3OGtNsUTIADD3Y/bf7l/zo182Dbf7j/zo1868PtfI4z5UNsxf3Wn6i9hqZtmL+60/UXsM5+0PTgfdLtABzPphre1/nCz7PYbIa3tf5ws+z2Hth9zi4344/LxAA63yWwbFq3MPf7ZybMiefZ60waPqI9BwXndpffxV5ccQAAy9GE29a3bVV2KO8/t//hiTbZ0VWS3p1Qk+9xTOPwXH/wBCr+xHvXLFY1pwZeEtkvNttUBtfwXH/wBCr+xD4Lj/AOhV/YjXrx4ef0NvLo2Rb1mBDXnBuJ7TjCuFa0rhGC56RWhyOe07nb6NKzWsRIACNNe21VuZm8lwmtTq2Z84U+P4Hu2/BaUz7eKPDsz5wp8X7DsrO8b4+SvLxGv1hswAON9gOrJ/drfqP2HadWV+7W/UfsLHdLe2WqHt2R841+D9h4T27H+ca/B+w7r+2XwsPyV/LZAAcD7wAHwQGF2zltz+DwfkrjP0+gxJ2ZFnW5Fk3/FJnWd9K8safBzZJyXmZAQpp5ABYQlZJRri5S7ktQrkrrY/JsmvBs7YZuTD5N8/tep307IybFrPdrX8z4/ceyvYda/aXSl9VaHlN6fd00wZ57dGGsslbNzse9J82RRlJ6RTb7kjZK9mYlf/ALSk++T1PTCuFa0hCMV3JaGJzxHaHtXgrT1tLXKdm5VvKtwXfPgZTB2WsWxWzs3ppckuBkQedstrdHVj4XHSd95AAeTpDx7VSeBbr2ae09h5NqfN9vgvaap7oeeX47fhrYAO98EAAAgABhggQBQBAAA+4AAOQAApAAKQAAUhQAIUACACgAACACggAoJ2FAAhQAIAKCACjsIAKUgAFIAqkAAMMgCAAAdoAAAMAAAAAAAAAAAAAAF1BABQQBVAAAAAAQAUEKEQAAAAAAAAAAAABCgACFAAAAAQoAEAFAAAEKBPUC6ABqAAAAAAAAAABndhfu1n1/wRgjO7B/dbPr/gjyze118J8sMoADjfYDD7f+TR4v8AAzBh9v8AyaPF/gemL3w5+K+GWGNh2J+4L6zNeNh2L+4r6zPfN7XBwXy/syAAOR9cMHt79vV9X8TOGD29+3q+r+J64ve5eL+KWKAB2PjMvsD5V/gvxM0YXYHyr/BfiZo4svvl9rhPhgAB5ulj9t/uP/OjXtTYdt/uP/OjXu068PtfI4z5f2GbZi/utP1F7DUzbMX91p+ovYZz9oenA+6XaADmfTDW9r/OFn2ew2Q1va/zhZ9nsPbD7nFxvxx+XiAB1vktpwP3Kj6iPQeLZNnWYEO+OsT2nBbpaX6DFO6RP6AAMtgMNtm6+jIh1ds4QlHsenEx3w3K/wBez+5ntXFNo3tx5OLrS01mG1A1b4bk/SLP7gs3K+kWf3MvoT5Y+ur4bSDVfhuV9Is/uZfhuV9Is/uHoT5Prq+G0g1b4dk/69n9zJ8OyfpFn9zHoT5Prq+GV29+xp+s/YY7ZfzhT4/gzosvtuSVtsppct56ndsv9/p8X7D1ivLSYctskZM8WjzDZwAcb7IdWT+7W/UfsO06sr91t+o/YWO6W9stTPbsf5wr8H7DxHu2P84V+D9h3X9svhYfkr+YbGADgfeDhc92mx90W/uOZ1ZP7rb9R+wsd0t2lqY0DKfQfnQEKuL0XMD17PwZZk+Pk1x+U/wRsNFFWPDdqgor2nHEoWPjQrS4pcfE7jiyXm0/o+3gwRjrv7gAPN0BG1FayaS72YraG1ZVWSqx0tY8HN9/oMRbfbc9bbJSfpZ7VwzPWXHl4ylJ1HVsV20sWnXW1SfdHidONtRZOXGqFekXrxb48jXz37Fi5Z6a5Ri3+B6TirWsy56cVkyZIjtDYgAcr6geTanzfb4L2nrPJtT5vt8F7TVfdDzy/Hb8Na4DwBkdnbPrzKpTnOUWpacNDttaKxuXxKUtknlqx5DOfElP+rZ9w+JKf9Wz7jHrVe/0mXwwYM58SU/6tn3HTl7Kqx8ay2Nk24rk9CxlrM6S3C5YjcwxAAPRyqQAAUgAAAAB2gAAX0gQFIAAAAD7QAAAAAAUgAFIAAA7QBQQAAAAAAApAAAAFHYQe0CggAAAAAAAAAAAAAAAAAAAB2AAAAAAAAAAAAAAA1AagAAAAAAAAAAAAABAKAAAAAAACFIUAAQAUAAAAABALxBOIAoAAAAAAAAAAGd2D+62fX/BGCM7sH91s+v+CPLN7XXwfywygAON9gMPt/5NHi/wMwYfb/yaPF/gemL3w5+K+GWGNh2L+4r6zNeNh2L+4L6zPfN7XBwXy/syAAOR9cMHt79vV9X8TOGD29+3q+q/aeuL3uXi/iligAdj4zL7A+Vf4L8TNGF2B8q7wX4maOLL75fa4T4oAAebpY7bf7j/AM6NfNg23+4/86NfOvD7XyOM+X9g2nBlvYVL/kRqxsex7FPAiu2DaZM8f4tcFOrzH6PcADlfVDB7ZxLXkddCDlCSWui10M4DVLcs7eWXFGWvLLU68W+x6Qqm/sJfj2Y01G2O62tTbTCbfjpbTLvi0dFMs2tpwZuFjHjm202HfuWzpb4T4x8TOGoQnKuanB6ST1TNnw8qOXQpx4PlJdzMZq6nmevB5d15J+z0AA8He8e0sT4Xj6R06yPGOvsNbnGUJOM4uMlwaZuB034lGR+1rTffyZ7Y8nL0lycRw3qzzV7tUOdNM77FCqO9JmeWx8RPXSb9G8eymiqiO7VBRXoPSc0fZzU4K0z/AJT0eGvYtCrirHNz04tM4PYdX8Ns19iZlQeHqW8u36fF/wCWGnsJ6+RevtidUtiXr5NkJejijPHk2hmRxKeDTslwivxN1yXmdQ878NhrE2mNNdvqlRbKuejlHno9Tu2Z84U+L9h5pScm5N6tvVtnq2Z84U+L9h029svmY9epGvLZgAcD7wdWT+7W/UfsO06sn92t+o/YWO6W9stTPbsf5wr8H7GeLtPbsj5wr8H7Duv7ZfCw/JX8w2QAHA+8HVk/u1v1H7DtOrJ/drfqP2FjulvbLUwCn0H51Dsx+N9S/mXtOssZOMlJc09RKx0luAOFVitqhZHlJanM+c/RRO+oAANSyIOF9kZrylJ6nWbNl7PoynvTTjPzonkWw69eN0mvA64zV11fJvweTm/x6wwqTbSS1b5I2DZWE8apzsWlk+a7kd+Ng0Y3GuGsvOlxZ6TyyZeaNQ6eH4X055rdwAHi7Q8m1Pm+3wXtPWeTanzfd4L2mq+6Hnl+O34a0ZzYX7tZ9f8ABGDM5sL92s+v+COrN7Xy+D+WGUABxvsB5dp/N93h+J6jybT+b7vD8TVfdDGX2W/DWRzAO9+fAAAKQoEAAAAAAAAHYAAAAADtAADkAAAAAAAAAAAAAcwAAAAAAAOwAAAAAAAAAAAAAAAAAAAAAAAAAAB2gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEKAAIAKQoEKABCgAQoAEBQABCgAQoAAAAAAM7sH91s+v+CMEe7A2l8CqlDqt/WWuu9p+B55Im1dQ6OGvWmTdmxgw3x7/w/wDv/IfH3/D/AO/8jm9K/h9P6rD5/tmTD7f+TR4v8CfH3/D/AO/8jx7Qz/hqh+r3N3X+LXU3jx2i25h4Z+Ix3xzWs9XjNh2L+4r6zNeMhhbU+CUdV1O/xb13tPwPbLWbV1Dk4bJXHfdmwgw3x7/w/wDv/IfH3/D/AO/8jm9K/h9L6rD5/tmTB7f/AG9X1fxOfx7/AMP/AL/yPDn5vw2cJdXubq056npjx2rbcufiM+O+Oa1nq8oAOl8xl9gfKu8F+JmjWdn53wKU/wBXv7+nbpoe34+/4f8A3/kc2THabbh9Th+Ix0xxW09WZBhvj7/h/wDf+Q+Pf+H/AN/5Hn6V/D3+qw+f7enbf7j/AM6NeMhnbU+F0dV1O5x113tfwMedOKs1rqXzeJvXJfdQyGyMtY9zrm9IWdvczHg3aItGpeNLzS0WhuINdxNq3Y8VCa62C5JvivtMjXtnGl8pTg/StTjtitD69OKx2jrOmRB4/jXD/wBb/a/cR7Vw1ytb8IszyW8PX1sf/qP5e0xO3o/qapd0tPuOyW28ZfJjZJ+CRj8/aXwytVqrdSeuu9qemOlotE6c3EZ8dsc1iXgO/EyrMS3fr5dsXyaOgHVMb6S+VEzWdw2nFzKsuGtcvK7Yvmj0GnwnKElKEnGS5NPiZGjbN9a0sjG1d74M5rYZ/wBX08XG1mNXZ8GMhtuh6b8Jxf2M7ltbDfO1rxizzmlo+zqjPin/AGh7QeP40w/9b/a/ccZbXxIrhOUvCJOS3hfWx/8AqHuBirNuVL9nVOX1noeK/a2TctItVx/l5+s3GK0vG/F4q9p2y2btCrEi1rv2dkV+Jr11077XZY9ZP7jrbberer7wdFMcUfOzZ7ZZ69g9WzPnCnxfsPKd2Ld8HyIW7u9uvlrpqbtG4l5Y5iLxMtrBhvj3/h/9/wCRfj3/AIf/AH/kcfpX8PsfVYfP9swdWT+7W/UfsMX8e/8AD/7/AMjjbtrrKpw6jTeTWu/+RYxX32ZtxWKYnr/bEnu2R84V+D9h4TvxMj4LkRu3d/d14a6dh1WjdZh8rFMVvEz5bUDDfHv/AA/+/wDIvx7/AMP/AL/yOT0r+H1/qsPn+2YOrJ/drfqP2GL+Pf8Ah/8Af+Rxt211lU4dRpvJrXf5fcWMV99mbcVimJ6/2xIAR2PjAHYAMrsnPVP6i56Qb8mT7DOGnHtxNp34yUdesgv4ZdngzwyYt9Yd/D8VyRy37NkBjK9t48kushOD9aO/41w/9bT/AJX7jwmlo+zvjPjn/aHsB4pbWw1ysb8Is89m3Kkv1VUpP+Z6CMdp+yTxGKvezKmLz9qxq/V4zUp9suxGNydo5GTrGUt2Hmx4HkPamHXWzizcZuNUbfXNWVxnHlJJo5GAxNrSxqFVKrrN3k97Th6jv+Pf+H/3/kec4rb6OmvF4piNyzB05dXXYtta5yi9DG/Hv/D/AO/8ifHv/D/7/wAhGK8fYnicMxqZ/th+3wM7sL92s+v+CMNfONl05xjuKT13dddD14G0vgdUodVv6vXXe0/A6MkTauofP4e9ceTcz0bEDD/Hv/D/AO/8ifHv/D/7/wAjm9K/h9L6rD5/tmTybT+b7vD8TxfHv/D/AO/8jqytr/CMedXU7u8tNd7XT7jVcVomJ0xk4nFNJiJYsAHW+OAviQAAUCFIAKQAAAABQQAAAAAAFIAAKQCkAAFIAAHpAAAAAAAAADsAKBPAAAAAABSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABqAAAAAAO0AAAAAAAAAAAAAAAAAAAQoAgAFIUAQpCgQoIBQQAUEKABAAKAAIUACAoAAAAQoAAACFIBQAAAAAAAAAAAAAAAAAAAADUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADkAAAAAMAAAAAAAAAAAAAAAFJ2AAAAAGgADsAAAAAXQgAAIAAAAAAApABSFAnaAAKQAAAAAAAAFAhSAAAAAAAdgHMAAAAHaAAAAAAAO0AAAAAA5AAAAAAAAABzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIUAAAAAAAAAQoIBQQoAEKAAAAAgFAAEAAAoIBSFAAEAAoAAAACFIBQQoAAAAQAUAAAABCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADtAAABgAAAAAAABAAAAAAAAAAAAAKBAAAHIFAgAAAAACgCFIAKTtAAAAACgCFBABSAAUEApCgCAAAC8iAUgAApAAAKBCkAAAAAAABSAAAABSAAUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBQAAAAAAAQoAEBSAUhQBCggAAAUgKBAUAQAoAAAAXcl5r9Q3Jea/UBCHLcl5r9Q3Zea/UBAXcl5r9Q3Jea/UBCHLcl5r9Q3Zea/UBAXcl5r9Q3Zea/UBAXclr8l+obkvNfqAgLuS81+obsvNfqAgLuS81+obkvNfqAgLuy81+obsvNfqAgLuS81+obkvNfqAgLuS81+obkvNfqAgLuy81+obkvNfqAgLuS81+obkvNfqAgLuy81+obsvNfqAgLuS81+obkvNfqAgLuS81+oKMvNfqAgLuS81+obkvNfqAgLuS81+ou5LzX6gOILuS81+ou7LzX6gOIOW5LzX6huy81+oDiDluS81+om5LzX6gIDluS81+obkvNfqA49gOW5LzX6huS81+oDiC7kvNfqLuy81+oDiO05bkvNfqG5LzX6gOIOW5LzX6huS81+oDiDluy81+obkvNfqA4g5bkvNfqG5LzX6gOJS7kvNfqG5LzX6gOIOW5LzX6huS81+oDiDluS81+obkvNfqA4g5bkvNfqG5LzX6gOIOW5LzX6huS81+oCEOW5LzX6huS81+oDiEctyXmv1Dcl5r9QHEpdyXmv1Dcl5r9QEIctyXmv1Dcl5r9QEBdyXmv1Dcl5r9QEBdyXmv1Dcl5r9QEIctyXmv1Dcl5r9QHHsDOW5LzX6huS81+oDiDluS1+S/UNyXmv1AcSl3Jea/UNyXmv1AcSl3Jea/UN2Xmv1AcQctyXmv1Dcl5r9QHHsBy3Jea/UNyXmv1AQhy3Jea/UN2Xmv1AQFUJea/UFCXmv1AcQct2Xmv1Dcl5r9QHEdhy3Jea/UNyXmv1AcQctyXmv1Dcl5r9QEIctyXmv1Ddl5r9QHEHLcl5r9Q3Jea/UBAXcl5r9Q3Jea/UBxBd2Xmv1F3Jea/UBxBy3Jea/UNyXmv1AcQctyXmv1Dcl5r9QHEHLdl5r9Q3Jea/UBxBy3Jea/UNyXmv1AcQXcl5r9RdyXmv1AcQct2Xmv1Dcl5r9QHEHLcl5r9RN2Xmv1AQF3Jea/UNyXmv1AQF3Jea/UXcl5r9QHEF3Jea/UXcl5r9QHEF3Zea/UNyXmv1AQF3Jea/UN2Xmv1AQF3Jea/UNyXmv1AQF3Jea/UNyXmv1AQF3Jea/UNyXmv1AQF3Jea/UNyXmv1AQF3Jea/UN2Xmv1AQF3Zea/UN2Xmv1AQF3Jea/UNyXmv1AQF3Zea/UNyXmv1AQF3Jea/UNyXmv1AQF3Zea/UNyXmv1AQF3Jea/UN2Xmv1AQF3Zea/UNyXmv1AQF3Zea/UNyXmv1AQhy3Jea/UN2Xmv1AQDlwAEKQAAABQQAOIAAAFAhQABAUAAQCgEAoIUAAAAAAEKAAAAAAAAAAAAAAAAAAAAAAB2gAAAAAAAAAAAAAAAAAAAAAAAAAAAABSAACjQCAoAgKAIUAACFAhQQAUAARlAAAAQoAAIAAQoAAAAAAAIUAAOQEKAAAAAAAAAAAAAAANAAABCgCF1IBQCAUAgF0IABSFIABQAIAAAAAAoEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACFAAAgFAAAAAAAAAAAEAFAAEKQoAAAAQoAhQBCggF+wEAAFIBQCACkKAAAAHKuqy17tcJTfdFalsptp062ucNeW9FoDgCHZZTbVo7a5w15b0WtQOAOVdVluvV1znpz3Yt6EhCVkt2EZSl3JagQHOyi2pJ21Tgny3otEhXOyW7XFzl3JasDiDnZRbUk7Kpw186LRa8e+2O9XTZOPfGDYHWDtnjX1x3rKLIRXbKDSOEISsluwi5SfYlqwOBTnZRbUk7apwT5b0WiOuagpuElB8FLTgwOIOUK5zjJwhKSitZNLXTxOIAAAAAAAAAAAAAAAAAFUZOLkotxXN6ciAADlGuc4ylGEpRj8ppcvEDiAAAOca5yjKUYSlGPymlwRJVzgoucJRUlqm1pqvQBxAAAA5QhKySjXFyk+SS1bA4jkVpptNNNPimQAAOwAUgAFBVXN7ukZeU9I8OfgBxKWUJQk4zi4yXNNaNEAEKAAIUACFAgKAAAAAAAAAAAAAAAAAAAAAAAAAGgAAdg5gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACFAEKABCkKBAC9gEBSAAAAAAAdoAAAAAAAAAD0AAABoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABCgACFAAAACFAEKQACgAQACkKAIAAAKQAUEAAFAEAAy2VZLAwcemh7krY785R5v7SbLvnlTniZEnZXOLa3nq0zjv1Z+JVXO2NN9K0Tm9FJeJcbqdmqd0r67bnHdhGt7yXpbIMbOO5OUX2PQz+1oq7ElFfLpUZ/Y+Br7bk23zfEzc8qn4zinZB02UqE2pLRcyjnsiKpxUn8u5Sl9i4Hl3nhbIrnS922+XlTXPTuO+rJpW03FWQjTVS4RbktHyPLRZVl4CxbbY1WVvWuUuT9BB1UbRshXZXfrfXNabs5cn3nosm8HZlCpe7Zf5UprnocaasbCrssvsoyJtaQhB7y172SFlWbhQx7bY021PyJS4Ra7vQUctmZVl2R8GyJStrtTTUnroz0VUXfFdlWM31kbmk1LdfB9558WFGz5PItvqtnFPchXLe4+kkr4T2NOMpx6yVu8468fUQenFWRiRsntC3SqUGlCc95yfoOjeeFsiudL3bL5eVNc9O444F9d+PPDypqMWta5yem6xXKrJwvgd1sK7KpNwm35L+0Dpo2jZCFld+t9c1puylyfeepYt2VsbGjTDecZyb4pdr7zrppx8KFlt9lGRNrSFcHvLXvZwvshLZGNBTi5qcm4p8Vz7Cj1YmHfi4ea74bu9Vw8pPv7jEVx35xjqo6vTVvgj27OshDFzVOcYuVekU3pq+PI8uLKuOVVK5a1qS3gMhXgYdl3UweRN8utik4anXTs+tU223u2ahNw3akteHae/rms5WTz6vg6l5MIz+5o81ckrMiWPmxqu6xvSU1uSWpB568PGycuqvGunuyTclJeVHTs7mTIowoQsUZX1Wx5Rtj8r1HsyLcay/HV16VyT37qXok+ziWd+mLdHNyaMiLjpWoNOWoHgzsSvGtpjByasipPVnr+K6PhltTssUIVqevDX2DIjTm/Brlk1VqEEpxnLSS09B3W5FLzMqSthpKjRPeXF9wHlhh4NmNPIhZfGFb0kpaavwOM9n12xx54k57t0nHSzTVNeBxosgtj5MHOKnKcWo68XyO/Hyq8fEwpOSbhbJyinxSevYUcFh4U8h4td13XLVKT03W12d5jpwcJyhL5UW0zNyuudspR2ljxp5p6RckvDQwtsusunNy3223vaaa+nQD2yxMTFhX8Lna7Jre0r08lenU6M7F+CWxUZb9c1vQl3o9mTGraKquhkVVyUVGcbJaaadx0bUvrtnVXS96FUN3e7wPRi/B/ia7fVum+t/TTn2aHVbiYdGPRO2VzndBSSi1on9vYMPcs2bkUO2uucpKS35aakzbK5QwfKjJRrSmk9dO9AdkMHDdkKt6+6T01nUk4Js7cTHhR8Y0WzfVxUdZJcdOJ22272RCcM+qvFWjUIy0fhocHOizI2hGV9cY2qKjLeWjIPHZiY9uJK/ElZ5D0nGzTXx4HbDCw3ZCrevum9NZ1JOCbLB04OHOud1d07ZLVVvVKPaeq27eyIThn1V4q0ahGWj8NAOiuj4Ni7Sp13t3RajKji/BcKWVK3Xqkkq0vXxOd91T+MdLa3vpbukl5XDsPFtCcJ0YajOMnGpJ6PXR+kDteyorMlB2tURh1jnpx0OCxMXJpteHO3rK1q42aeUvRoe2zKoeTKqVsdy3HUHNPVRfE8+PGrZ9d1k8iq2coOMI1y19YGOoplfdCqHOT0Mth04VW0oV12Wu6D5tLdb7UYzDuWPlV2taqMtX4GSpox4bRWV8Lo6pycknLytX2NFHQ8Sp/CMrKnONatcYqGmsnqdWViVRxoZONKUqpPdanziz205e9TdTVkV02RtlKMp6bsk33s6M+6140a7c2u5yerhXFaL06oDo2fiwypWqxyW5ByW6TExYX0ZNk3JOqG9HT8Ts2TdCrInG2ShGyDjq+SZ6KK6sXEy4yyaZzsholCeoHW8PDqqx5XTu3rop6R04ek5y2fh15axZ23OyfJrTRd2p1ZlkJRwN2cXuVpS0fLxO6+6p7crsVkHBaeVvLTl3kGMsh1d065PXdk02vQzLZUaJ1bPjF3RctFB6rgtVz9Ji8pqWVc4tNOcmmnz4mQlKuynAsV1S6lpTi5JPmuwoPAplPLnfbbpTJeVqm2vecJYeCsaOVv3qpvd3HpvNnbfdU6topWQbnNbvlLyvA81tkHsamtTi5q1tx14pcewiux7MhPIojRZLqrYb+suaRI4eJkuyvEst62C1W/ppLw0PTVmU0ywm7I6dS4Saeu6+HMO7IhvyntOjdS4bkYyk/s0AwoDbb1faCoAAAB6AAAAAAAAAAAAAAAAAAAAAAAAOwAAAAAAAAAAAAAAAAAAAAAAADQAAAAAAAAAAAAAADUAAAAAAAANAAACdoFAAAEKAIUAO0gKBABoBe0gAAdoAAAAAAAAAAAAAAAHaAAAAAAAAAAAAAAAAAAAAAAgFIUAQoAAAAQoIBQQoEKQoEBQBAX7QAIAAKAAICgCFAAhzlXOCi5wlFSWsW1pqvQcQIUu7Ld3t17uumunDUgEKco1znGUowlJR4yaXBeJxAAAAAAAAAAAACyjKLW9FxbWvFEAAFjGUpKMU3J8ElzYEBZRlCTjOLjJc01o0QAAAA5lhCU5KMIuUnySWrDTi2pJpp6NMCAAAAAABy3Zbu9uvd10104agcQAAAKBAUjAAoAhSACgAACFAAEAoAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYAAAAAAAHaAAAAAAAACAUAANCFAAAAQoHYBCkAAFIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABzAAAAAAABAABSFAAACAACggAAACkAApAABQQCkKAMosONtmDXO22UbYNvWWu7w7O4kMLDustopsu66Cb1lpuvQ7q76lkbNbtglCtqT3l5PDt7jz7OtrhtG2U5xjFqejb0TIO2xUS2LTFK1tzahxXyvT6DhPCwse2FF9t3XSS1cNN2LZK5wlsqpRtrU6bHNxlLRvwPZbk2X2KzHz6K6pJaxs3d6PfzQHijhSphnQlZNOqKfkvRTXpRcjDxKIVJyvlbbBOKTWifpOz4RGUM/rMiNsnCMYyaUd7nyR1bQvh12LOuUZ7kI67r14rsAs8TCotjRfbc7XpvOGm7Fs8eXjSxMiVUnrpyfej35FNGZlrJjlUxrno5RnLSS+w8m0siOTmSnX8hJRT7yjyg9kdoNRS+C4r0XN1cR8Yv6Jif4kB4z0YWK8vIVSe6tNZPuRzlnuUXH4LirVaaqrRouysiGNlqVj3Yyi4uWnL0gdscPEyXZDEst62C1W/ppLTu0PBXudZHrd7c147vMzLuyIb8p7Tx91LhuRjKT+zQwjer1fNgZvPxa8vaUKoucZ7qc29NFH0ek8sMPEyesrxLLetgm1v6aS8ND2SyaatowyVdXKuyvce7LVx9LRxd2RBTlPaePupcNyMZSf2aEGGhFznGEecnojK042Hj51VLttd8WtXotzXu7zF1WdXfCx8d2Sl95lZVY920I5ayqY1OSm1KWkk+7Qo434lduXl35E5Qprlo93m33HS8TGnTHIpnZ1Kmo2RnpvR9J7I5kety6q8iFU5T3oWS0cXy4annzLrliSjbnVWSk9OrrinqvS1yIOv4uXxp8G1l1fyt7t3dC/A8Wul5F87eqlNxrjHTeenaz0rMq+Luu34/Cer6rTXyufM88XXmbProd0KraZPTrHomvEo7cbFrry8TIx5ylTZLTyuaenI6crFhOnIyIOXWQukprs01PTTdRjvDxldCe5NznNPyVwfadOLdV8OyqrZxVN7kt7Xhz4PUg4R2apwxYqUlddrJ68oxOUcPDvsnRj229dHXRz03ZNHP4fCG2FZrrTFdWmuxd53O6+M5Se08dVLinGMZS9WgGF3Hv7mnla6aekyFmHhY1kKcm212tLecNN2Op4VY1d1nynvb3LTUyWTTRm5CyIZVMIT0c1OWkl9hR4MzGeJkSqb104p96PfJUPYlS0sbc3u6afL0f3Hl2nkQyctyr+Qkop9+h3VShPZUIxtrjZVbv7s5aN+AFnhYePOFORZb10ktXDTdjqK9mVxtyY5FkkqUpKUe1HrtyrL5xsxs6iquSWsbN3WL+1cTo+ERlHO6zJja3Woxk0o73PkiK4fA8GWL8KVl6ri9HF6bzfoHxdRO7F6udnU3689N5cDrjZD4llXvx3+t13dePqPXi2Qk9mxjOLlFy3knxXADohhYdt08eq23ro66Slputo644dNGNG7MlYnNtRhXprw8T0VVUYmbPKnk1SjFycYxflNvs0OFk69o4la66uq6tvVWS0TT9IHmzMSFNdd1E3Omzlvc0+5nkMlk9U6MbBpthJxesp6+Sm/SeC+mVF06ptOUXo9ORUerHxsZ0Ky6dk5yeirp0cl6WTaGHDG6qVbnu2R10sWkl4nspt12dVDEyaseab6zflutnTtWcJ0Yu5fG5wTUnrq2+HEK6dn4lWTC+V85QjUk9Uc54mPdizvxJ2a1vyo2acu/gc9kwjZj5kJyUIuCW8+S5lh1ODiWwldXdO5paVy1Sj4gIYWJvQrcr7pyS1lTo4rU6bKMXFybacjrpOMtIuvTlp6TIXW710J1Z1VeLHR7kZaS8NCKGNPaN+TO6iWmnVxdiSb0XEg8efiY2NRW4O5Wz4qE2uC9OiOjAxPhdslKW5XBb0pdyOeZTZJzvtyceyTfKFmr+xHPZOTGi2yM59WrI6KfPdZQ+CYuRTbLDnbv1LVxs08pejQ8VcessjByUU3pq3okZay/IhTZKzaNDWmijXGMnL7uBjcOVcMup3L9WpeVqB768DEtu6mt5Mny61JOGpjLIdXbKD4uLaM7G5rOVlu0KnRr5MIT9WqMLlaPJt0aac2009deIHUAAgwAAQAAAAAAAAAAAAKADtAAAAAAAA0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANQAACAAAAAAAAAAAAAAAAAA7AAAAAAAAAAAAAAAAAAAAhQABAUCApAAAAAAAAAAA7QAAAAAAAAAAAAACFAAAAAAAAIUCFBAKQAACkApAAALoAIAAAAAFBABSFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUCAFAEBQIUEAAoAAACHbj3yx74XQScovhryOooFnJznKb5yerIABYTlXOM4vSSeq7ROUrJynN6yk9W+8gAAADupyZ01W1xUWrVuy1OkAAAAAAAAAKBgAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAAAAAAAAAAO0AAAAAAAAAAAAAAAAAAAAAAAAAAAOQAAAAAAAA8QAAAAAAAAAACAAAAAAAABCgAAAIUhQBCkAFIABQAIUEApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAABQIAUCagoAhSFAhQAIAUAAAMh8XVQoqtvy1WrYppbmr19YjsqTzHQ7Uk4b8Zpapo78nCuysPCdKUnGtJrVLT0nprnFZkKIyUnTjOMmn28CDG17PrutcaMlThFN2TcGlH3nGzBh8HldjXq+MH5a3XFo79j2xUMinyHOyPkKfKT7md1nwqnFu6zHxcaEluvReVLw0ZR5ns6muUa78yNVslru7j0X2nXTgb8bbLbo101vTfS3k36O8ykIZMuqhONOZjNL9ZJJNL1nGuVcqL8fDhVa4WaxhZxTXoIMdZgJKmdVytptko76jpo/Sjuey6lkfB3mR67sjuP2nfZLIrhTXdVjUxlbF9XDXe58+46pf/AOi/+T8APNTgOUbZ32qmuqW65aa6vuSOb2ZKUqXj2xtrteinppp4o9U4vLxsnGqa66F8pbuum8tThibPrpyKVmTjvy1/VP7tWB0x2dTa7IUZastgm93q2k9PSeBJtpJcWbHiLLV01kRqpr3WowglxZr1curthJr5Mk2ij3fFkIzhTZlRhfJa7m62vWcZ7N3PhX63X4Pp/D8r7+B678OzJ2jDKpcZUzcZb+8uGh2SXW5G0seLXWTS3U3z4EViq8TfwbMnf+RJR3dOf2nf8W11uEMjKjVdNaqG5rp4s9Kpnh7JtVySn1kZOKerS1XuO/I67ItjbjY2NfXJLy5LivHiBg8iiePdKqxaSiztuxOqxaciM9+Nmqa003X3HLaVk7MuTtdTkkk3Vrp9569k7uTTPFsfCMlZHX0PiVHT8VSdldatWrhv2arRQX4nGWBXOmdmLkq918ZR3HF6d6PVRkwysvMg5qPXR3K2+XDkTEx57OhfdlJQTg4xjqm5MivPHArjVXPJyVS7OMY7jlw9PcduPs+zGyp2WyrVdPHfkm0+7gjnl41m0VRdipTW4oyW8lus7caEKqL8OmVWRapKW7NeTLvXMDzbSUsiiGTGyu6EXuynGDjL7VqeTCxvheQqt/c1Teump78p5NWDONtOLRGbXkR+U/SuJ0bFX/1CP1X7Ch8Wwn1kaMqNt1a1cN1rx0facKsGCx435N6pjP5C3XJs9eHi2YF9mRkOKqjF7st5eXry0O1Tnk4WO8bHovcI7s4zWrj96IPFHZcnmQp61blkd6FiWqaEdnV23dXTkqe7q7JODSgl7T30zu+H49Vyoi4QlpGrXyeHJni2dKLsyqJSUZXRcYt8tQO/Fpqrws10ZCuTr0fkuLXM8sdn1wprnlZKpdnGMdxyenpPVjYd2Lh5ruSi5VtJap6+k7rZWZVVNmLjY+Qt1KW+tXF+sDwR2XP4RZVOxR3Ib6klqpI6MbF+EU32b+71Md7TTXUy1V03nOm+VCm6XGPVt6J9z17TpxsS3Fws3r0oylXwjqm+HaBjcSEJ5VcbJbsd5dmuvo0MhmYSydqThTYtec9Y6KC0XrMZjtK+tvglJe0zvGnaWTvqKWRH9U5/Jk0uQGMngQdNlmLkK/q/lR3XF6d67zk9n01002X5arVsU0txt+09b+F49Vs5Y2Hjx3dG9NHL0LRnl2n+74P9FAenBwo420JwtsUpKDcfJ5p9voPHDBrlCy55O7jxe6puD1k/Ayaa+N4LVJvH0R0YuNZTiS6miueXGek1PRuK9AHjswFFUTqvVlV09xS3dGn4Hb8V1de8f4ZHruyO4/aezI614+H10oysWQt7d00Xo4HmX/8Aov8A5PwA81OBrXZbkWqmuEt3Xd3m36EevJx9dmYtVM1bvWvdklprrqWyt5mJbRS07q75S3G9N5as7Ix+A4uF17Scbm5aPXd1TA8nxbV1vULLi8jT5G49Ne7U8FkJVzlCa0lF6NGWjgWx2j8Ibj8H3+s6zeWmnMx2bZG7Mtsh8mUuAHetn1wrreRkxpnYtYx3W+Hp7j1bQxZ5W0o1xkopVJyk+SRMvGs2h1N+NpKO4oyWqW613npsqqntPSahOcaFuRlykwMa8GqdNtmNlK11LWUXBx4FlgVV49V12VudZHejHq23r6zIw+FvFyo5KhBut7lcUl9vAx+0v3XB/pAY8AFAAAAB2AAAAAQAApAAAAAAAAAAAAAAAAAABQIgAAAAAAAAAAAAAAAACgQAAAAAAAAAAAB2AUhSAAAAAAAAAAAAAAAAAAAAA7QAAAAAAAAAAHYAAAAABAAAQoIBSFIBQQoEBQBAUgAvYQAUgKBAAAAAAAAAAAAAAAAAAAAAAAACFAEKCACggAAoEAAAFAEKAAAAAAAejJyvhFVENzd6qG7rrrqecAAGAAAAAAAd+HZXTkRssc0o8U4JN6/aTLtruyZ2VQ3ISeqR0gAAAOdU+rthPTXdknp3nPLv+E5M7t3d33y110OkAACgQAAUgAAAAD0YWT8EyFbub+ia010POALJ70m+9ggAFBAKAAABAqgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAABAAAAAGgAApAABQIAAAAAMAAAABSAACkKBAABSAAACgQAoEAAAAAAAAAAAAoEAAAAAAAAAAAAAAwAAAAAAAQoAAAAAAAAAAAAAAAAAAAIgKQCkKAAHaQB4goAgKAIAAAAAAAAAAAAAAFScnok23ySAgOcqrILWcJRXe00SNc5JuMJSS5tIDiCqLabSbS56LkIwlN6Qi5PuS1AgOU6516b8JR171ocQO3L45d7/wDyS9p1HZk/vNr/AJ37TrJHZq3ukAIVlQCAAUgADiABQQCgAAAAAAA90cCuNNdmVkqh2cYx3HJ6d77jl8VTjbYrLYwqrSk7NNU12aI78vHs2jVj24qU0oKMo6pbrLXjwWNkYFd0Z2tqS7E33EHjuwYrGd+Per64vSXk7rj9h3z2XTVdGqzMUZz03V1bev38DlGqWBs3IjkaRsu0UYapvxJtL53q/wCQDsw8SumGbXdYlOMXFvc13V3nkhg1qlXX5KrrlJqD3G3L06dhkHF2Zu064cZzglFa8+Bxqotqw6nhU1St1atlLRuL+0KxuZifBXW42KyuyO9GSWmow8N5KnOViqqrWspta6fYe3bW86sRzkpvdalJcm+B14CWRg5GJGSVsmpRTfytOwqO10wr2LcqbVdGVi0ajo9eHDQ6Xs2uuUK78uNd01whuN6eLPRCizC2VY7klLrYy3ddWlqjvyFdfercbGxbq5JNWSXFePEisHfTPHulVYtJRejMlOmh7Hq0u0bm2nufKl3fmePaNk7cubsdUpJJN167v3nqVc7Ni1Otb3VWOUknyRUebJwuozIY/Wb29u+Vu6c/Qdi2Y/hN9crVGqn5Vjj+B7crFsyc+nJr3XRpFue8tFocrWrr8/FTSsm1KOr014LgRXR1NdexsjqbldGU48VHR66rhodL2bVW4V5GXGu2XHc3G9PFnohj2YWyrnekpdZCW7rq9NUTMwbM3LV9DU6bEnvby8kDGZFE8a+VVmm9Ht7zrMjtCEs7Os+DJWKuCTaa7DHFRCkKBAABQCBVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACkAAAAAAABQBAAAAAAAoAhSAAUAQAvYBACgQFIAAAAFIAAAAAoEAAAdoHoApCkAAFAgAAAAAAAAAAApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhQAIUgAoACBCgAQAAAUCAFAgBQIAAAAAHdi/vNf1jpAHss3XTd1Seu/5ab14a80TdnN48qtXGKWrX8L7de48gA9sNJyyurWqa4adpwxISjdOM4ST3Hw00Z5QB2Ww3NP1c4L+ft+5HWABzuf6+x/zP2nA5WcbJP0s4iFnuAAIAACFAAgAAoAAAEAoAAAAAAEAAAAAMACk7AAHcAACKBAGO0AUhe0AQdhXyAhSdpQIUnYO8KoAfMAB2kAoA7AAHYO0AAwAAHcAAHYAA7S9gEA7QAAAADvHaABe1EAAdwAAvaTtYADtL2gCdoCApCogABFAgKQAAh2AAXsCAhSFAg8QAABVyQAgL2gAB3AQF7CAUhe1EAoC7R3gQo7B2sAQvYOxgOwDsDAAIAACMAUi5lXICAdhWBB2F7R2gQAAAUgABdoQAF7CAAVgCApOwAB2AAAO8ACkAAd4AAFYEBQ+YEA7AAAAAAAAOwAAOwdoABAACFAAAAAiAUAAAOwdoEKOwgQAAAAACkAADsAAF7Sd4ADuHYAA7AAAAAAdgFlxk36SBgACF7QAIVAAEAIAAP/Z', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(20:51:59)*
+
+
+## 🤖 Claude *(20:52:03)*
+
+⚠️ Esse `flag-hero.png` é a versão **ANTIGA/rejeitada** (vermelho, "devolve o tempo/paz" — mensagem que o DESIGN-SYSTEM §5 manda **aposentar**). O alvo real é a **Landing V2** (cyan/gold/nebula, "ative uma agência: CEO+PMO+PMI"). O DESIGN-SYSTEM.md já me dá os tokens exatos, e os 3 JSX de `landing-v2/` são a especificação precisa — é o que vou portar.
+
+Escopo honesto: isto é grande (landing + design-system + depois app-wide). Vou executar em **estágios com prova material**, começando pela fundação (tokens+fontes) e o par nav+hero (a peça mais visível e que destrava o TikTok). Primeiro leio o tema atual do app + a spec V2:
+
+## 🤖 Claude *(20:52:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Landing.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { Navbar } from '@/components/landing/Navbar';
+> 2	import { HeroSection } from '@/components/blocks/hero-section';
+> 3	import { BentoGrid as FeaturesSection } from '@/components/ui/bento-grid-01';
+> 4	import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
+> 5	import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
+> 6	import { PricingSection } from '@/components/landing/PricingSection';
+> 7	import { FAQSection } from '@/components/landing/FAQSection';
+> 8	import { CTASection } from '@/components/landing/CTASection';
+> 9	import { Footer } from '@/components/landing/Footer';
+> 10	import { Helmet } from 'react-helmet-async';
+> 11	import { Sparkles, Zap } from 'lucide-react';
+> 12	
+> 13	export default function Landing() {
+> 14	  const jsonLd = {
+> 15	    '@context': 'https://schema.org',
+> 16	    '@type': 'SoftwareApplication',
+> 17	    name: 'Magic Constellation',
+> 18	    applicationCategory: 'BusinessApplication',
+> 19	    operatingSystem: 'Web',
+> 20	    description:
+> 21	      'Plataforma SaaS de marketing omnichannel com IA. Gere conteúdo multimodal, publique em 8 redes sociais e otimize campanhas automaticamente.',
+> 22	    offers: {
+> 23	      '@type': 'AggregateOffer',
+> 24	      lowPrice: '147',
+> 25	      highPrice: '997',
+> 26	      priceCurrency: 'BRL',
+> 27	      offerCount: 3,
+> 28	    },
+> 29	    featureList: [
+> 30	      'Agentes de IA autônomos',
+> 31	      'Geração de texto, imagem, áudio, vídeo',
+> 32	      'Publicação em 8 redes sociais',
+> 33	      'SEO e SEM inteligentes',
+> 34	      'Auto-otimização e auto-cura',
+> 35	    ],
+> 36	  };
+> 37	
+> 38	  return (
+> 39	    <>
+> 40	      <Helmet>
+> 41	        <title>Magic Constellation</title>
+> 42	        <meta
+> 43	          name="description"
+> 44	          content="Plataforma SaaS de marketing omnichannel com IA. Gere conteúdo multimodal, publique em 8 redes sociais e otimize campanhas automaticamente com agentes de IA."
+> 45	        />
+> 46	        <meta property="og:title" content="Magic Constellation" />
+> 47	        <meta
+> 48	          property="og:description"
+> 49	          content="Orquestre agentes de IA para gerar e publicar conteúdo em todas as redes sociais. Texto, imagem, áudio, vídeo — tudo automatizado."
+> 50	        />
+> 51	        <meta property="og:type" content="website" />
+> 52	        <link rel="canonical" href="https://login.mcorch.com" />
+> 53	        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+> 54	      </Helmet>
+> 55	
+> 56	      <div className="min-h-screen bg-background text-foreground">
+> 57	        <Navbar />
+> 58	        <HeroSection 
+> 59	          badge={{
+> 60	            text: "Nova Versão 2.0",
+> 61	            action: {
+> 62	              text: "Veja o que mudou",
+> 63	              href: "/auth"
+> 64	            }
+> 65	          }}
+> 66	          title="Orquestre seus Agentes de IA para Marketing"
+> 67	          description="Gere conteúdo multimodal, publique em todas as redes sociais e otimize campanhas automaticamente com IA — tudo em uma interface imersiva."
+> 68	          actions={[
+> 69	            {
+> 70	              text: "Começar Agora",
+> 71	              href: "/auth",
+> 72	              icon: <Zap className="h-4 w-4" />,
+> 73	              variant: "glow"
+> 74	            },
+> 75	            {
+> 76	              text: "Ver Demo",
+> 77	              href: "#features",
+> 78	              variant: "outline"
+> 79	            }
+> 80	          ]}
+> 81	          image={{
+> 82	            light: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1200&auto=format&fit=crop",
+> 83	            dark: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1200&auto=format&fit=crop",
+> 84	            alt: "GCRUX Vibe Interface"
+> 85	          }}
+> 86	        />
+> 87	        <div id="features">
+> 88	          <FeaturesSection />
+> 89	        </div>
+> 90	        <HowItWorksSection />
+> 91	        <TestimonialsSection />
+> 92	        <PricingSection />
+> 93	        <div id="faq">
+> 94	          <FAQSection />
+> 95	        </div>
+> 96	        <CTASection />
+> 97	        <Footer />
+> 98	      </div>
+> 99	    </>
+> 100	  );
+> 101	}
+> 102	
+> ```
+
+## 🤖 Claude *(20:52:39)*
+
+
+## 🤖 Claude *(20:52:41)*
+
+Quadro claro: a Landing atual é o template genérico "Magic Constellation" com imagens placeholder — o rebrand substitui tudo pela marca MCORCH. Vou executar em estágios com prova material. 
+
+Primeiro leio a spec V2 (nav+hero) e o tema atual do app que vou editar:
+
+## 🤖 Claude *(20:52:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nL=\"$SP/handoff/mcorch/project/landing-v2\"\necho \"################## landing-v2/01-nav-hero.jsx ##################\"; cat \"$L/01-nav-hero.jsx\"\necho; echo \"################## landing.css (tokens :root head) ##################\"; sed -n '1,120p' \"$L/landing.css\"",
+  "description": "Read V2 nav-hero spec + landing.css tokens"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ################## landing-v2/01-nav-hero.jsx ##################
+> // MCORCH Landing V2 — Nav + Hero
+> // New positioning: the entire agency, operated by AI. A CEO, a PMO and a PMI
+> // 100% dedicated to your operation and integrated into the tools you already use.
+> // Audience: design studios, video makers, social media, copy, web, Google/Meta ads.
+> 
+> const Wordmark = ({ size = 14 }) => (
+>   <div className="mc-wordmark" style={{ fontSize: size }}>
+>     M<span className="dot">·</span>C<span className="dot">·</span>O<span className="dot">·</span>R<span className="dot">·</span>C<span className="dot">·</span>H
+>   </div>
+> );
+> 
+> const SigilMark = ({ size = 22 }) => (
+>   <svg width={size} height={size} viewBox="0 0 20 20" style={{ filter: 'drop-shadow(0 0 6px rgba(0,242,255,0.55))' }}>
+>     <circle cx="10" cy="10" r="2.6" fill="#D4AF37"/>
+>     <circle cx="10" cy="10" r="7.6" stroke="#00F2FF" strokeWidth="0.6" fill="none"/>
+>     <circle cx="17.6" cy="10" r="0.9" fill="#00F2FF"/>
+>     <circle cx="2.4" cy="10" r="0.9" fill="#00F2FF"/>
+>   </svg>
+> );
+> 
+> // Generic CTA with arrow — primary or ghost variant
+> const CTA = ({ children, variant = 'primary', href = '#planos', ...rest }) => (
+>   <a href={href} className={`lp-cta lp-cta-${variant}`} data-magnetic="" {...rest}>
+>     <span>{children}</span>
+>     <span className="arrow">→</span>
+>   </a>
+> );
+> 
+> // Nav with sticky behavior
+> const Nav = () => (
+>   <header className="lp-nav" id="lp-nav">
+>     <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none' }}>
+>       <SigilMark/>
+>       <Wordmark size={13}/>
+>     </a>
+>     <nav className="links">
+>       <a href="#orquestra">A Orquestra</a>
+>       <a href="#como">Como Funciona</a>
+>       <a href="#paraquem">Para Quem</a>
+>       <a href="#planos">Planos</a>
+>       <a href="#faq">FAQ</a>
+>     </nav>
+>     <CTA href="#planos" variant="primary">Ativar minha agência</CTA>
+>   </header>
+> );
+> 
+> // ----------------------------------------------------------------
+> // HERO — the whole agency, dedicated to you.
+> // A CEO, a PMO and a PMI operating your business, integrated into your stack.
+> // ----------------------------------------------------------------
+> const Hero = () => (
+>   <section className="lp-hero" id="top">
+>     <HeroThree/>
+>     <div className="lp-hero-vignette"/>
+>     <div className="lp-hero-inner">
+>       <div className="lp-eyebrow" data-fx="hero-eyebrow" style={{ justifyContent: 'center', marginBottom: 28 }}>
+>         A agência autônoma · Operada por IA · Vol. I 2026
+>       </div>
+> 
+>       <h1>
+>         <span className="word"><span data-fx="hero-line">A agência</span></span>{' '}
+>         <span className="word"><span data-fx="hero-line"><em className="mc-display-i mc-cyan">inteira</em>.</span></span>
+>         <br/>
+>         <span className="word"><span data-fx="hero-line">Dedicada</span></span>{' '}
+>         <span className="word"><span data-fx="hero-line">a <em className="mc-display-i mc-gold">você</em>.</span></span>
+>       </h1>
+> 
+>       <p className="sub" data-fx="hero-sub">
+>         MCORCH coloca um <b style={{ color: 'var(--bone)' }}>CEO, um PMO e um PMI</b> — orquestrados por IA —
+>         100% dedicados à sua operação e integrados às ferramentas que você já usa.
+>         Você cria e fecha negócio. A orquestra cuida do resto.
+>       </p>
+> 
+>       <div className="cta-row" data-fx="hero-sub">
+>         <CTA href="#planos" variant="primary">Ativar minha agência</CTA>
+>         <CTA href="#orquestra" variant="ghost">Ver a orquestra</CTA>
+>       </div>
+> 
+>       <div className="trust" data-fx="hero-sub">
+>         <span>◆ <b>CEO · PMO · PMI</b> dedicados</span>
+>         <span>◆ Integra com <b>seu stack</b></span>
+>         <span>◆ Operação <b>24/7</b></span>
+>         <span>◆ Setup em <b>1 sessão</b></span>
+>       </div>
+>     </div>
+> 
+>     <div className="lp-hero-scroll-hint">
+>       <span>Role para a orquestra</span>
+>       <div className="line"/>
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // TRUST STRIP — the operation, in numbers
+> // ----------------------------------------------------------------
+> const TrustStrip = () => (
+>   <div className="lp-trust-strip">
+>     <div className="item">
+>       <span className="v cyan">03</span>
+>       <span>Executivos<br/>dedicados</span>
+>     </div>
+>     <div className="item">
+>       <span className="v">+40</span>
+>       <span>Ferramentas<br/>integráveis</span>
+>     </div>
+>     <div className="item">
+>       <span className="v gold">3.4×</span>
+>       <span>Capacidade<br/>de entrega</span>
+>     </div>
+>     <div className="item">
+>       <span className="v">24/7</span>
+>       <span>Operação<br/>orquestrada</span>
+>     </div>
+>     <div className="item">
+>       <span className="v cyan">42 min</span>
+>       <span>Setup<br/>completo</span>
+>     </div>
+>   </div>
+> );
+> 
+> Object.assign(window, { Wordmark, SigilMark, CTA, Nav, Hero, TrustStrip });
+> 
+> ################## landing.css (tokens :root head) ##################
+> /* MCORCH Landing — conversion-focused, AWWWARDS-caliber polish.
+>    Layered on top of styles.css + miv.css. */
+> 
+> html, body { background: #000; overflow-x: hidden; }
+> body { opacity: 0; transition: opacity .6s ease; }
+> body.lp-loaded { opacity: 1; }
+> 
+> /* Custom cursor (mirror MIV) */
+> html, body { cursor: none; }
+> a, button, input, textarea, [role="button"], [data-magnetic] { cursor: none; }
+> .lp-cursor, .lp-cursor-ring {
+>   position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99999;
+>   transition: width .22s, height .22s, opacity .22s, border-color .22s, background .22s;
+>   will-change: transform;
+> }
+> .lp-cursor {
+>   width: 6px; height: 6px; border-radius: 50%;
+>   background: var(--cyan); box-shadow: 0 0 10px rgba(0,242,255,0.7);
+> }
+> .lp-cursor-ring {
+>   width: 28px; height: 28px; border-radius: 50%;
+>   border: 1px solid rgba(0,242,255,0.55);
+> }
+> .lp-cursor-ring.is-hover { width: 46px; height: 46px; border-color: rgba(212,175,55,0.9); }
+> .lp-cursor.is-hover { background: var(--gold); box-shadow: 0 0 14px rgba(212,175,55,0.7); }
+> 
+> /* Pre-loader */
+> #lp-preload {
+>   position: fixed; inset: 0; z-index: 9999;
+>   display: grid; place-items: center; background: #000;
+>   transition: opacity .55s ease;
+> }
+> #lp-preload.is-gone { opacity: 0; pointer-events: none; }
+> #lp-preload svg { animation: lp-pulse 1.6s ease-in-out infinite; }
+> @keyframes lp-pulse {
+>   0%, 100% { opacity: .35; transform: scale(.96); }
+>   50%      { opacity: 1;   transform: scale(1.04); }
+> }
+> 
+> /* ----------------------------- NAV ----------------------------- */
+> .lp-nav {
+>   position: fixed; top: 0; left: 0; right: 0; z-index: 80;
+>   padding: 14px 28px;
+>   display: flex; justify-content: space-between; align-items: center;
+>   gap: clamp(16px, 3vw, 40px); flex-wrap: nowrap;
+>   transition: background .35s ease, border-color .35s ease, backdrop-filter .35s ease;
+>   border-bottom: 1px solid transparent;
+> }
+> .lp-nav.is-stuck {
+>   background: rgba(0,0,0,0.5);
+>   backdrop-filter: blur(22px) saturate(1.4);
+>   -webkit-backdrop-filter: blur(22px) saturate(1.4);
+>   border-bottom-color: rgba(255,255,255,0.06);
+> }
+> .lp-nav .links { display: flex; gap: 28px; align-items: center; }
+> .lp-nav .links a {
+>   font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+>   color: var(--bone-2); text-decoration: none; transition: color .2s;
+> }
+> .lp-nav .links a:hover { color: var(--cyan); }
+> /* Hide the center anchor nav across the mid-width band (tablet / small laptop)
+>    so the wordmark and CTA never crowd it. Full nav returns above 1040px. */
+> @media (max-width: 1040px) { .lp-nav .links { display: none; } }
+> 
+> /* ----------------------------- HERO ----------------------------- */
+> .lp-hero {
+>   position: relative; height: 100vh; min-height: 720px;
+>   overflow: hidden; display: flex; align-items: center; justify-content: center;
+> }
+> .lp-hero canvas { position: absolute; inset: 0; }
+> .lp-hero-vignette {
+>   position: absolute; inset: 0; pointer-events: none;
+>   background:
+>     radial-gradient(ellipse 130% 90% at 50% 45%, transparent 55%, rgba(0,0,0,0.78) 100%),
+>     linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.6) 100%);
+> }
+> .lp-hero-inner {
+>   position: relative; z-index: 3; text-align: center; padding: 0 6vw;
+>   max-width: 1280px; width: 100%;
+> }
+> .lp-hero h1 {
+>   font-family: var(--display);
+>   font-size: clamp(56px, 9.4vw, 152px);
+>   line-height: 0.92; letter-spacing: -0.028em; margin: 24px 0 28px;
+>   text-wrap: balance;
+> }
+> .lp-hero h1 .word { display: inline-block; overflow: hidden; vertical-align: bottom; }
+> .lp-hero h1 .word > span { display: inline-block; will-change: transform; }
+> .lp-hero p.sub {
+>   font-family: var(--mono); font-size: clamp(13px, 1.05vw, 16px);
+>   line-height: 1.7; color: var(--bone-2); letter-spacing: 0.01em;
+>   max-width: 680px; margin: 0 auto 44px;
+> }
+> .lp-hero .cta-row { display: inline-flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+> .lp-hero .trust {
+>   margin-top: 56px; display: flex; gap: 36px; flex-wrap: wrap; justify-content: center;
+>   font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+>   color: var(--bone-3);
+> }
+> .lp-hero .trust b { color: var(--bone); font-weight: 500; letter-spacing: 0.18em; }
+> .lp-hero-scroll-hint {
+>   position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+>   font-family: var(--mono); font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+>   color: var(--bone-3); z-index: 4;
+> }
+> .lp-hero-scroll-hint .line {
+>   width: 1px; height: 30px; background: linear-gradient(180deg, var(--cyan), transparent);
+>   margin: 10px auto 0; opacity: .8;
+> }
+> 
+> /* ----------------------------- BUTTONS (XL conversion) ----------------------------- */
+> .lp-cta {
+>   font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+>   font-weight: 500; padding: 18px 34px; border-radius: 999px;
+>   display: inline-flex; align-items: center; gap: 14px;
+>   cursor: pointer; border: 1px solid; transition: all .28s ease;
+>   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+> }
+> .lp-cta-primary {
+>   border-color: var(--cyan);
+> ```
+
+## 🤖 Claude *(20:53:24)*
+
+
+## 🤖 Claude *(20:53:28)*
+
+Tenho a spec completa do nav+hero — design hi-fi (tokens void/cyan/gold/nebula, Playfair+JetBrains Mono, wordmark M·C·O·R·C·H, WebGL hero, GSAP). Nova mensagem: **"A agência inteira. Dedicada a você — CEO+PMO+PMI operados por IA."**
+
+Isto é um build grande. Decisão de execução profissional (respeita ORO — você é o Reviewer): vou **construir a Landing V2 completa em React como nova página, verificar no browser localmente e te mostrar ANTES de publicar em prod** — nunca deixo um meio-rebrand quebrado no ar. Deploy só com seu GO.
+
+Vou ler as seções 02/03 (conteúdo real) + o tema atual do app pra construir fielmente:
+
+## 🤖 Claude *(20:53:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nL=\"$SP/handoff/mcorch/project/landing-v2\"\necho \"################## 02-problem-solution.jsx ##################\"; cat \"$L/02-problem-solution.jsx\"",
+  "description": "Read V2 section 02 problem-solution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ################## 02-problem-solution.jsx ##################
+> // MCORCH Landing V2 — Problem · Audience · Solution (CEO/PMO/PMI) · How · Demo
+> 
+> // ----------------------------------------------------------------
+> // PROBLEM — "You became the bottleneck of your own studio"
+> // ----------------------------------------------------------------
+> const ProblemSection = () => (
+>   <section className="lp-section" id="sintoma">
+>     <span className="num">01 / O GARGALO</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>01</div>
+> 
+>     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center', marginTop: 40 }}>
+>       <div>
+>         <div className="lp-eyebrow lp-reveal" data-fx="up">O preço de fazer tudo sozinho</div>
+>         <h2 className="lp-h1 lp-reveal" data-fx="up">
+>           Você virou o<br/>
+>           <em className="mc-display-i mc-cyan">gargalo</em> do<br/>
+>           próprio estúdio.
+>         </h2>
+>         <p className="lp-lede lp-reveal" data-fx="up" style={{ marginBottom: 28 }}>
+>           Todo briefing passa por você. Todo prazo depende de você. Cada ferramenta fala uma
+>           língua diferente e nenhuma conversa com a outra. Você abriu um estúdio pra criar —
+>           e virou gerente de projeto, atendimento e financeiro de você mesmo.
+>         </p>
+>         <p className="lp-lede lp-reveal" data-fx="up" style={{ color: 'var(--bone-3)' }}>
+>           Enquanto isso, o trabalho que te trouxe até aqui — a criação — fica pra depois.
+>           Esse é o gargalo.
+>         </p>
+>       </div>
+> 
+>       <div className="lp-reveal" data-fx="up" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+>         {[
+>           { v: '68%', l: 'Do dia gasto em coordenação, não em criação', c: 'gold' },
+>           { v: '5+', l: 'Ferramentas que não conversam entre si', c: 'cyan' },
+>           { v: '0', l: 'Pessoas cuidando da operação enquanto você cria', c: 'gold' },
+>           { v: '∞', l: 'Mensagens de cliente que moram na sua cabeça', c: 'cyan' },
+>         ].map((row, i) => (
+>           <div key={i} style={{
+>             display: 'grid', gridTemplateColumns: '120px 1fr', gap: 24, alignItems: 'baseline',
+>             padding: '22px 26px', borderRadius: 14, border: '1px solid var(--silver-2)',
+>             background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005))',
+>           }}>
+>             <span className="mc-num" style={{
+>               fontSize: 56, lineHeight: 1, color: row.c === 'gold' ? 'var(--gold)' : 'var(--cyan)',
+>               fontStyle: row.c === 'gold' ? 'italic' : 'normal',
+>             }}>{row.v}</span>
+>             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--bone-2)', letterSpacing: '0.04em', lineHeight: 1.5 }}>
+>               {row.l}
+>             </span>
+>           </div>
+>         ))}
+>       </div>
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // AUDIENCE — "Para quem" — the creative & marketing verticals it serves
+> // ----------------------------------------------------------------
+> const AudienceSection = () => (
+>   <section className="lp-section" id="paraquem" style={{ borderTop: '1px solid var(--silver-2)' }}>
+>     <span className="num">02 / PARA QUEM</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>02</div>
+> 
+>     <div style={{ maxWidth: 920, marginBottom: 64, marginTop: 40 }}>
+>       <div className="lp-eyebrow lp-reveal" data-fx="up">Feito para quem vive de entregar</div>
+>       <h2 className="lp-h2 lp-reveal" data-fx="up">
+>         A operação por trás<br/>
+>         de cada <em className="mc-display-i mc-cyan">entrega</em>.
+>       </h2>
+>       <p className="lp-lede lp-reveal" data-fx="up">
+>         Se o seu trabalho é criativo e a sua rotina virou gestão, a orquestra é pra você.
+>         Ela assume a operação de quem entrega — e devolve o foco à criação.
+>       </p>
+>     </div>
+> 
+>     <div className="lp-pillars">
+>       {[
+>         { k: 'Estúdios de design', d: 'Briefings, versões e aprovações orquestrados. Mais projetos entregues sem você virar gerente.' },
+>         { k: 'Video makers', d: 'Da pauta ao render: roteiro, cronograma e entregas no prazo, sincronizados ao seu editor.' },
+>         { k: 'Social media', d: 'Calendário, aprovação e publicação em fluxo. O ritmo é do PMO; a integração é do PMI.' },
+>         { k: 'Copywriters', d: 'Pautas, revisões e versionamento sob controle. Cada peça no tom, no prazo e no lugar.' },
+>         { k: 'Web designers', d: 'Escopo, sprint e handoff de dev orquestrados. Menos retrabalho, mais sites no ar.' },
+>         { k: 'Tráfego · Google & Meta Ads', d: 'Verba, criativos e relatórios acompanhados de perto. O CEO lê o ROI; o PMI ajusta a campanha.' },
+>       ].map((a, i) => (
+>         <div key={i} className="lp-pillar lp-reveal" data-fx="up" style={{ padding: '26px 24px 28px' }}>
+>           <div className="pill-num" style={{ marginBottom: 14 }}>◆ Vertical {String(i + 1).padStart(2, '0')}</div>
+>           <h3 className="lp-h3" style={{ fontSize: 22, marginBottom: 10 }}>{a.k}</h3>
+>           <p style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.65, color: 'var(--bone-2)', margin: 0 }}>{a.d}</p>
+>         </div>
+>       ))}
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // SOLUTION — the three dedicated executives: CEO · PMO · PMI
+> // ----------------------------------------------------------------
+> const PillarIcon = ({ kind }) => {
+>   if (kind === 'ceo') return (
+>     <svg viewBox="0 0 60 60" width="56" height="56" fill="none">
+>       <circle cx="30" cy="30" r="22" stroke="#00F2FF" strokeWidth="0.8" opacity="0.4"/>
+>       <circle cx="30" cy="30" r="12" stroke="#00F2FF" strokeWidth="0.8" opacity="0.7"/>
+>       <circle cx="30" cy="30" r="4" fill="#D4AF37"/>
+>       <circle cx="52" cy="30" r="1.6" fill="#00F2FF"/>
+>       <circle cx="8" cy="30" r="1.6" fill="#00F2FF"/>
+>       <circle cx="42" cy="12" r="1.2" fill="#D4AF37"/>
+>     </svg>
+>   );
+>   if (kind === 'pmo') return (
+>     <svg viewBox="0 0 60 60" width="56" height="56" fill="none">
+>       <g stroke="#00F2FF" strokeWidth="0.7" opacity="0.6">
+>         <line x1="10" y1="10" x2="50" y2="30"/>
+>         <line x1="10" y1="30" x2="50" y2="10"/>
+>         <line x1="10" y1="50" x2="50" y2="30"/>
+>         <line x1="10" y1="30" x2="50" y2="50"/>
+>         <line x1="10" y1="10" x2="10" y2="50"/>
+>         <line x1="50" y1="10" x2="50" y2="50"/>
+>       </g>
+>       <circle cx="10" cy="10" r="2.4" fill="#00F2FF"/>
+>       <circle cx="50" cy="10" r="2.4" fill="#00F2FF"/>
+>       <circle cx="10" cy="50" r="2.4" fill="#00F2FF"/>
+>       <circle cx="50" cy="50" r="2.4" fill="#00F2FF"/>
+>       <circle cx="10" cy="30" r="2.4" fill="#D4AF37"/>
+>       <circle cx="50" cy="30" r="2.4" fill="#D4AF37"/>
+>     </svg>
+>   );
+>   return (
+>     <svg viewBox="0 0 60 60" width="56" height="56" fill="none">
+>       <path d="M 8 50 L 28 14 L 38 32 L 52 10" stroke="#00F2FF" strokeWidth="1.2" fill="none"/>
+>       <circle cx="28" cy="14" r="3" fill="#D4AF37"/>
+>       <circle cx="52" cy="10" r="2.4" fill="#D4AF37"/>
+>       <line x1="8" y1="50" x2="52" y2="50" stroke="#00F2FF" strokeWidth="0.5" opacity="0.4"/>
+>       <line x1="8" y1="50" x2="8" y2="8" stroke="#00F2FF" strokeWidth="0.5" opacity="0.4"/>
+>     </svg>
+>   );
+> };
+> 
+> const SolutionSection = () => (
+>   <section className="lp-section" id="orquestra">
+>     <span className="num">03 / A ORQUESTRA</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>03</div>
+> 
+>     <div style={{ maxWidth: 960, marginBottom: 80 }}>
+>       <div className="lp-eyebrow lp-reveal" data-fx="up">A agência que trabalha por dentro</div>
+>       <h2 className="lp-h1 lp-reveal" data-fx="up">
+>         Não é um app.<br/>
+>         É a sua <em className="mc-display-i mc-cyan">agência</em><br/>
+>         operando <em className="mc-display-i mc-gold">sozinha</em>.
+>       </h2>
+>       <p className="lp-lede lp-reveal" data-fx="up">
+>         Três executivos orquestrados por IA, 100% dedicados à sua operação e integrados ao
+>         seu ecossistema. Você não contrata uma equipe — você ativa uma agência inteira.
+>       </p>
+>     </div>
+> 
+>     <div className="lp-pillars">
+>       {[
+>         {
+>           n: '§01', icon: 'ceo', title: 'CEO', role: 'Direção',
+>           body: 'Lê a sua operação inteira, define prioridades e toma as decisões de rumo. Protege a sua margem, distribui a energia da equipe e diz não pelo que não vale a pena.',
+>           stamp: 'Direção · Sempre on',
+>         },
+>         {
+>           n: '§02', icon: 'pmo', title: 'PMO', role: 'Orquestração',
+>           body: 'O escritório de projetos que nunca perde um prazo nem um briefing. Planeja, aloca, acompanha cada cliente e garante o padrão de entrega — projeto por projeto.',
+>           stamp: 'Orquestração · Zero atraso',
+>         },
+>         {
+>           n: '§03', icon: 'pmi', title: 'PMI', role: 'Integração',
+>           body: 'Executa o dia a dia e conecta tudo ao seu ecossistema: Figma, Drive, Notion, editor de vídeo, Meta e Google Ads, CRM, WhatsApp. Nada solto — tudo no lugar certo.',
+>           stamp: 'Integração · Seu stack',
+>         },
+>       ].map((p, i) => (
+>         <div key={i} className="lp-pillar lp-reveal" data-fx="up">
+>           <div className="pill-num">{p.n} · {p.role}</div>
+>           <div className="pill-icon"><PillarIcon kind={p.icon}/></div>
+>           <h3 className="lp-h3" style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+>             {p.title}
+>             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--bone-3)' }}>{p.role}</span>
+>           </h3>
+>           <p style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.7, color: 'var(--bone-2)', margin: '0 0 24px' }}>
+>             {p.body}
+>           </p>
+>           <div style={{ paddingTop: 18, borderTop: '1px solid var(--silver-2)', display: 'flex', justifyContent: 'space-between',
+>             fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--bone-3)' }}>
+>             <span>{p.stamp}</span>
+>             <span className="mc-cyan">◆ 100% dedicado</span>
+>           </div>
+>         </div>
+>       ))}
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // HOW IT WORKS — 4 phases of activation
+> // ----------------------------------------------------------------
+> const HowSection = () => (
+>   <section className="lp-section" id="como">
+>     <span className="num">04 / ATIVAÇÃO</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>04</div>
+> 
+>     <div style={{ maxWidth: 920, marginBottom: 80 }}>
+>       <div className="lp-eyebrow lp-reveal" data-fx="up">Como funciona</div>
+>       <h2 className="lp-h2 lp-reveal" data-fx="up">
+>         Da <em className="mc-display-i mc-cyan">ativação</em> à operação autônoma,<br/>
+>         em <em className="mc-display-i mc-gold">42 minutos</em>.
+>       </h2>
+>       <p className="lp-lede lp-reveal" data-fx="up">
+>         Uma ativação guiada. Quatro fases. Nenhuma delas pede que você vire especialista em nada.
+>       </p>
+>     </div>
+> 
+>     <div className="lp-steps">
+>       {[
+>         { ph: 'Fase 01', title: 'Diagnóstico', body: 'Você responde 12 perguntas sobre seu estúdio, seus serviços e seus clientes. O CEO calibra prioridades; o PMO mapeia como você trabalha hoje.' },
+>         { ph: 'Fase 02', title: 'Integração', body: 'Conectamos as ferramentas que você já usa — design, vídeo, social, tráfego, CRM. 42 minutos, uma única sessão. Sem código, sem configuração manual.' },
+>         { ph: 'Fase 03', title: 'Modo Sombra', body: 'A orquestra opera em sombra por 7 dias. Você vê cada decisão, cada briefing e cada entrega que ela faria — sem ainda perder o controle.' },
+>         { ph: 'Fase 04', title: 'Autônomo', body: 'Você aprova. A agência assume a operação. A partir daqui sua função volta a ser uma só: criar e fechar negócio.' },
+>       ].map((s, i) => (
+>         <div key={i} className="lp-step lp-reveal" data-fx="up">
+>           <div className="knot"/>
+>           <div className="ph">{s.ph}</div>
+>           <h3 className="lp-h3" style={{ fontSize: 26 }}>{s.title}</h3>
+>           <p style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.7, color: 'var(--bone-2)', margin: 0 }}>{s.body}</p>
+>         </div>
+>       ))}
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // DEMO — a real day, operated by the orchestra
+> // ----------------------------------------------------------------
+> const DemoSection = () => (
+>   <section className="lp-section" id="demo" style={{ borderTop: '1px solid var(--silver-2)' }}>
+>     <span className="num">05 / UM DIA</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>05</div>
+> 
+>     <div className="lp-demo-grid" style={{ marginTop: 40 }}>
+>       <div className="lp-reveal" data-fx="up">
+>         <div className="lp-eyebrow">Live · Orquestra ativa</div>
+>         <h2 className="lp-h2">
+>           Uma terça-feira<br/>operada <em className="mc-display-i mc-cyan">sozinha</em>.
+>         </h2>
+>         <p className="lp-lede" style={{ marginBottom: 32 }}>
+>           Um recorte do dia da sua agência sem você no meio. O CEO prioriza, o PMO orquestra,
+>           o PMI executa e integra. Três clientes atendidos, uma campanha reajustada,
+>           zero prazo perdido. Você criou. A operação andou.
+>         </p>
+>         <CTA href="#planos">Ativar minha agência</CTA>
+>       </div>
+> 
+>       <div className="lp-term lp-reveal" data-fx="up">
+>         <div className="head">
+>           <span className="dot" style={{ background: '#ff5f57' }}/>
+>           <span className="dot" style={{ background: '#febc2e' }}/>
+>           <span className="dot" style={{ background: '#28c840' }}/>
+>           <span className="label">mcorch · orquestra · live</span>
+>         </div>
+>         <div><span className="fg">› 09:14</span> <span className="pr">ceo</span> · prioridade <span className="fg">→</span> <span className="gl">campanha Zaffari</span> · deadline 48h</div>
+>         <div><span className="fg">› 09:14</span> <span className="pr">pmo</span> · aloca · briefing gerado <span className="fg">→</span> time de design</div>
+>         <div><span className="fg">› 09:15</span> <span className="pr">pmi</span> · sincroniza <span className="nb">Figma ↔ Drive ↔ Notion</span> <span className="ok">ok</span></div>
+>         <div><span className="fg">› 11:02</span> <span className="pr">pmi</span> · Meta Ads · verba realocada p/ criativo #4 <span className="ok">CTR 3.1%</span></div>
+>         <div><span className="fg">› 11:03</span> <span className="pr">pmo</span> · QA · peça revisada · dentro do padrão <span className="ok">✓</span></div>
+>         <div><span className="fg">› 14:20</span> <span className="pr">ceo</span> · margem do projeto projetada <span className="gl">38%</span></div>
+>         <div><span className="fg">› 14:21</span> <span className="pr">pmi</span> · entrega enviada ao cliente via WhatsApp <span className="ok">ok</span></div>
+>         <div><span className="fg">› 18:40</span> <span className="pr">pmo</span> · amanhã · 3 entregas agendadas · 0 conflitos<span className="mc-caret"></span></div>
+>       </div>
+>     </div>
+>   </section>
+> );
+> 
+> Object.assign(window, { ProblemSection, AudienceSection, PillarIcon, SolutionSection, HowSection, DemoSection });
+> ```
+
+## 🤖 Claude *(20:53:58)*
+
+
+## 🤖 Claude *(20:54:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nL=\"$SP/handoff/mcorch/project/landing-v2\"\necho \"################## 03-proof-final.jsx ##################\"; cat \"$L/03-proof-final.jsx\"",
+  "description": "Read V2 section 03 proof-pricing-faq-final-footer"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ################## 03-proof-final.jsx ##################
+> // MCORCH Landing V2 — Results · Plans/Offer · Guarantee · FAQ · Final · Footer
+> 
+> // ----------------------------------------------------------------
+> // RESULTS — projected metrics (count-up via data-counter)
+> // ----------------------------------------------------------------
+> const ResultsSection = () => (
+>   <section className="lp-section" id="provas" style={{ paddingTop: 60 }}>
+>     <span className="num">06 / EVIDÊNCIA</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>06</div>
+> 
+>     <div style={{ maxWidth: 920, marginBottom: 60, marginTop: 40 }}>
+>       <div className="lp-eyebrow lp-reveal" data-fx="up">Projeções · cohort piloto Vol. I</div>
+>       <h2 className="lp-h2 lp-reveal" data-fx="up">
+>         O que muda quando<br/>
+>         a operação <em className="mc-display-i mc-gold">sai das suas costas</em>.
+>       </h2>
+>     </div>
+> 
+>     <div className="lp-results lp-reveal" data-fx="up">
+>       <div className="cell gold">
+>         <div className="v" data-counter data-target="3.4" data-suffix="×" data-decimals="1">0×</div>
+>         <div className="l">Capacidade de entrega · 90 dias</div>
+>       </div>
+>       <div className="cell cyan">
+>         <div className="v" data-counter data-target="2.4" data-suffix="k" data-decimals="1">0k</div>
+>         <div className="l">Tarefas orquestradas / mês</div>
+>       </div>
+>       <div className="cell">
+>         <div className="v" data-counter data-target="68" data-prefix="−" data-suffix="%">0%</div>
+>         <div className="l">Horas em coordenação</div>
+>       </div>
+>       <div className="cell gold">
+>         <div className="v" data-counter data-target="99.9" data-suffix="%" data-decimals="1">0%</div>
+>         <div className="l">Uptime da operação</div>
+>       </div>
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // CHAMPIONSHIP OFFER — vision + 3 plans + scarcity + dramatic CTA
+> // ----------------------------------------------------------------
+> const ChampionshipOffer = () => (
+>   <section id="oferta" style={{ position: 'relative', borderTop: '1px solid var(--silver-2)' }}>
+>     {/* Vision act — three breath-paced lines that fade across the pin */}
+>     <div className="lp-vision" id="lp-vision">
+>       <div className="lp-vision-pin">
+>         <div className="lp-vision-ambient"/>
+>         <div className="lp-vision-stage">
+>           <div className="lp-eyebrow" style={{ justifyContent: 'center', color: 'var(--gold)', marginBottom: 36 }}>
+>             ◆ A visão · Vol. I · 2026
+>           </div>
+> 
+>           <div className="lp-vision-acts">
+>             <h3 className="lp-vision-act" data-vision-act="0">
+>               Imagine seu estúdio entregando o dobro—<br/>
+>               sem você virar gerente de projeto,<br/>
+>               atendimento e financeiro <em className="mc-display-i mc-cyan">ao mesmo tempo</em>.
+>             </h3>
+>             <h3 className="lp-vision-act" data-vision-act="1">
+>               Imagine um <em className="mc-display-i mc-gold">CEO</em>, um <em className="mc-display-i mc-gold">PMO</em> e um <em className="mc-display-i mc-gold">PMI</em><br/>
+>               cuidando da operação enquanto você cria.<br/>
+>               Cada prazo, cada briefing, cada ferramenta — <em className="mc-display-i mc-cyan">no lugar</em>.
+>             </h3>
+>             <h3 className="lp-vision-act" data-vision-act="2">
+>               Essa é a agência que trabalha por dentro.<br/>
+>               <em className="mc-display-i mc-gold">MCORCH</em> é o primeiro corte dela.
+>             </h3>
+>           </div>
+> 
+>           <div className="lp-vision-floor">
+>             <div className="lp-vision-progress">
+>               <span className="dot" data-dot="0"/>
+>               <span className="bar"/>
+>               <span className="dot" data-dot="1"/>
+>               <span className="bar"/>
+>               <span className="dot" data-dot="2"/>
+>             </div>
+>           </div>
+>         </div>
+>       </div>
+>     </div>
+> 
+>     {/* Marquee divider */}
+>     <div className="lp-marquee-wrap">
+>       <div className="lp-marquee" id="offer-marquee">
+>         <span>A agência inteira</span><em>·</em><span>CEO · PMO · PMI</span><em>·</em>
+>         <span>Dedicada 100%</span><em>·</em><span>Integrada ao seu stack</span><em>·</em>
+>         <span>Vol. I · 2026</span><em>·</em>
+>         <span>A agência inteira</span><em>·</em><span>CEO · PMO · PMI</span><em>·</em>
+>         <span>Dedicada 100%</span><em>·</em><span>Integrada ao seu stack</span><em>·</em>
+>         <span>Vol. I · 2026</span><em>·</em>
+>       </div>
+>     </div>
+> 
+>     {/* Plans + scarcity + dramatic close */}
+>     <div className="lp-offer-stage" id="planos">
+>       <span className="num" style={{ position: 'absolute', top: 60, left: '8vw',
+>         fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.32em', color: 'var(--bone-3)' }}>
+>         07 / PLANOS
+>       </span>
+> 
+>       <div className="lp-offer-hd lp-reveal" data-fx="up">
+>         <h2 className="lp-h2">
+>           A orquestra<br/>
+>           tem <em className="mc-display-i mc-cyan">três</em> profundidades.
+>         </h2>
+>         <p className="lp-lede" style={{ marginTop: 18 }}>
+>           Você não contrata uma equipe. Você ativa uma agência.<br/>
+>           Cada plano é uma profundidade de operação. Comece onde faz sentido — a orquestra escala com você.
+>         </p>
+>       </div>
+> 
+>       {/* Scarcity bar */}
+>       <div className="lp-scarcity lp-reveal" data-fx="up">
+>         <div className="lp-scarcity-row">
+>           <span className="dot mc-pulse"/>
+>           <span className="lbl">Cohort Vol. I · Q1 2026</span>
+>           <span className="sep">·</span>
+>           <span className="count">17<span className="of">/24</span> vagas tomadas</span>
+>         </div>
+>         <div className="lp-scarcity-bar"><div className="fill" style={{ width: '71%' }}/></div>
+>       </div>
+> 
+>       <div className="lp-pricing">
+>         {/* SIGNAL */}
+>         <div className="lp-plan lp-reveal" data-fx="up">
+>           <div className="tier">§ Plano 01</div>
+>           <h3 className="name">Signal</h3>
+>           <div className="price"><span className="ccy">R$</span>1.497<span className="per">/ mês · cancele quando quiser</span></div>
+>           <ul>
+>             <li>PMO + PMI essenciais · orquestração base</li>
+>             <li>Até 10 integrações do seu stack</li>
+>             <li>Onboarding em grupo · sessões quinzenais</li>
+>             <li>Painel de operação</li>
+>             <li>Suporte por e-mail · 48h</li>
+>             <li className="muted">CEO dedicado</li>
+>             <li className="muted">QA automatizado de entregas</li>
+>           </ul>
+>           <div className="price-foot">
+>             <CTA href="https://login.mcorch.com" variant="ghost">Ativar Signal</CTA>
+>           </div>
+>         </div>
+> 
+>         {/* HARNESS — featured: the full agency */}
+>         <div className="lp-plan is-featured lp-reveal" data-fx="up">
+>           <div className="badge">A agência inteira</div>
+>           <div className="tier mc-cyan">§ Plano 02</div>
+>           <h3 className="name">Harness</h3>
+>           <div className="price"><span className="ccy">R$</span>4.997<span className="per">/ mês · ciclo trimestral</span></div>
+>           <ul>
+>             <li><b>CEO + PMO + PMI · 100% dedicados</b></li>
+>             <li>Integração total ao seu ecossistema · +40 ferramentas</li>
+>             <li>Setup 1:1 · 42 min com a equipe</li>
+>             <li>QA de entregas + relatório semanal de ROI</li>
+>             <li>Suporte WhatsApp · resposta em 4h</li>
+>             <li>Acesso ao MIV completo · Vol. I</li>
+>           </ul>
+>           <div className="price-foot">
+>             <CTA href="https://login.mcorch.com" variant="primary">Ativar Harness</CTA>
+>           </div>
+>         </div>
+> 
+>         {/* SOVEREIGN */}
+>         <div className="lp-plan lp-reveal" data-fx="up">
+>           <div className="tier mc-gold">§ Plano 03</div>
+>           <h3 className="name">Sovereign</h3>
+>           <div className="price"><span className="ccy">R$</span>14.997<span className="per">/ mês · sob convite</span></div>
+>           <ul>
+>             <li>Tudo de Harness, sem teto</li>
+>             <li>Orquestra dedicada · agentes privados</li>
+>             <li>Integrações sob medida · até 7 exclusivas</li>
+>             <li>Gerente de conta humano · SLA &lt; 1h</li>
+>             <li>Revisão estratégica mensal 1:1</li>
+>             <li>Roadmap de produto co-criado</li>
+>           </ul>
+>           <div className="price-foot">
+>             <CTA href="https://login.mcorch.com" variant="ghost">Solicitar convite</CTA>
+>           </div>
+>         </div>
+>       </div>
+> 
+>       {/* Stack of trust + dramatic close */}
+>       <div className="lp-offer-close lp-reveal" data-fx="up">
+>         <div className="lp-offer-stack">
+>           <div className="stack-row">
+>             <span className="k">◆ Garantia</span>
+>             <span className="v">14 dias incondicionais · sem call de retenção</span>
+>           </div>
+>           <div className="stack-row">
+>             <span className="k">◆ Setup</span>
+>             <span className="v">42 minutos · uma única sessão de integração</span>
+>           </div>
+>           <div className="stack-row">
+>             <span className="k">◆ Cohort</span>
+>             <span className="v"><b className="mc-cyan">17/24</b> vagas tomadas · fechamento em janeiro</span>
+>           </div>
+>           <div className="stack-row">
+>             <span className="k">◆ Acesso</span>
+>             <span className="v">Vol. I · primeiro corte público da agência autônoma</span>
+>           </div>
+>         </div>
+> 
+>         <div className="lp-offer-finale">
+>           <p style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--bone-3)', marginBottom: 22 }}>
+>             Uma agência. Não mais uma ferramenta.
+>           </p>
+>           <h3 style={{ fontFamily: 'var(--display)', fontSize: 'clamp(36px, 5vw, 64px)', lineHeight: 1, letterSpacing: '-0.02em', margin: '0 0 32px' }}>
+>             Sua agência,<br/>
+>             <em className="mc-display-i mc-cyan">dedicada</em> e <em className="mc-display-i mc-gold">integrada</em>.
+>           </h3>
+>           <CTA href="https://login.mcorch.com" variant="primary">Ativar minha agência</CTA>
+>         </div>
+>       </div>
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // GUARANTEE
+> // ----------------------------------------------------------------
+> const GuaranteeSection = () => (
+>   <section className="lp-section">
+>     <div className="lp-guarantee lp-reveal" data-fx="up">
+>       <div className="seal">14d</div>
+>       <div>
+>         <div className="lp-eyebrow" style={{ marginBottom: 16, color: 'var(--gold)' }}>Garantia · Risco reverso</div>
+>         <h3 className="lp-h3" style={{ fontSize: 32, marginBottom: 14 }}>
+>           14 dias para ver a operação rodar sozinha.<br/>
+>           Se não vier, devolvemos tudo.
+>         </h3>
+>         <p style={{ fontFamily: 'var(--mono)', fontSize: 13, lineHeight: 1.75, color: 'var(--bone-2)', margin: 0, maxWidth: '72ch' }}>
+>           A primeira coisa que a gente entrega não é receita — é operação no lugar.
+>           Em 14 dias, se os seus prazos ainda dependem de você e as suas ferramentas
+>           continuam desconectadas, o reembolso é incondicional. Sem call de retenção. Sem desculpa.
+>         </p>
+>       </div>
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // FAQ
+> // ----------------------------------------------------------------
+> const FAQSection = () => (
+>   <section className="lp-section" id="faq">
+>     <span className="num">08 / DÚVIDAS</span>
+>     <div className="lp-bignum" style={{ right: '8vw', top: '40px' }}>08</div>
+> 
+>     <div style={{ maxWidth: 920, marginBottom: 50, marginTop: 40 }}>
+>       <div className="lp-eyebrow lp-reveal" data-fx="up">Perguntas honestas</div>
+>       <h2 className="lp-h2 lp-reveal" data-fx="up">
+>         O que você ainda<br/>
+>         <em className="mc-display-i mc-cyan">precisa saber</em>.
+>       </h2>
+>     </div>
+> 
+>     <div className="lp-faq lp-reveal" data-fx="up">
+>       {[
+>         {
+>           q: 'O MCORCH substitui a minha equipe?',
+>           a: 'Não. Ele substitui a operação que sobra pra você — a gestão, a coordenação, a integração de ferramentas. Sua equipe criativa fica livre pra criar; o CEO, o PMO e o PMI cuidam de tudo que não é criação.',
+>         },
+>         {
+>           q: 'Preciso saber configurar ferramentas ou mexer em código?',
+>           a: 'Não. Em uma sessão de 42 minutos conectamos seu Figma, Drive, editor de vídeo, Meta e Google Ads, CRM e WhatsApp. A partir daí a orquestra opera integrada ao que você já usa.',
+>         },
+>         {
+>           q: 'Serve pro meu tipo de trabalho?',
+>           a: 'Funciona para estúdios de design, video makers, social media, copywriters, web designers e gestores de tráfego. Se a operação ainda depende de você para andar, é exatamente pra você.',
+>         },
+>         {
+>           q: 'Em quanto tempo eu sinto diferença?',
+>           a: '7 dias de modo sombra já mostram a operação rodando. Em 30 dias, cai a carga de coordenação. Em 90 dias, a meta documentada é 3.4× de capacidade de entrega — sem aumentar a equipe.',
+>         },
+>         {
+>           q: 'Ele publica post e roda anúncio sozinho?',
+>           a: 'Com a sua aprovação. O PMI executa e integra, o PMO garante o padrão, o CEO decide a prioridade. Você define o nível de autonomia — de "só sugere" a "executa e me avisa".',
+>         },
+>         {
+>           q: 'Como ficam meus dados e acessos?',
+>           a: 'Cada operação é isolada e criptografada. Você concede e revoga acessos quando quiser, e vê cada ação registrada. Nada é feito às escondidas.',
+>         },
+>         {
+>           q: 'O Vol. I é o lançamento. Vai mudar depois?',
+>           a: 'Sim. Vol. I é o primeiro corte público. Quem entra agora opera com tarifa de fundação e recebe as próximas versões da arquitetura. As vagas deste cohort são limitadas a 24.',
+>         },
+>       ].map((item, i) => (
+>         <details key={i}>
+>           <summary>
+>             <span>{item.q}</span>
+>             <span className="sign">+</span>
+>           </summary>
+>           <div className="a">{item.a}</div>
+>         </details>
+>       ))}
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // FINAL CTA
+> // ----------------------------------------------------------------
+> const FinalCTA = () => (
+>   <section className="lp-final" id="acessar">
+>     <div style={{ position: 'relative', zIndex: 2 }}>
+>       <div className="lp-eyebrow lp-reveal" data-fx="up" style={{ justifyContent: 'center', color: 'var(--cyan)' }}>
+>         ◆ Vol. I · Ativação 2026
+>       </div>
+>       <h2 className="lp-reveal" data-fx="up">
+>         <span className="cyan">Pare</span> de ser o gargalo.<br/>
+>         <span className="gold">Ative</span> a agência.
+>       </h2>
+>       <p className="lp-lede lp-reveal" data-fx="up" style={{ margin: '0 auto 44px', maxWidth: 620, textAlign: 'center' }}>
+>         Sua próxima entrega não precisa passar por você.<br/>
+>         Precisa passar pela orquestra.
+>       </p>
+>       <div className="lp-reveal" data-fx="up" style={{ display: 'inline-flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+>         <CTA href="https://login.mcorch.com" variant="primary">Ativar minha agência</CTA>
+>         <CTA href="#planos" variant="ghost">Ver os planos</CTA>
+>       </div>
+>       <div className="meta lp-reveal" data-fx="up">
+>         <span><b>14 dias</b> de garantia</span>
+>         <span><b>42 min</b> de setup</span>
+>         <span><b>17/24</b> vagas tomadas</span>
+>         <span><b>Q1 2026</b> · Vol. I</span>
+>       </div>
+>     </div>
+>   </section>
+> );
+> 
+> // ----------------------------------------------------------------
+> // FOOTER
+> // ----------------------------------------------------------------
+> const Footer = () => (
+>   <footer className="lp-footer">
+>     <div className="row">
+>       <div style={{ maxWidth: 340 }}>
+>         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+>           <SigilMark size={22}/>
+>           <Wordmark size={12}/>
+>         </div>
+>         <p style={{ fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.7, color: 'var(--bone-3)', margin: 0 }}>
+>           Magic Constellation Orchestra · A agência autônoma.<br/>
+>           Um CEO, um PMO e um PMI dedicados e integrados ao seu ecossistema.
+>         </p>
+>       </div>
+> 
+>       <div className="col">
+>         <h5>A Orquestra</h5>
+>         <a href="#orquestra">CEO · PMO · PMI</a>
+>         <a href="#como">Como Funciona</a>
+>         <a href="#demo">Um Dia</a>
+>         <a href="#provas">Evidência</a>
+>       </div>
+>       <div className="col">
+>         <h5>Ativar</h5>
+>         <a href="#planos">Planos</a>
+>         <a href="https://login.mcorch.com">Ativação</a>
+>         <a href="#faq">FAQ</a>
+>         <a href="https://login.mcorch.com">Login</a>
+>       </div>
+>       <div className="col">
+>         <h5>Contato</h5>
+>         <a href="mailto:contato@mcorch.com">contato@mcorch.com</a>
+>         <a href="#">WhatsApp</a>
+>         <a href="#">Termos</a>
+>         <a href="#">Privacidade</a>
+>       </div>
+>     </div>
+>     <div className="bottom">
+>       <span>© 2026 MCORCH · A agência autônoma</span>
+>       <span>◆ Vol. I · MIV-001 · 2026.01</span>
+>     </div>
+>   </footer>
+> );
+> 
+> Object.assign(window, {
+>   ResultsSection, ChampionshipOffer,
+>   GuaranteeSection, FAQSection,
+>   FinalCTA, Footer,
+> });
+> ```
+
+## 🤖 Claude *(20:54:26)*
+
+
+## 🤖 Claude *(20:54:29)*
+
+Agora tenho a **spec completa da Landing V2** (14 seções, mensagem nova "agência autônoma CEO·PMO·PMI", planos Signal/Harness/Sovereign, FAQ, garantia 14d). O CSS (`styles.css` tokens + `landing.css` `.lp-*`) é CSS puro portável 1:1; o JSX é praticamente React (conversão mecânica).
+
+Vou portar o CSS pro app e inspecionar os pontos que preciso ajustar (import de fontes, `cursor:none`):
+
+## 🤖 Claude *(20:54:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nDS=\"$SP/handoff/mcorch/project/design_handoff_mcorch/design-system\"\nL=\"$SP/handoff/mcorch/project/landing-v2\"\nmkdir -p src/styles/mcorch\necho \"=== styles.css :root tokens (head) ===\"; sed -n '1,60p' \"$DS/styles.css\"\necho \"=== styles.css size / landing.css size ===\"; wc -l \"$DS/styles.css\" \"$L/landing.css\"",
+  "description": "Inspect styles.css tokens head + sizes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === styles.css :root tokens (head) ===
+> /* MCORCH — The Absolute Spectrum
+>    Cinematic Sci-Fi Realism · Set-and-forget */
+> 
+> @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+> 
+> :root {
+>   /* Vacuum & Matter */
+>   --void: #000000;
+>   --void-2: #050507;
+>   --void-3: #0a0a0d;
+> 
+>   /* Tactical Light */
+>   --cyan: #00F2FF;
+>   --cyan-dim: #0099a6;
+>   --cyan-veil: rgba(0, 242, 255, 0.08);
+>   --cyan-line: rgba(0, 242, 255, 0.22);
+> 
+>   /* Precious Metal */
+>   --gold: #D4AF37;
+>   --gold-dim: #8a7223;
+>   --gold-veil: rgba(212, 175, 55, 0.08);
+> 
+>   /* Relational Depth */
+>   --nebula: #4D00FF;
+>   --nebula-dim: #2d0099;
+>   --nebula-veil: rgba(77, 0, 255, 0.10);
+> 
+>   /* Silver / Bone — borders & text */
+>   --silver-1: rgba(255, 255, 255, 0.04);
+>   --silver-2: rgba(255, 255, 255, 0.08);
+>   --silver-3: rgba(255, 255, 255, 0.14);
+>   --silver-4: rgba(255, 255, 255, 0.22);
+>   --bone: rgba(255, 255, 255, 0.92);
+>   --bone-2: rgba(255, 255, 255, 0.72);
+>   --bone-3: rgba(255, 255, 255, 0.48);
+>   --bone-4: rgba(255, 255, 255, 0.28);
+> 
+>   /* Type */
+>   --display: 'Playfair Display', 'EB Garamond', Georgia, serif;
+>   --mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+> }
+> 
+> * { box-sizing: border-box; }
+> 
+> html, body {
+>   margin: 0;
+>   background: var(--void);
+>   color: var(--bone);
+>   font-family: var(--mono);
+>   font-feature-settings: "ss01", "ss02", "cv01";
+>   -webkit-font-smoothing: antialiased;
+>   text-rendering: geometricPrecision;
+> }
+> 
+> /* ------------------------------------------------------------------ */
+> /* Liquid Glass — light, soft, refractive (Apple-style glassmorph)    */
+> /* Layered: blur + saturation + thin highlight + subtle inner lift     */
+> /* ------------------------------------------------------------------ */
+> .lg {
+>   --lg-tint: 255, 255, 255;
+> === styles.css size / landing.css size ===
+>   449 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad/handoff/mcorch/project/design_handoff_mcorch/design-system/styles.css
+>   647 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad/handoff/mcorch/project/landing-v2/landing.css
+>  1096 total
+> ```
+
+## 🤖 Claude *(20:55:18)*
+
+
+## 🤖 Claude *(20:55:20)*
+
+CSS limpo e portável (~1100 linhas de CSS puro). Vou **escopar** as regras globais (`html,body`, `*`, `cursor:none`, e o gate `body{opacity:0}` que deixaria a página invisível sem o JS do preloader) sob um wrapper `.mcorch-lp`, pra não vazar no resto do app — deploy seguro e reversível. As classes `.lp-*`/`.mc-*` são específicas da landing, não precisam de escopo.
+
+## 🤖 Claude *(20:55:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7bb4586f-3050-4a11-99ef-569c4b75c080/scratchpad\nDS=\"$SP/handoff/mcorch/project/design_handoff_mcorch/design-system\"\nL=\"$SP/handoff/mcorch/project/landing-v2\"\n\npython3 - \"$DS/styles.css\" \"$L/landing.css\" <<'PY'\nimport sys, re\nsys_css_path, landing_css_path = sys.argv[1], sys.argv[2]\nsys_css = open(sys_css_path, encoding='utf-8').read()\nlanding_css = open(landing_css_path, encoding='utf-8').read()\n\n# --- styles.css transforms ---\n# scope the global html/body block and universal selector to the landing wrapper\nsys_css = sys_css.replace(\"html, body {\\n  margin: 0;\", \".mcorch-lp {\\n  margin: 0;\")\nsys_css = sys_css.replace(\"* { box-sizing: border-box; }\", \".mcorch-lp, .mcorch-lp * { box-sizing: border-box; }\")\n\n# --- landing.css transforms ---\n# 1) scope global background/overflow to wrapper\nlanding_css = landing_css.replace(\"html, body { background: #000; overflow-x: hidden; }\",\n                                   \".mcorch-lp { background: #000; overflow-x: hidden; }\")\n# 2) drop the preloader opacity gate (would keep the page invisible without the loader JS)\nlanding_css = landing_css.replace(\"body { opacity: 0; transition: opacity .6s ease; }\\nbody.lp-loaded { opacity: 1; }\", \"/* preloader opacity gate removed for React mount */\")\n# 3) remove cursor:none globals so the app cursor stays native\nlanding_css = landing_css.replace(\"html, body { cursor: none; }\\na, button, input, textarea, [role=\\\"button\\\"], [data-magnetic] { cursor: none; }\", \"/* custom cursor disabled */\")\n\n# strip any stray remaining `cursor: none;`\nsys_css = re.sub(r\"\\n\\s*cursor:\\s*none;\", \"\", sys_css)\nlanding_css = re.sub(r\"\\n\\s*cursor:\\s*none;\", \"\", landing_css)\n\nhdr = \"/* MCORCH brand \u2014 ported from design_handoff_mcorch (2026-07-03). Scoped to .mcorch-lp. Do not hand-edit tokens; source: design-system/DESIGN-SYSTEM.md */\\n\"\nopen(\"src/styles/mcorch/system.css\",\"w\",encoding='utf-8').write(hdr+sys_css)\nopen(\"src/styles/mcorch/landing.css\",\"w\",encoding='utf-8').write(hdr+landing_css)\nprint(\"system.css bytes:\", len(sys_css))\nprint(\"landing.css bytes:\", len(landing_css))\nprint(\"scoped .mcorch-lp in system:\", sys_css.count('.mcorch-lp'))\nPY\nls -la src/styles/mcorch/",
+  "description": "Port + scope the two brand CSS files into the app"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> system.css bytes: 14798
+> landing.css bytes: 27522
+> scoped .mcorch-lp in system: 3
+> total 52
+> drwxrwxr-x 2 ubuntu ubuntu  4096 Jul  3 17:55 .
+> drwxrwxr-x 3 ubuntu ubuntu  4096 Jul  3 17:54 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 27693 Jul  3 17:55 landing.css
+> -rw-rw-r-- 1 ubuntu ubuntu 14982 Jul  3 17:55 system.css
+> ```
+
+## 🤖 Claude *(20:55:50)*
+
+
+## 🤖 Claude *(20:55:51)*
+
+Preciso verificar quais regras dependem de JS (senão a página fica invisível, como o gate do preloader). Vou checar `.lp-reveal`, `data-fx`, `.lp-vision-act`, `data-counter`, `hero-line` no CSS portado:
+
+## 🤖 Claude *(20:55:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== .lp-reveal rules ===\"; grep -nE \"\\.lp-reveal|\\[data-fx|\\.is-in|\\.revealed\" src/styles/mcorch/landing.css | head\necho; echo \"=== hero word/line (opacity hidden?) ===\"; grep -nE \"hero-line|\\.word > span|opacity: 0|translateY\" src/styles/mcorch/landing.css | head -20\necho; echo \"=== vision-act default state ===\"; grep -nE \"lp-vision-act|lp-vision-pin|position: sticky|opacity\" src/styles/mcorch/landing.css | grep -iE \"vision\" | head\necho; echo \"=== counters ===\"; grep -nE \"data-counter|\\.lp-results .v\" src/styles/mcorch/landing.css | head",
+  "description": "Find JS-dependent invisibility traps in ported CSS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .lp-reveal rules ===
+> 448:.lp-reveal { will-change: transform, opacity; }
+> 
+> === hero word/line (opacity hidden?) ===
+> 32:#lp-preload.is-gone { opacity: 0; pointer-events: none; }
+> 87:.lp-hero h1 .word > span { display: inline-block; will-change: transform; }
+> 127:  transform: translateY(-1px);
+> 198:.lp-pillar:hover { transform: translateY(-4px); border-color: var(--cyan-line); }
+> 282:  font-family: var(--display); font-size: 70px; color: var(--gold); opacity: 0.55; line-height: 1;
+> 484:  opacity: 0;
+> 526:.lp-marquee em { font-style: normal; color: var(--gold); opacity: 0.4; }
+> 
+> === vision-act default state ===
+> 457:.lp-vision-pin {
+> 474:.lp-vision-acts {
+> 477:.lp-vision-act {
+> 489:.lp-vision-act[data-vision-act="0"] { opacity: 1; }
+> 641:  .lp-vision-act { font-size: clamp(22px, 6vw, 36px); }
+> 
+> === counters ===
+> 605:[data-counter] { font-variant-numeric: tabular-nums; }
+> ```
+
+## 🤖 Claude *(20:56:22)*
+
+
+## 🤖 Claude *(20:56:25)*
+
+CSS é seguro sem JS: `.lp-reveal` só tem `will-change` (visível por padrão, sem trap de opacity:0). Os únicos ajustes: renderizar os valores finais dos contadores (em vez de "0×") e uma backdrop CSS pro hero (no lugar do WebGL). Vou escrever os componentes TSX — convertendo o JSX fielmente, com CTAs apontando pra `/auth`.
+
+Primeiro os primitivos de marca:
+
+## 🤖 Claude *(20:56:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/landing-v2/Brand.tsx",
+  "content": "// MCORCH brand primitives \u2014 ported faithfully from design_handoff_mcorch/landing-v2\n// (2026-07-03). Source treated as spec (README \u00a72-3): reconstructed as real React,\n// NOT the Babel-in-browser JSX. Design tokens live in src/styles/mcorch/system.css.\nimport { Link } from 'react-router-dom';\nimport type { CSSProperties, ReactNode } from 'react';\n\n// The app login lives at /auth on this same host \u2014 the designer's placeholder\n// `https://login.mcorch.com` CTA resolves here (DEPLOY.md \u00a74 \"CTA a resolver\").\nconst APP_CTA = '/auth';\n\nexport const Wordmark = ({ size = 14 }: { size?: number }) => (\n  <div className=\"mc-wordmark\" style={{ fontSize: size }}>\n    M<span className=\"dot\">\u00b7</span>C<span className=\"dot\">\u00b7</span>O<span className=\"dot\">\u00b7</span>R\n    <span className=\"dot\">\u00b7</span>C<span className=\"dot\">\u00b7</span>H\n  </div>\n);\n\nexport const SigilMark = ({ size = 22 }: { size?: number }) => (\n  <svg width={size} height={size} viewBox=\"0 0 20 20\" style={{ filter: 'drop-shadow(0 0 6px rgba(0,242,255,0.55))' }}>\n    <circle cx=\"10\" cy=\"10\" r=\"2.6\" fill=\"#D4AF37\" />\n    <circle cx=\"10\" cy=\"10\" r=\"7.6\" stroke=\"#00F2FF\" strokeWidth=\"0.6\" fill=\"none\" />\n    <circle cx=\"17.6\" cy=\"10\" r=\"0.9\" fill=\"#00F2FF\" />\n    <circle cx=\"2.4\" cy=\"10\" r=\"0.9\" fill=\"#00F2FF\" />\n  </svg>\n);\n\ntype CtaProps = { children: ReactNode; variant?: 'primary' | 'ghost'; href?: string; style?: CSSProperties };\n\n// Anchors (#\u2026) scroll within the page; everything else routes to the app login.\nexport const Cta = ({ children, variant = 'primary', href = '#planos', style }: CtaProps) => {\n  const isAnchor = href.startsWith('#');\n  const cls = `lp-cta lp-cta-${variant}`;\n  const inner = (\n    <>\n      <span>{children}</span>\n      <span className=\"arrow\">\u2192</span>\n    </>\n  );\n  if (isAnchor) {\n    return (\n      <a href={href} className={cls} style={style}>\n        {inner}\n      </a>\n    );\n  }\n  return (\n    <Link to={APP_CTA} className={cls} style={style}>\n      {inner}\n    </Link>\n  );\n};\n\nexport const PillarIcon = ({ kind }: { kind: 'ceo' | 'pmo' | 'pmi' }) => {\n  if (kind === 'ceo')\n    return (\n      <svg viewBox=\"0 0 60 60\" width=\"56\" height=\"56\" fill=\"none\">\n        <circle cx=\"30\" cy=\"30\" r=\"22\" stroke=\"#00F2FF\" strokeWidth=\"0.8\" opacity=\"0.4\" />\n        <circle cx=\"30\" cy=\"30\" r=\"12\" stroke=\"#00F2FF\" strokeWidth=\"0.8\" opacity=\"0.7\" />\n        <circle cx=\"30\" cy=\"30\" r=\"4\" fill=\"#D4AF37\" />\n        <circle cx=\"52\" cy=\"30\" r=\"1.6\" fill=\"#00F2FF\" />\n        <circle cx=\"8\" cy=\"30\" r=\"1.6\" fill=\"#00F2FF\" />\n        <circle cx=\"42\" cy=\"12\" r=\"1.2\" fill=\"#D4AF37\" />\n      </svg>\n    );\n  if (kind === 'pmo')\n    return (\n      <svg viewBox=\"0 0 60 60\" width=\"56\" height=\"56\" fill=\"none\">\n        <g stroke=\"#00F2FF\" strokeWidth=\"0.7\" opacity=\"0.6\">\n          <line x1=\"10\" y1=\"10\" x2=\"50\" y2=\"30\" />\n          <line x1=\"10\" y1=\"30\" x2=\"50\" y2=\"10\" />\n          <line x1=\"10\" y1=\"50\" x2=\"50\" y2=\"30\" />\n          <line x1=\"10\" y1=\"30\" x2=\"50\" y2=\"50\" />\n          <line x1=\"10\" y1=\"10\" x2=\"10\" y2=\"50\" />\n          <line x1=\"50\" y1=\"10\" x2=\"50\" y2=\"50\" />\n        </g>\n        <circle cx=\"10\" cy=\"10\" r=\"2.4\" fill=\"#00F2FF\" />\n        <circle cx=\"50\" cy=\"10\" r=\"2.4\" fill=\"#00F2FF\" />\n        <circle cx=\"10\" cy=\"50\" r=\"2.4\" fill=\"#00F2FF\" />\n        <circle cx=\"50\" cy=\"50\" r=\"2.4\" fill=\"#00F2FF\" />\n        <circle cx=\"10\" cy=\"30\" r=\"2.4\" fill=\"#D4AF37\" />\n        <circle cx=\"50\" cy=\"30\" r=\"2.4\" fill=\"#D4AF37\" />\n      </svg>\n    );\n  return (\n    <svg viewBox=\"0 0 60 60\" width=\"56\" height=\"56\" fill=\"none\">\n      <path d=\"M 8 50 L 28 14 L 38 32 L 52 10\" stroke=\"#00F2FF\" strokeWidth=\"1.2\" fill=\"none\" />\n      <circle cx=\"28\" cy=\"14\" r=\"3\" fill=\"#D4AF37\" />\n      <circle cx=\"52\" cy=\"10\" r=\"2.4\" fill=\"#D4AF37\" />\n      <line x1=\"8\" y1=\"50\" x2=\"52\" y2=\"50\" stroke=\"#00F2FF\" strokeWidth=\"0.5\" opacity=\"0.4\" />\n      <line x1=\"8\" y1=\"50\" x2=\"8\" y2=\"8\" stroke=\"#00F2FF\" strokeWidth=\"0.5\" opacity=\"0.4\" />\n    </svg>\n  );\n};\n\n// On-brand animated hero backdrop \u2014 CSS/SVG approximation of the handoff's WebGL\n// sound-wave field (HeroThree). Faithful port of the Three.js scene is a follow-up\n// (OTD noted in HANDOFF); this keeps the hero alive and on-palette meanwhile.\nexport const HeroBackdrop = () => (\n  <div className=\"lp-hero-backdrop\" aria-hidden=\"true\">\n    <svg viewBox=\"0 0 1440 900\" preserveAspectRatio=\"xMidYMid slice\" width=\"100%\" height=\"100%\">\n      <defs>\n        <linearGradient id=\"mcw\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\">\n          <stop offset=\"0\" stopColor=\"rgba(0,242,255,0)\" />\n          <stop offset=\"0.5\" stopColor=\"rgba(0,242,255,0.5)\" />\n          <stop offset=\"1\" stopColor=\"rgba(77,0,255,0)\" />\n        </linearGradient>\n        <radialGradient id=\"mcglow\" cx=\"50%\" cy=\"46%\" r=\"60%\">\n          <stop offset=\"0\" stopColor=\"rgba(0,242,255,0.10)\" />\n          <stop offset=\"1\" stopColor=\"rgba(0,0,0,0)\" />\n        </radialGradient>\n      </defs>\n      <rect width=\"1440\" height=\"900\" fill=\"url(#mcglow)\" />\n      {Array.from({ length: 9 }).map((_, i) => (\n        <path\n          key={i}\n          className=\"lp-wave\"\n          style={{ animationDelay: `${i * -1.6}s`, opacity: 0.14 + i * 0.03 }}\n          d={`M -100 ${330 + i * 34} C 300 ${300 + i * 20}, 560 ${470 - i * 12}, 780 ${400 + i * 8} S 1240 ${300 + i * 22}, 1560 ${380 + i * 10}`}\n          fill=\"none\"\n          stroke=\"url(#mcw)\"\n          strokeWidth=\"1.1\"\n        />\n      ))}\n    </svg>\n  </div>\n);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/landing-v2/Brand.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:57:00)*
+
+
+## 🤖 Claude *(20:57:01)*
+
+Agora as seções (as 14 convertidas fielmente pra TSX, com contadores em valor final e CTAs via `Cta`):
+
+## 🤖 Claude *(20:59:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/landing-v2/LandingV2Sections.tsx",
+  "content": "// MCORCH Landing V2 \u2014 all sections, ported faithfully from\n// design_handoff_mcorch/landing-v2/{01,02,03}.jsx (2026-07-03) as real React.\n// Counters render their final values (no count-up dependency); scroll-scrub /\n// GSAP motion from the handoff is a progressive-enhancement follow-up.\nimport type { CSSProperties } from 'react';\nimport { Wordmark, SigilMark, Cta, PillarIcon, HeroBackdrop } from './Brand';\n\nconst card: CSSProperties = {\n  display: 'grid',\n  gridTemplateColumns: '120px 1fr',\n  gap: 24,\n  alignItems: 'baseline',\n  padding: '22px 26px',\n  borderRadius: 14,\n  border: '1px solid var(--silver-2)',\n  background: 'linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005))',\n};\n\n// ---------------------------------------------------------------- NAV\nexport const Nav = () => (\n  <header className=\"lp-nav\" id=\"lp-nav\">\n    <a href=\"#top\" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none' }}>\n      <SigilMark />\n      <Wordmark size={13} />\n    </a>\n    <nav className=\"links\">\n      <a href=\"#orquestra\">A Orquestra</a>\n      <a href=\"#como\">Como Funciona</a>\n      <a href=\"#paraquem\">Para Quem</a>\n      <a href=\"#planos\">Planos</a>\n      <a href=\"#faq\">FAQ</a>\n    </nav>\n    <Cta href=\"#planos\" variant=\"primary\">Ativar minha ag\u00eancia</Cta>\n  </header>\n);\n\n// ---------------------------------------------------------------- HERO\nexport const Hero = () => (\n  <section className=\"lp-hero\" id=\"top\">\n    <HeroBackdrop />\n    <div className=\"lp-hero-vignette\" />\n    <div className=\"lp-hero-inner\">\n      <div className=\"lp-eyebrow\" style={{ justifyContent: 'center', marginBottom: 28 }}>\n        A ag\u00eancia aut\u00f4noma \u00b7 Operada por IA \u00b7 Vol. I 2026\n      </div>\n\n      <h1>\n        <span className=\"word\"><span>A ag\u00eancia</span></span>{' '}\n        <span className=\"word\"><span><em className=\"mc-display-i mc-cyan\">inteira</em>.</span></span>\n        <br />\n        <span className=\"word\"><span>Dedicada</span></span>{' '}\n        <span className=\"word\"><span>a <em className=\"mc-display-i mc-gold\">voc\u00ea</em>.</span></span>\n      </h1>\n\n      <p className=\"sub\">\n        MCORCH coloca um <b style={{ color: 'var(--bone)' }}>CEO, um PMO e um PMI</b> \u2014 orquestrados por IA \u2014\n        100% dedicados \u00e0 sua opera\u00e7\u00e3o e integrados \u00e0s ferramentas que voc\u00ea j\u00e1 usa. Voc\u00ea cria e fecha neg\u00f3cio.\n        A orquestra cuida do resto.\n      </p>\n\n      <div className=\"cta-row\">\n        <Cta href=\"#planos\" variant=\"primary\">Ativar minha ag\u00eancia</Cta>\n        <Cta href=\"#orquestra\" variant=\"ghost\">Ver a orquestra</Cta>\n      </div>\n\n      <div className=\"trust\">\n        <span>\u25c6 <b>CEO \u00b7 PMO \u00b7 PMI</b> dedicados</span>\n        <span>\u25c6 Integra com <b>seu stack</b></span>\n        <span>\u25c6 Opera\u00e7\u00e3o <b>24/7</b></span>\n        <span>\u25c6 Setup em <b>1 sess\u00e3o</b></span>\n      </div>\n    </div>\n\n    <div className=\"lp-hero-scroll-hint\">\n      <span>Role para a orquestra</span>\n      <div className=\"line\" />\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- TRUST STRIP\nexport const TrustStrip = () => (\n  <div className=\"lp-trust-strip\">\n    <div className=\"item\"><span className=\"v cyan\">03</span><span>Executivos<br />dedicados</span></div>\n    <div className=\"item\"><span className=\"v\">+40</span><span>Ferramentas<br />integr\u00e1veis</span></div>\n    <div className=\"item\"><span className=\"v gold\">3.4\u00d7</span><span>Capacidade<br />de entrega</span></div>\n    <div className=\"item\"><span className=\"v\">24/7</span><span>Opera\u00e7\u00e3o<br />orquestrada</span></div>\n    <div className=\"item\"><span className=\"v cyan\">42 min</span><span>Setup<br />completo</span></div>\n  </div>\n);\n\n// ---------------------------------------------------------------- 01 PROBLEM\nexport const ProblemSection = () => (\n  <section className=\"lp-section\" id=\"sintoma\">\n    <span className=\"num\">01 / O GARGALO</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>01</div>\n\n    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center', marginTop: 40 }}>\n      <div>\n        <div className=\"lp-eyebrow lp-reveal\">O pre\u00e7o de fazer tudo sozinho</div>\n        <h2 className=\"lp-h1 lp-reveal\">\n          Voc\u00ea virou o<br />\n          <em className=\"mc-display-i mc-cyan\">gargalo</em> do<br />\n          pr\u00f3prio est\u00fadio.\n        </h2>\n        <p className=\"lp-lede lp-reveal\" style={{ marginBottom: 28 }}>\n          Todo briefing passa por voc\u00ea. Todo prazo depende de voc\u00ea. Cada ferramenta fala uma l\u00edngua\n          diferente e nenhuma conversa com a outra. Voc\u00ea abriu um est\u00fadio pra criar \u2014 e virou gerente de\n          projeto, atendimento e financeiro de voc\u00ea mesmo.\n        </p>\n        <p className=\"lp-lede lp-reveal\" style={{ color: 'var(--bone-3)' }}>\n          Enquanto isso, o trabalho que te trouxe at\u00e9 aqui \u2014 a cria\u00e7\u00e3o \u2014 fica pra depois. Esse \u00e9 o gargalo.\n        </p>\n      </div>\n\n      <div className=\"lp-reveal\" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>\n        {[\n          { v: '68%', l: 'Do dia gasto em coordena\u00e7\u00e3o, n\u00e3o em cria\u00e7\u00e3o', c: 'gold' },\n          { v: '5+', l: 'Ferramentas que n\u00e3o conversam entre si', c: 'cyan' },\n          { v: '0', l: 'Pessoas cuidando da opera\u00e7\u00e3o enquanto voc\u00ea cria', c: 'gold' },\n          { v: '\u221e', l: 'Mensagens de cliente que moram na sua cabe\u00e7a', c: 'cyan' },\n        ].map((row, i) => (\n          <div key={i} style={card}>\n            <span\n              className=\"mc-num\"\n              style={{\n                fontSize: 56,\n                lineHeight: 1,\n                color: row.c === 'gold' ? 'var(--gold)' : 'var(--cyan)',\n                fontStyle: row.c === 'gold' ? 'italic' : 'normal',\n              }}\n            >\n              {row.v}\n            </span>\n            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--bone-2)', letterSpacing: '0.04em', lineHeight: 1.5 }}>\n              {row.l}\n            </span>\n          </div>\n        ))}\n      </div>\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- 02 AUDIENCE\nexport const AudienceSection = () => (\n  <section className=\"lp-section\" id=\"paraquem\" style={{ borderTop: '1px solid var(--silver-2)' }}>\n    <span className=\"num\">02 / PARA QUEM</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>02</div>\n\n    <div style={{ maxWidth: 920, marginBottom: 64, marginTop: 40 }}>\n      <div className=\"lp-eyebrow lp-reveal\">Feito para quem vive de entregar</div>\n      <h2 className=\"lp-h2 lp-reveal\">\n        A opera\u00e7\u00e3o por tr\u00e1s<br />\n        de cada <em className=\"mc-display-i mc-cyan\">entrega</em>.\n      </h2>\n      <p className=\"lp-lede lp-reveal\">\n        Se o seu trabalho \u00e9 criativo e a sua rotina virou gest\u00e3o, a orquestra \u00e9 pra voc\u00ea. Ela assume a\n        opera\u00e7\u00e3o de quem entrega \u2014 e devolve o foco \u00e0 cria\u00e7\u00e3o.\n      </p>\n    </div>\n\n    <div className=\"lp-pillars\">\n      {[\n        { k: 'Est\u00fadios de design', d: 'Briefings, vers\u00f5es e aprova\u00e7\u00f5es orquestrados. Mais projetos entregues sem voc\u00ea virar gerente.' },\n        { k: 'Video makers', d: 'Da pauta ao render: roteiro, cronograma e entregas no prazo, sincronizados ao seu editor.' },\n        { k: 'Social media', d: 'Calend\u00e1rio, aprova\u00e7\u00e3o e publica\u00e7\u00e3o em fluxo. O ritmo \u00e9 do PMO; a integra\u00e7\u00e3o \u00e9 do PMI.' },\n        { k: 'Copywriters', d: 'Pautas, revis\u00f5es e versionamento sob controle. Cada pe\u00e7a no tom, no prazo e no lugar.' },\n        { k: 'Web designers', d: 'Escopo, sprint e handoff de dev orquestrados. Menos retrabalho, mais sites no ar.' },\n        { k: 'Tr\u00e1fego \u00b7 Google & Meta Ads', d: 'Verba, criativos e relat\u00f3rios acompanhados de perto. O CEO l\u00ea o ROI; o PMI ajusta a campanha.' },\n      ].map((a, i) => (\n        <div key={i} className=\"lp-pillar lp-reveal\" style={{ padding: '26px 24px 28px' }}>\n          <div className=\"pill-num\" style={{ marginBottom: 14 }}>\u25c6 Vertical {String(i + 1).padStart(2, '0')}</div>\n          <h3 className=\"lp-h3\" style={{ fontSize: 22, marginBottom: 10 }}>{a.k}</h3>\n          <p style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.65, color: 'var(--bone-2)', margin: 0 }}>{a.d}</p>\n        </div>\n      ))}\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- 03 SOLUTION\nexport const SolutionSection = () => (\n  <section className=\"lp-section\" id=\"orquestra\">\n    <span className=\"num\">03 / A ORQUESTRA</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>03</div>\n\n    <div style={{ maxWidth: 960, marginBottom: 80 }}>\n      <div className=\"lp-eyebrow lp-reveal\">A ag\u00eancia que trabalha por dentro</div>\n      <h2 className=\"lp-h1 lp-reveal\">\n        N\u00e3o \u00e9 um app.<br />\n        \u00c9 a sua <em className=\"mc-display-i mc-cyan\">ag\u00eancia</em><br />\n        operando <em className=\"mc-display-i mc-gold\">sozinha</em>.\n      </h2>\n      <p className=\"lp-lede lp-reveal\">\n        Tr\u00eas executivos orquestrados por IA, 100% dedicados \u00e0 sua opera\u00e7\u00e3o e integrados ao seu ecossistema.\n        Voc\u00ea n\u00e3o contrata uma equipe \u2014 voc\u00ea ativa uma ag\u00eancia inteira.\n      </p>\n    </div>\n\n    <div className=\"lp-pillars\">\n      {[\n        {\n          n: '\u00a701', icon: 'ceo' as const, title: 'CEO', role: 'Dire\u00e7\u00e3o',\n          body: 'L\u00ea a sua opera\u00e7\u00e3o inteira, define prioridades e toma as decis\u00f5es de rumo. Protege a sua margem, distribui a energia da equipe e diz n\u00e3o pelo que n\u00e3o vale a pena.',\n          stamp: 'Dire\u00e7\u00e3o \u00b7 Sempre on',\n        },\n        {\n          n: '\u00a702', icon: 'pmo' as const, title: 'PMO', role: 'Orquestra\u00e7\u00e3o',\n          body: 'O escrit\u00f3rio de projetos que nunca perde um prazo nem um briefing. Planeja, aloca, acompanha cada cliente e garante o padr\u00e3o de entrega \u2014 projeto por projeto.',\n          stamp: 'Orquestra\u00e7\u00e3o \u00b7 Zero atraso',\n        },\n        {\n          n: '\u00a703', icon: 'pmi' as const, title: 'PMI', role: 'Integra\u00e7\u00e3o',\n          body: 'Executa o dia a dia e conecta tudo ao seu ecossistema: Figma, Drive, Notion, editor de v\u00eddeo, Meta e Google Ads, CRM, WhatsApp. Nada solto \u2014 tudo no lugar certo.',\n          stamp: 'Integra\u00e7\u00e3o \u00b7 Seu stack',\n        },\n      ].map((p, i) => (\n        <div key={i} className=\"lp-pillar lp-reveal\">\n          <div className=\"pill-num\">{p.n} \u00b7 {p.role}</div>\n          <div className=\"pill-icon\"><PillarIcon kind={p.icon} /></div>\n          <h3 className=\"lp-h3\" style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>\n            {p.title}\n            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--bone-3)' }}>{p.role}</span>\n          </h3>\n          <p style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.7, color: 'var(--bone-2)', margin: '0 0 24px' }}>{p.body}</p>\n          <div\n            style={{\n              paddingTop: 18,\n              borderTop: '1px solid var(--silver-2)',\n              display: 'flex',\n              justifyContent: 'space-between',\n              fontFamily: 'var(--mono)',\n              fontSize: 9,\n              letterSpacing: '0.22em',\n              textTransform: 'uppercase',\n              color: 'var(--bone-3)',\n            }}\n          >\n            <span>{p.stamp}</span>\n            <span className=\"mc-cyan\">\u25c6 100% dedicado</span>\n          </div>\n        </div>\n      ))}\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- 04 HOW\nexport const HowSection = () => (\n  <section className=\"lp-section\" id=\"como\">\n    <span className=\"num\">04 / ATIVA\u00c7\u00c3O</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>04</div>\n\n    <div style={{ maxWidth: 920, marginBottom: 80 }}>\n      <div className=\"lp-eyebrow lp-reveal\">Como funciona</div>\n      <h2 className=\"lp-h2 lp-reveal\">\n        Da <em className=\"mc-display-i mc-cyan\">ativa\u00e7\u00e3o</em> \u00e0 opera\u00e7\u00e3o aut\u00f4noma,<br />\n        em <em className=\"mc-display-i mc-gold\">42 minutos</em>.\n      </h2>\n      <p className=\"lp-lede lp-reveal\">\n        Uma ativa\u00e7\u00e3o guiada. Quatro fases. Nenhuma delas pede que voc\u00ea vire especialista em nada.\n      </p>\n    </div>\n\n    <div className=\"lp-steps\">\n      {[\n        { ph: 'Fase 01', title: 'Diagn\u00f3stico', body: 'Voc\u00ea responde 12 perguntas sobre seu est\u00fadio, seus servi\u00e7os e seus clientes. O CEO calibra prioridades; o PMO mapeia como voc\u00ea trabalha hoje.' },\n        { ph: 'Fase 02', title: 'Integra\u00e7\u00e3o', body: 'Conectamos as ferramentas que voc\u00ea j\u00e1 usa \u2014 design, v\u00eddeo, social, tr\u00e1fego, CRM. 42 minutos, uma \u00fanica sess\u00e3o. Sem c\u00f3digo, sem configura\u00e7\u00e3o manual.' },\n        { ph: 'Fase 03', title: 'Modo Sombra', body: 'A orquestra opera em sombra por 7 dias. Voc\u00ea v\u00ea cada decis\u00e3o, cada briefing e cada entrega que ela faria \u2014 sem ainda perder o controle.' },\n        { ph: 'Fase 04', title: 'Aut\u00f4nomo', body: 'Voc\u00ea aprova. A ag\u00eancia assume a opera\u00e7\u00e3o. A partir daqui sua fun\u00e7\u00e3o volta a ser uma s\u00f3: criar e fechar neg\u00f3cio.' },\n      ].map((s, i) => (\n        <div key={i} className=\"lp-step lp-reveal\">\n          <div className=\"knot\" />\n          <div className=\"ph\">{s.ph}</div>\n          <h3 className=\"lp-h3\" style={{ fontSize: 26 }}>{s.title}</h3>\n          <p style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.7, color: 'var(--bone-2)', margin: 0 }}>{s.body}</p>\n        </div>\n      ))}\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- 05 DEMO\nexport const DemoSection = () => (\n  <section className=\"lp-section\" id=\"demo\" style={{ borderTop: '1px solid var(--silver-2)' }}>\n    <span className=\"num\">05 / UM DIA</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>05</div>\n\n    <div className=\"lp-demo-grid\" style={{ marginTop: 40 }}>\n      <div className=\"lp-reveal\">\n        <div className=\"lp-eyebrow\">Live \u00b7 Orquestra ativa</div>\n        <h2 className=\"lp-h2\">\n          Uma ter\u00e7a-feira<br />operada <em className=\"mc-display-i mc-cyan\">sozinha</em>.\n        </h2>\n        <p className=\"lp-lede\" style={{ marginBottom: 32 }}>\n          Um recorte do dia da sua ag\u00eancia sem voc\u00ea no meio. O CEO prioriza, o PMO orquestra, o PMI executa e\n          integra. Tr\u00eas clientes atendidos, uma campanha reajustada, zero prazo perdido. Voc\u00ea criou. A opera\u00e7\u00e3o\n          andou.\n        </p>\n        <Cta href=\"#planos\">Ativar minha ag\u00eancia</Cta>\n      </div>\n\n      <div className=\"lp-term lp-reveal\">\n        <div className=\"head\">\n          <span className=\"dot\" style={{ background: '#ff5f57' }} />\n          <span className=\"dot\" style={{ background: '#febc2e' }} />\n          <span className=\"dot\" style={{ background: '#28c840' }} />\n          <span className=\"label\">mcorch \u00b7 orquestra \u00b7 live</span>\n        </div>\n        <div><span className=\"fg\">\u203a 09:14</span> <span className=\"pr\">ceo</span> \u00b7 prioridade <span className=\"fg\">\u2192</span> <span className=\"gl\">campanha Zaffari</span> \u00b7 deadline 48h</div>\n        <div><span className=\"fg\">\u203a 09:14</span> <span className=\"pr\">pmo</span> \u00b7 aloca \u00b7 briefing gerado <span className=\"fg\">\u2192</span> time de design</div>\n        <div><span className=\"fg\">\u203a 09:15</span> <span className=\"pr\">pmi</span> \u00b7 sincroniza <span className=\"nb\">Figma \u2194 Drive \u2194 Notion</span> <span className=\"ok\">ok</span></div>\n        <div><span className=\"fg\">\u203a 11:02</span> <span className=\"pr\">pmi</span> \u00b7 Meta Ads \u00b7 verba realocada p/ criativo #4 <span className=\"ok\">CTR 3.1%</span></div>\n        <div><span className=\"fg\">\u203a 11:03</span> <span className=\"pr\">pmo</span> \u00b7 QA \u00b7 pe\u00e7a revisada \u00b7 dentro do padr\u00e3o <span className=\"ok\">\u2713</span></div>\n        <div><span className=\"fg\">\u203a 14:20</span> <span className=\"pr\">ceo</span> \u00b7 margem do projeto projetada <span className=\"gl\">38%</span></div>\n        <div><span className=\"fg\">\u203a 14:21</span> <span className=\"pr\">pmi</span> \u00b7 entrega enviada ao cliente via WhatsApp <span className=\"ok\">ok</span></div>\n        <div><span className=\"fg\">\u203a 18:40</span> <span className=\"pr\">pmo</span> \u00b7 amanh\u00e3 \u00b7 3 entregas agendadas \u00b7 0 conflitos<span className=\"mc-caret\" /></div>\n      </div>\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- 06 RESULTS\nexport const ResultsSection = () => (\n  <section className=\"lp-section\" id=\"provas\" style={{ paddingTop: 60 }}>\n    <span className=\"num\">06 / EVID\u00caNCIA</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>06</div>\n\n    <div style={{ maxWidth: 920, marginBottom: 60, marginTop: 40 }}>\n      <div className=\"lp-eyebrow lp-reveal\">Proje\u00e7\u00f5es \u00b7 cohort piloto Vol. I</div>\n      <h2 className=\"lp-h2 lp-reveal\">\n        O que muda quando<br />\n        a opera\u00e7\u00e3o <em className=\"mc-display-i mc-gold\">sai das suas costas</em>.\n      </h2>\n    </div>\n\n    <div className=\"lp-results lp-reveal\">\n      <div className=\"cell gold\"><div className=\"v\">3.4\u00d7</div><div className=\"l\">Capacidade de entrega \u00b7 90 dias</div></div>\n      <div className=\"cell cyan\"><div className=\"v\">2.4k</div><div className=\"l\">Tarefas orquestradas / m\u00eas</div></div>\n      <div className=\"cell\"><div className=\"v\">\u221268%</div><div className=\"l\">Horas em coordena\u00e7\u00e3o</div></div>\n      <div className=\"cell gold\"><div className=\"v\">99.9%</div><div className=\"l\">Uptime da opera\u00e7\u00e3o</div></div>\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- OFFER (vision + plans)\nexport const ChampionshipOffer = () => (\n  <section id=\"oferta\" style={{ position: 'relative', borderTop: '1px solid var(--silver-2)' }}>\n    <div className=\"lp-vision\" id=\"lp-vision\">\n      <div className=\"lp-vision-pin\">\n        <div className=\"lp-vision-ambient\" />\n        <div className=\"lp-vision-stage\">\n          <div className=\"lp-eyebrow\" style={{ justifyContent: 'center', color: 'var(--gold)', marginBottom: 36 }}>\n            \u25c6 A vis\u00e3o \u00b7 Vol. I \u00b7 2026\n          </div>\n\n          <div className=\"lp-vision-acts\">\n            <h3 className=\"lp-vision-act\" data-vision-act=\"0\">\n              Imagine seu est\u00fadio entregando o dobro\u2014<br />\n              sem voc\u00ea virar gerente de projeto,<br />\n              atendimento e financeiro <em className=\"mc-display-i mc-cyan\">ao mesmo tempo</em>.\n            </h3>\n            <h3 className=\"lp-vision-act\" data-vision-act=\"1\">\n              Imagine um <em className=\"mc-display-i mc-gold\">CEO</em>, um <em className=\"mc-display-i mc-gold\">PMO</em> e um{' '}\n              <em className=\"mc-display-i mc-gold\">PMI</em><br />\n              cuidando da opera\u00e7\u00e3o enquanto voc\u00ea cria.<br />\n              Cada prazo, cada briefing, cada ferramenta \u2014 <em className=\"mc-display-i mc-cyan\">no lugar</em>.\n            </h3>\n            <h3 className=\"lp-vision-act\" data-vision-act=\"2\">\n              Essa \u00e9 a ag\u00eancia que trabalha por dentro.<br />\n              <em className=\"mc-display-i mc-gold\">MCORCH</em> \u00e9 o primeiro corte dela.\n            </h3>\n          </div>\n\n          <div className=\"lp-vision-floor\">\n            <div className=\"lp-vision-progress\">\n              <span className=\"dot\" data-dot=\"0\" />\n              <span className=\"bar\" />\n              <span className=\"dot\" data-dot=\"1\" />\n              <span className=\"bar\" />\n              <span className=\"dot\" data-dot=\"2\" />\n            </div>\n          </div>\n        </div>\n      </div>\n    </div>\n\n    <div className=\"lp-marquee-wrap\">\n      <div className=\"lp-marquee\" id=\"offer-marquee\">\n        <span>A ag\u00eancia inteira</span><em>\u00b7</em><span>CEO \u00b7 PMO \u00b7 PMI</span><em>\u00b7</em>\n        <span>Dedicada 100%</span><em>\u00b7</em><span>Integrada ao seu stack</span><em>\u00b7</em>\n        <span>Vol. I \u00b7 2026</span><em>\u00b7</em>\n        <span>A ag\u00eancia inteira</span><em>\u00b7</em><span>CEO \u00b7 PMO \u00b7 PMI</span><em>\u00b7</em>\n        <span>Dedicada 100%</span><em>\u00b7</em><span>Integrada ao seu stack</span><em>\u00b7</em>\n        <span>Vol. I \u00b7 2026</span><em>\u00b7</em>\n      </div>\n    </div>\n\n    <div className=\"lp-offer-stage\" id=\"planos\">\n      <span\n        className=\"num\"\n        style={{ position: 'absolute', top: 60, left: '8vw', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.32em', color: 'var(--bone-3)' }}\n      >\n        07 / PLANOS\n      </span>\n\n      <div className=\"lp-offer-hd lp-reveal\">\n        <h2 className=\"lp-h2\">\n          A orquestra<br />\n          tem <em className=\"mc-display-i mc-cyan\">tr\u00eas</em> profundidades.\n        </h2>\n        <p className=\"lp-lede\" style={{ marginTop: 18 }}>\n          Voc\u00ea n\u00e3o contrata uma equipe. Voc\u00ea ativa uma ag\u00eancia.<br />\n          Cada plano \u00e9 uma profundidade de opera\u00e7\u00e3o. Comece onde faz sentido \u2014 a orquestra escala com voc\u00ea.\n        </p>\n      </div>\n\n      <div className=\"lp-scarcity lp-reveal\">\n        <div className=\"lp-scarcity-row\">\n          <span className=\"dot mc-pulse\" />\n          <span className=\"lbl\">Cohort Vol. I \u00b7 Q1 2026</span>\n          <span className=\"sep\">\u00b7</span>\n          <span className=\"count\">17<span className=\"of\">/24</span> vagas tomadas</span>\n        </div>\n        <div className=\"lp-scarcity-bar\"><div className=\"fill\" style={{ width: '71%' }} /></div>\n      </div>\n\n      <div className=\"lp-pricing\">\n        <div className=\"lp-plan lp-reveal\">\n          <div className=\"tier\">\u00a7 Plano 01</div>\n          <h3 className=\"name\">Signal</h3>\n          <div className=\"price\"><span className=\"ccy\">R$</span>1.497<span className=\"per\">/ m\u00eas \u00b7 cancele quando quiser</span></div>\n          <ul>\n            <li>PMO + PMI essenciais \u00b7 orquestra\u00e7\u00e3o base</li>\n            <li>At\u00e9 10 integra\u00e7\u00f5es do seu stack</li>\n            <li>Onboarding em grupo \u00b7 sess\u00f5es quinzenais</li>\n            <li>Painel de opera\u00e7\u00e3o</li>\n            <li>Suporte por e-mail \u00b7 48h</li>\n            <li className=\"muted\">CEO dedicado</li>\n            <li className=\"muted\">QA automatizado de entregas</li>\n          </ul>\n          <div className=\"price-foot\"><Cta variant=\"ghost\">Ativar Signal</Cta></div>\n        </div>\n\n        <div className=\"lp-plan is-featured lp-reveal\">\n          <div className=\"badge\">A ag\u00eancia inteira</div>\n          <div className=\"tier mc-cyan\">\u00a7 Plano 02</div>\n          <h3 className=\"name\">Harness</h3>\n          <div className=\"price\"><span className=\"ccy\">R$</span>4.997<span className=\"per\">/ m\u00eas \u00b7 ciclo trimestral</span></div>\n          <ul>\n            <li><b>CEO + PMO + PMI \u00b7 100% dedicados</b></li>\n            <li>Integra\u00e7\u00e3o total ao seu ecossistema \u00b7 +40 ferramentas</li>\n            <li>Setup 1:1 \u00b7 42 min com a equipe</li>\n            <li>QA de entregas + relat\u00f3rio semanal de ROI</li>\n            <li>Suporte WhatsApp \u00b7 resposta em 4h</li>\n            <li>Acesso ao MIV completo \u00b7 Vol. I</li>\n          </ul>\n          <div className=\"price-foot\"><Cta variant=\"primary\">Ativar Harness</Cta></div>\n        </div>\n\n        <div className=\"lp-plan lp-reveal\">\n          <div className=\"tier mc-gold\">\u00a7 Plano 03</div>\n          <h3 className=\"name\">Sovereign</h3>\n          <div className=\"price\"><span className=\"ccy\">R$</span>14.997<span className=\"per\">/ m\u00eas \u00b7 sob convite</span></div>\n          <ul>\n            <li>Tudo de Harness, sem teto</li>\n            <li>Orquestra dedicada \u00b7 agentes privados</li>\n            <li>Integra\u00e7\u00f5es sob medida \u00b7 at\u00e9 7 exclusivas</li>\n            <li>Gerente de conta humano \u00b7 SLA &lt; 1h</li>\n            <li>Revis\u00e3o estrat\u00e9gica mensal 1:1</li>\n            <li>Roadmap de produto co-criado</li>\n          </ul>\n          <div className=\"price-foot\"><Cta variant=\"ghost\">Solicitar convite</Cta></div>\n        </div>\n      </div>\n\n      <div className=\"lp-offer-close lp-reveal\">\n        <div className=\"lp-offer-stack\">\n          <div className=\"stack-row\"><span className=\"k\">\u25c6 Garantia</span><span className=\"v\">14 dias incondicionais \u00b7 sem call de reten\u00e7\u00e3o</span></div>\n          <div className=\"stack-row\"><span className=\"k\">\u25c6 Setup</span><span className=\"v\">42 minutos \u00b7 uma \u00fanica sess\u00e3o de integra\u00e7\u00e3o</span></div>\n          <div className=\"stack-row\"><span className=\"k\">\u25c6 Cohort</span><span className=\"v\"><b className=\"mc-cyan\">17/24</b> vagas tomadas \u00b7 fechamento em janeiro</span></div>\n          <div className=\"stack-row\"><span className=\"k\">\u25c6 Acesso</span><span className=\"v\">Vol. I \u00b7 primeiro corte p\u00fablico da ag\u00eancia aut\u00f4noma</span></div>\n        </div>\n\n        <div className=\"lp-offer-finale\">\n          <p style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--bone-3)', marginBottom: 22 }}>\n            Uma ag\u00eancia. N\u00e3o mais uma ferramenta.\n          </p>\n          <h3 style={{ fontFamily: 'var(--display)', fontSize: 'clamp(36px, 5vw, 64px)', lineHeight: 1, letterSpacing: '-0.02em', margin: '0 0 32px' }}>\n            Sua ag\u00eancia,<br />\n            <em className=\"mc-display-i mc-cyan\">dedicada</em> e <em className=\"mc-display-i mc-gold\">integrada</em>.\n          </h3>\n          <Cta variant=\"primary\">Ativar minha ag\u00eancia</Cta>\n        </div>\n      </div>\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- GUARANTEE\nexport const GuaranteeSection = () => (\n  <section className=\"lp-section\">\n    <div className=\"lp-guarantee lp-reveal\">\n      <div className=\"seal\">14d</div>\n      <div>\n        <div className=\"lp-eyebrow\" style={{ marginBottom: 16, color: 'var(--gold)' }}>Garantia \u00b7 Risco reverso</div>\n        <h3 className=\"lp-h3\" style={{ fontSize: 32, marginBottom: 14 }}>\n          14 dias para ver a opera\u00e7\u00e3o rodar sozinha.<br />\n          Se n\u00e3o vier, devolvemos tudo.\n        </h3>\n        <p style={{ fontFamily: 'var(--mono)', fontSize: 13, lineHeight: 1.75, color: 'var(--bone-2)', margin: 0, maxWidth: '72ch' }}>\n          A primeira coisa que a gente entrega n\u00e3o \u00e9 receita \u2014 \u00e9 opera\u00e7\u00e3o no lugar. Em 14 dias, se os seus\n          prazos ainda dependem de voc\u00ea e as suas ferramentas continuam desconectadas, o reembolso \u00e9\n          incondicional. Sem call de reten\u00e7\u00e3o. Sem desculpa.\n        </p>\n      </div>\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- 08 FAQ\nexport const FAQSection = () => (\n  <section className=\"lp-section\" id=\"faq\">\n    <span className=\"num\">08 / D\u00daVIDAS</span>\n    <div className=\"lp-bignum\" style={{ right: '8vw', top: '40px' }}>08</div>\n\n    <div style={{ maxWidth: 920, marginBottom: 50, marginTop: 40 }}>\n      <div className=\"lp-eyebrow lp-reveal\">Perguntas honestas</div>\n      <h2 className=\"lp-h2 lp-reveal\">\n        O que voc\u00ea ainda<br />\n        <em className=\"mc-display-i mc-cyan\">precisa saber</em>.\n      </h2>\n    </div>\n\n    <div className=\"lp-faq lp-reveal\">\n      {[\n        { q: 'O MCORCH substitui a minha equipe?', a: 'N\u00e3o. Ele substitui a opera\u00e7\u00e3o que sobra pra voc\u00ea \u2014 a gest\u00e3o, a coordena\u00e7\u00e3o, a integra\u00e7\u00e3o de ferramentas. Sua equipe criativa fica livre pra criar; o CEO, o PMO e o PMI cuidam de tudo que n\u00e3o \u00e9 cria\u00e7\u00e3o.' },\n        { q: 'Preciso saber configurar ferramentas ou mexer em c\u00f3digo?', a: 'N\u00e3o. Em uma sess\u00e3o de 42 minutos conectamos seu Figma, Drive, editor de v\u00eddeo, Meta e Google Ads, CRM e WhatsApp. A partir da\u00ed a orquestra opera integrada ao que voc\u00ea j\u00e1 usa.' },\n        { q: 'Serve pro meu tipo de trabalho?', a: 'Funciona para est\u00fadios de design, video makers, social media, copywriters, web designers e gestores de tr\u00e1fego. Se a opera\u00e7\u00e3o ainda depende de voc\u00ea para andar, \u00e9 exatamente pra voc\u00ea.' },\n        { q: 'Em quanto tempo eu sinto diferen\u00e7a?', a: '7 dias de modo sombra j\u00e1 mostram a opera\u00e7\u00e3o rodando. Em 30 dias, cai a carga de coordena\u00e7\u00e3o. Em 90 dias, a meta documentada \u00e9 3.4\u00d7 de capacidade de entrega \u2014 sem aumentar a equipe.' },\n        { q: 'Ele publica post e roda an\u00fancio sozinho?', a: 'Com a sua aprova\u00e7\u00e3o. O PMI executa e integra, o PMO garante o padr\u00e3o, o CEO decide a prioridade. Voc\u00ea define o n\u00edvel de autonomia \u2014 de \"s\u00f3 sugere\" a \"executa e me avisa\".' },\n        { q: 'Como ficam meus dados e acessos?', a: 'Cada opera\u00e7\u00e3o \u00e9 isolada e criptografada. Voc\u00ea concede e revoga acessos quando quiser, e v\u00ea cada a\u00e7\u00e3o registrada. Nada \u00e9 feito \u00e0s escondidas.' },\n        { q: 'O Vol. I \u00e9 o lan\u00e7amento. Vai mudar depois?', a: 'Sim. Vol. I \u00e9 o primeiro corte p\u00fablico. Quem entra agora opera com tarifa de funda\u00e7\u00e3o e recebe as pr\u00f3ximas vers\u00f5es da arquitetura. As vagas deste cohort s\u00e3o limitadas a 24.' },\n      ].map((item, i) => (\n        <details key={i}>\n          <summary>\n            <span>{item.q}</span>\n            <span className=\"sign\">+</span>\n          </summary>\n          <div className=\"a\">{item.a}</div>\n        </details>\n      ))}\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- FINAL CTA\nexport const FinalCTA = () => (\n  <section className=\"lp-final\" id=\"acessar\">\n    <div style={{ position: 'relative', zIndex: 2 }}>\n      <div className=\"lp-eyebrow lp-reveal\" style={{ justifyContent: 'center', color: 'var(--cyan)' }}>\n        \u25c6 Vol. I \u00b7 Ativa\u00e7\u00e3o 2026\n      </div>\n      <h2 className=\"lp-reveal\">\n        <span className=\"cyan\">Pare</span> de ser o gargalo.<br />\n        <span className=\"gold\">Ative</span> a ag\u00eancia.\n      </h2>\n      <p className=\"lp-lede lp-reveal\" style={{ margin: '0 auto 44px', maxWidth: 620, textAlign: 'center' }}>\n        Sua pr\u00f3xima entrega n\u00e3o precisa passar por voc\u00ea.<br />\n        Precisa passar pela orquestra.\n      </p>\n      <div className=\"lp-reveal\" style={{ display: 'inline-flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>\n        <Cta variant=\"primary\">Ativar minha ag\u00eancia</Cta>\n        <Cta href=\"#planos\" variant=\"ghost\">Ver os planos</Cta>\n      </div>\n      <div className=\"meta lp-reveal\">\n        <span><b>14 dias</b> de garantia</span>\n        <span><b>42 min</b> de setup</span>\n        <span><b>17/24</b> vagas tomadas</span>\n        <span><b>Q1 2026</b> \u00b7 Vol. I</span>\n      </div>\n    </div>\n  </section>\n);\n\n// ---------------------------------------------------------------- FOOTER\nexport const LandingFooter = () => (\n  <footer className=\"lp-footer\">\n    <div className=\"row\">\n      <div style={{ maxWidth: 340 }}>\n        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>\n          <SigilMark size={22} />\n          <Wordmark size={12} />\n        </div>\n        <p style={{ fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.7, color: 'var(--bone-3)', margin: 0 }}>\n          Magic Constellation Orchestra \u00b7 A ag\u00eancia aut\u00f4noma.<br />\n          Um CEO, um PMO e um PMI dedicados e integrados ao seu ecossistema.\n        </p>\n      </div>\n\n      <div className=\"col\">\n        <h5>A Orquestra</h5>\n        <a href=\"#orquestra\">CEO \u00b7 PMO \u00b7 PMI</a>\n        <a href=\"#como\">Como Funciona</a>\n        <a href=\"#demo\">Um Dia</a>\n        <a href=\"#provas\">Evid\u00eancia</a>\n      </div>\n      <div className=\"col\">\n        <h5>Ativar</h5>\n        <a href=\"#planos\">Planos</a>\n        <Link to=\"/auth\">Ativa\u00e7\u00e3o</Link>\n        <a href=\"#faq\">FAQ</a>\n        <Link to=\"/auth\">Login</Link>\n      </div>\n      <div className=\"col\">\n        <h5>Contato</h5>\n        <a href=\"mailto:contato@mcorch.com\">contato@mcorch.com</a>\n        <a href=\"#\">WhatsApp</a>\n        <Link to=\"/terms\">Termos</Link>\n        <Link to=\"/privacy\">Privacidade</Link>\n      </div>\n    </div>\n    <div className=\"bottom\">\n      <span>\u00a9 2026 MCORCH \u00b7 A ag\u00eancia aut\u00f4noma</span>\n      <span>\u25c6 Vol. I \u00b7 MIV-001 \u00b7 2026.01</span>\n    </div>\n  </footer>\n);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/landing-v2/LandingV2Sections.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:59:09)*
+
+
+## 🤖 Claude *(20:59:09)*
+
+Preciso adicionar o import de `Link` no arquivo de seções (usei no footer). Corrigindo:
+
+## 🤖 Claude *(20:59:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/landing-v2/LandingV2Sections.tsx",
+  "old_string": "import type { CSSProperties } from 'react';\nimport { Wordmark, SigilMark, Cta, PillarIcon, HeroBackdrop } from './Brand';",
+  "new_string": "import type { CSSProperties } from 'react';\nimport { Link } from 'react-router-dom';\nimport { Wordmark, SigilMark, Cta, PillarIcon, HeroBackdrop } from './Brand';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/landing-v2/LandingV2Sections.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:59:14)*
+
+
+## 🤖 Claude *(20:59:14)*
+
+Agora verifico as rotas existentes (/terms, /privacy, / e como a landing é montada) no App.tsx:
+
+## 🤖 Claude *(20:59:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"path=|Landing|lazy\\(|element=|Route\" src/App.tsx | grep -iE \"landing|privacy|terms|path=\\\"/\\\"|path='/'|auth\" | head -20\necho \"--- reveal hook existing? ---\"; ls src/hooks/ | grep -iE \"reveal|inview|intersect\" || echo \"no reveal hook\"",
+  "description": "Check landing/privacy/terms routes in App.tsx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 14:const Landing = lazy(() => import("./pages/Landing.tsx"));
+> 15:const Auth = lazy(() => import("./pages/Auth.tsx"));
+> 41:const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+> 42:const TermsOfService = lazy(() => import("./pages/TermsOfService.tsx"));
+> 97:              <Route path="/" element={<Landing />} />
+> 148:              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> 150:              <Route path="/privacy" element={<PrivacyPolicy />} />
+> 151:              <Route path="/terms" element={<TermsOfService />} />
+> --- reveal hook existing? ---
+> no reveal hook
+> ```
+
+## 🤖 Claude *(20:59:37)*
+
+
+## 🤖 Claude *(20:59:39)*
+
+Rotas `/privacy` e `/terms` existem (bom pro TikTok também). Agora a página que compõe tudo, com SEO da marca nova + um pequeno efeito de nav-stuck. Sem JS de reveal na v1 (conteúdo 100% visível, sem risco de tela invisível — motion fica pra polish):
+
+## 🤖 Claude *(20:59:52)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/LandingV2.tsx",
+  "content": "// MCORCH Landing V2 \u2014 the rebrand landing (design_handoff_mcorch, 2026-07-03).\n// Rendered under the scoped `.mcorch-lp` wrapper so the brand CSS never leaks into\n// the app shell. Preview route: /lp (swap `/` on Sovereign GO).\nimport { useEffect } from 'react';\nimport { Helmet } from 'react-helmet-async';\nimport '@/styles/mcorch/system.css';\nimport '@/styles/mcorch/landing.css';\nimport {\n  Nav,\n  Hero,\n  TrustStrip,\n  ProblemSection,\n  AudienceSection,\n  SolutionSection,\n  HowSection,\n  DemoSection,\n  ResultsSection,\n  ChampionshipOffer,\n  GuaranteeSection,\n  FAQSection,\n  FinalCTA,\n  LandingFooter,\n} from '@/components/landing-v2/LandingV2Sections';\n\nexport default function LandingV2() {\n  // Sticky-nav glass: toggle `.is-stuck` past the fold (progressive enhancement \u2014\n  // the nav is fully usable without it).\n  useEffect(() => {\n    const nav = document.getElementById('lp-nav');\n    if (!nav) return;\n    const onScroll = () => nav.classList.toggle('is-stuck', window.scrollY > 40);\n    onScroll();\n    window.addEventListener('scroll', onScroll, { passive: true });\n    return () => window.removeEventListener('scroll', onScroll);\n  }, []);\n\n  const jsonLd = {\n    '@context': 'https://schema.org',\n    '@type': 'SoftwareApplication',\n    name: 'MCORCH \u2014 A ag\u00eancia aut\u00f4noma',\n    applicationCategory: 'BusinessApplication',\n    operatingSystem: 'Web',\n    description:\n      'MCORCH ativa uma ag\u00eancia inteira operada por IA \u2014 um CEO, um PMO e um PMI dedicados e integrados ao seu ecossistema. Para est\u00fadios de design, video makers, social media, copy, web e tr\u00e1fego.',\n    offers: {\n      '@type': 'AggregateOffer',\n      lowPrice: '1497',\n      highPrice: '14997',\n      priceCurrency: 'BRL',\n      offerCount: 3,\n    },\n  };\n\n  return (\n    <>\n      <Helmet>\n        <title>MCORCH \u2014 A ag\u00eancia aut\u00f4noma \u00b7 CEO \u00b7 PMO \u00b7 PMI dedicados a voc\u00ea</title>\n        <meta\n          name=\"description\"\n          content=\"Ative uma ag\u00eancia inteira operada por IA: um CEO, um PMO e um PMI 100% dedicados e integrados ao seu stack. Voc\u00ea cria e fecha neg\u00f3cio \u2014 a orquestra cuida do resto.\"\n        />\n        <meta property=\"og:title\" content=\"MCORCH \u2014 A ag\u00eancia aut\u00f4noma\" />\n        <meta\n          property=\"og:description\"\n          content=\"Um CEO, um PMO e um PMI orquestrados por IA, dedicados \u00e0 sua opera\u00e7\u00e3o e integrados \u00e0s ferramentas que voc\u00ea j\u00e1 usa.\"\n        />\n        <meta property=\"og:type\" content=\"website\" />\n        <link rel=\"canonical\" href=\"https://login.mcorch.com\" />\n        <script type=\"application/ld+json\">{JSON.stringify(jsonLd)}</script>\n      </Helmet>\n\n      <div className=\"mcorch-lp\">\n        <Nav />\n        <Hero />\n        <TrustStrip />\n        <ProblemSection />\n        <AudienceSection />\n        <SolutionSection />\n        <HowSection />\n        <DemoSection />\n        <ResultsSection />\n        <ChampionshipOffer />\n        <GuaranteeSection />\n        <FAQSection />\n        <FinalCTA />\n        <LandingFooter />\n      </div>\n    </>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/LandingV2.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:59:55)*
+
+Agora a backdrop CSS do hero (keyframes das ondas) + a rota `/lp` de preview:
+
+## 🤖 Claude *(21:00:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat >> src/styles/mcorch/landing.css <<'CSS'\n\n/* --- Hero backdrop (CSS/SVG approximation of HeroThree WebGL; scoped) --- */\n.mcorch-lp .lp-hero-backdrop { position: absolute; inset: 0; z-index: 0; pointer-events: none; }\n.mcorch-lp .lp-hero-backdrop svg { position: absolute; inset: 0; width: 100%; height: 100%; }\n.mcorch-lp .lp-wave { transform-origin: center; animation: lp-wave-drift 14s ease-in-out infinite alternate; }\n@keyframes lp-wave-drift {\n  0%   { transform: translateY(-14px) scaleY(0.96); }\n  100% { transform: translateY(14px)  scaleY(1.05); }\n}\n@media (prefers-reduced-motion: reduce) { .mcorch-lp .lp-wave { animation: none; } }\nCSS\necho \"appended hero backdrop CSS \u2705\"\necho \"--- confirm append ---\"; tail -6 src/styles/mcorch/landing.css | head -3",
+  "description": "Append scoped hero backdrop keyframes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> appended hero backdrop CSS ✅
+> --- confirm append ---
+> .mcorch-lp .lp-wave { transform-origin: center; animation: lp-wave-drift 14s ease-in-out infinite alternate; }
+> @keyframes lp-wave-drift {
+>   0%   { transform: translateY(-14px) scaleY(0.96); }
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
