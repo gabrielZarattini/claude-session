@@ -89,6 +89,46 @@ cluster do nó mostra o card com a imagem + `mco_charged`; row em `generations` 
 
 ---
 
+## Amendment Fase 2a — vídeo async no slice (2026-07-02, ANTES do código)
+
+> Estende o slice executável com `image_to_video` (Fase 2 "breadth" — SDD §10.3). O ciclo de vida
+> async exige decisões novas porque o finalizador NÃO é a request do submit — é o webhook.
+
+| # | Decisão | Racional |
+|---|---------|----------|
+| S14 | **Vídeo async é ledger-first no SUBMIT**: `begin_space_generation` (débito, `output_type='video'`, `status='running'`) roda ANTES do submit ao Higgsfield. Submit falhou (rede/4xx/5xx/sem request_id) → `finalize_space_generation(error, refund total)` na MESMA request + resposta honesta 502 (`refund_pending` se o estorno não confirmar). Submit ok → resposta `202 {generation_id, status:'queued'}`; quem finaliza é o webhook. | Espelha S1; o débito nunca fica sem row e a row nunca fica sem débito. |
+| S15 | **Correlação webhook tenant-safe = HASH do token na row**: colunas novas `generations.webhook_token_hash text` (UNIQUE parcial, nullable — só runs async mintam) + `generations.operation_id text`. O submit minta o token server-side (CSPRNG), guarda **só o SHA-256** na row e baked o plaintext na URL (`?spaces_token=`). O webhook hasheia o token recebido e resolve a row pelo hash (single-row lookup no índice UNIQUE); NUNCA aceita `node_run_id`/ids vindos de URL/corpo — anti cross-tenant injection. **Hash (não plaintext) porque a RLS SELECT-own exporia o token ao próprio dono**, que poderia forjar failure-callback do próprio run (refund + vídeo tardio de graça) — precedente PAT vision-mcp. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2º POST → no-op. `vm_canvas_executions` NÃO é usada (FK `project_id NOT NULL → vm_canvas_projects` a torna estruturalmente inutilizável p/ Spaces). | Mesma razão do `webhook_token` legado, sem herdar a tabela errada nem vazar segredo via RLS. |
+| S16 | **Supressão do dinheiro legado no webhook**: o branch Spaces do `higgsfield-webhook` NÃO chama `deduct_mco_coins` (débito já ocorreu no begin — chamar de novo = double-charge, o P0 da OTD-VA-010) e NÃO escreve `vm_canvas_assets`/`updateProjectGraph` (grafo Spaces vive em `spaces.graph`). Sucesso pós-upload → `finalize(done, refund 0, result={video_url, storage_path})`; vídeo no bucket privado `canvas-assets` (mesmo path-shape legado, prefixo = space_id). Falha/NSFW/cancel → `finalize(error, refund total)`. `asset_id → creative_assets` = follow-up declarado (spine), não bloqueia a 2a. | Anti double-charge estrutural. |
+| S17 | **Sweep cobre async**: `running` > 30 min sem webhook → refund pelo sweep (S6/guard de valor). Webhook TARDIO pós-sweep → claim falha → no-op (vídeo entregue com refund mantido = generosidade limitada e logada; NUNCA re-cobrança). DoP real ~2-6 min ≪ 30 min. | First-finalizer-wins já selado (S6). |
+| S18 | **Guards 422 do vídeo (pré-débito)**: `provider === 'higgsfield'` + modelo ∈ allowlist 1:1 com os `ALLOWED_VIDEO_MODELS` legados (dop-lite/turbo/standard, kling-2.1-pro, seedance-v1-pro) + `input_asset_url` obrigatório (sem ele o submit falharia DEPOIS do débito) + `duration ∈ {5,10}` default 5. Custo = `CREDIT_COSTS["higgsfield/<model>-<duration>s"]` (chaves 10s ausentes hoje ⇒ fallback 10 do lookup legado NÃO se aplica ao Spaces: duration sem chave de custo → 422, estimativa=cobrança G7). | C12 lição: nunca cobrar caminho sem preço declarado. |
+
+**Gates novos (verification):**
+- **G8** submit-fail → row `error` + refund total + `mcoin_transactions` simétrica (zero cobrança líquida).
+- **G9** webhook failure/NSFW → finalize(error, refund total) idempotente.
+- **G10** webhook success (payload com `result_url` real) → download+validação (≥100KB, `video/*`) → upload bucket → `done` + `result.video_url` + **zero** `deduct_mco_coins` novo no ledger (a única txn é a do begin).
+- **G11** replay do webhook (2º POST mesmo token) → `{finalized:false}` no-op, zero mutação de saldo.
+- **G12** token inválido/ausente → 400 (malformado)/404 (desconhecido) sem vazamento de existência.
+
+**Recovery path (delta):** webhook perdido → sweep 30min refund (S17). Webhook com payload sem
+`result_url` → trata como falha (refund) — nunca `done` sem vídeo material (Lei 1).
+
+**Success signal (2a-server):** smoke zero-cost prova G8-G12 com webhook simulado (payload forjado +
+vídeo fake hospedado) SEM nenhuma chamada Higgsfield; E2E pago real (~30 mco + ~$0.13 BYOK) fica
+para a fatia 2a-cliente com nota de GO.
+
+### Amendment 2a-cliente (2026-07-02, ANTES do código do cliente)
+
+| # | Decisão | Racional |
+|---|---------|----------|
+| S19 | **Semântica de run async no cliente**: `runState` do grafo = *dispatch completo* (o Run button libera quando todas as camadas dispararam). Nó de vídeo fica `running` após o 202/queued; um **poller** (5s, teto 12min — FR-SPACES-013 padrão polling) lê a própria row `generations` (RLS own) e flipa o nó p/ `done`/`error` + invalida o cluster. Timeout do poller → nó permanece `running` com toast honesto ("processando — o cluster atualiza ao concluir"); o sweep S17 cobre o caso travado. | Não bloquear o run inteiro por um render de minutos; a verdade continua server-side. |
+| S20 | **Threading imagem→vídeo (extensão S11)**: edge chegando no handle **`first-frame`** do `video-generator` + upstream com geração `done` de imagem → vira `input_asset_url`. Vídeo SEM first-frame conectado (ou upstream sem imagem done) → nó pulado como no-op com toast específico (nunca cobrado — o guard 422 do server é o backstop). Prompt continua obrigatório (motion prompt). | O handle first-frame é semanticamente o frame inicial do image_to_video (DoP). |
+| S21 | **Batch de vídeo = 1 no slice 2a** (estimativa e execução ignoram `batch` p/ video-generator; S10 continua valendo p/ imagem). Vídeo custa 30-160 mco/run — batch acidental de 8 seria um débito de até 1.280 mco. Batch de vídeo volta com a Fase 2 breadth se houver demanda. | Proteção de débito acidental > conveniência. |
+| S22 | **Custo do vídeo no HUD = espelho 1:1 do server** (`SPACES_VIDEO_COSTS` client = `CREDIT_COSTS['higgsfield/<model>-5s']`), coberto pelo teste mecânico de mirror-parity que parseia o fonte do edge fn (mesmo padrão SOL-SPACES-001 da 1b). Estimativa = cobrança (G7). | Zero drift silencioso de preço. |
+
+**Gate novo:** **G13** — vitest prova: classify(video-generator)=executable · estimate 1:1 com CREDIT_COSTS · payload com `input_asset_url` do first-frame · skip sem first-frame · batch ignorado p/ vídeo.
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]

@@ -1,4 +1,4 @@
-# Resolver alertas de produção e migrations
+# [[2026-07-02 - Resolver alertas de produção e migrations|Resolver alertas de produção e migrations]]
 **Date:** 2026-07-03 | **Session ID:** `01c7f692-5349-45c6-bd11-c34c6257dd7f`
 
 ---
@@ -853,7 +853,7 @@ Executando o protocolo /handson — pre-flight em paralelo.
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "ls scratch/ 2>/dev/null; echo \"---BOK-CHECK---\"; for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do\n      [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\")\n    done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security \u2014 BoK complete (ciso-4-artifact)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
+  "command": "ls scratch/ 2>/dev/null; echo \"---BOK-CHECK---\"; for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do\n      [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\")\n    done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security \u2014 BoK complete (ciso-4-artifact)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
   "description": "List scratch files and verify BoK suite completeness"
 }
 ```
@@ -9444,7 +9444,7 @@ Let me start by reading these files.
 > 77	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
 > 78	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
 > 79	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
-> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas ([[channel-reshaper|channel-reshaper]] G7 + [[autopilot-cron-identity|autopilot-cron-identity]]). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
 > 81	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
 > 82	
 > 83	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
@@ -18953,7 +18953,7 @@ This is a very detailed HANDOFF. Let me now check the autonomous-loop-charter.md
 > 77	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
 > 78	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
 > 79	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
-> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas ([[channel-reshaper|channel-reshaper]] G7 + [[autopilot-cron-identity|autopilot-cron-identity]]). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
 > 81	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
 > 82	
 > 83	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
@@ -20224,7 +20224,7 @@ The classifier is blocking the python command. Let me try a different approach -
 > 2	-- Spaces Fase 1b (execution slice): `generations` ledger + atomic money RPCs.
 > 3	-- BoK SSOT: docs/bok/spaces-evolution/06-data-model.md §"generations" stub (:129-150) — columns/constraints
 > 4	--           copied verbatim; hardening divergences D1/D2/D3/D8 declared below (canonical security pattern wins).
-> 5	-- SOP (Lei 2, written BEFORE this code): docs/processes/spaces-graph-execution.md (decisões S1-S13).
+> 5	-- SOP (Lei 2, written BEFORE this code): docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md (decisões S1-S13).
 > 6	--
 > 7	-- Debit order is LEDGER-FIRST (S1): begin_space_generation INSERTs the 'running' row AND debits in the SAME
 > 8	-- transaction (deduct RAISE ⇒ rollback, never an orphan row) — resolves the BoK BPMN's internal contradiction
@@ -20295,7 +20295,7 @@ The classifier is blocking the python command. Let me try a different approach -
 > 73	COMMENT ON TABLE public.generations IS
 > 74	  'spaces-evolution Fase 1b: execution ledger (1 row per node run — FR-SPACES-012). Ledger-first: row+debit in '
 > 75	  'one tx via begin_space_generation; refund via finalize_space_generation (claim status IN pending/running, '
-> 76	  'first finalizer wins). SELECT-own RLS; service-role writes only. SOP docs/processes/spaces-graph-execution.md.';
+> 76	  'first finalizer wins). SELECT-own RLS; service-role writes only. SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md.';
 > 77	
 > 78	-- ── begin_space_generation — atomic ledger-first debit (S1/S2) ──────────────────────────────
 > 79	-- INSERT the 'running' row keyed on node_run_id; conflict ⇒ idempotent no-op (returns prior state, ZERO second
@@ -20641,7 +20641,7 @@ Basic commands work. Let me try to run the migration script step by step, avoidi
 > -- Spaces Fase 1b (execution slice): `generations` ledger + atomic money RPCs.
 > -- BoK SSOT: docs/bok/spaces-evolution/06-data-model.md §"generations" stub (:129-150) — columns/constraints
 > --           copied verbatim; hardening divergences D1/D2/D3/D8 declared below (canonical security pattern wins).
-> -- SOP (Lei 2, written BEFORE this code): docs/processes/spaces-graph-execution.md (decisões S1-S13).
+> -- SOP (Lei 2, written BEFORE this code): docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md (decisões S1-S13).
 > ```
 
 ## 🤖 Claude *(22:47:40)*
@@ -30103,7 +30103,7 @@ GO recebido. Vou executar o apply da migration Spaces 1b com pré-flight de idem
 > 77	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
 > 78	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
 > 79	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
-> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 80	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas ([[channel-reshaper|channel-reshaper]] G7 + [[autopilot-cron-identity|autopilot-cron-identity]]). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
 > 81	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
 > 82	
 > 83	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
@@ -30662,7 +30662,7 @@ Deploy provado: `script size: 159.8kB · Deployed Functions: canvas-execute`. Ag
 > ```
 > #!/usr/bin/env bun
 > /**
->  * smoke-spaces-execution.ts — Spaces Fase 1b zero-cost gates (SOP spaces-graph-execution G1-G6).
+>  * smoke-spaces-execution.ts — Spaces Fase 1b zero-cost gates (SOP [[spaces-graph-execution|spaces-graph-execution]] G1-G6).
 >  * Proves the money path WITHOUT any provider call/paid run (FMEA-SPACES-001 activation gate):
 >  *   T1 401 no-JWT · T2 422 node-type · T3 422 model · T4 404 foreign space (tenant) ·
 >  *   T5 402 insufficient balance · T6 begin/finalize atomics (G1 rollback · G2 idempotent dup ·
@@ -30867,7 +30867,7 @@ Deploy provado: `script size: 159.8kB · Deployed Functions: canvas-execute`. Ag
 > 203	    }
 > 204	
 > 205	    // Explicit action list (was LIKE 'canvas_%spend'): 'spaces.node.run' would silently bypass the
-> 206	    // cap under the LIKE pattern (SOP spaces-graph-execution S5). Refund rows use different actions
+> 206	    // cap under the LIKE pattern (SOP [[spaces-graph-execution|spaces-graph-execution]] S5). Refund rows use different actions
 > 207	    // and are intentionally NOT netted — the cap counts gross spend (conservative).
 > 208	    const dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 > 209	    const { data: spendRows, error: spendErr } = await admin
@@ -30899,7 +30899,7 @@ Deploy provado: `script size: 159.8kB · Deployed Functions: canvas-execute`. Ag
 > 235	      }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 > 236	    }
 > 237	
-> 238	    // ── Spaces Fase 1b ledger mode (SOP docs/processes/spaces-graph-execution.md) ──────────
+> 238	    // ── Spaces Fase 1b ledger mode (SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md) ──────────
 > 239	    // Exclusive branch: NEVER falls through to the legacy deduct-after-success paths below
 > 240	    // (double-charge hazard — SOP S4). Ledger = `generations` (not vm_canvas_executions).
 > 241	    if (body.space_id && body.node_run_id) {
@@ -31156,8 +31156,8 @@ Deploy provado: `script size: 159.8kB · Deployed Functions: canvas-execute`. Ag
 {
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
-  "old_string": "    // \u2500\u2500 Check user credits (mco_balance in profiles) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const { data: profile } = await admin\n      .from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).single();\n\n    if (!profile || (profile.mco_balance || 0) < creditCost) {\n      return new Response(JSON.stringify({\n        error: \"Insufficient mcoCoins\",\n        required: creditCost,\n        balance: profile?.mco_balance || 0,\n      }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    // \u2500\u2500 SSP-01 OE04 \u2014 Daily cap enforcement (din\u00e2mico com base na role) \u2500\u2500\n    // Sums abs(amount) of canvas_* ledger entries in the rolling 24h window.\n    // Fail-open on query error to avoid blocking UX when observability is down.\n    let dailyCap = 100;\n    const { data: roleRow, error: roleErr } = await admin\n      .from(\"user_roles\")\n      .select(\"role\")\n      .eq(\"user_id\", user.id)\n      .maybeSingle();\n\n    if (roleErr) {\n      console.error(\"[canvas-execute] failed to fetch user role for daily cap:\", roleErr);\n    } else if (roleRow?.role === \"admin\") {\n      dailyCap = 10000;\n    } else if (roleRow?.role === \"editor\") {\n      dailyCap = 1000;\n    }\n\n    // Explicit action list (was LIKE 'canvas_%spend'): 'spaces.node.run' would silently bypass the\n    // cap under the LIKE pattern (SOP spaces-graph-execution S5). Refund rows use different actions\n    // and are intentionally NOT netted \u2014 the cap counts gross spend (conservative).\n    const dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n    const { data: spendRows, error: spendErr } = await admin\n      .from(\"mcoin_transactions\")\n      .select(\"amount\")\n      .eq(\"user_id\", user.id)\n      .in(\"action\", [\n        \"canvas_magic_prompt_spend\",\n        \"canvas_image_spend\",\n        \"canvas_video_spend\",\n        \"spaces.node.run\",\n      ])\n      .gte(\"created_at\", dayAgoIso);\n\n    if (spendErr) {\n      console.error(\"[canvas-execute] daily cap query error:\", spendErr);\n    }\n    const spentToday = (spendRows ?? []).reduce(\n      (sum, r) => sum + Math.abs(Number(r.amount) || 0),\n      0,\n    );\n    if (spentToday + creditCost > dailyCap) {\n      return new Response(JSON.stringify({\n        error: \"Daily Canvas cap reached\",\n        cap: dailyCap,\n        spent_today: spentToday,\n        required: creditCost,\n        resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),\n      }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    // \u2500\u2500 Spaces Fase 1b ledger mode (SOP docs/processes/spaces-graph-execution.md) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Exclusive branch: NEVER falls through to the legacy deduct-after-success paths below\n    // (double-charge hazard \u2014 SOP S4). Ledger = `generations` (not vm_canvas_executions).\n    if (body.space_id && body.node_run_id) {\n      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders });\n    }",
-  "new_string": "    // \u2500\u2500 Spaces Fase 1b ledger mode (SOP docs/processes/spaces-graph-execution.md) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Exclusive branch: NEVER falls through to the legacy deduct-after-success paths below\n    // (double-charge hazard \u2014 SOP S4). Ledger = `generations` (not vm_canvas_executions).\n    // Dispatched BEFORE the legacy 402 pre-checks: Spaces runs its 422/404 guards first, then its\n    // own balance + daily-cap pre-checks (canonical order 401\u2192422\u2192404\u2192402 \u2014 smoke T2-T5).\n    if (body.space_id && body.node_run_id) {\n      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders });\n    }\n\n    // \u2500\u2500 Check user credits (mco_balance in profiles) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const { data: profile } = await admin\n      .from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).single();\n\n    if (!profile || (profile.mco_balance || 0) < creditCost) {\n      return new Response(JSON.stringify({\n        error: \"Insufficient mcoCoins\",\n        required: creditCost,\n        balance: profile?.mco_balance || 0,\n      }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    const capResp = await enforceDailyCanvasCap(admin, user.id, creditCost, corsHeaders);\n    if (capResp) return capResp;"
+  "old_string": "    // \u2500\u2500 Check user credits (mco_balance in profiles) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const { data: profile } = await admin\n      .from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).single();\n\n    if (!profile || (profile.mco_balance || 0) < creditCost) {\n      return new Response(JSON.stringify({\n        error: \"Insufficient mcoCoins\",\n        required: creditCost,\n        balance: profile?.mco_balance || 0,\n      }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    // \u2500\u2500 SSP-01 OE04 \u2014 Daily cap enforcement (din\u00e2mico com base na role) \u2500\u2500\n    // Sums abs(amount) of canvas_* ledger entries in the rolling 24h window.\n    // Fail-open on query error to avoid blocking UX when observability is down.\n    let dailyCap = 100;\n    const { data: roleRow, error: roleErr } = await admin\n      .from(\"user_roles\")\n      .select(\"role\")\n      .eq(\"user_id\", user.id)\n      .maybeSingle();\n\n    if (roleErr) {\n      console.error(\"[canvas-execute] failed to fetch user role for daily cap:\", roleErr);\n    } else if (roleRow?.role === \"admin\") {\n      dailyCap = 10000;\n    } else if (roleRow?.role === \"editor\") {\n      dailyCap = 1000;\n    }\n\n    // Explicit action list (was LIKE 'canvas_%spend'): 'spaces.node.run' would silently bypass the\n    // cap under the LIKE pattern (SOP spaces-graph-execution S5). Refund rows use different actions\n    // and are intentionally NOT netted \u2014 the cap counts gross spend (conservative).\n    const dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n    const { data: spendRows, error: spendErr } = await admin\n      .from(\"mcoin_transactions\")\n      .select(\"amount\")\n      .eq(\"user_id\", user.id)\n      .in(\"action\", [\n        \"canvas_magic_prompt_spend\",\n        \"canvas_image_spend\",\n        \"canvas_video_spend\",\n        \"spaces.node.run\",\n      ])\n      .gte(\"created_at\", dayAgoIso);\n\n    if (spendErr) {\n      console.error(\"[canvas-execute] daily cap query error:\", spendErr);\n    }\n    const spentToday = (spendRows ?? []).reduce(\n      (sum, r) => sum + Math.abs(Number(r.amount) || 0),\n      0,\n    );\n    if (spentToday + creditCost > dailyCap) {\n      return new Response(JSON.stringify({\n        error: \"Daily Canvas cap reached\",\n        cap: dailyCap,\n        spent_today: spentToday,\n        required: creditCost,\n        resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),\n      }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    // \u2500\u2500 Spaces Fase 1b ledger mode (SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Exclusive branch: NEVER falls through to the legacy deduct-after-success paths below\n    // (double-charge hazard \u2014 SOP S4). Ledger = `generations` (not vm_canvas_executions).\n    if (body.space_id && body.node_run_id) {\n      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders });\n    }",
+  "new_string": "    // \u2500\u2500 Spaces Fase 1b ledger mode (SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Exclusive branch: NEVER falls through to the legacy deduct-after-success paths below\n    // (double-charge hazard \u2014 SOP S4). Ledger = `generations` (not vm_canvas_executions).\n    // Dispatched BEFORE the legacy 402 pre-checks: Spaces runs its 422/404 guards first, then its\n    // own balance + daily-cap pre-checks (canonical order 401\u2192422\u2192404\u2192402 \u2014 smoke T2-T5).\n    if (body.space_id && body.node_run_id) {\n      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders });\n    }\n\n    // \u2500\u2500 Check user credits (mco_balance in profiles) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    const { data: profile } = await admin\n      .from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).single();\n\n    if (!profile || (profile.mco_balance || 0) < creditCost) {\n      return new Response(JSON.stringify({\n        error: \"Insufficient mcoCoins\",\n        required: creditCost,\n        balance: profile?.mco_balance || 0,\n      }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n    }\n\n    const capResp = await enforceDailyCanvasCap(admin, user.id, creditCost, corsHeaders);\n    if (capResp) return capResp;"
 }
 ```
 
@@ -31176,7 +31176,7 @@ Deploy provado: `script size: 159.8kB · Deployed Functions: canvas-execute`. Ag
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
   "old_string": "async function executeSpacesNode(ctx: SpacesExecCtx): Promise<Response> {",
-  "new_string": "/** SSP-01 OE04 \u2014 Daily cap enforcement (din\u00e2mico com base na role). Shared by the legacy and\n *  Spaces paths. Sums abs(amount) of canvas_*/spaces ledger entries in the rolling 24h window.\n *  Fail-open on query error to avoid blocking UX when observability is down.\n *  Returns the 402 Response when the cap blocks, else null. */\nasync function enforceDailyCanvasCap(\n  admin: any,\n  userId: string,\n  creditCost: number,\n  corsHeaders: Record<string, string>,\n): Promise<Response | null> {\n  let dailyCap = 100;\n  const { data: roleRow, error: roleErr } = await admin\n    .from(\"user_roles\")\n    .select(\"role\")\n    .eq(\"user_id\", userId)\n    .maybeSingle();\n\n  if (roleErr) {\n    console.error(\"[canvas-execute] failed to fetch user role for daily cap:\", roleErr);\n  } else if (roleRow?.role === \"admin\") {\n    dailyCap = 10000;\n  } else if (roleRow?.role === \"editor\") {\n    dailyCap = 1000;\n  }\n\n  // Explicit action list (was LIKE 'canvas_%spend'): 'spaces.node.run' would silently bypass the\n  // cap under the LIKE pattern (SOP spaces-graph-execution S5). Refund rows use different actions\n  // and are intentionally NOT netted \u2014 the cap counts gross spend (conservative).\n  const dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n  const { data: spendRows, error: spendErr } = await admin\n    .from(\"mcoin_transactions\")\n    .select(\"amount\")\n    .eq(\"user_id\", userId)\n    .in(\"action\", [\n      \"canvas_magic_prompt_spend\",\n      \"canvas_image_spend\",\n      \"canvas_video_spend\",\n      \"spaces.node.run\",\n    ])\n    .gte(\"created_at\", dayAgoIso);\n\n  if (spendErr) {\n    console.error(\"[canvas-execute] daily cap query error:\", spendErr);\n  }\n  const spentToday = (spendRows ?? []).reduce(\n    (sum: number, r: { amount: unknown }) => sum + Math.abs(Number(r.amount) || 0),\n    0,\n  );\n  if (spentToday + creditCost > dailyCap) {\n    return new Response(JSON.stringify({\n      error: \"Daily Canvas cap reached\",\n      cap: dailyCap,\n      spent_today: spentToday,\n      required: creditCost,\n      resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),\n    }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n  }\n  return null;\n}\n\nasync function executeSpacesNode(ctx: SpacesExecCtx): Promise<Response> {"
+  "new_string": "/** SSP-01 OE04 \u2014 Daily cap enforcement (din\u00e2mico com base na role). Shared by the legacy and\n *  Spaces paths. Sums abs(amount) of canvas_*/spaces ledger entries in the rolling 24h window.\n *  Fail-open on query error to avoid blocking UX when observability is down.\n *  Returns the 402 Response when the cap blocks, else null. */\nasync function enforceDailyCanvasCap(\n  admin: any,\n  userId: string,\n  creditCost: number,\n  corsHeaders: Record<string, string>,\n): Promise<Response | null> {\n  let dailyCap = 100;\n  const { data: roleRow, error: roleErr } = await admin\n    .from(\"user_roles\")\n    .select(\"role\")\n    .eq(\"user_id\", userId)\n    .maybeSingle();\n\n  if (roleErr) {\n    console.error(\"[canvas-execute] failed to fetch user role for daily cap:\", roleErr);\n  } else if (roleRow?.role === \"admin\") {\n    dailyCap = 10000;\n  } else if (roleRow?.role === \"editor\") {\n    dailyCap = 1000;\n  }\n\n  // Explicit action list (was LIKE 'canvas_%spend'): 'spaces.node.run' would silently bypass the\n  // cap under the LIKE pattern (SOP [[spaces-graph-execution|spaces-graph-execution]] S5). Refund rows use different actions\n  // and are intentionally NOT netted \u2014 the cap counts gross spend (conservative).\n  const dayAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();\n  const { data: spendRows, error: spendErr } = await admin\n    .from(\"mcoin_transactions\")\n    .select(\"amount\")\n    .eq(\"user_id\", userId)\n    .in(\"action\", [\n      \"canvas_magic_prompt_spend\",\n      \"canvas_image_spend\",\n      \"canvas_video_spend\",\n      \"spaces.node.run\",\n    ])\n    .gte(\"created_at\", dayAgoIso);\n\n  if (spendErr) {\n    console.error(\"[canvas-execute] daily cap query error:\", spendErr);\n  }\n  const spentToday = (spendRows ?? []).reduce(\n    (sum: number, r: { amount: unknown }) => sum + Math.abs(Number(r.amount) || 0),\n    0,\n  );\n  if (spentToday + creditCost > dailyCap) {\n    return new Response(JSON.stringify({\n      error: \"Daily Canvas cap reached\",\n      cap: dailyCap,\n      spent_today: spentToday,\n      required: creditCost,\n      resets_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),\n    }), { status: 402, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n  }\n  return null;\n}\n\nasync function executeSpacesNode(ctx: SpacesExecCtx): Promise<Response> {"
 }
 ```
 
@@ -31356,7 +31356,7 @@ Deploy provado: `script size: 159.8kB · Deployed Functions: canvas-execute`. Ag
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "git add supabase/functions/canvas-execute/index.ts && git commit -m \"fix(canvas-execute): dispatch Spaces branch before legacy 402 pre-checks\n\nSmoke T2-T4 exposed guard-order inversion: the legacy balance/daily-cap\npre-checks ran before executeSpacesNode, so invalid payloads with empty\nbalance returned 402 instead of the SOP-mandated 422/404 (canonical order\n401->422->404->402, spaces-graph-execution G4/S5). Daily cap extracted to\nenforceDailyCanvasCap (shared legacy+Spaces); Spaces branch now runs its\nown balance+cap pre-checks after validation. begin_space_generation stays\nthe race-safe authority. Smoke 13/13 \u00b7 deno check clean \u00b7 vitest 375 passed.\" && git add src/integrations/supabase/types.ts && git commit -m \"chore(types): regen supabase types \u2014 generations table + spaces money RPCs\n\nMigration 20260702190000 applied+registered in prod (GO Sovereign 2026-07-02).\nMaterial proof: 16 cols, 2 policies, svc-only grants (client grants 0), 5 idx,\nupdated_at trigger, RLS on, spaces_id_owner_unique anchor. Ledger drift also\nclosed: 10 verified-applied migrations registered (146->156); 20260630140000\ngate_mode intentionally left pending (deferred to GO 3b). tsc 0.\" && git log -2 --format='%h %s'",
+  "command": "git add supabase/functions/canvas-execute/index.ts && git commit -m \"fix(canvas-execute): dispatch Spaces branch before legacy 402 pre-checks\n\nSmoke T2-T4 exposed guard-order inversion: the legacy balance/daily-cap\npre-checks ran before executeSpacesNode, so invalid payloads with empty\nbalance returned 402 instead of the SOP-mandated 422/404 (canonical order\n401->422->404->402, [[spaces-graph-execution|spaces-graph-execution]] G4/S5). Daily cap extracted to\nenforceDailyCanvasCap (shared legacy+Spaces); Spaces branch now runs its\nown balance+cap pre-checks after validation. begin_space_generation stays\nthe race-safe authority. Smoke 13/13 \u00b7 deno check clean \u00b7 vitest 375 passed.\" && git add src/integrations/supabase/types.ts && git commit -m \"chore(types): regen supabase types \u2014 generations table + spaces money RPCs\n\nMigration 20260702190000 applied+registered in prod (GO Sovereign 2026-07-02).\nMaterial proof: 16 cols, 2 policies, svc-only grants (client grants 0), 5 idx,\nupdated_at trigger, RLS on, spaces_id_owner_unique anchor. Ledger drift also\nclosed: 10 verified-applied migrations registered (146->156); 20260630140000\ngate_mode intentionally left pending (deferred to GO 3b). tsc 0.\" && git log -2 --format='%h %s'",
   "description": "Commit the guard-order fix and types regen separately"
 }
 ```
@@ -32275,7 +32275,7 @@ Nó **done** na UI. Prova material no DB (débito, ledger, resultado, nó de obs
 >  * Vision QA — o "olho criativo" do MCORCH sobre o Vision MCP público (mcp.mcorch.com).
 >  *
 >  * Reusable creative-eye tool for the creative-layer validation track (SOP:
->  * docs/processes/creative-qa-vision-gate.md). Drives the real MCP handshake with the tenant's PAT and
+>  * docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md). Drives the real MCP handshake with the tenant's PAT and
 >  * calls the billable vision tools (BYOK-free for the Usuário Zero: openrouter for image, google for video).
 >  *
 >  * Modes:
@@ -33366,3 +33366,3871 @@ Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claud
 > ```
 > [{"column_name":"id","data_type":"uuid"},{"column_name":"project_id","data_type":"uuid"},{"column_name":"user_id","data_type":"uuid"},{"column_name":"node_id","data_type":"text"},{"column_name":"node_type","data_type":"USER-DEFINED"},{"column_name":"provider","data_type":"text"},{"column_name":"model","data_type":"text"},{"column_name":"prompt","data_type":"text"},{"column_name":"negative_prompt","data_type":"text"},{"column_name":"parameters","data_type":"jsonb"},{"column_name":"input_asset_id","data_type":"uuid"},{"column_name":"output_asset_id","data_type":"uuid"},{"column_name":"output_url","data_type":"text"},{"column_name":"credits_charged","data_type":"integer"},{"column_name":"status","data_type":"text"},{"column_name":"error_message","data_type":"text"},{"column_name":"execution_time_ms","data_type":"integer"},{"column_name":"queued_at","data_type":"timestamp with time zone"},{"column_name":"started_at","data_type":"timestamp with time zone"},{"column_name":"completed_at","data_type":"timestamp with time zone"},{"column_name":"created_at","data_type":"timestamp with time zone"},{"column_name":"operation_id","data_type":"text"},{"column_name":"webhook_token","data_type":"text"},{"column_name":"response_payload","data_type":"jsonb"},{"column_name":"webhook_received_at","data_type":"timestamp with time zone"}]
 > ```
+
+## 🤖 Claude *(00:01:11)*
+
+
+## 🤖 Claude *(00:01:11)*
+
+
+## 🤖 Claude *(00:01:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint WHERE conrelid='\"'\"'public.vm_canvas_executions'\"'\"'::regclass AND contype IN ('\"'\"'f'\"'\"') ; \"}' && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name='\"'\"'vm_canvas_executions'\"'\"' AND column_name IN ('\"'\"'project_id'\"'\"','\"'\"'user_id'\"'\"','\"'\"'credits_charged'\"'\"','\"'\"'webhook_token'\"'\"');\"}'",
+  "description": "Check FKs and nullability on vm_canvas_executions"
+}
+```
+
+## 🤖 Claude *(00:01:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'dop-lite\\|dop-turbo\\|dop-standard\\|kling\\|seedance' supabase/functions/canvas-execute/index.ts | grep -i 'cost\\|CREDIT' ; sed -n '/const CREDIT_COSTS/,/^}/p' supabase/functions/canvas-execute/index.ts | grep -E 'dop|kling|seedance|5s|10s' | head -12",
+  "description": "Check CREDIT_COSTS keys for video models"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"conname":"vm_canvas_executions_input_asset_id_fkey","def":"FOREIGN KEY (input_asset_id) REFERENCES vm_canvas_assets(id)"},{"conname":"vm_canvas_executions_output_asset_id_fkey","def":"FOREIGN KEY (output_asset_id) REFERENCES vm_canvas_assets(id)"},{"conname":"vm_canvas_executions_project_id_fkey","def":"FOREIGN KEY (project_id) REFERENCES vm_canvas_projects(id) ON DELETE CASCADE"},{"conname":"vm_canvas_executions_user_id_fkey","def":"FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"}][{"column_name":"project_id","is_nullable":"NO"},{"column_name":"user_id","is_nullable":"NO"},{"column_name":"credits_charged","is_nullable":"NO"},{"column_name":"webhook_token","is_nullable":"NO"}]
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 32:  "higgsfield/dop-lite-5s": 30,       // placeholder; 2 hf credits ≈ $0.13
+> 33:  "higgsfield/dop-turbo-5s": 90,      // placeholder; 6.5 hf credits ≈ $0.41
+> 34:  "higgsfield/dop-standard-5s": 125,  // placeholder; 9 hf credits ≈ $0.56
+>   "higgsfield/dop-lite-5s": 30,       // placeholder; 2 hf credits ≈ $0.13
+>   "higgsfield/dop-turbo-5s": 90,      // placeholder; 6.5 hf credits ≈ $0.41
+>   "higgsfield/dop-standard-5s": 125,  // placeholder; 9 hf credits ≈ $0.56
+>   "higgsfield/kling-2.1-pro-5s": 160,
+>   "higgsfield/seedance-v1-pro-5s": 130,
+> ```
+
+## 🤖 Claude *(00:02:06)*
+
+
+## 🤖 Claude *(00:02:06)*
+
+
+## 🤖 Claude *(00:02:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n '^## \\|^### \\|S1[0-9]\\|## Gates' docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md | head -30 && tail -20 docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md",
+  "description": "Read SOP structure to append amendment"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9:## Operator
+> 14:## Decisões seladas (resoluções de contradição — fonte: síntese `wf_b4abf175-410`)
+> 27:| S10 | **Batch N = N execuções independentes** do mesmo nó (cada uma com `node_run_id` e row próprios, sequenciais). Estimativa `base × batch` = cobrança real. NUNCA reusar o batch nativo do provider (hazard Soul paga-4-entrega-1, C18). | C18. |
+> 28:| S11 | **Threading de inputs (convenção single-output 1b)**: edge chegando no handle `prompt` + upstream com geração `done` de texto → o texto vira o prompt do filho (fallback: prompt próprio); edge no handle `reference` + upstream `done` de imagem → `reference_image_urls=[url]`. A saída de texto mora em `generations.result` (jsonb — divergência aditiva D8 do stub, precedente `vision_jobs.result`); imagem mora em `creative_assets`/URL. Multi-output = diferido com os nós de vídeo. | C20. |
+> 29:| S12 | **Billing segue o precedente vivo**: cobra `CREDIT_COSTS` mesmo com chave BYOK do tenant (todo canvas-execute já é per-user BYOK e cobra — mcoCoins é cobrança de valor de plataforma). "BYOK isenta débito" (BR-SPACES-006) contradiz o precedente do ecossistema inteiro → registrado como errata/OPEN de BoK no seal; `data.byok` fica dormant. | C17. |
+> 30:| S13 | Colunas mco em `numeric` (semântica BoK); todos os custos atuais são inteiros — o cast `::integer` do ledger é latente-only (comentado na migration). | D6. |
+> 32:## Sequence
+> 56:## Verification gates
+> 68:## Recovery path
+> 84:## Success signal
+> 
+> - **Provider falhou (após retry)**: finalize `error` + refund total automático (S6) — nunca "tente de novo" sem estorno.
+> - **Run travado** (`running` > 30 min — crash do edge fn entre begin e finalize):
+>   `scripts/self-heal-spaces.sh` (on-demand, SEM cron novo — 07:182) marca `error` + refund
+>   idempotente via `finalize_space_generation`. NUNCA re-cobrar. **Guard do sweep
+>   (/security-review 2026-07-02):** só estorna rows SEM valor entregue (`result IS NULL AND
+>   asset_id IS NULL`) — row entregue-mas-finalize-falhou é materializada pelo done-fallback do
+>   edge fn e nunca é estornada. O edge fn reporta `refund_pending:true` (não `refunded`) quando
+>   o estorno não confirmou commit — a resposta nunca mente sobre o ledger (Lei 1).
+> - **Duplicidade suspeita**: reconciliar `mcoin_transactions` (actions `spaces.node.run`/`spaces.node.refund`,
+>   join por `context->>'node_run_id'`) × `generations` — invariante KPI-SPACES-004: Σ débitos = Σ `mco_charged`
+>   de rows não-estornadas; violação = P0 freeze.
+> - **Sessão expirada no meio do run**: nó atual → `error` (com refund server-side se já debitado);
+>   cliente tenta `refreshSession()` 1×; camadas seguintes abortam com toast.
+> 
+> ## Success signal
+> 
+> Sovereign roda ▶ num grafo `prompt-generator → image-generator`; débito visível no HUD de mcoCoins;
+> cluster do nó mostra o card com a imagem + `mco_charged`; row em `generations` (UUID citável) com
+> `status='done'` e `mcoin_transactions` batendo; Vision-QA APROVADO no print 1920×1080.
+> ```
+
+## 🤖 Claude *(00:02:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '14,31p' docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md",
+  "description": "Read the S-decisions table for correct append format"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ## Decisões seladas (resoluções de contradição — fonte: síntese `wf_b4abf175-410`)
+> 
+> | # | Decisão | Racional |
+> |---|---------|----------|
+> | S1 | **Ordem de débito = ledger-first**: `begin_space_generation` INSERE a row `generations` `status='running'` **e** debita (`deduct_mco_coins`, action `spaces.node.run`) **na MESMA transação**; falha do deduct → rollback da row (nunca órfã). | Resolve a contradição interna da BoK (BPMN insere após provider vs sweep precisa de row `running`); espelha `begin_autopilot_cycle`. |
+> | S2 | **Idempotência** vive em `generations.node_run_id UNIQUE` + `ON CONFLICT DO NOTHING` no begin (0 rows → retorna estado prévio, **zero segundo débito**) — NÃO no `deduct_mco_coins` (que não tem chave de idempotência). | C3/C5 da síntese. |
+> | S3 | **`node_run_id` é cunhado no cliente 1× por nó por tentativa de run** (`crypto.randomUUID()`); retry client-side da MESMA tentativa REUSA o id; re-run iniciado pelo usuário cunha id novo. | Retry que cunha id novo derrota a idempotência (C23). |
+> | S4 | **Reuso do `canvas-execute` (zero tool novo, Pattern #5)** via **extensão aditiva**: presença de `space_id` + `node_run_id` no payload ativa o "Spaces ledger mode" (branch exclusivo). O caminho legado (deduct-after-success do Canvas Studio) fica INTOCADO; os dois branches são mutuamente exclusivos — sem double-charge. | C1/C4. |
+> | S5 | **Teto diário**: a query do cap passa de `LIKE 'canvas_%spend'` para lista explícita `IN ('canvas_magic_prompt_spend','canvas_image_spend','canvas_video_spend','spaces.node.run')` — senão o gasto Spaces bypassa o teto silenciosamente. Modelo por-role (100/1000/10000) mantido; teto por-plano = débito OPEN (BR-SPACES-003). | C7. |
+> | S6 | **Refund = crédito positivo** via `finalize_space_generation` (claim `status IN ('pending','running')` — primeiro finalizador vence, idempotente), clamp `0 ≤ refund ≤ mco_charged`, `add_mco_coins` + **row simétrica** em `mcoin_transactions` (action `spaces.node.refund`) com `node_run_id` no context (chave da reconciliação KPI-SPACES-004). uid SEMPRE da row reclamada, nunca do caller. | D5/D7/C15. |
+> | S7 | **Escopo executável 1b**: `image-generator` → `generate_image` e `prompt-generator` → `magic_prompt`. **`image-upscaler` CORTADO da 1b** (o server não tem caminho real de upscale — `upscale-2x/4x` são cost-keys inalcançáveis); declarado no seal. Demais tipos: fontes/decorativos = no-op (nunca cobrados); geradores fora do slice (vídeo/áudio/svg/designer) → toast pt-BR "não suportado na Fase 1" + status `idle` (nunca `error`, nunca cobrado). | C12 + NA-SPACES-008. |
+> | S8 | **Mapa de modelos**: os 38 `IMAGE_MODELS` do Spaces são chaves Magnific SEM roteamento server. 1b resolve por `SPACES_MODEL_MAP` client-side: `auto` → `openrouter`/`google/gemini-2.5-flash-image` (10 mco); `flux.1.1` → `openrouter`/`black-forest-labs/flux-1.1-pro` (12 mco). Chave fora do mapa → resolve como `auto` (Pattern #2 Routing mínimo) e o `estimateCost` do HUD usa o preço do `auto` como fallback (estimativa = cobrança). A row `generations.model_key` grava a chave **resolvida** (`provider/model` — verdade do server). | C11. |
+> | S9 | **Status transitório não persiste**: o serializer da Fase 1a passa a resetar `pending/running` → `idle` ao persistir `spaces.graph` (reload nunca hidrata run fantasma). `done/error/blocked` podem persistir (sinal histórico). | C14 — sem isso viola G1 da SOP 1a. |
+> | S10 | **Batch N = N execuções independentes** do mesmo nó (cada uma com `node_run_id` e row próprios, sequenciais). Estimativa `base × batch` = cobrança real. NUNCA reusar o batch nativo do provider (hazard Soul paga-4-entrega-1, C18). | C18. |
+> | S11 | **Threading de inputs (convenção single-output 1b)**: edge chegando no handle `prompt` + upstream com geração `done` de texto → o texto vira o prompt do filho (fallback: prompt próprio); edge no handle `reference` + upstream `done` de imagem → `reference_image_urls=[url]`. A saída de texto mora em `generations.result` (jsonb — divergência aditiva D8 do stub, precedente `vision_jobs.result`); imagem mora em `creative_assets`/URL. Multi-output = diferido com os nós de vídeo. | C20. |
+> | S12 | **Billing segue o precedente vivo**: cobra `CREDIT_COSTS` mesmo com chave BYOK do tenant (todo canvas-execute já é per-user BYOK e cobra — mcoCoins é cobrança de valor de plataforma). "BYOK isenta débito" (BR-SPACES-006) contradiz o precedente do ecossistema inteiro → registrado como errata/OPEN de BoK no seal; `data.byok` fica dormant. | C17. |
+> | S13 | Colunas mco em `numeric` (semântica BoK); todos os custos atuais são inteiros — o cast `::integer` do ledger é latente-only (comentado na migration). | D6. |
+> ```
+
+## 🤖 Claude *(00:02:33)*
+
+
+## 🤖 Claude *(00:02:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '155,300p' supabase/functions/higgsfield-webhook/index.ts",
+  "description": "Read webhook failure and success paths to mirror"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     body = (await req.json()) as Record<string, unknown>;
+>   } catch {
+>     /* empty body is fine; treat as failure below */
+>   }
+> 
+>   const nowIso = new Date().toISOString();
+> 
+>   // Failure path: mark exec failed, NO deduct, NO upload.
+>   // Higgsfield terminal states `nsfw` and `canceled` are soft-fails that REFUND
+>   // credits upstream — they previously fell through to the success path and
+>   // surfaced the generic "no result_url" message. Map them to clear reasons here
+>   // (no deduct either way: deduct only fires after a verified upload).
+>   const terminalStatus = typeof body.status === "string" ? body.status.toLowerCase() : "";
+>   const isSoftFail =
+>     terminalStatus === "nsfw" || terminalStatus === "canceled" || terminalStatus === "cancelled";
+>   if (body.status === "failed" || body.error || isSoftFail) {
+>     const errMsg = isSoftFail
+>       ? terminalStatus === "nsfw"
+>         ? "Geração bloqueada pelo filtro NSFW do Higgsfield (crédito reembolsado)"
+>         : "Geração cancelada no Higgsfield (crédito reembolsado)"
+>       : (body.error as string) || "Higgsfield reported failure";
+>     await admin
+>       .from("vm_canvas_executions")
+>       .update({
+>         status: "failed",
+>         error_message: errMsg,
+>         response_payload: body,
+>         webhook_received_at: nowIso,
+>         completed_at: nowIso,
+>       })
+>       .eq("id", execution.id);
+> 
+>     // Sync node status in project graph
+>     await updateProjectGraph(admin, execution.project_id, execution.node_id, "failed", { errorMessage: errMsg });
+> 
+>     // SSP-01 OE03 Pillar 4 (Observability) — best-effort health pulse
+>     await admin
+>       .from("infra_health_logs")
+>       .insert({ service: "higgsfield-webhook", status: "unhealthy" })
+>       .then(() => {}, (e) => console.error("[higgsfield-webhook] health log failed:", e));
+> 
+>     return new Response(JSON.stringify({ ok: true, status: "failed" }), {
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+>     });
+>   }
+> 
+>   // Success path: resolve result URL from payload variants
+>   const payload = body.payload as { video?: { url?: string }; result_url?: string; url?: string } | undefined;
+>   const video = body.video as { url?: string } | undefined;
+>   const resultUrl =
+>     (body.result_url as string | undefined) ||
+>     (body.url as string | undefined) ||
+>     video?.url ||
+>     payload?.video?.url ||
+>     payload?.result_url ||
+>     payload?.url;
+> 
+>   if (!resultUrl) {
+>     const errMsg = "no result_url in webhook payload";
+>     await admin
+>       .from("vm_canvas_executions")
+>       .update({
+>         status: "failed",
+>         error_message: errMsg,
+>         response_payload: body,
+>         webhook_received_at: nowIso,
+>         completed_at: nowIso,
+>       })
+>       .eq("id", execution.id);
+> 
+>     await updateProjectGraph(admin, execution.project_id, execution.node_id, "failed", { errorMessage: errMsg });
+> 
+>     // SSP-01 OE03 Pillar 4 (Observability)
+>     await admin
+>       .from("infra_health_logs")
+>       .insert({ service: "higgsfield-webhook", status: "unhealthy" })
+>       .then(() => {}, (e) => console.error("[higgsfield-webhook] health log failed:", e));
+> 
+>     return new Response(JSON.stringify({ error: errMsg }), {
+>       status: 400,
+>       headers: { ...corsHeaders, "Content-Type": "application/json" },
+>     });
+>   }
+> 
+>   try {
+>     // Download → validate ≥ 100 KB + content-type starts with 'video/'
+>     const videoResp = await fetch(resultUrl);
+>     if (!videoResp.ok) throw new Error(`fetch result_url failed: ${videoResp.status}`);
+>     const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+>     if (videoBytes.byteLength < MIN_VIDEO_BYTES) {
+>       throw new Error(`video too small (${videoBytes.byteLength} bytes) — likely error stub`);
+>     }
+>     const contentType = videoResp.headers.get("content-type") || "video/mp4";
+>     if (!contentType.startsWith("video/")) {
+>       throw new Error(`unexpected content-type: ${contentType}`);
+>     }
+> 
+>     // Upload to canvas-assets bucket — private; client uses signed URL
+>     const fileName = `${execution.project_id}/${execution.id}.mp4`;
+>     const { error: upErr } = await admin.storage
+>       .from("canvas-assets")
+>       .upload(fileName, videoBytes, { contentType, upsert: true });
+>     if (upErr) throw new Error(`storage upload: ${upErr.message}`);
+> 
+>     const { data: signed } = await admin.storage
+>       .from("canvas-assets")
+>       .createSignedUrl(fileName, 7 * 24 * 60 * 60); // 7d
+> 
+>     const signedUrl = signed?.signedUrl || null;
+> 
+>     // Atomic finalize: update exec → deduct → insert asset row
+>     // (deduct is via the post-migration 4-arg deduct_mco_coins that ALSO logs to mcoin_transactions)
+>     await admin
+>       .from("vm_canvas_executions")
+>       .update({
+>         status: "success",
+>         output_url: signedUrl,
+>         response_payload: body,
+>         webhook_received_at: nowIso,
+>         completed_at: nowIso,
+>       })
+>       .eq("id", execution.id);
+> 
+>     // Sync node status in project graph
+>     await updateProjectGraph(admin, execution.project_id, execution.node_id, "success", { videoUrl: signedUrl });
+> 
+>     // Deduct ONLY after upload-OK (atomic per Sovereign requirement; logs negative-amount ledger row)
+>     await admin.rpc("deduct_mco_coins", {
+>       p_user_id: execution.user_id,
+>       p_amount: execution.credits_charged,
+>       p_action: "canvas_video_spend",
+>       p_context: {
+>         execution_id: execution.id,
+>         node_id: execution.node_id,
+>         model: execution.model,
+>         video_path: fileName,
+>       },
+>     });
+> 
+>     // Asset row for the new video (vm_canvas_assets schema requires mime_type)
+>     await admin.from("vm_canvas_assets").insert({
+>       user_id: execution.user_id,
+>       project_id: execution.project_id,
+>       asset_type: "video",
+>       storage_key: fileName,
+>       storage_bucket: "canvas-assets",
+> ```
+
+## 🤖 Claude *(00:02:45)*
+
+
+## 🤖 Claude *(00:02:45)*
+
+Entendimento completo. Escrevendo o SOP Amendment (Lei 2) agora:
+
+## 🤖 Claude *(00:03:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md <<'EOF'\n\n---\n\n## Amendment Fase 2a \u2014 v\u00eddeo async no slice (2026-07-02, ANTES do c\u00f3digo)\n\n> Estende o slice execut\u00e1vel com `image_to_video` (Fase 2 \"breadth\" \u2014 SDD \u00a710.3). O ciclo de vida\n> async exige decis\u00f5es novas porque o finalizador N\u00c3O \u00e9 a request do submit \u2014 \u00e9 o webhook.\n\n| # | Decis\u00e3o | Racional |\n|---|---------|----------|\n| S14 | **V\u00eddeo async \u00e9 ledger-first no SUBMIT**: `begin_space_generation` (d\u00e9bito, `output_type='video'`, `status='running'`) roda ANTES do submit ao Higgsfield. Submit falhou (rede/4xx/5xx/sem request_id) \u2192 `finalize_space_generation(error, refund total)` na MESMA request + resposta honesta 502 (`refund_pending` se o estorno n\u00e3o confirmar). Submit ok \u2192 resposta `202 {generation_id, status:'queued'}`; quem finaliza \u00e9 o webhook. | Espelha S1; o d\u00e9bito nunca fica sem row e a row nunca fica sem d\u00e9bito. |\n| S15 | **Correla\u00e7\u00e3o webhook tenant-safe = token na row**: colunas novas `generations.webhook_token text UNIQUE` (nullable \u2014 s\u00f3 runs async mintam) + `generations.operation_id text`. O submit minta o token server-side e o baked na URL (`?spaces_token=`). O webhook resolve a row S\u00d3 pelo token (single-row lookup no \u00edndice UNIQUE) e NUNCA aceita `node_run_id`/ids vindos de URL/corpo \u2014 anti cross-tenant injection. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2\u00ba POST \u2192 no-op. `vm_canvas_executions` N\u00c3O \u00e9 usada (FK `project_id NOT NULL \u2192 vm_canvas_projects` a torna estruturalmente inutiliz\u00e1vel p/ Spaces). | Mesma raz\u00e3o do `webhook_token` legado, sem herdar a tabela errada. |\n| S16 | **Supress\u00e3o do dinheiro legado no webhook**: o branch Spaces do `higgsfield-webhook` N\u00c3O chama `deduct_mco_coins` (d\u00e9bito j\u00e1 ocorreu no begin \u2014 chamar de novo = double-charge, o P0 da OTD-VA-010) e N\u00c3O escreve `vm_canvas_assets`/`updateProjectGraph` (grafo Spaces vive em `spaces.graph`). Sucesso p\u00f3s-upload \u2192 `finalize(done, refund 0, result={video_url, storage_path})`; v\u00eddeo no bucket privado `canvas-assets` (mesmo path-shape legado, prefixo = space_id). Falha/NSFW/cancel \u2192 `finalize(error, refund total)`. `asset_id \u2192 creative_assets` = follow-up declarado (spine), n\u00e3o bloqueia a 2a. | Anti double-charge estrutural. |\n| S17 | **Sweep cobre async**: `running` > 30 min sem webhook \u2192 refund pelo sweep (S6/guard de valor). Webhook TARDIO p\u00f3s-sweep \u2192 claim falha \u2192 no-op (v\u00eddeo entregue com refund mantido = generosidade limitada e logada; NUNCA re-cobran\u00e7a). DoP real ~2-6 min \u226a 30 min. | First-finalizer-wins j\u00e1 selado (S6). |\n| S18 | **Guards 422 do v\u00eddeo (pr\u00e9-d\u00e9bito)**: `provider === 'higgsfield'` + modelo \u2208 allowlist 1:1 com os `ALLOWED_VIDEO_MODELS` legados (dop-lite/turbo/standard, kling-2.1-pro, seedance-v1-pro) + `input_asset_url` obrigat\u00f3rio (sem ele o submit falharia DEPOIS do d\u00e9bito) + `duration \u2208 {5,10}` default 5. Custo = `CREDIT_COSTS[\"higgsfield/<model>-<duration>s\"]` (chaves 10s ausentes hoje \u21d2 fallback 10 do lookup legado N\u00c3O se aplica ao Spaces: duration sem chave de custo \u2192 422, estimativa=cobran\u00e7a G7). | C12 li\u00e7\u00e3o: nunca cobrar caminho sem pre\u00e7o declarado. |\n\n**Gates novos (verification):**\n- **G8** submit-fail \u2192 row `error` + refund total + `mcoin_transactions` sim\u00e9trica (zero cobran\u00e7a l\u00edquida).\n- **G9** webhook failure/NSFW \u2192 finalize(error, refund total) idempotente.\n- **G10** webhook success (payload com `result_url` real) \u2192 download+valida\u00e7\u00e3o (\u2265100KB, `video/*`) \u2192 upload bucket \u2192 `done` + `result.video_url` + **zero** `deduct_mco_coins` novo no ledger (a \u00fanica txn \u00e9 a do begin).\n- **G11** replay do webhook (2\u00ba POST mesmo token) \u2192 `{finalized:false}` no-op, zero muta\u00e7\u00e3o de saldo.\n- **G12** token inv\u00e1lido/ausente \u2192 401/404 sem vazamento de exist\u00eancia.\n\n**Recovery path (delta):** webhook perdido \u2192 sweep 30min refund (S17). Webhook com payload sem\n`result_url` \u2192 trata como falha (refund) \u2014 nunca `done` sem v\u00eddeo material (Lei 1).\n\n**Success signal (2a-server):** smoke zero-cost prova G8-G12 com webhook simulado (payload forjado +\nv\u00eddeo fake hospedado) SEM nenhuma chamada Higgsfield; E2E pago real (~30 mco + ~$0.13 BYOK) fica\npara a fatia 2a-cliente com nota de GO.\nEOF\necho \"SOP amended: $(wc -l < docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md) lines\"",
+  "description": "Append Fase 2a amendment (S14-S18, G8-G12) to the SOP"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SOP amended: 117 lines
+> ```
+
+## 🤖 Claude *(00:03:46)*
+
+
+## 🤖 Claude *(00:03:46)*
+
+
+## 🤖 Claude *(00:03:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md",
+  "old_string": "| S15 | **Correla\u00e7\u00e3o webhook tenant-safe = token na row**: colunas novas `generations.webhook_token text UNIQUE` (nullable \u2014 s\u00f3 runs async mintam) + `generations.operation_id text`. O submit minta o token server-side e o baked na URL (`?spaces_token=`). O webhook resolve a row S\u00d3 pelo token (single-row lookup no \u00edndice UNIQUE) e NUNCA aceita `node_run_id`/ids vindos de URL/corpo \u2014 anti cross-tenant injection. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2\u00ba POST \u2192 no-op. `vm_canvas_executions` N\u00c3O \u00e9 usada (FK `project_id NOT NULL \u2192 vm_canvas_projects` a torna estruturalmente inutiliz\u00e1vel p/ Spaces). | Mesma raz\u00e3o do `webhook_token` legado, sem herdar a tabela errada. |",
+  "new_string": "| S15 | **Correla\u00e7\u00e3o webhook tenant-safe = HASH do token na row**: colunas novas `generations.webhook_token_hash text` (UNIQUE parcial, nullable \u2014 s\u00f3 runs async mintam) + `generations.operation_id text`. O submit minta o token server-side (CSPRNG), guarda **s\u00f3 o SHA-256** na row e baked o plaintext na URL (`?spaces_token=`). O webhook hasheia o token recebido e resolve a row pelo hash (single-row lookup no \u00edndice UNIQUE); NUNCA aceita `node_run_id`/ids vindos de URL/corpo \u2014 anti cross-tenant injection. **Hash (n\u00e3o plaintext) porque a RLS SELECT-own exporia o token ao pr\u00f3prio dono**, que poderia forjar failure-callback do pr\u00f3prio run (refund + v\u00eddeo tardio de gra\u00e7a) \u2014 precedente PAT vision-mcp. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2\u00ba POST \u2192 no-op. `vm_canvas_executions` N\u00c3O \u00e9 usada (FK `project_id NOT NULL \u2192 vm_canvas_projects` a torna estruturalmente inutiliz\u00e1vel p/ Spaces). | Mesma raz\u00e3o do `webhook_token` legado, sem herdar a tabela errada nem vazar segredo via RLS. |"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:04:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'S15' docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md | head -3",
+  "description": "Check S15 current state in SOP"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 100:| S15 | **Correlação webhook tenant-safe = token na row**: colunas novas `generations.webhook_token text UNIQUE` (nullable — só runs async mintam) + `generations.operation_id text`. O submit minta o token server-side e o baked na URL (`?spaces_token=`). O webhook resolve a row SÓ pelo token (single-row lookup no índice UNIQUE) e NUNCA aceita `node_run_id`/ids vindos de URL/corpo — anti cross-tenant injection. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2º POST → no-op. `vm_canvas_executions` NÃO é usada (FK `project_id NOT NULL → vm_canvas_projects` a torna estruturalmente inutilizável p/ Spaces). | Mesma razão do `webhook_token` legado, sem herdar a tabela errada. |
+> ```
+
+## 🤖 Claude *(00:04:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md",
+  "offset": 95,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	> async exige decisões novas porque o finalizador NÃO é a request do submit — é o webhook.
+> 96	
+> 97	| # | Decisão | Racional |
+> 98	|---|---------|----------|
+> 99	| S14 | **Vídeo async é ledger-first no SUBMIT**: `begin_space_generation` (débito, `output_type='video'`, `status='running'`) roda ANTES do submit ao Higgsfield. Submit falhou (rede/4xx/5xx/sem request_id) → `finalize_space_generation(error, refund total)` na MESMA request + resposta honesta 502 (`refund_pending` se o estorno não confirmar). Submit ok → resposta `202 {generation_id, status:'queued'}`; quem finaliza é o webhook. | Espelha S1; o débito nunca fica sem row e a row nunca fica sem débito. |
+> 100	| S15 | **Correlação webhook tenant-safe = token na row**: colunas novas `generations.webhook_token text UNIQUE` (nullable — só runs async mintam) + `generations.operation_id text`. O submit minta o token server-side e o baked na URL (`?spaces_token=`). O webhook resolve a row SÓ pelo token (single-row lookup no índice UNIQUE) e NUNCA aceita `node_run_id`/ids vindos de URL/corpo — anti cross-tenant injection. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2º POST → no-op. `vm_canvas_executions` NÃO é usada (FK `project_id NOT NULL → vm_canvas_projects` a torna estruturalmente inutilizável p/ Spaces). | Mesma razão do `webhook_token` legado, sem herdar a tabela errada. |
+> 101	| S16 | **Supressão do dinheiro legado no webhook**: o branch Spaces do `higgsfield-webhook` NÃO chama `deduct_mco_coins` (débito já ocorreu no begin — chamar de novo = double-charge, o P0 da OTD-VA-010) e NÃO escreve `vm_canvas_assets`/`updateProjectGraph` (grafo Spaces vive em `spaces.graph`). Sucesso pós-upload → `finalize(done, refund 0, result={video_url, storage_path})`; vídeo no bucket privado `canvas-assets` (mesmo path-shape legado, prefixo = space_id). Falha/NSFW/cancel → `finalize(error, refund total)`. `asset_id → creative_assets` = follow-up declarado (spine), não bloqueia a 2a. | Anti double-charge estrutural. |
+> 102	| S17 | **Sweep cobre async**: `running` > 30 min sem webhook → refund pelo sweep (S6/guard de valor). Webhook TARDIO pós-sweep → claim falha → no-op (vídeo entregue com refund mantido = generosidade limitada e logada; NUNCA re-cobrança). DoP real ~2-6 min ≪ 30 min. | First-finalizer-wins já selado (S6). |
+> 103	| S18 | **Guards 422 do vídeo (pré-débito)**: `provider === 'higgsfield'` + modelo ∈ allowlist 1:1 com os `ALLOWED_VIDEO_MODELS` legados (dop-lite/turbo/standard, kling-2.1-pro, seedance-v1-pro) + `input_asset_url` obrigatório (sem ele o submit falharia DEPOIS do débito) + `duration ∈ {5,10}` default 5. Custo = `CREDIT_COSTS["higgsfield/<model>-<duration>s"]` (chaves 10s ausentes hoje ⇒ fallback 10 do lookup legado NÃO se aplica ao Spaces: duration sem chave de custo → 422, estimativa=cobrança G7). | C12 lição: nunca cobrar caminho sem preço declarado. |
+> 104	
+> ```
+
+## 🤖 Claude *(00:04:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md",
+  "old_string": "| S15 | **Correla\u00e7\u00e3o webhook tenant-safe = token na row**: colunas novas `generations.webhook_token text UNIQUE` (nullable \u2014 s\u00f3 runs async mintam) + `generations.operation_id text`. O submit minta o token server-side e o baked na URL (`?spaces_token=`). O webhook resolve a row S\u00d3 pelo token (single-row lookup no \u00edndice UNIQUE) e NUNCA aceita `node_run_id`/ids vindos de URL/corpo \u2014 anti cross-tenant injection. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2\u00ba POST \u2192 no-op. `vm_canvas_executions` N\u00c3O \u00e9 usada (FK `project_id NOT NULL \u2192 vm_canvas_projects` a torna estruturalmente inutiliz\u00e1vel p/ Spaces). | Mesma raz\u00e3o do `webhook_token` legado, sem herdar a tabela errada. |",
+  "new_string": "| S15 | **Correla\u00e7\u00e3o webhook tenant-safe = HASH do token na row**: colunas novas `generations.webhook_token_hash text` (UNIQUE parcial, nullable \u2014 s\u00f3 runs async mintam) + `generations.operation_id text`. O submit minta o token server-side (CSPRNG), guarda **s\u00f3 o SHA-256** na row e baked o plaintext na URL (`?spaces_token=`). O webhook hasheia o token recebido e resolve a row pelo hash (single-row lookup no \u00edndice UNIQUE); NUNCA aceita `node_run_id`/ids vindos de URL/corpo \u2014 anti cross-tenant injection. **Hash (n\u00e3o plaintext) porque a RLS SELECT-own exporia o token ao pr\u00f3prio dono**, que poderia forjar failure-callback do pr\u00f3prio run (refund + v\u00eddeo tardio de gra\u00e7a) \u2014 precedente PAT vision-mcp. Replay-guard = claim do finalize (`status IN ('pending','running')`): 2\u00ba POST \u2192 no-op. `vm_canvas_executions` N\u00c3O \u00e9 usada (FK `project_id NOT NULL \u2192 vm_canvas_projects` a torna estruturalmente inutiliz\u00e1vel p/ Spaces). | Mesma raz\u00e3o do `webhook_token` legado, sem herdar a tabela errada nem vazar segredo via RLS. |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:04:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260702210000_spaces_video_async_webhook_token.sql",
+  "content": "-- Migration: 20260702210000_spaces_video_async_webhook_token.sql\n-- Spaces Fase 2a (async video slice): webhook correlation columns on `generations`.\n-- SOP (Lei 2, amended BEFORE this code): docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md \u00a7Amendment Fase 2a\n-- (S14-S18). BoK SSOT: docs/bok/spaces-evolution/05-sdd.md \u00a710.3 (Fase 2 breadth \u2014 video nodes).\n--\n-- S15: the submit path mints a CSPRNG token, stores ONLY its SHA-256 here and bakes the plaintext\n-- into the Higgsfield hf_webhook URL (?spaces_token=). The webhook hashes the incoming token and\n-- resolves the row via the partial UNIQUE index. Hash (never plaintext) because the SELECT-own RLS\n-- policy would expose a plaintext token to its OWNER, who could then forge a failure callback for\n-- their own run (refund + late-arriving video for free) \u2014 vision-mcp PAT precedent (SHA-256 lookup).\n-- Replay guard lives in finalize_space_generation's claim (status IN pending/running) \u2014 a second\n-- webhook POST is a no-op. No RLS change: columns inherit SELECT-own; the hash is preimage-safe.\n\nALTER TABLE public.generations ADD COLUMN webhook_token_hash text;\nALTER TABLE public.generations ADD COLUMN operation_id text;\n\nCREATE UNIQUE INDEX generations_webhook_token_hash_idx\n  ON public.generations (webhook_token_hash)\n  WHERE webhook_token_hash IS NOT NULL;\n\nCOMMENT ON COLUMN public.generations.webhook_token_hash IS\n  'SHA-256 hex of the per-run async webhook token (S15). Plaintext lives only in the provider''s '\n  'baked callback URL \u2014 never stored, so the owner-readable row cannot be used to forge callbacks.';\nCOMMENT ON COLUMN public.generations.operation_id IS\n  'Provider-side operation handle (Higgsfield request_id) for observability/manual rescue.';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260702210000_spaces_video_async_webhook_token.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:05:50)*
+
+
+## 🤖 Claude *(00:05:50)*
+
+
+## 🤖 Claude *(00:05:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 733,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 733	async function executeSpacesNode(ctx: SpacesExecCtx): Promise<Response> {
+> 734	  const { admin, user, body, keys, creditCost, corsHeaders } = ctx;
+> 735	  const t0 = Date.now();
+> 736	
+> 737	  // ── 1b slice gate (SOP S7): only these node_types execute in Spaces mode ──
+> 738	  if (body.node_type !== "generate_image" && body.node_type !== "magic_prompt") {
+> 739	    return spacesJson(422, {
+> 740	      error: "spaces_node_type_unsupported",
+> 741	      message: "Tipo de nó não suportado na Fase 1 do Spaces.",
+> 742	    }, corsHeaders);
+> 743	  }
+> 744	
+> 745	  // ── 422 guards BEFORE any debit (gate G4) ──
+> 746	  if (body.node_type === "generate_image") {
+> 747	    const pair = `${body.provider}/${body.model}`;
+> 748	    if (!SPACES_IMAGE_MODELS.has(pair)) {
+> 749	      return spacesJson(422, {
+> 750	        error: "spaces_model_unsupported",
+> 751	        message: "Modelo não suportado na Fase 1 do Spaces.",
+> 752	        model_requested: pair,
+> 753	        allowed: [...SPACES_IMAGE_MODELS],
+> 754	      }, corsHeaders);
+> 755	    }
+> 756	    if (isImagePromptTooLong(body.prompt)) {
+> 757	      return spacesJson(422, {
+> 758	        error: "prompt_too_long",
+> 759	        message: `Prompt de imagem acima de ${MAX_IMAGE_PROMPT_CHARS} caracteres — resuma a descrição.`,
+> 760	      }, corsHeaders);
+> 761	    }
+> 762	    if (detectInstructionStylePrompt(body.prompt)) {
+> 763	      return spacesJson(422, {
+> 764	        error: "prompt_instruction_style",
+> 765	        message: "O prompt parece uma instrução de sistema, não uma descrição de imagem.",
+> 766	      }, corsHeaders);
+> 767	    }
+> 768	  }
+> 769	
+> 770	  // ── Ownership pre-check: foreign/absent space ⇒ 404, not 403 (FR-SPACES-007).
+> 771	  // The composite tenant FK in `generations` is the schema-level backstop.
+> 772	  const { data: spaceRow } = await admin
+> 773	    .from("spaces").select("id").eq("id", body.space_id).eq("owner_id", user.id).maybeSingle();
+> 774	  if (!spaceRow) {
+> 775	    return spacesJson(404, { error: "space_not_found", message: "Space não encontrado." }, corsHeaders);
+> 776	  }
+> 777	
+> 778	  // ── 402 pre-checks AFTER validation (canonical order 401→422→404→402; SOP S5) ──
+> 779	  // These mirror the legacy pre-checks; begin_space_generation stays the race-safe authority.
+> 780	  const { data: profile } = await admin
+> 781	    .from("profiles").select("mco_balance").eq("id", user.id).single();
+> 782	  if (!profile || (profile.mco_balance || 0) < creditCost) {
+> 783	    return spacesJson(402, {
+> 784	      error: "insufficient_balance",
+> 785	      message: "Saldo de mcoCoins insuficiente.",
+> 786	      required: creditCost,
+> 787	      balance: profile?.mco_balance || 0,
+> 788	    }, corsHeaders);
+> 789	  }
+> 790	  const capResp = await enforceDailyCanvasCap(admin, user.id, creditCost, corsHeaders);
+> 791	  if (capResp) return capResp;
+> 792	
+> 793	  // ── Ledger-first begin (SOP S1): 'running' row + atomic debit in ONE transaction ──
+> 794	  const modelKey = body.node_type === "magic_prompt" ? "magic_prompt" : `${body.provider}/${body.model}`;
+> 795	  const { data: begun, error: beginErr } = await admin.rpc("begin_space_generation", {
+> 796	    p_owner_id: user.id,
+> 797	    p_space_id: body.space_id,
+> 798	    p_node_id: body.node_id,
+> 799	    p_node_run_id: body.node_run_id,
+> 800	    p_model_key: modelKey,
+> 801	    p_output_type: body.node_type === "magic_prompt" ? "text" : "image",
+> 802	    p_amount: creditCost,
+> 803	    p_context: { provider: body.provider, model: body.model, node_type: body.node_type },
+> 804	  });
+> 805	  if (beginErr) {
+> 806	    // deduct RAISE inside the RPC rolled the row back — surface the canonical 402 when it is a balance
+> 807	    // failure (race past the pre-check). Frozen accounts map to a GENERIC 403 (security-review LOW:
+> 808	    // never leak internal quarantine wording). Everything else: log server-side, generic 500 body.
+> 809	    const msg = beginErr.message ?? "";
+> 810	    console.error("[canvas-execute:spaces] begin failed:", msg);
+> 811	    if (msg.includes("Saldo mcoCoins insuficiente")) {
+> 812	      return spacesJson(402, { error: "insufficient_balance", message: "Saldo de mcoCoins insuficiente." }, corsHeaders);
+> ```
+
+## 🤖 Claude *(00:05:59)*
+
+
+## 🤖 Claude *(00:06:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 813,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 813	    }
+> 814	    if (msg.includes("Conta congelada")) {
+> 815	      return spacesJson(403, { error: "account_unavailable", message: "Conta indisponível para operações de débito." }, corsHeaders);
+> 816	    }
+> 817	    return spacesJson(500, { error: "begin_failed", message: "Falha ao iniciar a geração — nada foi cobrado." }, corsHeaders);
+> 818	  }
+> 819	  if (begun?.duplicate) {
+> 820	    // Idempotent replay (SOP S2): prior attempt already charged — return its state, ZERO second debit.
+> 821	    return spacesJson(200, {
+> 822	      execution_id: begun.generation_id,
+> 823	      status: begun.status,
+> 824	      duplicate: true,
+> 825	      credits_charged: 0,
+> 826	    }, corsHeaders);
+> 827	  }
+> 828	  const generationId = begun?.generation_id as string;
+> 829	
+> 830	  // ── Provider call — 1 retry, fixed 5s backoff (BoK 07:155) ──
+> 831	  let outputUrl = "", outputB64 = "", enhancedPrompt = "", provErr = "";
+> 832	  for (let attempt = 0; attempt < 2; attempt++) {
+> 833	    try {
+> 834	      provErr = "";
+> 835	      if (body.node_type === "magic_prompt") {
+> 836	        enhancedPrompt = await generateMagicPrompt(
+> 837	          keys.openrouter, keys.gemini, body.prompt,
+> 838	          body.parameters?.level || "curto",
+> 839	          body.parameters?.target_model || "generic",
+> 840	          "Nenhum contexto de campanha disponível.",
+> 841	        );
+> 842	      } else if (body.provider === "openrouter") {
+> 843	        const r = await generateOpenRouter(keys.openrouter, body);
+> 844	        outputUrl = r.url; outputB64 = r.b64;
+> 845	      } else {
+> 846	        // Unreachable behind SPACES_IMAGE_MODELS (both pairs are openrouter) — kept as a hard stop.
+> 847	        throw new Error(`Unknown Spaces provider: ${body.provider}`);
+> 848	      }
+> 849	      break;
+> 850	    } catch (e: any) {
+> 851	      provErr = e?.message || "Provider error";
+> 852	      console.error(`[canvas-execute:spaces] provider attempt ${attempt + 1} failed:`, provErr);
+> 853	      if (attempt === 0) await new Promise((r) => setTimeout(r, 5000));
+> 854	    }
+> 855	  }
+> 856	
+> 857	  const producedNothing = body.node_type === "magic_prompt"
+> ```
+
+## 🤖 Claude *(00:06:11)*
+
+
+## 🤖 Claude *(00:06:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  // \u2500\u2500 1b slice gate (SOP S7): only these node_types execute in Spaces mode \u2500\u2500\n  if (body.node_type !== \"generate_image\" && body.node_type !== \"magic_prompt\") {\n    return spacesJson(422, {\n      error: \"spaces_node_type_unsupported\",\n      message: \"Tipo de n\u00f3 n\u00e3o suportado na Fase 1 do Spaces.\",\n    }, corsHeaders);\n  }\n\n  // \u2500\u2500 422 guards BEFORE any debit (gate G4) \u2500\u2500\n  if (body.node_type === \"generate_image\") {",
+  "new_string": "  // \u2500\u2500 Slice gate (SOP S7 + Amendment 2a S14): image, prompt and async video \u2500\u2500\n  if (\n    body.node_type !== \"generate_image\" && body.node_type !== \"magic_prompt\" &&\n    body.node_type !== \"image_to_video\"\n  ) {\n    return spacesJson(422, {\n      error: \"spaces_node_type_unsupported\",\n      message: \"Tipo de n\u00f3 n\u00e3o suportado nesta fase do Spaces.\",\n    }, corsHeaders);\n  }\n\n  // \u2500\u2500 Video 422 guards BEFORE any debit (S18) \u2500\u2500\n  let videoCost = 0;\n  if (body.node_type === \"image_to_video\") {\n    const pair = `${body.provider}/${body.model}`;\n    if (body.provider !== \"higgsfield\" || !SPACES_VIDEO_MODELS.has(body.model)) {\n      return spacesJson(422, {\n        error: \"spaces_model_unsupported\",\n        message: \"Modelo de v\u00eddeo n\u00e3o suportado no Spaces.\",\n        model_requested: pair,\n        allowed: [...SPACES_VIDEO_MODELS].map((m) => `higgsfield/${m}`),\n      }, corsHeaders);\n    }\n    if (!body.input_asset_url) {\n      return spacesJson(422, {\n        error: \"video_input_required\",\n        message: \"Conecte uma imagem upstream antes de gerar v\u00eddeo (input_asset_url).\",\n      }, corsHeaders);\n    }\n    const duration = typeof body.parameters?.duration === \"number\" ? body.parameters.duration : 5;\n    const costKey = `higgsfield/${body.model}-${duration}s`;\n    videoCost = CREDIT_COSTS[costKey] || 0;\n    if (videoCost <= 0) {\n      // S18: never charge a path without a declared price (the legacy `|| 10` fallback is NOT\n      // acceptable here \u2014 estimate must equal the real charge, gate G7).\n      return spacesJson(422, {\n        error: \"video_duration_unsupported\",\n        message: \"Dura\u00e7\u00e3o sem pre\u00e7o declarado \u2014 use 5s.\",\n        cost_key: costKey,\n      }, corsHeaders);\n    }\n    // Per-user BYOK fail-closed (API Tenancy Model): no Higgsfield key \u21d2 402 BEFORE debit.\n    if (!keys.higgsfield || !keys.higgsfield_secret) {\n      return spacesJson(402, {\n        error: \"higgsfield_not_configured\",\n        message: \"Configure suas credenciais Higgsfield em /dashboard/settings.\",\n        action: \"Configure your Higgsfield credentials at /dashboard/settings\",\n      }, corsHeaders);\n    }\n  }\n  const effectiveCost = body.node_type === \"image_to_video\" ? videoCost : creditCost;\n\n  // \u2500\u2500 422 guards BEFORE any debit (gate G4) \u2500\u2500\n  if (body.node_type === \"generate_image\") {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:06:34)*
+
+
+## 🤖 Claude *(00:06:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  // \u2500\u2500 402 pre-checks AFTER validation (canonical order 401\u2192422\u2192404\u2192402; SOP S5) \u2500\u2500\n  // These mirror the legacy pre-checks; begin_space_generation stays the race-safe authority.\n  const { data: profile } = await admin\n    .from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).single();\n  if (!profile || (profile.mco_balance || 0) < creditCost) {\n    return spacesJson(402, {\n      error: \"insufficient_balance\",\n      message: \"Saldo de mcoCoins insuficiente.\",\n      required: creditCost,\n      balance: profile?.mco_balance || 0,\n    }, corsHeaders);\n  }\n  const capResp = await enforceDailyCanvasCap(admin, user.id, creditCost, corsHeaders);\n  if (capResp) return capResp;\n\n  // \u2500\u2500 Ledger-first begin (SOP S1): 'running' row + atomic debit in ONE transaction \u2500\u2500\n  const modelKey = body.node_type === \"magic_prompt\" ? \"magic_prompt\" : `${body.provider}/${body.model}`;\n  const { data: begun, error: beginErr } = await admin.rpc(\"begin_space_generation\", {\n    p_owner_id: user.id,\n    p_space_id: body.space_id,\n    p_node_id: body.node_id,\n    p_node_run_id: body.node_run_id,\n    p_model_key: modelKey,\n    p_output_type: body.node_type === \"magic_prompt\" ? \"text\" : \"image\",\n    p_amount: creditCost,\n    p_context: { provider: body.provider, model: body.model, node_type: body.node_type },\n  });",
+  "new_string": "  // \u2500\u2500 402 pre-checks AFTER validation (canonical order 401\u2192422\u2192404\u2192402; SOP S5) \u2500\u2500\n  // These mirror the legacy pre-checks; begin_space_generation stays the race-safe authority.\n  const { data: profile } = await admin\n    .from(\"profiles\").select(\"mco_balance\").eq(\"id\", user.id).single();\n  if (!profile || (profile.mco_balance || 0) < effectiveCost) {\n    return spacesJson(402, {\n      error: \"insufficient_balance\",\n      message: \"Saldo de mcoCoins insuficiente.\",\n      required: effectiveCost,\n      balance: profile?.mco_balance || 0,\n    }, corsHeaders);\n  }\n  const capResp = await enforceDailyCanvasCap(admin, user.id, effectiveCost, corsHeaders);\n  if (capResp) return capResp;\n\n  // \u2500\u2500 Ledger-first begin (SOP S1): 'running' row + atomic debit in ONE transaction \u2500\u2500\n  const modelKey = body.node_type === \"magic_prompt\" ? \"magic_prompt\" : `${body.provider}/${body.model}`;\n  const outputType = body.node_type === \"magic_prompt\"\n    ? \"text\"\n    : (body.node_type === \"image_to_video\" ? \"video\" : \"image\");\n  const { data: begun, error: beginErr } = await admin.rpc(\"begin_space_generation\", {\n    p_owner_id: user.id,\n    p_space_id: body.space_id,\n    p_node_id: body.node_id,\n    p_node_run_id: body.node_run_id,\n    p_model_key: modelKey,\n    p_output_type: outputType,\n    p_amount: effectiveCost,\n    p_context: { provider: body.provider, model: body.model, node_type: body.node_type },\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:06:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  const generationId = begun?.generation_id as string;\n\n  // \u2500\u2500 Provider call \u2014 1 retry, fixed 5s backoff (BoK 07:155) \u2500\u2500",
+  "new_string": "  const generationId = begun?.generation_id as string;\n\n  // \u2500\u2500 Async video sub-path (Amendment 2a S14): debit done, submit now, webhook finalizes \u2500\u2500\n  if (body.node_type === \"image_to_video\") {\n    return await executeSpacesVideo({\n      admin, body, keys, corsHeaders,\n      creditCost: effectiveCost,\n      generationId,\n      supabaseUrl: ctx.supabaseUrl,\n    });\n  }\n\n  // \u2500\u2500 Provider call \u2014 1 retry, fixed 5s backoff (BoK 07:155) \u2500\u2500"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:06:57)*
+
+
+## 🤖 Claude *(00:07:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "const SPACES_IMAGE_MODELS = new Set([\n  \"openrouter/google/gemini-2.5-flash-image\",\n  \"openrouter/black-forest-labs/flux-1.1-pro\",\n]);",
+  "new_string": "const SPACES_IMAGE_MODELS = new Set([\n  \"openrouter/google/gemini-2.5-flash-image\",\n  \"openrouter/black-forest-labs/flux-1.1-pro\",\n]);\n\n// Amendment 2a (S18): 1:1 with the legacy ALLOWED_VIDEO_MODELS \u2014 all route via Higgsfield submit.\nconst SPACES_VIDEO_MODELS = new Set([\n  \"dop-lite\",\n  \"dop-turbo\",\n  \"dop-standard\",\n  \"kling-2.1-pro\",\n  \"seedance-v1-pro\",\n]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:07:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "    if (body.space_id && body.node_run_id) {\n      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders });\n    }",
+  "new_string": "    if (body.space_id && body.node_run_id) {\n      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders, supabaseUrl });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:07:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "interface SpacesExecCtx {\n  admin: any;\n  user: { id: string };\n  body: ExecuteRequest;\n  keys: Record<string, string>;\n  creditCost: number;\n  corsHeaders: Record<string, string>;\n}",
+  "new_string": "interface SpacesExecCtx {\n  admin: any;\n  user: { id: string };\n  body: ExecuteRequest;\n  keys: Record<string, string>;\n  creditCost: number;\n  corsHeaders: Record<string, string>;\n  supabaseUrl: string;\n}\n\nasync function sha256Hex(s: string): Promise<string> {\n  const d = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(s));\n  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, \"0\")).join(\"\");\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:07:24)*
+
+
+## 🤖 Claude *(00:07:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "async function executeSpacesNode(ctx: SpacesExecCtx): Promise<Response> {",
+  "new_string": "/** Pure Higgsfield submit (shared by the legacy vm_canvas_executions path and the Spaces async\n *  video path \u2014 Amendment 2a). No table writes; the caller owns row/ledger side-effects. */\nasync function higgsfieldSubmit(o: {\n  apiKey: string;\n  apiSecret: string;\n  body: ExecuteRequest;\n  webhookUrl: string;\n}): Promise<{ ok: true; operationId: string } | { ok: false; message: string }> {\n  const duration = typeof o.body.parameters?.duration === \"number\" ? o.body.parameters.duration : 5;\n  const motionStrength = typeof o.body.parameters?.motion_strength === \"number\"\n    ? o.body.parameters.motion_strength\n    : 0.5;\n\n  // Routing based on model parameter (aligned with .claude/context/higgsfield-api-validation-2026-05-15.md)\n  const BASE_URL = \"https://platform.higgsfield.ai\";\n  let modelPath = \"higgsfield-ai/dop/standard\";\n  if (o.body.model === \"dop-lite\") {\n    modelPath = \"higgsfield-ai/dop/lite\";\n  } else if (o.body.model === \"dop-turbo\") {\n    modelPath = \"higgsfield-ai/dop/turbo\";\n  } else if (o.body.model === \"kling-2.1-pro\") {\n    modelPath = \"kling-video/v2.1/pro/image-to-video\";\n  } else if (o.body.model === \"seedance-v1-pro\") {\n    modelPath = \"bytedance/seedance/v1/pro/image-to-video\";\n  }\n\n  const submitUrl = new URL(`${BASE_URL}/${modelPath}`);\n  submitUrl.searchParams.set(\"hf_webhook\", o.webhookUrl);\n\n  let submitResp: Response;\n  try {\n    submitResp = await fetch(submitUrl.toString(), {\n      method: \"POST\",\n      headers: {\n        Authorization: `Key ${o.apiKey}:${o.apiSecret}`,\n        \"Content-Type\": \"application/json\",\n        Accept: \"application/json\",\n      },\n      body: JSON.stringify({\n        image_url: o.body.input_asset_url,\n        prompt: o.body.prompt,\n        duration,\n        motion_strength: motionStrength,\n      }),\n    });\n  } catch (e) {\n    const msg = e instanceof Error ? e.message : \"Higgsfield submit network error\";\n    return { ok: false, message: `Higgsfield submit network error: ${msg}` };\n  }\n\n  if (!submitResp.ok) {\n    const text = await submitResp.text().catch(() => \"\");\n    let msg = `Higgsfield submit ${submitResp.status}: ${text.slice(0, 200)}`;\n    if (submitResp.status === 401 || submitResp.status === 403) {\n      msg = \"Higgsfield: credenciais inv\u00e1lidas\";\n    } else if (submitResp.status === 402) {\n      msg = \"Higgsfield: saldo de cr\u00e9ditos esgotado\";\n    } else if (submitResp.status === 429) {\n      msg = \"Higgsfield: limite de requisi\u00e7\u00f5es atingido\";\n    }\n    return { ok: false, message: msg };\n  }\n\n  let submitData: { request_id?: string; id?: string };\n  try {\n    submitData = await submitResp.json();\n  } catch {\n    return { ok: false, message: \"Higgsfield: resposta inv\u00e1lida (JSON parse failed)\" };\n  }\n\n  const operationId = submitData.request_id ?? submitData.id;\n  if (!operationId) {\n    return { ok: false, message: \"Higgsfield: resposta de submit sem request_id\" };\n  }\n  return { ok: true, operationId };\n}\n\n/** Amendment 2a (S14/S15): async video after the ledger-first debit already committed.\n *  Mints the webhook token (row stores ONLY the SHA-256 \u2014 the owner-readable row must never\n *  leak a forgeable secret), submits to Higgsfield, and answers 202/queued. Any submit failure\n *  refunds in full on the spot \u2014 the row never stays charged without an in-flight job. */\nasync function executeSpacesVideo(o: {\n  admin: any;\n  body: ExecuteRequest;\n  keys: Record<string, string>;\n  corsHeaders: Record<string, string>;\n  creditCost: number;\n  generationId: string;\n  supabaseUrl: string;\n}): Promise<Response> {\n  const { admin, body, keys, corsHeaders, creditCost, generationId, supabaseUrl } = o;\n\n  const refundNow = async (why: string, status: number, errorCode: string) => {\n    console.error(`[canvas-execute:spaces] video ${errorCode}:`, why);\n    const { error: finErr } = await finalizeWithRetry(admin, {\n      p_node_run_id: body.node_run_id,\n      p_status: \"error\",\n      p_refund: creditCost,\n      p_result: { error: why },\n    });\n    return spacesJson(status, {\n      error: errorCode,\n      message: why,\n      execution_id: generationId,\n      ...(finErr ? { refund_pending: true } : { refunded: creditCost }),\n    }, corsHeaders);\n  };\n\n  // Mint token; persist only the hash (S15). Without the hash the webhook could never finalize \u2014\n  // refund immediately instead of stranding a charged row until the sweep.\n  const token = crypto.randomUUID().replaceAll(\"-\", \"\") + crypto.randomUUID().replaceAll(\"-\", \"\");\n  const tokenHash = await sha256Hex(token);\n  const { error: tokErr } = await admin\n    .from(\"generations\")\n    .update({ webhook_token_hash: tokenHash })\n    .eq(\"id\", generationId);\n  if (tokErr) {\n    return await refundNow(\"Falha ao preparar o callback de v\u00eddeo \u2014 estorno aplicado.\", 500, \"video_begin_failed\");\n  }\n\n  const webhookUrl = `${supabaseUrl}/functions/v1/higgsfield-webhook?spaces_token=${token}`;\n  const submit = await higgsfieldSubmit({\n    apiKey: keys.higgsfield,\n    apiSecret: keys.higgsfield_secret,\n    body,\n    webhookUrl,\n  });\n  if (!submit.ok) {\n    return await refundNow(submit.message, 502, \"video_submit_failed\");\n  }\n\n  await admin.from(\"generations\").update({ operation_id: submit.operationId }).eq(\"id\", generationId);\n\n  return spacesJson(202, {\n    execution_id: generationId,\n    status: \"queued\",\n    operation_id: submit.operationId,\n    credits_charged: creditCost, // ledger-first: already debited (S14)\n  }, corsHeaders);\n}\n\nasync function executeSpacesNode(ctx: SpacesExecCtx): Promise<Response> {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:07:53)*
+
+
+## 🤖 Claude *(00:07:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'async function submitHiggsfieldVideo\\|^}' supabase/functions/canvas-execute/index.ts | grep -A1 'submitHiggsfieldVideo'",
+  "description": "Locate submitHiggsfieldVideo bounds"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1612:async function submitHiggsfieldVideo(opts: SubmitVideoOpts): Promise<Response> {
+> 1748:}
+> ```
+
+## 🤖 Claude *(00:07:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 1612,
+  "limit": 137
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1612	async function submitHiggsfieldVideo(opts: SubmitVideoOpts): Promise<Response> {
+> 1613	  const { admin, supabaseUrl, apiKey, apiSecret, body, execution, corsHeaders } = opts;
+> 1614	
+> 1615	  const fail = async (msg: string, httpStatus: number) => {
+> 1616	    await admin
+> 1617	      .from("vm_canvas_executions")
+> 1618	      .update({
+> 1619	        status: "failed",
+> 1620	        error_message: msg,
+> 1621	        completed_at: new Date().toISOString(),
+> 1622	      })
+> 1623	      .eq("id", execution.id);
+> 1624	    await admin
+> 1625	      .from("infra_health_logs")
+> 1626	      .insert({ service: "canvas-execute", status: "unhealthy" })
+> 1627	      .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 1628	    return new Response(
+> 1629	      JSON.stringify({ error: msg, execution_id: execution.id, status: "failed" }),
+> 1630	      { status: httpStatus, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 1631	    );
+> 1632	  };
+> 1633	
+> 1634	  if (!apiKey || !apiSecret) {
+> 1635	    return fail(
+> 1636	      "Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)",
+> 1637	      500,
+> 1638	    );
+> 1639	  }
+> 1640	
+> 1641	  const imageUrl = body.input_asset_url;
+> 1642	  if (!imageUrl) {
+> 1643	    return fail(
+> 1644	      "image_to_video requer input_asset_url (conecte uma imagem upstream antes de gerar)",
+> 1645	      400,
+> 1646	    );
+> 1647	  }
+> 1648	
+> 1649	  const duration = typeof body.parameters?.duration === "number" ? body.parameters.duration : 5;
+> 1650	  const motionStrength = typeof body.parameters?.motion_strength === "number"
+> 1651	    ? body.parameters.motion_strength
+> 1652	    : 0.5;
+> 1653	
+> 1654	  // Routing based on model parameter (aligned with .claude/context/higgsfield-api-validation-2026-05-15.md)
+> 1655	  const BASE_URL = "https://platform.higgsfield.ai";
+> 1656	  let modelPath = "higgsfield-ai/dop/standard";
+> 1657	  if (body.model === "dop-lite") {
+> 1658	    modelPath = "higgsfield-ai/dop/lite";
+> 1659	  } else if (body.model === "dop-turbo") {
+> 1660	    modelPath = "higgsfield-ai/dop/turbo";
+> 1661	  } else if (body.model === "kling-2.1-pro") {
+> 1662	    modelPath = "kling-video/v2.1/pro/image-to-video";
+> 1663	  } else if (body.model === "seedance-v1-pro") {
+> 1664	    modelPath = "bytedance/seedance/v1/pro/image-to-video";
+> 1665	  }
+> 1666	  const authHeader = `Key ${apiKey}:${apiSecret}`;
+> 1667	
+> 1668	  // Per-execution token guards against URL leak across rows (UNIQUE index on
+> 1669	  // vm_canvas_executions.webhook_token). Higgsfield POSTs back with this token
+> 1670	  // and the webhook idempotency check rejects replays via HTTP 409.
+> 1671	  const webhookUrl = `${supabaseUrl}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}`;
+> 1672	
+> 1673	  const submitUrl = new URL(`${BASE_URL}/${modelPath}`);
+> 1674	  submitUrl.searchParams.set("hf_webhook", webhookUrl);
+> 1675	
+> 1676	  let submitResp: Response;
+> 1677	  try {
+> 1678	    submitResp = await fetch(submitUrl.toString(), {
+> 1679	      method: "POST",
+> 1680	      headers: {
+> 1681	        Authorization: authHeader,
+> 1682	        "Content-Type": "application/json",
+> 1683	        Accept: "application/json",
+> 1684	      },
+> 1685	      body: JSON.stringify({
+> 1686	        image_url: imageUrl,
+> 1687	        prompt: body.prompt,
+> 1688	        duration,
+> 1689	        motion_strength: motionStrength,
+> 1690	      }),
+> 1691	    });
+> 1692	  } catch (e) {
+> 1693	    const msg = e instanceof Error ? e.message : "Higgsfield submit network error";
+> 1694	    return fail(`Higgsfield submit network error: ${msg}`, 502);
+> 1695	  }
+> 1696	
+> 1697	  if (!submitResp.ok) {
+> 1698	    const text = await submitResp.text().catch(() => "");
+> 1699	    let msg = `Higgsfield submit ${submitResp.status}: ${text.slice(0, 200)}`;
+> 1700	    if (submitResp.status === 401 || submitResp.status === 403) {
+> 1701	      msg = "Higgsfield: credenciais inválidas";
+> 1702	    } else if (submitResp.status === 402) {
+> 1703	      msg = "Higgsfield: saldo de créditos esgotado";
+> 1704	    } else if (submitResp.status === 429) {
+> 1705	      msg = "Higgsfield: limite de requisições atingido";
+> 1706	    }
+> 1707	    return fail(msg, 502);
+> 1708	  }
+> 1709	
+> 1710	  let submitData: { request_id?: string; id?: string; status?: string };
+> 1711	  try {
+> 1712	    submitData = await submitResp.json();
+> 1713	  } catch {
+> 1714	    return fail("Higgsfield: resposta inválida (JSON parse failed)", 502);
+> 1715	  }
+> 1716	
+> 1717	  const operationId = submitData.request_id ?? submitData.id;
+> 1718	  if (!operationId) {
+> 1719	    return fail("Higgsfield: resposta de submit sem request_id", 502);
+> 1720	  }
+> 1721	
+> 1722	  const { error: updErr } = await admin
+> 1723	    .from("vm_canvas_executions")
+> 1724	    .update({ operation_id: operationId })
+> 1725	    .eq("id", execution.id);
+> 1726	  if (updErr) {
+> 1727	    console.error("[canvas-execute] failed to persist operation_id:", updErr);
+> 1728	    // The job is in-flight at Higgsfield but we lost the polling handle.
+> 1729	    // Webhook will still finalize via webhook_token; watchdog poll falls back to noop.
+> 1730	  }
+> 1731	
+> 1732	  await admin
+> 1733	    .from("infra_health_logs")
+> 1734	    .insert({ service: "canvas-execute", status: "healthy" })
+> 1735	    .then(() => {}, (e: unknown) => console.error("[canvas-execute] health log failed:", e));
+> 1736	
+> 1737	  return new Response(
+> 1738	    JSON.stringify({
+> 1739	      execution_id: execution.id,
+> 1740	      status: "queued",
+> 1741	      webhook_token: execution.webhook_token,
+> 1742	      operation_id: operationId,
+> 1743	      credits_charged: execution.credits_charged, // intent, not yet deducted
+> 1744	      higgsfield_status: submitData.status ?? "queued",
+> 1745	    }),
+> 1746	    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 1747	  );
+> 1748	}
+> ```
+
+## 🤖 Claude *(00:08:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  const duration = typeof body.parameters?.duration === \"number\" ? body.parameters.duration : 5;\n  const motionStrength = typeof body.parameters?.motion_strength === \"number\"\n    ? body.parameters.motion_strength\n    : 0.5;\n\n  // Routing based on model parameter (aligned with .claude/context/higgsfield-api-validation-2026-05-15.md)\n  const BASE_URL = \"https://platform.higgsfield.ai\";\n  let modelPath = \"higgsfield-ai/dop/standard\";\n  if (body.model === \"dop-lite\") {\n    modelPath = \"higgsfield-ai/dop/lite\";\n  } else if (body.model === \"dop-turbo\") {\n    modelPath = \"higgsfield-ai/dop/turbo\";\n  } else if (body.model === \"kling-2.1-pro\") {\n    modelPath = \"kling-video/v2.1/pro/image-to-video\";\n  } else if (body.model === \"seedance-v1-pro\") {\n    modelPath = \"bytedance/seedance/v1/pro/image-to-video\";\n  }\n  const authHeader = `Key ${apiKey}:${apiSecret}`;\n\n  // Per-execution token guards against URL leak across rows (UNIQUE index on\n  // vm_canvas_executions.webhook_token). Higgsfield POSTs back with this token\n  // and the webhook idempotency check rejects replays via HTTP 409.\n  const webhookUrl = `${supabaseUrl}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}`;\n\n  const submitUrl = new URL(`${BASE_URL}/${modelPath}`);\n  submitUrl.searchParams.set(\"hf_webhook\", webhookUrl);\n\n  let submitResp: Response;\n  try {\n    submitResp = await fetch(submitUrl.toString(), {\n      method: \"POST\",\n      headers: {\n        Authorization: authHeader,\n        \"Content-Type\": \"application/json\",\n        Accept: \"application/json\",\n      },\n      body: JSON.stringify({\n        image_url: imageUrl,\n        prompt: body.prompt,\n        duration,\n        motion_strength: motionStrength,\n      }),\n    });\n  } catch (e) {\n    const msg = e instanceof Error ? e.message : \"Higgsfield submit network error\";\n    return fail(`Higgsfield submit network error: ${msg}`, 502);\n  }\n\n  if (!submitResp.ok) {\n    const text = await submitResp.text().catch(() => \"\");\n    let msg = `Higgsfield submit ${submitResp.status}: ${text.slice(0, 200)}`;\n    if (submitResp.status === 401 || submitResp.status === 403) {\n      msg = \"Higgsfield: credenciais inv\u00e1lidas\";\n    } else if (submitResp.status === 402) {\n      msg = \"Higgsfield: saldo de cr\u00e9ditos esgotado\";\n    } else if (submitResp.status === 429) {\n      msg = \"Higgsfield: limite de requisi\u00e7\u00f5es atingido\";\n    }\n    return fail(msg, 502);\n  }\n\n  let submitData: { request_id?: string; id?: string; status?: string };\n  try {\n    submitData = await submitResp.json();\n  } catch {\n    return fail(\"Higgsfield: resposta inv\u00e1lida (JSON parse failed)\", 502);\n  }\n\n  const operationId = submitData.request_id ?? submitData.id;\n  if (!operationId) {\n    return fail(\"Higgsfield: resposta de submit sem request_id\", 502);\n  }\n\n  const { error: updErr } = await admin\n    .from(\"vm_canvas_executions\")\n    .update({ operation_id: operationId })\n    .eq(\"id\", execution.id);",
+  "new_string": "  // Per-execution token guards against URL leak across rows (UNIQUE index on\n  // vm_canvas_executions.webhook_token). Higgsfield POSTs back with this token\n  // and the webhook idempotency check rejects replays via HTTP 409.\n  const webhookUrl = `${supabaseUrl}/functions/v1/higgsfield-webhook?token=${execution.webhook_token}`;\n\n  // Shared submit core (Amendment 2a refactor) \u2014 behavior preserved: every submit\n  // failure was (and is) a 502 with the same mapped messages.\n  const submit = await higgsfieldSubmit({ apiKey, apiSecret, body, webhookUrl });\n  if (!submit.ok) {\n    return fail(submit.message, 502);\n  }\n  const operationId = submit.operationId;\n\n  const { error: updErr } = await admin\n    .from(\"vm_canvas_executions\")\n    .update({ operation_id: operationId })\n    .eq(\"id\", execution.id);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:08:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  return new Response(\n    JSON.stringify({\n      execution_id: execution.id,\n      status: \"queued\",\n      webhook_token: execution.webhook_token,\n      operation_id: operationId,\n      credits_charged: execution.credits_charged, // intent, not yet deducted\n      higgsfield_status: submitData.status ?? \"queued\",\n    }),\n    { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n  );\n}",
+  "new_string": "  return new Response(\n    JSON.stringify({\n      execution_id: execution.id,\n      status: \"queued\",\n      webhook_token: execution.webhook_token,\n      operation_id: operationId,\n      credits_charged: execution.credits_charged, // intent, not yet deducted\n      higgsfield_status: \"queued\",\n    }),\n    { headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } },\n  );\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:08:38)*
+
+
+## 🤖 Claude *(00:08:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export PATH=\"/home/ubuntu/.deno/bin:$PATH\" && deno check supabase/functions/canvas-execute/index.ts 2>&1 | tail -3",
+  "description": "Deno check canvas-execute after video edits",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mCheck[0m supabase/functions/canvas-execute/index.ts
+> ```
+
+## 🤖 Claude *(00:08:47)*
+
+Limpo. Agora o branch Spaces no `higgsfield-webhook`:
+
+## 🤖 Claude *(00:08:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts",
+  "offset": 1,
+  "limit": 155
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// higgsfield-webhook — Receives Higgsfield video generation callbacks (Phase 4.2b).
+> 2	//
+> 3	// URL pattern: https://<project>.supabase.co/functions/v1/higgsfield-webhook?token=<webhook_token>
+> 4	//
+> 5	// Auth: token query param matched against vm_canvas_executions.webhook_token (unique index).
+> 6	// NOT JWT-protected — external caller is Higgsfield. Token = 64 hex chars (2 concatenated UUIDs).
+> 7	//
+> 8	// Aligned with .claude/context/higgsfield-api-validation-2026-05-15.md
+> 9	// Spec source: .claude/proposals/vm-canvas-jobs-async-video-v1.md
+> 10	// Migration:   supabase/migrations/20260516224542_vm_canvas_executions_async_video.sql
+> 11	
+> 12	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 13	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 14	
+> 15	const corsHeaders = {
+> 16	  "Access-Control-Allow-Origin": "*",
+> 17	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 18	  "Access-Control-Allow-Headers": "content-type",
+> 19	};
+> 20	
+> 21	const MIN_VIDEO_BYTES = 100 * 1024; // 100 KB — pattern from rescue-video.ts to reject JSON error stubs
+> 22	const TOKEN_LENGTH = 64;             // 2× UUID without dashes (per migration default)
+> 23	
+> 24	interface ExecutionRow {
+> 25	  id: string;
+> 26	  user_id: string;
+> 27	  project_id: string;
+> 28	  credits_charged: number;
+> 29	  status: string;
+> 30	  node_id: string;
+> 31	  node_type: string;
+> 32	  model: string;
+> 33	  prompt: string | null;
+> 34	  negative_prompt: string | null;
+> 35	  parameters: Record<string, unknown>;
+> 36	  input_asset_id: string | null;
+> 37	}
+> 38	
+> 39	async function updateProjectGraph(
+> 40	  admin: any,
+> 41	  projectId: string,
+> 42	  nodeId: string,
+> 43	  status: "success" | "failed",
+> 44	  payload: { videoUrl?: string | null; errorMessage?: string }
+> 45	) {
+> 46	  try {
+> 47	    const { data: proj, error: projErr } = await admin
+> 48	      .from("vm_canvas_projects")
+> 49	      .select("graph")
+> 50	      .eq("id", projectId)
+> 51	      .maybeSingle();
+> 52	
+> 53	    if (projErr) {
+> 54	      console.error(`[webhook] failed to fetch project graph for sync:`, projErr.message);
+> 55	      return;
+> 56	    }
+> 57	    if (!proj || !proj.graph || typeof proj.graph !== "object") {
+> 58	      return;
+> 59	    }
+> 60	
+> 61	    const graph = proj.graph as any;
+> 62	    const nodes = graph.nodes || [];
+> 63	    let updated = false;
+> 64	
+> 65	    const updatedNodes = nodes.map((node: any) => {
+> 66	      if (node.id === nodeId) {
+> 67	        updated = true;
+> 68	        const currentData = node.data || {};
+> 69	        return {
+> 70	          ...node,
+> 71	          data: {
+> 72	            ...currentData,
+> 73	            status: status,
+> 74	            ...(status === "success"
+> 75	              ? {
+> 76	                  output: {
+> 77	                    ...currentData.output,
+> 78	                    videoUrl: payload.videoUrl || undefined,
+> 79	                    generatedAt: new Date().toISOString(),
+> 80	                  },
+> 81	                  error: undefined,
+> 82	                }
+> 83	              : {
+> 84	                  error: payload.errorMessage || "Generation failed",
+> 85	                }),
+> 86	          },
+> 87	        };
+> 88	      }
+> 89	      return node;
+> 90	    });
+> 91	
+> 92	    if (updated) {
+> 93	      graph.nodes = updatedNodes;
+> 94	      const { error: saveErr } = await admin
+> 95	        .from("vm_canvas_projects")
+> 96	        .update({ graph })
+> 97	        .eq("id", projectId);
+> 98	
+> 99	      if (saveErr) {
+> 100	        console.error(`[webhook] failed to update project graph:`, saveErr.message);
+> 101	      } else {
+> 102	        console.log(`[webhook] successfully synced node ${nodeId} to status ${status} in project ${projectId}`);
+> 103	      }
+> 104	    }
+> 105	  } catch (e) {
+> 106	    console.error(`[webhook] error in updateProjectGraph:`, e);
+> 107	  }
+> 108	}
+> 109	
+> 110	serve(async (req) => {
+> 111	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 112	  if (req.method !== "POST") {
+> 113	    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+> 114	  }
+> 115	
+> 116	  const url = new URL(req.url);
+> 117	  const token = url.searchParams.get("token");
+> 118	  if (!token || token.length !== TOKEN_LENGTH) {
+> 119	    return new Response(JSON.stringify({ error: "missing or malformed token" }), {
+> 120	      status: 400,
+> 121	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 122	    });
+> 123	  }
+> 124	
+> 125	  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 126	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 127	  const admin = createClient(supabaseUrl, serviceKey);
+> 128	
+> 129	  // Look up execution by webhook_token (unique index — single-row query)
+> 130	  const { data: exec, error: lookupErr } = await admin
+> 131	    .from("vm_canvas_executions")
+> 132	    .select("id, user_id, project_id, credits_charged, status, node_id, node_type, model, prompt, negative_prompt, parameters, input_asset_id")
+> 133	    .eq("webhook_token", token)
+> 134	    .maybeSingle();
+> 135	
+> 136	  if (lookupErr || !exec) {
+> 137	    return new Response(JSON.stringify({ error: "invalid token" }), {
+> 138	      status: 404,
+> 139	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 140	    });
+> 141	  }
+> 142	
+> 143	  const execution = exec as ExecutionRow;
+> 144	
+> 145	  // Idempotent: only accept callback if still in flight
+> 146	  if (!["queued", "running"].includes(execution.status)) {
+> 147	    return new Response(
+> 148	      JSON.stringify({ error: "execution already finalized", status: execution.status }),
+> 149	      { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 150	    );
+> 151	  }
+> 152	
+> 153	  let body: Record<string, unknown> = {};
+> 154	  try {
+> 155	    body = (await req.json()) as Record<string, unknown>;
+> ```
+
+## 🤖 Claude *(00:09:24)*
+
+
+## 🤖 Claude *(00:09:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts",
+  "old_string": "serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  if (req.method !== \"POST\") {\n    return new Response(\"Method not allowed\", { status: 405, headers: corsHeaders });\n  }\n\n  const url = new URL(req.url);\n  const token = url.searchParams.get(\"token\");",
+  "new_string": "async function sha256Hex(s: string): Promise<string> {\n  const d = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(s));\n  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, \"0\")).join(\"\");\n}\n\n// \u2500\u2500 Spaces async video callback (SOP [[spaces-graph-execution|spaces-graph-execution]] \u00a7Amendment 2a, S15/S16) \u2500\u2500\n// Correlates by SHA-256 of the incoming token against generations.webhook_token_hash (the row\n// stores only the hash \u2014 an owner reading their own row via RLS cannot forge this callback).\n// NEVER touches the legacy money path: the debit happened ledger-first at submit; this branch\n// only finalizes (done | error+full refund) via the claim-guarded RPC \u2014 a replay is a no-op.\nasync function handleSpacesCallback(\n  admin: any,\n  token: string,\n  body: Record<string, unknown>,\n): Promise<Response> {\n  const jsonResp = (status: number, payload: Record<string, unknown>) =>\n    new Response(JSON.stringify(payload), {\n      status,\n      headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n    });\n\n  const tokenHash = await sha256Hex(token);\n  const { data: gen, error: lookupErr } = await admin\n    .from(\"generations\")\n    .select(\"id, node_run_id, owner_id, space_id, mco_charged, status\")\n    .eq(\"webhook_token_hash\", tokenHash)\n    .maybeSingle();\n  if (lookupErr || !gen) {\n    return jsonResp(404, { error: \"invalid token\" }); // G12 \u2014 same shape as the legacy unknown-token\n  }\n  if (![\"pending\", \"running\"].includes(gen.status)) {\n    // Replay (G11): already settled by the first finalizer \u2014 no-op, zero balance mutation.\n    return jsonResp(200, { ok: true, replay: true, status: gen.status });\n  }\n\n  const charged = Number(gen.mco_charged) || 0;\n  const finalize = async (\n    status: \"done\" | \"error\",\n    refund: number,\n    result: Record<string, unknown>,\n  ) => {\n    const { data, error } = await admin.rpc(\"finalize_space_generation\", {\n      p_node_run_id: gen.node_run_id,\n      p_status: status,\n      p_refund: refund,\n      p_result: result,\n    });\n    if (error) {\n      // Fail-open by design: a stuck 'running' row is later refunded by the sweep (S17).\n      console.error(\"[higgsfield-webhook:spaces] finalize failed:\", error);\n    }\n    return { data, error };\n  };\n\n  // Failure / soft-fail path (G9): full refund; NO legacy deduct in either direction (S16).\n  const terminalStatus = typeof body.status === \"string\" ? body.status.toLowerCase() : \"\";\n  const isSoftFail =\n    terminalStatus === \"nsfw\" || terminalStatus === \"canceled\" || terminalStatus === \"cancelled\";\n  if (body.status === \"failed\" || body.error || isSoftFail) {\n    const errMsg = isSoftFail\n      ? (terminalStatus === \"nsfw\"\n        ? \"Gera\u00e7\u00e3o bloqueada pelo filtro NSFW do Higgsfield (estorno aplicado)\"\n        : \"Gera\u00e7\u00e3o cancelada no Higgsfield (estorno aplicado)\")\n      : (body.error as string) || \"Higgsfield reported failure\";\n    const { data, error } = await finalize(\"error\", charged, { error: errMsg });\n    await admin\n      .from(\"infra_health_logs\")\n      .insert({ service: \"higgsfield-webhook\", status: \"unhealthy\" })\n      .then(() => {}, (e: unknown) => console.error(\"[higgsfield-webhook] health log failed:\", e));\n    return jsonResp(200, {\n      ok: true,\n      status: \"failed\",\n      finalized: data?.finalized ?? false,\n      ...(error ? { finalize_error: true } : {}),\n    });\n  }\n\n  // Success path: same payload variants as the legacy branch.\n  const payload = body.payload as\n    | { video?: { url?: string }; result_url?: string; url?: string }\n    | undefined;\n  const video = body.video as { url?: string } | undefined;\n  const resultUrl =\n    (body.result_url as string | undefined) ||\n    (body.url as string | undefined) ||\n    video?.url ||\n    payload?.video?.url ||\n    payload?.result_url ||\n    payload?.url;\n\n  if (!resultUrl) {\n    // SOP recovery: \"success\" without material video = failure + refund \u2014 never done without value.\n    const { data } = await finalize(\"error\", charged, { error: \"no result_url in webhook payload\" });\n    return jsonResp(200, { ok: true, status: \"failed\", finalized: data?.finalized ?? false });\n  }\n\n  try {\n    // Download \u2192 validate \u2265 100 KB + content-type video/* (rescue-video pattern)\n    const videoResp = await fetch(resultUrl);\n    if (!videoResp.ok) throw new Error(`fetch result_url failed: ${videoResp.status}`);\n    const videoBytes = new Uint8Array(await videoResp.arrayBuffer());\n    if (videoBytes.byteLength < MIN_VIDEO_BYTES) {\n      throw new Error(`video too small (${videoBytes.byteLength} bytes) \u2014 likely error stub`);\n    }\n    const contentType = videoResp.headers.get(\"content-type\") || \"video/mp4\";\n    if (!contentType.startsWith(\"video/\")) {\n      throw new Error(`unexpected content-type: ${contentType}`);\n    }\n\n    const fileName = `${gen.space_id}/${gen.node_run_id}.mp4`;\n    const { error: upErr } = await admin.storage\n      .from(\"canvas-assets\")\n      .upload(fileName, videoBytes, { contentType, upsert: true });\n    if (upErr) throw new Error(`storage upload: ${upErr.message}`);\n\n    const { data: signed } = await admin.storage\n      .from(\"canvas-assets\")\n      .createSignedUrl(fileName, 7 * 24 * 60 * 60); // 7d \u2014 legacy parity\n\n    // G10: done + result.video_url; the ONLY ledger txn for this run is the begin's (S16).\n    const { data, error } = await finalize(\"done\", 0, {\n      video_url: signed?.signedUrl || null,\n      storage_path: fileName,\n      storage_bucket: \"canvas-assets\",\n    });\n    await admin\n      .from(\"infra_health_logs\")\n      .insert({ service: \"higgsfield-webhook\", status: \"healthy\" })\n      .then(() => {}, (e: unknown) => console.error(\"[higgsfield-webhook] health log failed:\", e));\n    return jsonResp(200, {\n      ok: true,\n      status: \"done\",\n      finalized: data?.finalized ?? false,\n      ...(error ? { finalize_error: true } : {}),\n    });\n  } catch (e) {\n    const errMsg = e instanceof Error ? e.message : \"video materialization failed\";\n    console.error(\"[higgsfield-webhook:spaces] success path failed:\", errMsg);\n    const { data } = await finalize(\"error\", charged, { error: errMsg });\n    return jsonResp(200, { ok: true, status: \"failed\", finalized: data?.finalized ?? false });\n  }\n}\n\nserve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n  if (req.method !== \"POST\") {\n    return new Response(\"Method not allowed\", { status: 405, headers: corsHeaders });\n  }\n\n  const url = new URL(req.url);\n\n  // \u2500\u2500 Spaces async video branch (Amendment 2a) \u2014 separate param, fully separate path \u2500\u2500\n  const spacesToken = url.searchParams.get(\"spaces_token\");\n  if (spacesToken) {\n    if (spacesToken.length !== TOKEN_LENGTH) {\n      return new Response(JSON.stringify({ error: \"missing or malformed token\" }), {\n        status: 400,\n        headers: { ...corsHeaders, \"Content-Type\": \"application/json\" },\n      });\n    }\n    const spacesSupabaseUrl = Deno.env.get(\"SUPABASE_URL\")!;\n    const spacesServiceKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n    const spacesAdmin = createClient(spacesSupabaseUrl, spacesServiceKey);\n    let spacesBody: Record<string, unknown> = {};\n    try {\n      spacesBody = (await req.json()) as Record<string, unknown>;\n    } catch {\n      /* empty body is treated as a failure payload downstream */\n    }\n    return await handleSpacesCallback(spacesAdmin, spacesToken, spacesBody);\n  }\n\n  const token = url.searchParams.get(\"token\");"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:09:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export PATH=\"/home/ubuntu/.deno/bin:$PATH\" && deno check supabase/functions/higgsfield-webhook/index.ts 2>&1 | tail -3",
+  "description": "Deno check higgsfield-webhook",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mCheck[0m supabase/functions/higgsfield-webhook/index.ts
+> ```
+
+## 🤖 Claude *(00:10:06)*
+
+
+## 🤖 Claude *(00:10:06)*
+
+
+## 🤖 Claude *(00:10:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && python3 -c \"\nimport json\nsql = open('supabase/migrations/20260702210000_spaces_video_async_webhook_token.sql').read()\nprint(json.dumps({'query': sql}))\n\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/mig2a.json && curl -s -w '\\nHTTP:%{http_code}' -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/mig2a.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES ('20260702210000', 'spaces_video_async_webhook_token') ON CONFLICT DO NOTHING RETURNING version;\\\"}\" && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT (SELECT count(*) FROM information_schema.columns WHERE table_name='\"'\"'generations'\"'\"' AND column_name IN ('\"'\"'webhook_token_hash'\"'\"','\"'\"'operation_id'\"'\"')) AS new_cols, (SELECT count(*) FROM pg_indexes WHERE indexname='\"'\"'generations_webhook_token_hash_idx'\"'\"') AS idx;\"}'",
+  "description": "Apply 2a migration, register in ledger, verify columns and index"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> []
+> HTTP:201[{"version":"20260702210000"}][{"new_cols":2,"idx":1}]
+> ```
+
+## 🤖 Claude *(00:10:29)*
+
+
+## 🤖 Claude *(00:10:29)*
+
+
+## 🤖 Claude *(00:10:47)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review Spaces 2a video",
+  "prompt": "You are an independent adversarial security reviewer for the MCORCH repo at /home/gcrUX/htdocs/constellation-orchestra. You did NOT write this code. Review the uncommitted working-tree changes for the \"Spaces Fase 2a \u2014 async video\" slice:\n\n1. `supabase/migrations/20260702210000_spaces_video_async_webhook_token.sql` (new columns webhook_token_hash + operation_id on public.generations, partial UNIQUE index)\n2. `supabase/functions/canvas-execute/index.ts` \u2014 the Spaces video additions: SPACES_VIDEO_MODELS allowlist, video 422 guards (S18), effectiveCost, executeSpacesVideo (token mint \u2192 SHA-256 hash stored on row \u2192 higgsfieldSubmit \u2192 refund-on-submit-fail), higgsfieldSubmit extraction, and the refactored legacy submitHiggsfieldVideo. Run `git diff supabase/functions/canvas-execute/index.ts` to see exactly what changed vs HEAD.\n3. `supabase/functions/higgsfield-webhook/index.ts` \u2014 new handleSpacesCallback branch (?spaces_token= param, hash lookup, failure\u2192finalize(error, full refund), success\u2192download/validate/upload\u2192finalize(done, result.video_url), replay no-op). Run `git diff supabase/functions/higgsfield-webhook/index.ts`.\n\nContext (read these first):\n- SOP: docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md \u2014 Amendment Fase 2a (S14-S18, gates G8-G12) at the end of the file.\n- The RPCs begin_space_generation / finalize_space_generation live in supabase/migrations/20260702190000_spaces_generations_ledger.sql (service-role-only, claim-guarded finalize, refund clamp).\n\nAdversarial focus \u2014 try to construct concrete attacks/failures:\n- MINT: any path where a user gains mcoCoins (refund > charge, double refund, forged refund via webhook).\n- DOUBLE-CHARGE: any path debiting twice for one node_run_id (esp. webhook legacy deduct firing for a Spaces run, or the legacy branch double-billing after the refactor).\n- CROSS-TENANT: can a caller finalize/read another tenant's generation (token guessing, hash collision practicality, id injection via URL/body)?\n- SECRET LEAK: is the plaintext webhook token ever stored/logged/returned to a client? Is the hash sufficient (owner reads own row via SELECT-own RLS \u2014 can they forge callbacks)?\n- REPLAY: second webhook POST with same token; webhook arriving after the stuck-run sweep refunded; webhook racing the sweep.\n- LEGACY REGRESSION: did the higgsfieldSubmit extraction change any legacy behavior (status codes, messages, operation_id persistence, webhook_token flow)?\n- SSRF/download: the webhook fetches resultUrl from the payload \u2014 assess risk given the token gate (who can trigger this fetch, what can it reach: internal endpoints? metadata service?). Note the legacy branch has the same pattern; flag only NEW exposure or confirm parity.\n- Guard order: any way to be charged on a validation that should 422/404 first.\n\nFor each finding: severity (P0/HIGH/MEDIUM/LOW/INFO), concrete attack scenario, file:line, suggested fix. If sound, say SOUND explicitly per focus area. Return a structured verdict: SOUND or findings list. Be rigorous \u2014 this is a money path.",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a9137afaf030d6373 (internal ID - do not mention to user. Use SendMessage with to: 'a9137afaf030d6373', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/tasks/a9137afaf030d6373.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(00:10:56)*
+
+
+## 🤖 Claude *(00:10:56)*
+
+
+## 🤖 Claude *(00:10:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '60,200p' scripts/qa/smoke-spaces-execution.ts",
+  "description": "Read smoke body to extend with video gates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   const { data: sessB } = await anonB.auth.signInWithPassword({ email: b.email, password: b.password });
+>   const jwtA = sessA?.session?.access_token!;
+>   if (!jwtA || !sessB?.session) throw new Error('sign-in failed for throwaways');
+> 
+>   const { data: spaceA } = await admin.from('spaces')
+>     .insert({ owner_id: a.uid, title: 'smoke-1b-A' }).select('id').single();
+>   const { data: spaceB } = await admin.from('spaces')
+>     .insert({ owner_id: b.uid, title: 'smoke-1b-B' }).select('id').single();
+>   if (!spaceA || !spaceB) throw new Error('space setup failed');
+> 
+>   // Drain A's balance (fresh accounts may carry a starter grant) so the 402 gate is deterministic.
+>   const startBal = await balance(a.uid);
+>   if (startBal > 0) {
+>     await admin.rpc('deduct_mco_coins', { p_user_id: a.uid, p_amount: startBal, p_action: 'qa_drain', p_context: { smoke: 'spaces1b' } });
+>   }
+> 
+>   // ── T1 — 401 without JWT ──
+>   const t1 = await invokeFn(null, spacePayload(spaceA.id));
+>   gate('T1 401 sem JWT', t1.status === 401, `status=${t1.status}`);
+> 
+>   // ── T2 — 422 unsupported node type (before any debit) ──
+>   const t2 = await invokeFn(jwtA, spacePayload(spaceA.id, { node_type: 'image_to_video', model: 'dop-standard', provider: 'higgsfield' }));
+>   gate('T2 422 node-type fora do slice', t2.status === 422 && t2.json.error === 'spaces_node_type_unsupported', `status=${t2.status} error=${t2.json.error}`);
+> 
+>   // ── T3 — 422 unsupported model pair ──
+>   const t3 = await invokeFn(jwtA, spacePayload(spaceA.id, { provider: 'openai', model: 'dall-e-3' }));
+>   gate('T3 422 modelo fora do allowlist', t3.status === 422 && t3.json.error === 'spaces_model_unsupported', `status=${t3.status} error=${t3.json.error}`);
+> 
+>   // ── T4 — 404 foreign/absent space (FR-SPACES-007: tenant → not found) ──
+>   const t4a = await invokeFn(jwtA, spacePayload(crypto.randomUUID()));
+>   const t4b = await invokeFn(jwtA, spacePayload(spaceB.id));
+>   gate('T4 404 space alheio/inexistente', t4a.status === 404 && t4b.status === 404, `random=${t4a.status} foreign=${t4b.status}`);
+> 
+>   // ── T5 — 402 insufficient balance (shared pre-check; zero generations rows) ──
+>   const t5 = await invokeFn(jwtA, spacePayload(spaceA.id));
+>   const { count: rowsAfter402 } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('owner_id', a.uid);
+>   gate('T5 402 saldo + zero rows', t5.status === 402 && (rowsAfter402 ?? 0) === 0, `status=${t5.status} rows=${rowsAfter402}`);
+> 
+>   // ── T6 — begin/finalize atomics (direct service-role RPC; no provider, no edge fn needed) ──
+>   await admin.rpc('add_mco_coins', { p_user_id: a.uid, p_amount: 50 });
+>   const run1 = crypto.randomUUID();
+>   const { data: beg1, error: begErr1 } = await admin.rpc('begin_space_generation', {
+>     p_owner_id: a.uid, p_space_id: spaceA.id, p_node_id: 'n1', p_node_run_id: run1,
+>     p_model_key: 'qa/test', p_output_type: 'image', p_amount: 10, p_context: { smoke: 'spaces1b' },
+>   });
+>   const balAfterBegin = await balance(a.uid);
+>   gate('T6a begin ledger-first (row+débito)', !begErr1 && beg1?.ok === true && beg1?.duplicate === false && balAfterBegin === 40,
+>     `bal=${balAfterBegin} beg=${JSON.stringify(beg1)}`);
+> 
+>   const { data: beg1dup } = await admin.rpc('begin_space_generation', {
+>     p_owner_id: a.uid, p_space_id: spaceA.id, p_node_id: 'n1', p_node_run_id: run1,
+>     p_model_key: 'qa/test', p_output_type: 'image', p_amount: 10, p_context: {},
+>   });
+>   gate('T6b duplicata idempotente (zero 2º débito)', beg1dup?.duplicate === true && (await balance(a.uid)) === 40,
+>     `dup=${JSON.stringify(beg1dup)} bal=${await balance(a.uid)}`);
+> 
+>   const run2 = crypto.randomUUID();
+>   const { error: begErr2 } = await admin.rpc('begin_space_generation', {
+>     p_owner_id: a.uid, p_space_id: spaceA.id, p_node_id: 'n1', p_node_run_id: run2,
+>     p_model_key: 'qa/test', p_output_type: 'image', p_amount: 999, p_context: {},
+>   });
+>   const { count: run2rows } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('node_run_id', run2);
+>   gate('T6c saldo insuficiente → rollback total (zero row)', !!begErr2 && (run2rows ?? 0) === 0 && (await balance(a.uid)) === 40,
+>     `err=${begErr2?.message?.slice(0, 40)} rows=${run2rows}`);
+> 
+>   const { data: fin1 } = await admin.rpc('finalize_space_generation', { p_node_run_id: run1, p_status: 'error', p_refund: 10 });
+>   const balAfterRefund = await balance(a.uid);
+>   const { data: refundRows } = await admin.from('mcoin_transactions').select('amount')
+>     .eq('user_id', a.uid).eq('action', 'spaces.node.refund');
+>   gate('T6d finalize(error) → refund total + row simétrica', fin1?.finalized === true && fin1?.refunded === 10 && balAfterRefund === 50 && (refundRows ?? []).length === 1,
+>     `fin=${JSON.stringify(fin1)} bal=${balAfterRefund}`);
+> 
+>   const { data: fin1again } = await admin.rpc('finalize_space_generation', { p_node_run_id: run1, p_status: 'error', p_refund: 10 });
+>   gate('T6e finalize 2× → no-op (sem double-refund)', fin1again?.finalized === false && (await balance(a.uid)) === 50,
+>     `fin2=${JSON.stringify(fin1again)}`);
+> 
+>   const run3 = crypto.randomUUID();
+>   await admin.rpc('begin_space_generation', {
+>     p_owner_id: a.uid, p_space_id: spaceA.id, p_node_id: 'n2', p_node_run_id: run3,
+>     p_model_key: 'qa/test', p_output_type: 'text', p_amount: 5, p_context: {},
+>   });
+>   const { data: fin3 } = await admin.rpc('finalize_space_generation', { p_node_run_id: run3, p_status: 'error', p_refund: 999 });
+>   gate('T6f refund clampado ao cobrado (anti-mint)', fin3?.finalized === true && Number(fin3?.refunded) === 5 && (await balance(a.uid)) === 50,
+>     `fin=${JSON.stringify(fin3)} bal=${await balance(a.uid)}`);
+> 
+>   // ── T7 — RLS: SELECT-own · no client INSERT · no client DELETE ──
+>   const { data: ownRows } = await anonA.from('generations').select('id').eq('owner_id', a.uid);
+>   const { data: crossRows } = await anonB.from('generations').select('id').eq('owner_id', a.uid);
+>   const { error: insErr } = await anonA.from('generations').insert({
+>     owner_id: a.uid, space_id: spaceA.id, node_id: 'x', node_run_id: crypto.randomUUID(),
+>     output_type: 'image', model_key: 'hack', mco_charged: 0,
+>   } as never);
+>   await anonA.from('generations').delete().eq('owner_id', a.uid);
+>   const { count: afterDel } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('owner_id', a.uid);
+>   gate('T7 RLS own-only + sem INSERT/DELETE client', (ownRows ?? []).length === 2 && (crossRows ?? []).length === 0 && !!insErr && (afterDel ?? 0) === 2,
+>     `own=${ownRows?.length} cross=${crossRows?.length} ins=${insErr ? 'blocked' : 'ALLOWED!'} rows=${afterDel}`);
+> 
+>   // ── T8 — RPC privilege: authenticated caller → 42501 ──
+>   const { error: privErr } = await anonA.rpc('begin_space_generation', {
+>     p_owner_id: a.uid, p_space_id: spaceA.id, p_node_id: 'n1', p_node_run_id: crypto.randomUUID(),
+>     p_model_key: 'qa/test', p_output_type: 'image', p_amount: 1, p_context: {},
+>   } as never);
+>   gate('T8 RPC negada a authenticated', !!privErr && /permission denied|42501/i.test(privErr.message), privErr?.message?.slice(0, 60));
+> 
+> } catch (e) {
+>   fail++;
+>   console.error('💥 smoke aborted:', (e as Error).message);
+> } finally {
+>   await deleteThrowawayUser(admin, uidA);
+>   await deleteThrowawayUser(admin, uidB);
+> }
+> 
+> console.log(`\n${fail === 0 ? '✅' : '❌'} smoke-spaces-execution: ${pass} passed, ${fail} failed`);
+> process.exit(fail === 0 ? 0 : 1);
+> ```
+
+## 🤖 Claude *(00:11:49)*
+
+
+## 🤖 Claude *(00:11:49)*
+
+
+## 🤖 Claude *(00:11:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts",
+  "old_string": "  // \u2500\u2500 T2 \u2014 422 unsupported node type (before any debit) \u2500\u2500\n  const t2 = await invokeFn(jwtA, spacePayload(spaceA.id, { node_type: 'image_to_video', model: 'dop-standard', provider: 'higgsfield' }));\n  gate('T2 422 node-type fora do slice', t2.status === 422 && t2.json.error === 'spaces_node_type_unsupported', `status=${t2.status} error=${t2.json.error}`);",
+  "new_string": "  // \u2500\u2500 T2 \u2014 422 unsupported node type (before any debit; image_to_video entrou no slice na 2a) \u2500\u2500\n  const t2 = await invokeFn(jwtA, spacePayload(spaceA.id, { node_type: 'upscale', model: 'upscale-2x', provider: 'openrouter' }));\n  gate('T2 422 node-type fora do slice', t2.status === 422 && t2.json.error === 'spaces_node_type_unsupported', `status=${t2.status} error=${t2.json.error}`);\n\n  // \u2500\u2500 V1-V4 \u2014 video 422/402 guards BEFORE any debit (Amendment 2a S18; balance ainda 0) \u2500\u2500\n  const videoPayload = (extra: Record<string, unknown> = {}) => spacePayload(spaceA.id, {\n    node_type: 'image_to_video', provider: 'higgsfield', model: 'dop-lite',\n    input_asset_url: 'https://example.com/img.png', parameters: { duration: 5 }, ...extra,\n  });\n  const v1 = await invokeFn(jwtA, videoPayload({ model: 'sora-2' }));\n  gate('V1 422 modelo de v\u00eddeo fora do allowlist', v1.status === 422 && v1.json.error === 'spaces_model_unsupported', `status=${v1.status} error=${v1.json.error}`);\n  const v2 = await invokeFn(jwtA, videoPayload({ input_asset_url: undefined }));\n  gate('V2 422 v\u00eddeo sem input_asset_url', v2.status === 422 && v2.json.error === 'video_input_required', `status=${v2.status} error=${v2.json.error}`);\n  const v3 = await invokeFn(jwtA, videoPayload({ parameters: { duration: 8 } }));\n  gate('V3 422 dura\u00e7\u00e3o sem pre\u00e7o declarado', v3.status === 422 && v3.json.error === 'video_duration_unsupported', `status=${v3.status} error=${v3.json.error}`);\n  const v4 = await invokeFn(jwtA, videoPayload());\n  const { count: rowsAfterV } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('owner_id', a.uid);\n  gate('V4 402 higgsfield_not_configured fail-closed + zero rows', v4.status === 402 && v4.json.error === 'higgsfield_not_configured' && (rowsAfterV ?? 0) === 0, `status=${v4.status} error=${v4.json.error} rows=${rowsAfterV}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:12:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts",
+  "old_string": "  // \u2500\u2500 T7 \u2014 RLS: SELECT-own \u00b7 no client INSERT \u00b7 no client DELETE \u2500\u2500",
+  "new_string": "  // \u2500\u2500 W1-W5 \u2014 async video webhook lifecycle (Amendment 2a G8-G12; webhook simulado, zero Higgsfield) \u2500\u2500\n  const FN_WEBHOOK = `${URL}/functions/v1/higgsfield-webhook`;\n  const sha256Hex = async (s: string) => {\n    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));\n    return [...new Uint8Array(d)].map((x) => x.toString(16).padStart(2, '0')).join('');\n  };\n  const mintVideoRun = async (amount: number) => {\n    const runId = crypto.randomUUID();\n    await admin.rpc('begin_space_generation', {\n      p_owner_id: a.uid, p_space_id: spaceA.id, p_node_id: 'nv', p_node_run_id: runId,\n      p_model_key: 'higgsfield/dop-lite', p_output_type: 'video', p_amount: amount, p_context: {},\n    });\n    const token = crypto.randomUUID().replaceAll('-', '') + crypto.randomUUID().replaceAll('-', '');\n    await admin.from('generations').update({ webhook_token_hash: await sha256Hex(token) }).eq('node_run_id', runId);\n    return { runId, token };\n  };\n  const postWebhook = async (token: string, payload: Record<string, unknown>) => {\n    const res = await fetch(`${FN_WEBHOOK}?spaces_token=${token}`, {\n      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),\n    });\n    let json: Record<string, unknown> = {};\n    try { json = await res.json(); } catch { /* empty */ }\n    return { status: res.status, json };\n  };\n\n  // W1 (G12): unknown token \u2192 404, sem vazamento\n  const w1 = await postWebhook('f'.repeat(64), { status: 'failed' });\n  gate('W1 404 token desconhecido', w1.status === 404, `status=${w1.status}`);\n\n  // W2 (G9): failure payload \u2192 finalize(error) + refund total\n  const balBeforeW2 = await balance(a.uid);\n  const runV = await mintVideoRun(10);\n  const w2 = await postWebhook(runV.token, { status: 'failed', error: 'smoke forced failure' });\n  const { data: genW2 } = await admin.from('generations').select('status, mco_refunded').eq('node_run_id', runV.runId).single();\n  gate('W2 webhook failure \u2192 error + refund total', w2.status === 200 && (w2.json as any).finalized === true && genW2?.status === 'error' && Number(genW2?.mco_refunded) === 10 && (await balance(a.uid)) === balBeforeW2,\n    `resp=${JSON.stringify(w2.json)} gen=${JSON.stringify(genW2)} bal=${await balance(a.uid)}`);\n\n  // W3 (G11): replay do mesmo token \u2192 no-op, zero muta\u00e7\u00e3o\n  const w3 = await postWebhook(runV.token, { status: 'failed', error: 'replay attempt' });\n  gate('W3 replay \u2192 no-op', w3.status === 200 && (w3.json as any).replay === true && (await balance(a.uid)) === balBeforeW2,\n    `resp=${JSON.stringify(w3.json)}`);\n\n  // W4 (G10): success payload com v\u00eddeo material \u2192 done + result.video_url + ZERO deduct legado (S16)\n  const dummy = new Uint8Array(150 * 1024); // \u2265100KB, content-type video/mp4 via storage\n  const srcPath = `qa/smoke-spaces-video-src-${Date.now()}.mp4`;\n  const { error: srcUpErr } = await admin.storage.from('canvas-assets').upload(srcPath, dummy, { contentType: 'video/mp4' });\n  if (srcUpErr) throw new Error(`dummy upload failed: ${srcUpErr.message}`);\n  const { data: srcSigned } = await admin.storage.from('canvas-assets').createSignedUrl(srcPath, 600);\n  const balBeforeW4 = await balance(a.uid);\n  const runV2 = await mintVideoRun(10);\n  const w4 = await postWebhook(runV2.token, { status: 'completed', result_url: srcSigned!.signedUrl });\n  const { data: genW4 } = await admin.from('generations').select('status, mco_refunded, result').eq('node_run_id', runV2.runId).single();\n  const { count: legacyDeduct } = await admin.from('mcoin_transactions').select('id', { count: 'exact', head: true })\n    .eq('user_id', a.uid).eq('action', 'canvas_video_spend');\n  gate('W4 webhook success \u2192 done + video_url + zero deduct legado', w4.status === 200 && (w4.json as any).status === 'done' && genW4?.status === 'done' && !!(genW4?.result as any)?.video_url && Number(genW4?.mco_refunded) === 0 && (await balance(a.uid)) === balBeforeW4 - 10 && (legacyDeduct ?? 0) === 0,\n    `resp=${JSON.stringify(w4.json)} genStatus=${genW4?.status} legacyDeduct=${legacyDeduct} bal=${await balance(a.uid)}`);\n\n  // W5 (G8): submit-fail no edge fn \u2192 refund total na mesma request (chave fake \u2192 Higgsfield 401)\n  await admin.from('user_api_keys').insert({\n    user_id: a.uid, higgsfield_api_key: 'qa-fake-key', higgsfield_api_key_secret: 'qa-fake-secret',\n  } as never);\n  const balBeforeW5 = await balance(a.uid);\n  const w5 = await invokeFn(jwtA, videoPayload());\n  const { data: genW5 } = await admin.from('generations').select('status, mco_refunded').eq('owner_id', a.uid)\n    .eq('output_type', 'video').eq('model_key', 'higgsfield/dop-lite').neq('node_run_id', runV.runId).neq('node_run_id', runV2.runId).maybeSingle();\n  gate('W5 submit-fail \u2192 502 + refund total (G8)', w5.status === 502 && w5.json.error === 'video_submit_failed' && genW5?.status === 'error' && (await balance(a.uid)) === balBeforeW5,\n    `status=${w5.status} error=${w5.json.error} gen=${JSON.stringify(genW5)} bal=${await balance(a.uid)}`);\n\n  // storage cleanup (users/spaces/generations cascade via deleteThrowawayUser; storage n\u00e3o)\n  await admin.storage.from('canvas-assets').remove([srcPath, `${spaceA.id}/${runV2.runId}.mp4`]);\n\n  // \u2500\u2500 T7 \u2014 RLS: SELECT-own \u00b7 no client INSERT \u00b7 no client DELETE \u2500\u2500"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:12:45)*
+
+
+## 🤖 Claude *(00:12:45)*
+
+
+## 🤖 Claude *(00:12:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts",
+  "old_string": "  // \u2500\u2500 T7 \u2014 RLS: SELECT-own \u00b7 no client INSERT \u00b7 no client DELETE \u2500\u2500\n  const { data: ownRows } = await anonA.from('generations').select('id').eq('owner_id', a.uid);\n  const { data: crossRows } = await anonB.from('generations').select('id').eq('owner_id', a.uid);\n  const { error: insErr } = await anonA.from('generations').insert({\n    owner_id: a.uid, space_id: spaceA.id, node_id: 'x', node_run_id: crypto.randomUUID(),\n    output_type: 'image', model_key: 'hack', mco_charged: 0,\n  } as never);\n  await anonA.from('generations').delete().eq('owner_id', a.uid);\n  const { count: afterDel } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('owner_id', a.uid);\n  gate('T7 RLS own-only + sem INSERT/DELETE client', (ownRows ?? []).length === 2 && (crossRows ?? []).length === 0 && !!insErr && (afterDel ?? 0) === 2,\n    `own=${ownRows?.length} cross=${crossRows?.length} ins=${insErr ? 'blocked' : 'ALLOWED!'} rows=${afterDel}`);",
+  "new_string": "  // \u2500\u2500 T7 \u2014 RLS: SELECT-own \u00b7 no client INSERT \u00b7 no client DELETE \u2500\u2500\n  const { count: adminCount } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('owner_id', a.uid);\n  const { data: ownRows } = await anonA.from('generations').select('id').eq('owner_id', a.uid);\n  const { data: crossRows } = await anonB.from('generations').select('id').eq('owner_id', a.uid);\n  const { error: insErr } = await anonA.from('generations').insert({\n    owner_id: a.uid, space_id: spaceA.id, node_id: 'x', node_run_id: crypto.randomUUID(),\n    output_type: 'image', model_key: 'hack', mco_charged: 0,\n  } as never);\n  await anonA.from('generations').delete().eq('owner_id', a.uid);\n  const { count: afterDel } = await admin.from('generations').select('id', { count: 'exact', head: true }).eq('owner_id', a.uid);\n  gate('T7 RLS own-only + sem INSERT/DELETE client', (adminCount ?? 0) > 0 && (ownRows ?? []).length === adminCount && (crossRows ?? []).length === 0 && !!insErr && (afterDel ?? 0) === adminCount,\n    `own=${ownRows?.length}/${adminCount} cross=${crossRows?.length} ins=${insErr ? 'blocked' : 'ALLOWED!'} rows=${afterDel}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:13:05)*
+
+
+## 🤖 Claude *(00:13:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'user_api_keys\\|decrypted' supabase/functions/canvas-execute/index.ts | head -5 && npx tsc --noEmit 2>&1 | head -5; echo \"tsc exit=$?\"",
+  "description": "Verify keys source relation and run tsc on smoke changes",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 152:      .from("decrypted_user_api_keys").select("*").eq("user_id", user.id).maybeSingle();
+> tsc exit=0
+> ```
+
+## 🤖 Claude *(00:13:16)*
+
+
+## 🤖 Claude *(00:13:16)*
+
+
+## 🤖 Claude *(00:13:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy canvas-execute --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deploying|Deployed' && SUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy higgsfield-webhook --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deploying|Deployed'",
+  "description": "Deploy canvas-execute and higgsfield-webhook",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: canvas-execute (script size: 163.5kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: canvas-execute
+> Deploying Function: higgsfield-webhook (script size: 84.76kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: higgsfield-webhook
+> ```
+
+## 🤖 Claude *(00:13:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -25",
+  "description": "Run extended smoke (T + V + W gates) against prod",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ T1 401 sem JWT — status=401
+> ✅ T2 422 node-type fora do slice — status=422 error=spaces_node_type_unsupported
+> ✅ V1 422 modelo de vídeo fora do allowlist — status=422 error=spaces_model_unsupported
+> ✅ V2 422 vídeo sem input_asset_url — status=422 error=video_input_required
+> ✅ V3 422 duração sem preço declarado — status=422 error=video_duration_unsupported
+> ✅ V4 402 higgsfield_not_configured fail-closed + zero rows — status=402 error=higgsfield_not_configured rows=0
+> ✅ T3 422 modelo fora do allowlist — status=422 error=spaces_model_unsupported
+> ✅ T4 404 space alheio/inexistente — random=404 foreign=404
+> ✅ T5 402 saldo + zero rows — status=402 rows=0
+> ✅ T6a begin ledger-first (row+débito) — bal=40 beg={"ok":true,"duplicate":false,"generation_id":"09b89d39-f3f5-4baa-a4f3-1b2a45c6c7a6"}
+> ✅ T6b duplicata idempotente (zero 2º débito) — dup={"ok":true,"status":"running","duplicate":true,"generation_id":"09b89d39-f3f5-4baa-a4f3-1b2a45c6c7a6"} bal=40
+> ✅ T6c saldo insuficiente → rollback total (zero row) — err=Saldo mcoCoins insuficiente para complet rows=0
+> ✅ T6d finalize(error) → refund total + row simétrica — fin={"refunded":10,"finalized":true} bal=50
+> ✅ T6e finalize 2× → no-op (sem double-refund) — fin2={"finalized":false}
+> ✅ T6f refund clampado ao cobrado (anti-mint) — fin={"refunded":5,"finalized":true} bal=50
+> ✅ W1 404 token desconhecido — status=404
+> ✅ W2 webhook failure → error + refund total — resp={"ok":true,"status":"failed","finalized":true} gen={"status":"error","mco_refunded":10} bal=50
+> ✅ W3 replay → no-op — resp={"ok":true,"replay":true,"status":"error"}
+> ✅ W4 webhook success → done + video_url + zero deduct legado — resp={"ok":true,"status":"done","finalized":true} genStatus=done legacyDeduct=0 bal=40
+> ✅ W5 submit-fail → 502 + refund total (G8) — status=502 error=video_submit_failed gen={"status":"error","mco_refunded":30} bal=40
+> ✅ T7 RLS own-only + sem INSERT/DELETE client — own=5/5 cross=0 ins=blocked rows=5
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> ⚠️  deleteThrowawayUser(b7671c8d-efb9-4da4-877a-0cc8172c1434) failed: Database error deleting user — run scripts/qa/sweep-smoke-users.ts to reap orphans
+> 
+> ✅ smoke-spaces-execution: 22 passed, 0 failed
+> ```
+
+## 🤖 Claude *(00:14:03)*
+
+
+## 🤖 Claude *(00:14:03)*
+
+
+## 🤖 Claude *(00:14:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"DELETE FROM public.user_api_keys_table WHERE user_id='\"'\"'b7671c8d-efb9-4da4-877a-0cc8172c1434'\"'\"' RETURNING user_id;\"}' && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"DELETE FROM auth.users WHERE id='\"'\"'b7671c8d-efb9-4da4-877a-0cc8172c1434'\"'\"' AND raw_user_meta_data->>'\"'\"'full_name'\"'\"'='\"'\"'SMOKETEST'\"'\"' RETURNING id;\"}' && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT count(*) AS smoketest_left FROM auth.users WHERE raw_user_meta_data->>'\"'\"'full_name'\"'\"'='\"'\"'SMOKETEST'\"'\"';\"}'",
+  "description": "Clean orphaned smoke user and its api-key row"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"user_id":"b7671c8d-efb9-4da4-877a-0cc8172c1434"}][{"id":"b7671c8d-efb9-4da4-877a-0cc8172c1434"}][{"smoketest_left":0}]
+> ```
+
+## 🤖 Claude *(00:14:22)*
+
+
+## 🤖 Claude *(00:14:22)*
+
+Orphan limpo (`smoketest_left: 0`). Vitest de regressão enquanto o review roda:
+
+## 🤖 Claude *(00:14:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test 2>&1 | tail -3",
+  "description": "Full vitest regression",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    Start at  21:14:24
+>    Duration  21.43s (transform 2.96s, setup 5.56s, collect 8.62s, tests 2.70s, environment 25.85s, prepare 6.99s)
+> ```
+
+## 🤖 Claude *(00:14:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test 2>&1 | grep -E 'Test Files|Tests '",
+  "description": "Show vitest pass counts",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Test Files  31 passed | 2 skipped (33)
+>       Tests  375 passed | 2 skipped (377)
+> ```
+
+## 🤖 Claude *(00:15:25)*
+
+
+## 🤖 Claude *(00:15:25)*
+
+
+## 🤖 Claude *(00:15:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx eslint scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -5; echo \"eslint exit=$?\"",
+  "description": "Lint the extended smoke script",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   214:103  error  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+>   214:177  error  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+> 
+> ✖ 5 problems (5 errors, 0 warnings)
+> 
+> eslint exit=0
+> ```
+
+## 🤖 Claude *(00:15:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx eslint scripts/qa/smoke-spaces-execution.ts 2>&1 | head -8",
+  "description": "Show all eslint errors in the smoke",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts
+>    61:16   error  Optional chain expressions can return undefined by design - using a non-null assertion is unsafe and wrong  @typescript-eslint/no-non-null-asserted-optional-chain
+>   194:86   error  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+>   199:62   error  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+>   214:103  error  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+>   214:177  error  Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+> ```
+
+## 🤖 Claude *(00:15:47)*
+
+
+## 🤖 Claude *(00:15:47)*
+
+
+## 🤖 Claude *(00:15:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -i 's/(w2\\.json as any)\\.finalized === true/w2.json.finalized === true/; s/(w3\\.json as any)\\.replay === true/w3.json.replay === true/; s/(w4\\.json as any)\\.status === '\"'\"'done'\"'\"'/w4.json.status === '\"'\"'done'\"'\"'/; s/!!(genW4?\\.result as any)?\\.video_url/!!(genW4?.result as Record<string, unknown> | null)?.video_url/' scripts/qa/smoke-spaces-execution.ts && npx eslint scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -3 && bun build --no-bundle scripts/qa/smoke-spaces-execution.ts > /dev/null 2>&1; echo \"bun parse exit=$?\"",
+  "description": "Replace any-casts with typed access, re-lint",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✖ 1 problem (1 error, 0 warnings)
+> 
+> bun parse exit=0
+> ```
+
+## 🤖 Claude *(00:16:08)*
+
+
+## 🤖 Claude *(00:16:08)*
+
+Re-rodando o smoke para provar o estado final do arquivo (pós-fix de lint):
+
+## 🤖 Claude *(00:16:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -4",
+  "description": "Re-run smoke after lint fixes",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> ⚠️  deleteThrowawayUser(9deda80e-3fa1-4e11-b6c0-ed8e00fe4153) failed: Database error deleting user — run scripts/qa/sweep-smoke-users.ts to reap orphans
+> 
+> ✅ smoke-spaces-execution: 22 passed, 0 failed
+> ```
+
+## 🤖 Claude *(00:16:30)*
+
+
+## 🤖 Claude *(00:16:30)*
+
+
+## 🤖 Claude *(00:16:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts",
+  "old_string": "} finally {\n  await deleteThrowawayUser(admin, uidA);\n  await deleteThrowawayUser(admin, uidB);\n}",
+  "new_string": "} finally {\n  // W5 seeds a fake Higgsfield key; the vault-encrypted row blocks auth admin deleteUser \u2014\n  // remove it from the BASE table first (service-role) or the user becomes a sweep orphan.\n  if (uidA) await admin.from('user_api_keys_table').delete().eq('user_id', uidA);\n  await deleteThrowawayUser(admin, uidA);\n  await deleteThrowawayUser(admin, uidB);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:16:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"DELETE FROM public.user_api_keys_table WHERE user_id='\"'\"'9deda80e-3fa1-4e11-b6c0-ed8e00fe4153'\"'\"'; DELETE FROM auth.users WHERE id='\"'\"'9deda80e-3fa1-4e11-b6c0-ed8e00fe4153'\"'\"' AND raw_user_meta_data->>'\"'\"'full_name'\"'\"'='\"'\"'SMOKETEST'\"'\"' RETURNING id;\"}' && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT count(*) AS smoketest_left FROM auth.users WHERE raw_user_meta_data->>'\"'\"'full_name'\"'\"'='\"'\"'SMOKETEST'\"'\"';\"}'",
+  "description": "Clean second orphaned smoke user"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"9deda80e-3fa1-4e11-b6c0-ed8e00fe4153"}][{"smoketest_left":0}]
+> ```
+
+## 🤖 Claude *(00:16:58)*
+
+
+## 🤖 Claude *(00:17:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -3",
+  "description": "Prove smoke cleanup vaccine works (no orphan warning)",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> 
+> ✅ smoke-spaces-execution: 22 passed, 0 failed
+> ```
+
+## 🤖 Claude *(00:17:27)*
+
+
+## 🤖 Claude *(00:17:27)*
+
+
+## 🤖 Claude *(00:17:34)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 240,
+  "reason": "Aguardando o security-review em background terminar (notifica\u00e7\u00e3o deve chegar antes; heartbeat dentro da janela de cache).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 21:22:00 (in 266s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(00:17:35)*
+
+<task-notification>
+<task-id>a9137afaf030d6373</task-id>
+<tool-use-id>toolu_014rhdDGjGPgLPvmFBgXonyw</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/tasks/a9137afaf030d6373.output</output-file>
+<status>completed</status>
+<summary>Agent "Security review Spaces 2a video" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Review complete. I examined the migration, both edge-function diffs against HEAD, the SOP Amendment (S14-S18/G8-G12), the ledger RPCs (`20260702190000`), the sweep (`scripts/self-heal-spaces.sh`), the bucket definition, `supabase/config.toml`, and the updated smoke.
+
+# VERDICT: NO P0/HIGH — 1 MEDIUM, 2 LOW, 5 INFO
+
+The money core is well-built: hash-only token storage, claim-guarded first-finalizer-wins, refund clamp, estimate=charge, and the Spaces webhook branch never touches `deduct_mco_coins`. The findings below are gaps at the edges.
+
+---
+
+## FINDINGS
+
+### MEDIUM-1 — Webhook success path lacks the finalize-retry + done-fallback the sync path already has → delivered video can be sweep-refunded
+`supabase/functions/higgsfield-webhook/index.ts:146-162` (single-attempt `finalize`, fail-open) and `:230-244` (done path).
+
+Scenario: video uploads successfully to storage, then `finalize_space_generation(done, 0)` fails once (transient RPC/DB blip). The branch logs and returns `finalized:false`. The row stays `running` with `result IS NULL AND asset_id IS NULL` — which is **exactly the sweep's refundable predicate** (`scripts/self-heal-spaces.sh:27`). 30 min later the sweep issues a **full refund** while the video sits in the **public** `canvas-assets` bucket (migration `20260514040200:134-137`, `public=TRUE`, SELECT `TO public`) at the predictable path `${space_id}/${node_run_id}.mp4` — both UUIDs known to the owner. Net: user keeps the coins and can fetch the video. Not attacker-forceable (requires an ops failure, bounded to one run's charge), but this is the same class the sync path was required to fix — `canvas-execute` has `finalizeWithRetry` (:654) and `materializeDoneFallback` (:671, whose own comment says "a delivered-but-stuck 'running' row must not look sweep-refundable"). The new webhook branch uses **neither**.
+
+**Fix:** in `handleSpacesCallback`, retry finalize once (mirror `finalizeWithRetry`), and on done-finalize failure do a claim-guarded direct `generations` UPDATE (`status='done'`, `result={video_url,...}`, `.in("status",["pending","running"])`) so the sweep predicate excludes the row. The error/refund finalize failing is fine as-is (sweep refunds idempotently — no double).
+
+### LOW-1 — Guard order: video BYOK 402 fires before the 404 space-ownership check
+`supabase/functions/canvas-execute/index.ts:935-941` (402 `higgsfield_not_configured`) runs before `:972-976` (404 `space_not_found`). Documented canonical order is 401→422→404→402 (SOP + comment at :187-188, encoded in smokes T2-T5). A key-less caller probing a foreign `space_id` with a video node gets 402 instead of 404. No debit risk, and the 402 discloses only the caller's own config (no foreign-space oracle), but it breaks the declared ordering invariant and diverges from the image path. **Fix:** move the BYOK check after the ownership 404, or amend the SOP declaring the deviation.
+
+### LOW-2 — Legacy regression: `higgsfield_status` now hardcoded `"queued"`
+`canvas-execute/index.ts:1684` — was `submitData.status ?? "queued"`; `higgsfieldSubmit` discards the provider's submit-response `status` field. The refactor comment ":1654 behavior preserved" is not exactly true. Cosmetic unless a client branches on it. **Fix:** return `status` from `higgsfieldSubmit` or document the change. Everything else in the extraction is faithful: identical mapped messages, all failures 502, credential/input guards (500/400) untouched, `operation_id` persistence + `webhook_token` flow unchanged.
+
+### INFO-1 — Provider error text persisted owner-readable could theoretically echo the plaintext token
+`canvas-execute/index.ts:800` (200-char response-body slice) → `refundNow` stores it in `generations.result` (:846) readable via SELECT-own. If Higgsfield's error body ever echoes the request URL (which carries `?spaces_token=`), the owner sees the plaintext. **Harmless today** — the row is finalized terminal in the same request, so the replay guard makes the token worthless — but strip URLs/tokens from persisted error text as defense-in-depth.
+
+### INFO-2 — `canvas-assets` is a public bucket; the 7d signed URL is cosmetic; legacy comment says "private"
+Cross-tenant confidentiality of videos rests solely on UUID unguessability (space_id + node_run_id). Exact parity with the legacy path (`project_id/execution_id.mp4`) — **no new exposure** — but it widens the blast radius of MEDIUM-1's "generosity" and S17's accepted race. Also `result.video_url` dies after 7d; `storage_path` is persisted for re-signing (parity).
+
+### INFO-3 — Legacy path still returns `webhook_token` plaintext to the client (pre-existing, unchanged)
+`canvas-execute/index.ts:1681`. In the legacy deduct-on-success model a client can forge its own failure callback to dodge the charge for a video retrievable out-of-band via its own BYOK Higgsfield account. Pre-existing; the new hash design fixes exactly this — candidate for a legacy retrofit, not part of this slice.
+
+### INFO-4 — `operation_id` persistence unchecked in the Spaces path
+`canvas-execute/index.ts:879` — legacy logs `updErr` (:1666); Spaces ignores it. Observability-only (webhook finalizes via token).
+
+### INFO-5 — G12 doc nit
+SOP says invalid/missing token → "401/404"; code returns 400 (malformed length) / 404 (unknown) — legacy parity, smoke W1 asserts 404. Align the SOP wording.
+
+---
+
+## PER-FOCUS VERDICTS
+
+- **MINT: SOUND** (modulo MEDIUM-1's ops-conditional bounded leak — not attacker-mintable). Refund always ≤ `mco_charged` (RPC clamp `:169` + CHECK), single refund per run (claim `status IN pending/running`), refund amounts sourced from the row (`gen.mco_charged`), never from the payload. Submit-network-error-but-actually-submitted: `refundNow` finalizes terminal → late webhook hits replay guard **before** download → no video, no second refund. Token mint failure fails closed with refund.
+- **DOUBLE-CHARGE: SOUND.** Spaces webhook branch contains zero `deduct_mco_coins` (smoke W4 asserts `canvas_video_spend` count = 0). Namespaces fully disjoint: `?spaces_token=` → `generations`, `?token=` → `vm_canvas_executions`; a Spaces run never has a `vm_canvas_executions` row, so the legacy deduct can't fire for it. Duplicate `node_run_id` → idempotent no-op, no re-mint of token, no second debit. `effectiveCost` is consistent across pre-check, cap, begin, refund, and response (G7).
+- **CROSS-TENANT: SOUND.** Single-row hash lookup on a partial UNIQUE index; `node_run_id`/`owner_id`/`space_id` all taken from the claimed row, never from URL/body; RPC derives uid from the row; `generations` writes are service-role-only (verified grants + smoke T7/T8); token ≈122 bits CSPRNG, SHA-256 preimage/collision infeasible; storage path derived from row values (uuid-typed).
+- **SECRET LEAK: SOUND** (with INFO-1/INFO-3). Plaintext token exists only in the `hf_webhook` URL sent to Higgsfield; never stored, logged, or returned (the 202 body has no token — unlike legacy). Owner reading the hash via RLS cannot forge callbacks.
+- **REPLAY: SOUND.** Second POST short-circuits pre-download on terminal status; post-sweep webhook is a no-op (S17's bounded generosity acknowledged in the SOP); concurrent finalizers settle at the RPC's atomic claim. MEDIUM-1 is the one gap that widens the S17 window.
+- **LEGACY REGRESSION:** only LOW-2; all statuses, messages, `operation_id`, and token flow otherwise preserved.
+- **SSRF: PARITY CONFIRMED — no new exposure.** The `resultUrl` fetch (webhook `:208`) is triggerable only by a valid-token holder (effectively Higgsfield), identical to legacy `:406` including the no-allowlist/no-timeout/unbounded-buffer pattern and the small port-scan oracle via persisted error text. Pre-existing hardening opport­unity, not this slice.
+- **GUARD ORDER:** LOW-1 (BYOK 402 before space 404); no path is *charged* before a 422/404 (begin is strictly after all guards + the balance/cap pre-checks).
+
+**Recommendation:** MEDIUM-1 is worth closing before the paid 2a-cliente E2E, since it converts an ops blip into free coins + a retained public video. LOW-1/LOW-2 are polish. The slice is fundamentally sound on every mint/double-charge/cross-tenant axis.</result>
+<usage><subagent_tokens>147386</subagent_tokens><tool_uses>15</tool_uses><duration_ms>395417</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(00:17:54)*
+
+
+## 🤖 Claude *(00:17:54)*
+
+
+## 🤖 Claude *(00:18:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts",
+  "old_string": "  const charged = Number(gen.mco_charged) || 0;\n  const finalize = async (\n    status: \"done\" | \"error\",\n    refund: number,\n    result: Record<string, unknown>,\n  ) => {\n    const { data, error } = await admin.rpc(\"finalize_space_generation\", {\n      p_node_run_id: gen.node_run_id,\n      p_status: status,\n      p_refund: refund,\n      p_result: result,\n    });\n    if (error) {\n      // Fail-open by design: a stuck 'running' row is later refunded by the sweep (S17).\n      console.error(\"[higgsfield-webhook:spaces] finalize failed:\", error);\n    }\n    return { data, error };\n  };",
+  "new_string": "  const charged = Number(gen.mco_charged) || 0;\n  const finalize = async (\n    status: \"done\" | \"error\",\n    refund: number,\n    result: Record<string, unknown>,\n  ) => {\n    // One retry (security-review MEDIUM 2026-07-02): a transient RPC blip on the DONE path would\n    // leave a delivered video looking sweep-refundable \u2014 mirror canvas-execute's finalizeWithRetry.\n    const args = {\n      p_node_run_id: gen.node_run_id,\n      p_status: status,\n      p_refund: refund,\n      p_result: result,\n    };\n    let { data, error } = await admin.rpc(\"finalize_space_generation\", args);\n    if (error) {\n      console.error(\"[higgsfield-webhook:spaces] finalize failed, retrying once:\", error);\n      await new Promise((r) => setTimeout(r, 1000));\n      ({ data, error } = await admin.rpc(\"finalize_space_generation\", args));\n      if (error) console.error(\"[higgsfield-webhook:spaces] finalize retry failed:\", error);\n    }\n    if (error && status === \"done\") {\n      // Done-fallback (claim-guarded): value WAS delivered \u2014 the row must never match the sweep's\n      // refundable predicate (result IS NULL AND asset_id IS NULL). Money untouched (refund 0).\n      try {\n        const { error: fbErr } = await admin\n          .from(\"generations\")\n          .update({ status: \"done\", result })\n          .eq(\"node_run_id\", gen.node_run_id)\n          .in(\"status\", [\"pending\", \"running\"]);\n        if (fbErr) console.error(\"[higgsfield-webhook:spaces] done-fallback failed:\", fbErr);\n      } catch (e) {\n        console.error(\"[higgsfield-webhook:spaces] done-fallback threw:\", e);\n      }\n    }\n    // The error/refund finalize failing stays fail-open: the sweep refunds idempotently (S17).\n    return { data, error };\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-webhook/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:08)*
+
+
+## 🤖 Claude *(00:18:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "    if (videoCost <= 0) {\n      // S18: never charge a path without a declared price (the legacy `|| 10` fallback is NOT\n      // acceptable here \u2014 estimate must equal the real charge, gate G7).\n      return spacesJson(422, {\n        error: \"video_duration_unsupported\",\n        message: \"Dura\u00e7\u00e3o sem pre\u00e7o declarado \u2014 use 5s.\",\n        cost_key: costKey,\n      }, corsHeaders);\n    }\n    // Per-user BYOK fail-closed (API Tenancy Model): no Higgsfield key \u21d2 402 BEFORE debit.\n    if (!keys.higgsfield || !keys.higgsfield_secret) {\n      return spacesJson(402, {\n        error: \"higgsfield_not_configured\",\n        message: \"Configure suas credenciais Higgsfield em /dashboard/settings.\",\n        action: \"Configure your Higgsfield credentials at /dashboard/settings\",\n      }, corsHeaders);\n    }\n  }",
+  "new_string": "    if (videoCost <= 0) {\n      // S18: never charge a path without a declared price (the legacy `|| 10` fallback is NOT\n      // acceptable here \u2014 estimate must equal the real charge, gate G7).\n      return spacesJson(422, {\n        error: \"video_duration_unsupported\",\n        message: \"Dura\u00e7\u00e3o sem pre\u00e7o declarado \u2014 use 5s.\",\n        cost_key: costKey,\n      }, corsHeaders);\n    }\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  const { data: spaceRow } = await admin\n    .from(\"spaces\").select(\"id\").eq(\"id\", body.space_id).eq(\"owner_id\", user.id).maybeSingle();\n  if (!spaceRow) {\n    return spacesJson(404, { error: \"space_not_found\", message: \"Space n\u00e3o encontrado.\" }, corsHeaders);\n  }\n\n  // \u2500\u2500 402 pre-checks AFTER validation (canonical order 401\u2192422\u2192404\u2192402; SOP S5) \u2500\u2500",
+  "new_string": "  const { data: spaceRow } = await admin\n    .from(\"spaces\").select(\"id\").eq(\"id\", body.space_id).eq(\"owner_id\", user.id).maybeSingle();\n  if (!spaceRow) {\n    return spacesJson(404, { error: \"space_not_found\", message: \"Space n\u00e3o encontrado.\" }, corsHeaders);\n  }\n\n  // Per-user BYOK fail-closed (API Tenancy Model), AFTER the ownership 404 so the canonical\n  // 401\u2192422\u2192404\u2192402 order holds (security-review LOW 2026-07-02).\n  if (body.node_type === \"image_to_video\" && (!keys.higgsfield || !keys.higgsfield_secret)) {\n    return spacesJson(402, {\n      error: \"higgsfield_not_configured\",\n      message: \"Configure suas credenciais Higgsfield em /dashboard/settings.\",\n      action: \"Configure your Higgsfield credentials at /dashboard/settings\",\n    }, corsHeaders);\n  }\n\n  // \u2500\u2500 402 pre-checks AFTER validation (canonical order 401\u2192422\u2192404\u2192402; SOP S5) \u2500\u2500"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:32)*
+
+
+## 🤖 Claude *(00:18:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  webhookUrl: string;\n}): Promise<{ ok: true; operationId: string } | { ok: false; message: string }> {",
+  "new_string": "  webhookUrl: string;\n}): Promise<{ ok: true; operationId: string; status?: string } | { ok: false; message: string }> {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  let submitData: { request_id?: string; id?: string };\n  try {\n    submitData = await submitResp.json();\n  } catch {\n    return { ok: false, message: \"Higgsfield: resposta inv\u00e1lida (JSON parse failed)\" };\n  }\n\n  const operationId = submitData.request_id ?? submitData.id;\n  if (!operationId) {\n    return { ok: false, message: \"Higgsfield: resposta de submit sem request_id\" };\n  }\n  return { ok: true, operationId };\n}",
+  "new_string": "  let submitData: { request_id?: string; id?: string; status?: string };\n  try {\n    submitData = await submitResp.json();\n  } catch {\n    return { ok: false, message: \"Higgsfield: resposta inv\u00e1lida (JSON parse failed)\" };\n  }\n\n  const operationId = submitData.request_id ?? submitData.id;\n  if (!operationId) {\n    return { ok: false, message: \"Higgsfield: resposta de submit sem request_id\" };\n  }\n  return { ok: true, operationId, status: submitData.status };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "      credits_charged: execution.credits_charged, // intent, not yet deducted\n      higgsfield_status: \"queued\",",
+  "new_string": "      credits_charged: execution.credits_charged, // intent, not yet deducted\n      higgsfield_status: submit.status ?? \"queued\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "  if (!submit.ok) {\n    return await refundNow(submit.message, 502, \"video_submit_failed\");\n  }",
+  "new_string": "  if (!submit.ok) {\n    // Defense-in-depth (security-review INFO): the provider error text may echo the request URL,\n    // which carries the plaintext token \u2014 never persist it (the row is owner-readable).\n    const safeMsg = submit.message.split(token).join(\"[redacted]\");\n    return await refundNow(safeMsg, 502, \"video_submit_failed\");\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:18:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -i 's|- \\*\\*G12\\*\\* token inv\u00e1lido/ausente \u2192 401/404 sem vazamento de exist\u00eancia.|- **G12** token inv\u00e1lido/ausente \u2192 400 (malformado)/404 (desconhecido) sem vazamento de exist\u00eancia.|' docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md && grep -c 'G12.*400' docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md && export PATH=\"/home/ubuntu/.deno/bin:$PATH\" && deno check supabase/functions/canvas-execute/index.ts supabase/functions/higgsfield-webhook/index.ts 2>&1 | tail -3",
+  "description": "Fix SOP G12 wording and deno check both functions",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1
+> [0m[32mCheck[0m supabase/functions/canvas-execute/index.ts
+> [0m[32mCheck[0m supabase/functions/higgsfield-webhook/index.ts
+> ```
+
+## 🤖 Claude *(00:19:09)*
+
+
+## 🤖 Claude *(00:19:09)*
+
+
+## 🤖 Claude *(00:19:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy canvas-execute --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deployed|script size' ; SUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy higgsfield-webhook --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deployed|script size' ; set -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -12",
+  "description": "Redeploy both functions and re-run full smoke",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deploying Function: canvas-execute (script size: 163.7kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: canvas-execute
+> Deploying Function: higgsfield-webhook (script size: 85.37kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: higgsfield-webhook
+> ✅ T6d finalize(error) → refund total + row simétrica — fin={"refunded":10,"finalized":true} bal=50
+> ✅ T6e finalize 2× → no-op (sem double-refund) — fin2={"finalized":false}
+> ✅ T6f refund clampado ao cobrado (anti-mint) — fin={"refunded":5,"finalized":true} bal=50
+> ✅ W1 404 token desconhecido — status=404
+> ✅ W2 webhook failure → error + refund total — resp={"ok":true,"status":"failed","finalized":true} gen={"status":"error","mco_refunded":10} bal=50
+> ✅ W3 replay → no-op — resp={"ok":true,"replay":true,"status":"error"}
+> ✅ W4 webhook success → done + video_url + zero deduct legado — resp={"ok":true,"status":"done","finalized":true} genStatus=done legacyDeduct=0 bal=40
+> ✅ W5 submit-fail → 502 + refund total (G8) — status=502 error=video_submit_failed gen={"status":"error","mco_refunded":30} bal=40
+> ✅ T7 RLS own-only + sem INSERT/DELETE client — own=5/5 cross=0 ins=blocked rows=5
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> 
+> ✅ smoke-spaces-execution: 22 passed, 0 failed
+> ```
+
+## 🤖 Claude *(00:19:42)*
+
+
+## 🤖 Claude *(00:19:42)*
+
+**22/22 pós-fixes do review.** Commits granulares agora:
+
+## 🤖 Claude *(00:19:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md supabase/migrations/20260702210000_spaces_video_async_webhook_token.sql && git commit -q -m \"feat(spaces): Fase 2a SOP amendment (S14-S18) + async video webhook-token migration\n\nLei 2 BEFORE code: async video lifecycle decisions sealed \u2014 ledger-first at\nsubmit (S14), SHA-256-only token correlation on generations (S15 \u2014 plaintext\nwould leak to the owner via SELECT-own RLS enabling forged failure callbacks;\nvision-mcp PAT precedent), legacy-deduct suppression in the webhook (S16,\nanti double-charge OTD-VA-010 class), sweep coverage (S17), pre-debit video\nguards with declared-price-only costing (S18). Gates G8-G12.\nMigration 20260702210000 (webhook_token_hash + operation_id + partial UNIQUE)\napplied+registered+proven live (new_cols=2, idx=1). /security-review\nindependente: NO P0/HIGH (1 MEDIUM + 2 LOW corrigidos no c\u00c3\u00b3digo).\" && git add supabase/functions/canvas-execute/index.ts supabase/functions/higgsfield-webhook/index.ts && git commit -q -m \"feat(spaces): async video slice in canvas-execute + Spaces branch in higgsfield-webhook\n\ncanvas-execute: image_to_video joins the Spaces slice \u2014 422 guards (allowlist\n1:1 legacy, input required, declared-price durations only), per-user BYOK\nfail-closed 402 AFTER the ownership 404 (review LOW-1), ledger-first begin\n(output_type video), token mint hash-only, higgsfieldSubmit extracted and\nshared with the legacy path (status passthrough preserved \u2014 review LOW-2),\nfull refund on submit-fail with token redaction in persisted errors (INFO-1).\nhiggsfield-webhook: handleSpacesCallback (?spaces_token=) \u2014 hash lookup,\nfailure/NSFW -> finalize(error, full refund), success -> download/validate/\nupload -> finalize(done, result.video_url) with retry + claim-guarded\ndone-fallback (review MEDIUM-1: delivered video must never look\nsweep-refundable), replay no-op, ZERO legacy deduct (S16).\ndeno check clean; deployed 163.7kB + 85.37kB.\" && git add scripts/qa/smoke-spaces-execution.ts && git commit -q -m \"test(spaces): smoke 2a \u2014 video guards V1-V4 + webhook lifecycle W1-W5 (22 gates)\n\nV1-V4: model allowlist / input required / undeclared duration / BYOK\nfail-closed \u2014 all pre-debit, zero rows. W1-W5 prove the async money cycle\nwith a SIMULATED webhook (zero Higgsfield spend): unknown-token 404 (G12),\nfailure -> full refund (G9), replay no-op (G11), success -> done +\nresult.video_url + zero legacy deduct (G10/S16), and a REAL submit with a\nfake key -> Higgsfield 401 -> 502 + same-request refund (G8). T2 moved to\n'upscale' (image_to_video entered the slice); T7 counts dynamically; W5's\nseeded key row is deleted from the base table before user cleanup (vault FK\nblocked deleteUser \u2014 orphan vaccine). Proven 22/22 against prod 3x.\" && git log -3 --format='%h %s' | head -3",
+  "description": "Three granular commits for the 2a slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:19PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:19PM[0m [32mINF[0m scan completed in 10.8ms
+> [90m9:19PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:19PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:19PM[0m [32mINF[0m scan completed in 17.9ms
+> [90m9:19PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.12 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:19PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:19PM[0m [32mINF[0m scan completed in 12.5ms
+> [90m9:19PM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.19 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> ✔️ secret-scan (0.18 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 7b0742d test(spaces): smoke 2a — video guards V1-V4 + webhook lifecycle W1-W5 (22 gates)
+> df41d1d feat(spaces): async video slice in canvas-execute + Spaces branch in higgsfield-webhook
+> 9db732b feat(spaces): Fase 2a SOP amendment (S14-S18) + async video webhook-token migration
+> ```
+
+## 🤖 Claude *(00:20:14)*
+
+
+## 🤖 Claude *(00:20:14)*
+
+
+## 🤖 Claude *(00:20:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase gen types typescript --project-id bcyvddsykvehvpwstlfa --schema public > src/integrations/supabase/types.ts 2>/dev/null && grep -c 'webhook_token_hash' src/integrations/supabase/types.ts && npx tsc --noEmit 2>&1 | head -3; echo \"tsc exit=$?\"",
+  "description": "Regen types with new columns and tsc check",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3
+> tsc exit=0
+> ```
+
+## 🤖 Claude *(00:20:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- **Restam do Spaces:** Fase 2 (breadth: mais node types no slice server) \u00b7 Fase 3 (collab).",
+  "new_string": "- **Restam do Spaces:** Fase 2a-cliente (n\u00f3 de v\u00eddeo na UI + threading imagem\u2192input_asset_url + E2E pago) \u00b7 Fase 2 restante (\u00e1udio/Designer/Workflow Apps/FX) \u00b7 Fase 3 (collab).\n\n### \u2705 Spaces Fase 2a-SERVER \u2014 v\u00eddeo async no slice \u2014 SHIPPED (loop 2026-07-02 it.2, commits `9db732b`+`df41d1d`+`7b0742d`)\n- **Lei 2 ANTES do c\u00f3digo:** SOP Amendment S14-S18 + gates G8-G12 (`spaces-graph-execution.md`) \u2014 ledger-first no submit; correla\u00e7\u00e3o webhook por **SHA-256-only** na row (plaintext vazaria ao pr\u00f3prio dono via RLS SELECT-own \u2192 forjaria failure-callback p/ refund + v\u00eddeo gr\u00e1tis; precedente PAT vision-mcp); supress\u00e3o TOTAL do deduct legado no webhook (classe OTD-VA-010); sweep S17; guards S18 pre\u00e7o-declarado-only.\n- **Migration `20260702210000`** (webhook_token_hash + operation_id + UNIQUE parcial) aplicada+registrada+provada (new_cols=2, idx=1). **/security-review independente: NO P0/HIGH** (1 MEDIUM done-fallback no webhook + 2 LOW ordem-BYOK/status-passthrough \u2014 **TODOS corrigidos**; SOUND em mint/double-charge/cross-tenant/secret-leak/replay/SSRF-parity).\n- **C\u00f3digo:** `canvas-execute` image_to_video no slice (422 allowlist/input/dura\u00e7\u00e3o + BYOK fail-closed 402 p\u00f3s-404 + begin output_type=video + refund total em submit-fail com reda\u00e7\u00e3o de token) + `higgsfieldSubmit` extra\u00eddo/compartilhado c/ legado \u00b7 `higgsfield-webhook` branch `?spaces_token=` (falha\u2192refund; sucesso\u2192download/validate/upload\u2192done+result.video_url com **retry+done-fallback claim-guarded**; replay no-op; ZERO deduct legado). deno check \u2713 \u00b7 deployados 163.7kB+85.37kB \u00b7 types regen (tsc 0).\n- **Prova (Lei 1):** smoke **22/22 \u00d73** contra prod (13 gates 1b + V1-V4 guards + W1-W5 ciclo webhook SIMULADO zero-Higgsfield; W5 = submit real com chave fake \u2192 401 \u2192 refund na mesma request, G8 E2E) \u00b7 vitest 375 passed \u00b7 vacina de orphan (chave vault do W5 bloqueava deleteUser \u2014 limpeza da base table no finally).\n- **Notas honestas:** E2E pago real (dop-lite ~30 mco + ~$0.13 BYOK Higgsfield) fica p/ 2a-cliente. INFO-3 do review (legado retorna webhook_token plaintext ao cliente \u2014 pr\u00e9-existente, candidato a retrofit do design hash) + INFO-2 (canvas-assets \u00e9 bucket p\u00fablico desde o legado) registrados como follow-ups n\u00e3o-bloqueantes."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:21:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 1b LIVE: GO executado (apply + drift fechado + smoke 13/13 + E2E pago + Vision QA)",
+  "new_string": "## Task State\n\n## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2a-SERVER: v\u00eddeo async no slice (ledger-first + webhook hash-safe, smoke 22/22)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = /security-review independente + Sovereign \u00b7 Owner = Sovereign (caminho de dinheiro async novo; blast radius mitigado por SOP S14-S18 + review NO P0/HIGH + smoke 22/22 zero-cost).\n\nItera\u00e7\u00e3o 2 do loop p\u00f3s-GO. Item de maior valor desbloqueado = Fase 2 breadth do Spaces; corte honesto = **servidor primeiro** (UI/E2E pago = 2a-cliente, pr\u00f3xima). Ciclo fechado completo:\n\n| Etapa | Prova material (Lei 1) |\n|-------|------------------------|\n| **SOP Lei 2 ANTES do c\u00f3digo** | Amendment S14-S18 + G8-G12 em `spaces-graph-execution.md`. Decis\u00e3o-chave S15: row guarda **s\u00f3 SHA-256** do token de webhook \u2014 plaintext seria leg\u00edvel pelo pr\u00f3prio dono via RLS SELECT-own, permitindo forjar failure-callback (refund + v\u00eddeo tardio gr\u00e1tis). `vm_canvas_executions` estruturalmente inutiliz\u00e1vel p/ Spaces (FK `project_id NOT NULL`). |\n| **Migration `20260702210000`** | Aplicada via Management API HTTP 201 + registrada (`RETURNING version`) + provada (`new_cols=2, idx=1`). Aditiva: `webhook_token_hash` + `operation_id` + UNIQUE parcial. |\n| **/security-review independente** | **NO P0/HIGH** \u2014 SOUND em mint/double-charge/cross-tenant/secret-leak/replay/SSRF(paridade legado). 1 MEDIUM (done-finalize sem retry/fallback \u2192 v\u00eddeo entregue podia virar sweep-refund + coins de volta) + 2 LOW (ordem BYOK-402 antes do 404 \u00b7 `higgsfield_status` hardcoded no refactor) + 5 INFO \u2014 **MEDIUM+LOWs+INFO-1/5 corrigidos na sess\u00e3o** (retry+done-fallback claim-guarded no webhook \u00b7 BYOK p\u00f3s-404 \u00b7 status passthrough \u00b7 reda\u00e7\u00e3o de token em erro persistido \u00b7 doc G12). |\n| **canvas-execute (deployado 163.7kB)** | `image_to_video` no slice: guards 422 (allowlist 1:1 legado \u00b7 input obrigat\u00f3rio \u00b7 dura\u00e7\u00e3o s\u00f3 com pre\u00e7o declarado \u2014 sem fallback `\\|\\| 10`, G7) \u00b7 BYOK fail-closed 402 \u00b7 begin ledger-first `output_type=video` \u00b7 submit-fail \u2192 refund total na MESMA request \u00b7 `higgsfieldSubmit` extra\u00eddo e compartilhado com o legado (zero regress\u00e3o al\u00e9m do passthrough corrigido). |\n| **higgsfield-webhook (deployado 85.37kB)** | Branch `?spaces_token=`: hash-lookup single-row \u2192 falha/NSFW \u2192 finalize(error, refund total) \u00b7 sucesso \u2192 download/validate(\u2265100KB, video/*)\u2192upload\u2192finalize(done, result.video_url) com retry+done-fallback \u00b7 replay \u2192 no-op \u00b7 **ZERO `deduct_mco_coins`** (S16 \u2014 a \u00fanica txn \u00e9 a do begin). |\n| **Smoke 22/22 \u00d73** | 13 gates 1b intactos + V1-V4 (guards pr\u00e9-d\u00e9bito, zero rows) + W1-W5: 404 token desconhecido (G12) \u00b7 failure\u2192refund total (G9) \u00b7 replay no-op (G11) \u00b7 success\u2192done+video_url+zero deduct legado (G10/S16) \u00b7 **G8 E2E real**: chave fake seed \u2192 submit real Higgsfield \u2192 401 \u2192 502+refund na mesma request. Zero cr\u00e9ditos Higgsfield gastos. Vacina: key vault do W5 bloqueava deleteUser \u2192 limpeza da base table no finally (provado sem warning). |\n| **Regress\u00e3o** | vitest **375 passed** \u00b7 tsc 0 \u00b7 types regen c/ colunas novas \u00b7 eslint s\u00f3 o erro pr\u00e9-existente da linha 61 do smoke. |\n\n**Pend\u00eancias declaradas:** 2a-cliente (n\u00f3 v\u00eddeo na UI + threading imagem\u2192`input_asset_url` + E2E pago dop-lite ~30 mco + ~$0.13 BYOK \u2014 nota de GO de gasto) \u00b7 INFO-3 retrofit hash no legado \u00b7 INFO-2 bucket p\u00fablico (paridade legado).\n\n**Survival Laws Self-audit:** Lei 1 \u2705 (claims com HTTP/UUID/output literal) \u00b7 Lei 2 \u2705 (SOP amendment ANTES do c\u00f3digo) \u00b7 Lei 3 \u2705 (poda cont\u00ednua; scratch em /tmp) \u00b7 Lei 4 \u2705 (ORO declarado; review independente como co-Reviewer).\n\n## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 1b LIVE: GO executado (apply + drift fechado + smoke 13/13 + E2E pago + Vision QA)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:21:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && cat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2a.sql <<'EOF'\nINSERT INTO public.mcorch_nodes (user_id, node_type, name, content, metadata, revenue_impact, stability_score)\nVALUES (NULL, 'handoff', 'spaces-2a-server-async-video-2026-07-02',\n'[HANDOFF SEAL] Spaces Fase 2a-SERVER \u2014 video async no slice do canvas-execute com ledger-first + webhook hash-safe. SOP Amendment S14-S18 ANTES do codigo (decisao-chave S15: row guarda so SHA-256 do token \u2014 plaintext vazaria ao dono via RLS SELECT-own permitindo forjar failure-callback). Migration 20260702210000 aplicada+registrada+provada. /security-review independente NO P0/HIGH (MEDIUM done-fallback + 2 LOW corrigidos; SOUND em mint/double-charge/cross-tenant/secret-leak/replay). higgsfield-webhook branch spaces_token: falha->refund total, sucesso->done+result.video_url com retry+done-fallback claim-guarded, replay no-op, ZERO deduct legado (S16). Smoke 22/22 x3 zero-Higgsfield (W5 = submit real com chave fake -> 401 -> refund mesma request). vitest 375. Commits 9db732b df41d1d 7b0742d. Pendente: 2a-cliente (UI + E2E pago).',\n'{\"provider\":\"handoff\",\"event\":\"spaces_2a_server\",\"migration\":\"20260702210000\",\"commits\":[\"9db732b\",\"df41d1d\",\"7b0742d\"],\"smoke\":\"22/22\",\"review\":\"NO_P0_HIGH\"}'::jsonb,\n0, 0.9)\nRETURNING id;\nEOF\npython3 -c \"\nimport json\nprint(json.dumps({'query': open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2a.sql').read()}))\n\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2a.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2a.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT count(*) AS mesh_total FROM public.mcorch_nodes;\"}'",
+  "description": "Insert 2a-server seal node into knowledge mesh"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"b69f5b5b-2827-4ca3-a9c9-4ebacb381bcb"}][{"mesh_total":9037}]
+> ```
+
+## 🤖 Claude *(00:21:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -i 's|version-6.77.0--spaces--Fase--1b--LIVE--canvas--pago-blueviolet|version-6.78.0--spaces--2a--video--async--server-blueviolet|; s|neural_mesh-9036_nodes|neural_mesh-9037_nodes|' README.md && git add README.md HANDOFF.md .claude/context/autonomous-loop-charter.md src/integrations/supabase/types.ts && git commit -q -m \"chore(sprint): v6.78.0 \u2014 Spaces Fase 2a-server selado (v\u00eddeo async ledger-first, review NO P0/HIGH, smoke 22/22, mesh 9037)\n\nSeal node b69f5b5b-2827-4ca3-a9c9-4ebacb381bcb. Types regen com\nwebhook_token_hash/operation_id (tsc 0). Charter + HANDOFF atualizados;\npendencia declarada: 2a-cliente (UI video node + E2E pago gated em nota\nde GO de gasto ~30 mco + ~\\$0.13 BYOK Higgsfield).\" && git push origin main 2>&1 | tail -1 && git log -1 --format='%h %s' && git status -sb | head -1",
+  "description": "Bump README, commit seal, push to origin",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:21PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:21PM[0m [32mINF[0m scan completed in 17ms
+> [90m9:21PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.05 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    53c88b0..721ef7e  main -> main
+> 721ef7e chore(sprint): v6.78.0 — Spaces Fase 2a-server selado (vídeo async ledger-first, review NO P0/HIGH, smoke 22/22, mesh 9037)
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(00:22:27)*
+
+
+## 🤖 Claude *(00:22:27)*
+
+
+## 🤖 Claude *(00:22:33)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 90,
+  "reason": "Fatia 2a-server selada e pushada; pr\u00f3xima itera\u00e7\u00e3o (2a-cliente UI de v\u00eddeo) pronta para come\u00e7ar sem espera externa.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 21:25:00 (in 147s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(00:25:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(00:25:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(00:25:15)*
+
+
+## 🤖 Claude *(00:25:15)*
+
+
+## 🤖 Claude *(00:25:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git fetch origin -q; git log -1 --format='%h %s'; ls src/hooks/ | grep -iE 'generation|space'; ls src/lib/ | grep -iE 'space'; ls src/components/spaces/ 2>/dev/null | head",
+  "description": "Locate Spaces client files"
+}
+```
+
+## 🤖 Claude *(00:25:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'video-generator\\|video_generator' src/lib/spaces-*.ts src/hooks/useGenerationLedger.ts 2>/dev/null | head -10; grep -rn 'SPACES_MODEL_MAP\\|magic_prompt\\|generate_image' src/lib/spaces-execution.ts 2>/dev/null | head -15",
+  "description": "Find video-generator references and model map in client execution lib"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 721ef7e chore(sprint): v6.78.0 — Spaces Fase 2a-server selado (vídeo async ledger-first, review NO P0/HIGH, smoke 22/22, mesh 9037)
+> useAiosWorkspaceChat.ts
+> useGenerationLedger.ts
+> useSpaceSession.ts
+> useSpaces.ts
+> spaces-dag.ts
+> spaces-execution.ts
+> spaces-schema.ts
+> GenerationCluster.tsx
+> ParamHUD.tsx
+> SpaceNodeCard.tsx
+> Spotlight.tsx
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/lib/spaces-execution.ts:43:export const SPACES_MODEL_MAP: Record<string, ResolvedModel> = {
+> src/lib/spaces-execution.ts:56:  return SPACES_MODEL_MAP[modelKey ?? 'auto'] ?? SPACES_MODEL_MAP['auto'];
+> src/lib/spaces-execution.ts:64:    return level === 'longo' ? 5 : level === 'medio' ? 2 : 1; // mirrors magic_prompt server pricing
+> src/lib/spaces-execution.ts:125:  node_type: 'generate_image' | 'magic_prompt';
+> src/lib/spaces-execution.ts:149:      project_id: spaceId, node_id: node.id, node_type: 'magic_prompt',
+> src/lib/spaces-execution.ts:150:      provider: 'openrouter', model: 'magic_prompt', prompt,
+> src/lib/spaces-execution.ts:158:      project_id: spaceId, node_id: node.id, node_type: 'generate_image',
+> ```
+
+## 🤖 Claude *(00:25:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	/**
+> 2	 * spaces-execution.ts — Pure helpers for the Spaces Fase 1b executor (runGraph).
+> 3	 *
+> 4	 * SOP: docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md (S7 slice · S8 model map · S10 batch ·
+> 5	 * S11 input threading). No I/O here — useGenerationLedger owns the network; these are
+> 6	 * classification/resolution/graph primitives so they stay vitest-provable.
+> 7	 */
+> 8	import type { SpaceNode, SpaceEdge, Generation } from './spaces-schema';
+> 9	import { NODE_TYPE_IDS } from './node-registry';
+> 10	
+> 11	/* ── S7 — 1b executable slice ──────────────────────────────────────────────── */
+> 12	export const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator']);
+> 13	
+> 14	/** Sources/decorative/collector — never billed, never error (NA-SPACES-008). */
+> 15	export const PASSIVE_TYPES = new Set([
+> 16	  'references', 'upload', 'assets', 'find-inspiration', 'text',
+> 17	  'sticky-note', 'stickers', 'group', 'list',
+> 18	]);
+> 19	
+> 20	export type NodeExecClass = 'executable' | 'passive' | 'unsupported';
+> 21	
+> 22	/**
+> 23	 * Registry type id of a node. Fase 1a nodes don't persist `typeId` — fall back to the
+> 24	 * label prefix ("image-generator #1" → "image-generator"), which addNode has always minted.
+> 25	 */
+> 26	export function nodeTypeId(node: SpaceNode): string | null {
+> 27	  const explicit = node.data.typeId;
+> 28	  if (explicit && NODE_TYPE_IDS.includes(explicit)) return explicit;
+> 29	  const prefix = (node.data.label || '').replace(/\s*#\d+\s*$/, '').trim();
+> 30	  return NODE_TYPE_IDS.includes(prefix) ? prefix : null;
+> 31	}
+> 32	
+> 33	export function classifyNode(node: SpaceNode): NodeExecClass {
+> 34	  const t = nodeTypeId(node);
+> 35	  if (t && EXECUTABLE_TYPES.has(t)) return 'executable';
+> 36	  if (t && PASSIVE_TYPES.has(t)) return 'passive';
+> 37	  return 'unsupported'; // includes image-upscaler (cut from 1b — SOP S7) and all video/audio/svg/designer
+> 38	}
+> 39	
+> 40	/* ── S8 — model resolution (Spaces key → server-supported provider/model) ──── */
+> 41	export interface ResolvedModel { provider: string; model: string }
+> 42	
+> 43	export const SPACES_MODEL_MAP: Record<string, ResolvedModel> = {
+> 44	  'auto': { provider: 'openrouter', model: 'google/gemini-2.5-flash-image' },
+> 45	  'flux.1.1': { provider: 'openrouter', model: 'black-forest-labs/flux-1.1-pro' },
+> 46	};
+> 47	
+> 48	/** Mirror of the server CREDIT_COSTS for the RESOLVED pairs (mirror-parity test G7). */
+> 49	export const SPACES_EXECUTABLE_COSTS: Record<string, number> = {
+> 50	  'auto': 10,      // openrouter/google/gemini-2.5-flash-image
+> 51	  'flux.1.1': 12,  // openrouter/black-forest-labs/flux-1.1-pro
+> 52	};
+> 53	
+> 54	/** Unknown Spaces model key resolves as 'auto' (Pattern #2 minimal routing — SOP S8). */
+> 55	export function resolveSpacesModel(modelKey?: string): ResolvedModel {
+> 56	  return SPACES_MODEL_MAP[modelKey ?? 'auto'] ?? SPACES_MODEL_MAP['auto'];
+> 57	}
+> 58	
+> 59	/** Estimate = real charge for the executable slice (gate G7 — HUD honesty). */
+> 60	export function estimateExecutableCost(node: SpaceNode): number {
+> 61	  const t = nodeTypeId(node);
+> 62	  if (t === 'prompt-generator') {
+> 63	    const level = (node.data.params?.level as string) || 'curto';
+> 64	    return level === 'longo' ? 5 : level === 'medio' ? 2 : 1; // mirrors magic_prompt server pricing
+> 65	  }
+> 66	  if (t === 'image-generator') {
+> 67	    const base = SPACES_EXECUTABLE_COSTS[node.data.modelKey ?? 'auto'] ?? SPACES_EXECUTABLE_COSTS['auto'];
+> 68	    return base * Math.max(1, node.data.batch ?? 1); // S10: batch N = N independent runs
+> 69	  }
+> 70	  return 0;
+> 71	}
+> 72	
+> 73	export function projectSpacesGraphCost(nodes: SpaceNode[]): number {
+> 74	  return nodes
+> 75	    .filter((n) => classifyNode(n) === 'executable')
+> 76	    .reduce((sum, n) => sum + estimateExecutableCost(n), 0);
+> 77	}
+> 78	
+> 79	/* ── Partial failure — BFS over outgoing edges (FR-SPACES-005) ─────────────── */
+> 80	export function collectDescendants(nodeId: string, edges: SpaceEdge[]): Set<string> {
+> 81	  const out = new Map<string, string[]>();
+> 82	  for (const e of edges) {
+> 83	    if (!out.has(e.source)) out.set(e.source, []);
+> 84	    out.get(e.source)!.push(e.target);
+> 85	  }
+> 86	  const blocked = new Set<string>();
+> 87	  const queue = [...(out.get(nodeId) ?? [])];
+> 88	  while (queue.length) {
+> 89	    const id = queue.shift()!;
+> 90	    if (blocked.has(id)) continue;
+> 91	    blocked.add(id);
+> 92	    queue.push(...(out.get(id) ?? []));
+> 93	  }
+> 94	  return blocked;
+> 95	}
+> 96	
+> 97	/* ── S11 — input threading (single-output convention, 1b) ──────────────────── */
+> 98	export interface NodeOutput { type: 'text' | 'image'; value: string }
+> 99	export interface UpstreamInputs { promptText?: string; referenceImages: string[] }
+> 100	
+> 101	/**
+> 102	 * Resolve a node's inputs from upstream outputs: edge into handle `prompt` + text output → prompt;
+> 103	 * edge into handle `reference` + image output → reference image. Tolerates untyped hydrated edges.
+> 104	 */
+> 105	export function resolveUpstreamInputs(
+> 106	  node: SpaceNode,
+> 107	  edges: SpaceEdge[],
+> 108	  outputs: Map<string, NodeOutput>,
+> 109	): UpstreamInputs {
+> 110	  const result: UpstreamInputs = { referenceImages: [] };
+> 111	  for (const e of edges) {
+> 112	    if (e.target !== node.id) continue;
+> 113	    const up = outputs.get(e.source);
+> 114	    if (!up) continue;
+> 115	    if (e.targetHandle === 'prompt' && up.type === 'text') result.promptText = up.value;
+> 116	    if (e.targetHandle === 'reference' && up.type === 'image') result.referenceImages.push(up.value);
+> 117	  }
+> 118	  return result;
+> 119	}
+> 120	
+> 121	/* ── Payload builder (S4 additive extension of the live canvas-execute shape) ─ */
+> 122	export interface SpacesExecutePayload {
+> 123	  project_id: string;      // legacy-required field — carries the spaceId
+> 124	  node_id: string;
+> 125	  node_type: 'generate_image' | 'magic_prompt';
+> 126	  provider: string;
+> 127	  model: string;
+> 128	  prompt: string;
+> 129	  parameters: Record<string, unknown>;
+> 130	  reference_image_urls?: string[];
+> 131	  space_id: string;        // ledger-mode trigger (with node_run_id)
+> 132	  node_run_id: string;
+> 133	}
+> 134	
+> 135	/** Returns null when the node has no usable prompt (skipped as no-op — never charged). */
+> 136	export function buildExecutePayload(
+> 137	  node: SpaceNode,
+> 138	  spaceId: string,
+> 139	  nodeRunId: string,
+> 140	  upstream: UpstreamInputs,
+> 141	): SpacesExecutePayload | null {
+> 142	  const t = nodeTypeId(node);
+> 143	  const ownPrompt = ((node.data.params?.prompt as string) || '').trim();
+> 144	  const prompt = (upstream.promptText || ownPrompt).trim();
+> 145	  if (!prompt) return null;
+> 146	
+> 147	  if (t === 'prompt-generator') {
+> 148	    return {
+> 149	      project_id: spaceId, node_id: node.id, node_type: 'magic_prompt',
+> 150	      provider: 'openrouter', model: 'magic_prompt', prompt,
+> 151	      parameters: { level: (node.data.params?.level as string) || 'curto' },
+> 152	      space_id: spaceId, node_run_id: nodeRunId,
+> 153	    };
+> 154	  }
+> 155	  if (t === 'image-generator') {
+> 156	    const { provider, model } = resolveSpacesModel(node.data.modelKey);
+> 157	    return {
+> 158	      project_id: spaceId, node_id: node.id, node_type: 'generate_image',
+> 159	      provider, model, prompt,
+> 160	      parameters: { aspect_ratio: node.data.aspectRatio ?? '1:1' },
+> 161	      ...(upstream.referenceImages.length ? { reference_image_urls: upstream.referenceImages } : {}),
+> 162	      space_id: spaceId, node_run_id: nodeRunId,
+> 163	    };
+> 164	  }
+> 165	  return null;
+> 166	}
+> 167	
+> 168	/* ── Row → cluster-card mapper (C9 — zod card shape; server CHECKs own invariants) ─ */
+> 169	export interface GenerationRow {
+> 170	  id: string; space_id: string; node_id: string; node_run_id: string;
+> 171	  output_type: string; asset_id: string | null; model_key: string;
+> 172	  mco_charged: number; mco_refunded: number; usd_cost: number | null;
+> 173	  latency_ms: number | null; result: Record<string, unknown> | null;
+> 174	  status: string; created_at: string;
+> 175	}
+> 176	
+> 177	export function rowToGeneration(row: GenerationRow): Generation & { previewUrl?: string; previewText?: string } {
+> 178	  return {
+> 179	    id: row.id,
+> 180	    spaceId: row.space_id,
+> 181	    nodeId: row.node_id,
+> 182	    outputType: row.output_type as Generation['outputType'],
+> 183	    assetId: row.asset_id ?? undefined,
+> 184	    modelKey: row.model_key,
+> 185	    mcoCharged: Number(row.mco_charged) || 0,
+> 186	    mcoRefunded: Number(row.mco_refunded) || 0,
+> 187	    usdCost: row.usd_cost != null ? Number(row.usd_cost) : undefined,
+> 188	    latencyMs: row.latency_ms ?? undefined,
+> 189	    status: row.status as Generation['status'],
+> 190	    createdAt: row.created_at,
+> 191	    previewUrl: (row.result?.output_url as string) || undefined,
+> 192	    previewText: (row.result?.enhanced_prompt as string) || undefined,
+> 193	  };
+> 194	}
+> 195	
+> ```
+
+## 🤖 Claude *(00:25:34)*
+
+
+## 🤖 Claude *(00:25:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// useGenerationLedger — the ONLY client surface of the Spaces execution ledger (SD-SPACES-003).
+> 2	// estimate (dry-run, zero server calls — BR-SPACES-005) · runGraph (FR-SPACES-005, layer-by-layer via
+> 3	// canvas-execute ledger mode) · cluster reads (FR-SPACES-012, lazy ≤24/page). ALL money moves happen
+> 4	// server-side (begin/finalize RPCs) — this hook never touches balances.
+> 5	// SOP: docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md.
+> 6	import { useCallback } from 'react';
+> 7	import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+> 8	import { supabase } from '@/integrations/supabase/client';
+> 9	import { useSpacesStore } from '@/store/useSpacesStore';
+> 10	import { getSpaceLayers } from '@/lib/spaces-dag';
+> 11	import {
+> 12	  classifyNode, buildExecutePayload, resolveUpstreamInputs, collectDescendants,
+> 13	  projectSpacesGraphCost, rowToGeneration,
+> 14	  type NodeOutput, type GenerationRow,
+> 15	} from '@/lib/spaces-execution';
+> 16	import { useSpaceSession } from '@/hooks/useSpaceSession';
+> 17	import { toast } from '@/hooks/use-toast';
+> 18	import type { SpaceNode } from '@/lib/spaces-schema';
+> 19	
+> 20	const PAGE_SIZE = 24;
+> 21	
+> 22	interface ExecResponse {
+> 23	  execution_id: string;
+> 24	  status: string;
+> 25	  output_url?: string;
+> 26	  enhanced_prompt?: string;
+> 27	  duplicate?: boolean;
+> 28	  credits_charged: number;
+> 29	}
+> 30	
+> 31	/** Structured run failure — kind drives node status + run control (FRD error table 04:100-107). */
+> 32	class RunNodeError extends Error {
+> 33	  kind: 'blocked' | 'error' | 'abort';
+> 34	  constructor(kind: 'blocked' | 'error' | 'abort', message: string) {
+> 35	    super(message);
+> 36	    this.kind = kind;
+> 37	  }
+> 38	}
+> 39	
+> 40	/** Extract {status, code, message} from a FunctionsHttpError and map to run semantics. */
+> 41	async function toRunError(error: unknown): Promise<RunNodeError> {
+> 42	  const ctx = (error as { context?: Response })?.context;
+> 43	  let status = 0;
+> 44	  let code = '';
+> 45	  let message = '';
+> 46	  try {
+> 47	    status = (ctx as Response | undefined)?.status ?? 0;
+> 48	    const body = await (ctx as Response | undefined)?.json?.();
+> 49	    code = (body?.error as string) ?? '';
+> 50	    message = (body?.message as string) ?? code;
+> 51	  } catch { /* body was not JSON */ }
+> 52	
+> 53	  if (status === 402) {
+> 54	    const daily = /daily|cap/i.test(code);
+> 55	    return new RunNodeError('blocked', daily
+> 56	      ? 'Teto diário de mcoCoins do dia já atingido.'
+> 57	      : 'Saldo de mcoCoins insuficiente.');
+> 58	  }
+> 59	  if (status === 404) return new RunNodeError('abort', 'Space não encontrado.');
+> 60	  if (status === 422) return new RunNodeError('error', message || 'Parâmetros inválidos para este nó.');
+> 61	  if (status === 502) return new RunNodeError('error', message || 'Falha do provedor — o valor debitado foi estornado.');
+> 62	  return new RunNodeError('error', message || (error as Error)?.message || 'Falha na execução do nó.');
+> 63	}
+> 64	
+> 65	/** Seed the in-run output map with each node's LATEST done generation (S11 threading across runs). */
+> 66	async function seedOutputs(spaceId: string, outputs: Map<string, NodeOutput>) {
+> 67	  const { data } = await supabase
+> 68	    .from('generations')
+> 69	    .select('node_id, output_type, result, created_at')
+> 70	    .eq('space_id', spaceId)
+> 71	    .eq('status', 'done')
+> 72	    .order('created_at', { ascending: false })
+> 73	    .limit(200);
+> 74	  for (const row of data ?? []) {
+> 75	    if (outputs.has(row.node_id)) continue; // newest wins (ordered DESC)
+> 76	    const result = (row.result ?? {}) as Record<string, unknown>;
+> 77	    if (row.output_type === 'text' && typeof result.enhanced_prompt === 'string') {
+> 78	      outputs.set(row.node_id, { type: 'text', value: result.enhanced_prompt });
+> 79	    } else if (row.output_type === 'image' && typeof result.output_url === 'string') {
+> 80	      outputs.set(row.node_id, { type: 'image', value: result.output_url });
+> 81	    }
+> 82	  }
+> 83	}
+> 84	
+> 85	export function useGenerationLedger(spaceId?: string) {
+> 86	  const qc = useQueryClient();
+> 87	  const { ensureFresh } = useSpaceSession();
+> 88	
+> 89	  /** Dry-run projection (BR-SPACES-005/008) — pure client math, zero débito, zero server calls. */
+> 90	  const estimate = useCallback(
+> 91	    () => projectSpacesGraphCost(useSpacesStore.getState().nodes),
+> 92	    [],
+> 93	  );
+> 94	
+> 95	  const runGraph = useCallback(async () => {
+> 96	    if (!spaceId) return;
+> 97	    const store = useSpacesStore.getState();
+> 98	    if (store.runState === 'running') return;
+> 99	
+> 100	    if (!(await ensureFresh())) {
+> 101	      toast({ title: 'Sessão expirada — faça login novamente.', variant: 'destructive' });
+> 102	      return;
+> 103	    }
+> 104	
+> 105	    let layers: SpaceNode[][];
+> 106	    try {
+> 107	      layers = getSpaceLayers(store.nodes, store.edges);
+> 108	    } catch {
+> 109	      toast({ title: 'Ciclo detectado no grafo — remova a conexão circular.', variant: 'destructive' });
+> 110	      return;
+> 111	    }
+> 112	
+> 113	    const executables = store.nodes.filter((n) => classifyNode(n) === 'executable');
+> 114	    if (executables.length === 0) {
+> 115	      toast({ title: 'Nenhum nó executável na Fase 1', description: 'Adicione um Gerador de imagem ou Assistant.' });
+> 116	      return;
+> 117	    }
+> 118	
+> 119	    store.setRunState('running');
+> 120	    const outputs = new Map<string, NodeOutput>();
+> 121	    try {
+> 122	      await seedOutputs(spaceId, outputs);
+> 123	    } catch { /* seeding is best-effort — in-run outputs still thread */ }
+> 124	
+> 125	    const blockedIds = new Set<string>();
+> 126	    let hadError = false;
+> 127	    let ranAny = false;
+> 128	    let aborted = false;
+> 129	    let warnedUnsupported = false;
+> 130	
+> 131	    const runNode = async (node: SpaceNode) => {
+> 132	      const st = useSpacesStore.getState();
+> 133	      const upstream = resolveUpstreamInputs(node, st.edges, outputs);
+> 134	      const batch = Math.max(1, node.data.batch ?? 1);
+> 135	      st.updateNodeStatus(node.id, 'running');
+> 136	      for (let i = 0; i < batch; i++) {
+> 137	        // S3: node_run_id minted ONCE per attempt (idempotency anchor server-side).
+> 138	        const nodeRunId = crypto.randomUUID();
+> 139	        const payload = buildExecutePayload(node, spaceId, nodeRunId, upstream);
+> 140	        if (!payload) {
+> 141	          st.updateNodeStatus(node.id, 'idle');
+> 142	          toast({ title: `"${node.data.label}" sem prompt — pulado (nada cobrado).` });
+> 143	          return;
+> 144	        }
+> 145	        const { data, error } = await supabase.functions.invoke('canvas-execute', { body: payload });
+> 146	        if (error) throw await toRunError(error);
+> 147	        const res = data as ExecResponse;
+> 148	        ranAny = true;
+> 149	        if (res.enhanced_prompt) outputs.set(node.id, { type: 'text', value: res.enhanced_prompt });
+> 150	        else if (res.output_url) outputs.set(node.id, { type: 'image', value: res.output_url });
+> 151	      }
+> 152	      st.updateNodeStatus(node.id, 'done');
+> 153	      qc.invalidateQueries({ queryKey: ['generations', spaceId, node.id] });
+> 154	    };
+> 155	
+> 156	    for (const layer of layers) {
+> 157	      if (aborted) break;
+> 158	
+> 159	      const unsupported = layer.filter((n) => classifyNode(n) === 'unsupported');
+> 160	      if (unsupported.length > 0 && !warnedUnsupported) {
+> 161	        warnedUnsupported = true;
+> 162	        toast({
+> 163	          title: 'Alguns nós não são suportados na Fase 1',
+> 164	          description: 'Eles permanecem como estão — nada é cobrado por eles.',
+> 165	        });
+> 166	      }
+> 167	
+> 168	      const toRun = layer.filter((n) => classifyNode(n) === 'executable' && !blockedIds.has(n.id));
+> 169	      if (toRun.length === 0) continue;
+> 170	
+> 171	      const results = await Promise.allSettled(toRun.map((n) => runNode(n)));
+> 172	      results.forEach((r, i) => {
+> 173	        if (r.status !== 'rejected') return;
+> 174	        const node = toRun[i];
+> 175	        const err = r.reason instanceof RunNodeError ? r.reason : new RunNodeError('error', String(r.reason));
+> 176	        hadError = true;
+> 177	        const st = useSpacesStore.getState();
+> 178	        if (err.kind === 'blocked' || err.kind === 'abort') {
+> 179	          st.updateNodeStatus(node.id, 'blocked');
+> 180	          aborted = true; // 402/404: no point continuing — remaining nodes stay untouched
+> 181	        } else {
+> 182	          st.updateNodeStatus(node.id, 'error');
+> 183	          for (const descId of collectDescendants(node.id, st.edges)) {
+> 184	            blockedIds.add(descId);
+> 185	            if (st.nodes.some((n) => n.id === descId && classifyNode(n) === 'executable')) {
+> 186	              st.updateNodeStatus(descId, 'blocked');
+> 187	            }
+> 188	          }
+> 189	        }
+> 190	        toast({ title: `"${node.data.label}" falhou`, description: err.message, variant: 'destructive' });
+> 191	      });
+> 192	    }
+> 193	
+> 194	    useSpacesStore.getState().setRunState(hadError ? 'partial' : ranAny ? 'done' : 'idle');
+> 195	  }, [spaceId, ensureFresh, qc]);
+> 196	
+> 197	  return { estimate, runGraph };
+> 198	}
+> 199	
+> 200	/** Cluster reader (FR-SPACES-012/002): lazy ≤24 cards/page, cursor = created_at DESC, staleTime 60s. */
+> 201	export function useGenerationCluster(spaceId?: string, nodeId?: string | null) {
+> 202	  return useInfiniteQuery({
+> 203	    queryKey: ['generations', spaceId, nodeId],
+> 204	    enabled: !!spaceId && !!nodeId,
+> 205	    staleTime: 60_000,
+> 206	    initialPageParam: null as string | null,
+> 207	    queryFn: async ({ pageParam }) => {
+> 208	      let q = supabase
+> 209	        .from('generations')
+> 210	        .select('*')
+> 211	        .eq('space_id', spaceId!)
+> 212	        .eq('node_id', nodeId!)
+> 213	        .order('created_at', { ascending: false })
+> 214	        .limit(PAGE_SIZE);
+> 215	      if (pageParam) q = q.lt('created_at', pageParam);
+> 216	      const { data, error } = await q;
+> 217	      if (error) throw error;
+> 218	      return ((data ?? []) as GenerationRow[]).map(rowToGeneration);
+> 219	    },
+> 220	    getNextPageParam: (last) => (last.length === PAGE_SIZE ? last[last.length - 1].createdAt : undefined),
+> 221	  });
+> 222	}
+> 223	
+> ```
+
+## 🤖 Claude *(00:26:14)*
+
+
+## 🤖 Claude *(00:26:14)*
+
+
+## 🤖 Claude *(00:26:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -A6 \"'video-generator'\" src/lib/node-registry.ts | head -20; echo \"---PORTS---\"; grep -n -B2 -A8 \"video-generator\" src/lib/node-registry.ts | grep -E 'ports|inputs|outputs|handle|image|video' | head -10",
+  "description": "Check video-generator registry entry and ports"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 40:  { id: 'video-generator', labelPt: 'Gerador de vídeo', category: 'video', icon: 'video', inputs: ['text', 'image'], output: 'video' },
+> 41-  { id: 'speak', labelPt: 'Speak (lip-sync)', category: 'video', icon: 'lip-sync', inputs: ['video', 'audio'], output: 'video' },
+> 42-  { id: 'video-combiner', labelPt: 'Combinador de vídeo', category: 'video', icon: 'rectangle-merge', inputs: ['video'], output: 'video' },
+> 43-  { id: 'video-upscaler', labelPt: 'Upscaler de vídeo', category: 'video', icon: 'enhance', inputs: ['video'], output: 'video' },
+> 44-  { id: 'video-frame-splitter', labelPt: 'Extrator de mídia', category: 'video', icon: 'split', inputs: ['video'], output: 'image', badge: 'New' },
+> 45-  // Audio
+> 46-  { id: 'voice-over', labelPt: 'Voiceover', category: 'audio', icon: 'ai-voice', inputs: ['text'], output: 'audio' },
+> --
+> 63:  'basics-video-generator': 'video-generator',
+> 64-  'basics-prompt-generator': 'prompt-generator',
+> 65-  'basics-image-upscaler': 'image-upscaler',
+> 66-  'basics-list': 'list',
+> 67-};
+> 68-
+> 69-export function resolveNodeType(id: string): string {
+> --
+> 108:  'video-generator': {
+> 109-    in: ['references', 'audio', 'video-reference', 'last-frame', 'first-frame', 'prompt'],
+> 110-    out: ['start-frame', 'end-frame', 'output', 'audio-output'],
+> 111-  },
+> ---PORTS---
+> 38-  { id: 'svg-generator', labelPt: 'Gerador de SVG', category: 'image', icon: 'vector', inputs: ['text'], output: 'svg' },
+> 40:  { id: 'video-generator', labelPt: 'Gerador de vídeo', category: 'video', icon: 'video', inputs: ['text', 'image'], output: 'video' },
+> 41-  { id: 'speak', labelPt: 'Speak (lip-sync)', category: 'video', icon: 'lip-sync', inputs: ['video', 'audio'], output: 'video' },
+> 42-  { id: 'video-combiner', labelPt: 'Combinador de vídeo', category: 'video', icon: 'rectangle-merge', inputs: ['video'], output: 'video' },
+> 43-  { id: 'video-upscaler', labelPt: 'Upscaler de vídeo', category: 'video', icon: 'enhance', inputs: ['video'], output: 'video' },
+> 44-  { id: 'video-frame-splitter', labelPt: 'Extrator de mídia', category: 'video', icon: 'split', inputs: ['video'], output: 'image', badge: 'New' },
+> 46-  { id: 'voice-over', labelPt: 'Voiceover', category: 'audio', icon: 'ai-voice', inputs: ['text'], output: 'audio' },
+> 47-  { id: 'sfx-generator', labelPt: 'Efeitos sonoros', category: 'audio', icon: 'sound-effects', inputs: ['text'], output: 'audio' },
+> 48-  { id: 'music-generator', labelPt: 'Gerador de música', category: 'audio', icon: 'music', inputs: ['text'], output: 'audio' },
+> 62-  'basics-image-generator': 'image-generator',
+> ```
+
+## 🤖 Claude *(00:26:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l src/components/spaces/ParamHUD.tsx src/components/spaces/GenerationCluster.tsx src/components/spaces/SpaceNodeCard.tsx src/lib/node-registry.ts",
+  "description": "Size the UI files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   103 src/components/spaces/ParamHUD.tsx
+>    77 src/components/spaces/GenerationCluster.tsx
+>    74 src/components/spaces/SpaceNodeCard.tsx
+>   155 src/lib/node-registry.ts
+>   409 total
+> ```
+
+## 🤖 Claude *(00:26:25)*
+
+
+## 🤖 Claude *(00:26:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/spaces/ParamHUD.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// ParamHUD — right-side parameter panel (28% of the 72/28 law, PR-SPACES-001/002; hybrid model
+> 2	// validated by live recon UI-SPACES-009). Schema comes from useParamRegistry (SD-SPACES-002);
+> 3	// mutations go through the store — no I/O here.
+> 4	import { useSpacesStore } from '@/store/useSpacesStore';
+> 5	import { getSchema, estimateCost, type ParamField } from '@/hooks/useParamRegistry';
+> 6	import { GenerationCluster } from '@/components/spaces/GenerationCluster';
+> 7	import { Input } from '@/components/ui/input';
+> 8	import { Textarea } from '@/components/ui/textarea';
+> 9	import { Label } from '@/components/ui/label';
+> 10	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> 11	import type { SpaceNode } from '@/lib/spaces-schema';
+> 12	
+> 13	/** modelKey/aspectRatio/batch live at data level; everything else is a params.* entry. */
+> 14	const DATA_LEVEL_KEYS = new Set(['modelKey', 'aspectRatio', 'batch']);
+> 15	
+> 16	function FieldControl({ node, field }: { node: SpaceNode; field: ParamField }) {
+> 17	  const updateNodeData = useSpacesStore((s) => s.updateNodeData);
+> 18	  const updateNodeParams = useSpacesStore((s) => s.updateNodeParams);
+> 19	  const current = DATA_LEVEL_KEYS.has(field.key)
+> 20	    ? (node.data as Record<string, unknown>)[field.key]
+> 21	    : node.data.params[field.key];
+> 22	  const setValue = (v: unknown) =>
+> 23	    DATA_LEVEL_KEYS.has(field.key)
+> 24	      ? updateNodeData(node.id, { [field.key]: v } as Partial<SpaceNode['data']>)
+> 25	      : updateNodeParams(node.id, { [field.key]: v });
+> 26	
+> 27	  switch (field.kind) {
+> 28	    case 'textarea':
+> 29	      return (
+> 30	        <Textarea rows={4} value={(current as string) ?? ''} placeholder={field.labelPt}
+> 31	          onChange={(e) => setValue(e.target.value)} />
+> 32	      );
+> 33	    case 'select':
+> 34	      return (
+> 35	        <Select value={(current as string) ?? undefined} onValueChange={(v) => setValue(v)}>
+> 36	          <SelectTrigger><SelectValue placeholder={field.labelPt} /></SelectTrigger>
+> 37	          <SelectContent className="max-h-64">
+> 38	            {(field.options ?? []).map((o) => (
+> 39	              <SelectItem key={o.value} value={o.value}>{o.labelPt}</SelectItem>
+> 40	            ))}
+> 41	          </SelectContent>
+> 42	        </Select>
+> 43	      );
+> 44	    case 'stepper':
+> 45	      return (
+> 46	        <Input type="number" min={field.min} max={field.max} step={field.step}
+> 47	          value={Number(current ?? field.min ?? 1)}
+> 48	          onChange={(e) => setValue(Math.max(field.min ?? 1, Math.min(field.max ?? 8, Number(e.target.value) || 1)))} />
+> 49	      );
+> 50	    case 'references':
+> 51	      return <p className="text-xs text-muted-foreground">Referências (0/8) chegam na Fase 2.</p>;
+> 52	    default:
+> 53	      return (
+> 54	        <Input value={(current as string) ?? ''} placeholder={field.labelPt}
+> 55	          onChange={(e) => setValue(e.target.value)} />
+> 56	      );
+> 57	  }
+> 58	}
+> 59	
+> 60	export function ParamHUD() {
+> 61	  const selectedNodeId = useSpacesStore((s) => s.selectedNodeId);
+> 62	  const spaceId = useSpacesStore((s) => s.spaceId);
+> 63	  const node = useSpacesStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId));
+> 64	
+> 65	  if (!selectedNodeId || !node) {
+> 66	    return (
+> 67	      <div className="flex h-full items-center justify-center p-6 text-center">
+> 68	        <p className="text-sm text-muted-foreground">Selecione um nó para editar parâmetros</p>
+> 69	      </div>
+> 70	    );
+> 71	  }
+> 72	
+> 73	  const fields = getSchema(node);
+> 74	  return (
+> 75	    <div className="h-full overflow-y-auto p-4 space-y-4 bg-sidebar text-sidebar-foreground">
+> 76	      <div>
+> 77	        <h2 className="text-sm font-semibold flex items-center gap-2">
+> 78	          <span>{node.data.icon}</span>{node.data.label}
+> 79	        </h2>
+> 80	        <p className="text-xs text-muted-foreground mt-0.5">{node.data.category}</p>
+> 81	      </div>
+> 82	      {fields.length === 0 ? (
+> 83	        <p className="text-xs text-muted-foreground">Este nó não tem parâmetros editáveis.</p>
+> 84	      ) : (
+> 85	        fields.map((f) => (
+> 86	          <div key={f.key} className="space-y-1.5">
+> 87	            <Label className="text-xs">{f.labelPt}</Label>
+> 88	            <FieldControl node={node} field={f} />
+> 89	          </div>
+> 90	        ))
+> 91	      )}
+> 92	      <p className="text-xs text-muted-foreground border-t border-border pt-3">
+> 93	        Custo estimado: {estimateCost(node)} mcoCoins <span className="opacity-70">(o servidor é a autoridade — BR-SPACES-002)</span>
+> 94	      </p>
+> 95	      {spaceId && (
+> 96	        <div className="border-t border-border pt-3 space-y-2">
+> 97	          <h3 className="text-xs font-semibold">Gerações</h3>
+> 98	          <GenerationCluster spaceId={spaceId} nodeId={node.id} />
+> 99	        </div>
+> 100	      )}
+> 101	    </div>
+> 102	  );
+> 103	}
+> 104	
+> ```
+
+## 🤖 Claude *(00:26:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/spaces/GenerationCluster.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// GenerationCluster — lazy generation history of the selected node (FR-SPACES-002/012/014).
+> 2	// Render-only: data via useGenerationCluster (TanStack InfiniteQuery); ≤24 cards/page, cursor
+> 3	// created_at DESC, IntersectionObserver sentinel, loading="lazy" thumbs. Re-runs ADD, never overwrite.
+> 4	import { useEffect, useRef } from 'react';
+> 5	import { useGenerationCluster } from '@/hooks/useGenerationLedger';
+> 6	import { Loader2 } from 'lucide-react';
+> 7	import type { NodeStatus } from '@/lib/spaces-schema';
+> 8	
+> 9	const STATUS_LABEL: Record<NodeStatus, string> = {
+> 10	  idle: 'ocioso', pending: 'na fila', running: 'gerando', done: 'concluída', error: 'falhou', blocked: 'bloqueada',
+> 11	};
+> 12	const STATUS_CLASS: Record<NodeStatus, string> = {
+> 13	  idle: 'text-muted-foreground', pending: 'text-amber-400', running: 'text-blue-400',
+> 14	  done: 'text-emerald-400', error: 'text-red-400', blocked: 'text-orange-400',
+> 15	};
+> 16	
+> 17	export function GenerationCluster({ spaceId, nodeId }: { spaceId: string; nodeId: string }) {
+> 18	  const { data, isLoading, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
+> 19	    useGenerationCluster(spaceId, nodeId);
+> 20	  const sentinelRef = useRef<HTMLDivElement | null>(null);
+> 21	
+> 22	  useEffect(() => {
+> 23	    const el = sentinelRef.current;
+> 24	    if (!el || !hasNextPage) return;
+> 25	    const io = new IntersectionObserver((entries) => {
+> 26	      if (entries[0]?.isIntersecting && !isFetchingNextPage) fetchNextPage();
+> 27	    });
+> 28	    io.observe(el);
+> 29	    return () => io.disconnect();
+> 30	  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+> 31	
+> 32	  const items = (data?.pages ?? []).flat();
+> 33	
+> 34	  if (isLoading) {
+> 35	    return <div className="flex justify-center py-4"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>;
+> 36	  }
+> 37	  if (isError) {
+> 38	    return <p className="text-xs text-destructive py-2">Falha ao carregar as gerações — tente novamente.</p>;
+> 39	  }
+> 40	  if (items.length === 0) {
+> 41	    return <p className="text-xs text-muted-foreground py-2">Nenhuma geração ainda — rode ▶ para gerar.</p>;
+> 42	  }
+> 43	
+> 44	  return (
+> 45	    <div className="space-y-2">
+> 46	      {items.map((g) => (
+> 47	        <div key={g.id} className="rounded-md border border-border bg-card/60 p-2 space-y-1.5">
+> 48	          {g.previewUrl ? (
+> 49	            <img
+> 50	              src={g.previewUrl} alt={`Geração ${g.modelKey}`} loading="lazy"
+> 51	              className="w-full rounded max-h-40 object-cover"
+> 52	            />
+> 53	          ) : g.previewText ? (
+> 54	            <p className="text-xs whitespace-pre-wrap line-clamp-4">{g.previewText}</p>
+> 55	          ) : null}
+> 56	          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+> 57	            <span className="truncate max-w-[55%]" title={g.modelKey}>{g.modelKey}</span>
+> 58	            <span className={STATUS_CLASS[g.status]}>{STATUS_LABEL[g.status]}</span>
+> 59	          </div>
+> 60	          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+> 61	            <span>
+> 62	              {g.mcoCharged} mco
+> 63	              {(g.mcoRefunded ?? 0) > 0 && (
+> 64	                <span className="text-emerald-400"> · estorno {g.mcoRefunded}</span>
+> 65	              )}
+> 66	            </span>
+> 67	            <span>{new Date(g.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+> 68	          </div>
+> 69	        </div>
+> 70	      ))}
+> 71	      <div ref={sentinelRef} className="h-1" />
+> 72	      {isFetchingNextPage && (
+> 73	        <div className="flex justify-center py-2"><Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /></div>
+> 74	      )}
+> 75	    </div>
+> 76	  );
+> 77	}
+> 78	
+> ```
+
+## 🤖 Claude *(00:26:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat src/hooks/useParamRegistry.ts 2>/dev/null | head -80",
+  "description": "Read param registry schema source"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /**
+>  * useParamRegistry.ts — Declarative parameter schema + cost estimation for nodes.
+>  *
+>  * Separates "what params a node exposes" (data) from "how the HUD draws them" (UI).
+>  * Drives both the inline node controls AND the right-side Settings panel (the
+>  * verified hybrid HUD — UI-SPACES-009). Trace: SD-SPACES-002, BR-SPACES-002.
+>  *
+>  * Promotion target: src/hooks/useParamRegistry.ts
+>  */
+> import {
+>   ASPECT_RATIOS, IMAGE_MODELS,
+>   type SpaceNode, type AspectRatio, type ImageModel,
+> } from '@/lib/spaces-schema';
+> import { classifyNode, estimateExecutableCost } from '@/lib/spaces-execution';
+> 
+> export interface ParamField {
+>   key: string;
+>   kind: 'text' | 'textarea' | 'select' | 'slider' | 'stepper' | 'toggle' | 'mask' | 'references';
+>   labelPt: string;                                   // pt-BR label
+>   options?: { value: string; labelPt: string }[];
+>   min?: number; max?: number; step?: number;
+>   /** mcoCoins delta when this option is enabled (shown inline — BR-SPACES-002) */
+>   costDelta?: number;
+> }
+> 
+> /**
+>  * Verified server-side cost authority lives in `supabase/functions/canvas-execute`
+>  * (CREDIT_COSTS). The client mirror below is display-only — NEVER the source of truth.
+>  * Keys are a representative subset; keep in sync with the edge function.
+>  */
+> export const CLIENT_COST_MIRROR: Record<string, number> = {
+>   'auto': 15,                 // routed server-side; estimate only
+>   'flux.2-pro': 12, 'flux.2-max': 18, 'flux.1.1': 12, 'flux.1-fast': 6,
+>   'google-imagen-4': 18, 'google-imagen-4-ultra': 28, 'google-imagen-4-fast': 8,
+>   'seedream-4': 10, 'seedream-4-4k': 20, 'gpt-1.5': 18,
+>   'recraft-v4': 14, 'krea-2': 16, 'mystic-2.5-fluid': 14,
+>   // editing/utility ops (verified families)
+>   'upscale-2x': 8, 'upscale-4x': 20, 'inpaint': 6, 'remove-background': 3,
+>   'scene-compose': 18, 'style-transfer': 14,
+> };
+> 
+> const IMAGE_MODEL_OPTIONS = IMAGE_MODELS.map((m) => ({
+>   value: m,
+>   labelPt: m === 'auto' ? 'Automático' : m.replace(/-/g, ' '),
+> }));
+> 
+> const ASPECT_OPTIONS = ASPECT_RATIOS.map((r) => ({ value: r, labelPt: r }));
+> 
+> /** Param schema per node category (extend as nodes are added). */
+> export function getSchema(node: SpaceNode): ParamField[] {
+>   switch (node.data.category) {
+>     case 'image':
+>       return [
+>         { key: 'modelKey', kind: 'select', labelPt: 'Modelo', options: IMAGE_MODEL_OPTIONS },
+>         { key: 'references', kind: 'references', labelPt: 'Referências (0/8)' },
+>         { key: 'prompt', kind: 'textarea', labelPt: 'Descreva a imagem que deseja gerar…' },
+>         { key: 'aspectRatio', kind: 'select', labelPt: 'Proporção', options: ASPECT_OPTIONS },
+>         { key: 'batch', kind: 'stepper', labelPt: 'Quantidade', min: 1, max: 8, step: 1 },
+>       ];
+>     case 'video':
+>       return [
+>         { key: 'modelKey', kind: 'select', labelPt: 'Modelo de vídeo' },
+>         { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o vídeo…' },
+>         { key: 'aspectRatio', kind: 'select', labelPt: 'Proporção', options: ASPECT_OPTIONS },
+>       ];
+>     case 'audio':
+>       return [{ key: 'prompt', kind: 'textarea', labelPt: 'Texto / roteiro…' }];
+>     case 'text':
+>       return [{ key: 'prompt', kind: 'textarea', labelPt: 'Escreva o texto…' }];
+>     default:
+>       return [];
+>   }
+> }
+> 
+> /** Estimate mcoCoins for a single node run (display only; server reconciles).
+>  *  Fase 1b (gate G7 — SOP [[spaces-graph-execution|spaces-graph-execution]] S8): executable nodes estimate via the
+>  *  1b executor map so estimate = real charge; non-executable nodes cost 0 (never run). */
+> export function estimateCost(node: SpaceNode): number {
+>   if (node.data.byok) return 0; // BR-SPACES-006 (dormant in 1b — SOP S12)
+>   if (classifyNode(node) !== 'executable') return 0;
+> ```
+
+## 🤖 Claude *(00:27:12)*
+
+
+## 🤖 Claude *(00:27:12)*
+
+
+## 🤖 Claude *(00:27:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'modelKey\\|batch' src/lib/spaces-schema.ts | head -6; ls src/test/ | grep -i space",
+  "description": "Check modelKey typing and spaces test files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 88:  modelKey: z.string().optional(),                     // e.g. 'flux.2-pro' → CREDIT_COSTS
+> 90:  batch: z.number().int().min(1).max(8).default(1),    // 'x1..x8' stepper
+> 139:  modelKey: z.string(),
+> agentic-workspace.test.ts
+> spaces-execution.test.ts
+> spaces-mirror-parity.test.ts
+> spaces-store.test.ts
+> ```
+
+## 🤖 Claude *(00:27:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md <<'EOF'\n\n### Amendment 2a-cliente (2026-07-02, ANTES do c\u00f3digo do cliente)\n\n| # | Decis\u00e3o | Racional |\n|---|---------|----------|\n| S19 | **Sem\u00e2ntica de run async no cliente**: `runState` do grafo = *dispatch completo* (o Run button libera quando todas as camadas dispararam). N\u00f3 de v\u00eddeo fica `running` ap\u00f3s o 202/queued; um **poller** (5s, teto 12min \u2014 FR-SPACES-013 padr\u00e3o polling) l\u00ea a pr\u00f3pria row `generations` (RLS own) e flipa o n\u00f3 p/ `done`/`error` + invalida o cluster. Timeout do poller \u2192 n\u00f3 permanece `running` com toast honesto (\"processando \u2014 o cluster atualiza ao concluir\"); o sweep S17 cobre o caso travado. | N\u00e3o bloquear o run inteiro por um render de minutos; a verdade continua server-side. |\n| S20 | **Threading imagem\u2192v\u00eddeo (extens\u00e3o S11)**: edge chegando no handle **`first-frame`** do `video-generator` + upstream com gera\u00e7\u00e3o `done` de imagem \u2192 vira `input_asset_url`. V\u00eddeo SEM first-frame conectado (ou upstream sem imagem done) \u2192 n\u00f3 pulado como no-op com toast espec\u00edfico (nunca cobrado \u2014 o guard 422 do server \u00e9 o backstop). Prompt continua obrigat\u00f3rio (motion prompt). | O handle first-frame \u00e9 semanticamente o frame inicial do image_to_video (DoP). |\n| S21 | **Batch de v\u00eddeo = 1 no slice 2a** (estimativa e execu\u00e7\u00e3o ignoram `batch` p/ video-generator; S10 continua valendo p/ imagem). V\u00eddeo custa 30-160 mco/run \u2014 batch acidental de 8 seria um d\u00e9bito de at\u00e9 1.280 mco. Batch de v\u00eddeo volta com a Fase 2 breadth se houver demanda. | Prote\u00e7\u00e3o de d\u00e9bito acidental > conveni\u00eancia. |\n| S22 | **Custo do v\u00eddeo no HUD = espelho 1:1 do server** (`SPACES_VIDEO_COSTS` client = `CREDIT_COSTS['higgsfield/<model>-5s']`), coberto pelo teste mec\u00e2nico de mirror-parity que parseia o fonte do edge fn (mesmo padr\u00e3o SOL-SPACES-001 da 1b). Estimativa = cobran\u00e7a (G7). | Zero drift silencioso de pre\u00e7o. |\n\n**Gate novo:** **G13** \u2014 vitest prova: classify(video-generator)=executable \u00b7 estimate 1:1 com CREDIT_COSTS \u00b7 payload com `input_asset_url` do first-frame \u00b7 skip sem first-frame \u00b7 batch ignorado p/ v\u00eddeo.\nEOF\necho ok",
+  "description": "Append client amendment S19-S22 to SOP before code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ok
+> ```
+
+## 🤖 Claude *(00:27:39)*
+
+Agora o código. Primeiro a lib pura (`spaces-execution.ts`):
+
+## 🤖 Claude *(00:27:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "/* \u2500\u2500 S7 \u2014 1b executable slice \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nexport const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator']);",
+  "new_string": "/* \u2500\u2500 S7 + Amendment 2a \u2014 executable slice \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nexport const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator', 'video-generator']);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:27:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "/** Unknown Spaces model key resolves as 'auto' (Pattern #2 minimal routing \u2014 SOP S8). */\nexport function resolveSpacesModel(modelKey?: string): ResolvedModel {\n  return SPACES_MODEL_MAP[modelKey ?? 'auto'] ?? SPACES_MODEL_MAP['auto'];\n}",
+  "new_string": "/** Unknown Spaces model key resolves as 'auto' (Pattern #2 minimal routing \u2014 SOP S8). */\nexport function resolveSpacesModel(modelKey?: string): ResolvedModel {\n  return SPACES_MODEL_MAP[modelKey ?? 'auto'] ?? SPACES_MODEL_MAP['auto'];\n}\n\n/* \u2500\u2500 Amendment 2a (S18/S22) \u2014 async video slice, 1:1 with the server allowlist \u2500 */\n/** Client keys ARE the server model ids; costs mirror CREDIT_COSTS['higgsfield/<model>-5s']\n *  (mirror-parity test parses the edge fn source \u2014 G13/SOL-SPACES-001 pattern). */\nexport const SPACES_VIDEO_COSTS: Record<string, number> = {\n  'dop-lite': 30,\n  'dop-turbo': 90,\n  'dop-standard': 125,\n  'kling-2.1-pro': 160,\n  'seedance-v1-pro': 130,\n};\nexport const DEFAULT_VIDEO_MODEL = 'dop-lite';\n\nexport function resolveSpacesVideoModel(modelKey?: string): string {\n  return modelKey && SPACES_VIDEO_COSTS[modelKey] != null ? modelKey : DEFAULT_VIDEO_MODEL;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "/** Estimate = real charge for the executable slice (gate G7 \u2014 HUD honesty). */\nexport function estimateExecutableCost(node: SpaceNode): number {\n  const t = nodeTypeId(node);\n  if (t === 'prompt-generator') {\n    const level = (node.data.params?.level as string) || 'curto';\n    return level === 'longo' ? 5 : level === 'medio' ? 2 : 1; // mirrors magic_prompt server pricing\n  }\n  if (t === 'image-generator') {\n    const base = SPACES_EXECUTABLE_COSTS[node.data.modelKey ?? 'auto'] ?? SPACES_EXECUTABLE_COSTS['auto'];\n    return base * Math.max(1, node.data.batch ?? 1); // S10: batch N = N independent runs\n  }\n  return 0;\n}",
+  "new_string": "/** Estimate = real charge for the executable slice (gate G7 \u2014 HUD honesty). */\nexport function estimateExecutableCost(node: SpaceNode): number {\n  const t = nodeTypeId(node);\n  if (t === 'prompt-generator') {\n    const level = (node.data.params?.level as string) || 'curto';\n    return level === 'longo' ? 5 : level === 'medio' ? 2 : 1; // mirrors magic_prompt server pricing\n  }\n  if (t === 'image-generator') {\n    const base = SPACES_EXECUTABLE_COSTS[node.data.modelKey ?? 'auto'] ?? SPACES_EXECUTABLE_COSTS['auto'];\n    return base * Math.max(1, node.data.batch ?? 1); // S10: batch N = N independent runs\n  }\n  if (t === 'video-generator') {\n    // S21: video batch is ALWAYS 1 in the 2a slice (30-160 mco/run \u2014 accidental \u00d78 would be a\n    // 1,280-mco debit). Batch returns with Fase 2 breadth if demanded.\n    return SPACES_VIDEO_COSTS[resolveSpacesVideoModel(node.data.modelKey)];\n  }\n  return 0;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "/* \u2500\u2500 S11 \u2014 input threading (single-output convention, 1b) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nexport interface NodeOutput { type: 'text' | 'image'; value: string }\nexport interface UpstreamInputs { promptText?: string; referenceImages: string[] }\n\n/**\n * Resolve a node's inputs from upstream outputs: edge into handle `prompt` + text output \u2192 prompt;\n * edge into handle `reference` + image output \u2192 reference image. Tolerates untyped hydrated edges.\n */\nexport function resolveUpstreamInputs(\n  node: SpaceNode,\n  edges: SpaceEdge[],\n  outputs: Map<string, NodeOutput>,\n): UpstreamInputs {\n  const result: UpstreamInputs = { referenceImages: [] };\n  for (const e of edges) {\n    if (e.target !== node.id) continue;\n    const up = outputs.get(e.source);\n    if (!up) continue;\n    if (e.targetHandle === 'prompt' && up.type === 'text') result.promptText = up.value;\n    if (e.targetHandle === 'reference' && up.type === 'image') result.referenceImages.push(up.value);\n  }\n  return result;\n}",
+  "new_string": "/* \u2500\u2500 S11 + S20 \u2014 input threading (single-output convention) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nexport interface NodeOutput { type: 'text' | 'image'; value: string }\nexport interface UpstreamInputs { promptText?: string; referenceImages: string[]; firstFrameImage?: string }\n\n/**\n * Resolve a node's inputs from upstream outputs: edge into handle `prompt` + text output \u2192 prompt;\n * edge into handle `reference` + image output \u2192 reference image; edge into handle `first-frame` +\n * image output \u2192 input_asset_url do v\u00eddeo (S20). Tolerates untyped hydrated edges.\n */\nexport function resolveUpstreamInputs(\n  node: SpaceNode,\n  edges: SpaceEdge[],\n  outputs: Map<string, NodeOutput>,\n): UpstreamInputs {\n  const result: UpstreamInputs = { referenceImages: [] };\n  for (const e of edges) {\n    if (e.target !== node.id) continue;\n    const up = outputs.get(e.source);\n    if (!up) continue;\n    if (e.targetHandle === 'prompt' && up.type === 'text') result.promptText = up.value;\n    if (e.targetHandle === 'reference' && up.type === 'image') result.referenceImages.push(up.value);\n    if (e.targetHandle === 'first-frame' && up.type === 'image') result.firstFrameImage = up.value;\n  }\n  return result;\n}\n\n/** S20: a video node with no threaded first-frame image is skipped as a no-op (never charged). */\nexport function missingVideoInput(node: SpaceNode, upstream: UpstreamInputs): boolean {\n  return nodeTypeId(node) === 'video-generator' && !upstream.firstFrameImage;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "/* \u2500\u2500 Payload builder (S4 additive extension of the live canvas-execute shape) \u2500 */\nexport interface SpacesExecutePayload {\n  project_id: string;      // legacy-required field \u2014 carries the spaceId\n  node_id: string;\n  node_type: 'generate_image' | 'magic_prompt';\n  provider: string;\n  model: string;\n  prompt: string;\n  parameters: Record<string, unknown>;\n  reference_image_urls?: string[];\n  space_id: string;        // ledger-mode trigger (with node_run_id)\n  node_run_id: string;\n}",
+  "new_string": "/* \u2500\u2500 Payload builder (S4 additive extension of the live canvas-execute shape) \u2500 */\nexport interface SpacesExecutePayload {\n  project_id: string;      // legacy-required field \u2014 carries the spaceId\n  node_id: string;\n  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video';\n  provider: string;\n  model: string;\n  prompt: string;\n  parameters: Record<string, unknown>;\n  reference_image_urls?: string[];\n  input_asset_url?: string; // S20: first-frame image for image_to_video\n  space_id: string;        // ledger-mode trigger (with node_run_id)\n  node_run_id: string;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "  if (t === 'image-generator') {\n    const { provider, model } = resolveSpacesModel(node.data.modelKey);\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'generate_image',\n      provider, model, prompt,\n      parameters: { aspect_ratio: node.data.aspectRatio ?? '1:1' },\n      ...(upstream.referenceImages.length ? { reference_image_urls: upstream.referenceImages } : {}),\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  return null;\n}",
+  "new_string": "  if (t === 'image-generator') {\n    const { provider, model } = resolveSpacesModel(node.data.modelKey);\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'generate_image',\n      provider, model, prompt,\n      parameters: { aspect_ratio: node.data.aspectRatio ?? '1:1' },\n      ...(upstream.referenceImages.length ? { reference_image_urls: upstream.referenceImages } : {}),\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  if (t === 'video-generator') {\n    // S20: first-frame threading is mandatory \u2014 the caller skips (missingVideoInput) before here,\n    // this null is the pure-function backstop.\n    if (!upstream.firstFrameImage) return null;\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'image_to_video',\n      provider: 'higgsfield', model: resolveSpacesVideoModel(node.data.modelKey), prompt,\n      parameters: { duration: 5 }, // S18: only declared-price durations\n      input_asset_url: upstream.firstFrameImage,\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  return null;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:39)*
+
+
+## 🤖 Claude *(00:28:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts",
+  "old_string": "export function rowToGeneration(row: GenerationRow): Generation & { previewUrl?: string; previewText?: string } {\n  return {\n    id: row.id,\n    spaceId: row.space_id,\n    nodeId: row.node_id,\n    outputType: row.output_type as Generation['outputType'],\n    assetId: row.asset_id ?? undefined,\n    modelKey: row.model_key,\n    mcoCharged: Number(row.mco_charged) || 0,\n    mcoRefunded: Number(row.mco_refunded) || 0,\n    usdCost: row.usd_cost != null ? Number(row.usd_cost) : undefined,\n    latencyMs: row.latency_ms ?? undefined,\n    status: row.status as Generation['status'],\n    createdAt: row.created_at,\n    previewUrl: (row.result?.output_url as string) || undefined,\n    previewText: (row.result?.enhanced_prompt as string) || undefined,\n  };\n}",
+  "new_string": "export function rowToGeneration(row: GenerationRow): Generation & { previewUrl?: string; previewText?: string; previewVideoUrl?: string } {\n  return {\n    id: row.id,\n    spaceId: row.space_id,\n    nodeId: row.node_id,\n    outputType: row.output_type as Generation['outputType'],\n    assetId: row.asset_id ?? undefined,\n    modelKey: row.model_key,\n    mcoCharged: Number(row.mco_charged) || 0,\n    mcoRefunded: Number(row.mco_refunded) || 0,\n    usdCost: row.usd_cost != null ? Number(row.usd_cost) : undefined,\n    latencyMs: row.latency_ms ?? undefined,\n    status: row.status as Generation['status'],\n    createdAt: row.created_at,\n    previewUrl: (row.result?.output_url as string) || undefined,\n    previewText: (row.result?.enhanced_prompt as string) || undefined,\n    previewVideoUrl: (row.result?.video_url as string) || undefined, // 2a async video (S16)\n  };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/spaces-execution.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:51)*
+
+
+## 🤖 Claude *(00:28:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts",
+  "old_string": "import {\n  classifyNode, buildExecutePayload, resolveUpstreamInputs, collectDescendants,\n  projectSpacesGraphCost, rowToGeneration,\n  type NodeOutput, type GenerationRow,\n} from '@/lib/spaces-execution';",
+  "new_string": "import {\n  classifyNode, buildExecutePayload, resolveUpstreamInputs, collectDescendants,\n  projectSpacesGraphCost, rowToGeneration, missingVideoInput, nodeTypeId,\n  type NodeOutput, type GenerationRow,\n} from '@/lib/spaces-execution';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts",
+  "old_string": "interface ExecResponse {\n  execution_id: string;\n  status: string;\n  output_url?: string;\n  enhanced_prompt?: string;\n  duplicate?: boolean;\n  credits_charged: number;\n}",
+  "new_string": "interface ExecResponse {\n  execution_id: string;\n  status: string;\n  output_url?: string;\n  enhanced_prompt?: string;\n  duplicate?: boolean;\n  credits_charged: number;\n  operation_id?: string; // async video (202/queued \u2014 Amendment 2a S14)\n}\n\n/** S19 \u2014 async video poller: reads the node's own `generations` row (RLS own) every POLL_MS until\n *  terminal, then flips the node + invalidates the cluster. Timeout leaves the node `running`\n *  honestly (the S17 sweep is the money backstop). */\nconst POLL_MS = 5_000;\nconst POLL_MAX_MS = 12 * 60_000;\nfunction watchVideoGeneration(\n  nodeId: string,\n  nodeRunId: string,\n  spaceId: string,\n  onSettled: (status: 'done' | 'error', refunded: number) => void,\n) {\n  const startedAt = Date.now();\n  const tick = async () => {\n    try {\n      const { data } = await supabase\n        .from('generations')\n        .select('status, mco_refunded')\n        .eq('node_run_id', nodeRunId)\n        .maybeSingle();\n      const status = data?.status;\n      if (status === 'done' || status === 'error') {\n        onSettled(status, Number(data?.mco_refunded) || 0);\n        return;\n      }\n    } catch { /* transient read error \u2014 keep polling */ }\n    if (Date.now() - startedAt < POLL_MAX_MS) {\n      setTimeout(tick, POLL_MS);\n    } else {\n      toast({\n        title: 'V\u00eddeo ainda processando',\n        description: 'O cluster do n\u00f3 atualiza quando concluir; execu\u00e7\u00f5es travadas s\u00e3o estornadas automaticamente.',\n      });\n    }\n  };\n  setTimeout(tick, POLL_MS);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts",
+  "old_string": "    const runNode = async (node: SpaceNode) => {\n      const st = useSpacesStore.getState();\n      const upstream = resolveUpstreamInputs(node, st.edges, outputs);\n      const batch = Math.max(1, node.data.batch ?? 1);\n      st.updateNodeStatus(node.id, 'running');\n      for (let i = 0; i < batch; i++) {\n        // S3: node_run_id minted ONCE per attempt (idempotency anchor server-side).\n        const nodeRunId = crypto.randomUUID();\n        const payload = buildExecutePayload(node, spaceId, nodeRunId, upstream);\n        if (!payload) {\n          st.updateNodeStatus(node.id, 'idle');\n          toast({ title: `\"${node.data.label}\" sem prompt \u2014 pulado (nada cobrado).` });\n          return;\n        }\n        const { data, error } = await supabase.functions.invoke('canvas-execute', { body: payload });\n        if (error) throw await toRunError(error);\n        const res = data as ExecResponse;\n        ranAny = true;\n        if (res.enhanced_prompt) outputs.set(node.id, { type: 'text', value: res.enhanced_prompt });\n        else if (res.output_url) outputs.set(node.id, { type: 'image', value: res.output_url });\n      }\n      st.updateNodeStatus(node.id, 'done');\n      qc.invalidateQueries({ queryKey: ['generations', spaceId, node.id] });\n    };",
+  "new_string": "    const runNode = async (node: SpaceNode) => {\n      const st = useSpacesStore.getState();\n      const upstream = resolveUpstreamInputs(node, st.edges, outputs);\n      // S21: video batch is ALWAYS 1 in the 2a slice (accidental \u00d78 would debit up to 1,280 mco).\n      const isVideo = nodeTypeId(node) === 'video-generator';\n      const batch = isVideo ? 1 : Math.max(1, node.data.batch ?? 1);\n      if (missingVideoInput(node, upstream)) {\n        st.updateNodeStatus(node.id, 'idle');\n        toast({ title: `\"${node.data.label}\" sem imagem no first-frame \u2014 pulado (nada cobrado).`,\n          description: 'Conecte a sa\u00edda de um Gerador de imagem (done) ao handle first-frame.' });\n        return;\n      }\n      st.updateNodeStatus(node.id, 'running');\n      for (let i = 0; i < batch; i++) {\n        // S3: node_run_id minted ONCE per attempt (idempotency anchor server-side).\n        const nodeRunId = crypto.randomUUID();\n        const payload = buildExecutePayload(node, spaceId, nodeRunId, upstream);\n        if (!payload) {\n          st.updateNodeStatus(node.id, 'idle');\n          toast({ title: `\"${node.data.label}\" sem prompt \u2014 pulado (nada cobrado).` });\n          return;\n        }\n        const { data, error } = await supabase.functions.invoke('canvas-execute', { body: payload });\n        if (error) throw await toRunError(error);\n        const res = data as ExecResponse;\n        ranAny = true;\n        if (res.status === 'queued') {\n          // S19: async dispatch \u2014 the node stays `running`; the poller settles it from the row truth.\n          watchVideoGeneration(node.id, nodeRunId, spaceId, (status, refunded) => {\n            useSpacesStore.getState().updateNodeStatus(node.id, status);\n            qc.invalidateQueries({ queryKey: ['generations', spaceId, node.id] });\n            toast(status === 'done'\n              ? { title: `\"${node.data.label}\" \u2014 v\u00eddeo pronto \u2713` }\n              : { title: `\"${node.data.label}\" \u2014 gera\u00e7\u00e3o de v\u00eddeo falhou`,\n                  description: refunded > 0 ? `Estorno de ${refunded} mcoCoins aplicado.` : undefined,\n                  variant: 'destructive' });\n          });\n          qc.invalidateQueries({ queryKey: ['generations', spaceId, node.id] });\n          return; // node stays running \u2014 do NOT mark done here\n        }\n        if (res.enhanced_prompt) outputs.set(node.id, { type: 'text', value: res.enhanced_prompt });\n        else if (res.output_url) outputs.set(node.id, { type: 'image', value: res.output_url });\n      }\n      st.updateNodeStatus(node.id, 'done');\n      qc.invalidateQueries({ queryKey: ['generations', spaceId, node.id] });\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGenerationLedger.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:28)*
+
+
+## 🤖 Claude *(00:29:28)*
+
+Agora o card de vídeo no cluster e o schema de params:
+
+## 🤖 Claude *(00:29:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/spaces/GenerationCluster.tsx",
+  "old_string": "          {g.previewUrl ? (\n            <img\n              src={g.previewUrl} alt={`Gera\u00e7\u00e3o ${g.modelKey}`} loading=\"lazy\"\n              className=\"w-full rounded max-h-40 object-cover\"\n            />\n          ) : g.previewText ? (\n            <p className=\"text-xs whitespace-pre-wrap line-clamp-4\">{g.previewText}</p>\n          ) : null}",
+  "new_string": "          {g.previewVideoUrl ? (\n            <video\n              src={g.previewVideoUrl} controls preload=\"metadata\" playsInline\n              className=\"w-full rounded max-h-40\"\n            />\n          ) : g.previewUrl ? (\n            <img\n              src={g.previewUrl} alt={`Gera\u00e7\u00e3o ${g.modelKey}`} loading=\"lazy\"\n              className=\"w-full rounded max-h-40 object-cover\"\n            />\n          ) : g.previewText ? (\n            <p className=\"text-xs whitespace-pre-wrap line-clamp-4\">{g.previewText}</p>\n          ) : null}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/spaces/GenerationCluster.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts",
+  "old_string": "    case 'video':\n      return [\n        { key: 'modelKey', kind: 'select', labelPt: 'Modelo de v\u00eddeo' },\n        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o v\u00eddeo\u2026' },\n        { key: 'aspectRatio', kind: 'select', labelPt: 'Propor\u00e7\u00e3o', options: ASPECT_OPTIONS },\n      ];",
+  "new_string": "    case 'video':\n      // 2a slice (SOP S18/S20/S21): declared-price models only, 5s fixed, first-frame threading \u2014\n      // the motion prompt + model are the editable params.\n      return [\n        { key: 'modelKey', kind: 'select', labelPt: 'Modelo de v\u00eddeo', options: VIDEO_MODEL_OPTIONS },\n        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o movimento do v\u00eddeo (5s)\u2026' },\n      ];"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(00:29:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts",
+  "offset": 40,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	};
+> 41	
+> 42	const IMAGE_MODEL_OPTIONS = IMAGE_MODELS.map((m) => ({
+> 43	  value: m,
+> 44	  labelPt: m === 'auto' ? 'Automático' : m.replace(/-/g, ' '),
+> 45	}));
+> 46	
+> 47	const ASPECT_OPTIONS = ASPECT_RATIOS.map((r) => ({ value: r, labelPt: r }));
+> 48	
+> 49	/** Param schema per node category (extend as nodes are added). */
+> 50	export function getSchema(node: SpaceNode): ParamField[] {
+> 51	  switch (node.data.category) {
+> 52	    case 'image':
+> 53	      return [
+> 54	        { key: 'modelKey', kind: 'select', labelPt: 'Modelo', options: IMAGE_MODEL_OPTIONS },
+> 55	        { key: 'references', kind: 'references', labelPt: 'Referências (0/8)' },
+> 56	        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva a imagem que deseja gerar…' },
+> 57	        { key: 'aspectRatio', kind: 'select', labelPt: 'Proporção', options: ASPECT_OPTIONS },
+> 58	        { key: 'batch', kind: 'stepper', labelPt: 'Quantidade', min: 1, max: 8, step: 1 },
+> 59	      ];
+> 60	    case 'video':
+> 61	      return [
+> 62	        { key: 'modelKey', kind: 'select', labelPt: 'Modelo de vídeo' },
+> 63	        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o vídeo…' },
+> 64	        { key: 'aspectRatio', kind: 'select', labelPt: 'Proporção', options: ASPECT_OPTIONS },
+> 65	      ];
+> 66	    case 'audio':
+> 67	      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Texto / roteiro…' }];
+> 68	    case 'text':
+> 69	      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Escreva o texto…' }];
+> 70	    default:
+> 71	      return [];
+> 72	  }
+> 73	}
+> 74	
+> 75	/** Estimate mcoCoins for a single node run (display only; server reconciles).
+> 76	 *  Fase 1b (gate G7 — SOP [[spaces-graph-execution|spaces-graph-execution]] S8): executable nodes estimate via the
+> 77	 *  1b executor map so estimate = real charge; non-executable nodes cost 0 (never run). */
+> 78	export function estimateCost(node: SpaceNode): number {
+> 79	  if (node.data.byok) return 0; // BR-SPACES-006 (dormant in 1b — SOP S12)
+> 80	  if (classifyNode(node) !== 'executable') return 0;
+> 81	  return estimateExecutableCost(node);
+> 82	}
+> 83	
+> 84	/** Project total cost for a set of nodes (pre-run — BR-SPACES-008 / dry-run BR-SPACES-005). */
+> 85	export function projectGraphCost(nodes: SpaceNode[]): number {
+> 86	  return nodes.reduce((sum, n) => sum + estimateCost(n), 0);
+> 87	}
+> 88	
+> 89	export type { AspectRatio, ImageModel };
+> 90	
+> ```
+
+## 🤖 Claude *(00:29:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts",
+  "old_string": "const IMAGE_MODEL_OPTIONS = IMAGE_MODELS.map((m) => ({\n  value: m,\n  labelPt: m === 'auto' ? 'Autom\u00e1tico' : m.replace(/-/g, ' '),\n}));\n\nconst ASPECT_OPTIONS = ASPECT_RATIOS.map((r) => ({ value: r, labelPt: r }));",
+  "new_string": "const IMAGE_MODEL_OPTIONS = IMAGE_MODELS.map((m) => ({\n  value: m,\n  labelPt: m === 'auto' ? 'Autom\u00e1tico' : m.replace(/-/g, ' '),\n}));\n\n/** 2a slice \u2014 1:1 with the server allowlist; cost shown inline (estimate = charge, G7). */\nconst VIDEO_MODEL_OPTIONS = Object.entries(SPACES_VIDEO_COSTS).map(([m, cost]) => ({\n  value: m,\n  labelPt: `${m.replace(/-/g, ' ')} \u00b7 ${cost} mco`,\n}));\n\nconst ASPECT_OPTIONS = ASPECT_RATIOS.map((r) => ({ value: r, labelPt: r }));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts",
+  "old_string": "    case 'video':\n      return [\n        { key: 'modelKey', kind: 'select', labelPt: 'Modelo de v\u00eddeo' },\n        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o v\u00eddeo\u2026' },\n        { key: 'aspectRatio', kind: 'select', labelPt: 'Propor\u00e7\u00e3o', options: ASPECT_OPTIONS },\n      ];",
+  "new_string": "    case 'video':\n      // 2a slice (SOP S18/S20/S21): declared-price models only, 5s fixed, first-frame threading.\n      return [\n        { key: 'modelKey', kind: 'select', labelPt: 'Modelo de v\u00eddeo', options: VIDEO_MODEL_OPTIONS },\n        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva o movimento do v\u00eddeo (5s)\u2026' },\n      ];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:30:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts",
+  "old_string": "import {\n  ASPECT_RATIOS, IMAGE_MODELS,\n  type SpaceNode, type AspectRatio, type ImageModel,\n} from '@/lib/spaces-schema';\nimport { classifyNode, estimateExecutableCost } from '@/lib/spaces-execution';",
+  "new_string": "import {\n  ASPECT_RATIOS, IMAGE_MODELS,\n  type SpaceNode, type AspectRatio, type ImageModel,\n} from '@/lib/spaces-schema';\nimport { classifyNode, estimateExecutableCost, SPACES_VIDEO_COSTS } from '@/lib/spaces-execution';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useParamRegistry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:30:12)*
+
+
+## 🤖 Claude *(00:30:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -i 's|description: .Adicione um Gerador de imagem ou Assistant..|description: '\"'\"'Adicione um Gerador de imagem, Assistant ou Gerador de v\u00eddeo.'\"'\"'|' src/hooks/useGenerationLedger.ts && grep -n 'Adicione um Gerador' src/hooks/useGenerationLedger.ts && cat src/test/spaces-mirror-parity.test.ts | head -60",
+  "description": "Update executable toast and read mirror-parity test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 153:      toast({ title: 'Nenhum nó executável na Fase 1', description: 'Adicione um Gerador de imagem, Assistant ou Gerador de vídeo.' });
+> // spaces-mirror-parity.test.ts — SOL-SPACES-001 mechanical mirror-parity gate (FMEA-SPACES-004).
+> // The client estimate map (SPACES_EXECUTABLE_COSTS / SPACES_MODEL_MAP) MUST match the server
+> // authority (CREDIT_COSTS + SPACES_IMAGE_MODELS in canvas-execute). This test parses the deployed
+> // edge-fn SOURCE so a drift on either side fails CI before it can lie to the user (gate G7).
+> import { describe, it, expect } from 'vitest';
+> import { readFileSync } from 'node:fs';
+> import { resolve } from 'node:path';
+> import { SPACES_MODEL_MAP, SPACES_EXECUTABLE_COSTS } from '@/lib/spaces-execution';
+> 
+> const fnSource = readFileSync(
+>   resolve(__dirname, '../../supabase/functions/canvas-execute/index.ts'),
+>   'utf-8',
+> );
+> 
+> /** Parse `"key": <number>,` entries of the CREDIT_COSTS literal. */
+> function parseCreditCosts(src: string): Record<string, number> {
+>   const block = src.match(/const CREDIT_COSTS[^=]*=\s*{([\s\S]*?)};/)?.[1] ?? '';
+>   const costs: Record<string, number> = {};
+>   for (const m of block.matchAll(/"([^"]+)":\s*(\d+)/g)) costs[m[1]] = Number(m[2]);
+>   return costs;
+> }
+> 
+> /** Parse the SPACES_IMAGE_MODELS allowlist entries. */
+> function parseSpacesAllowlist(src: string): string[] {
+>   const block = src.match(/const SPACES_IMAGE_MODELS = new Set\(\[([\s\S]*?)\]\)/)?.[1] ?? '';
+>   return [...block.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+> }
+> 
+> describe('mirror parity — client estimate vs server authority (SOL-SPACES-001)', () => {
+>   const serverCosts = parseCreditCosts(fnSource);
+>   const serverAllowlist = parseSpacesAllowlist(fnSource);
+> 
+>   it('parses the server maps (guard against refactors breaking the parser)', () => {
+>     expect(Object.keys(serverCosts).length).toBeGreaterThan(10);
+>     expect(serverAllowlist.length).toBeGreaterThan(0);
+>   });
+> 
+>   it('every client model resolves to a server-priced pair with the SAME cost', () => {
+>     for (const [spacesKey, { provider, model }] of Object.entries(SPACES_MODEL_MAP)) {
+>       const pair = `${provider}/${model}`;
+>       expect(serverCosts[pair], `server CREDIT_COSTS missing ${pair}`).toBeDefined();
+>       expect(SPACES_EXECUTABLE_COSTS[spacesKey], `client cost missing for ${spacesKey}`)
+>         .toBe(serverCosts[pair]);
+>     }
+>   });
+> 
+>   it('client map and server allowlist are the SAME set (no orphan on either side)', () => {
+>     const clientPairs = Object.values(SPACES_MODEL_MAP).map((m) => `${m.provider}/${m.model}`).sort();
+>     expect([...new Set(clientPairs)]).toEqual([...serverAllowlist].sort());
+>   });
+> });
+> ```
+
+## 🤖 Claude *(00:30:22)*
+
+
+## 🤖 Claude *(00:30:22)*
+
+
+## 🤖 Claude *(00:30:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -30 src/test/spaces-execution.test.ts && grep -n 'function makeNode\\|const makeNode\\|makeNode(' src/test/spaces-execution.test.ts | head -3",
+  "description": "Check execution test structure and node factory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     expect(p).toMatchObject({
+>       node_type: 'generate_image',
+>       provider: 'openrouter', model: 'black-forest-labs/flux-1.1-pro',
+>       prompt: 'do upstream',
+>       reference_image_urls: ['https://x/ref.png'],
+>     });
+>   });
+> 
+>   it('returns null when there is no usable prompt (skipped, never charged)', () => {
+>     const n = mkNode({ typeId: 'image-generator', params: {} });
+>     expect(buildExecutePayload(n, 's', 'r', { referenceImages: [] })).toBeNull();
+>   });
+> });
+> 
+> describe('rowToGeneration (C9 row→card mapper)', () => {
+>   it('maps snake_case row to the zod card shape with previews', () => {
+>     const row: GenerationRow = {
+>       id: '9c3e6c5e-0000-4000-8000-000000000001', space_id: 's', node_id: 'n', node_run_id: 'r',
+>       output_type: 'image', asset_id: null, model_key: 'openrouter/google/gemini-2.5-flash-image',
+>       mco_charged: 10, mco_refunded: 0, usd_cost: null, latency_ms: 4200,
+>       result: { output_url: 'https://x/out.png' }, status: 'done', created_at: '2026-07-02T12:00:00Z',
+>     };
+>     const g = rowToGeneration(row);
+>     expect(g.mcoCharged).toBe(10);
+>     expect(g.previewUrl).toBe('https://x/out.png');
+>     expect(g.status).toBe('done');
+>     const text = rowToGeneration({ ...row, output_type: 'text', result: { enhanced_prompt: 'abc' } });
+>     expect(text.previewText).toBe('abc');
+>   });
+> });
+> ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - fc54f2bd-db07-4bb1-86c9-4f15891e35e3]]
+%% --- TIMELINE END --- %%
