@@ -503,7 +503,7 @@ I'll execute the ShakeHands /handson pickup protocol. Starting with pre-flight c
 > 49	  storage.objects SELECT owner-scoped, 4 rotas =auth.uid():
 > 50	    creative_assets(bucket,key) [service-role-write only] · spaces.id=folder[1] · vm_canvas_projects.id=folder[1] · folder[1]=uid
 > 51	  id triggers (INSERT: gen_random_uuid · UPDATE: pin OLD.id) → id não-forjável (fecha claim/PK-swap)
-> 52	SOP: docs/processes/private-bucket-asset-signing.md
+> 52	SOP: docs/processes/[[private-bucket-asset-signing|private-bucket-asset-signing]].md
 > 53	```
 > 54	
 > 55	**Survival Laws Self-audit:** Lei 1 ✅ (toda claim ancorada — policies 3/1/0, HTTP SIGNED-200/BLOCKED, prints + meus olhos; o diagnóstico refutou a hipótese do Sovereign com o DB vivo) · Lei 2 ✅ (SOP ANTES do código) · Lei 3 ✅ (janela longe de 95% no início; podas por referência) · Lei 4 ✅ (ORO declarado; **portão de DDL de prod respeitado** — não contornei o classificador, esperei o `!` do Sovereign; `/security-review` pegou meu próprio HIGH e eu fechei antes do apply-final/commit).
@@ -776,7 +776,7 @@ Vou verificar materialmente (Lei 1) — não basta afirmar, preciso provar que (
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; ls -la supabase/migrations/ | grep -E \"2026070(2|3)\" ; echo \"---SOP---\"; ls -la docs/processes/private-bucket-asset-signing.md 2>/dev/null; echo \"---ENV KEYS present?---\"; grep -qE \"SB_SECRET_KEY\" .env && echo \"SB_SECRET_KEY present\" || echo \"SB_SECRET_KEY MISSING\"; grep -qE \"VITE_SUPABASE_URL\" .env && echo \"URL present\" || echo \"URL missing\"",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; ls -la supabase/migrations/ | grep -E \"2026070(2|3)\" ; echo \"---SOP---\"; ls -la docs/processes/[[private-bucket-asset-signing|private-bucket-asset-signing]].md 2>/dev/null; echo \"---ENV KEYS present?---\"; grep -qE \"SB_SECRET_KEY\" .env && echo \"SB_SECRET_KEY present\" || echo \"SB_SECRET_KEY MISSING\"; grep -qE \"VITE_SUPABASE_URL\" .env && echo \"URL present\" || echo \"URL missing\"",
   "description": "Locate security migrations + SOP + env keys"
 }
 ```
@@ -791,7 +791,7 @@ Vou verificar materialmente (Lei 1) — não basta afirmar, preciso provar que (
 > -rw-rw-r-- 1 ubuntu ubuntu  3513 Jul  2 22:53 20260702230000_spaces_storage_enumeration_hardening.sql
 > -rw-rw-r-- 1 ubuntu ubuntu  8344 Jul  3 03:08 20260703030000_asset_owner_signing_and_ispublic_repair.sql
 > ---SOP---
-> -rw-rw-r-- 1 ubuntu ubuntu 5390 Jul  3 02:56 docs/processes/private-bucket-asset-signing.md
+> -rw-rw-r-- 1 ubuntu ubuntu 5390 Jul  3 02:56 docs/processes/[[private-bucket-asset-signing|private-bucket-asset-signing]].md
 > ---ENV KEYS present?---
 > SB_SECRET_KEY present
 > URL present
@@ -892,7 +892,7 @@ I have keys and the migrations. Let me read both security migrations to understa
 > 1	-- Migration: 20260703030000_asset_owner_signing_and_ispublic_repair.sql
 > 2	-- Fix Assets (2026-07-03) — restore OWNER-scoped display of PRIVATE-bucket media across the ecosystem,
 > 3	-- WITHOUT reopening the cross-tenant enumeration hole that 20260702230000 correctly closed (OTD-SPACES-001).
-> 4	-- SOP: docs/processes/private-bucket-asset-signing.md.
+> 4	-- SOP: docs/processes/[[private-bucket-asset-signing|private-bucket-asset-signing]].md.
 > 5	--
 > 6	-- PROBLEM (proven live, Law 1): canvas-assets / generated-images / video-studio-assets are PRIVATE buckets.
 > 7	--   Their storage objects were uploaded by the service role (owner = NULL) under prefixes that are NOT the
@@ -1098,7 +1098,7 @@ O código do fix está claro. Agora a prova viva (Lei 1). Deixa eu achar o bridg
 > // E2E: prove creative media RENDERS across the ecosystem after the private-bucket-signing fix (2026-07-03).
 > // Magic-link auth (User 0) → Biblioteca de Assets + a Canvas Studio project + a Space → for each, count media
 > // elements that ACTUALLY loaded (img.naturalWidth>0 / video has a signed src) and confirm srcs are /object/sign/
-> // (never a dead /object/public/ on a private bucket). Screenshot + Vision QA each. SOP: private-bucket-asset-signing.md.
+> // (never a dead /object/public/ on a private bucket). Screenshot + Vision QA each. SOP: [[private-bucket-asset-signing|private-bucket-asset-signing]].md.
 > import { chromium, type Page } from 'playwright';
 > import { createClient } from '@supabase/supabase-js';
 > import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -1296,3 +1296,132 @@ Module resolution needs the repo's node_modules. Let me place the script inside 
 > REMAINING public-on-private (must be 0): 0
 > EXIT=0
 > ```
+
+## 🤖 Claude *(13:30:20)*
+
+
+## 🤖 Claude *(13:30:21)*
+
+Perfect — all starting data confirmed, and `is_public` repair holds (0 public-on-private). Now the behavioral proof: owner signs, cross-tenant blocked, id-squat neutralized. Writing the live verifier.
+
+## 🤖 Claude *(13:30:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; cat > ./_verify_assets_security.mjs <<'EOF'\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync, existsSync } from 'fs';\nfor (const l of (existsSync('.env')?readFileSync('.env','utf8').split('\\n'):[])){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m)process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,'');}\nconst URL=process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL;\nconst SVC=process.env.SB_SECRET_KEY??process.env.SUPABASE_SERVICE_ROLE_KEY;\nconst ANON=process.env.SB_PUBLISHABLE_KEY??process.env.SUPABASE_PUBLISHABLE_KEY??process.env.VITE_SUPABASE_PUBLISHABLE_KEY??process.env.SUPABASE_ANON_KEY;\nconst admin=createClient(URL,SVC,{auth:{persistSession:false}});\n\nconst OWNER_EMAIL='gabrielcall@gmail.com';\nconst VICTIM_PROJECT='0b86e7d0-5f56-4d28-8709-76bdc88c2bca';\nconst VICTIM_OBJ='0b86e7d0-5f56-4d28-8709-76bdc88c2bca/81bf34ec-062e-4dcf-a5e3-ff7ee947b93a.mp4'; // under victim's project prefix\nconst results=[];\nfunction gate(id,pass,detail){results.push({id,pass,detail});console.log(`${pass?'\u2705':'\u274c'} ${id} \u2014 ${detail}`);}\n\nasync function userClientFromToken(tok){return createClient(URL,ANON,{global:{headers:{Authorization:`Bearer ${tok}`}},auth:{persistSession:false}});}\nasync function mintOwnerToken(email){\n  const {data,error}=await admin.auth.admin.generateLink({type:'magiclink',email});\n  if(error||!data.properties?.hashed_token)throw new Error('generateLink: '+(error?.message??'no hash'));\n  const anon=createClient(URL,ANON,{auth:{persistSession:false}});\n  for(const type of ['magiclink','email']){const {data:s,error:e}=await anon.auth.verifyOtp({token_hash:data.properties.hashed_token,type});if(!e&&s?.session)return s.session.access_token;}\n  throw new Error('verifyOtp failed');\n}\n\n// \u2500\u2500 S1: OWNER can sign + fetch their own private object (FUNCTIONING) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet ownerTok;\ntry{\n  ownerTok=await mintOwnerToken(OWNER_EMAIL);\n  const oc=await userClientFromToken(ownerTok);\n  const {data,error}=await oc.storage.from('canvas-assets').createSignedUrl(VICTIM_OBJ,60);\n  if(error||!data?.signedUrl){gate('S1 owner-sign',false,'owner could NOT sign own object: '+(error?.message));}\n  else{\n    const r=await fetch(data.signedUrl);\n    gate('S1 owner-sign',r.status===200,`owner signed own object \u2192 HTTP ${r.status} (${r.headers.get('content-type')})`);\n  }\n}catch(e){gate('S1 owner-sign',false,'exception: '+e.message);}\n\n// \u2500\u2500 throwaway attacker \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst atkEmail=`smoketest-assetsec-${Date.now()}@example.com`;\nconst {data:atk,error:atkErr}=await admin.auth.admin.createUser({email:atkEmail,password:'Str0ng!Pass-'+Date.now(),email_confirm:true,user_metadata:{full_name:'SMOKETEST'}});\nif(atkErr){gate('setup attacker',false,atkErr.message);}\nconst atkId=atk?.user?.id;\nlet atkTok;\ntry{const anon=createClient(URL,ANON,{auth:{persistSession:false}});const {data:s,error:e}=await anon.auth.signInWithPassword({email:atkEmail,password:atk?atk.user?undefined:undefined});}catch(e){}\n// sign in properly\n{\n  const anon=createClient(URL,ANON,{auth:{persistSession:false}});\n  const {data:s,error:e}=await anon.auth.signInWithPassword({email:atkEmail,password:(await (async()=>'x')())});\n}\n// re-mint attacker token cleanly via generateLink (recovery/magiclink) to avoid password roundtrip\ntry{\n  const {data:lk}=await admin.auth.admin.generateLink({type:'magiclink',email:atkEmail});\n  const anon=createClient(URL,ANON,{auth:{persistSession:false}});\n  for(const type of ['magiclink','email']){const {data:s,error:e}=await anon.auth.verifyOtp({token_hash:lk.properties.hashed_token,type});if(!e&&s?.session){atkTok=s.session.access_token;break;}}\n}catch(e){}\n\n// \u2500\u2500 S2: attacker CANNOT sign the victim's private object (SECURE) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry{\n  const ac=await userClientFromToken(atkTok);\n  const {data,error}=await ac.storage.from('canvas-assets').createSignedUrl(VICTIM_OBJ,60);\n  const blocked=(!!error||!data?.signedUrl);\n  gate('S2 cross-tenant-sign',blocked,blocked?`BLOCKED (${error?.message??'no url'})`:'LEAK! attacker signed victim object');\n}catch(e){gate('S2 cross-tenant-sign',true,'BLOCKED (exception '+e.message+')');}\n\n// \u2500\u2500 S3: attacker CANNOT enumerate the bucket (SECURE \u2014 OTD-SPACES-001) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry{\n  const ac=await userClientFromToken(atkTok);\n  const {data,error}=await ac.storage.from('canvas-assets').list(VICTIM_PROJECT,{limit:100});\n  const n=(data||[]).length;\n  gate('S3 enumeration',n===0,n===0?`list returned 0 objects (owner-scoped)`:`LEAK! attacker listed ${n} victim objects`);\n}catch(e){gate('S3 enumeration',true,'BLOCKED (exception '+e.message+')');}\n\n// \u2500\u2500 S4: id-squat is neutralized by the server-side id trigger (SECURE) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet squatId=null;\ntry{\n  const ac=await userClientFromToken(atkTok);\n  const {data,error}=await ac.from('vm_canvas_projects').insert({id:VICTIM_PROJECT,user_id:atkId,name:'squat-test'}).select('id').single();\n  if(error){gate('S4 id-squat',true,`insert blocked outright (${error.message})`);}\n  else{\n    squatId=data.id;\n    const neutralized=data.id!==VICTIM_PROJECT;\n    gate('S4 id-squat',neutralized,neutralized?`trigger regenerated id ${data.id} \u2260 victim ${VICTIM_PROJECT}`:`LEAK! row kept victim id`);\n    // and prove signing STILL blocked even after the squat attempt\n    const {data:sd,error:se}=await ac.storage.from('canvas-assets').createSignedUrl(VICTIM_OBJ,60);\n    gate('S4b post-squat-sign',(!!se||!sd?.signedUrl),(!!se||!sd?.signedUrl)?`still BLOCKED (${se?.message??'no url'})`:'LEAK! signed after squat');\n  }\n}catch(e){gate('S4 id-squat',true,'blocked (exception '+e.message+')');}\n\n// \u2500\u2500 S5: is_public repair holds (no public flag on private buckets) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n{\n  const {count}=await admin.from('creative_assets').select('*',{count:'exact',head:true}).eq('is_public',true).in('storage_bucket',['canvas-assets','generated-images','video-studio-assets','video-studio-projects','vision-artifacts']);\n  gate('S5 is_public-repair',count===0,`public-on-private rows = ${count} (must be 0)`);\n}\n\n// \u2500\u2500 cleanup \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ntry{ if(squatId){await admin.from('vm_canvas_projects').delete().eq('user_id',atkId);} }catch(e){}\ntry{ if(atkId){await admin.auth.admin.deleteUser(atkId);} }catch(e){}\n\nconst passed=results.filter(r=>r.pass).length;\nconsole.log(`\\n=== ${passed}/${results.length} gates passed ===`);\nprocess.exit(passed===results.length?0:1);\nEOF\nbun run ./_verify_assets_security.mjs; echo \"EXIT=$?\"",
+  "description": "Run live security + functioning verifier"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 43 | try{const anon=createClient(URL,ANON,{auth:{persistSession:false}});const {data:s,error:e}=await anon.auth.signInWithPassword({email:atkEmail,password:atk?atk.user?undefined:undefined});}catch(e){}
+>                                                                                                                                                                                             ^
+> error: Expected " =" but found "}"
+>     at /home/gcrUX/htdocs/constellation-orchestra/_verify_assets_security.mjs:43:184
+> 
+> 43 | try{const anon=createClient(URL,ANON,{auth:{persistSession:false}});const {data:s,error:e}=await anon.auth.signInWithPassword({email:atkEmail,password:atk?atk.user?undefined:undefined});}catch(e){}
+>                                                                                                                                                                                              ^
+> error: Unexpected )
+>     at /home/gcrUX/htdocs/constellation-orchestra/_verify_assets_security.mjs:43:185
+> 
+> Bun v1.3.12 (Linux arm64)
+> EXIT=1
+> ```
+
+## 🤖 Claude *(13:31:02)*
+
+
+## 🤖 Claude *(13:31:02)*
+
+I left broken scratch lines in. Let me rewrite the attacker-token minting cleanly (use generateLink like the owner, drop the password path).
+
+## 🤖 Claude *(13:31:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; cat > ./_verify_assets_security.mjs <<'EOF'\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync, existsSync } from 'fs';\nfor (const l of (existsSync('.env')?readFileSync('.env','utf8').split('\\n'):[])){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m)process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,'');}\nconst URL=process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL;\nconst SVC=process.env.SB_SECRET_KEY??process.env.SUPABASE_SERVICE_ROLE_KEY;\nconst ANON=process.env.SB_PUBLISHABLE_KEY??process.env.SUPABASE_PUBLISHABLE_KEY??process.env.VITE_SUPABASE_PUBLISHABLE_KEY??process.env.SUPABASE_ANON_KEY;\nconst admin=createClient(URL,SVC,{auth:{persistSession:false}});\n\nconst OWNER_EMAIL='gabrielcall@gmail.com';\nconst VICTIM_PROJECT='0b86e7d0-5f56-4d28-8709-76bdc88c2bca';\nconst VICTIM_OBJ='0b86e7d0-5f56-4d28-8709-76bdc88c2bca/81bf34ec-062e-4dcf-a5e3-ff7ee947b93a.mp4';\nconst results=[];\nfunction gate(id,pass,detail){results.push({id,pass,detail});console.log(`${pass?'\u2705':'\u274c'} ${id} \u2014 ${detail}`);}\nfunction userClient(tok){return createClient(URL,ANON,{global:{headers:{Authorization:`Bearer ${tok}`}},auth:{persistSession:false}});}\nasync function mintToken(email){\n  const {data,error}=await admin.auth.admin.generateLink({type:'magiclink',email});\n  if(error||!data.properties?.hashed_token)throw new Error('generateLink: '+(error?.message??'no hash'));\n  const anon=createClient(URL,ANON,{auth:{persistSession:false}});\n  for(const type of ['magiclink','email']){const {data:s,error:e}=await anon.auth.verifyOtp({token_hash:data.properties.hashed_token,type});if(!e&&s?.session)return s.session.access_token;}\n  throw new Error('verifyOtp failed');\n}\n\n// S1: OWNER can sign + fetch own private object (FUNCTIONING)\ntry{\n  const oc=userClient(await mintToken(OWNER_EMAIL));\n  const {data,error}=await oc.storage.from('canvas-assets').createSignedUrl(VICTIM_OBJ,60);\n  if(error||!data?.signedUrl)gate('S1 owner-sign',false,'owner could NOT sign: '+(error?.message));\n  else{const r=await fetch(data.signedUrl);gate('S1 owner-sign',r.status===200,`owner signed own object \u2192 HTTP ${r.status} (${r.headers.get('content-type')})`);}\n}catch(e){gate('S1 owner-sign',false,'exception: '+e.message);}\n\n// throwaway attacker\nconst atkEmail=`smoketest-assetsec-${Date.now()}@example.com`;\nconst {data:atk,error:atkErr}=await admin.auth.admin.createUser({email:atkEmail,password:'Str0ng!Pass-'+Date.now(),email_confirm:true,user_metadata:{full_name:'SMOKETEST'}});\nif(atkErr)gate('setup attacker',false,atkErr.message);\nconst atkId=atk?.user?.id;\nlet atkTok;try{atkTok=await mintToken(atkEmail);}catch(e){gate('setup attacker-token',false,e.message);}\n\n// S2: attacker CANNOT sign victim's private object (SECURE)\ntry{\n  const {data,error}=await userClient(atkTok).storage.from('canvas-assets').createSignedUrl(VICTIM_OBJ,60);\n  const blocked=(!!error||!data?.signedUrl);\n  gate('S2 cross-tenant-sign',blocked,blocked?`BLOCKED (${error?.message??'no url'})`:'LEAK! attacker signed victim object');\n}catch(e){gate('S2 cross-tenant-sign',true,'BLOCKED (exception '+e.message+')');}\n\n// S3: attacker CANNOT enumerate the bucket (SECURE \u2014 OTD-SPACES-001)\ntry{\n  const {data,error}=await userClient(atkTok).storage.from('canvas-assets').list(VICTIM_PROJECT,{limit:100});\n  const n=(data||[]).length;\n  gate('S3 enumeration',n===0,n===0?`list returned 0 objects (owner-scoped)`:`LEAK! attacker listed ${n} victim objects`);\n}catch(e){gate('S3 enumeration',true,'BLOCKED (exception '+e.message+')');}\n\n// S4: id-squat neutralized by server-side id trigger (SECURE)\nlet squatId=null;\ntry{\n  const {data,error}=await userClient(atkTok).from('vm_canvas_projects').insert({id:VICTIM_PROJECT,user_id:atkId,name:'squat-test'}).select('id').single();\n  if(error){gate('S4 id-squat',true,`insert blocked outright (${error.message})`);}\n  else{\n    squatId=data.id;\n    const neutralized=data.id!==VICTIM_PROJECT;\n    gate('S4 id-squat',neutralized,neutralized?`trigger regenerated id ${data.id} \u2260 victim ${VICTIM_PROJECT}`:'LEAK! row kept victim id');\n    const {data:sd,error:se}=await userClient(atkTok).storage.from('canvas-assets').createSignedUrl(VICTIM_OBJ,60);\n    gate('S4b post-squat-sign',(!!se||!sd?.signedUrl),(!!se||!sd?.signedUrl)?`still BLOCKED (${se?.message??'no url'})`:'LEAK! signed after squat');\n  }\n}catch(e){gate('S4 id-squat',true,'blocked (exception '+e.message+')');}\n\n// S5: is_public repair holds\n{\n  const {count}=await admin.from('creative_assets').select('*',{count:'exact',head:true}).eq('is_public',true).in('storage_bucket',['canvas-assets','generated-images','video-studio-assets','video-studio-projects','vision-artifacts']);\n  gate('S5 is_public-repair',count===0,`public-on-private rows = ${count} (must be 0)`);\n}\n\n// cleanup\ntry{if(atkId)await admin.from('vm_canvas_projects').delete().eq('user_id',atkId);}catch(e){}\ntry{if(atkId)await admin.auth.admin.deleteUser(atkId);}catch(e){}\n\nconst passed=results.filter(r=>r.pass).length;\nconsole.log(`\\n=== ${passed}/${results.length} gates passed ===`);\nprocess.exit(passed===results.length?0:1);\nEOF\nbun run ./_verify_assets_security.mjs; echo \"EXIT=$?\"",
+  "description": "Run cleaned live verifier"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ S1 owner-sign — owner signed own object → HTTP 200 (video/mp4)
+> ✅ S2 cross-tenant-sign — BLOCKED (Object not found)
+> ✅ S3 enumeration — list returned 0 objects (owner-scoped)
+> ✅ S4 id-squat — trigger regenerated id 51cdac2f-e653-44f5-924e-26f595f26056 ≠ victim 0b86e7d0-5f56-4d28-8709-76bdc88c2bca
+> ✅ S4b post-squat-sign — still BLOCKED (Object not found)
+> ✅ S5 is_public-repair — public-on-private rows = 0 (must be 0)
+> 
+> === 6/6 gates passed ===
+> EXIT=0
+> ```
+
+## 🤖 Claude *(13:31:41)*
+
+
+## 🤖 Claude *(13:31:42)*
+
+6/6 gates verdes ao vivo em produção. Deixa eu limpar os scripts temporários que criei na raiz.
+
+## 🤖 Claude *(13:31:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; rm -f _probe_assets.mjs _verify_assets_security.mjs; git status --short",
+  "description": "Remove temp scripts, confirm clean tree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M .agents/workflows/handson.md
+> ```
+
+## 🤖 Claude *(13:32:02)*
+
+Verifiquei **ao vivo em produção** (Lei 1 — não afirmação, comportamento provado). A correção de segurança que causou o sumiço dos assets continua **fechada**, e agora está **segura E funcionando** ao mesmo tempo. As duas coisas coexistem — que era exatamente o risco do fix.
+
+## Prova material — 6/6 gates verdes (throwaway user contra objeto real do User 0)
+
+| Gate | O que provou | Resultado |
+|------|--------------|-----------|
+| **S1 · funcionando** | Dono assina o próprio objeto privado e o vídeo carrega | ✅ signed → **HTTP 200 (video/mp4)** |
+| **S2 · seguro** | Atacante (usuário throwaway) tenta assinar objeto do User 0 | ✅ **BLOCKED** (`Object not found`) |
+| **S3 · seguro** | Atacante tenta **enumerar** o bucket privado (o furo original OTD-SPACES-001) | ✅ **0 objetos** (list owner-scoped) |
+| **S4 · seguro** | Atacante tenta o **id-squat** (inserir projeto com `id` = projeto da vítima) | ✅ trigger **regenerou o id** → `51cdac2f…` ≠ `0b86e7d0…` |
+| **S4b · seguro** | Assinatura da vítima **depois** do squat | ✅ ainda **BLOCKED** |
+| **S5 · consistente** | `is_public=true` em bucket privado (o data-repair) | ✅ **0 linhas** |
+
+## Leitura
+
+- **O fecho original (enumeração cross-tenant) permanece intacto** — S2/S3 provam que um usuário externo não assina nem lista nada de outro tenant. O furo que a migration `20260702230000` fechou continua fechado.
+- **O HIGH que o `/security-review` pegou na 1ª versão do fix continua fechado** — S4/S4b provam que o id-squat + PK-swap (o vetor que quase reabriu o buraco ao usar `id` como proxy de autorização de storage) está neutralizado pelos triggers `INSERT+UPDATE` que fixam o id no servidor.
+- **O dono volta a ver tudo** — S1 prova que o User 0 assina e carrega seus próprios objetos privados (os 83 assets de `canvas-assets`, todos `is_public=false` corretos).
+
+**Não há trade-off aberto:** segurança e funcionalidade estão ambas verdes. O teste foi zero-custo (só auth + tentativas de assinatura, nenhum gasto de mco/BYOK) e limpei o usuário throwaway + os scripts temporários. Working tree segue só com o `M .agents/workflows/handson.md` de antes.
+
+Quer que eu promova esse verificador a um smoke permanente em `scripts/qa/` (anticorpo re-executável, Lei 2) para travar essa regressão em futuras mudanças de storage?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - Resolver alertas de produção e migrations]]
+> * **Próxima Sessão**: [[2026-07-03 - aced5ac9-b7e1-4508-aafa-8d1da8c0fa0a]]
+%% --- TIMELINE END --- %%
