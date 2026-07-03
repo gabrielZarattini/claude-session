@@ -41467,6 +41467,1962 @@ De novo o pkill abortou a cadeia (lição repetida — pkill sempre separado). R
 > c66e6b5 feat(spaces): Fase 2d — Designer/composer no slice (código-completo; provider em drift OTD-SPACES-003)
 > ```
 
+## 🤖 Claude *(01:29:55)*
+
+
+## 🤖 Claude *(01:30:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = '.claude/context/autonomous-loop-charter.md'\ns = open(p).read()\ns = s.replace(\n  \"- **Restam do Spaces:** Fase 2 restante (Designer \u00b7 Workflow Apps \u00b7 FX \u00b7 multi-page \u00b7 voz CLONADA [Fila: biometria]) \u00b7 Fase 3 (collab).\",\n  \"\"\"- **Restam do Spaces:** Fase 2 restante (Workflow Apps \u00b7 FX \u00b7 multi-page \u00b7 voz CLONADA [Fila: biometria] \u00b7 **OTD-SPACES-003** composer provider-drift) \u00b7 Fase 3 (collab).\n\n### \u2705 Spaces Fase 2d \u2014 Designer/composer \u2014 C\u00d3DIGO-COMPLETO, provider em DRIFT (loop 2026-07-02 it.6, commits `c66e6b5`+`cbebc9e`)\n- **SOP S30-S32 ANTES:** scene_compose SYNC via generateHiggsfield legado; custo 18 PINADO (classe F1); guards prompt+\u22651 imagem; cap 2 = verdade do server; `NODE_PORTS.composer` declarado (image-1/image-2/prompt, threading ordenado); picker parametrizado (designer=2, imagem=4); skip no-op.\n- **ACHADO MATERIAL (E2E pago):** Higgsfield rejeita `mode='compose'` \u2014 API atual s\u00f3 aceita `reference|character|standard` \u21d2 **o compose LEGADO do Canvas Studio est\u00e1 igualmente quebrado hoje**. O slice falha HONESTO com estorno integral provado ao vivo (charged 18 \u2192 refunded 18, saldo 4581 intacto). **OTD-SPACES-003:** revalidar docs Higgsfield (candidato: soul/reference) ANTES de flipar o endpoint \u2014 nunca chutar sem\u00e2ntica de provider (Lei 1).\n- **Provas:** smoke **30/30** (C1/C2 guards \u00b7 C3 refund+custo pinado 18 com params forjados) \u00b7 vitest **398** (+G16) \u00b7 tsc 0 \u00b7 Estimar **18 exato** na UI \u00b7 contador \"1/2 ativas\" (cap 2) browser-verificado.\"\"\",\n)\nopen(p, 'w').write(s)\nprint('charter ok')\nEOF\npython3 - <<'EOF'\np = 'HANDOFF.md'\ns = open(p).read()\nmarker = \"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2c: voiceover stock E2E PAGO (canvas\u2192\u00e1udio fechado)\"\nseal = \"\"\"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2d: Designer/composer c\u00f3digo-completo + ACHADO de drift do provider\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (net-zero: falha com estorno integral provado).\n\nItera\u00e7\u00e3o 6. SOP S30-S32 ANTES do c\u00f3digo. Composer entrou no slice (4\u00aa modalidade projetada): guards 422 (prompt + \u22651 imagem), custo 18 **pinado** contra params forjados (classe F1 \u2014 gate C3 prova), cap 2 imagens = verdade do server (`refs[0]/[1]`), handles `image-1`/`image-2` declarados, picker parametrizado. **ACHADO MATERIAL do E2E pago:** o Higgsfield atual rejeita `mode='compose'` (`Input should be 'reference', 'character' or 'standard'`) \u2014 ou seja, **o scene_compose LEGADO do Canvas Studio est\u00e1 quebrado hoje por API drift**, n\u00e3o \u00e9 regress\u00e3o desta fatia. O slice degrada honesto: toast de falha + **estorno integral provado ao vivo** (charged 18 \u2192 refunded 18, saldo 4581 intacto). Fix = **OTD-SPACES-003** (revalidar docs Higgsfield \u2014 candidato `soul/reference` \u2014 antes de flipar o endpoint; nunca chutar sem\u00e2ntica de provider). Provas: smoke **30/30** \u00b7 vitest **398** \u00b7 tsc 0 \u00b7 Estimar 18 exato + contador 1/2 browser-verificados. Commits `c66e6b5`+`cbebc9e`. Space de teste deletado.\n\n**Survival Laws Self-audit:** Lei 1 \u2705 (o pr\u00f3prio achado \u00e9 o exemplo \u2014 parei no erro material em vez de chutar) \u00b7 Lei 2 \u2705 \u00b7 Lei 3 \u2705 (janela alta \u2014 pr\u00f3ximo wake avalia selo final) \u00b7 Lei 4 \u2705.\n\n\"\"\"\ns = s.replace(marker, seal + marker, 1)\nopen(p, 'w').write(s)\nprint('handoff ok')\nEOF\nTOKEN=$(cat /home/ubuntu/.supabase/access-token) && cat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2d.sql <<'EOF'\nINSERT INTO public.mcorch_nodes (user_id, node_type, name, content, metadata, revenue_impact, stability_score)\nVALUES (NULL, 'handoff', 'spaces-2d-composer-drift-finding-2026-07-02',\n'[HANDOFF SEAL] Spaces Fase 2d \u2014 Designer/composer codigo-completo no slice (SOP S30-S32; custo 18 pinado classe F1; cap 2 = verdade do server; guards + skip no-op; picker parametrizado). ACHADO MATERIAL do E2E pago: Higgsfield rejeita mode=compose (API atual: reference|character|standard) => o scene_compose LEGADO do Canvas Studio esta quebrado hoje por API drift. Slice degrada honesto com estorno integral provado (18->18, saldo intacto). OTD-SPACES-003: revalidar docs antes de flipar endpoint (Lei 1 \u2014 nunca chutar semantica de provider). Smoke 30/30, vitest 398. Commits c66e6b5 cbebc9e.',\n'{\"provider\":\"handoff\",\"event\":\"spaces_2d_composer_drift\",\"otd\":\"OTD-SPACES-003\",\"commits\":[\"c66e6b5\",\"cbebc9e\"],\"smoke\":\"30/30\"}'::jsonb,\n0, 0.9)\nRETURNING id;\nEOF\npython3 -c \"import json;print(json.dumps({'query': open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2d.sql').read()}))\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2d.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2d.json && sed -i 's|version-6.81.0--spaces--2c--voiceover--E2E--pago-blueviolet|version-6.82.0--spaces--2d--composer--drift--OTD-blueviolet|; s|neural_mesh-9041_nodes|neural_mesh-9042_nodes|' README.md && git add README.md HANDOFF.md .claude/context/autonomous-loop-charter.md && git commit -q -m \"chore(sprint): v6.82.0 \u2014 Spaces 2d composer selado (c\u00f3digo-completo, OTD-SPACES-003 drift do provider, smoke 30/30, mesh 9042)\" && git push origin main 2>&1 | tail -1",
+  "description": "Seal 2d: charter/handoff/mesh/README, push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> charter ok
+> handoff ok
+> [{"id":"409cfcad-d491-43f0-9993-0516a559cf43"}][38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:30PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:30PM[0m [32mINF[0m scan completed in 19.6ms
+> [90m10:30PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.07 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    e72c090..da0d650  main -> main
+> ```
+
+## 🤖 Claude *(01:31:13)*
+
+
+## 🤖 Claude *(01:31:13)*
+
+Push `e72c090..da0d650`. Fatia 2d selada.
+
+**Lei 3 — avaliação de janela:** estimo ~85-90% de uso após 6 iterações densas. Selar agora com folga é a decisão correta (o próximo item desbloqueado — multi-page/Workflow Apps/OTD-003 — é grande demais para caber antes dos ~95%). **Encerrando o loop com o selo final da sessão.**
+
+---
+
+# 🏁 SELO FINAL DA SESSÃO — Sprint Spaces completo (6 iterações autônomas)
+
+**ORO:** Operator = MCORCH Agent · Reviewer = Sovereign + 2× /security-review independentes · Owner = Sovereign.
+
+## O que esta sessão entregou (tudo pushado, `main = origin`)
+
+| Fatia | Resultado | Prova âncora |
+|---|---|---|
+| **1b GO executado** | Migration do ledger `generations` aplicada+registrada+provada; **drift do ledger de migrations fechado** (10 registradas, audit exit 0); fix de ordem de guards; **E2E pago**: magic_prompt done, saldo −1 exato, Vision QA high | `4753119`·`53c88b0` · gen `7add79b2` |
+| **2a-server** | Vídeo async ledger-first + webhook hash-safe (SHA-256-only anti-forja); review **NO P0/HIGH**, MEDIUM+LOWs corrigidos; smoke 22/22 zero-Higgsfield | `9db732b`·`df41d1d` |
+| **2a-cliente** | **Canvas→vídeo REAL**: MP4 11.3MB via webhook Higgsfield real, poller flipou a UI, saldo −40 exato, **Vision QA no vídeo APROVADO** | `ea5a4b9` · space `51b229cf` **(vivo — assista!)** |
+| **2b References** | Picker com upload real, cap honesto 4 (verdade do server), zero migration | `4abddf7` |
+| **2c Voiceover** | **Canvas→voz neural** (8 vozes stock): review APPROVED + F1 pinado (A4), WAV 9s real, saldo −2 exato | `694d836` · space `1d77b500` **(vivo — ouça!)** |
+| **2d Composer** | Código-completo + **achado material**: Higgsfield dropou `mode=compose` → o compose legado do Canvas Studio está quebrado por API drift; slice degrada honesto com estorno integral provado | `c66e6b5` · **OTD-SPACES-003** |
+
+**Números da sessão:** 4 modalidades no canvas pago (texto·imagem·vídeo·áudio) · smoke **30/30** · vitest **398** · 2 reviews independentes · malha **9042 nós** · v6.82.0 · custo real do Sovereign: **~62 mco + ~US$0,15 BYOK** (todos os E2E pagos, com 2 spaces-demo vivos).
+
+## 📥 Fila de Ação Sovereign (só você destrava)
+1. **OTD-SPACES-003** — revalidar docs Higgsfield p/ o endpoint compose (candidato `soul/reference`); destrava o Designer E o compose legado.
+2. **OTD-SPACES-001/002** — bucket `canvas-assets` público-listável (privado+signed URLs) · `spaces` INSERT id server-side.
+3. **Voz clonada do Gabriel** (biometria) · **App registration YT/TikTok/Pinterest** (unlock do #2) · **Universe cutover de nav** · **Smart-Delete E2E destrutivo** · demais itens já na charter.
+
+## Survival Self-audit final
+**Lei 1** ✅ toda claim com hash/UUID/HTTP/bytes literais; o achado 2d é o exemplo canônico (parei no erro material em vez de chutar semântica de provider). **Lei 2** ✅ 4 SOP amendments ANTES do código (S14-S32). **Lei 3** ✅ selando a ~85-90% com folga para este selo. **Lei 4** ✅ ORO declarado em toda fatia; 2 reviews independentes como co-Reviewer; nenhum portão Sovereign contornado.
+
+**Loop PARADO.** Para religar: cole o prompt canônico da charter (`.claude/context/autonomous-loop-charter.md` §"Como religar"). A charter e o HANDOFF.md estão atualizados como fonte da verdade para a próxima sessão.
+
+**MATE A POESIA. ENTREGUE ENGENHARIA.** ✅
+
+## 👤 User *(01:33:22)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(01:33:22)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(01:33:40)*
+
+
+## 🤖 Claude *(01:33:40)*
+
+Executando o ritual `/handoff` v4. **PRE-FLIGHT** (tudo em paralelo):
+
+## 🤖 Claude *(01:33:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short; echo \"---\"; git log --oneline -7 | cat; echo \"---\"; npx tsc --noEmit 2>&1 | tail -3; echo \"tsc exit=$?\"",
+  "description": "Pre-flight: git state + tsc",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---
+> da0d650 chore(sprint): v6.82.0 — Spaces 2d composer selado (código-completo, OTD-SPACES-003 drift do provider, smoke 30/30, mesh 9042)
+> cbebc9e test(spaces): gates G16 + C1-C3 — composer slice (vitest 398, smoke 30/30)
+> c66e6b5 feat(spaces): Fase 2d — Designer/composer no slice (código-completo; provider em drift OTD-SPACES-003)
+> e72c090 chore(sprint): v6.81.0 — Spaces 2c voiceover selado (3a modalidade paga, review APPROVED+F1 pinado, smoke 27/27, mesh 9041)
+> bfd2b29 test(spaces): gates G15 + A1-A4 — voice slice (vitest 393, smoke 27/27)
+> 694d836 feat(spaces): Fase 2c — voice_over no slice (tts-speak stock voices, sync ledger-first)
+> bd49da9 chore(sprint): v6.80.0 — Spaces 2b References picker selado (upload real + cap honesto 4, Vision QA high, mesh 9040)
+> ---
+> tsc exit=0
+> ```
+
+## 🤖 Claude *(01:33:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat",
+  "description": "Pre-flight: infra health",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 3 days (healthy)
+> mcorch_claude_mem: Up 2 weeks (healthy)
+> mcorch_chroma: Up 2 weeks (healthy)
+> mega-brain-dashboard: Up 2 weeks
+> mega-brain-webhook: Up 2 weeks (healthy)
+> mega-brain-daemon: Up 2 weeks (healthy)
+> {"nanosecond heartbeat":1783042423673878286}
+> ```
+
+## 🤖 Claude *(01:33:51)*
+
+
+## 🤖 Claude *(01:33:51)*
+
+
+## 🤖 Claude *(01:33:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 1a secret leak (diff HEAD) ===\"; git diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\" | head -5 || echo \"CLEAN \u2705\"; echo \"=== 1b JWT enforcement ===\"; grep -rL \"Authorization\\|jwt\\|JWT\\|service_role\" supabase/functions/*/index.ts | grep -v \"get-infra-status\\|watchdog\" || echo \"ALL FUNCTIONS: JWT enforced \u2705\"; echo \"=== 1c client coin deduction ===\"; grep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5 || echo \"NO VIOLATIONS \u2705\"; echo \"=== 1d RLS bypass ===\"; grep -rn \"service_role\\|bypass.*rls\\|rls.*bypass\" src/ | head -5 || echo \"NO VIOLATIONS \u2705\"; echo \"=== 1e sensitive console.log ===\"; grep -rn \"console\\.log.*token\\|console\\.log.*key\\|console\\.log.*secret\\|console\\.log.*password\" src/ | head -5 || echo \"NO SENSITIVE LOGS \u2705\"",
+  "description": "Phase 1 security audit \u2014 5 checks",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a secret leak (diff HEAD) ===
+> === 1b JWT enforcement ===
+> supabase/functions/instagram-webhook/index.ts
+> supabase/functions/stripe-webhook/index.ts
+> supabase/functions/autonomic-action/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> === 1c client coin deduction ===
+> === 1d RLS bypass ===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> === 1e sensitive console.log ===
+> src/test/canvas-video-async-smoke.test.ts:239:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:247:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:252:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> ```
+
+## 🤖 Claude *(01:34:10)*
+
+
+## 🤖 Claude *(01:34:10)*
+
+
+## 🤖 Claude *(01:34:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && SUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\" && RESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" -d \"{\n  \\\"name\\\": \\\"session-handoff-20260702-spaces-sprint-1b-2d\\\",\n  \\\"node_type\\\": \\\"handoff\\\",\n  \\\"content\\\": \\\"[HANDOFF SEAL] Sprint Spaces completo em 6 iteracoes autonomas do loop: 1b GO executado (ledger generations aplicado+registrado, drift de migrations fechado, E2E pago magic_prompt) + 2a-server (video async ledger-first + webhook hash-safe, review NO P0/HIGH) + 2a-cliente (canvas->video REAL: MP4 11.3MB via webhook Higgsfield, saldo -40 exato, Vision QA no video) + 2b References picker (cap honesto 4) + 2c voiceover stock (review APPROVED, F1 pinado, WAV 9s, saldo -2 exato) + 2d composer (codigo-completo; ACHADO: Higgsfield dropou mode=compose -> OTD-SPACES-003, compose legado do Canvas Studio quebrado por API drift, estorno integral provado). 4 modalidades no canvas pago (texto/imagem/video/audio). Smoke 30/30, vitest 398, 2 security-reviews independentes, spaces-demo vivos 51b229cf (video) e 1d77b500 (voz). SOPs S14-S32 antes do codigo.\\\",\n  \\\"stability_score\\\": 1.0,\n  \\\"project_id\\\": null,\n  \\\"user_id\\\": null,\n  \\\"metadata\\\": {\n    \\\"session\\\": \\\"spaces-sprint-1b-2d\\\",\n    \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n    \\\"commits\\\": \\\"$(git log --oneline -5 | head -5 | tr '\\n' '|' | sed 's/\\\"/ /g')\\\"\n  }\n}\") && NODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\") && echo \"Node ID: $NODE_ID\" && curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200 && echo && echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json && cat proof-manifest.json",
+  "description": "Insert session handoff node, embed, write proof-manifest",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: f85d3cf4-d391-4865-af84-76511308d184
+> {"error":"Request body must contain { node_id: string }"}
+> {"handoffNodeId": "f85d3cf4-d391-4865-af84-76511308d184"}
+> ```
+
+## 🤖 Claude *(01:34:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && curl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" -d '{\"node_id\": \"f85d3cf4-d391-4865-af84-76511308d184\"}' | head -c 200 && echo && curl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?id=eq.f85d3cf4-d391-4865-af84-76511308d184&select=id,embedding\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin)[0]; print('embedded:', d['embedding'] is not None)\"",
+  "description": "Embed the handoff node with correct param name and verify",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"node_id":"f85d3cf4-d391-4865-af84-76511308d184","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> embedded: True
+> ```
+
+## 🤖 Claude *(01:34:43)*
+
+
+## 🤖 Claude *(01:34:43)*
+
+
+## 🤖 Claude *(01:34:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && COUNT=$(curl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$' | tr -d '\\r') && echo \"live count: $COUNT\" && sed -i \"s|neural_mesh-9042_nodes|neural_mesh-${COUNT}_nodes|; s|version-6.82.0--spaces--2d--composer--drift--OTD-blueviolet|version-6.82.1--spaces--sprint--1b--2d--sealed-blueviolet|\" README.md && grep -oE 'version-[^-]*--spaces[^\"]*|neural_mesh-[0-9]*_nodes' README.md | head -2",
+  "description": "Update README badges with live mesh count and seal version",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> live count: 9043
+> version-6.82.1--spaces--sprint--1b--2d--sealed-blueviolet?style=for-the-badge
+> neural_mesh-9043_nodes
+> ```
+
+## 🤖 Claude *(01:34:58)*
+
+
+## 🤖 Claude *(01:34:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"What's New\\|## \ud83c\udd95\\|### \\[v6\\.7\" README.md | head -5",
+  "description": "Locate What's New section"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 79:## 🆕 What's new in v6.76.0 (2026-07-02)
+> 83:## 🆕 What's new in v6.75.0 (2026-07-02)
+> 88:## 🆕 What's new in v6.74.0 (2026-07-02)
+> 93:## 🆕 What's new in v6.73.4 (2026-07-02)
+> 97:## 🆕 What's new in v6.73.3 (2026-07-02)
+> ```
+
+## 🤖 Claude *(01:35:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 76,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 76	  <img src="https://img.shields.io/badge/vision--mcp_agents-8_BoK_%2B_Pantheon_reconciled-orange?style=for-the-badge" alt="vision-mcp agents" />
+> 77	</p>
+> 78	
+> 79	## 🆕 What's new in v6.76.0 (2026-07-02)
+> 80	
+> 81	- **Spaces Fase 1b — execução com ledger CÓDIGO-COMPLETO (apply em prod gated):** runGraph→`canvas-execute` + ledger `generations` + clusters de geração — a fatia que fecha canvas→conteúdo pago. **SOP Lei 2** `spaces-graph-execution.md` (13 decisões S1-S13 do mapeamento ultracode `wf_b4abf175-410`, 24 contradições BoK↔código resolvidas). Migration `20260702190000`: tabela `generations` (stub BoK verbatim + hardening: FK composta tenant-escopada, RESTRICTIVE no-delete, `result` jsonb) + RPCs atômicas service-role-only `begin_space_generation` (**ledger-first**: row `running` + débito na MESMA tx, idempotente por `node_run_id`) e `finalize_space_generation` (first-finalizer-wins, refund clampado + row simétrica). Branch **exclusivo** no `canvas-execute` (422 guards pré-débito · teto diário estendido p/ `spaces.node.run` · retry 1×/5s · estorno total em falha · resposta honesta `refund_pending` · done-fallback anti-falso-estorno). Client: `useGenerationLedger` (Kahn + BFS blocked + batch=N + threading S11), clusters lazy ≤24 no HUD, botões **Estimar** (dry-run zero débito) e **Rodar**. **/security-review independente: núcleo do dinheiro SOUND** (zero mint/double-charge/cross-tenant), 4 achados corrigidos incl. `self-heal-spaces.sh` (sweep que nunca estorna valor entregue). **Provas:** vitest **17/17** (lib pura + mirror-parity mecânico SOL-SPACES-001) · deno check · eslint 0 · tsc 0 · smoke zero-cost 8 gates pronto. **⚠️ Pendente de GO Sovereign:** apply da migration em prod (classificador de permissões exige consentimento específico) → deploy fn → smoke → E2E pago. Achado: 6 migrations `202607*` aplicadas-mas-não-registradas no ledger remoto (`db push` inseguro — usar `scripts/qa/apply-spaces-1b-migration.sh`).
+> 82	
+> 83	## 🆕 What's new in v6.75.0 (2026-07-02)
+> 84	
+> 85	- **Spaces Fase 1a — canvas infinito 72/28 VIVO (`9ea6ac0`):** primeira fatia visível do módulo Spaces (o BoK Gate aberto na v6.74.0). Rotas `/dashboard/spaces` (home) + `/dashboard/spaces/:id` (canvas ReactFlow 72/28 via react-resizable-panels), Spotlight `cmdk` com os 26 tipos canônicos, conexão tipada (6 dataTypes) com toast pt-BR, undo/redo zundo, persistência debounced no `spaces.graph` jsonb. **Zero execução/ledger** (Fase 1b vem depois) — só cria/edita/persiste. Tabela `spaces` RLS-own (migration `20260702170000`, /security-review NO FINDINGS). **Provado E2E no browser** (sessão User 0): criar Space → Spotlight insere 2 nós → DB `graph`=2 nós com portas corretas → reload hidrata → HUD → 0 erro console → Vision-QA APROVADO high. Bônus: fix a11y do `CommandDialog` compartilhado (DialogTitle sr-only). vitest 5/5.
+> ```
+
+## 🤖 Claude *(01:35:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.76.0 (2026-07-02)",
+  "new_string": "## \ud83c\udd95 What's new in v6.82.1 (2026-07-02) \u2014 Sprint Spaces 1b\u21922d SELADO\n\n- **Canvas pago com 4 modalidades (texto\u00b7imagem\u00b7v\u00eddeo\u00b7\u00e1udio) \u2014 sprint de 6 itera\u00e7\u00f5es aut\u00f4nomas do loop, tudo E2E pago provado:**\n  - **1b LIVE (GO executado):** migration do ledger `generations` aplicada+registrada+provada (DDL 8/8); **drift do ledger de migrations FECHADO** (10 registradas por sonda DDL, `audit-schema-drift.sh` exit 0); fix de ordem de guards (401\u2192422\u2192404\u2192402); smoke 13/13; **E2E pago** magic_prompt (saldo \u22121 exato, Vision QA high).\n  - **2a v\u00eddeo async:** ledger-first no submit + webhook hash-safe (`generations.webhook_token_hash` SHA-256-only \u2014 plaintext vazaria ao dono via RLS; migration `20260702210000`); supress\u00e3o TOTAL do deduct legado; review **NO P0/HIGH** (MEDIUM done-fallback + 2 LOW corrigidos); **canvas\u2192v\u00eddeo REAL**: MP4 **11.3MB** via webhook Higgsfield real, poller flipa a UI, saldo \u221240 exato, **Vision QA no pr\u00f3prio v\u00eddeo APROVADO** (space-demo `51b229cf` vivo).\n  - **2b References:** picker com upload real ao bucket (policies de prefixo uid), **cap honesto 4 = verdade do server** (diverg\u00eancia do BoK 8 declarada), refs nunca cobram.\n  - **2c Voiceover:** 3\u00aa modalidade \u2014 8 vozes stock Gemini TTS via reuso do `tts-speak` com o JWT do usu\u00e1rio (n\u00e3o cobra \u2192 zero double-charge); review **APPROVED** com F1 LOW corrigido (**cobran\u00e7a pinada** contra provider forjado, gate A4); **WAV real 9s (436KB)**, saldo \u22122 exato (space-demo `1d77b500` vivo).\n  - **2d Composer:** c\u00f3digo-completo (custo 18 pinado, cap 2 imagens=verdade do server) + **ACHADO MATERIAL**: Higgsfield dropou `mode=compose` (API atual: `reference|character|standard`) \u21d2 o compose LEGADO do Canvas Studio est\u00e1 quebrado por API drift \u2014 slice degrada honesto com **estorno integral provado** (18\u219218). **OTD-SPACES-003** (revalidar docs antes de flipar endpoint).\n  - **Totais:** smoke **30/30** \u00b7 vitest **398** \u00b7 2 /security-review independentes \u00b7 SOPs S14-S32 ANTES do c\u00f3digo \u00b7 OTD-SPACES-001/002/003 registradas \u00b7 custo real do sprint ~62 mco + ~US$0,15 BYOK.\n\n## \ud83c\udd95 What's new in v6.76.0 (2026-07-02)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:35:35)*
+
+
+## 🤖 Claude *(01:35:35)*
+
+
+## 🤖 Claude *(01:35:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'HANDOFF.md'\ns = open(p).read()\nmarker = \"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2d: Designer/composer c\u00f3digo-completo + ACHADO de drift do provider\"\nseal = \"\"\"## Handoff Seal Record (2026-07-02) \u2014 \ud83c\udfc1 SELO FINAL /handoff: Sprint Spaces 1b\u21922d (6 itera\u00e7\u00f5es aut\u00f4nomas)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (/handoff expl\u00edcito) + 2\u00d7 /security-review independentes \u00b7 Owner = Sovereign.\n\nSelo formal v4 da sess\u00e3o de loop que executou o GO do Spaces 1b e correu a Fase 2 inteira dispon\u00edvel. Os 6 registros incrementais abaixo (1b-LIVE \u00b7 2a-server \u00b7 2a-cliente \u00b7 2b \u00b7 2c \u00b7 2d) carregam as provas granulares; este registro consolida:\n\n| Dimens\u00e3o | Estado material |\n|---|---|\n| **Produto** | Canvas pago com **4 modalidades** (texto\u00b7imagem\u00b7v\u00eddeo\u00b7\u00e1udio), tudo E2E pago provado; 2 spaces-demo VIVOS do User 0: `51b229cf` (imagem\u2192v\u00eddeo MP4 11.3MB) e `1d77b500` (voiceover WAV 9s). |\n| **Dinheiro** | Ledger-first em todas as modalidades; d\u00e9bitos exatos provados (\u22121/\u221240/\u22122); estornos integrais provados (inclusive com webhook real e com provider em drift); cobran\u00e7a PINADA contra payloads forjados (gates A4/C3); zero deduct legado (S16 provado com webhook real). |\n| **Seguran\u00e7a** | 2 reviews independentes (2a NO P0/HIGH \u00b7 2c APPROVED); todos os MEDIUM/LOW corrigidos pr\u00e9-commit; OTD-SPACES-001/002/003 registradas na charter. |\n| **Higiene** | Drift do ledger de migrations FECHADO (`audit-schema-drift.sh` exit 0); worktree limpo; tsc 0; vitest **398**; smoke **30/30**; infra 100% healthy (6 containers + chroma heartbeat). |\n| **Lei 2** | SOPs S14-S32 amendados em `spaces-graph-execution.md` ANTES de cada fatia de c\u00f3digo. |\n| **Pend\u00eancias herd\u00e1veis** | Fila Sovereign na charter (OTD-SPACES-003 compose-drift \u00b7 OTD-001/002 bucket/id \u00b7 voz clonada [biometria] \u00b7 app-registration YT/TikTok \u00b7 Universe cutover \u00b7 Smart-Delete witness). Backlog desbloqueado restante: Workflow Apps \u00b7 FX \u00b7 multi-page (Fase 2) \u00b7 Fase 3 collab. |\n\n**Survival Laws Self-audit (sess\u00e3o):** Lei 1 \u2705 (toda claim ancorada em hash/UUID/HTTP/bytes; achado 2d = exemplo can\u00f4nico de parar no erro material) \u00b7 Lei 2 \u2705 (4 amendments ANTES do c\u00f3digo) \u00b7 Lei 3 \u2705 (selo a ~90% da janela com folga; podas cont\u00ednuas por refer\u00eancia) \u00b7 Lei 4 \u2705 (ORO declarado por fatia; 2 reviews independentes; nenhum port\u00e3o Sovereign contornado \u2014 biometria/OAuth/decis\u00f5es seguem na Fila).\n\n\"\"\"\ns = s.replace(marker, seal + marker, 1)\nopen(p, 'w').write(s)\nprint('handoff consolidated record added')\nEOF\necho \"=== FASE 5b \u2014 secret scan no HANDOFF.md ===\"; grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -5 || echo \"HANDOFF.md: NO CREDENTIALS FOUND \u2705\"; grep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -3 || echo \"NO GOOGLE API KEYS \u2705\"; grep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\" | head -3 || echo \"NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Add consolidated seal record, run Phase 5b secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> handoff consolidated record added
+> === FASE 5b — secret scan no HANDOFF.md ===
+> 1969:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 5442:**SSP-01 REPAIR & REM CYCLE v6.6.0 SHIPPED (2026-05-17). Quatro Ordens Executivas Sovereign do mesmo dia entregues em sequência estrita, fechando o P0 selado em v6.5.0 e desbloqueando Canvas Studio Phase 4.2c. (OE01 Prova de Vida) Admin role do Sovereign `ada39fae-67e1-4e53-af1c-5a18e1c108e8` confirmado materialmente em `user_roles` via service-role REST (HTTP 200, `role='admin'`, `created_at='2026-04-17T05:57:46.249257+00:00'` — divergência com claim "ZERO admin" de v6.5.0 documentada). Bridge end-to-end com JWT admin segue como Cérebro sem mãos — Sovereign pode validar curl quando convier. (OE02 Reconciliação do Ledger) Insert sintético em `mcoin_transactions` para Sovereign: UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a`, `action='opening_balance_reconciliation'`, `amount=5533`, `context` com source/audit_ref/sop_ref. Drift agora `mco_balance(5533) − Σledger(5533) = 0` confirmado via REST direto. Pillar 3 (Cost Discipline) parte 1 fechada. (OE03 Ciclo Circadiano v1.0) Refator das rotinas noturnas: 02:30 + 03:30 (sequenciais sobrepostos) → 03:00 Stage 1 Light Sleep (`scripts/nightly-stage1-light-sleep.sh`, ~130 LOC — log rotation gzip>7d, temp cleanup `/tmp/openclaw-incidents` + `/tmp/mcorch-*.log` + tg-response, infra spot check docker+chroma+pulse `infra_health_logs`) · 05:00 Stage 2 Deep Sleep (`scripts/nightly-stage2-deep-sleep.sh`, ~130 LOC — wrapper para `nightly-bridge-refresh.sh` + ledger drift watch alert-only + VACUUM ANALYZE quando pooler disponível) · 07:00 Stage 3 REM Cycle (`scripts/nightly-stage3-rem.sh`, ~110 LOC — `scripts/news-impact-analyzer.ts` 173 LOC com OpenRouter `perplexity/sonar` web-grounded + `scripts/morning-briefing.sh` ao Telegram bot `@claw_gcrux`). Espaçamento 2h entre stages para isolamento CPU/IO + thermal recovery. Server timezone `America/Sao_Paulo (-03)` confirmado via `timedatectl` — crontab usa horários BRT direto. OpenClaw native cron 03:00 Memory Dreaming Promotion sobrepõe Stage 1 (daemon próprio, sem race). Crontab swap atômico (backup `/tmp/crontab.backup-*.txt`). Smoke tests: Stage 1 EXIT 0 status=healthy · Stage 2 EXIT 0 detectou pre-existing OpenClaw CLI drift (OTD-V660-002 RPN 150 — `openclaw memory index` não existe em v2026.5.14) + drift do user `924cb32e` (balance 50, ledger 0) · Stage 3 EXIT 0 com 2 news_pulse UUIDs `fbebabdb-...` + `8ee97502-...` + briefing DELIVERED. SOP `docs/processes/nightly-circadian-cycle.md` (140+ linhas) escrita ANTES dos scripts (Lei 2). (OE04 P0.3 Daily Cap + Balance Toast + Re-audit) `supabase/functions/canvas-execute/index.ts` ganhou daily cap 100 mcoCoins/24h por user (`mcoin_transactions` query com `action LIKE 'canvas_%spend'` + `created_at >= now-24h`), HTTP 402 estruturado com `cap/spent_today/required/resets_at`, fail-open em query error. Action tagging na chamada `deduct_mco_coins`: `canvas_image_spend` ou `canvas_video_spend` + context com `execution_id/provider/model/node_type`. Fallback direct update removido (race condition). Deploy `canvas-execute` **132.6 kB** (+0.4 kB sobre v6.5.0). `src/components/dashboard/DashboardLayout.tsx` ganhou import sonner + `LOW_BALANCE_THRESHOLD=50` + toast.warning na carga inicial e no Realtime UPDATE quando cruza threshold (id='low-balance' dedupe) + amber pill no header quando `mco_balance < 50`. TS zero erros. 122/122 testes passam em 4.71s. Build em 20.38s sem regressão de chunk. SOP `docs/processes/canvas-daily-cap-handling.md` (90+ linhas) escrita ANTES do código (Lei 2). **Survival Audit v2** (`.claude/context/survival-audit-v2.md`, 170 linhas) re-scored: Memory 5/5 · Skill 4/5 · **Cost Discipline 4/5** ⬆ · Observability 3/5 · **SOP 5/5** ⬆. Min 3/5 · Média 4.2/5. Por diretiva Sovereign OE04 explícita ("Se o score for ≥ 4, a restrição de Phase 4.2c estará automaticamente revogada"): **Canvas Studio Phase 4.2c DESBLOQUEADO**. 9 commits granulares + handoff seal. 4 OTDs novos (V660-001 outros users drift · V660-002 OpenClaw CLI drift · V660-003 pooler URL ausente · V660-004 Perplexity Sonar low signal). Próximo deliverable: (a) confirmar bridge end-to-end com JWT Sovereign (fecha Cérebro sem mãos v6.5.0); (b) resolver OpenClaw CLI drift; (c) Canvas Studio Phase 4.2c implementation (fork canvas-execute para vídeo async + wire useCanvasJobsRealtime + watchdog polling + enable ImageToVideo).**
+> 5847:- Ledger ledger é canônico desde migration `20260516224541_deduct_mco_coins_ledger.sql`; ledger entry de reconciliação UUID `4caa9314-2fdf-4d60-9cb2-b7ed63bbcf5a` (`action='opening_balance_reconciliation'`, `amount=5533`) é o âncora histórico.
+> ```
+
+## 🤖 Claude *(01:36:07)*
+
+
+## 🤖 Claude *(01:36:07)*
+
+
+## 🤖 Claude *(01:36:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add HANDOFF.md README.md proof-manifest.json && git commit -q -m \"docs(handoff): seal sprint Spaces 1b\u21922d \u2014 4 modalidades pagas no canvas, drift fechado, 2 reviews (mesh 9043)\" 2>&1 | tail -1; git log -1 --format='%h %s' && set -a && source .env && set +a && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -25",
+  "description": "Commit seal docs, run Phase 5c material proof audit",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> f4c03c2 docs(handoff): seal sprint Spaces 1b→2d — 4 modalidades pagas no canvas, drift fechado, 2 reviews (mesh 9043)
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (/handoff explícito) + 2×  | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (/handoff explícito) + 2×  | ✅ |
+> | handoff node f85d3cf4 | mesh_node | f85d3cf4-d391-4865-af84-76511308d184 | f85d3cf4-d391-4865-af84-76511308d184 | ✅ |
+> 
+> QA VERDICT: 2 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.2s)
+> ```
+
+## 🤖 Claude *(01:36:20)*
+
+
+## 🤖 Claude *(01:36:20)*
+
+**SEAL ALLOWED** (2 claims verificadas, 0 falhas). **FASE 6 — BoK Seal Status:**
+
+## 🤖 Claude *(01:36:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for slug in $(ls docs/bok/ 2>/dev/null); do required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); missing=(); for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done; [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug (faltam: ${missing[*]:0:2}...)\"; done 2>/dev/null | tail -20; echo \"---\"; echo \"M\u00f3dulos tocados nesta sess\u00e3o: Spaces (docs/bok/spaces-evolution/ = su\u00edte 12 docs selada, seal 8f5fd3fd) \u2014 todo o trabalho da sess\u00e3o \u00e9 execu\u00e7\u00e3o de fases da BoK spaces-evolution j\u00e1 selada; zero m\u00f3dulo novo sem BoK.\"",
+  "description": "Phase 6 BoK completeness check",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ conteudo-v2
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ identity-fabric
+> ✅ marketing-hub
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ post-engine
+> ⚠️ security (faltam: 00-index 01-mrd...)
+> ✅ spaces-evolution
+> ✅ video-studio
+> ✅ viral-autopilot
+> ✅ viral-daily-canvas
+> ✅ viralmind
+> ✅ vision-mcp
+> ---
+> Módulos tocados nesta sessão: Spaces (docs/bok/spaces-evolution/ = suíte 12 docs selada, seal 8f5fd3fd) — todo o trabalho da sessão é execução de fases da BoK spaces-evolution já selada; zero módulo novo sem BoK.
+> ```
+
+## 🤖 Claude *(01:36:36)*
+
+
+## 🤖 Claude *(01:36:36)*
+
+
+## 🤖 Claude *(01:36:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -1 && git status -sb | head -1; echo \"---7b---\"; ls scratch/ 2>/dev/null || echo \"scratch/ inexistente \u2705\"; ls .claude/context/sprint-priorities.md 2>/dev/null && grep -c \"\" .claude/context/sprint-priorities.md || echo \"sprint-priorities.md n\u00e3o existe (charter do loop \u00e9 a fonte de prioridades desta era) \u2705\"",
+  "description": "Push, scratch cleanup check, sprint priorities check",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    da0d650..f4c03c2  main -> main
+> ## main...origin/main
+> ---7b---
+> .claude/context/sprint-priorities.md
+> 267
+> ```
+
+## 🤖 Claude *(01:36:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"Atualizado\\|\u00daltima\\|updated\" .claude/context/sprint-priorities.md | head -3; head -12 .claude/context/sprint-priorities.md",
+  "description": "Check sprint-priorities freshness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 137:**Sprint v6.6.3 selado em 2026-05-18** — OE-661-ROADMAP Debt Liquidation: sessão única liquidando 3 das 4 dívidas declaradas em CLAUDE.md (Financial deferred por decisão Sovereign até Usuário 1) + dívida implícita OE-661-003 Target Binding. **(Phase 0 Hybrid restore)** `process-affiliate-link/index.ts` (POST original 234 LOC tinha sido refatorado em -222 LOC para redirect 302 puro — quebrava `ContentLibraryPage.tsx:744`). Hybrid restaurado: GET 302 público (no-verify-jwt, redireciona a `panel.gcrux.com/api/ml-redirect`) + POST autenticado original (probe HEAD + self-heal ML search + insert em `affiliate_links`). Deploy 78.31 kB. **(Phase 1 Postback Debt)** `handle-ml-postback` captura `obsNode.id` da observation inserida + cria edge `ATTRIBUTES_REVENUE_TO` (source=observation, target=content_mesh_asset preferred + fallback OR, weight=revenueCents). `.maybeSingle()` para tolerar zero matches. Deploy 59.34 kB. Smoke chain (synthetic): test affiliate_link `adb9e131` → observation `f65d52b2` → edge `65d072fe` → content_mesh_asset `f3a091f7`. **(Phase 2 Auto-Stitching OE-661-003)** `embed-mcorch-node/index.ts` ganha `autoStitchObservation()` que regex-extrai file paths do conteúdo + nome (.ts/.tsx/.js/.md/.sql/.sh/.json/...) e cria edges `observes` para ast_file/markdown_file/vault_note correspondentes; fallback obrigatório a `root:CLAUDE` (`2747e164`) quando nenhum path resolve. Deploy 105.1 kB. Retrofit: `stitch-fallback.js` (fix OR `root:CLAUDE`) costurou 6 orphans pré-existentes; `audit-mesh-edges.ts` (fix schema `type`→`node_type`) reporta **10/10 observations VALID — 100% Target Binding coverage**. Live auto-stitch confirmado em re-embed `{stitched:1}` edge `2e1e57db`. **(Phase 3 Link Forge OE-661-004)** Novo `scripts/link-forge.ts` (Bun-native, mirror backfill-embeddings) varre content_mesh_asset, aplica 3 regex (Roborock S8 MLB3981745621 · Samsung Neo QLED 8K MLB3546719283 · Family Hub MLB3728491023), substitui menções por markdown links para `panel.gcrux.com/api/ml-redirect?...&utm_content=$node.id`, UPDATE atomic + `CONTAINS_LINK_FOR` edge para product node criado on-demand. Flag `--dry-run`. Smoke: dry-run preview 179→905 chars; live 1 content updated + 3 edges (`884fceef`/`f4f4146c`/`c834ca23`) + 3 product nodes (`77ac9b9f`/`3d12ac89`/`92a60fc0`). Pendência: `GCRUX_ML_AFFILIATE_TOKEN` ainda DEFAULT na vault — provisionar antes do primeiro run real. **(Phase 4 Memory ingest)** 4 markdown_files autoembed via trigger pós-upsert: `8ad38681` gateway-recovery.md (Memory Debt sealed), `549e01a4` roadmap-v1.md, `5e957727` revenue-flywheel.md (recém ingerido), `d1296632` link-forge-scope.md. **Material proofs**: 8 commits granulares (56ed242 hybrid affiliate · dfabb17 postback · 1f368c1 auto-stitch · 140f248 link-forge · 27c7105 skills+docs+utility · c12906b CLAUDE+BoK rule · b8f5702 handoff seal · este sprint update); TS zero erros (após fix node symlink `/home/ubuntu/.local/bin/node`); 122/122 testes em 3.39s; 3 Edge Functions deployed (`process-affiliate-link --no-verify-jwt` · `handle-ml-postback --no-verify-jwt` · `embed-mcorch-node --no-verify-jwt`); milestone node `6f2cf405-4bb5-440b-a02a-9579fc39f29f` embedado (768d); mesh total **8343 nodes** (+7 desde v6.6.2) · **11617 edges** (+1555 entre observes retrofit, ATTRIBUTES_REVENUE_TO, CONTAINS_LINK_FOR, e autoembed cascade). **Próximo deliverable:** (a) provisionar `GCRUX_ML_AFFILIATE_TOKEN` na vault Supabase; (b) wire `orchestrate-content` (ou processo equivalente) a emitir `content_mesh_asset` nodes pós-geração — sem eles Link Forge é noop em produção; (c) primeiro run end-to-end Usuário Zero validando flywheel completo (gera → publica → ML afiliado → postback → ATTRIBUTES_REVENUE_TO → ROIWidget); (d) Stripe Financial Debt continua deferred (decisão Sovereign — sandbox enquanto Gabriel valida como Usuário Zero).
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> **Sprint v6.76.0 — Spaces Fase 1b: execução runGraph + ledger generations CÓDIGO-COMPLETO, apply em prod GATED (2026-07-02)** — loop re-armado, ciclo fechado completo até o portão de produção: mapeamento ultracode `wf_b4abf175-410` (24 contradições BoK↔código resolvidas) → SOP Lei 2 `spaces-graph-execution.md` (S1-S13) → migration `20260702190000` (ledger `generations` + RPCs atômicas `begin/finalize_space_generation` service-role-only, **NÃO aplicada**) → branch ledger-first exclusivo no `canvas-execute` (422 pré-débito · cap IN-list · `refund_pending` honesto · done-fallback) → client `useGenerationLedger`/clusters/Estimar+Rodar → **/security-review independente SOUND** (4 achados corrigidos, incl. `self-heal-spaces.sh`). **Prova:** vitest **17/17** (+ mirror-parity mecânico) · deno check · eslint 0 · tsc 0 · Phase 5c **SEAL ALLOWED** (11/11) · mesh **9034** · handoff `209cbcd8`. **🔒 Pendente GO Sovereign:** apply da migration (classificador negou 4× sob modo auto — `! bash scripts/qa/apply-spaces-1b-migration.sh` destrava) → deploy fn → smoke 8 gates → E2E+Vision QA. **Achado:** 6 migrations `202607*` aplicadas-mas-não-registradas no ledger remoto (db push INSEGURO). **Lição:** o portão de permissão do harness é um Owner-gate real — 4 recusas respeitadas sem contorno é o protocolo de Lei 4 funcionando.
+> 
+> **Sprint v6.75.0 — loop it.2-3 (selo final): reward_weights config-as-data + Spaces Fase 1a canvas vivo (2026-07-02)** — **(it.2)** NFR-VA-010: pesos do reward do Viral Autopilot viram DADO por plano (`autopilot_plans.reward_weights` jsonb; `resolveRewardConfig` valida+normaliza, inválido→fail-safe; auditoria `weights_source`). /security-review NO FINDINGS · smoke **16/16** (`6058e78`). **(it.3)** Spaces Fase 1a: **canvas infinito 72/28 VIVO** em `/dashboard/spaces` (home + `:id`), Spotlight 26 tipos, conexão tipada, persistência `spaces.graph` jsonb RLS-own — zero execução/ledger (Fase 1b depois). /security-review NO FINDINGS · vitest 5/5 · **E2E browser User 0 (DB graph=2 nós) + Vision-QA APROVADO** (`9ea6ac0`). **Prova:** tsc 0 · Phase 5c **SEAL ALLOWED** (6/6) · mesh **9033** · handoff `13fd6fe0`. **Loop PARADO** (janela alta + Fatia 1b grande à frente). **Pending:** Spaces Fase 1b (`runGraph`→`canvas-execute`+ledger+clusters — fecha canvas→conteúdo pago) · Universe cutover (Sovereign) · V4-2 (experiment-gated). **Lição:** selar antes de uma Fatia grande protege trabalho durável sem desperdício (Lei 3 calibrada).
+> 
+> **Sprint v6.74.0 — spaces-evolution BoK 9/9 + loop re-armado it.1: B5 Pauta de Receita (2026-07-02)** — **(1)** A pedido direto do Sovereign, a única suíte BoK incompleta foi fechada ANTES de continuar o roadmap: 06/07/08 grounded no scaffold Phase 0 promovido + **Pattern Conformance §11** (4 yes · 8 deferred nomeados · 9 n-a) + renames canônicos → **25/25 suítes verdes**, seal `8f5fd3fd` DERIVES_FROM viralmind, **BoK Gate do Spaces Fase 1 ABERTO** (`4a8fee0`). Verificação mecânica corrigiu 2 imprecisões pré-commit (Lei 1). **(2)** Loop autônomo re-armado (prompt canônico) — it.1 = **B5 Pauta de Receita FR-VA-031 (HITL)**: SOP Lei 2 → ranking puro vitest 7/7 → seção na AutopilotPage → browser-verify User 0 (linha #1 ↔ `content_library e27a09e7`) → **Vision-QA APROVADO high** (`367db9b`). **Prova:** tsc 0 · Phase 5c **SEAL ALLOWED** (8/8) · mesh **9032** · handoff `10d8c70b`. ⚠️ Workflows quota-blocked até 4:20am → execução inline. **Pending:** `reward_weights` config-as-data (NFR-VA-010) · Spaces Fase 1 MVP · V4-2 · witness G7 imagem multi-canal no próximo ciclo pago.
+> ```
+
+## 🤖 Claude *(01:37:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = '.claude/context/sprint-priorities.md'\ns = open(p).read()\nanchor = \"**Sprint v6.76.0 \u2014 Spaces Fase 1b:\"\nentry = \"\"\"**Sprint v6.82.1 \u2014 Sprint Spaces 1b\u21922d SELADO: canvas pago com 4 modalidades (2026-07-02)** \u2014 6 itera\u00e7\u00f5es aut\u00f4nomas do loop p\u00f3s-GO Sovereign. **(1b LIVE)** GO executado: migration `20260702190000` aplicada+registrada+provada (DDL 8/8) \u00b7 **drift do ledger de migrations FECHADO** (10 registradas por sonda DDL, audit exit 0) \u00b7 fix ordem de guards \u00b7 smoke 13/13 \u00b7 E2E pago magic_prompt (saldo \u22121 exato, Vision QA high). **(2a v\u00eddeo)** ledger-first no submit + webhook hash-safe (SHA-256-only, migration `20260702210000`) + supress\u00e3o do deduct legado; review **NO P0/HIGH** (MEDIUM+2 LOW corrigidos); **canvas\u2192v\u00eddeo REAL** MP4 11.3MB via webhook Higgsfield, saldo \u221240 exato, Vision QA no v\u00eddeo (space-demo `51b229cf` vivo). **(2b)** References picker upload real, cap honesto 4 = verdade do server. **(2c voz)** 8 vozes stock via `tts-speak` com JWT do usu\u00e1rio; review **APPROVED** + F1 pinado (gate A4); WAV 9s real, saldo \u22122 exato (space-demo `1d77b500` vivo). **(2d composer)** c\u00f3digo-completo + **ACHADO**: Higgsfield dropou `mode=compose` \u2192 compose legado do Canvas Studio quebrado por API drift; estorno integral provado; **OTD-SPACES-003**. **Prova:** smoke **30/30** \u00b7 vitest **398** \u00b7 tsc 0 \u00b7 SOPs S14-S32 ANTES do c\u00f3digo \u00b7 Phase 5c **SEAL ALLOWED** \u00b7 mesh **9043** \u00b7 handoff `f85d3cf4`. **Pending:** OTD-SPACES-001/002/003 \u00b7 Workflow Apps/FX/multi-page (Fase 2) \u00b7 voz clonada (biometria, Fila) \u00b7 app-registration YT/TikTok (Fila). **Li\u00e7\u00e3o:** parar no erro material do provider (compose 422) em vez de chutar sem\u00e2ntica = Lei 1 aplicada a APIs externas; e o pin de custo contra payload forjado (F1/A4/C3) virou padr\u00e3o obrigat\u00f3rio de todo custo declarado.\n\n\"\"\" \ns = s.replace(anchor, entry + anchor, 1)\nopen(p, 'w').write(s)\nprint('sprint-priorities updated')\nEOF\ncat .mcp.json 2>/dev/null | python3 -c \"import json,sys; d=json.load(sys.stdin); print('MCP servers:', ', '.join(d.get('mcpServers', {}).keys()))\" 2>/dev/null || echo \".mcp.json ausente\"; git add .claude/context/sprint-priorities.md && git commit -q -m \"chore(sprint): update sprint-priorities \u2014 sprint Spaces 1b\u21922d selado (4 modalidades pagas, mesh 9043)\" && git push origin main 2>&1 | tail -1",
+  "description": "Update sprint-priorities, MCP check, commit and push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sprint-priorities updated
+> MCP servers: gitnexus, obsidian, playwright, gemini-api-docs-mcp, vision-mcp
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:37PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:37PM[0m [32mINF[0m scan completed in 8.39ms
+> [90m10:37PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    f4c03c2..992afe9  main -> main
+> ```
+
+## 🤖 Claude *(01:37:43)*
+
+
+## 🤖 Claude *(01:37:43)*
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — SPRINT SPACES 1b→2d (2026-07-02)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a Secret leak (diff HEAD) ......... ✅ CLEAN (worktree limpo)
+  1b JWT enforcement ................. ⚠️ 4 webhooks (instagram/stripe/
+     autonomic/whatsapp — auth por assinatura/token, classe isenta conhecida)
+  1c Client coin deduction ........... ✅ NO VIOLATIONS
+  1d RLS bypass ...................... ✅ (1 match = comentário de doc)
+  1e Sensitive console.log ........... ✅ (matches = narração de QA, sem valores)
+  Nenhum 🔴 — seal autorizado.
+
+📦 COMMITS (16 na sessão, 2 neste ritual)
+  992afe9 — chore(sprint): sprint-priorities — sprint Spaces 1b→2d selado
+  f4c03c2 — docs(handoff): seal sprint Spaces 1b→2d — 4 modalidades pagas
+  da0d650…4753119 — 14 commits granulares das 6 fatias (feat/test/chore)
+
+⬡ KNOWLEDGE MESH
+  Milestone node: f85d3cf4-d391-4865-af84-76511308d184
+                  (session-handoff-20260702-spaces-sprint-1b-2d)
+  Embedding: ✅ 768d (openrouter/text-embedding-3-small, 1 chunk)
+  Nós da sessão: 7 handoff/observation (9034 → 9043)
+
+📖 README.md
+  Versão: 6.76.0 → 6.82.1 (7 bumps na sessão)
+  Badge neural_mesh: 9034 → 9043 nós (query live pós-insert)
+  Seção adicionada: "What's new in v6.82.1 — Sprint Spaces 1b→2d SELADO"
+
+🧠 HANDOFF.md
+  Fase selada: Sprint Spaces 1b→2d (registro consolidado + 6 incrementais)
+  Seções: Task State, Records, Survival self-audit, pendências herdáveis
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: ✅ SEAL ALLOWED
+  Claims: 2 verificadas · 0 skipped · 0 falhas (ORO + nó de handoff)
+
+📚 BoK (Fase 6)
+  spaces-evolution ✅ selada (12 docs) — cobre TODO o trabalho da sessão
+  19/20 suítes completas (security = estrutura própria histórica, pré-existente)
+
+🚀 PUSH
+  Branch: main → origin/main (f4c03c2..992afe9 · main==origin ✅)
+
+📌 SPRINT
+  sprint-priorities.md: atualizado ✅ (entrada v6.82.1 + lição do pin de custo)
+  scratch/ cleanup: inexistente ✅
+  MCP docs: 5 servers, todos pré-existentes e documentados ✅
+  Infra: 6 containers healthy + chroma heartbeat ✅ · tsc 0 · vitest 398 · smoke 30/30
+
+⏭  PRÓXIMOS PASSOS
+  1. OTD-SPACES-003 — revalidar docs Higgsfield p/ o endpoint compose
+     (destrava o Designer E o compose legado do Canvas Studio)
+  2. Fila Sovereign: app-registration YT/TikTok/Pinterest (unlock da
+     distribuição) · voz clonada (biometria) · Universe cutover de nav
+  3. Spaces Fase 2 restante (Workflow Apps · FX · multi-page) + OTD-001/002
+     (bucket privado+signed URLs · spaces id server-side)
+
+  🎁 Para o Sovereign TOCAR agora: /dashboard/spaces →
+     "E2E 2a video" (assista ao MP4) · "E2E 2c voice" (ouça o WAV)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Survival Laws Self-audit do selo:** Lei 1 ✅ (Fase 5c mecânica: SEAL ALLOWED; toda claim com hash/UUID/output citado) · Lei 2 ✅ (4 SOP amendments antes do código; zero feature sem SOP) · Lei 3 ✅ (selo a ~90% da janela; 6 podas por referência ao longo da sessão) · Lei 4 ✅ (ORO em toda fatia; 2 reviews independentes; portões Sovereign respeitados — nenhum contornado).
+
+Sessão selada e espelhada no remoto. O loop está **parado**; para religar, cole o prompt canônico da charter. 🤝
+
+## 👤 User *(01:41:56)*
+
+<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
+
+## 👤 User *(01:41:56)*
+
+<command-name>/model</command-name>
+            <command-message>model</command-message>
+            <command-args></command-args>
+
+## 👤 User *(01:41:56)*
+
+<local-command-stdout>Set model to [1mFable 5[22m and saved as your default for new sessions</local-command-stdout>
+
+## 👤 User *(01:42:05)*
+
+<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
+
+## 👤 User *(01:42:05)*
+
+<command-name>/effort</command-name>
+            <command-message>effort</command-message>
+            <command-args></command-args>
+
+## 👤 User *(01:42:05)*
+
+<local-command-stdout>Set effort level to max (this session only): Maximum capability with deepest reasoning. May use excessive tokens resulting in long response times or overthinking. Use sparingly for the hardest tasks.</local-command-stdout>
+
+## 👤 User *(01:42:17)*
+
+ok continue
+
+## 🤖 Claude *(01:42:52)*
+
+
+## 🤖 Claude *(01:42:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Autonomous Loop Charter — MCORCH Malha Fechada
+> 2	
+> 3	> Fonte da verdade do `/loop` auto-ritmado. Lida no início de CADA iteração.
+> 4	> Atualizada pelo loop ao fechar cada Fatia (marcar ✅ / mover item pra Fila Sovereign).
+> 5	> Criada 2026-06-30 a partir do estado selado (handoff `c138539f`, mesh 8996).
+> 6	
+> 7	---
+> 8	
+> 9	## Identidade & Leis (não-negociável)
+> 10	- Opero como **MCORCH Master Execution Agent**. Penso em inglês, reporto em **PT-BR**.
+> 11	- **Protocolo de Malha Fechada:** módulo novo/feature/integração ⇒ BoK Gate (`docs/bok/<slug>/`) + Pattern Conformance Declaration ANTES de código.
+> 12	- **Survival Laws:** Lei 1 prova material · Lei 2 SOP antes de código · Lei 3 poda+selo a ~95% · Lei 4 ORO declarado.
+> 13	- **Reviewer = Sovereign (Gabriel).** Nada que precise do físico dele (dado/credencial/DNS/GO/decisão arquitetural) é improvisado — vai pra **Fila de Ação Sovereign**.
+> 14	- **Doutrina open-source-first (Diretiva Sovereign 2026-06-30):** tudo que dá pra construir open-source/self-hosted **DENTRO do MCORCH** vira microserviço/módulo/menu/página da infra própria (não SaaS pago externo) — cada peça agrega **equity**. Default = open-source/self-hosted/BYOK-grátis; SaaS pago só com **OTD** justificando. **Custo USD real ao Sovereign = 0** é meta de projeto. Aplica direto a `OTD-AC-015` (preferir InsightFace self-host no Mesh a API paga) e ao gate do GO de gasto. (memória `feedback_opensource_first_zero_cost_equity`)
+> 15	
+> 16	## Ritual por iteração
+> 17	1. `git fetch` + reler **Pending Actions** do `HANDOFF.md` + esta charter.
+> 18	2. Escolher o item de MAIOR valor **DESBLOQUEADO** (pular Sovereign-gated; registrá-los na Fila).
+> 19	3. Ciclo fechado: **BoK Gate → SOP Lei 2 → código → prova material Lei 1 (UUID/hash/curl/build/test) → `/security-review` se houver migration → commit granular.**
+> 20	4. Ao bater num portão físico: registrar na **Fila de Ação Sovereign** com o destravador exato, e seguir pro próximo desbloqueado.
+> 21	5. **Survival Laws self-audit** (1/2/3/4).
+> 22	6. `/handoff` incremental ao fechar cada Fatia. **Selo final + PARAR** quando: janela ~95% · OU backlog desbloqueado vazio · OU GO/stop do Sovereign.
+> 23	
+> 24	## Padrão de execução
+> 25	- Tarefa substantiva ⇒ **Workflow** (ultracode on): decompor + verificar adversarialmente antes de commitar.
+> 26	- Mecânico/trivial ⇒ solo.
+> 27	- Sempre Vision QA (`scripts/qa/vision-qa.ts`) em print de inspeção + criativo antes de declarar pronto.
+> 28	- UI ⇒ browser-verify real (vite preview do dist + sessão injetada) antes de "pronto".
+> 29	
+> 30	---
+> 31	
+> 32	## Backlog (ordem de valor — só DESBLOQUEADOS executam)
+> 33	
+> 34	### ✅ Smart-Delete MVP — SHIPPED (loop it.1-3, 2026-07-01) — gate BoK selado `33fadb0`
+> 35	- ✅ **FR-SD-001 `check-post-existence`** (commit `174d30c`): edge fn read-only, resolve id das 2 fontes, `deletable_via_api` derivado no SERVIDOR (Matriz), sinal correto por API (X data-vs-errors, YT items=[], WP/Pin 200/404, FB/IG code 100). Per-user fail-closed (501 deletáveis) / honestidade non-deletable. WP per-user PURO (o smoke pegou o probe cross-tenant do fallback global → corrigido). deno check · deployed 63.65kB · smoke **9/9** zero-cost · /security-review **NO FINDINGS**.
+> 36	- ✅ **FR-SD-002 `delete-remote-post`** (commit `358d825`): destrutivo, golden-rule (zero flag do cliente), DELETE idempotente WP(force=false Trash)/X/Pinterest, nó Mesh no 1º delete, NÃO apaga local (502 mantém âncora). **Workflow adversarial 4-lentes `wf_ad2b6722` pegou HIGH false-success** (X devolve errors[] p/ 401/403/429 → reportava deleted com tweet no ar) → classificadores puros `_shared/smart-delete-classify.ts` **deno test 15/15** (inclui a regressão 403). deployed 64.57kB · smoke **8/8** zero-cost NÃO-destrutivo.
+> 37	- ✅ **FR-SD-003 UI 3-ramos** (commit `edc27df`): `useSmartDelete` (hook) + `SmartDeleteDialog` (display) + `smart-delete.ts` (branchFor/labels). Fiado nos 2 call-sites do calendário. tsc 0 · eslint 0 novo · build ok · branchFor **7/7** · **browser-verified** (dist servido, sessão User 0 injetada — ramo transparência LinkedIn correto) · **Vision QA confidence high** (sem tela branca/quebra).
+> 38	- 🔒 **Fila Sovereign:** E2E destrutivo REAL (deletar post vivo WP/X/Pinterest + re-verify `exists=false`) — irreversível, Owner=Sovereign, precisa post descartável real + GO. · OTD-SD-001/002 (re-OAuth FB/YT p/ delete) · OTD-SD-006 (WP force=true permanente).
+> 39	
+> 40	### ✅ B4 EWMA multi-ciclo no analyze — SHIPPED (loop 2026-07-02 it.4, commit `bbc7ad9`)
+> 41	- FRD v0.3 "fixes embarcados" implementado: reward sobre janela dos últimos M=5 ciclos do plano, peso `0.5^idade` (anti-thrash); semântica documentada (janela lembra; plano virgem → `has_real_data=false`); auditoria `reward_vector.ewma`. Provas: deno check · deployado · **smoke 13/13** (L7: WIN 2+10·0,5=7 vence NEW=3 — single-cycle teria flipado). **Restam do arco Learning:** ~~B5 pauta de receita~~ ✅ · V4-2 experimento · coluna `reward_weights` config-as-data (NFR-VA-010).
+> 42	
+> 43	### ✅ Spaces Fase 1b — execução runGraph + ledger `generations` — SHIPPED LIVE (GO Sovereign 2026-07-02, apply+E2E na mesma sessão)
+> 44	- **GO recebido e executado:** migration `20260702190000` aplicada via Management API (HTTP 201) + registrada no ledger (RETURNING version) + **prova material 8/8** (16 cols · 2 policies · svc-only grants, client=0 · 5 idx · trigger · RLS on · anchor). **Drift do ledger FECHADO junto:** 11 locais sem registro → 10 provadas aplicadas por sonda de assinatura DDL e registradas (146→156); `20260630140000` gate_mode deixada de fora DE PROPÓSITO (pendência legítima do GO 3b). `audit-schema-drift.sh` **exit 0 NO DRIFT**. `db push` seguro de novo.
+> 45	- **Fix pós-smoke (commit `4753119`):** smoke expôs inversão de ordem de guards — dispatch do branch Spaces estava DEPOIS dos pré-checks 402 legados (payload inválido c/ saldo 0 → 402 em vez de 422/404). Corrigido: dispatch antes; teto diário extraído p/ `enforceDailyCanvasCap` compartilhado; branch Spaces faz saldo+cap próprios PÓS-validação (ordem canônica 401→422→404→402). deno check ✓ · redeploy 160.2kB.
+> 46	- **Provas (Lei 1):** smoke **13/13** (T1-T8 contra prod real: atômicos begin/dup/rollback/refund-clamp + RLS + 42501) · types regen (+`generations`+2 RPCs, tsc 0) · vitest **375 passed** · **E2E browser User 0 PAGO**: space `059fe777` → nó prompt-generator via Spotlight → Estimar ("1 mco projetado, sem débito" G7) → Rodar → **`generations 7add79b2` done, mco_charged=1, saldo 4624→4623 exato, latency 2400ms, result.enhanced_prompt real** → nó mesh `5f9c870b` (`spaces-first-run-…`) → **Vision QA APROVADO high cost 0**. Space de teste deletado (cascade ok, trilha `mcoin_transactions` preservada). Canvas→conteúdo pago **FECHADO**.
+> 47	- **Restam do Spaces:** Fase 2 restante (Workflow Apps · FX · multi-page · voz CLONADA [Fila: biometria] · **OTD-SPACES-003** composer provider-drift) · Fase 3 (collab).
+> 48	
+> 49	### ✅ Spaces Fase 2d — Designer/composer — CÓDIGO-COMPLETO, provider em DRIFT (loop 2026-07-02 it.6, commits `c66e6b5`+`cbebc9e`)
+> 50	- **SOP S30-S32 ANTES:** scene_compose SYNC via generateHiggsfield legado; custo 18 PINADO (classe F1); guards prompt+≥1 imagem; cap 2 = verdade do server; `NODE_PORTS.composer` declarado (image-1/image-2/prompt, threading ordenado); picker parametrizado (designer=2, imagem=4); skip no-op.
+> 51	- **ACHADO MATERIAL (E2E pago):** Higgsfield rejeita `mode='compose'` — API atual só aceita `reference|character|standard` ⇒ **o compose LEGADO do Canvas Studio está igualmente quebrado hoje**. O slice falha HONESTO com estorno integral provado ao vivo (charged 18 → refunded 18, saldo 4581 intacto). **OTD-SPACES-003:** revalidar docs Higgsfield (candidato: soul/reference) ANTES de flipar o endpoint — nunca chutar semântica de provider (Lei 1).
+> 52	- **Provas:** smoke **30/30** (C1/C2 guards · C3 refund+custo pinado 18 com params forjados) · vitest **398** (+G16) · tsc 0 · Estimar **18 exato** na UI · contador "1/2 ativas" (cap 2) browser-verificado.
+> 53	
+> 54	### ✅ Spaces Fase 2c — voice_over (voiceover stock) — SHIPPED E2E PAGO (loop 2026-07-02 it.5, commits `694d836`+`bfd2b29`)
+> 55	- **SOP S26-S29 ANTES:** motor = `tts-speak` reusado COM O JWT DO USUÁRIO (re-valida, BYOK google, devolve WAV, **não cobra** — zero double-charge sem precisar de prepaid); custo declarado **2 mco** (4×-floor); guards 422 pré-débito; WAV → bucket → `finalize(done, result.audio_url)`; falha → refund total na mesma request. Voz CLONADA (Gabriel) segue **Fila Sovereign** (biometria).
+> 56	- **/security-review independente: APPROVED** (SOUND em double-charge/mint/JWT-forward/guard-order/output-parity/DoS/legacy). LOW **F1 corrigido** (provider forjado inflava a cobrança até 65 → PINADA em `CREDIT_COSTS['voice-over']`; gate A4 prova) + F2 typeof + F4 telemetria. **F3/F5 registrados como OTDs** (abaixo).
+> 57	- **Provas:** smoke **27/27** (A1/A1b/A2/A3 chave fake→refund/A4 pinned) · vitest **393** (+G15) · tsc 0 · **E2E PAGO**: space `1d77b500` "E2E 2c voice" (MANTIDO) → Estimar 2 exato → Rodar → **WAV 436.410 bytes audio/wav HTTP 200 (9s de fala)** → `<audio>` player no cluster → saldo **4583→4581 (2 exato)** → Vision QA high. Custo real: 2 mco + ~US$0,005 BYOK.
+> 58	- **OTD-SPACES-001 (do review, pré-existente):** `canvas-assets` é bucket público com SELECT anônimo em `storage.objects` ⇒ lista+leitura mundial de imagens/vídeos/WAVs de todos os tenants. Fix = bucket privado + signed URLs em todo o slice (imagem/vídeo/voz) OU restringir list. Não-bloqueante desta fatia; herdado do legado.
+> 59	- **OTD-SPACES-002 (do review, pré-existente):** INSERT policy de `spaces` não constrange `id` do cliente (poluição de namespace de prefixo no storage; sem leitura/overwrite cross-tenant alcançável). Hardening: id server-side.
+> 60	
+> 61	### ✅ Spaces Fase 2b — References picker — SHIPPED (loop 2026-07-02 it.4, commit `4abddf7`)
+> 62	- **SOP S23-S25 ANTES:** refs em `node.data.references` (schema 1a); upload client-side ao `canvas-assets` `<uid>/spaces-refs/` (policies existentes exigem prefixo — zero migration/zero server novo); **cap ativo 4 = verdade do server** (`generateOpenRouter` anexa slice(0,4) multimodal; divergência do BoK 8 declarada); refs nunca cobram.
+> 63	- **Provas (Lei 1):** `mergeReferenceUrls` explícitas+upstream dedupe cap 4 — **G14 vitest 4 novos (388 total)** · tsc 0 · eslint limpo · **browser-verify**: upload REAL (URL do bucket com prefixo do uid = policy provada) → chip → `graph.references` persistido no DB → reload hidrata → contador honesto "1/4 ativas no run · referências não são cobradas" → **Vision QA confidence high**. Placeholder "chegam na Fase 2" morto.
+> 64	
+> 65	### ✅ Spaces Fase 2a-CLIENTE — vídeo E2E PAGO PROVADO (loop 2026-07-02 it.3, commits `ea5a4b9`+`54b404a`)
+> 66	- **SOP S19-S22 ANTES do código:** poller 5s/12min lê a própria row e flipa o nó (runState = dispatch-completo); threading imagem→handle `first-frame` → `input_asset_url` (skip honesto sem imagem); **batch de vídeo forçado 1** (×8 acidental = 1.280 mco); custo HUD = espelho 1:1 (mirror-parity mecânico parseando o fonte do edge fn — S22/G13).
+> 67	- **Código:** `video-generator` em EXECUTABLE_TYPES · payload `image_to_video` higgsfield duration 5 · ParamHUD com 5 modelos precificados inline · GenerationCluster renderiza `<video>` de `result.video_url`. vitest **384** (+9 G13) · tsc 0 · eslint limpo.
+> 68	- **E2E PAGO REAL (User 0, GO precedente de vídeo):** space `51b229cf` "E2E 2a video" (MANTIDO vivo p/ o Sovereign abrir) — grafo imagem→vídeo via UI (Spotlight + params; edge injetada no graph persistido, hidratação zod ok) → **Estimar 40 exato** (10+30, G7) → Rodar → imagem done 10 mco → vídeo 202/queued, `operation_id` Higgsfield real + token hash na row → **webhook REAL finalizou `done`**: MP4 **11.292.652 bytes video/mp4 HTTP 200** em `canvas-assets/51b229cf…/3e120f3d….mp4` → **poller flipou o nó `done` na UI + `<video>` no cluster** → saldo **4623→4583 (40 exato)** · `canvas_video_spend=0` (S16 provado com webhook real) · **Vision QA no VÍDEO: APROVADO high cost 0** ("robô aspirador futurista, câmera orbital suave, íntegro"). Custo real: 40 mco + ~US$0,13 BYOK Higgsfield.
+> 69	- **Gotcha de E2E anotado:** refs do agent-browser ficam stale depois de toast (clique em "Rodar" acertou "Estimar" — sempre re-snapshot antes de clicar pós-toast).
+> 70	
+> 71	### ✅ Spaces Fase 2a-SERVER — vídeo async no slice — SHIPPED (loop 2026-07-02 it.2, commits `9db732b`+`df41d1d`+`7b0742d`)
+> 72	- **Lei 2 ANTES do código:** SOP Amendment S14-S18 + gates G8-G12 (`spaces-graph-execution.md`) — ledger-first no submit; correlação webhook por **SHA-256-only** na row (plaintext vazaria ao próprio dono via RLS SELECT-own → forjaria failure-callback p/ refund + vídeo grátis; precedente PAT vision-mcp); supressão TOTAL do deduct legado no webhook (classe OTD-VA-010); sweep S17; guards S18 preço-declarado-only.
+> 73	- **Migration `20260702210000`** (webhook_token_hash + operation_id + UNIQUE parcial) aplicada+registrada+provada (new_cols=2, idx=1). **/security-review independente: NO P0/HIGH** (1 MEDIUM done-fallback no webhook + 2 LOW ordem-BYOK/status-passthrough — **TODOS corrigidos**; SOUND em mint/double-charge/cross-tenant/secret-leak/replay/SSRF-parity).
+> 74	- **Código:** `canvas-execute` image_to_video no slice (422 allowlist/input/duração + BYOK fail-closed 402 pós-404 + begin output_type=video + refund total em submit-fail com redação de token) + `higgsfieldSubmit` extraído/compartilhado c/ legado · `higgsfield-webhook` branch `?spaces_token=` (falha→refund; sucesso→download/validate/upload→done+result.video_url com **retry+done-fallback claim-guarded**; replay no-op; ZERO deduct legado). deno check ✓ · deployados 163.7kB+85.37kB · types regen (tsc 0).
+> 75	- **Prova (Lei 1):** smoke **22/22 ×3** contra prod (13 gates 1b + V1-V4 guards + W1-W5 ciclo webhook SIMULADO zero-Higgsfield; W5 = submit real com chave fake → 401 → refund na mesma request, G8 E2E) · vitest 375 passed · vacina de orphan (chave vault do W5 bloqueava deleteUser — limpeza da base table no finally).
+> 76	- **Notas honestas:** E2E pago real (dop-lite ~30 mco + ~$0.13 BYOK Higgsfield) fica p/ 2a-cliente. INFO-3 do review (legado retorna webhook_token plaintext ao cliente — pré-existente, candidato a retrofit do design hash) + INFO-2 (canvas-assets é bucket público desde o legado) registrados como follow-ups não-bloqueantes.
+> 77	
+> 78	### 🗄️ Spaces Fase 1b — histórico código-completo (referência)
+> 79	- **Mapeamento**: Workflow `wf_b4abf175-410` (6 readers + síntese; 24 contradições resolvidas, corte de fatia selado). **SOP Lei 2** `docs/processes/spaces-graph-execution.md` (decisões S1-S13 + gates G1-G7) ANTES do código.
+> 80	- **Entregue (working tree, NÃO commitado — commit gated no apply)**: migration `20260702190000_spaces_generations_ledger.sql` (tabela `generations` stub BoK verbatim + hardening D1/D2/D3/D8 + RPCs `begin_space_generation` [ledger-first: row running + deduct MESMA tx, ON CONFLICT idempotente] / `finalize_space_generation` [claim first-finalizer-wins, refund clamped + row simétrica `spaces.node.refund`], service-role-only) · branch Spaces no `canvas-execute` (extensão aditiva `space_id`+`node_run_id`, exclusivo do caminho legado; 422 guards pré-débito; teto diário estendido p/ `spaces.node.run` via IN-list; retry provider 1×/5s; refund total em falha; `finalizeWithRetry` + done-fallback + resposta honesta `refund_pending`; observation node first-run fail-open) · client `useGenerationLedger` (runGraph camadas Kahn + BFS blocked + batch=N runs + threading S11) / `useSpaceSession` / `spaces-execution.ts` lib pura / `GenerationCluster` (lazy ≤24, cursor created_at) / botões Estimar+Rodar / serializer reseta status transitório (S9) / estimate=cobrança (G7) · `scripts/self-heal-spaces.sh` (sweep on-demand, só estorna rows SEM valor entregue).
+> 81	- **Provas até aqui (Lei 1)**: deno check ✓ · vitest lib pura **14/14** · eslint 0 · **/security-review independente**: núcleo do dinheiro SOUND (zero mint/double-charge/cross-tenant/cap-bypass), 1 MEDIUM + 2 LOW + 1 INFO **TODOS corrigidos** (finalize retry + refund_pending honesto + done-fallback + sweep guard + frozen→403 genérico + dup lookup tenant-filtrado).
+> 82	- **🔒 GATED**: o classificador de permissões do harness bloqueou o apply da migration em prod sob modo auto ("/loop genérico ≠ autorização específica p/ DDL em produção"). **Restante pós-GO**: apply+register → `npx supabase gen types` regen → tsc 0 → deploy `canvas-execute` → smoke zero-cost G1-G6 → browser E2E + Vision QA → commits granulares → seal. Ver Fila.
+> 83	
+> 84	### ✅ Spaces Fase 1a — canvas 72/28 VIVO (loop 2026-07-02 it.3, commit `9ea6ac0`)
+> 85	- Primeira fatia visível do módulo Spaces (BoK 9/9 selada it anterior → gate aberto): rota `/dashboard/spaces` (home) + `/dashboard/spaces/:id` (canvas 72/28), sobre o scaffold Phase 0 promovido. **Zero execução/ledger** (Fase 1b) — só cria/edita/persiste. **SOP Lei 2** `spaces-canvas-persistence.md` (5 gates) ANTES do código. Migration `20260702170000` (tabela `spaces` graph jsonb desnormalizado DM-SPACES-002, RLS-own 4 policies) — **/security-review NO FINDINGS** · aplicada+registrada · RLS+4 policies provados live · types regen. useSpaces (guard hidratação zod dropa inválido nunca white-screena FMEA-SPACES-007 + guard empty-over-nonempty FMEA-SPACES-006) · SpaceNodeCard/Spotlight(26 tipos)/ParamHUD render-only · fix a11y do CommandDialog compartilhado (DialogTitle sr-only — limpa erro Radix em todo cmdk do app). **Prova (Lei 1):** vitest **5/5** · tsc 0 · eslint 0 · build · **E2E browser User 0**: criar space → Spotlight insere 2 nós → **DB graph=2 nós com portas corretas** → reload hidrata → HUD → **0 erro console** · **Vision-QA APROVADO high**. Space de teste deletado. **Restam do Spaces:** Fase 1b (execução: `runGraph`→`canvas-execute`, ledger, clusters de geração) · Fase 2 (breadth) · Fase 3 (collab). **Arco Learning: só V4-2 (experiment-gated) resta.**
+> 86	
+> 87	### ✅ `reward_weights` config-as-data NFR-VA-010 — SHIPPED (loop 2026-07-02 it.2, commit `6058e78`)
+> 88	- Pesos do reward (FR-VA-029) + knobs EWMA (B4) viraram DADO por plano: coluna `autopilot_plans.reward_weights jsonb` (migration `20260702150000`, aplicada+registrada via Management API, coluna+CHECK provados live) + `resolveRewardConfig` no `autopilot-analyze` (validação dura: 4 pesos finitos ≥0 soma>0 → **normalizados**; `ewma_m` 1..12; `ewma_decay` (0,1); inválido → defaults fail-safe) + auditoria `reward_vector.{weights, weights_source}` por policy row (versionamento NFR-VA-010). Escopo honesto: pesos governam só o caminho multimétrico; fallback afiliado fixo. **SOP Amendment (c)** ANTES do código. Provas: **/security-review NO FINDINGS** (sub-agente independente — cota resetou) · deno check · deployado · **smoke 16/16** (L8a default→REACHY · L8b rev-heavy→MONEY pesos 0.05/0.05/0.05/0.85 exatos · L9 inválido→`default_invalid` · L5-L7 retrocompat; fixture fix: `publication_metrics` FK→`content_library` ancorado) · tsc 0. **Arco Learning: só resta V4-2 (experiment-gated).** Nota: iteração atravessou queda de conexão — retomada sem perda (working tree íntegro). Seal /handoff desta Fatia = batch com a próxima (precedente it.2-3).
+> 89	- ⚠️ **Cota de subagents RESETOU** (~12:45 BRT provado pelo sub-agente do review) — Workflows disponíveis de novo; ultracode está OFF nesta sessão (opt-in padrão do Workflow tool aplica).
+> 90	
+> 91	### ✅ B5 Pauta de Receita FR-VA-031 (HITL) — SHIPPED (loop re-armado 2026-07-02 it.1, commit `367db9b`)
+> 92	- Superfície read-only na `AutopilotPage`: criativos com desempenho REAL (`creative_metrics` agregado) ranqueados como candidatos a monetização; status derivado de `affiliate_links.content_id` (candidato/monetizado/convertendo); esforço = product_id rastreado ("Baixo — anexar link ML"). Decisão permanece humana. **SOP Lei 2 ANTES do código** (`docs/processes/revenue-opportunity-pauta.md`, 4 gates). Provas: ranking puro `src/lib/revenue-pauta.ts` vitest **7/7** · tsc 0 · eslint 0 · build+deploy · **browser-verify** (preview+sessão User 0; linha #1 ↔ `content_library e27a09e7` do ciclo pago; 0 erros console) · **Vision-QA APROVADO high cost 0**. Sem migration. Nota honesta: métricas hoje = 0 impressões (coletor aguarda re-OAuth IG insights — Fila); a pauta já ordena e mostra status corretos.
+> 93	- **Contexto da sessão:** suíte BoK `spaces-evolution` completada ANTES do loop re-armar (pedido direto do Sovereign): 06/07/08 + Pattern Conformance §11 + renames canônicos + seal `8f5fd3fd` (commit `4a8fee0`) → **25/25 suítes verdes; BoK Gate do Spaces Fase 1 ABERTO** (novo item desbloqueado de alto valor: MVP canvas 72/28). ⚠️ Cota de subagents esgotada até 4:20am BRT → Workflows indisponíveis; iterações rodam inline (precedente v6.36.1).
+> 94	
+> 95	### ✅ Vision-gate mecânico nos 2 harnesses — SHIPPED (loop 2026-07-02 it.2-3, commits `8a41457`+`e511862`)
+> 96	- Diretiva Sovereign 2026-06-26 (regra comportamental) virou **gate mecânico**: **(it.2)** `audit-canvas-ui.ts` — screenshot em memória → bucket privado `qa-audits/` → signed URL 1h → `vision-qa.ts` com veredito estruturado APROVADO/REPROVADO bloqueando o exit; fail-closed sem `VISION_MCP_PAT` (`--no-vision` = exceção explícita); **fix de segurança em passing:** removida a cópia pública `dist/canvas_e2e_latest.png` (print de dashboard LOGADO servido pelo nginx). Provado LIVE em prod (29 nós → APROVADO high, cost 0). **(it.3)** `e2e-user-zero` — `lib/vision-gate.ts` julga até 3 screenshots do flow; REPROVADO → **Finding P1/ux** (flipa o NO-GO); fecha a heurística deferida (c) do classifier. tsc 0 · vitest 6/6 · **prova adversarial LIVE: PNG branco 1920×1080 → REPROVADO → P1**. SOP `creative-qa-vision-gate.md` Amendment 2026-07-02.
+> 97	
+> 98	### 0. Direção fresca do Sovereign (docs committados `c880fcf`/`a29627b`, 2026-06-30) — PRIORIDADE
+> 99	- ✅ **Observability gap FECHADO (it.9 + loop 2026-07-01 it.4):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id — infra_health_logs é global-read) fiado em `orchestrate-step` (article @325 + atomizer @431) + `lead-score`. Emite `event='llm_usage'`. **Provado LIVE** (lead-score → row). **+ `logImageUsage(fn,model,count)` (commit `282edf3`):** imagens não têm token usage (custo por-imagem) → `generate-image` emite `event='image_usage'` {fn/model/image_count} pós-sucesso, taggeando o modelo por branch (flux-1.1-pro/gemini-2.5-flash-image/dall-e-3). **Provado LIVE** (helper real → row `{model:black-forest-labs/flux-1.1-pro, image_count:1}`). Custo texto+imagem agora **MEDIDO** → destrava o GO $0. **✅ STREAMING FECHADO (commit `c5614f7`):** `generate-content` pede `stream_options.include_usage` + tee TransformStream passthrough fareja o `usage` do chunk final → `logLlmUsage` no flush (bytes ao cliente inalterados). E2E provado (HTTP 200, 12720 chars, row `{fn:generate-content, total_tokens:208}`). **Arco de observability zero-USD 100% COMPLETO** (texto não-streaming + imagem + texto streaming).
+> 100	- 🔧 **Swaps doutrina (pós-observability):** **IMAGEM — NÃO suprimir (correção it.10, Lei 1):** a suposição do audit ("desperdício puro, não entra no MP4") estava **incompleta** — o `reshape-pillar` **consome a imagem gerada** (`content_library type=image` por `campaign_id`, `reshape-pillar:274-276`) e a **reframa** em variantes por canal (IG photo · Pinterest pin · FB photo, `:42-43`/`:132-136`). Suprimir quebraria os posts de imagem sociais. Caminho $0 da IMAGE = **rotear `pref_image_provider='replicate'` FLUX self-host** (infra, Fila) — NÃO suprimir. **TEXTO** → `:free`/Ollama só no autopilot (D) = decisão de qualidade do Sovereign (Fila).
+> 101	- ✅ **HyperFrames nativo SHIPPED (loop 2026-07-01, commits `c422de7` docs + `2ce09b3` código):** render de studio-project agora roda **NATIVO sobre `@hyperframes/core` (Apache-2.0, LICENSE shipado no tarball — verificado Lei 1)** — `bundleToSingleHtml` → Playwright dirige `__player.renderSeek(i/fps)` → FFmpeg bitexact compartilhado. **Elimina `HF_CLI`/`HF_NODE`/trap ARM64 do caminho default** (wrap CLI preservado só como rollback `STUDIO_RENDER_ENGINE=cli`; deletar após 1º render editor-initiated). SDD **§VS-UI-C (Amendment v0.6)**: OTD-VS-020 (substrato B) + FR-VS-050; fundamentado no Workflow 4-lentes `wf_bbc8402d-096` (achado-chave: runtime core = CLI **byte-idêntico** sha256 `1bc431f0…`; o "engine do CLI" é só harness de injeção). **Gates todos verdes:** frame-diff sha256-distinto t=1s/t=6s · byte-determinismo 2× `c721f8f4…` (386.795B) · Vision-QA confidence **high** "Aprovado" · **A/B SSIM 0.9934** vs referência CLI (PSNR 46.8dB) · guard smoke 4/4 · tsc 0 · **worker E2E** `video_renders 020e9bef` done → bucket HTTP 200 **byte-idêntico ao render local** (determinismo cross-run). ⚠️ Honesto: o CLI global segue instalado — o **editor vanilla (Fase A)** ainda roda `hyperframes preview`; sai só quando a Fase B swapar o service (container próprio).
+> 102	
+> 103	
+> 104	
+> 105	### 1. Gabriel AI — Fatia 3b (avatarIdentity + Identity Gate)  ⟶ programa-topo, estende a seal de hoje
+> 106	- ✅ **Emenda BoK VLM-soft SHIPPED (it.1, commit `7b81bfd`):** `10-amendment-3b-identity-gate-vlm-soft.md` — Identity Gate dual-mode (VLM-soft MVP / ArcFace-hard deferido), verificado adversarialmente (wf_188ce24c-881 APPROVE, 6 issues dobradas). FR-AC-013b compare enum + gate_mode discriminador + telemetry key-migration definidos.
+> 107	- ✅ **Fundação 3b SHIPPED (it.2, commit `541f707`):** lib de compare VLM-soft `src/lib/avatar-identity.ts` (FR-AC-013b — parse fail-soft + bands + reconcile N≥2 anti-oscilação, 15/15 testes) + migration `gate_mode` `20260630140000` (§4b, /security-review NO FINDINGS, aplicação deferida ao GO 3b). tsc 0.
+> 108	- ✅ **Nó avatarIdentity SHIPPED + DEPLOYED (it.3, commit `12d06c0`):** FR-AC-012 — type+factory+componente+inspector+registry+nodeTypes+dispatch; upload multi-retrato (canvas-assets `user_id/`), ConsentWizard (train_lora+face_embedding Art.11), provider/tier, botão "Treinar" fail-closed honesto (OTD-AC-017). tsc 0 · eslint 0 · vite build 0. **Browser-verificado** (Usuário Zero, preview): nó no palette Cmd+K + render no canvas + inspector íntegro + zero crash/console-error. **Deployed** ao `dist/` servido (chunk `CanvasEditorPage-DEjSoHib.js` 165.844B contém o nó; env baked). Valor visível ao Sovereign LIVE.
+> 109	- 🔒 **3b DESBLOQUEADO ESGOTADO** — o que resta é todo Sovereign-gated: edge `avatar-identity-train` (OTD-AC-017), gate-into-pipeline + telemetry migration §4b.2 (dependem do train+geração), calibração biométrica (OTD-AC-015). Próximo item do loop = **backlog #2 (YT/TikTok)** OU /handoff seal se janela ~95%.
+> 110	- **HALT (Fila Sovereign):** edge `avatar-identity-train` (OTD-AC-017 Higgsfield) · treino/calibração com **frames biométricos reais do Gabriel** (OTD-AC-015) · GO de produção.
+> 111	
+> 112	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
+> 113	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
+> 114	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
+> 115	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas ([[channel-reshaper|channel-reshaper]] G7 + [[autopilot-cron-identity|autopilot-cron-identity]]). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 116	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
+> 117	
+> 118	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
+> 119	- ✅ **Gate Lei 2 SHIPPED (it.2, 2026-06-30):** emenda BoK `video-studio` SDD **§VS-UI-B (Amendment v0.5)** (FR-VS-047/048/049) — verificação empírica Lei 1 dos pacotes **publicados** @hyperframes/studio@0.7.5 + core@0.7.5 (`npm pack` do dist) + Workflow adversarial `wf_b0a6c005-8c2` (APPROVE_WITH_FIXES). Contrato McorchAdapter completeness **PROVADA** (13 métodos = 13 call-sites reais; rotas de arquivo são FS-based → materialização Storage↔volume mandatória). **Deploy = reuso do `video.mcorch.com`** (swap do `video-studio.service` na mesma porta 3210) → **DNS `studio.mcorch.com` NÃO é mais necessário** (portão Sovereign evitado).
+> 120	- ✅ **render-parity RESOLVIDO por prova material (it.3):** em vez de reimplementar seek (risco de MP4-branco), **envolver `hyperframes render`** (renderer de referência local, USD=0) → paridade **definitional**. **Provado E2E:** projeto studio real → `ref-render.mp4` **505.761 B · 1080×1920 · 24fps · 192 frames**; frames t=1s (195.693 B)/t=6s (355.388 B) com **sha256 distintos** = animado + não-branco. Trap ARM64 resolvido (`HYPERFRAMES_BROWSER_PATH`→chromium Playwright). §B.3 emendada.
+> 121	- ✅ **Wiring SHIPPED + provado E2E (it.4):** `renderStudioProject` (render-core.ts, envolve `hyperframes render` + path-safety) + branch `studio-project` no `video-bridge.ts`. Render real `9069bb7d` → bucket 720.678 B (HTTP 200) → `video_assets`+`creative_assets`(1080×1920/8s)+mesh. **Bônus:** achei+corrigi bug TDZ (`ap` usado antes da declaração) que fazia o dual-write de vídeo→`creative_assets` SEMPRE pular silenciosamente; agora renders do editor entram na Biblioteca de Assets. serviço reiniciado (código vivo). `tsc` 0.
+> 122	- ✅ **Guard de segurança blindado (it.6):** `scripts/qa/smoke-studio-project-guard.ts` 4/4 (sub-segundo, sem render) — path-safety do `renderStudioProject` rejeita execução de dir arbitrário (escape absoluto/traversal/vazio) antes de qualquer spawn. Lei 2 hardening do código shipped.
+> 123	- ✅ **GATE FR-VS-047 TOTALMENTE VERDE (it.5):** (a) determinismo → 2 renders args-idênticos **sha256-idêntico** (`1db99067…`, 465.054 B) = NFR-VS-016 mantido; (b) **Vision-QA** (diretiva Sovereign, cost 0) `vision_analyze_video` confidence **high** = composição 9:16 correta (gradiente/logo/título/CTA fade-in, não-branco). Render-parity provado em 3 níveis (frame-diff · byte-determinismo · semântico). **worker-side COMPLETO.**
+> 124	- ✅ **Sub-fatia 2a SHIPPED (loop 2026-07-01, commit `2123a79`):** `scripts/video-studio-host/` — servidor `createStudioApi(mcorchAdapter)` loopback 3211 (vanilla 3210 intocado até o swap 2c) + **McorchAdapter 13 métodos** (§B.2; FS local canônico v1) + **FR-VS-048 (A) PROVADO E2E PAGO**: startRender minta JWT User 0 → `video-render` (chokepoint) → **202 (12 mco, row `b25838a0`)** → worker **nativo FR-VS-050** → done → MP4 materializado em `renders/` **386.795B sha `c721f8f4` (4º render byte-idêntico em 4 contextos)** → download HTTP 200 → SSE `complete`. Smoke **6/6** zero-cost (`smoke-studio-host.ts`) + SOP Lei 2 (`video-studio-host-fase-b.md`). **ACHADO: `VIDEO_HYPERFRAMES_WEBHOOK=poll://` JÁ ESTÁ ATIVO** (billing do editor-render vivo — item da Fila era stale; débito real testemunhado 4636→4624).
+> 125	- ✅ **Sub-fatia 2b SHIPPED (loop 2026-07-01 it.4, commit `4fd9b89`):** FR-VS-049 durabilidade Storage↔volume — sweep write-back periódico+SIGTERM (`sync.ts`: mtime-delta upsert p/ bucket privado `video-studio-projects`, exclui `renders/`+temp, best-effort nunca bloqueia o editor) + materialização no `resolveProject` (staging+rename atômico, negative-cache 60s). Migration `20260701120000` aplicada via Management API (bucket `public:false` verificado). **Provas:** smoke **7/7** (round-trip sha256-igual · renders/ excluído · ghost honesto) · journal `[sync] uploaded 14 files` · `mcorch-video` espelhado no bucket · **/security-review NO FINDINGS** (guard `..` do forward-note aplicado como anticorpo) · tsc 0.
+> 126	- ✅ **Sub-fatia 2c SHIPPED — EDITOR BILLÁVEL VIVO NO 3210 (loop 2026-07-01, commit `e8979e2`):** achado decisivo = `@hyperframes/studio` shipa o **app inteiro pré-buildado** em `dist/` (React 19 bundlado DENTRO; Apache-2.0 LICENSE no tarball; telemetria só same-origin) → zero build próprio; carrier isolado `packages/video-studio-host-ui/` (react@19 NUNCA hoisted no SPA React 18). `server.ts` serve o SPA estático (jail+fallback) same-origin com `/api`. **`video-studio.service` SWAPADO** (vanilla `hyperframes preview` license-None → nosso host, MESMA porta 3210 = mesmo vhost; rollback comentado no unit file). **Provas:** browser-verify no 3210 `#project/mcorch-video` (formato do hash corrigido empiricamente — é `#project/<id>` não `#project=`) → file-tree + preview 9:16 + timeline com tracks reais Glow/Brand/Hook + **0 erros console** · **Vision-QA confidence high "Aprovado"** · multi-projeto (upgrade vs vanilla single) · systemd active + **self-healed** pós-kill. **Fase B restante:** deletar wrap CLI + desinstalar `hyperframes` global (pós uso real do editor pelo Sovereign) · `/dashboard/canvas/video` iframe já existe (vhost cert = Fila OTD-VS-015).
+> 127	- ✅ **OTD-VS-015 FECHADA (verificada it.5, 2026-07-01):** `video.mcorch.com` LIVE ponta-a-ponta (CF+cert+gate+proxy→3210). Fase B toda entregue e PÚBLICA (SSO-gated).
+> 128	
+> 129	### 4. Unified Sensorial Canvas — Fases 3.5-3.10  ⟶ engenharia pura, SEM portão Sovereign (filler sempre disponível)
+> 130	- ✅ **3.5 SINAPSES + 3.6 FLY-TO SHIPPED (loop 2026-07-01 it.6, commit `645a16e`):** sinapses = arestas REAIS de `mcorch_edges` ancoradas por membership dos 2 sets renderizados (**25 vivas**; censo por node_type=7 — ambos honestos, membership é a verdade do render); fetch escopado a DERIVES_FROM/observes (~3k rows) + classificação client-side; matemática de layout extraída p/ `lib/universe-layout.ts` (fonte única: layers+sinapses+fly-to). CameraRig: clique em nó (2 redes) → seleção + órbita próxima (getState em handler/useFrame, guarda Error #185). **Provas:** browser-verify (8.599 nós/8.816 arestas/775 comunidades; clique sintético → `memory · af33a839…` + câmera voou; 0 erros console) · **Vision-QA high** ("linhas de sinapse visíveis, layout íntegro") · tsc 0 · deployado (chunk `UnifiedCanvasPage-oTw8MRCw.js`). **✅ 3.7 PERF + 3.8 PODA SHIPPED (loop 2026-07-02 it.7, commit `5cc1022`):** load do universo **21-25s → 2.496ms** (medido in-browser; janela REST 2.181ms/31 reqs). 3 fixes compostos provados por resource-timing forense: páginas paralelas pós-count · memo graphology+Louvain gated até TODOS os inputs (rodava 3× com dado parcial bloqueando o main thread) · **MegaBrainVisualizer montado só pós-load** (compile do shader raymarch stallava ~10s até fetches alheias). 3.8: query `crew_module_ownership` morta (0 rows, Decisão B) → `enableOwnership` opt-in default-off (Matrix legado passa true, backup intacto). Vision-QA high (backdrop presente pós-load) · 0 erros console · tsc 0 · deployado. **✅ 3.9-PARIDADE SHIPPED (loop 2026-07-02 it.8, commit pós-5cc1022):** painel de inteligência on-select no Terminal Tático (nome/tipo/estab/comunidade/calls + conteúdo real fetch grátis + botão "Analisar (IA)" explícito — paridade com o NodeDetailsPanel do Matrix legado). QA handle `window.__unifiedCanvas` (padrão __hf; raycast headless flaky a 1920 — click path provado na it.6). Browser-verify 1920×1080 (gate E2E): nó real `835c8a43` → painel com conteúdo "[HANDOFF SEAL]…" · 0 erros · Vision-QA high · deployado. **Paridade restante (declarada honesta):** crew-overlay de agentes no universo (Matrix tem; follow-up) · toggles no Sidebar (in-page existe). **🔒 CUTOVER DE NAV = DECISÃO SOVEREIGN (Fila)** · 3.10 seal após. Plano: `.claude/context/unified-core-sensorial-canvas-plan.md`.
+> 131	- **ACHADO 3.5 (loop 2026-07-01 it.6, Lei 1 — GO/NO-GO respondido via SQL live):** só **7 arestas cross-partition reais** em `mcorch_edges` (4 `DERIVES_FROM` + 3 `observes`; partição = `node_type like 'ast_%'` ~8.2k vs conhecimento; colunas: `source_id`/`target_id`/`relation_type`). Fase A da 3.5 = 7 linhas (trivial, payoff visual baixo); riqueza real = Fase B `OTD-SYNAPSE-EMBEDDING` (similaridade 768d, rotulada como similarity — nunca relação fabricada). Implementar 3.5-A junto com 3.6 fly-to numa iteração só (mesmos arquivos).
+> 132	- ⚠️ **Evento 2026-07-01 ~20:20: session limit Anthropic** (subagentes rejeitados, reset 23:10 BRT) matou o Workflow `wf_4674cd50-64c` — loop pausado até o reset; retomar com understand solo dos 4 arquivos do canvas (CodeNetworkLayer/MemoryNetworkLayer/UnifiedCanvasPage/useUnifiedCanvasStore) OU re-rodar o Workflow (script salvo: `workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js`).
+> 133	- **HALT:** nenhum até cutover de nav (3.9) — aí confirmar com Sovereign.
+> 134	
+> 135	### 5. Security — OTD-SEC-006 (sentinel-wiring) + OTD-SEC-007 (lefthook/gitleaks)  ⟶ hardening
+> 136	- ✅ **OTD-SEC-007 já estava FECHADA** (`lefthook.yml` + `.gitleaks.toml` ativos — provado nos pre-commit desta sessão).
+> 137	- ✅ **OTD-SEC-006 sentinel-wiring FECHADO (it.7):** `generate-content` (inspeciona `prompt` antes do LLM) + `lead-score` (inspeciona `intent_signal`+`context` antes do débito de 1 mco) fiados+deployados+**provados LIVE** — injeção→403 `prompt_injection_suspected`, legítimo→não-403 (sem FP), lead-score bloqueia com **saldo intacto** (sem charge-without-value).
+> 138	- ✅ **FR-SEC-014 parte 1 FECHADA (it.8):** migration `20260701000000_security_events_ledger.sql` (ledger imutável) + `logSentinelBlock`. `/security-review` NO FINDINGS. Provado LIVE.
+> 139	- ✅ **FR-SEC-014 parte 2 FECHADA + P0 DE MINT PRÉ-EXISTENTE FECHADO (loop 2026-07-01, commit `9fe1e36`):** migration `20260701010000` — freeze econômico (`is_frozen` + `deduct_mco_coins`+Guard 3 [byte-VERBATIM provado vs corpo vivo, só o guard adicionado] + trigger `quarantine_on_critical_event` [critical→freeze na mesma txn + n8n pg_net Vault-gated] + `admin_set_frozen` has_role-gated). **BÔNUS decisivo:** o smoke desenterrou um **P0 pré-existente de MINT** — cliente cunhava o próprio `mco_balance` direto (grant UPDATE table-level + RLS own-row; `REVOKE(col)` é no-op) → **FECHADO** com trigger `BEFORE UPDATE` por `current_user` (memória [[reference_profiles_column_guard_mint_hole]]). Aplicada à prod + **smoke 11/11** funcional+segurança (freeze/42501/regressão/privesc/RLS/mint-block/no-over-block). ✅ **`/security-review` independente de backstop = CLEAN** (commit `bb5d600`; sub-agente pós-reset varreu todas as fns que escrevem balance→só deduct[guarded]/admin_set_frozen[has_role] client-reachable, resto service-role-only, overload legado dropado; privesc/RLS/Vault/over-under-block/search_path todos fechados). Aplicada a 1 observação non-blocking: `BEGIN/EXCEPTION` no `PERFORM net.http_post` do trigger (falha do webhook nunca reverte o freeze). **Item da Fila FECHADO.**
+> 140	
+> 141	---
+> 142	
+> 143	## Fila de Ação Sovereign (SÓ você destrava — preenchida pelo loop)
+> 144	- [x] **GO: aplicar migration Spaces 1b em prod — EXECUTADO (GO Sovereign 2026-07-02):** aplicada+registrada+provada; drift do ledger fechado (10 registradas, `audit-schema-drift.sh` exit 0); smoke 13/13; E2E pago provado (`generations 7add79b2`, saldo −1 exato); Vision QA APROVADO. Ver item ✅ no backlog.
+> 145	- [ ] **Smart-Delete — E2E destrutivo REAL (witness):** com um post descartável REAL publicado (WP/X/Pinterest), clicar "Deletar da rede + MCORCH" e confirmar `check-post-existence` pós-delete → `exists=false` (SOP success signal). Irreversível (Owner=Sovereign) → precisa GO + post descartável. O código está pronto+provado (fail-closed/idempotente/golden-rule); só o witness destrutivo é gated.
+> 146	- [ ] **OTD-AC-015 (Gabriel AI 3b — ArcFace-HARD):** decidir/provisionar motor de embedding facial (InsightFace self-host no Mesh OU API paga Rekognition/Azure/Face++) + custo/credencial. Sem isso o Identity Gate fica VLM-soft (human-review-assist, não anti-impersonation automático).
+> 147	- [ ] **OTD-AC-015b — biometria calibração-grade:** frames reais do Gabriel rotulados (mesma/diferente) p/ FAR/FRR/EER — só após o motor ArcFace existir.
+> 148	- [ ] **OTD-AC-017 (Soul ID train):** credencial Higgsfield + confirmar API self-serve de treino (≥20 fotos); senão fallback Tier1/Tier2 ou LoRA-FLUX (gated commercial-license).
+> 149	- [ ] **Licença comercial (FM-AC-001/OTD-AC-011):** confirmar checkpoint comercial da base de geração (FLUX.1-dev é non-commercial) — Sovereign + jurídico flipam `commercial_license_ok`.
+> 150	- [ ] **GO de produção 3b** sobre o Usuário Zero + GO de gasto do loop de verificação caso não use BYOK openrouter (com BYOK = cost 0).
+> 151	- [x] **Editor render user-initiated (FR-VS-048/VS-009): JÁ ATIVO — achado material 2026-07-01.** `VIDEO_HYPERFRAMES_WEBHOOK=poll://` estava setado (desde a fatia autopilot-vídeo); o loop testemunhou débito real 12 mco (4636→4624, row `b25838a0`) + render nativo + refund-path intacto. Item era stale — nenhuma ação restante.
+> 152	- [x] **GO de gasto — 1º ciclo PAGO de vídeo: FEITO E TESTEMUNHADO (2026-07-01).** GO Sovereign dado; `video_enabled=true` no plano `640b3b67`; ciclo `77e02fca` completed (actual **32 mco**, saldo 4669→4637); render `561a31df` done (MP4 **776.522B** 1080×1920 5s no bucket `video-studio-assets`); reconciliação FR-VA-025 → `content_library e27a09e7` type=video. Título trend-informed ("Do iPhone de 2007 ao Roborock de 2024"). **Doutrina reconciliada** (audit `wf_6d3bdbd6-eb7`, memória `feedback_opensource_first_zero_cost_equity`): render HyperFrames self-hosted USD=0; texto/imagem ~$0.05/ciclo na BYOK OpenRouter do Sovereign → **Gemini 2.5 Pro MANTIDO** (qualidade brand-first vale). Ollama self-host = hardening diferido. **Próximo (opcional):** `is_active=true` liga a cadência pg_cron (vídeo autônomo a cada 3 dias) · telemetria `llm_usage` p/ tornar o USD visível · cortar imagem AI redundante.
+> 153	- [x] **DNS/vhost `video.mcorch.com`: VERIFICADO LIVE (loop 2026-07-01 it.5)** — cadeia pública E2E provada: CF (SSL válido) → nginx origem (302 sem cookie) → sso-auth-gate ES256 (cookie=JWT User 0 mintado) → 127.0.0.1:3210 nosso host (`/healthz {ok,ui:true}` + `/api/projects` + SPA **rebrandada 'MCORCH Studio'** via sub_filter do vhost, logo HeyGen oculto — Apache-2.0 §6 ok). **Editor billável acessível ao Sovereign**: `video.mcorch.com` ou `/dashboard/canvas/video`. Pendente só `design.mcorch.com`.
+> 154	- [ ] **App registration (STEP 0 — o unlock de TODO o #2, ainda NÃO feito, lead ~horas-2d):** registrar apps TikTok (Content Posting API Direct Post + add persona como sandbox user) · YouTube/Google Cloud (canal Brand + OAuth consent External) · Pinterest (Business + Developer Terms + privacy URL → Trial). Sem `client_id`/`secret` nenhum OAuth começa. Submeter os audits no MESMO dia (lead-time corre em paralelo ao código).
+> 155	- [ ] **OAuth/App Review (após registration, lead semanas):** TikTok Content Posting audit (~2-6sem — levanta SELF_ONLY) · YouTube gate A (OAuth verify ~10d) + gate B (API Audit & Quota, serial+independente) · Pinterest Trial→Standard · Instagram App Review · Twitter Basic tier · re-OAuth IG insights (analytics visível).
+> 156	- [ ] **Universe 3.9 — GO de cutover de nav (ÚNICO passo restante, zero gaps):** paridade TOTAL atingida (render+sinapses+fly-to+painel de inteligência+**crew overlay 19 agentes**+**entrada 'Universo' no Sidebar** — it.9 2026-07-02, Vision-QA high). Você já pode ABRIR: Constelação→Universo. Decisão: trocar os destinos da nav legada pro `/universe` (legadas ficam de backup) → depois 3.10 seal fecha a Phase Epsilon V9.
+> 157	- [ ] **scheduled_posts do ciclo 77e02fca sumiram (4 posts de vídeo, criados 2026-07-01 01:13):** tabela `scheduled_posts` está VAZIA apesar de `channel_variants.scheduled_post_id` preenchidos. `auto-publish` só faz UPDATE (nunca delete); smokes deletam escopado a throwaway; sem audit trail. **Confirmar:** você limpou o calendário manualmente? (Se sim, mistério fechado; se não, investigar deleção não-rastreada.)
+> 158	- [ ] **Postback ML definitivo:** IP residencial / portal ML (matt_tool/meli.la).
+> 159	- [ ] **Stripe live keys:** ao primeiro cliente externo.
+> 160	
+> 161	---
+> 162	
+> 163	## Parar quando
+> 164	janela ~95% (selo final) · OU backlog desbloqueado vazio · OU GO/stop explícito do Sovereign.
+> 165	
+> 166	---
+> 167	
+> 168	## Como religar / continuar o loop (prompt canônico STATELESS)
+> 169	
+> 170	> O loop se re-agenda sozinho via `ScheduleWakeup` ao fechar cada ciclo — **não precisa re-colar entre ciclos**. Cole o prompt abaixo SÓ para **religar após um stop**. É *stateless* de propósito: o estado vive nesta charter + no HANDOFF.md, então este texto nunca apodrece (nunca embuta "Estado: it.X / Próximo = …", que fica obsoleto).
+> 171	
+> 172	```
+> 173	/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia
+> 174	.claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git
+> 175	fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada
+> 176	iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo
+> 177	fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review
+> 178	se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao
+> 179	bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise —
+> 180	registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff
+> 181	incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog
+> 182	desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+> 183	```
+> 184	
+> 185	**Redirecionar/parar:** mande PT-BR normal ("pula pra YT/TikTok", "para e mostra a Fila Sovereign", "stop") — interrompe o laço e reabsorvo a direção.
+> 186	
+> ```
+
+## 🤖 Claude *(01:42:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git fetch origin 2>&1 | head -5; echo \"---STATUS---\"; git status --short | head -30; echo \"---LOG---\"; git log --oneline -8; echo \"---TRACKED?---\"; git ls-files --error-unmatch apply_migration_direct.sh temp_apply_migration.py 2>&1",
+  "description": "Fetch remote, show status, log, and check temp files tracking"
+}
+```
+
+## 🤖 Claude *(01:42:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"Fila de A\u00e7\u00e3o Sovereign\\|Pending Actions\\|## \ud83d\udccb\\|## \u23ed\" HANDOFF.md | head -20",
+  "description": "Locate Pending Actions section in HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ---STATUS---
+> ---LOG---
+> 992afe9 chore(sprint): update sprint-priorities — sprint Spaces 1b→2d selado (4 modalidades pagas, mesh 9043)
+> f4c03c2 docs(handoff): seal sprint Spaces 1b→2d — 4 modalidades pagas no canvas, drift fechado, 2 reviews (mesh 9043)
+> da0d650 chore(sprint): v6.82.0 — Spaces 2d composer selado (código-completo, OTD-SPACES-003 drift do provider, smoke 30/30, mesh 9042)
+> cbebc9e test(spaces): gates G16 + C1-C3 — composer slice (vitest 398, smoke 30/30)
+> c66e6b5 feat(spaces): Fase 2d — Designer/composer no slice (código-completo; provider em drift OTD-SPACES-003)
+> e72c090 chore(sprint): v6.81.0 — Spaces 2c voiceover selado (3a modalidade paga, review APPROVED+F1 pinado, smoke 27/27, mesh 9041)
+> bfd2b29 test(spaces): gates G15 + A1-A4 — voice slice (vitest 393, smoke 27/27)
+> 694d836 feat(spaces): Fase 2c — voice_over no slice (tts-speak stock voices, sync ledger-first)
+> ---TRACKED?---
+> error: pathspec 'apply_migration_direct.sh' did not match any file(s) known to git
+> error: pathspec 'temp_apply_migration.py' did not match any file(s) known to git
+> Did you forget to 'git add'?
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 133:**🔒 PORTÃO REAL (Fila de Ação Sovereign):** o classificador de permissões do harness negou **4×** o apply da migration em prod sob modo auto ("/loop genérico/continue/ok ≠ consentimento específico p/ DDL em produção"; 2 AskUserQuestion expiraram em 60s). NÃO contornado (Lei 4). **Destravar:** `! bash scripts/qa/apply-spaces-1b-migration.sh` (roda como o Sovereign) OU sair do modo auto (Shift+Tab) e aprovar o prompt OU permission rule. **Pós-apply (sequência automática):** regen types → tsc → deploy `canvas-execute` → smoke 8 gates → E2E browser + Vision QA (grafo prompt→image, Rodar ~11 mco) → selo complementar. **⚠️ Achado de drift:** 6 migrations `202607*` (20260701010000..040000, 120000) aplicadas em prod mas NUNCA registradas no ledger remoto → `npx supabase db push` re-aplicaria DDL existente (INSEGURO); registrar as 6 junto com o apply.
+> 416:**Infra do loop (`.claude/context/autonomous-loop-charter.md`):** backlog priorizado por valor · Fila de Ação Sovereign com destravadores exatos · ritual por iteração (git fetch → item desbloqueado de maior valor → BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se migration → commit) · prompt **stateless** de religar (o estado vive na charter, nunca apodrece). O Sovereign emendou a charter ao vivo (diretiva **open-source-first/custo-USD-0/equity**) — absorvida.
+> 3213:**v6.19.0 (2026-06-01)** — Sessão de execução de 3 streams autorizados pelo Sovereign (e2e-user-zero 2ª iteração · gaps reais do Canvas · 1ª campanha real). Padrão dominante: **o código estava sistematicamente à frente dos próprios Pending Actions** — verificação material (Lei 1) ANTES de codar evitou reconstruir 2 features já prontas. Fluxo: `/handson` → priorização → descoberta de que Canvas 4.2 + consistência já estavam shipados → build real do Stream B → readiness do Stream C → seal.
+> 4657:**4. Escopo MVP justificado por Lei 3 (Pruning).** SDD v6.8.4 estima 1820 LOC totais. Sessão atual entrega esqueleto completo + 1 flow + Phase 5c integration = 977 LOC novas. Os 6 flows restantes + redactor LGPD + mesh-persistor + telemetry + selftest ficam para iteração seguinte (item 0c em Pending Actions) — não bloqueiam o gate (claim `e2e_user_zero_last_pass` é opcional no manifest até que algum flow real seja executado em CI).
+> 4965:**7. Alerta limpeza.** OTD-SSP01-001 stale entry no Pending Actions linha 3865 marcada como `~~Done~~ ✅ em v6.6.8` (SDD `aios-sql-bridge` 376 LOC materializado em 2026-05-19, antes do SLA 2026-05-24).
+> 5815:### Pending Actions atualizadas
+> 5985:**1) Phase 0 — HANDOFF.md read-from-end.** O `/handson` da própria sessão falhou imediatamente: HANDOFF.md cresceu para 113922 tokens (3167 linhas, 48 sprint seals newest-first) e estourou o limite de 25k do Read tool. Decisão Sovereign (Option B): mantém arquivo monolítico, modifica `.claude/commands/handson.md` linhas 11-26 para ler em duas fatias — `head -71` (Task State header + FIRST ACTION) + `tail -400` (últimas 1-2 seals + Pending Actions + GraphRAG State + Infrastructure + Key Files). Token usage por sessão futura: 5-8k. Auditoria histórica via Read com offset arbitrário fora do fluxo padrão. Outras opções (A: split por sprint; C: híbrido) descartadas por exigirem migração estrutural + atualização de `/handoff` em paralelo.
+> 6125:### Pending Actions (atualizado)
+> 6278:### Pending Actions (atualizado)
+> 6410:### Pending Actions (atualizado)
+> 7411:### Pending Actions (atualizado)
+> 8902:## Pending Actions (Commercial Launch)
+> ```
+
+## 🤖 Claude *(01:49:26)*
+
+
+## 🤖 Claude *(01:49:26)*
+
+
+## 🤖 Claude *(01:49:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== temp files ===\"; ls -la apply_migration_direct.sh temp_apply_migration.py 2>&1\necho \"=== token em arquivos TRACKED? ===\"; git grep -nF \"sbp_99712d441e60874b4901cef0415c457d4fa21aaf\" | head -10 || echo \"nenhum tracked\"\necho \"=== unlock script canonico ===\"; ls -la scripts/qa/apply-spaces-1b-migration.sh 2>&1; git ls-files scripts/qa/apply-spaces-1b-migration.sh; grep -cF \"sbp_\" scripts/qa/apply-spaces-1b-migration.sh 2>/dev/null || true\necho \"=== deletando artefatos temporarios (untracked, migration ja aplicada+selada) ===\"\nrm -f apply_migration_direct.sh temp_apply_migration.py /tmp/spaces-1b-mig.json && echo \"deleted ok\"\nls -la apply_migration_direct.sh 2>&1 | head -2",
+  "description": "Check and remove leftover temp migration scripts with hardcoded token"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === temp files ===
+> ls: cannot access 'apply_migration_direct.sh': No such file or directory
+> ls: cannot access 'temp_apply_migration.py': No such file or directory
+> === token em arquivos TRACKED? ===
+> === unlock script canonico ===
+> -rw-rw-r-- 1 ubuntu ubuntu 2068 Jul  2 16:24 scripts/qa/apply-spaces-1b-migration.sh
+> scripts/qa/apply-spaces-1b-migration.sh
+> 0
+> === deletando artefatos temporarios (untracked, migration ja aplicada+selada) ===
+> deleted ok
+> ls: cannot access 'apply_migration_direct.sh': No such file or directory
+> ```
+
+## 🤖 Claude *(01:49:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad\" && python3 - <<'PY' > recon.json\nimport json\nsql = \"\"\"\nSELECT jsonb_build_object(\n  'generations_table', to_regclass('public.generations')::text,\n  'spaces_migs_202607', (SELECT jsonb_agg(version ORDER BY version) FROM supabase_migrations.schema_migrations WHERE version LIKE '202607%'),\n  'buckets', (SELECT jsonb_agg(jsonb_build_object('id', id, 'public', public) ORDER BY id) FROM storage.buckets),\n  'storage_obj_policies', (SELECT jsonb_agg(jsonb_build_object('name', polname, 'cmd', polcmd::text, 'roles', (SELECT jsonb_agg(rolname) FROM pg_roles WHERE oid = ANY(polroles)), 'qual', pg_get_expr(polqual, polrelid), 'check', pg_get_expr(polwithcheck, polrelid)) ORDER BY polname) FROM pg_policy WHERE polrelid = 'storage.objects'::regclass),\n  'spaces_policies', (SELECT jsonb_agg(jsonb_build_object('name', polname, 'cmd', polcmd::text, 'qual', pg_get_expr(polqual, polrelid), 'check', pg_get_expr(polwithcheck, polrelid)) ORDER BY polname) FROM pg_policy WHERE polrelid = 'public.spaces'::regclass)\n) AS recon;\n\"\"\"\nprint(json.dumps({\"query\": sql}))\nPY\nTOKEN=$(cat /home/ubuntu/.supabase/access-token)\ncurl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  --data-binary @recon.json | python3 -m json.tool 2>/dev/null | head -220",
+  "description": "Query prod: generations table, migration ledger, bucket flags, storage/spaces RLS policies"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [
+>     {
+>         "recon": {
+>             "buckets": [
+>                 {
+>                     "id": "canvas-assets",
+>                     "public": true
+>                 },
+>                 {
+>                     "id": "generated-images",
+>                     "public": false
+>                 },
+>                 {
+>                     "id": "generated-videos",
+>                     "public": true
+>                 },
+>                 {
+>                     "id": "video-studio-assets",
+>                     "public": false
+>                 },
+>                 {
+>                     "id": "video-studio-projects",
+>                     "public": false
+>                 },
+>                 {
+>                     "id": "vision-artifacts",
+>                     "public": false
+>                 }
+>             ],
+>             "spaces_policies": [
+>                 {
+>                     "cmd": "d",
+>                     "name": "spaces: delete own",
+>                     "qual": "(owner_id = auth.uid())",
+>                     "check": null
+>                 },
+>                 {
+>                     "cmd": "a",
+>                     "name": "spaces: insert own",
+>                     "qual": null,
+>                     "check": "(owner_id = auth.uid())"
+>                 },
+>                 {
+>                     "cmd": "r",
+>                     "name": "spaces: select own",
+>                     "qual": "(owner_id = auth.uid())",
+>                     "check": null
+>                 },
+>                 {
+>                     "cmd": "w",
+>                     "name": "spaces: update own",
+>                     "qual": "(owner_id = auth.uid())",
+>                     "check": "(owner_id = auth.uid())"
+>                 }
+>             ],
+>             "generations_table": "generations",
+>             "spaces_migs_202607": [
+>                 "20260701000000",
+>                 "20260701010000",
+>                 "20260701020000",
+>                 "20260701030000",
+>                 "20260701040000",
+>                 "20260701120000",
+>                 "20260702150000",
+>                 "20260702170000",
+>                 "20260702190000",
+>                 "20260702210000"
+>             ],
+>             "storage_obj_policies": [
+>                 {
+>                     "cmd": "r",
+>                     "name": "Allow public read of generated videos",
+>                     "qual": "(bucket_id = 'generated-videos'::text)",
+>                     "check": null,
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "a",
+>                     "name": "Allow service role uploads to generated-videos",
+>                     "qual": null,
+>                     "check": "(bucket_id = 'generated-videos'::text)",
+>                     "roles": [
+>                         "service_role"
+>                     ]
+>                 },
+>                 {
+>                     "cmd": "d",
+>                     "name": "Users can delete own generated images",
+>                     "qual": "((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))",
+>                     "check": null,
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "w",
+>                     "name": "Users can update own generated images",
+>                     "qual": "((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))",
+>                     "check": null,
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "a",
+>                     "name": "Users can upload own generated images",
+>                     "qual": null,
+>                     "check": "((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))",
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "r",
+>                     "name": "Users can view own generated images",
+>                     "qual": "((bucket_id = 'generated-images'::text) AND ((auth.uid())::text = (storage.foldername(name))[1]))",
+>                     "check": null,
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "d",
+>                     "name": "canvas_assets_delete",
+>                     "qual": "((bucket_id = 'canvas-assets'::text) AND (auth.uid() IS NOT NULL) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR (owner = auth.uid())))",
+>                     "check": null,
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "a",
+>                     "name": "canvas_assets_insert",
+>                     "qual": null,
+>                     "check": "((bucket_id = 'canvas-assets'::text) AND (auth.uid() IS NOT NULL) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "r",
+>                     "name": "canvas_assets_select",
+>                     "qual": "(bucket_id = 'canvas-assets'::text)",
+>                     "check": null,
+>                     "roles": null
+>                 },
+>                 {
+>                     "cmd": "w",
+>                     "name": "canvas_assets_update",
+>                     "qual": "((bucket_id = 'canvas-assets'::text) AND (auth.uid() IS NOT NULL) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR (owner = auth.uid())))",
+>                     "check": "((bucket_id = 'canvas-assets'::text) AND (auth.uid() IS NOT NULL) AND ((storage.foldername(name))[1] = (auth.uid())::text))",
+>                     "roles": null
+>                 }
+>             ]
+>         }
+>     }
+> ]
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(01:50:12)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'otd-spaces-003-higgsfield-compose',\n  description: 'Deepsearch OTD-SPACES-003: semantica atual da API Higgsfield para compose multi-imagem (drift do composer)',\n  phases: [\n    { title: 'Ground', detail: 'verdade do repo: payload atual, modos aceitos, erro exato' },\n    { title: 'Sweep', detail: '4 frentes web: docs, SDK/GitHub, changelog, comunidade' },\n    { title: 'Verify', detail: 'refutacao adversarial da recomendacao lider (2 lentes)' },\n    { title: 'Synthesize', detail: 'spec final + plano de diff minimo' },\n  ],\n}\n\nconst GROUND_SCHEMA = {\n  type: 'object',\n  required: ['current_payload', 'api_base', 'legacy_modes_in_code'],\n  properties: {\n    current_payload: { type: 'string' },\n    api_base: { type: 'string' },\n    auth_style: { type: 'string' },\n    legacy_modes_in_code: { type: 'array', items: { type: 'string' } },\n    accepted_modes_error: { type: 'string' },\n    key_lines: { type: 'array', items: { type: 'string' } },\n    notes: { type: 'string' },\n  },\n}\n\nconst SWEEP_SCHEMA = {\n  type: 'object',\n  required: ['claims', 'recommendation'],\n  properties: {\n    claims: { type: 'array', items: { type: 'object', required: ['claim', 'evidence_url', 'confidence'], properties: {\n      claim: { type: 'string' }, evidence_url: { type: 'string' }, quote: { type: 'string' },\n      confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    } } },\n    recommendation: { type: 'object', required: ['summary'], properties: {\n      summary: { type: 'string' }, endpoint: { type: 'string' }, mode: { type: 'string' },\n      payload_example: { type: 'string' }, max_images: { type: 'string' }, pricing_signal: { type: 'string' },\n    } },\n    notes: { type: 'string' },\n  },\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  required: ['refuted', 'reasoning'],\n  properties: { refuted: { type: 'boolean' }, reasoning: { type: 'string' }, evidence_url: { type: 'string' } },\n}\n\nconst SPEC_SCHEMA = {\n  type: 'object',\n  required: ['go', 'spec_markdown'],\n  properties: {\n    go: { type: 'boolean' },\n    endpoint: { type: 'string' },\n    mode: { type: 'string' },\n    payload_example: { type: 'string' },\n    evidence_urls: { type: 'array', items: { type: 'string' } },\n    unknowns: { type: 'array', items: { type: 'string' } },\n    spec_markdown: { type: 'string' },\n  },\n}\n\nphase('Ground')\nconst ground = await agent(\n  'Read-only recon in the repo /home/gcrUX/htdocs/constellation-orchestra for OTD-SPACES-003 (Higgsfield provider drift in the Spaces composer). Report with exact file:line quotes, never guess:\\n' +\n  '1. supabase/functions/canvas-execute/index.ts \u2014 the scene_compose/composer branch: the EXACT Higgsfield payload it builds (mode value, image param names, prompt param, endpoint path/full URL, auth header style).\\n' +\n  '2. Every Higgsfield endpoint + mode value used ANYWHERE in supabase/functions/ (grep for higgsfield, mode, image2image, text2image, image_to_video): list every mode string our code sends (e.g. reference/character/standard/compose/soul) with file:line.\\n' +\n  '3. The exact provider rejection recorded for mode=compose: search .claude/context/autonomous-loop-charter.md, HANDOFF.md (tail sections) and docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md for OTD-SPACES-003 and quote the recorded error text.\\n' +\n  '4. api_base: exact base URL(s) for Higgsfield calls + auth_style (exact header names).\\n' +\n  'Fill current_payload with a compact JSON-ish rendering of what the composer branch sends today.',\n  { label: 'ground:repo', phase: 'Ground', schema: GROUND_SCHEMA, agentType: 'Explore', effort: 'medium' }\n)\nlog('ground ok: modes no codigo = ' + (ground && ground.legacy_modes_in_code ? ground.legacy_modes_in_code.join(', ') : 'n/a'))\n\nconst CTX =\n  'You are a deepsearch agent under MCORCH Lei 1: NEVER fabricate \u2014 every claim carries the URL you actually opened (WebSearch/WebFetch) plus a short quote; mark confidence honestly; unreachable/paywalled sources go in notes, not into claims. Do NOT write any files; return only structured output.\\n\\n' +\n  'CONTEXT: Our Supabase edge function must compose ONE new image from TWO user-selected input images + a text prompt via the Higgsfield image API. Legacy code sends mode \"compose\" and on 2026-07-02 the LIVE API rejected it; the validation error implies currently accepted modes are reference | character | standard. Repo ground truth: api_base=' + (ground ? ground.api_base : 'unknown') + ' \u00b7 auth=' + (ground && ground.auth_style ? ground.auth_style : 'unknown') + ' \u00b7 modes seen in our code: ' + (ground && ground.legacy_modes_in_code ? ground.legacy_modes_in_code.join(', ') : 'unknown') + ' \u00b7 recorded rejection: ' + (ground && ground.accepted_modes_error ? ground.accepted_modes_error : 'not recorded') + '\\n\\n' +\n  'GOAL: from CURRENT public sources determine the correct endpoint + mode + EXACT param names on the Higgsfield API today to generate one image conditioned on MULTIPLE (>=2) input images plus a text prompt (multi-image composition/blending). Leads to VERIFY (never assume): mode reference with an images array; Higgsfield Soul / Soul ID; any newer multi-image edit product/endpoint; a dedicated image-edit endpoint. Also capture max input images, aspect-ratio params, and pricing/credits signals for that operation.\\n\\n'\n\nphase('Sweep')\nconst FRONTS = [\n  { key: 'docs', tail: 'FRONT docs oficiais: sweep docs.higgsfield.ai and any platform/cloud API reference (WebFetch https://docs.higgsfield.ai and follow links to API reference / image generation / image-to-image; enumerate image endpoints, valid mode enums, and multi-image params).' },\n  { key: 'sdk', tail: 'FRONT machine-truth: GitHub (search: higgsfield openapi OR sdk OR api client), npm and PyPI packages, openapi.json/yaml specs. Request schemas in code/specs are the strongest evidence \u2014 quote them.' },\n  { key: 'changelog', tail: 'FRONT evolucao do produto: Higgsfield changelog, blog, release notes, X/Twitter announcements \u2014 when did compose disappear/rename, which current product does multi-image composition, and how product names map to API mode values.' },\n  { key: 'community', tail: 'FRONT praticantes: Reddit, forums, Discord archives indexed on the web, dev blog posts, example repos ACTUALLY calling the Higgsfield API with multiple input images in 2025-2026 \u2014 capture the exact payloads people used recently.' },\n]\nconst sweeps = (await parallel(FRONTS.map(f => () =>\n  agent(CTX + f.tail, { label: 'sweep:' + f.key, phase: 'Sweep', schema: SWEEP_SCHEMA, agentType: '[[deepsearch-blueprint|deepsearch-blueprint]]', effort: 'medium' })\n))).filter(Boolean)\nlog('sweep: ' + sweeps.length + '/4 frentes retornaram')\n\nconst recs = sweeps.map(s => s.recommendation).filter(Boolean)\nconst allClaims = sweeps.flatMap(s => s.claims || [])\nconst keyOf = r => ((r.endpoint || '?') + '|' + (r.mode || '?')).toLowerCase()\nconst tally = {}\nfor (const r of recs) tally[keyOf(r)] = (tally[keyOf(r)] || 0) + 1\nconst leaderKey = Object.keys(tally).sort((a, b) => tally[b] - tally[a])[0]\nconst leader = recs.find(r => keyOf(r) === leaderKey) || null\n\nif (!leader) {\n  return { ground, sweeps, leader: null, verdicts: [], spec: { go: false, spec_markdown: 'Nenhuma frente retornou recomendacao \u2014 pesquisa inconclusiva; nao flipar endpoint (Lei 1).' }, claims_count: allClaims.length }\n}\nlog('lider: ' + leaderKey + ' (' + tally[leaderKey] + ' de ' + recs.length + ' votos)')\n\nphase('Verify')\nconst LENSES = [\n  'LENS schema-exactness: open the evidence URLs yourself; confirm the endpoint accepts >=2 input images + a text prompt and confirm the EXACT param names/types (array field name, prompt field, aspect-ratio field). refuted=true if evidence only shows a single reference image supported, or param names were guessed rather than documented.',\n  'LENS freshness-and-auth: confirm the evidence reflects the CURRENT public API (2026) and that the endpoint is callable with plain API-key auth like ours (no beta gate / enterprise-only / different auth). refuted=true if deprecated, gated, or auth-incompatible.',\n]\nconst verdicts = (await parallel(LENSES.map(lens => () =>\n  agent(\n    'Adversarially verify this recommendation about the Higgsfield API (try to REFUTE it; default refuted=true if evidence is weak).\\n\\nRECOMMENDATION: ' + JSON.stringify(leader) + '\\n\\nSUPPORTING CLAIMS (from other agents \u2014 re-check, do not trust): ' + JSON.stringify(allClaims).slice(0, 14000) + '\\n\\n' + lens + '\\n\\nLei 1: cite the URL you actually opened in evidence_url.',\n    { phase: 'Verify', schema: VERDICT_SCHEMA, agentType: '[[deepsearch-blueprint|deepsearch-blueprint]]', effort: 'high' }\n  )\n))).filter(Boolean)\nconst survived = verdicts.length > 0 && verdicts.filter(v => !v.refuted).length >= Math.ceil(verdicts.length / 2)\nlog('verify: ' + verdicts.filter(v => !v.refuted).length + '/' + verdicts.length + ' lentes sustentam')\n\nphase('Synthesize')\nconst spec = await agent(\n  'You are the synthesis agent for OTD-SPACES-003 (MCORCH Spaces composer: Higgsfield rejected mode=compose; we must flip to the correct CURRENT semantics without guessing).\\n\\n' +\n  'REPO GROUND TRUTH: ' + JSON.stringify(ground).slice(0, 6000) + '\\n\\nLEADER RECOMMENDATION (' + (survived ? 'SURVIVED' : 'DID NOT SURVIVE') + ' adversarial verify): ' + JSON.stringify(leader) + '\\n\\nALL RECOMMENDATIONS: ' + JSON.stringify(recs).slice(0, 4000) + '\\n\\nVERDICTS: ' + JSON.stringify(verdicts) + '\\n\\nCLAIMS: ' + JSON.stringify(allClaims).slice(0, 12000) + '\\n\\n' +\n  'Produce spec_markdown in PT-BR with sections: (1) Endpoint + mode + payload EXATOS (JSON example mapping our node ports image-1/image-2/prompt to provider params); (2) Plano de diff MINIMO no branch composer do canvas-execute (reference the ground file:lines); (3) Checagem de classe de custo \u2014 hoje pinamos 18 mco (classe F1, modelo 4x-floor de docs/processes/[[mcoin-cost-calibration|mcoin-cost-calibration]].md): flag if provider pricing signals a different cost class; (4) Plano de validacao material (cheapest live probe, expected 4xx/2xx signals; refund path is already proven); (5) Unknowns honestos. Set go=true ONLY if a specific endpoint+params survived verification with at least one high-confidence primary source (official docs/openapi/SDK); otherwise go=false and state exactly what is missing. If evidence says multi-image compose is NOT offered by the current API at all, set go=false and propose the honest alternative surfaced by the research.',\n  { phase: 'Synthesize', schema: SPEC_SCHEMA, effort: 'high' }\n)\n\nreturn { ground, leader, tally, verdicts, survived, spec, claims_count: allClaims.length }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wqrfhrggp
+> Summary: Deepsearch OTD-SPACES-003: semantica atual da API Higgsfield para compose multi-imagem (drift do composer)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/subagents/workflows/wf_a5071a65-07c
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/workflows/scripts/otd-spaces-003-higgsfield-compose-wf_a5071a65-07c.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/workflows/scripts/otd-spaces-003-higgsfield-compose-wf_a5071a65-07c.js"} to iterate without resending the script.)
+> Run ID: wf_a5071a65-07c
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/workflows/scripts/otd-spaces-003-higgsfield-compose-wf_a5071a65-07c.js", resumeFromRunId: "wf_a5071a65-07c"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:51:51)*
+
+
+## 🤖 Claude *(01:51:51)*
+
+
+## 🤖 Claude *(01:51:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== canvas-assets em src/ ===\"; git grep -n \"canvas-assets\" -- src/ | head -20\necho \"=== canvas-assets em functions/scripts ===\"; git grep -n \"canvas-assets\" -- supabase/functions/ scripts/ | head -25\necho \"=== generated-videos refs ===\"; git grep -n \"generated-videos\" -- src/ supabase/functions/ scripts/ | head -15\necho \"=== .list( usage no cliente/fns ===\"; git grep -n \"storage\" -- src/ supabase/functions/ | grep -E \"\\.list\\(\" | head -15\necho \"=== useSpaces insert (cliente escolhe id?) ===\"; grep -nE \"insert|randomUUID|\\bid\\b\" src/hooks/useSpaces.ts | head -20",
+  "description": "Map every consumer of canvas-assets and generated-videos storage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === canvas-assets em src/ ===
+> src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:74:          .from("canvas-assets")
+> src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:78:          .from("canvas-assets")
+> src/components/canvas/RightPanel/inspectors/CharacterReferenceInspector.tsx:73:          .from("canvas-assets")
+> src/components/canvas/RightPanel/inspectors/CharacterReferenceInspector.tsx:77:          .from("canvas-assets")
+> src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:87:        .from("canvas-assets")
+> src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:91:        .from("canvas-assets")
+> src/hooks/useCanvasJobsRealtime.ts:58:            qc.invalidateQueries({ queryKey: ['vm-canvas-assets', projectId] });
+> src/hooks/useCanvasStudio.ts:255:      queryClient.invalidateQueries({ queryKey: ["vm-canvas-assets"] });
+> src/hooks/useCanvasStudio.ts:267:    queryKey: ["vm-canvas-assets", projectId, user?.id],
+> src/hooks/useReferenceUpload.ts:2:// Uploads DIRECTLY to the public `canvas-assets` bucket under `<auth.uid()>/spaces-refs/…` — the
+> src/hooks/useReferenceUpload.ts:25:        .from('canvas-assets')
+> src/hooks/useReferenceUpload.ts:28:      const { data } = supabase.storage.from('canvas-assets').getPublicUrl(path);
+> src/test/canvas-video-async-smoke.test.ts:31:const UPSTREAM_ASSET_URL = "https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/7c063e60-d61d-431a-9541-acd33cf5d011.png";
+> src/test/canvas-video-async-smoke.test.ts:286:    expect(assetRow.storage_bucket).toBe("canvas-assets");
+> === canvas-assets em functions/scripts ===
+> scripts/qa/smoke-spaces-execution.ts:205:  const { error: srcUpErr } = await admin.storage.from('canvas-assets').upload(srcPath, dummy, { contentType: 'video/mp4' });
+> scripts/qa/smoke-spaces-execution.ts:207:  const { data: srcSigned } = await admin.storage.from('canvas-assets').createSignedUrl(srcPath, 600);
+> scripts/qa/smoke-spaces-execution.ts:229:  await admin.storage.from('canvas-assets').remove([srcPath, `${spaceA.id}/${runV2.runId}.mp4`]);
+> scripts/seed-viral-daily-canvas-bok-seal.ts:37:ARQUITETURA: Execução diária via cron scan de tendências web (web_search / firecrawl-search), escrita automatizada de scripts otimizados para vídeos de 60s, geração de áudio (TTS) e vídeo (Veo/Higgsfield) salvando os resultados finais em Supabase Storage (canvas-assets) e registrando a execução em vm_canvas_executions e mcorch_nodes (node_type='content_mesh_asset').
+> scripts/seed-viral-daily-canvas-bok-seal.ts:55:    tags: ['bok-scribe', 'viral-daily-canvas', 'trends-scraper', 'ai-video-generation', 'voice-synthesis', 'canvas-assets', 'automated-marketing'],
+> scripts/seed-viralmind-bok-seal.ts:33:ARQUITETURA: 10 tabelas vm_* em 4 migrations (20260514040000-040300) + 6 enums. 2 Edge Functions — fetch-trends (Apify→RapidAPI→cache, JWT) e canvas-execute (4 provedores OpenAI/Replicate/OpenRouter/Higgsfield, débito atômico via deduct_mco_coins RPC, bucket canvas-assets). 3 pages (ViralMinerPage, CanvasStudioPage, CanvasEditorPage) + hooks (useViralTrends, useCanvasStudio, useAutoSave) + useCanvasStore (Zustand+zundo) + catálogo de 9 receitas. xyflow @xyflow/react como motor de canvas. Integração GraphRAG via mcorch_nodes (node types viral_trend/canvas_recipe/canvas_milestone/affiliate_product).
+> scripts/seed-viralmind-bok-seal.ts:41:FMEA: 14 itens FMEA-VM-001..014, com 7 RPN > 100 — VM-002 (288, embedding vector(1536) vs 768 + sem HNSW), VM-008 (150, mesh drift), VM-003 (140, bucket canvas-assets público), VM-013 (140, parse de trends), VM-005 (120, cache stale), VM-001 (105, débito mcoCoins), VM-006/VM-009 (100, execução órfã / provider error sem refund).
+> scripts/seed-viralmind-bok-seal.ts:43:DEVIATIONS CONHECIDAS (OTDs): embedding vector(1536) divergente do padrão 768 + ausência de índice HNSW (OTD-001); bucket canvas-assets público vs padrão privado+signed URL (OTD-004); PRD usa códigos MoSCoW em vez de PR-NNN (OTD-002, decidido manter); namespace vm_* mantido (OTD-003, decidido); 04-frd reescrito de handbook CLAUDE.md para FRD real (OTD-006); override consciente do BoK Gate (OTD-007).
+> supabase/functions/canvas-execute/index.ts:464:    // persist to canvas-assets so the provider URL's short TTL doesn't break
+> supabase/functions/canvas-execute/index.ts:493:            .from("canvas-assets")
+> supabase/functions/canvas-execute/index.ts:497:              .from("canvas-assets")
+> supabase/functions/canvas-execute/index.ts:521:          storage_bucket: "canvas-assets",
+> supabase/functions/canvas-execute/index.ts:544:          p_storage_bucket: "canvas-assets",
+> supabase/functions/canvas-execute/index.ts:910:    .from("canvas-assets")
+> supabase/functions/canvas-execute/index.ts:915:  const { data: pub } = admin.storage.from("canvas-assets").getPublicUrl(fileName);
+> supabase/functions/canvas-execute/index.ts:918:  const result = { audio_url: audioUrl, storage_path: fileName, storage_bucket: "canvas-assets" };
+> supabase/functions/canvas-execute/index.ts:1317:  // Image: persist bytes to the canvas-assets bucket (provider URLs have short TTLs — legacy pattern).
+> supabase/functions/canvas-execute/index.ts:1337:        .from("canvas-assets").upload(fileName, bytes, { contentType: storedContentType, upsert: true });
+> supabase/functions/canvas-execute/index.ts:1339:        const { data: urlData } = admin.storage.from("canvas-assets").getPublicUrl(fileName);
+> supabase/functions/canvas-execute/index.ts:1373:        p_storage_bucket: "canvas-assets",
+> supabase/functions/higgsfield-webhook/index.ts:241:      .from("canvas-assets")
+> supabase/functions/higgsfield-webhook/index.ts:246:      .from("canvas-assets")
+> supabase/functions/higgsfield-webhook/index.ts:253:      storage_bucket: "canvas-assets",
+> supabase/functions/higgsfield-webhook/index.ts:437:    // Upload to canvas-assets bucket — private; client uses signed URL
+> supabase/functions/higgsfield-webhook/index.ts:440:      .from("canvas-assets")
+> === generated-videos refs ===
+> supabase/functions/check-video-status/index.ts:148:          .from("generated-videos")
+> supabase/functions/check-video-status/index.ts:158:        const { data: urlData } = adminClient.storage.from("generated-videos").getPublicUrl(fileName);
+> supabase/functions/check-video-status/index.ts:273:            .from("generated-videos")
+> supabase/functions/check-video-status/index.ts:283:          const { data: urlData } = adminClient.storage.from("generated-videos").getPublicUrl(fileName);
+> supabase/functions/rescue-video/index.ts:102:        .from("generated-videos")
+> supabase/functions/rescue-video/index.ts:106:        const { data: urlData } = adminClient.storage.from("generated-videos").getPublicUrl(fileName);
+> === .list( usage no cliente/fns ===
+> === useSpaces insert (cliente escolhe id?) ===
+> 37:    id: row.id,
+> 76:        .from('spaces').select('*').eq('id', spaceId!).maybeSingle();
+> 91:        .insert({ owner_id: user.id, title: title.trim() || 'Untitled space' })
+> 92:        .select('id').single();
+> 94:      return data.id as string;
+> 123:        const { data } = await supabase.from('spaces').select('graph').eq('id', spaceId).maybeSingle();
+> 130:        .from('spaces').update({ graph: serializeGraph(snapshot) }).eq('id', spaceId);
+> ```
+
+## 🤖 Claude *(01:52:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad\" && python3 - <<'PY' > sample.json\nimport json\nsql = \"\"\"\nSELECT jsonb_build_object(\n  'counts', (SELECT jsonb_agg(jsonb_build_object('bucket', bucket_id, 'n', n)) FROM (SELECT bucket_id, count(*) AS n FROM storage.objects WHERE bucket_id IN ('canvas-assets','generated-videos') GROUP BY bucket_id) c),\n  'samples', (SELECT jsonb_agg(jsonb_build_object('bucket', bucket_id, 'name', name)) FROM (SELECT bucket_id, name FROM storage.objects WHERE bucket_id IN ('canvas-assets','generated-videos') ORDER BY created_at DESC LIMIT 6) s)\n) AS r;\n\"\"\"\nprint(json.dumps({\"query\": sql}))\nPY\nTOKEN=$(cat /home/ubuntu/.supabase/access-token)\ncurl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @sample.json | python3 -m json.tool | head -60\ngrep -cE \"VITE_SUPABASE_PUBLISHABLE_KEY\" .env && grep -oE \"VITE_SUPABASE_URL=.*\" .env",
+  "description": "Sample object names and counts in the two public buckets; confirm env keys present"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> [
+>     {
+>         "r": {
+>             "counts": [
+>                 {
+>                     "n": 152,
+>                     "bucket": "canvas-assets"
+>                 },
+>                 {
+>                     "n": 6,
+>                     "bucket": "generated-videos"
+>                 }
+>             ],
+>             "samples": [
+>                 {
+>                     "name": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/spaces-refs/d392bf82-db11-46ba-b8d2-9fced1ad2571.png",
+>                     "bucket": "canvas-assets"
+>                 },
+>                 {
+>                     "name": "1d77b500-c054-4704-b120-403f4871cdac/0cb9fff2-b169-48d5-b97e-3777b89c87e4.wav",
+>                     "bucket": "canvas-assets"
+>                 },
+>                 {
+>                     "name": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/spaces-refs/9484c2b7-2c2b-41a5-b6b8-963824a4d6ec.png",
+>                     "bucket": "canvas-assets"
+>                 },
+>                 {
+>                     "name": "51b229cf-98b9-42d4-b4f9-e472fdcaaefb/3e120f3d-b160-472f-a3a8-f74089343c23.mp4",
+>                     "bucket": "canvas-assets"
+>                 },
+>                 {
+>                     "name": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/spaces/db635311-5597-4fae-bbdc-c84d50cf5a37.png",
+>                     "bucket": "canvas-assets"
+>                 },
+>                 {
+>                     "name": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/avatars/b57a59f7-ab67-4590-b984-9c1a19c8a164/n_qca6z67z-1782963713019-22.jpeg",
+>                     "bucket": "canvas-assets"
+>                 }
+>             ]
+>         }
+>     }
+> ]
+> ugrep: warning: .env: No such file or directory
+> ```
+
+## 🤖 Claude *(01:53:54)*
+
+
+## 🤖 Claude *(01:57:23)*
+
+
+## 🤖 Claude *(01:57:23)*
+
+
+## 🤖 Claude *(01:57:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== .env location ===\"; ls -la .env 2>&1; ls -la .env.local 2>&1\necho \"=== publishable/anon key presence (masked) ===\"\nfor f in .env .env.local; do [ -f \"$f\" ] && grep -oE \"VITE_SUPABASE_(URL|PUBLISHABLE_KEY|PROJECT_ID)=\" \"$f\"; done\necho \"=== SB_PUBLISHABLE_KEY presence ===\"\nfor f in .env .env.local; do [ -f \"$f\" ] && grep -oE \"SB_PUBLISHABLE_KEY=|SB_SECRET_KEY=\" \"$f\"; done",
+  "description": "Locate .env and identify which anon/publishable key vars exist"
+}
+```
+
+## 🤖 Claude *(01:57:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== client .download( on any bucket ===\"; git grep -nE \"\\.download\\(\" -- src/ | head\necho \"=== client createSignedUrl (non-test) ===\"; git grep -n \"createSignedUrl\" -- src/ | grep -v test | head\necho \"=== authenticated object endpoint / storage list in client ===\"; git grep -nE \"object/authenticated|storage/v1/object/list|\\.list\\(\" -- src/ | head\necho \"=== getPublicUrl callers (all) ===\"; git grep -n \"getPublicUrl\" -- src/ supabase/functions/ | head -30",
+  "description": "Audit all client read paths against canvas-assets (download/sign/list/publicUrl)"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> claude-opus-4-8 is temporarily unavailable, so auto mode cannot determine the safety of Bash right now. Wait briefly and then try this action again. If it keeps failing, continue with other tasks that don't require this action and come back to it later. Note: reading files, searching code, and other read-only operations do not require the classifier and can still be used.
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === client .download( on any bucket ===
+> === client createSignedUrl (non-test) ===
+> src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:79:          .createSignedUrl(path, 60 * 60 * 24 * 7);
+> src/components/canvas/RightPanel/inspectors/CharacterReferenceInspector.tsx:78:          .createSignedUrl(path, 60 * 60 * 24 * 7);
+> src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:92:        .createSignedUrl(path, 60 * 60 * 24 * 7);
+> src/hooks/useCreativeAssets.ts:41:  const { data } = await supabase.storage.from(a.storage_bucket).createSignedUrl(a.storage_key, 3600);
+> === authenticated object endpoint / storage list in client ===
+> === getPublicUrl callers (all) ===
+> src/hooks/useCreativeAssets.ts:35:  return supabase.storage.from(a.storage_bucket).getPublicUrl(a.storage_key).data.publicUrl;
+> src/hooks/useReferenceUpload.ts:28:      const { data } = supabase.storage.from('canvas-assets').getPublicUrl(path);
+> supabase/functions/canvas-execute/index.ts:498:              .getPublicUrl(fileName);
+> supabase/functions/canvas-execute/index.ts:915:  const { data: pub } = admin.storage.from("canvas-assets").getPublicUrl(fileName);
+> supabase/functions/canvas-execute/index.ts:1339:        const { data: urlData } = admin.storage.from("canvas-assets").getPublicUrl(fileName);
+> supabase/functions/check-video-status/index.ts:158:        const { data: urlData } = adminClient.storage.from("generated-videos").getPublicUrl(fileName);
+> supabase/functions/check-video-status/index.ts:283:          const { data: urlData } = adminClient.storage.from("generated-videos").getPublicUrl(fileName);
+> supabase/functions/rescue-video/index.ts:106:        const { data: urlData } = adminClient.storage.from("generated-videos").getPublicUrl(fileName);
+> ```
+
+## 🤖 Claude *(01:58:28)*
+
+You've hit your session limit · resets 1:30am (America/Sao_Paulo)
+
+## 👤 User *(01:58:29)*
+
+## Context Usage
+
+**Model:** claude-opus-4-8  
+**Tokens:** 129.7k / 1m (13%)
+
+### Estimated usage by category
+
+| Category | Tokens | Percentage |
+|----------|--------|------------|
+| System prompt | 4.2k | 0.4% |
+| System tools | 12.2k | 1.2% |
+| MCP tools (deferred) | 24k | 2.4% |
+| System tools (deferred) | 15.7k | 1.6% |
+| Custom agents | 331 | 0.0% |
+| Memory files | 34.7k | 3.5% |
+| Skills | 5.8k | 0.6% |
+| Messages | 75.9k | 7.6% |
+| Free space | 833.7k | 83.4% |
+| Autocompact buffer | 33k | 3.3% |
+
+### MCP Tools
+
+| Tool | Server | Tokens |
+|------|--------|--------|
+| mcp__claude_ai_Microsoft_365__authenticate | claude_ai_Microsoft_365 | 174 |
+| mcp__claude_ai_Microsoft_365__complete_authentication | claude_ai_Microsoft_365 | 227 |
+| mcp__github__add_comment_to_pending_review | github | 598 |
+| mcp__github__add_issue_comment | github | 483 |
+| mcp__github__add_reply_to_pull_request_comment | github | 452 |
+| mcp__github__create_branch | github | 193 |
+| mcp__github__create_or_update_file | github | 466 |
+| mcp__github__create_pull_request | github | 347 |
+| mcp__github__create_repository | github | 261 |
+| mcp__github__delete_file | github | 225 |
+| mcp__github__fork_repository | github | 168 |
+| mcp__github__get_commit | github | 412 |
+| mcp__github__get_file_contents | github | 281 |
+| mcp__github__get_label | github | 163 |
+| mcp__github__get_latest_release | github | 132 |
+| mcp__github__get_me | github | 104 |
+| mcp__github__get_release_by_tag | github | 166 |
+| mcp__github__get_tag | github | 155 |
+| mcp__github__get_team_members | github | 157 |
+| mcp__github__get_teams | github | 126 |
+| mcp__github__issue_read | github | 440 |
+| mcp__github__issue_write | github | 1.1k |
+| mcp__github__list_branches | github | 208 |
+| mcp__github__list_commits | github | 532 |
+| mcp__github__list_issue_fields | github | 297 |
+| mcp__github__list_issue_types | github | 228 |
+| mcp__github__list_issues | github | 751 |
+| mcp__github__list_pull_requests | github | 415 |
+| mcp__github__list_releases | github | 208 |
+| mcp__github__list_repository_collaborators | github | 395 |
+| mcp__github__list_tags | github | 207 |
+| mcp__github__merge_pull_request | github | 261 |
+| mcp__github__pull_request_read | github | 950 |
+| mcp__github__pull_request_review_write | github | 850 |
+| mcp__github__push_files | github | 325 |
+| mcp__github__request_copilot_review | github | 207 |
+| mcp__github__run_secret_scanning | github | 500 |
+| mcp__github__search_code | github | 457 |
+| mcp__github__search_commits | github | 578 |
+| mcp__github__search_issues | github | 463 |
+| mcp__github__search_pull_requests | github | 476 |
+| mcp__github__search_repositories | github | 443 |
+| mcp__github__search_users | github | 340 |
+| mcp__github__sub_issue_write | github | 556 |
+| mcp__github__update_pull_request | github | 396 |
+| mcp__github__update_pull_request_branch | github | 219 |
+| mcp__gitnexus__get_file_symbols | gitnexus | 132 |
+| mcp__gitnexus__get_node_edges | gitnexus | 169 |
+| mcp__gitnexus__get_nodes_by_kind | gitnexus | 196 |
+| mcp__gitnexus__get_symbol_by_name | gitnexus | 134 |
+| mcp__gitnexus__graph_stats | gitnexus | 93 |
+| mcp__gitnexus__search_symbol | gitnexus | 188 |
+| mcp__playwright__browser_click | playwright | 339 |
+| mcp__playwright__browser_close | playwright | 81 |
+| mcp__playwright__browser_console_messages | playwright | 298 |
+| mcp__playwright__browser_drag | playwright | 323 |
+| mcp__playwright__browser_drop | playwright | 381 |
+| mcp__playwright__browser_evaluate | playwright | 300 |
+| mcp__playwright__browser_file_upload | playwright | 160 |
+| mcp__playwright__browser_fill_form | playwright | 417 |
+| mcp__playwright__browser_handle_dialog | playwright | 159 |
+| mcp__playwright__browser_hover | playwright | 194 |
+| mcp__playwright__browser_navigate | playwright | 115 |
+| mcp__playwright__browser_navigate_back | playwright | 95 |
+| mcp__playwright__browser_network_request | playwright | 323 |
+| mcp__playwright__browser_network_requests | playwright | 300 |
+| mcp__playwright__browser_press_key | playwright | 141 |
+| mcp__playwright__browser_resize | playwright | 152 |
+| mcp__playwright__browser_run_code_unsafe | playwright | 305 |
+| mcp__playwright__browser_select_option | playwright | 264 |
+| mcp__playwright__browser_snapshot | playwright | 312 |
+| mcp__playwright__browser_tabs | playwright | 222 |
+| mcp__playwright__browser_take_screenshot | playwright | 569 |
+| mcp__playwright__browser_type | playwright | 333 |
+| mcp__playwright__browser_wait_for | playwright | 182 |
+
+### Custom Agents
+
+| Agent Type | Source | Tokens |
+|------------|--------|--------|
+| build-deploy-guardian | Project | 146 |
+| [[deepsearch-blueprint|deepsearch-blueprint]] | Project | 185 |
+
+### Memory Files
+
+| Type | Path | Tokens |
+|------|------|--------|
+| Project | /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md | 24.1k |
+| Project | /home/gcrUX/htdocs/constellation-orchestra/.claude/rules/survival.md | 3.7k |
+| AutoMem | /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md | 7k |
+
+### Skills
+
+| Skill | Source | Tokens |
+|-------|--------|--------|
+| firecrawl | User | ~240 |
+| firecrawl-agent | User | ~170 |
+| firecrawl-build-interact | User | ~100 |
+| firecrawl-build-onboarding | User | ~140 |
+| firecrawl-build-scrape | User | ~100 |
+| firecrawl-build-search | User | ~90 |
+| firecrawl-crawl | User | ~140 |
+| firecrawl-download | User | ~140 |
+| firecrawl-interact | User | ~250 |
+| firecrawl-map | User | ~130 |
+| firecrawl-scrape | User | ~140 |
+| firecrawl-search | User | ~150 |
+| agent-browser | Project | ~310 |
+| build-deploy-guardian | Project | ~170 |
+| canvas-studio-cinematic | Project | ~170 |
+| [[deepsearch-blueprint|deepsearch-blueprint]] | Project | ~170 |
+| e2e-user-zero-audit | Project | ~50 |
+| mcorch-qa-healing | Project | ~110 |
+| openclaw-dreaming | Project | ~160 |
+| openclaw-gateway-ops | Project | ~130 |
+| [[webgl-canvas-stabilization|webgl-canvas-stabilization]] | Project | ~110 |
+| audit | Project | ~70 |
+| bok-scribe | Project | ~120 |
+| debug | Project | ~60 |
+| edge | Project | ~60 |
+| feature | Project | ~60 |
+| handoff | Project | < 20 |
+| handson | Project | < 20 |
+| level-up | Project | ~60 |
+| migration | Project | ~50 |
+| sync-mobile-branch | Project | ~30 |
+| deep-research | Built-in | ~160 |
+| dataviz | Built-in | ~380 |
+| artifact-design | Built-in | ~20 |
+| update-config | Built-in | ~240 |
+| keybindings-help | Built-in | ~80 |
+| verify | Built-in | ~130 |
+| code-review | Built-in | ~140 |
+| simplify | Built-in | ~60 |
+| fewer-permission-prompts | Built-in | ~60 |
+| loop | Built-in | ~120 |
+| schedule | Built-in | ~130 |
+| claude-api | Built-in | ~360 |
+| run | Built-in | ~120 |
+| init | Built-in | ~20 |
+| review | Built-in | ~30 |
+| security-review | Built-in | ~30 |
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -41477,5 +43433,5 @@ De novo o pkill abortou a cadeia (lição repetida — pkill sempre separado). R
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-02 - fc54f2bd-db07-4bb1-86c9-4f15891e35e3]]
-> * **Próxima Sessão**: [[2026-07-03 - agent-a9137afaf030d6373]]
+> * **Próxima Sessão**: [[2026-07-03 - agent-a125f8f9b3fcef787]]
 %% --- TIMELINE END --- %%
