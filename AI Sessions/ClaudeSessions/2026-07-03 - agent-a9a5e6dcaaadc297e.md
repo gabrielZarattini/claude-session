@@ -1080,3 +1080,16 @@ I have enough evidence to map the full scope. Let me compile the surface invento
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - agent-a941b59f6c7b58b25]]
+> * **Próxima Sessão**: [[2026-07-03 - agent-ad13e722023a3e993]]
+%% --- TIMELINE END --- %%
