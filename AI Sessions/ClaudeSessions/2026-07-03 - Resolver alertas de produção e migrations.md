@@ -39297,6 +39297,2176 @@ Testes G14 + validação completa:
 }
 ```
 
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    O painel lateral de um editor de nós exibe uma seção de Referências. Nela, há uma thumbnail quadriculada nas cores azul e amarela, um botão '+' para adicionar referências, e o contador '1/4 ativas no run - referências não são cobradas'. Não há tela branca, erro ou layout quebrado; todos os elementos estão visíveis e formatados corretamente.
+> qa print cleaned
+> ```
+
+## 🤖 Claude *(01:00:34)*
+
+
+## 🤖 Claude *(01:00:34)*
+
+
+## 🤖 Claude *(01:00:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "pkill -f 'vite preview'; true",
+  "description": "Stop preview server"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ```
+
+## 🤖 Claude *(01:00:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test 2>&1 | grep -E 'Test Files|Tests '",
+  "description": "Full vitest regression",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Test Files  31 passed | 2 skipped (33)
+>       Tests  388 passed | 2 skipped (390)
+> ```
+
+## 🤖 Claude *(01:01:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md src/lib/spaces-execution.ts src/hooks/useReferenceUpload.ts src/components/spaces/ReferencePicker.tsx src/components/spaces/ParamHUD.tsx src/test/spaces-execution.test.ts && git commit -q -m \"feat(spaces): Fase 2b \u2014 References picker no image-generator (upload + merge capado na verdade do server)\n\nSOP Amendment S23-S25 ANTES do c\u00f3digo: refs em node.data.references\n(schema 1a), upload client-side direto ao canvas-assets sob\n<uid>/spaces-refs/ (policies existentes exigem o prefixo \u2014 zero migration,\nzero superf\u00edcie server); cap ativo = 4 (generateOpenRouter anexa\nslice(0,4) multimodal \u2014 nunca prometer ref que o server ignora, diverg\u00eancia\ndeclarada do BoK 8); refs nunca cobram. mergeReferenceUrls: expl\u00edcitas\nprimeiro + upstream threaded, dedupe, cap 4. ReferencePicker render-only\n(chips + remover + contador honesto 'n/4 ativas'); useReferenceUpload\n(image/* \u22648MB). Gate G14 vitest 4 novos (388 total) \u00b7 tsc 0 \u00b7 browser-verify:\nupload REAL ao bucket (prefixo uid provado) \u2192 chip \u2192 graph persistido \u2192\nreload hidrata \u2192 Vision QA confidence high.\" && git log -1 --format='%h %s'",
+  "description": "Commit the 2b references slice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  secret-scan ❯ 
+> 
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:01PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:01PM[0m [32mINF[0m scan completed in 10.5ms
+> [90m10:01PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ e2e-output-tripwire (0.04 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 4abddf7 feat(spaces): Fase 2b — References picker no image-generator (upload + merge capado na verdade do server)
+> ```
+
+## 🤖 Claude *(01:01:19)*
+
+
+## 🤖 Claude *(01:01:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = '.claude/context/autonomous-loop-charter.md'\ns = open(p).read()\ns = s.replace(\n  \"- **Restam do Spaces:** Fase 2 restante (\u00e1udio/Designer/Workflow Apps/FX/References picker/multi-page) \u00b7 Fase 3 (collab).\",\n  \"\"\"- **Restam do Spaces:** Fase 2 restante (\u00e1udio via `generate-voice` [tem fn, precisa branch de ledger] \u00b7 Designer \u00b7 Workflow Apps \u00b7 FX \u00b7 multi-page) \u00b7 Fase 3 (collab).\n\n### \u2705 Spaces Fase 2b \u2014 References picker \u2014 SHIPPED (loop 2026-07-02 it.4, commit `4abddf7`)\n- **SOP S23-S25 ANTES:** refs em `node.data.references` (schema 1a); upload client-side ao `canvas-assets` `<uid>/spaces-refs/` (policies existentes exigem prefixo \u2014 zero migration/zero server novo); **cap ativo 4 = verdade do server** (`generateOpenRouter` anexa slice(0,4) multimodal; diverg\u00eancia do BoK 8 declarada); refs nunca cobram.\n- **Provas (Lei 1):** `mergeReferenceUrls` expl\u00edcitas+upstream dedupe cap 4 \u2014 **G14 vitest 4 novos (388 total)** \u00b7 tsc 0 \u00b7 eslint limpo \u00b7 **browser-verify**: upload REAL (URL do bucket com prefixo do uid = policy provada) \u2192 chip \u2192 `graph.references` persistido no DB \u2192 reload hidrata \u2192 contador honesto \"1/4 ativas no run \u00b7 refer\u00eancias n\u00e3o s\u00e3o cobradas\" \u2192 **Vision QA confidence high**. Placeholder \"chegam na Fase 2\" morto.\"\"\",\n)\nopen(p, 'w').write(s)\nprint('charter updated')\nEOF\npython3 - <<'EOF'\np = 'HANDOFF.md'\ns = open(p).read()\nmarker = \"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2a-CLIENTE: v\u00eddeo E2E PAGO \u2014 canvas\u2192v\u00eddeo REAL fechado\"\nseal = \"\"\"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2b: References picker (consist\u00eancia visual no n\u00f3 de imagem)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (zero mudan\u00e7a no dinheiro \u2014 S25; superf\u00edcie = client + bucket com policies existentes).\n\nItera\u00e7\u00e3o 4 do loop. SOP S23-S25 ANTES do c\u00f3digo. Entrega: o placeholder \"Refer\u00eancias (0/8) chegam na Fase 2\" virou picker real \u2014 upload client-side ao `canvas-assets` `<uid>/spaces-refs/` (policy de prefixo provada com upload real do User 0), chips com remo\u00e7\u00e3o, contador honesto **\"n/4 ativas\"** (cap = verdade do server: `generateOpenRouter` usa `slice(0,4)` multimodal \u2014 diverg\u00eancia do BoK 8 declarada), merge expl\u00edcitas\u2192upstream dedupe cap 4 no payload (`mergeReferenceUrls`). Provas: **G14 vitest 4 novos (388 total)** \u00b7 tsc 0 \u00b7 eslint limpo \u00b7 browser-verify (upload \u2192 chip \u2192 `graph.references` no DB \u2192 reload hidrata) \u00b7 **Vision QA confidence high**. Commit `4abddf7`. Follow-up declarado: \u00f3rf\u00e3os de bucket em remo\u00e7\u00e3o de ref (\u22648MB, limpeza com o References node completo da Fase 2).\n\n**Survival Laws Self-audit:** Lei 1 \u2705 \u00b7 Lei 2 \u2705 (SOP antes) \u00b7 Lei 3 \u2705 \u00b7 Lei 4 \u2705.\n\n\"\"\"\ns = s.replace(marker, seal + marker, 1)\nopen(p, 'w').write(s)\nprint('handoff updated')\nEOF\nsed -i 's|version-6.79.0--spaces--2a--video--E2E--pago-blueviolet|version-6.80.0--spaces--2b--references--picker-blueviolet|' README.md && echo \"readme bumped\"",
+  "description": "Update charter, HANDOFF, README for 2b seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> charter updated
+> handoff updated
+> readme bumped
+> ```
+
+## 🤖 Claude *(01:01:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && cat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2b.sql <<'EOF'\nINSERT INTO public.mcorch_nodes (user_id, node_type, name, content, metadata, revenue_impact, stability_score)\nVALUES (NULL, 'handoff', 'spaces-2b-references-picker-2026-07-02',\n'[HANDOFF SEAL] Spaces Fase 2b \u2014 References picker no image-generator. SOP S23-S25 antes do codigo: refs em node.data.references, upload client-side ao canvas-assets <uid>/spaces-refs/ (policies existentes, zero migration/zero server novo), cap ativo 4 = verdade do server (generateOpenRouter slice(0,4) multimodal; divergencia do BoK 8 declarada), refs nunca cobram. mergeReferenceUrls explicitas+upstream dedupe cap 4. G14 vitest 4 novos (388 total), tsc 0, browser-verify upload real (prefixo uid = policy provada) -> chip -> graph persistido -> reload hidrata -> contador honesto 1/4 ativas -> Vision QA high. Commit 4abddf7.',\n'{\"provider\":\"handoff\",\"event\":\"spaces_2b_references\",\"commits\":[\"4abddf7\"],\"vision_qa\":\"high\"}'::jsonb,\n0, 0.9)\nRETURNING id;\nEOF\npython3 -c \"import json;print(json.dumps({'query': open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2b.sql').read()}))\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2b.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2b.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT count(*) AS mesh FROM public.mcorch_nodes;\"}' && sed -i \"s|neural_mesh-9039_nodes|neural_mesh-9040_nodes|\" README.md && git add README.md HANDOFF.md .claude/context/autonomous-loop-charter.md && git commit -q -m \"chore(sprint): v6.80.0 \u2014 Spaces 2b References picker selado (upload real + cap honesto 4, Vision QA high, mesh 9040)\n\nSeal node do commit anterior 4abddf7; consistencia visual entra no\ncanvas pago. Charter/HANDOFF atualizados.\" && git push origin main 2>&1 | tail -1",
+  "description": "Insert mesh seal node, bump badge, commit and push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"d05d04e8-1039-403c-8599-8ffe790f8b23"}][{"mesh":9040}][38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:01PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:01PM[0m [32mINF[0m scan completed in 15.5ms
+> [90m10:01PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.05 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    4a9d05b..bd49da9  main -> main
+> ```
+
+## 🤖 Claude *(01:02:22)*
+
+
+## 🤖 Claude *(01:02:22)*
+
+
+## 🤖 Claude *(01:02:26)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 90,
+  "reason": "Fatia 2b selada e pushada; pr\u00f3xima itera\u00e7\u00e3o sonda multi-page vs \u00e1udio na Fase 2 do Spaces.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 22:04:00 (in 93s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(01:04:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(01:04:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(01:04:23)*
+
+
+## 🤖 Claude *(01:04:23)*
+
+
+## 🤖 Claude *(01:04:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log -1 --format='%h %s' && wc -l supabase/functions/generate-voice/index.ts && grep -n 'deduct\\|mco\\|verify_jwt\\|auth\\|resolve_voice_profile\\|cartesia\\|COST' supabase/functions/generate-voice/index.ts | head -20",
+  "description": "Probe generate-voice billing and auth model"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bd49da9 chore(sprint): v6.80.0 — Spaces 2b References picker selado (upload real + cap honesto 4, Vision QA high, mesh 9040)
+> 418 supabase/functions/generate-voice/index.ts
+> 9://   action: "clone"      → Instant Voice Cloning (ElevenLabs IVC / Cartesia) → voice_profiles row. No mco.
+> 10://   action: "synthesize" → TTS with a cloned voice → audio asset. Charges VOICE_COST (36) atomically.
+> 19:    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 22:const VOICE_COST = 36; // mirror COIN_COSTS.VOICE_GENERATION (src/lib/billing.ts) — Deno can't import src/lib.
+> 24:const CARTESIA_MODEL = "sonic-3.5";                 // EN + pt-BR (docs.cartesia.ai)
+> 29:type VoiceProvider = "elevenlabs" | "cartesia";
+> 89:    const authHeader = req.headers.get("Authorization");
+> 90:    if (!authHeader) return json({ error: "unauthorized" }, 401);
+> 92:    // Dual-path auth (mirrors generate-image): service-role bearer trusts body.user_id; else resolve via JWT.
+> 93:    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 96:    const provider = (body?.provider === "cartesia" ? "cartesia" : "elevenlabs") as VoiceProvider;
+> 107:      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+> 108:      const { data: { user }, error: authErr } = await userClient.auth.getUser();
+> 109:      if (authErr || !user) return json({ error: "unauthorized" }, 401);
+> 115:      .from("decrypted_user_api_keys").select("elevenlabs_api_key, cartesia_api_key").eq("user_id", userId).maybeSingle();
+> 117:      (p === "cartesia" ? userKeys?.cartesia_api_key : userKeys?.elevenlabs_api_key) || "";
+> 152:        voiceId = provider === "cartesia"
+> 153:          ? await cartesiaClone(apiKey, sampleBytes, name, sampleMime)
+> 178:      admin.from("mcorch_nodes").insert({
+> 200:      const { data: rows, error: resolveErr } = await admin.rpc("resolve_voice_profile", {
+> ```
+
+## 🤖 Claude *(01:04:41)*
+
+
+## 🤖 Claude *(01:04:41)*
+
+
+## 🤖 Claude *(01:04:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '195,260p' supabase/functions/generate-voice/index.ts",
+  "description": "Read synthesize path and default-voice handling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       const script = typeof body?.script === "string" ? body.script : "";
+>       if (!voiceProfileId) return json({ error: "voice_profile_id is required" }, 400);
+>       if (!script.trim()) return json({ error: "script is required" }, 400);
+> 
+>       // Resolve the OWNER-scoped voice profile (decrypts the provider voice_id; tenant-guarded by the RPC).
+>       const { data: rows, error: resolveErr } = await admin.rpc("resolve_voice_profile", {
+>         p_id: voiceProfileId,
+>         p_user_id: userId,
+>       });
+>       if (resolveErr) {
+>         console.error("[generate-voice] resolve_voice_profile error:", resolveErr);
+>         return json({ error: "voice_profile_resolve_failed" }, 500);
+>       }
+>       const profile = Array.isArray(rows) ? rows[0] : rows;
+>       if (!profile) return json({ error: "voice_profile_not_found" }, 404);
+>       if (profile.status !== "active") return json({ error: "voice_profile_revoked" }, 403);
+> 
+>       const profProvider = (profile.provider === "cartesia" ? "cartesia" : "elevenlabs") as VoiceProvider;
+> 
+>       // HARD code-switch gate (FR-AC-010): the voice was cloned in profile.language — never accent-bleed.
+>       if (profile.language !== language) {
+>         return json({ error: "language_mismatch", detail: `voz clonada em ${profile.language}, pedido em ${language}` }, 422);
+>       }
+>       // SOFT code-switch gate (intra-sentence).
+>       if (detectCodeSwitch(script, language)) {
+>         return json({ error: "code_switch_detected", detail: "use um único idioma por geração" }, 422);
+>       }
+>       // Sentinel — injection guard on the (potentially untrusted) script.
+>       const verdict = inspectPrompt(script, `${SERVICE}:${userId}`, { rateLimit: true });
+>       if (!verdict.allow) {
+>         await logSentinelBlock(admin, "generate-voice", verdict, userId);
+>         return verdictResponse(verdict, corsHeaders);
+>       }
+> 
+>       // BYOK for the profile's provider (the voice_id is provider-specific).
+>       const apiKey = keyFor(profProvider);
+>       if (!apiKey) {
+>         await pulse("degraded", "avatar_voice", { reason: "no_config", provider: profProvider });
+>         return json({ error: `${profProvider}_not_configured`, action: "Configure suas credenciais de voz em /dashboard/settings" }, 402);
+>       }
+> 
+>       // Consent fail-closed (FR-AC-031, LGPD Art. 18): if the user GRANTED voice_clone consent and then revoked
+>       // ALL of it, block the render. Profiles created post-Fatia-3a always carry an active consent (clone requires
+>       // it); legacy/pre-consent profiles (no consent rows) are not blocked here.
+>       const { data: vcConsents } = await admin.from("avatar_consents").select("revoked_at")
+>         .eq("user_id", userId).eq("purpose", "voice_clone").eq("consent_granted", true);
+>       if (vcConsents && vcConsents.length > 0 && !vcConsents.some((c: { revoked_at: string | null }) => c.revoked_at === null)) {
+>         return json({ error: "consent_revoked", action: "Consentimento de voz revogado — conceda novamente em /dashboard/settings" }, 403);
+>       }
+> 
+>       // Balance gate, then atomic debit (BEFORE any provider call — fail-closed).
+>       const { data: prof } = await admin.from("profiles").select("mco_balance").eq("id", userId).maybeSingle();
+>       if (((prof?.mco_balance as number | null) ?? 0) < VOICE_COST) {
+>         return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+>       }
+>       const { error: deductErr } = await admin.rpc("deduct_mco_coins", { p_user_id: userId, p_amount: VOICE_COST });
+>       if (deductErr) return json({ error: "Saldo insuficiente de mcoCoins" }, 402);
+> 
+>       // Synthesize (provider call). Refund on failure — never charge-without-value (FM-AC-005).
+>       let audioBytes: Uint8Array;
+>       let mime: string;
+>       try {
+>         if (profProvider === "cartesia") {
+>           audioBytes = await cartesiaTTS(apiKey, profile.voice_id, script, language);
+>           mime = "audio/wav";
+>         } else {
+> ```
+
+## 🤖 Claude *(01:04:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT count(*) AS profiles, (SELECT count(*) FROM public.decrypted_user_api_keys WHERE user_id='\"'\"'ada39fae-67e1-4e53-af1c-5a18e1c108e8'\"'\"' AND (cartesia_api_key IS NOT NULL OR elevenlabs_api_key IS NOT NULL)) AS has_voice_byok FROM public.voice_profiles WHERE user_id='\"'\"'ada39fae-67e1-4e53-af1c-5a18e1c108e8'\"'\"';\"}'",
+  "description": "Check User 0 voice profiles and voice BYOK keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"profiles":0,"has_voice_byok":1}]
+> ```
+
+## 🤖 Claude *(01:05:03)*
+
+
+## 🤖 Claude *(01:05:03)*
+
+
+## 🤖 Claude *(01:05:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -40 supabase/functions/tts-speak/index.ts && grep -n 'deduct\\|COST\\|voice' supabase/functions/tts-speak/index.ts | head -10",
+  "description": "Probe tts-speak function"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 
+> const corsHeaders = {
+>   "Access-Control-Allow-Origin": "*",
+>   "Access-Control-Allow-Methods": "POST, OPTIONS",
+>   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> };
+> 
+> // Gemini 2.5 Flash TTS — neural voices, same API key as chat
+> const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+> const TTS_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
+> 
+> const VALID_VOICES = new Set([
+>   "Kore", "Puck", "Charon", "Fenrir", "Aoede", "Leda", "Orus", "Zephyr",
+> ]);
+> 
+> // Wrap raw PCM (16-bit signed LE, mono, 24kHz) in a WAV container
+> function pcmToWav(pcm: Uint8Array, sampleRate = 24000): Uint8Array {
+>   const numChannels = 1;
+>   const bitsPerSample = 16;
+>   const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+>   const blockAlign = (numChannels * bitsPerSample) / 8;
+>   const dataSize = pcm.byteLength;
+>   const header = new DataView(new ArrayBuffer(44));
+> 
+>   const w = (off: number, val: number, len: 4 | 2 = 4) =>
+>     len === 4 ? header.setUint32(off, val, true) : header.setUint16(off, val, true);
+> 
+>   // RIFF chunk
+>   [82, 73, 70, 70].forEach((b, i) => header.setUint8(i, b));         // "RIFF"
+>   w(4, 36 + dataSize);
+>   [87, 65, 86, 69].forEach((b, i) => header.setUint8(8 + i, b));     // "WAVE"
+>   [102, 109, 116, 32].forEach((b, i) => header.setUint8(12 + i, b)); // "fmt "
+>   w(16, 16); w(20, 1, 2); w(22, numChannels, 2);
+>   w(24, sampleRate); w(28, byteRate); w(32, blockAlign, 2); w(34, bitsPerSample, 2);
+>   [100, 97, 116, 97].forEach((b, i) => header.setUint8(36 + i, b)); // "data"
+>   w(40, dataSize);
+> 
+>   const wav = new Uint8Array(44 + dataSize);
+>   wav.set(new Uint8Array(header.buffer), 0);
+> 9:// Gemini 2.5 Flash TTS — neural voices, same API key as chat
+> 80:  let voiceName: string;
+> 85:    voiceName = VALID_VOICES.has(body.voice) ? body.voice : "Kore";
+> 97:        voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+> ```
+
+## 🤖 Claude *(01:05:18)*
+
+
+## 🤖 Claude *(01:05:18)*
+
+
+## 🤖 Claude *(01:05:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n 'deduct_mco\\|mco_balance\\|Authorization\\|auth.getUser\\|user_id\\|decrypted' supabase/functions/tts-speak/index.ts | head -12 && grep -n 'verify_jwt' supabase/config.toml | head -3 && grep -n -B2 -A3 'tts-speak' supabase/config.toml | head -10",
+  "description": "Check tts-speak auth, billing, and verify_jwt config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 54:  const authHeader = req.headers.get("Authorization");
+> 60:    { global: { headers: { Authorization: authHeader } } },
+> 62:  const { data: { user }, error: userError } = await supabase.auth.getUser();
+> 71:    .from("decrypted_user_api_keys")
+> 73:    .eq("user_id", user.id)
+> 7:verify_jwt = false
+> 9:verify_jwt = false
+> 11:verify_jwt = false
+> ```
+
+## 🤖 Claude *(01:05:36)*
+
+
+## 🤖 Claude *(01:05:36)*
+
+
+## 🤖 Claude *(01:05:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '100,160p' supabase/functions/tts-speak/index.ts && grep -n -A2 'voice-over' src/lib/node-registry.ts | head -6",
+  "description": "Read tts-speak response shape and voice-over ports"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   };
+> 
+>   const geminiRes = await fetch(`${TTS_URL}?key=${geminiKey}`, {
+>     method: "POST",
+>     headers: { "Content-Type": "application/json" },
+>     body: JSON.stringify(payload),
+>   });
+> 
+>   if (!geminiRes.ok) {
+>     const detail = await geminiRes.text();
+>     return respond({ error: `Gemini TTS error: ${geminiRes.status}`, detail }, geminiRes.status);
+>   }
+> 
+>   const json = await geminiRes.json();
+>   const b64 = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+> 
+>   if (!b64) return respond({ error: "No audio in response" }, 502);
+> 
+>   // base64 → PCM → WAV
+>   const binaryStr = atob(b64);
+>   const pcm = new Uint8Array(binaryStr.length);
+>   for (let i = 0; i < binaryStr.length; i++) pcm[i] = binaryStr.charCodeAt(i);
+>   const wav = pcmToWav(pcm);
+> 
+>   return new Response(wav.buffer, {
+>     status: 200,
+>     headers: {
+>       ...corsHeaders,
+>       "Content-Type": "audio/wav",
+>       "Content-Length": String(wav.byteLength),
+>     },
+>   });
+> });
+> 46:  { id: 'voice-over', labelPt: 'Voiceover', category: 'audio', icon: 'ai-voice', inputs: ['text'], output: 'audio' },
+> 47-  { id: 'sfx-generator', labelPt: 'Efeitos sonoros', category: 'audio', icon: 'sound-effects', inputs: ['text'], output: 'audio' },
+> 48-  { id: 'music-generator', labelPt: 'Gerador de música', category: 'audio', icon: 'music', inputs: ['text'], output: 'audio' },
+> --
+> 112:  'voice-over': { in: ['text'], out: ['output'] },
+> 113-  'prompt-generator': { in: ['attachments', 'prompt'], out: ['generated_prompt'] },
+> ```
+
+## 🤖 Claude *(01:06:27)*
+
+
+## 🤖 Claude *(01:06:27)*
+
+
+## 🤖 Claude *(01:06:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md <<'EOF'\n\n### Amendment 2c \u2014 voice-over no slice (2026-07-02, ANTES do c\u00f3digo)\n\n| # | Decis\u00e3o | Racional |\n|---|---------|----------|\n| S26 | **`voice-over` \u2192 `voice_over` entra no slice como caminho SYNC** (como imagem, n\u00e3o como v\u00eddeo): motor = **`tts-speak` reusado por invoke com o JWT DO USU\u00c1RIO** (o fn re-valida sess\u00e3o, resolve BYOK `google_api_key` e devolve WAV puro; ele **n\u00e3o cobra** \u2014 zero hazard de double-charge, sem precisar do padr\u00e3o `prepaid`). canvas-execute N\u00c3O duplica a chamada Gemini/pcmToWav. | Reuso > duplica\u00e7\u00e3o; tts-speak \u00e9 a fonte \u00fanica do TTS stock. |\n| S27 | **Custo declarado = 2 mco** (`CREDIT_COSTS['voice-over']`), calibra\u00e7\u00e3o 4\u00d7-floor (`mcoin-cost-calibration.md`): Gemini 2.5 Flash TTS \u2248 US$0,005/run t\u00edpico \u2192 `ceil(0.005/0.018\u00d74)=2`. Espelho client em `SPACES_AUDIO_COSTS` coberto pelo teste de mirror-parity (mesmo padr\u00e3o S22). | Pre\u00e7o declarado only (li\u00e7\u00e3o C12/S18). |\n| S28 | **Guards 422 pr\u00e9-d\u00e9bito**: script (prompt) obrigat\u00f3rio e \u22642000 chars; `voice` \u2208 allowlist das 8 stock (default `Kore` \u2014 espelha `VALID_VOICES` do tts-speak); BYOK `google_api_key` ausente \u2192 402 `google_not_configured` P\u00d3S-404 (ordem can\u00f4nica). Falha do tts-speak (4xx/5xx) \u2192 1 retry/5s \u2192 refund total + 502 honesto (`refund_pending` se estorno n\u00e3o confirmar). | Mesma gram\u00e1tica dos guards de imagem/v\u00eddeo. |\n| S29 | **Sa\u00edda**: WAV do tts-speak \u2192 upload service-role `canvas-assets/<space_id>/<node_run_id>.wav` \u2192 `finalize(done, result={audio_url (p\u00fablica), storage_path})`, `output_type='audio'`. Cluster renderiza `<audio controls>`. Threading S11 estendido: edge no handle **`text`** do voice-over + upstream texto done \u2192 script (prompt-generator \u2192 voice-over). Voz clonada (Gabriel) segue **Fila Sovereign** (biometria \u2014 `generate-voice` synthesize exige profile; User 0 tem 0). | Faceless-content pillar sem esperar a biometria. |\n\n**Gate G15:** vitest \u2014 classify/estimate/payload/threading-text/mirror-parity do custo; smoke A1 (422 sem script) \u00b7 A2 (402 BYOK fail-closed, zero rows) \u00b7 A3 (chave fake \u2192 tts-speak falha \u2192 refund total na mesma request); E2E pago browser (prompt\u2192voice ou script direto) + `<audio>` no cluster + Vision QA.\nEOF\necho \"SOP 2c amended\"",
+  "description": "Append SOP amendment S26-S29 before code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SOP 2c amended
+> ```
+
+## 🤖 Claude *(01:07:07)*
+
+
+## 🤖 Claude *(01:07:07)*
+
+Servidor agora. Verificando o contrato de request do tts-speak (nomes dos campos) e o CREDIT_COSTS:
+
+## 🤖 Claude *(01:07:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '50,100p' supabase/functions/tts-speak/index.ts | grep -n 'body\\.' | head -6; grep -n -B1 -A2 'tts-speak\\|higgsfield/dop-lite' supabase/config.toml supabase/functions/canvas-execute/index.ts | grep -E 'verify_jwt|dop-lite|\\[functions' | head -6",
+  "description": "Check tts-speak body contract and config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 35:    text = String(body.text ?? "").trim();
+> 36:    voiceName = VALID_VOICES.has(body.voice) ? body.voice : "Kore";
+> supabase/functions/canvas-execute/index.ts:32:  "higgsfield/dop-lite-5s": 30,       // placeholder; 2 hf credits ≈ $0.13
+> ```
+
+## 🤖 Claude *(01:07:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'supabase/functions/canvas-execute/index.ts'\ns = open(p).read()\n\n# 1. CREDIT_COSTS entry (declared price \u2014 S27)\ns = s.replace(\n  '  \"higgsfield/dop-lite-5s\": 30,       // placeholder; 2 hf credits \u2248 $0.13',\n  '  \"voice-over\": 2,                    // Gemini 2.5 Flash TTS \u2248 $0.005/run \u2014 4x-floor (SOP 2c S27)\\n  \"higgsfield/dop-lite-5s\": 30,       // placeholder; 2 hf credits \u2248 $0.13',\n)\n\n# 2. Slice gate \u2014 add voice_over\ns = s.replace(\n  '''  if (\n    body.node_type !== \"generate_image\" && body.node_type !== \"magic_prompt\" &&\n    body.node_type !== \"image_to_video\"\n  ) {''',\n  '''  if (\n    body.node_type !== \"generate_image\" && body.node_type !== \"magic_prompt\" &&\n    body.node_type !== \"image_to_video\" && body.node_type !== \"voice_over\"\n  ) {''',\n)\n\n# 3. Voice 422 guards \u2014 insert right before the image 422 guards\ns = s.replace(\n  '''  const effectiveCost = body.node_type === \"image_to_video\" ? videoCost : creditCost;''',\n  '''  // \u2500\u2500 Voice 422 guards BEFORE any debit (Amendment 2c S28) \u2500\u2500\n  if (body.node_type === \"voice_over\") {\n    const script = (body.prompt || \"\").trim();\n    if (!script) {\n      return spacesJson(422, {\n        error: \"voice_script_required\",\n        message: \"Escreva (ou conecte) o roteiro do voiceover.\",\n      }, corsHeaders);\n    }\n    if (script.length > 2000) {\n      return spacesJson(422, {\n        error: \"voice_script_too_long\",\n        message: \"Roteiro acima de 2000 caracteres \u2014 divida em partes.\",\n      }, corsHeaders);\n    }\n    const voice = body.parameters?.voice;\n    if (voice !== undefined && !SPACES_TTS_VOICES.has(String(voice))) {\n      return spacesJson(422, {\n        error: \"voice_unsupported\",\n        message: \"Voz n\u00e3o suportada.\",\n        allowed: [...SPACES_TTS_VOICES],\n      }, corsHeaders);\n    }\n  }\n  const effectiveCost = body.node_type === \"image_to_video\" ? videoCost : creditCost;''',\n)\n\n# 4. BYOK gemini check after the ownership 404 (next to the higgsfield check)\ns = s.replace(\n  '''  if (body.node_type === \"image_to_video\" && (!keys.higgsfield || !keys.higgsfield_secret)) {\n    return spacesJson(402, {\n      error: \"higgsfield_not_configured\",\n      message: \"Configure suas credenciais Higgsfield em /dashboard/settings.\",\n      action: \"Configure your Higgsfield credentials at /dashboard/settings\",\n    }, corsHeaders);\n  }''',\n  '''  if (body.node_type === \"image_to_video\" && (!keys.higgsfield || !keys.higgsfield_secret)) {\n    return spacesJson(402, {\n      error: \"higgsfield_not_configured\",\n      message: \"Configure suas credenciais Higgsfield em /dashboard/settings.\",\n      action: \"Configure your Higgsfield credentials at /dashboard/settings\",\n    }, corsHeaders);\n  }\n  // voice_over: tts-speak resolves the SAME per-user google_api_key \u2014 fail-closed pre-debit (S28).\n  if (body.node_type === \"voice_over\" && !keys.gemini) {\n    return spacesJson(402, {\n      error: \"google_not_configured\",\n      message: \"Configure sua chave Google (Gemini) em /dashboard/settings.\",\n      action: \"Configure your Google credentials at /dashboard/settings\",\n    }, corsHeaders);\n  }''',\n)\n\n# 5. begin output_type + model_key for voice\ns = s.replace(\n  '''  const modelKey = body.node_type === \"magic_prompt\" ? \"magic_prompt\" : `${body.provider}/${body.model}`;\n  const outputType = body.node_type === \"magic_prompt\"\n    ? \"text\"\n    : (body.node_type === \"image_to_video\" ? \"video\" : \"image\");''',\n  '''  const modelKey = body.node_type === \"magic_prompt\"\n    ? \"magic_prompt\"\n    : (body.node_type === \"voice_over\" ? \"google/gemini-2.5-flash-preview-tts\" : `${body.provider}/${body.model}`);\n  const outputType = body.node_type === \"magic_prompt\"\n    ? \"text\"\n    : (body.node_type === \"image_to_video\"\n      ? \"video\"\n      : (body.node_type === \"voice_over\" ? \"audio\" : \"image\"));''',\n)\n\n# 6. Dispatch voice sub-path after begin (next to the video dispatch)\ns = s.replace(\n  '''  // \u2500\u2500 Async video sub-path (Amendment 2a S14): debit done, submit now, webhook finalizes \u2500\u2500\n  if (body.node_type === \"image_to_video\") {''',\n  '''  // \u2500\u2500 Sync voice sub-path (Amendment 2c S26): debit done, tts-speak now, finalize in-request \u2500\u2500\n  if (body.node_type === \"voice_over\") {\n    return await executeSpacesVoice({\n      admin, body, corsHeaders,\n      creditCost: effectiveCost,\n      generationId,\n      supabaseUrl: ctx.supabaseUrl,\n      authHeader: ctx.authHeader,\n    });\n  }\n\n  // \u2500\u2500 Async video sub-path (Amendment 2a S14): debit done, submit now, webhook finalizes \u2500\u2500\n  if (body.node_type === \"image_to_video\") {''',\n)\n\nopen(p, 'w').write(s)\nprint('canvas-execute patched (6 blocks)')\nEOF",
+  "description": "Patch canvas-execute for voice_over slice (guards, cost, dispatch)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> canvas-execute patched (6 blocks)
+> ```
+
+## 🤖 Claude *(01:07:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "old_string": "// Amendment 2a (S18): 1:1 with the legacy ALLOWED_VIDEO_MODELS \u2014 all route via Higgsfield submit.\nconst SPACES_VIDEO_MODELS = new Set([\n  \"dop-lite\",\n  \"dop-turbo\",\n  \"dop-standard\",\n  \"kling-2.1-pro\",\n  \"seedance-v1-pro\",\n]);",
+  "new_string": "// Amendment 2a (S18): 1:1 with the legacy ALLOWED_VIDEO_MODELS \u2014 all route via Higgsfield submit.\nconst SPACES_VIDEO_MODELS = new Set([\n  \"dop-lite\",\n  \"dop-turbo\",\n  \"dop-standard\",\n  \"kling-2.1-pro\",\n  \"seedance-v1-pro\",\n]);\n\n// Amendment 2c (S28): mirror of tts-speak's VALID_VOICES \u2014 never forward a voice it would coerce.\nconst SPACES_TTS_VOICES = new Set([\n  \"Kore\", \"Puck\", \"Charon\", \"Fenrir\", \"Aoede\", \"Leda\", \"Orus\", \"Zephyr\",\n]);"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(01:08:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'supabase/functions/canvas-execute/index.ts'\ns = open(p).read()\ns = s.replace(\n  '''// Amendment 2a (S18): 1:1 with the legacy ALLOWED_VIDEO_MODELS \u2014 all route via Higgsfield submit.\nconst SPACES_VIDEO_MODELS = new Set([\n  \"dop-lite\",\n  \"dop-turbo\",\n  \"dop-standard\",\n  \"kling-2.1-pro\",\n  \"seedance-v1-pro\",\n]);''',\n  '''// Amendment 2a (S18): 1:1 with the legacy ALLOWED_VIDEO_MODELS \u2014 all route via Higgsfield submit.\nconst SPACES_VIDEO_MODELS = new Set([\n  \"dop-lite\",\n  \"dop-turbo\",\n  \"dop-standard\",\n  \"kling-2.1-pro\",\n  \"seedance-v1-pro\",\n]);\n\n// Amendment 2c (S28): mirror of tts-speak's VALID_VOICES \u2014 never forward a voice it would coerce.\nconst SPACES_TTS_VOICES = new Set([\n  \"Kore\", \"Puck\", \"Charon\", \"Fenrir\", \"Aoede\", \"Leda\", \"Orus\", \"Zephyr\",\n]);''',\n)\n\n# SpacesExecCtx: add authHeader\ns = s.replace(\n  '''interface SpacesExecCtx {\n  admin: any;\n  user: { id: string };\n  body: ExecuteRequest;\n  keys: Record<string, string>;\n  creditCost: number;\n  corsHeaders: Record<string, string>;\n  supabaseUrl: string;\n}''',\n  '''interface SpacesExecCtx {\n  admin: any;\n  user: { id: string };\n  body: ExecuteRequest;\n  keys: Record<string, string>;\n  creditCost: number;\n  corsHeaders: Record<string, string>;\n  supabaseUrl: string;\n  authHeader: string;\n}''',\n)\n\n# executeSpacesVoice \u2014 insert before executeSpacesVideo\ns = s.replace(\n  '''/** Amendment 2a (S14/S15): async video after the ledger-first debit already committed.''',\n  '''/** Amendment 2c (S26): sync voice after the ledger-first debit already committed.\n *  Reuses tts-speak WITH THE USER'S JWT (it re-validates the session, resolves the per-user\n *  google_api_key BYOK and returns raw WAV \u2014 and it never bills, so there is no double-charge\n *  hazard). Any synthesis failure after 1 retry refunds in full on the spot. */\nasync function executeSpacesVoice(o: {\n  admin: any;\n  body: ExecuteRequest;\n  corsHeaders: Record<string, string>;\n  creditCost: number;\n  generationId: string;\n  supabaseUrl: string;\n  authHeader: string;\n}): Promise<Response> {\n  const { admin, body, corsHeaders, creditCost, generationId, supabaseUrl, authHeader } = o;\n  const t0 = Date.now();\n\n  const refundNow = async (why: string, status: number, errorCode: string) => {\n    console.error(`[canvas-execute:spaces] voice ${errorCode}:`, why);\n    const { error: finErr } = await finalizeWithRetry(admin, {\n      p_node_run_id: body.node_run_id,\n      p_status: \"error\",\n      p_refund: creditCost,\n      p_result: { error: why },\n    });\n    return spacesJson(status, {\n      error: errorCode,\n      message: why,\n      execution_id: generationId,\n      ...(finErr ? { refund_pending: true } : { refunded: creditCost }),\n    }, corsHeaders);\n  };\n\n  const anonKey = Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\") ?? \"\";\n  let wavBytes: Uint8Array | null = null;\n  let lastErr = \"\";\n  for (let attempt = 0; attempt < 2; attempt++) {\n    try {\n      const resp = await fetch(`${supabaseUrl}/functions/v1/tts-speak`, {\n        method: \"POST\",\n        headers: {\n          Authorization: authHeader,\n          apikey: anonKey,\n          \"Content-Type\": \"application/json\",\n        },\n        body: JSON.stringify({\n          text: body.prompt,\n          voice: (body.parameters?.voice as string) || \"Kore\",\n        }),\n      });\n      if (!resp.ok) {\n        const detail = await resp.text().catch(() => \"\");\n        throw new Error(`tts-speak ${resp.status}: ${detail.slice(0, 160)}`);\n      }\n      const bytes = new Uint8Array(await resp.arrayBuffer());\n      if (bytes.byteLength < 1024) throw new Error(`audio too small (${bytes.byteLength} bytes)`);\n      wavBytes = bytes;\n      break;\n    } catch (e) {\n      lastErr = e instanceof Error ? e.message : \"voice synthesis error\";\n      console.error(`[canvas-execute:spaces] voice attempt ${attempt + 1} failed:`, lastErr);\n      if (attempt === 0) await new Promise((r) => setTimeout(r, 5000));\n    }\n  }\n  if (!wavBytes) {\n    return await refundNow(\n      `Falha na s\u00edntese de voz \u2014 o valor foi estornado. (${lastErr})`,\n      502,\n      \"voice_synthesis_failed\",\n    );\n  }\n\n  // Materialize (S29): WAV \u2192 public bucket, path shape shared with the video slice.\n  const fileName = `${body.space_id}/${body.node_run_id}.wav`;\n  const { error: upErr } = await admin.storage\n    .from(\"canvas-assets\")\n    .upload(fileName, wavBytes, { contentType: \"audio/wav\", upsert: true });\n  if (upErr) {\n    return await refundNow(`Falha ao salvar o \u00e1udio \u2014 o valor foi estornado. (${upErr.message})`, 502, \"voice_store_failed\");\n  }\n  const { data: pub } = admin.storage.from(\"canvas-assets\").getPublicUrl(fileName);\n  const audioUrl = pub?.publicUrl ?? null;\n\n  const result = { audio_url: audioUrl, storage_path: fileName, storage_bucket: \"canvas-assets\" };\n  const { error: finErr } = await finalizeWithRetry(admin, {\n    p_node_run_id: body.node_run_id,\n    p_status: \"done\",\n    p_refund: 0,\n    p_result: result,\n    p_latency_ms: Date.now() - t0,\n  });\n  if (finErr) {\n    // Value delivered \u2014 never leave the row sweep-refundable (mirror of the image/webhook paths).\n    await materializeDoneFallback(admin, body.node_run_id!, { result });\n  }\n\n  return spacesJson(200, {\n    execution_id: generationId,\n    status: \"done\",\n    audio_url: audioUrl,\n    credits_charged: creditCost,\n  }, corsHeaders);\n}\n\n/** Amendment 2a (S14/S15): async video after the ledger-first debit already committed.''',\n)\nopen(p, 'w').write(s)\nprint('helpers patched')\nEOF\ngrep -n 'authHeader' supabase/functions/canvas-execute/index.ts | head -8",
+  "description": "Add SPACES_TTS_VOICES, ctx.authHeader, executeSpacesVoice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> helpers patched
+> 127:    const authHeader = req.headers.get("Authorization");
+> 128:    if (!authHeader) {
+> 137:      global: { headers: { Authorization: authHeader } },
+> 644:  authHeader: string;
+> 843:  authHeader: string;
+> 845:  const { admin, body, corsHeaders, creditCost, generationId, supabaseUrl, authHeader } = o;
+> 872:          Authorization: authHeader,
+> 1191:      authHeader: ctx.authHeader,
+> ```
+
+## 🤖 Claude *(01:08:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'supabase/functions/canvas-execute/index.ts'\ns = open(p).read()\ns = s.replace(\n  \"      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders, supabaseUrl });\",\n  \"      return await executeSpacesNode({ admin, user, body, keys, creditCost, corsHeaders, supabaseUrl, authHeader });\",\n)\nopen(p, 'w').write(s)\nprint('dispatch site patched')\nEOF\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\" && deno check supabase/functions/canvas-execute/index.ts 2>&1 | tail -2",
+  "description": "Pass authHeader at dispatch, deno check",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dispatch site patched
+> [0m[32mCheck[0m supabase/functions/canvas-execute/index.ts
+> ```
+
+## 🤖 Claude *(01:08:27)*
+
+
+## 🤖 Claude *(01:08:27)*
+
+Servidor limpo. Cliente agora (lib + registry + cluster):
+
+## 🤖 Claude *(01:08:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'src/lib/spaces-execution.ts'\ns = open(p).read()\n\ns = s.replace(\n  \"export const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator', 'video-generator']);\",\n  \"export const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator', 'video-generator', 'voice-over']);\",\n)\n\ns = s.replace(\n  \"\"\"export function resolveSpacesVideoModel(modelKey?: string): string {\n  return modelKey && SPACES_VIDEO_COSTS[modelKey] != null ? modelKey : DEFAULT_VIDEO_MODEL;\n}\"\"\",\n  \"\"\"export function resolveSpacesVideoModel(modelKey?: string): string {\n  return modelKey && SPACES_VIDEO_COSTS[modelKey] != null ? modelKey : DEFAULT_VIDEO_MODEL;\n}\n\n/* \u2500\u2500 Amendment 2c (S27/S28) \u2014 stock-voice TTS slice \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n/** Mirrors CREDIT_COSTS['voice-over'] (S27, 4x-floor calibration) \u2014 mirror-parity tested. */\nexport const SPACES_VOICE_COST = 2;\n/** Mirrors tts-speak VALID_VOICES (S28). */\nexport const SPACES_TTS_VOICES = [\n  'Kore', 'Puck', 'Charon', 'Fenrir', 'Aoede', 'Leda', 'Orus', 'Zephyr',\n] as const;\"\"\",\n)\n\ns = s.replace(\n  \"\"\"  if (t === 'video-generator') {\n    // S21: video batch is ALWAYS 1 in the 2a slice (30-160 mco/run \u2014 accidental \u00d78 would be a\n    // 1,280-mco debit). Batch returns with Fase 2 breadth if demanded.\n    return SPACES_VIDEO_COSTS[resolveSpacesVideoModel(node.data.modelKey)];\n  }\n  return 0;\n}\"\"\",\n  \"\"\"  if (t === 'video-generator') {\n    // S21: video batch is ALWAYS 1 in the 2a slice (30-160 mco/run \u2014 accidental \u00d78 would be a\n    // 1,280-mco debit). Batch returns with Fase 2 breadth if demanded.\n    return SPACES_VIDEO_COSTS[resolveSpacesVideoModel(node.data.modelKey)];\n  }\n  if (t === 'voice-over') return SPACES_VOICE_COST; // S27 \u2014 batch not applicable (single synth)\n  return 0;\n}\"\"\",\n)\n\n# threading: voice-over 'text' handle carries text into the prompt (S29)\ns = s.replace(\n  \"    if (e.targetHandle === 'prompt' && up.type === 'text') result.promptText = up.value;\",\n  \"    if ((e.targetHandle === 'prompt' || e.targetHandle === 'text') && up.type === 'text') result.promptText = up.value;\",\n)\n\n# payload builder \u2014 voice branch before the final return null\ns = s.replace(\n  \"\"\"  if (t === 'video-generator') {\n    // S20: first-frame threading is mandatory \u2014 the caller skips (missingVideoInput) before here,\n    // this null is the pure-function backstop.\n    if (!upstream.firstFrameImage) return null;\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'image_to_video',\n      provider: 'higgsfield', model: resolveSpacesVideoModel(node.data.modelKey), prompt,\n      parameters: { duration: 5 }, // S18: only declared-price durations\n      input_asset_url: upstream.firstFrameImage,\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  return null;\n}\"\"\",\n  \"\"\"  if (t === 'video-generator') {\n    // S20: first-frame threading is mandatory \u2014 the caller skips (missingVideoInput) before here,\n    // this null is the pure-function backstop.\n    if (!upstream.firstFrameImage) return null;\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'image_to_video',\n      provider: 'higgsfield', model: resolveSpacesVideoModel(node.data.modelKey), prompt,\n      parameters: { duration: 5 }, // S18: only declared-price durations\n      input_asset_url: upstream.firstFrameImage,\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  if (t === 'voice-over') {\n    const voice = (node.data.params?.voice as string) || 'Kore';\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'voice_over',\n      provider: 'google', model: 'gemini-2.5-flash-preview-tts', prompt,\n      parameters: { voice },\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  return null;\n}\"\"\",\n)\n\n# payload type union\ns = s.replace(\n  \"  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video';\",\n  \"  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video' | 'voice_over';\",\n)\n\n# rowToGeneration: previewAudioUrl\ns = s.replace(\n  \"    previewVideoUrl: (row.result?.video_url as string) || undefined, // 2a async video (S16)\",\n  \"    previewVideoUrl: (row.result?.video_url as string) || undefined, // 2a async video (S16)\\n    previewAudioUrl: (row.result?.audio_url as string) || undefined, // 2c voice (S29)\",\n)\ns = s.replace(\n  \"export function rowToGeneration(row: GenerationRow): Generation & { previewUrl?: string; previewText?: string; previewVideoUrl?: string } {\",\n  \"export function rowToGeneration(row: GenerationRow): Generation & { previewUrl?: string; previewText?: string; previewVideoUrl?: string; previewAudioUrl?: string } {\",\n)\n\nopen(p, 'w').write(s)\nprint('spaces-execution patched')\nEOF\npython3 - <<'EOF'\np = 'src/hooks/useParamRegistry.ts'\ns = open(p).read()\ns = s.replace(\n  \"import { classifyNode, estimateExecutableCost, SPACES_VIDEO_COSTS } from '@/lib/spaces-execution';\",\n  \"import { classifyNode, estimateExecutableCost, SPACES_VIDEO_COSTS, SPACES_TTS_VOICES } from '@/lib/spaces-execution';\",\n)\ns = s.replace(\n  \"    case 'audio':\\n      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Texto / roteiro\u2026' }];\",\n  \"\"\"    case 'audio':\n      // 2c slice (S28/S29): stock Gemini voices; script threads from upstream text (handle 'text').\n      return [\n        { key: 'voice', kind: 'select', labelPt: 'Voz', options: SPACES_TTS_VOICES.map((v) => ({ value: v, labelPt: v })) },\n        { key: 'prompt', kind: 'textarea', labelPt: 'Roteiro do voiceover\u2026' },\n      ];\"\"\",\n)\nopen(p, 'w').write(s)\nprint('param registry patched')\nEOF\npython3 - <<'EOF'\np = 'src/components/spaces/GenerationCluster.tsx'\ns = open(p).read()\ns = s.replace(\n  \"\"\"          {g.previewVideoUrl ? (\"\"\",\n  \"\"\"          {g.previewAudioUrl ? (\n            <audio src={g.previewAudioUrl} controls preload=\"metadata\" className=\"w-full\" />\n          ) : g.previewVideoUrl ? (\"\"\",\n)\nopen(p, 'w').write(s)\nprint('cluster patched')\nEOF\nnpx tsc --noEmit 2>&1 | head -4; echo \"tsc=$?\"",
+  "description": "Patch client lib, param registry, cluster for voice slice",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> spaces-execution patched
+> param registry patched
+> cluster patched
+> tsc=0
+> ```
+
+## 🤖 Claude *(01:09:13)*
+
+
+## 🤖 Claude *(01:09:13)*
+
+tsc 0. Testes G15 + mirror-parity:
+
+## 🤖 Claude *(01:09:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> src/test/spaces-execution.test.ts <<'EOF'\n\n/* \u2500\u2500 Amendment 2c \u2014 voice slice (gate G15) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nimport { SPACES_VOICE_COST, SPACES_TTS_VOICES } from '@/lib/spaces-execution';\n\ndescribe('voice slice 2c (S26-S29 \u2014 gate G15)', () => {\n  it('classifies voice-over as executable and prices it at the declared cost', () => {\n    const n = mkNode({ typeId: 'voice-over', params: { prompt: 'ol\u00e1 mundo' } });\n    expect(classifyNode(n)).toBe('executable');\n    expect(estimateExecutableCost(n)).toBe(SPACES_VOICE_COST);\n  });\n\n  it('builds the voice_over payload with the selected stock voice (default Kore)', () => {\n    const n = mkNode({ typeId: 'voice-over', params: { prompt: 'roteiro', voice: 'Puck' } });\n    const p = buildExecutePayload(n, 's', 'r', { referenceImages: [] });\n    expect(p).toMatchObject({\n      node_type: 'voice_over', provider: 'google', model: 'gemini-2.5-flash-preview-tts',\n      prompt: 'roteiro', parameters: { voice: 'Puck' },\n    });\n    const d = buildExecutePayload(mkNode({ typeId: 'voice-over', params: { prompt: 'x' } }), 's', 'r', { referenceImages: [] });\n    expect((d as Record<string, unknown>).parameters).toEqual({ voice: 'Kore' });\n    expect(SPACES_TTS_VOICES).toContain('Kore');\n  });\n\n  it(\"threads upstream text through the voice-over 'text' handle into the script (S29)\", () => {\n    const n = mkNode({ id: 'vo1', typeId: 'voice-over', params: {} });\n    const edges: SpaceEdge[] = [\n      { id: 'e1', source: 'pg1', target: 'vo1', sourceHandle: 'generated_prompt', targetHandle: 'text' } as SpaceEdge,\n    ];\n    const upstream = resolveUpstreamInputs(n, edges, new Map([['pg1', { type: 'text', value: 'texto do upstream' }]]));\n    expect(upstream.promptText).toBe('texto do upstream');\n    const p = buildExecutePayload(n, 's', 'r', upstream);\n    expect((p as Record<string, unknown>).prompt).toBe('texto do upstream');\n  });\n\n  it('maps a done voice row to a previewAudioUrl card', () => {\n    const row: GenerationRow = {\n      id: '9c3e6c5e-0000-4000-8000-000000000003', space_id: 's', node_id: 'v', node_run_id: 'r3',\n      output_type: 'audio', asset_id: null, model_key: 'google/gemini-2.5-flash-preview-tts',\n      mco_charged: 2, mco_refunded: 0, usd_cost: null, latency_ms: 3000,\n      result: { audio_url: 'https://x/a.wav' }, status: 'done', created_at: '2026-07-02T12:00:00Z',\n    };\n    expect(rowToGeneration(row).previewAudioUrl).toBe('https://x/a.wav');\n  });\n});\nEOF\ncat >> src/test/spaces-mirror-parity.test.ts <<'EOF'\n\n/* \u2500\u2500 Amendment 2c \u2014 voice cost mirror parity (S27/G15) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nimport { SPACES_VOICE_COST } from '@/lib/spaces-execution';\n\ndescribe('voice mirror parity \u2014 SPACES_VOICE_COST vs server CREDIT_COSTS (S27)', () => {\n  it(\"client voice cost equals CREDIT_COSTS['voice-over'] parsed from the edge fn source\", () => {\n    const m = fnSource.match(/\"voice-over\":\\s*(\\d+)/);\n    expect(m, \"server CREDIT_COSTS missing 'voice-over'\").toBeTruthy();\n    expect(SPACES_VOICE_COST).toBe(Number(m![1]));\n  });\n});\nEOF\nbun run test src/test/spaces-execution.test.ts src/test/spaces-mirror-parity.test.ts 2>&1 | grep -E 'Test Files|Tests '",
+  "description": "Add G15 tests and run spaces test files",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Test Files  2 passed (2)
+>       Tests  35 passed (35)
+> ```
+
+## 🤖 Claude *(01:09:37)*
+
+
+## 🤖 Claude *(01:09:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'scripts/qa/smoke-spaces-execution.ts'\ns = open(p).read()\ns = s.replace(\n  \"\"\"  // storage cleanup (users/spaces/generations cascade via deleteThrowawayUser; storage n\u00e3o)\n  await admin.storage.from('canvas-assets').remove([srcPath, `${spaceA.id}/${runV2.runId}.mp4`]);\"\"\",\n  \"\"\"  // storage cleanup (users/spaces/generations cascade via deleteThrowawayUser; storage n\u00e3o)\n  await admin.storage.from('canvas-assets').remove([srcPath, `${spaceA.id}/${runV2.runId}.mp4`]);\n\n  // \u2500\u2500 A1-A3 \u2014 voice_over slice (Amendment 2c G15; zero Gemini cost) \u2500\u2500\n  const voicePayload = (extra: Record<string, unknown> = {}) => spacePayload(spaceA.id, {\n    node_type: 'voice_over', provider: 'google', model: 'gemini-2.5-flash-preview-tts',\n    prompt: 'teste de voz do smoke', parameters: { voice: 'Kore' }, ...extra,\n  });\n  const a1 = await invokeFn(jwtA, voicePayload({ prompt: '   ' }));\n  gate('A1 422 voice sem roteiro', a1.status === 422 && a1.json.error === 'voice_script_required', `status=${a1.status} error=${a1.json.error}`);\n\n  const a1b = await invokeFn(jwtA, voicePayload({ parameters: { voice: 'DarthVader' } }));\n  gate('A1b 422 voz fora do allowlist', a1b.status === 422 && a1b.json.error === 'voice_unsupported', `status=${a1b.status} error=${a1b.json.error}`);\n\n  const a2 = await invokeFn(jwtA, voicePayload());\n  gate('A2 402 google_not_configured fail-closed', a2.status === 402 && a2.json.error === 'google_not_configured', `status=${a2.status} error=${a2.json.error}`);\n\n  // A3 (G15): fake google key \u2192 begin (d\u00e9bito 2) \u2192 tts-speak falha \u2192 refund total na MESMA request\n  await admin.from('user_api_keys').update({ google_api_key: 'qa-fake-google-key' } as never).eq('user_id', a.uid);\n  const balBeforeA3 = await balance(a.uid);\n  const a3 = await invokeFn(jwtA, voicePayload());\n  const { data: genA3 } = await admin.from('generations').select('status, mco_charged, mco_refunded').eq('owner_id', a.uid)\n    .eq('output_type', 'audio').maybeSingle();\n  gate('A3 synth-fail \u2192 502 + refund total', a3.status === 502 && a3.json.error === 'voice_synthesis_failed' && genA3?.status === 'error' && Number(genA3?.mco_charged) === 2 && Number(genA3?.mco_refunded) === 2 && (await balance(a.uid)) === balBeforeA3,\n    `status=${a3.status} error=${a3.json.error} gen=${JSON.stringify(genA3)} bal=${await balance(a.uid)}`);\"\"\",\n)\nopen(p, 'w').write(s)\nprint('smoke patched')\nEOF\nSUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy canvas-execute --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deployed|script size'",
+  "description": "Add A1-A3 smoke gates and deploy canvas-execute",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> smoke patched
+> Deploying Function: canvas-execute (script size: 166.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: canvas-execute
+> ```
+
+## 🤖 Claude *(01:10:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -10",
+  "description": "Run full smoke with A-gates against prod",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ W4 webhook success → done + video_url + zero deduct legado — resp={"ok":true,"status":"done","finalized":true} genStatus=done legacyDeduct=0 bal=40
+> ✅ W5 submit-fail → 502 + refund total (G8) — status=502 error=video_submit_failed gen={"status":"error","mco_refunded":30} bal=40
+> ✅ A1 422 voice sem roteiro — status=422 error=voice_script_required
+> ✅ A1b 422 voz fora do allowlist — status=422 error=voice_unsupported
+> ✅ A2 402 google_not_configured fail-closed — status=402 error=google_not_configured
+> ✅ A3 synth-fail → 502 + refund total — status=502 error=voice_synthesis_failed gen={"status":"error","mco_charged":2,"mco_refunded":2} bal=40
+> ✅ T7 RLS own-only + sem INSERT/DELETE client — own=6/6 cross=0 ins=blocked rows=6
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> 
+> ✅ smoke-spaces-execution: 26 passed, 0 failed
+> ```
+
+## 🤖 Claude *(01:10:30)*
+
+
+## 🤖 Claude *(01:10:30)*
+
+**Smoke 26/26.** Lançando o review independente (mudança de money-path) em background e rodando o E2E pago do voice em paralelo:
+
+## 🤖 Claude *(01:10:43)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review Spaces 2c voice",
+  "prompt": "You are an independent adversarial security reviewer for the MCORCH repo at /home/gcrUX/htdocs/constellation-orchestra. Review the UNCOMMITTED working-tree changes for \"Spaces Fase 2c \u2014 voice_over slice\" in `supabase/functions/canvas-execute/index.ts` (run `git diff supabase/functions/canvas-execute/index.ts` \u2014 ONLY the voice_over-related hunks are in scope; video/references hunks were reviewed previously and are committed... actually run `git diff HEAD supabase/functions/canvas-execute/index.ts` and focus on: CREDIT_COSTS['voice-over']=2, SPACES_TTS_VOICES, the voice 422 guards block, the google BYOK 402 check, begin output_type/model_key for voice, executeSpacesVoice [tts-speak invoke with the USER's JWT + upload + finalize], and the dispatch site).\n\nContext: SOP docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md \u00a7Amendment 2c (S26-S29) at the end. tts-speak (supabase/functions/tts-speak/index.ts) is JWT-authed, resolves per-user google_api_key BYOK, does NOT bill. The ledger RPCs are in supabase/migrations/20260702190000_spaces_generations_ledger.sql.\n\nAdversarial focus (money path):\n- DOUBLE-CHARGE: tts-speak does not deduct \u2014 verify nothing else does; one begin per node_run_id.\n- MINT: refund paths (synthesis fail, store fail) \u2014 refund \u2264 charged? double refund possible?\n- JWT FORWARDING: executeSpacesVoice forwards the caller's Authorization header to tts-speak. Any risk (confused deputy, header injection, service-role leak)? The header came from the incoming request.\n- GUARD ORDER: 401\u2192422\u2192404\u2192402 held for voice? Charged before validation anywhere?\n- OUTPUT: WAV uploaded to public bucket canvas-assets at <space_id>/<node_run_id>.wav \u2014 parity with the video slice; result.audio_url is a public URL (not signed) \u2014 any NEW exposure vs the video path (which used a 7d signed URL on the same public bucket)?\n- DoS/size: tts-speak response buffered fully (arrayBuffer) \u2014 bounded? script capped at 2000 chars upstream.\n- Legacy regression: any change to non-Spaces paths?\n\nFor each finding: severity, concrete scenario, file:line, fix. If sound per axis, say SOUND. Return a structured verdict.",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a125f8f9b3fcef787 (internal ID - do not mention to user. Use SendMessage with to: 'a125f8f9b3fcef787', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/tasks/a125f8f9b3fcef787.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(01:10:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -1 && (npx vite preview --port 4173 --strictPort > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/preview4.log 2>&1 &) && sleep 3 && set -a && source .env && set +a && bun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/session4.json && agent-browser open \"http://localhost:4173/\" && sleep 2 && agent-browser eval \"localStorage.setItem('sb-bcyvddsykvehvpwstlfa-auth-token', $(python3 -c \"import json;print(json.dumps(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/session4.json').read()))\")); 'ok'\" && agent-browser open \"http://localhost:4173/dashboard/spaces/51b229cf-98b9-42d4-b4f9-e472fdcaaefb\" && sleep 4 && agent-browser eval \"document.querySelectorAll('.react-flow__node').length + ' nodes'\"",
+  "description": "Build, preview, login, open the E2E space",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ built in 28.74s
+> ✓ Magic Constellation
+>   http://localhost:4173/
+> "ok"
+> ✓ Magic Constellation
+>   http://localhost:4173/dashboard/spaces/51b229cf-98b9-42d4-b4f9-e472fdcaaefb
+> "2 nodes"
+> ```
+
+## 🤖 Claude *(01:11:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser snapshot -i 2>&1 | grep 'Adicionar n\u00f3' && agent-browser find role button --name \"Adicionar n\u00f3 N\" --click 2>/dev/null || agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'Adicionar n\u00f3 N\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 1 && agent-browser snapshot -i 2>&1 | grep -cE 'option ' && for c in v o i c e; do agent-browser press \"$c\" > /dev/null; done; sleep 0.5; agent-browser snapshot -i 2>&1 | grep -E 'option' | head -3",
+  "description": "Open Spotlight, filter for voiceover",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   - button "Adicionar nó N" [ref=e16]
+> ✓ Done
+> 26
+>   - option "Combinador de vídeo video-combiner" [selected, ref=e7]
+>   - option "Upscaler de vídeo video-upscaler" [ref=e8]
+>   - option "Voiceover voice-over" [ref=e9]
+> ```
+
+## 🤖 Claude *(01:11:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser press \"ArrowDown\" && agent-browser press \"ArrowDown\" && sleep 0.3 && agent-browser snapshot -i 2>&1 | grep 'selected' | head -1 && agent-browser press \"Enter\" && sleep 1.5 && agent-browser eval \"[...document.querySelectorAll('.react-flow__node')].map(n=>n.textContent.slice(0,22)).join(' / ')\"",
+  "description": "Select Voiceover and insert",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> ✓ Done
+>   - option "Voiceover voice-over" [selected, ref=e9]
+> ✓ Done
+> "🖼️image-generator #1◂ / 🖼️video-generator #1◂ / 🖼️voice-over #1◂ text"
+> ```
+
+## 🤖 Claude *(01:12:11)*
+
+
+## 🤖 Claude *(01:12:11)*
+
+
+## 🤖 Claude *(01:12:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser eval \"(() => { const v=[...document.querySelectorAll('.react-flow__node')].find(x=>x.textContent.includes('voice-over')); v.dispatchEvent(new MouseEvent('click',{bubbles:true})); return 'sel'; })()\" && sleep 0.5 && agent-browser press \"Delete\" && sleep 1.5 && agent-browser eval \"document.querySelectorAll('.react-flow__node').length + ' nodes (demo intacto)'\" && agent-browser open \"http://localhost:4173/dashboard/spaces\" && sleep 3 && agent-browser snapshot -i 2>&1 | grep 'Novo Space'",
+  "description": "Remove voice node from demo space, go to Spaces home",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> "sel"
+> ✓ Done
+> "2 nodes (demo intacto)"
+> ✓ Magic Constellation
+>   http://localhost:4173/dashboard/spaces
+>   - button "Novo Space" [expanded=false, ref=e12]
+> ```
+
+## 🤖 Claude *(01:12:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser click e12 && sleep 1 && agent-browser snapshot -i 2>&1 | grep -E 'textbox \"Nome\"|button \"Criar\"' && agent-browser type $(agent-browser snapshot -i 2>&1 | grep -o 'textbox \"Nome\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') \"E2E 2c voice\" && agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'button \"Criar\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 3 && agent-browser eval \"location.pathname\"",
+  "description": "Create the voice E2E space",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> - textbox "Nome" [ref=e4]
+> - button "Criar" [ref=e5]
+> ✓ Done
+> ✓ Done
+> "/dashboard/spaces/1d77b500-c054-4704-b120-403f4871cdac"
+> ```
+
+## 🤖 Claude *(01:12:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'Adicionar n\u00f3 N\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 1 && for c in v o i c e; do agent-browser press \"$c\" > /dev/null; done; sleep 0.5; agent-browser press \"ArrowDown\" > /dev/null; agent-browser press \"ArrowDown\" > /dev/null; sleep 0.3; agent-browser snapshot -i 2>&1 | grep 'selected' | head -1 && agent-browser press \"Enter\" && sleep 1.5 && agent-browser eval \"(() => { const v=[...document.querySelectorAll('.react-flow__node')].find(x=>x.textContent.includes('voice-over')); v?.dispatchEvent(new MouseEvent('click',{bubbles:true})); return document.querySelectorAll('.react-flow__node').length + ' node(s), voice selected'; })()\" && sleep 1.5 && agent-browser snapshot -i 2>&1 | grep -E 'combobox|textbox' | head -3",
+  "description": "Insert voice-over node in the new space and select it",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+>   - option "Voiceover voice-over" [selected, ref=e9]
+> ✓ Done
+> "1 node(s), voice selected"
+>   - combobox [expanded=false, ref=e17]: Voz
+>   - textbox "Roteiro do voiceover…" [ref=e18]
+> ```
+
+## 🤖 Claude *(01:12:58)*
+
+
+## 🤖 Claude *(01:12:58)*
+
+
+## 🤖 Claude *(01:13:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser type e18 \"Bem-vindo ao MCORCH Spaces. Este voiceover foi gerado direto no canvas, com voz neural, em uma unica execucao.\" && sleep 2 && agent-browser snapshot -i 2>&1 | grep -E 'button \"(Estimar|Rodar)\"' && agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'button \"Estimar\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 1.5 && agent-browser snapshot -i 2>&1 | grep -o 'Simula\u00e7\u00e3o \u2014 [0-9]* mcoCoins[^.]*' | head -1",
+  "description": "Fill script and Estimar",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+>   - button "Estimar" [ref=e11]
+>   - button "Rodar" [ref=e12]
+> ✓ Done
+> Simulação — 2 mcoCoins projetados (sem débito)
+> ```
+
+## 🤖 Claude *(01:13:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "RODAR=$(agent-browser snapshot -i 2>&1 | grep -o 'button \"Rodar\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && echo \"rodar ref=$RODAR\" && agent-browser click $RODAR && sleep 12 && agent-browser eval \"[...document.querySelectorAll('.react-flow__node')].map(n=>n.textContent.match(/idle|running|done|error/)?.[0]).join()\" && agent-browser eval \"document.querySelectorAll('audio').length + ' audio tags'\" && TOKEN=$(cat /home/ubuntu/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT status, mco_charged, mco_refunded, latency_ms, left(result->>'\"'\"'audio_url'\"'\"',70) AS audio_url_head, (SELECT mco_balance FROM public.profiles WHERE id='\"'\"'ada39fae-67e1-4e53-af1c-5a18e1c108e8'\"'\"') AS balance_now FROM public.generations WHERE space_id='\"'\"'1d77b500-c054-4704-b120-403f4871cdac'\"'\"';\"}'",
+  "description": "Rodar the voice node, verify UI + ledger row",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> rodar ref=e13
+> ✓ Done
+> "done"
+> "1 audio tags"
+> [{"status":"done","mco_charged":"2","mco_refunded":"0","latency_ms":6548,"audio_url_head":"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canv","balance_now":"4581.00"}]
+> ```
+
+## 🤖 Claude *(01:13:43)*
+
+
+## 🤖 Claude *(01:13:43)*
+
+**Voice pago de primeira**: nó done, `<audio>` no cluster, row charged=2, saldo **4583→4581 exato**, latência 6.5s. Prova material do WAV + print:
+
+## 🤖 Claude *(01:13:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && AURL=$(curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT result->>'\"'\"'audio_url'\"'\"' AS u FROM public.generations WHERE space_id='\"'\"'1d77b500-c054-4704-b120-403f4871cdac'\"'\"';\"}' | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['u'])\") && curl -s -o /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/e2e_voice.wav -w 'audio HTTP:%{http_code} bytes:%{size_download} type:%{content_type}\\n' \"$AURL\" && agent-browser screenshot /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/voice_done.png",
+  "description": "Download the generated WAV and screenshot the canvas",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> audio HTTP:200 bytes:436410 type:audio/wav
+> ✓ Screenshot saved to /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/voice_done.png
+> ```
+
+## 🤖 Claude *(01:13:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/voice_done.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/png'}}]
+> ```
+
+## 🤖 Claude *(01:14:07)*
+
+
+## 🤖 Claude *(01:14:07)*
+
+Print perfeito — player de áudio **0:00/0:09** no cluster, nó done, saldo 4581. Vision QA no print:
+
+## 🤖 Claude *(01:14:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst admin = createClient(process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY);\nconst bytes = await Bun.file('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/voice_done.png').arrayBuffer();\nconst path = 'qa/spaces-2c-voice-' + Date.now() + '.png';\nawait admin.storage.from('generated-images').upload(path, bytes, { contentType: 'image/png' });\nconst { data } = await admin.storage.from('generated-images').createSignedUrl(path, 3600);\nconsole.log(data.signedUrl);\n\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/voice_url.txt && bun run scripts/qa/vision-qa.ts image \"$(cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/voice_url.txt)\" \"Canvas de editor de n\u00f3s: deve haver um n\u00f3 voice-over com status done, e no painel lateral um player de \u00e1udio com dura\u00e7\u00e3o ~9s e status conclu\u00edda. Tela branca, erro ou layout quebrado? APROVADO ou REPROVADO.\" 2>&1 | tail -4; bun -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst admin = createClient(process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY);\nconst { data } = await admin.storage.from('generated-images').list('qa');\nfor (const f of data ?? []) if (f.name.startsWith('spaces-2c-voice-')) await admin.storage.from('generated-images').remove(['qa/' + f.name]);\nconsole.log('qa print cleaned');\n\"; pkill -f 'vite preview'; true",
+  "description": "Vision QA on voice canvas print, clean up, stop preview",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    A imagem exibe um canvas de editor de nós em um ambiente escuro com tema de ficção científica. No centro, há um nó 'voice-over #1' com o status 'done' exibido em uma etiqueta verde na parte inferior. O nó possui entradas 'text' e saída 'output'. À direita do nó, há um painel lateral que exibe os detalhes do nó 'voice-over #1'. Este painel inclui um reprodutor de áudio ('player') com a duração '0:00 / 0:09' (9 segundos) e o status 'concluída' para a geração do áudio. O restante da interface está sem falhas ou elementos quebrados.
+> qa print cleaned
+> ```
+
+## 🤖 Claude *(01:14:36)*
+
+
+## 🤖 Claude *(01:14:36)*
+
+
+## 🤖 Claude *(01:14:40)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 240,
+  "reason": "Aguardando o security-review do voice slice terminar (notifica\u00e7\u00e3o deve chegar antes do heartbeat).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 22:19:00 (in 259s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(01:16:05)*
+
+<task-notification>
+<task-id>a125f8f9b3fcef787</task-id>
+<tool-use-id>toolu_01G6LRgr8Z3Kfh8SgH9K1gF8</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/tasks/a125f8f9b3fcef787.output</output-file>
+<status>completed</status>
+<summary>Agent "Security review Spaces 2c voice" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>All evidence gathered. Here is the structured verdict.
+
+---
+
+# Adversarial Security Review — Spaces Fase 2c (voice_over slice)
+
+**Scope:** uncommitted hunks in `supabase/functions/canvas-execute/index.ts` (verified against `supabase/functions/tts-speak/index.ts`, `supabase/migrations/20260702190000_spaces_generations_ledger.sql`, `higgsfield-webhook/index.ts`, storage migrations `20260514040200` + `20260518020030`, SOP Amendment 2c S26–S29).
+
+## Verdict per adversarial axis
+
+### 1. DOUBLE-CHARGE — SOUND
+- `tts-speak/index.ts` (all 132 lines read): zero billing code — no `deduct_mco_coins`, no RPC calls, no ledger writes. S26's premise holds materially.
+- Exactly one `begin_space_generation` per request (`canvas-execute:1149`), and the RPC is idempotent: `ON CONFLICT (node_run_id) DO NOTHING` + duplicate short-circuit returns `credits_charged: 0` (migration `:107-121`, `canvas-execute:1173-1181`). Replay while the first request is in-flight returns the prior `running` state with zero second debit.
+- The Spaces branch is exclusive (`index.ts:195-197` returns before the legacy deduct path) and `executeSpacesVoice` performs no additional debit — only finalize/refund.
+
+### 2. MINT / REFUND — SOUND
+- Refund amount is always `p_refund = creditCost` = exactly what `begin` charged (same `effectiveCost` variable threaded to both, `:1156` and `:1188`), and the RPC clamps `LEAST(GREATEST(refund,0), mco_charged)` with the `mco_refunded &lt;= mco_charged` CHECK as backstop (migration `:41`, `:169`). Credit is positive-only via `add_mco_coins` — no negative-deduct mint vector.
+- Double refund impossible: finalize claims `status IN ('pending','running')` — first finalizer (in-request `refundNow` OR the sweep) wins; second call returns `finalized:false` (migration `:170-175`). `finalizeWithRetry`'s second attempt after a commit-then-network-blip lands on a terminal row → no-op.
+- `refundNow` is invoked at most once per request path (synth-fail XOR store-fail XOR success). If both finalize attempts fail, the response honestly says `refund_pending:true` and the row stays `running` for sweep reconciliation — no claimed-but-uncommitted refund.
+- Residual (pre-existing pattern, bounded at 2 mco): if finalize(done) fails twice AND `materializeDoneFallback` also fails, a delivered run stays `running` and the sweep could refund delivered value. Mirrors the committed image path; triple-failure required. INFO only.
+
+### 3. JWT FORWARDING — SOUND
+- `authHeader` is the caller's own incoming header, already validated by `supabase.auth.getUser()` at `:140` — a service-role bearer has no `sub` and dies at the 401 before the Spaces branch, so only a genuine user JWT can reach the forward.
+- This is the anti-confused-deputy pattern: the deputy forwards the original principal's credential; `tts-speak` independently re-validates the session (`tts-speak:54-63`) and resolves that same user's `google_api_key` (`:70-77`). No privilege the caller didn't already have (they can invoke `tts-speak` directly).
+- Header injection: fetch `Headers` reject CR/LF and Deno's server rejects malformed incoming header values — no smuggling path. The `apikey` header carries only the publishable anon key. No service-role material crosses the call.
+- Token expiry mid-flight (sync path + 5s retry) degrades to `tts-speak 401` → full refund. Correct.
+
+### 4. GUARD ORDER — SOUND
+Verified sequence: 401 (`:128`,`:141`) → 400 required fields → slice gate 422 (`:1007`) → voice 422 guards (script required / &gt;2000 / voice allowlist, `:1049-1071`) → 404 ownership (`:1101-1105`) → 402 BYOK `google_not_configured` post-404 (`:1117-1123`) → 402 balance (`:1129`) → 402 daily cap (`:1137`) → **only then** `begin` debits. Nothing is charged before validation; every post-debit failure path refunds. Canonical 401→422→404→402 holds exactly as S28 declares. `voice: null` fails closed (`null !== undefined` → `String(null)` not in allowlist → 422).
+
+### 5. OUTPUT EXPOSURE — SOUND (no NEW exposure); one pre-existing posture note
+- Parity with video is real: same bucket, same `&lt;space_id&gt;/&lt;node_run_id&gt;.&lt;ext&gt;` path shape (webhook `:239` vs voice `:904`), both service-role uploads.
+- The public-URL-vs-signed-URL delta is **immaterial**: `canvas-assets` is created `public=TRUE` (migration `20260514040200:135`) and `canvas_assets_select` is `TO public USING (bucket_id='canvas-assets')` (`20260518020030:70-72`) — the video slice's 7d signed URL was already cosmetic; the same object is permanently fetchable at its derivable public URL. Voice merely stops pretending. Path entropy (two UUIDv4s) is not the guessability boundary anyway, because:
+- **Pre-existing posture (NOT introduced by this diff):** the `TO public` SELECT policy on `storage.objects` also authorizes anonymous **list** of the entire bucket — every tenant's images/videos, and now voiceover WAVs (user scripts, potentially sensitive text-to-speech), are enumerable without auth. Recommend an OTD: private bucket + signed URLs everywhere, or at minimum an authenticated list restriction. Out of this diff's blast radius.
+- Storage write safety: no cross-tenant overwrite — a foreign `node_run_id` dies at `begin`'s owner-filtered 23505 (`migration :112-120`) before any upload; the `&lt;uuid&gt;/&lt;uuid&gt;.wav` shape cannot collide with legacy `&lt;uid&gt;/spaces/&lt;genId&gt;.&lt;ext&gt;` paths; client-side writes to these prefixes are blocked by the folder-prefix INSERT policy. `result.audio_url` lives in an owner-SELECT-only row.
+
+### 6. DoS / SIZE — SOUND
+- Script capped at 2000 chars pre-debit (422); `tts-speak` independently truncates at 4000 (`:87`). Worst-case WAV at 24 kHz/16-bit mono ≈ single-digit MB — comfortably inside edge-isolate memory and the bucket's 50 MB cap. One retry max, 5s fixed backoff. Each attempt costs the attacker their own 2 mco + daily cap. `≥1024` floor rejects error stubs. No explicit upper byte bound on the buffered response, but the upstream is our own function bounded by Gemini's output — INFO.
+
+### 7. LEGACY REGRESSION — SOUND
+- `authHeader` added to ctx: threading only, no legacy behavior change.
+- `CREDIT_COSTS["voice-over"]=2`: a legacy (non-Spaces) `node_type:"voice_over"` request now computes `creditCost` 2 instead of the `|| 10` default — but that request dies identically at the `vm_canvas_executions` enum-violation 500 (`NODE_TYPE_MAP` miss, `:248-305`) before any deduction, exactly as before. Non-material.
+- Slice gate/ternary changes touch only the `voice_over` branch; image/magic_prompt/video hunks byte-identical in behavior.
+
+## Findings
+
+| # | Severity | Finding | Location | Fix |
+|---|----------|---------|----------|-----|
+| F1 | **LOW** | Voice charge not pinned to the declared price: a self-crafted request with `node_type:"voice_over", provider:"higgsfield", model:"soul"` makes `resolveHiggsfieldSoulKey` (which ignores `node_type`) resolve `creditCost=40` (or 20/26/65), and `effectiveCost` inherits it — a 2-mco voice run charged up to 65, ledger row saying `model_key=google/gemini-2.5-flash-preview-tts, mco_charged=40`. No undercharge or mint is possible (the only alternate resolution is `"voice-over"→2`; refund is clamped to the same inflated charge), so it's a self-inflicted overcharge + ledger/KPI distortion — but it violates S27/G7 "estimate must equal the real charge". | `index.ts:180-188` + `:1072` | `const effectiveCost = body.node_type === "voice_over" ? CREDIT_COSTS["voice-over"] : (body.node_type === "image_to_video" ? videoCost : creditCost);` |
+| F2 | INFO | Voice guard coerces with `String(voice)` but forwards the raw value: a non-string that stringifies into the allowlist (e.g. `["Puck"]`) passes the 422 guard, then `tts-speak` coerces it to `Kore` — contradicting S28's "never forward a voice it would coerce". Zero security impact (output is still a valid stock voice). | `:1063-1070` vs `:878` | Require `typeof voice === "string"` in the guard and forward the validated variable. |
+| F3 | INFO (pre-existing) | `canvas-assets` is a public bucket with anonymous SELECT (⇒ list + read) on `storage.objects`; the video slice's 7d signed URL was already cosmetic. Voice adds no new exposure class but puts potentially sensitive voiceover scripts (as audio) into a world-listable bucket. | `20260514040200:135`, `20260518020030:70-72` | Separate OTD: private bucket + signed URLs across image/video/voice, or restrict list. Not a blocker for this diff. |
+| F4 | INFO | Voice failure paths (`refundNow`) skip `infra_health_logs` telemetry; the image provider-fail path writes it (`:1246-1250`). Parity with the video slice's refundNow (also silent), but a Mesh Mandate conformance nit. | `:848-862` | Add the same fail-open health-log insert with `event:"spaces_voice_failure"`. |
+| F5 | INFO (pre-existing, inherited) | `spaces` INSERT policy doesn't constrain client-supplied `id` (`20260702170000:23`), so `&lt;space_id&gt;/` storage prefixes can be minted to equal another user's uid (folder-prefix namespace pollution). No foreign read/overwrite is reachable (path shapes can't collide; `begin` blocks foreign `node_run_id` pre-upload). Same property already shipped in the video slice. | `20260702170000:9,23` | Optional hardening: strip `id` from client inserts or generate server-side. |
+
+## Overall
+
+**APPROVED with one LOW fix recommended pre-commit (F1 — one-line pin of the voice cost).** The money path is architecturally sound: single idempotent ledger-first debit, clamped first-finalizer-wins refunds, honest `refund_pending` reporting, correct 401→422→404→402 order with zero charge-before-validation, and the JWT forward is the safe original-principal pattern with independent re-validation downstream. The smoke additions (A1/A1b/A2/A3) materially cover the guard, fail-closed BYOK, and same-request full-refund paths, and A3's `mco_charged === 2` assertion would pass — but only because it sends `provider: 'google'`; F1's crafted-provider case is exactly the hole that assertion doesn't see. F3 (public bucket listability) deserves its own OTD independent of this slice.</result>
+<usage><subagent_tokens>121385</subagent_tokens><tool_uses>15</tool_uses><duration_ms>321927</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:16:19)*
+
+
+## 🤖 Claude *(01:16:19)*
+
+
+## 🤖 Claude *(01:16:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'supabase/functions/canvas-execute/index.ts'\ns = open(p).read()\n\n# F1 \u2014 pin the voice charge to the declared price regardless of crafted provider/model\ns = s.replace(\n  '  const effectiveCost = body.node_type === \"image_to_video\" ? videoCost : creditCost;',\n  '''  // F1 (review 2c): pin voice to the DECLARED price \u2014 a crafted provider/model must never let\n  // the legacy cost resolver inflate the charge (G7: estimate == real charge).\n  const effectiveCost = body.node_type === \"voice_over\"\n    ? CREDIT_COSTS[\"voice-over\"]\n    : (body.node_type === \"image_to_video\" ? videoCost : creditCost);''',\n)\n\n# F2 \u2014 strict string guard + forward the validated voice\ns = s.replace(\n  '''    const voice = body.parameters?.voice;\n    if (voice !== undefined && !SPACES_TTS_VOICES.has(String(voice))) {\n      return spacesJson(422, {\n        error: \"voice_unsupported\",\n        message: \"Voz n\u00e3o suportada.\",\n        allowed: [...SPACES_TTS_VOICES],\n      }, corsHeaders);\n    }''',\n  '''    const voice = body.parameters?.voice;\n    if (voice !== undefined && (typeof voice !== \"string\" || !SPACES_TTS_VOICES.has(voice))) {\n      return spacesJson(422, {\n        error: \"voice_unsupported\",\n        message: \"Voz n\u00e3o suportada.\",\n        allowed: [...SPACES_TTS_VOICES],\n      }, corsHeaders);\n    }''',\n)\n\n# F4 \u2014 health telemetry on voice failure paths (fail-open)\ns = s.replace(\n  '''  const refundNow = async (why: string, status: number, errorCode: string) => {\n    console.error(`[canvas-execute:spaces] voice ${errorCode}:`, why);\n    const { error: finErr } = await finalizeWithRetry(admin, {''',\n  '''  const refundNow = async (why: string, status: number, errorCode: string) => {\n    console.error(`[canvas-execute:spaces] voice ${errorCode}:`, why);\n    await admin\n      .from(\"infra_health_logs\")\n      .insert({ service: \"canvas-execute\", status: \"unhealthy\", event: \"spaces_voice_failure\" })\n      .then(() => {}, (e: unknown) => console.error(\"[canvas-execute] health log failed:\", e));\n    const { error: finErr } = await finalizeWithRetry(admin, {''',\n)\nopen(p, 'w').write(s)\nprint('F1+F2+F4 applied')\nEOF\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\" && deno check supabase/functions/canvas-execute/index.ts 2>&1 | tail -1 && SUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy canvas-execute --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deployed|script size'",
+  "description": "Apply review fixes F1/F2/F4, deno check, redeploy",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> F1+F2+F4 applied
+> [0m[32mCheck[0m supabase/functions/canvas-execute/index.ts
+> Deploying Function: canvas-execute (script size: 166.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: canvas-execute
+> ```
+
+## 🤖 Claude *(01:16:46)*
+
+
+## 🤖 Claude *(01:16:46)*
+
+Adicionando o gate de regressão do F1 (A4: provider forjado → cobrança PINADA em 2) e re-rodando o smoke completo:
+
+## 🤖 Claude *(01:16:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'scripts/qa/smoke-spaces-execution.ts'\ns = open(p).read()\ns = s.replace(\n  \"\"\"  gate('A3 synth-fail \u2192 502 + refund total', a3.status === 502 && a3.json.error === 'voice_synthesis_failed' && genA3?.status === 'error' && Number(genA3?.mco_charged) === 2 && Number(genA3?.mco_refunded) === 2 && (await balance(a.uid)) === balBeforeA3,\n    `status=${a3.status} error=${a3.json.error} gen=${JSON.stringify(genA3)} bal=${await balance(a.uid)}`);\"\"\",\n  \"\"\"  gate('A3 synth-fail \u2192 502 + refund total', a3.status === 502 && a3.json.error === 'voice_synthesis_failed' && genA3?.status === 'error' && Number(genA3?.mco_charged) === 2 && Number(genA3?.mco_refunded) === 2 && (await balance(a.uid)) === balBeforeA3,\n    `status=${a3.status} error=${a3.json.error} gen=${JSON.stringify(genA3)} bal=${await balance(a.uid)}`);\n\n  // A4 (review F1): provider/model FORJADOS n\u00e3o podem inflar a cobran\u00e7a do voice \u2014 pre\u00e7o PINADO em 2.\n  const balBeforeA4 = await balance(a.uid);\n  const a4 = await invokeFn(jwtA, voicePayload({ provider: 'higgsfield', model: 'soul', parameters: { voice: 'Kore', resolution: '1080p', batch: 4 } }));\n  const { data: genA4 } = await admin.from('generations').select('mco_charged, mco_refunded, status').eq('owner_id', a.uid)\n    .eq('output_type', 'audio').order('created_at', { ascending: false }).limit(1).maybeSingle();\n  gate('A4 provider forjado \u2192 cobran\u00e7a pinada em 2 + refund', Number(genA4?.mco_charged) === 2 && Number(genA4?.mco_refunded) === 2 && (await balance(a.uid)) === balBeforeA4,\n    `charged=${genA4?.mco_charged} refunded=${genA4?.mco_refunded} status=${a4.status} bal=${await balance(a.uid)}`);\"\"\",\n)\nopen(p, 'w').write(s)\nprint('A4 added')\nEOF\nset -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -8",
+  "description": "Add A4 pinned-cost gate and re-run full smoke",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> A4 added
+> ✅ A1b 422 voz fora do allowlist — status=422 error=voice_unsupported
+> ✅ A2 402 google_not_configured fail-closed — status=402 error=google_not_configured
+> ✅ A3 synth-fail → 502 + refund total — status=502 error=voice_synthesis_failed gen={"status":"error","mco_charged":2,"mco_refunded":2} bal=40
+> ✅ A4 provider forjado → cobrança pinada em 2 + refund — charged=2 refunded=2 status=502 bal=40
+> ✅ T7 RLS own-only + sem INSERT/DELETE client — own=7/7 cross=0 ins=blocked rows=7
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> 
+> ✅ smoke-spaces-execution: 27 passed, 0 failed
+> ```
+
+## 🤖 Claude *(01:17:31)*
+
+
+## 🤖 Claude *(01:17:31)*
+
+**27/27 — A4 prova o preço pinado.** Regressão final + commits + selo:
+
+## 🤖 Claude *(01:17:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test 2>&1 | grep -E 'Test Files|Tests ' && git add docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md supabase/functions/canvas-execute/index.ts src/lib/spaces-execution.ts src/hooks/useParamRegistry.ts src/components/spaces/GenerationCluster.tsx && git commit -q -m \"feat(spaces): Fase 2c \u2014 voice_over no slice (tts-speak stock voices, sync ledger-first)\n\nSOP Amendment S26-S29 ANTES do c\u00f3digo: reuso do tts-speak COM O JWT DO\nUSU\u00c1RIO (re-valida sess\u00e3o, resolve BYOK google, devolve WAV, N\u00c3O cobra \u2014\nzero hazard de double-charge); custo declarado 2 mco (4x-floor); guards\n422 pr\u00e9-d\u00e9bito (script obrigat\u00f3rio \u22642000, allowlist 8 vozes stock, BYOK\nfail-closed p\u00f3s-404); WAV \u2192 canvas-assets <space>/<node_run>.wav \u2192\nfinalize(done, result.audio_url) com retry+done-fallback; falha \u2192 refund\ntotal na mesma request. /security-review independente APPROVED \u2014 LOW F1\ncorrigido (cobran\u00e7a PINADA em CREDIT_COSTS[voice-over] contra provider\nforjado) + F2 (typeof string na voz) + F4 (telemetria de falha). Cliente:\nvoice-over execut\u00e1vel, HUD Voz+Roteiro, cluster <audio>, threading handle\ntext. deno check \u2713 deployado 166.4kB.\" && git add src/test/spaces-execution.test.ts src/test/spaces-mirror-parity.test.ts scripts/qa/smoke-spaces-execution.ts && git commit -q -m \"test(spaces): gates G15 + A1-A4 \u2014 voice slice (vitest 393, smoke 27/27)\n\nUnit: classify/estimate/payload/threading-text/previewAudioUrl +\nmirror-parity do custo parseando CREDIT_COSTS[voice-over] do fonte.\nSmoke: A1 422 sem roteiro \u00b7 A1b 422 voz fora do allowlist \u00b7 A2 402\ngoogle_not_configured fail-closed \u00b7 A3 chave fake \u2192 synth-fail \u2192 refund\ntotal mesma request \u00b7 A4 (review F1) provider forjado \u2192 cobran\u00e7a pinada\nem 2 + refund. 27/27 contra prod.\" && git log -2 --format='%h %s'",
+  "description": "Final vitest, commit feat + tests",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  Test Files  31 passed | 2 skipped (33)
+>       Tests  393 passed | 2 skipped (395)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:18PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:18PM[0m [32mINF[0m scan completed in 15ms
+> [90m10:18PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:18PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:18PM[0m [32mINF[0m scan completed in 17.1ms
+> [90m10:18PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> bfd2b29 test(spaces): gates G15 + A1-A4 — voice slice (vitest 393, smoke 27/27)
+> 694d836 feat(spaces): Fase 2c — voice_over no slice (tts-speak stock voices, sync ledger-first)
+> ```
+
+## 🤖 Claude *(01:18:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = '.claude/context/autonomous-loop-charter.md'\ns = open(p).read()\ns = s.replace(\n  \"- **Restam do Spaces:** Fase 2 restante (\u00e1udio via `generate-voice` [tem fn, precisa branch de ledger] \u00b7 Designer \u00b7 Workflow Apps \u00b7 FX \u00b7 multi-page) \u00b7 Fase 3 (collab).\",\n  \"\"\"- **Restam do Spaces:** Fase 2 restante (Designer \u00b7 Workflow Apps \u00b7 FX \u00b7 multi-page \u00b7 voz CLONADA [Fila: biometria]) \u00b7 Fase 3 (collab).\n\n### \u2705 Spaces Fase 2c \u2014 voice_over (voiceover stock) \u2014 SHIPPED E2E PAGO (loop 2026-07-02 it.5, commits `694d836`+`bfd2b29`)\n- **SOP S26-S29 ANTES:** motor = `tts-speak` reusado COM O JWT DO USU\u00c1RIO (re-valida, BYOK google, devolve WAV, **n\u00e3o cobra** \u2014 zero double-charge sem precisar de prepaid); custo declarado **2 mco** (4\u00d7-floor); guards 422 pr\u00e9-d\u00e9bito; WAV \u2192 bucket \u2192 `finalize(done, result.audio_url)`; falha \u2192 refund total na mesma request. Voz CLONADA (Gabriel) segue **Fila Sovereign** (biometria).\n- **/security-review independente: APPROVED** (SOUND em double-charge/mint/JWT-forward/guard-order/output-parity/DoS/legacy). LOW **F1 corrigido** (provider forjado inflava a cobran\u00e7a at\u00e9 65 \u2192 PINADA em `CREDIT_COSTS['voice-over']`; gate A4 prova) + F2 typeof + F4 telemetria. **F3/F5 registrados como OTDs** (abaixo).\n- **Provas:** smoke **27/27** (A1/A1b/A2/A3 chave fake\u2192refund/A4 pinned) \u00b7 vitest **393** (+G15) \u00b7 tsc 0 \u00b7 **E2E PAGO**: space `1d77b500` \"E2E 2c voice\" (MANTIDO) \u2192 Estimar 2 exato \u2192 Rodar \u2192 **WAV 436.410 bytes audio/wav HTTP 200 (9s de fala)** \u2192 `<audio>` player no cluster \u2192 saldo **4583\u21924581 (2 exato)** \u2192 Vision QA high. Custo real: 2 mco + ~US$0,005 BYOK.\n- **OTD-SPACES-001 (do review, pr\u00e9-existente):** `canvas-assets` \u00e9 bucket p\u00fablico com SELECT an\u00f4nimo em `storage.objects` \u21d2 lista+leitura mundial de imagens/v\u00eddeos/WAVs de todos os tenants. Fix = bucket privado + signed URLs em todo o slice (imagem/v\u00eddeo/voz) OU restringir list. N\u00e3o-bloqueante desta fatia; herdado do legado.\n- **OTD-SPACES-002 (do review, pr\u00e9-existente):** INSERT policy de `spaces` n\u00e3o constrange `id` do cliente (polui\u00e7\u00e3o de namespace de prefixo no storage; sem leitura/overwrite cross-tenant alcan\u00e7\u00e1vel). Hardening: id server-side.\"\"\",\n)\nopen(p, 'w').write(s)\nprint('charter updated')\nEOF\npython3 - <<'EOF'\np = 'HANDOFF.md'\ns = open(p).read()\nmarker = \"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2b: References picker (consist\u00eancia visual no n\u00f3 de imagem)\"\nseal = \"\"\"## Handoff Seal Record (2026-07-02) \u2014 Spaces Fase 2c: voiceover stock E2E PAGO (canvas\u2192\u00e1udio fechado)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = /security-review independente (APPROVED) + Sovereign \u00b7 Owner = Sovereign (custo E2E: 2 mco + ~US$0,005 BYOK).\n\nItera\u00e7\u00e3o 5. SOP S26-S29 ANTES do c\u00f3digo. Terceira modalidade do canvas pago: **texto\u2192voz neural** com as 8 vozes stock do Gemini TTS (BYOK que o User 0 j\u00e1 tinha \u2014 voz CLONADA do Gabriel segue na Fila, biometria). Decis\u00e3o-chave S26: reuso do `tts-speak` **com o JWT do pr\u00f3prio usu\u00e1rio** (o fn re-valida a sess\u00e3o e resolve o BYOK dele; n\u00e3o cobra \u2192 zero hazard de double-charge, sem precisar do padr\u00e3o prepaid). Review independente **APPROVED**: F1 LOW corrigido pr\u00e9-commit (provider forjado no payload inflava a cobran\u00e7a at\u00e9 65 mco via resolver legado \u2192 pre\u00e7o **pinado** em `CREDIT_COSTS['voice-over']=2`; gate A4 prova com payload forjado) + F2/F4; F3/F5 pr\u00e9-existentes viraram **OTD-SPACES-001/002** na charter (bucket p\u00fablico list\u00e1vel \u00b7 INSERT id de spaces). Provas: smoke **27/27** \u00b7 vitest **393** \u00b7 tsc 0 \u00b7 **E2E PAGO** space `1d77b500` (mantido): Estimar 2 exato \u2192 WAV **436.410 bytes** HTTP 200 (9s) \u2192 `<audio>` no cluster \u2192 saldo **4583\u21924581 (2 exato)** \u2192 Vision QA high. Commits `694d836`+`bfd2b29`.\n\n**Survival Laws Self-audit:** Lei 1 \u2705 \u00b7 Lei 2 \u2705 \u00b7 Lei 3 \u2705 \u00b7 Lei 4 \u2705 (ORO + review independente como co-Reviewer).\n\n\"\"\"\ns = s.replace(marker, seal + marker, 1)\nopen(p, 'w').write(s)\nprint('handoff updated')\nEOF\nTOKEN=$(cat /home/ubuntu/.supabase/access-token) && cat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2c.sql <<'EOF'\nINSERT INTO public.mcorch_nodes (user_id, node_type, name, content, metadata, revenue_impact, stability_score)\nVALUES (NULL, 'handoff', 'spaces-2c-voiceover-e2e-pago-2026-07-02',\n'[HANDOFF SEAL] Spaces Fase 2c \u2014 voice_over no slice, 3a modalidade do canvas pago (texto->voz neural, 8 vozes stock Gemini TTS). SOP S26-S29 antes do codigo: tts-speak reusado com o JWT do usuario (nao cobra \u2014 zero double-charge), custo declarado 2 mco 4x-floor, guards pre-debito, WAV->bucket->finalize, refund total em falha. /security-review APPROVED; F1 LOW corrigido (provider forjado inflava cobranca -> preco pinado, gate A4 prova) + F2/F4; F3/F5 viraram OTD-SPACES-001/002 (bucket publico listavel; spaces INSERT id). Smoke 27/27, vitest 393, E2E pago: WAV 436410 bytes 9s, saldo 4583->4581 exato, Vision QA high. Space 1d77b500 mantido. Commits 694d836 bfd2b29.',\n'{\"provider\":\"handoff\",\"event\":\"spaces_2c_voice\",\"space_id\":\"1d77b500-c054-4704-b120-403f4871cdac\",\"wav_bytes\":436410,\"commits\":[\"694d836\",\"bfd2b29\"],\"smoke\":\"27/27\",\"review\":\"APPROVED\"}'::jsonb,\n0, 0.9)\nRETURNING id;\nEOF\npython3 -c \"import json;print(json.dumps({'query': open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2c.sql').read()}))\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2c.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/seal2c.json && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT count(*) AS mesh FROM public.mcorch_nodes;\"}'",
+  "description": "Update charter/HANDOFF, insert seal node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> charter updated
+> handoff updated
+> [{"id":"f128ea54-db48-4a1e-83a1-ac6739c86fa6"}][{"mesh":9041}]
+> ```
+
+## 🤖 Claude *(01:19:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -i 's|version-6.80.0--spaces--2b--references--picker-blueviolet|version-6.81.0--spaces--2c--voiceover--E2E--pago-blueviolet|; s|neural_mesh-9040_nodes|neural_mesh-9041_nodes|' README.md && git add README.md HANDOFF.md .claude/context/autonomous-loop-charter.md && git commit -q -m \"chore(sprint): v6.81.0 \u2014 Spaces 2c voiceover selado (3a modalidade paga, review APPROVED+F1 pinado, smoke 27/27, mesh 9041)\n\nCanvas->audio fechado E2E pago (WAV 9s real, saldo -2 exato). Space\n1d77b500 mantido para o Sovereign ouvir. OTD-SPACES-001/002 registradas\n(bucket publico listavel; spaces INSERT id). Seal node f128ea54.\" && git push origin main 2>&1 | tail -1 && git log -1 --format='%h' && git status -sb | head -1",
+  "description": "Bump README, commit seal, push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:19PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:19PM[0m [32mINF[0m scan completed in 20.2ms
+> [90m10:19PM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.04 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> ✔️ secret-scan (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    bd49da9..e72c090  main -> main
+> e72c090
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(01:19:24)*
+
+
+## 🤖 Claude *(01:19:24)*
+
+
+## 🤖 Claude *(01:19:29)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 90,
+  "reason": "Fatia 2c selada; pr\u00f3xima itera\u00e7\u00e3o sonda o composer (scene_compose) como 4\u00aa modalidade do slice.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 22:21:00 (in 91s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(01:21:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(01:21:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(01:21:12)*
+
+
+## 🤖 Claude *(01:21:12)*
+
+
+## 🤖 Claude *(01:21:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log -1 --format='%h %s'; grep -n 'isCompose\\|scene-compose\\|scene_compose' supabase/functions/canvas-execute/index.ts | head -8; grep -n -B3 'const isCompose' supabase/functions/canvas-execute/index.ts | head -8",
+  "description": "Locate scene_compose legacy path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> e72c090 chore(sprint): v6.81.0 — Spaces 2c voiceover selado (3a modalidade paga, review APPROVED+F1 pinado, smoke 27/27, mesh 9041)
+> 42:  "scene-compose": 18,
+> 234:      scene_compose: "compose",
+> 1676:  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> 1677:  const endpoint = isCompose
+> 1687:  if (isCompose) {
+> 1673-  // sync because gens complete within the 90s edge function window.
+> 1674-
+> 1675-  // ── Submit Soul text-to-image job ──────────────────────────────────
+> 1676:  const isCompose = body.node_type === "scene_compose" || body.node_type === "compose";
+> ```
+
+## 🤖 Claude *(01:21:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -A2 \"'composer'\" src/lib/node-registry.ts | head -6",
+  "description": "Check composer node registry entry and ports"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 35:  { id: 'composer', labelPt: 'Designer', category: 'designer', icon: 'design-standalone-v2', inputs: ['image', 'text'], output: 'image', badge: 'New' },
+> 36-  { id: 'sketch', labelPt: 'Sketch', category: 'image', icon: 'sketch', inputs: ['image'], output: 'image' },
+> 37-  { id: 'image-to-svg', labelPt: 'Imagem para SVG', category: 'image', icon: 'vector', inputs: ['image'], output: 'svg' },
+> ```
+
+## 🤖 Claude *(01:21:43)*
+
+
+## 🤖 Claude *(01:21:43)*
+
+
+## 🤖 Claude *(01:21:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n -A3 \"'composer':\" src/lib/node-registry.ts | head -5; sed -n '1690,1740p' supabase/functions/canvas-execute/index.ts",
+  "description": "Check composer ports and Higgsfield compose submit/response"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     const refs = (body.reference_image_urls ?? []).filter(Boolean);
+>     const image1 = body.input_image_1 || refs[0];
+>     const image2 = body.input_image_2 || refs[1];
+>     if (image1) {
+>       payload.image_1_url = image1;
+>       payload.input_image_1 = image1;
+>     }
+>     if (image2) {
+>       payload.image_2_url = image2;
+>       payload.input_image_2 = image2;
+>     }
+>     if (body.input_layout) {
+>       payload.layout_url = body.input_layout;
+>       payload.input_layout = body.input_layout;
+>     }
+>   }
+> 
+>   const submitResp = await fetch(endpoint, {
+>     method: "POST",
+>     headers: {
+>       Authorization: authHeader,
+>       "Content-Type": "application/json",
+>       Accept: "application/json",
+>     },
+>     body: JSON.stringify(payload),
+>   });
+> 
+>   if (!submitResp.ok) {
+>     const t = await submitResp.text();
+>     if (submitResp.status === 401 || submitResp.status === 403) {
+>       throw new Error("Higgsfield: credenciais inválidas");
+>     }
+>     if (submitResp.status === 402) {
+>       throw new Error("Higgsfield: saldo de créditos esgotado");
+>     }
+>     if (submitResp.status === 429) {
+>       throw new Error("Higgsfield: limite de requisições atingido");
+>     }
+>     throw new Error(`Higgsfield submit error ${submitResp.status}: ${t.slice(0, 200)}`);
+>   }
+> 
+>   const submitData = await submitResp.json();
+>   const requestId = submitData.request_id || submitData.id;
+>   if (!requestId) throw new Error("Higgsfield: resposta de submit inválida (sem request_id)");
+> 
+>   // ── Poll until terminal state ──────────────────────────────────────
+>   const started = Date.now();
+>   while (Date.now() - started < MAX_POLL_MS) {
+>     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+>     const statusResp = await fetch(`${BASE_URL}/requests/${requestId}/status`, {
+>       method: "GET",
+> ```
+
+## 🤖 Claude *(01:22:09)*
+
+
+## 🤖 Claude *(01:22:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '100,130p' src/lib/node-registry.ts",
+  "description": "Read NODE_PORTS map and fallback for composer"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /**
+>  * NODE_PORTS — real per-node handle ids (data-handleid), verified live 2026-06-29.
+>  * Source of truth for building Port[] in the store/registry (NA-SPACES-002).
+>  */
+> export const NODE_PORTS: Record<string, { in: string[]; out: string[] }> = {
+>   'image-generator': { in: ['reference', 'prompt'], out: ['output'] },
+>   'video-generator': {
+>     in: ['references', 'audio', 'video-reference', 'last-frame', 'first-frame', 'prompt'],
+>     out: ['start-frame', 'end-frame', 'output', 'audio-output'],
+>   },
+>   'voice-over': { in: ['text'], out: ['output'] },
+>   'prompt-generator': { in: ['attachments', 'prompt'], out: ['generated_prompt'] },
+>   'image-upscaler': { in: ['input-image'], out: ['output'] },
+>   'music-generator': { in: ['prompt'], out: ['output'] },
+>   'list': {
+>     in: ['texts', 'images', 'videos', 'audios', 'svgs', 'models-3d'],
+>     out: ['output-texts', 'output-images', 'output-videos', 'output-audios', 'output-svgs', 'output-models-3d'],
+>   },
+>   'references': { in: [], out: ['output'] },
+>   'sticky-note': { in: [], out: [] },
+>   'stickers': { in: [], out: [] },
+>   'group': { in: [], out: [] },
+> };
+> 
+> /**
+>  * HANDLE_DATA_TYPE — best-effort handle-id → PortDataType inference (Phase 0).
+>  * Phase 1 refines per-node; output/main handles fall back to the NodeTypeDef types.
+>  */
+> const HANDLE_DATA_TYPE: Record<string, PortDataType> = {
+> ```
+
+## 🤖 Claude *(01:22:27)*
+
+
+## 🤖 Claude *(01:22:27)*
+
+
+## 🤖 Claude *(01:22:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md <<'EOF'\n\n### Amendment 2d \u2014 Designer/composer no slice (2026-07-02, ANTES do c\u00f3digo)\n\n| # | Decis\u00e3o | Racional |\n|---|---------|----------|\n| S30 | **`composer` \u2192 `scene_compose` entra no slice SYNC** via `generateHiggsfield` legado (submit+poll in-window \u226490s, endpoint compose). Custo declarado **18 mco** (`CREDIT_COSTS['scene-compose']`), **PINADO** contra provider/model forjado (mesma classe F1 do review 2c). BYOK Higgsfield fail-closed 402 p\u00f3s-404. | 4\u00aa modalidade; caminho server j\u00e1 existente e provado no Canvas Studio. |\n| S31 | **Compose usa NO M\u00c1XIMO 2 imagens (verdade do server**: `refs[0]`/`refs[1]` \u2192 `image_1_url`/`image_2_url`). Fontes: picker de refer\u00eancias (cap 2 no HUD do Designer) + threading dos handles novos `image-1`/`image-2` (entry `NODE_PORTS.composer` declarada \u2014 n\u00e3o existia). \u22651 imagem \u00e9 OBRIGAT\u00d3RIA (Designer comp\u00f5e; sem imagem \u2192 skip no-op nunca cobrado + toast). Prompt obrigat\u00f3rio. | Honestidade G7-classe: nunca aceitar imagem que o server ignora. |\n| S32 | **Sa\u00edda = imagem** (flui pelo caminho sync de upload+finalize j\u00e1 existente do slice); `model_key='higgsfield/scene-compose'`; threading downstream: a sa\u00edda do composer \u00e9 imagem `done` normal (vira first-frame de v\u00eddeo, ref de imagem etc.). | Reuso total do p\u00f3s-provider. |\n\n**Gate G16:** vitest classify/estimate/payload-cap-2/skip-sem-imagem + mirror do custo; smoke C1 (422 sem prompt)/C2 (skip... n/a server \u2014 client) \u2192 C1 422 sem imagem \u00b7 C2 402 BYOK \u00b7 C3 custo pinado com payload forjado; E2E pago (18 mco) com ref do picker + Vision QA.\nEOF\necho ok",
+  "description": "Append SOP amendment S30-S32"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ok
+> ```
+
+## 🤖 Claude *(01:23:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'supabase/functions/canvas-execute/index.ts'\ns = open(p).read()\n\n# Slice gate \u2014 add scene_compose\ns = s.replace(\n  '''  if (\n    body.node_type !== \"generate_image\" && body.node_type !== \"magic_prompt\" &&\n    body.node_type !== \"image_to_video\" && body.node_type !== \"voice_over\"\n  ) {''',\n  '''  if (\n    body.node_type !== \"generate_image\" && body.node_type !== \"magic_prompt\" &&\n    body.node_type !== \"image_to_video\" && body.node_type !== \"voice_over\" &&\n    body.node_type !== \"scene_compose\"\n  ) {''',\n)\n\n# Compose 422 guards \u2014 insert right after the voice guard block (before effectiveCost)\ns = s.replace(\n  '''  // F1 (review 2c): pin voice to the DECLARED price \u2014 a crafted provider/model must never let\n  // the legacy cost resolver inflate the charge (G7: estimate == real charge).\n  const effectiveCost = body.node_type === \"voice_over\"\n    ? CREDIT_COSTS[\"voice-over\"]\n    : (body.node_type === \"image_to_video\" ? videoCost : creditCost);''',\n  '''  // \u2500\u2500 Compose 422 guards BEFORE any debit (Amendment 2d S31) \u2500\u2500\n  if (body.node_type === \"scene_compose\") {\n    if (!(body.prompt || \"\").trim()) {\n      return spacesJson(422, {\n        error: \"compose_prompt_required\",\n        message: \"Descreva a composi\u00e7\u00e3o desejada.\",\n      }, corsHeaders);\n    }\n    const composeRefs = (body.reference_image_urls ?? []).filter(Boolean);\n    if (composeRefs.length === 0) {\n      return spacesJson(422, {\n        error: \"compose_image_required\",\n        message: \"Conecte ou anexe ao menos 1 imagem \u2014 o Designer comp\u00f5e a partir dela.\",\n      }, corsHeaders);\n    }\n  }\n\n  // F1 (review 2c): pin voice/compose to the DECLARED price \u2014 a crafted provider/model must never\n  // let the legacy cost resolver inflate the charge (G7: estimate == real charge).\n  const effectiveCost = body.node_type === \"voice_over\"\n    ? CREDIT_COSTS[\"voice-over\"]\n    : (body.node_type === \"scene_compose\"\n      ? CREDIT_COSTS[\"scene-compose\"]\n      : (body.node_type === \"image_to_video\" ? videoCost : creditCost));''',\n)\n\n# BYOK higgsfield also required for scene_compose\ns = s.replace(\n  '  if (body.node_type === \"image_to_video\" && (!keys.higgsfield || !keys.higgsfield_secret)) {',\n  '  if ((body.node_type === \"image_to_video\" || body.node_type === \"scene_compose\") && (!keys.higgsfield || !keys.higgsfield_secret)) {',\n)\n\n# begin model_key + output_type for compose\ns = s.replace(\n  '''  const modelKey = body.node_type === \"magic_prompt\"\n    ? \"magic_prompt\"\n    : (body.node_type === \"voice_over\" ? \"google/gemini-2.5-flash-preview-tts\" : `${body.provider}/${body.model}`);''',\n  '''  const modelKey = body.node_type === \"magic_prompt\"\n    ? \"magic_prompt\"\n    : (body.node_type === \"voice_over\"\n      ? \"google/gemini-2.5-flash-preview-tts\"\n      : (body.node_type === \"scene_compose\" ? \"higgsfield/scene-compose\" : `${body.provider}/${body.model}`));''',\n)\n# output_type: scene_compose produces an image \u2014 the existing ternary already defaults to \"image\". OK.\n\n# Sync provider loop \u2014 compose branch (before the openrouter branch's else hard-stop)\ns = s.replace(\n  '''      } else if (body.provider === \"openrouter\") {\n        const r = await generateOpenRouter(keys.openrouter, body);\n        outputUrl = r.url; outputB64 = r.b64;\n      } else {\n        // Unreachable behind SPACES_IMAGE_MODELS (both pairs are openrouter) \u2014 kept as a hard stop.\n        throw new Error(`Unknown Spaces provider: ${body.provider}`);\n      }''',\n  '''      } else if (body.node_type === \"scene_compose\") {\n        // Amendment 2d (S30): sync Higgsfield Soul compose (submit + in-window poll).\n        const r = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);\n        outputUrl = r.url;\n      } else if (body.provider === \"openrouter\") {\n        const r = await generateOpenRouter(keys.openrouter, body);\n        outputUrl = r.url; outputB64 = r.b64;\n      } else {\n        // Unreachable behind SPACES_IMAGE_MODELS (both pairs are openrouter) \u2014 kept as a hard stop.\n        throw new Error(`Unknown Spaces provider: ${body.provider}`);\n      }''',\n)\nopen(p, 'w').write(s)\nprint('server patched')\nEOF\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\" && deno check supabase/functions/canvas-execute/index.ts 2>&1 | tail -1",
+  "description": "Patch server for scene_compose slice",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> server patched
+> [0m[32mCheck[0m supabase/functions/canvas-execute/index.ts
+> ```
+
+## 🤖 Claude *(01:23:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\n# Client: node-registry composer ports + spaces-execution + registry schema + picker maxActive\np = 'src/lib/node-registry.ts'\ns = open(p).read()\ns = s.replace(\n  \"  'voice-over': { in: ['text'], out: ['output'] },\",\n  \"  'voice-over': { in: ['text'], out: ['output'] },\\n  'composer': { in: ['image-1', 'image-2', 'prompt'], out: ['output'] }, // 2d: 2 imagens = verdade do server (S31)\",\n)\nopen(p, 'w').write(s)\n\np = 'src/lib/spaces-execution.ts'\ns = open(p).read()\ns = s.replace(\n  \"export const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator', 'video-generator', 'voice-over']);\",\n  \"export const EXECUTABLE_TYPES = new Set(['image-generator', 'prompt-generator', 'video-generator', 'voice-over', 'composer']);\",\n)\ns = s.replace(\n  \"/** Mirrors CREDIT_COSTS['voice-over'] (S27, 4x-floor calibration) \u2014 mirror-parity tested. */\\nexport const SPACES_VOICE_COST = 2;\",\n  \"/** Mirrors CREDIT_COSTS['voice-over'] (S27, 4x-floor calibration) \u2014 mirror-parity tested. */\\nexport const SPACES_VOICE_COST = 2;\\n/** Mirrors CREDIT_COSTS['scene-compose'] (S30) \u2014 mirror-parity tested. */\\nexport const SPACES_COMPOSE_COST = 18;\\n/** Compose uses at most 2 images \u2014 server truth refs[0]/refs[1] (S31). */\\nexport const SPACES_MAX_COMPOSE_IMAGES = 2;\",\n)\ns = s.replace(\n  \"  if (t === 'voice-over') return SPACES_VOICE_COST; // S27 \u2014 batch not applicable (single synth)\\n  return 0;\",\n  \"  if (t === 'voice-over') return SPACES_VOICE_COST; // S27 \u2014 batch not applicable (single synth)\\n  if (t === 'composer') return SPACES_COMPOSE_COST;  // S30 \u2014 single compose\\n  return 0;\",\n)\n# threading: image-1/image-2 handles feed referenceImages in ORDER\ns = s.replace(\n  \"    if (e.targetHandle === 'reference' && up.type === 'image') result.referenceImages.push(up.value);\",\n  \"    if (e.targetHandle === 'reference' && up.type === 'image') result.referenceImages.push(up.value);\\n    if ((e.targetHandle === 'image-1' || e.targetHandle === 'image-2') && up.type === 'image') {\\n      // S31: composer handles \u2014 image-1 first (unshift), image-2 appended\\n      if (e.targetHandle === 'image-1') result.referenceImages.unshift(up.value);\\n      else result.referenceImages.push(up.value);\\n    }\",\n)\n# skip helper + payload branch\ns = s.replace(\n  \"/** S20: a video node with no threaded first-frame image is skipped as a no-op (never charged). */\\nexport function missingVideoInput(node: SpaceNode, upstream: UpstreamInputs): boolean {\\n  return nodeTypeId(node) === 'video-generator' && !upstream.firstFrameImage;\\n}\",\n  \"\"\"/** S20: a video node with no threaded first-frame image is skipped as a no-op (never charged). */\nexport function missingVideoInput(node: SpaceNode, upstream: UpstreamInputs): boolean {\n  return nodeTypeId(node) === 'video-generator' && !upstream.firstFrameImage;\n}\n\n/** S31: a composer with no image at all (picker or threaded) is skipped as a no-op. */\nexport function missingComposeInput(node: SpaceNode, upstream: UpstreamInputs): boolean {\n  if (nodeTypeId(node) !== 'composer') return false;\n  const explicit = (node.data.references ?? []).some((r) => !!r.url);\n  return !explicit && upstream.referenceImages.length === 0;\n}\"\"\",\n)\ns = s.replace(\n  \"\"\"  if (t === 'voice-over') {\n    const voice = (node.data.params?.voice as string) || 'Kore';\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'voice_over',\n      provider: 'google', model: 'gemini-2.5-flash-preview-tts', prompt,\n      parameters: { voice },\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  return null;\"\"\",\n  \"\"\"  if (t === 'voice-over') {\n    const voice = (node.data.params?.voice as string) || 'Kore';\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'voice_over',\n      provider: 'google', model: 'gemini-2.5-flash-preview-tts', prompt,\n      parameters: { voice },\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  if (t === 'composer') {\n    const refs = mergeReferenceUrls(node, upstream).slice(0, SPACES_MAX_COMPOSE_IMAGES); // S31: cap 2\n    if (refs.length === 0) return null; // missingComposeInput backstop\n    return {\n      project_id: spaceId, node_id: node.id, node_type: 'scene_compose',\n      provider: 'higgsfield', model: 'scene-compose', prompt,\n      parameters: {},\n      reference_image_urls: refs,\n      space_id: spaceId, node_run_id: nodeRunId,\n    };\n  }\n  return null;\"\"\",\n)\ns = s.replace(\n  \"  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video' | 'voice_over';\",\n  \"  node_type: 'generate_image' | 'magic_prompt' | 'image_to_video' | 'voice_over' | 'scene_compose';\",\n)\nopen(p, 'w').write(s)\n\np = 'src/hooks/useParamRegistry.ts'\ns = open(p).read()\ns = s.replace(\n  \"\"\"    case 'text':\n      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Escreva o texto\u2026' }];\"\"\",\n  \"\"\"    case 'designer':\n      // 2d slice (S30/S31): compose de at\u00e9 2 imagens (picker cap 2 + handles image-1/image-2).\n      return [\n        { key: 'references', kind: 'references', labelPt: 'Imagens (at\u00e9 2)' },\n        { key: 'prompt', kind: 'textarea', labelPt: 'Descreva a composi\u00e7\u00e3o\u2026' },\n      ];\n    case 'text':\n      return [{ key: 'prompt', kind: 'textarea', labelPt: 'Escreva o texto\u2026' }];\"\"\",\n)\nopen(p, 'w').write(s)\nprint('client patched')\nEOF\npython3 - <<'EOF'\n# ReferencePicker: parametrize maxActive (composer cap 2)\np = 'src/components/spaces/ReferencePicker.tsx'\ns = open(p).read()\ns = s.replace(\n  \"export function ReferencePicker({ node }: { node: SpaceNode }) {\",\n  \"export function ReferencePicker({ node, maxActive = SPACES_MAX_ACTIVE_REFERENCES }: { node: SpaceNode; maxActive?: number }) {\",\n)\ns = s.replace(\n  \"        {Math.min(refs.length, SPACES_MAX_ACTIVE_REFERENCES)}/{SPACES_MAX_ACTIVE_REFERENCES} ativas no run\\n        {refs.length > SPACES_MAX_ACTIVE_REFERENCES && ` (${refs.length} salvas \u2014 o servidor usa as ${SPACES_MAX_ACTIVE_REFERENCES} primeiras)`}\",\n  \"        {Math.min(refs.length, maxActive)}/{maxActive} ativas no run\\n        {refs.length > maxActive && ` (${refs.length} salvas \u2014 o servidor usa as ${maxActive} primeiras)`}\",\n)\nopen(p, 'w').write(s)\n\np = 'src/components/spaces/ParamHUD.tsx'\ns = open(p).read()\ns = s.replace(\n  \"    case 'references':\\n      return <ReferencePicker node={node} />; // Amendment 2b (S23/S24) \u2014 upload + chips, cap 4 ativas\",\n  \"    case 'references':\\n      // Amendment 2b/2d \u2014 upload + chips; composer usa 2 (S31), imagem usa 4 (S24)\\n      return <ReferencePicker node={node} maxActive={node.data.category === 'designer' ? 2 : 4} />;\",\n)\nopen(p, 'w').write(s)\nprint('picker parametrized')\nEOF\nnpx tsc --noEmit 2>&1 | head -3; echo \"tsc=$?\"",
+  "description": "Patch client for composer slice, parametrize picker",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> client patched
+> picker parametrized
+> tsc=0
+> ```
+
+## 🤖 Claude *(01:23:46)*
+
+
+## 🤖 Claude *(01:23:46)*
+
+tsc 0. Skip-guard no runNode + testes G16 + smoke C:
+
+## 🤖 Claude *(01:24:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'src/hooks/useGenerationLedger.ts'\ns = open(p).read()\ns = s.replace(\n  \"  classifyNode, buildExecutePayload, resolveUpstreamInputs, collectDescendants,\\n  projectSpacesGraphCost, rowToGeneration, missingVideoInput, nodeTypeId,\",\n  \"  classifyNode, buildExecutePayload, resolveUpstreamInputs, collectDescendants,\\n  projectSpacesGraphCost, rowToGeneration, missingVideoInput, missingComposeInput, nodeTypeId,\",\n)\ns = s.replace(\n  \"\"\"      if (missingVideoInput(node, upstream)) {\n        st.updateNodeStatus(node.id, 'idle');\n        toast({ title: `\"${node.data.label}\" sem imagem no first-frame \u2014 pulado (nada cobrado).`,\n          description: 'Conecte a sa\u00edda de um Gerador de imagem (done) ao handle first-frame.' });\n        return;\n      }\"\"\",\n  \"\"\"      if (missingVideoInput(node, upstream)) {\n        st.updateNodeStatus(node.id, 'idle');\n        toast({ title: `\"${node.data.label}\" sem imagem no first-frame \u2014 pulado (nada cobrado).`,\n          description: 'Conecte a sa\u00edda de um Gerador de imagem (done) ao handle first-frame.' });\n        return;\n      }\n      if (missingComposeInput(node, upstream)) {\n        st.updateNodeStatus(node.id, 'idle');\n        toast({ title: `\"${node.data.label}\" sem imagem \u2014 pulado (nada cobrado).`,\n          description: 'Anexe at\u00e9 2 imagens no Designer ou conecte-as nos handles image-1/image-2.' });\n        return;\n      }\"\"\",\n)\nopen(p, 'w').write(s)\nprint('ledger hook patched')\nEOF\ncat >> src/test/spaces-execution.test.ts <<'EOF'\n\n/* \u2500\u2500 Amendment 2d \u2014 composer slice (gate G16) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nimport { SPACES_COMPOSE_COST, SPACES_MAX_COMPOSE_IMAGES, missingComposeInput } from '@/lib/spaces-execution';\n\ndescribe('composer slice 2d (S30-S32 \u2014 gate G16)', () => {\n  const withRefs2 = (urls: string[]): SpaceNode => {\n    const n = mkNode({ typeId: 'composer', params: { prompt: 'componha' } });\n    n.data.references = urls.map((url) => ({ kind: 'style', url } as import('@/lib/spaces-schema').SpaceReference));\n    return n;\n  };\n\n  it('classifies composer as executable at the declared cost', () => {\n    const n = withRefs2(['https://x/a.png']);\n    expect(classifyNode(n)).toBe('executable');\n    expect(estimateExecutableCost(n)).toBe(SPACES_COMPOSE_COST);\n  });\n\n  it('payload caps compose images at 2 (server truth refs[0]/refs[1])', () => {\n    const n = withRefs2(['https://x/a.png', 'https://x/b.png', 'https://x/c.png']);\n    const p = buildExecutePayload(n, 's', 'r', { referenceImages: [] });\n    expect(p).toMatchObject({ node_type: 'scene_compose', provider: 'higgsfield' });\n    expect((p as Record<string, unknown>).reference_image_urls).toEqual(['https://x/a.png', 'https://x/b.png']);\n    expect(SPACES_MAX_COMPOSE_IMAGES).toBe(2);\n  });\n\n  it('threads image-1 handle FIRST (unshift) then image-2', () => {\n    const n = mkNode({ id: 'c1', typeId: 'composer', params: { prompt: 'p' } });\n    const edges: SpaceEdge[] = [\n      { id: 'e2', source: 'i2', target: 'c1', targetHandle: 'image-2' } as SpaceEdge,\n      { id: 'e1', source: 'i1', target: 'c1', targetHandle: 'image-1' } as SpaceEdge,\n    ];\n    const outputs = new Map<string, NodeOutput>([\n      ['i1', { type: 'image', value: 'https://x/first.png' }],\n      ['i2', { type: 'image', value: 'https://x/second.png' }],\n    ]);\n    const up = resolveUpstreamInputs(n, edges, outputs);\n    expect(up.referenceImages[0]).toBe('https://x/first.png');\n    expect(missingComposeInput(n, up)).toBe(false);\n  });\n\n  it('composer without any image is a skip (never charged)', () => {\n    const n = mkNode({ typeId: 'composer', params: { prompt: 'p' } });\n    const up = resolveUpstreamInputs(n, [], new Map());\n    expect(missingComposeInput(n, up)).toBe(true);\n    expect(buildExecutePayload(n, 's', 'r', up)).toBeNull();\n  });\n});\nEOF\ncat >> src/test/spaces-mirror-parity.test.ts <<'EOF'\n\n/* \u2500\u2500 Amendment 2d \u2014 compose cost mirror parity (S30/G16) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\nimport { SPACES_COMPOSE_COST } from '@/lib/spaces-execution';\n\ndescribe('compose mirror parity (S30)', () => {\n  it(\"client compose cost equals CREDIT_COSTS['scene-compose']\", () => {\n    const m = fnSource.match(/\"scene-compose\":\\s*(\\d+)/);\n    expect(m).toBeTruthy();\n    expect(SPACES_COMPOSE_COST).toBe(Number(m![1]));\n  });\n});\nEOF\nbun run test src/test/spaces-execution.test.ts src/test/spaces-mirror-parity.test.ts 2>&1 | grep -E 'Test Files|Tests ' && npx tsc --noEmit 2>&1 | head -2; echo tsc=$?",
+  "description": "Patch runNode skip, add G16 tests, verify",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ledger hook patched
+>  Test Files  2 passed (2)
+>       Tests  40 passed (40)
+> tsc=0
+> ```
+
+## 🤖 Claude *(01:24:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'EOF'\np = 'scripts/qa/smoke-spaces-execution.ts'\ns = open(p).read()\ns = s.replace(\n  \"\"\"  // \u2500\u2500 T7 \u2014 RLS: SELECT-own \u00b7 no client INSERT \u00b7 no client DELETE \u2500\u2500\"\"\",\n  \"\"\"  // \u2500\u2500 C1-C3 \u2014 scene_compose slice (Amendment 2d G16; zero Higgsfield cost) \u2500\u2500\n  const composePayload = (extra: Record<string, unknown> = {}) => spacePayload(spaceA.id, {\n    node_type: 'scene_compose', provider: 'higgsfield', model: 'scene-compose',\n    prompt: 'componha as duas imagens', reference_image_urls: ['https://example.com/a.png'], ...extra,\n  });\n  const c1 = await invokeFn(jwtA, composePayload({ reference_image_urls: [] }));\n  gate('C1 422 compose sem imagem', c1.status === 422 && c1.json.error === 'compose_image_required', `status=${c1.status} error=${c1.json.error}`);\n  const c2 = await invokeFn(jwtA, composePayload({ prompt: ' ' }));\n  gate('C2 422 compose sem prompt', c2.status === 422 && c2.json.error === 'compose_prompt_required', `status=${c2.status} error=${c2.json.error}`);\n  // C3 (F1-classe): fake higgsfield key j\u00e1 semeada no W5 \u2192 submit falha \u2192 refund; cobran\u00e7a PINADA em 18\n  // mesmo com params forjados de soul (resolution/batch).\n  const balBeforeC3 = await balance(a.uid);\n  const c3 = await invokeFn(jwtA, composePayload({ parameters: { resolution: '1080p', batch: 4 } }));\n  const { data: genC3 } = await admin.from('generations').select('status, mco_charged, mco_refunded, model_key').eq('owner_id', a.uid)\n    .eq('model_key', 'higgsfield/scene-compose').maybeSingle();\n  gate('C3 compose fail \u2192 refund + custo pinado 18', Number(genC3?.mco_charged) === 18 && Number(genC3?.mco_refunded) === 18 && genC3?.status === 'error' && (await balance(a.uid)) === balBeforeC3,\n    `status=${c3.status} gen=${JSON.stringify(genC3)} bal=${await balance(a.uid)}`);\n\n  // \u2500\u2500 T7 \u2014 RLS: SELECT-own \u00b7 no client INSERT \u00b7 no client DELETE \u2500\u2500\"\"\",\n)\nopen(p, 'w').write(s)\nprint('smoke C-gates added')\nEOF\nSUPABASE_ACCESS_TOKEN=$(cat /home/ubuntu/.supabase/access-token) npx supabase functions deploy canvas-execute --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E 'Deployed|script size' && set -a && source .env && set +a && bun run scripts/qa/smoke-spaces-execution.ts 2>&1 | tail -9",
+  "description": "Add C-gates, deploy, run full smoke",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> smoke C-gates added
+> Deploying Function: canvas-execute (script size: 166.8kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: canvas-execute
+> ✅ A3 synth-fail → 502 + refund total — status=502 error=voice_synthesis_failed gen={"status":"error","mco_charged":2,"mco_refunded":2} bal=40
+> ✅ A4 provider forjado → cobrança pinada em 2 + refund — charged=2 refunded=2 status=502 bal=40
+> ✅ C1 422 compose sem imagem — status=422 error=compose_image_required
+> ✅ C2 422 compose sem prompt — status=422 error=compose_prompt_required
+> ✅ C3 compose fail → refund + custo pinado 18 — status=502 gen={"status":"error","mco_charged":18,"mco_refunded":18,"model_key":"higgsfield/scene-compose"} bal=40
+> ✅ T7 RLS own-only + sem INSERT/DELETE client — own=8/8 cross=0 ins=blocked rows=8
+> ✅ T8 RPC negada a authenticated — permission denied for function begin_space_generation
+> 
+> ✅ smoke-spaces-execution: 30 passed, 0 failed
+> ```
+
+## 🤖 Claude *(01:25:26)*
+
+
+## 🤖 Claude *(01:25:26)*
+
+
+## 🤖 Claude *(01:25:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -1 && (npx vite preview --port 4173 --strictPort > /dev/null 2>&1 &) && sleep 3 && set -a && source .env && set +a && bun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/session5.json && agent-browser open \"http://localhost:4173/\" && sleep 2 && agent-browser eval \"localStorage.setItem('sb-bcyvddsykvehvpwstlfa-auth-token', $(python3 -c \"import json;print(json.dumps(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/session5.json').read()))\")); 'ok'\" && agent-browser open \"http://localhost:4173/dashboard/spaces\" && sleep 4 && NOVO=$(agent-browser snapshot -i 2>&1 | grep -o 'button \"Novo Space\" \\[expanded=false, ref=[e0-9]*' | grep -o 'e[0-9]*$') && agent-browser click $NOVO && sleep 1 && agent-browser type $(agent-browser snapshot -i 2>&1 | grep -o 'textbox \"Nome\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') \"E2E 2d composer\" && agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'button \"Criar\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 3 && agent-browser eval \"location.pathname\"",
+  "description": "Build, preview, create composer E2E space",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ built in 24.00s
+> ✓ Magic Constellation
+>   http://localhost:4173/
+> "ok"
+> ✓ Magic Constellation
+>   http://localhost:4173/dashboard/spaces
+> ✓ Done
+> ✓ Done
+> ✓ Done
+> "/dashboard/spaces/a167bdfb-4398-43c3-ba35-ca69b410717e"
+> ```
+
+## 🤖 Claude *(01:26:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'Adicionar n\u00f3 N\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 1 && for c in d e s i g n; do agent-browser press \"$c\" > /dev/null; done; sleep 0.5; agent-browser snapshot -i 2>&1 | grep 'option' | head -3",
+  "description": "Open Spotlight and filter for Designer",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+>   - option "Designer composer" [selected, ref=e7]
+>   - option "Gerador de música music-generator" [ref=e8]
+> ```
+
+## 🤖 Claude *(01:26:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser press \"Enter\" && sleep 1.5 && agent-browser eval \"(() => { const c=[...document.querySelectorAll('.react-flow__node')].find(x=>x.textContent.includes('composer')); c?.dispatchEvent(new MouseEvent('click',{bubbles:true})); return document.querySelectorAll('.react-flow__node').length + ' node, selected: ' + !!c; })()\" && sleep 1.5 && agent-browser snapshot -i 2>&1 | grep -iE 'Imagens|textbox|Adicionar refer|ativas' | head -4",
+  "description": "Insert composer node, select, verify HUD schema",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> "1 node, selected: true"
+>   - button "Adicionar referência" [ref=e18]
+>   - textbox "Descreva a composição…" [ref=e19]
+> ```
+
+## 🤖 Claude *(01:26:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser upload 'input[type=\"file\"]' /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/ref_test.png 2>&1 | tail -1 && sleep 4 && agent-browser eval \"[...document.querySelectorAll('img')].filter(i=>i.src.includes('spaces-refs')).length + ' chip(s)'\" && agent-browser eval \"document.body.innerText.match(/\\d\\/2 ativas[^\\n]*/)?.[0] ?? 'counter?'\" && agent-browser type e19 \"transforme o padrao xadrez em um cartaz futurista com titulo MCORCH em neon\" && sleep 2 && agent-browser click $(agent-browser snapshot -i 2>&1 | grep -o 'button \"Estimar\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && sleep 1.5 && agent-browser snapshot -i 2>&1 | grep -o 'Simula\u00e7\u00e3o \u2014 [0-9]* mcoCoins[^.]*' | head -1",
+  "description": "Upload ref (cap 2 counter), fill prompt, Estimar",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> "1 chip(s)"
+> "1/2 ativas no run · referências não são cobradas"
+> ✓ Done
+> ✓ Done
+> Simulação — 18 mcoCoins projetados (sem débito)
+> ```
+
+## 🤖 Claude *(01:27:03)*
+
+
+## 🤖 Claude *(01:27:03)*
+
+
+## 🤖 Claude *(01:27:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "RODAR=$(agent-browser snapshot -i 2>&1 | grep -o 'button \"Rodar\" \\[ref=[e0-9]*' | grep -o 'e[0-9]*$') && agent-browser click $RODAR && TOKEN=$(cat /home/ubuntu/.supabase/access-token); until curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT status FROM public.generations WHERE space_id='\"'\"'a167bdfb-4398-43c3-ba35-ca69b410717e'\"'\"';\"}' | grep -qE '\"status\":\"(done|error)\"'; do sleep 10; done; curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT status, mco_charged, mco_refunded, latency_ms, left(result->>'\"'\"'output_url'\"'\"',70) AS out_head, (SELECT mco_balance FROM public.profiles WHERE id='\"'\"'ada39fae-67e1-4e53-af1c-5a18e1c108e8'\"'\"') AS balance FROM public.generations WHERE space_id='\"'\"'a167bdfb-4398-43c3-ba35-ca69b410717e'\"'\"';\"}'",
+  "description": "Rodar compose, poll until terminal, dump row + balance",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+> [{"status":"error","mco_charged":"18","mco_refunded":"18","latency_ms":6157,"out_head":null,"balance":"4581.00"}]
+> ```
+
+## 🤖 Claude *(01:27:35)*
+
+
+## 🤖 Claude *(01:27:35)*
+
+
+## 🤖 Claude *(01:27:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"SELECT result FROM public.generations WHERE space_id='\"'\"'a167bdfb-4398-43c3-ba35-ca69b410717e'\"'\"';\"}'",
+  "description": "Read the stored provider error"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"result":null}]
+> ```
+
+## 🤖 Claude *(01:27:51)*
+
+
+## 🤖 Claude *(01:27:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "JWT=$(python3 -c \"import json;print(json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/01c7f692-5349-45c6-bd11-c34c6257dd7f/scratchpad/session5.json'))['access_token'])\") && set -a && source .env && set +a && curl -s -X POST \"$VITE_SUPABASE_URL/functions/v1/canvas-execute\" -H \"Authorization: Bearer $JWT\" -H \"apikey: $SB_PUBLISHABLE_KEY\" -H \"Content-Type: application/json\" -d '{\"project_id\":\"a167bdfb-4398-43c3-ba35-ca69b410717e\",\"node_id\":\"n_diag\",\"node_type\":\"scene_compose\",\"provider\":\"higgsfield\",\"model\":\"scene-compose\",\"prompt\":\"cartaz futurista de teste\",\"parameters\":{},\"reference_image_urls\":[\"https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/public/canvas-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/spaces-refs/9484c2b7-2c2b-41a5-b6b8-963824a4d6ec.png\"],\"space_id\":\"a167bdfb-4398-43c3-ba35-ca69b410717e\",\"node_run_id\":\"'$(uuidgen)'\"}' | head -c 400",
+  "description": "Reproduce compose failure via curl to capture the error body (net-zero on failure)",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"error":"provider_failed","message":"Falha do provedor de geração — o valor debitado foi estornado.","execution_id":"3d91c5b1-20ed-4655-b296-e2a17fbda266","refunded":18,"detail":"Higgsfield submit error 422: {\"detail\":[{\"type\":\"literal_error\",\"loc\":[\"path\",\"mode\"],\"msg\":\"Input should be 'reference', 'character' or 'standard'\",\"input\":\"compose\",\"ctx\":{\"expected\":\"'refe
+> ```
+
+## 🤖 Claude *(01:28:30)*
+
+
+## 🤖 Claude *(01:28:30)*
+
+
+## 🤖 Claude *(01:28:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '1676,1686p' supabase/functions/canvas-execute/index.ts && grep -n -i 'compose\\|mode' .claude/context/higgsfield-api-validation-2026-05-15.md 2>/dev/null | head -8",
+  "description": "Check compose endpoint construction and validation doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   // api.higgsfield.ai/v1/generations endpoint was wrong and never worked.
+>   const BASE_URL = "https://platform.higgsfield.ai";
+>   const authHeader = `Key ${apiKey}:${apiSecret}`;
+>   const POLL_INTERVAL_MS = 3000;
+>   const MAX_POLL_MS = 90_000;
+> 
+>   // Derive Soul aspect ratio from incoming size / aspect_ratio params.
+>   // Canonical Higgsfield ARs (per /docs/guides/images): 16:9 · 9:16 · 1:1 · 4:5.
+>   const SIZE_TO_AR: Record<string, string> = {
+>     "1024x1024": "1:1",
+>     "1792x1024": "16:9",
+> 15:2. **DoP renomeou `/preview` → `/standard`** (a doc lista `dop/preview` em "Available Models" mas todos os exemplos canônicos usam `dop/standard`; a página de pricing confirma: "Standard (ex. Preview)"). Catálogo deve usar `dop/standard` como canônico, manter `dop/preview` como alias deprecado.
+> 39:| `POST /{model_id}` | POST | Submit generation request |
+> 43:`{model_id}` é o caminho completo após o host (e.g. `higgsfield-ai/soul/standard`).
+> 45:### Modelos relevantes para Canvas Studio
+> 49:| `higgsfield-ai/soul/standard` | text-to-image | GenerateImage node (modelo premium) |
+> 55:⚠️ **OTD-HF-001:** A página `/guides/video` cita `higgsfield-ai/dop/preview` na lista "Available Models" mas usa `dop/standard` no exemplo bash. A página de pricing esclarece: **"Standard (ex. Preview)"** — `preview` foi renomeado para `standard`. Usar `standard` em produção; `preview` provavelmente continua respondendo mas é nomenclatura legada.
+> 94:⚠️ **OTD-HF-003:** Docs canônicas só mostram exemplos com `duration: 5`. O plano `floating-sleeping-sparrow.md` menciona 5/10/15s — confirmar via `cloud.higgsfield.ai/explore` (Models Gallery) ou via support se DoP suporta 10s/15s. Pricing tabulado só lista 5s para DoP.
+> 141:| `nsfw` | Bloqueado por moderação | **refund automático** |
+> ```
+
+## 🤖 Claude *(01:29:03)*
+
+
+## 🤖 Claude *(01:29:03)*
+
+
+## 🤖 Claude *(01:29:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "pkill -f 'vite preview'; TOKEN=$(cat /home/ubuntu/.supabase/access-token); curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"DELETE FROM public.spaces WHERE id='\"'\"'a167bdfb-4398-43c3-ba35-ca69b410717e'\"'\"' RETURNING id;\"}' && git add docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md supabase/functions/canvas-execute/index.ts src/lib/spaces-execution.ts src/lib/node-registry.ts src/hooks/useParamRegistry.ts src/hooks/useGenerationLedger.ts src/components/spaces/ReferencePicker.tsx src/components/spaces/ParamHUD.tsx && git commit -q -m \"feat(spaces): Fase 2d \u2014 Designer/composer no slice (c\u00f3digo-completo; provider em drift OTD-SPACES-003)\n\nSOP S30-S32 ANTES do c\u00f3digo: scene_compose SYNC via generateHiggsfield\nlegado; custo declarado 18 PINADO (classe F1); guards 422 (prompt +\n>=1 imagem); BYOK higgsfield fail-closed pos-404; cap 2 imagens =\nverdade do server (refs[0]/refs[1]); NODE_PORTS.composer declarado\n(image-1/image-2/prompt); threading ordenado (image-1 unshift); picker\nparametrizado maxActive (designer=2, imagem=4); skip no-op sem imagem.\nACHADO MATERIAL (E2E pago): Higgsfield rejeita mode='compose' \u2014 API\natual s\u00f3 aceita reference|character|standard \u2192 o compose LEGADO do\nCanvas Studio est\u00e1 igualmente quebrado. Slice falha HONESTO com estorno\nintegral provado (charged 18 -> refunded 18, saldo intacto). Fix do\nendpoint = OTD-SPACES-003 (revalidar docs antes de flipar o path \u2014\nnunca chutar sem\u00e2ntica de provider, Lei 1). deno check \u2713 deploy 166.8kB.\" && git add src/test/spaces-execution.test.ts src/test/spaces-mirror-parity.test.ts scripts/qa/smoke-spaces-execution.ts && git commit -q -m \"test(spaces): gates G16 + C1-C3 \u2014 composer slice (vitest 398, smoke 30/30)\n\nUnit: classify/estimate/payload-cap-2/threading image-1 first/skip sem\nimagem + mirror do custo 18. Smoke: C1 422 sem imagem \u00b7 C2 422 sem\nprompt \u00b7 C3 chave fake \u2192 fail \u2192 refund total + custo PINADO 18 mesmo\ncom params forjados de soul. 30/30 contra prod.\" && git log -2 --format='%h %s' | head -2",
+  "description": "Clean test space, commit 2d feat + tests",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ```
+
+## 🤖 Claude *(01:29:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log -2 --format='%h %s'; git status --short | head -12",
+  "description": "Check state after pkill-aborted chain"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> e72c090 chore(sprint): v6.81.0 — Spaces 2c voiceover selado (3a modalidade paga, review APPROVED+F1 pinado, smoke 27/27, mesh 9041)
+> bfd2b29 test(spaces): gates G15 + A1-A4 — voice slice (vitest 393, smoke 27/27)
+>  M docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md
+>  M scripts/qa/smoke-spaces-execution.ts
+>  M src/components/spaces/ParamHUD.tsx
+>  M src/components/spaces/ReferencePicker.tsx
+>  M src/hooks/useGenerationLedger.ts
+>  M src/hooks/useParamRegistry.ts
+>  M src/lib/node-registry.ts
+>  M src/lib/spaces-execution.ts
+>  M src/test/spaces-execution.test.ts
+>  M src/test/spaces-mirror-parity.test.ts
+>  M supabase/functions/canvas-execute/index.ts
+> ```
+
+## 🤖 Claude *(01:29:29)*
+
+
+## 🤖 Claude *(01:29:29)*
+
+De novo o pkill abortou a cadeia (lição repetida — pkill sempre separado). Refazendo:
+
+## 🤖 Claude *(01:29:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /home/ubuntu/.supabase/access-token); curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"query\":\"DELETE FROM public.spaces WHERE id='\"'\"'a167bdfb-4398-43c3-ba35-ca69b410717e'\"'\"' RETURNING id;\"}' && git add docs/processes/[[spaces-graph-execution|spaces-graph-execution]].md supabase/functions/canvas-execute/index.ts src/lib/spaces-execution.ts src/lib/node-registry.ts src/hooks/useParamRegistry.ts src/hooks/useGenerationLedger.ts src/components/spaces/ReferencePicker.tsx src/components/spaces/ParamHUD.tsx && git commit -q -m \"feat(spaces): Fase 2d \u2014 Designer/composer no slice (c\u00f3digo-completo; provider em drift OTD-SPACES-003)\n\nSOP S30-S32 ANTES do c\u00f3digo: scene_compose SYNC via generateHiggsfield\nlegado; custo declarado 18 PINADO (classe F1); guards 422 (prompt +\n>=1 imagem); BYOK higgsfield fail-closed pos-404; cap 2 imagens =\nverdade do server (refs[0]/refs[1]); NODE_PORTS.composer declarado;\nthreading ordenado (image-1 unshift); picker parametrizado maxActive\n(designer=2, imagem=4); skip no-op sem imagem.\nACHADO MATERIAL (E2E pago): Higgsfield rejeita mode='compose' \u2014 API\natual s\u00f3 aceita reference|character|standard \u2192 o compose LEGADO do\nCanvas Studio est\u00e1 igualmente quebrado. Slice falha HONESTO com estorno\nintegral provado (charged 18 -> refunded 18, saldo intacto). Fix =\nOTD-SPACES-003 (revalidar docs antes de flipar o path \u2014 nunca chutar\nsem\u00e2ntica de provider, Lei 1). deno check \u2713 deploy 166.8kB.\" && git add src/test/spaces-execution.test.ts src/test/spaces-mirror-parity.test.ts scripts/qa/smoke-spaces-execution.ts && git commit -q -m \"test(spaces): gates G16 + C1-C3 \u2014 composer slice (vitest 398, smoke 30/30)\n\nUnit: classify/estimate/payload-cap-2/threading image-1 first/skip sem\nimagem + mirror do custo 18. Smoke: C1 422 sem imagem \u00b7 C2 422 sem\nprompt \u00b7 C3 chave fake \u2192 fail \u2192 refund total + custo PINADO 18 mesmo\ncom params forjados de soul. 30/30 contra prod.\" && git log -2 --format='%h %s' | head -2",
+  "description": "Delete test space, commit 2d feat + tests",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"a167bdfb-4398-43c3-ba35-ca69b410717e"}][38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:29PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:29PM[0m [32mINF[0m scan completed in 8.66ms
+> [90m10:29PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:29PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:29PM[0m [32mINF[0m scan completed in 8.12ms
+> [90m10:29PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> cbebc9e test(spaces): gates G16 + C1-C3 — composer slice (vitest 398, smoke 30/30)
+> c66e6b5 feat(spaces): Fase 2d — Designer/composer no slice (código-completo; provider em drift OTD-SPACES-003)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

@@ -137,6 +137,27 @@ para a fatia 2a-cliente com nota de GO.
 
 **Gate G14:** vitest prova o merge explícitas+upstream capado em 4 + payload sem refs quando vazio; browser-verify prova upload real ao bucket → chip → reload hidrata `references` do graph → Vision QA no print.
 
+### Amendment 2c — voice-over no slice (2026-07-02, ANTES do código)
+
+| # | Decisão | Racional |
+|---|---------|----------|
+| S26 | **`voice-over` → `voice_over` entra no slice como caminho SYNC** (como imagem, não como vídeo): motor = **`tts-speak` reusado por invoke com o JWT DO USUÁRIO** (o fn re-valida sessão, resolve BYOK `google_api_key` e devolve WAV puro; ele **não cobra** — zero hazard de double-charge, sem precisar do padrão `prepaid`). canvas-execute NÃO duplica a chamada Gemini/pcmToWav. | Reuso > duplicação; tts-speak é a fonte única do TTS stock. |
+| S27 | **Custo declarado = 2 mco** (`CREDIT_COSTS['voice-over']`), calibração 4×-floor (`mcoin-cost-calibration.md`): Gemini 2.5 Flash TTS ≈ US$0,005/run típico → `ceil(0.005/0.018×4)=2`. Espelho client em `SPACES_AUDIO_COSTS` coberto pelo teste de mirror-parity (mesmo padrão S22). | Preço declarado only (lição C12/S18). |
+| S28 | **Guards 422 pré-débito**: script (prompt) obrigatório e ≤2000 chars; `voice` ∈ allowlist das 8 stock (default `Kore` — espelha `VALID_VOICES` do tts-speak); BYOK `google_api_key` ausente → 402 `google_not_configured` PÓS-404 (ordem canônica). Falha do tts-speak (4xx/5xx) → 1 retry/5s → refund total + 502 honesto (`refund_pending` se estorno não confirmar). | Mesma gramática dos guards de imagem/vídeo. |
+| S29 | **Saída**: WAV do tts-speak → upload service-role `canvas-assets/<space_id>/<node_run_id>.wav` → `finalize(done, result={audio_url (pública), storage_path})`, `output_type='audio'`. Cluster renderiza `<audio controls>`. Threading S11 estendido: edge no handle **`text`** do voice-over + upstream texto done → script (prompt-generator → voice-over). Voz clonada (Gabriel) segue **Fila Sovereign** (biometria — `generate-voice` synthesize exige profile; User 0 tem 0). | Faceless-content pillar sem esperar a biometria. |
+
+**Gate G15:** vitest — classify/estimate/payload/threading-text/mirror-parity do custo; smoke A1 (422 sem script) · A2 (402 BYOK fail-closed, zero rows) · A3 (chave fake → tts-speak falha → refund total na mesma request); E2E pago browser (prompt→voice ou script direto) + `<audio>` no cluster + Vision QA.
+
+### Amendment 2d — Designer/composer no slice (2026-07-02, ANTES do código)
+
+| # | Decisão | Racional |
+|---|---------|----------|
+| S30 | **`composer` → `scene_compose` entra no slice SYNC** via `generateHiggsfield` legado (submit+poll in-window ≤90s, endpoint compose). Custo declarado **18 mco** (`CREDIT_COSTS['scene-compose']`), **PINADO** contra provider/model forjado (mesma classe F1 do review 2c). BYOK Higgsfield fail-closed 402 pós-404. | 4ª modalidade; caminho server já existente e provado no Canvas Studio. |
+| S31 | **Compose usa NO MÁXIMO 2 imagens (verdade do server**: `refs[0]`/`refs[1]` → `image_1_url`/`image_2_url`). Fontes: picker de referências (cap 2 no HUD do Designer) + threading dos handles novos `image-1`/`image-2` (entry `NODE_PORTS.composer` declarada — não existia). ≥1 imagem é OBRIGATÓRIA (Designer compõe; sem imagem → skip no-op nunca cobrado + toast). Prompt obrigatório. | Honestidade G7-classe: nunca aceitar imagem que o server ignora. |
+| S32 | **Saída = imagem** (flui pelo caminho sync de upload+finalize já existente do slice); `model_key='higgsfield/scene-compose'`; threading downstream: a saída do composer é imagem `done` normal (vira first-frame de vídeo, ref de imagem etc.). | Reuso total do pós-provider. |
+
+**Gate G16:** vitest classify/estimate/payload-cap-2/skip-sem-imagem + mirror do custo; smoke C1 (422 sem prompt)/C2 (skip... n/a server — client) → C1 422 sem imagem · C2 402 BYOK · C3 custo pinado com payload forjado; E2E pago (18 mco) com ref do picker + Vision QA.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
