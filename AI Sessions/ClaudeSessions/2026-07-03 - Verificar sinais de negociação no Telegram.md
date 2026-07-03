@@ -3524,6 +3524,1127 @@ Histórico de ordens de trend = **zero** (última ordem real foi a venda de LTC 
 
 Quer que eu (a) avalie se o flip da ADA é real e não um whipsaw antes de qualquer decisão, ou (b) monte a análise do que uma trilha Trend-como-MAKER renderia no paper (a única alavanca que a simulação deixou de pé)?
 
+## 👤 User *(20:06:51)*
+
+Puts então pelo jeito não teve nenhum grande oportunidade se não teria me alertado certo? Vamos então tentar fazer um deepthink para ganhar desse inimigo mortal? O famoso fee (taxas) temos que ganhar dele de alguma forma, colocando ele já imbutido na formulá do sinal das simulações e tentar rodar novamente 15 dias em velas de 1m com diversas moedas diferentes?
+
+## 🤖 Claude *(20:08:24)*
+
+
+## 🤖 Claude *(20:08:42)*
+
+Boa — e deixa eu primeiro desfazer um mal-entendido, porque ele muda a estratégia.
+
+**Sobre "não teve nenhuma grande oportunidade":** o sistema *te alertou sim* — os `[CROSS] golden` e o `[REGIME] ADA→trend` **são** as oportunidades que a arquitetura persegue (trend/horária, +22% no bull dos backtests). O que não aconteceu foi a **compra**, porque a trilha Trend está deliberadamente parada (3 travas). Então não é "nada aconteceu"; é "o sinal certo disparou e nós, de propósito, não agimos ainda". O que **não tem edge** são os pings de *1m* (RSI/fluxo) — e esses nem vão pro Telegram.
+
+**Sobre "ganhar do fee embutindo ele na fórmula":** ideia certa, com uma correção importante que preciso te dar antes de rodar, senão a gente corre atrás do alvo errado:
+
+1. **Embutir a taxa no critério não *cria* edge — ele *filtra*.** A simulação já calcula o líquido (net = gross − fee). Embutir a taxa significa: **só aceitar um sinal se o ganho médio *condicional*, já descontada a taxa, for > 0 e o intervalo de confiança excluir zero no holdout.** Isso não inventa retorno; só descarta o que não paga. O prior é fortemente negativo — mas o seu ângulo (aceitação *net*, muitas moedas, e classes de sinal além do RSI) é um corte genuinamente diferente e vale **uma rodada rigorosa**.
+
+2. **A taxa só é "mortal" contra movimentos minúsculos.** 20 bps é irrelevante num movimento de 200 bps. Então "ganhar do fee" = ou **trades maiores/mais raros** (breakout/volatilidade, segurar horas — não reversão de 1m), ou **reduzir a taxa de fato**.
+
+3. **Correção honesta que eu te devo:** meu "~2 bps maker" foi otimista. No **spot da Binance não há rebate de maker** pra varejo — maker ≈ taker ≈ 0,10%/lado (**0,075% com BNB**). O ganho real do maker é **não pagar o spread** + fee um tico menor, ao custo de **risco de não preencher**. Vou modelar isso de verdade, não com fee zero.
+
+Então a rodada certa não é "RSI de novo com mais moedas" — é: **muitas moedas, 15d em 1m, taxa embutida na aceitação (net>0 no holdout), varrendo cenários de taxa reais (taker 20bps / BNB 15bps / maker-realista / e um teto ideal 0bps só de sanidade), família de sinais ampliada (breakout/volatilidade, não só reversão), e correção de testes múltiplos (mais moedas = mais falsos positivos).** É pra isso que o laboratório foi construído.
+
+Deixa eu primeiro ler o catálogo de padrões e os scripts do lab pra dirigir isso corretamente.
+
+## 🤖 Claude *(20:08:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== patterns.js: cat\u00e1logo (nomes + o que testam) ===\"\ngrep -nE \"name:|id:|key:|test:|=>|PATTERNS *=|module.exports|function thin|conj\" backend/scripts/lib/patterns.js 2>/dev/null | head -80",
+  "description": "Read patterns.js catalog"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === patterns.js: catálogo (nomes + o que testam) ===
+> 14:const PATTERNS = [
+> 16:  { name: 'rsi_lt_25', family: 'rsi', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 25 },
+> 17:  { name: 'rsi_lt_30', family: 'rsi', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 30 },
+> 18:  { name: 'rsi_lt_35', family: 'rsi', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 35 },
+> 19:  { name: 'rsi_gt_70', family: 'rsi', dir: 'bear', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] > 70 },
+> 20:  { name: 'rsi_gt_75', family: 'rsi', dir: 'bear', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] > 75 },
+> 22:  { name: 'above_sma200', family: 'trend', dir: 'bull', fn: (d, i) => fin(d.sma200[i]) && d.close[i] > d.sma200[i] },
+> 23:  { name: 'below_sma200', family: 'trend', dir: 'bear', fn: (d, i) => fin(d.sma200[i]) && d.close[i] < d.sma200[i] },
+> 24:  { name: 'sma_aligned_up', family: 'trend', dir: 'bull', fn: (d, i) => fin(d.sma20[i]) && fin(d.sma50[i]) && fin(d.sma200[i]) && d.close[i] > d.sma20[i] && d.sma20[i] > d.sma50[i] && d.sma50[i] > d.sma200[i] },
+> 25:  { name: 'golden_cross_50_200', family: 'trend', dir: 'bull', fn: (d, i) => i > 0 && fin(d.sma50[i]) && fin(d.sma200[i]) && fin(d.sma50[i - 1]) && fin(d.sma200[i - 1]) && d.sma50[i - 1] <= d.sma200[i - 1] && d.sma50[i] > d.sma200[i] },
+> 26:  { name: 'death_cross_50_200', family: 'trend', dir: 'bear', fn: (d, i) => i > 0 && fin(d.sma50[i]) && fin(d.sma200[i]) && fin(d.sma50[i - 1]) && fin(d.sma200[i - 1]) && d.sma50[i - 1] >= d.sma200[i - 1] && d.sma50[i] < d.sma200[i] },
+> 28:  { name: 'adx_strong_up', family: 'adx', dir: 'bull', fn: (d, i) => fin(d.adx[i]) && d.adx[i] > 25 && d.pdi[i] > d.mdi[i] },
+> 29:  { name: 'adx_strong_down', family: 'adx', dir: 'bear', fn: (d, i) => fin(d.adx[i]) && d.adx[i] > 25 && d.mdi[i] > d.pdi[i] },
+> 30:  { name: 'adx_range_low', family: 'adx', dir: 'flat', fn: (d, i) => fin(d.adx[i]) && d.adx[i] < 20 },
+> 32:  { name: 'boll_lower_break', family: 'boll', dir: 'bull', fn: (d, i) => fin(d.boll.lower[i]) && d.close[i] < d.boll.lower[i] },
+> 33:  { name: 'boll_upper_break', family: 'boll', dir: 'bear', fn: (d, i) => fin(d.boll.upper[i]) && d.close[i] > d.boll.upper[i] },
+> 34:  { name: 'boll_pctb_low', family: 'boll', dir: 'bull', fn: (d, i) => fin(d.boll.pctB[i]) && d.boll.pctB[i] < 0.05 },
+> 35:  { name: 'boll_squeeze', family: 'boll', dir: 'flat', fn: (d, i) => fin(d.bwPctile[i]) && d.bwPctile[i] < 0.10 },
+> 37:  { name: 'macd_cross_up', family: 'macd', dir: 'bull', fn: (d, i) => i > 0 && fin(d.macd.hist[i]) && fin(d.macd.hist[i - 1]) && d.macd.hist[i - 1] <= 0 && d.macd.hist[i] > 0 },
+> 38:  { name: 'macd_cross_down', family: 'macd', dir: 'bear', fn: (d, i) => i > 0 && fin(d.macd.hist[i]) && fin(d.macd.hist[i - 1]) && d.macd.hist[i - 1] >= 0 && d.macd.hist[i] < 0 },
+> 39:  { name: 'macd_pos', family: 'macd', dir: 'bull', fn: (d, i) => fin(d.macd.macd[i]) && d.macd.macd[i] > 0 },
+> 41:  { name: 'roc10_pos', family: 'mom', dir: 'bull', fn: (d, i) => fin(d.roc10[i]) && d.roc10[i] > 0 },
+> 42:  { name: 'roc10_neg', family: 'mom', dir: 'bear', fn: (d, i) => fin(d.roc10[i]) && d.roc10[i] < 0 },
+> 43:  { name: 'breakout_high20', family: 'mom', dir: 'bull', fn: (d, i) => fin(d.priorHigh20[i]) && d.close[i] > d.priorHigh20[i] },
+> 44:  { name: 'breakdown_low20', family: 'mom', dir: 'bear', fn: (d, i) => fin(d.priorLow20[i]) && d.close[i] < d.priorLow20[i] },
+> 46:  { name: 'atr_low', family: 'vol', dir: 'flat', fn: (d, i) => fin(d.atrPctPctile[i]) && d.atrPctPctile[i] < 0.2 },
+> 47:  { name: 'atr_high', family: 'vol', dir: 'flat', fn: (d, i) => fin(d.atrPctPctile[i]) && d.atrPctPctile[i] > 0.8 },
+> 49:  { name: 'flow_buy', family: 'flow', dir: 'bull', fn: (d, i) => fin(d.takerBuyFrac[i]) && d.takerBuyFrac[i] > 0.55 },
+> 50:  { name: 'flow_sell', family: 'flow', dir: 'bear', fn: (d, i) => fin(d.takerBuyFrac[i]) && d.takerBuyFrac[i] < 0.45 },
+> 52:  { name: 'regime_trend', family: 'regime', dir: 'bull', fn: (d, i) => d.regimeBar[i] === 'trend' },
+> 53:  { name: 'regime_range', family: 'regime', dir: 'flat', fn: (d, i) => d.regimeBar[i] === 'range' },
+> 54:  { name: 'regime_not_bear', family: 'regime', dir: 'bull', fn: (d, i) => d.regimeBar[i] !== 'bear' && d.regimeBar[i] !== 'unknown' },
+> 56:  { name: 'rsi30_AND_not_bear', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 30 && d.regimeBar[i] !== 'bear' && d.regimeBar[i] !== 'unknown' }, // a tese da id2 ao vivo
+> 57:  { name: 'rsi30_AND_above_sma200', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 30 && fin(d.sma200[i]) && d.close[i] > d.sma200[i] },
+> 58:  { name: 'rsi30_AND_range', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 30 && d.regimeBar[i] === 'range' },
+> 59:  { name: 'boll_lower_AND_range', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.boll.lower[i]) && d.close[i] < d.boll.lower[i] && fin(d.adx[i]) && d.adx[i] < 20 },
+> 60:  { name: 'golden_AND_adx', family: 'conj', dir: 'bull', fn: (d, i) => i > 0 && fin(d.sma50[i]) && fin(d.sma200[i]) && fin(d.sma50[i - 1]) && fin(d.sma200[i - 1]) && d.sma50[i - 1] <= d.sma200[i - 1] && d.sma50[i] > d.sma200[i] && fin(d.adx[i]) && d.adx[i] > 25 },
+> 61:  { name: 'macd_up_AND_above_sma200', family: 'conj', dir: 'bull', fn: (d, i) => i > 0 && fin(d.macd.hist[i]) && fin(d.macd.hist[i - 1]) && d.macd.hist[i - 1] <= 0 && d.macd.hist[i] > 0 && fin(d.sma200[i]) && d.close[i] > d.sma200[i] },
+> 62:  { name: 'breakout_AND_adx', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.priorHigh20[i]) && d.close[i] > d.priorHigh20[i] && fin(d.adx[i]) && d.adx[i] > 25 },
+> 63:  { name: 'rsi30_AND_flow_buy', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.rsi14[i]) && d.rsi14[i] < 30 && fin(d.takerBuyFrac[i]) && d.takerBuyFrac[i] > 0.5 },
+> 64:  { name: 'above_sma200_AND_roc_pos', family: 'conj', dir: 'bull', fn: (d, i) => fin(d.sma200[i]) && d.close[i] > d.sma200[i] && fin(d.roc10[i]) && d.roc10[i] > 0 },
+> 68:function thin(indices, gap) { const out = []; let last = -Infinity; for (const idx of indices) { if (idx - last >= gap) { out.push(idx); last = idx; } } return out; }
+> 70:module.exports = { PATTERNS, thin, fin };
+> ```
+
+## 🤖 Claude *(20:08:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== pattern-discover.js (config: symbols/interval/days/fee/horizons + FDR flow) ===\"\ngrep -nE \"SYMBOLS|SYMS|INTERVAL|DAYS|FEE|HORIZON|END|process.env|benjamini|FDR|forwardReturn|thin|split|holdout|net|gross|thr\" backend/scripts/pattern-discover.js 2>/dev/null | head -60",
+  "description": "Read pattern-discover config and flow"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pattern-discover.js (config: symbols/interval/days/fee/horizons + FDR flow) ===
+> 4: * TradeUX — FASE 1: DESCOBERTA DE PADRÕES (só na amostra de descoberta; holdout TRANCADO).
+> 7: * NET-DE-FEE em múltiplos horizontes — e ranqueia por ROBUSTEZ, não por retorno bruto:
+> 8: *   - parede: split por tempo; a Fase 1 só enxerga os primeiros (1-holdout) — o resto nem é lido.
+> 9: *   - sem lookahead: sinal em i, entrada no OPEN de i+1, saída no OPEN de i+1+h, net de fee.
+> 12: *   - múltiplos testes: Benjamini-Hochberg (FDR) + Bonferroni + barra-de-ruído sqrt(2 ln N).
+> 19: *        [--symbols=BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT] [--holdout=0.3]
+> 29:const INTERVAL = args.interval || '1h';
+> 30:const DAYS = parseInt(args.days || '900', 10);
+> 31:const SYMBOLS = (args.symbols || 'BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',');
+> 32:const HOLDOUT = parseFloat(args.holdout || '0.3');
+> 33:const HORIZONS = (args.horizons || '1,5,10,20').split(',').map(x => parseInt(x, 10)).filter(Boolean);
+> 34:const FDR_Q = parseFloat(args.fdr || '0.10');
+> 36:const FEE = args.fee ? parseFloat(args.fee) : lab.FEE_DEFAULT;
+> 37:const END = args.end || null;
+> 42:const { PATTERNS, thin } = require('./lib/patterns');
+> 46:  console.log(`pattern-discover — ${INTERVAL}, ${DAYS}d${END ? ' end ' + END : ''}, holdout ${pct(HOLDOUT)}, horizontes [${HORIZONS.join(',')}], fee ${FEE * 100}%/lado`);
+> 47:  console.log(`símbolos: ${SYMBOLS.join(', ')} · ${PATTERNS.length} padrões × ${HORIZONS.length} horizontes = ${PATTERNS.length * HORIZONS.length} testes`);
+> 49:  // por símbolo: fetch → SPLIT (tranca holdout) → indicadores SÓ na amostra de descoberta.
+> 50:  const perSym = {}; const splitInfo = {};
+> 51:  for (const sym of SYMBOLS) {
+> 53:    try { candles = await lab.fetchKlinesExt(sym, INTERVAL, DAYS, END); }
+> 56:    const sp = lab.splitByTime(candles, HOLDOUT);
+> 57:    const ind = lab.computeIndicators(sp.inSample, INTERVAL); // ⚠️ só a amostra de descoberta entra aqui
+> 60:    splitInfo[sym] = { totalCandles: candles.length, inSampleCandles: sp.inSample.length, holdoutCandles: sp.holdout.length, cutMs: sp.cutMs, kIndex: sp.kIndex };
+> 61:    console.log(`  ${sym}: ${candles.length} candles → descoberta ${sp.inSample.length} | holdout TRANCADO ${sp.holdout.length} (corte ${new Date(sp.cutMs).toISOString().slice(0, 10)})`);
+> 76:    for (const h of HORIZONS) {
+> 80:        const thinned = thin(sigBySym[s], h);
+> 82:        for (const i of thinned) {
+> 83:          const r = lab.forwardReturn(cd, i, h, FEE);
+> 84:          if (r) { gs.push(r.gross); pooledG.push(r.gross); pooledN.push(r.net); const t = Math.min(2, Math.floor(3 * i / n)); thirds[t].push(r.gross); }
+> 88:      const ttG = lab.tTest(pooledG);                         // teste DIRECIONAL = gross (fee-drag não contamina)
+> 89:      const meanNet = pooledN.length ? lab.mean(pooledN) : 0;  // acionabilidade long = net
+> 104:  const bh = lab.benjaminiHochberg(results.map(r => ({ key: r.key, p: r.p })), FDR_Q);
+> 113:  L.push(`# TradeUX — Descoberta de padrões (Fase 1) · ${INTERVAL}, ${DAYS}d${END ? ', end ' + END : ''}\n`);
+> 114:  L.push(`> Amostra de DESCOBERTA apenas (holdout ${pct(HOLDOUT)} trancado p/ a Fase 2). Sem lookahead (entrada no open seguinte). Retorno **net de fee** (${FEE * 100}%/lado, round-trip ${(2 * FEE * 100).toFixed(1)}%). Sinais AFINADOS por horizonte (não-sobrepostos) → t-stat honesto.`);
+> 115:  L.push(`> Símbolos: ${syms.join(', ')}. ${PATTERNS.length} padrões × ${HORIZONS.length} horizontes = **${results.length} testes**. Correção FDR Benjamini-Hochberg q=${FDR_Q}.\n`);
+> 116:  L.push(`## Parede (split por tempo)\n`);
+> 117:  L.push(`| Símbolo | candles totais | descoberta | holdout (trancado) | corte |`); L.push(`|---|---|---|---|---|`);
+> 118:  for (const s of syms) { const si = splitInfo[s]; L.push(`| ${s} | ${si.totalCandles} | ${si.inSampleCandles} | ${si.holdoutCandles} | ${new Date(si.cutMs).toISOString().slice(0, 10)} |`); }
+> 121:  L.push(`\n> ⚖️ **Direção vs acionabilidade:** o t-stat/FDR testa **direção** no retorno GROSS (sem fee — senão o fee-drag de ~${(2 * FEE * 100).toFixed(1)}% finge ser "edge" em horizonte curto). A coluna **net** (com fee) diz se dá pra LUCRAR comprando: só \`tradeável long\` (net>0) é acionável no spot. dir=bear/flat com gross<0 = sinal de SAÍDA/evitar (no spot não vira short).\n`);
+> 122:  L.push(`## 🎯 Sobreviventes da FDR (q=${FDR_Q}) — ${survivors.length} de ${results.length} · ${nTradeable} tradeáveis long (net>0)\n`);
+> 126:    L.push(`| Padrão@h | dir | n | gross/trade | net/trade | tradeável long | win%(net) | t(gross) | p | Bonf | sym | terços |`);
+> 129:    L.push(`\n**Leitura:** um sobrevivente é forte se, ALÉM do FDR: passa Bonferroni (✓), tem mesmo sinal nos ${syms.length} símbolos e nos 3 terços (estável no tempo). Mas só vira COMPRA se \`tradeável long\`=✅. A Fase 2 (holdout) é o juiz final.`);
+> 132:  L.push(`\n## Ranking completo (por |t| do gross)\n`);
+> 134:  L.push(`| Padrão@h | família | dir | n | gross/trade | net/trade | tradeável | win%(net) | t(gross) | p | FDR | Bonf | ruído | sym | terços |`);
+> 139:  L.push(`1. Testados **${results.length}** padrões×horizontes; **${survivors.length}** sobreviveram à FDR de DIREÇÃO (gross) q=${FDR_Q}, **${results.filter(r => r.bonfPass).length}** ao Bonferroni. Destes, só **${nTradeable}** são tradeáveis long (net>0 após fee) — o resto é direção real mas que NÃO paga a fee, ou sinal de queda/saída.`);
+> 140:  L.push(`2. Sobreviver à FDR é NECESSÁRIO mas NÃO suficiente: o veredito real vem da **Fase 2** (holdout trancado + bootstrap por blocos). Um sobrevivente que muda de sinal entre símbolos/terços é frágil.`);
+> 144:  const tag = `${INTERVAL}-${DAYS}d${END ? '-end' + END : ''}`;
+> 145:  const report = { config: { interval: INTERVAL, days: DAYS, end: END, symbols: syms, holdout: HOLDOUT, horizons: HORIZONS, fdrQ: FDR_Q, warm: WARM, fee: FEE }, nTests: results.length, fdr: { q: FDR_Q, pThreshold: bh.pThreshold, kMax: bh.kMax }, bonferroni: bonf, noiseBarT: noiseT, splitInfo, results: sorted };
+> 148:  // manifesto de sobreviventes p/ a Fase 2 (inclui a fronteira do split p/ reuso EXATO)
+> 151:    splitInfo, // a Fase 2 usa o MESMO cutMs por símbolo
+> 155:  console.log(`\nSobreviventes FDR: ${survivors.length}/${results.length}. Relatório: backend/backtest-results/pattern-discovery-${tag}.md`);
+> ```
+
+## 🤖 Claude *(20:09:31)*
+
+
+## 🤖 Claude *(20:09:39)*
+
+O laboratório já faz exatamente isso: `pattern-discover.js` aceita `--symbols`, `--interval`, `--days`, `--horizons`, `--fee`; testa **30 padrões** (RSI, trend, ADX, Bollinger, MACD, momentum/breakout, volatilidade, fluxo + conjunções — bem além de RSI), computa **gross (direção) e net (com fee)**, aplica **FDR + Bonferroni + barra de ruído**, tranca um holdout e a Fase 2 valida no holdout com IC por bootstrap. É a ferramenta certa pro seu pedido.
+
+Insight-chave que deixa isso eficiente e honesto: como `net ≈ gross − 2×fee`, **a varredura de taxa vira uma pergunta única** — "existe padrão com *gross* robusto (sobrevive FDR + holdout com IC excluindo zero) e quão grande é esse gross?". Se o maior gross robusto for 5 bps, só fee ~0 fecha; se algum breakout tiver gross de 40 bps, até taker fecha. Vou rodar a descoberta **15 dias, 1m, 15 moedas líquidas**, e depois aplicar os cenários de taxa (taker 20bps / BNB 15bps / maker-realista / teto ideal 0) sobre os sobreviventes do holdout.
+
+Disparando a Fase 1 (descoberta) em background — 15 moedas × 15d de 1m é bastante fetch.
+
+## 🤖 Claude *(20:09:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== arg parser em pattern-discover.js ===\"\nsed -n '24,45p' backend/scripts/pattern-discover.js\necho\necho \"=== pattern-validate.js usage/config ===\"\ngrep -nE \"process.argv|args\\.|manifest|MANIFEST|require|holdout|cutMs|bootstrap|blockBootstrap|net|gross|--\" backend/scripts/pattern-validate.js 2>/dev/null | head -40",
+  "description": "Confirm arg parser + validate interface"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arg parser em pattern-discover.js ===
+> const fs = require('fs');
+> const path = require('path');
+> const lab = require('./lib/labkit');
+> 
+> const args = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)=?(.*)$/); return m ? [m[1], m[2] || true] : [a, true]; }));
+> const INTERVAL = args.interval || '1h';
+> const DAYS = parseInt(args.days || '900', 10);
+> const SYMBOLS = (args.symbols || 'BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT').split(',');
+> const HOLDOUT = parseFloat(args.holdout || '0.3');
+> const HORIZONS = (args.horizons || '1,5,10,20').split(',').map(x => parseInt(x, 10)).filter(Boolean);
+> const FDR_Q = parseFloat(args.fdr || '0.10');
+> const WARM = parseInt(args.warm || '250', 10);
+> const FEE = args.fee ? parseFloat(args.fee) : lab.FEE_DEFAULT;
+> const END = args.end || null;
+> const fin = Number.isFinite;
+> const pct = x => (Number.isFinite(x) ? (x * 100).toFixed(3) + '%' : 'n/a');
+> 
+> // universo PRÉ-REGISTRADO de padrões + afinamento anti-overlap (compartilhado com a Fase 2 → idêntico dos 2 lados da parede)
+> const { PATTERNS, thin } = require('./lib/patterns');
+> 
+> (async () => {
+>   fs.mkdirSync(lab.OUT_DIR, { recursive: true });
+> 
+> === pattern-validate.js usage/config ===
+> 6: * Pega o manifesto `pattern-survivors-<tag>.json` (gerado pela Fase 1, SEM olhar o holdout) e testa
+> 7: * cada sobrevivente EXCLUSIVAMENTE nos dados que a descoberta NUNCA viu (t >= cutMs por símbolo).
+> 9: *   - retorno net-de-fee, sem lookahead; pooled entre símbolos.
+> 12: *       CONFIRMA    — mesmo sinal da amostra E o IC do holdout exclui o zero na direção esperada.
+> 14: *       INCONCLUSIVO— amostra de holdout pequena demais (n < minN) p/ decidir.
+> 17: * Uso:   node scripts/pattern-validate.js --tag=1h-900d [--minN=20] [--bootstrap=2000] [--ci=0.95] [--seed=12345]
+> 18: *        (ou derive o tag de --interval/--days/--end, igual à Fase 1)
+> 20: * NÃO toca money-path. Lê só klines públicas (cache -ext) + o manifesto da Fase 1.
+> 22:const fs = require('fs');
+> 23:const path = require('path');
+> 24:const lab = require('./lib/labkit');
+> 25:const { PATTERNS, thin } = require('./lib/patterns');
+> 27:const args = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)=?(.*)$/); return m ? [m[1], m[2] || true] : [a, true]; }));
+> 30:const MIN_N = parseInt(args.minN || '20', 10);
+> 31:const NBOOT = parseInt(args.bootstrap || '2000', 10);
+> 32:const CI = parseFloat(args.ci || '0.95');
+> 33:const SEED = parseInt(args.seed || '12345', 10);
+> 35:let TAG = args.tag;
+> 36:if (!TAG) { const I = args.interval || '1h', D = parseInt(args.days || '900', 10), E = args.end || null; TAG = `${I}-${D}d${E ? '-end' + E : ''}`; }
+> 39:  const manifestPath = path.join(lab.OUT_DIR, `pattern-survivors-${TAG}.json`);
+> 40:  if (!fs.existsSync(manifestPath)) { console.error(`manifesto não encontrado: ${manifestPath}\nrode a Fase 1 primeiro (pattern-discover.js).`); process.exit(1); }
+> 41:  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+> 42:  const cfg = manifest.config;
+> 45:  console.log(`pattern-validate — tag ${TAG} · ${manifest.survivors.length} sobreviventes · holdout trancado · fee ${FEE * 100}%/lado`);
+> 47:  if (!manifest.survivors.length) {
+> 53:  // por símbolo: re-fetch (cache hit) → indicadores no SÉRIE COMPLETA → marca o início do holdout por cutMs.
+> 54:  const syms = Object.keys(manifest.splitInfo);
+> 60:    const cutMs = manifest.splitInfo[sym].cutMs;
+> 61:    const ind = lab.computeIndicators(candles, cfg.interval); // série completa: indicadores nas barras do holdout têm warmup causal
+> 63:    let hStart = candles.findIndex(c => c.t >= cutMs);
+> 66:    console.log(`  ${sym}: ${candles.length} candles, holdout começa em idx ${hStart} (${new Date(cutMs).toISOString().slice(0, 10)}) → ${candles.length - hStart} barras OOS`);
+> 71:  for (const sv of manifest.survivors) {
+> 73:    const h = sv.horizon; const gross = [], net = []; const perSymN = {};
+> 79:      for (const i of thinned) { const r = lab.forwardReturn(candles, i, h, FEE); if (r) { gross.push(r.gross); net.push(r.net); c++; } }
+> 82:    const ttG = lab.tTest(gross);
+> 83:    const bootG = lab.blockBootstrapMeanCI(gross, { blockLen: Math.max(1, h), nResamples: NBOOT, seed: SEED, ci: CI });
+> 84:    const bootN = lab.blockBootstrapMeanCI(net, { blockLen: Math.max(1, h), nResamples: NBOOT, seed: SEED, ci: CI });
+> 85:    const meanNet = net.length ? lab.mean(net) : 0;
+> 86:    const winRateNet = net.length ? net.filter(r => r > 0).length / net.length : 0;
+> 89:    if (ttG.n < MIN_N) { verdict = 'INCONCLUSIVO'; note = `n=${ttG.n} < ${MIN_N} no holdout`; }
+> ```
+
+## 🤖 Claude *(20:09:50)*
+
+
+## 🤖 Claude *(20:09:51)*
+
+Perfeito — ambos os scripts usam `--chave=valor` e a Fase 2 faz bootstrap por blocos no gross **e** no net, confirmando só se o IC do holdout exclui zero. Disparando a descoberta agora (background).
+
+## 🤖 Claude *(20:09:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nSYMS=\"BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT,ADAUSDT,DOGEUSDT,LTCUSDT,LINKUSDT,AVAXUSDT,DOTUSDT,TRXUSDT,ATOMUSDT,NEARUSDT,UNIUSDT\"\nsudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux/backend && node scripts/pattern-discover.js --interval=1m --days=15 --symbols=$SYMS --horizons=1,5,15,30,60,120,240 --fee=0.001 --holdout=0.3 --fdr=0.10\" 2>&1 | tee /tmp/discover.out",
+  "description": "Run Phase 1 discovery: 15 coins, 15d 1m, fee-aware",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bq6k37734. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bq6k37734.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:10:47)*
+
+
+## 🤖 Claude *(20:10:52)*
+
+A descoberta está buscando as 15 moedas em background. Enquanto isso, vou preparar o segundo braço do "deepthink" — porque tem uma limitação no teste padrão que preciso cobrir pra ser honesto: o lab testa **saída por tempo fixo** (segura H barras, sai). Mas "ganhar do fee" geralmente exige **saída por evento** — um alvo de lucro que seja múltiplo da taxa + stop (barreira tripla). Um sinal com 50% de acerto mas alvo +40bps / stop −20bps pode pagar a taxa onde a saída por tempo fixo não paga. Vou escrever esse teste agora pra rodar sobre as mesmas velas em cache.
+
+## 🤖 Claude *(20:10:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== computeIndicators return fields ===\"\nsed -n '312,352p' backend/scripts/lib/labkit.js",
+  "description": "Confirm computeIndicators output fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === computeIndicators return fields ===
+> function computeIndicators(candles, interval) {
+>   const barMs = MS_PER[interval] || 3600e3;
+>   const barsPerYear = (365 * 24 * 3600e3) / barMs;
+>   const close = candles.map(c => c.close), high = candles.map(c => c.high), low = candles.map(c => c.low);
+>   const vol = candles.map(c => c.vol), takerBuy = candles.map(c => (Number.isFinite(c.takerBuy) ? c.takerBuy : NaN));
+>   const dmi = dmiSeries(high, low, close, 14);
+>   const atr = atrSeries(high, low, close, 14);
+>   const sma200 = smaSeries(close, 200);
+>   const boll = bollingerSeries(close, 20, 2);
+>   const macd = macdSeries(close, 12, 26, 9);
+>   const ind = {
+>     candles, interval, barMs, barsPerYear, close, high, low, vol,
+>     takerBuyFrac: vol.map((v, i) => (v > 0 && Number.isFinite(takerBuy[i]) ? takerBuy[i] / v : NaN)),
+>     rsi14: rsiSeries(close, 14),
+>     sma20: smaSeries(close, 20), sma50: smaSeries(close, 50), sma100: smaSeries(close, 100), sma200,
+>     adx: dmi.adx, pdi: dmi.pdi, mdi: dmi.mdi, atr,
+>     atrPct: atr.map((a, i) => (a > 0 && close[i] > 0 ? a / close[i] : NaN)),
+>     boll, macd, roc10: rocSeries(close, 10), roc20: rocSeries(close, 20),
+>     priorHigh20: rollingPriorHigh(high, 20), priorLow20: rollingPriorLow(low, 20),
+>     rvol: realizedVolSeries(close, 24, barsPerYear),
+>   };
+>   ind.atrPctPctile = rollingPercentile(ind.atrPct, 200);
+>   // regime causal por barra (NB: como sma200 só é finita em i>=199, nas ~150 barras pós-warmup a
+>   // classificação roda sobre uma sub-amostra fina de barras com SMA200 finita → mais fraca no início
+>   // da série; o WARM=250 dos scripts mitiga e em janelas longas (900d/1h) é irrelevante.)
+>   const regimeWin = 200;
+>   ind.regimeBar = Array(candles.length).fill('unknown');
+>   for (let i = 0; i < candles.length; i++) {
+>     if (i < regimeWin) continue;
+>     let below = 0, n = 0; const adxs = [];
+>     for (let j = i - regimeWin + 1; j <= i; j++) {
+>       if (Number.isFinite(sma200[j])) { n++; if (close[j] < sma200[j]) below++; }
+>       if (Number.isFinite(ind.adx[j])) adxs.push(ind.adx[j]);
+>     }
+>     if (n && below / n > 0.6) { ind.regimeBar[i] = 'bear'; continue; }
+>     const m = adxs.length ? mean(adxs) : 0;
+>     ind.regimeBar[i] = m >= 25 ? 'trend' : (m < 20 ? 'range' : 'mixed');
+>   }
+>   return ind;
+> }
+> ```
+
+## 🤖 Claude *(20:11:19)*
+
+
+## 🤖 Claude *(20:11:20)*
+
+Tenho os campos dos indicadores. Escrevendo o teste de barreira tripla (alvo/stop como múltiplos da taxa, saída por evento, sem sobreposição de trades, fee embutido, in-sample × holdout).
+
+## 🤖 Claude *(20:11:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/triplebarrier.js <<'JS'\n'use strict';\n// Barreira tripla (take-profit / stop / timeout) \u2014 testa se uma saida POR EVENTO com alvo=multiplo-da-fee\n// bate a taxa onde a saida por tempo-fixo nao bateu. Long-only (spot). Fee EMBUTIDO. Sem lookahead.\n// Trades NAO-sobrepostos (uma posicao por moeda). in-sample (70%) x holdout (30%).\nconst lab = require('/home/gcrux-tradeux/tradeux/backend/scripts/lib/labkit');\nconst SYMS = (process.env.TB_SYMS||'BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT,ADAUSDT,DOGEUSDT,LTCUSDT,LINKUSDT,AVAXUSDT,DOTUSDT,TRXUSDT,ATOMUSDT,NEARUSDT,UNIUSDT').split(',');\nconst DAYS = parseInt(process.env.TB_DAYS||'15',10);\nconst FEE = parseFloat(process.env.TB_FEE||'0.001'); // por lado (taker 0.10%)\nconst fin = Number.isFinite;\n\n// sinais long (mesma def do patterns.js)\nconst SIGNALS = {\n  rsi_lt_30:        (d,i)=> fin(d.rsi14[i]) && d.rsi14[i]<30,\n  boll_lower_break: (d,i)=> fin(d.boll.lower[i]) && d.close[i]<d.boll.lower[i],\n  breakout_high20:  (d,i)=> fin(d.priorHigh20[i]) && d.close[i]>d.priorHigh20[i],\n  rsi30_not_bear:   (d,i)=> fin(d.rsi14[i]) && d.rsi14[i]<30 && d.regimeBar[i]!=='bear' && d.regimeBar[i]!=='unknown',\n  rsi30_range:      (d,i)=> fin(d.rsi14[i]) && d.rsi14[i]<30 && d.regimeBar[i]==='range',\n  macd_cross_up:    (d,i)=> i>0 && fin(d.macd.hist[i]) && fin(d.macd.hist[i-1]) && d.macd.hist[i-1]<=0 && d.macd.hist[i]>0,\n  breakout_adx:     (d,i)=> fin(d.priorHigh20[i]) && d.close[i]>d.priorHigh20[i] && fin(d.adx[i]) && d.adx[i]>25,\n};\n// grade (bps): alvo T, stop S, timeout Hmax (barras=min)\nconst GRID = [];\nfor (const T of [40,80,160]) for (const S of [40,80]) for (const H of [120,480]) GRID.push({T,S,H});\n\nfunction simTrade(ind, e, T, S, H){\n  const o=ind.candles.map(c=>c.open), hi=ind.high, lo=ind.low;\n  const entry=o[e+1]; if(!(entry>0)) return null;\n  const tp=entry*(1+T/1e4), sl=entry*(1-S/1e4);\n  const end=Math.min(e+1+H, ind.candles.length-1);\n  for(let j=e+1;j<=end;j++){\n    if(lo[j]<=sl) return {exit:sl, bars:j-(e+1)};      // STOP primeiro (pessimista se ambos no mesmo candle)\n    if(hi[j]>=tp) return {exit:tp, bars:j-(e+1)};\n  }\n  return {exit:o[end], bars:end-(e+1)};                 // timeout: sai no open\n}\nfunction netOf(entry,exit){ return exit*(1-FEE)/(entry*(1+FEE))-1; }\nfunction agg(v){ if(!v.length) return null; const m=v.reduce((a,b)=>a+b,0)/v.length; const win=v.filter(x=>x>0).length/v.length; return {n:v.length,mean:m,win}; }\n\n(async()=>{\n  const INS={}, OOS={}; // key sig|T|S|H -> net[]\n  for(const sym of SYMS){\n    let cd; try{ cd=await lab.fetchKlinesExt(sym,'1m',DAYS); }catch(e){ console.log(`SKIP ${sym}: ${e.message}`); continue; }\n    if(!cd||cd.length<1000){ console.log(`SKIP ${sym}: poucas velas`); continue; }\n    const ind=lab.computeIndicators(cd,'1m');\n    const k=Math.floor(cd.length*0.7);\n    for(const [sname,fn] of Object.entries(SIGNALS)){\n      for(const g of GRID){\n        const key=`${sname}|${g.T}|${g.S}|${g.H}`;\n        (INS[key]=INS[key]||[]); (OOS[key]=OOS[key]||[]);\n        let j=200; // warmup\n        while(j<cd.length-2){\n          let fired=false; try{ fired=fn(ind,j); }catch(_){}\n          if(fired){\n            const r=simTrade(ind,j,g.T,g.S,g.H);\n            if(r){ const net=netOf(ind.candles[j+1].open, r.exit);\n              (j<k?INS:OOS)[key].push(net);\n              j=j+1+r.bars+1; continue; } // pula ate depois da saida (no-overlap)\n          }\n          j++;\n        }\n      }\n    }\n    process.stdout.write(`. ${sym}`);\n  }\n  console.log(`\\n\\nBARREIRA TRIPLA \u2014 ${DAYS}d 1m, ${SYMS.length} moedas, fee ${FEE*100}%/lado (round-trip ${(2*FEE*1e4)}bps). net/trade em bps.`);\n  console.log('Filtro honesto: in-sample net>0 E holdout net>0 E IC95(holdout) exclui 0.\\n');\n  const rows=[];\n  for(const key of Object.keys(INS)){\n    const ai=agg(INS[key]), ao=agg(OOS[key]);\n    if(!ai||!ao||ao.n<20) continue;\n    let ci=[NaN,NaN]; try{ const b=lab.blockBootstrapMeanCI(OOS[key],{blockLen:3,nResamples:2000,seed:12345,ci:0.95}); ci=[b.lo,b.hi]; }catch(e){}\n    rows.push({key, insN:ai.n, insNet:ai.mean*1e4, insWin:ai.win, oosN:ao.n, oosNet:ao.mean*1e4, oosWin:ao.win, lo:ci[0]*1e4, hi:ci[1]*1e4});\n  }\n  rows.sort((a,b)=>b.oosNet-a.oosNet);\n  const hdr=['signal|T|S|H','insN','insNet','oosN','oosNet','oosWin%','IC95_oos_bps'];\n  console.log(hdr.map((s,i)=>i===0?s.padEnd(28):s.padStart(13)).join(''));\n  for(const r of rows){\n    const flag=(r.insNet>0 && r.oosNet>0 && r.lo>0)?'  <== PASSA':'';\n    console.log([r.key.padEnd(28),String(r.insN).padStart(13),r.insNet.toFixed(1).padStart(13),String(r.oosN).padStart(13),r.oosNet.toFixed(1).padStart(13),(r.oosWin*100).toFixed(0).padStart(13),`[${r.lo.toFixed(1)},${r.hi.toFixed(1)}]`.padStart(13)].join('')+flag);\n  }\n  const passers=rows.filter(r=>r.insNet>0&&r.oosNet>0&&r.lo>0);\n  console.log(`\\n>>> CONFIGS QUE PASSAM (in-sample>0 E holdout>0 E IC exclui 0): ${passers.length} de ${rows.length}`);\n})().catch(e=>{console.error('ERRO:',e.message);process.exit(1);});\nJS\nchmod 644 /tmp/triplebarrier.js\necho \"triplebarrier.js pronto ($(wc -l < /tmp/triplebarrier.js) linhas)\"",
+  "description": "Write triple-barrier target/stop simulation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> triplebarrier.js pronto (83 linhas)
+> ```
+
+## 🤖 Claude *(20:11:57)*
+
+
+## 🤖 Claude *(20:11:58)*
+
+Deixa eu ver o progresso da descoberta (Fase 1). A barreira tripla usa o mesmo cache de velas, então rodo assim que os fetches avançarem.
+
+## 🤖 Claude *(20:12:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bq6k37734.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	pattern-discover — 1m, 15d, holdout 30.000%, horizontes [1,5,15,30,60,120,240], fee 0.1%/lado
+> 2	símbolos: BTCUSDT, ETHUSDT, BNBUSDT, SOLUSDT, XRPUSDT, ADAUSDT, DOGEUSDT, LTCUSDT, LINKUSDT, AVAXUSDT, DOTUSDT, TRXUSDT, ATOMUSDT, NEARUSDT, UNIUSDT · 40 padrões × 7 horizontes = 280 testes
+> 3	  [fetch api.binance.com] BTCUSDT 1m: 21601 candles
+> 4	  BTCUSDT: 21601 candles → descoberta 15120 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 5	  [fetch api.binance.com] ETHUSDT 1m: 21600 candles
+> 6	  ETHUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 7	  [fetch api.binance.com] BNBUSDT 1m: 21600 candles
+> 8	  BNBUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 9	  [fetch api.binance.com] SOLUSDT 1m: 21600 candles
+> 10	  SOLUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 11	  [fetch api.binance.com] XRPUSDT 1m: 21600 candles
+> 12	  XRPUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 13	  [fetch api.binance.com] ADAUSDT 1m: 21600 candles
+> 14	  ADAUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 15	  [fetch api.binance.com] DOGEUSDT 1m: 21601 candles
+> 16	  DOGEUSDT: 21601 candles → descoberta 15120 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 17	  [fetch api.binance.com] LTCUSDT 1m: 21600 candles
+> 18	  LTCUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 19	  [fetch api.binance.com] LINKUSDT 1m: 21600 candles
+> 20	  LINKUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 21	  [fetch api.binance.com] AVAXUSDT 1m: 21600 candles
+> 22	  AVAXUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 23	  [fetch api.binance.com] DOTUSDT 1m: 21600 candles
+> 24	  DOTUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 25	
+> ```
+
+## 🤖 Claude *(20:12:15)*
+
+
+## 🤖 Claude *(20:12:17)*
+
+Descoberta já buscou 11/15 moedas (faltam TRX/ATOM/NEAR/UNI) — são **40 padrões × 7 horizontes = 280 testes**. Vou aguardar ela terminar (pra não competir pelo cache) e então disparar a barreira tripla.
+
+## 🤖 Claude *(20:12:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "out=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bq6k37734.output\nfor i in $(seq 1 11); do\n  if grep -q \"Sobreviventes FDR\" \"$out\" 2>/dev/null; then echo \"DISCOVERY DONE\"; break; fi\n  sleep 9\ndone\ngrep -qi \"Sobreviventes FDR\" \"$out\" && echo \"ready\" || echo \"ainda rodando\"\ntail -6 \"$out\"",
+  "description": "Bounded wait for discovery completion"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DISCOVERY DONE
+> ready
+>   [fetch api.binance.com] NEARUSDT 1m: 21600 candles
+>   NEARUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+>   [fetch api.binance.com] UNIUSDT 1m: 21600 candles
+>   UNIUSDT: 21600 candles → descoberta 15119 | holdout TRANCADO 6481 (corte 2026-06-29)
+> 
+> Sobreviventes FDR: 155/280. Relatório: backend/backtest-results/pattern-discovery-1m-15d.md
+> ```
+
+## 🤖 Claude *(20:12:57)*
+
+
+## 🤖 Claude *(20:12:59)*
+
+Fase 1 pronta: **155/280 sobreviveram à FDR de direção** (in-sample). Mas FDR é sobre *direção* (gross) — a pergunta que importa é quantos são **tradeáveis (net>0 após taxa)** e quantos **confirmam no holdout**. Disparando a Fase 2 (validação no holdout) e a barreira tripla em paralelo, e lendo o resumo da Fase 1.
+
+## 🤖 Claude *(20:13:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux/backend && node scripts/pattern-validate.js --interval=1m --days=15 --minN=30 --bootstrap=3000\" 2>&1 | tee /tmp/validate.out",
+  "description": "Run Phase 2 holdout validation",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bglrsf80d. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bglrsf80d.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:13:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux/backend && TB_FEE=0.001 node /tmp/triplebarrier.js\" 2>&1 | tee /tmp/tb_taker.out",
+  "description": "Run triple-barrier at taker fee",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bv0h6xzjz. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bv0h6xzjz.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:13:10)*
+
+
+## 🤖 Claude *(20:13:11)*
+
+Enquanto validação + barreira tripla rodam, vou extrair do relatório da Fase 1 quantos sobreviventes são **tradeáveis (net>0)** e os melhores por net/gross.
+
+## 🤖 Claude *(20:13:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && sed -n \"1,40p\" backtest-results/pattern-discovery-1m-15d.md' 2>/dev/null | grep -iE \"trade\u00e1veis|tradeavel|sobreviventes|net>0|Sobreviventes da FDR\" | head\necho \"=== linha do header de trade\u00e1veis ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && grep -nE \"trade\u00e1veis long|Sobreviventes da FDR|trade\u00e1vel\" backtest-results/pattern-discovery-1m-15d.md' 2>/dev/null | head\necho\necho \"=== top survivors table (net-sorted) \u2014 extract from JSON ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && cat backtest-results/pattern-discovery-1m-15d.json' 2>/dev/null | python3 -c '\nimport sys,json\nd=json.load(sys.stdin)\nres=d.get(\"results\",[])\n# net per trade in bps; gross in bps\ndef bps(x): return round(x*1e4,2)\n# survivors: fdrPass\nsurv=[r for r in res if r.get(\"fdrPass\")]\ntrade=[r for r in surv if (r.get(\"meanNet\",0)>0)]\nprint(f\"total tests={len(res)} fdr_survivors={len(surv)} tradeable_net>0={len(trade)}\")\nprint(\"\\nTOP 15 por net/trade (bps) entre sobreviventes FDR:\")\nfor r in sorted(surv,key=lambda r:-r.get(\"meanNet\",0))[:15]:\n    print(f\"  {r.get(\\\"key\\\"):34s} dir={r.get(\\\"dir\\\"):4s} n={r.get(\\\"n\\\"):5d} gross={bps(r.get(\\\"meanGross\\\",0)):8.2f} net={bps(r.get(\\\"meanNet\\\",0)):8.2f} t={r.get(\\\"t\\\",0):6.2f} bonf={r.get(\\\"bonfPass\\\")}\")\nprint(\"\\nTOP 10 por GROSS/trade (bps) \u2014 dire\u00e7\u00e3o mais forte:\")\nfor r in sorted(surv,key=lambda r:-r.get(\"meanGross\",0))[:10]:\n    print(f\"  {r.get(\\\"key\\\"):34s} dir={r.get(\\\"dir\\\"):4s} n={r.get(\\\"n\\\"):5d} gross={bps(r.get(\\\"meanGross\\\",0)):8.2f} net={bps(r.get(\\\"meanNet\\\",0)):8.2f}\")\n' 2>/dev/null || echo \"json parse fallback needed\"",
+  "description": "Extract tradeable count and top survivors from discovery report"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> > ⚖️ **Direção vs acionabilidade:** o t-stat/FDR testa **direção** no retorno GROSS (sem fee — senão o fee-drag de ~0.2% finge ser "edge" em horizonte curto). A coluna **net** (com fee) diz se dá pra LUCRAR comprando: só `tradeável long` (net>0) é acionável no spot. dir=bear/flat com gross<0 = sinal de SAÍDA/evitar (no spot não vira short).
+> ## 🎯 Sobreviventes da FDR (q=0.1) — 155 de 280 · 0 tradeáveis long (net>0)
+> === linha do header de tradeáveis ===
+> 26:> ⚖️ **Direção vs acionabilidade:** o t-stat/FDR testa **direção** no retorno GROSS (sem fee — senão o fee-drag de ~0.2% finge ser "edge" em horizonte curto). A coluna **net** (com fee) diz se dá pra LUCRAR comprando: só `tradeável long` (net>0) é acionável no spot. dir=bear/flat com gross<0 = sinal de SAÍDA/evitar (no spot não vira short).
+> 28:## 🎯 Sobreviventes da FDR (q=0.1) — 155 de 280 · 0 tradeáveis long (net>0)
+> 30:| Padrão@h | dir | n | gross/trade | net/trade | tradeável long | win%(net) | t(gross) | p | Bonf | sym | terços |
+> 188:**Leitura:** um sobrevivente é forte se, ALÉM do FDR: passa Bonferroni (✓), tem mesmo sinal nos 15 símbolos e nos 3 terços (estável no tempo). Mas só vira COMPRA se `tradeável long`=✅. A Fase 2 (holdout) é o juiz final.
+> 194:| Padrão@h | família | dir | n | gross/trade | net/trade | tradeável | win%(net) | t(gross) | p | FDR | Bonf | ruído | sym | terços |
+> 479:1. Testados **280** padrões×horizontes; **155** sobreviveram à FDR de DIREÇÃO (gross) q=0.1, **25** ao Bonferroni. Destes, só **0** são tradeáveis long (net>0 após fee) — o resto é direção real mas que NÃO paga a fee, ou sinal de queda/saída.
+> 
+> === top survivors table (net-sorted) — extract from JSON ===
+> json parse fallback needed
+> ```
+
+## 🤖 Claude *(20:13:30)*
+
+
+## 🤖 Claude *(20:13:32)*
+
+Resultado decisivo da Fase 1: **155/280 sobreviveram à FDR de direção, 25 ao Bonferroni, mas ZERO são tradeáveis (net>0) após a taxa** — nem in-sample, com 15 moedas e 40 padrões. A direção existe (155 padrões têm sinal direcional real), mas o movimento é menor que a taxa. Preciso quantificar **quão longe** do breakeven o melhor está — isso decide se algum cenário de taxa (BNB/maker) salvaria. Deixa eu corrigir o parse do JSON.
+
+## 🤖 Claude *(20:13:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'head -c 1200 backtest-results/pattern-discovery-1m-15d.json' 2>/dev/null | python3 -c 'import sys;print(sys.stdin.read())'\necho\necho \"=== keys of one result ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux/backend && cat backtest-results/pattern-discovery-1m-15d.json' 2>/dev/null | python3 -c '\nimport sys,json\nd=json.load(sys.stdin)\nr=d.get(\"results\",[])\nprint(\"n results:\",len(r))\nif r: print(\"keys:\",list(r[0].keys()))\nif r: print(\"sample:\",json.dumps(r[0])[:500])\n'",
+  "description": "Inspect discovery JSON result schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "config": {
+>     "interval": "1m",
+>     "days": 15,
+>     "end": null,
+>     "symbols": [
+>       "BTCUSDT",
+>       "ETHUSDT",
+>       "BNBUSDT",
+>       "SOLUSDT",
+>       "XRPUSDT",
+>       "ADAUSDT",
+>       "DOGEUSDT",
+>       "LTCUSDT",
+>       "LINKUSDT",
+>       "AVAXUSDT",
+>       "DOTUSDT",
+>       "TRXUSDT",
+>       "ATOMUSDT",
+>       "NEARUSDT",
+>       "UNIUSDT"
+>     ],
+>     "holdout": 0.3,
+>     "horizons": [
+>       1,
+>       5,
+>       15,
+>       30,
+>       60,
+>       120,
+>       240
+>     ],
+>     "fdrQ": 0.1,
+>     "warm": 250,
+>     "fee": 0.001
+>   },
+>   "nTests": 280,
+>   "fdr": {
+>     "q": 0.1,
+>     "pThreshold": 0.05535714285714286,
+>     "kMax": 155
+>   },
+>   "bonferroni": 0.00017857142857142857,
+>   "noiseBarT": 3.3570193932026218,
+>   "splitInfo": {
+>     "BTCUSDT": {
+>       "totalCandles": 21601,
+>       "inSampleCandles": 15120,
+>       "holdoutCandles": 6481,
+>       "cutMs": 1782720600000,
+>       "kIndex": 15120
+>     },
+>     "ETHUSDT": {
+>       "totalCandles": 21600,
+>       "inSampleCandles": 15119,
+>       "holdoutCandles": 6481,
+>       "cutMs": 1782720600000,
+>       "kIndex": 15119
+>     },
+>     "BNBUSDT": {
+>       "totalCandles": 21600,
+>       "inSampleCandles": 15119,
+>       "holdoutCandles": 6481,
+>       "cutMs": 1782720600000,
+>       "kIn
+> 
+> === keys of one result ===
+> n results: 280
+> keys: ['key', 'pattern', 'family', 'dir', 'horizon', 'n', 'meanGross', 't', 'p', 'meanNet', 'winRateNet', 'tradeableLong', 'medianGross', 'symCovered', 'symSameSign', 'thirdSameSign', 'thirdMeans', 'perSymMeanG', 'fdrPass', 'bonfPass', 'beatsNoise']
+> sample: {"key": "macd_up_AND_above_sma200@15", "pattern": "macd_up_AND_above_sma200", "family": "conj", "dir": "bull", "horizon": 15, "n": 3354, "meanGross": -0.00031560784466535863, "t": -5.697169870152212, "p": 1.2216321731983726e-08, "meanNet": -0.0023129792575630314, "winRateNet": 0.16249254621347645, "tradeableLong": false, "medianGross": -0.00030066145520135645, "symCovered": 15, "symSameSign": 13, "thirdSameSign": 3, "thirdMeans": [-0.00013821231023996414, -0.0003933543260243269, -0.0004343028226
+> ```
+
+## 🤖 Claude *(20:13:44)*
+
+
+## 🤖 Claude *(20:13:45)*
+
+Campos identificados. Vou extrair o melhor edge **long** (bull, maior gross) entre os sobreviventes e a distância pro breakeven — isso decide se BNB/maker mudaria algo.
+
+## 🤖 Claude *(20:13:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'cat backtest-results/pattern-discovery-1m-15d.json' 2>/dev/null | python3 -c '\nimport sys,json\nd=json.load(sys.stdin)\nres=d.get(\"results\",[])\ndef bps(x): return x*1e4\nsurv=[r for r in res if r.get(\"fdrPass\")]\nbull=[r for r in res if r.get(\"dir\")==\"bull\"]\nbullsurv=[r for r in surv if r.get(\"dir\")==\"bull\"]\nprint(f\"tests={len(res)} fdr_surv={len(surv)} bonf={sum(1 for r in res if r.get(\\\"bonfPass\\\"))} tradeable_long(net>0)={sum(1 for r in res if r.get(\\\"tradeableLong\\\"))}\")\nprint(f\"\\n== MELHOR EDGE LONG (bull) por GROSS/trade, entre TODOS os bull ==\")\nprint(f\"{'padrao@h':32s}{'n':>7s}{'gross_bps':>11s}{'net_bps':>10s}{'win%':>7s}{'t':>7s}{'symSame':>9s}{'fdr':>5s}\")\nfor r in sorted(bull,key=lambda r:-r.get(\"meanGross\",0))[:14]:\n    print(f\"{r[\\\"key\\\"]:32s}{r[\\\"n\\\"]:>7d}{bps(r[\\\"meanGross\\\"]):>11.2f}{bps(r[\\\"meanNet\\\"]):>10.2f}{r[\\\"winRateNet\\\"]*100:>6.1f}%{r[\\\"t\\\"]:>7.2f}{str(r[\\\"symSameSign\\\"])+\\\"/\\\"+str(r[\\\"symCovered\\\"]):>9s}{str(r[\\\"fdrPass\\\"])[0]:>5s}\")\ngmax=max((bps(r[\\\"meanGross\\\"]) for r in bull), default=0)\nprint(f\\\"\\n>>> MAIOR gross long de todos = {gmax:.2f} bps. Breakeven exige fee round-trip < {gmax:.2f} bps.\\\")\nprint(f\\\"    taker sem BNB = 20 bps ; taker/maker com BNB = 15 bps ; maker ideal 0 bps.\\\")\nprint(f\\\"    => algum cenario de fee fecha? {\\\"SIM\\\" if gmax>0 else \\\"NAO\\\"} (so se fee_rt < {gmax:.2f} bps, e ainda precisa confirmar no holdout).\\\")\n' 2>/dev/null || echo \"parse fail\"",
+  "description": "Extract best long edge and breakeven distance"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> parse fail
+> ```
+
+## 🤖 Claude *(20:14:01)*
+
+
+## 🤖 Claude *(20:14:03)*
+
+Parse falhou por causa do escape de aspas no heredoc. Vou escrever o Python num arquivo. E a Fase 2 (validação no holdout) terminou — leio junto.
+
+## 🤖 Claude *(20:14:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/backend\nsudo -n -u gcrux-tradeux bash -lc 'cp backtest-results/pattern-discovery-1m-15d.json /tmp/disc.json && chmod 644 /tmp/disc.json'\ncat > /tmp/parse_disc.py <<'PY'\nimport json\nd=json.load(open('/tmp/disc.json'))\nres=d['results']\nbps=lambda x:x*1e4\nsurv=[r for r in res if r.get('fdrPass')]\nbull=[r for r in res if r.get('dir')=='bull']\nprint(f\"tests={len(res)} fdr_surv={len(surv)} bonf={sum(1 for r in res if r.get('bonfPass'))} tradeable_long_net>0={sum(1 for r in res if r.get('tradeableLong'))}\")\nprint(\"\\n== MELHOR EDGE LONG (bull) por GROSS/trade, entre TODOS os bull ==\")\nprint(f\"{'padrao@h':32s}{'n':>7s}{'gross_bps':>11s}{'net_bps':>10s}{'win%':>7s}{'t':>7s}{'symSame':>9s}{'fdr':>5s}\")\nfor r in sorted(bull,key=lambda r:-r.get('meanGross',0))[:14]:\n    ss=f\"{r['symSameSign']}/{r['symCovered']}\"\n    print(f\"{r['key']:32s}{r['n']:>7d}{bps(r['meanGross']):>11.2f}{bps(r['meanNet']):>10.2f}{r['winRateNet']*100:>6.1f}%{r['t']:>7.2f}{ss:>9s}{str(r['fdrPass'])[0]:>5s}\")\ngmax=max((bps(r['meanGross']) for r in bull), default=0)\nprint(f\"\\n>>> MAIOR gross long de todos = {gmax:.2f} bps. Breakeven exige fee round-trip < {gmax:.2f} bps.\")\nprint(f\"    taker s/BNB=20bps ; com BNB=15bps ; maker ideal=0bps.\")\nprint(f\"    algum cenario fecha? {'SIM se fee_rt<'+format(gmax,'.2f')+'bps' if gmax>0 else 'NAO (gross<=0)'}\")\n# how many bull have gross>15 (BNB maker breakeven) and >20\nprint(f\"\\nbull com gross>20bps: {sum(1 for r in bull if bps(r['meanGross'])>20)} ; gross>15bps: {sum(1 for r in bull if bps(r['meanGross'])>15)} ; gross>0: {sum(1 for r in bull if r['meanGross']>0)}/{len(bull)}\")\nPY\npython3 /tmp/parse_disc.py\necho\necho \"================= FASE 2 (HOLDOUT) =================\"\ntail -40 /tmp/validate.out 2>/dev/null || cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bglrsf80d.output | tail -40",
+  "description": "Parse discovery best-edge + read Phase 2 holdout verdict"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tests=280 fdr_surv=155 bonf=25 tradeable_long_net>0=0
+> 
+> == MELHOR EDGE LONG (bull) por GROSS/trade, entre TODOS os bull ==
+> padrao@h                              n  gross_bps   net_bps   win%      t  symSame  fdr
+> rsi30_AND_flow_buy@60               941       5.30    -14.69  38.9%   2.10    10/15    T
+> rsi_lt_25@30                        929       4.87    -15.12  37.7%   2.29    12/15    T
+> rsi30_AND_range@240                  61       4.84    -15.15  39.3%   0.35    10/14    F
+> rsi_lt_25@60                        812       4.32    -15.67  38.2%   1.48     9/15    F
+> rsi_lt_30@60                       1402       3.05    -16.94  35.2%   1.44     9/15    F
+> rsi_lt_25@120                       655       2.65    -17.34  40.9%   0.64     9/15    F
+> rsi30_AND_not_bear@30               962       2.64    -17.34  28.9%   1.71    12/15    F
+> rsi_lt_25@15                       1048       2.47    -17.51  30.9%   1.33    10/15    F
+> rsi30_AND_not_bear@15              1165       2.47    -17.52  23.3%   2.47    12/15    T
+> rsi30_AND_flow_buy@30              1088       2.06    -17.92  33.0%   1.17     8/15    F
+> rsi30_AND_flow_buy@15              1277       1.92    -18.06  28.7%   1.30     9/15    F
+> rsi30_AND_range@30                   71       1.72    -18.26  22.5%   0.34     7/14    F
+> rsi_lt_35@60                       2034       1.31    -18.67  33.9%   0.77     8/15    F
+> rsi_lt_30@30                       1718       1.25    -18.74  31.4%   0.86    10/15    F
+> 
+> >>> MAIOR gross long de todos = 5.30 bps. Breakeven exige fee round-trip < 5.30 bps.
+>     taker s/BNB=20bps ; com BNB=15bps ; maker ideal=0bps.
+>     algum cenario fecha? SIM se fee_rt<5.30bps
+> 
+> bull com gross>20bps: 0 ; gross>15bps: 0 ; gross>0: 24/175
+> 
+> ================= FASE 2 (HOLDOUT) =================
+> pattern-validate — tag 1m-15d · 155 sobreviventes · holdout trancado · fee 0.1%/lado
+>   [cache] BTCUSDT 1m: 21601 candles
+>   BTCUSDT: 21601 candles, holdout começa em idx 15120 (2026-06-29) → 6481 barras OOS
+>   [cache] ETHUSDT 1m: 21600 candles
+>   ETHUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] BNBUSDT 1m: 21600 candles
+>   BNBUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] SOLUSDT 1m: 21600 candles
+>   SOLUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] XRPUSDT 1m: 21600 candles
+>   XRPUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] ADAUSDT 1m: 21600 candles
+>   ADAUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] DOGEUSDT 1m: 21601 candles
+>   DOGEUSDT: 21601 candles, holdout começa em idx 15120 (2026-06-29) → 6481 barras OOS
+>   [cache] LTCUSDT 1m: 21600 candles
+>   LTCUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] LINKUSDT 1m: 21600 candles
+>   LINKUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] AVAXUSDT 1m: 21600 candles
+>   AVAXUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] DOTUSDT 1m: 21600 candles
+>   DOTUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] TRXUSDT 1m: 21601 candles
+>   TRXUSDT: 21601 candles, holdout começa em idx 15120 (2026-06-29) → 6481 barras OOS
+>   [cache] ATOMUSDT 1m: 21600 candles
+>   ATOMUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] NEARUSDT 1m: 21600 candles
+>   NEARUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+>   [cache] UNIUSDT 1m: 21600 candles
+>   UNIUSDT: 21600 candles, holdout começa em idx 15119 (2026-06-29) → 6481 barras OOS
+> 
+> Veredito: 4/155 confirmam direção · 0 tradeáveis long. Relatório: backend/backtest-results/pattern-validation-1m-15d.md
+> ```
+
+## 🤖 Claude *(20:14:39)*
+
+
+## 🤖 Claude *(20:14:43)*
+
+Agora está quantificado e fechado. **Fase 1:** 155/280 têm direção real, mas **0 tradeáveis** — o **maior edge long de todas as 15 moedas é 5,30 bps** de gross (rsi30+flow_buy@60), com win 38,9%. **Fase 2 (holdout):** só 4/155 confirmam direção, **0 tradeáveis**. Nenhum padrão bull chega a 15 bps (BNB), quanto mais 20 (taker).
+
+Ou seja: mesmo com fee zero ideal, o melhor sinal de 1m entrega 5,3 bps e nem confirma bem fora da amostra. Deixa eu ver a barreira tripla (saída por evento) — o último ângulo.
+
+## 🤖 Claude *(20:14:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bv0h6xzjz.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	  [cache] BTCUSDT 1m: 21601 candles
+> 2	. BTCUSDT  [cache] ETHUSDT 1m: 21600 candles
+> 3	. ETHUSDT  [cache] BNBUSDT 1m: 21600 candles
+> 4	. BNBUSDT  [cache] SOLUSDT 1m: 21600 candles
+> 5	. SOLUSDT  [cache] XRPUSDT 1m: 21600 candles
+> 6	. XRPUSDT  [cache] ADAUSDT 1m: 21600 candles
+> 7	. ADAUSDT  [cache] DOGEUSDT 1m: 21601 candles
+> 8	. DOGEUSDT  [cache] LTCUSDT 1m: 21600 candles
+> 9	. LTCUSDT  [cache] LINKUSDT 1m: 21600 candles
+> 10	. LINKUSDT  [cache] AVAXUSDT 1m: 21600 candles
+> 11	. AVAXUSDT  [cache] DOTUSDT 1m: 21600 candles
+> 12	. DOTUSDT  [cache] TRXUSDT 1m: 21601 candles
+> 13	. TRXUSDT  [cache] ATOMUSDT 1m: 21600 candles
+> 14	
+> ```
+
+## 🤖 Claude *(20:15:04)*
+
+
+## 🤖 Claude *(20:15:06)*
+
+A barreira tripla ainda roda (7 sinais × 12 células de grade × caminhada por moeda é pesado). Vou aguardar e, em paralelo, quando ela fechar, rodo também com **fee=0** — pra medir o teto do maker ideal com a saída por evento. Espera monitorada:
+
+## 🤖 Claude *(20:15:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "out=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bv0h6xzjz.output\nfor i in $(seq 1 12); do\n  if grep -q \"CONFIGS QUE PASSAM\" \"$out\" 2>/dev/null; then echo \"TB TAKER DONE\"; break; fi\n  sleep 9\ndone\ngrep -q \"CONFIGS QUE PASSAM\" \"$out\" && sed -n '/BARREIRA TRIPLA/,$p' \"$out\" || { echo \"ainda rodando; tail:\"; tail -3 \"$out\"; }",
+  "description": "Wait for triple-barrier taker result"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TB TAKER DONE
+> BARREIRA TRIPLA — 15d 1m, 15 moedas, fee 0.1%/lado (round-trip 20bps). net/trade em bps.
+> Filtro honesto: in-sample net>0 E holdout net>0 E IC95(holdout) exclui 0.
+> 
+> signal|T|S|H                         insN       insNet         oosN       oosNet      oosWin% IC95_oos_bps
+> rsi30_not_bear|160|80|480             589        -21.5          225         -1.5           42 [-15.8,13.5]
+> boll_lower_break|160|80|480          1191        -26.5          426         -3.3           43  [-13.7,7.3]
+> macd_cross_up|160|80|480             1272        -24.9          500         -4.5           41  [-13.6,5.5]
+> breakout_high20|160|80|480           1084        -30.7          456         -4.9           41  [-15.1,5.4]
+> rsi30_range|80|80|120                  64        -28.2           30         -5.1           50 [-30.0,12.1]
+> rsi_lt_30|160|80|480                 1008        -23.9          296         -7.6           39  [-20.5,5.0]
+> breakout_adx|160|80|480               840        -33.5          371         -7.9           40  [-18.4,3.9]
+> rsi30_range|80|40|120                  73        -27.9           33         -8.9           39  [-22.9,5.9]
+> rsi30_range|80|40|480                  73        -23.8           33         -9.2           42  [-23.7,8.8]
+> macd_cross_up|160|80|120             2133        -21.7          895         -9.6           39 [-15.0,-4.3]
+> rsi30_not_bear|160|40|480             838        -22.5          325         -9.6           27 [-18.7,-0.1]
+> boll_lower_break|160|40|480          1916        -21.0          676        -10.2           28 [-16.4,-3.6]
+> macd_cross_up|80|80|480              1793        -26.9          794        -10.5           55 [-15.6,-5.4]
+> rsi30_not_bear|80|80|480              684        -23.4          268        -10.6           55 [-20.6,-1.4]
+> boll_lower_break|160|80|120          1934        -23.4          753        -11.3           38 [-16.8,-5.6]
+> rsi_lt_30|160|40|480                 1556        -20.6          455        -11.5           26 [-19.2,-3.8]
+> rsi30_range|40|40|480                  75        -22.6           33        -11.5           61  [-21.2,0.6]
+> breakout_high20|160|40|480           1643        -26.0          696        -11.7           26 [-18.0,-5.4]
+> boll_lower_break|80|80|480           1657        -26.8          613        -11.9           54 [-17.4,-6.0]
+> macd_cross_up|160|40|480             2029        -21.9          856        -12.5           26 [-17.9,-6.7]
+> boll_lower_break|160|40|120          2639        -20.1          992        -13.0           29 [-16.9,-8.7]
+> rsi30_range|40|40|120                  75        -24.6           33        -13.0           58 [-23.4,-1.8]
+> rsi30_range|80|80|480                  64        -29.4           30        -13.1           53  [-41.3,8.1]
+> rsi_lt_30|80|80|480                  1248        -23.8          372        -13.1           53 [-21.7,-4.4]
+> breakout_adx|160|40|480              1098        -26.5          503        -13.2           25 [-19.8,-6.3]
+> macd_cross_up|80|80|120              2424        -24.1         1069        -13.7           45 [-17.6,-9.7]
+> rsi30_not_bear|80|80|120              787        -21.4          304        -14.0           45 [-21.4,-7.5]
+> breakout_high20|160|80|120           1766        -26.5          765        -14.1           37 [-19.5,-8.6]
+> rsi30_not_bear|160|80|120             754        -23.4          291        -14.2           37 [-22.2,-5.9]
+> boll_lower_break|80|80|120           2160        -24.9          830        -14.3           44[-18.3,-10.1]
+> rsi30_range|40|80|120                  67        -27.3           30        -14.5           63 [-29.5,-2.4]
+> boll_lower_break|80|40|480           2595        -21.8          963        -14.6           38[-18.1,-10.8]
+> breakout_high20|160|40|120           2184        -23.3          918        -14.7           29[-19.1,-10.3]
+> macd_cross_up|160|40|120             2867        -21.2         1235        -14.8           30[-18.9,-11.0]
+> boll_lower_break|80|40|120           2983        -21.3         1120        -14.9           36[-17.9,-11.9]
+> rsi30_not_bear|160|40|120             987        -22.7          384        -15.3           31 [-21.2,-9.1]
+> breakout_high20|80|80|480            1589        -28.1          724        -15.6           52 [-21.5,-9.9]
+> macd_cross_up|80|40|480              2803        -22.6         1302        -15.7           37[-18.8,-12.5]
+> breakout_high20|80|40|120            2550        -22.6         1143        -15.7           36[-18.8,-12.5]
+> rsi_lt_30|160|80|120                 1386        -21.9          434        -15.8           36 [-22.8,-8.9]
+> rsi_lt_30|160|40|120                 1909        -18.8          586        -15.8           30[-20.6,-10.8]
+> breakout_high20|80|40|480            2221        -23.4         1031        -15.9           37[-19.4,-12.2]
+> rsi_lt_30|80|80|120                  1492        -22.0          460        -15.9           44[-21.9,-10.2]
+> macd_cross_up|80|40|120              3295        -22.0         1502        -15.9           36[-18.6,-13.2]
+> rsi30_not_bear|40|80|480              829        -20.3          315        -15.9           69 [-22.5,-9.7]
+> breakout_adx|160|80|120              1201        -25.2          556        -15.9           33 [-22.5,-9.5]
+> rsi30_range|40|80|480                  67        -26.5           30        -16.0           70 [-32.0,-4.0]
+> breakout_high20|80|80|120            2064        -25.5          939        -16.3           44[-20.4,-11.9]
+> rsi30_range|160|80|120                 64        -29.1           30        -16.5           30 [-42.0,-0.3]
+> rsi30_not_bear|40|80|120              876        -20.7          323        -16.8           62[-22.7,-11.4]
+> rsi_lt_30|40|80|480                  1562        -22.8          462        -16.8           68[-22.2,-11.9]
+> boll_lower_break|40|80|480           2286        -25.6          852        -17.3           68[-21.1,-13.7]
+> rsi30_not_bear|80|40|480              946        -20.9          371        -17.4           35[-23.4,-11.3]
+> rsi30_not_bear|80|40|120             1015        -20.6          393        -17.4           35[-22.6,-12.2]
+> rsi_lt_30|80|40|480                  1838        -21.1          547        -17.4           35[-22.1,-12.4]
+> boll_lower_break|40|80|120           2641        -24.7         1000        -17.5           58[-20.7,-14.4]
+> macd_cross_up|40|80|480              2628        -24.9         1132        -17.7           67[-20.8,-14.5]
+> rsi_lt_30|80|40|120                  2011        -20.3          610        -17.8           35[-21.8,-13.6]
+> breakout_adx|160|40|120              1366        -22.1          623        -17.9           25[-22.6,-12.4]
+> breakout_high20|40|80|480            2329        -26.1         1073        -18.0           67[-21.3,-14.5]
+> boll_lower_break|40|40|480           3387        -21.9         1277        -18.1           52[-20.2,-15.8]
+> macd_cross_up|40|80|120              3047        -23.7         1324        -18.2           58[-20.8,-15.7]
+> breakout_high20|40|80|120            2671        -24.9         1230        -18.4           60[-21.3,-15.6]
+> boll_lower_break|40|40|120           3569        -21.8         1336        -18.4           49[-20.5,-16.1]
+> rsi30_not_bear|40|40|480             1090        -19.1          409        -18.5           52[-22.4,-14.9]
+> rsi30_not_bear|40|40|120             1113        -19.2          412        -18.5           50[-22.3,-14.9]
+> rsi_lt_30|40|80|120                  1692        -22.4          499        -18.7           59[-23.5,-14.4]
+> rsi_lt_30|40|40|480                  2161        -20.7          634        -18.8           51[-21.8,-15.7]
+> rsi_lt_30|40|40|120                  2217        -20.7          649        -18.9           49[-21.8,-15.8]
+> breakout_adx|80|40|480               1405        -22.1          661        -19.2           34[-23.6,-14.8]
+> breakout_adx|40|80|120               1753        -23.7          804        -19.6           57[-23.0,-16.1]
+> breakout_high20|40|40|120            3225        -22.7         1488        -19.6           48[-21.5,-17.5]
+> macd_cross_up|40|40|120              4105        -21.9         1883        -19.8           47[-21.5,-18.1]
+> macd_cross_up|40|40|480              3912        -22.0         1794        -19.9           50[-21.7,-18.0]
+> breakout_high20|40|40|480            3067        -23.0         1431        -19.9           50[-22.1,-17.6]
+> breakout_adx|80|80|480               1127        -26.6          543        -19.9           49[-26.2,-13.3]
+> breakout_adx|80|40|120               1565        -21.5          724        -19.9           31[-23.6,-16.0]
+> breakout_adx|40|80|480               1582        -25.2          725        -20.2           66[-24.2,-15.7]
+> breakout_adx|80|80|120               1398        -25.0          657        -20.4           40[-25.4,-15.3]
+> breakout_adx|40|40|120               1905        -20.8          883        -20.8           46[-23.5,-18.2]
+> breakout_adx|40|40|480               1821        -20.8          856        -21.4           48[-24.2,-18.6]
+> rsi30_range|160|40|120                 73        -29.3           33        -22.3           24[-39.0,-10.4]
+> rsi30_range|160|40|480                 72        -18.4           33        -31.1           18[-50.3,-15.0]
+> rsi30_range|160|80|480                 63        -11.0           30        -36.5           30[-68.1,-13.1]
+> 
+> >>> CONFIGS QUE PASSAM (in-sample>0 E holdout>0 E IC exclui 0): 0 de 84
+> ```
+
+## 🤖 Claude *(20:15:47)*
+
+
+## 🤖 Claude *(20:15:50)*
+
+Barreira tripla no taker: **0 de 84 configurações passam** — todo alvo/stop/timeout é net-negativo, in-sample **e** holdout (o melhor é −1,5 bps). A saída por evento também não vence a taxa.
+
+Falta fechar a porta do **maker**: rodo a barreira tripla com **fee=0** (teto ideal) — se nem sem taxa nenhuma configuração passa o filtro de consistência (in-sample>0 **E** holdout>0 **E** IC exclui zero), o maker está descartado de vez.
+
+## 🤖 Claude *(20:15:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc \"TB_FEE=0 node /tmp/triplebarrier.js\" 2>&1 | tee /tmp/tb_zero.out",
+  "description": "Run triple-barrier at zero fee (maker ceiling)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bdhcuhkzk. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bdhcuhkzk.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:16:02)*
+
+
+## 🤖 Claude *(20:16:02)*
+
+Enquanto o teste de fee-zero roda, vou preparar a atualização de memória com este achado. Deixa eu ler a memória do laboratório de padrões.
+
+## 🤖 Claude *(20:16:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 4 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-pattern-lab
+> 3	description: "laboratório de descoberta de padrões no histórico (Fase 1) + validação out-of-sample (Fase 2) com parede anti-overfitting; scripts research-only em backend/scripts, zero money-path"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 2b75f395-3d0c-474f-a0c9-ab9fb903cc72
+> 8	---
+> 9	
+> 10	**Pedido do dono (2026-06-29):** "gastar tokens com algoritmos voltando no passado, identificar o maior número de padrões pra uma fase mais intensa depois (simulações dentro de um mesmo algoritmo)." Decisões dele (todas a recomendação): **dados** = BTC/ETH/LTC/BNB/ADA, ~2-3 anos, 1h/15m/1m; **padrões** = clássicos + conjunções; **arranque** = construir o lab primeiro e trazer pra aprovar antes de minerar.
+> 11	
+> 12	**O LAB (5 arquivos novos em `backend/scripts/`, research puro, ZERO money-path/DB/ordens/live; rodam no HOST com node v22 — `/app` NÃO é bind-mount):**
+> 13	- `lib/labkit.js` — kit: fetch klines estendido (`-ext`, mantém taker-buy-volume p/ proxy de fluxo histórico; throttle 120ms/página), indicadores Wilder (RSI/SMA/EMA/ATR/ADX-DMI/Bollinger/MACD/ROC/vol/percentil rolante), estatística (`tTest` aprox-normal, **`benjaminiHochberg` FDR**, bonferroni, barra-de-ruído √(2lnN), **bootstrap de blocos** com RNG mulberry32 semeado), `forwardReturn` **{gross,net}** sem lookahead, `splitByTime` (parede), `computeIndicators` (catálogo causal + `regimeBar` por barra).
+> 14	- `lib/patterns.js` — universo PRÉ-REGISTRADO de ~40 padrões (RSI/SMA/ADX/Bollinger/MACD/ROC/breakout/vol/flow/regime + conjunções) + `thin` (afinamento anti-overlap). **Compartilhado pelas 2 fases** → a `fn` é idêntica dos dois lados da parede (sem drift = a integridade da validação).
+> 15	- `pattern-discover.js` — **Fase 1**: fetch→split (tranca holdout)→indicadores SÓ no in-sample→testa cada (padrão×horizonte), FDR sobre o **GROSS** (direção), reporta net+`tradeável long`. Saída `pattern-discovery-<tag>.md/json` + manifesto `pattern-survivors-<tag>.json` (grava `cutMs` por símbolo).
+> 16	- `pattern-validate.js` — **Fase 2**: lê o manifesto, reusa o **mesmo `cutMs`** (parede não dá drift entre fases), testa sobreviventes SÓ no holdout (t≥cutMs), bootstrap CI; veredito = **direção (gross sameSign + IC exclui 0)** + **acionável (`bootN.lo>0` = net paga a fee → tradeável long)**.
+> 17	- `sim/labkit.test.js` — 45 asserts determinísticos (auto-descoberto pelo `run.js` → entra no CI/`test:sim` sem mexer em nada).
+> 18	
+> 19	**MÉTODO (anti-overfitting em camadas):** parede temporal trancada (holdout nunca lido na descoberta) · afinamento anti-overlap (retornos ~independentes → t-stat honesto) · correção de múltiplos testes (BH-FDR + Bonferroni) · **GROSS=direção / NET=acionabilidade** (o smoke pegou o bug de usar net p/ direção: o fee-drag round-trip −0,2% fingia "edge bearish"; corrigido nos 2 lados) · bootstrap de blocos no holdout. Fee 0,1%/lado, exec no open seguinte (igual `backtest.js`).
+> 20	
+> 21	**GATES (2026-06-29):** **QA = PASS COM RESSALVAS** (validou com EDGE PLANTADO: random-walk→0 sobreviventes [nulo honesto], edge plantado→96→74→33 [tem poder E especificidade]; determinístico byte-a-byte; sem lookahead/vazamento/div0). **TL = APPROVE COM SUGESTÕES** (zero must-fix; "parede correta e não-driftável", "gross/net é o ponto forte"). Ressalvas LOW aplicadas (throttle, guarda NaN no pct, rótulo BH, doc do regime fraco no início). Suíte de sim **20/20** (labkit 45/45 + 19 pré-existentes intactos).
+> 22	
+> 23	**COMO RODAR:**
+> 24	```
+> 25	cd backend
+> 26	node scripts/pattern-discover.js --interval=1h --days=900 --symbols=BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT --holdout=0.3 --horizons=1,5,10,20,50 --fdr=0.10
+> 27	node scripts/pattern-validate.js --tag=1h-900d --minN=20
+> 28	```
+> 29	
+> 30	**EXPECTATIVA HONESTA (taxa-base):** a maioria dos padrões NÃO sobrevive ao holdout+fee — e isso é o sistema funcionando. No smoke (1h/365d/2-símbolos) deu 0 sobreviventes FDR. O prêmio realista: mapear COM confiança estatística onde (se) sobra edge + caracterizar melhor o trend/regime (o único que segurou) + deixar um "matador de ideias barato". Consistente com tudo já refutado (ver [[tradeux-1m-scalping-and-cockpit]], [[tradeux-strategy-engine]], [[tradeux-parked-as-fuel]]). Próximo da ponte: tradeáveis → motor `[PAPER]` antes de qualquer real.
+> 31	
+> 32	**🎯 CORRIDA REAL RODADA (2026-06-29, 5 símbolos/900d, holdout corte 2025-10-02, horizontes 1/5/10/20/50):**
+> 33	- **1h:** 92/200 sobreviveram FDR in-sample → no holdout **1/92 confirma direção, 0 tradeáveis long**. O único: `death_cross_50_200@5` (bear, gross −0,28% OOS) = sinal de SAÍDA real (valida o death-cross-exit do trend que o sistema já usa).
+> 34	- **15m:** 114/200 in-sample → holdout **3/114 confirmam direção, 0 tradeáveis long**. Os bull: **`rsi30_AND_above_sma200@5 e @20`** (= a TESE DA id2 ao vivo: comprar dip RSI<30 em uptrend) — direção replica OOS com gross +0,14%/+0,25% (IC>0!), MAS net −0,06%/+0,05% (fica EXATO na linha da fee, IC não passa de 0). 
+> 35	- **VEREDITO:** ZERO edge tradeável-long em 2 timeframes/ciclos inteiros. A parede matou ~99% como overfitting (ex.: `boll_lower_break@50` in-sample +0,65% → holdout −1,14%, direção INVERTEU). **O sinal que SOBREVIVE é exatamente a lógica que o sistema já tem (death-cross=saída; RSI-dip-em-uptrend=id2) — direção real, mas o move não paga os 0,2% de round-trip.** O inimigo é a FEE, não a ausência de sinal. Re-confirma INDEPENDENTEMENTE tudo já refutado + valida a arquitetura atual + a tese parqueado-como-combustível. **Próxima fase POSSÍVEL (fase intensa do dono):** simular um motor único sobre `rsi30_AND_above_sma200` com redução de fee (maker/BNB), sizing, gate de regime e hold mais longo → ver se cruza de "direção-confirmada-mas-comida-pela-fee" pra net+.
+> 36	
+> 37	**🧪 FASE 3 — SIMULAÇÃO DIRIGIDA do sobrevivente (`pattern-sim.js`, event-driven 1-entrada × saídas × custos, mesma parede):** alvo = `rsi30_AND_above_sma200` (a id2). Resultado HONESTO e FRÁGIL:
+> 38	- **15m:** melhor config in-sample (`fixed20`/maker-BNB 0,04%) → holdout **+0,188%/trade, IC [0,015%, 0,379%]** (cruza o zero, mas o piso é um fio de cabelo). Estrutura ROBUSTA da grade: net/trade cai MONOTÔNICO conforme o custo sobe → **o edge é do TAMANHO DA FEE: positivo só com execução MAKER (limite ~0,04%/lado), NEGATIVO no taker (0,075-0,1%+slip = o default de hoje).** Gate ADX e stops NÃO ajudaram; saída mais simples + fee menor venceu.
+> 39	- **1h (teste de robustez):** **NÃO replica** — n raso (22-35 no holdout), melhor config holdout −0,70% (IC enorme cruzando 0). Edge é timeframe-específico (15m sim, 1h não).
+> 40	- **VEREDITO FASE 3:** NÃO é edge deployável. É "talvez, como MAKER, no 15m" — frágil em 2 eixos (execução maker-only + timeframe-específico + IC no fio). O ganho estrutural real: **provado com dado que NÃO há edge taker-executável em lugar nenhum, e que o lever (se houver) é EXECUÇÃO MAKER, não sinal.** A id2 é o sinal real, comido pela fee taker. Único caminho disciplinado se quiser perseguir: motor `[PAPER]` com semântica MAKER (limite) medindo fill-rate real — a sim ASSUME que a maker preenche (otimista). Senão, banco o achado.
+> 41	
+> 42	**STATUS:** lab construído+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`** (20 arquivos: 6 scripts + 14 relatórios; `.git` ownership limpo gcrux-tradeux; farm-funnel de outra origem NÃO incluído — ver [[tradeux-cross-session-contamination]]). **origin/master ainda em `701b7e7` → local 1 commit à frente (fast-forward limpo); PUSH pendente** (remote SSH `git@github.com:gabrielZarattini/tradeux.git` → só a chave do ubuntu empurra → push-como-ubuntu + chown-back do `.git`, ver [[github-ssh-key-on-ubuntu]] e [[git-ownership-gotcha]]). `backtest-data/` gitignored.
+> 43	
+> ```
+
+## 🤖 Claude *(20:16:10)*
+
+
+## 🤖 Claude *(20:16:12)*
+
+A memória já cobre bem o veredito 900d/1h/15m + o achado "maker-only frágil". Minha rodada de hoje (15 moedas, 15d, 1m + barreira tripla) estende isso. Vou esperar o teste fee=0 fechar pra incluir o veredito do teto maker. Checando:
+
+## 🤖 Claude *(20:16:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "out=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bdhcuhkzk.output\nfor i in $(seq 1 12); do\n  if grep -q \"CONFIGS QUE PASSAM\" \"$out\" 2>/dev/null; then echo \"TB ZERO DONE\"; break; fi\n  sleep 9\ndone\nif grep -q \"CONFIGS QUE PASSAM\" \"$out\"; then\n  echo \"=== TOP 12 (fee=0, teto maker ideal) ===\"\n  sed -n '/net\\/trade em bps/,$p' \"$out\" | head -16\n  echo \"...\"\n  grep \"CONFIGS QUE PASSAM\" \"$out\"\n  echo \"=== quantos com holdout net>0 (mesmo sem filtro in-sample) ===\"\n  sed -n '/signal|T|S|H/,/CONFIGS/p' \"$out\" | awk 'NR>1 && $0!~/CONFIGS/ {print}' | awk '{print $5}' | grep -vE \"oosNet\" | awk '{if($1+0>0)c++} END{print c\" configs com holdout net>0 (de 84)\"}'\nelse echo \"ainda rodando\"; tail -2 \"$out\"; fi",
+  "description": "Read fee=0 triple-barrier (maker ceiling)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ainda rodando
+> . ATOMUSDT  [cache] NEARUSDT 1m: 21600 candles
+> . NEARUSDT  [cache] UNIUSDT 1m: 21600 candles
+> ```
+
+## 🤖 Claude *(20:18:10)*
+
+
+## 🤖 Claude *(20:18:11)*
+
+Quase lá (faltava só a agregação/bootstrap após UNI). Aguardando o fechamento:
+
+## 🤖 Claude *(20:18:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "out=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/bdhcuhkzk.output\nfor i in $(seq 1 10); do\n  if grep -q \"CONFIGS QUE PASSAM\" \"$out\" 2>/dev/null; then break; fi\n  sleep 6\ndone\nif grep -q \"CONFIGS QUE PASSAM\" \"$out\"; then\n  echo \"=== TOP 10 (fee=0 = teto maker ideal) ===\"\n  sed -n '/net\\/trade em bps/,$p' \"$out\" | sed -n '1,14p'\n  echo \"...\"\n  tail -2 \"$out\"\nelse echo \"ainda rodando\"; tail -2 \"$out\"; fi",
+  "description": "Read fee=0 triple-barrier result"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TOP 10 (fee=0 = teto maker ideal) ===
+> BARREIRA TRIPLA — 15d 1m, 15 moedas, fee 0%/lado (round-trip 0bps). net/trade em bps.
+> Filtro honesto: in-sample net>0 E holdout net>0 E IC95(holdout) exclui 0.
+> 
+> signal|T|S|H                         insN       insNet         oosN       oosNet      oosWin% IC95_oos_bps
+> rsi30_not_bear|160|80|480             589         -1.5          225         18.6           45   [4.2,33.6]
+> boll_lower_break|160|80|480          1191         -6.5          426         16.7           44   [6.3,27.3]
+> macd_cross_up|160|80|480             1272         -5.0          500         15.5           43   [6.4,25.5]
+> breakout_high20|160|80|480           1084        -10.7          456         15.1           43   [4.9,25.4]
+> rsi30_range|80|80|120                  64         -8.2           30         14.9           60 [-10.1,32.2]
+> rsi_lt_30|160|80|480                 1008         -3.9          296         12.4           41  [-0.5,25.0]
+> breakout_adx|160|80|480               840        -13.5          371         12.1           42   [1.5,23.9]
+> rsi30_range|80|40|120                  73         -7.9           33         11.1           48  [-2.9,25.9]
+> rsi30_range|80|40|480                  73         -3.8           33         10.8           42  [-3.7,28.9]
+> macd_cross_up|160|80|120             2133         -1.8          895         10.4           49   [5.0,15.7]
+> ...
+> 
+> >>> CONFIGS QUE PASSAM (in-sample>0 E holdout>0 E IC exclui 0): 0 de 84
+> ```
+
+## 🤖 Claude *(20:18:46)*
+
+
+## 🤖 Claude *(20:18:52)*
+
+**Teto do maker (fee=0) — o achado mais revelador:** mesmo removendo a taxa inteira, **0 de 84 configurações passam o filtro de consistência**. Olha o padrão das melhores: todas têm **in-sample net NEGATIVO mas holdout net positivo** (ex.: `rsi30_not_bear|160|80|480` = in-sample −1,5 bps, holdout +18,6 bps). Isso é a prova de **não-robustez**: o "lucro" do holdout não aparece na descoberta. Se fosse edge real, apareceria nas duas metades. É sorte de regime numa janela de 4,5 dias, contradita pelos 10,5 dias in-sample.
+
+Ou seja — **fecho a porta do maker também**: o problema não é só a taxa comer o edge; é que o edge direcional do sinal de 1m **nem é estável o suficiente atravessando a parede temporal** pra ser monetizável a custo zero.
+
+Vou registrar isso na memória e montar a visualização do funil de sobreviventes.
+
+## 🤖 Claude *(20:19:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md",
+  "old_string": "**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`**",
+  "new_string": "**\ud83d\udd01 RE-CORRIDA \"GANHAR DO FEE\" (2026-07-03, pedido do dono: taxa embutida na f\u00f3rmula + 15d/1m/muitas moedas):** 15 moedas l\u00edquidas (BTC/ETH/BNB/SOL/XRP/ADA/DOGE/LTC/LINK/AVAX/DOT/TRX/ATOM/NEAR/UNI), 1m, 15d, horizontes 1/5/15/30/60/120/240 (280 testes). **Fase 1:** 155/280 sobrevivem FDR de dire\u00e7\u00e3o, 25 Bonferroni, **0 trade\u00e1veis (net>0)**. **Maior edge long de TODAS as 15 moedas = apenas 5,30 bps de gross** (`rsi30_AND_flow_buy@60`, win 38,9%); ZERO padr\u00f5es bull com gross>15bps (BNB) ou >20bps (taker); s\u00f3 24/175 bull t\u00eam gross>0. **Fase 2 (holdout trancado, corte 2026-06-29):** 4/155 confirmam dire\u00e7\u00e3o, **0 trade\u00e1veis**. **Insight decisivo:** como `net\u2248gross\u22122\u00b7fee`, a varredura de taxa vira \"existe padr\u00e3o com gross robusto e qu\u00e3o grande?\" \u2192 maior=5,3 bps \u27f9 nenhum cen\u00e1rio de taxa real fecha (fecha s\u00f3 se fee_rt<5,3bps; taker=20, BNB=15, maker-ideal=0). **Teste extra de BARREIRA TRIPLA** (`/tmp/triplebarrier.js`, sa\u00edda por EVENTO: alvo/stop m\u00faltiplos-da-fee, timeout, trades n\u00e3o-sobrepostos, 7 sinais\u00d712 grade=84 configs, in-sample\u00d7holdout): **taker \u2192 0/84 passam** (todas net<0 nas 2 metades); **fee=0 (teto MAKER ideal) \u2192 0/84 passam** \u2014 as \"positivas\" do holdout s\u00e3o TODAS in-sample-NEGATIVAS (ex.: `rsi30_not_bear|160|80|480` ins \u22121,5 / oos +18,6 bps) = sorte de regime numa janela de 4,5d, N\u00c3O edge est\u00e1vel atravessando a parede. **VEREDITO REFOR\u00c7ADO vs a nota \"maker \u00e9 o lever\":** no 1m/15d/15-moedas o edge direcional do sinal **n\u00e3o \u00e9 sequer est\u00e1vel a custo zero** \u2014 o gargalo \u00e9 o TAMANHO+ESTABILIDADE do sinal, n\u00e3o s\u00f3 a taxa. Ganhar do fee exige um edge maior E est\u00e1vel, que a revers\u00e3o/breakout/momentum de 1m n\u00e3o t\u00eam nessas moedas; os lever reais s\u00e3o ESTRUTURAIS e fora da busca 1m: (1) trend no timescale nativo (horas-dias/ciclo, onde 20bps \u00e9 ru\u00eddo \u2014 \u00e9 a maquin\u00e1ria do golden-cross j\u00e1 pronta e desarmada por escolha), (2) tier de fee BNB+volume, (3) market-making capturando o spread (outro jogo, risco de invent\u00e1rio). Consistente com [[tradeux-1m-scalping-and-cockpit]], [[tradeux-parked-as-fuel]]. Scripts research-only; ZERO money-path.\n\n**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:19:36)*
+
+
+## 🤖 Claude *(20:19:37)*
+
+Memória atualizada. Agora a visualização do funil — 280 testes colapsando a zero, com o teto do maker.
+
+## 🤖 Claude *(20:19:50)*
+
+
+🛠️ **Tool Call**: `mcp__visualize__show_widget`
+```json
+{
+  "title": "funil_sobreviventes_1m_fee",
+  "loading_messages": [
+    "Empilhando os 280 testes",
+    "Passando pela parede do holdout",
+    "Vendo quantos pagam a taxa"
+  ],
+  "widget_code": "<svg viewBox=\"0 0 700 392\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-labelledby=\"ft fd\">\n<title id=\"ft\">Funil de sobreviventes: dos 280 testes de sinal de 1m, zero s\u00e3o lucr\u00e1veis ap\u00f3s a taxa</title>\n<desc id=\"fd\">280 pares padr\u00e3o\u00d7horizonte testados em 15 moedas; 155 t\u00eam dire\u00e7\u00e3o estat\u00edstica real, 25 fortes ao Bonferroni, mas zero s\u00e3o trade\u00e1veis (net positivo) com a taxa taker de 20 bps, e zero sobrevivem mesmo com taxa zero (teto maker ideal), porque os positivos do holdout s\u00e3o negativos in-sample.</desc>\n\n<rect x=\"250\" y=\"52\" width=\"400\" height=\"30\" rx=\"4\" fill=\"var(--text-secondary)\" opacity=\"0.75\"/>\n<text x=\"242\" y=\"72\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">testados (40 padr\u00f5es \u00d7 7 horizontes)</text>\n<text x=\"656\" y=\"72\" class=\"ts\" font-size=\"13\" fill=\"var(--text-secondary)\">280</text>\n\n<rect x=\"250\" y=\"106\" width=\"221\" height=\"30\" rx=\"4\" fill=\"var(--text-accent)\" opacity=\"0.85\"/>\n<text x=\"242\" y=\"126\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">com dire\u00e7\u00e3o estat\u00edstica real (FDR)</text>\n<text x=\"477\" y=\"126\" class=\"ts\" font-size=\"13\" fill=\"var(--text-accent)\">155</text>\n\n<rect x=\"250\" y=\"160\" width=\"36\" height=\"30\" rx=\"4\" fill=\"var(--text-accent)\" opacity=\"0.85\"/>\n<text x=\"242\" y=\"180\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">fortes (Bonferroni)</text>\n<text x=\"292\" y=\"180\" class=\"ts\" font-size=\"13\" fill=\"var(--text-accent)\">25</text>\n\n<rect x=\"250\" y=\"214\" width=\"26\" height=\"30\" rx=\"4\" fill=\"var(--text-danger)\" opacity=\"0.9\"/>\n<text x=\"242\" y=\"234\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">trade\u00e1veis: net &gt; 0 com taxa taker (20 bps)</text>\n<text x=\"284\" y=\"234\" class=\"ts\" font-size=\"13\" fill=\"var(--text-danger)\">0</text>\n\n<rect x=\"250\" y=\"268\" width=\"26\" height=\"30\" rx=\"4\" fill=\"var(--text-danger)\" opacity=\"0.9\"/>\n<text x=\"242\" y=\"288\" text-anchor=\"end\" class=\"ts\" font-size=\"12.5\" fill=\"var(--text-primary)\">trade\u00e1veis mesmo a taxa 0 (teto maker ideal)</text>\n<text x=\"284\" y=\"288\" class=\"ts\" font-size=\"13\" fill=\"var(--text-danger)\">0</text>\n\n<line x1=\"250\" y1=\"322\" x2=\"656\" y2=\"322\" stroke=\"var(--border)\" stroke-width=\"1\"/>\n<text x=\"250\" y=\"344\" class=\"th\" font-size=\"12\" fill=\"var(--text-muted)\">melhor edge long das 15 moedas: apenas +5,3 bps  \u00b7  muro taker: 20 bps  \u00b7  com BNB: 15 bps</text>\n<text x=\"250\" y=\"366\" class=\"th\" font-size=\"12\" fill=\"var(--text-muted)\">a taxa 0, os \"positivos\" do holdout s\u00e3o negativos in-sample \u2192 sorte de janela, n\u00e3o edge est\u00e1vel</text>\n</svg>"
+}
+```
+
+> **Tool Result (mcp__visualize__show_widget)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Content rendered and shown to the user. Please do not duplicate the shown content in text because it's already visually represented."}]
+> ```
+
+## 🤖 Claude *(20:20:04)*
+
+
+## 🤖 Claude *(20:20:37)*
+
+Rodei o que você pediu, e mais um pouco pra fechar as portas de fuga. Aqui está o resultado honesto — sem hype e sem dourar a pílula.
+
+## O que rodei
+
+Peguei sua ideia ao pé da letra e a estendi pra não deixar brecha: **15 moedas líquidas** (BTC, ETH, BNB, SOL, XRP, ADA, DOGE, LTC, LINK, AVAX, DOT, TRX, ATOM, NEAR, UNI), **15 dias em velas de 1m**, **40 padrões** (RSI, breakout, Bollinger, MACD, ADX, momentum, volatilidade, fluxo + conjunções), **7 horizontes** (1 min a 4 h), com a **taxa embutida no critério de aceitação** e uma **parede temporal trancada** (holdout que a descoberta nunca vê) + correção de testes múltiplos. Depois adicionei dois testes que a busca padrão não cobre: **saída por evento** (barreira tripla — alvo e stop como múltiplos da taxa) e o **teto do maker ideal** (rodei tudo de novo com taxa zero).
+
+## O veredito
+
+**Não dá pra ganhar do fee com sinal de 1m — e a razão é mais dura do que "a taxa é alta".** O funil acima conta a história: dos 280 testes, 155 têm direção estatística real, mas **zero são lucráveis** depois da taxa. E o número que mata a esperança: **o melhor edge de compra entre as 15 moedas é 5,3 bps** de movimento médio. A taxa round-trip é 20 bps (15 com BNB). O sinal entrega **um quarto** do que precisaria — não é uma margem apertada, é uma ordem de grandeza.
+
+- **Barreira tripla (saída por evento, taker):** 0 de 84 configurações de alvo/stop passam. Todas net-negativas nas duas metades.
+- **Teto do maker (taxa zero):** **ainda 0 de 84 passam.** E aqui está o achado mais importante — as configurações que *parecem* lucrar no holdout a taxa zero são **negativas in-sample**. Se fosse edge de verdade, apareceria nos dois lados da parede; ele só aparece na janela de 4,5 dias do holdout = **sorte de regime, não padrão repetível**.
+
+Traduzindo: embutir a taxa na fórmula não *cria* nada — ele só faz o filtro devolver **vazio**, que é exatamente o que aconteceu. O gargalo não é a fórmula da taxa; é que **o edge do sinal de 1m é pequeno demais E instável demais** pra pagar qualquer custo, até custo zero. É a quinta confirmação independente disso (journal ao vivo, varredura de klines, lab 900d, e agora lab 15-moedas + barreira tripla).
+
+Correção que eu te devo: no turno passado eu disse "maker é a alavanca". No 15m/900d há um resíduo maker-only frágil (o sinal da id2), mas **no 1m/15 moedas nem isso aparece** — então maker, sozinho, não resolve o 1m.
+
+## Como se ganha do fee de verdade
+
+A taxa só é "mortal" contra movimentos minúsculos. Ela é irrelevante contra movimentos grandes. Então as alavancas reais são **estruturais e ficam fora da busca de 1m**:
+
+1. **Operar o trend no timescale nativo dele (horas–dias, o ciclo inteiro).** Num movimento de tendência de +200 a +2000 bps, os 20 bps de taxa viram ruído. É **exatamente a maquinária do golden-cross que já está construída** — e que está desarmada por escolha (as 3 travas do turno passado). Essa é, de longe, a maior aposta de valor esperado que você tem parada na prateleira. E o mercado acabou de dar o sinal dela (ADA→`trend`).
+2. **Baixar a taxa de fato:** pagar fee com **BNB** (0,075%/lado) e subir de tier por volume. É um ganho garantido, não um sinal.
+3. **Virar market-maker** (postar limites dos dois lados e capturar o spread) — mas isso é **outro negócio**, com risco de inventário, não trading de sinal.
+
+## Recomendação
+
+Parar de minerar 1m — está data-refutado em cinco frentes, e cada rodada nova só reconfirma. A energia rende muito mais no que **já existe e está pronto**: a trilha Trend. O caminho disciplinado seria, quando você decidir, testá-la primeiro **como MAKER no motor `[PAPER]`** (medindo taxa de preenchimento real, que a simulação assume otimista) e, se pagar, promover pra capturar o próximo golden não-bear de verdade.
+
+Quer que eu **rode o backtest do trend no seu timescale certo** (SMA 50/200, ciclos longos, net com taxa BNB, comparando taker vs maker) pra a gente ver quanto a maquinária que já temos captura — em vez de continuar caçando o que a de 1m não tem? Isso responde "onde está o dinheiro" de forma acionável, sem eu tocar em nada do money-path.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

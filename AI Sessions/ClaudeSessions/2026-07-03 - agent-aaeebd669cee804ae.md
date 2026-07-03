@@ -640,3 +640,16 @@ All three layers confirmed at both API and code level, with a fourth compounding
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - agent-a9a5e6dcaaadc297e]]
+> * **Próxima Sessão**: [[2026-07-03 - agent-ac217f1b3eebf41d1]]
+%% --- TIMELINE END --- %%
