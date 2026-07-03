@@ -158,6 +158,37 @@ para a fatia 2a-cliente com nota de GO.
 
 **Gate G16:** vitest classify/estimate/payload-cap-2/skip-sem-imagem + mirror do custo; smoke C1 (422 sem prompt)/C2 (skip... n/a server — client) → C1 422 sem imagem · C2 402 BYOK · C3 custo pinado com payload forjado; E2E pago (18 mco) com ref do picker + Vision QA.
 
+### Amendment 2d-bis — compose engine truth + storage privado (2026-07-03, pós-drift OTD-SPACES-003)
+
+**Contexto (Lei 1):** o E2E pago da 2d expôs que `soul/compose` NUNCA existiu upstream. Sondas
+422 zero-custo contra a API viva (2026-07-03) provaram o contrato real e estão PINADAS no
+sentinel `scripts/qa/smoke-higgsfield-schema.ts` (7 gates S1-S7 — RODAR antes de qualquer
+mudança de integração Higgsfield; drift = exit 1):
+
+- O path é `POST /higgsfield-ai/soul/{mode}` com `mode ∈ {reference, character, standard}` —
+  `mode` é literal de PATH (`loc: ["path","mode"]`), não campo de body.
+- Refs de imagem NÃO viajam no body (`image_1_url`/`input_image_*`/`layout_url` são ignorados
+  silenciosamente). Identidade exige `custom_reference_id` (UUID) cunhado ANTES via
+  `POST /v1/custom-references {name, input_images:[{type:'image_url', image_url}]}` →
+  assíncrono (`not_ready→queued→…`, fila de MINUTOS provada ao vivo) → **incompatível com a
+  janela sync ≤90s** do edge fn.
+- Enums vivos: `aspect_ratio ∈ {9:16,16:9,4:3,3:4,1:1,2:3,3:2}` (4:5/5:4 morreram);
+  `resolution ∈ {720p,1080p}`; `batch_size ∈ {1,4}`.
+
+| # | Decisão (substitui/emenda) | Racional |
+|---|---------|----------|
+| S30 v2 | **Engine do compose = OpenRouter `google/gemini-2.5-flash-image` (Nano Banana) multimodal** — exatamente o caminho de refs da 2b já provado em produção (≤2 refs como `image_url` parts + prompt de composição). Custo declarado **10 mco** (`CREDIT_COSTS['scene-compose']`, 4×-floor: mesmo engine da linha de imagem 10 mco; o 18 antigo precificava um endpoint inexistente). PINADO classe F1. BYOK **`openrouter_api_key`** fail-closed 402 pós-404 (`openrouter_not_configured`); vídeo permanece Higgsfield. `generateHiggsfield` agora dá throw HONESTO para compose (legado nunca degrada p/ t2i silencioso). Prompt-guards de imagem (too-long/instruction-style) espelhados pré-débito. | Provider truth > ficção; entrega compose FUNCIONANDO hoje com infra provada. |
+| S32 v2 | `model_key='openrouter/scene-compose'` (verdade do engine, distinguível da imagem pura no ledger). | Honestidade analítica. |
+| S33 | **`canvas-assets` é bucket PRIVADO desde a criação (2026-05-14)** — `getPublicUrl` produzia URLs 400 mortas em 3 call-sites (legacy image :498, voice WAV :915, spaces image :1339) + no `useReferenceUpload`. Agora: server assina **7d** (paridade higgsfield-webhook); refs do cliente assinam **365d** (dono tem SELECT pela policy owner-scoped do hardening 20260702230000). `register_creative_asset` marca `p_is_public:false`. Rot de URLs: rows antigas com URL morta se re-geram; re-assinatura path-based é o follow-up durável (OTD-SPACES-006). | Materialidade: provar URL com a MESMA classe de acesso do consumidor (browser anônimo), nunca com service-role. |
+
+**Gate G16 v2:** smoke 31 gates (C1/C2 guards · **C4 402 openrouter_not_configured pré-débito zero-row** · C3 refund+custo pinado **10** com provider forjado, `model_key='openrouter/scene-compose'`) · sentinel S1-S7 · vitest 398 · E2E pago provado 2026-07-03: space `4909d024` "E2E 2d compose" (MANTIDO), generation `cc789ada` done 12,1s, saldo 4581→4571 (10 exato), PNG 919.943B em URL ASSINADA HTTP 200, Vision QA confidence high custo 0.
+
+**OTDs registradas:**
+- **OTD-SPACES-004** — compose premium via Higgsfield `soul/reference`: exige pipeline async de mint (`/v1/custom-references` na hora do ATTACH da ref, não do run — fila de minutos) + poll/advancer. Contrato 100% provado e pinado no sentinel; implementar quando a estética Soul justificar a complexidade.
+- **OTD-SPACES-005** — retrofit do compose do Canvas Studio LEGADO (hoje falha honesto via throw; rotear pro mesmo caminho OpenRouter multimodal).
+- **OTD-SPACES-006** — refs por PATH + re-assinatura on-read (mata o rot de 365d/7d).
+- **OTD-SPACES-007** — conector per-user do **MCP oficial Higgsfield** (`mcp.higgsfield.ai/mcp`): handshake+tools/list funcionam com `Bearer <api_key>` BYOK (provado), mas tools de CONTA (generate/balance/media) exigem OAuth de conta (`openid email offline_access`). Caminho viável provado: `registration_endpoint` público + grants `authorization_code`+`refresh_token` + device-flow (`fnf-device-auth.higgsfield.ai`) ⇒ fluxo "Conectar Higgsfield" per-user com refresh token no Vault (classe `social_credentials`). Destrava 30+ modelos (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro, Soul 2.0) atrás de UMA integração com schema auto-descritivo. **BoK amendment obrigatória antes do código** (Closed-Loop Step 3.5).
+
 ---
 
 %% --- PROJECT METADATA START --- %%
