@@ -1,4 +1,4 @@
-# Verificar sinais de negociação no Telegram
+# [[2026-07-03 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
 **Date:** 2026-07-04 | **Session ID:** `5ac169f1-067b-4906-9716-0ce0d4e3a2bc`
 
 ---
@@ -5081,3 +5081,130 @@ Vou registrar esse achado na memória pra não repetir o erro do "conserto" e pr
 ## 🤖 Claude *(00:36:49)*
 
 Registrado. Resumindo a decisão que fica na sua mão: **não há, hoje, estratégia com edge comprovado pra fazer o dinheiro crescer** — o que existe é um sistema que **preservou seus $149** enquanto o mercado caiu 36%, e uma mola pronta pro próximo bull de verdade. Meu voto é construir o **detector de bull sustentado** pra você deployar no momento certo (com o edge do lado certo) em vez de forçar agora e perder. É só dar o ok que eu construo — research-only, sem tocar no dinheiro.
+
+## 👤 User *(01:20:46)*
+
+Mas veja só, desde quando começamos seria um coisa bem simples, se tivessemos vendido os 149 usdt quando o BTC tava 59mil e vendesse agora mesmo teria lucro ?
+
+## 🤖 Claude *(01:21:38)*
+
+
+## 🤖 Claude *(01:21:40)*
+
+Pergunta justa e direta — e merece número real, não teoria. Deixa eu medir exatamente: se os $149 tivessem virado BTC a 59 mil e vendido agora, quanto seria. Vou pegar o preço atual e o histórico real.
+
+## 🤖 Claude *(01:21:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/btc.js <<'JS'\n'use strict';\nconst fs=require('fs');\nconst F='/home/gcrux-tradeux/tradeux/backend/backtest-data/BTCUSDT-1h-900d-ext.json';\nconst cd=JSON.parse(fs.readFileSync(F,'utf8'));\nconst now=cd[cd.length-1];\nconst nowPx=now.close, nowT=new Date(now.t).toISOString().slice(0,16);\n// preco no go-live ~2026-06-17\nconst tGolive=Date.parse('2026-06-17T00:00:00Z');\nlet gi=cd.findIndex(c=>c.t>=tGolive); if(gi<0)gi=cd.length-1;\nconst golivePx=cd[gi].close, goliveT=new Date(cd[gi].t).toISOString().slice(0,10);\n// ultima vez que BTC esteve ~59000 (dentro de +-150)\nlet last59=null;\nfor(let i=cd.length-1;i>=0;i--){ if(Math.abs(cd[i].close-59000)<=150){ last59=cd[i]; break; } }\n// min e max desde go-live\nlet mn=1e12,mx=0,mnT,mxT;\nfor(let i=gi;i<cd.length;i++){ if(cd[i].close<mn){mn=cd[i].close;mnT=cd[i].t;} if(cd[i].close>mx){mx=cd[i].close;mxT=cd[i].t;} }\nconst fee=0.0015; // round-trip com BNB ~0.15%\nfunction pnl(entry){ const btc=149/entry; const val=btc*nowPx*(1-fee); return {btc, val, pct:(val/149-1)*100}; }\nconsole.log(`=== BTC agora: $${nowPx.toFixed(0)}  (${nowT} UTC) ===\\n`);\nconsole.log(`pre\u00e7o no go-live (~17/jun): $${golivePx.toFixed(0)} (${goliveT})`);\nif(last59) console.log(`\u00faltima vez em ~$59.000: $${last59.close.toFixed(0)} em ${new Date(last59.t).toISOString().slice(0,10)}`);\nelse console.log(`BTC N\u00c3O tocou $59.000 desde o go-live (m\u00edn foi $${mn.toFixed(0)} em ${new Date(mnT).toISOString().slice(0,10)})`);\nconsole.log(`faixa desde go-live: m\u00edn $${mn.toFixed(0)} (${new Date(mnT).toISOString().slice(0,10)}) \u00b7 m\u00e1x $${mx.toFixed(0)} (${new Date(mxT).toISOString().slice(0,10)})\\n`);\nconsole.log(`--- CEN\u00c1RIO: $149 em BTC, vendido agora (net taxa ~0,15%) ---`);\nfor(const e of [59000, golivePx, mn, 62000]){\n  const p=pnl(e);\n  console.log(`  comprando a $${e.toFixed(0).padStart(6)}  ->  $${p.val.toFixed(2)}  (${p.pct>=0?'+':''}${p.pct.toFixed(2)}%  = ${p.pct>=0?'+':''}$${(p.val-149).toFixed(2)})`);\n}\nJS\nchmod 644 /tmp/btc.js\nsudo -n -u gcrux-tradeux bash -lc 'node /tmp/btc.js' 2>&1\necho\necho \"=== pre\u00e7o BTC AO VIVO (confirma\u00e7\u00e3o) ===\"\nTOKEN=$(cat /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/scratchpad/tok.txt 2>/dev/null)\ncurl -s -m8 \"http://127.0.0.1:8090/api/analysis/regime-status\" -H \"Authorization: $TOKEN\" 2>/dev/null | python3 -c 'import sys,json;d=json.load(sys.stdin);b=d[\"symbols\"][\"BTCUSDT\"];print(\"BTC SMA fast/slow (1h):\",round(b[\"sma\"][\"fast\"]),\"/\",round(b[\"sma\"][\"slow\"]),\"| regime:\",b[\"regime\"])' 2>/dev/null || echo \"(sem token vivo; usando cache)\"",
+  "description": "Compute BTC buy-and-hold scenario since go-live"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BTC agora: $60472  (2026-06-29T19:00 UTC) ===
+> 
+> preço no go-live (~17/jun): $65700 (2026-06-17)
+> última vez em ~$59.000: $59067 em 2026-06-28
+> faixa desde go-live: mín $58290 (2026-06-25) · máx $66104 (2026-06-17)
+> 
+> --- CENÁRIO: $149 em BTC, vendido agora (net taxa ~0,15%) ---
+>   comprando a $ 59000  ->  $152.49  (+2.34%  = +$3.49)
+>   comprando a $ 65700  ->  $136.94  (-8.10%  = $-12.06)
+>   comprando a $ 58290  ->  $154.35  (+3.59%  = +$5.35)
+>   comprando a $ 62000  ->  $145.11  (-2.61%  = $-3.89)
+> 
+> === preço BTC AO VIVO (confirmação) ===
+> (sem token vivo; usando cache)
+> ```
+
+## 🤖 Claude *(01:22:23)*
+
+
+## 🤖 Claude *(01:22:25)*
+
+A cache 1h de 900d está **desatualizada** (termina em 29/jun, BTC $60.472). O preço atual real é ~$62.400 (da cache 1m de hoje). Deixa eu pegar o preço **ao vivo** e recalcular com o número certo — isso muda a conta.
+
+## 🤖 Claude *(01:22:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\n# re-login pra token fresco\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2-')\nPW=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PASSWORD=|^DEFAULT_SETTINGS_PWD=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2-')\nBASE=\"http://127.0.0.1:8090/api\"\nTOKEN=$(curl -s -m8 -X POST \"$BASE/login\" -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PW\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))' 2>/dev/null)\necho \"=== BTC MINI_TICKER ao vivo ===\"\ncurl -s -m8 \"$BASE/beholder/memory/BTCUSDT/MINI_TICKER\" -H \"Authorization: $TOKEN\" 2>/dev/null | python3 -c 'import sys,json\nd=json.load(sys.stdin)\ndef find(o):\n  if isinstance(o,dict):\n    for k in (\"close\",\"current\",\"c\",\"lastPrice\"):\n      if k in o and o[k]: \n        try: return float(o[k])\n        except: pass\n    for v in o.values():\n      r=find(v)\n      if r: return r\n  return None\np=find(d); print(\"BTC agora ao vivo: $%.0f\"%p if p else (\"raw:\"+json.dumps(d)[:300]))' 2>/dev/null || echo \"endpoint miss\"\necho\necho \"=== pre\u00e7o BTC mais recente na cache 1m (3/jul) ===\"\nsudo -n -u gcrux-tradeux bash -lc 'python3 -c \"import json;cd=json.load(open(\\\"/home/gcrux-tradeux/tradeux/backend/backtest-data/BTCUSDT-1m-15d-ext.json\\\"));import datetime;print(\\\"BTC:\\\",round(cd[-1][\\\"close\\\"] if isinstance(cd[-1],dict) else cd[-1][4]),\\\"@\\\",datetime.datetime.utcfromtimestamp((cd[-1][\\\"t\\\"] if isinstance(cd[-1],dict) else cd[-1][0])/1000).isoformat()[:16])\"'",
+  "description": "Get live BTC price and freshest cache price"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BTC MINI_TICKER ao vivo ===
+> BTC agora ao vivo: $62510
+> 
+> === preço BTC mais recente na cache 1m (3/jul) ===
+> <string>:1: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+> BTC: 62405 @ 2026-07-03T20:10
+> ```
+
+## 🤖 Claude *(01:23:06)*
+
+
+## 🤖 Claude *(01:23:32)*
+
+Peguei o preço ao vivo: **BTC agora = $62.510.** Agora a conta real, sem hindsight escondido.
+
+## Resposta direta: sim, essa compra específica dava lucro
+
+Se os $149 tivessem comprado BTC a **$59.000** e vendido agora a $62.510: **+5,8% ≈ +$8,63** (já net da taxa BNB). Você está certo nessa.
+
+## Mas tem um "porém" honesto que muda tudo
+
+O detalhe é *quando* o BTC esteve a 59k. Olha a linha do tempo real desde o go-live:
+
+| Momento | Preço BTC | $149 comprando aí → hoje |
+|---|---|---|
+| **Go-live (~17/jun)** | **$65.700** (perto do topo) | **−$7,44 (−5,0%)** ❌ |
+| Fundo (25/jun) | $58.290 | +$10,55 (+7,1%) |
+| **Quando bateu 59k (28/jun)** | $59.067 | **+$8,63 (+5,8%)** ✅ |
+| Agora | $62.510 | — |
+
+O ponto: **no dia em que a gente começou, o BTC estava a $65.700 — quase no topo local.** Ele só caiu pra 59k **onze dias depois** (28/jun). Então "comprar a 59k" não é "o que a gente teria feito ao começar" — é acertar o fundo *depois*. Se tivéssemos simplesmente jogado os $149 em BTC **no primeiro dia**, estaríamos **−$7,44 hoje**, não no lucro.
+
+E o que o bot fez de fato: ficou **flat (~$149)**. Ou seja — e aqui eu te dou o crédito e o crédito ao bot ao mesmo tempo:
+- **O bot parado GANHOU** de "comprar BTC no go-live e segurar" (que perdeu 5%).
+- **O bot parado PERDEU** só pra quem acertasse o fundo de 59k (que ganhou 5,8%) — o difícil é *acertar o fundo*.
+
+O BTC fez um vai-e-volta 66k → 58k → 62,5k e terminou **abaixo** de onde começamos. O bot atravessou isso preservando o capital.
+
+## O que isso significa de verdade pro seu objetivo
+
+Você tocou no ponto mais honesto da coisa toda: **pra uma conta pequena, "comprar e segurar BTC" (ou fazer aportes aos poucos — DCA) é mais simples e, com timing decente, compete ou ganha do bot parado.** Não é heresia dizer isso — é o que os dados mostram nesta janela.
+
+A diferença real entre as duas abordagens:
+- **Segurar/DCA BTC:** simples, ganha em mercado de alta, mas **come a queda inteira** quando vira bear (BTC já caiu 12% do topo dentro dessa janela; num bear de verdade cai 50-70%).
+- **O bot:** tenta **desviar da queda** (ir pra caixa no bear) e pegar parte da alta. O custo é ficar de fora de subidas curtas como essa. E, como te mostrei, o motor de trend **só paga num bull sustentado** — que não veio.
+
+Então a escolha honesta é sua, e é sobre **o que você acredita que vem**:
+- Se você acha que vem **bull** → segurar/DCA BTC é simples e pega tudo; o bot pegaria parte.
+- Se você acha que vem **queda** → o bot (parado/caixa) te protege; segurar BTC te machuca.
+- Se você **não sabe** (o caso realista) → o bot parado é a aposta de menor arrependimento: preserva os $149 e fica pronto pro gatilho de bull sustentado.
+
+Minha leitura sem vender ilusão: com $149, o caminho de crescer de verdade não é sofisticação de sinal — é **(1)** decidir se você quer exposição direcional a BTC (aí DCA é honesto e simples) ou proteção (aí o bot parado faz sentido), e **(2)** aportar mais capital quando puder, porque 5% de $149 é $7, mas 5% de $1.000 é $50. Quer que eu te mostre, com esses mesmos dados, como um **DCA simples de BTC** (comprar um pouco toda semana) teria se saído vs o bot desde o go-live? É a comparação que fecha essa dúvida de vez.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]
+%% --- TIMELINE END --- %%
