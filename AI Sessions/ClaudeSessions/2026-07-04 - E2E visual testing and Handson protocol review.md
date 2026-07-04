@@ -862,7 +862,7 @@ Primeiro, scouting inline para descobrir a superfície exata de trabalho (rotas,
 > -rw-rw-r-- 1 ubuntu ubuntu  6667 Jun 28 16:08 probe-vision-mcp-fatia2-foundation.ts
 > -rw-rw-r-- 1 ubuntu ubuntu  4848 Jun 28 16:09 probe-vision-mcp-protocol-versions.ts
 > -rw-rw-r-- 1 ubuntu ubuntu  8735 Jun  1 10:10 run-audit.ts
-> -rw-rw-r-- 1 ubuntu ubuntu  5208 Jun 28 16:09 smoke-[[aeo-audit|aeo-audit]].ts
+> -rw-rw-r-- 1 ubuntu ubuntu  5208 Jun 28 16:09 smoke-aeo-audit.ts
 > -rw-rw-r-- 1 ubuntu ubuntu  3800 Jun 28 16:10 smoke-aeo-refund.ts
 > -rw-rw-r-- 1 ubuntu ubuntu  9632 Jun 28 16:10 smoke-affiliate-click.ts
 > -rw-rw-r-- 1 ubuntu ubuntu  7782 Jul  3 11:11 smoke-asset-owner-signing.ts
@@ -1116,7 +1116,7 @@ Superfície mapeada: ~40 páginas (7 públicas + ~33 protegidas + onboarding). H
 > 3	 * Vision QA — o "olho criativo" do MCORCH sobre o Vision MCP público (mcp.mcorch.com).
 > 4	 *
 > 5	 * Reusable creative-eye tool for the creative-layer validation track (SOP:
-> 6	 * docs/processes/[[creative-qa-vision-gate|creative-qa-vision-gate]].md). Drives the real MCP handshake with the tenant's PAT and
+> 6	 * docs/processes/creative-qa-vision-gate.md). Drives the real MCP handshake with the tenant's PAT and
 > 7	 * calls the billable vision tools (BYOK-free for the Usuário Zero: openrouter for image, google for video).
 > 8	 *
 > 9	 * Modes:
@@ -1955,7 +1955,7 @@ Workflow de auditoria rodando em background (`wf_3eb0350e-d8c`). Enquanto os 8 g
 > === .claude/agents/ (top) ===
 > bok-scribe-agent.md
 > build-deploy-guardian.md
-> [[deepsearch-blueprint|deepsearch-blueprint]].md
+> deepsearch-blueprint.md
 > openclaw-soul-template.md
 > === existing doctor/repair/session/supply-chain-ish tooling? ===
 > audit-4cs.sh
@@ -1974,7 +1974,7 @@ Workflow de auditoria rodando em background (`wf_3eb0350e-d8c`). Enquanto os 8 g
 > gen-user-session.ts
 > health-pulse.ts
 > run-audit.ts
-> smoke-[[aeo-audit|aeo-audit]].ts
+> smoke-aeo-audit.ts
 > smoke-infra-health-rls.ts
 > ```
 
@@ -2498,7 +2498,7 @@ QA avançando (g1 quase completo, g2 em memory; 26 shots). Continuo com o doctor
 ```json
 {
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh",
-  "content": "#!/usr/bin/env bash\n# MCORCH Doctor \u2014 bespoke ecosystem health diagnostician (SSP-01 \u00b7 Lei 1 Materiality).\n#\n# Adapted (NOT cloned) from the concept of `affaan-m/ECC` doctor/repair to the MCORCH sovereign\n# mesh. It DIAGNOSES + PRESCRIBES \u2014 it never auto-mutates (Lei 1/Lei 4: repair is the operator's\n# call, so we print the exact remediation command instead of running it). Consolidates the\n# scattered health signals (git \u00b7 Docker mesh \u00b7 Chroma \u00b7 env keys \u00b7 dist \u00b7 BoK \u00b7 supply-chain)\n# into one materially-verifiable command.\n#\n# Usage:  bash .claude/scripts/mcorch-doctor.sh [--deep]\n#   --deep also runs `tsc --noEmit` (slow) and the supply-chain sentinel with --home.\n# Exit code = number of FAIL checks (0 = ecosystem healthy).\nset -uo pipefail\ncd \"$(dirname \"$0\")/../..\" || exit 3\nROOT=\"$(pwd)\"\nDEEP=0; [[ \"${1:-}\" == \"--deep\" ]] && DEEP=1\n\nG=\"\\033[32m\"; Y=\"\\033[33m\"; R=\"\\033[31m\"; C=\"\\033[36m\"; B=\"\\033[1m\"; N=\"\\033[0m\"\nFAILS=0; WARNS=0\npass(){ echo -e \"  ${G}\u2713 PASS${N}  $1\"; }\nwarn(){ echo -e \"  ${Y}\u25b2 WARN${N}  $1\"; WARNS=$((WARNS+1)); [[ -n \"${2:-}\" ]] && echo -e \"         ${Y}\u21b3 $2${N}\"; }\nfail(){ echo -e \"  ${R}\u2717 FAIL${N}  $1\"; FAILS=$((FAILS+1)); [[ -n \"${2:-}\" ]] && echo -e \"         ${R}\u21b3 remediar: $2${N}\"; }\nhdr(){ echo -e \"\\n${B}${C}$1${N}\"; }\n\necho -e \"${B}\ud83e\ude7a MCORCH Doctor${N} \u2014 $ROOT\"\n\n# \u2500\u2500 1. Git \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"1 \u00b7 Git\"\nBR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) && pass \"branch: $BR\" || fail \"n\u00e3o \u00e9 repo git\" \"git init\"\nDIRTY=$(git status --porcelain 2>/dev/null | wc -l)\n[[ \"$DIRTY\" -eq 0 ]] && pass \"worktree limpo\" || warn \"$DIRTY arquivo(s) n\u00e3o-commitado(s)\" \"git status --short  (esperado durante trabalho ativo)\"\ngit fetch -q origin 2>/dev/null || true\nAHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo \"?\")\nBEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo \"?\")\n[[ \"$BEHIND\" == \"0\" || \"$BEHIND\" == \"?\" ]] && pass \"vs origin: ahead $AHEAD / behind $BEHIND\" || warn \"atr\u00e1s do origin em $BEHIND commit(s)\" \"git pull --rebase\"\n\n# \u2500\u2500 2. Docker Sovereign Mesh \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"2 \u00b7 Docker Sovereign Mesh\"\nif command -v docker >/dev/null 2>&1; then\n  for c in mcorch_chroma mcorch_claude_mem mcorch_vision_mcp mega-brain-daemon mega-brain-webhook mega-brain-dashboard; do\n    ST=$(docker ps --filter \"name=^${c}$\" --format '{{.Status}}' 2>/dev/null)\n    if [[ -n \"$ST\" ]]; then\n      if echo \"$ST\" | grep -qi \"unhealthy\"; then fail \"$c: $ST\" \"docker restart $c\"\n      else pass \"$c: $ST\"; fi\n    else\n      # mega-brain-dashboard/webhook are non-critical; chroma/vision/claude_mem/daemon are core\n      case \"$c\" in mcorch_chroma|mcorch_vision_mcp|mcorch_claude_mem|mega-brain-daemon) fail \"$c ausente/parado\" \"docker start $c\" ;; *) warn \"$c ausente/parado\" \"docker start $c\" ;; esac\n    fi\n  done\nelse\n  fail \"docker CLI ausente\" \"instalar docker ou checar PATH\"\nfi\n\n# \u2500\u2500 3. Chroma vector engine heartbeat \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"3 \u00b7 Chroma (Vector Engine, API v2)\"\nHB=$(curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat 2>/dev/null)\necho \"$HB\" | grep -q \"nanosecond heartbeat\" && pass \"heartbeat vivo\" || fail \"sem heartbeat na :8001\" \"docker restart mcorch_chroma\"\n\n# \u2500\u2500 4. Env keys (presen\u00e7a, NUNCA valor \u2014 Lei 1 sem vazar segredo) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"4 \u00b7 Credenciais de infra (.env \u2014 presen\u00e7a, n\u00e3o valor)\"\nif [[ -f .env ]]; then\n  pass \".env presente\"\n  REQ=(VITE_SUPABASE_URL VITE_SUPABASE_PROJECT_ID SB_SECRET_KEY SB_PUBLISHABLE_KEY)\n  OPT=(VISION_MCP_PAT MESH_EMBED_OPENROUTER_KEY MESH_EMBED_GEMINI_KEY)\n  for k in \"${REQ[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || fail \"$k ausente no .env\" \"adicionar $k ao .env\"; done\n  for k in \"${OPT[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || warn \"$k ausente (opcional)\" \"necess\u00e1rio p/ Vision QA / mesh embed\"; done\nelse\n  fail \".env ausente\" \"restaurar .env (infra-only; BYOK per-user vive no Vault)\"\nfi\n\n# \u2500\u2500 5. Frontend build artifact \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"5 \u00b7 Frontend (dist servido pelo nginx)\"\nif [[ -f dist/index.html ]]; then\n  AGE=$(( ($(date +%s) - $(stat -c %Y dist/index.html)) / 3600 ))\n  ENVBAKED=$(grep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/ 2>/dev/null | head -1)\n  [[ -n \"$ENVBAKED\" ]] && pass \"dist/index.html presente (${AGE}h) \u00b7 env baked no bundle\" || warn \"dist presente mas Supabase URL n\u00e3o encontrada no bundle\" \"rebuild com .env: bun run build\"\nelse\n  fail \"dist/index.html ausente\" \"bun run build (no repo principal = deploy)\"\nfi\n\n# \u2500\u2500 6. Harness integrity (arquivos load-bearing SSP-01) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"6 \u00b7 Integridade do harness (SSP-01)\"\nfor f in CLAUDE.md .claude/rules/survival.md HANDOFF.md docs/architecture/agentic-vision.md; do\n  [[ -f \"$f\" ]] && pass \"$f\" || fail \"$f ausente\" \"restaurar do git: git checkout -- $f\"\ndone\n\n# \u2500\u2500 7. BoK suites completeness \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"7 \u00b7 Su\u00edtes BoK (Closed-Loop gate)\"\nif [[ -d docs/bok ]]; then\n  INCOMPLETE=0\n  for slug in $(ls docs/bok/ 2>/dev/null); do\n    if [[ \"$slug\" == \"security\" ]]; then req=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    else req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); fi\n    miss=\"\"; for d in \"${req[@]}\"; do [[ -f \"docs/bok/$slug/$d.md\" ]] || miss=\"$miss $d\"; done\n    [[ -n \"$miss\" ]] && { warn \"$slug incompleta:$miss\" \"rodar /bok-scribe ou completar docs\"; INCOMPLETE=$((INCOMPLETE+1)); }\n  done\n  [[ \"$INCOMPLETE\" -eq 0 ]] && pass \"$(ls docs/bok/ | wc -l) su\u00edtes \u2014 todas completas\"\nelse\n  warn \"docs/bok ausente\" \"\"\nfi\n\n# \u2500\u2500 8. Supply-chain sentinel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"8 \u00b7 Supply-Chain Sentinel (IoC)\"\nSENTINEL_ARGS=\"\"; [[ \"$DEEP\" -eq 1 ]] && SENTINEL_ARGS=\"--home\"\nif bun run .claude/scripts/scan-supply-chain-iocs.ts $SENTINEL_ARGS >/tmp/mcorch-doctor-ioc.log 2>&1; then\n  pass \"nenhum IoC cr\u00edtico/high $([[ \"$DEEP\" -eq 1 ]] && echo '(+home)')\"\nelse\n  fail \"IoC de supply-chain detectado\" \"ver: bun run .claude/scripts/scan-supply-chain-iocs.ts $SENTINEL_ARGS\"\n  sed 's/^/         /' /tmp/mcorch-doctor-ioc.log | grep -E \"CRITICAL|HIGH\" | head -8\nfi\n\n# \u2500\u2500 9. TypeScript (deep) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nif [[ \"$DEEP\" -eq 1 ]]; then\n  hdr \"9 \u00b7 TypeScript (--deep)\"\n  if npx tsc --noEmit >/tmp/mcorch-doctor-tsc.log 2>&1; then pass \"tsc --noEmit: 0 erros\"\n  else fail \"tsc reportou erros\" \"npx tsc --noEmit | head\"; tail -5 /tmp/mcorch-doctor-tsc.log | sed 's/^/         /'; fi\nfi\n\n# \u2500\u2500 verdict \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\necho \"\"\nif [[ \"$FAILS\" -eq 0 ]]; then echo -e \"${B}${G}\ud83e\ude7a Ecossistema saud\u00e1vel${N} \u2014 0 fail \u00b7 ${WARNS} warn\"\nelse echo -e \"${B}${R}\ud83e\ude7a $FAILS falha(s)${N} \u00b7 ${WARNS} warn \u2014 ver remedia\u00e7\u00f5es acima\"; fi\nexit \"$FAILS\"\n"
+  "content": "#!/usr/bin/env bash\n# MCORCH Doctor \u2014 bespoke ecosystem health diagnostician (SSP-01 \u00b7 Lei 1 Materiality).\n#\n# Adapted (NOT cloned) from the concept of `affaan-m/ECC` doctor/repair to the MCORCH sovereign\n# mesh. It DIAGNOSES + PRESCRIBES \u2014 it never auto-mutates (Lei 1/Lei 4: repair is the operator's\n# call, so we print the exact remediation command instead of running it). Consolidates the\n# scattered health signals (git \u00b7 Docker mesh \u00b7 Chroma \u00b7 env keys \u00b7 dist \u00b7 BoK \u00b7 supply-chain)\n# into one materially-verifiable command.\n#\n# Usage:  bash .claude/scripts/mcorch-doctor.sh [--deep]\n#   --deep also runs `tsc --noEmit` (slow) and the supply-chain sentinel with --home.\n# Exit code = number of FAIL checks (0 = ecosystem healthy).\nset -uo pipefail\ncd \"$(dirname \"$0\")/../..\" || exit 3\nROOT=\"$(pwd)\"\nDEEP=0; [[ \"${1:-}\" == \"--deep\" ]] && DEEP=1\n\nG=\"\\033[32m\"; Y=\"\\033[33m\"; R=\"\\033[31m\"; C=\"\\033[36m\"; B=\"\\033[1m\"; N=\"\\033[0m\"\nFAILS=0; WARNS=0\npass(){ echo -e \"  ${G}\u2713 PASS${N}  $1\"; }\nwarn(){ echo -e \"  ${Y}\u25b2 WARN${N}  $1\"; WARNS=$((WARNS+1)); [[ -n \"${2:-}\" ]] && echo -e \"         ${Y}\u21b3 $2${N}\"; }\nfail(){ echo -e \"  ${R}\u2717 FAIL${N}  $1\"; FAILS=$((FAILS+1)); [[ -n \"${2:-}\" ]] && echo -e \"         ${R}\u21b3 remediar: $2${N}\"; }\nhdr(){ echo -e \"\\n${B}${C}$1${N}\"; }\n\necho -e \"${B}\ud83e\ude7a MCORCH Doctor${N} \u2014 $ROOT\"\n\n# \u2500\u2500 1. Git \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"1 \u00b7 Git\"\nBR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) && pass \"branch: $BR\" || fail \"n\u00e3o \u00e9 repo git\" \"git init\"\nDIRTY=$(git status --porcelain 2>/dev/null | wc -l)\n[[ \"$DIRTY\" -eq 0 ]] && pass \"worktree limpo\" || warn \"$DIRTY arquivo(s) n\u00e3o-commitado(s)\" \"git status --short  (esperado durante trabalho ativo)\"\ngit fetch -q origin 2>/dev/null || true\nAHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo \"?\")\nBEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo \"?\")\n[[ \"$BEHIND\" == \"0\" || \"$BEHIND\" == \"?\" ]] && pass \"vs origin: ahead $AHEAD / behind $BEHIND\" || warn \"atr\u00e1s do origin em $BEHIND commit(s)\" \"git pull --rebase\"\n\n# \u2500\u2500 2. Docker Sovereign Mesh \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"2 \u00b7 Docker Sovereign Mesh\"\nif command -v docker >/dev/null 2>&1; then\n  for c in mcorch_chroma mcorch_claude_mem mcorch_vision_mcp mega-brain-daemon mega-brain-webhook mega-brain-dashboard; do\n    ST=$(docker ps --filter \"name=^${c}$\" --format '{{.Status}}' 2>/dev/null)\n    if [[ -n \"$ST\" ]]; then\n      if echo \"$ST\" | grep -qi \"unhealthy\"; then fail \"$c: $ST\" \"docker restart $c\"\n      else pass \"$c: $ST\"; fi\n    else\n      # mega-brain-dashboard/webhook are non-critical; chroma/vision/claude_mem/daemon are core\n      case \"$c\" in mcorch_chroma|mcorch_vision_mcp|mcorch_claude_mem|mega-brain-daemon) fail \"$c ausente/parado\" \"docker start $c\" ;; *) warn \"$c ausente/parado\" \"docker start $c\" ;; esac\n    fi\n  done\nelse\n  fail \"docker CLI ausente\" \"instalar docker ou checar PATH\"\nfi\n\n# \u2500\u2500 3. Chroma vector engine heartbeat \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"3 \u00b7 Chroma (Vector Engine, API v2)\"\nHB=$(curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat 2>/dev/null)\necho \"$HB\" | grep -q \"nanosecond heartbeat\" && pass \"heartbeat vivo\" || fail \"sem heartbeat na :8001\" \"docker restart mcorch_chroma\"\n\n# \u2500\u2500 4. Env keys (presen\u00e7a, NUNCA valor \u2014 Lei 1 sem vazar segredo) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"4 \u00b7 Credenciais de infra (.env \u2014 presen\u00e7a, n\u00e3o valor)\"\nif [[ -f .env ]]; then\n  pass \".env presente\"\n  REQ=(VITE_SUPABASE_URL VITE_SUPABASE_PROJECT_ID SB_SECRET_KEY SB_PUBLISHABLE_KEY)\n  OPT=(VISION_MCP_PAT MESH_EMBED_OPENROUTER_KEY MESH_EMBED_GEMINI_KEY)\n  for k in \"${REQ[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || fail \"$k ausente no .env\" \"adicionar $k ao .env\"; done\n  for k in \"${OPT[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || warn \"$k ausente (opcional)\" \"necess\u00e1rio p/ Vision QA / mesh embed\"; done\nelse\n  fail \".env ausente\" \"restaurar .env (infra-only; BYOK per-user vive no Vault)\"\nfi\n\n# \u2500\u2500 5. Frontend build artifact \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"5 \u00b7 Frontend (dist servido pelo nginx)\"\nif [[ -f dist/index.html ]]; then\n  AGE=$(( ($(date +%s) - $(stat -c %Y dist/index.html)) / 3600 ))\n  ENVBAKED=$(grep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/ 2>/dev/null | head -1)\n  [[ -n \"$ENVBAKED\" ]] && pass \"dist/index.html presente (${AGE}h) \u00b7 env baked no bundle\" || warn \"dist presente mas Supabase URL n\u00e3o encontrada no bundle\" \"rebuild com .env: bun run build\"\nelse\n  fail \"dist/index.html ausente\" \"bun run build (no repo principal = deploy)\"\nfi\n\n# \u2500\u2500 6. Harness integrity (arquivos load-bearing SSP-01) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"6 \u00b7 Integridade do harness (SSP-01)\"\nfor f in CLAUDE.md .claude/rules/survival.md HANDOFF.md docs/architecture/agentic-vision.md; do\n  [[ -f \"$f\" ]] && pass \"$f\" || fail \"$f ausente\" \"restaurar do git: git checkout -- $f\"\ndone\n\n# \u2500\u2500 7. BoK suites completeness \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"7 \u00b7 Su\u00edtes BoK (Closed-Loop gate)\"\nif [[ -d docs/bok ]]; then\n  INCOMPLETE=0\n  for slug in $(ls docs/bok/ 2>/dev/null); do\n    if [[ \"$slug\" == \"security\" ]]; then req=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    else req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); fi\n    miss=\"\"; for d in \"${req[@]}\"; do [[ -f \"docs/bok/$slug/$d.md\" ]] || miss=\"$miss $d\"; done\n    [[ -n \"$miss\" ]] && { warn \"$slug incompleta:$miss\" \"rodar /bok-scribe ou completar docs\"; INCOMPLETE=$((INCOMPLETE+1)); }\n  done\n  [[ \"$INCOMPLETE\" -eq 0 ]] && pass \"$(ls docs/bok/ | wc -l) su\u00edtes \u2014 todas completas\"\nelse\n  warn \"docs/bok ausente\" \"\"\nfi\n\n# \u2500\u2500 8. Supply-chain sentinel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"8 \u00b7 Supply-Chain Sentinel (IoC)\"\nSENTINEL_ARGS=\"\"; [[ \"$DEEP\" -eq 1 ]] && SENTINEL_ARGS=\"--home\"\nif bun run .claude/scripts/scan-supply-chain-iocs.ts $SENTINEL_ARGS >/tmp/mcorch-doctor-ioc.log 2>&1; then\n  pass \"nenhum IoC cr\u00edtico/high $([[ \"$DEEP\" -eq 1 ]] && echo '(+home)')\"\nelse\n  fail \"IoC de supply-chain detectado\" \"ver: bun run .claude/scripts/scan-supply-chain-iocs.ts $SENTINEL_ARGS\"\n  sed 's/^/         /' /tmp/mcorch-doctor-ioc.log | grep -E \"CRITICAL|HIGH\" | head -8\nfi\n\n# \u2500\u2500 9. TypeScript (deep) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nif [[ \"$DEEP\" -eq 1 ]]; then\n  hdr \"9 \u00b7 TypeScript (--deep)\"\n  if npx tsc --noEmit >/tmp/mcorch-doctor-tsc.log 2>&1; then pass \"tsc --noEmit: 0 erros\"\n  else fail \"tsc reportou erros\" \"npx tsc --noEmit | head\"; tail -5 /tmp/mcorch-doctor-tsc.log | sed 's/^/         /'; fi\nfi\n\n# \u2500\u2500 verdict \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\necho \"\"\nif [[ \"$FAILS\" -eq 0 ]]; then echo -e \"${B}${G}\ud83e\ude7a Ecossistema saud\u00e1vel${N} \u2014 0 fail \u00b7 ${WARNS} warn\"\nelse echo -e \"${B}${R}\ud83e\ude7a $FAILS falha(s)${N} \u00b7 ${WARNS} warn \u2014 ver remedia\u00e7\u00f5es acima\"; fi\nexit \"$FAILS\"\n"
 }
 ```
 
@@ -3009,7 +3009,7 @@ Agora o SOP (Lei 2) — `docs/processes/ecc-harness-tools.md` cobrindo os 3 util
 🛠️ **Tool Call**: `Write`
 ```json
 {
-  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[ecc-harness-tools|ecc-harness-tools]].md",
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/ecc-harness-tools.md",
   "content": "# SOP \u2014 Ferramentas de Harness ECC-alinhadas (SSP-01)\n\n> **Lei 2 (Processo Antecipado).** Utilit\u00e1rios de harness adaptados **sob medida** (n\u00e3o clonados) do\n> ecossistema [`affaan-m/ECC`](https://github.com/affaan-m/ECC) para a arquitetura soberana do MCORCH.\n> Conceito portado, c\u00f3digo pr\u00f3prio. Cada ferramenta ancora numa Survival Law.\n>\n> **Origem:** diretiva Sovereign 2026-07-04 \u2014 o Passo 4 do `/handson` (Antigravity) marcou o alinhamento\n> ECC \"para verificar posteriormente\"; ap\u00f3s o rebrand MIV, chegou o momento de materializ\u00e1-lo.\n\n---\n\n## Invent\u00e1rio\n\n| Ferramenta | Caminho | Lei | Auto-muta? |\n|-----------|---------|-----|-----------|\n| **mcorch-doctor** | `.claude/scripts/mcorch-doctor.sh` | Lei 1 (Materialidade) | \u274c diagnostica + prescreve |\n| **supply-chain sentinel** | `.claude/scripts/scan-supply-chain-iocs.ts` | Lei 1 \u00b7 Cyber-Sentinel | \u274c s\u00f3 reporta |\n| **session-inspect** | `.claude/scripts/session-inspect.ts` | Lei 3 (Poda) | \u274c s\u00f3 mede |\n\n**Princ\u00edpio comum:** nenhuma ferramenta muta o sistema. Reparar \u00e9 decis\u00e3o do operador (Lei 1/Lei 4) \u2014\no `doctor` imprime o comando exato de remedia\u00e7\u00e3o; n\u00e3o o executa. (Diverg\u00eancia consciente do\n`repair.js` do ECC, que restaura arquivos \u2014 no MCORCH o self-heal \u00e9 do daemon/watchdog, n\u00e3o de um script de sess\u00e3o.)\n\n---\n\n## 1 \u00b7 mcorch-doctor \u2014 diagn\u00f3stico consolidado do ecossistema\n\n- **Operator:** MCORCH Master Execution Agent (ou o Sovereign) no pickup de sess\u00e3o ou antes de um deploy.\n- **Sequence:**\n  1. `bash .claude/scripts/mcorch-doctor.sh` (r\u00e1pido) ou `--deep` (inclui `tsc --noEmit` + sentinel `--home`).\n  2. Checa em ordem: Git (branch/limpo/vs-origin) \u00b7 Docker Sovereign Mesh (chroma/claude_mem/vision_mcp/mega-brain-*) \u00b7 Chroma heartbeat :8001 \u00b7 chaves de infra no `.env` (presen\u00e7a, **nunca valor**) \u00b7 `dist/` (existe + env baked no bundle) \u00b7 integridade do harness (CLAUDE.md/survival.md/HANDOFF.md/agentic-vision.md) \u00b7 su\u00edtes BoK completas \u00b7 supply-chain sentinel.\n- **Verification gate:** cada linha \u00e9 `\u2713 PASS` / `\u25b2 WARN` / `\u2717 FAIL`. Exit code = **n\u00ba de FAILs** (0 = saud\u00e1vel).\n- **Recovery path:** cada FAIL imprime `\u21b3 remediar: <comando exato>` (ex: `docker restart mcorch_chroma`, `git checkout -- <arquivo>`). O operador executa; nunca o script.\n- **Success signal:** `\ud83e\ude7a Ecossistema saud\u00e1vel \u2014 0 fail` + exit 0.\n\n## 2 \u00b7 supply-chain sentinel \u2014 IoC scanner (fam\u00edlia Shai-Hulud)\n\n- **Operator:** agente/Sovereign antes de instalar/atualizar depend\u00eancias, no CI de seguran\u00e7a, e no `doctor`.\n- **Sequence:**\n  1. `bun run .claude/scripts/scan-supply-chain-iocs.ts` (repo) \u2014 lockfiles/manifests, node_modules, source rastreado.\n  2. `--home` inclui persist\u00eancia no host (systemd user units, `~/.local/bin` droppers, LaunchAgents, `/tmp`, configs do Claude/editor envenenados).\n- **Detec\u00e7\u00e3o (4 superf\u00edcies):** (a) pacote comprometido@vers\u00e3o-maliciosa em qualquer lockfile \u2192 CRITICAL; nome-comprometido em outra vers\u00e3o \u2192 WARN; (b) filename de payload de worm dentro de `node_modules/` \u2192 CRITICAL; (c) marcador textual de worm + dom\u00ednio hostil de exfiltra\u00e7\u00e3o no source \u2192 CRITICAL/HIGH; metadata-IP/exfil-sink \u2192 WARN (com supress\u00e3o heur\u00edstica de contexto defensivo/SSRF); (d) artefato de persist\u00eancia no host \u2192 CRITICAL.\n- **Verification gate:** exit **0** = limpo (sem critical/high) \u00b7 **1** = comprometido \u00b7 **2** = args ruins. `--json` p/ pipeline.\n- **Recovery path:** CRITICAL \u2192 remover o pacote/arquivo, **rotacionar todos os segredos** (npm/GitHub/cloud tokens), auditar `git log` e hist\u00f3rico de instala\u00e7\u00e3o, isolar a m\u00e1quina se houver dropper de runtime.\n- **Success signal:** `\u2705 Nenhum IoC de supply-chain detectado` + exit 0.\n- **Manuten\u00e7\u00e3o (honestidade Lei 1):** as blocklists de pacotes s\u00e3o um **seed curado e documentado**, n\u00e3o uma lista \"completa\". Ao surgir uma nova onda (CISA / GitHub Advisory), estenda `BAD_PACKAGES`/`WORM_MARKERS`/`HOSTILE_*` e registre o diff aqui. As checagens estruturais (persist\u00eancia/payload/marcador/dom\u00ednio) s\u00e3o o n\u00facleo robusto e independem da completude da lista. Supress\u00e3o de refer\u00eancia leg\u00edtima: coment\u00e1rio `// ioc-scan:allow` na linha.\n\n## 3 \u00b7 session-inspect \u2014 medidor de or\u00e7amento de contexto (Lei 3)\n\n- **Operator:** agente ao longo da sess\u00e3o, especialmente perto do gate de seal.\n- **Sequence:** `bun run .claude/scripts/session-inspect.ts [--session <id>] [--top <N>] [--json]`. Sem args \u2192 sess\u00e3o ativa (jsonl top-level mais recente do projeto).\n- **C\u00e1lculo:** l\u00ea o transcript e soma `input + cache_read + cache_creation` do **\u00faltimo** turno assistant = tamanho **exato** da janela (dado da API, n\u00e3o estimativa). Budget = 1M. Reserva ~5% (~50k) p/ o `/handoff`.\n- **Verification gate / veredito:**\n  - `< 45%` \u2192 cedo p/ selar; probe-first (puxe o pr\u00f3ximo pendente).\n  - `45\u201390%` \u2192 janela saud\u00e1vel, continue.\n  - `90\u201395%` \u2192 prepare o seal.\n  - `\u2265 95%` \u2192 **SELAR AGORA** (exit 10, script-friendly).\n- **Recovery path (poda):** usa \"Maiores tool-results em contexto\" para escolher o que podar (referenciar por path/hash, n\u00e3o recarregar) \u2014 [[feedback_context_budget_calibration]].\n- **Success signal:** o veredito e o % batem com o que o Sovereign v\u00ea na UI; a decis\u00e3o de selar deixa de ser um chute.\n\n---\n\n## Integra\u00e7\u00e3o no `/handson`\n\nO `mcorch-doctor` engloba git/Docker/Chroma/BoK/sentinel \u2192 substitui/consolida os comandos avulsos do Passo 1.\nO `session-inspect` calibra o or\u00e7amento de contexto ao longo da sess\u00e3o. Ambos referenciados no\nPasso 4 de `.agents/workflows/handson.md`.\n"
 }
 ```
@@ -3017,7 +3017,7 @@ Agora o SOP (Lei 2) — `docs/processes/ecc-harness-tools.md` cobrindo os 3 util
 > **Tool Result (Write)** - ✅ Success
 >
 > ```
-> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[ecc-harness-tools|ecc-harness-tools]].md (file state is current in your context — no need to Read it back)
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/ecc-harness-tools.md (file state is current in your context — no need to Read it back)
 > ```
 
 ## 🤖 Claude *(04:50:24)*
@@ -3441,7 +3441,7 @@ QA completa. Padrões **sistêmicos** já emergem claramente. Vou capturar os ac
 >    MIV P1: GOLD aplicado a rótulos DECORATIVOS do visualizador, violando a exclusividade gold=valor monetário. Computed-style: 'Cymatics' em amber-400 rgba(251,191,36,0.8) e 'Campo Gravitacional em Repouso' em amber-300 rgba(252,211,77,0.7). Nenhum dos dois é valor/mcoCoins — são labels de estado do shader de cimática. Achado forte com prova material (cor computada).
 >    MIV P2: Chip mcoCoins do HUD em cyan, não gold (computed-style classificou o texto 'mcoCoins' na família cyan r<90,g>150,b>150). Mesmo achado sistêmico.
 >    MIV P2: Rótulos de status do HUD Mega Brain em inglês, não pt-BR: 'Knowledge Mesh Active', 'AIOS — Autonomous Intelligence OS', 'MESH LIVE', 'AIOS Online', 'VAD READY', 'AIOS IDLE'. Estilo cyber-HUD misturado com siglas de marca (AIOS/VAD/MESH), mas frases plenas como 'Knowledge Mesh Active' deveriam ser pt-BR ('Malha de Conhecimento Ativa').
->    INT P2: Loop WebGL contínuo (cimática, 2 canvases ativos 561x981 e 1310x944) satura o compositor: o CDP Page.captureScreenshot expirou de forma reprodutível (3 tentativas, incl. timeout de 2min) — impossível capturar frame raster desta rota. Indica custo de GPU alto/RAF sem throttle (ver SOP [[webgl-canvas-stabilization|webgl-canvas-stabilization]]). Render em si está OK (canvases dimensionados provam desenho ativo, não é void branco).
+>    INT P2: Loop WebGL contínuo (cimática, 2 canvases ativos 561x981 e 1310x944) satura o compositor: o CDP Page.captureScreenshot expirou de forma reprodutível (3 tentativas, incl. timeout de 2min) — impossível capturar frame raster desta rota. Indica custo de GPU alto/RAF sem throttle (ver SOP webgl-canvas-stabilization). Render em si está OK (canvases dimensionados provam desenho ativo, não é void branco).
 >    PT-BR faltando: Knowledge Mesh Active | AIOS — Autonomous Intelligence OS | MESH LIVE | AIOS Online | VAD READY | AIOS IDLE
 > 
 > ■ [WARN] Chat  /dashboard/chat
@@ -6712,15 +6712,449 @@ Doctor final: **🩺 Ecossistema saudável — 0 fail** (o 1 warn = mudanças n�
 > .claude/scripts/session-inspect.ts
 > ```
 
----
+## 🤖 Claude *(06:00:29)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-03 - f51b7a04-6530-4582-8b21-d9ba14caedee]]
-> * **Próxima Sessão**: [[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(06:00:31)*
+
+`.claude/scripts/db/` é gitignored (tooling local); meus 3 arquivos na raiz de `.claude/scripts/` não são. Vou commitar explicitamente. Estrutura: **3 commits granulares** (MIV sistêmico · regressões de marca/pt-BR · tooling ECC), estilo do projeto (sem Co-Authored-By, corpo orientado a milestone). Commit A:
+
+## 🤖 Claude *(06:00:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/index.css src/components/ui/button.tsx src/components/dashboard/DashboardLayout.tsx src/pages/DashboardHome.tsx\ngit commit -q -F - <<'EOF'\nfeat(ui): conformidade MIV sist\u00eamica \u2014 hover cyan, mcoCoins gold, glow nos CTAs\n\nFecha os 3 achados sist\u00eamicos da auditoria visual E2E p\u00f3s-rebrand (44 p\u00e1ginas):\n- token --accent violeta\u2192cyan: todo hover/sele\u00e7\u00e3o shadcn (cards, selects, bot\u00f5es\n  ghost/outline) em ~12 p\u00e1ginas deixa de pintar nebula e passa a cyan t\u00e1tico; nebula\n  volta a ser exclusiva de mem\u00f3ria. Corrige de quebra o \u00edcone Self-Healing (text-accent).\n- pill de saldo no header agora em gold (valor), n\u00e3o cyan \u2014 consistente com a Autonomic\n  Wallet e a Economia dos Agentes; gold volta a significar s\u00f3 valor/mcoCoins.\n- bot\u00e3o prim\u00e1rio ganha glow neon (default + glow variant; rgba(var(--primary)) quebrado\n  trocado por hsl).\n- badge \"Trial\" sai de gold p/ cyan (status, n\u00e3o valor); breadcrumb map completo e pt-BR.\n\nProvado ao vivo: --accent=184 100% 50% no bundle; hover de template e de \"Testar\" em\ncyan; pill gold; \u00edcone Self-Healing cyan.\nEOF\ngit log --oneline -1",
+  "description": "Commit A \u2014 systemic MIV conformance"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m3:00AM[0m [32mINF[0m 1 commits scanned.
+> [90m3:00AM[0m [32mINF[0m scan completed in 30.7ms
+> [90m3:00AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.74 seconds)
+> ✔️ e2e-output-tripwire (0.03 seconds)
+> ✔️ secret-scan (0.57 seconds)
+> ✔️ gitleaks-staged (0.73 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> aaa2351 feat(ui): conformidade MIV sistêmica — hover cyan, mcoCoins gold, glow nos CTAs
+> ```
+
+## 🤖 Claude *(06:00:45)*
+
+
+## 🤖 Claude *(06:00:46)*
+
+Commit A selado (`aaa2351`) — lefthook (gitleaks/secret-scan) passou. Commit B (regressões de marca + pt-BR):
+
+## 🤖 Claude *(06:00:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/pages/onboarding/OnboardingPage.tsx src/pages/NotFound.tsx src/pages/ViralMinerPage.tsx src/components/Legend.tsx src/pages/ResetPassword.tsx src/components/dashboard/DashboardSidebar.tsx src/hooks/useCampaigns.ts\ngit commit -q -F - <<'EOF'\nfix(brand): regress\u00f5es p\u00f3s-rebrand \u2014 onboarding MCORCH, pt-BR no minerador/404/legenda\n\n- onboarding exibia a marca ANTIGA \"Constellation Orchestra\" (1\u00aa tela do usu\u00e1rio novo)\n  \u2192 wordmark MCORCH com o gradiente de marca cyan\u2192nebula (id\u00eantico ao /auth).\n- 404 \"Oops! Page not found\"/\"Return to Home\" \u2192 \"Ops! P\u00e1gina n\u00e3o encontrada\"/\"Voltar ao in\u00edcio\".\n- Minerador Viral 100% pt-BR (heading, subt\u00edtulo, CTA, filtros, velocidade, toasts) +\n  escala de score sai de coral/laranja off-brand p/ verde\u2192cyan\u2192neutro.\n- legenda da Constela\u00e7\u00e3o (painel inteiro em ingl\u00eas) \u2192 pt-BR.\n- reset-password: beco-sem-sa\u00edda ganha CTA \"Voltar ao login\".\n- sidebar casa com as p\u00e1ginas (Minerador Viral, Arena de Modelos, Kanban, Chat);\n  template \"Brand Awareness\" \u2192 \"Reconhecimento de Marca\".\n\nTodos verificados por re-navega\u00e7\u00e3o browser (agent-browser, preview local).\nEOF\ngit log --oneline -1",
+  "description": "Commit B \u2014 brand regressions + pt-BR"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m3:00AM[0m [32mINF[0m 1 commits scanned.
+> [90m3:00AM[0m [32mINF[0m scan completed in 203ms
+> [90m3:00AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.60 seconds)
+> ✔️ e2e-output-tripwire (0.10 seconds)
+> ✔️ secret-scan (0.19 seconds)
+> ✔️ gitleaks-staged (0.57 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> 75077f6 fix(brand): regressões pós-rebrand — onboarding MCORCH, pt-BR no minerador/404/legenda
+> ```
+
+## 🤖 Claude *(06:01:05)*
+
+
+## 🤖 Claude *(06:01:07)*
+
+Commit B selado (`75077f6`). Commit C — tooling ECC (os hooks vão escanear; o scanner contém strings de IoC mas não segredos, deve passar):
+
+## 🤖 Claude *(06:01:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/scripts/mcorch-doctor.sh .claude/scripts/scan-supply-chain-iocs.ts .claude/scripts/session-inspect.ts docs/processes/ecc-harness-tools.md CLAUDE.md .agents/workflows/handson.md\ngit commit -q -F - <<'EOF'\nfeat(harness): utilit\u00e1rios ECC-nativos \u2014 doctor, supply-chain sentinel, session-inspect\n\nMaterializa o \"Passo 4 \u2014 Alinhamento ECC\" que ficou como placeholder no /handson do\nAntigravity (\"verificar posteriormente\"). Conceito do affaan-m/ECC adaptado sob medida\n(c\u00f3digo soberano, sem clonar), cada um ancorado numa Survival Law:\n\n- mcorch-doctor.sh: diagn\u00f3stico consolidado (git \u00b7 Docker mesh \u00b7 Chroma \u00b7 .env \u00b7 dist \u00b7\n  BoK \u00b7 IoC). Diagnostica e PRESCREVE a remedia\u00e7\u00e3o exata \u2014 nunca auto-muta (Lei 1/4).\n  Exit = n\u00ba de FAILs. Rodado: ecossistema saud\u00e1vel, 0 fail.\n- scan-supply-chain-iocs.ts: detecta IoCs de worm de supply-chain (fam\u00edlia Shai-Hulud/\n  node-ipc) \u2014 pacote@vers\u00e3o comprometida, payload em node_modules, dom\u00ednio hostil, marcador\n  de worm, persist\u00eancia no host (--home). Provado: detecta os IoCs num fixture e sai limpo\n  no repo, sem falso-positivo (Lei 1).\n- session-inspect.ts: medidor material da janela de contexto (usage EXATO da API do\n  transcript, n\u00e3o estimativa) p/ o gate de seal ~95% + candidatos a poda (Lei 3).\n\nSOP docs/processes/ecc-harness-tools.md (Operator/Sequence/Verification/Recovery/Success);\nPasso 4 do handson atualizado de \"planeje criar\" p/ \"est\u00e3o vivos, rode-os\"; Key Files.\nEOF\ngit log --oneline -4 | cat",
+  "description": "Commit C \u2014 ECC harness tooling"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m3:01AM[0m [32mINF[0m 1 commits scanned.
+> [90m3:01AM[0m [32mINF[0m scan completed in 52.9ms
+> [90m3:01AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.27 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.21 seconds)
+> ✔️ gitleaks-staged (0.26 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 8af7268 feat(harness): utilitários ECC-nativos — doctor, supply-chain sentinel, session-inspect
+> 75077f6 fix(brand): regressões pós-rebrand — onboarding MCORCH, pt-BR no minerador/404/legenda
+> aaa2351 feat(ui): conformidade MIV sistêmica — hover cyan, mcoCoins gold, glow nos CTAs
+> fa67586 docs(readme): mesh 9050 — retema MIV do ecossistema
+> ```
+
+## 🤖 Claude *(06:01:54)*
+
+
+## 🤖 Claude *(06:01:56)*
+
+Os 3 commits selados (`aaa2351`, `75077f6`, `8af7268`) — lefthook/gitleaks limpos em cada. Agora o restante do handoff: nó de milestone na malha (preciso do UUID real p/ o HANDOFF — Lei 1), depois HANDOFF.md + memória + push. Inserindo o milestone:
+
+## 🤖 Claude *(06:02:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nnode --input-type=module -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst db = createClient(process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY, { auth:{persistSession:false} });\nconst content = 'Handoff seal 2026-07-04: Conformidade MIV p\u00f3s-rebrand + tooling ECC-nativo. (1) Auditoria visual E2E de 44 p\u00e1ginas via workflow de 8 subagentes agent-browser (real-user nav, hovers, triggers, badges, widgets). Achados: 5 ok / 26 warn / 13 fail. (2) Fixes sist\u00eamicos verificados ao vivo: token --accent violeta\u2192cyan (hover de ~12 p\u00e1ginas + \u00edcone Self-Healing), pill mcoCoins cyan\u2192gold, glow neon nos CTAs prim\u00e1rios; regress\u00f5es de marca fechadas: onboarding Constellation Orchestra\u2192MCORCH, 404 e Minerador Viral pt-BR, legenda da Constela\u00e7\u00e3o pt-BR, Trial badge gold\u2192cyan, reset-password CTA. Commits aaa2351/75077f6. (3) Tooling ECC adaptado sob medida (affaan-m/ECC, sem clonar): mcorch-doctor.sh (diagn\u00f3stico+prescri\u00e7\u00e3o, nunca auto-muta), scan-supply-chain-iocs.ts (IoC fam\u00edlia Shai-Hulud), session-inspect.ts (medidor de janela Lei 3) + SOP. Commit 8af7268. Deferidos documentados: re-tema Core-Fable/orquestrador (identidades de superf\u00edcie), paletas categ\u00f3ricas de data-viz, freeze do /universe (OTD-UCANVAS-PERF Fase Epsilon V9).';\nconst { data, error } = await db.from('mcorch_nodes').insert({\n  node_type: 'milestone',\n  name: 'Handoff 2026-07-04 \u2014 Conformidade MIV p\u00f3s-rebrand + tooling ECC-nativo',\n  content,\n  metadata: { phase: 'miv-conformance-ecc-tooling', date: '2026-07-04', commits: ['aaa2351','75077f6','8af7268'], pages_audited: 44, tools: ['mcorch-doctor','scan-supply-chain-iocs','session-inspect'] }\n}).select('id').single();\nif (error) { console.error('INSERT ERR', error.message); process.exit(1); }\nconsole.log('NODE_ID', data.id);\nconst { count } = await db.from('mcorch_nodes').select('*', { count:'exact', head:true });\nconsole.log('MESH_COUNT', count);\n\" 2>&1 | tail -5",
+  "description": "Insert handoff milestone node + get mesh count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID 5f0f0a7f-92da-464c-b990-cf2cc2aaf03a
+> MESH_COUNT 9051
+> ```
+
+## 🤖 Claude *(06:02:30)*
+
+
+## 🤖 Claude *(06:02:30)*
+
+Milestone `5f0f0a7f-92da-464c-b990-cf2cc2aaf03a` inserido · **malha 9051** (real, Lei 1). Confirmando o embedding (768d):
+
+## 🤖 Claude *(06:02:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nsleep 3\nnode --input-type=module -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst db = createClient(process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL, process.env.SB_SECRET_KEY, { auth:{persistSession:false} });\nconst id='5f0f0a7f-92da-464c-b990-cf2cc2aaf03a';\nconst { data } = await db.from('mcorch_nodes').select('id, embedding').eq('id', id).single();\nconst emb = data?.embedding;\nconsole.log('embedding present:', emb ? 'YES ('+(typeof emb==='string'? 'stored' : 'array')+')' : 'NO (null)');\nif (!emb) {\n  const r = await fetch(process.env.SUPABASE_URL+'/functions/v1/embed-mcorch-node', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+process.env.SB_SECRET_KEY, 'apikey': process.env.SB_SECRET_KEY}, body: JSON.stringify({ node_id: id }) });\n  console.log('embed invoke:', r.status);\n}\n\" 2>&1 | tail -5",
+  "description": "Verify/trigger node embedding"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> embedding present: YES (stored)
+> ```
+
+## 🤖 Claude *(06:03:10)*
+
+
+## 🤖 Claude *(06:03:11)*
+
+Embedding presente (768d, auto via trigger). Node `5f0f0a7f` selado na malha. Agora atualizo o HANDOFF.md — nova linha no Task State + novo Seal Record (newest-first):
+
+## 🤖 Claude *(06:03:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "44 p\u00e1ginas polidas via workflow 9-subagentes, E2E 0-erros |\n\n## Handoff Seal Record (2026-07-04) \u2014 Retema MIV do ecossistema + landing 100% fiel + gate de rejei\u00e7\u00e3o TikTok",
+  "new_string": "44 p\u00e1ginas polidas via workflow 9-subagentes, E2E 0-erros |\n| **Conformidade MIV p\u00f3s-rebrand + tooling ECC-nativo (2026-07-04)** | \u2705 auditoria visual E2E de 44 p\u00e1ginas (workflow 8 subagentes agent-browser \u2014 real-user nav, hovers, triggers, badges, widgets); 3 fixes sist\u00eamicos (`--accent` cyan \u00b7 mcoCoins gold \u00b7 glow CTA) + regress\u00f5es de marca (onboarding MCORCH \u00b7 404/miner/legenda pt-BR \u00b7 Trial cyan) verificados ao vivo; tooling ECC-nativo (doctor \u00b7 supply-chain sentinel \u00b7 session-inspect) + SOP. mesh **9051** \u00b7 commits `aaa2351`/`75077f6`/`8af7268` |\n\n## Handoff Seal Record (2026-07-04) \u2014 Conformidade MIV p\u00f3s-rebrand + tooling ECC-nativo\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent (+ workflow `wf_3eb0350e-d8c` de 8 subagentes de auditoria) \u00b7 Reviewer = Sovereign (Gabriel) + re-navega\u00e7\u00e3o browser pr\u00f3pria (Lei 1) \u00b7 Owner = Sovereign (marca p\u00fablica + resubmiss\u00e3o TikTok; custo **0 USD** \u2014 s\u00f3 auth throwaway + preview local, sem gasto de mco/BYOK).\n\nSess\u00e3o p\u00f3s-rebrand: o Sovereign pediu (1) verificar **todas as p\u00e1ginas** com E2E Browser Visual como usu\u00e1rio real (hovers, boards neon, badges, widgets, \u00edcones, bot\u00f5es, triggers) e (2) revisar+materializar a mudan\u00e7a n\u00e3o-commitada do `/handson` (alinhamento ECC que o Antigravity deixou \"para depois\"). Ambos entregues, sem parar.\n\n**Arc 1 \u2014 Auditoria visual E2E + corre\u00e7\u00e3o (44 p\u00e1ginas).** Workflow de 8 subagentes, cada um dirigindo o pr\u00f3prio agent-browser (sess\u00e3o isolada) contra `vite preview` local (evita CF), navegando + hover + abrindo triggers seguros + **lendo os pr\u00f3prios screenshots** (custo de imagem fora do meu contexto) com guardrail r\u00edgido anti-gasto. Veredito: **5 ok \u00b7 26 warn \u00b7 13 fail**. Sinal separado do ru\u00eddo (emoji\u2192tofu = preview headless sem fonte; thumbnails pretos = signed-URL local; iframe login = SSO n\u00e3o propaga \u2014 todos artefatos de ambiente, n\u00e3o defeitos de produ\u00e7\u00e3o). **Fixes de alto valor, verificados material\u00admente por re-navega\u00e7\u00e3o:**\n\n| Fix | Prova (Lei 1) |\n|-----|---------------|\n| **S1 \u2014 `--accent` violeta\u2192cyan** (sist\u00eamico, ~12 p\u00e1ginas) | `--accent=184 100% 50%` no bundle; hover de template card **cyan** (era violeta); hover \"Testar\" **cyan**; \u00edcone Self-Healing **cyan** (`text-accent`) |\n| **S2 \u2014 pill mcoCoins cyan\u2192gold** (toda p\u00e1gina) | dashboard/miner/campaigns/settings: pill do header em **gold** |\n| **S3 \u2014 glow neon nos CTAs prim\u00e1rios** | \"Analisar e Otimizar\"/\"Pr\u00f3ximo\"/\"Minerar Tend\u00eancias\" com halo cyan |\n| **Regress\u00f5es de marca** | onboarding \"Constellation Orchestra\"\u2192**MCORCH**; 404 pt-BR; Minerador Viral 100% pt-BR + score verde\u2192cyan\u2192neutro; Legenda da Constela\u00e7\u00e3o pt-BR; Trial badge gold\u2192cyan; reset-password CTA \"Voltar ao login\"; sidebar casa c/ p\u00e1ginas |\n| **Nebula intencional intacta** | cores de territ\u00f3rio (verde/azul/magenta) e Mem\u00f3ria preservadas \u2014 o remap do token n\u00e3o tocou a data-viz expl\u00edcita |\n\n**Arc 2 \u2014 Tooling ECC-nativo (Lei 2).** Materializado o \"Passo 4\" do `/handson` do Antigravity: conceito do `affaan-m/ECC` adaptado sob medida (c\u00f3digo soberano, sem clonar), cada ferramenta ancorada numa Survival Law, **provado material\u00admente**: `mcorch-doctor.sh` (diagn\u00f3stico consolidado, diagnostica+prescreve, nunca auto-muta \u2014 0 fail no repo), `scan-supply-chain-iocs.ts` (IoC fam\u00edlia Shai-Hulud \u2014 detecta num fixture + limpo no repo, 0 FP), `session-inspect.ts` (medidor exato da janela via `usage` da API \u2014 Lei 3, dogfoodado a 39.9%). SOP `docs/processes/ecc-harness-tools.md` + Passo 4 atualizado + Key Files.\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `aaa2351` | feat(ui): conformidade MIV sist\u00eamica \u2014 hover cyan, mcoCoins gold, glow nos CTAs |\n| `75077f6` | fix(brand): regress\u00f5es p\u00f3s-rebrand \u2014 onboarding MCORCH, pt-BR no minerador/404/legenda |\n| `8af7268` | feat(harness): utilit\u00e1rios ECC-nativos \u2014 doctor, supply-chain sentinel, session-inspect |\n\nMilestone node `5f0f0a7f-92da-464c-b990-cf2cc2aaf03a` inserido + embedado (768d). Malha **9051 n\u00f3s**.\n\n**Deferidos (documentados p/ decis\u00e3o Sovereign \u2014 n\u00e3o s\u00e3o leaks de token, s\u00e3o identidades de superf\u00edcie / necessidade categ\u00f3rica / m\u00f3dulo em obra):** re-tema amber do Core-Fable e palette de n\u00f3s do Orquestrador (sistemas de cor deliberados por superf\u00edcie); paletas categ\u00f3ricas de data-viz (constela\u00e7\u00e3o/matrix/mem\u00f3ria/universe); **freeze da main-thread do `/universe`** (OTD-UCANVAS-PERF \u2014 Phase Epsilon V9 ainda 3.7-3.10 em obra); label 3D \"UNASSIGNED UNIT\" com z-fighting; nomes bil\u00edngues de features (Viral Autopilot/Spaces \u2014 conven\u00e7\u00e3o do app).\n\n**Survival Laws Self-audit:** Lei 1 \u2705 (todo claim ancorado \u2014 token no bundle, screenshots re-lidos, commit hashes, node UUID+count reais, doctor/sentinel/scanner rodados com output; **peguei e corrigi um bug do meu pr\u00f3prio S1** \u2014 `--accent` escuro quebraria `text-accent` \u2014 via verifica\u00e7\u00e3o) \u00b7 Lei 2 \u2705 (Arc 2 \u00c9 o SOP antes de virar processo; rebrand = feature documentada) \u00b7 Lei 3 \u2705 (session-inspect pr\u00f3prio mostrou 39.9% \u2014 longe do teto; selo por trabalho conclu\u00eddo, n\u00e3o por janela) \u00b7 Lei 4 \u2705 (ORO declarado; deferidos registrados em vez de improvisar re-temas arriscados) \u00b7 Gate E2E de UI \u2705 (44 p\u00e1ginas navegadas + fixes re-verificados em browser real 1920\u00d71080).\n\n## Handoff Seal Record (2026-07-04) \u2014 Retema MIV do ecossistema + landing 100% fiel + gate de rejei\u00e7\u00e3o TikTok"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(06:04:14)*
+
+
+## 🤖 Claude *(06:04:16)*
+
+HANDOFF.md selado. Agora a memória durável. Vou registrar 2 fatos não-óbvios (os tokens MIV já estão no CLAUDE.md, então capturo o *gotcha* de design-system + o resultado/deferidos desta sessão):
+
+## 🤖 Claude *(06:04:31)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_miv_design_tokens.md",
+  "content": "---\nname: reference_miv_design_tokens\ndescription: Conven\u00e7\u00f5es dos tokens MIV no index.css \u2014 accent=cyan gen\u00e9rico, nebula s\u00f3 mem\u00f3ria, gold s\u00f3 valor, e o gotcha dual-role do --accent\nmetadata:\n  type: reference\n---\n\nDesign-system MIV (`src/index.css`, remap dos tokens shadcn). Regras que a auditoria visual 2026-07-04 firmou (evita re-flag de hovers violeta e gold decorativo no futuro):\n\n- **`--accent` = cyan** (`184 100% 50%`, era `258 100% 68%` nebula). \u00c9 o token GEN\u00c9RICO de hover/sele\u00e7\u00e3o do shadcn (`hover:bg-accent`, `focus:bg-accent` de Select/Dropdown/ghost/outline). Antes pintava tudo de violeta no app inteiro. **Gotcha dual-role:** o codebase usa `--accent` tanto como FUNDO (`bg-accent`, quer escuro) quanto como COR direta (`text-accent`/`border-accent` \u2014 \u00edcones como Self-Healing, KPI cards, quer claro). Por isso o token DEVE ficar **brilhante** (n\u00e3o uma superf\u00edcie escura) + `--accent-foreground` near-black p/ contraste no fill. Um accent escuro deixaria `text-accent` invis\u00edvel.\n- **nebula (`--nebula`/`--nebula-light`, roxo) = EXCLUSIVO de contexto mem\u00f3ria/conhecimento** (bot\u00e3o Mem\u00f3ria, SYNC EMBEDDINGS, Memory Mesh). Nunca como acento gen\u00e9rico. Superf\u00edcies de nebula intencional usam classes expl\u00edcitas (`mc-nebula`, violet-*), N\u00c3O `--accent` \u2014 por isso remapear `--accent`\u2192cyan n\u00e3o as quebra.\n- **gold (`--gold` #D4AF37, `--status-waiting` `46 65% 52%`) = EXCLUSIVO de valor monet\u00e1rio/mcoCoins.** O pill de saldo do header (DashboardLayout) e a Autonomic Wallet e os KPIs de Economia dos Agentes usam gold. Badge de status (Trial, \"Pausada\") em gold = viola\u00e7\u00e3o \u2192 usar cyan/bone. Amber tailwind (`#FBBF24`) \u2260 value-gold; Core-Fable usa amber como tema de superf\u00edcie (deliberado, deferido).\n- **CTA prim\u00e1rio** = glow neon (button `default` variant tem `shadow-[0_0_16px_hsl(184_100%_50%/0.35)]`).\n- Playfair (`--display`/`font-heading`) = t\u00edtulos; JetBrains Mono (`--mono`/`font-body`) = corpo.\n\nRelacionado: [[project_miv_conformance_pass]] \u00b7 [[project_mcorch_rebrand_landing_v2]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_miv_design_tokens.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(06:04:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_miv_conformance_pass.md",
+  "content": "---\nname: project_miv_conformance_pass\ndescription: Passe de conformidade MIV p\u00f3s-rebrand (auditoria E2E de 44 p\u00e1ginas) + tooling ECC-nativo \u2014 2026-07-04\nmetadata:\n  type: project\n---\n\n2026-07-04 (`aaa2351`/`75077f6`/`8af7268`, malha 9051, node `5f0f0a7f`): auditoria visual E2E das **44 p\u00e1ginas** p\u00f3s-rebrand MIV + fixes + tooling ECC.\n\n**Recipe da auditoria (reutiliz\u00e1vel):** workflow de N subagentes, cada um dirige o PR\u00d3PRIO agent-browser (sess\u00e3o isolada `--session <\u00fanico>`) contra `vite preview` local (evita CF), navega+hover+abre triggers seguros, **l\u00ea os pr\u00f3prios screenshots** (mant\u00e9m o custo de imagem fora do contexto principal) e retorna achados estruturados. Guardrail r\u00edgido anti-gasto (nunca clicar Run/Gerar/Publicar/Export). Sess\u00e3o via `gen-user-session.ts` \u2192 base64 \u2192 `localStorage.setItem('sb-bcyvddsykvehvpwstlfa-auth-token', atob(...))`. `--accent` do bundle chec\u00e1vel por `eval getComputedStyle(...).getPropertyValue('--accent')`.\n\n**Fixes (verificados por re-navega\u00e7\u00e3o):** os 3 sist\u00eamicos + regress\u00f5es de marca \u2014 ver [[reference_miv_design_tokens]]. Li\u00e7\u00e3o: um fix de token de alt\u00edssima alavancagem (`--accent`) exige verificar os DOIS pap\u00e9is (`bg-accent` e `text-accent`) antes de escurecer.\n\n**Deferidos (N\u00c3O s\u00e3o leaks \u2014 decis\u00e3o Sovereign):** re-tema amber do Core-Fable + palette de n\u00f3s do Orquestrador (identidades de superf\u00edcie deliberadas); paletas categ\u00f3ricas de data-viz (constela\u00e7\u00e3o/matrix/mem\u00f3ria/universe \u2014 necessidade de distin\u00e7\u00e3o); **freeze da main-thread do `/universe`** ([[project_unified_sensorial_canvas]], OTD-UCANVAS-PERF, Fase 3.7 em obra); label 3D \"UNASSIGNED UNIT\" z-fighting; nomes bil\u00edngues de features (Viral Autopilot/Spaces = conven\u00e7\u00e3o do app).\n\n**Tooling ECC (`docs/processes/ecc-harness-tools.md`, `.claude/scripts/`):** `mcorch-doctor.sh` (health consolidado, diagnostica+prescreve, nunca auto-muta), `scan-supply-chain-iocs.ts` (IoC Shai-Hulud/node-ipc, `--home`), `session-inspect.ts` (medidor exato da janela p/ Lei 3). Adaptados sob medida do `affaan-m/ECC` (sem clonar). Origem: o Passo 4 que o Antigravity deixou no `.agents/workflows/handson.md`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_miv_conformance_pass.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(06:05:00)*
+
+
+## 🤖 Claude *(06:05:01)*
+
+Adicionando os ponteiros ao índice MEMORY.md:
+
+## 🤖 Claude *(06:05:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Rebrand MCORCH \u2014 Landing V2 em React (preview /lp, prod gated)](project_mcorch_rebrand_landing_v2.md)",
+  "new_string": "# Memory Index\n\n- [Conformidade MIV p\u00f3s-rebrand (44 p\u00e1ginas E2E) + tooling ECC](project_miv_conformance_pass.md) \u2014 2026-07-04 `aaa2351`/`75077f6`/`8af7268`: auditoria visual de 8 subagentes agent-browser; 3 fixes sist\u00eamicos + regress\u00f5es de marca verificados; recipe reutiliz\u00e1vel; deferidos = identidades de superf\u00edcie, n\u00e3o leaks. Tooling ECC (doctor/sentinel/session-inspect).\n- [Tokens MIV \u2014 accent=cyan gen\u00e9rico, nebula s\u00f3 mem\u00f3ria, gold s\u00f3 valor](reference_miv_design_tokens.md) \u2014 gotcha dual-role do `--accent` (bg E text \u2192 tem que ficar brilhante); nebula intencional usa classe expl\u00edcita, n\u00e3o o token; gold=mcoCoins/valor; CTA=glow.\n- [Rebrand MCORCH \u2014 Landing V2 em React (preview /lp, prod gated)](project_mcorch_rebrand_landing_v2.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(06:05:13)*
+
+
+## 🤖 Claude *(06:05:14)*
+
+Memória selada. Commit do HANDOFF.md + push de tudo:
+
+## 🤖 Claude *(06:05:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -F - <<'EOF'\ndocs(handoff): seal conformidade MIV p\u00f3s-rebrand + tooling ECC-nativo\n\nAuditoria visual E2E de 44 p\u00e1ginas (5 ok/26 warn/13 fail); 3 fixes sist\u00eamicos\n(--accent cyan \u00b7 mcoCoins gold \u00b7 glow CTA) + regress\u00f5es de marca fechadas e\nverificadas ao vivo; tooling ECC (doctor \u00b7 supply-chain sentinel \u00b7 session-inspect).\nmesh 9051 \u00b7 node 5f0f0a7f \u00b7 Survival Laws self-audit anexado.\nEOF\necho \"=== push ===\"; git push origin main 2>&1 | tail -6\necho \"=== verify ===\"; git log --oneline -5 | cat; echo \"---\"; git status -sb | head -2",
+  "description": "Commit HANDOFF + push to origin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m3:05AM[0m [32mINF[0m 1 commits scanned.
+> [90m3:05AM[0m [32mINF[0m scan completed in 44.5ms
+> [90m3:05AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.22 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.17 seconds)
+> ✔️ gitleaks-staged (0.18 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> === push ===
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.98 seconds)
+> ✔️ gitleaks-range (0.98 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    fa67586..ce8de24  main -> main
+> === verify ===
+> ce8de24 docs(handoff): seal conformidade MIV pós-rebrand + tooling ECC-nativo
+> 8af7268 feat(harness): utilitários ECC-nativos — doctor, supply-chain sentinel, session-inspect
+> 75077f6 fix(brand): regressões pós-rebrand — onboarding MCORCH, pt-BR no minerador/404/legenda
+> aaa2351 feat(ui): conformidade MIV sistêmica — hover cyan, mcoCoins gold, glow nos CTAs
+> fa67586 docs(readme): mesh 9050 — retema MIV do ecossistema
+> ---
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(06:05:36)*
+
+
+## 🤖 Claude *(06:05:36)*
+
+Push completo: `fa67586..ce8de24 main -> main` (4 commits, gitleaks-range limpo, up to date). Limpeza dos previews locais:
+
+## 🤖 Claude *(06:05:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "fuser -k 4173/tcp 4174/tcp 2>/dev/null; sleep 1\necho \"4173: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/ 2>/dev/null || echo down)\"\necho \"4174: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4174/ 2>/dev/null || echo down)\"\necho \"previews encerrados\"",
+  "description": "Kill preview servers by port"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  28491794173: 000down
+> 4174: 000down
+> previews encerrados
+> ```
+
+## 🤖 Claude *(06:06:00)*
+
+
+## 🤖 Claude *(06:06:20)*
+
+Tudo selado e pushed, Sovereign. Sessão concluída ponta-a-ponta sem parar.
+
+## ✅ Entregue
+
+### Arc 1 — Auditoria Visual E2E de TODAS as 44 páginas (como usuário real)
+Workflow de **8 subagentes** dirigindo agent-browser (sessões isoladas, preview local anti-CF), navegando + hovers + triggers + badges/widgets/ícones/botões, cada um lendo os próprios screenshots (custo de imagem fora do meu contexto). Veredito: **5 ok · 26 warn · 13 fail**. Separei sinal de ruído (emoji→tofu, thumbnails pretos e login de iframe são **artefatos do preview headless**, não defeitos de produção).
+
+**Fixes de alta alavancagem — todos verificados por re-navegação ao vivo:**
+
+| # | Fix | Prova |
+|---|-----|-------|
+| S1 | `--accent` violeta→**cyan** (sistêmico, ~12 páginas) | token `184 100% 50%` no bundle; hover de template + "Testar" **cyan** (era violeta); ícone Self-Healing cyan |
+| S2 | pill mcoCoins cyan→**gold** (toda página) | pill do header agora gold em dashboard/miner/campaigns/settings |
+| S3 | **glow neon** nos CTAs primários | "Analisar e Otimizar"/"Próximo"/"Minerar Tendências" com halo |
+| — | regressões de marca | onboarding **"Constellation Orchestra"→MCORCH**, 404 pt-BR, Minerador Viral 100% pt-BR + score sem coral, Legenda da Constelação pt-BR, Trial gold→cyan, reset-password ganhou CTA, sidebar casa com as páginas |
+
+A **nebula intencional não quebrou** (territórios da constelação e botão Memória intactos — a data-viz usa cores explícitas, não o token).
+
+### Arc 2 — Alinhamento ECC (revisado + materializado)
+A mudança não-commitada era o "Passo 4" que você pediu ao Antigravity deixar no `/handson`. **Chegou o momento** → construí os 3 utilitários sob medida (conceito do `affaan-m/ECC`, código soberano, **sem clonar**), **provados materialmente**, cada um numa Survival Law:
+- **`mcorch-doctor.sh`** — health consolidado (diagnostica+prescreve, nunca auto-muta)
+- **`scan-supply-chain-iocs.ts`** — IoC de worm Shai-Hulud/node-ipc (detecta em fixture, limpo no repo, 0 FP)
+- **`session-inspect.ts`** — medidor exato da janela p/ Lei 3 (dogfoodado a 39.9%)
+- SOP `ecc-harness-tools.md` + Passo 4 atualizado + Key Files.
+
+### Arc 3 — Handoff selado
+4 commits pushed (`aaa2351`/`75077f6`/`8af7268`/`ce8de24`) · milestone `5f0f0a7f` embedado · **malha 9051** · HANDOFF.md + Survival Laws self-audit + 2 memórias.
+
+## 🔎 Deferidos (decisões, não omissões — na sua alçada)
+Não são leaks de token; são **identidades deliberadas de superfície** ou módulos em obra: re-tema amber do **Core-Fable** e palette de nós do **Orquestrador**; paletas categóricas de data-viz; **freeze da main-thread do `/universe`** (OTD-UCANVAS-PERF, Fase Epsilon V9 ainda 3.7-3.10); label 3D "UNASSIGNED UNIT" com z-fighting; nomes bilíngues de features (convenção do app). Prontos para atacar quando você decidir.
+
+Uma nota honesta (Lei 1): meu primeiro `--accent` escuro teria quebrado `text-accent` (ícones invisíveis) — a verificação material pegou e eu corrigi antes de deployar. O gate de RLS/gitleaks passou em todos os commits.
