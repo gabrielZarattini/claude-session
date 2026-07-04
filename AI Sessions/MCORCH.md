@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 67
-> * **Total de Sessões**: 1825
+> * **Total de Processos**: 68
+> * **Total de Sessões**: 1829
 
 ---
 
@@ -42,6 +42,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[creative-qa-vision-gate]]` - *Processo*
 *   `[[credential-disconnect-clear]]` - *Processo*
 *   `[[deepsearch-blueprint]]` - *Processo*
+*   `[[ecc-harness-tools]]` - *Processo*
 *   `[[edge-jwt-identity-verification]]` - *Processo*
 *   `[[great-reset-sovereign]]` - *Processo*
 *   `[[handoff-material-proof-audit]]` - *Processo*
@@ -91,13 +92,17 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-07-04 - agent-aea4cc075927ec918]]` (ClaudeSessions) - *2026-07-04*
+*   `[[2026-07-04 - agent-ae915deecfdc1d2dd]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-adde171de0d9a4c77]]` (ClaudeSessions) - *2026-07-04*
+*   `[[2026-07-04 - agent-abc5bfb335f7c6c81]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-ab11e0d7f346bd0d1]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-aad1c8160bf567cc9]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-aa4754fda9c80e3da]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-a7c9f197febbabe1b]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-a7822279f67966774]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-a4f07cb4e257c2655]]` (ClaudeSessions) - *2026-07-04*
+*   `[[2026-07-04 - agent-a4c7055bc1199ab89]]` (ClaudeSessions) - *2026-07-04*
+*   `[[2026-07-04 - agent-a3576a159753965b7]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-a27de3f8fb115cf63]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - agent-a1b011dc038095b9f]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions) - *2026-07-04*
