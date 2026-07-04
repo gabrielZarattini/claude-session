@@ -1,4 +1,4 @@
-# Executor mestre MCORCH em malha fechada autônoma
+# [[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma|Executor mestre MCORCH em malha fechada autônoma]]
 **Date:** 2026-07-03 | **Session ID:** `0c1ad55a-1aef-4790-9a42-92684bcd77d2`
 
 ---
@@ -831,7 +831,7 @@ Executando o ritual /handson — pre-flight em paralelo.
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\"); done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security \u2014 BoK complete (ciso-4-artifact)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone; echo \"---SCRATCH---\"; ls -la scratch/ 2>/dev/null | head -20",
+  "command": "for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\"); done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security \u2014 BoK complete (ciso-4-artifact)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone; echo \"---SCRATCH---\"; ls -la scratch/ 2>/dev/null | head -20",
   "description": "Check BoK suite completeness and scratch contents"
 }
 ```
@@ -1079,7 +1079,7 @@ For each BoK suite in `docs/bok/<slug>/`, verify completeness:
 ```bash
 for slug in $(ls docs/bok/ 2>/dev/null); do
   if [ "$slug" = "security" ]; then
-    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)
+    required_sec=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)
     missing=()
     for doc in "${required_sec[@]}"; do
       [ -f "docs/bok/security/$doc.md" ] || missing+=("$doc")
@@ -1239,7 +1239,7 @@ For each BoK suite in `docs/bok/<slug>/`, verify completeness:
 ```bash
 for slug in $(ls docs/bok/ 2>/dev/null); do
   if [ "$slug" = "security" ]; then
-    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)
+    required_sec=(00-[[deepsearch-blueprint|deepsearch-blueprint]] 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)
     missing=()
     for doc in "${required_sec[@]}"; do
       [ -f "docs/bok/security/$doc.md" ] || missing+=("$doc")
@@ -5337,3 +5337,16 @@ Hero excelente — a **explosão de partículas** (constelação + filamentos) r
 > ✓ Screenshot saved to /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0c1ad55a-1aef-4790-9a42-92684bcd77d2/scratchpad/lp-3-ativar.png
 > "{\"w\":300,\"h\":150,\"nodesVisibleHint\":true}"
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - Executar loop autônomo MCORCH com charter]]
+> * **Próxima Sessão**: [[2026-07-03 - Resolver alertas de produção e migrations]]
+%% --- TIMELINE END --- %%

@@ -4997,16 +4997,3 @@ Push        : ✅ origin sincronizado — Vivo==master==origin==78515ae
 - ⚠️ Working tree segue com os `farm-funnel-*` de outra origem — **não commitar** (contaminação cross-session conhecida).
 
 Estado financeiro intacto (~$149, 🔴 LIVE mas parado-mas-armado, regime bear). Bom descanso! 🤝
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
-
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-06-29 - Finalizar QA do Antigravity com validação senior]]
-> * **Próxima Sessão**: [[2026-06-29 - agent-a02d266a2191d0afa]]
-%% --- TIMELINE END --- %%
