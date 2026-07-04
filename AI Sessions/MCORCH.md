@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 67
-> * **Total de Sessões**: 1824
+> * **Total de Sessões**: 1825
 
 ---
 
@@ -102,6 +102,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-04 - agent-a1b011dc038095b9f]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions) - *2026-07-04*
+*   `[[2026-07-04 - E2E visual testing and Handson protocol review]]` (ClaudeSessions) - *2026-07-04*
 *   `[[2026-07-03 - handson]]` (GeminiSessions) - *2026-07-03*
 *   `[[2026-07-03 - f51b7a04-6530-4582-8b21-d9ba14caedee]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - agent-aebb30b757174fc0a]]` (ClaudeSessions) - *2026-07-03*

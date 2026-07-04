@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1829
-> * **Sessões do Claude**: 1783
+> * **Total de Sessões Registradas**: 1830
+> * **Sessões do Claude**: 1784
 > * **Sessões do Gemini**: 46
 
 ---
@@ -81,8 +81,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-04 - agent-a27de3f8fb115cf63]]` - *2026-07-04*
 *   `[[2026-07-04 - agent-a1b011dc038095b9f]]` - *2026-07-04*
 *   `[[2026-07-04 - Verificar sinais de negociação no Telegram]]` - *2026-07-04*
-*   `[[2026-07-03 - handson]]` - *2026-07-03*
-*   *... e mais 1778 sessões nessa categoria.*
+*   `[[2026-07-04 - E2E visual testing and Handson protocol review]]` - *2026-07-04*
+*   *... e mais 1779 sessões nessa categoria.*
 
 ---
 
@@ -1750,6 +1750,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-04 - agent-a1b011dc038095b9f]]` (ClaudeSessions)
 *   `[[2026-07-04 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions)
 *   `[[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions)
+*   `[[2026-07-04 - E2E visual testing and Handson protocol review]]` (ClaudeSessions)
 *   `[[2026-07-03 - handson]]` (GeminiSessions)
 *   `[[2026-07-03 - f51b7a04-6530-4582-8b21-d9ba14caedee]]` (ClaudeSessions)
 *   `[[2026-07-03 - agent-aebb30b757174fc0a]]` (ClaudeSessions)
