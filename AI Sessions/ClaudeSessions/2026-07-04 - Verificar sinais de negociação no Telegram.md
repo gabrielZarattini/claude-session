@@ -4806,3 +4806,278 @@ Meu palpite do maior retorno esperado pro seu tempo: parar de caçar 1m e me dei
 ## 👤 User *(00:28:44)*
 
 eu quero lucrar e fazer mais dinheiro sempre que possivel. E quando tiver 100%de lucro por exemplo temos 149 agora e quando tiver 300USDT vou querer reinvestir 80% do lucro para alavancar entende? Então se 16,7% é melhor que nada que foi praticamente o que conseguimos ate agora desde que iniciamos.
+
+## 🤖 Claude *(00:30:29)*
+
+
+## 🤖 Claude *(00:30:40)*
+
+Agora ficou claro o seu objetivo: **crescer o capital, e quando dobrar (≈$300) reinvestir 80% do lucro pra compor** ("alavancar"). Entendido. Vou tratar "alavancar" como **compor no spot** (reinvestir o lucro em posições maiores) — porque alavancagem literal (futuros/margem) já foi refutada na pesquisa de bear-capture (foi falso positivo e multiplica o risco de zerar), e o desenho do sistema é spot-only por decisão. Se você quis dizer margem/futuros mesmo, me corrige — mas o plano abaixo compõe spot, que é o caminho são pra $149→$300 sem risco de liquidação.
+
+E o ponto central: você está certo — **+16,7% é infinitamente melhor que os ~0% que tiramos até agora**, e a fonte disso é o **trend**, não o 1m. Então o trabalho de maior retorno é provar, com número, quanto o motor de trend **capturaria** se a entrada estivesse consertada. É isso que vou fazer agora — sem tocar em nada do dinheiro ao vivo (eu **não** viro o HALT nem ligo trading; isso é decisão sua, com os portões).
+
+Antes de tudo, um recado do ambiente: vários conectores (GitHub, Slack, etc.) pediram autorização nesta sessão e **não funcionam aqui** (sessão não-interativa) — se precisar deles, autorize via `/mcp` num terminal `claude` interativo. Não afeta este backtest.
+
+Deixa eu ver se já existe um backtest de trend pronto pra estender.
+
+## 🤖 Claude *(00:30:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== backtest scripts existentes ===\"\nls backend/scripts/ | grep -iE \"backtest|trend|funnel\"\necho\necho \"=== backtest-futures-trend.js: cabe\u00e7alho (o que faz) ===\"\nsed -n '1,30p' backend/scripts/backtest-futures-trend.js 2>/dev/null | grep -vE \"^\\s*$\" | head -25\necho\necho \"=== dados 1h j\u00e1 em cache? ===\"\nsudo -n -u gcrux-tradeux bash -lc 'ls -1 /home/gcrux-tradeux/tradeux/backend/backtest-data/ | grep -E \"1h\" | head -30'",
+  "description": "Check existing trend backtest + cached 1h data"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === backtest scripts existentes ===
+> activate-trend.js
+> backfill-funnel-buys.js
+> backtest-farm-funnel.js
+> backtest-futures-trend.js
+> backtest.js
+> setup-trend.js
+> 
+> === backtest-futures-trend.js: cabeçalho (o que faz) ===
+> #!/usr/bin/env node
+> /*
+>  * TradeUX — Backtest CRÍTICO: trend-following BILATERAL em FUTURES (long+short), custos reais.
+>  * Responde a UMA pergunta: "lucrar na queda" via short/trend em Binance Futures tem expectância
+>  * LÍQUIDA positiva DE VERDADE — ou é falso positivo?
+>  *
+>  * Honestidade anti-falso-positivo embutida:
+>  *  - dados REAIS de FUTURES (fapi klines) + FUNDING histórico REAL (fapi fundingRate, 8h)
+>  *  - custos de futures realistas: taker + slippage por lado, aplicados em CADA flip de posição
+>  *  - funding aplicado por candle na posição (long paga rate>0 / short recebe)
+>  *  - params SMA/ADX FIXOS (não otimizados no dado) + sweep de sensibilidade (robustez vs overfit)
+>  *  - GROSS vs NET lado a lado (quanto os custos+funding comem do "edge")
+>  *  - multi-símbolo + roda bear E bull separados (o short tem de ajudar no bear SEM destruir no bull)
+>  *  - leverage 1x no notional (mede a EXPECTÂNCIA do sinal; alavancagem escala retorno E risco igual)
+>  *
+>  * Uso: node scripts/backtest-futures-trend.js [--days=365] [--end=2024-04-01] [--interval=1h]
+>  *      [--symbols=BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT] [--fee=0.0005] [--slip=0.0002] [--adx=25]
+>  */
+> 'use strict';
+> const https = require('https');
+> const fs = require('fs');
+> const path = require('path');
+> const args = Object.fromEntries(process.argv.slice(2).map(a => {
+>   const m = a.match(/^--([^=]+)=?(.*)$/); return m ? [m[1], m[2] || true] : [a, true];
+> }));
+> 
+> === dados 1h já em cache? ===
+> ADAUSDT-1h-180d-end2024-04-01.json
+> ADAUSDT-1h-365d-end2023-01-01.json
+> ADAUSDT-1h-365d.json
+> ADAUSDT-1h-900d-ext.json
+> AVAXUSDT-1h-180d-end2024-04-01.json
+> AVAXUSDT-1h-365d-end2023-01-01.json
+> AVAXUSDT-1h-365d.json
+> BNBUSDT-1h-180d-end2024-04-01.json
+> BNBUSDT-1h-365d-end2023-01-01.json
+> BNBUSDT-1h-365d.json
+> BNBUSDT-1h-900d-ext.json
+> BNBUSDT-FUT-1h-180d-end2024-04-01.json
+> BNBUSDT-FUT-1h-365d.json
+> BTCUSDT-1h-180d-end2024-04-01.json
+> BTCUSDT-1h-365d-end2023-01-01.json
+> BTCUSDT-1h-365d-ext.json
+> BTCUSDT-1h-365d.json
+> BTCUSDT-1h-900d-ext.json
+> BTCUSDT-FUT-1h-180d-end2024-04-01.json
+> BTCUSDT-FUT-1h-365d.json
+> ETHUSDT-1h-180d-end2024-04-01.json
+> ETHUSDT-1h-365d-end2023-01-01.json
+> ETHUSDT-1h-365d-ext.json
+> ETHUSDT-1h-365d.json
+> ETHUSDT-1h-900d-ext.json
+> ETHUSDT-FUT-1h-180d-end2024-04-01.json
+> ETHUSDT-FUT-1h-365d.json
+> LINKUSDT-1h-180d-end2024-04-01.json
+> LINKUSDT-1h-365d-end2023-01-01.json
+> LINKUSDT-1h-365d.json
+> ```
+
+## 🤖 Claude *(00:31:10)*
+
+
+## 🤖 Claude *(00:31:13)*
+
+Ótimo — tem bastante 1h em cache (inclusive 900d-ext pra BTC/ETH/BNB/ADA). Vou escrever um backtest de **trend spot long-only** com a saída protetiva (death cross ou regime→bear), comparando a entrada **atual** (só no cross) vs a **consertada** (re-arma no flip de regime não-bear com estrutura de alta), net de taxa BNB + slippage, contra buy&hold, com holdout. Rodando sobre ~900 dias e 12 moedas.
+
+## 🤖 Claude *(00:31:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/trendbt.js <<'JS'\n'use strict';\n// Backtest TREND SPOT long-only. Entrada A=atual(cross&&!bear) vs B=consertada(re-arma no flip nao-bear c/ estrutura de alta).\n// Saida = death cross OU regime->bear (para caixa). Net de fee+slip. vs buy&hold. in-sample(70%)/holdout(30%). Sem lookahead.\nconst lab=require('/home/gcrux-tradeux/tradeux/backend/scripts/lib/labkit');\nconst SYMS=(process.env.BT_SYMS||'BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT,ADAUSDT,DOGEUSDT,LTCUSDT,LINKUSDT,AVAXUSDT,DOTUSDT,UNIUSDT').split(',');\nconst DAYS=parseInt(process.env.BT_DAYS||'900',10);\nconst FEE=parseFloat(process.env.BT_FEE||'0.00075'); // BNB taker\nconst SLIP=parseFloat(process.env.BT_SLIP||'0.0002');\nconst C=FEE+SLIP; const fin=Number.isFinite;\nconst nonbear=r=>r&&r!=='bear'&&r!=='unknown';\n\nfunction sim(ind, entryFn, i0, i1){ // retorna trades [{eT,net}] com entrada em [i0,i1)\n  const o=ind.candles.map(c=>c.open), sma50=ind.sma50, sma200=ind.sma200, rb=ind.regimeBar;\n  const golden=i=>i>0&&fin(sma50[i-1])&&fin(sma200[i-1])&&fin(sma50[i])&&fin(sma200[i])&&sma50[i-1]<=sma200[i-1]&&sma50[i]>sma200[i];\n  const death=i=>i>0&&fin(sma50[i-1])&&fin(sma200[i-1])&&fin(sma50[i])&&fin(sma200[i])&&sma50[i-1]>=sma200[i-1]&&sma50[i]<sma200[i];\n  const trades=[]; let inpos=false, eIdx=-1;\n  for(let i=205;i<ind.candles.length-1;i++){\n    if(!inpos){\n      if(i>=i0&&i<i1&&entryFn(ind,i,{golden,death})){ inpos=true; eIdx=i; }\n    } else {\n      if(death(i)||rb[i]==='bear'){\n        const entry=o[eIdx+1], exit=o[i+1];\n        if(entry>0&&exit>0) trades.push({eT:ind.candles[eIdx+1].t, net:(exit*(1-C))/(entry*(1+C))-1});\n        inpos=false; eIdx=-1;\n      }\n    }\n  }\n  if(inpos&&eIdx>=0){ const entry=o[eIdx+1], exit=o[ind.candles.length-1]; if(entry>0&&exit>0) trades.push({eT:ind.candles[eIdx+1].t, net:(exit*(1-C))/(entry*(1+C))-1, open:true}); }\n  return trades;\n}\nconst A=(d,i,{golden})=> golden(i) && nonbear(d.regimeBar[i]);\nconst B=(d,i,{golden})=>{ const up=fin(d.sma200[i])&&d.close[i]>d.sma200[i]&&fin(d.sma50[i])&&d.sma50[i]>d.sma200[i];\n  return up && ( golden(i) || (nonbear(d.regimeBar[i]) && !nonbear(d.regimeBar[i-1])) ); };\nfunction comp(trades){ let e=1; for(const t of trades) e*=(1+t.net); return e-1; }\nfunction stat(nets){ if(!nets.length)return null; const m=nets.reduce((a,b)=>a+b,0)/nets.length; const win=nets.filter(x=>x>0).length/nets.length; return {n:nets.length,mean:m,win}; }\n\n(async()=>{\n  const rows=[]; const poolB_ins=[], poolB_oos=[]; let adaLine=null;\n  for(const s of SYMS){\n    let cd; try{ cd=await lab.fetchKlinesExt(s,'1h',DAYS); }catch(e){ console.log(`SKIP ${s}: ${e.message}`); continue; }\n    if(!cd||cd.length<1000){ console.log(`SKIP ${s}: poucas velas`); continue; }\n    const ind=lab.computeIndicators(cd,'1h');\n    const k=Math.floor(cd.length*0.7); const cut=cd[k].t;\n    const tA=sim(ind,A,0,cd.length), tB=sim(ind,B,0,cd.length);\n    const bh=(cd[cd.length-1].close/cd[205].close-1);\n    const compA=comp(tA), compB=comp(tB);\n    // holdout: trades com entrada >= cut\n    const tB_ins=tB.filter(t=>t.eT<cut), tB_oos=tB.filter(t=>t.eT>=cut);\n    poolB_ins.push(...tB_ins.map(t=>t.net)); poolB_oos.push(...tB_oos.map(t=>t.net));\n    const sB=stat(tB.map(t=>t.net));\n    const r={s, compA:compA*100, compB:compB*100, bh:bh*100, nA:tA.length, nB:tB.length, winB:sB?sB.win*100:0, avgB:sB?sB.mean*100:0, compB_oos:comp(tB_oos)*100, nB_oos:tB_oos.length};\n    rows.push(r); if(s==='ADAUSDT') adaLine=r;\n    process.stdout.write(`. ${s}`);\n  }\n  console.log(`\\n\\n=== TREND SPOT LONG-ONLY \u2014 ${DAYS}d 1h \u00b7 fee ${FEE*100}%+slip ${SLIP*100}%/lado (round-trip ${((C)*2*100).toFixed(2)}%) ===`);\n  console.log('A=entrada ATUAL (so no golden cross && !bear)  \u00b7  B=entrada CONSERTADA (re-arma no flip nao-bear + estrutura de alta)');\n  console.log('saida = death cross OU regime->bear (para caixa)\\n');\n  console.log(['moeda','A_comp%','B_comp%','buy&hold%','nB','winB%','avgB%/trade','B_holdout%(nB)'].map((h,i)=>i===0?h.padEnd(9):h.padStart(13)).join(''));\n  for(const r of rows){\n    console.log([r.s.padEnd(9),r.compA.toFixed(1).padStart(13),r.compB.toFixed(1).padStart(13),r.bh.toFixed(1).padStart(13),String(r.nB).padStart(13),r.winB.toFixed(0).padStart(13),r.avgB.toFixed(2).padStart(13),`${r.compB_oos.toFixed(1)}(${r.nB_oos})`.padStart(13)].join(''));\n  }\n  const med=a=>{const s=[...a].sort((x,y)=>x-y);const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;};\n  console.log(`\\nMEDIANA por moeda: A_comp=${med(rows.map(r=>r.compA)).toFixed(1)}%  B_comp=${med(rows.map(r=>r.compB)).toFixed(1)}%  buy&hold=${med(rows.map(r=>r.bh)).toFixed(1)}%`);\n  console.log(`MEDIA por moeda:   A_comp=${(rows.reduce((a,r)=>a+r.compA,0)/rows.length).toFixed(1)}%  B_comp=${(rows.reduce((a,r)=>a+r.compB,0)/rows.length).toFixed(1)}%  buy&hold=${(rows.reduce((a,r)=>a+r.bh,0)/rows.length).toFixed(1)}%`);\n  const si=stat(poolB_ins), so=stat(poolB_oos);\n  let ci=[NaN,NaN]; try{ const b=lab.blockBootstrapMeanCI(poolB_oos,{blockLen:2,nResamples:3000,seed:12345,ci:0.95}); ci=[b.lo*100,b.hi*100]; }catch(e){}\n  console.log(`\\nPOOL de trades B \u2014 in-sample: n=${si.n} avg=${(si.mean*100).toFixed(2)}%/trade win=${(si.win*100).toFixed(0)}%  |  holdout: n=${so.n} avg=${(so.mean*100).toFixed(2)}%/trade win=${(so.win*100).toFixed(0)}% IC95[${ci[0].toFixed(2)}%,${ci[1].toFixed(2)}%]`);\n  if(adaLine) console.log(`\\nADA (a virada recente): entrada B capturaria compound ${adaLine.compB.toFixed(1)}% em ${adaLine.nB} trades (A atual: ${adaLine.compA.toFixed(1)}%).`);\n})().catch(e=>{console.error('ERRO:',e.message);process.exit(1);});\nJS\nchmod 644 /tmp/trendbt.js\nsudo -n -u gcrux-tradeux bash -lc 'BT_DAYS=900 node /tmp/trendbt.js' 2>&1 | tee /tmp/trendbt.out",
+  "description": "Run spot trend backtest: current vs fixed entry, 12 coins 900d",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: btwb9cvxx. Output is being written to: /tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/btwb9cvxx.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(00:32:14)*
+
+
+## 🤖 Claude *(00:32:16)*
+
+O backtest está rodando (buscando as moedas 1h que faltam + computando). Enquanto isso, vou aguardar o resultado antes de desenhar o plano de composição — quero ancorar o tamanho de posição na expectância real (avg %/trade, win-rate, drawdown). Espera monitorada:
+
+## 🤖 Claude *(00:32:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "out=/tmp/claude-1001/-home-gcrux-tradeux/5ac169f1-067b-4906-9716-0ce0d4e3a2bc/tasks/btwb9cvxx.output\nfor i in $(seq 1 13); do\n  if grep -q \"POOL de trades B\" \"$out\" 2>/dev/null; then echo DONE; break; fi\n  sleep 9\ndone\nif grep -q \"POOL de trades B\" \"$out\"; then sed -n '/TREND SPOT LONG-ONLY/,$p' \"$out\"; else echo \"ainda rodando:\"; tail -3 \"$out\"; fi",
+  "description": "Wait for trend backtest result"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DONE
+> === TREND SPOT LONG-ONLY — 900d 1h · fee 0.075%+slip 0.02%/lado (round-trip 0.19%) ===
+> A=entrada ATUAL (so no golden cross && !bear)  ·  B=entrada CONSERTADA (re-arma no flip nao-bear + estrutura de alta)
+> saida = death cross OU regime->bear (para caixa)
+> 
+> moeda          A_comp%      B_comp%    buy&hold%           nB        winB%  avgB%/tradeB_holdout%(nB)
+> BTCUSDT           89.1         51.3         45.6           87           30         0.61     -9.6(25)
+> ETHUSDT           26.6          8.1        -34.0           85           32         0.50    -20.6(26)
+> BNBUSDT          -24.3         50.1         78.6           86           37         0.75    -33.3(25)
+> SOLUSDT           16.1          9.3         -4.0           90           40         0.36    -28.7(26)
+> XRPUSDT          -24.6         89.9        121.1           89           31         2.64    -24.9(22)
+> ADAUSDT           95.5        -23.3        -71.1           87           28         0.98    -40.9(26)
+> DOGEUSDT         202.9         40.6         -1.9           86           29         1.16    -38.4(29)
+> LTCUSDT          -45.3        -56.8        -39.0          105           31        -0.56    -55.9(33)
+> LINKUSDT           2.0        -55.9        -43.4           95           36        -0.59    -40.2(29)
+> AVAXUSDT          -3.1        -47.2        -77.5           94           36        -0.36    -44.4(30)
+> DOTUSDT           -8.1        -45.6        -86.2           89           31        -0.22    -54.1(26)
+> UNIUSDT           27.8        -71.4        -44.3           83           27        -1.24    -40.1(25)
+> 
+> MEDIANA por moeda: A_comp=9.1%  B_comp=-7.6%  buy&hold=-36.5%
+> MEDIA por moeda:   A_comp=29.6%  B_comp=-4.2%  buy&hold=-13.0%
+> 
+> POOL de trades B — in-sample: n=754 avg=1.15%/trade win=36%  |  holdout: n=322 avg=-1.63%/trade win=25% IC95[-2.08%,-1.20%]
+> 
+> ADA (a virada recente): entrada B capturaria compound -23.3% em 87 trades (A atual: 95.5%).
+> ```
+
+## 🤖 Claude *(00:34:08)*
+
+
+## 🤖 Claude *(00:34:15)*
+
+Este resultado é importante — e me obriga a te dar uma correção honesta sobre **mim mesmo**.
+
+**Minha ideia do "conserto" da entrada está REFUTADA.** Eu apostei que re-armar no flip de regime capturaria mais. O backtest diz o contrário: a entrada "consertada" (B) é **pior** — mediana −7,6% vs +9,1% da atual, e no holdout dá **−1,63%/trade, win 25%, IC [−2,08%, −1,20%]** (negativo com folga). Na ADA, meu "conserto" daria **−23,3%** enquanto a lógica **atual** deu **+95,5%** nos 900 dias. Motivo: re-armar entra mais vezes, inclusive em flips fracos/falsos → whipsaw. A lógica atual (só no cross) é mais seletiva e melhor. **Eu estava errado; assumo.**
+
+Mas antes de concluir qualquer coisa sobre a lógica **atual**, preciso verificá-la fora da amostra também — só medi o holdout da B. Deixa eu rodar o holdout da A pra não repetir o erro de elogiar algo que não validei.
+
+## 🤖 Claude *(00:34:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp\n# adiciona pooling in/out-sample da variante A e imprime stats OOS da A\npython3 - <<'PY'\ns=open('/tmp/trendbt.js').read()\n# add poolA arrays\ns=s.replace(\"const rows=[]; const poolB_ins=[], poolB_oos=[]; let adaLine=null;\",\n            \"const rows=[]; const poolB_ins=[], poolB_oos=[]; const poolA_ins=[], poolA_oos=[]; let adaLine=null;\")\n# pool A trades by cut\ns=s.replace(\"    const tB_ins=tB.filter(t=>t.eT<cut), tB_oos=tB.filter(t=>t.eT>=cut);\",\n            \"    const tB_ins=tB.filter(t=>t.eT<cut), tB_oos=tB.filter(t=>t.eT>=cut);\\n    poolA_ins.push(...tA.filter(t=>t.eT<cut).map(t=>t.net)); poolA_oos.push(...tA.filter(t=>t.eT>=cut).map(t=>t.net));\")\n# print A pooled stats after B pooled stats\nanchor='  if(adaLine) console.log'\naddition='''  const siA=stat(poolA_ins), soA=stat(poolA_oos);\n  let ciA=[NaN,NaN]; try{ const b=lab.blockBootstrapMeanCI(poolA_oos,{blockLen:2,nResamples:3000,seed:12345,ci:0.95}); ciA=[b.lo*100,b.hi*100]; }catch(e){}\n  console.log(`POOL de trades A (ATUAL) \u2014 in-sample: n=${siA.n} avg=${(siA.mean*100).toFixed(2)}%/trade win=${(siA.win*100).toFixed(0)}%  |  holdout: n=${soA.n} avg=${(soA.mean*100).toFixed(2)}%/trade win=${(soA.win*100).toFixed(0)}% IC95[${ciA[0].toFixed(2)}%,${ciA[1].toFixed(2)}%]`);\n  const compA_oos_med=(()=>{const a=rows.map(r=>r.compA);return null;})();\n'''\ns=s.replace(anchor, addition+anchor)\nopen('/tmp/trendbt2.js','w').write(s)\nprint(\"wrote /tmp/trendbt2.js\")\nPY\nchmod 644 /tmp/trendbt2.js\nsudo -n -u gcrux-tradeux bash -lc 'BT_DAYS=900 node /tmp/trendbt2.js' 2>&1 | sed -n '/POOL de trades/,$p'",
+  "description": "Add variant A holdout pooling and rerun"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> wrote /tmp/trendbt2.js
+> POOL de trades B — in-sample: n=754 avg=1.15%/trade win=36%  |  holdout: n=322 avg=-1.63%/trade win=25% IC95[-2.08%,-1.20%]
+> POOL de trades A (ATUAL) — in-sample: n=183 avg=3.86%/trade win=38%  |  holdout: n=87 avg=-2.83%/trade win=21% IC95[-4.02%,-1.73%]
+> 
+> ADA (a virada recente): entrada B capturaria compound -23.3% em 87 trades (A atual: 95.5%).
+> Shell cwd was reset to /home/gcrux-tradeux
+> ```
+
+## 🤖 Claude *(00:35:35)*
+
+
+## 🤖 Claude *(00:36:06)*
+
+Agora tenho o quadro completo — e ele é duro, mas você precisa dele inteiro pra decidir bem.
+
+## A verdade que o backtest me forçou a enxergar
+
+Rodei o holdout também da lógica **atual** (A), não só do meu "conserto". Resultado:
+
+| Entrada | In-sample (avg/trade, acerto) | Holdout / mercado recente (avg/trade, acerto) |
+|---|---|---|
+| **A — lógica atual** (só no cross) | +3,86%/trade, 38% | **−2,83%/trade, 21%** · IC [−4,0%, −1,7%] |
+| **B — meu "conserto"** | +1,15%/trade, 36% | **−1,63%/trade, 25%** · IC [−1,2%, −2,1%] |
+
+Leitura sem filtro: **as duas versões perdem dinheiro fora da amostra, no mercado recente.** Os números lindos da entrada atual (DOGE +203%, ADA +95%, BTC +89% ao longo de 900 dias) são **todos in-sample** — vêm do bull antigo. Nos últimos ~9 meses (o holdout), seguir tendência nessas moedas **sangrou por trade**, porque o mercado ficou picotado e o golden cross entra bem na hora que o preço reverte (whipsaw).
+
+Traduzindo pro seu objetivo, com honestidade que eu te devo:
+
+1. **Meu "conserto" estava errado** (já assumi) — e agora descobri que **nem a lógica atual funciona no mercado de agora**. Armar o trend hoje, do jeito que está, provavelmente **perderia** dinheiro, não ganharia.
+2. **Em NADA que testei nesta sessão há expectância positiva fora da amostra** — nem 1m, nem barreira tripla, nem trend (atual ou consertado). Não é preguiça nem bloqueio meu: é que **este mercado, nos últimos meses, não ofereceu um movimento que pague depois do custo.**
+
+## Então o sistema serve pra quê, de verdade?
+
+Uma coisa só, mas que **não é zero**: **preservar capital.** Nos mesmos 900 dias, comprar-e-segurar essas alts deu **mediana −36,5%** (o mercado caiu). O trend indo pra caixa no bear deu **mediana +9,1%** — ou seja, num mercado que derreteu 36%, ele te manteve **perto do zero em vez de no vermelho**. Foi exatamente isso que aconteceu com você: seus $149 estão **intactos** enquanto quem segurou alt perdeu um terço.
+
+E ele é uma **mola carregada**: no bull antigo (in-sample), a lógica atual capturou muito. O problema é que **não houve um bull sustentado** pra capturar — a ADA subiu 16,7% num pico, não numa tendência que se sustentou.
+
+## O caminho honesto pro seu objetivo ($149 → $300, compor)
+
+Não existe botão que eu aperte pra fazer dinheiro **neste** mercado — os dados dizem isso em cinco frentes. E aqui está o ponto que preciso ser franco: **compor (reinvestir 80%) uma estratégia de expectância negativa só faz você perder mais rápido.** Composição multiplica o que existe — se o edge é negativo, ela multiplica a perda. Composição só é sua amiga **depois** que existe um regime que paga.
+
+O plano data-dirigido, então, é chato mas correto:
+
+1. **Preservar** — manter o capital parado (é o que já está, e é o único "trade" com expectância positiva agora: não perder).
+2. **Esperar o gatilho certo** — não um pico de um dia (ADA), mas um **regime de tendência SUSTENTADO** em vários símbolos ao mesmo tempo. Esse é o momento em que o motor de trend historicamente pagou.
+3. **Aí sim** deployar a lógica **atual** (não a minha "consertada") + a regra de composição — porque aí o edge existe pra multiplicar.
+4. **Enquanto isso, os únicos ganhos garantidos** são estruturais: pagar taxa com **BNB** (corta 25% do custo) e, se quiser crescer mais rápido, **aportar mais capital** — porque com $149 e sem edge no mercado atual, forçar trade é forçar perda.
+
+## O que eu recomendo fazer agora
+
+Em vez de eu montar a regra de composição pra uma estratégia que hoje perde, o de maior valor é eu construir o **detector de "bull sustentado"** — uma definição objetiva (ex.: N dos 5 símbolos em regime `trend` por X dias seguidos, com breadth confirmada) que **te alerta no Telegram quando o regime que historicamente paga realmente chega**. Assim você não fica esperando no escuro nem morde cada pico falso — e quando o sinal de verdade vier, a gente arma o trend + composição com o edge do lado certo.
+
+Quer que eu construa esse detector de regime-sustentado (research-only, não toca no dinheiro)? É a peça que transforma "esperar" em "esperar com gatilho", e é onde seu objetivo de crescer encontra o que os dados realmente suportam.
+
+Vou registrar esse achado na memória pra não repetir o erro do "conserto" e pra deixar claro que armar trend em chop perde.
+
+## 🤖 Claude *(00:36:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md",
+  "old_string": "**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`**",
+  "new_string": "**\ud83e\udded BACKTEST DO MOTOR DE TREND SPOT (2026-07-03, meta do dono = crescer capital / compor 80% do lucro):** long-only spot, sa\u00edda = death cross OU regime\u2192bear, net taxa BNB 0,075%+slip 0,02%/lado, 12 moedas, 900d/1h, split 70/30. Comparei **A = entrada ATUAL** (`golden && !bear`) vs **B = \"conserto\" que EU propus** (re-arma no flip nao-bear + estrutura de alta, pra pegar casos tipo ADA-que-cruzou-em-bear). **RESULTADO: o \"conserto\" B est\u00e1 REFUTADO** (mediana por moeda \u22127,6% vs +9,1% da A; ADA B \u221223,3% vs A +95,5%; holdout B \u22121,63%/trade win25% IC[\u22122,1,\u22121,2]) \u2014 re-armar entra mais e pega whipsaw; a A (s\u00f3 no cross) \u00e9 mais seletiva e melhor. **N\u00c3O repetir a ideia do re-arm.** MAS o achado mais importante: **a PR\u00d3PRIA l\u00f3gica atual (A) \u00e9 net-NEGATIVA no holdout** = \u22122,83%/trade, win 21%, **IC [\u22124,0%, \u22121,7%]** (exclui 0 no lado negativo); os n\u00fameros lindos da A (DOGE +203%, ADA +95%, BTC +89%) s\u00e3o TODOS in-sample (bull antigo). **VEREDITO:** nos \u00faltimos ~9 meses (holdout = mercado recente, picotado/bear) seguir tend\u00eancia SANGRA \u2014 armar o trend HOJE provavelmente PERDE. O valor REAL e PROVADO do motor \u00e9 **preserva\u00e7\u00e3o de capital** (trend\u2192caixa no bear deu mediana +9,1% vs buy&hold **\u221236,5%** nos 900d = num mercado que caiu 1/3, manteve perto do flat \u2014 \u00e9 por isso que os $149 do dono est\u00e3o intactos). \u00c9 uma **mola carregada** pro PR\u00d3XIMO bull sustentado, n\u00e3o um gerador de renda agora. **Consequ\u00eancia p/ o objetivo do dono:** compor (reinvestir 80%) uma expect\u00e2ncia negativa s\u00f3 perde mais r\u00e1pido \u2014 composi\u00e7\u00e3o s\u00f3 ajuda DEPOIS que existe regime que paga. **Nada testado nesta sess\u00e3o (1m, barreira tripla, trend A, trend B) tem expect\u00e2ncia positiva OOS no mercado atual.** Caminho correto: preservar + esperar **gatilho de BULL SUSTENTADO** (n\u00e3o um pico como a ADA +16,7%; ex.: N/5 s\u00edmbolos em `trend` por X dias, breadth) \u2192 a\u00ed armar a l\u00f3gica ATUAL + composi\u00e7\u00e3o. Ganho garantido enquanto isso = s\u00f3 estrutural (fee BNB, aportar capital). Pr\u00f3ximo passo oferecido: construir o DETECTOR de bull-sustentado (research-only, alerta Telegram). Scripts `/tmp/trendbt*.js` (n\u00e3o versionados). Consistente com [[tradeux-farm-funnel-backtest]] (que dizia \"trend=+22% no bull\" \u2014 VERDADE s\u00f3 no bull; refina: em chop/bear o trend \u00e9 net\u2212), [[tradeux-parked-as-fuel]] (vindica o parqueado), [[tradeux-1m-scalping-and-cockpit]].\n\n**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:36:45)*
+
+
+## 🤖 Claude *(00:36:49)*
+
+Registrado. Resumindo a decisão que fica na sua mão: **não há, hoje, estratégia com edge comprovado pra fazer o dinheiro crescer** — o que existe é um sistema que **preservou seus $149** enquanto o mercado caiu 36%, e uma mola pronta pro próximo bull de verdade. Meu voto é construir o **detector de bull sustentado** pra você deployar no momento certo (com o edge do lado certo) em vez de forçar agora e perder. É só dar o ok que eu construo — research-only, sem tocar no dinheiro.

@@ -1,4 +1,4 @@
-# Verificar sinais de negociação no Telegram
+# [[2026-07-04 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
 **Date:** 2026-07-03 | **Session ID:** `5ac169f1-067b-4906-9716-0ce0d4e3a2bc`
 
 ---
