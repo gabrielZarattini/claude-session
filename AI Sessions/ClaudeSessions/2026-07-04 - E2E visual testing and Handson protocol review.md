@@ -1839,3 +1839,1340 @@ Agora vou buscar IDs reais do User 0 para as páginas de detalhe (`campaigns/:id
 > spaces: {"id":"4909d024-b55d-4cbc-af2b-b9365d38a89b","title":"E2E 2d compose"}
 > content: {"id":"e27a09e7-197b-4a22-9e80-6914cb56ff9c","title":"Vídeo 9:16: Do iPhone de 2007 ao Roborock de 2024: A Revolução da Automação Chegou à Sua Casa","media_url":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/561a31df-f7a2-4d20-ba8b-3c286d8470f6.mp4"}
 > ```
+
+## 🤖 Claude *(04:31:50)*
+
+
+## 🤖 Claude *(04:31:54)*
+
+Todos os IDs reais obtidos:
+- campaign `29b85b73` · space `4909d024` · canvas `905e2c66` · content/vídeo `e27a09e7`
+
+Inventário completo = **44 rotas**. Vou lançar um Workflow de auditoria visual E2E: 8 grupos temáticos, cada subagente dirige seu próprio agent-browser (sessão isolada), navega/hover/abre triggers seguros, tira screenshots 1920×1080, **lê os próprios PNGs** (mantém o custo de imagem fora do meu contexto) e retorna achados estruturados — com guardrail rígido anti-gasto. Rodando em background.
+
+## 🤖 Claude *(04:33:03)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'miv-e2e-visual-audit',\n  description: 'Auditoria visual E2E de 44 p\u00e1ginas p\u00f3s-rebrand MIV \u2014 real-user navigation, hovers, triggers, badges, widgets',\n  phases: [{ title: 'Audit', detail: '8 grupos, cada um dirige agent-browser e inspeciona os pr\u00f3prios screenshots' }],\n}\n\nconst SCRATCH = '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad'\nconst BASE = 'http://127.0.0.1:4173'\nconst KEY = 'sb-bcyvddsykvehvpwstlfa-auth-token'\nconst BIN_PATH = '/home/ubuntu/.nvm/versions/node/v22.22.3/bin'\n\nconst GROUPS = [\n  { id: 'g1', authed: false, label: 'p\u00fablico+auth', pages: [\n    { slug: 'landing', route: '/', name: 'Landing V2 (raiz)', kind: 'content' },\n    { slug: 'legacy', route: '/legacy', name: 'Landing legada', kind: 'content' },\n    { slug: 'auth', route: '/auth', name: 'Login/Cadastro', kind: 'content' },\n    { slug: 'reset', route: '/reset-password', name: 'Reset de senha', kind: 'content' },\n    { slug: 'privacy', route: '/privacy', name: 'Pol\u00edtica de Privacidade', kind: 'content' },\n    { slug: 'terms', route: '/terms', name: 'Termos de Servi\u00e7o', kind: 'content' },\n    { slug: 'notfound', route: '/rota-que-nao-existe-404', name: '404 NotFound', kind: 'content' },\n  ]},\n  { id: 'g2', authed: true, label: 'dashboard+constela\u00e7\u00e3o', pages: [\n    { slug: 'dashboard', route: '/dashboard', name: 'Vis\u00e3o Geral (home)', kind: 'content' },\n    { slug: 'constellation', route: '/dashboard/constellation', name: 'Constela\u00e7\u00e3o 3D', kind: 'canvas3d' },\n    { slug: 'memory', route: '/dashboard/constellation/memory', name: 'Memory Mesh', kind: 'canvas3d' },\n    { slug: 'matrix', route: '/dashboard/constellation/matrix', name: 'Matrix', kind: 'canvas3d' },\n    { slug: 'universe', route: '/dashboard/universe', name: 'Unified Sensorial Canvas', kind: 'canvas3d' },\n  ]},\n  { id: 'g3', authed: true, label: 'conte\u00fado+campanhas', pages: [\n    { slug: 'campaigns', route: '/dashboard/campaigns', name: 'Campanhas (lista)', kind: 'content' },\n    { slug: 'campaign-new', route: '/dashboard/campaigns/new', name: 'Assistente de Campanha', kind: 'content' },\n    { slug: 'campaign-detail', route: '/dashboard/campaigns/29b85b73-3982-41f3-90a4-dc5dab2e8ef3', name: 'Detalhe de Campanha', kind: 'content' },\n    { slug: 'content', route: '/dashboard/content', name: 'Biblioteca de Conte\u00fado', kind: 'content' },\n    { slug: 'video-editor', route: '/dashboard/content/video-editor/e27a09e7-197b-4a22-9e80-6914cb56ff9c', name: 'Editor de V\u00eddeo', kind: 'content' },\n    { slug: 'blog', route: '/dashboard/blog', name: 'Editor de Blog', kind: 'content' },\n    { slug: 'calendar', route: '/dashboard/calendar', name: 'Calend\u00e1rio', kind: 'content' },\n  ]},\n  { id: 'g4', authed: true, label: 'marketing+autopilot+orquestra\u00e7\u00e3o', pages: [\n    { slug: 'marketing', route: '/dashboard/marketing', name: 'Marketing Hub', kind: 'content' },\n    { slug: 'autopilot', route: '/dashboard/autopilot', name: 'Viral Autopilot', kind: 'content' },\n    { slug: 'orchestration', route: '/dashboard/orchestration', name: 'Orquestrador Visual (canvas)', kind: 'canvas3d' },\n    { slug: 'arena', route: '/dashboard/arena', name: 'Model Arena', kind: 'content' },\n    { slug: 'agent-economics', route: '/dashboard/agent-economics', name: 'Economia dos Agentes', kind: 'content' },\n    { slug: 'kanban', route: '/dashboard/kanban', name: 'Kanban', kind: 'content' },\n  ]},\n  { id: 'g5', authed: true, label: 'monetiza\u00e7\u00e3o+social+analytics', pages: [\n    { slug: 'affiliates', route: '/dashboard/affiliates', name: 'Afiliados', kind: 'content' },\n    { slug: 'affiliate-products', route: '/dashboard/affiliate-products', name: 'Produtos Afiliados', kind: 'content' },\n    { slug: 'social', route: '/dashboard/social', name: 'Redes Sociais', kind: 'content' },\n    { slug: 'analytics', route: '/dashboard/analytics', name: 'Analytics', kind: 'content' },\n    { slug: 'miner', route: '/dashboard/miner', name: 'Minerador Viral', kind: 'content' },\n  ]},\n  { id: 'g6', authed: true, label: 'canvas-studio', pages: [\n    { slug: 'canvas', route: '/dashboard/canvas', name: 'Canvas Studio (home)', kind: 'content' },\n    { slug: 'canvas-design', route: '/dashboard/canvas/design', name: 'Canvas Design', kind: 'iframe' },\n    { slug: 'canvas-video', route: '/dashboard/canvas/video', name: 'Video Studio Editor', kind: 'iframe' },\n    { slug: 'canvas-assets', route: '/dashboard/canvas/assets', name: 'Biblioteca de Assets', kind: 'content' },\n    { slug: 'canvas-editor', route: '/dashboard/canvas/905e2c66-7a92-4c9e-ad30-8113f64839dd', name: 'Editor de Canvas (grafo)', kind: 'canvas3d' },\n    { slug: 'video', route: '/dashboard/video', name: 'Video Studio', kind: 'content' },\n  ]},\n  { id: 'g7', authed: true, label: 'spaces+core-fable+chat', pages: [\n    { slug: 'spaces', route: '/dashboard/spaces', name: 'Spaces (home)', kind: 'canvas3d' },\n    { slug: 'space-canvas', route: '/dashboard/spaces/4909d024-b55d-4cbc-af2b-b9365d38a89b', name: 'Space Canvas', kind: 'canvas3d' },\n    { slug: 'core-fable', route: '/dashboard/core-fable', name: 'Core-Fable (shader 3D)', kind: 'canvas3d' },\n    { slug: 'chat', route: '/dashboard/chat', name: 'Chat', kind: 'content' },\n  ]},\n  { id: 'g8', authed: true, label: 'config+sistema+admin', pages: [\n    { slug: 'settings', route: '/dashboard/settings', name: 'Configura\u00e7\u00f5es', kind: 'content' },\n    { slug: 'billing', route: '/dashboard/billing', name: 'Assinatura/Billing', kind: 'content' },\n    { slug: 'admin', route: '/dashboard/admin', name: 'Administra\u00e7\u00e3o', kind: 'content' },\n    { slug: 'onboarding', route: '/onboarding', name: 'Onboarding', kind: 'content' },\n  ]},\n]\n\nconst SCHEMA = {\n  type: 'object',\n  properties: {\n    group: { type: 'string' },\n    summary: { type: 'string' },\n    pages: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          route: { type: 'string' },\n          name: { type: 'string' },\n          loaded: { type: 'boolean' },\n          status: { type: 'string', enum: ['ok', 'warn', 'fail'] },\n          miv_issues: { type: 'array', items: { type: 'object', properties: { severity: { type: 'string' }, detail: { type: 'string' } }, required: ['severity', 'detail'] } },\n          interaction_issues: { type: 'array', items: { type: 'object', properties: { severity: { type: 'string' }, detail: { type: 'string' } }, required: ['severity', 'detail'] } },\n          console_errors: { type: 'array', items: { type: 'string' } },\n          untranslated_text: { type: 'array', items: { type: 'string' } },\n          screenshots: { type: 'array', items: { type: 'string' } },\n          notes: { type: 'string' },\n        },\n        required: ['route', 'name', 'loaded', 'status', 'miv_issues', 'interaction_issues'],\n      },\n    },\n  },\n  required: ['group', 'pages', 'summary'],\n}\n\nfunction buildPrompt(g) {\n  const S = `miv-${g.id}`\n  const setupAuth = g.authed\n    ? `agent-browser --session ${S} open \"${BASE}/\"\nB64=$(cat ${SCRATCH}/session.b64)\nagent-browser --session ${S} eval \"localStorage.setItem('${KEY}', atob('$B64')); 'ok'\"\nagent-browser --session ${S} wait 1500`\n    : `# (grupo p\u00fablico \u2014 N\u00c3O injetar sess\u00e3o; queremos ver /auth e /reset sem login)`\n\n  const pageList = g.pages.map((p, i) => {\n    const wait = p.kind === 'canvas3d' ? 6000 : (p.kind === 'iframe' ? 5000 : 3800)\n    return `${i + 1}. slug=${p.slug} | rota=\"${p.route}\" | nome=\"${p.name}\" | tipo=${p.kind} | wait=${wait}ms`\n  }).join('\\n')\n\n  return `Voc\u00ea \u00e9 um agente de QA visual/UX meticuloso auditando o app MCORCH DEPOIS de um rebrand completo de marca (MIV \u2014 Massive Impact Visual). Dirige um navegador REAL via a CLI \\`agent-browser\\` contra um preview LOCAL (evita o Cloudflare). Objetivo: navegar como um usu\u00e1rio real, verificar hovers, boards neon, badges, widgets, \u00edcones, bot\u00f5es, dropdowns/triggers, e julgar a conformidade de marca MIV + sa\u00fade de intera\u00e7\u00e3o de CADA p\u00e1gina. Reporte achados como objeto estruturado (schema for\u00e7ado).\n\n## AMBIENTE\n- Preview: ${BASE}\n- Sua sess\u00e3o agent-browser: \\`${S}\\` (\u00daNICA \u2014 n\u00e3o use outro nome)\n- Auth: ${g.authed ? 'INJETAR sess\u00e3o do User 0 (setup abaixo)' : 'N\u00c3O injetar \u2014 p\u00e1ginas p\u00fablicas/sem-login'}\n- Screenshots: ${SCRATCH}/shots (crie com mkdir -p)\n- Se \\`agent-browser\\` n\u00e3o estiver no PATH: \\`export PATH=\"${BIN_PATH}:$PATH\"\\`\n\n## SETUP (rode UMA vez, no come\u00e7o)\n\\`\\`\\`bash\nmkdir -p ${SCRATCH}/shots\nexport PATH=\"${BIN_PATH}:$PATH\"\nagent-browser --session ${S} set viewport 1920 1080\n${setupAuth}\n\\`\\`\\`\n\n## \u26d4 GUARDRAIL R\u00cdGIDO \u2014 NUNCA GASTAR / MUTAR (backend \u00e9 PRODU\u00c7\u00c3O REAL, dinheiro do Sovereign)\nNUNCA clique em controle que dispare a\u00e7\u00e3o paga ou mutante. PROIBIDO clicar: Rodar/Run, Gerar/Generate, Executar/Execute, \"Analisar e Otimizar\", \"Executar Diagn\u00f3stico\", Orquestrar, Publicar/Publish, Renderizar/Render, Exportar/Export, Enviar/Send campanha, Pontuar, Criar (se insere), Deletar/Delete, Desconectar/Disconnect, Salvar credenciais, Confirmar/checkout de pagamento.\nPERMITIDO: passar o mouse (hover) em QUALQUER coisa; clicar em nav lateral, abas (tabs), toggles de visualiza\u00e7\u00e3o; abrir dropdowns/filtros/date-pickers; abrir um dialog S\u00d3 para ver e depois \\`press Escape\\` para fechar SEM confirmar. Na d\u00favida: hover + screenshot, N\u00c3O clique. Se abrir um dialog com bot\u00e3o final destrutivo/pago, tire o screenshot e \\`press Escape\\` \u2014 nunca confirme.\n\n## PROTOCOLO POR P\u00c1GINA (para cada rota da lista, na ordem)\n1. \\`agent-browser --session ${S} open \"${BASE}<rota>\"\\`\n2. \\`agent-browser --session ${S} wait <wait do item>\\`\n3. Confirme render: \\`agent-browser --session ${S} eval \"location.pathname\"\\`. Se voltou pra \\`/auth\\` inesperadamente numa rota protegida \u2192 registre loaded=false + nota \"redirect /auth \u2014 sess\u00e3o\", e siga pra pr\u00f3xima p\u00e1gina.\n4. \\`agent-browser --session ${S} screenshot ${SCRATCH}/shots/${g.id}-<slug>-default.png\\` (viewport principal \u2014 o mais importante pro MIV)\n5. Se tipo=content: \\`agent-browser --session ${S} scroll down 900\\` e \\`screenshot ${SCRATCH}/shots/${g.id}-<slug>-scroll.png\\` (ver abaixo-da-dobra). Pule scroll pra canvas3d/iframe.\n6. \\`agent-browser --session ${S} snapshot -i\\` \u2014 enumere elementos interativos (@eN: bot\u00f5es, links, abas, badges).\n7. Fa\u00e7a HOVER em 2 a 4 elementos representativos (item de nav, um board/card/widget, um CTA prim\u00e1rio, um \u00edcone/badge): pra cada \\`hover @eN\\` depois \\`screenshot ${SCRATCH}/shots/${g.id}-<slug>-hover<N>.png\\`. Verifique se o elemento RESPONDE visualmente (glow neon / mudan\u00e7a de cor / tooltip).\n8. Se houver trigger SEGURO (dropdown, aba, filtro, date-picker, dialog de \"ver\"): abra, \\`screenshot ${SCRATCH}/shots/${g.id}-<slug>-trigger.png\\`, depois \\`press Escape\\`.\n9. \\`agent-browser --session ${S} get console-messages\\` \u2014 capture erros/warnings.\n10. LEIA (visualize) seus screenshots e julgue pelos rubrics abaixo. Seja espec\u00edfico: cite o que viu em qual screenshot.\n\n## RUBRIC DE MARCA MIV (julgue cada p\u00e1gina)\n- Fundo = void (quase #000 preto). Cards = void levemente elevado/grafite.\n- Acento/interativo = cyan #00F2FF (nav ativo, CTAs, \u00edcones, links).\n- **GOLD \u00e9 EXCLUSIVO para valor monet\u00e1rio / mcoCoins.** Gold em qualquer coisa decorativa/n\u00e3o-valor = ACHADO (P1).\n- Nebula (roxo/violeta) = reservado para contexto de mem\u00f3ria/conhecimento. Violeta gen\u00e9rico fora disso = ACHADO (P2).\n- T\u00edtulos/headings = Playfair Display (serifa elegante). Corpo/labels = JetBrains Mono.\n- CTAs prim\u00e1rios = glow neon.\n- OFF-BRAND a sinalizar: azul/indigo gen\u00e9rico do tailwind, verde gen\u00e9rico (a n\u00e3o ser status de sucesso), laranja, rosa, cinza chapado onde deveria ser bone. Heading sem serifa. Corpo sem mono.\n- TODO texto de UI vis\u00edvel deve ser pt-BR. String de UI em ingl\u00eas (n\u00e3o identificador t\u00e9cnico) = ACHADO (P1).\n\n## RUBRIC DE INTERA\u00c7\u00c3O\n- Hover deve responder (glow/cor/tooltip). Hover morto em elemento claramente interativo = P2.\n- Sem \u00e1reas brancas/em branco (canvas 3D DEVE mostrar algo \u2014 n\u00e3o um vazio branco nem spinner infinito).\n- Sem texto cortado/estourando, layout quebrado, elementos sobrepostos.\n- Badges/widgets/\u00edcones todos renderizam (sem caixa de \u00edcone faltando, sem placeholder de imagem quebrada).\n- Sem erro de console n\u00e3o-tratado (erros React, falha de chunk). Anote-os.\n\n## SA\u00cdDA\nRetorne S\u00d3 o objeto estruturado (schema for\u00e7ado): group=\"${g.label}\", pages[], summary. Por p\u00e1gina: route, name, loaded, status(ok/warn/fail), miv_issues[{severity,detail}], interaction_issues[{severity,detail}], console_errors[], untranslated_text[], screenshots[] (paths), notes. severity \u2208 P0/P1/P2/P3. status=ok se limpa (issues vazias), warn se P2/P3, fail se P0/P1 ou n\u00e3o carregou. Baseie-se em EVID\u00caNCIA (n\u00e3o invente; p\u00e1gina limpa = ok honesto).\n\n## No FIM: \\`agent-browser --session ${S} close\\`\n\n## P\u00c1GINAS DESTE GRUPO (na ordem):\n${pageList}\n`\n}\n\nphase('Audit')\nlog(`Auditoria visual MIV: ${GROUPS.length} grupos, ${GROUPS.reduce((a, g) => a + g.pages.length, 0)} p\u00e1ginas`)\n\nconst results = await parallel(\n  GROUPS.map((g) => () => agent(buildPrompt(g), { label: `audit:${g.id}:${g.label}`, phase: 'Audit', schema: SCHEMA }))\n)\n\nconst clean = results.filter(Boolean)\nconst allPages = clean.flatMap((r) => r.pages || [])\nconst fails = allPages.filter((p) => p.status === 'fail')\nconst warns = allPages.filter((p) => p.status === 'warn')\nlog(`Conclu\u00eddo: ${allPages.length} p\u00e1ginas \u00b7 ${fails.length} fail \u00b7 ${warns.length} warn \u00b7 ${allPages.filter(p => p.status === 'ok').length} ok`)\n\nreturn { groups: clean, totals: { pages: allPages.length, fail: fails.length, warn: warns.length, ok: allPages.filter(p => p.status === 'ok').length } }\n",
+  "run_in_background": "true"
+}
+```
+
+> **Tool Result (Workflow)** - ❌ Error
+>
+> ```
+> <tool_use_error>InputValidationError: Workflow failed due to the following issue:
+> An unexpected parameter `run_in_background` was provided</tool_use_error>
+> ```
+
+## 🤖 Claude *(04:33:06)*
+
+
+## 🤖 Claude *(04:33:06)*
+
+Workflow roda em background por padrão. Relançando sem o parâmetro inválido.
+
+## 🤖 Claude *(04:34:12)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'miv-e2e-visual-audit',\n  description: 'Auditoria visual E2E de 44 p\u00e1ginas p\u00f3s-rebrand MIV \u2014 real-user navigation, hovers, triggers, badges, widgets',\n  phases: [{ title: 'Audit', detail: '8 grupos, cada um dirige agent-browser e inspeciona os pr\u00f3prios screenshots' }],\n}\n\nconst SCRATCH = '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad'\nconst BASE = 'http://127.0.0.1:4173'\nconst KEY = 'sb-bcyvddsykvehvpwstlfa-auth-token'\nconst BIN_PATH = '/home/ubuntu/.nvm/versions/node/v22.22.3/bin'\n\nconst GROUPS = [\n  { id: 'g1', authed: false, label: 'p\u00fablico+auth', pages: [\n    { slug: 'landing', route: '/', name: 'Landing V2 (raiz)', kind: 'content' },\n    { slug: 'legacy', route: '/legacy', name: 'Landing legada', kind: 'content' },\n    { slug: 'auth', route: '/auth', name: 'Login/Cadastro', kind: 'content' },\n    { slug: 'reset', route: '/reset-password', name: 'Reset de senha', kind: 'content' },\n    { slug: 'privacy', route: '/privacy', name: 'Pol\u00edtica de Privacidade', kind: 'content' },\n    { slug: 'terms', route: '/terms', name: 'Termos de Servi\u00e7o', kind: 'content' },\n    { slug: 'notfound', route: '/rota-que-nao-existe-404', name: '404 NotFound', kind: 'content' },\n  ]},\n  { id: 'g2', authed: true, label: 'dashboard+constela\u00e7\u00e3o', pages: [\n    { slug: 'dashboard', route: '/dashboard', name: 'Vis\u00e3o Geral (home)', kind: 'content' },\n    { slug: 'constellation', route: '/dashboard/constellation', name: 'Constela\u00e7\u00e3o 3D', kind: 'canvas3d' },\n    { slug: 'memory', route: '/dashboard/constellation/memory', name: 'Memory Mesh', kind: 'canvas3d' },\n    { slug: 'matrix', route: '/dashboard/constellation/matrix', name: 'Matrix', kind: 'canvas3d' },\n    { slug: 'universe', route: '/dashboard/universe', name: 'Unified Sensorial Canvas', kind: 'canvas3d' },\n  ]},\n  { id: 'g3', authed: true, label: 'conte\u00fado+campanhas', pages: [\n    { slug: 'campaigns', route: '/dashboard/campaigns', name: 'Campanhas (lista)', kind: 'content' },\n    { slug: 'campaign-new', route: '/dashboard/campaigns/new', name: 'Assistente de Campanha', kind: 'content' },\n    { slug: 'campaign-detail', route: '/dashboard/campaigns/29b85b73-3982-41f3-90a4-dc5dab2e8ef3', name: 'Detalhe de Campanha', kind: 'content' },\n    { slug: 'content', route: '/dashboard/content', name: 'Biblioteca de Conte\u00fado', kind: 'content' },\n    { slug: 'video-editor', route: '/dashboard/content/video-editor/e27a09e7-197b-4a22-9e80-6914cb56ff9c', name: 'Editor de V\u00eddeo', kind: 'content' },\n    { slug: 'blog', route: '/dashboard/blog', name: 'Editor de Blog', kind: 'content' },\n    { slug: 'calendar', route: '/dashboard/calendar', name: 'Calend\u00e1rio', kind: 'content' },\n  ]},\n  { id: 'g4', authed: true, label: 'marketing+autopilot+orquestra\u00e7\u00e3o', pages: [\n    { slug: 'marketing', route: '/dashboard/marketing', name: 'Marketing Hub', kind: 'content' },\n    { slug: 'autopilot', route: '/dashboard/autopilot', name: 'Viral Autopilot', kind: 'content' },\n    { slug: 'orchestration', route: '/dashboard/orchestration', name: 'Orquestrador Visual (canvas)', kind: 'canvas3d' },\n    { slug: 'arena', route: '/dashboard/arena', name: 'Model Arena', kind: 'content' },\n    { slug: 'agent-economics', route: '/dashboard/agent-economics', name: 'Economia dos Agentes', kind: 'content' },\n    { slug: 'kanban', route: '/dashboard/kanban', name: 'Kanban', kind: 'content' },\n  ]},\n  { id: 'g5', authed: true, label: 'monetiza\u00e7\u00e3o+social+analytics', pages: [\n    { slug: 'affiliates', route: '/dashboard/affiliates', name: 'Afiliados', kind: 'content' },\n    { slug: 'affiliate-products', route: '/dashboard/affiliate-products', name: 'Produtos Afiliados', kind: 'content' },\n    { slug: 'social', route: '/dashboard/social', name: 'Redes Sociais', kind: 'content' },\n    { slug: 'analytics', route: '/dashboard/analytics', name: 'Analytics', kind: 'content' },\n    { slug: 'miner', route: '/dashboard/miner', name: 'Minerador Viral', kind: 'content' },\n  ]},\n  { id: 'g6', authed: true, label: 'canvas-studio', pages: [\n    { slug: 'canvas', route: '/dashboard/canvas', name: 'Canvas Studio (home)', kind: 'content' },\n    { slug: 'canvas-design', route: '/dashboard/canvas/design', name: 'Canvas Design', kind: 'iframe' },\n    { slug: 'canvas-video', route: '/dashboard/canvas/video', name: 'Video Studio Editor', kind: 'iframe' },\n    { slug: 'canvas-assets', route: '/dashboard/canvas/assets', name: 'Biblioteca de Assets', kind: 'content' },\n    { slug: 'canvas-editor', route: '/dashboard/canvas/905e2c66-7a92-4c9e-ad30-8113f64839dd', name: 'Editor de Canvas (grafo)', kind: 'canvas3d' },\n    { slug: 'video', route: '/dashboard/video', name: 'Video Studio', kind: 'content' },\n  ]},\n  { id: 'g7', authed: true, label: 'spaces+core-fable+chat', pages: [\n    { slug: 'spaces', route: '/dashboard/spaces', name: 'Spaces (home)', kind: 'canvas3d' },\n    { slug: 'space-canvas', route: '/dashboard/spaces/4909d024-b55d-4cbc-af2b-b9365d38a89b', name: 'Space Canvas', kind: 'canvas3d' },\n    { slug: 'core-fable', route: '/dashboard/core-fable', name: 'Core-Fable (shader 3D)', kind: 'canvas3d' },\n    { slug: 'chat', route: '/dashboard/chat', name: 'Chat', kind: 'content' },\n  ]},\n  { id: 'g8', authed: true, label: 'config+sistema+admin', pages: [\n    { slug: 'settings', route: '/dashboard/settings', name: 'Configura\u00e7\u00f5es', kind: 'content' },\n    { slug: 'billing', route: '/dashboard/billing', name: 'Assinatura/Billing', kind: 'content' },\n    { slug: 'admin', route: '/dashboard/admin', name: 'Administra\u00e7\u00e3o', kind: 'content' },\n    { slug: 'onboarding', route: '/onboarding', name: 'Onboarding', kind: 'content' },\n  ]},\n]\n\nconst SCHEMA = {\n  type: 'object',\n  properties: {\n    group: { type: 'string' },\n    summary: { type: 'string' },\n    pages: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          route: { type: 'string' },\n          name: { type: 'string' },\n          loaded: { type: 'boolean' },\n          status: { type: 'string', enum: ['ok', 'warn', 'fail'] },\n          miv_issues: { type: 'array', items: { type: 'object', properties: { severity: { type: 'string' }, detail: { type: 'string' } }, required: ['severity', 'detail'] } },\n          interaction_issues: { type: 'array', items: { type: 'object', properties: { severity: { type: 'string' }, detail: { type: 'string' } }, required: ['severity', 'detail'] } },\n          console_errors: { type: 'array', items: { type: 'string' } },\n          untranslated_text: { type: 'array', items: { type: 'string' } },\n          screenshots: { type: 'array', items: { type: 'string' } },\n          notes: { type: 'string' },\n        },\n        required: ['route', 'name', 'loaded', 'status', 'miv_issues', 'interaction_issues'],\n      },\n    },\n  },\n  required: ['group', 'pages', 'summary'],\n}\n\nfunction buildPrompt(g) {\n  const S = `miv-${g.id}`\n  const setupAuth = g.authed\n    ? `agent-browser --session ${S} open \"${BASE}/\"\nB64=$(cat ${SCRATCH}/session.b64)\nagent-browser --session ${S} eval \"localStorage.setItem('${KEY}', atob('$B64')); 'ok'\"\nagent-browser --session ${S} wait 1500`\n    : `# (grupo p\u00fablico \u2014 NAO injetar sessao; queremos ver /auth e /reset sem login)`\n\n  const pageList = g.pages.map((p, i) => {\n    const wait = p.kind === 'canvas3d' ? 6000 : (p.kind === 'iframe' ? 5000 : 3800)\n    return `${i + 1}. slug=${p.slug} | rota=\"${p.route}\" | nome=\"${p.name}\" | tipo=${p.kind} | wait=${wait}ms`\n  }).join('\\n')\n\n  return `Voce e um agente de QA visual/UX meticuloso auditando o app MCORCH DEPOIS de um rebrand completo de marca (MIV \u2014 Massive Impact Visual). Dirige um navegador REAL via a CLI \\`agent-browser\\` contra um preview LOCAL (evita o Cloudflare). Objetivo: navegar como um usuario real, verificar hovers, boards neon, badges, widgets, icones, botoes, dropdowns/triggers, e julgar a conformidade de marca MIV + saude de interacao de CADA pagina. Reporte achados como objeto estruturado (schema forcado).\n\n## AMBIENTE\n- Preview: ${BASE}\n- Sua sessao agent-browser: \\`${S}\\` (UNICA \u2014 nao use outro nome)\n- Auth: ${g.authed ? 'INJETAR sessao do User 0 (setup abaixo)' : 'NAO injetar \u2014 paginas publicas/sem-login'}\n- Screenshots: ${SCRATCH}/shots (crie com mkdir -p)\n- Se \\`agent-browser\\` nao estiver no PATH: \\`export PATH=\"${BIN_PATH}:$PATH\"\\`\n\n## SETUP (rode UMA vez, no comeco)\n\\`\\`\\`bash\nmkdir -p ${SCRATCH}/shots\nexport PATH=\"${BIN_PATH}:$PATH\"\nagent-browser --session ${S} set viewport 1920 1080\n${setupAuth}\n\\`\\`\\`\n\n## GUARDRAIL RIGIDO \u2014 NUNCA GASTAR / MUTAR (backend e PRODUCAO REAL, dinheiro do Sovereign)\nNUNCA clique em controle que dispare acao paga ou mutante. PROIBIDO clicar: Rodar/Run, Gerar/Generate, Executar/Execute, \"Analisar e Otimizar\", \"Executar Diagnostico\", Orquestrar, Publicar/Publish, Renderizar/Render, Exportar/Export, Enviar/Send campanha, Pontuar, Criar (se insere), Deletar/Delete, Desconectar/Disconnect, Salvar credenciais, Confirmar/checkout de pagamento.\nPERMITIDO: passar o mouse (hover) em QUALQUER coisa; clicar em nav lateral, abas (tabs), toggles de visualizacao; abrir dropdowns/filtros/date-pickers; abrir um dialog SO para ver e depois \\`press Escape\\` para fechar SEM confirmar. Na duvida: hover + screenshot, NAO clique. Se abrir um dialog com botao final destrutivo/pago, tire o screenshot e \\`press Escape\\` \u2014 nunca confirme.\n\n## PROTOCOLO POR PAGINA (para cada rota da lista, na ordem)\n1. \\`agent-browser --session ${S} open \"${BASE}<rota>\"\\`\n2. \\`agent-browser --session ${S} wait <wait do item>\\`\n3. Confirme render: \\`agent-browser --session ${S} eval \"location.pathname\"\\`. Se voltou pra \\`/auth\\` inesperadamente numa rota protegida \u2192 registre loaded=false + nota \"redirect /auth \u2014 sessao\", e siga pra proxima pagina.\n4. \\`agent-browser --session ${S} screenshot ${SCRATCH}/shots/${g.id}-<slug>-default.png\\` (viewport principal \u2014 o mais importante pro MIV)\n5. Se tipo=content: \\`agent-browser --session ${S} scroll down 900\\` e \\`screenshot ${SCRATCH}/shots/${g.id}-<slug>-scroll.png\\` (ver abaixo-da-dobra). Pule scroll pra canvas3d/iframe.\n6. \\`agent-browser --session ${S} snapshot -i\\` \u2014 enumere elementos interativos (@eN: botoes, links, abas, badges).\n7. Faca HOVER em 2 a 4 elementos representativos (item de nav, um board/card/widget, um CTA primario, um icone/badge): pra cada \\`hover @eN\\` depois \\`screenshot ${SCRATCH}/shots/${g.id}-<slug>-hover<N>.png\\`. Verifique se o elemento RESPONDE visualmente (glow neon / mudanca de cor / tooltip).\n8. Se houver trigger SEGURO (dropdown, aba, filtro, date-picker, dialog de \"ver\"): abra, \\`screenshot ${SCRATCH}/shots/${g.id}-<slug>-trigger.png\\`, depois \\`press Escape\\`.\n9. \\`agent-browser --session ${S} get console-messages\\` \u2014 capture erros/warnings.\n10. LEIA (visualize) seus screenshots e julgue pelos rubrics abaixo. Seja especifico: cite o que viu em qual screenshot.\n\n## RUBRIC DE MARCA MIV (julgue cada pagina)\n- Fundo = void (quase #000 preto). Cards = void levemente elevado/grafite.\n- Acento/interativo = cyan #00F2FF (nav ativo, CTAs, icones, links).\n- GOLD e EXCLUSIVO para valor monetario / mcoCoins. Gold em qualquer coisa decorativa/nao-valor = ACHADO (P1).\n- Nebula (roxo/violeta) = reservado para contexto de memoria/conhecimento. Violeta generico fora disso = ACHADO (P2).\n- Titulos/headings = Playfair Display (serifa elegante). Corpo/labels = JetBrains Mono.\n- CTAs primarios = glow neon.\n- OFF-BRAND a sinalizar: azul/indigo generico do tailwind, verde generico (a nao ser status de sucesso), laranja, rosa, cinza chapado onde deveria ser bone. Heading sem serifa. Corpo sem mono.\n- TODO texto de UI visivel deve ser pt-BR. String de UI em ingles (nao identificador tecnico) = ACHADO (P1).\n\n## RUBRIC DE INTERACAO\n- Hover deve responder (glow/cor/tooltip). Hover morto em elemento claramente interativo = P2.\n- Sem areas brancas/em branco (canvas 3D DEVE mostrar algo \u2014 nao um vazio branco nem spinner infinito).\n- Sem texto cortado/estourando, layout quebrado, elementos sobrepostos.\n- Badges/widgets/icones todos renderizam (sem caixa de icone faltando, sem placeholder de imagem quebrada).\n- Sem erro de console nao-tratado (erros React, falha de chunk). Anote-os.\n\n## SAIDA\nRetorne SO o objeto estruturado (schema forcado): group=\"${g.label}\", pages[], summary. Por pagina: route, name, loaded, status(ok/warn/fail), miv_issues[{severity,detail}], interaction_issues[{severity,detail}], console_errors[], untranslated_text[], screenshots[] (paths), notes. severity in P0/P1/P2/P3. status=ok se limpa (issues vazias), warn se P2/P3, fail se P0/P1 ou nao carregou. Baseie-se em EVIDENCIA (nao invente; pagina limpa = ok honesto).\n\n## No FIM: \\`agent-browser --session ${S} close\\`\n\n## PAGINAS DESTE GRUPO (na ordem):\n${pageList}\n`\n}\n\nphase('Audit')\nlog(`Auditoria visual MIV: ${GROUPS.length} grupos, ${GROUPS.reduce((a, g) => a + g.pages.length, 0)} paginas`)\n\nconst results = await parallel(\n  GROUPS.map((g) => () => agent(buildPrompt(g), { label: `audit:${g.id}:${g.label}`, phase: 'Audit', schema: SCHEMA }))\n)\n\nconst clean = results.filter(Boolean)\nconst allPages = clean.flatMap((r) => r.pages || [])\nconst fails = allPages.filter((p) => p.status === 'fail')\nconst warns = allPages.filter((p) => p.status === 'warn')\nlog(`Concluido: ${allPages.length} paginas \u00b7 ${fails.length} fail \u00b7 ${warns.length} warn \u00b7 ${allPages.filter(p => p.status === 'ok').length} ok`)\n\nreturn { groups: clean, totals: { pages: allPages.length, fail: fails.length, warn: warns.length, ok: allPages.filter(p => p.status === 'ok').length } }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wjsizy0w5
+> Summary: Auditoria visual E2E de 44 páginas pós-rebrand MIV — real-user navigation, hovers, triggers, badges, widgets
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/workflows/scripts/miv-e2e-visual-audit-wf_3eb0350e-d8c.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/workflows/scripts/miv-e2e-visual-audit-wf_3eb0350e-d8c.js"} to iterate without resending the script.)
+> Run ID: wf_3eb0350e-d8c
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/workflows/scripts/miv-e2e-visual-audit-wf_3eb0350e-d8c.js", resumeFromRunId: "wf_3eb0350e-d8c"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(04:34:31)*
+
+
+## 🤖 Claude *(04:34:32)*
+
+Workflow de auditoria rodando em background (`wf_3eb0350e-d8c`). Enquanto os 8 grupos navegam, vou adiantar o **Arc 2 (alinhamento ECC)** — pesquisar as utilities do `affaan-m/ECC` e mapear o que já temos vs. o que falta. Primeiro, o inventário local de tooling e carrego as ferramentas web.
+
+## 🤖 Claude *(04:34:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== .claude/scripts/ ===\"; ls -R .claude/scripts/ 2>/dev/null | head -40 || echo \"(no .claude/scripts dir)\"\necho \"=== .claude/agents/ (top) ===\"; ls .claude/agents/*.md 2>/dev/null | xargs -n1 basename 2>/dev/null | head -40\necho \"=== existing doctor/repair/session/supply-chain-ish tooling? ===\"\nls scripts/ 2>/dev/null | grep -iE \"doctor|repair|health|session|inspect|supply|ioc|scan|audit|self-heal|watchdog\" \necho \"--- scripts/qa ---\"\nls scripts/qa/ 2>/dev/null | grep -iE \"doctor|repair|health|session|inspect|supply|ioc|scan|audit\"",
+  "description": "Inventory local tooling vs ECC concepts"
+}
+```
+
+## 🤖 Claude *(04:34:37)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebSearch,WebFetch",
+  "max_results": 5
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .claude/scripts/ ===
+> .claude/scripts/:
+> db
+> 
+> .claude/scripts/db:
+> check-agents.ts
+> check-columns.ts
+> check-node-counts.ts
+> check-system-nodes.ts
+> check_trends.ts
+> deep-diagnostic.ts
+> list_users.ts
+> mimic-frontend.ts
+> seed-kanban-spaces.ts
+> smoke_test_byok.ts
+> sync-agents-to-nodes.ts
+> test_discover.ts
+> test_fetch_trends.ts
+> test-limit.ts
+> test-pagination.ts
+> view_logs.ts
+> === .claude/agents/ (top) ===
+> bok-scribe-agent.md
+> build-deploy-guardian.md
+> deepsearch-blueprint.md
+> openclaw-soul-template.md
+> === existing doctor/repair/session/supply-chain-ish tooling? ===
+> audit-4cs.sh
+> audit-mesh-edges.js
+> audit-mesh-edges.ts
+> canvas-video-watchdog.sh
+> inspect-nodes-status.cjs
+> seed-claw-master-audit-v1-seal.ts
+> self-heal-spaces.sh
+> watchdog-mcorch.sh
+> --- scripts/qa ---
+> audit-canvas-ui.ts
+> audit-lucide-imports.ts
+> audit-privileged-rpc-grants.sh
+> audit-schema-drift.sh
+> gen-user-session.ts
+> health-pulse.ts
+> run-audit.ts
+> smoke-aeo-audit.ts
+> smoke-infra-health-rls.ts
+> ```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebSearch'}, {'type': 'tool_reference', 'tool_name': 'WebFetch'}]
+> ```
+
+## 🤖 Claude *(04:34:46)*
+
+
+## 🤖 Claude *(04:34:48)*
+
+Local: temos vários `audit-*`, `watchdog-mcorch.sh`, `self-heal-spaces.sh`, `health-pulse.ts` — mas **nada** que faça (a) doctor/repair do Claude CLI, (b) inspeção de sessão/tokens, (c) scan de supply-chain IoC de pacotes. Vou pesquisar o repo ECC para entender os utilitários exatos antes de adaptá-los sob medida (SSP-01, sem clonar).
+
+## 🤖 Claude *(04:34:49)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "affaan-m ECC github doctor.js repair.js session-inspect scan-supply-chain-iocs claude"
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "affaan-m ECC github doctor.js repair.js session-inspect scan-supply-chain-iocs claude"
+> 
+> Links: [{"title":"GitHub - affaan-m/ECC: The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond. · GitHub","url":"https://github.com/affaan-m/ecc"},{"title":"ECC/package.json at main · affaan-m/ECC","url":"https://github.com/affaan-m/ECC/blob/main/package.json"},{"title":"Releases · affaan-m/ECC","url":"https://github.com/affaan-m/ECC/releases"},{"title":"Issues · affaan-m/ECC","url":"https://github.com/affaan-m/ECC/issues"},{"title":"affaan-m (Affaan Mustafa) · GitHub","url":"https://github.com/affaan-m"},{"title":"Add ECC install-state plus uninstall / doctor / repair lifecycle · Issue #421 · affaan-m/ECC","url":"https://github.com/affaan-m/everything-claude-code/issues/421"},{"title":"Overview · affaan-m/ECC · GitHub","url":"https://github.com/affaan-m/ECC/security"},{"title":"affaan-m-ECC/docs/security/supply-chain-incident-response.md at main · skill-vault/affaan-m-ECC","url":"https://github.com/skill-vault/affaan-m-ECC/blob/main/docs/security/supply-chain-incident-response.md"},{"title":"ECC/docs/es/README.md at main · affaan-m/ECC","url":"https://github.com/affaan-m/ECC/blob/main/docs/es/README.md"},{"title":"ECC/docs/releases/2.0.0-rc.1/release-notes.md at main · affaan-m/ECC","url":"https://github.com/affaan-m/ECC/blob/main/docs/releases/2.0.0-rc.1/release-notes.md"}]
+> 
+> Based on the search results, here's what I found about your query:
+> 
+> ECC is an agent harness performance optimization system with skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond.
+> 
+> The specific components you mentioned are part of ECC's infrastructure:
+> 
+> - **doctor.js and repair.js**: These are diagnostic and repair scripts that can be run with `node scripts/ecc.js doctor` and `node scripts/ecc.js repair` to help restore ECC-managed files.
+> 
+> - **session-inspect**: This appears to be part of ECC's session management tools for tracking Claude Code configuration state.
+> 
+> - **scan-supply-chain-iocs.js**: This is a script included in the package files (`scripts/ci/scan-supply-chain-iocs.js`) and is used for security scanning. It can be run with `node scripts/ci/scan-supply-chain-iocs.js --home` to find Claude Code, VS Code, Zed, or OS-level persistence indicators.
+> 
+> The project focuses on security and supply-chain integrity. Features include supply chain verification, runtime monitoring, watch mode, PR security gate, and org-wide policy enforcement.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(04:35:19)*
+
+
+## 🤖 Claude *(04:35:24)*
+
+ECC = "Everything Claude Code" (harness de otimização + segurança para Claude Code/Codex/Cursor). Os 3 conceitos:
+- **doctor/repair** (`scripts/ecc.js doctor|repair`) — diagnostica/restaura arquivos geridos do Claude Code.
+- **session-inspect** — rastreio de estado/tokens de sessão.
+- **scan-supply-chain-iocs** (`--home`) — detecta IoCs de persistência (Claude Code, VS Code, Zed, OS-level) — ataque de supply-chain.
+
+Vou buscar o código-fonte real dos scripts para adaptar versões sob medida com fidelidade. Fetches em paralelo.
+
+## 🤖 Claude *(04:35:25)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://raw.githubusercontent.com/affaan-m/ECC/main/scripts/ci/scan-supply-chain-iocs.js",
+  "prompt": "Extract the complete list of supply-chain IoC (indicator of compromise) checks this script performs. For each check, describe: (1) what file/path/pattern it looks at, (2) what malicious indicator it flags, (3) the exact regexes or filenames or persistence locations it scans (Claude Code, VS Code, Zed, shell rc files, cron, systemd, etc). Also describe its CLI flags (like --home), exit codes, and output format. Be concrete and complete so I can reimplement it."
+}
+```
+
+## 🤖 Claude *(04:35:28)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://raw.githubusercontent.com/affaan-m/ECC/main/scripts/ecc.js",
+  "prompt": "Describe exactly what the `doctor` and `repair` subcommands do. What does doctor diagnose (which files, hashes, versions, config integrity, drift)? What does repair restore and how? List the checks and their remediation. Also mention any install-state / manifest file it reads. Be concrete."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> I cannot provide a concrete description of what `doctor` and `repair` do based on the content provided. The CLI entrypoint script only lists these commands with brief descriptions:
+> 
+> - **doctor**: "Diagnose missing or drifted ECC-managed files"
+> - **repair**: "Restore drifted or missing ECC-managed files"
+> 
+> The actual implementation details—specific file checks, hash validation methods, version comparison logic, configuration integrity validation, drift detection mechanisms, remediation procedures, and install-state file formats—are contained in the separate `doctor.js` and `repair.js` scripts, which are not included in the webpage content you provided.
+> 
+> To answer your question concretely with specifics about which files are checked, how drift is detected, what remediations are applied, and which manifest files are consulted, I would need access to those implementation files.
+> ```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Supply-Chain IoC Scanner: Complete Check Inventory
+> 
+> ## Core Detection Mechanisms
+> 
+> ### 1. **Malicious Package Version Matching**
+> - **Files scanned:** `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `pyproject.toml`, `poetry.lock`, `requirements.txt`
+> - **Detection method:** Parses JSON or regex-matches dependency specifications
+> - **Malicious packages:** 150+ packages across scopes (@uipath/*, @tanstack/*, @squawk/*, @mistralai/*, etc.)
+> - **Example indicators:** `@beproduct/nestjs-auth@0.1.2` through `0.1.19`, `node-ipc@9.1.6`, `9.2.3`, `10.1.1`, `11.0.0`, `12.0.1`
+> - **Match logic:** Version specifiers are checked against exact versions and compared as semantic ranges
+> 
+> ### 2. **Malicious File Hash Detection**
+> - **Files targeted:** `node-ipc.cjs`, `node-ipc-9.1.6.tgz`, `node-ipc-9.2.3.tgz`, `node-ipc-12.0.1.tar.gz`
+> - **Detection:** SHA256 hash comparison against known compromised payloads
+> - **Example hash:** `96097e0612d9575cb133021017fb1a5c68a03b60f9f3d24ebdc0e628d9034144` (node-ipc.cjs)
+> 
+> ### 3. **Payload Filename Detection**
+> - **Critical filenames:** `router_init.js`, `router_runtime.js`, `tanstack_runner.js`, `opensearch_init.js`, `vite_setup.mjs`, `execution.js`, `transformers.pyz`, `pgmonitor.py`
+> - **Scanning context:** Only within `node_modules/` directories
+> - **Severity:** Critical findings when detected
+> 
+> ### 4. **Persistence Artifact Detection**
+> - **Configuration paths scanned:**
+>   - `~/.claude/settings.json`, `~/.claude/settings.local.json`
+>   - `~/.claude/hooks/hooks.json`
+>   - `~/.vscode/tasks.json`
+>   - `~/.config/systemd/user/` (gh-token-monitor.service, pgsql-monitor.service)
+>   - `~/.config/gh-token-monitor/token` (dead-man switch storage)
+>   - `~/Library/LaunchAgents/com.user.gh-token-monitor.plist`
+>   - `~/.local/bin/` (gh-token-monitor.sh, pgmonitor.py)
+> 
+> ### 5. **Critical Text Indicator Scanning**
+> Pattern matches against 40+ known IoCs, including:
+> - **Package references:** `@tanstack/setup`, git commit hashes (`79ac49eedf774dd4b0cfa308722bc463cfe5885c`)
+> - **Hostile domains:** `filev2.getsession.org`, `seed1.getsession.org`, `api.masscan.cloud`, `git-tanstack.com`
+> - **IP addresses:** `169.254.169.254`, `169.254.170.2` (metadata services)
+> - **Workflow artifacts:** `codeql_analysis.yml`, `shai-hulud-workflow.yml`
+> - **Suspicious markers:** `IfYouRevokeThisTokenItWillWipeTheComputerOfTheOwner`, `A Mini Shai-Hulud has Appeared`
+> - **Detection regex:** Non-greedy, case-insensitive, with word-boundary enforcement to avoid false positives (e.g., `execution.js` vs. legitimate `before-shell-execution.js`)
+> 
+> ### 6. **Runtime Artifact Detection** (with --home flag)
+> - **Scanned paths:** `/tmp/transformers.pyz`, `/tmp/pgmonitor.py`, `/tmp/node-ipc-*.tgz`, `/private/tmp/` equivalents
+> 
+> ### 7. **Claude Settings Defense**
+> - **Claude-specific protection:** Indicators found within `.claude/settings.json` permission deny-lists are excluded from reporting (defensive scanning acknowledges allowlisting)
+> 
+> ## CLI Interface
+> 
+> **Command structure:** `node scripts/ci/scan-supply-chain-iocs.js [options]`
+> 
+> **Flags:**
+> - `--root <dir>`: Scan directory (default: repo root)
+> - `--home`: Include user-level Claude, VS Code, LaunchAgent, systemd, ~/.local/bin, /tmp locations
+> - `--home-dir <dir>`: Custom home directory with --home
+> - `--json`: JSON output instead of text
+> - `--help, -h`: Usage information
+> 
+> **Exit codes:**
+> - `0`: Scan completed; no findings
+> - `1`: Findings detected (critical IoCs present)
+> - `2`: Argument parsing error
+> 
+> ## Output Format
+> 
+> **Text mode:** `CRITICAL: <file>:<line> <indicator>` followed by descriptive message
+> 
+> **JSON mode:** Structured object containing `rootDir`, `scannedFiles` (count), and `findings` array with `{severity, filePath, line, indicator, message}` entries
+> 
+> ## Directory Traversal Strategy
+> 
+> - **Ignored directories:** `.git`, `.next`, `.pytest_cache`, `__pycache__`, `coverage`, `dist`, `docs`, `target`, `tests`
+> - **Special handling:** `node_modules/` walked separately to inspect both root and scoped packages (@-prefixed)
+> - **Deduplication:** File list deduplicated and sorted before scanning
+> ```
+
+## 🤖 Claude *(04:36:28)*
+
+
+## 🤖 Claude *(04:36:31)*
+
+O scanner de supply-chain IoC é ouro — detecta a família de worms **Shai-Hulud** (versões maliciosas de pacotes, hashes, domínios hostis, artefatos de persistência em `~/.claude`, systemd, LaunchAgents). Não temos NADA equivalente (só gitleaks p/ segredos). Vou confirmar o comportamento do `session-inspect` e localizar doctor/repair no tree.
+
+## 🤖 Claude *(04:36:33)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://api.github.com/repos/affaan-m/ECC/git/trees/main?recursive=1",
+  "prompt": "List every file path that contains any of: \"doctor\", \"repair\", \"session-inspect\", \"session_inspect\", \"inspect\", \"supply-chain\", \"iocs\", \"token\". Return the exact full paths. Also list any file under a \"scripts/\" or \"lib/\" directory whose name suggests health-check, diagnostics, or session/token inspection."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # File Paths Matching Search Criteria
+> 
+> Based on the repository structure provided, here are the files matching your search terms:
+> 
+> ## Supply Chain & Security Files
+> - `.github/workflows/supply-chain-watch.yml`
+> 
+> ## Session & Hook Management
+> - `.cursor/hooks/session-end.js`
+> - `.cursor/hooks/session-start.js`
+> - `.kiro/hooks/session-summary.kiro.hook`
+> 
+> ## Scripts Directory
+> - `.kiro/scripts/format.sh`
+> - `.kiro/scripts/quality-gate.sh`
+> 
+> **Note:** The repository structure shows no files explicitly containing "doctor," "repair," "session-inspect," "session_inspect," "inspect" (as standalone filename), "iocs," or "token" in their paths. The matches above represent the closest functional equivalents related to session management, supply chain monitoring, and quality assurance automation within the disclosed file tree.
+> ```
+
+## 🤖 Claude *(04:37:28)*
+
+
+## 🤖 Claude *(04:37:31)*
+
+Tenho spec completo do scanner (família Shai-Hulud) e entendimento suficiente de doctor/repair/session-inspect para adaptações **sob medida** (a diretiva pede adaptar, não portar). Vou checar rápido o progresso da auditoria antes de construir os 3 utilitários ECC-nativos.
+
+## 🤖 Claude *(04:37:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c\necho \"=== journal tail ===\"; tail -8 \"$TDIR/journal.jsonl\" 2>/dev/null | node -e \"let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{s.trim().split('\\n').forEach(l=>{try{const j=JSON.parse(l);console.log((j.type||'?'), (j.label||j.agentId||''), (j.status||''))}catch{}})})\" 2>/dev/null || tail -5 \"$TDIR/journal.jsonl\" 2>/dev/null\necho \"=== shots captured so far ===\"; ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots/ 2>/dev/null | wc -l; ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots/ 2>/dev/null | sed 's/-[^-]*\\.png//' | sort -u | head -20",
+  "description": "Check QA workflow progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === journal tail ===
+> started abc5bfb335f7c6c81 
+> started a3576a159753965b7 
+> === shots captured so far ===
+> 10
+> g1-landing
+> g2-dashboard
+> ```
+
+## 🤖 Claude *(04:38:30)*
+
+
+## 🤖 Claude *(04:38:33)*
+
+QA em andamento (g1+g2 rodando, 10 shots capturados — cap de 2 concorrentes confirmado). Vou construir os 3 utilitários ECC-nativos enquanto a auditoria roda. Começando pelo **scanner de supply-chain IoC** (a joia — família Shai-Hulud; não temos equivalente).
+
+## 🤖 Claude *(04:39:35)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * MCORCH Supply-Chain Sentinel \u2014 bespoke IoC scanner (SSP-01 \u00b7 Cyber-Sentinel family).\n *\n * Adapted (NOT cloned) from the concept of `affaan-m/ECC scripts/ci/scan-supply-chain-iocs.js`\n * to the MCORCH sovereign architecture. Detects indicators of compromise (IoCs) from the\n * npm/supply-chain worm waves (node-ipc protestware; the Sept-2025 \"Shai-Hulud\" self-propagating\n * worm; @ctrl/* takeovers) \u2014 the class of attack the Survival Laws exist to survive.\n *\n * Detection surface (worm-signature based \u2192 high signal, low false-positive):\n *   1. Known-compromised package @ version present in any lockfile/manifest.\n *   2. Worm payload filenames dropped inside node_modules/.\n *   3. Worm text markers + hostile exfil domains + cloud-metadata IPs in tracked source.\n *   4. Host persistence artifacts (systemd user units, ~/.local/bin droppers, LaunchAgents,\n *      poisoned ~/.claude hooks) + /tmp runtime droppers  \u2014 only with --home.\n *\n * Usage:\n *   bun run .claude/scripts/scan-supply-chain-iocs.ts [--root <dir>] [--home] [--home-dir <dir>] [--json]\n *   Exit 0 = clean \u00b7 1 = IoCs found \u00b7 2 = bad args.\n *\n * The embedded blocklists are a CURATED, DOCUMENTED SEED (Lei 1 \u2014 honest, not a fabricated\n * \"complete\" list). The structural checks (persistence / payload / markers / domains) are the\n * robust core and do NOT depend on list completeness. Refresh package lists from CISA / GitHub\n * Advisory when a new wave lands, and record the diff in docs/processes/supply-chain-sentinel.md.\n */\nimport { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';\nimport { join, resolve, relative, basename, sep } from 'node:path';\nimport { homedir } from 'node:os';\nimport { execSync } from 'node:child_process';\n\ntype Severity = 'critical' | 'high' | 'warn';\ninterface Finding { severity: Severity; path: string; line?: number; indicator: string; message: string }\n\n// \u2500\u2500 IoC data (curated seed \u2014 extend from advisories) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// name \u2192 known-malicious versions. Present-at-bad-version = critical; present-at-other-version = warn.\nconst BAD_PACKAGES: Record<string, string[]> = {\n  'node-ipc': ['9.2.2', '10.1.1', '10.1.2'],          // protestware wipe (CVE-2022-23812)\n  'peacenotwar': ['*'],                                 // node-ipc protestware payload\n  '@ctrl/tinycolor': ['4.1.1', '4.1.2'],                // Shai-Hulud 2025-09\n  '@ctrl/deluge': ['1.2.0'],                            // Shai-Hulud 2025-09\n  'angulartics2': ['14.1.2'],                           // Shai-Hulud 2025-09\n  'koa2-swagger-ui': ['5.11.1', '5.11.2'],              // Shai-Hulud 2025-09\n  'ngx-toastr': ['19.0.2'],                             // Shai-Hulud 2025-09\n  'rxnt-authentication': ['*'],                          // Shai-Hulud 2025-09\n  'ua-parser-js': ['0.7.29', '0.8.0', '1.0.0'],         // 2021 crypto-miner takeover\n};\n\n// Payload files the worms drop INSIDE node_modules (worm-specific \u2192 near-zero FP).\nconst PAYLOAD_FILENAMES = new Set([\n  'router_init.js', 'router_runtime.js', 'tanstack_runner.js', 'opensearch_init.js',\n  'vite_setup.mjs', 'transformers.pyz', 'pgmonitor.py',\n]);\n\n// Very-high-signal text markers left by the worms (case-insensitive substring).\nconst WORM_MARKERS = [\n  'A Mini Shai-Hulud has Appeared',\n  'IfYouRevokeThisTokenItWillWipeTheComputerOfTheOwner',\n  'shai-hulud-workflow',\n];\n\n// Hostile exfil domains + cloud-metadata IPs. Domains = high; metadata IPs = warn (context).\nconst HOSTILE_HIGH = ['filev2.getsession.org', 'seed1.getsession.org', 'api.masscan.cloud', 'git-tanstack.com'];\nconst HOSTILE_WARN = ['169.254.169.254', '169.254.170.2', 'webhook.site'];\n\n// Host persistence droppers (relative to home) \u2014 only checked with --home.\nconst PERSISTENCE_REL = [\n  '.config/systemd/user/gh-token-monitor.service',\n  '.config/systemd/user/pgsql-monitor.service',\n  '.config/gh-token-monitor/token',\n  '.local/bin/gh-token-monitor.sh',\n  '.local/bin/pgmonitor.py',\n  'Library/LaunchAgents/com.user.gh-token-monitor.plist',\n];\nconst RUNTIME_ABS = ['/tmp/transformers.pyz', '/tmp/pgmonitor.py', '/private/tmp/transformers.pyz', '/private/tmp/pgmonitor.py'];\n\n// Poisoned Claude/editor config files worth a hostile-indicator sweep with --home.\nconst HOME_CONFIG_REL = [\n  '.claude/settings.json', '.claude/settings.local.json', '.claude/hooks/hooks.json',\n  '.vscode/tasks.json', '.config/zed/settings.json',\n];\n\nconst IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.next', 'coverage', '__pycache__', '.pytest_cache', 'target', '.cache']);\nconst SELF_PATH = resolve(import.meta.path ?? __filename ?? '');\nconst ALLOW_MARKER = 'ioc-scan:allow'; // line-level suppression for legit references\n\n// \u2500\u2500 args \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst argv = process.argv.slice(2);\nfunction argVal(flag: string): string | undefined { const i = argv.indexOf(flag); return i >= 0 ? argv[i + 1] : undefined; }\nif (argv.includes('-h') || argv.includes('--help')) {\n  console.log('Uso: bun run .claude/scripts/scan-supply-chain-iocs.ts [--root <dir>] [--home] [--home-dir <dir>] [--json]');\n  process.exit(2);\n}\nconst ROOT = resolve(argVal('--root') ?? process.cwd());\nconst HOME = resolve(argVal('--home-dir') ?? homedir());\nconst SCAN_HOME = argv.includes('--home');\nconst JSON_OUT = argv.includes('--json');\n\nconst findings: Finding[] = [];\nconst add = (f: Finding) => findings.push(f);\n\n// \u2500\u2500 helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction trackedFiles(root: string): string[] {\n  try {\n    const out = execSync('git ls-files -z', { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });\n    return out.split('\\0').filter(Boolean).map((p) => join(root, p));\n  } catch {\n    // Not a git repo \u2014 fall back to a bounded manual walk.\n    const acc: string[] = [];\n    const walk = (dir: string, depth: number) => {\n      if (depth > 8) return;\n      let entries: string[]; try { entries = readdirSync(dir); } catch { return; }\n      for (const e of entries) {\n        if (IGNORE_DIRS.has(e)) continue;\n        const p = join(dir, e);\n        let st; try { st = statSync(p); } catch { continue; }\n        if (st.isDirectory()) walk(p, depth + 1);\n        else if (st.size < 4 * 1024 * 1024) acc.push(p);\n      }\n    };\n    walk(root, 0);\n    return acc;\n  }\n}\n\nfunction readSafe(p: string): string | null { try { return readFileSync(p, 'utf8'); } catch { return null; } }\n\n// 1 \u2500\u2500 lockfiles / manifests: known-compromised package @ version \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction scanManifests() {\n  const manifests = ['package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'bun.lock', 'bun.lockb', 'requirements.txt', 'poetry.lock', 'pyproject.toml'];\n  for (const m of manifests) {\n    const p = join(ROOT, m);\n    const txt = readSafe(p);\n    if (!txt) continue;\n    const lines = txt.split('\\n');\n    for (const [name, badVers] of Object.entries(BAD_PACKAGES)) {\n      // Match \"name\" followed by a version token nearby (JSON, lockfile, or specifier form).\n      const esc = name.replace(/[.*+?^${}()|[\\]\\\\/]/g, '\\\\$&');\n      const re = new RegExp(`(?:\"${esc}\"|['\\`]?${esc}['\\`]?|\\\\b${esc}@)\\\\s*[:@\"']?\\\\s*[\\\\^~>=<]*\\\\s*([0-9][0-9A-Za-z.\\\\-]*)`, 'g');\n      let mm: RegExpExecArray | null;\n      while ((mm = re.exec(txt))) {\n        const ver = mm[1];\n        const line = txt.slice(0, mm.index).split('\\n').length;\n        if (lines[line - 1]?.includes(ALLOW_MARKER)) continue;\n        const hit = badVers.includes('*') || badVers.includes(ver);\n        add({\n          severity: hit ? 'critical' : 'warn',\n          path: relative(ROOT, p) || m, line, indicator: `${name}@${ver}`,\n          message: hit\n            ? `Pacote comprometido em vers\u00e3o maliciosa conhecida (${badVers.join('/')}) \u2014 REMOVA e rotacione segredos.`\n            : `Pacote da lista de comprometidos presente em outra vers\u00e3o \u2014 confirme que n\u00e3o \u00e9 ${badVers.join('/')}.`,\n        });\n      }\n    }\n  }\n}\n\n// 2 \u2500\u2500 node_modules payload filenames \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction scanNodeModulesPayloads() {\n  const nm = join(ROOT, 'node_modules');\n  if (!existsSync(nm)) return;\n  const walk = (dir: string, depth: number) => {\n    if (depth > 6) return;\n    let entries: string[]; try { entries = readdirSync(dir); } catch { return; }\n    for (const e of entries) {\n      const p = join(dir, e);\n      let st; try { st = statSync(p); } catch { continue; }\n      if (st.isDirectory()) { if (e !== '.bin') walk(p, depth + 1); }\n      else if (PAYLOAD_FILENAMES.has(e)) {\n        add({ severity: 'critical', path: relative(ROOT, p), indicator: e, message: 'Arquivo de payload de worm dentro de node_modules \u2014 quarentena imediata.' });\n      }\n    }\n  };\n  walk(nm, 0);\n}\n\n// 3 \u2500\u2500 worm markers + hostile domains in tracked source \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction scanText() {\n  const files = trackedFiles(ROOT);\n  for (const f of files) {\n    if (resolve(f) === SELF_PATH) continue;                       // never flag this scanner\n    const rel = relative(ROOT, f);\n    if (rel.startsWith('docs' + sep) || rel.startsWith('.claude' + sep + 'scripts')) continue; // our own security tooling/docs legitimately name IoCs\n    if (basename(f).length > 128) continue;\n    const txt = readSafe(f);\n    if (!txt || txt.length > 3 * 1024 * 1024) continue;\n    const lower = txt.toLowerCase();\n    const probes: Array<[string[], Severity, string]> = [\n      [WORM_MARKERS, 'critical', 'Marcador textual de worm supply-chain (Shai-Hulud)'],\n      [HOSTILE_HIGH, 'high', 'Dom\u00ednio hostil de exfiltra\u00e7\u00e3o conhecido'],\n      [HOSTILE_WARN, 'warn', 'Indicador contextual (metadata IP / exfil sink) \u2014 confirme uso leg\u00edtimo'],\n    ];\n    for (const [list, sev, label] of probes) {\n      for (const ioc of list) {\n        let idx = lower.indexOf(ioc.toLowerCase());\n        while (idx >= 0) {\n          const line = txt.slice(0, idx).split('\\n').length;\n          if (!txt.split('\\n')[line - 1]?.includes(ALLOW_MARKER)) {\n            add({ severity: sev, path: rel, line, indicator: ioc, message: label });\n          }\n          idx = lower.indexOf(ioc.toLowerCase(), idx + ioc.length);\n        }\n      }\n    }\n  }\n}\n\n// 4 \u2500\u2500 host persistence + runtime droppers + poisoned configs (--home) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nfunction scanHome() {\n  for (const rel of PERSISTENCE_REL) {\n    const p = join(HOME, rel);\n    if (existsSync(p)) add({ severity: 'critical', path: p, indicator: basename(p), message: 'Artefato de persist\u00eancia de worm no host (dropper/dead-man switch) \u2014 investigue e remova.' });\n  }\n  for (const p of RUNTIME_ABS) {\n    if (existsSync(p)) add({ severity: 'critical', path: p, indicator: basename(p), message: 'Dropper de runtime em /tmp \u2014 worm ativo, isole a m\u00e1quina.' });\n  }\n  // /tmp/node-ipc-*.tgz\n  for (const tdir of ['/tmp', '/private/tmp']) {\n    try { for (const e of readdirSync(tdir)) if (/^node-ipc-.*\\.(tgz|tar\\.gz)$/.test(e)) add({ severity: 'high', path: join(tdir, e), indicator: e, message: 'Tarball node-ipc solto em /tmp \u2014 poss\u00edvel staging de payload.' }); } catch { /* no tmp */ }\n  }\n  // hostile indicators inside poisoned Claude/editor configs\n  for (const rel of HOME_CONFIG_REL) {\n    const p = join(HOME, rel);\n    const txt = readSafe(p);\n    if (!txt) continue;\n    const lower = txt.toLowerCase();\n    for (const ioc of [...WORM_MARKERS, ...HOSTILE_HIGH]) {\n      if (lower.includes(ioc.toLowerCase())) add({ severity: 'critical', path: p, indicator: ioc, message: 'Indicador hostil dentro de config do Claude/editor \u2014 hook/tarefa envenenada.' });\n    }\n  }\n}\n\n// \u2500\u2500 run \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nscanManifests();\nscanNodeModulesPayloads();\nscanText();\nif (SCAN_HOME) scanHome();\n\nconst crit = findings.filter((f) => f.severity === 'critical').length;\nconst high = findings.filter((f) => f.severity === 'high').length;\nconst warn = findings.filter((f) => f.severity === 'warn').length;\n\nif (JSON_OUT) {\n  console.log(JSON.stringify({ rootDir: ROOT, homeScanned: SCAN_HOME, counts: { critical: crit, high, warn }, findings }, null, 2));\n} else {\n  console.log(`\ud83d\udee1\ufe0f  MCORCH Supply-Chain Sentinel \u2014 root=${ROOT}${SCAN_HOME ? ' +home' : ''}`);\n  if (findings.length === 0) {\n    console.log('\u2705 Nenhum IoC de supply-chain detectado.');\n  } else {\n    const order: Severity[] = ['critical', 'high', 'warn'];\n    for (const sev of order) {\n      for (const f of findings.filter((x) => x.severity === sev)) {\n        const tag = sev === 'critical' ? '\ud83d\udd34 CRITICAL' : sev === 'high' ? '\ud83d\udfe0 HIGH' : '\ud83d\udfe1 WARN';\n        console.log(`${tag}  ${f.path}${f.line ? ':' + f.line : ''}  [${f.indicator}] \u2014 ${f.message}`);\n      }\n    }\n    console.log(`\\n  ${crit} critical \u00b7 ${high} high \u00b7 ${warn} warn`);\n  }\n}\n\nprocess.exit(crit + high > 0 ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:39:41)*
+
+
+## 🤖 Claude *(04:39:42)*
+
+Scanner escrito. **Lei 1 — provar materialmente.** Rodando contra o repo (deve sair limpo, exit 0) e com `--home` (persistência no host):
+
+## 🤖 Claude *(04:39:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scan (repo only) ===\"; bun run .claude/scripts/scan-supply-chain-iocs.ts; echo \"exit=$?\"\necho \"\"; echo \"=== scan --home ===\"; bun run .claude/scripts/scan-supply-chain-iocs.ts --home; echo \"exit=$?\"",
+  "description": "Run IoC scanner clean + home"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scan (repo only) ===
+> 🛡️  MCORCH Supply-Chain Sentinel — root=/home/gcrUX/htdocs/constellation-orchestra
+> 🟡 WARN  packages/vision-mcp-core/src/__tests__/fatia2.test.ts:54  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 🟡 WARN  packages/vision-mcp-core/src/__tests__/fatia2.test.ts:68  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 🟡 WARN  packages/vision-mcp-core/src/tools/analyze-video.ts:88  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 🟡 WARN  supabase/functions/discover-products/index.ts:38  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 
+>   0 critical · 0 high · 4 warn
+> exit=0
+> 
+> === scan --home ===
+> 🛡️  MCORCH Supply-Chain Sentinel — root=/home/gcrUX/htdocs/constellation-orchestra +home
+> 🟡 WARN  packages/vision-mcp-core/src/__tests__/fatia2.test.ts:54  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 🟡 WARN  packages/vision-mcp-core/src/__tests__/fatia2.test.ts:68  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 🟡 WARN  packages/vision-mcp-core/src/tools/analyze-video.ts:88  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 🟡 WARN  supabase/functions/discover-products/index.ts:38  [169.254.169.254] — Indicador contextual (metadata IP / exfil sink) — confirme uso legítimo
+> 
+>   0 critical · 0 high · 4 warn
+> exit=0
+> ```
+
+## 🤖 Claude *(04:40:47)*
+
+
+## 🤖 Claude *(04:40:50)*
+
+Scanner funciona (exit 0, sem critical/high). Os 4 WARN são o **IP de metadata cloud `169.254.169.254`** — e são todos **guardas SSRF legítimos** (código que BLOQUEIA o IP para prevenir exfiltração), exatamente o caso "confirme uso legítimo". Vou olhar as 4 linhas para decidir entre suprimir (baseline limpo) ou refinar o heurístico.
+
+## 🤖 Claude *(04:40:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor spec in \"packages/vision-mcp-core/src/__tests__/fatia2.test.ts:54\" \"packages/vision-mcp-core/src/__tests__/fatia2.test.ts:68\" \"packages/vision-mcp-core/src/tools/analyze-video.ts:88\" \"supabase/functions/discover-products/index.ts:38\"; do\n  f=\"${spec%:*}\"; ln=\"${spec##*:}\"\n  echo \"\u2500\u2500 $spec \u2500\u2500\"\n  sed -n \"${ln}p\" \"$f\" | head -c 200; echo\ndone",
+  "description": "Inspect the 4 metadata-IP context lines"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── packages/vision-mcp-core/src/__tests__/fatia2.test.ts:54 ──
+>     for (const h of ["https://127.0.0.1/v.mp4", "https://169.254.169.254/v", "https://10.1.2.3/v"]) {
+> 
+> ── packages/vision-mcp-core/src/__tests__/fatia2.test.ts:68 ──
+>     for (const h of ["https://localhost/a", "https://127.0.0.1/a", "https://10.0.0.5/a", "https://192.168.1.1/a", "https://169.254.169.254/latest/meta-data", "https://172.16.0.1/a"]) {
+> 
+> ── packages/vision-mcp-core/src/tools/analyze-video.ts:88 ──
+> // against the SSRF guard (a public host could 302 → http://169.254.169.254 / an internal mesh service,
+> 
+> ── supabase/functions/discover-products/index.ts:38 ──
+> // internal/metadata IPs (169.254.169.254, 127.*, 10.*, 192.168.*, 172.16-31.*) do not. Mirrors the
+> ```
+
+## 🤖 Claude *(04:41:15)*
+
+
+## 🤖 Claude *(04:41:18)*
+
+Todos os 4 são guardas SSRF legítimos (blocklists de teste + comentários explicando o guard). Vou refinar o heurístico: para os indicadores WARN (metadata IP), pular linhas claramente **defensivas** (comentário, palavra-chave SSRF/block/metadata, ou blocklist com 2+ IPs) — mantendo a detecção de um metadata-IP de exfiltração isolado.
+
+## 🤖 Claude *(04:41:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts",
+  "old_string": "function readSafe(p: string): string | null { try { return readFileSync(p, 'utf8'); } catch { return null; } }",
+  "new_string": "function readSafe(p: string): string | null { try { return readFileSync(p, 'utf8'); } catch { return null; } }\n\n// A contextual (WARN) indicator inside clearly-defensive code is a legit reference, not an IoC:\n// a comment, an SSRF/blocklist keyword, or an enumeration of several IPs (a blocklist lists many;\n// an exfil call targets exactly the metadata IP alone).\nconst DEF_KW = /\\b(ssrf|blocklist|allowlist|block|deny|denied|forbidden|reject|guard|private|internal|metadata|loopback|link.?local)\\b/i;\nfunction looksDefensive(lineTxt: string): boolean {\n  const t = lineTxt.trim();\n  if (t.startsWith('//') || t.startsWith('*') || t.startsWith('#')) return true;         // comment\n  if (DEF_KW.test(lineTxt)) return true;                                                  // defensive keyword\n  return (lineTxt.match(/\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b/g)?.length ?? 0) >= 2;     // blocklist enumeration\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:41:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts",
+  "old_string": "        let idx = lower.indexOf(ioc.toLowerCase());\n        while (idx >= 0) {\n          const line = txt.slice(0, idx).split('\\n').length;\n          if (!txt.split('\\n')[line - 1]?.includes(ALLOW_MARKER)) {\n            add({ severity: sev, path: rel, line, indicator: ioc, message: label });\n          }\n          idx = lower.indexOf(ioc.toLowerCase(), idx + ioc.length);\n        }",
+  "new_string": "        let idx = lower.indexOf(ioc.toLowerCase());\n        const srcLines = txt.split('\\n');\n        while (idx >= 0) {\n          const line = txt.slice(0, idx).split('\\n').length;\n          const lineTxt = srcLines[line - 1] ?? '';\n          const suppressed = lineTxt.includes(ALLOW_MARKER) || (sev === 'warn' && looksDefensive(lineTxt));\n          if (!suppressed) add({ severity: sev, path: rel, line, indicator: ioc, message: label });\n          idx = lower.indexOf(ioc.toLowerCase(), idx + ioc.length);\n        }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:41:37)*
+
+
+## 🤖 Claude *(04:41:39)*
+
+Agora um teste **positivo** (Lei 1 — provar que detecta, não só que fica quieto): fixture temporária com IoCs reais + re-run limpo no repo.
+
+## 🤖 Claude *(04:41:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad\nFIX=\"$SCRATCH/ioc-fixture\"; rm -rf \"$FIX\"; mkdir -p \"$FIX/node_modules/@ctrl/tinycolor\"\ncat > \"$FIX/package.json\" <<'EOF'\n{ \"name\": \"victim\", \"dependencies\": { \"@ctrl/tinycolor\": \"4.1.2\", \"left-pad\": \"1.3.0\" } }\nEOF\necho \"console.log('exfil to filev2.getsession.org')\" > \"$FIX/evil.js\"\necho \"// A Mini Shai-Hulud has Appeared\" > \"$FIX/worm.txt\"\necho \"payload\" > \"$FIX/node_modules/@ctrl/tinycolor/tanstack_runner.js\"\necho \"=== POSITIVE TEST (fixture with known IoCs) ===\"\ngit -C \"$FIX\" init -q 2>/dev/null; git -C \"$FIX\" add -A 2>/dev/null\nbun run .claude/scripts/scan-supply-chain-iocs.ts --root \"$FIX\"; echo \"exit=$? (expect 1)\"\necho \"\"; echo \"=== BASELINE RE-RUN (repo, expect clean exit 0) ===\"\nbun run .claude/scripts/scan-supply-chain-iocs.ts; echo \"exit=$? (expect 0)\"\nrm -rf \"$FIX\"",
+  "description": "Positive detection test + clean baseline"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === POSITIVE TEST (fixture with known IoCs) ===
+> 🛡️  MCORCH Supply-Chain Sentinel — root=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/ioc-fixture
+> 🔴 CRITICAL  node_modules/@ctrl/tinycolor/tanstack_runner.js  [tanstack_runner.js] — Arquivo de payload de worm dentro de node_modules — quarentena imediata.
+> 🔴 CRITICAL  worm.txt:1  [A Mini Shai-Hulud has Appeared] — Marcador textual de worm supply-chain (Shai-Hulud)
+> 🟠 HIGH  evil.js:1  [filev2.getsession.org] — Domínio hostil de exfiltração conhecido
+> 
+>   2 critical · 1 high · 0 warn
+> exit=1 (expect 1)
+> 
+> === BASELINE RE-RUN (repo, expect clean exit 0) ===
+> 🛡️  MCORCH Supply-Chain Sentinel — root=/home/gcrUX/htdocs/constellation-orchestra
+> ✅ Nenhum IoC de supply-chain detectado.
+> exit=0 (expect 0)
+> ```
+
+## 🤖 Claude *(04:42:34)*
+
+
+## 🤖 Claude *(04:42:37)*
+
+O teste positivo pegou payload+marker+domínio, mas o **check de versão de pacote não disparou** para `@ctrl/tinycolor@4.1.2` — bug no meu regex (a aspa de abertura da versão em JSON não era consumida). Bom que o teste positivo pegou (Lei 1 funcionando sobre a minha própria ferramenta). Corrigindo:
+
+## 🤖 Claude *(04:42:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts",
+  "old_string": "      const esc = name.replace(/[.*+?^${}()|[\\]\\\\/]/g, '\\\\$&');\n      const re = new RegExp(`(?:\"${esc}\"|['\\`]?${esc}['\\`]?|\\\\b${esc}@)\\\\s*[:@\"']?\\\\s*[\\\\^~>=<]*\\\\s*([0-9][0-9A-Za-z.\\\\-]*)`, 'g');",
+  "new_string": "      const esc = name.replace(/[.*+?^${}()|[\\]\\\\/]/g, '\\\\$&');\n      // name (quoted/bare/specifier) \u2192 any run of separators/quotes/@/: \u2192 optional range op \u2192 version\n      const re = new RegExp(`(?:\"${esc}\"|['\\`]?${esc}['\\`]?)[\\\\s:@=\"'\\`]*[\\\\^~>=<]*\\\\s*([0-9][0-9A-Za-z.\\\\-]*)`, 'g');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/scan-supply-chain-iocs.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:42:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad\nFIX=\"$SCRATCH/ioc-fixture2\"; rm -rf \"$FIX\"; mkdir -p \"$FIX/node_modules/@ctrl/tinycolor\"\ncat > \"$FIX/package.json\" <<'EOF'\n{ \"name\": \"victim\", \"dependencies\": { \"@ctrl/tinycolor\": \"4.1.2\", \"node-ipc\": \"^9.2.2\", \"left-pad\": \"1.3.0\" } }\nEOF\nprintf '\"@ctrl/tinycolor@4.1.2\":\\n  version \"4.1.2\"\\n' > \"$FIX/yarn.lock\"\ngit -C \"$FIX\" init -q; git -C \"$FIX\" add -A\necho \"=== POSITIVE v2 (package-version detection must fire now) ===\"\nbun run .claude/scripts/scan-supply-chain-iocs.ts --root \"$FIX\" 2>&1 | grep -iE \"tinycolor|node-ipc|critical|warn\"; echo \"exit=${PIPESTATUS[0]}\"\necho \"\"; echo \"=== repo baseline still clean? ===\"\nbun run .claude/scripts/scan-supply-chain-iocs.ts >/dev/null 2>&1; echo \"exit=$? (expect 0)\"\nrm -rf \"$FIX\"",
+  "description": "Verify package-version detection fires; baseline clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === POSITIVE v2 (package-version detection must fire now) ===
+> 🔴 CRITICAL  package.json:1  [node-ipc@9.2.2] — Pacote comprometido em versão maliciosa conhecida (9.2.2/10.1.1/10.1.2) — REMOVA e rotacione segredos.
+> 🔴 CRITICAL  package.json:1  [@ctrl/tinycolor@4.1.2] — Pacote comprometido em versão maliciosa conhecida (4.1.1/4.1.2) — REMOVA e rotacione segredos.
+> 🔴 CRITICAL  yarn.lock:1  [@ctrl/tinycolor@4.1.2] — Pacote comprometido em versão maliciosa conhecida (4.1.1/4.1.2) — REMOVA e rotacione segredos.
+>   3 critical · 0 high · 0 warn
+> exit=1
+> 
+> === repo baseline still clean? ===
+> exit=0 (expect 0)
+> ```
+
+## 🤖 Claude *(04:43:17)*
+
+
+## 🤖 Claude *(04:43:23)*
+
+**Scanner provado materialmente**: detecta node-ipc@9.2.2, @ctrl/tinycolor@4.1.2 (package.json + yarn.lock), payload files, worm markers, domínios hostis — e **zero falso-positivo** no repo (exit 0). Sem falso-positivo em left-pad. 
+
+Agora o **doctor** — health-check consolidado do ecossistema (diagnostica + prescreve; sem auto-repair, Lei 1/4). Vou checar rápido o progresso da QA antes.
+
+## 🤖 Claude *(04:43:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c\nSHOTS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots\necho \"groups done (agents completed):\"; grep -c '\"type\":\"completed\"' \"$TDIR/journal.jsonl\" 2>/dev/null || echo \"?\"\necho \"shots so far: $(ls $SHOTS 2>/dev/null | wc -l)\"\necho \"page prefixes captured:\"; ls $SHOTS 2>/dev/null | sed 's/-\\(default\\|scroll\\|hover[0-9]*\\|trigger\\)\\.png//' | sort -u | tr '\\n' ' '",
+  "description": "QA workflow progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> groups done (agents completed):
+> 0
+> ?
+> shots so far: 26
+> page prefixes captured:
+> g1-auth g1-landing g1-landing-plans.png g1-landing-scroll2.png g1-landing-section1.png g1-legacy g1-notfound g1-privacy g1-reset g1-terms g2-constellation g2-dashboard g2-memory
+> ```
+
+## 🤖 Claude *(04:43:34)*
+
+
+## 🤖 Claude *(04:43:35)*
+
+QA avançando (g1 quase completo, g2 em memory; 26 shots). Continuo com o doctor.
+
+## 🤖 Claude *(04:44:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh",
+  "content": "#!/usr/bin/env bash\n# MCORCH Doctor \u2014 bespoke ecosystem health diagnostician (SSP-01 \u00b7 Lei 1 Materiality).\n#\n# Adapted (NOT cloned) from the concept of `affaan-m/ECC` doctor/repair to the MCORCH sovereign\n# mesh. It DIAGNOSES + PRESCRIBES \u2014 it never auto-mutates (Lei 1/Lei 4: repair is the operator's\n# call, so we print the exact remediation command instead of running it). Consolidates the\n# scattered health signals (git \u00b7 Docker mesh \u00b7 Chroma \u00b7 env keys \u00b7 dist \u00b7 BoK \u00b7 supply-chain)\n# into one materially-verifiable command.\n#\n# Usage:  bash .claude/scripts/mcorch-doctor.sh [--deep]\n#   --deep also runs `tsc --noEmit` (slow) and the supply-chain sentinel with --home.\n# Exit code = number of FAIL checks (0 = ecosystem healthy).\nset -uo pipefail\ncd \"$(dirname \"$0\")/../..\" || exit 3\nROOT=\"$(pwd)\"\nDEEP=0; [[ \"${1:-}\" == \"--deep\" ]] && DEEP=1\n\nG=\"\\033[32m\"; Y=\"\\033[33m\"; R=\"\\033[31m\"; C=\"\\033[36m\"; B=\"\\033[1m\"; N=\"\\033[0m\"\nFAILS=0; WARNS=0\npass(){ echo -e \"  ${G}\u2713 PASS${N}  $1\"; }\nwarn(){ echo -e \"  ${Y}\u25b2 WARN${N}  $1\"; WARNS=$((WARNS+1)); [[ -n \"${2:-}\" ]] && echo -e \"         ${Y}\u21b3 $2${N}\"; }\nfail(){ echo -e \"  ${R}\u2717 FAIL${N}  $1\"; FAILS=$((FAILS+1)); [[ -n \"${2:-}\" ]] && echo -e \"         ${R}\u21b3 remediar: $2${N}\"; }\nhdr(){ echo -e \"\\n${B}${C}$1${N}\"; }\n\necho -e \"${B}\ud83e\ude7a MCORCH Doctor${N} \u2014 $ROOT\"\n\n# \u2500\u2500 1. Git \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"1 \u00b7 Git\"\nBR=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) && pass \"branch: $BR\" || fail \"n\u00e3o \u00e9 repo git\" \"git init\"\nDIRTY=$(git status --porcelain 2>/dev/null | wc -l)\n[[ \"$DIRTY\" -eq 0 ]] && pass \"worktree limpo\" || warn \"$DIRTY arquivo(s) n\u00e3o-commitado(s)\" \"git status --short  (esperado durante trabalho ativo)\"\ngit fetch -q origin 2>/dev/null || true\nAHEAD=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo \"?\")\nBEHIND=$(git rev-list --count HEAD..@{u} 2>/dev/null || echo \"?\")\n[[ \"$BEHIND\" == \"0\" || \"$BEHIND\" == \"?\" ]] && pass \"vs origin: ahead $AHEAD / behind $BEHIND\" || warn \"atr\u00e1s do origin em $BEHIND commit(s)\" \"git pull --rebase\"\n\n# \u2500\u2500 2. Docker Sovereign Mesh \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"2 \u00b7 Docker Sovereign Mesh\"\nif command -v docker >/dev/null 2>&1; then\n  for c in mcorch_chroma mcorch_claude_mem mcorch_vision_mcp mega-brain-daemon mega-brain-webhook mega-brain-dashboard; do\n    ST=$(docker ps --filter \"name=^${c}$\" --format '{{.Status}}' 2>/dev/null)\n    if [[ -n \"$ST\" ]]; then\n      if echo \"$ST\" | grep -qi \"unhealthy\"; then fail \"$c: $ST\" \"docker restart $c\"\n      else pass \"$c: $ST\"; fi\n    else\n      # mega-brain-dashboard/webhook are non-critical; chroma/vision/claude_mem/daemon are core\n      case \"$c\" in mcorch_chroma|mcorch_vision_mcp|mcorch_claude_mem|mega-brain-daemon) fail \"$c ausente/parado\" \"docker start $c\" ;; *) warn \"$c ausente/parado\" \"docker start $c\" ;; esac\n    fi\n  done\nelse\n  fail \"docker CLI ausente\" \"instalar docker ou checar PATH\"\nfi\n\n# \u2500\u2500 3. Chroma vector engine heartbeat \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"3 \u00b7 Chroma (Vector Engine, API v2)\"\nHB=$(curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat 2>/dev/null)\necho \"$HB\" | grep -q \"nanosecond heartbeat\" && pass \"heartbeat vivo\" || fail \"sem heartbeat na :8001\" \"docker restart mcorch_chroma\"\n\n# \u2500\u2500 4. Env keys (presen\u00e7a, NUNCA valor \u2014 Lei 1 sem vazar segredo) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"4 \u00b7 Credenciais de infra (.env \u2014 presen\u00e7a, n\u00e3o valor)\"\nif [[ -f .env ]]; then\n  pass \".env presente\"\n  REQ=(VITE_SUPABASE_URL VITE_SUPABASE_PROJECT_ID SB_SECRET_KEY SB_PUBLISHABLE_KEY)\n  OPT=(VISION_MCP_PAT MESH_EMBED_OPENROUTER_KEY MESH_EMBED_GEMINI_KEY)\n  for k in \"${REQ[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || fail \"$k ausente no .env\" \"adicionar $k ao .env\"; done\n  for k in \"${OPT[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || warn \"$k ausente (opcional)\" \"necess\u00e1rio p/ Vision QA / mesh embed\"; done\nelse\n  fail \".env ausente\" \"restaurar .env (infra-only; BYOK per-user vive no Vault)\"\nfi\n\n# \u2500\u2500 5. Frontend build artifact \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"5 \u00b7 Frontend (dist servido pelo nginx)\"\nif [[ -f dist/index.html ]]; then\n  AGE=$(( ($(date +%s) - $(stat -c %Y dist/index.html)) / 3600 ))\n  ENVBAKED=$(grep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/ 2>/dev/null | head -1)\n  [[ -n \"$ENVBAKED\" ]] && pass \"dist/index.html presente (${AGE}h) \u00b7 env baked no bundle\" || warn \"dist presente mas Supabase URL n\u00e3o encontrada no bundle\" \"rebuild com .env: bun run build\"\nelse\n  fail \"dist/index.html ausente\" \"bun run build (no repo principal = deploy)\"\nfi\n\n# \u2500\u2500 6. Harness integrity (arquivos load-bearing SSP-01) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"6 \u00b7 Integridade do harness (SSP-01)\"\nfor f in CLAUDE.md .claude/rules/survival.md HANDOFF.md docs/architecture/agentic-vision.md; do\n  [[ -f \"$f\" ]] && pass \"$f\" || fail \"$f ausente\" \"restaurar do git: git checkout -- $f\"\ndone\n\n# \u2500\u2500 7. BoK suites completeness \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"7 \u00b7 Su\u00edtes BoK (Closed-Loop gate)\"\nif [[ -d docs/bok ]]; then\n  INCOMPLETE=0\n  for slug in $(ls docs/bok/ 2>/dev/null); do\n    if [[ \"$slug\" == \"security\" ]]; then req=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    else req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); fi\n    miss=\"\"; for d in \"${req[@]}\"; do [[ -f \"docs/bok/$slug/$d.md\" ]] || miss=\"$miss $d\"; done\n    [[ -n \"$miss\" ]] && { warn \"$slug incompleta:$miss\" \"rodar /bok-scribe ou completar docs\"; INCOMPLETE=$((INCOMPLETE+1)); }\n  done\n  [[ \"$INCOMPLETE\" -eq 0 ]] && pass \"$(ls docs/bok/ | wc -l) su\u00edtes \u2014 todas completas\"\nelse\n  warn \"docs/bok ausente\" \"\"\nfi\n\n# \u2500\u2500 8. Supply-chain sentinel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nhdr \"8 \u00b7 Supply-Chain Sentinel (IoC)\"\nSENTINEL_ARGS=\"\"; [[ \"$DEEP\" -eq 1 ]] && SENTINEL_ARGS=\"--home\"\nif bun run .claude/scripts/scan-supply-chain-iocs.ts $SENTINEL_ARGS >/tmp/mcorch-doctor-ioc.log 2>&1; then\n  pass \"nenhum IoC cr\u00edtico/high $([[ \"$DEEP\" -eq 1 ]] && echo '(+home)')\"\nelse\n  fail \"IoC de supply-chain detectado\" \"ver: bun run .claude/scripts/scan-supply-chain-iocs.ts $SENTINEL_ARGS\"\n  sed 's/^/         /' /tmp/mcorch-doctor-ioc.log | grep -E \"CRITICAL|HIGH\" | head -8\nfi\n\n# \u2500\u2500 9. TypeScript (deep) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nif [[ \"$DEEP\" -eq 1 ]]; then\n  hdr \"9 \u00b7 TypeScript (--deep)\"\n  if npx tsc --noEmit >/tmp/mcorch-doctor-tsc.log 2>&1; then pass \"tsc --noEmit: 0 erros\"\n  else fail \"tsc reportou erros\" \"npx tsc --noEmit | head\"; tail -5 /tmp/mcorch-doctor-tsc.log | sed 's/^/         /'; fi\nfi\n\n# \u2500\u2500 verdict \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\necho \"\"\nif [[ \"$FAILS\" -eq 0 ]]; then echo -e \"${B}${G}\ud83e\ude7a Ecossistema saud\u00e1vel${N} \u2014 0 fail \u00b7 ${WARNS} warn\"\nelse echo -e \"${B}${R}\ud83e\ude7a $FAILS falha(s)${N} \u00b7 ${WARNS} warn \u2014 ver remedia\u00e7\u00f5es acima\"; fi\nexit \"$FAILS\"\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:44:29)*
+
+
+## 🤖 Claude *(04:44:29)*
+
+Testando o doctor (Lei 1):
+
+## 🤖 Claude *(04:44:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nchmod +x .claude/scripts/mcorch-doctor.sh .claude/scripts/scan-supply-chain-iocs.ts\nbash .claude/scripts/mcorch-doctor.sh 2>&1; echo \"exit=$?\"",
+  "description": "Run mcorch-doctor (non-deep)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [1m🩺 MCORCH Doctor[0m — /home/gcrUX/htdocs/constellation-orchestra
+> 
+> [1m[36m1 · Git[0m
+>   [32m✓ PASS[0m  branch: main
+>   [33m▲ WARN[0m  2 arquivo(s) não-commitado(s)
+>          [33m↳ git status --short  (esperado durante trabalho ativo)[0m
+>   [32m✓ PASS[0m  vs origin: ahead 0 / behind 0
+> 
+> [1m[36m2 · Docker Sovereign Mesh[0m
+>   [32m✓ PASS[0m  mcorch_chroma: Up 2 weeks (healthy)
+>   [32m✓ PASS[0m  mcorch_claude_mem: Up 2 weeks (healthy)
+>   [32m✓ PASS[0m  mcorch_vision_mcp: Up 4 days (healthy)
+>   [32m✓ PASS[0m  mega-brain-daemon: Up 2 weeks (healthy)
+>   [32m✓ PASS[0m  mega-brain-webhook: Up 2 weeks (healthy)
+>   [32m✓ PASS[0m  mega-brain-dashboard: Up 2 weeks
+> 
+> [1m[36m3 · Chroma (Vector Engine, API v2)[0m
+>   [32m✓ PASS[0m  heartbeat vivo
+> 
+> [1m[36m4 · Credenciais de infra (.env — presença, não valor)[0m
+>   [32m✓ PASS[0m  .env presente
+>   [32m✓ PASS[0m  VITE_SUPABASE_URL definido
+>   [32m✓ PASS[0m  VITE_SUPABASE_PROJECT_ID definido
+>   [32m✓ PASS[0m  SB_SECRET_KEY definido
+>   [31m✗ FAIL[0m  SB_PUBLISHABLE_KEY ausente no .env
+>          [31m↳ remediar: adicionar SB_PUBLISHABLE_KEY ao .env[0m
+>   [32m✓ PASS[0m  VISION_MCP_PAT definido
+>   [33m▲ WARN[0m  MESH_EMBED_OPENROUTER_KEY ausente (opcional)
+>          [33m↳ necessário p/ Vision QA / mesh embed[0m
+>   [33m▲ WARN[0m  MESH_EMBED_GEMINI_KEY ausente (opcional)
+>          [33m↳ necessário p/ Vision QA / mesh embed[0m
+> 
+> [1m[36m5 · Frontend (dist servido pelo nginx)[0m
+>   [32m✓ PASS[0m  dist/index.html presente (0h) · env baked no bundle
+> 
+> [1m[36m6 · Integridade do harness (SSP-01)[0m
+>   [32m✓ PASS[0m  CLAUDE.md
+>   [32m✓ PASS[0m  .claude/rules/survival.md
+>   [32m✓ PASS[0m  HANDOFF.md
+>   [32m✓ PASS[0m  docs/architecture/agentic-vision.md
+> 
+> [1m[36m7 · Suítes BoK (Closed-Loop gate)[0m
+>   [32m✓ PASS[0m  25 suítes — todas completas
+> 
+> [1m[36m8 · Supply-Chain Sentinel (IoC)[0m
+>   [32m✓ PASS[0m  nenhum IoC crítico/high 
+> 
+> [1m[31m🩺 1 falha(s)[0m · 3 warn — ver remediações acima
+> exit=1
+> ```
+
+## 🤖 Claude *(04:44:47)*
+
+
+## 🤖 Claude *(04:44:49)*
+
+Doctor funciona e já pegou algo: "SB_PUBLISHABLE_KEY ausente". Mas o `gen-user-session` minta com fallback (`VITE_SUPABASE_PUBLISHABLE_KEY`). Vou verificar os nomes reais no .env — o doctor deve aceitar a mesma ordem de resolução do app (senão é falso-FAIL).
+
+## 🤖 Claude *(04:44:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== publishable/anon key names present in .env ===\"; grep -oE \"^(SB_PUBLISHABLE_KEY|SUPABASE_PUBLISHABLE_KEY|VITE_SUPABASE_PUBLISHABLE_KEY|SUPABASE_ANON_KEY|VITE_SUPABASE_ANON_KEY)=\" .env 2>/dev/null || echo \"(none of those exact names)\"\necho \"=== any *PUBLISHABLE* / *ANON* keys ===\"; grep -oE \"^[A-Z_]*(PUBLISHABLE|ANON)[A-Z_]*=\" .env 2>/dev/null\necho \"=== any *MESH_EMBED* ===\"; grep -oE \"^[A-Z_]*MESH_EMBED[A-Z_]*=\" .env 2>/dev/null || echo \"(no MESH_EMBED_* \u2014 checking OPENROUTER/GEMINI names)\"; grep -oE \"^[A-Z_]*(OPENROUTER|GEMINI|GOOGLE)[A-Z_]*=\" .env 2>/dev/null | head",
+  "description": "Discover real env key names"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publishable/anon key names present in .env ===
+> SUPABASE_PUBLISHABLE_KEY=
+> VITE_SUPABASE_PUBLISHABLE_KEY=
+> === any *PUBLISHABLE* / *ANON* keys ===
+> SUPABASE_PUBLISHABLE_KEY=
+> VITE_SUPABASE_PUBLISHABLE_KEY=
+> === any *MESH_EMBED* ===
+> (no MESH_EMBED_* — checking OPENROUTER/GEMINI names)
+> OPENROUTER_API_KEY=
+> GEMINI_API_KEY=
+> ```
+
+## 🤖 Claude *(04:45:10)*
+
+
+## 🤖 Claude *(04:45:12)*
+
+Achado: a publishable key existe como `SUPABASE_PUBLISHABLE_KEY`/`VITE_SUPABASE_PUBLISHABLE_KEY` (não `SB_PUBLISHABLE_KEY`) — o app resolve por fallback, então o FAIL era falso. E `MESH_EMBED_*` são segredos do **Vault das edge fns**, não do .env local (que tem `OPENROUTER_API_KEY`/`GEMINI_API_KEY`). Corrigindo o doctor para espelhar a ordem de resolução real:
+
+## 🤖 Claude *(04:45:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh",
+  "old_string": "if [[ -f .env ]]; then\n  pass \".env presente\"\n  REQ=(VITE_SUPABASE_URL VITE_SUPABASE_PROJECT_ID SB_SECRET_KEY SB_PUBLISHABLE_KEY)\n  OPT=(VISION_MCP_PAT MESH_EMBED_OPENROUTER_KEY MESH_EMBED_GEMINI_KEY)\n  for k in \"${REQ[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || fail \"$k ausente no .env\" \"adicionar $k ao .env\"; done\n  for k in \"${OPT[@]}\"; do grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || warn \"$k ausente (opcional)\" \"necess\u00e1rio p/ Vision QA / mesh embed\"; done\nelse\n  fail \".env ausente\" \"restaurar .env (infra-only; BYOK per-user vive no Vault)\"\nfi",
+  "new_string": "if [[ -f .env ]]; then\n  pass \".env presente\"\n  # has_any <label> <remediation> <name...> \u2014 PASS if any accepted name is defined (mirrors the\n  # app's env resolution order; e.g. publishable key has 4 accepted names).\n  has_any(){ local label=\"$1\" rem=\"$2\"; shift 2; local k; for k in \"$@\"; do grep -qE \"^${k}=.+\" .env && { pass \"$label ($k)\"; return; }; done; fail \"$label ausente\" \"$rem\"; }\n  has_any \"VITE_SUPABASE_URL\" \"adicionar ao .env\" VITE_SUPABASE_URL SUPABASE_URL\n  has_any \"VITE_SUPABASE_PROJECT_ID\" \"adicionar ao .env\" VITE_SUPABASE_PROJECT_ID\n  has_any \"Supabase secret key\" \"adicionar SB_SECRET_KEY (legadas revogadas)\" SB_SECRET_KEY SUPABASE_SERVICE_ROLE_KEY\n  has_any \"Supabase publishable key\" \"adicionar SB_PUBLISHABLE_KEY\" SB_PUBLISHABLE_KEY SUPABASE_PUBLISHABLE_KEY VITE_SUPABASE_PUBLISHABLE_KEY SUPABASE_ANON_KEY\n  # Optional local BYOK / QA (MESH_EMBED_* s\u00e3o segredos do Vault das edge fns \u2014 n\u00e3o do .env local).\n  for spec in \"VISION_MCP_PAT:Vision QA (scripts/qa/vision-qa.ts)\" \"OPENROUTER_API_KEY:BYOK provider probes locais\" \"GEMINI_API_KEY:BYOK Gemini probes locais\"; do\n    k=\"${spec%%:*}\"; why=\"${spec#*:}\"; grep -qE \"^${k}=.+\" .env && pass \"$k definido\" || warn \"$k ausente (opcional)\" \"$why\"\n  done\nelse\n  fail \".env ausente\" \"restaurar .env (infra-only; BYOK per-user vive no Vault)\"\nfi"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:45:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbash .claude/scripts/mcorch-doctor.sh 2>&1 | sed -n '/4 \u00b7 Cred/,/5 \u00b7 Front/p'; echo \"---\"; bash .claude/scripts/mcorch-doctor.sh >/dev/null 2>&1; echo \"final exit=$? (expect 0)\"",
+  "description": "Re-run doctor env section + exit code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [1m[36m4 · Credenciais de infra (.env — presença, não valor)[0m
+>   [32m✓ PASS[0m  .env presente
+>   [32m✓ PASS[0m  VITE_SUPABASE_URL (VITE_SUPABASE_URL)
+>   [32m✓ PASS[0m  VITE_SUPABASE_PROJECT_ID (VITE_SUPABASE_PROJECT_ID)
+>   [32m✓ PASS[0m  Supabase secret key (SB_SECRET_KEY)
+>   [32m✓ PASS[0m  Supabase publishable key (SUPABASE_PUBLISHABLE_KEY)
+>   [32m✓ PASS[0m  VISION_MCP_PAT definido
+>   [32m✓ PASS[0m  OPENROUTER_API_KEY definido
+>   [32m✓ PASS[0m  GEMINI_API_KEY definido
+> 
+> [1m[36m5 · Frontend (dist servido pelo nginx)[0m
+> ---
+> final exit=0 (expect 0)
+> ```
+
+## 🤖 Claude *(04:46:04)*
+
+
+## 🤖 Claude *(04:46:06)*
+
+Doctor limpo (exit 0). Terceiro utilitário: **session-inspect** — medidor de orçamento de contexto para a Lei 3 (o gap exato da memória `feedback_context_budget_calibration`: "sem medidor de token preciso no main-loop"). Preciso do formato do transcript de sessão primeiro.
+
+## 🤖 Claude *(04:46:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "PROJ=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra\necho \"=== session jsonl files (top 5 by mtime) ===\"; ls -lt \"$PROJ\"/*.jsonl 2>/dev/null | head -5\necho \"=== current session id from scratchpad: 969f6e14-bf0b-42c0-9300-8707dcc8eb7f ===\"\nF=$(ls -t \"$PROJ\"/969f6e14*.jsonl 2>/dev/null | head -1); echo \"file: $F\"; [[ -n \"$F\" ]] && echo \"lines: $(wc -l < \"$F\")\"\necho \"=== usage field shape (last assistant turn with usage) ===\"\n[[ -n \"$F\" ]] && grep -o '\"usage\":{[^}]*}' \"$F\" 2>/dev/null | tail -1\necho \"=== keys of a sample line ===\"\n[[ -n \"$F\" ]] && tail -30 \"$F\" | node -e \"let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const ls=s.trim().split('\\n');for(let i=ls.length-1;i>=0;i--){try{const j=JSON.parse(ls[i]);if(j.message&&j.message.usage){console.log('type:',j.type,'| usage keys:',Object.keys(j.message.usage).join(','));console.log('usage:',JSON.stringify(j.message.usage));break;}}catch{}}})\" 2>/dev/null",
+  "description": "Inspect session transcript format + usage fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === session jsonl files (top 5 by mtime) ===
+> -rw------- 1 ubuntu ubuntu  1163796 Jul  4 01:46 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f.jsonl
+> -rw------- 1 ubuntu ubuntu 17764455 Jul  4 01:16 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0c1ad55a-1aef-4790-9a42-92684bcd77d2.jsonl
+> -rw------- 1 ubuntu ubuntu  7213790 Jul  3 19:59 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/79ebc368-936c-430e-a2a6-a66c1873000d.jsonl
+> -rw------- 1 ubuntu ubuntu  3549940 Jul  3 19:57 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/aced5ac9-b7e1-4508-aafa-8d1da8c0fa0a.jsonl
+> -rw------- 1 ubuntu ubuntu  4953298 Jul  3 19:54 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/f51b7a04-6530-4582-8b21-d9ba14caedee.jsonl
+> === current session id from scratchpad: 969f6e14-bf0b-42c0-9300-8707dcc8eb7f ===
+> file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f.jsonl
+> lines: 267
+> === usage field shape (last assistant turn with usage) ===
+> "usage":{"input_tokens":2,"cache_creation_input_tokens":703,"cache_read_input_tokens":224317,"output_tokens":1511,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0}
+> === keys of a sample line ===
+> type: assistant | usage keys: input_tokens,cache_creation_input_tokens,cache_read_input_tokens,output_tokens,server_tool_use,service_tier,cache_creation,inference_geo,iterations,speed
+> usage: {"input_tokens":2,"cache_creation_input_tokens":703,"cache_read_input_tokens":224317,"output_tokens":1511,"server_tool_use":{"web_search_requests":0,"web_fetch_requests":0},"service_tier":"standard","cache_creation":{"ephemeral_1h_input_tokens":703,"ephemeral_5m_input_tokens":0},"inference_geo":"not_available","iterations":[{"input_tokens":2,"output_tokens":1511,"cache_read_input_tokens":224317,"cache_creation_input_tokens":703,"cache_creation":{"ephemeral_5m_input_tokens":0,"ephemeral_1h_input_tokens":703},"type":"message"}],"speed":"standard"}
+> ```
+
+## 🤖 Claude *(04:46:43)*
+
+
+## 🤖 Claude *(04:46:45)*
+
+Formato claro: cada turno assistant tem `message.usage` com `input_tokens + cache_read + cache_creation` = **tamanho exato da janela de contexto** (não estimativa — dado da API, Lei 1). O gap da Lei 3 pode virar um medidor **material**. Escrevendo `session-inspect.ts`:
+
+## 🤖 Claude *(04:47:15)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/session-inspect.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * MCORCH Session Inspect \u2014 bespoke context-budget meter (SSP-01 \u00b7 Lei 3 Pruning).\n *\n * Adapted (NOT cloned) from the concept of `affaan-m/ECC` session-inspect to the MCORCH context\n * discipline. Reads the ACTIVE Claude Code session transcript and reports the EXACT context-window\n * utilization from the API's own usage accounting (input + cache_read + cache_creation of the last\n * assistant turn) \u2014 not a volume estimate. Directly serves the Sovereign directive\n * [[feedback_context_budget_calibration]]: \"usar a janela INTEIRA, selar s\u00f3 a ~95%\" \u2014 now with a\n * material gauge instead of a guess (Lei 1).\n *\n * Also surfaces the heaviest tool-results in context (pruning candidates \u2014 Lei 3).\n *\n * Usage:\n *   bun run .claude/scripts/session-inspect.ts [--session <id>] [--dir <projectDir>] [--top <N>] [--json]\n *   Exit 0 always (informational); 10 when \u226595% (seal-now signal, script-friendly).\n */\nimport { readFileSync, readdirSync, statSync } from 'node:fs';\nimport { join } from 'node:path';\nimport { homedir } from 'node:os';\n\nconst BUDGET = 1_000_000;          // 1M window (Max plan)\nconst SEAL_PCT = 95;               // reserve ~5% for the /handoff seal itself\nconst HANDOFF_COST = 50_000;\n\nconst argv = process.argv.slice(2);\nconst argVal = (f: string) => { const i = argv.indexOf(f); return i >= 0 ? argv[i + 1] : undefined; };\nconst JSON_OUT = argv.includes('--json');\nconst TOP = parseInt(argVal('--top') ?? '5', 10);\n\n// Project transcript dir = ~/.claude/projects/<cwd-with-slashes-as-dashes>\nconst projectDir = argVal('--dir') ?? join(homedir(), '.claude', 'projects', process.cwd().replace(/\\//g, '-'));\n\nfunction pickSession(): string {\n  const explicit = argVal('--session');\n  let files: string[];\n  try { files = readdirSync(projectDir).filter((f) => f.endsWith('.jsonl')); }\n  catch { console.error(`Transcript dir n\u00e3o encontrado: ${projectDir}`); process.exit(2); }\n  if (explicit) {\n    const hit = files.find((f) => f.startsWith(explicit));\n    if (!hit) { console.error(`Sess\u00e3o ${explicit} n\u00e3o encontrada em ${projectDir}`); process.exit(2); }\n    return join(projectDir, hit);\n  }\n  // Default = most-recently-modified top-level session jsonl (the live one being appended to).\n  const withTime = files.map((f) => ({ f, m: statSync(join(projectDir, f)).mtimeMs })).sort((a, b) => b.m - a.m);\n  if (!withTime.length) { console.error('Nenhum transcript de sess\u00e3o encontrado.'); process.exit(2); }\n  return join(projectDir, withTime[0].f);\n}\n\nconst file = pickSession();\nconst lines = readFileSync(file, 'utf8').split('\\n').filter(Boolean);\n\nlet ctxUsed = 0;                       // last assistant turn's total prompt tokens = live context\nlet outputTotal = 0;                   // \u03a3 output \u2014 proxy for work spent this session\nlet assistantTurns = 0, toolCalls = 0, userTurns = 0;\nconst toolNames = new Map<string, string>();     // tool_use id \u2192 name\nconst toolSizes: Array<{ name: string; bytes: number; turn: number }> = [];\n\nlines.forEach((ln, idx) => {\n  let j: any; try { j = JSON.parse(ln); } catch { return; }\n  const msg = j.message;\n  if (j.type === 'assistant' && msg?.usage) {\n    assistantTurns++;\n    const u = msg.usage;\n    ctxUsed = (u.input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0);\n    outputTotal += u.output_tokens ?? 0;\n    if (Array.isArray(msg.content)) for (const c of msg.content) if (c?.type === 'tool_use') { toolCalls++; if (c.id) toolNames.set(c.id, c.name ?? '?'); }\n  } else if (j.type === 'user' && Array.isArray(msg?.content)) {\n    userTurns++;\n    for (const c of msg.content) if (c?.type === 'tool_result') {\n      const bytes = typeof c.content === 'string' ? c.content.length : JSON.stringify(c.content ?? '').length;\n      toolSizes.push({ name: toolNames.get(c.tool_use_id) ?? 'tool', bytes, turn: idx + 1 });\n    }\n  }\n});\n\nconst pct = (ctxUsed / BUDGET) * 100;\nconst remaining = Math.max(0, BUDGET - ctxUsed);\nconst topTools = toolSizes.sort((a, b) => b.bytes - a.bytes).slice(0, TOP);\n\nlet verdict: string, code = 0;\nif (pct >= SEAL_PCT) { verdict = 'SELAR AGORA \u2014 reserve ~5% (~50k) p/ o /handoff'; code = 10; }\nelse if (pct >= 90) { verdict = 'Perto do teto \u2014 prepare o seal (\u22645% de folga)'; }\nelse if (pct >= 45) { verdict = 'Janela saud\u00e1vel \u2014 continue; puxe o pr\u00f3ximo item do roadmap'; }\nelse { verdict = 'Cedo p/ selar \u2014 probe-first: puxe o pr\u00f3ximo pendente em vez de selar'; }\n\nif (JSON_OUT) {\n  console.log(JSON.stringify({ file, budget: BUDGET, contextUsed: ctxUsed, pct: +pct.toFixed(1), remaining, outputTotal, assistantTurns, userTurns, toolCalls, sealThresholdPct: SEAL_PCT, verdict, topTools }, null, 2));\n  process.exit(code);\n}\n\nconst kb = (n: number) => n >= 1024 ? (n / 1024).toFixed(0) + 'kB' : n + 'B';\nconst k = (n: number) => (n / 1000).toFixed(0) + 'k';\nconst barW = 40, filled = Math.min(barW, Math.round((pct / 100) * barW));\nconst bar = '\u2588'.repeat(filled) + '\u2591'.repeat(barW - filled);\nconst mark = Math.round((SEAL_PCT / 100) * barW);\nconst barMarked = bar.slice(0, mark) + '|' + bar.slice(mark);\n\nconsole.log(`\ud83e\udded MCORCH Session Inspect`);\nconsole.log(`   sess\u00e3o: ${file.split('/').pop()}  (${lines.length} linhas \u00b7 ${assistantTurns} turnos \u00b7 ${toolCalls} tool-calls)`);\nconsole.log(`\\n   Janela de contexto (Lei 3):`);\nconsole.log(`   [${barMarked}] ${pct.toFixed(1)}%   (| = teto de seal ${SEAL_PCT}%)`);\nconsole.log(`   usado ${k(ctxUsed)} / ${k(BUDGET)}  \u00b7  livre ${k(remaining)}  \u00b7  custo do seal ~${k(HANDOFF_COST)}`);\nconsole.log(`   output gasto na sess\u00e3o: ${k(outputTotal)} tokens`);\nconsole.log(`\\n   \ud83d\udccb Veredito: ${verdict}`);\nif (topTools.length) {\n  console.log(`\\n   \ud83d\udd0e Maiores tool-results em contexto (candidatos a poda \u2014 Lei 3):`);\n  for (const t of topTools) console.log(`      ${kb(t.bytes).padStart(6)}  ${t.name}  (linha ${t.turn})`);\n}\nprocess.exit(code);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/session-inspect.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:47:25)*
+
+
+## 🤖 Claude *(04:47:25)*
+
+Testando o session-inspect contra a sessão ativa:
+
+## 🤖 Claude *(04:47:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nchmod +x .claude/scripts/session-inspect.ts\nbun run .claude/scripts/session-inspect.ts; echo \"exit=$?\"",
+  "description": "Run session-inspect on active session"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🧭 MCORCH Session Inspect
+>    sessão: 969f6e14-bf0b-42c0-9300-8707dcc8eb7f.jsonl  (280 linhas · 124 turnos · 54 tool-calls)
+> 
+>    Janela de contexto (Lei 3):
+>    [█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░|░░] 23.3%   (| = teto de seal 95%)
+>    usado 233k / 1000k  ·  livre 767k  ·  custo do seal ~50k
+>    output gasto na sessão: 315k tokens
+> 
+>    📋 Veredito: Cedo p/ selar — probe-first: puxe o próximo pendente em vez de selar
+> 
+>    🔎 Maiores tool-results em contexto (candidatos a poda — Lei 3):
+>        177kB  Read  (linha 129)
+>         43kB  Read  (linha 41)
+>          9kB  Read  (linha 62)
+>          8kB  Read  (linha 37)
+>          7kB  Read  (linha 86)
+> exit=0
+> ```
+
+## 🤖 Claude *(04:47:46)*
+
+
+## 🤖 Claude *(04:47:48)*
+
+**Session-inspect vivo e material**: 23.3% de janela (233k/1000k, dado exato da API), veredito Lei 3 correto, e já aponta os maiores tool-results como candidatos a poda. Os **3 utilitários ECC-nativos estão construídos e provados** (scanner IoC, doctor, session-inspect).
+
+Deixa eu checar o progresso da auditoria visual (Arc 1 primário):
+
+## 🤖 Claude *(04:47:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c\nSHOTS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots\necho \"completed agents: $(grep -c '\"type\":\"completed\"' \"$TDIR/journal.jsonl\" 2>/dev/null)\"\necho \"started agents: $(grep -c '\"type\":\"started\"' \"$TDIR/journal.jsonl\" 2>/dev/null)\"\necho \"shots: $(ls $SHOTS 2>/dev/null | wc -l)\"\necho \"groups with shots:\"; ls $SHOTS 2>/dev/null | sed -E 's/^(g[0-9]+)-.*/\\1/' | sort | uniq -c\necho \"=== running agent-browser sessions ===\"; pgrep -af \"agent-browser\" 2>/dev/null | grep -oE \"session (miv-[a-z0-9]+)\" | sort -u | head",
+  "description": "QA workflow progress detail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> completed agents: 0
+> started agents: 3
+> shots: 34
+> groups with shots:
+>      17 g1
+>      12 g2
+>       5 g3
+> === running agent-browser sessions ===
+> session miv-g2
+> ```
+
+## 🤖 Claude *(04:48:32)*
+
+
+## 🤖 Claude *(04:48:34)*
+
+QA progride (g1/g2/g3 iniciados, 34 shots; ainda 0 grupos finalizados — trabalho pesado de browser sob cap-2). Roda em background; serei notificado. Enquanto isso, finalizo o Arc 2. Vou ler o `handson.md` inteiro para revisar criticamente a mudança do Antigravity (a diretiva: "revise a mudança").
+
+## 🤖 Claude *(04:48:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Workflow: /handson (Session Start Protocol)
+> 2	
+> 3	Este workflow realiza a inicialização de uma sessão do agente, coletando telemetria e o estado do projeto para reportar ao Sovereign.
+> 4	
+> 5	## Passos a executar automaticamente
+> 6	
+> 7	### Passo 1: Executar comandos de diagnóstico
+> 8	
+> 9	Execute todos os comandos a seguir para coletar o estado do projeto e da infraestrutura:
+> 10	
+> 11	```bash
+> 12	# 1. Histórico recente e estilo de commits
+> 13	git log --oneline -7
+> 14	
+> 15	# 2. Alterações não commitadas (worktree)
+> 16	git status --short
+> 17	
+> 18	# 3. Escopo das alterações
+> 19	git diff HEAD --stat
+> 20	
+> 21	# 4. Verificação estrita de TypeScript
+> 22	npx tsc --noEmit 2>&1 | tail -20
+> 23	
+> 24	# 5. Estado dos containers Docker
+> 25	docker ps --filter "name=mcorch" --format "table {{.Names}}\t{{.Status}}"
+> 26	docker ps --filter "name=mega-brain" --format "table {{.Names}}\t{{.Status}}"
+> 27	
+> 28	# 6. Saúde do banco vetorial Chroma
+> 29	curl -s http://localhost:8001/api/v2/heartbeat || echo "Chroma offline/inacessível 🔴"
+> 30	
+> 31	# 7. Verificar suites BoK disponíveis
+> 32	ls docs/bok/ 2>/dev/null
+> 33	
+> 34	# 8. Contar linhas do HANDOFF.md
+> 35	wc -l HANDOFF.md
+> 36	```
+> 37	
+> 38	### Passo 2: Ler arquivos de estado do projeto
+> 39	
+> 40	Leia as seguintes referências para carregar o contexto da sessão anterior:
+> 41	
+> 42	- `HANDOFF.md` (As primeiras 71 linhas para o cabeçalho do Task State, e as últimas 400 linhas para o estado atualizado)
+> 43	- `CLAUDE.md` (As regras arquiteturais de desenvolvimento e padrões de código)
+> 44	- `.claude/context/sprint-priorities.md` (Objetivos da sprint e gaps ativos)
+> 45	- `/home/ubuntu/.gemini/antigravity-ide/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (Índice de memória)
+> 46	
+> 47	### Passo 3: Auditoria do BoK Gate
+> 48	
+> 49	Execute a verificação de integridade dos documentos BoK das funcionalidades em desenvolvimento para assegurar que cada uma possui seus 9 arquivos de especificação (`00-index.md` a `08-quality-metrics.md`):
+> 50	
+> 51	```bash
+> 52	for slug in $(ls docs/bok/ 2>/dev/null); do
+> 53	  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+> 54	  missing=()
+> 55	  for doc in "${required[@]}"; do
+> 56	    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+> 57	  done
+> 58	  [ ${#missing[@]} -eq 0 ] && echo "✅ $slug — BoK completo" || echo "⚠️ $slug — faltando: ${missing[*]}"
+> 59	done
+> 60	```
+> 61	
+> 62	Se o Sovereign solicitar o desenvolvimento de um novo módulo ou alteração arquitetural substantiva que não possua uma suite BoK completa selada em `docs/bok/<slug>/`, acione imediatamente o Alerta de Gate bloqueador e sugira a execução de `/bok-scribe <resumo>`.
+> 63	
+> 64	### Passo 4: Alinhamento de Perspectiva ECC (Adaptação sem Clonar)
+> 65	
+> 66	Compare a suíte de scripts e agentes locais com os utilitários de infraestrutura propostos pelo ecossistema **`affaan-m/ECC`** (ex: `doctor.js`, `repair.js` para sanidade do Claude CLI; `session-inspect.js` para controle de tokens; `scan-supply-chain-iocs.js` para segurança de pacotes).
+> 67	Identifique o que está ausente no nosso ecossistema e planeje a criação/adaptação sob medida destes utilitários (salvando-os em `.claude/scripts/` ou `.claude/agents/`) seguindo estritamente as regras de **Survival Laws (SSP-01)** e a arquitetura soberana, sem necessidade de clonar o repositório ECC.
+> 68	
+> 69	---
+> 70	
+> 71	## Formato do Output (Breve em Português)
+> 72	
+> 73	Após a consolidação das informações, apresente o resultado estruturado abaixo:
+> 74	
+> 75	```
+> 76	Subagent: [Handson Analyzer]
+> 77	═══════════════════════════════════════════════════════════
+> 78	  HANDSON — <FASE SELADA> (<data do último seal>)
+> 79	  Executando no Antigravity IDE (Gemini)
+> 80	═══════════════════════════════════════════════════════════
+> 81	
+> 82	🏁 ESTADO ATUAL
+> 83	  Fase selada: <nome da última fase do Task State>
+> 84	  Últimos commits:
+> 85	    <hash> — <mensagem>
+> 86	    <hash> — <mensagem>
+> 87	    <hash> — <mensagem>
+> 88	
+> 89	📂 MUDANÇAS PENDENTES
+> 90	  <Arquivos modificados ou "Worktree limpo ✅">
+> 91	
+> 92	🏗️ INFRA
+> 93	  mcorch_chroma:     <status> — Chroma API: <OK / ERRO>
+> 94	  mcorch_claude_mem: <status>
+> 95	  mega-brain-*:      <status resumido>
+> 96	
+> 97	🧠 KNOWLEDGE MESH
+> 98	  <totalNodes> nós · <totalEdges> arestas (do HANDOFF.md GraphRAG State)
+> 99	
+> 100	🔧 TYPESCRIPT
+> 101	  <"Zero erros ✅" ou lista dos erros críticos>
+> 102	
+> 103	📚 BoK SUITES (BoK Gate check)
+> 104	  Sealed: <lista das pastas docs/bok/<slug> completas>
+> 105	  Incomplete: <pastas incompletas ou "nenhuma">
+> 106	
+> 107	🛡️ ALINHAMENTO ECC (Perspectiva de Ferramentas/Scripts)
+> 108	  Disponíveis localmente: <lista dos utilitários já mapeados ou adaptados>
+> 109	  Pendente para adaptação: <lista das ferramentas ECC ausentes sugeridas para portar>
+> 110	
+> 111	📌 SPRINT
+> 112	  Goal: <Sprint Goal de sprint-priorities.md>
+> 113	  Top gap: <Gap #1 de sprint-priorities.md>
+> 114	
+> 115	⚡ PRÓXIMOS PASSOS
+> 116	  1. <próximo item da lista do HANDOFF.md>
+> 117	  2. <segundo item>
+> 118	
+> 119	⚠️ ALERTAS
+> 120	  <avisos críticos de infra, typescript ou arquivos perdidos em scratch/>
+> 121	
+> 122	═══════════════════════════════════════════════════════════
+> 123	  Pronto para trabalhar. Aguardando direção.
+> 124	═══════════════════════════════════════════════════════════
+> 125	```
+> 126	
+> ```
+
+## 🤖 Claude *(04:49:18)*
+
+
+## 🤖 Claude *(04:49:21)*
+
+Agora entendo: `.agents/workflows/handson.md` é a cópia do protocolo `/handson` do **Antigravity IDE** (lê memória de `~/.gemini/antigravity-ide/...`, linha 45). A mudança do Sovereign = **Passo 4: Alinhamento ECC** — um placeholder "para verificar posteriormente". Chegou o momento: eu **construí** os 3 utilitários. Vou revisar/upgradar o Passo 4 de "planeje criar" → "estão VIVOS, rode-os", refletindo o que existe agora.
+
+## 🤖 Claude *(04:49:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md",
+  "old_string": "### Passo 4: Alinhamento de Perspectiva ECC (Adapta\u00e7\u00e3o sem Clonar)\n\nCompare a su\u00edte de scripts e agentes locais com os utilit\u00e1rios de infraestrutura propostos pelo ecossistema **`affaan-m/ECC`** (ex: `doctor.js`, `repair.js` para sanidade do Claude CLI; `session-inspect.js` para controle de tokens; `scan-supply-chain-iocs.js` para seguran\u00e7a de pacotes).\nIdentifique o que est\u00e1 ausente no nosso ecossistema e planeje a cria\u00e7\u00e3o/adapta\u00e7\u00e3o sob medida destes utilit\u00e1rios (salvando-os em `.claude/scripts/` ou `.claude/agents/`) seguindo estritamente as regras de **Survival Laws (SSP-01)** e a arquitetura soberana, sem necessidade de clonar o reposit\u00f3rio ECC.",
+  "new_string": "### Passo 4: Alinhamento de Perspectiva ECC (Ferramentas de Harness \u2014 VIVAS)\n\nInspirado no ecossistema **`affaan-m/ECC`**, o MCORCH mant\u00e9m utilit\u00e1rios de harness **adaptados sob medida** (N\u00c3O clonados; conceito portado, c\u00f3digo soberano) em `.claude/scripts/`, cada um ancorado numa Survival Law (SSP-01). Rode-os no pickup:\n\n| Utilit\u00e1rio | Comando | Fun\u00e7\u00e3o | Lei |\n|-----------|---------|--------|-----|\n| **mcorch-doctor** | `bash .claude/scripts/mcorch-doctor.sh [--deep]` | Diagn\u00f3stico consolidado do ecossistema (git \u00b7 Docker mesh \u00b7 Chroma \u00b7 .env \u00b7 dist \u00b7 BoK \u00b7 supply-chain). Diagnostica + **prescreve** a remedia\u00e7\u00e3o exata \u2014 nunca auto-muta (Lei 1/Lei 4). | Lei 1 |\n| **supply-chain sentinel** | `bun run .claude/scripts/scan-supply-chain-iocs.ts [--home]` | Detecta IoCs de worm de supply-chain (fam\u00edlia Shai-Hulud, node-ipc): pacote comprometido@vers\u00e3o, payloads em node_modules, dom\u00ednios hostis, persist\u00eancia no host (`--home`). Exit 1 = comprometido. | Lei 1 \u00b7 Cyber-Sentinel |\n| **session-inspect** | `bun run .claude/scripts/session-inspect.ts` | Medidor **material** da janela de contexto (uso exato via `usage` da API, n\u00e3o estimativa) + candidatos a poda. Guia o gate de seal ~95%. | Lei 3 |\n\nO `mcorch-doctor` j\u00e1 engloba o sentinel; rode-o como parte do diagn\u00f3stico (equivale ao Passo 1) e `session-inspect` para calibrar o or\u00e7amento de contexto. SOP: `docs/processes/ecc-harness-tools.md`.\n\n**Gap-scan cont\u00ednuo (sem clonar):** ao revisitar o ECC, identifique novos utilit\u00e1rios ausentes e adapte-os sob medida (SSP-01), registrando em `.claude/scripts/` + Key Files + SOP."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:49:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md",
+  "old_string": "\ud83d\udee1\ufe0f ALINHAMENTO ECC (Perspectiva de Ferramentas/Scripts)\n  Dispon\u00edveis localmente: <lista dos utilit\u00e1rios j\u00e1 mapeados ou adaptados>\n  Pendente para adapta\u00e7\u00e3o: <lista das ferramentas ECC ausentes sugeridas para portar>",
+  "new_string": "\ud83d\udee1\ufe0f ALINHAMENTO ECC (Ferramentas de Harness)\n  Doctor: <PASS/N falhas do mcorch-doctor.sh>  \u00b7  Sentinel: <0 IoCs ou N cr\u00edticos>  \u00b7  Contexto: <% da janela (Lei 3)>\n  Pendente para adapta\u00e7\u00e3o: <novas ferramentas ECC ausentes, ou \"nenhuma\">\n"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.agents/workflows/handson.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:49:43)*
+
+
+## 🤖 Claude *(04:49:44)*
+
+Agora o SOP (Lei 2) — `docs/processes/ecc-harness-tools.md` cobrindo os 3 utilitários com a estrutura Operator/Sequence/Verification/Recovery/Success:
+
+## 🤖 Claude *(04:50:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/ecc-harness-tools.md",
+  "content": "# SOP \u2014 Ferramentas de Harness ECC-alinhadas (SSP-01)\n\n> **Lei 2 (Processo Antecipado).** Utilit\u00e1rios de harness adaptados **sob medida** (n\u00e3o clonados) do\n> ecossistema [`affaan-m/ECC`](https://github.com/affaan-m/ECC) para a arquitetura soberana do MCORCH.\n> Conceito portado, c\u00f3digo pr\u00f3prio. Cada ferramenta ancora numa Survival Law.\n>\n> **Origem:** diretiva Sovereign 2026-07-04 \u2014 o Passo 4 do `/handson` (Antigravity) marcou o alinhamento\n> ECC \"para verificar posteriormente\"; ap\u00f3s o rebrand MIV, chegou o momento de materializ\u00e1-lo.\n\n---\n\n## Invent\u00e1rio\n\n| Ferramenta | Caminho | Lei | Auto-muta? |\n|-----------|---------|-----|-----------|\n| **mcorch-doctor** | `.claude/scripts/mcorch-doctor.sh` | Lei 1 (Materialidade) | \u274c diagnostica + prescreve |\n| **supply-chain sentinel** | `.claude/scripts/scan-supply-chain-iocs.ts` | Lei 1 \u00b7 Cyber-Sentinel | \u274c s\u00f3 reporta |\n| **session-inspect** | `.claude/scripts/session-inspect.ts` | Lei 3 (Poda) | \u274c s\u00f3 mede |\n\n**Princ\u00edpio comum:** nenhuma ferramenta muta o sistema. Reparar \u00e9 decis\u00e3o do operador (Lei 1/Lei 4) \u2014\no `doctor` imprime o comando exato de remedia\u00e7\u00e3o; n\u00e3o o executa. (Diverg\u00eancia consciente do\n`repair.js` do ECC, que restaura arquivos \u2014 no MCORCH o self-heal \u00e9 do daemon/watchdog, n\u00e3o de um script de sess\u00e3o.)\n\n---\n\n## 1 \u00b7 mcorch-doctor \u2014 diagn\u00f3stico consolidado do ecossistema\n\n- **Operator:** MCORCH Master Execution Agent (ou o Sovereign) no pickup de sess\u00e3o ou antes de um deploy.\n- **Sequence:**\n  1. `bash .claude/scripts/mcorch-doctor.sh` (r\u00e1pido) ou `--deep` (inclui `tsc --noEmit` + sentinel `--home`).\n  2. Checa em ordem: Git (branch/limpo/vs-origin) \u00b7 Docker Sovereign Mesh (chroma/claude_mem/vision_mcp/mega-brain-*) \u00b7 Chroma heartbeat :8001 \u00b7 chaves de infra no `.env` (presen\u00e7a, **nunca valor**) \u00b7 `dist/` (existe + env baked no bundle) \u00b7 integridade do harness (CLAUDE.md/survival.md/HANDOFF.md/agentic-vision.md) \u00b7 su\u00edtes BoK completas \u00b7 supply-chain sentinel.\n- **Verification gate:** cada linha \u00e9 `\u2713 PASS` / `\u25b2 WARN` / `\u2717 FAIL`. Exit code = **n\u00ba de FAILs** (0 = saud\u00e1vel).\n- **Recovery path:** cada FAIL imprime `\u21b3 remediar: <comando exato>` (ex: `docker restart mcorch_chroma`, `git checkout -- <arquivo>`). O operador executa; nunca o script.\n- **Success signal:** `\ud83e\ude7a Ecossistema saud\u00e1vel \u2014 0 fail` + exit 0.\n\n## 2 \u00b7 supply-chain sentinel \u2014 IoC scanner (fam\u00edlia Shai-Hulud)\n\n- **Operator:** agente/Sovereign antes de instalar/atualizar depend\u00eancias, no CI de seguran\u00e7a, e no `doctor`.\n- **Sequence:**\n  1. `bun run .claude/scripts/scan-supply-chain-iocs.ts` (repo) \u2014 lockfiles/manifests, node_modules, source rastreado.\n  2. `--home` inclui persist\u00eancia no host (systemd user units, `~/.local/bin` droppers, LaunchAgents, `/tmp`, configs do Claude/editor envenenados).\n- **Detec\u00e7\u00e3o (4 superf\u00edcies):** (a) pacote comprometido@vers\u00e3o-maliciosa em qualquer lockfile \u2192 CRITICAL; nome-comprometido em outra vers\u00e3o \u2192 WARN; (b) filename de payload de worm dentro de `node_modules/` \u2192 CRITICAL; (c) marcador textual de worm + dom\u00ednio hostil de exfiltra\u00e7\u00e3o no source \u2192 CRITICAL/HIGH; metadata-IP/exfil-sink \u2192 WARN (com supress\u00e3o heur\u00edstica de contexto defensivo/SSRF); (d) artefato de persist\u00eancia no host \u2192 CRITICAL.\n- **Verification gate:** exit **0** = limpo (sem critical/high) \u00b7 **1** = comprometido \u00b7 **2** = args ruins. `--json` p/ pipeline.\n- **Recovery path:** CRITICAL \u2192 remover o pacote/arquivo, **rotacionar todos os segredos** (npm/GitHub/cloud tokens), auditar `git log` e hist\u00f3rico de instala\u00e7\u00e3o, isolar a m\u00e1quina se houver dropper de runtime.\n- **Success signal:** `\u2705 Nenhum IoC de supply-chain detectado` + exit 0.\n- **Manuten\u00e7\u00e3o (honestidade Lei 1):** as blocklists de pacotes s\u00e3o um **seed curado e documentado**, n\u00e3o uma lista \"completa\". Ao surgir uma nova onda (CISA / GitHub Advisory), estenda `BAD_PACKAGES`/`WORM_MARKERS`/`HOSTILE_*` e registre o diff aqui. As checagens estruturais (persist\u00eancia/payload/marcador/dom\u00ednio) s\u00e3o o n\u00facleo robusto e independem da completude da lista. Supress\u00e3o de refer\u00eancia leg\u00edtima: coment\u00e1rio `// ioc-scan:allow` na linha.\n\n## 3 \u00b7 session-inspect \u2014 medidor de or\u00e7amento de contexto (Lei 3)\n\n- **Operator:** agente ao longo da sess\u00e3o, especialmente perto do gate de seal.\n- **Sequence:** `bun run .claude/scripts/session-inspect.ts [--session <id>] [--top <N>] [--json]`. Sem args \u2192 sess\u00e3o ativa (jsonl top-level mais recente do projeto).\n- **C\u00e1lculo:** l\u00ea o transcript e soma `input + cache_read + cache_creation` do **\u00faltimo** turno assistant = tamanho **exato** da janela (dado da API, n\u00e3o estimativa). Budget = 1M. Reserva ~5% (~50k) p/ o `/handoff`.\n- **Verification gate / veredito:**\n  - `< 45%` \u2192 cedo p/ selar; probe-first (puxe o pr\u00f3ximo pendente).\n  - `45\u201390%` \u2192 janela saud\u00e1vel, continue.\n  - `90\u201395%` \u2192 prepare o seal.\n  - `\u2265 95%` \u2192 **SELAR AGORA** (exit 10, script-friendly).\n- **Recovery path (poda):** usa \"Maiores tool-results em contexto\" para escolher o que podar (referenciar por path/hash, n\u00e3o recarregar) \u2014 [[feedback_context_budget_calibration]].\n- **Success signal:** o veredito e o % batem com o que o Sovereign v\u00ea na UI; a decis\u00e3o de selar deixa de ser um chute.\n\n---\n\n## Integra\u00e7\u00e3o no `/handson`\n\nO `mcorch-doctor` engloba git/Docker/Chroma/BoK/sentinel \u2192 substitui/consolida os comandos avulsos do Passo 1.\nO `session-inspect` calibra o or\u00e7amento de contexto ao longo da sess\u00e3o. Ambos referenciados no\nPasso 4 de `.agents/workflows/handson.md`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/ecc-harness-tools.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:50:24)*
+
+
+## 🤖 Claude *(04:50:26)*
+
+SOP escrito. Vou verificar o progresso da auditoria visual — já se passou um tempo considerável.
+
+## 🤖 Claude *(04:50:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c\nSHOTS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots\necho \"completed: $(grep -c '\"type\":\"completed\"' \"$TDIR/journal.jsonl\" 2>/dev/null) / started: $(grep -c '\"type\":\"started\"' \"$TDIR/journal.jsonl\" 2>/dev/null)\"\necho \"shots: $(ls $SHOTS 2>/dev/null | wc -l) | by group:\"; ls $SHOTS 2>/dev/null | sed -E 's/^(g[0-9]+)-.*/\\1/' | sort | uniq -c | tr '\\n' ' '; echo\necho \"active browser sessions:\"; pgrep -af \"agent-browser\" 2>/dev/null | grep -oE \"session (miv-g[0-9]+)\" | sort | uniq -c\necho \"=== journal last events ===\"; tail -6 \"$TDIR/journal.jsonl\" 2>/dev/null | node -e \"let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{s.trim().split('\\n').forEach(l=>{try{const j=JSON.parse(l);console.log(j.type, j.label||j.agentId||'')}catch{}})})\" 2>/dev/null",
+  "description": "QA workflow progress poll"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> completed: 0 / started: 3
+> shots: 39 | by group:
+>      17 g1      14 g2       8 g3 
+> active browser sessions:
+> === journal last events ===
+> started abc5bfb335f7c6c81
+> started a3576a159753965b7
+> result abc5bfb335f7c6c81
+> started a4c7055bc1199ab89
+> ```
+
+## 🤖 Claude *(04:51:10)*
+
+
+## 🤖 Claude *(04:51:12)*
+
+g1 retornou resultado; g2/g3 em progresso, g4 iniciou. Auditoria segue (notifica ao completar). Enquanto isso, registro os 3 utilitários na Key Files Reference do CLAUDE.md (Arc 2, independente da QA):
+
+## 🤖 Claude *(04:51:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Build & Deploy skill** | `.claude/skills/build-deploy-guardian/SKILL.md` |\n| **Build & Deploy agent (subagent)** | `.claude/agents/build-deploy-guardian.md` |",
+  "new_string": "| **Build & Deploy skill** | `.claude/skills/build-deploy-guardian/SKILL.md` |\n| **Build & Deploy agent (subagent)** | `.claude/agents/build-deploy-guardian.md` |\n| **ECC harness tools SOP (Lei 2)** | `docs/processes/ecc-harness-tools.md` (3 utilit\u00e1rios adaptados sob medida do `affaan-m/ECC` \u2014 conceito portado, c\u00f3digo soberano; nenhum auto-muta) |\n| **mcorch-doctor (diagn\u00f3stico consolidado)** | `.claude/scripts/mcorch-doctor.sh` (`[--deep]` \u00b7 git \u00b7 Docker mesh \u00b7 Chroma \u00b7 .env presen\u00e7a \u00b7 dist env-baked \u00b7 harness \u00b7 BoK \u00b7 sentinel; exit = n\u00ba de FAILs; diagnostica + prescreve, nunca auto-muta \u2014 Lei 1/Lei 4) |\n| **Supply-chain sentinel (IoC scanner)** | `.claude/scripts/scan-supply-chain-iocs.ts` (`[--home]` \u00b7 fam\u00edlia Shai-Hulud/node-ipc: pacote@vers\u00e3o comprometida \u00b7 payload em node_modules \u00b7 dom\u00ednio hostil/marcador de worm \u00b7 persist\u00eancia no host; exit 1=comprometido; blocklist = seed curado, checagens estruturais = n\u00facleo robusto; supress\u00e3o `// ioc-scan:allow`) |\n| **session-inspect (medidor Lei 3)** | `.claude/scripts/session-inspect.ts` (janela de contexto EXATA via `usage` da API do transcript, n\u00e3o estimativa; veredito de seal ~95% + maiores tool-results p/ poda; exit 10 quando \u226595%) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:51:38)*
+
+
+## 🤖 Claude *(04:51:38)*
+
+CLAUDE.md registrado. Arc 2 substancialmente completo (3 tools construídos+provados, handson.md revisado, SOP escrito, Key Files atualizado). Agora vou aguardar a auditoria visual de forma eficiente — carrego o Monitor para bloquear até o workflow completar e triar os achados imediatamente.
+
+## 🤖 Claude *(04:51:38)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:Monitor,TaskList",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'Monitor'}, {'type': 'tool_reference', 'tool_name': 'TaskList'}]
+> ```
+
+## 🤖 Claude *(04:52:08)*
+
+
+## 🤖 Claude *(04:52:10)*
+
+A auditoria é harness-tracked (serei re-invocado ao completar). Para robustez contra stall do agent-browser, vou armar um waiter em background que me pinga quando os 8 grupos retornarem (com as tallies), e sigo aguardando.
+
+## 🤖 Claude *(04:52:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c\necho \"current results: $(grep -c '\"type\":\"result\"' \"$TDIR/journal.jsonl\" 2>/dev/null)/8\"\necho \"shots: $(ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots 2>/dev/null | wc -l)\"",
+  "description": "Quick QA status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> current results: 1/8
+> shots: 39
+> ```
+
+## 🤖 Claude *(04:52:19)*
+
+
+## 🤖 Claude *(04:52:20)*
+
+1/8 completo. Vou armar o waiter em background (exit quando 8/8, com timeout de segurança contra stall) e aguardar a notificação.
+
+## 🤖 Claude *(04:52:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TDIR=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/subagents/workflows/wf_3eb0350e-d8c\nSHOTS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/scratchpad/shots\ndeadline=$(( $(date +%s) + 2700 ))\nwhile :; do\n  n=$(grep -c '\"type\":\"result\"' \"$TDIR/journal.jsonl\" 2>/dev/null || echo 0)\n  [ \"$n\" -ge 8 ] && { echo \"QA-DONE: 8/8 grupos retornaram \u00b7 $(ls $SHOTS 2>/dev/null | wc -l) shots\"; break; }\n  [ \"$(date +%s)\" -ge \"$deadline\" ] && { echo \"QA-STALL: s\u00f3 $n/8 ap\u00f3s 45min \u00b7 $(ls $SHOTS 2>/dev/null|wc -l) shots \u2014 checar workflow\"; break; }\n  sleep 20\ndone",
+  "description": "Background waiter for QA workflow completion",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bvq1z3air. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/969f6e14-bf0b-42c0-9300-8707dcc8eb7f/tasks/bvq1z3air.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(04:52:32)*
+
+
+## 🤖 Claude *(04:52:49)*
+
+Progresso até aqui, Sovereign — trabalho seguindo em paralelo:
+
+## Arc 1 — Auditoria Visual E2E (em execução, background)
+Workflow `wf_3eb0350e-d8c` rodando: **8 grupos temáticos cobrindo as 44 rotas**, cada subagente dirige seu próprio agent-browser (sessão isolada) contra o preview local (evita CF), navega como usuário real, faz hover/abre triggers seguros, tira screenshots 1920×1080 e **lê os próprios PNGs** (mantém o custo de imagem fora do meu contexto). Guardrail rígido anti-gasto cravado (nunca clicar Run/Gerar/Publicar/Export etc.).
+- Smoke inline já provou o recipe E2E: dashboard renderiza MIV impecável (void, sigilo, Playfair, cyan, **gold só no mcoCoins**, glow neon).
+- Status: 1/8 grupos retornados, 39 shots capturados. Waiter armado — me chama ao completar.
+
+## Arc 2 — Alinhamento ECC (substancialmente completo)
+Revisei a mudança não-commitada: `.agents/workflows/handson.md` é a cópia do `/handson` do **Antigravity IDE**; o "Passo 4 — Alinhamento ECC" era um placeholder ("verificar posteriormente"). **Chegou o momento → materializei** os 3 utilitários, adaptados sob medida (conceito do `affaan-m/ECC`, código soberano, **sem clonar**), cada um ancorado numa Survival Law — e **todos provados materialmente (Lei 1)**:
+
+| Utilitário | Lei | Prova |
+|---|---|---|
+| **`scan-supply-chain-iocs.ts`** — IoC scanner família Shai-Hulud | Lei 1 · Cyber-Sentinel | teste **positivo** (detectou node-ipc@9.2.2, @ctrl/tinycolor@4.1.2 em package.json+yarn.lock, payload, marcador de worm, domínio hostil) + **negativo** (repo limpo exit 0, zero falso-positivo) |
+| **`mcorch-doctor.sh`** — diagnóstico consolidado (diagnostica+prescreve, nunca auto-muta) | Lei 1/Lei 4 | rodado: exit 0, 0 fail (pegou e eu corrigi 1 falso-FAIL de resolução de env-key) |
+| **`session-inspect.ts`** — medidor material da janela de contexto | Lei 3 | rodado na sessão viva: 23.3% (233k/1000k, dado exato da API), veredito de seal + candidatos a poda |
+
+Também: refinei o Passo 4 do handson (de "planeje criar" → "estão vivos, rode-os"), escrevi o SOP `docs/processes/ecc-harness-tools.md` (Lei 2) e registrei tudo na Key Files Reference do CLAUDE.md.
+
+Aguardando a auditoria visual completar para triar achados, corrigir regressões MIV e então selar (handoff). Não vou parar até terminar tudo.

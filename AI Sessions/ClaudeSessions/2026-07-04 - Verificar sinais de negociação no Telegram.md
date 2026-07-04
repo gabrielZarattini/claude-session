@@ -1,4 +1,4 @@
-# Verificar sinais de negociação no Telegram
+# [[2026-07-03 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
 **Date:** 2026-07-04 | **Session ID:** `5dd0b0b5-7a66-4be6-84e2-7aed31d5a564`
 
 ---
@@ -5091,3 +5091,16 @@ Mas veja só, desde quando começamos seria um coisa bem simples, se tivessemos 
 API Error: Claude Code is unable to respond to this request, which appears to violate our Usage Policy (https://www.anthropic.com/legal/aup). Try rephrasing the request in a new session or change your model.
 
 Request ID: req_011CcgBP5AuzFsvQwmZrfYTs
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]
+> * **Próxima Sessão**: [[2026-07-04 - agent-a1b011dc038095b9f]]
+%% --- TIMELINE END --- %%
