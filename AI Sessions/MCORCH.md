@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 67
-> * **Total de Sessões**: 1807
+> * **Total de Sessões**: 1812
 
 ---
 
@@ -91,6 +91,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-07-03 - handson]]` (GeminiSessions) - *2026-07-03*
+*   `[[2026-07-03 - f51b7a04-6530-4582-8b21-d9ba14caedee]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - agent-aebb30b757174fc0a]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - agent-aeb899cd78ad14716]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - agent-ad13e722023a3e993]]` (ClaudeSessions) - *2026-07-03*
@@ -117,10 +118,14 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-03 - aced5ac9-b7e1-4508-aafa-8d1da8c0fa0a]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - Verificar segurança após correção de assets]]` (ClaudeSessions) - *2026-07-03*
+*   `[[2026-07-03 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - Resolver expiração frequente de token Google OAuth]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - Resolver alertas de produção e migrations]]` (ClaudeSessions) - *2026-07-03*
+*   `[[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions) - *2026-07-03*
+*   `[[2026-07-03 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - 7bb4586f-3050-4a11-99ef-569c4b75c080]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-03 - 5ac169f1-067b-4906-9716-0ce0d4e3a2bc]]` (ClaudeSessions) - *2026-07-03*
+*   `[[2026-07-03 - 186e41ef-e58a-4d93-8830-a34846884c8c]]` (ClaudeSessions) - *2026-07-03*
 *   `[[2026-07-02 - handson]]` (GeminiSessions) - *2026-07-02*
 *   `[[2026-07-02 - fc54f2bd-db07-4bb1-86c9-4f15891e35e3]]` (ClaudeSessions) - *2026-07-02*
 *   `[[2026-07-02 - fa7dcf43-6152-4a3d-bb86-7b343f68c4e2]]` (ClaudeSessions) - *2026-07-02*

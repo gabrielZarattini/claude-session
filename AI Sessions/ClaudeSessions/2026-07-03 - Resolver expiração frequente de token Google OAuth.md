@@ -6874,5 +6874,5 @@ Quer que eu **siga direto no motion agora**, ou prefere primeiro **abrir o `/` e
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-03 - Resolver alertas de produção e migrations]]
-> * **Próxima Sessão**: [[2026-07-03 - Verificar segurança após correção de assets]]
+> * **Próxima Sessão**: [[2026-07-03 - Validar ecossistema e gerar lucros antes dos 90 dias]]
 %% --- TIMELINE END --- %%

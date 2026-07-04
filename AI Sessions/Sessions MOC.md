@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1812
-> * **Sessões do Claude**: 1766
+> * **Total de Sessões Registradas**: 1817
+> * **Sessões do Claude**: 1771
 > * **Sessões do Gemini**: 46
 
 ---
@@ -40,6 +40,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-03*
+*   `[[2026-07-03 - Executar loop autônomo MCORCH com charter]]` - *2026-07-03*
 *   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-02*
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` - *2026-07-02*
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` - *2026-07-01*
@@ -50,9 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` - *2026-06-24*
 *   `[[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-24*
 *   `[[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]` - *2026-06-23*
-*   `[[2026-05-27 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-27*
-*   `[[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]` - *2026-05-26*
-*   *... e mais 2 sessões nessa categoria.*
+*   *... e mais 4 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
@@ -71,6 +71,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-03 - handson]]` - *2026-07-03*
+*   `[[2026-07-03 - f51b7a04-6530-4582-8b21-d9ba14caedee]]` - *2026-07-03*
 *   `[[2026-07-03 - agent-aebb30b757174fc0a]]` - *2026-07-03*
 *   `[[2026-07-03 - agent-aeb899cd78ad14716]]` - *2026-07-03*
 *   `[[2026-07-03 - agent-ad13e722023a3e993]]` - *2026-07-03*
@@ -81,8 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-03 - agent-a9137afaf030d6373]]` - *2026-07-03*
 *   `[[2026-07-03 - agent-a885a02a9049abd4c]]` - *2026-07-03*
 *   `[[2026-07-03 - agent-a75a239c2861f227d]]` - *2026-07-03*
-*   `[[2026-07-03 - agent-a73a6c146a25e18b7]]` - *2026-07-03*
-*   *... e mais 1764 sessões nessa categoria.*
+*   *... e mais 1767 sessões nessa categoria.*
 
 ---
 
@@ -1739,6 +1739,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-03 - handson]]` (GeminiSessions)
+*   `[[2026-07-03 - f51b7a04-6530-4582-8b21-d9ba14caedee]]` (ClaudeSessions)
 *   `[[2026-07-03 - agent-aebb30b757174fc0a]]` (ClaudeSessions)
 *   `[[2026-07-03 - agent-aeb899cd78ad14716]]` (ClaudeSessions)
 *   `[[2026-07-03 - agent-ad13e722023a3e993]]` (ClaudeSessions)
@@ -1765,10 +1766,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-03 - aced5ac9-b7e1-4508-aafa-8d1da8c0fa0a]]` (ClaudeSessions)
 *   `[[2026-07-03 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions)
 *   `[[2026-07-03 - Verificar segurança após correção de assets]]` (ClaudeSessions)
+*   `[[2026-07-03 - Validar ecossistema e gerar lucros antes dos 90 dias]]` (ClaudeSessions)
 *   `[[2026-07-03 - Resolver expiração frequente de token Google OAuth]]` (ClaudeSessions)
 *   `[[2026-07-03 - Resolver alertas de produção e migrations]]` (ClaudeSessions)
+*   `[[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma]]` (ClaudeSessions)
+*   `[[2026-07-03 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions)
 *   `[[2026-07-03 - 7bb4586f-3050-4a11-99ef-569c4b75c080]]` (ClaudeSessions)
 *   `[[2026-07-03 - 5ac169f1-067b-4906-9716-0ce0d4e3a2bc]]` (ClaudeSessions)
+*   `[[2026-07-03 - 186e41ef-e58a-4d93-8830-a34846884c8c]]` (ClaudeSessions)
 *   `[[2026-07-02 - handson]]` (GeminiSessions)
 *   `[[2026-07-02 - fc54f2bd-db07-4bb1-86c9-4f15891e35e3]]` (ClaudeSessions)
 *   `[[2026-07-02 - fa7dcf43-6152-4a3d-bb86-7b343f68c4e2]]` (ClaudeSessions)
