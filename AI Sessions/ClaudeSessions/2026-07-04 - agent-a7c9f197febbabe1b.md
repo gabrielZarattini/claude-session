@@ -3116,3 +3116,16 @@ Risk/uncertainty:
 - **Kanban agent avatar gradients** (`from-blue-600 to-indigo-600`, `from-purple-600 to-pink-600`, `from-neutral-700 to-neutral-800`, and `text-white` on those colored avatars, lines 224-225/448) were **deliberately preserved** — they are categorical per-agent identity colors (like data-viz category colors), not theme chrome; recoloring them to cyan would destroy agent distinguishability. This is the only remaining hardcoded color and is a defensible functional choice.
 - OrchestrationPage's violet was somewhat intentional (orchestrator edges glow violet per CLAUDE.md), but MIV designates active/action = cyan, so the toggle chrome now reads cyan; the canvas rendering itself was not touched.
 - All changes are className/token-only; no props, hooks, logic, or JSX structure altered. Did not run build per instructions.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-04 - agent-a7822279f67966774]]
+> * **Próxima Sessão**: [[2026-07-04 - agent-aa4754fda9c80e3da]]
+%% --- TIMELINE END --- %%
