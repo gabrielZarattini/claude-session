@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1845
-> * **Sessões do Claude**: 1799
+> * **Total de Sessões Registradas**: 1849
+> * **Sessões do Claude**: 1803
 > * **Sessões do Gemini**: 46
 
 ---
@@ -71,18 +71,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-05 - agent-aed41526b2d0082ee]]` - *2026-07-05*
+*   `[[2026-07-05 - agent-aad83b7211d9ed913]]` - *2026-07-05*
+*   `[[2026-07-05 - agent-aa75d3f9ced0f5fd0]]` - *2026-07-05*
 *   `[[2026-07-05 - agent-a89913a584ada3129]]` - *2026-07-05*
+*   `[[2026-07-05 - agent-a441863132fd93670]]` - *2026-07-05*
 *   `[[2026-07-05 - agent-a42411ea60f58ccf2]]` - *2026-07-05*
 *   `[[2026-07-05 - agent-a28d042b0ef803895]]` - *2026-07-05*
+*   `[[2026-07-05 - agent-a20f5056fc94d469a]]` - *2026-07-05*
 *   `[[2026-07-05 - agent-a175006cdedbd1286]]` - *2026-07-05*
 *   `[[2026-07-05 - Verificar sinais de negociação no Telegram]]` - *2026-07-05*
 *   `[[2026-07-05 - E2E visual testing and Handson protocol review]]` - *2026-07-05*
 *   `[[2026-07-04 - agent-aea4cc075927ec918]]` - *2026-07-04*
-*   `[[2026-07-04 - agent-ae915deecfdc1d2dd]]` - *2026-07-04*
-*   `[[2026-07-04 - agent-adde171de0d9a4c77]]` - *2026-07-04*
-*   `[[2026-07-04 - agent-ad4abb29594850f10]]` - *2026-07-04*
-*   `[[2026-07-04 - agent-ac4d2a72f0b928dec]]` - *2026-07-04*
-*   *... e mais 1794 sessões nessa categoria.*
+*   *... e mais 1798 sessões nessa categoria.*
 
 ---
 
@@ -1739,9 +1739,13 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-05 - agent-aed41526b2d0082ee]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-aad83b7211d9ed913]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-aa75d3f9ced0f5fd0]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a89913a584ada3129]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-a441863132fd93670]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a42411ea60f58ccf2]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a28d042b0ef803895]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-a20f5056fc94d469a]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a175006cdedbd1286]]` (ClaudeSessions)
 *   `[[2026-07-05 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions)
 *   `[[2026-07-05 - E2E visual testing and Handson protocol review]]` (ClaudeSessions)

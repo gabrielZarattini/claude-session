@@ -53,3 +53,10 @@ Cada step só completa quando o gate material é atendido. Não pular gates "por
 - `supabase/functions/canvas-execute/index.ts:232-267`
 - `supabase/functions/higgsfield-webhook/index.ts:91-222`
 - `.claude/context/survival-audit-v1.md` (5 execuções falhadas documentadas em 2026-05-14/15)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
