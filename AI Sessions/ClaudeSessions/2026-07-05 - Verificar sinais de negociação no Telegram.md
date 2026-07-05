@@ -1,4 +1,4 @@
-# Verificar sinais de negociação no Telegram
+# [[2026-07-03 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
 **Date:** 2026-07-05 | **Session ID:** `471cb4d6-e001-49d9-94b4-3b7ebe9b0f00`
 
 ---
@@ -8916,3 +8916,16 @@ You've hit your session limit · resets 6:10pm (America/Sao_Paulo)
 ## 🤖 Claude *(19:52:05)*
 
 You've hit your session limit · resets 6:10pm (America/Sao_Paulo)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-05 - E2E visual testing and Handson protocol review]]
+> * **Próxima Sessão**: [[2026-07-05 - agent-a175006cdedbd1286]]
+%% --- TIMELINE END --- %%
