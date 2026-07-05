@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1838
-> * **Sessões do Claude**: 1792
+> * **Total de Sessões Registradas**: 1840
+> * **Sessões do Claude**: 1794
 > * **Sessões do Gemini**: 46
 
 ---
@@ -70,6 +70,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-05 - Verificar sinais de negociação no Telegram]]` - *2026-07-05*
+*   `[[2026-07-05 - E2E visual testing and Handson protocol review]]` - *2026-07-05*
 *   `[[2026-07-04 - agent-aea4cc075927ec918]]` - *2026-07-04*
 *   `[[2026-07-04 - agent-ae915deecfdc1d2dd]]` - *2026-07-04*
 *   `[[2026-07-04 - agent-adde171de0d9a4c77]]` - *2026-07-04*
@@ -80,9 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-04 - agent-aad1c8160bf567cc9]]` - *2026-07-04*
 *   `[[2026-07-04 - agent-aa4754fda9c80e3da]]` - *2026-07-04*
 *   `[[2026-07-04 - agent-a8dcbffb5f394e706]]` - *2026-07-04*
-*   `[[2026-07-04 - agent-a7c9f197febbabe1b]]` - *2026-07-04*
-*   `[[2026-07-04 - agent-a7822279f67966774]]` - *2026-07-04*
-*   *... e mais 1787 sessões nessa categoria.*
+*   *... e mais 1789 sessões nessa categoria.*
 
 ---
 
@@ -1738,6 +1738,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-05 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions)
+*   `[[2026-07-05 - E2E visual testing and Handson protocol review]]` (ClaudeSessions)
 *   `[[2026-07-04 - agent-aea4cc075927ec918]]` (ClaudeSessions)
 *   `[[2026-07-04 - agent-ae915deecfdc1d2dd]]` (ClaudeSessions)
 *   `[[2026-07-04 - agent-adde171de0d9a4c77]]` (ClaudeSessions)

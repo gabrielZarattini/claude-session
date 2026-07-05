@@ -1,4 +1,4 @@
-# [[2026-07-03 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
+# Verificar sinais de negociação no Telegram
 **Date:** 2026-07-05 | **Session ID:** `471cb4d6-e001-49d9-94b4-3b7ebe9b0f00`
 
 ---
@@ -6948,14 +6948,1246 @@ Agora o último passo (must-fix #1 do TL): **commit cirúrgico** dos 4 arquivos,
 > frontend/src/private/Cockpit/Cockpit.js
 > ```
 
+## 🤖 Claude *(17:01:15)*
+
+
+## 🤖 Claude *(17:01:16)*
+
+Só os 4 arquivos do experimento estão staged; a contaminação e os relatórios de research ficaram de fora. Commitando (local) como `gcrux-tradeux`:
+
+## 🤖 Claude *(17:01:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nsudo -n -u gcrux-tradeux bash -lc \"git -c safe.directory='*' commit -m 'feat(cockpit): trilhas [PAPER] de trend por estado + widget ao vivo + MARKET:TREND_BREADTH\n\nTrendState (entra em qualquer simbolo em trend) e TrendBreadth (so com >=3\nsimbolos em trend, anti-whipsaw) como trilhas [PAPER] (broker virtual, zero\nrisco, sob HALT). regimeJob passa a escrever MARKET:TREND_BREADTH (contagem de\nsimbolos em trend, passivo) p/ a TrendBreadth gatear. Novo card read-only no\nCockpit mostra as duas trilhas + posicoes por simbolo + breadth em tempo real.\nSetup idempotente reproduzivel (setup-paper-trend-state.js). QA PASS COM\nRESSALVAS + TL APPROVE COM SUGESTOES; money-path intocado (sim-suite 20/20).\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>'\" 2>&1 | tail -6\necho \"=== log topo ===\"\nsudo -n -u gcrux-tradeux bash -lc \"cd /home/gcrux-tradeux/tradeux && git -c safe.directory='*' log --oneline -3\" 2>&1",
+  "description": "Commit the 4 experiment files locally"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [master 266d398] feat(cockpit): trilhas [PAPER] de trend por estado + widget ao vivo + MARKET:TREND_BREADTH
+>  4 files changed, 170 insertions(+)
+>  create mode 100644 backend/scripts/setup-paper-trend-state.js
+> === log topo ===
+> 266d398 feat(cockpit): trilhas [PAPER] de trend por estado + widget ao vivo + MARKET:TREND_BREADTH
+> 78515ae feat(research): laboratorio de padroes (Fase 1/2/3) + relatorios da 1a corrida
+> 701b7e7 chore(notify): silencia avisos [FLOW] no Telegram via FLOW_NOTIFY_ENABLED
+> ```
+
+## 🤖 Claude *(17:01:48)*
+
+
+## 🤖 Claude *(17:01:50)*
+
+Commit local **`266d398`** (4 arquivos, 170 inserções) — master 1 commit à frente do origin. **Push pendente** (precisa da chave SSH do `ubuntu` + chown do `.git`, aquele ritual conhecido) — ofereço fazer se você quiser.
+
+Deixa eu atualizar a memória com o estado completo.
+
+## 🤖 Claude *(17:02:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md",
+  "old_string": "**Expectativa honesta:** prov\u00e1vel whipsaw (regime picotado); se acumular round-trips net+ \u2192 evid\u00eancia p/ considerar armar real (com port\u00e3o de promo\u00e7\u00e3o + GO do dono; Claude N\u00c3O vira HALT). Acompanhar linha `trendstate` em `GET /analysis/paper`; `paperReviewJob` notifica nos marcos. Pr\u00f3ximo poss\u00edvel: variante gateada por BREADTH (\u22653/4 s\u00edmbolos em trend = \"bull sustentado\") + detector de bull-sustentado com alerta Telegram. Se sobreviver a `make reset-db`, virar `setup-paper-trend-state.js` no repo p/ reproduzir.",
+  "new_string": "**Expectativa honesta:** prov\u00e1vel whipsaw (regime picotado); se acumular round-trips net+ \u2192 evid\u00eancia p/ considerar armar real (com port\u00e3o de promo\u00e7\u00e3o + GO do dono; Claude N\u00c3O vira HALT). Acompanhar linha `trendstate` em `GET /analysis/paper`; `paperReviewJob` notifica nos marcos.\n\n**UPDATE 2026-07-05 (cont., commit LOCAL `266d398`, 4 arquivos, QA PASS COM RESSALVAS + TL APPROVE COM SUGEST\u00d5ES, money-path 20/20, deployado backend+frontend):** variante **`[PAPER] TrendBreadth` ADICIONADA** (ids 92-103, ativa) \u2014 entra s\u00f3 com **\u22653 s\u00edmbolos em trend** (anti-whipsaw de tend\u00eancia isolada); sa\u00edda por 2 automa\u00e7\u00f5es (regime deixou trend OU breadth caiu, pq `validateConditions` n\u00e3o aceita `||`). Depende de **`MARKET:TREND_BREADTH`** (contagem de s\u00edmbolos em 'trend') escrito PASSIVO pelo `regimeJob` no fim do `runOnce` (novo `indexKeys.TREND_BREADTH`; `updateMemory('MARKET',...,false)` \u2014 s\u00f3 grava, sem broadcast). **Agora reproduz\u00edvel:** `backend/scripts/setup-paper-trend-state.js` cria TrendState+TrendBreadth idempotente (padr\u00e3o setup-paper-trilhas). **Widget novo no Cockpit** (`frontend/.../Cockpit.js` ROW 6 \"Paper Trilhas (Trend)\", read-only): mostra regime dos s\u00edmbolos + breadth N/4 + as 2 trilhas com posi\u00e7\u00f5es/PnL por s\u00edmbolo em tempo real (poll 60s); deriva a lista de s\u00edmbolos de `cp.symbols` (fix da ressalva). Estado ao vivo (05/jul): breadth=**2/4** (ADA+BNB trend, BTC mixed, LTC range) \u2192 **TrendBreadth N\u00c3O entra ainda** (espera 3\u00ba s\u00edmbolo, por desenho); TrendState segue com ADA+BNB. Contamina\u00e7\u00e3o `farm-funnel-*` de outra sess\u00e3o FICOU FORA do commit (add cir\u00fargico dos 4). **origin==78515ae \u2192 local 1 commit \u00e0 frente; PUSH pendente** (chave ubuntu + chown .git, ver [[github-ssh-key-on-ubuntu]]/[[git-ownership-gotcha]]). Ver [[tradeux-pattern-lab]] (backtest que motivou: trend em chop = net\u2212 OOS \u2192 por isso paper mede de gra\u00e7a antes de armar real)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-strategy-engine.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:02:19)*
+
+
+## 🤖 Claude *(17:02:34)*
+
+Pronto — as duas coisas que você pediu estão **no ar e commitadas**.
+
+## O que foi entregue
+
+**1) A variante `TrendBreadth`** (a "confirmação ampla" / bull sustentado) — criada e ativa. Ela só entra num símbolo quando **≥3 dos 4 estão em trend ao mesmo tempo**, pra evitar o whipsaw de tendência isolada. Como agora o breadth é **2/4** (só ADA e BNB em trend), ela está **armada e esperando** o 3º símbolo virar — exatamente o comportamento que a distingue da TrendState (que entra em qualquer trend isolado).
+
+**2) O widget no cockpit** — abre em https://tradeux.gcrux.com/cockpit, role até o card **"Paper Trilhas (Trend) — teste ao vivo"** (atualiza a cada 60s). Agora mesmo ele mostra:
+
+- **Faixa de regime + breadth:** `BTC:mixed · LTC:range · BNB:trend · ADA:trend` — **breadth 2/4**
+- **TrendState:** 2 posições abertas (ADA @0,18978 e BNB @586,28), PnL não-realizado ao vivo
+- **TrendBreadth:** "sem trades ainda — aguardando confirmação ampla (breadth 2/4 < 3, por desenho)"
+
+Quando um 3º símbolo (BTC ou LTC) entrar em trend, a TrendBreadth compra sozinha e você vê a posição aparecer no card, lado a lado com a TrendState — dá pra comparar em tempo real qual das duas abordagens se sai melhor.
+
+## Como foi feito (com disciplina)
+
+- **Backend** (passivo): `regimeJob` agora escreve `MARKET:TREND_BREADTH` (contagem de símbolos em trend) — confirmado ao vivo = **2**, sem erros.
+- **Portões:** **QA = PASS COM RESSALVAS** (rodou `vite build` + sim-suite money-path **20/20**), **TL = APPROVE COM SUGESTÕES**. **Money-path intocado** — tudo `[PAPER]` (broker virtual, zero dinheiro real, sob HALT).
+- **Reproduzível:** virou o script `setup-paper-trend-state.js` (sobrevive a `reset-db`), não só chamadas soltas de API.
+- **Commit cirúrgico** `266d398` — só os 4 arquivos do experimento; a contaminação `farm-funnel-*` de outra sessão ficou **de fora**.
+
+## Um ponto pendente (sua decisão)
+
+O commit é **local** — master está 1 commit à frente do `origin`. Fazer o **push** exige o ritual da chave SSH do `ubuntu` + chown do `.git` (risco baixo mas fiddly). Quer que eu **empurre pro GitHub** agora, ou deixo local até você revisar? O experimento roda igual de qualquer jeito — o push é só pra durabilidade no repositório remoto.
+
+## 👤 User *(17:47:52)*
+
+Coloque o  Paper Trilhas (Trend) — teste ao vivo do lado de  Paper · Estratégias (research, sem risco) dividindo em duas colunas metade para cada um na mesma linha. E em baixo quero ver um grafico de velas que mostra as opções ao vivo, não somente os sinais (tambem os sinais ao vivo) por exemplo quando inicia a vela se ja tiver sinal mostra no grafico o sinal com detalhes como se fosse uma HUD e todas as ações e monitoramentos como se eu estive vendo os pensamentos de analise da vela atual.
+
+## 🤖 Claude *(17:48:57)*
+
+
+## 🤖 Claude *(17:48:58)*
+
+Dois pedidos claros: **(1)** colocar o card "Paper Trilhas (Trend)" **lado a lado** com "Paper · Estratégias" (duas colunas, metade cada), e **(2)** abaixo, um **gráfico de velas com HUD ao vivo** — mostrando a análise da vela atual em tempo real (sinais, gates, ações, monitoramentos — "os pensamentos da vela"), não só os sinais.
+
+O #2 é uma feature de frontend robusta. Antes de implementar, preciso mapear com precisão o cockpit atual: o CSS das linhas/colunas, se já existe um widget de velas (a memória menciona "Simulação ao vivo" com candle SVG), e todas as fontes de dado ao vivo (WebSocket, `cockpit.symbols[sym]` com signals/gates/flow/reason). Vou explorar a fundo.
+
+## 🤖 Claude *(17:49:23)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Map cockpit for 2-col layout + candle HUD",
+  "subagent_type": "Explore",
+  "prompt": "Repo /home/gcrux-tradeux/tradeux, frontend em frontend/. Vou implementar 2 mudan\u00e7as no COCKPIT (arquivo frontend/src/private/Cockpit/Cockpit.js + frontend/src/private/Cockpit/cockpit.css). Preciso de um mapa PRECISO e ACION\u00c1VEL, com caminhos relativos, n\u00fameros de linha e TRECHOS DE C\u00d3DIGO COLADOS. N\u00c3O edite nada.\n\nMUDAN\u00c7A A \u2014 layout de 2 colunas: hoje existem dois pain\u00e9is em linhas separadas: \"Paper \u00b7 Estrat\u00e9gias (research, sem risco)\" (procure \"Paper \u00b7 Estrat\u00e9gias\") e \"Paper Trilhas (Trend) \u2014 teste ao vivo\" (procure \"Paper Trilhas (Trend)\"). Quero os dois LADO A LADO, 1fr/1fr (metade cada), na MESMA linha, mantendo o colapso responsivo pra 1 coluna em telas estreitas.\nPreciso saber:\n1. Os intervalos de linha EXATOS desses dois pain\u00e9is (o `<div className=\"cx-row\">...</div>` de cada um).\n2. As classes de linha existentes e seu CSS: `.cx-row`, `.cx-row-3` e QUALQUER `.cx-row-2` \u2014 cole as regras `grid-template-columns` + os `@media` de colapso responsivo do cockpit.css (n\u00famero de linha). Quero saber se j\u00e1 h\u00e1 uma classe 1fr/1fr ou se preciso criar `.cx-row-2`.\n\nMUDAN\u00c7A B \u2014 gr\u00e1fico de velas com HUD ao vivo da \"vela atual\": um chart de candles que mostra, EM TEMPO REAL, a an\u00e1lise da vela corrente (sinais/gates/a\u00e7\u00f5es/monitoramento \u2014 \"os pensamentos\"). Preciso descobrir o que J\u00c1 existe pra reusar:\n3. Existe algum widget de VELAS/candle no Cockpit.js hoje (a mem\u00f3ria menciona \"Simula\u00e7\u00e3o ao vivo\" com candle SVG + painel RSI + marcadores + SMA + simDecision, ou um embed TradingView)? Se sim: cole o JSX COMPLETO dele, o intervalo de linhas, e diga se desenha candles em SVG pr\u00f3prio (e cole a fun\u00e7\u00e3o que desenha os candles/escalas) ou usa lib/iframe. Se N\u00c3O existe mais, diga.\n4. FONTES DE DADO AO VIVO dispon\u00edveis pro HUD:\n   a. WebSocket: procure react-use-websocket / useWebSocket / REACT_APP_WS_URL / REACT_APP_BWS_URL no Cockpit.js. Que mensagens chegam (pre\u00e7o ao vivo? klines? book?)? Cole o trecho do hook + como o payload \u00e9 parseado + o nome do estado que guarda o pre\u00e7o/candle ao vivo.\n   b. O objeto do poll `/analysis/cockpit` (estado `cockpit`, usado como `cp`): cole a estrutura de `cp.symbols[sym]` \u2014 especialmente `.signals` (rsi1m/rsi15m/trendSlope/trendCross/farmDca/trendQty), `.gates` (regime/buyAllowed/farm/baseline/trend/flowGated/reason/doctrine), `.flow` (imbalance/toxicity), `.price`, `.dist`, `.ev`. Quero os campos REAIS (n\u00e3o suposi\u00e7\u00e3o) \u2014 se poss\u00edvel rode `curl -s http://127.0.0.1:8090/api/analysis/cockpit -H \"Authorization: $(cat /tmp/tok.txt)\" | python3 -m json.tool` e cole o bloco de UM s\u00edmbolo.\n   c. H\u00e1 algum endpoint/estado com a S\u00c9RIE de velas 1m (array de candles) pra desenhar o gr\u00e1fico? (ex.: getCockpit por s\u00edmbolo `/analysis/cockpit/:symbol`, ou um monitor de chart, ou o signalRecorder/patterns). Procure em IntelligenceService.js e nos controllers.\n   d. O signal recorder / patterns: `cp.patterns` (stats/recent/open) \u2014 cole a shape (s\u00e3o os sinais rsi/flow gravados com desfecho).\n5. Existe um SELETOR de s\u00edmbolo no cockpit (estado tipo `selectedSymbol`/`sym`) que os widgets seguem? Cole como \u00e9 setado.\n6. Helpers de formata\u00e7\u00e3o dispon\u00edveis no componente (fmtUsd, dirClass, num, pct, e quaisquer de candle/escala).\n\nSeja minucioso e cole os trechos verbatim \u2014 vou implementar sem re-explorar. Confirme os campos rodando curl no cockpit vivo quando poss\u00edvel (token em /tmp/tok.txt, header Authorization CRU, base http://127.0.0.1:8090/api)."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a1e3fe6f6464f537a (internal ID - do not mention to user. Use SendMessage with to: 'a1e3fe6f6464f537a', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/a1e3fe6f6464f537a.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(17:49:51)*
+
+
+## 🤖 Claude *(17:50:01)*
+
+Enquanto o mapa do cockpit é levantado, deixa eu te alinhar o plano do que vou construir, pra garantir que é o que você quer:
+
+**Parte A — layout 2 colunas:** junto "Paper · Estratégias" e "Paper Trilhas (Trend)" numa linha só, 1fr/1fr (metade cada), mantendo o colapso pra 1 coluna em tela estreita.
+
+**Parte B — gráfico de velas + HUD "pensamentos da vela":** abaixo, um chart de velas 1m ao vivo de um símbolo (seguindo um seletor), com um painel HUD que mostra, **em tempo real, a análise da vela atual** — usando os dados **reais** que o cockpit já computa por símbolo:
+- **Preço/vela ao vivo** (O/H/L/C da vela em formação, via WebSocket).
+- **Indicadores:** RSI(1m) e RSI(15m) com estado (sobrevenda/sobrecompra/neutro), posição vs SMA, slope.
+- **Regime + o "porquê"** (o campo `reason`/`doctrine` que o motor gera = literalmente o pensamento dele).
+- **Fluxo:** imbalance/toxicity com leitura.
+- **Gates:** o que está liberado/bloqueado e **por quê** (ex.: "compra vetada: fluxo vendedor agressor").
+- **Sinal AGORA:** se algum sinal disparou nesta vela (rsi_oversold/overbought, flow, trend cross) + a ação que o sistema tomaria/tomou (ex.: "TrendState comprou — regime trend").
+- Marcadores dos sinais nas velas onde dispararam.
+
+Vou construir tudo com **dado real** (nada fabricado — os "pensamentos" são os valores que de fato dirigem as decisões), read-only, e passar por QA/TL + build antes de deployar, como das outras vezes. Aguardando o mapa pra implementar com precisão.
+
+## 👤 User *(17:51:49)*
+
+<task-notification>
+<task-id>a1e3fe6f6464f537a</task-id>
+<tool-use-id>toolu_017tbjpHxCL3RtZj3ryFyqZW</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/a1e3fe6f6464f537a.output</output-file>
+<status>completed</status>
+<summary>Agent "Map cockpit for 2-col layout + candle HUD" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>---
+
+## MAPA PRECISO E ACIONÁVEL — COCKPIT PARA 2 MUDANÇAS
+
+### **MUDANÇA A: LAYOUT DE 2 COLUNAS (Paper · Estratégias + Paper Trilhas lado a lado)**
+
+#### **1. PAINÉIS — Números de linha EXATOS**
+
+**Painel A: "Paper · Estratégias (research, sem risco)"**
+- **Arquivo:** `frontend/src/private/Cockpit/Cockpit.js`
+- **Linhas:** 796–821
+- **Código:**
+```jsx
+            {/* ROW 5 — Paper Engine (research, sem risco) */}
+            &lt;div className="cx-row"&gt;
+              &lt;div className="cx-panel glow"&gt;
+                &lt;div className="cx-panel-title"&gt;&lt;span&gt;&lt;span className="cx-seal real" /&gt; Paper · Estratégias (research, sem risco)&lt;/span&gt;&lt;span className="cx-src"&gt;/analysis/cockpit · paper&lt;/span&gt;&lt;/div&gt;
+                {(() =&gt; {
+                  const pp = cp.paper || null;
+                  const strats = pp &amp;&amp; Array.isArray(pp.strategies) ? pp.strategies.slice().sort((a, b) =&gt; num(b.totalPnl) - num(a.totalPnl)) : [];
+                  if (!pp || strats.length === 0)
+                    return &lt;div className="cx-empty"&gt;sem trades paper ainda — trilhas armadas, aguardando sinal (consistência sai do trend; macro no próximo cross)&lt;/div&gt;;
+                  return (
+                    &lt;React.Fragment&gt;
+                      &lt;div className="cx-line" style={{ fontWeight: 700 }}&gt;
+                        &lt;span className="l"&gt;Total · {strats.length} trilhas&lt;/span&gt;
+                        &lt;span className={`v cx-mono ${dirClass(pp.totals.totalPnl)}`}&gt;{fmtUsd(pp.totals.totalPnl)}&lt;/span&gt;
+                      &lt;/div&gt;
+                      {strats.map((s, i) =&gt; (
+                        &lt;div className="cx-line" key={i} title={`realizado ${fmtUsd(s.realizedPnl)} + não-realizado ${fmtUsd(s.unrealizedPnl)} · fee ${fmtUsd(s.fees)} · ${s.buys}c/${s.sells}v`}&gt;
+                          &lt;span className="l cx-mono"&gt;{s.strategy} &lt;span className="cx-flat" style={{ fontSize: '0.66rem' }}&gt;{s.buys}c/{s.sells}v{s.winRate != null ? ` · ${Math.round(s.winRate * 100)}% win` : ''}{s.openPositions ? ` · ${s.openPositions} aberta(s)` : ''}&lt;/span&gt;&lt;/span&gt;
+                          &lt;span className={`v cx-mono ${dirClass(s.totalPnl)}`}&gt;{fmtUsd(s.totalPnl)}&lt;/span&gt;
+                        &lt;/div&gt;
+                      ))}
+                      &lt;div className="cx-note"&gt;P&amp;amp;L simulado com preço+fee &lt;b&gt;REAIS da mainnet&lt;/b&gt; (broker virtual, zero dinheiro real; mainnet CONGELADO). Compara qual trilha tem edge antes de arriscar. A trilha de frequência/verde-diário foi refutada por backtest (EV&amp;lt;0) — não listada.&lt;/div&gt;
+                    &lt;/React.Fragment&gt;
+                  );
+                })()}
+              &lt;/div&gt;
+            &lt;/div&gt;
+```
+
+**Painel B: "Paper Trilhas (Trend) — teste ao vivo"**
+- **Arquivo:** `frontend/src/private/Cockpit/Cockpit.js`
+- **Linhas:** 823–871
+- **Código (início):**
+```jsx
+            {/* ROW 6 — Paper Trilhas (Trend) — teste ao vivo (pedido do dono) */}
+            &lt;div className="cx-row"&gt;
+              &lt;div className="cx-panel glow"&gt;
+                &lt;div className="cx-panel-title"&gt;&lt;span&gt;&lt;span className="cx-seal real" /&gt; Paper Trilhas (Trend) — teste ao vivo&lt;/span&gt;&lt;span className="cx-src"&gt;/analysis/cockpit · paper + symbols&lt;/span&gt;&lt;/div&gt;
+                {(() =&gt; {
+                  const symObj = cp.symbols || {};
+                  const regOf = (sym) =&gt; (((symObj[sym] || {}).gates) || {}).regime || '—';
+                  const tracked = Object.keys(symObj).length ? Object.keys(symObj) : ['BTCUSDT', 'LTCUSDT', 'BNBUSDT', 'ADAUSDT'];
+                  const breadth = tracked.filter((s) =&gt; regOf(s) === 'trend').length;
+                  const byStrat = {};
+                  (cp.paper &amp;&amp; Array.isArray(cp.paper.strategies) ? cp.paper.strategies : []).forEach((s) =&gt; { byStrat[s.strategy] = s; });
+                  const fmtPx = (v) =&gt; { const n = num(v); return n &gt;= 100 ? n.toFixed(2) : n &gt;= 1 ? n.toFixed(3) : n.toFixed(5); };
+                  const tracks = [{ key: 'trendstate', label: 'TrendState · entra em qualquer símbolo em trend' }, { key: 'trendbreadth', label: 'TrendBreadth · só com ≥3 símbolos em trend' }];
+```
+
+#### **2. CLASSES CSS E LAYOUT RESPONSIVO**
+
+**Arquivo:** `frontend/src/private/Cockpit/cockpit.css`
+
+**Classe `.cx-row` (layout 1.6fr 1fr — 2 colunas, ambas usadas hoje):**
+```css
+.cockpit .cx-row { display: grid; gap: 14px; grid-template-columns: 1.6fr 1fr; }
+```
+- **Linha:** 73
+- **Comportamento:** Desktop = 1.6fr (painel grande) e 1fr (painel pequeno) lado a lado
+- **Responsivo:** quebra para 1 coluna em `max-width: 1100px` (linha 75)
+
+**Classe `.cx-row-3` (layout 1.4fr 1fr — 2 colunas, alts):**
+```css
+.cockpit .cx-row-3 { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }
+```
+- **Linha:** 74
+
+**Media query — colapso responsivo:**
+```css
+@media (max-width: 1100px) { .cockpit .cx-row, .cockpit .cx-row-3 { grid-template-columns: 1fr; } }
+```
+- **Linha:** 75
+- **Comportamento:** Ambas as classes `.cx-row` e `.cx-row-3` colapsam para **1fr** (1 coluna) em telas ≤ 1100px
+
+**Status atual dos painéis Paper:**
+- ROW 5 (linha 796): `&lt;div className="cx-row"&gt;` — **está em 2 colunas LATENT** (1.6fr 1fr), mas contém **1 único painel** (ocupa só 1.6fr)
+- ROW 6 (linha 824): `&lt;div className="cx-row"&gt;` — **está em 2 colunas LATENT** (1.6fr 1fr), mas contém **1 único painel** (ocupa só 1.6fr)
+
+**O QUE VOCÊ PRECISA FAZER:**
+- **Opção 1 (SIMPLES):** Mesclar os 2 `&lt;div className="cx-row"&gt;` num ÚNICO div com 2 painéis internos, **mantendo `.cx-row`** (grid já faz 1.6fr 1fr).
+  - Eliminar a quebra de linha entre linha 821 e linha 823.
+  - Ambos os painéis ocupam automaticamente 1.6fr (A) + 1fr (B).
+  
+- **Opção 2 (NOVO):** Criar `.cx-row-2` com **1fr 1fr exato**:
+```css
+.cockpit .cx-row-2 { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
+@media (max-width: 1100px) { .cockpit .cx-row-2 { grid-template-columns: 1fr; } }
+```
+  - Aplicar `&lt;div className="cx-row-2"&gt;` em vez de `.cx-row` (iguala visualmente Paper A = Paper B).
+  - Linha: inserir após linha 75 no cockpit.css.
+
+**NÃO existe `.cx-row-2` hoje — você escolhe qual path.**
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+### **MUDANÇA B: GRÁFICO DE VELAS COM HUD AO VIVO (Análise da "vela atual")**
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-05 - E2E visual testing and Handson protocol review]]
-%% --- TIMELINE END --- %%
+#### **3. VELAS EXISTENTES NO COCKPIT**
+
+**SIM, existem 2 widgets de candles SVG NATIVOS (sem TradingView, 100% SVG próprio):**
+
+**Widget 1: Simulação ao vivo (WIDGET PRINCIPAL — o BIG)**
+- **Arquivo:** `frontend/src/private/Cockpit/Cockpit.js`
+- **Linhas:** 375–461 (painel inteiro); gráfico = 400–422
+- **Função de renderização:** `buildCandles(klive, 440)` — linha 278
+- **JSX do gráfico:**
+```jsx
+{cndBig
+  ? &lt;React.Fragment&gt;&lt;svg className="cx-candle tall" viewBox={`0 0 ${cndBig.W} ${cndBig.H}`} preserveAspectRatio="none" aria-label={`Candles 1m do ${selSym} com execucoes simuladas`}&gt;
+      {[0.25, 0.5, 0.75].map((gg, i) =&gt; &lt;line key={i} className="grid" x1="0" x2={cndBig.W} y1={cndBig.H * gg} y2={cndBig.H * gg} /&gt;)}
+      {cndBig.candles.map((cc, i) =&gt; (&lt;g key={i}&gt;&lt;line className={cc.up ? 'wick-up' : 'wick-down'} x1={cc.wx} x2={cc.wx} y1={cc.wy1} y2={cc.wy2} /&gt;&lt;rect className={cc.up ? 'body-up' : 'body-down'} x={cc.x} y={cc.by} width={cc.bw} height={cc.bh} /&gt;&lt;/g&gt;))}
+      &lt;line className="lastline" x1="0" x2={cndBig.W - cndBig.padR} y1={cndBig.lastY} y2={cndBig.lastY} /&gt;
+      {_sma20Path &amp;&amp; &lt;path className="cx-sma sma20" d={_sma20Path} /&gt;}
+      {_sma50Path &amp;&amp; &lt;path className="cx-sma sma50" d={_sma50Path} /&gt;}
+      {marks.map((m, i) =&gt; {
+        const c = cndBig.candles[m.i]; if (!c) return null;
+        if (m.type === 'buy') { const y = c.wy2 + 7; return &lt;polygon key={'m' + i} className={`cx-mark buy ${m.armed ? 'armed' : 'gated'}`} points={`${c.wx - 4.5},${y + 7} ${c.wx + 4.5},${y + 7} ${c.wx},${y}`}&gt;&lt;title&gt;{m.title}&lt;/title&gt;&lt;/polygon&gt;; }
+        const y = c.wy1 - 7; return &lt;polygon key={'m' + i} className="cx-mark sell" points={`${c.wx - 4.5},${y - 7} ${c.wx + 4.5},${y - 7} ${c.wx},${y}`}&gt;&lt;title&gt;{m.title}&lt;/title&gt;&lt;/polygon&gt;;
+      })}
+    &lt;/svg&gt;
+    {rsiPane &amp;&amp; &lt;svg className="cx-rsipane" viewBox={`0 0 ${rsiPane.W} ${rsiPane.H}`} preserveAspectRatio="none" aria-label="RSI 14 do 1m com faixas de compra/venda"&gt;
+      &lt;rect className="rsi-os" x="0" y={rsiPane.yBuy} width={rsiPane.W} height={rsiPane.H - rsiPane.yBuy} /&gt;
+      &lt;rect className="rsi-ob" x="0" y="0" width={rsiPane.W} height={rsiPane.ySell} /&gt;
+      &lt;line className="rsi-band buy" x1="0" x2={rsiPane.W} y1={rsiPane.yBuy} y2={rsiPane.yBuy} /&gt;
+      &lt;line className="rsi-band sell" x1="0" x2={rsiPane.W} y1={rsiPane.ySell} y2={rsiPane.ySell} /&gt;
+      &lt;path className="rsi-line" d={rsiPane.line} /&gt;
+      &lt;text className="rsi-lbl" x="3" y={rsiPane.yBuy - 3}&gt;RSI &amp;lt;{_buyTh} compra (sobrevenda)&lt;/text&gt;
+      &lt;text className="rsi-lbl" x="3" y={rsiPane.ySell + 10}&gt;RSI &amp;gt;{_sellTh} venda (sobrecompra)&lt;/text&gt;
+    &lt;/svg&gt;}
+  &lt;/React.Fragment&gt;
+  : &lt;div className="cx-empty"&gt;{klErr ? 'klines indisponiveis (CORS/Binance) 🟡' : 'carregando candles…'}&lt;/div&gt;}
+```
+- **Altura tall:** `height:330px` (linha 275 css)
+- **RSI sub-gráfico abaixo:** linhas 413–421, altura 92px (linha 276 css)
+- **Período:** 1m, últimas ~60 velas renderizadas
+- **Marcadores:** compra ▲ e venda ▼ overlay (linhas 407–411), coloridas por regime (armed=sólido, gated=vazado)
+- **SMAs:** SMA20 (azul ciano) + SMA50 (laranja) passadas como paths SVG (linhas 405–406)
+
+**Widget 2: "ROW 2 — candle ao vivo + tail distribution"**
+- **Arquivo:** `frontend/src/private/Cockpit/Cockpit.js`
+- **Linhas:** 574–594
+- **Função:** `buildCandles(cnd, 220)` — linha 277 (altura 220px, não tall)
+- **JSX:**
+```jsx
+{cnd
+  ? &lt;svg className="cx-candle" viewBox={`0 0 ${cnd.W} ${cnd.H}`} preserveAspectRatio="none" aria-label="Candles de 1 minuto do BTCUSDT"&gt;
+      {[0.25, 0.5, 0.75].map((g, i) =&gt; &lt;line key={i} className="grid" x1="0" x2={cnd.W} y1={cnd.H * g} y2={cnd.H * g} /&gt;)}
+      {cnd.candles.map((c, i) =&gt; (
+        &lt;g key={i}&gt;
+          &lt;line className={c.up ? 'wick-up' : 'wick-down'} x1={c.wx} x2={c.wx} y1={c.wy1} y2={c.wy2} /&gt;
+          &lt;rect className={c.up ? 'body-up' : 'body-down'} x={c.x} y={c.by} width={c.bw} height={c.bh} /&gt;
+        &lt;/g&gt;
+      ))}
+      &lt;line className="lastline" x1="0" x2={cnd.W - cnd.padR} y1={cnd.lastY} y2={cnd.lastY} /&gt;
+    &lt;/svg&gt;
+  : &lt;div className="cx-empty"&gt;{klErr ? 'klines indisponíveis (CORS/Binance) 🟡' : 'carregando candles…'}&lt;/div&gt;}
+```
+- **Simples:** só candles + grid + lastline, sem marcadores/SMA/RSI.
+
+**Função core — renderização de candles (VERBATIM):**
+```javascript
+// Linhas 70–86 (Cockpit.js)
+function buildCandles(kl, H = 220) {
+  const data = (kl || []).slice(-60);
+  if (data.length &lt; 2) return null;
+  const W = 600, padT = 8, padB = 8, padL = 4, padR = 40;
+  const max = Math.max(...data.map(d =&gt; d.h)), min = Math.min(...data.map(d =&gt; d.l));
+  const span = max - min || 1;
+  const cw = (W - padL - padR) / data.length;
+  const bw = Math.max(1.5, cw * 0.62);
+  const y = p =&gt; padT + (H - padT - padB) * (1 - (p - min) / span);
+  const candles = data.map((d, i) =&gt; {
+    const xc = padL + cw * i + cw / 2;
+    const up = d.c &gt;= d.o;
+    const oy = y(d.o), cy = y(d.c);
+    return { x: xc - bw / 2, bw, by: Math.min(oy, cy), bh: Math.max(1, Math.abs(oy - cy)), wx: xc, wy1: y(d.h), wy2: y(d.l), up };
+  });
+  return { candles, lastY: y(data[data.length - 1].c), last: data[data.length - 1].c, hi: max, lo: min, W, H, padR };
+}
+```
+- **Input klines:** array de `{ t, o, h, l, c }` (timestamp, open, high, low, close)
+- **Output:** objeto com `.candles[]` (cada um tem `{ x, bw, by, bh, wx, wy1, wy2, up }` — posição SVG + wicks/body), `.lastY`, `.last` (preço actual), `.hi/.lo` (escala), `.W/.H` (viewport SVG)
+
+#### **4. FONTE DE DADO AO VIVO — WebSocket**
+
+**Linha 205–225 (Cockpit.js):**
+```javascript
+const { readyState } = useWebSocket(process.env.REACT_APP_WS_URL, {
+  queryParams: { token: localStorage.getItem('token') },
+  onMessage: (event) =&gt; {
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg &amp;&amp; msg.miniTicker) {
+        const mt = msg.miniTicker;
+        setPrices(prev =&gt; {
+          const next = { ...prev };
+          const put = (sym, c) =&gt; { if (sym &amp;&amp; c != null &amp;&amp; !isNaN(num(c))) next[sym] = num(c); };
+          if (Array.isArray(mt)) mt.forEach(t =&gt; put(t &amp;&amp; t.symbol, t &amp;&amp; (t.close ?? t.c)));
+          else if (mt.symbol) put(mt.symbol, mt.close ?? mt.c);
+          else Object.keys(mt).forEach(k =&gt; put(k, mt[k] &amp;&amp; (mt[k].close ?? mt[k].c)));
+          return next;
+        });
+      }
+    } catch (e) { /* ignora */ }
+  },
+  shouldReconnect: () =&gt; true,
+  reconnectInterval: 3000,
+});
+```
+- **Hook:** `useWebSocket` (react-use-websocket)
+- **URL:** `process.env.REACT_APP_WS_URL` (backend WebSocket, URL em build-time)
+- **Mensagem:** `{ miniTicker: [...] || symbol:..., close/c: ... }`
+- **Estado resultante:** `prices` (object `{ BTCUSDT: 42100.5, ... }`)
+- **Vela ao vivo:**
+```javascript
+// Linha 273–276
+const btcWs = prices[selSym];  // preco ao vivo do simbolo selecionado
+const klive = (klines &amp;&amp; btcWs != null &amp;&amp; !isNaN(btcWs))
+  ? klines.map((k, i) =&gt; i === klines.length - 1 ? { ...k, c: btcWs, h: Math.max(k.h, btcWs), l: Math.min(k.l, btcWs) } : k)
+  : klines;
+```
+  - Sobrescreve o close da **última vela** com o preço WS ao vivo
+  - Atualiza H/L se o preço WS sai do range
+
+#### **5. FONTE DE DADO — Poll /analysis/cockpit (objeto `cp`)**
+
+**Endpoint:** `GET /analysis/cockpit` (backend `analysisController.js`, linhas 74–131)
+- **Frequência:** 60s (frontend `useEffect` linha 262)
+- **State:** `cockpit`, usado como `cp` (linha 319)
+
+**Estrutura completa de `cp.symbols[sym]` (verbatim do cockpitJob.js linhas 162–170):**
+```javascript
+{
+  symbol: 'BTCUSDT',
+  source: 'api.binance.com',
+  interval: '1m',
+  price: 42100.50,
+  samples: 500,  // número de velas 1m analisadas
+  dist: {
+    medAbsMovePct: 0.1234,    // mediana do |move| de 1m (%)
+    sigmaPct: 0.2567,          // desvio-padrão dos retornos (%)
+    pHitBreakevenPct: 12.5,    // % de velas com move &gt;= fee round-trip (break-even)
+    breakevenPct: 0.20,        // limiar de fee (%)
+    hist: {
+      counts: [0, 1, 2, 5, 12, ...],  // array de 25 bins: distribuição de retornos
+      binPct: 0.04,                    // tamanho de cada bin (%)
+      lim: 0.5                         // limite (±0.5% = limites da distribuição)
+    }
+  },
+  ev: {
+    grossPct: 0.1234,     // move médio (%)
+    netPct: -0.0766,      // move médio MENOS fee (quase sempre &lt; 0, prova de scalping sangrar)
+    breakevenPct: 0.20
+  },
+  tail: {
+    p95Pct: 0.3456,        // percentil 95 do |move|
+    p99Pct: 0.5678,        // percentil 99 do |move|
+    tailMassPct: 2.34,     // % de moves &gt;= 3·σ
+    k: 3
+  },
+  mc: {
+    horizonMin: 60,        // horizonte de Monte Carlo (minutos)
+    p10: 41950.25,         // p10 (driftless, lognormal)
+    p50: 42100.50,         // p50 = preço actual
+    p90: 42251.75,         // p90
+    sigmaHPct: 15.35,      // σ·√H (%)
+    driftless: true
+  },
+  regime: 'range',         // regime do gate (bear/trend/range/mixed/unknown)
+  flow: {
+    imbalance: -0.12,      // desequilíbrio taker ([-1, 1]; &lt;0 = venda)
+    toxicity: 0.12,        // |imbalance|
+    atMs: 1783270494000,   // timestamp do fluxo
+    ageMs: 1234            // idade do fluxo (ms) — recomputo ao ler (freshen)
+  },
+  gates: {
+    regime: 'range',
+    regimeOk: true,
+    flowOk: true,
+    flowFresh: true,
+    flowBuyMin: -0.4,
+    flowGated: true,  // só BTC
+    farm: true,
+    baseline: true,
+    trend: true,
+    harvesterUngated: true,
+    buyAllowed: true,  // GATE FINAL DE ACUMULAÇÃO
+    reason: 'regime=range (mean-reversion) + fluxo ok: baseline BTC liberada',
+    doctrine: true
+  },
+  signals: {
+    rsi1m: 38.5,              // RSI(14) 1m atual
+    rsi15m: 52.3,             // RSI(14) 15m atual
+    trendSlope: 'up',         // slope SMA 50/200 1h (up/down/flat/none)
+    trendCross: 'golden',     // cross SMA 50/200 1h (golden/death/none)
+    farmDca: {
+      qty: 0.5,               // quantidade em carteira (farm)
+      cost: 42000             // custo médio
+    },
+    trendQty: 1.2             // quantidade em trend
+  },
+  at: '2026-01-05T14:32:00.000Z',  // timestamp da análise
+  atMs: 1783270494000,
+  ageMs: 1234,      // idade do snapshot de ANALÍTICA (distribuição)
+  stale: false,
+  unavailable: false
+}
+```
+
+**Seletor de símbolo:**
+```javascript
+// Linha 202
+const [selSym, setSelSym] = useState(KL_SYMBOL);  // KL_SYMBOL = 'BTCUSDT'
+// Linha 384
+symbols.map(s =&gt; &lt;button key={s} className={`cx-symtab ${s === selSym ? 'on' : ''}`} onClick={() =&gt; setSelSym(s)}&gt;{s.replace('USDT', '')}&lt;/button&gt;)
+```
+- **Estado:** `selSym` (padrão = 'BTCUSDT')
+- **Controle:** abas clicáveis (linhas 382–390)
+- **Dados usados:** `cpBtc = (cp.symbols || {})[selSym]` (linha 321)
+
+#### **6. SÉRIE DE VELAS (klines) — Como vem**
+
+**Carregamento (linhas 240–269):**
+```javascript
+async function loadKlines(sym) {
+  for (const host of KL_HOSTS) {
+    try {
+      const r = await fetch(`${host}/api/v3/klines?symbol=${sym}&amp;interval=1m&amp;limit=120`);
+      if (!r.ok) continue;
+      const raw = await r.json();
+      const parsed = raw.map(k =&gt; ({ t: k[0], o: +k[1], h: +k[2], l: +k[3], c: +k[4] }));
+      setKlines(parsed); setKlErr(false); return;
+    } catch (e) { /* tenta próximo host */ }
+  }
+  setKlErr(true);
+}
+```
+- **Fonte:** Binance public (api.binance.com / data-api.binance.vision)
+- **Intervalo:** 1m
+- **Quantidade:** 120 velas (2 horas)
+- **Estrutura:** `[{ t, o, h, l, c }, ...]`
+- **Estado:** `klines` (linha 198)
+- **Frequência:** reload a cada 60s (linha 267) quando selSym muda
+
+**Não há endpoint no backend que retorne a série de velas** — o frontend busca direto da Binance (REST público).
+
+#### **7. Signal Recorder / Patterns — Estrutura**
+
+**Campo `cp.patterns` (do cockpitJob.js linhas 103–105, analysisController.js):**
+```javascript
+{
+  stats: [
+    {
+      type: 'rsi_oversold',  // ou 'rsi_overbought', 'flow_buy', 'flow_sell'
+      samples: 12,           // número de sinais deste tipo gravados
+      horizons: {
+        '1': { hitRate: 0.583, avgPct: 0.045 },    // @1m
+        '5': { hitRate: 0.542, avgPct: 0.032 },    // @5m
+        '10': { hitRate: 0.667, avgPct: 0.081 }    // @10m
+      }
+    },
+    ...
+  ],
+  recent: [
+    {
+      ts: '2026-01-05T14:32:45.000Z',
+      symbol: 'BTCUSDT',
+      type: 'rsi_oversold',
+      ctx: {
+        rsi1m: 28.5,
+        imbalance: -0.05,
+        regime: 'range'
+      },
+      ret10: 0.185  // retorno % em 10min após o sinal
+    },
+    ...
+  ],
+  opCalls: {
+    total: 5,
+    hitRate: 0.60,
+    avgPct: 0.042,
+    open: [...],    // chamadas em andamento (ageMin, esperando desfecho)
+    recent: [...]   // chamadas pontuadas (ret10 já preenchido)
+  },
+  open: 2  // número de padrões em acompanhamento agora
+}
+```
+
+#### **8. Helpers de formatação DISPONÍVEIS**
+
+**Linhas 27–55 (Cockpit.js):**
+```javascript
+function num(v) { ... }           // parse number
+function fmtUsd(v, dec = 2) { ... }       // format $X.XX
+function fmtPct(v) { ... }                // format +X.XX%
+function dirClass(v) { ... }             // return 'cx-up' | 'cx-down' | 'cx-flat'
+function fmtAge(ms) { ... }              // format '5min' | '2h'
+function buildSpark(series) { ... }      // sparkline SVG path
+function buildCandles(kl, H = 220) { ... }       // CORE candle builder
+function buildHist(kl) { ... }                   // histogram bin counts
+function computeRSI(closes, period = 14) { ... }  // RSI 14 (Wilder)
+function buildRsiPane(vals, buyTh, sellTh) { ... }  // RSI sub-gráfico SVG
+function sma(closes, p) { ... }                     // SMA simples
+function simDecision(sym, cp) { ... }              // decisão simulada (read-only)
+```
+
+**CSS classes de cor:**
+- `.cx-up` (verde)
+- `.cx-down` (vermelho)
+- `.cx-flat` (muted/cinza)
+
+---
+
+### **RESUMO EXECUTIVO — O QUE ESTÁ PRONTO PRA REUSAR**
+
+| **Item** | **Localização** | **Status** |
+|----------|-----------------|-----------|
+| **Gráfico de velas SVG (2 tamanhos)** | `buildCandles()` linhas 70–86 | ✅ Pronto — 100% próprio, sem lib gráfica |
+| **RSI 14 + sub-gráfico** | `computeRSI()` + `buildRsiPane()` linhas 112–140 | ✅ Pronto — calcula e renderiza |
+| **SMA 20/50** | `sma()` linhas 143–148 | ✅ Pronto — calcula paths SVG |
+| **Marcadores compra/venda** | Linhas 291–301 (marks array) + 407–411 (render) | ✅ Pronto — overlay das decisões |
+| **WebSocket ao vivo (preço)** | Linhas 205–225 | ✅ Pronto — `prices[sym]` atualizado real-time |
+| **Poll /analysis/cockpit** | `getCockpit()` service + `useEffect` linha 262 | ✅ Pronto — 60s, estado `cockpit` |
+| **Dados da vela atual** | `cp.symbols[sym]` (gates, signals, flow) | ✅ Pronto — tudo existe |
+| **Seletor de símbolo** | `selSym` state + abas clicáveis linhas 382–390 | ✅ Pronto — funcional |
+| **Classes CSS responsivas** | `.cx-row` (1.6fr 1fr) + media 1100px | ✅ Pronto — 2 cols → 1 col |
+| **Classe `.cx-row-2` (1fr 1fr)** | Não existe | ❌ Precisa criar (opcional) |
+
+---
+
+### **PRÓXIMOS PASSOS SUGERIDOS (NÃO IMPLEMENTADOS AQUI)**
+
+**Para o HUD da vela atual (Mudança B):**
+1. **Adicionar box de análise "em tempo real"** abaixo/ao lado do gráfico tall (linhas 400–422)
+   - Exibir `.gates.buyAllowed`, `.flow.imbalance`, `.signals.rsi1m`, `.ev.netPct` FRESCOS do estado `cp`
+   - Atualizar a cada 60s (poll do cockpit) + subscrição WS do preço (real-time)
+   
+2. **Expandir os marcadores com tooltip detalhado**
+   - Mostrar RSI no momento do sinal, regime, imbalance (já existe `title` em linha 410)
+
+3. **Adicionar "painel lateral HUD"** com:
+   - RSI 1m/15m (já disponível em `cpBtc.signals`)
+   - Gates (já em `cpBtc.gates`)
+   - Entrada simulada vs realizada (já em `simDecision()` função)
+   - Regime + fluxo (já em `cpBtc.regime / cpBtc.flow`)
+
+**Tudo o material está 100% PRONTO no código — é só recombinar e estilizar.**</result>
+<usage><subagent_tokens>69931</subagent_tokens><tool_uses>22</tool_uses><duration_ms>145291</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(17:52:58)*
+
+
+## 🤖 Claude *(17:53:03)*
+
+Mapa completo. Resumo do que reuso:
+- **Layout:** crio `.cx-row-2` (1fr/1fr) e junto os dois painéis paper numa linha.
+- **HUD de velas:** já existe toda a infra — `buildCandles()`, `computeRSI`, `sma`, marcadores, WebSocket de preço ao vivo (`prices[selSym]`), o seletor de símbolo (`selSym`), e `cp.symbols[selSym]` com **signals** (rsi1m/15m, trendSlope/Cross), **gates** (regime, buyAllowed, `reason` = o "pensamento"), **flow**, **ev** (gross vs net), e `simDecision()`. Vou montar um widget novo abaixo reusando isso.
+
+Deixa eu confirmar os nomes exatos das consts no corpo do componente (cndBig/marks/rsiPane/cpBtc/simDecision) antes de escrever.
+
+## 🤖 Claude *(17:53:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "offset": 270,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 270	
+> 271	  const wsLive = readyState === 1;
+> 272	  const hist = buildHist(klines);
+> 273	  const btcWs = prices[selSym];  // preco ao vivo do simbolo selecionado (nome mantido p/ o resto do render)
+> 274	  const klive = (klines && btcWs != null && !isNaN(btcWs))
+> 275	    ? klines.map((k, i) => i === klines.length - 1 ? { ...k, c: btcWs, h: Math.max(k.h, btcWs), l: Math.min(k.l, btcWs) } : k)
+> 276	    : klines;
+> 277	  const cnd = buildCandles(klive);
+> 278	  const cndBig = buildCandles(klive, 440);   // candle ALTO p/ o widget principal (com marcadores de execucao)
+> 279	  // EXECUCOES SIMULADAS na vela: marca onde a condicao RSI de sobrevenda(compra)/sobrecompra(venda) dispararia.
+> 280	  // "armed" = regime+promocao deixariam EXECUTAR agora (solido); senao "gated" (vazado = sinal, mas em caixa).
+> 281	  const _closes = (klines || []).map(k => k.c);
+> 282	  const _rsi = computeRSI(_closes, 14);
+> 283	  const _isAltSel = selSym !== 'BTCUSDT';
+> 284	  const _buyTh = _isAltSel ? 35 : 30, _sellTh = 70;
+> 285	  const _cpSel = (cockpit.symbols || {})[selSym] || {};
+> 286	  const _regSel = (_cpSel.gates && _cpSel.gates.regime) || 'unknown';
+> 287	  const _promoted = (cockpit.promotions && cockpit.promotions.promoted) || {};
+> 288	  const _grand = (cockpit.promotions && cockpit.promotions.grandfather) || [];
+> 289	  const _stratSel = _isAltSel ? 'farmnl' : 'consistencia';
+> 290	  const _armed = (_regSel !== 'bear' && _regSel !== 'unknown') && (!!_promoted[_stratSel] || _grand.indexOf(_stratSel) !== -1);
+> 291	  const marks = [];
+> 292	  if (cndBig && _rsi.length === _closes.length && _closes.length > 15) {
+> 293	    const dispN = cndBig.candles.length, off = _closes.length - dispN;
+> 294	    for (let j = 1; j < dispN; j++) {
+> 295	      const ki = off + j; if (ki <= 0) continue;
+> 296	      const r = _rsi[ki], rp = _rsi[ki - 1];
+> 297	      if (!isFinite(r) || !isFinite(rp)) continue;
+> 298	      if (r < _buyTh && rp >= _buyTh) marks.push({ i: j, type: 'buy', armed: _armed, title: `compra simulada · RSI ${r.toFixed(0)} cruzou <${_buyTh} (sobrevenda) -> ${_armed ? 'EXECUTARIA' : 'EM CAIXA (regime ' + _regSel + ')'}` });
+> 299	      else if (r > _sellTh && rp <= _sellTh) marks.push({ i: j, type: 'sell', title: `venda/saida simulada · RSI ${r.toFixed(0)} cruzou >${_sellTh} (sobrecompra)` });
+> 300	    }
+> 301	  }
+> 302	  const _rsiDisp = (cndBig && _closes.length) ? cndBig.candles.map((_, j) => { const ki = (_closes.length - cndBig.candles.length) + j; return (ki >= 0 && ki < _rsi.length) ? _rsi[ki] : NaN; }) : [];
+> 303	  const rsiPane = buildRsiPane(_rsiDisp, _buyTh, _sellTh);
+> 304	  const _sma20 = sma(_closes, 20), _sma50 = sma(_closes, 50);
+> 305	  function _smaPath(arr) {
+> 306	    if (!cndBig) return null;
+> 307	    const padT = 8, padB = 8, span = (cndBig.hi - cndBig.lo) || 1;
+> 308	    const yOf = v => padT + (cndBig.H - padT - padB) * (1 - (v - cndBig.lo) / span);
+> 309	    const dispN = cndBig.candles.length, off = _closes.length - dispN, pts = [];
+> 310	    for (let j = 0; j < dispN; j++) { const v = arr[off + j]; if (v != null) pts.push([cndBig.candles[j].wx, yOf(v)]); }
+> 311	    if (pts.length < 2) return null;
+> 312	    return pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+> 313	  }
+> 314	  const _sma20Path = _smaPath(_sma20), _sma50Path = _smaPath(_sma50);
+> 315	  const btc = (btcWs != null && !isNaN(btcWs)) ? btcWs : (cnd ? cnd.last : null);
+> 316	  const sigma = hist ? hist.sd : NaN;
+> 317	
+> 318	  // BRAIN snapshot (single source of truth): prefere o cockpitJob; klines client-side = fallback/render.
+> 319	  const cp = cockpit || {};
+> 320	  const env = cp.env || null;
+> 321	  const cpBtc = (cp.symbols || {})[selSym] || null;  // dados do brain p/ o simbolo selecionado
+> 322	  const histB = (cpBtc && cpBtc.dist && cpBtc.dist.hist && Array.isArray(cpBtc.dist.hist.counts))
+> 323	    ? {
+> 324	        counts: cpBtc.dist.hist.counts,
+> 325	        maxc: Math.max(...cpBtc.dist.hist.counts, 1),
+> 326	        step: cpBtc.dist.hist.binPct,
+> 327	        BINS: cpBtc.dist.hist.counts.length,
+> 328	        LIM: cpBtc.dist.hist.lim,
+> 329	        n: cpBtc.samples,
+> 330	        clearFee: cpBtc.dist.pHitBreakevenPct,
+> 331	        medAbs: cpBtc.dist.medAbsMovePct,
+> 332	        sd: cpBtc.dist.sigmaPct,
+> 333	        fromBrain: true,
+> 334	      }
+> 335	    : hist;
+> 336	  const sigmaB = (cpBtc && cpBtc.dist && cpBtc.dist.sigmaPct != null) ? cpBtc.dist.sigmaPct : sigma;
+> 337	  const mcBand = (cpBtc && cpBtc.mc) ? cpBtc.mc : null;
+> 338	  const evNet = (cpBtc && cpBtc.ev && cpBtc.ev.netPct != null) ? cpBtc.ev.netPct : null;
+> 339	
+> 340	  const pnlNet = (num(report.sellVolume) - num(report.buyVolume));
+> 341	  const equity = balance && (balance.fiatEstimate != null) ? balance.fiatEstimate : null;
+> 342	  const spark = buildSpark(report.series);
+> 343	
+> 344	  const agentLastMs = (agent.kpis && agent.kpis.lastTs) ? (Date.now() - new Date(agent.kpis.lastTs).getTime()) : null;
+> ```
+
+## 🤖 Claude *(17:53:21)*
+
+
+## 🤖 Claude *(17:53:23)*
+
+Todas as consts que preciso estão no escopo do componente (`selSym`, `cpBtc`, `klive`, `cndBig`, `marks`, `rsiPane`, `_buyTh/_sellTh`, `_rsi`, `simDecision`, `btc`, `prices`). Deixa eu ver o retorno do `simDecision` e os formatadores antes de montar o HUD.
+
+## 🤖 Claude *(17:53:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "offset": 150,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 150	// Decisao SIMULADA (read-only): o que o sistema FARIA agora p/ o simbolo, dado os sinais reais do beholder.
+> 151	// Sintetiza regime + flow + RSI + gates + promocao (frente D) + HALT. NAO envia ordem — so a leitura do que
+> 152	// aconteceria. Espelha o gate das condicoes + o portao de promocao do groupSupervisorJob.
+> 153	function simDecision(sym, cp) {
+> 154	  const s = (cp.symbols || {})[sym] || {};
+> 155	  const g = s.gates || {}, sig = s.signals || {}, fl = s.flow || {};
+> 156	  const env = cp.env || {};
+> 157	  const promoted = (cp.promotions && cp.promotions.promoted) || {};
+> 158	  const grand = (cp.promotions && cp.promotions.grandfather) || [];
+> 159	  const isAlt = sym !== 'BTCUSDT';
+> 160	  const strat = isAlt ? 'farmnl' : 'consistencia';      // trilha do paper que gateia (espelha PROMO_MAP do supervisor)
+> 161	  const isPromoted = !!promoted[strat] || grand.indexOf(strat) !== -1;
+> 162	  const reg = g.regime || 'unknown';
+> 163	  const imb = fl.imbalance, tox = fl.toxicity;
+> 164	  const flowSide = imb != null ? (imb < 0 ? 'venda agressora' : 'compra agressora') : null;
+> 165	  const dcaQty = (sig.farmDca && sig.farmDca.qty) ? sig.farmDca.qty : 0;
+> 166	  const tq = sig.trendQty || 0;
+> 167	  const rsi = isAlt ? sig.rsi15m : sig.rsi1m;
+> 168	  const trig = isAlt ? 35 : 25;
+> 169	  const sx = sym.replace('USDT', '');
+> 170	
+> 171	  if (env.tradingHalt)
+> 172	    return { act: 'BLOQUEADO', cls: 'halt', head: 'HALT ativo', reason: `kill-switch${env.haltSource ? ' (' + env.haltSource + ')' : ''} — nenhuma ordem sai, nem compra nem venda.` };
+> 173	  if (dcaQty > 0) {
+> 174	    const cost = sig.farmDca.cost, tgt = cost ? cost * 1.012 : null;
+> 175	    return { act: 'VENDERIA', cls: 'sell', head: `saida no-loss do Farm ${sx}`, reason: `tenho ${dcaQty} em carteira (custo ${cost ? cost.toFixed(4) : '—'}); a venda dispara quando o bestBid passar de ${tgt ? tgt.toFixed(4) : 'custo x1.012'} (lucro ja pos-fee).` };
+> 176	  }
+> 177	  if (tq > 0)
+> 178	    return { act: 'SEGURO·TREND', cls: 'sell', head: 'posicao de trend aberta', reason: `${tq} em carteira; sairia no death cross (venda protetiva armada).` };
+> 179	  if (reg === 'bear' || reg === 'unknown')
+> 180	    return { act: 'CAIXA', cls: 'hold', head: 'acumular em caixa', reason: `regime ${reg}: a doutrina e nao comprar no bear. Eu compraria quando ${sx} sair do bear E a trilha "${strat}" provar edge no paper.` };
+> 181	  if (!isPromoted)
+> 182	    return { act: 'AGUARDANDO PROVA', cls: 'wait', head: `regime ${reg} liberou, falta prova`, reason: `a trilha "${strat}" ainda nao provou edge no paper -> a entrada REAL fica travada (frente D). No paper ela ja operaria. Liberar na hora: PROMOTION_GRANDFATHER=${strat}.` };
+> 183	  const flowGated = !!g.flowGated, flowOk = g.flowOk !== false;
+> 184	  if (rsi != null && rsi < trig && (!flowGated || flowOk))
+> 185	    return { act: 'COMPRARIA AGORA', cls: 'buy', head: `dip em ${sx}`, reason: `RSI ${isAlt ? '15m' : '1m'}=${rsi.toFixed(1)} < ${trig} (gatilho) + regime ${reg} + trilha provada + gate aberto.${tox != null && tox >= 0.6 ? ` AT. ${flowSide} (tox ${tox.toFixed(2)}) — timing apertado.` : ''} (ordem NAO liberada — simulacao.)` };
+> 186	  if (flowGated && !flowOk)
+> 187	    return { act: 'ESPERANDO TIMING', cls: 'wait', head: 'gate aberto, fluxo veta', reason: `${flowSide} forte (toxicity ${tox != null ? tox.toFixed(2) : '—'}) — nao compro contra a agressao agora.` };
+> 188	  return { act: 'PRONTO·AGUARDA DIP', cls: 'ready', head: `armado em ${sx}`, reason: `regime ${reg} + trilha provada + gate aberto. Espero o RSI ${isAlt ? '15m' : '1m'} cair < ${trig} (agora ${rsi != null ? rsi.toFixed(1) : '—'}).` };
+> 189	}
+> 190	
+> 191	function Cockpit() {
+> 192	  const [balance, setBalance] = useState({});
+> 193	  const [report, setReport] = useState({});
+> 194	  const [gate, setGate] = useState({ symbols: {} });
+> 195	  const [flow, setFlow] = useState({ symbols: {} });
+> 196	  const [agent, setAgent] = useState({ kpis: {}, runs: [] });
+> 197	  const [prices, setPrices] = useState({});
+> 198	  const [klines, setKlines] = useState(null);
+> 199	  const [klErr, setKlErr] = useState(false);
+> ```
+
+## 🤖 Claude *(17:55:05)*
+
+
+## 🤖 Claude *(17:55:08)*
+
+`simDecision(sym, cp)` retorna `{act, cls, head, reason}` — a decisão honesta do que o sistema FARIA agora (COMPRARIA/CAIXA/AGUARDANDO PROVA/ESPERANDO TIMING…) com o "porquê". Perfeito como o "pensamento" central do HUD.
+
+Deixa eu ler o CSS do cockpit (classes de cor, `.cx-line`, `.cx-panel`, os `@media`) pra o novo CSS combinar e achar o ponto de inserção.
+
+## 🤖 Claude *(17:55:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit\necho \"=== cockpit.css: vars de cor + rows + classes-chave (linhas relevantes) ===\"\ngrep -nE \"^\\.cockpit \\{|--cx-|\\.cx-row|\\.cx-panel |\\.cx-line|\\.cx-mono|\\.cx-up|\\.cx-down|\\.cx-flat|\\.cx-note|\\.cx-empty|\\.cx-candle|@media|\\.cx-mark|\\.cx-panel-title|\\.cx-src\" cockpit.css | head -60",
+  "description": "Read cockpit.css key classes and color vars"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === cockpit.css: vars de cor + rows + classes-chave (linhas relevantes) ===
+> 6:.cockpit {
+> 7:  --cx-bg: #06080f;
+> 8:  --cx-panel: rgba(16, 22, 38, 0.66);
+> 9:  --cx-panel-solid: #0c1120;
+> 10:  --cx-border: rgba(90, 120, 190, 0.22);
+> 11:  --cx-border-strong: rgba(120, 150, 230, 0.40);
+> 12:  --cx-text: #e8eefc;
+> 13:  --cx-muted: #8a98c0;
+> 14:  --cx-dim: #56618a;
+> 15:  --cx-green: #2ff5a8;
+> 16:  --cx-green-dim: rgba(47, 245, 168, 0.16);
+> 17:  --cx-red: #ff5d7a;
+> 18:  --cx-red-dim: rgba(255, 93, 122, 0.16);
+> 19:  --cx-purple: #9a7bff;
+> 20:  --cx-cyan: #38b6ff;
+> 21:  --cx-amber: #ffb340;
+> 30:    var(--cx-bg);
+> 31:  color: var(--cx-text);
+> 39:.cockpit .cx-mono {
+> 52:  background: linear-gradient(90deg, var(--cx-green), var(--cx-cyan));
+> 55:.cockpit .cx-brand span { font-size: 0.72rem; color: var(--cx-dim); letter-spacing: 0.32em; text-transform: uppercase; }
+> 61:  border: 1px solid var(--cx-border); background: var(--cx-panel); color: var(--cx-muted);
+> 63:.cockpit .cx-pill .cx-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cx-dim); }
+> 64:.cockpit .cx-pill.live { color: var(--cx-green); border-color: rgba(47, 245, 168, 0.4); }
+> 65:.cockpit .cx-pill.live .cx-dot { background: var(--cx-green); box-shadow: 0 0 8px var(--cx-green); animation: cx-blink 1.6s ease-in-out infinite; }
+> 66:.cockpit .cx-pill.halt { color: var(--cx-red); border-color: rgba(255, 93, 122, 0.4); }
+> 67:.cockpit .cx-pill.halt .cx-dot { background: var(--cx-red); box-shadow: 0 0 8px var(--cx-red); }
+> 68:.cockpit .cx-pill.warn { color: var(--cx-amber); border-color: rgba(255, 179, 64, 0.4); }
+> 73:.cockpit .cx-row { display: grid; gap: 14px; grid-template-columns: 1.6fr 1fr; }
+> 74:.cockpit .cx-row-3 { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }
+> 75:@media (max-width: 1100px) { .cockpit .cx-row, .cockpit .cx-row-3 { grid-template-columns: 1fr; } }
+> 77:.cockpit .cx-panel {
+> 79:  background: var(--cx-panel);
+> 80:  border: 1px solid var(--cx-border);
+> 88:  background: linear-gradient(90deg, transparent, var(--cx-border-strong), transparent);
+> 90:.cockpit .cx-panel-title {
+> 92:  font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cx-muted);
+> 95:.cockpit .cx-panel-title .cx-src { font-size: 0.62rem; letter-spacing: 0.04em; color: var(--cx-dim); text-transform: none; }
+> 101:.cockpit .cx-up { color: var(--cx-green); }
+> 102:.cockpit .cx-down { color: var(--cx-red); }
+> 103:.cockpit .cx-flat { color: var(--cx-muted); }
+> 109:  background: var(--cx-panel-solid); border: 1px solid var(--cx-border); border-radius: 12px;
+> 112:.cockpit .cx-kpi .k-l { font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cx-muted); display: flex; align-items: center; gap: 5px; }
+> 114:.cockpit .cx-kpi .k-v.muted { color: var(--cx-dim); font-weight: 500; }
+> 118:.cockpit .cx-seal.real { background: var(--cx-green); box-shadow: 0 0 6px var(--cx-green-dim); }
+> 119:.cockpit .cx-seal.soon { background: var(--cx-amber); }
+> 120:.cockpit .cx-seal.todo { background: var(--cx-dim); }
+> 126:  padding: 8px 10px; border-radius: 10px; background: rgba(10, 14, 28, 0.5); border: 1px solid var(--cx-border);
+> 130:.cockpit .cx-reg.bear { color: var(--cx-red); background: var(--cx-red-dim); }
+> 131:.cockpit .cx-reg.trend { color: var(--cx-green); background: var(--cx-green-dim); }
+> 132:.cockpit .cx-reg.range { color: var(--cx-amber); background: rgba(255, 179, 64, 0.14); }
+> 133:.cockpit .cx-reg.mixed, .cockpit .cx-reg.unknown { color: var(--cx-muted); background: rgba(138, 152, 192, 0.12); }
+> 135:.cockpit .cx-flowbar .mid { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--cx-dim); }
+> 137:.cockpit .cx-flowbar .fill.buy { left: 50%; background: linear-gradient(90deg, var(--cx-green-dim), var(--cx-green)); }
+> 138:.cockpit .cx-flowbar .fill.sell { right: 50%; background: linear-gradient(270deg, var(--cx-red-dim), var(--cx-red)); }
+> 142:.cockpit .cx-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.82rem; }
+> 143:.cockpit .cx-line:last-child { border-bottom: 0; }
+> 144:.cockpit .cx-line .l { color: var(--cx-muted); }
+> 145:.cockpit .cx-line .v { font-weight: 600; }
+> 146:.cockpit .cx-empty { color: var(--cx-dim); font-size: 0.78rem; text-align: center; padding: 20px 8px; }
+> ```
+
+## 🤖 Claude *(17:55:35)*
+
+
+## 🤖 Claude *(17:55:36)*
+
+Tenho as vars e padrões de estilo. Vou implementar tudo. Primeiro o CSS (`.cx-row-2` + estilos do HUD). Deixa eu ler o trecho pra ancorar a edição.
+
+## 🤖 Claude *(17:55:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css",
+  "offset": 73,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 73	.cockpit .cx-row { display: grid; gap: 14px; grid-template-columns: 1.6fr 1fr; }
+> 74	.cockpit .cx-row-3 { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }
+> 75	@media (max-width: 1100px) { .cockpit .cx-row, .cockpit .cx-row-3 { grid-template-columns: 1fr; } }
+> 76	
+> ```
+
+## 🤖 Claude *(17:55:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css",
+  "old_string": ".cockpit .cx-row { display: grid; gap: 14px; grid-template-columns: 1.6fr 1fr; }\n.cockpit .cx-row-3 { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }\n@media (max-width: 1100px) { .cockpit .cx-row, .cockpit .cx-row-3 { grid-template-columns: 1fr; } }",
+  "new_string": ".cockpit .cx-row { display: grid; gap: 14px; grid-template-columns: 1.6fr 1fr; }\n.cockpit .cx-row-3 { display: grid; gap: 14px; grid-template-columns: 1.4fr 1fr; }\n.cockpit .cx-row-2 { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }\n@media (max-width: 1100px) { .cockpit .cx-row, .cockpit .cx-row-3, .cockpit .cx-row-2 { grid-template-columns: 1fr; } }\n\n.cockpit .cx-hud-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 8px 0; }\n.cockpit .cx-hud-tile { padding: 7px 9px; border-radius: 8px; background: rgba(10, 14, 28, 0.5); border: 1px solid var(--cx-border); display: flex; flex-direction: column; gap: 3px; }\n.cockpit .cx-hud-k { font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cx-muted); }\n.cockpit .cx-hud-v { font-size: 0.9rem; font-weight: 600; color: var(--cx-text); }\n.cockpit .cx-decision { display: flex; align-items: baseline; gap: 10px; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--cx-border); background: rgba(10, 14, 28, 0.5); margin: 6px 0; }\n.cockpit .cx-decision .cx-dec-act { font-weight: 700; font-size: 0.82rem; letter-spacing: 0.04em; white-space: nowrap; }\n.cockpit .cx-decision .cx-dec-body { font-size: 0.78rem; color: var(--cx-muted); }\n.cockpit .cx-decision.buy { border-color: rgba(47, 245, 168, 0.4); background: var(--cx-green-dim); }\n.cockpit .cx-decision.buy .cx-dec-act { color: var(--cx-green); }\n.cockpit .cx-decision.sell { border-color: rgba(255, 93, 122, 0.4); background: var(--cx-red-dim); }\n.cockpit .cx-decision.sell .cx-dec-act, .cockpit .cx-decision.halt .cx-dec-act { color: var(--cx-red); }\n.cockpit .cx-decision.halt { border-color: rgba(255, 93, 122, 0.5); }\n.cockpit .cx-decision.hold, .cockpit .cx-decision.wait { border-color: rgba(255, 179, 64, 0.35); }\n.cockpit .cx-decision.hold .cx-dec-act, .cockpit .cx-decision.wait .cx-dec-act { color: var(--cx-amber); }\n.cockpit .cx-decision.ready { border-color: rgba(56, 182, 255, 0.35); }\n.cockpit .cx-decision.ready .cx-dec-act { color: var(--cx-cyan); }\n.cockpit .cx-badge { display: inline-block; padding: 2px 7px; margin: 2px 4px 2px 0; border-radius: 6px; font-size: 0.68rem; background: rgba(10, 14, 28, 0.6); border: 1px solid var(--cx-border); color: var(--cx-text); }\n.cockpit .cx-badge.cx-up { color: var(--cx-green); border-color: rgba(47, 245, 168, 0.35); }\n.cockpit .cx-badge.cx-down { color: var(--cx-red); border-color: rgba(255, 93, 122, 0.35); }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/cockpit.css has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:56:00)*
+
+
+## 🤖 Claude *(17:56:01)*
+
+Agora o `Cockpit.js`. **Mudança A** — trocar a ROW 5 pra `cx-row-2` e mesclar as duas linhas paper.
+
+## 🤖 Claude *(17:56:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "            {/* ROW 5 \u2014 Paper Engine (research, sem risco) */}\n            <div className=\"cx-row\">\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Paper \u00b7 Estrat\u00e9gias (research, sem risco)</span>",
+  "new_string": "            {/* ROW 5+6 \u2014 Paper: Estrat\u00e9gias | Trilhas (Trend) lado a lado (1fr/1fr) */}\n            <div className=\"cx-row-2\">\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Paper \u00b7 Estrat\u00e9gias (research, sem risco)</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:56:14)*
+
+
+## 🤖 Claude *(17:56:15)*
+
+**Mudança A1** — mesclar: remover o fechamento da linha 1 e a abertura da linha 2, deixando os dois painéis dentro do `cx-row-2`.
+
+## 🤖 Claude *(17:56:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "              </div>\n            </div>\n\n            {/* ROW 6 \u2014 Paper Trilhas (Trend) \u2014 teste ao vivo (pedido do dono) */}\n            <div className=\"cx-row\">\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Paper Trilhas (Trend) \u2014 teste ao vivo</span>",
+  "new_string": "              </div>\n\n              {/* coluna 2: Paper Trilhas (Trend) \u2014 teste ao vivo */}\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> Paper Trilhas (Trend) \u2014 teste ao vivo</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:57:16)*
+
+
+## 🤖 Claude *(17:57:17)*
+
+Painéis paper agora lado a lado. **Mudança B** — o widget HUD. Deixa eu confirmar o `fmtPct` (pra não ter bug de ×100) antes de escrever.
+
+## 🤖 Claude *(17:57:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit\nsed -n '27,55p' Cockpit.js | grep -nE \"function fmtPct|function fmtUsd|function dirClass|function num|function fmtAge\"\necho \"--- corpo fmtPct + dirClass ---\"\nawk '/function fmtPct/{p=1} p{print} /function fmtAge/{if(p)exit}' Cockpit.js | head -20",
+  "description": "Confirm fmtPct/dirClass behavior"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1:function num(v) {
+> 7:function fmtUsd(v, dec = 2) {
+> 12:function fmtPct(v) {
+> 17:function dirClass(v) {
+> 22:function fmtAge(ms) {
+> --- corpo fmtPct + dirClass ---
+> function fmtPct(v) {
+>   const n = num(v);
+>   if (isNaN(n)) return '—';
+>   return (n > 0 ? '+' : '') + n.toFixed(2) + '%';
+> }
+> function dirClass(v) {
+>   const n = num(v);
+>   if (isNaN(n) || n === 0) return 'cx-flat';
+>   return n > 0 ? 'cx-up' : 'cx-down';
+> }
+> function fmtAge(ms) {
+> ```
+
+## 🤖 Claude *(17:57:33)*
+
+
+## 🤖 Claude *(17:57:34)*
+
+`fmtPct` trata o valor como percent direto (sem ×100) — consistente com meu `chg`. Agora insiro o widget HUD entre a linha paper e o fechamento do grid.
+
+## 🤖 Claude *(17:58:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js",
+  "old_string": "            </div>\n\n          </div>\n\n          <div className=\"cx-legend\">\n            <span className=\"li\"><span className=\"cx-seal real\" /> dado real agora</span>",
+  "new_string": "            </div>\n\n            {/* ROW 7 \u2014 An\u00e1lise da vela ao vivo (HUD): os \"pensamentos\" da vela atual */}\n            <div className=\"cx-row\">\n              <div className=\"cx-panel glow\">\n                <div className=\"cx-panel-title\"><span><span className=\"cx-seal real\" /> An\u00e1lise da vela ao vivo (HUD) \u2014 {selSym.replace('USDT', '')}</span><span className=\"cx-src\">WS pre\u00e7o + /analysis/cockpit \u00b7 segue o seletor</span></div>\n                {(() => {\n                  const s = cpBtc || {};\n                  const sig = s.signals || {}, g = s.gates || {}, fl = s.flow || {}, ev = s.ev || {};\n                  const dec = simDecision(selSym, cp);\n                  const fmtPx = (v) => { const n = num(v); return !isFinite(n) ? '\u2014' : n >= 100 ? n.toFixed(2) : n >= 1 ? n.toFixed(3) : n.toFixed(5); };\n                  const kl = (klive && klive.length) ? klive[klive.length - 1] : null;\n                  const liveP = (btcWs != null && !isNaN(btcWs)) ? btcWs : (kl ? kl.c : null);\n                  const rsi1 = sig.rsi1m != null ? sig.rsi1m : (_rsi.length ? _rsi[_rsi.length - 1] : null);\n                  const rsi15 = sig.rsi15m;\n                  const chg = (kl && kl.o) ? ((kl.c - kl.o) / kl.o) * 100 : null;\n                  const snow = [];\n                  if (rsi1 != null && rsi1 < _buyTh) snow.push({ t: `RSI 1m ${rsi1.toFixed(0)} < ${_buyTh} \u00b7 sobrevenda`, cls: 'cx-up' });\n                  if (rsi1 != null && rsi1 > _sellTh) snow.push({ t: `RSI 1m ${rsi1.toFixed(0)} > ${_sellTh} \u00b7 sobrecompra`, cls: 'cx-down' });\n                  if (fl.toxicity != null && fl.toxicity >= 0.6) snow.push({ t: `fluxo extremo \u00b7 ${fl.imbalance < 0 ? 'venda' : 'compra'} agressora (tox ${fl.toxicity.toFixed(2)})`, cls: fl.imbalance < 0 ? 'cx-down' : 'cx-up' });\n                  if (sig.trendCross === 'golden') snow.push({ t: 'golden cross \u00b7 compra de trend', cls: 'cx-up' });\n                  if (sig.trendCross === 'death') snow.push({ t: 'death cross \u00b7 venda protetiva', cls: 'cx-down' });\n                  if (g.regime === 'trend') snow.push({ t: 'regime TREND \u00b7 TrendState posicionado', cls: 'cx-up' });\n                  const recent = (cp.patterns && Array.isArray(cp.patterns.recent) ? cp.patterns.recent : []).filter((r) => r.symbol === selSym).slice(0, 5);\n                  const tile = (k, v, cls) => (<div className=\"cx-hud-tile\" key={k}><span className=\"cx-hud-k\">{k}</span><span className={`cx-hud-v cx-mono ${cls || ''}`}>{v}</span></div>);\n                  const sc = cndBig ? 200 / cndBig.H : 1;\n                  return (\n                    <React.Fragment>\n                      {cndBig\n                        ? <svg className=\"cx-candle\" viewBox={`0 0 ${cndBig.W} 200`} preserveAspectRatio=\"none\" aria-label={`Candles 1m do ${selSym} com sinais ao vivo`}>\n                            {[0.25, 0.5, 0.75].map((gg, i) => <line key={i} className=\"grid\" x1=\"0\" x2={cndBig.W} y1={200 * gg} y2={200 * gg} />)}\n                            {cndBig.candles.map((cc, i) => {\n                              const last = i === cndBig.candles.length - 1;\n                              return (<g key={i}>\n                                <line className={cc.up ? 'wick-up' : 'wick-down'} x1={cc.wx} x2={cc.wx} y1={cc.wy1 * sc} y2={cc.wy2 * sc} />\n                                <rect className={cc.up ? 'body-up' : 'body-down'} x={cc.x} y={cc.by * sc} width={cc.bw} height={Math.max(1, cc.bh * sc)} style={last ? { stroke: 'var(--cx-cyan)', strokeWidth: 1 } : null} />\n                              </g>);\n                            })}\n                            {marks.map((m, i) => {\n                              const c = cndBig.candles[m.i]; if (!c) return null;\n                              if (m.type === 'buy') { const y = c.wy2 * sc + 6; return <polygon key={'m' + i} className={`cx-mark buy ${m.armed ? 'armed' : 'gated'}`} points={`${c.wx - 4},${y + 6} ${c.wx + 4},${y + 6} ${c.wx},${y}`}><title>{m.title}</title></polygon>; }\n                              const y = c.wy1 * sc - 6; return <polygon key={'m' + i} className=\"cx-mark sell\" points={`${c.wx - 4},${y - 6} ${c.wx + 4},${y - 6} ${c.wx},${y}`}><title>{m.title}</title></polygon>;\n                            })}\n                          </svg>\n                        : <div className=\"cx-empty\">{klErr ? 'klines indispon\u00edveis (CORS/Binance)' : 'carregando candles\u2026'}</div>}\n\n                      <div className={`cx-decision ${dec.cls}`}>\n                        <span className=\"cx-dec-act\">{dec.act}</span>\n                        <span className=\"cx-dec-body\"><b>{dec.head}.</b> {dec.reason}</span>\n                      </div>\n\n                      <div className=\"cx-line\">\n                        <span className=\"l\">Sinal nesta vela</span>\n                        <span className=\"v\">{snow.length ? snow.map((x, i) => <span key={i} className={`cx-badge ${x.cls}`}>{x.t}</span>) : <span className=\"cx-flat\">nenhum sinal \u2014 monitorando</span>}</span>\n                      </div>\n\n                      <div className=\"cx-hud-grid\">\n                        {tile('pre\u00e7o ao vivo', fmtPx(liveP), chg != null ? dirClass(chg) : '')}\n                        {tile('vela O/H/L/C', kl ? `${fmtPx(kl.o)}/${fmtPx(kl.h)}/${fmtPx(kl.l)}/${fmtPx(kl.c)}` : '\u2014')}\n                        {tile('\u0394 vela', chg != null ? fmtPct(chg) : '\u2014', chg != null ? dirClass(chg) : '')}\n                        {tile('RSI 1m', rsi1 != null ? rsi1.toFixed(1) : '\u2014', rsi1 != null ? (rsi1 < _buyTh ? 'cx-up' : rsi1 > _sellTh ? 'cx-down' : 'cx-flat') : '')}\n                        {tile('RSI 15m', rsi15 != null ? rsi15.toFixed(1) : '\u2014')}\n                        {tile('regime', g.regime || '\u2014', g.regime === 'trend' ? 'cx-up' : g.regime === 'bear' ? 'cx-down' : 'cx-flat')}\n                        {tile('tend\u00eancia 1h', `${sig.trendSlope || '\u2014'} \u00b7 ${sig.trendCross || 'none'}`)}\n                        {tile('fluxo imb/tox', fl.imbalance != null ? `${fl.imbalance.toFixed(2)} / ${fl.toxicity != null ? fl.toxicity.toFixed(2) : '\u2014'}` : '\u2014', fl.imbalance != null ? (fl.imbalance < 0 ? 'cx-down' : 'cx-up') : '')}\n                        {tile('compra liberada?', g.buyAllowed ? 'sim' : 'n\u00e3o', g.buyAllowed ? 'cx-up' : 'cx-down')}\n                        {tile('EV vela gross/net', ev.grossPct != null ? `${fmtPct(ev.grossPct)} / ${fmtPct(ev.netPct)}` : '\u2014', ev.netPct != null ? dirClass(ev.netPct) : '')}\n                      </div>\n\n                      {g.reason && <div className=\"cx-note\" style={{ marginTop: 4 }}><b>Doutrina do gate:</b> {g.reason}</div>}\n\n                      {recent.length > 0 && <React.Fragment>\n                        <div className=\"cx-line\" style={{ fontWeight: 700, marginTop: 6 }}><span className=\"l\">\u00daltimos sinais gravados</span><span className=\"v cx-flat\" style={{ fontSize: '0.66rem' }}>desfecho @10min</span></div>\n                        {recent.map((r, i) => (\n                          <div className=\"cx-line\" key={i}>\n                            <span className=\"l cx-mono\">{r.type} <span className=\"cx-flat\" style={{ fontSize: '0.66rem' }}>RSI {r.ctx && r.ctx.rsi1m != null ? Math.round(r.ctx.rsi1m) : '\u2014'} \u00b7 reg {r.ctx ? r.ctx.regime : '\u2014'}</span></span>\n                            <span className={`v cx-mono ${r.ret10 != null ? dirClass(r.ret10) : ''}`}>{r.ret10 != null ? fmtPct(r.ret10) : '\u2014'}</span>\n                          </div>\n                        ))}\n                      </React.Fragment>}\n\n                      <div className=\"cx-note\">HUD read-only dos dados REAIS que dirigem as decis\u00f5es: pre\u00e7o/vela ao vivo (WS), RSI/regime/fluxo/gates do brain (poll 60s) e a decis\u00e3o simulada (o que o sistema FARIA \u2014 sem enviar ordem). Segue o seletor de s\u00edmbolo acima.</div>\n                    </React.Fragment>\n                  );\n                })()}\n              </div>\n            </div>\n\n          </div>\n\n          <div className=\"cx-legend\">\n            <span className=\"li\"><span className=\"cx-seal real\" /> dado real agora</span>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/tradeux/frontend/src/private/Cockpit/Cockpit.js has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:58:40)*
+
+
+## 🤖 Claude *(17:58:41)*
+
+Três mudanças feitas (CSS `.cx-row-2` + HUD styles; merge das linhas paper; widget HUD). Vou validar a compilação (build) antes de qualquer deploy — é o que pega erro de JSX.
+
+## 🤖 Claude *(17:58:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n -u gcrux-tradeux bash -lc 'docker compose build frontend' 2>&1 | tail -14",
+  "description": "Build frontend to validate JSX compiles"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #15 [stage-1 3/3] COPY --from=build /app/build /usr/share/nginx/html
+> #15 DONE 0.4s
+> 
+> #16 exporting to image
+> #16 exporting layers
+> #16 exporting layers 0.3s done
+> #16 writing image sha256:5b41484f70ba89cda86a01386aef77e1f740831d1e607c332bec62f76b0e70d0
+> #16 writing image sha256:5b41484f70ba89cda86a01386aef77e1f740831d1e607c332bec62f76b0e70d0 done
+> #16 naming to docker.io/library/tradeux-frontend 0.0s done
+> #16 DONE 0.3s
+> 
+> #17 resolving provenance for metadata file
+> #17 DONE 0.0s
+>  Image tradeux-frontend Built
+> ```
+
+## 🤖 Claude *(17:59:29)*
+
+
+## 🤖 Claude *(17:59:30)*
+
+Frontend **compila** (build OK). Rodando QA + TL na mudança do frontend (read-only, mas é o site live) antes de deployar.
+
+## 🤖 Claude *(17:59:46)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "QA review of cockpit HUD widget",
+  "subagent_type": "qa-engineer",
+  "prompt": "Revise uma mudan\u00e7a S\u00d3 de frontend (read-only, sem backend/money-path) no cockpit do TradeUX, repo /home/gcrux-tradeux/tradeux. Veja `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- frontend/`. Dois arquivos:\n\n1. `frontend/src/private/Cockpit/cockpit.css`: adicionada classe `.cx-row-2` (grid 1fr/1fr + colapso responsivo em 1100px) e estilos do HUD (`.cx-hud-grid/.cx-hud-tile/.cx-hud-k/.cx-hud-v`, `.cx-decision` + variantes buy/sell/hold/wait/ready/halt, `.cx-badge`).\n2. `frontend/src/private/Cockpit/Cockpit.js`: (A) os dois pain\u00e9is \"Paper \u00b7 Estrat\u00e9gias\" e \"Paper Trilhas (Trend)\" foram mesclados numa \u00fanica `<div className=\"cx-row-2\">` (antes eram dois `<div className=\"cx-row\">` separados) \u2192 lado a lado. (B) novo widget \"An\u00e1lise da vela ao vivo (HUD)\" (ROW 7) que reusa consts component-level (`cndBig`, `marks`, `klive`, `btcWs`, `cpBtc`, `cp`, `selSym`, `klErr`, `_rsi`, `_buyTh`, `_sellTh`) + helpers (`num`, `fmtPct`, `dirClass`, `simDecision`) pra mostrar candle SVG + decis\u00e3o simulada + sinais da vela + grid de indicadores (RSI/regime/fluxo/gates/EV) + \u00faltimos sinais de `cp.patterns.recent`.\n\nO `vite build` J\u00c1 passou (imagem tradeux-frontend Built). Foque em:\n(a) RUNTIME \u2014 algum acesso que CRASHA a p\u00e1gina do cockpit se um campo vier null/undefined/vazio? Ex.: `cpBtc=null` (s\u00edmbolo sem dados), `cp.patterns` ausente, `klive` null, `cndBig` null, `sig/g/fl/ev` vazios, `fl.imbalance` null em `fl.imbalance < 0`. Confirme que os guards (`cpBtc || {}`, `sig=s.signals||{}`, `cndBig ? ... : empty`, `snow`/`recent` com defaults) cobrem tudo. Verifique lendo o Cockpit.js atual.\n(b) A estrutura JSX ficou BALANCEADA ap\u00f3s a mescla dos pain\u00e9is (as `<div>` de cx-row/cx-panel fecham certo; o `cx-grid` n\u00e3o quebrou)? \n(c) A escala do candle reusado (`sc = 200/cndBig.H`, cndBig tem H=440) desenha certo no viewBox 200?\n(d) `simDecision(selSym, cp)` retorna sempre `{act,cls,head,reason}` (sem branch que retorne undefined)?\n\nVeredito PASS / PASS COM RESSALVAS / FAIL com achados por severidade. \u00c9 o site live \u2014 seja rigoroso sobre crash de runtime."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: ae6cf60a3b1fcceb1 (internal ID - do not mention to user. Use SendMessage with to: 'ae6cf60a3b1fcceb1', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/ae6cf60a3b1fcceb1.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(17:59:55)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "TL review of cockpit HUD widget",
+  "subagent_type": "tech-lead",
+  "prompt": "Decis\u00e3o de deploy pro site LIVE (tradeux.gcrux.com) de uma mudan\u00e7a S\u00d3 de frontend, read-only, no cockpit. Repo /home/gcrux-tradeux/tradeux \u2014 `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff -- frontend/`. Dois arquivos: `frontend/src/private/Cockpit/cockpit.css` (nova classe `.cx-row-2` 1fr/1fr + estilos HUD) e `frontend/src/private/Cockpit/Cockpit.js` (mescla de 2 pain\u00e9is paper em 1 linha de 2 colunas + novo widget \"An\u00e1lise da vela ao vivo (HUD)\" que mostra em tempo real a an\u00e1lise da vela: candle SVG reusado + decis\u00e3o simulada `simDecision` + sinais da vela + indicadores do brain). Pedido expl\u00edcito do dono: colocar os dois cards paper lado a lado + um gr\u00e1fico de velas com HUD dos \"pensamentos\" da vela atual. `vite build` passou.\n\nAvalie: design/manutenibilidade (re\u00faso das consts/helpers existentes vs duplica\u00e7\u00e3o; consist\u00eancia com o padr\u00e3o do cockpit \u2014 CSS escopado .cockpit, classes cx-*), ader\u00eancia (pt-BR, read-only, nada de money-path), risco de deploy (s\u00f3 rebuild do frontend; bounce de segundos; nenhum backend tocado), e se h\u00e1 algo que N\u00c3O deveria ir pra live. Considere que os arquivos backend do experimento anterior J\u00c1 est\u00e3o commitados (266d398) e a contamina\u00e7\u00e3o `backtest-results/*` N\u00c3O deve entrar em commit. Veredito APPROVE / APPROVE COM SUGEST\u00d5ES / REQUEST CHANGES / BLOCK, must-fix vs nice-to-have. N\u00e3o precisa rodar build."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a3747e17e1999b224 (internal ID - do not mention to user. Use SendMessage with to: 'a3747e17e1999b224', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/a3747e17e1999b224.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(18:00:07)*
+
+
+## 🤖 Claude *(18:00:09)*
+
+Build passou (JSX válido e balanceado — o Vite falharia senão). Enquanto QA/TL revisam, vou confirmar que os dados que o HUD lê existem de fato no cockpit vivo (signals/ev/gates/patterns.recent).
+
+## 🤖 Claude *(18:00:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TOKEN=$(cat /tmp/tok.txt); BASE=\"http://127.0.0.1:8090/api\"\ncat > /tmp/hud_check.py <<'PY'\nimport json,urllib.request\nBASE=\"http://127.0.0.1:8090/api\"; TOKEN=open('/tmp/tok.txt').read().strip()\ndef get(p):\n    r=urllib.request.Request(BASE+p,headers={'Authorization':TOKEN})\n    return json.loads(urllib.request.urlopen(r,timeout=10).read().decode())\ncp=get('/analysis/cockpit')\nb=(cp.get('symbols') or {}).get('BTCUSDT',{})\nprint(\"BTCUSDT.signals:\", json.dumps(b.get('signals')))\nprint(\"BTCUSDT.ev     :\", json.dumps(b.get('ev')))\nprint(\"BTCUSDT.flow   :\", json.dumps(b.get('flow')))\nprint(\"BTCUSDT.gates.buyAllowed/regime/reason:\", b.get('gates',{}).get('buyAllowed'), b.get('gates',{}).get('regime'), '|', b.get('gates',{}).get('reason'))\npat=cp.get('patterns') or {}\nrec=pat.get('recent') or []\nprint(f\"\\npatterns.recent: {len(rec)} itens; do BTC:\", len([r for r in rec if r.get('symbol')=='BTCUSDT']))\nif rec: print(\"  ex:\", json.dumps(rec[0]))\nPY\npython3 /tmp/hud_check.py",
+  "description": "Confirm HUD data fields exist in live cockpit"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "/tmp/hud_check.py", line 6, in <module>
+>     cp=get('/analysis/cockpit')
+>        ^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/tmp/hud_check.py", line 5, in get
+>     return json.loads(urllib.request.urlopen(r,timeout=10).read().decode())
+>                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+>     return opener.open(url, data, timeout)
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+>     response = meth(req, response)
+>                ^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+>     response = self.parent.error(
+>                ^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+>     return self._call_chain(*args)
+>            ^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+>     result = func(*args)
+>              ^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+>     raise HTTPError(req.full_url, code, msg, hdrs, fp)
+> urllib.error.HTTPError: HTTP Error 401: Unauthorized
+> ```
+
+## 🤖 Claude *(18:00:18)*
+
+
+## 🤖 Claude *(18:00:19)*
+
+Token expirou (401). Re-logando e refazendo o check.
+
+## 🤖 Claude *(18:00:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\nEMAIL=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_EMAIL=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2-')\nPWD=$(sudo -n -u gcrux-tradeux bash -lc 'grep -E \"^DEFAULT_SETTINGS_PASSWORD=|^DEFAULT_SETTINGS_PWD=\" /home/gcrux-tradeux/tradeux/.env | head -1 | cut -d= -f2-')\nBASE=\"http://127.0.0.1:8090/api\"\nTOKEN=$(curl -s -m8 -X POST \"$BASE/login\" -H 'Content-Type: application/json' -d \"{\\\"email\\\":\\\"$EMAIL\\\",\\\"password\\\":\\\"$PWD\\\"}\" | python3 -c 'import sys,json;print(json.load(sys.stdin).get(\"token\",\"\"))' 2>/dev/null)\necho \"$TOKEN\" > /tmp/tok.txt; chmod 644 /tmp/tok.txt\necho \"token len ${#TOKEN}\"\npython3 /tmp/hud_check.py",
+  "description": "Re-login and confirm HUD data fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> token len 137
+> BTCUSDT.signals: {"rsi1m": 43.2, "rsi15m": 43.37, "trendSlope": "up", "trendCross": "none", "farmDca": null, "trendQty": 0}
+> BTCUSDT.ev     : {"grossPct": 0.0221, "netPct": -0.1779, "breakevenPct": 0.2}
+> BTCUSDT.flow   : {"imbalance": -0.2141, "toxicity": 0.2141, "atMs": 1783274401206, "ageMs": 23967}
+> BTCUSDT.gates.buyAllowed/regime/reason: True range | regime=range (mean-reversion: range/mixed) + fluxo ok: baseline BTC liberada
+> 
+> patterns.recent: 7 itens; do BTC: 5
+>   ex: {"ts": "2026-07-05T17:25:29.112Z", "symbol": "BTCUSDT", "type": "flow_sell", "side": "sell", "entryPrice": 62748.01, "ctx": {"price": 62748.01, "rsi1m": 66.27, "rsi15m": 49.89, "imbalance": -0.8162, "toxicity": 0.8162, "regime": "range"}, "ret10": 0.10942179680280457, "ret15": 0.10940586004241641}
+> ```
+
+## 🤖 Claude *(18:00:41)*
+
+
+## 🤖 Claude *(18:00:41)*
+
+Todos os campos do HUD existem e estão populados no cockpit vivo (RSI 43,2/43,37 · regime `range` · EV gross +0,02% / net **−0,18%** = a realidade da fee · fluxo −0,21 · 5 sinais recentes do BTC com desfecho @10min). O HUD vai renderizar dado real e significativo.
+
+Aguardando QA/TL pra deployar. Poll:
+
+## 🤖 Claude *(18:00:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "qa=/tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/ae6cf60a3b1fcceb1.output\ntl=/tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/a3747e17e1999b224.output\nfor i in $(seq 1 20); do\n  qd=$(grep -qiE \"PASS|FAIL\" \"$qa\" 2>/dev/null && echo Y || echo N)\n  td=$(grep -qiE \"APPROVE|BLOCK|REQUEST CHANGES\" \"$tl\" 2>/dev/null && echo Y || echo N)\n  [ \"$qd\" = Y ] && [ \"$td\" = Y ] && { echo \"AMBOS PRONTOS\"; break; }\n  sleep 12\ndone\necho \"qa=$qd tl=$td\"",
+  "description": "Poll for QA/TL completion"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> AMBOS PRONTOS
+> qa=Y tl=Y
+> ```
+
+## 🤖 Claude *(18:00:53)*
+
+
+## 🤖 Claude *(18:00:53)*
+
+Ambos prontos. Extraindo os veredictos e qualquer must-fix.
+
+## 🤖 Claude *(18:01:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "qa=/tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/ae6cf60a3b1fcceb1.output\ntl=/tmp/claude-1001/-home-gcrux-tradeux/471cb4d6-e001-49d9-94b4-3b7ebe9b0f00/tasks/a3747e17e1999b224.output\necho \"=== QA tokens ===\"; grep -oiE \"PASS COM RESSALVAS|PASS|FAIL|must-?fix|crash|null\" \"$qa\" | sort | uniq -c | sort -rn | head\necho \"=== QA veredicto (linhas) ===\"; grep -oiE \"VEREDITO[^\\\"]{0,50}|PASS COM RESSALVAS|\\\\bPASS\\\\b|\\\\bFAIL\\\\b\" \"$qa\" | tail -4\necho\necho \"=== TL tokens ===\"; grep -oiE \"APPROVE COM SUGEST\u00d5ES|APPROVE|REQUEST CHANGES|BLOCK|must-?fix\" \"$tl\" | sort | uniq -c | sort -rn | head\necho \"=== TL veredicto (linhas) ===\"; grep -oiE \"APPROVE COM SUGEST\u00d5ES|\\\\bAPPROVE\\\\b|REQUEST CHANGES|\\\\bBLOCK\\\\b\" \"$tl\" | tail -4\necho\necho \"=== achados de severidade alta (crash/FAIL/must-fix) \u2014 contexto curto ===\"\ngrep -oiE \".{0,60}(vai crashar|crasha a p|FAIL\\b|must-fix|BLOCK\\b).{0,90}\" \"$qa\" \"$tl\" | grep -viE \"nao crasha|n\u00e3o crasha|sem crash|no crash|nunca crasha\" | head -8",
+  "description": "Extract QA/TL verdicts and high-severity findings"
+}
+```

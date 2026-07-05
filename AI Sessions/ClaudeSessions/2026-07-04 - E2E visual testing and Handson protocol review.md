@@ -1,4 +1,4 @@
-# E2E visual testing and Handson protocol review
+# [[2026-07-05 - E2E visual testing and Handson protocol review|E2E visual testing and Handson protocol review]]
 **Date:** 2026-07-04 | **Session ID:** `969f6e14-bf0b-42c0-9300-8707dcc8eb7f`
 
 ---
