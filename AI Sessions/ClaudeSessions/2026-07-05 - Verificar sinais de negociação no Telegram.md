@@ -1,4 +1,4 @@
-# Verificar sinais de negociação no Telegram
+# [[2026-07-03 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
 **Date:** 2026-07-05 | **Session ID:** `471cb4d6-e001-49d9-94b4-3b7ebe9b0f00`
 
 ---
@@ -8191,3 +8191,16 @@ Ambos prontos. Extraindo os veredictos e qualquer must-fix.
   "description": "Extract QA/TL verdicts and high-severity findings"
 }
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-05 - E2E visual testing and Handson protocol review]]
+> * **Próxima Sessão**: [[2026-07-05 - agent-a175006cdedbd1286]]
+%% --- TIMELINE END --- %%

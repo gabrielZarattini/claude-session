@@ -1158,3 +1158,16 @@ Confirmado por contagem na região L795-955: **26 `<div>` / 26 `</div>`**, **5 `
 ## Recomendação de merge
 
 **PODE MERGEAR.** Mudança puramente cosmética/read-only, guards completos, JSX balanceado, escala do candle e `simDecision` corretos. Único item aberto é o LOW cosmético de L888 (rótulo do lado do fluxo quando `imbalance=null`) — opcional endurecer para `fl.imbalance != null && fl.imbalance < 0` num follow-up, não bloqueia. Recomendo um smoke visual pós-deploy nos 4 símbolos (BTC/LTC/BNB/ADA) e com klines bloqueadas, dado que é o site live.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-05 - agent-acbbab1d010adc9c5]]
+> * **Próxima Sessão**: [[2026-07-05 - agent-aed41526b2d0082ee]]
+%% --- TIMELINE END --- %%
