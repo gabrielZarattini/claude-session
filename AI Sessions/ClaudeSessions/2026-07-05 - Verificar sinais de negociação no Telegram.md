@@ -9352,5 +9352,5 @@ Você re-chamou `/handoff` — a sessão já foi selada no turno anterior (commi
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-05 - E2E visual testing and Handson protocol review]]
-> * **Próxima Sessão**: [[2026-07-05 - agent-a0fd80537b214f83b]]
+> * **Próxima Sessão**: [[2026-07-05 - agent-a0579cfe2a5d02c2a]]
 %% --- TIMELINE END --- %%
