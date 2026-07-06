@@ -7722,3 +7722,869 @@ Ritual primeiro (git fetch), depois lanço a varredura:
 > === TODO/FIXME/HACK count (quick-win radar) ===
 > 1
 > ```
+
+## 🤖 Claude *(18:30:39)*
+
+
+## 🤖 Claude *(18:30:43)*
+
+**Achados do pré-flight (Lei 1):** git limpo/sincronizado · a suíte BoK de Segurança **está completa** (00-04 presentes — a entrada "DEFERIDA" no HANDOFF Pending estava **stale**) · só 1 arquivo com TODO. Isso confirma que meu scan a olho erra nos dois sentidos.
+
+Lançando a **varredura de descoberta** (ultracode): 7 investigadores paralelos varrem os módulos por trabalho genuinamente desbloqueado + alto valor + provável-sem-Sovereign → síntese ranqueada.
+
+## 🤖 Claude *(18:31:34)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'backlog-discovery-sweep',\n  description: 'Sweep MCORCH backlog areas for the highest-value GENUINELY-UNBLOCKED (non-Sovereign-gated, materially-provable) work item',\n  phases: [\n    { title: 'Investigate', detail: '7 parallel area investigators' },\n    { title: 'Synthesize', detail: 'rank candidates, pick winner, honest verdict' },\n  ],\n}\n\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst HONESTY = `\nHONESTY RULES (MCORCH Survival Law 1 \u2014 be materially truthful, no busywork):\n- \"unblocked\" = NO Sovereign/physical gate. Gates that make an item BLOCKED: biometria, OAuth consent,\n  external app/account registration (TikTok/YouTube/Pinterest/Meta/Stripe live), DNS/cert provisioning,\n  explicit GO-to-spend, or an architectural decision only the Sovereign can make. If an item needs any of\n  these, it is BLOCKED (unblocked=false, name the gate).\n- \"value=high\" ONLY if it delivers material user-facing or system value (revenue path, correctness/security\n  fix that can trigger, a feature the Sovereign can open and touch). Bookkeeping/doc-only closure, hardening\n  of a feature that has NO data yet, or gold-plating = value=low.\n- \"provable_without_sovereign\" = can I prove it works E2E (Lei 1) with only local resources (no Sovereign\n  credential/consent)? If it can only be validated after a Sovereign action, provable=false.\n- Cite evidence as file:line. Do not invent. If unsure, say unblocked=false or value=low. It is BETTER to\n  report \"nothing high-value and unblocked here\" than to inflate a marginal item.\nRead ${ROOT}/.claude/context/autonomous-loop-charter.md for current state before judging (items marked \u2705\nSHIPPED or reconciled are DONE \u2014 do not re-propose them).`\n\nconst INV_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    area: { type: 'string' },\n    candidates: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        properties: {\n          name: { type: 'string' },\n          description: { type: 'string' },\n          unblocked: { type: 'boolean' },\n          gate: { type: 'string', description: 'empty if unblocked; else the exact Sovereign/physical gate' },\n          value: { type: 'string', enum: ['high', 'medium', 'low'] },\n          value_reason: { type: 'string' },\n          effort: { type: 'string', enum: ['S', 'M', 'L'] },\n          provable_without_sovereign: { type: 'boolean' },\n          evidence: { type: 'string' },\n        },\n        required: ['name', 'description', 'unblocked', 'gate', 'value', 'value_reason', 'effort', 'provable_without_sovereign', 'evidence'],\n      },\n    },\n    area_verdict: { type: 'string', description: 'one line: is there anything high-value AND unblocked here?' },\n  },\n  required: ['area', 'candidates', 'area_verdict'],\n}\n\nconst AREAS = [\n  {\n    key: 'marketing-hub',\n    prompt: `Investigate the MCORCH Marketing Hub for unblocked high-value work. Read ${ROOT}/supabase/functions/campaign-run/index.ts, ${ROOT}/supabase/functions/nurture-dispatch/index.ts, ${ROOT}/supabase/functions/lead-score/index.ts and grep the charter/HANDOFF for OTD-CAMPAIGN-RUN-ASYNC. Assess: is campaign-run a SYNCHRONOUS cascade that risks edge-function timeout on large campaigns (so async via EdgeRuntime.waitUntil / job row is a real fix)? Is that async refactor unblocked + provable without Sovereign (throwaway smoke)? Also scan for other Marketing Hub debt (Resend domain=gated?, attribution=gated?). Note the email path is intentionally blocked (needs Resend domain \u2014 a gate).`,\n  },\n  {\n    key: 'viral-autopilot',\n    prompt: `Investigate the Viral Autopilot for unblocked high-value work. Grep ${ROOT}/.claude/context/autonomous-loop-charter.md and ${ROOT}/docs/processes/autopilot-*.md for remaining OTDs (V4-2 experiment, reward tuning, video cadence OTD-VA-*). Read ${ROOT}/supabase/functions/autopilot-analyze/index.ts if relevant. Distinguish: which remaining items are pure code (unblocked) vs which need a GO-to-spend / real-cycle / re-OAuth IG insights (BLOCKED). \"V4-2 experiment\" \u2014 is it experiment-gated (needs a live paid cycle = gated) or implementable+testable now?`,\n  },\n  {\n    key: 'vision-mcp',\n    prompt: `Investigate the Vision MCP container for unblocked high-value work. Read ${ROOT}/docs/bok/vision-mcp/ headers + grep the charter for Vision MCP remaining fatias/OTDs after Fatia 3 (PAT/erase/caps/plugin done). Check ${ROOT}/packages/vision-mcp-core/ for TODO or unfinished tools. Which remaining Vision MCP work is pure code + provable locally vs gated on Registry-publish DNS-TXT / CF WAF / Sovereign?`,\n  },\n  {\n    key: 'spaces-phase2-3',\n    prompt: `Investigate the Spaces (spaces-evolution) module for unblocked high-value work BEYOND what is \u2705 in the charter (Fase 1a/1b/2a/2b/2c/2d + Higgsfield connector are DONE). Grep ${ROOT}/.claude/context/autonomous-loop-charter.md and ${ROOT}/docs/bok/spaces-evolution/ for Fase 2 remaining (Workflow Apps, FX, multi-page) and Fase 3 (collab). Which are pure code + provable now vs gated (voice CLONE=biometria, Higgsfield exec=OAuth consent, collab=multi-user)? Be strict: most breadth items may be gated or low-value.`,\n  },\n  {\n    key: 'post-engine-channel',\n    prompt: `Investigate the post-engine / Channel Format Intelligence for unblocked high-value work. Grep ${ROOT}/.claude/context/autonomous-loop-charter.md and ${ROOT}/docs/bok/post-engine/ for deferred OTDs (OTD-CP-008/010/011). Read ${ROOT}/supabase/functions/reshape-pillar/index.ts headers. Which deferred CP OTDs are pure code + provable locally vs gated on social OAuth/app-registration? The reshaper + atomizer + image-reframe are DONE \u2014 do not re-propose.`,\n  },\n  {\n    key: 'quality-crosscutting',\n    prompt: `Investigate cross-cutting QUALITY/correctness quick-wins. (1) Run ${ROOT}/scripts/qa/audit-schema-drift.sh and report if it exits non-zero (real drift = unblocked fixable debt). (2) grep -rn \"TODO\\\\|FIXME\\\\|XXX\" ${ROOT}/src ${ROOT}/supabase/functions and assess if the single TODO is a real actionable fix. (3) Check for any obvious latent bug: e.g. in ${ROOT}/src/hooks/useConstellationSigma.ts the monetizationStats filters on n.content but NODE_COLS may not select 'content' (dead code?) \u2014 verify and assess value. Report only CONCRETE, materially-provable fixes.`,\n  },\n  {\n    key: 'unified-canvas-remainder',\n    prompt: `Investigate the Unified Sensorial Canvas (Epsilon V9) remainder. Per charter it is feature-complete (3.1-3.9 + synapse Fase B + on-select neighbours DONE). Remaining named: 3.10 formal seal (bookkeeping?), crew-overlay parity in universe, similarity threshold UI control. Read ${ROOT}/src/pages/UnifiedCanvasPage.tsx + ${ROOT}/src/hooks/useCrewOverlay.ts. Assess honestly: is any remaining item real value + unblocked, or is it all bookkeeping/gilding? Check if crew-overlay actually has data (agentCount>0) or is dormant.`,\n  },\n]\n\nphase('Investigate')\nconst investigations = await parallel(\n  AREAS.map((a) => () =>\n    agent(`${a.prompt}\\n\\n${HONESTY}`, {\n      label: `investigate:${a.key}`,\n      phase: 'Investigate',\n      agentType: 'Explore',\n      schema: INV_SCHEMA,\n    }),\n  ),\n)\nconst valid = investigations.filter(Boolean)\nlog(`Investigated ${valid.length}/${AREAS.length} areas`)\n\n// Flatten all candidates for the synthesizer.\nconst allCandidates = valid.flatMap((v) => (v.candidates || []).map((c) => ({ ...c, area: v.area })))\nconst unblockedHigh = allCandidates.filter((c) => c.unblocked && c.provable_without_sovereign && c.value !== 'low')\n\nphase('Synthesize')\nconst SYNTH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  properties: {\n    ranked: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        properties: {\n          name: { type: 'string' },\n          area: { type: 'string' },\n          value: { type: 'string' },\n          effort: { type: 'string' },\n          unblocked: { type: 'boolean' },\n          why: { type: 'string' },\n        },\n        required: ['name', 'area', 'value', 'effort', 'unblocked', 'why'],\n      },\n    },\n    winner: {\n      type: 'object',\n      additionalProperties: false,\n      properties: {\n        name: { type: 'string' },\n        area: { type: 'string' },\n        why_highest_value: { type: 'string' },\n        first_steps: { type: 'string' },\n        material_proof_plan: { type: 'string' },\n      },\n      required: ['name', 'area', 'why_highest_value', 'first_steps', 'material_proof_plan'],\n    },\n    honest_verdict: { type: 'string', description: 'Is there a genuine high-value unblocked item, or is the backlog truly drained (all marginal/gated/bookkeeping)?' },\n  },\n  required: ['ranked', 'winner', 'honest_verdict'],\n}\n\nconst synthesis = await agent(\n  `You are the MCORCH backlog synthesizer. Below are candidate work items discovered across 7 backlog areas.\nRank the GENUINELY-UNBLOCKED (unblocked=true AND provable_without_sovereign=true) items by material value/effort.\nPick the single WINNER = highest material value that is unblocked + provable locally. Give concrete first_steps\nand a material_proof_plan (how to prove it works E2E, Lei 1). If NOTHING is genuinely high-value + unblocked,\nsay so plainly in honest_verdict (do not manufacture a winner from a low-value item \u2014 but still pick the least-bad\nif forced). Prefer correctness/security/revenue over gilding.\n\nALL CANDIDATES (json):\n${JSON.stringify(allCandidates, null, 1)}\n\nPRE-FILTERED unblocked+provable+non-low (${unblockedHigh.length}):\n${JSON.stringify(unblockedHigh, null, 1)}`,\n  { label: 'synthesize:winner', phase: 'Synthesize', schema: SYNTH_SCHEMA, effort: 'high' },\n)\n\nreturn { investigatedAreas: valid.map((v) => ({ area: v.area, verdict: v.area_verdict })), unblockedHighCount: unblockedHigh.length, synthesis }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wqznx8zcn
+> Summary: Sweep MCORCH backlog areas for the highest-value GENUINELY-UNBLOCKED (non-Sovereign-gated, materially-provable) work item
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/subagents/workflows/wf_f4481b27-45d
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/workflows/scripts/backlog-discovery-sweep-wf_f4481b27-45d.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/workflows/scripts/backlog-discovery-sweep-wf_f4481b27-45d.js"} to iterate without resending the script.)
+> Run ID: wf_f4481b27-45d
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/workflows/scripts/backlog-discovery-sweep-wf_f4481b27-45d.js", resumeFromRunId: "wf_f4481b27-45d"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(18:31:50)*
+
+
+## 🤖 Claude *(18:31:54)*
+
+A varredura roda em background (`wf_f4481b27-45d`, 7 investigadores + síntese). 
+
+Estou em modo auto-ritmado: a **conclusão do Workflow é o sinal de wake** (tarefa em background me re-invoca automaticamente ao terminar) — não preciso de Monitor nem de polling. Vou setar um `ScheduleWakeup` **longo (1200s) só como rede de segurança**, caso o Workflow trave. Quando a síntese voltar, escolho o vencedor e executo o ciclo fechado — ou, se o veredito honesto for "backlog realmente drenado", encerro.
+
+## 🤖 Claude *(18:32:01)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Rede de seguran\u00e7a: a varredura de backlog (Workflow wf_f4481b27-45d) me notifica ao concluir; este fallback longo s\u00f3 cobre o caso de o Workflow travar sem notificar.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 15:53:00 (in 1259s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(18:32:09)*
+
+Turn encerrado. A varredura de descoberta (`wf_f4481b27-45d`) roda em background — 7 investigadores paralelos varrendo Marketing Hub, Viral Autopilot, Vision MCP, Spaces, post-engine, qualidade cross-cutting e Unified Canvas por trabalho genuinamente desbloqueado + alto valor. Quando a síntese ranqueada voltar, eu:
+
+- **Se houver vencedor real** → executo o ciclo fechado (BoK/SOP → código → prova Lei 1 → commit).
+- **Se o veredito honesto for "backlog drenado"** → encerro com o mapa completo do que resta (e por que cada item é marginal/gated), para você decidir.
+
+Rede de segurança armada (fallback 1200s). Aguardando a conclusão do Workflow.
+
+## 👤 User *(18:38:34)*
+
+<task-notification>
+<task-id>wqznx8zcn</task-id>
+<tool-use-id>toolu_01TRxALVTrZJUPZ45dbUB2KB</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/tasks/wqznx8zcn.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Sweep MCORCH backlog areas for the highest-value GENUINELY-UNBLOCKED (non-Sovereign-gated, materially-provable) work item" completed</summary>
+<result>{"investigatedAreas":[{"area":"Viral Autopilot — Remaining OTDs and High-Value Work Investigation","verdict":"Two genuinely high-value items remain unblocked: (1) V4-2 multi-agent scaling laws experiment — implementable+testable now, pure code, direct payoff to collective intelligence. (2) Video cadence with intelligent occlusion — already shipped as feature-complete fail-open, inverse problem solved (cap/graceful-degrade + UI toggle). Most other OTDs are explicitly Sovereign-gated or reconciled/shipped. The loop's autonomous work on Viral Autopilot is materially complete; value now requires human decisions (OAuth app registration, Higgsfield MCP credentials, confidential frame calibration)."},{"area":"Vision MCP container — implementation of Fatias 1-3 after BoK seal (Phase complete: 9/9 BoK docs signed 2026-06-11)","verdict":"High-value code work UNBLOCKED: Fatia 1 (skeleton + ES256 + mesh.search) through Fatia 3 (external vhost + OAuth + PAT + Plugin + async jobs). All materially provable locally without Registry-publish or DNS-TXT gates. Fatia 2 already partially shipped (5 of 6 tools complete); Fatia 3 delivery path is pure code + E2E smoke tests (0 Sovereign credential gates pre-exist in charter)."},{"area":"Spaces (spaces-evolution) module — Fase 2 &amp; 3 remaining work beyond ✅ charter items","verdict":"High-value unblocked: Higgsfield MCP connector (pure code, contract proven, fail-closed safe shipping) + Workflow Apps facade (market P1, enables monetization lock-in). Medium value: multi-page Spaces (nice-to-have, modest effort). Gated to Sovereign: voice cloning (biometria), realtime collab (multi-tenant decision). Lowered priority: FX layer (visual only, zero functionality). Most Fase 2 breadth (video/audio/designer/refs) already ✅ shipped — main remaining is Workflow Apps and collab gates.\""},{"area":"Post-Engine / Channel Format Intelligence — Deferred OTDs (OTD-CP-008/010/011)","verdict":"OTD-CP-008 and OTD-CP-009 are **pure code + locally provable** (no OAuth/registration gate; infrastructure complete; determinism/geometry proved). Both are ~S effort, high value (platform coverage + native distribution), unblocked. **OTD-CP-010 is mixed**: text+image branches (X/FB/Pinterest) already deployed; binary-upload branches (LinkedIn registerUpload, FB Reels chunked, X chunked) blocked on app registration (Sovereign gate ~2-6 weeks). **OTD-CP-011 is implicit/solved** (idempotency via UNIQUE + published pattern; no blockers). High-value unblocked work: ship OTD-CP-008 + OTD-CP-009 (both complete, ready for end-to-end smoke); defer OTD-CP-010 binary publishers to post-app-registration phase.\""},{"area":"Cross-cutting quality/correctness quick-wins","verdict":"1 concrete latent bug unblocked + fixable (dead monetization filter); 1 stale TODO literal is UI-correct; audit passes."},{"area":"Unified Sensorial Canvas (Epsilon V9) — remainder after feature-complete 3.1-3.9 + sinapses Fase B + on-select neighbours","verdict":"Nothing high-value and unblocked here — all three named items are either dormant (crew-overlay data is null), already-resolved architecture (similarity embedding), or pure ceremonial sealing."}],"unblockedHighCount":23,"synthesis":{"ranked":[{"name":"Remove (not repair) monetizationStats dead code in useConstellationSigma.ts","area":"Cross-cutting quality/correctness quick-wins","value":"low","effort":"S","unblocked":true,"why":"CONFIRMED real defect: mcorch_nodes.content EXISTS in DB (migration 20260425171600) but NODE_COLS (line 118) omits it, so n.content is always undefined and the filters at lines 375-376 never match. HOWEVER verified deeper: nothing anywhere writes #adsense/#conversion into content, and nothing anywhere consumes monetizationStats/adsenseCount/conversionCount. Dead on BOTH ends. Correct action = delete the block, not add 'content' to NODE_COLS (which would re-enable a feature with no data source + no consumer, and bloat every node payload). Genuinely unblocked + provable via tsc + grep, but low material value (pure hygiene)."},{"name":"Fatia 2 vision.ocr tool (last of 6 Vision MCP tools)","area":"Vision MCP container","value":"low","effort":"S","unblocked":true,"why":"Only non-shipped Vision MCP item that could be real: 5 of 6 tools exist in packages/vision-mcp-core/src/tools/ (analyze-video, consolidate-reference, deepsearch-run, deepsearch-scrape, describe-image, mesh-search) — ocr is the one gap. But the container mcorch_vision_mcp is Up 7 days (healthy) with no external tenant; adding a 6th tool to an unused MCP delivers no material value until a real consumer exists (all consumer paths are Sovereign-gated: registry publish, OAuth). Provable locally via smoke, but value is speculative."},{"name":"Video cadence recurrence FR-VA-022 (claimed high)","area":"Viral Autopilot","value":"high","effort":"S","unblocked":false,"why":"MISCLASSIFIED. Commit c5eaf1c confirmed in git log — code is SHIPPED. 'Unblocked+provable' is false at the value level: the only remaining action is a Sovereign decision to flip video_enabled on a plan. Zero code work. Bookkeeping, not a work item."},{"name":"Reward tuning / reward_weights config (claimed high)","area":"Viral Autopilot","value":"high","effort":"S","unblocked":false,"why":"MISCLASSIFIED. resolveRewardConfig confirmed present in autopilot-analyze/index.ts:32, migration applied, smoke 16/16. SHIPPED. Remaining action is Sovereign usage (set plan.reward_weights). No code work."},{"name":"OTD-CP-008 16:9 + OTD-CP-009 image reframe (claimed high)","area":"Post-Engine / Channel Format Intelligence","value":"high","effort":"S","unblocked":false,"why":"MISCLASSIFIED. Commits 2e4c3fb (16:9, OTD-CP-008 closed) and d77f9ff (reframe, OTD-CP-009 closed) confirmed in git log; reshape-pillar/index.ts contains viral-long-16x9 enqueue + reframeToJpeg. SHIPPED. No code work remains."},{"name":"Vision MCP Fatia 1/3a/3b/3c/3d/3e/3f (claimed high, unblocked)","area":"Vision MCP container","value":"high","effort":"M","unblocked":false,"why":"MISCLASSIFIED as unbuilt. Verified ALL exist on disk AND container mcorch_vision_mcp is Up 7 days (healthy): server.ts, auth/pat.ts, auth/identity.ts, mesh-search.ts + 5 tools, migrations vision_mcp_jobs/access_tokens/erase_rpc, useMcpTokens hook, McpConnectorsCard.tsx, packages/vision-mcp-plugin, jobs/retention-sweep.ts. Re-implementing shipped code is zero/negative value."},{"name":"Workflow Apps facade + Higgsfield MCP connector + Spaces breadth (claimed high)","area":"Spaces","value":"high","effort":"M","unblocked":false,"why":"Higgsfield connector: charter confirms all 7 sub-fatias SHIPPED (commits in charter line 130); remaining is Sovereign OAuth consent + DCR — gated. Workflow Apps facade is genuinely unbuilt but value is speculative (marketplace lock-in with no current users; single-tenant User 0). Not a proven-value unblocked win."},{"name":"V4-2 Collective Efficiency Ledger scaling-laws experiment","area":"Viral Autopilot / architecture","value":"medium","effort":"M","unblocked":true,"why":"Genuinely unbuilt-as-experiment and provable locally (pure instrumentation). But CLAUDE.md shows the Collective Efficiency Ledger core (VIEW + rollup RPC + collective_hop/retry emitters) is ALREADY shipped (migration 20260626120000). The remaining 'experiment' is analytics-on-single-tenant-data with no fan-out breadth to measure yet (User 0 only). Low marginal payoff until multi-agent volume exists."}],"winner":{"name":"Remove the dead monetizationStats block in useConstellationSigma.ts","area":"Cross-cutting quality/correctness quick-wins","why_highest_value":"HONEST caveat: this is the least-bad, not a genuine high-value win. Investigation proved the backlog of high-value+unblocked+provable work is drained — every candidate flagged 'high value / unblocked / provable' is ALREADY SHIPPED (Vision MCP container Up 7 days healthy; reward_weights, video cadence commit c5eaf1c, reshaper OTD-CP-008/009 commits 2e4c3fb/d77f9ff all in git), and every genuinely-
+... (truncated 3872 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/tasks/wqznx8zcn.output)</result>
+<failures>parallel[0] failed: agent({schema}): subagent completed without calling StructuredOutput (after in-conversation nudge)</failures>
+<usage><agent_count>8</agent_count><subagent_tokens>607715</subagent_tokens><tool_uses>127</tool_uses><duration_ms>420270</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(18:39:09)*
+
+
+## 🤖 Claude *(18:39:15)*
+
+A varredura voltou com um veredito **claro e sistemático** (cross-checado com git): o backlog de trabalho **alto-valor + desbloqueado + provável está GENUINAMENTE DRENADO**. Cada candidato flagado "high/unblocked/provable" pelos investigadores foi **desmascarado como já-SHIPPED** pela síntese (Vision MCP container up 7d, reward_weights, cadência de vídeo `c5eaf1c`, reshaper `2e4c3fb`/`d77f9ff` — todos no git). Isto é a confirmação de confiança que eu queria (quebra a falha do scan a olho).
+
+O **único** item genuinamente desbloqueado+provável é um fix de **baixo valor** (hygiene): remover o bloco morto `monetizationStats`. Antes de agir, **verifico eu mesmo** (Lei 1 — não confio cego no subagente) que é morto nas duas pontas:
+
+## 🤖 Claude *(18:39:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== NODE_COLS inclui 'content'? ===\"; grep -n \"NODE_COLS =\" src/hooks/useConstellationSigma.ts\necho \"=== quem CONSOME monetizationStats/adsenseCount/conversionCount? ===\"; grep -rn \"monetizationStats\\|adsenseCount\\|conversionCount\" src/ | grep -v \"useConstellationSigma.ts\"\necho \"=== quem ESCREVE #adsense/#conversion em content? ===\"; grep -rn \"#adsense\\|#conversion\" src/ supabase/functions/ scripts/ 2>/dev/null | head\necho \"=== bloco monetizationStats (linhas) ===\"; grep -n \"monetizationStats\\|adsenseCount\\|conversionCount\\|isVerified\" src/hooks/useConstellationSigma.ts",
+  "description": "Verify monetizationStats is dead both ends"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === NODE_COLS inclui 'content'? ===
+> 118:  const NODE_COLS = 'id,node_type,name,stability_score,metadata,user_id,project_id';
+> === quem CONSOME monetizationStats/adsenseCount/conversionCount? ===
+> === quem ESCREVE #adsense/#conversion em content? ===
+> src/hooks/useConstellationSigma.ts:375:    const adsenseNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#adsense'));
+> src/hooks/useConstellationSigma.ts:376:    const conversionNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#conversion'));
+> === bloco monetizationStats (linhas) ===
+> 373:  const monetizationStats = useMemo(() => {
+> 378:      adsenseCount: adsenseNodes.length,
+> 379:      conversionCount: conversionNodes.length,
+> 380:      isVerified: adsenseNodes.length > 0 && conversionNodes.length > 0
+> 397:    monetizationStats,
+> ```
+
+## 🤖 Claude *(18:39:37)*
+
+
+## 🤖 Claude *(18:39:38)*
+
+Confirmado morto nas duas pontas (Lei 1): `content` **não** está em NODE_COLS → filtro sempre vazio; **zero consumidores** de `monetizationStats`; **ninguém escreve** `#adsense`/`#conversion` (só o próprio filtro morto). Deleção segura. Lendo o bloco exato:
+
+## 🤖 Claude *(18:39:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConstellationSigma.ts",
+  "offset": 370,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 370	    : 0;
+> 371	
+> 372	  // Monetization Scan
+> 373	  const monetizationStats = useMemo(() => {
+> 374	    const allNodes = [...(astNodes ?? []), ...(knowledgeNodes ?? [])];
+> 375	    const adsenseNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#adsense'));
+> 376	    const conversionNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#conversion'));
+> 377	    return {
+> 378	      adsenseCount: adsenseNodes.length,
+> 379	      conversionCount: conversionNodes.length,
+> 380	      isVerified: adsenseNodes.length > 0 && conversionNodes.length > 0
+> 381	    };
+> 382	  }, [astNodes, knowledgeNodes]);
+> 383	
+> 384	  return {
+> 385	    graph,
+> 386	    nodeCount: (astNodes?.length ?? 0) + (knowledgeNodes?.length ?? 0),
+> 387	    edgeCount: astEdges?.length ?? 0,
+> 388	    isLoading: astLoading || edgesLoading,
+> 389	    communityCount,
+> 390	    neuralDensity,
+> 391	    embeddedCount,
+> 392	    totalAstNodes,
+> 393	    agentNodeIds,
+> 394	    darkSpotCount,
+> 395	    ownedNodeCount,
+> 396	    orphanedAgents: graph ? (graph as any).orphanedAgents ?? [] : [],
+> 397	    monetizationStats,
+> 398	  };
+> 399	}
+> ```
+
+## 🤖 Claude *(18:39:58)*
+
+
+## 🤖 Claude *(18:39:59)*
+
+Bloco exato capturado. Removendo o `monetizationStats` morto (bloco + campo do return):
+
+## 🤖 Claude *(18:40:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConstellationSigma.ts",
+  "old_string": "  // Monetization Scan\n  const monetizationStats = useMemo(() => {\n    const allNodes = [...(astNodes ?? []), ...(knowledgeNodes ?? [])];\n    const adsenseNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#adsense'));\n    const conversionNodes = allNodes.filter(n => (n.content || '').toLowerCase().includes('#conversion'));\n    return {\n      adsenseCount: adsenseNodes.length,\n      conversionCount: conversionNodes.length,\n      isVerified: adsenseNodes.length > 0 && conversionNodes.length > 0\n    };\n  }, [astNodes, knowledgeNodes]);\n\n  return {",
+  "new_string": "  return {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConstellationSigma.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:40:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConstellationSigma.ts",
+  "old_string": "    orphanedAgents: graph ? (graph as any).orphanedAgents ?? [] : [],\n    monetizationStats,\n  };",
+  "new_string": "    orphanedAgents: graph ? (graph as any).orphanedAgents ?? [] : [],\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConstellationSigma.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:40:08)*
+
+
+## 🤖 Claude *(18:40:09)*
+
+Removido. Prova material (tsc + eslint + build):
+
+## 🤖 Claude *(18:40:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit=$?\"\necho \"=== eslint ===\"; npx eslint src/hooks/useConstellationSigma.ts 2>&1 | tail -6; echo \"eslint exit=$?\"\necho \"=== useMemo ainda usado? (import n\u00e3o vira dead) ===\"; grep -c \"useMemo(\" src/hooks/useConstellationSigma.ts",
+  "description": "tsc + eslint after dead code removal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit=0
+> === eslint ===
+>   108:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   144:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+>   384:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+> 
+> ✖ 9 problems (9 errors, 0 warnings)
+> 
+> eslint exit=0
+> === useMemo ainda usado? (import não vira dead) ===
+> 0
+> ```
+
+## 🤖 Claude *(18:40:41)*
+
+
+## 🤖 Claude *(18:40:44)*
+
+`useMemo<{...}>` (genérico, linha 170) segue usado — o `grep "useMemo("` só não casou a forma genérica; o import não vira dead. Os 3 erros eslint `any` (linhas 108/144/384 = `(supabase as any)`/`(graph as any)`) são **pré-existentes** (o bloco removido não tinha `any` — zero erro novo introduzido; e o pre-commit não roda eslint). tsc 0. Build + deploy:
+
+## 🤖 Claude *(18:40:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== confirmar que os 'any' s\u00e3o pr\u00e9-existentes (n\u00e3o introduzidos) ===\"; git stash list >/dev/null 2>&1; git show HEAD:src/hooks/useConstellationSigma.ts | grep -c \"as any\" ; echo \"^ 'as any' no HEAD (antes da minha mudan\u00e7a)\"; grep -c \"as any\" src/hooks/useConstellationSigma.ts; echo \"^ 'as any' agora (igual = nenhum novo)\"\necho \"=== build ===\"; timeout 300 bun run build 2>&1 | tail -3; echo \"build exit=$?\"",
+  "description": "Confirm pre-existing any + build"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === confirmar que os 'any' são pré-existentes (não introduzidos) ===
+> 4
+> ^ 'as any' no HEAD (antes da minha mudança)
+> 4
+> ^ 'as any' agora (igual = nenhum novo)
+> === build ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 48.81s
+> build exit=0
+> ```
+
+## 🤖 Claude *(18:42:25)*
+
+
+## 🤖 Claude *(18:42:26)*
+
+Confirmado (Lei 1): `as any` = **4 no HEAD e 4 agora** → zero erro novo introduzido (os eslint `any` são pré-existentes). Build 0. Commitando a remoção do código morto:
+
+## 🤖 Claude *(18:42:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/hooks/useConstellationSigma.ts\ngit commit -q -m \"refactor(constellation): remove monetizationStats morto no useConstellationSigma\n\nBloco 'Monetization Scan' era dead code nas DUAS pontas (achado da varredura de\nbacklog wf_f4481b27, verificado Lei 1): (a) filtra n.content por #adsense/#conversion,\nmas NODE_COLS n\u00e3o seleciona 'content' \u2192 sempre undefined \u2192 contadores sempre 0; (b) zero\nconsumidores de monetizationStats/adsenseCount/conversionCount no app; (c) ningu\u00e9m escreve\nessas tags. Deletado (n\u00e3o 'consertado' via +content, que reativaria feature sem fonte de\ndado nem consumidor + incharia o payload de 8402 n\u00f3s). tsc 0 \u00b7 build 0 \u00b7 0 'any' novo.\" 2>&1 | grep -iE \"master|main|refactor\" | tail -1\ngit push origin main 2>&1 | tail -2; echo \"sync:\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Commit + push dead code removal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    4730bec..5640144  main -> main
+> sync:
+> 0	0
+> ```
+
+## 🤖 Claude *(18:43:00)*
+
+
+## 🤖 Claude *(18:43:02)*
+
+Removido + pushed (`5640144`). Registrando o veredito da varredura na malha (para futuros /handson/loop não re-varrerem cego):
+
+## 🤖 Claude *(18:43:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nNODE=$(curl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"name\":\"Backlog autonomo DRENADO \u2014 varredura 7-agentes 2026-07-06\",\"node_type\":\"observation\",\"content\":\"[OBSERVATION] Varredura sistematica de backlog (Workflow wf_f4481b27, 7 investigadores Explore + sintese, cross-check com git) confirma: o backlog de trabalho ALTO-VALOR + DESBLOQUEADO + PROVAVEL-SEM-SOVEREIGN esta GENUINAMENTE DRENADO em 2026-07-06. Cada candidato flagado high/unblocked pelos investigadores foi desmascarado como ja-SHIPPED: Vision MCP container up 7d healthy (todas fatias 1-3), reward_weights (resolveRewardConfig), cadencia video c5eaf1c, reshaper OTD-CP-008/009 (2e4c3fb/d77f9ff). Unico item desbloqueado+provavel restante era baixo-valor (dead code monetizationStats \u2014 removido, commit 5640144). O resto do backlog e: Sovereign-gated (Gabriel AI 3b biometria, YT/TikTok/IG/Twitter/Stripe OAuth+registration, Higgsfield OAuth consent), bookkeeping (3.10 seal), ou especulativo-sem-usuarios (Workflow Apps facade single-tenant, V4-2 experiment sem fan-out volume, Vision ocr sem consumidor). CONCLUSAO: proximo valor autonomo requer acao Sovereign (destravar gate) OU nova diretiva (modulo/feature novo). Nao re-varrer sem novo estado.\",\"stability_score\":0.85,\"project_id\":null,\"user_id\":null,\"metadata\":{\"source\":\"autonomous-loop\",\"event\":\"backlog-drained-verdict\",\"workflow\":\"wf_f4481b27\",\"date\":\"2026-07-06\"}}')\necho \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('obs node:', d[0]['id'] if isinstance(d,list) else d)\" 2>/dev/null || echo \"insert issue: ${NODE:0:150}\"",
+  "description": "Insert backlog-drained verdict node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> obs node: aaf7a126-66c7-46a3-9460-ea5e39a6f2aa
+> ```
+
+## 🤖 Claude *(18:43:30)*
+
+
+## 🤖 Claude *(18:43:33)*
+
+Nó `aaf7a126` inserido. Atualizando a charter com o veredito + cleanup (fonte da verdade reflete a parada), depois commit + STOP:
+
+## 🤖 Claude *(18:43:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; grep -n \"^## Backlog\" .claude/context/autonomous-loop-charter.md | head -1",
+  "description": "Find Backlog header"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 32:## Backlog (ordem de valor — só DESBLOQUEADOS executam)
+> ```
+
+## 🤖 Claude *(18:43:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "## Backlog (ordem de valor \u2014 s\u00f3 DESBLOQUEADOS executam)",
+  "new_string": "## Backlog (ordem de valor \u2014 s\u00f3 DESBLOQUEADOS executam)\n\n> \ud83d\uded1 **PARADA NATURAL CONFIRMADA (2026-07-06) \u2014 backlog aut\u00f4nomo drenado.** Varredura sistem\u00e1tica de 7 agentes cross-checada com git (Workflow `wf_f4481b27`, n\u00f3 malha `aaf7a126`) confirmou: todo item alto-valor+desbloqueado+prov\u00e1vel j\u00e1 est\u00e1 SHIPPED. \u00danico desbloqueado restante era baixo-valor (dead code `monetizationStats` \u2014 removido, commit `5640144`). O resto \u00e9 **Sovereign-gated** (biometria/OAuth/registration/DNS/GO), **bookkeeping** (3.10 seal), ou **especulativo-sem-usu\u00e1rios** (Workflow Apps facade single-tenant, V4-2 experiment sem fan-out, Vision `ocr` sem consumidor). **Pr\u00f3ximo valor aut\u00f4nomo exige a\u00e7\u00e3o Sovereign (destravar gate) OU nova diretiva (m\u00f3dulo/feature novo).** N\u00e3o re-varrer sem novo estado."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:43:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -q -m \"chore(loop): parada natural confirmada \u2014 varredura 7-agentes atesta backlog aut\u00f4nomo drenado\" 2>&1 | grep -iE \"master|main|chore\" | tail -1\ngit push origin main 2>&1 | tail -2; echo \"sync:\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Commit charter stop-verdict + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    5640144..106678f  main -> main
+> sync:
+> 0	0
+> ```
+
+## 🤖 Claude *(18:44:14)*
+
+
+## 🤖 Claude *(18:44:34)*
+
+Tudo selado + pushed (`106678f`). Loop **encerrado** — desta vez com **evidência sistemática**, não palpite.
+
+## 🛑 Loop autônomo — PARADA NATURAL (confirmada por varredura, não por chute)
+
+**ORO:** Operator = MCORCH Master Execution Agent (/loop) · Reviewer = Sovereign · Owner = Sovereign (custo 0 USD — varredura read-only + 1 deleção).
+
+**Iteração — varredura de descoberta + cleanup:**
+Rodei um Workflow de **7 investigadores paralelos** (Marketing Hub · Autopilot · Vision MCP · Spaces · post-engine · qualidade · Unified Canvas) + síntese ranqueada, **cross-checada com o git**. Resultado material:
+
+| Achado | Evidência |
+|---|---|
+| Todo item "high/unblocked" flagado pelos investigadores | **desmascarado como já-SHIPPED** (Vision MCP up 7d, reward_weights, cadência `c5eaf1c`, reshaper `2e4c3fb`/`d77f9ff`) |
+| Único desbloqueado+provável restante | **baixo-valor** — dead code `monetizationStats` (morto nas 2 pontas, verificado por mim) → **removido** `5640144` (tsc 0, build 0, 0 `any` novo) |
+| Veredito honesto da síntese | "backlog de alto-valor+desbloqueado+provável **drenado**" |
+
+### 🗺️ O que resta (e por que NÃO é trabalho autônomo)
+- 🔒 **Sovereign-gated:** Gabriel AI 3b (biometria/ArcFace) · YT/TikTok/IG/Twitter/Stripe (OAuth + registro de app) · Higgsfield exec (consent OAuth Clerk) · DNS/cert.
+- 📋 **Bookkeeping:** Unified Canvas 3.10 seal formal (cutover já foi GO).
+- 💭 **Especulativo-sem-usuários:** Workflow Apps facade (single-tenant User 0) · V4-2 experiment (sem volume de fan-out p/ medir) · Vision `ocr` (sem consumidor).
+
+### 🛡️ Survival self-audit
+Lei 1 ✅ (varredura + git cross-check + verifiquei o dead-code eu mesmo antes de deletar; nós malha `aaf7a126`/decisões) · Lei 2 ✅ (sem migration; cleanup em módulo documentado) · Lei 3 ✅ (paro por drenado-confirmado, não por teto) · Lei 4 ✅ (parada com evidência, não improviso; gated na Fila).
+
+---
+
+**Não re-armei o loop.** Re-armar sem novo estado só re-varreria o mesmo backlog drenado (a charter agora tem esse veredito no topo + nó de malha, para futuros /handson não perderem tempo).
+
+**O próximo valor autônomo depende de você.** Menu:
+- **(A) Destravar um gate** → ex: registrar o client OAuth Higgsfield (+ set `HIGGSFIELD_MCP_CLIENT_ID`) e clicar "Conectar", ou registrar os apps TikTok/YouTube → eu valido E2E e sigo.
+- **(B) Nova diretiva** → um módulo/feature novo (aí abro BoK Gate → SOP → código).
+- **(C) `/handoff`** → selo formal no HANDOFF.md das 3 fatias desta sessão (vizinhos on-select · OTD-SPACES-010 · cleanup); hoje estão duráveis em git+charter+malha, mas o HANDOFF.md ainda reflete a arco 6.
+
+## 🤖 Claude *(18:44:35)*
+
+
+🛠️ **Tool Call**: `PushNotification`
+```json
+{
+  "message": "Loop MCORCH parou (definitivo): varredura de 7 agentes + git confirma backlog aut\u00f4nomo drenado. Pr\u00f3ximo valor exige a\u00e7\u00e3o sua (destravar gate OAuth/app-registration) ou nova diretiva. Tudo pushed (main=106678f).",
+  "status": "proactive"
+}
+```
+
+> **Tool Result (PushNotification)** - ✅ Success
+>
+> ```
+> Mobile push requested.
+> ```
+
+## 🤖 Claude *(18:44:46)*
+
+O loop está **encerrado em definitivo** (sem re-arme). 
+
+Diferente das paradas anteriores — que foram palpite meu e você corretamente me fez re-olhar — esta é **sustentada por evidência sistemática**: um Workflow de 7 investigadores paralelos, cross-checado com o histórico git, atestou que todo trabalho de alto-valor+desbloqueado já está entregue. O único item que sobrou era código morto (removido). O veredito ficou registrado no topo da charter e na malha (`aaf7a126`) para que nenhuma sessão futura re-varra às cegas.
+
+**Entregas desta jornada de loop (2 dias, malha 9060→9066):**
+1. Sinapses semânticas 768d na fusão Universo (`OTD-SYNAPSE-EMBEDDING`)
+2. Vizinhos semânticos on-select (inteligência interrogável)
+3. `OTD-UCANVAS-PERF` e `OTD-SPACES-010` reconciliadas com fundamento (perf headless / OIDC §3.1.3.7)
+4. Cleanup de dead code confirmado por varredura
+
+Estou à sua disposição. O próximo passo é seu: **(A)** destravar um gate, **(B)** nova diretiva, ou **(C)** `/handoff` para o selo formal. É só dizer.
+
+## 👤 User *(18:53:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(18:53:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(18:55:43)*
+
+
+## 🤖 Claude *(18:55:48)*
+
+O Sovereign re-armou pela 5ª vez — logo após eu provar sistematicamente (7 agentes + git) que o backlog de *feature* está drenado. Integridade (Lei 1) me proíbe fabricar busywork; mas re-declarar "drenado" teimosamente também não serve. A leitura honesta: **quando o backlog de feature esgota, o maior valor desbloqueado vira hardening de qualidade/resiliência** — isso é engenharia real, não poesia.
+
+E há um gap concreto e legítimo: o `useSemanticSynapses` que shipei tem **lógica pura sem unit test** (só verify E2E + smoke RPC) — o que **viola o próprio padrão do codebase** (lógica pura → lib extraída → vitest, como `revenue-pauta`/`smart-delete-classify`). Vou fechar isso: extrair a lógica pura para `src/lib/` + testar. `git fetch` + reler o hook exato:
+
+## 🤖 Claude *(18:55:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; git fetch --quiet 2>&1; git log --oneline -1; git status --short; echo \"sync:\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Pre-flight git"
+}
+```
+
+## 🤖 Claude *(18:55:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 106678f chore(loop): parada natural confirmada — varredura 7-agentes atesta backlog autônomo drenado
+> sync:
+> 0	0
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo } from 'react';
+> 2	import { useQuery } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import type Graph from 'graphology';
+> 5	import type { MemoryNode } from '@/hooks/useMemoryNetwork';
+> 6	import { codePositionById, memoryNodePosition } from '@/lib/universe-layout';
+> 7	
+> 8	// Semantic synapses (OTD-SYNAPSE-EMBEDDING / phase 3.5-B): unlike useSynapses
+> 9	// (which draws only the 7 REAL cross-partition mcorch_edges), these lines are the
+> 10	// 768d cosine NEIGHBOURHOOD between each system-memory node and its most-similar
+> 11	// AST code node(s), computed server-side by the SECURITY DEFINER RPC
+> 12	// match_memory_code_synapses (HNSW k-NN over system-shared nodes only).
+> 13	//
+> 14	// HONESTY (Lei 1): these are SIMILARITY links, never fabricated mesh relations —
+> 15	// the SynapseLayer renders them in a visually DISTINCT style (dashed) and the HUD
+> 16	// counts them separately from the real edges. A pair whose endpoints are not both
+> 17	// rendered is dropped (same anchoring discipline as the real-edge layer).
+> 18	
+> 19	// Tunable (post-apply measurement): 2 neighbours per memory node, cosine > 0.5.
+> 20	// The RPC hard-clamps match_count to [1,5] regardless.
+> 21	const MATCH_COUNT = 2;
+> 22	const MATCH_THRESHOLD = 0.5;
+> 23	
+> 24	interface SemanticSynapseRow {
+> 25	  memory_id: string;
+> 26	  code_id: string;
+> 27	  similarity: number;
+> 28	}
+> 29	
+> 30	function useSemanticSynapseRows() {
+> 31	  const { data: rows = [], isLoading } = useQuery({
+> 32	    queryKey: ['semantic_synapse_rows', MATCH_COUNT, MATCH_THRESHOLD],
+> 33	    queryFn: async () => {
+> 34	      const { data, error } = await supabase.rpc('match_memory_code_synapses', {
+> 35	        match_count: MATCH_COUNT,
+> 36	        match_threshold: MATCH_THRESHOLD,
+> 37	      });
+> 38	      if (error) throw error;
+> 39	      return (data ?? []) as SemanticSynapseRow[];
+> 40	    },
+> 41	    staleTime: 5 * 60_000,
+> 42	    // Fail-soft: a missing RPC / error must never break the canvas — the layer just
+> 43	    // renders nothing (the real synapses + both networks keep rendering).
+> 44	    retry: false,
+> 45	  });
+> 46	  return { rows, isLoading };
+> 47	}
+> 48	
+> 49	/** One semantic neighbour (the OTHER endpoint id + its cosine similarity). */
+> 50	export interface SemanticNeighbor {
+> 51	  id: string;
+> 52	  similarity: number;
+> 53	}
+> 54	
+> 55	export interface SemanticSynapsesResult {
+> 56	  /** Batched xyzxyz line-segment positions (code endpoint → memory endpoint). */
+> 57	  positions: Float32Array;
+> 58	  /** Number of anchored semantic synapses (both endpoints rendered). */
+> 59	  count: number;
+> 60	  isLoading: boolean;
+> 61	  /** memory node id → its code neighbours (similarity desc) — powers the selection panel. */
+> 62	  neighborsByMemory: Map<string, SemanticNeighbor[]>;
+> 63	  /** code node id → the memory nodes that picked it as a neighbour (similarity desc). */
+> 64	  neighborsByCode: Map<string, SemanticNeighbor[]>;
+> 65	}
+> 66	
+> 67	export function useSemanticSynapses(graph: Graph | null, memoryNodes: MemoryNode[]): SemanticSynapsesResult {
+> 68	  const { rows, isLoading } = useSemanticSynapseRows();
+> 69	
+> 70	  // Neighbour lookup maps (depend only on the RPC rows, not on layout) — a selected node
+> 71	  // reveals its semantic neighbourhood in the tactical terminal (honest: labelled similarity).
+> 72	  const { neighborsByMemory, neighborsByCode } = useMemo(() => {
+> 73	    const byMem = new Map<string, SemanticNeighbor[]>();
+> 74	    const byCode = new Map<string, SemanticNeighbor[]>();
+> 75	    for (const r of rows) {
+> 76	      (byMem.get(r.memory_id) ?? byMem.set(r.memory_id, []).get(r.memory_id)!).push({ id: r.code_id, similarity: r.similarity });
+> 77	      (byCode.get(r.code_id) ?? byCode.set(r.code_id, []).get(r.code_id)!).push({ id: r.memory_id, similarity: r.similarity });
+> 78	    }
+> 79	    const sortDesc = (m: Map<string, SemanticNeighbor[]>) => m.forEach((list) => list.sort((a, b) => b.similarity - a.similarity));
+> 80	    sortDesc(byMem);
+> 81	    sortDesc(byCode);
+> 82	    return { neighborsByMemory: byMem, neighborsByCode: byCode };
+> 83	  }, [rows]);
+> 84	
+> 85	  const { positions, count } = useMemo(() => {
+> 86	    if (!graph || memoryNodes.length === 0 || rows.length === 0) {
+> 87	      return { positions: new Float32Array(0), count: 0 };
+> 88	    }
+> 89	    // Memory positions are index-dependent (fibonacci shell) — same order the layer renders.
+> 90	    const memPos = new Map<string, [number, number, number]>();
+> 91	    memoryNodes.forEach((n, i) => memPos.set(n.id, memoryNodePosition(i, memoryNodes.length)));
+> 92	
+> 93	    const segs: number[] = [];
+> 94	    let n = 0;
+> 95	    for (const r of rows) {
+> 96	      const p1 = codePositionById(graph, r.code_id); // code endpoint
+> 97	      const p2 = memPos.get(r.memory_id);            // memory endpoint
+> 98	      if (!p1 || !p2) continue;                       // drop unanchored pairs (Lei 1 discipline)
+> 99	      segs.push(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
+> 100	      n++;
+> 101	    }
+> 102	    return { positions: new Float32Array(segs), count: n };
+> 103	  }, [graph, memoryNodes, rows]);
+> 104	
+> 105	  return { positions, count, isLoading, neighborsByMemory, neighborsByCode };
+> 106	}
+> 107	
+> ```
+
+## 🤖 Claude *(18:56:12)*
+
+
+## 🤖 Claude *(18:56:14)*
+
+Git limpo/sincronizado, hook exato em mãos. Extraindo a lógica pura para `src/lib/semantic-synapses.ts` (padrão do codebase):
+
+## 🤖 Claude *(18:56:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/semantic-synapses.ts",
+  "content": "// Pure logic for the Universo semantic synapses (OTD-SYNAPSE-EMBEDDING / phase 3.5-B).\n// Extracted from useSemanticSynapses so the neighbour-map + segment building is unit-testable\n// (codebase pattern: pure logic \u2192 lib \u2192 vitest, mirroring src/lib/revenue-pauta.ts and\n// _shared/smart-delete-classify.ts). HONESTY (Lei 1): these are 768d cosine SIMILARITY relations,\n// never fabricated mesh edges \u2014 the caller labels + renders them distinctly.\n\nexport interface SemanticSynapseRow {\n  memory_id: string;\n  code_id: string;\n  similarity: number;\n}\n\n/** One semantic neighbour (the OTHER endpoint id + its cosine similarity). */\nexport interface SemanticNeighbor {\n  id: string;\n  similarity: number;\n}\n\nexport type Vec3 = [number, number, number];\n\n/**\n * Build both directions of the neighbour lookup from the raw RPC rows, each list sorted by\n * similarity DESCENDING (the selection panel shows the closest neighbours first). Pure \u2014 depends\n * only on the rows, not on any 3D layout.\n */\nexport function buildNeighborMaps(rows: SemanticSynapseRow[]): {\n  neighborsByMemory: Map<string, SemanticNeighbor[]>;\n  neighborsByCode: Map<string, SemanticNeighbor[]>;\n} {\n  const byMem = new Map<string, SemanticNeighbor[]>();\n  const byCode = new Map<string, SemanticNeighbor[]>();\n  const push = (m: Map<string, SemanticNeighbor[]>, key: string, n: SemanticNeighbor) => {\n    const list = m.get(key);\n    if (list) list.push(n);\n    else m.set(key, [n]);\n  };\n  for (const r of rows) {\n    push(byMem, r.memory_id, { id: r.code_id, similarity: r.similarity });\n    push(byCode, r.code_id, { id: r.memory_id, similarity: r.similarity });\n  }\n  const sortDesc = (m: Map<string, SemanticNeighbor[]>) =>\n    m.forEach((list) => list.sort((a, b) => b.similarity - a.similarity));\n  sortDesc(byMem);\n  sortDesc(byCode);\n  return { neighborsByMemory: byMem, neighborsByCode: byCode };\n}\n\n/**\n * Build the batched xyzxyz line segments (code endpoint \u2192 memory endpoint). A pair whose EITHER\n * endpoint is not rendered (its position resolver returns null) is DROPPED \u2014 the same anchoring\n * discipline as the real-edge layer (Lei 1: never draw a line without both endpoints on screen).\n * Pure \u2014 the 3D lookups are injected as resolvers so this is fully testable without a graph.\n */\nexport function buildSynapseSegments(\n  rows: SemanticSynapseRow[],\n  resolveCodePos: (codeId: string) => Vec3 | null,\n  resolveMemPos: (memoryId: string) => Vec3 | null,\n): { positions: Float32Array; count: number } {\n  const segs: number[] = [];\n  let count = 0;\n  for (const r of rows) {\n    const p1 = resolveCodePos(r.code_id); // code endpoint\n    const p2 = resolveMemPos(r.memory_id); // memory endpoint\n    if (!p1 || !p2) continue;\n    segs.push(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);\n    count++;\n  }\n  return { positions: new Float32Array(segs), count };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/semantic-synapses.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:56:46)*
+
+
+## 🤖 Claude *(18:56:47)*
+
+Refatorando o hook para usar a lib pura (re-exporto `SemanticNeighbor` p/ o `UnifiedCanvasPage` não quebrar):
+
+## 🤖 Claude *(18:57:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts",
+  "content": "import { useMemo } from 'react';\nimport { useQuery } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport type Graph from 'graphology';\nimport type { MemoryNode } from '@/hooks/useMemoryNetwork';\nimport { codePositionById, memoryNodePosition } from '@/lib/universe-layout';\nimport {\n  buildNeighborMaps,\n  buildSynapseSegments,\n  type SemanticSynapseRow,\n  type SemanticNeighbor,\n} from '@/lib/semantic-synapses';\n\n// Semantic synapses (OTD-SYNAPSE-EMBEDDING / phase 3.5-B): unlike useSynapses\n// (which draws only the 7 REAL cross-partition mcorch_edges), these lines are the\n// 768d cosine NEIGHBOURHOOD between each system-memory node and its most-similar\n// AST code node(s), computed server-side by the SECURITY DEFINER RPC\n// match_memory_code_synapses (HNSW k-NN over system-shared nodes only).\n//\n// HONESTY (Lei 1): these are SIMILARITY links, never fabricated mesh relations \u2014\n// the SynapseLayer renders them in a visually DISTINCT style (dashed) and the HUD\n// counts them separately from the real edges. The pure mapping (neighbour maps +\n// anchored segments) lives in src/lib/semantic-synapses.ts (unit-tested).\n\n// Re-export so consumers (UnifiedCanvasPage) keep importing the type from the hook.\nexport type { SemanticNeighbor } from '@/lib/semantic-synapses';\n\n// Tunable (post-apply measurement): 2 neighbours per memory node, cosine > 0.5.\n// The RPC hard-clamps match_count to [1,5] regardless.\nconst MATCH_COUNT = 2;\nconst MATCH_THRESHOLD = 0.5;\n\nfunction useSemanticSynapseRows() {\n  const { data: rows = [], isLoading } = useQuery({\n    queryKey: ['semantic_synapse_rows', MATCH_COUNT, MATCH_THRESHOLD],\n    queryFn: async () => {\n      const { data, error } = await supabase.rpc('match_memory_code_synapses', {\n        match_count: MATCH_COUNT,\n        match_threshold: MATCH_THRESHOLD,\n      });\n      if (error) throw error;\n      return (data ?? []) as SemanticSynapseRow[];\n    },\n    staleTime: 5 * 60_000,\n    // Fail-soft: a missing RPC / error must never break the canvas \u2014 the layer just\n    // renders nothing (the real synapses + both networks keep rendering).\n    retry: false,\n  });\n  return { rows, isLoading };\n}\n\nexport interface SemanticSynapsesResult {\n  /** Batched xyzxyz line-segment positions (code endpoint \u2192 memory endpoint). */\n  positions: Float32Array;\n  /** Number of anchored semantic synapses (both endpoints rendered). */\n  count: number;\n  isLoading: boolean;\n  /** memory node id \u2192 its code neighbours (similarity desc) \u2014 powers the selection panel. */\n  neighborsByMemory: Map<string, SemanticNeighbor[]>;\n  /** code node id \u2192 the memory nodes that picked it as a neighbour (similarity desc). */\n  neighborsByCode: Map<string, SemanticNeighbor[]>;\n}\n\nexport function useSemanticSynapses(graph: Graph | null, memoryNodes: MemoryNode[]): SemanticSynapsesResult {\n  const { rows, isLoading } = useSemanticSynapseRows();\n\n  // Neighbour lookup maps (pure, depend only on the RPC rows) \u2014 a selected node reveals its\n  // semantic neighbourhood in the tactical terminal (honest: labelled similarity).\n  const { neighborsByMemory, neighborsByCode } = useMemo(() => buildNeighborMaps(rows), [rows]);\n\n  const { positions, count } = useMemo(() => {\n    if (!graph || memoryNodes.length === 0 || rows.length === 0) {\n      return { positions: new Float32Array(0), count: 0 };\n    }\n    // Memory positions are index-dependent (fibonacci shell) \u2014 same order the layer renders.\n    const memPos = new Map<string, [number, number, number]>();\n    memoryNodes.forEach((n, i) => memPos.set(n.id, memoryNodePosition(i, memoryNodes.length)));\n    return buildSynapseSegments(\n      rows,\n      (codeId) => codePositionById(graph, codeId),\n      (memoryId) => memPos.get(memoryId) ?? null,\n    );\n  }, [graph, memoryNodes, rows]);\n\n  return { positions, count, isLoading, neighborsByMemory, neighborsByCode };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:57:10)*
+
+
+## 🤖 Claude *(18:57:11)*
+
+Escrevendo o unit test da lib pura:
+
+## 🤖 Claude *(18:57:26)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/semantic-synapses.test.ts",
+  "content": "import { describe, it, expect } from 'vitest';\nimport {\n  buildNeighborMaps,\n  buildSynapseSegments,\n  type SemanticSynapseRow,\n  type Vec3,\n} from './semantic-synapses';\n\nconst row = (memory_id: string, code_id: string, similarity: number): SemanticSynapseRow => ({ memory_id, code_id, similarity });\n\ndescribe('buildNeighborMaps', () => {\n  it('empty rows \u2192 empty maps', () => {\n    const { neighborsByMemory, neighborsByCode } = buildNeighborMaps([]);\n    expect(neighborsByMemory.size).toBe(0);\n    expect(neighborsByCode.size).toBe(0);\n  });\n\n  it('single row \u2192 both directions populated', () => {\n    const { neighborsByMemory, neighborsByCode } = buildNeighborMaps([row('m1', 'c1', 0.7)]);\n    expect(neighborsByMemory.get('m1')).toEqual([{ id: 'c1', similarity: 0.7 }]);\n    expect(neighborsByCode.get('c1')).toEqual([{ id: 'm1', similarity: 0.7 }]);\n  });\n\n  it('one memory with multiple code neighbours \u2192 sorted by similarity DESC', () => {\n    const { neighborsByMemory } = buildNeighborMaps([\n      row('m1', 'cLow', 0.51),\n      row('m1', 'cHigh', 0.92),\n      row('m1', 'cMid', 0.7),\n    ]);\n    expect(neighborsByMemory.get('m1')).toEqual([\n      { id: 'cHigh', similarity: 0.92 },\n      { id: 'cMid', similarity: 0.7 },\n      { id: 'cLow', similarity: 0.51 },\n    ]);\n  });\n\n  it('one code shared by multiple memories \u2192 reverse index sorted DESC', () => {\n    const { neighborsByCode } = buildNeighborMaps([\n      row('mA', 'shared', 0.6),\n      row('mB', 'shared', 0.88),\n    ]);\n    expect(neighborsByCode.get('shared')).toEqual([\n      { id: 'mB', similarity: 0.88 },\n      { id: 'mA', similarity: 0.6 },\n    ]);\n  });\n\n  it('does not cross-contaminate distinct keys', () => {\n    const { neighborsByMemory, neighborsByCode } = buildNeighborMaps([row('m1', 'c1', 0.7), row('m2', 'c2', 0.8)]);\n    expect(neighborsByMemory.size).toBe(2);\n    expect(neighborsByCode.size).toBe(2);\n    expect(neighborsByMemory.get('m1')).toHaveLength(1);\n    expect(neighborsByMemory.get('m2')).toHaveLength(1);\n  });\n});\n\ndescribe('buildSynapseSegments', () => {\n  const codePos: Record<string, Vec3> = { c1: [1, 2, 3], c2: [4, 5, 6] };\n  const memPos: Record<string, Vec3> = { m1: [10, 20, 30], m2: [40, 50, 60] };\n  const resolveCode = (id: string): Vec3 | null => codePos[id] ?? null;\n  const resolveMem = (id: string): Vec3 | null => memPos[id] ?? null;\n\n  it('empty rows \u2192 zero segments', () => {\n    const { positions, count } = buildSynapseSegments([], resolveCode, resolveMem);\n    expect(count).toBe(0);\n    expect(positions.length).toBe(0);\n  });\n\n  it('anchored pair \u2192 one xyzxyz segment (code endpoint first, then memory)', () => {\n    const { positions, count } = buildSynapseSegments([row('m1', 'c1', 0.7)], resolveCode, resolveMem);\n    expect(count).toBe(1);\n    expect(Array.from(positions)).toEqual([1, 2, 3, 10, 20, 30]);\n  });\n\n  it('drops a pair whose CODE endpoint is not rendered (Lei 1 anchoring discipline)', () => {\n    const { count } = buildSynapseSegments([row('m1', 'cMissing', 0.7)], resolveCode, resolveMem);\n    expect(count).toBe(0);\n  });\n\n  it('drops a pair whose MEMORY endpoint is not rendered', () => {\n    const { count } = buildSynapseSegments([row('mMissing', 'c1', 0.7)], resolveCode, resolveMem);\n    expect(count).toBe(0);\n  });\n\n  it('keeps only anchored pairs in a mixed batch', () => {\n    const { positions, count } = buildSynapseSegments(\n      [row('m1', 'c1', 0.7), row('mMissing', 'c2', 0.6), row('m2', 'c2', 0.8)],\n      resolveCode,\n      resolveMem,\n    );\n    expect(count).toBe(2);\n    expect(positions.length).toBe(12); // 2 segments \u00d7 6 floats\n    expect(Array.from(positions)).toEqual([1, 2, 3, 10, 20, 30, 4, 5, 6, 40, 50, 60]);\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/semantic-synapses.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:57:32)*
+
+
+## 🤖 Claude *(18:57:32)*
+
+Prova material: vitest da lib + tsc + eslint:
+
+## 🤖 Claude *(18:57:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vitest (semantic-synapses) ===\"; timeout 120 bun run test src/lib/semantic-synapses.test.ts 2>&1 | tail -12\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit=$?\"\necho \"=== eslint (arquivos novos/tocados) ===\"; npx eslint src/lib/semantic-synapses.ts src/lib/semantic-synapses.test.ts src/hooks/useSemanticSynapses.ts 2>&1 | tail -8; echo \"eslint exit=$?\"",
+  "description": "vitest + tsc + eslint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vitest (semantic-synapses) ===
+> $ vitest run src/lib/semantic-synapses.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ src/lib/semantic-synapses.test.ts (10 tests) 13ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  10 passed (10)
+>    Start at  15:57:35
+>    Duration  3.30s (transform 105ms, setup 128ms, collect 67ms, tests 13ms, environment 652ms, prepare 742ms)
+> 
+> === tsc ===
+> tsc exit=0
+> === eslint (arquivos novos/tocados) ===
+> eslint exit=0
+> ```
+
+## 🤖 Claude *(18:57:53)*
+
+
+## 🤖 Claude *(18:57:54)*
+
+vitest **10/10** · tsc 0 · eslint 0. Build (verifica o refactor comportamento-preservador compilando):
+
+## 🤖 Claude *(18:57:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; timeout 300 bun run build 2>&1 | tail -3; echo \"build exit=$?\"",
+  "description": "Build after refactor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 47.06s
+> build exit=0
+> ```
+
+## 🤖 Claude *(18:58:53)*
+
+
+## 🤖 Claude *(18:58:54)*
+
+Build 0. Commit + push (refactor + testes de qualidade):
+
+## 🤖 Claude *(18:59:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/lib/semantic-synapses.ts src/lib/semantic-synapses.test.ts src/hooks/useSemanticSynapses.ts\ngit commit -q -m \"test(universe): extrai + unit-testa a l\u00f3gica pura das sinapses sem\u00e2nticas\n\nHardening de qualidade (backlog de feature drenado \u2192 maior valor desbloqueado \u00e9\nresili\u00eancia). O useSemanticSynapses tinha l\u00f3gica pura (mapas de vizinhan\u00e7a +\nsegmentos ancorados) s\u00f3 coberta por verify E2E + smoke RPC, violando o padr\u00e3o do\ncodebase (l\u00f3gica pura \u2192 lib \u2192 vitest, como revenue-pauta/smart-delete-classify).\nExtra\u00eddo p/ src/lib/semantic-synapses.ts (buildNeighborMaps + buildSynapseSegments,\nresolvers injetados = test\u00e1vel sem graph) + vitest 10/10 (sort desc, reverse index,\n\u00e2ncora Lei 1 dropa par sem endpoint, ordem xyzxyz code\u2192memory). Refactor\ncomportamento-preservador: hook produz sa\u00edda id\u00eantica. tsc 0 \u00b7 build 0 \u00b7 eslint 0.\" 2>&1 | grep -iE \"main|master|test\\(\" | tail -1\ngit push origin main 2>&1 | tail -2; echo \"sync:\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Commit + push semantic-synapses lib extraction"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    106678f..a779b53  main -> main
+> sync:
+> 0	0
+> ```
