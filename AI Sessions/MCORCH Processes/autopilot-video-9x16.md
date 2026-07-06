@@ -144,6 +144,28 @@ Esta SOP é a **camada de vídeo** sobre a base financeira de `autopilot-cron-id
 
 ---
 
+## Amendment — Cadência de vídeo recorrente (FR-VA-022 Amendment · 2026-07-05)
+
+**Problema.** Com `video_enabled=true`, **todo** ciclo enfileirava um render 9:16 por sub-run de article-flow (12 mco cada). Texto recorrendo a cada 3 dias + vídeo em todo ciclo drena saldo rápido — por isso o vídeo ficava desligado. Esta emenda **desacopla a frequência do vídeo da cadência do texto** e dá ao vídeo um **cap próprio**, mantendo o default seguro (vídeo OFF).
+
+| Pergunta | Conteúdo |
+|----------|----------|
+| **Operator** | Usuário Zero configura o plano na `AutopilotPage` (toggle "Vídeo 9:16 autônomo" + "a cada N ciclo(s)"). Ligar é decisão explícita (default OFF). |
+| **Sequence** | (1) plano `video_enabled=false` por padrão → nenhum vídeo. (2) Operator liga `video_enabled=true` e escolhe `video_every_n_cycles=N`. (3) A cada disparo da cadência, `autopilot-run` conta os ciclos anteriores do plano → ordinal; o vídeo entra **só** quando `priorCount % N === 0` (ordinais 1, N+1, 2N+1…). (4) O custo do vídeo (`nVideoRuns × 12`) entra no `projected` do ciclo **apenas** quando devido. |
+| **Cap próprio (graceful-degrade)** | Se `projectedText + projectedVídeo > budget_cap_mco`, o vídeo é **pulado** neste ciclo (o ciclo de texto segue normalmente) — o vídeo **nunca** aborta o ciclo. Emite `infra_health_logs` `event=video_skipped_over_cap` (observável, não silencioso). |
+| **Verification gates** | (G1) `resolveVideoCadence` unit-tested (`_shared/autopilot-video-cadence.test.ts`): N=1 → todo ciclo; N=3 → ordinais 1,4,7; disabled → nunca; over-cap → skip com texto vivo. (G2) `dry_run` do `autopilot-run` reporta `video.due/every_n_cycles/prior_cycles/skip_reason` sem gastar. (G3) `video_every_n_cycles=1` = comportamento byte-idêntico ao anterior (backward-compat). |
+| **Recovery** | Custo alto inesperado → subir `video_every_n_cycles` OU desligar `video_enabled` (efeito no próximo ciclo). Vídeo pulado por cap → subir `budget_cap_mco` ou baixar produtos/redes/variantes. Render falho num ciclo devido → `finalize_video_render` refunda o 12 (inalterado). |
+| **Success signal** | Plano com `video_enabled=true, video_every_n_cycles=3`: o `dry_run` mostra `video.due=true` no ciclo 1, `false` nos ciclos 2-3, `true` de novo no 4 — e o `projected` sobe só nos ciclos devidos. |
+
+**Invariante de custo (Lei 1):** a decisão `videoDue` alimenta **ao mesmo tempo** o `projected` (pré-débito) e o flag de fan-out (`video_enabled` p/ `orchestrate-content`) — os dois **sempre concordam**, então nunca há débito de vídeo sem enqueue nem enqueue sem débito. `video_every_n_cycles=1` + `video_enabled=false` (default) = zero mudança de comportamento.
+
+**Anti-patterns adicionais:**
+- ❌ Decidir `videoDue` para o custo mas usar `video_enabled` cru no fan-out (ou vice-versa) → débito-sem-valor / valor-sem-débito.
+- ❌ Deixar o vídeo abortar o ciclo por estourar o cap em vez de graceful-degrade → perde a distribuição de texto recorrente.
+- ❌ Ligar vídeo recorrente sem cap/frequência conscientes → gasto autônomo descontrolado (o default OFF + `video_every_n_cycles` são o kill-switch).
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]

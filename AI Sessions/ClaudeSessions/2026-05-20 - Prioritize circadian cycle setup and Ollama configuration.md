@@ -5571,7 +5571,7 @@ Suíte pronta. Aguardando sua direção sobre push e inserção na mesh.
 
 ## 👤 User *(18:20:16)*
 
-Ok continue com os próximos passos.
+Ok [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]].
 
 ## 🤖 Claude *(18:21:56)*
 

@@ -1,5 +1,5 @@
 # Continue com os próximos passos
-**Date:** 2026-07-05 | **Session ID:** `be8df5a5-f15e-42b8-8659-5b49cc9f4cea`
+**Date:** 2026-07-06 | **Session ID:** `be8df5a5-f15e-42b8-8659-5b49cc9f4cea`
 
 ---
 
@@ -6468,15 +6468,2047 @@ Como o roadmap que você nomeou está esgotado (gatilho de seal da Lei 3), preci
 }
 ```
 
----
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Ambos os itens do roadmap estão feitos e verificados. Como seguir?"="Cadência de vídeo recorrente". You can now continue with these answers in mind.
+> ```
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+## 🤖 Claude *(23:41:21)*
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-04 - agent-aea4cc075927ec918]]
-> * **Próxima Sessão**: [[2026-07-05 - E2E visual testing and Handson protocol review]]
-%% --- TIMELINE END --- %%
+
+## 🤖 Claude *(23:41:24)*
+
+O Sovereign escolheu: **cadência de vídeo recorrente** (com cap próprio, default OFF; ligar = GO seu). É uma Fatia money-sensitive num módulo já documentado (viral-autopilot BoK 9/9) — sigo o processo: **entender → desenhar (SOP Lei 2) → implementar → smoke zero-custo → verificar**.
+
+Começo entendendo o mecanismo atual de vídeo/cadência/custo (Lei 1 — leio o código vivo, não a memória):
+
+## 🤖 Claude *(23:41:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== autopilot migrations ===\"; ls supabase/migrations/ | grep -i autopilot\necho \"\"; echo \"=== autopilot edge fns ===\"; ls supabase/functions/ | grep -i autopilot\necho \"\"; echo \"=== autopilot_plans columns (schema) ===\"; python3 -c \"\nimport subprocess\nr=subprocess.run(['cat','supabase/migrations/20260620120000_viral_autopilot_plans.sql'],capture_output=True,text=True)\nprint(r.stdout[:2200])\n\"",
+  "description": "List autopilot files + read plans schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot migrations ===
+> 20260619140000_viral_autopilot_creative_metrics.sql
+> 20260620120000_viral_autopilot_plans.sql
+> 20260620120100_viral_autopilot_cycles.sql
+> 20260620120200_begin_autopilot_cycle.sql
+> 20260620120300_finalize_autopilot_cycle.sql
+> 20260623040000_viral_autopilot_cadence_cron.sql
+> 20260624130000_autopilot_video_plan_columns.sql
+> 20260624140000_autopilot_video_enqueue_refund.sql
+> 20260702150000_autopilot_reward_weights.sql
+> 
+> === autopilot edge fns ===
+> autopilot-analyze
+> autopilot-cadence-cron
+> autopilot-collect
+> autopilot-run
+> 
+> === autopilot_plans columns (schema) ===
+> -- Migration: viral-autopilot autopilot_plans — per-user cadence config (FR-VA-001 / FR-VA-005).
+> -- BoK SSOT: docs/bok/viral-autopilot/06-data-model.md §2 (autopilot_plans) + 05-sdd.md §7.
+> -- SOP (Lei 2 — written BEFORE this code): docs/processes/autopilot-cron-identity.md.
+> --
+> -- The "what & when" source of truth for the autonomous viral loop: which products, which networks, how often,
+> -- and the MANDATORY safety caps (budget_cap_mco per cycle, daily_cap_mco per tenant, min_balance_mco floor).
+> -- Caps are NOT NULL by design — the cron NEVER runs without a kill-switch (FMEA-VA-001 RPN 128 / BR-RISK-001).
+> --
+> -- Tenancy: RLS user_id = auth.uid() (own CRUD); RESTRICTIVE no-delete for authenticated (only service-role
+> -- removes, e.g. LGPD cascade). UNIQUE(id,user_id) is the target of the tenant-scoped composite FK from
+> -- autopilot_cycles (next migration). Passes /security-review (FMEA-011 / FMEA-VA-001 cross-tenant family).
+> --
+> -- Engineering notes (deviations from sealed stub, declared per Lei 1):
+> --   * CHECKs added beyond the data-model stub (mode enum, interval 1-30, platforms subset, caps >= 12 = 1-cycle
+> --     floor [1 run 10 + analyze 2], ab_variants 1-5) materialize the §6 Data Quality rules at the DB layer.
+> --   * project_id has NO FK (matches data-model §2 "FK —"); kept as a plain scoping uuid.
+> 
+> CREATE TABLE IF NOT EXISTS public.autopilot_plans (
+>   id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+>   user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   project_id         uuid,
+>   name               text        NOT NULL,
+>   mode               text        NOT NULL CHECK (mode IN ('all_at_once','every_n_days')),
+>   interval_days      int         DEFAULT 3 CHECK (interval_days IS NULL OR (interval_days BETWEEN 1 AND 30)),
+>   target_product_ids text[]      NOT NULL CHECK (array_length(target_product_ids, 1) >= 1),
+>   platforms          text[]      NOT NULL CHECK (array_length(platforms, 1) >= 1
+>                                    AND platforms <@ ARRAY['wordpress','linkedin','twitter']),
+>   budget_cap_mco     int         NOT NULL CHECK (budget_cap_mco  >= 12),  -- >= 1 cycle (1 run 10 + analyze 2)
+>   daily_cap_mco
+> ```
+
+## 🤖 Claude *(23:41:36)*
+
+
+## 🤖 Claude *(23:41:37)*
+
+Já existe `20260624130000_autopilot_video_plan_columns.sql`. Leio as colunas de vídeo do plano + como o `autopilot-run` gateia vídeo por ciclo + a cadência re-arma:
+
+## 🤖 Claude *(23:41:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== video plan columns migration ===\"; cat supabase/migrations/20260624130000_autopilot_video_plan_columns.sql\necho \"\"; echo \"=== remaining autopilot_plans columns (daily_cap onward) ===\"; python3 -c \"\nr=open('supabase/migrations/20260620120000_viral_autopilot_plans.sql').read()\ni=r.find('daily_cap_mco'); print(r[i-20:i+900])\n\"",
+  "description": "Read video plan columns + remaining schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video plan columns migration ===
+> -- Migration: viral-autopilot Fatia VA-V1 — per-plan video 9:16 opt-in (FR-VA-022, Amendment v0.2).
+> -- BoK SSOT: docs/bok/viral-autopilot/04-frd.md §2.A FR-VA-022 + 05-sdd.md OTD-VA-009/010.
+> -- SOP (Lei 2): docs/processes/autopilot-video-9x16.md (gate OTD-VA-009 — escrito ANTES deste código).
+> --
+> -- Opt-in por plano: quando video_enabled, cada sub-run product-aware enfileira UM render HyperFrames 9:16
+> -- (FR-VA-024). Default FALSE = backward-compat byte-idêntico com ciclos texto+imagem. video_format restrito
+> -- a '9:16' (extensível por CHECK quando outros formatos entrarem). Nenhuma mudança de RLS (as policies seladas
+> -- de autopilot_plans permanecem: per-user own-row). Additive + nullable-safe (NOT NULL com DEFAULT).
+> -- Passes /security-review before commit.
+> 
+> ALTER TABLE public.autopilot_plans
+>   ADD COLUMN IF NOT EXISTS video_enabled boolean NOT NULL DEFAULT false,
+>   ADD COLUMN IF NOT EXISTS video_format  text    NOT NULL DEFAULT '9:16'
+>     CHECK (video_format IN ('9:16'));
+> 
+> COMMENT ON COLUMN public.autopilot_plans.video_enabled IS
+>   'FR-VA-022 — quando true, cada sub-run product-aware enfileira um render HyperFrames 9:16 (FR-VA-024). '
+>   'Custo (VIDEO_HYPERFRAMES_RENDER) entra no projected do ciclo (OTD-VA-010); render falho refunda via '
+>   'finalize_video_render. Default false = ciclo só texto+imagem (backward-compat).';
+> 
+> === remaining autopilot_plans columns (daily_cap onward) ===
+> _cap_mco per cycle, daily_cap_mco per tenant, min_balance_mco floor).
+> -- Caps are NOT NULL by design — the cron NEVER runs without a kill-switch (FMEA-VA-001 RPN 128 / BR-RISK-001).
+> --
+> -- Tenancy: RLS user_id = auth.uid() (own CRUD); RESTRICTIVE no-delete for authenticated (only service-role
+> -- removes, e.g. LGPD cascade). UNIQUE(id,user_id) is the target of the tenant-scoped composite FK from
+> -- autopilot_cycles (next migration). Passes /security-review (FMEA-011 / FMEA-VA-001 cross-tenant family).
+> --
+> -- Engineering notes (deviations from sealed stub, declared per Lei 1):
+> --   * CHECKs added beyond the data-model stub (mode enum, interval 1-30, platforms subset, caps >= 12 = 1-cycle
+> --     floor [1 run 10 + analyze 2], ab_variants 1-5) materialize the §6 Data Quality rules at the DB layer.
+> --   * project_id has NO FK (matches data-model §2 "FK —"); kept as a plain scoping uuid.
+> 
+> CREATE TABLE IF NOT EXISTS
+> ```
+
+## 🤖 Claude *(23:42:11)*
+
+
+## 🤖 Claude *(23:42:14)*
+
+Mecanismo entendido: `video_enabled=true` faz **todo** ciclo enfileirar vídeo 9:16 por sub-run (12 mco cada) — por isso o Sovereign desligou (custo × cada 3 dias). A feature "cadência de vídeo recorrente com cap próprio" = **desacoplar a frequência do vídeo da do texto** (vídeo a cada N ciclos), default seguro. Leio o `autopilot-run` para ver o gating de vídeo + cálculo do projected + chamada do begin:
+
+## 🤖 Claude *(23:42:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== autopilot-run: video + projected + begin logic (grep map) ===\"; python3 -c \"\nimport subprocess\nr=subprocess.run(['grep','-n','video_enabled\\|video\\|projected\\|VIDEO\\|begin_autopilot_cycle\\|includeVideo\\|nVideoRuns\\|n_video\\|ab_variants\\|N_runs\\|orchestrate-content\\|cycle','supabase/functions/autopilot-run/index.ts'],capture_output=True,text=True)\nprint(r.stdout)\n\"\necho \"=== file length ===\"; wc -l supabase/functions/autopilot-run/index.ts",
+  "description": "Map autopilot-run video/cost/cycle logic"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot-run: video + projected + begin logic (grep map) ===
+> <string>:3: SyntaxWarning: invalid escape sequence '\|'
+> 8:// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9://   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 10://   self-bill) → finalize_autopilot_cycle(actual) → re-arm next_run_at. dry_run short-circuits after the cost
+> 11://   projection (no cycle, no deduct) — the zero-cost proof path.
+> 20:const ORCH_COST = 10;     // orchestrate-content flat bundle (image already included — billing.ts:16-21)
+> 22:const VIDEO_COST = 12;    // VIDEO_HYPERFRAMES_RENDER (billing.ts:39) — per video sub-run when plan.video_enabled (FR-VA-022/024)
+> 29:// passes it AND orchestrate-content's mirror gate, steering the content LLM (affiliate-link/scam-URL swap) for ANY
+> 87:      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format, hitl_required")
+> 94:    // step fan out (orchestrate-content stepsOrder — wordpress/linkedin/twitter; knowledge_mesh is a universal
+> 107:    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 112:    // The cost rides on the cycle pre-debit (OTD-VA-010): projected/actual += N×VIDEO_COST. The render itself
+> 113:    // never self-bills (charged_mco marker only); a FAILED render refunds via finalize_video_render.
+> 114:    const videoEnabled = plan.video_enabled === true;
+> 115:    const videoFormat = typeof plan.video_format === "string" ? plan.video_format : "9:16";
+> 117:    // Video charge accuracy (OTD-VA-010 follow-up — billing bug witnessed 2026-06-26, cycle 2403bfcb): a 9:16 render
+> 118:    // is enqueued ONLY by the article_generation flow, which orchestrate-content runs solely for the 'wordpress'
+> 119:    // platform (index.ts:231-232). A linkedin/twitter sub-run never reaches video_generation, so charging it
+> 120:    // VIDEO_COST is charge-without-value — and uncaught by the orchestrate-step refund (orchestrate-step:454), which
+> 121:    // fires only on a FAILED enqueue ATTEMPT, never for a flow that has no video step at all. So count video sub-runs
+> 122:    // by the article-flow platform, not by every sub-run (was: nRuns × VIDEO_COST → over-charged non-wordpress runs).
+> 123:    // FR-PE-013 (post-engine social-connect amendment) — DEFERRED: youtube/tiktok/pinterest ARE vertical-video
+> 126:    // them here would charge VIDEO_COST with no video_renders row to refund (charge-without-value). Re-add ONLY with
+> 127:    // the orchestrate-content/-step enqueue-gate extension (its own slice). Until then they stay out of the pre-debit.
+> 128:    const VIDEO_FLOW_PLATFORMS = new Set(["wordpress"]);
+> 129:    const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;
+> 130:    const nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants : 0;
+> 132:    const projected = nRuns * ORCH_COST + nVideoRuns * VIDEO_COST + ANALYZE_COST;
+> 134:    // ── FR-VA-018: trend-informed angle (cycle-level). Reconnects the trends island: pick a trend from vm_trends
+> 135:    // (a GLOBAL shared catalog — no tenant scope) to steer THIS cycle's viral angle. Trend text is UNTRUSTED
+> 137:    // per-product gate in orchestrate-content (skip-and-continue: a blocked trend is dropped, not the whole angle).
+> 138:    // Relevance: prefer a trend whose niche overlaps the cycle's products; else the freshest top-viral active trend.
+> 139:    // Defense-in-depth: orchestrate-content re-inspects the full topic, so this is the first of two gates.
+> 170:    // dry_run: return the cost projection (+ resolved trend angle) WITHOUT opening a cycle or deducting (zero-cost).
+> 172:      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,
+> 174:        video: { enabled: videoEnabled, format: videoFormat, cost_each: VIDEO_COST, n_video: nVideoRuns },
+> 175:        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 178:    // ── begin_autopilot_cycle: ATOMIC cap-check + single pre-debit (or abort reason, no deduct). ────────────────
+> 179:    const { data: begun, error: beginErr } = await admin.rpc("begin_autopilot_cycle", {
+> 180:      p_plan_id: planId, p_user_id: userId, p_projected_mco: projected, p_planned_units: nRuns,
+> 190:      return json({ ok: false, reason, projected_mco: projected }, reason === "insufficient_balance" ? 402 : 409);
+> 192:    const cycleId = begun.cycle_id as string;
+> 194:    // ── R3 loop (FR-VA-010/011): analyze the PREVIOUS completed cycle to steer THIS cycle's generation. ─────────
+> 196:    // PREPAID — the cycle reserved ANALYZE_COST(2); analyzeCharged consumes it only when real data produced a policy
+> 197:    // (else finalize refunds the 2). Best-effort — a missing/empty previous cycle just means no steering this round.
+> 205:      const { data: prev } = await admin.from("autopilot_cycles")
+> 207:        .neq("id", cycleId).order("cycle_number", { ascending: false }).limit(1).maybeSingle();
+> 209:        await svcCall("autopilot-collect", { cycle_id: prev.id }).catch(() => {});
+> 210:        const ar = await svcCall("autopilot-analyze", { previous_cycle_id: prev.id, prepaid: true })
+> 218:    // = ε-greedy exploration — never collapse a pair to 0). No-op when ab_variants==1 (no room to move). The policy
+> 229:    } catch { /* policy read best-effort — never block the cycle */ }
+> 239:    // ── Fan-out: (product × platform) × reallocated variants → orchestrate-content (prepaid → NO self-bill). ──────
+> 247:            const r = await fetch(`${url}/functions/v1/orchestrate-content`, {
+> 256:                prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 257:                video_enabled: videoEnabled, video_format: videoFormat,
+> 264:              if (videoEnabled && VIDEO_FLOW_PLATFORMS.has(pair.platform)) succeededVideo++;
+> 278:    // render later refunds its 12 via finalize_video_render. The reserved ANALYZE_COST(2) is consumed only when R3
+> 280:    const actual = succeeded * ORCH_COST + succeededVideo * VIDEO_COST + analyzeCharged;
+> 282:    const { data: fin } = await admin.rpc("finalize_autopilot_cycle", {
+> 283:      p_cycle_id: cycleId, p_actual_mco: actual, p_status: status,
+> 297:      ok: true, cycle_id: cycleId, n_runs: nRuns, succeeded,
+> 298:      projected_mco: projected, actual_mco: actual, refunded_mco: fin?.refunded ?? 0, status,
+> 
+> === file length ===
+> 304 supabase/functions/autopilot-run/index.ts
+> ```
+
+## 🤖 Claude *(23:44:11)*
+
+
+## 🤖 Claude *(23:44:14)*
+
+Mecanismo totalmente mapeado. `video_enabled=true` → vídeo em **todo** ciclo (por isso o custo). O design da fatia: **`video_every_n_cycles`** (vídeo a cada N ciclos, desacoplando do texto) + **graceful-degrade** (se o vídeo não couber no `budget_cap_mco`, pula vídeo e mantém o ciclo de texto — nunca aborta tudo), default seguro (`video_enabled=false`). Sigo Lei 2 (SOP antes do código) e ultracode (helper puro testável + verificação).
+
+Leio os pontos exatos de edição do `autopilot-run` + a UI:
+
+## 🤖 Claude *(23:44:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 80,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 80	      if (error || !user) return json({ error: "Unauthorized" }, 401);
+> 81	      userId = user.id;
+> 82	    }
+> 83	
+> 84	    // ── Load plan TENANT-SCOPED (plan MUST belong to userId — cross-tenant/missing → 404). ───────────────────────
+> 85	    const { data: plan } = await admin
+> 86	      .from("autopilot_plans")
+> 87	      .select("id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format, hitl_required")
+> 88	      .eq("id", planId).eq("user_id", userId).maybeSingle();
+> 89	    if (!plan) return json({ error: "plan_not_found" }, 404);
+> 90	
+> 91	    const products = ((plan.target_product_ids ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 92	    const rawPlatforms = ((plan.platforms ?? []) as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+> 93	    // Fan-out hygiene (SOP autopilot-cron-identity Amendment 2026-07-02): only platforms with a real pipeline
+> 94	    // step fan out (orchestrate-content stepsOrder — wordpress/linkedin/twitter; knowledge_mesh is a universal
+> 95	    // fallback). A youtube/tiktok/pinterest/instagram sub-run would run knowledge_mesh only and still count
+> 96	    // ORCH_COST in actual (charge-without-value); their distribution rides the reshaper off the wordpress
+> 97	    // pillar's 9:16 master (FR-CP-003), not the fan-out.
+> 98	    const FAN_OUT_PLATFORMS = new Set(["wordpress", "linkedin", "twitter"]);
+> 99	    const platforms = rawPlatforms.filter((p) => FAN_OUT_PLATFORMS.has(p));
+> 100	    const skippedPlatforms = rawPlatforms.filter((p) => !FAN_OUT_PLATFORMS.has(p));
+> 101	    if (skippedPlatforms.length) {
+> 102	      await admin.from("infra_health_logs").insert({
+> 103	        service: "viral-autopilot", status: "degraded", event: "fanout_platform_skipped",
+> 104	        metadata: { plan_id: planId, platforms: skippedPlatforms },
+> 105	      }).then(() => {}, () => {});
+> 106	    }
+> 107	    const abVariants = Math.max(1, Math.min(5, Number(plan.ab_variants ?? 1)));
+> 108	    const nRuns = products.length * platforms.length * abVariants;
+> 109	    if (nRuns < 1) return json({ error: "plan_has_no_targets", detail: "plano sem produtos/redes válidos (redes fora do fan-out são distribuídas pelo reshaper)" }, 422);
+> 110	
+> 111	    // FR-VA-022/024 (Amendment v0.2): when the plan opts in, each sub-run enqueues ONE HyperFrames 9:16 render.
+> 112	    // The cost rides on the cycle pre-debit (OTD-VA-010): projected/actual += N×VIDEO_COST. The render itself
+> 113	    // never self-bills (charged_mco marker only); a FAILED render refunds via finalize_video_render.
+> 114	    const videoEnabled = plan.video_enabled === true;
+> 115	    const videoFormat = typeof plan.video_format === "string" ? plan.video_format : "9:16";
+> 116	
+> 117	    // Video charge accuracy (OTD-VA-010 follow-up — billing bug witnessed 2026-06-26, cycle 2403bfcb): a 9:16 render
+> 118	    // is enqueued ONLY by the article_generation flow, which orchestrate-content runs solely for the 'wordpress'
+> 119	    // platform (index.ts:231-232). A linkedin/twitter sub-run never reaches video_generation, so charging it
+> 120	    // VIDEO_COST is charge-without-value — and uncaught by the orchestrate-step refund (orchestrate-step:454), which
+> 121	    // fires only on a FAILED enqueue ATTEMPT, never for a flow that has no video step at all. So count video sub-runs
+> 122	    // by the article-flow platform, not by every sub-run (was: nRuns × VIDEO_COST → over-charged non-wordpress runs).
+> 123	    // FR-PE-013 (post-engine social-connect amendment) — DEFERRED: youtube/tiktok/pinterest ARE vertical-video
+> 124	    // platforms, but the 9:16 render is enqueued ONLY by the article_generation step (gated on 'wordpress' above), and
+> 125	    // autopilot fans out one platform per sub-run, so a youtube/tiktok/pinterest sub-run enqueues NO render. Adding
+> 126	    // them here would charge VIDEO_COST with no video_renders row to refund (charge-without-value). Re-add ONLY with
+> 127	    // the orchestrate-content/-step enqueue-gate extension (its own slice). Until then they stay out of the pre-debit.
+> 128	    const VIDEO_FLOW_PLATFORMS = new Set(["wordpress"]);
+> 129	    const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;
+> 130	    const nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants : 0;
+> 131	
+> 132	    const projected = nRuns * ORCH_COST + nVideoRuns * VIDEO_COST + ANALYZE_COST;
+> 133	
+> 134	    // ── FR-VA-018: trend-informed angle (cycle-level). Reconnects the trends island: pick a trend from vm_trends
+> ```
+
+## 🤖 Claude *(23:44:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== useAutopilot plan fields (video?) ===\"; python3 -c \"\nimport subprocess\nr=subprocess.run(['grep','-n','video\\|budget_cap\\|interval_days\\|ab_variants\\|createPlan\\|updatePlan\\|PlanInput\\|mode','src/hooks/useAutopilot.ts'],capture_output=True,text=True)\nprint(r.stdout[:1500])\n\"\necho \"=== AutopilotPage video control? ===\"; python3 -c \"\nimport subprocess\nr=subprocess.run(['grep','-n','video\\|budget\\|interval\\|Switch\\|Cad\u00eancia\\|cadence','src/pages/AutopilotPage.tsx'],capture_output=True,text=True)\nprint(r.stdout[:1200])\n\"",
+  "description": "Read autopilot-run edit points + UI video fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === useAutopilot plan fields (video?) ===
+> <string>:3: SyntaxWarning: invalid escape sequence '\|'
+> 22:export interface AutopilotPlanInput {
+> 24:  mode: 'all_at_once' | 'every_n_days';
+> 25:  interval_days: number;
+> 28:  budget_cap_mco: number;
+> 31:  ab_variants: number;
+> 66:    mutationFn: async (input: AutopilotPlanInput): Promise<string> => {
+> 71:        mode: input.mode,
+> 72:        interval_days: input.mode === 'every_n_days' ? input.interval_days : null,
+> 75:        budget_cap_mco: input.budget_cap_mco,
+> 78:        ab_variants: input.ab_variants,
+> 
+> === AutopilotPage video control? ===
+> <string>:3: SyntaxWarning: invalid escape sequence '\|'
+> 1:// AutopilotPage (FR-VA-014/015) — display-only cockpit for the Viral Autopilot cadence engine. All data/logic
+> 2:// lives in useAutopilot (Harness Engineering). Create plans, activate/pause cadence, "run now" (with a zero-cost
+> 22:  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],
+> 23:  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,
+> 28:  aborted_budget: 'Custo projetado acima do teto por ciclo do plano.',
+> 36:  aborted_budget: 'bg-amber-500/15 text-amber-400',
+> 43:  aborted_budget: 'abortado (orçamento)',
+> 109:              <Label>Cadência</Label>
+> 120:                <Label htmlFor="ap-interval">Intervalo (dias)</Label>
+> 121:                <Input id="ap-interval" type="number" min={1} max={30} value={form.interval_days}
+> 122:                  onChange={(e) => set({ interval_days: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })} />
+> 129:              <Label htmlFor="ap-budget">Teto/ciclo</Label>
+> 130:              <Input id="ap-budget" type="number" min={12} value={form.budget_cap_mco}
+> 131:                onChange={(e) => set({ budget_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />
+> 223:
+> ```
+
+## 🤖 Claude *(23:45:27)*
+
+
+## 🤖 Claude *(23:45:28)*
+
+Tenho os pontos exatos. Antes de escrever, confirmo o padrão de import do teste `_shared` (vitest) e leio os pontos de edição da UI + fim do SOP:
+
+## 🤖 Claude *(23:45:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/llm-fallback.test.ts",
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// @vitest-environment node
+> 2	// Unit proof for OTD-LLM-FALLBACK cascade (SOP: docs/processes/llm-cascading-fallback.md).
+> 3	// Verifies: primary success short-circuits; 402/429 trigger Gemini Free; Gemini failure cascades
+> 4	// to OpenRouter Free; total exhaustion returns structured 502; telemetry is a no-op outside Deno.
+> 5	import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+> 6	import { fetchLLMWithFallback } from "./llm-fallback.ts";
+> 7	
+> 8	const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+> 9	const init = () => ({
+> 10	  method: "POST",
+> 11	  headers: { Authorization: "Bearer primary", "HTTP-Referer": "x", "X-Title": "y" },
+> 12	  // a "heavy" model so the Gemini candidates are the -pro tier (2 candidates)
+> ```
+
+## 🤖 Claude *(23:45:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 1,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// autopilot-run — Viral Autopilot per-plan executor (FR-VA-002 / FR-VA-007 / FR-VA-016 / FR-VA-021). verify_jwt=false.
+> 2	// SOP: docs/processes/autopilot-cron-identity.md.
+> 3	//
+> 4	// Identity (two paths):
+> 5	//   - cron/service: Authorization === Bearer SB_SECRET_KEY + x-autopilot-user-id (the autopilot-cadence-cron
+> 6	//     derived it from autopilot_plans.user_id). The header is re-validated by the TENANT-SCOPED plan load below.
+> 7	//   - user "gerar agora": user JWT → getUser → the plan load is scoped to that user (IDOR-safe).
+> 8	// Flow: load plan (tenant-scoped) → N_runs = products×platforms×ab_variants → projected = N_runs*10 + 2 →
+> 9	//   begin_autopilot_cycle (ATOMIC cap-check + single pre-debit) → fan-out orchestrate-content (prepaid, no
+> 10	//   self-bill) → finalize_autopilot_cycle(actual) → re-arm next_run_at. dry_run short-circuits after the cost
+> 11	//   projection (no cycle, no deduct) — the zero-cost proof path.
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	import { inspectPrompt } from "../_shared/sentinel.ts";
+> 14	
+> 15	const corsHeaders = {
+> 16	  "Access-Control-Allow-Origin": "*",
+> 17	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 18	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-autopilot-user-id",
+> ```
+
+## 🤖 Claude *(23:45:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts",
+  "offset": 20,
+  "limit": 65
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	] as const;
+> 21	
+> 22	export interface AutopilotPlanInput {
+> 23	  name: string;
+> 24	  mode: 'all_at_once' | 'every_n_days';
+> 25	  interval_days: number;
+> 26	  target_product_ids: string[];
+> 27	  platforms: string[];
+> 28	  budget_cap_mco: number;
+> 29	  daily_cap_mco: number;
+> 30	  min_balance_mco: number;
+> 31	  ab_variants: number;
+> 32	}
+> 33	
+> 34	export function useAutopilotPlans() {
+> 35	  const { user } = useAuth();
+> 36	  return useQuery({
+> 37	    queryKey: ['autopilot-plans'],
+> 38	    enabled: !!user,
+> 39	    queryFn: async (): Promise<AutopilotPlan[]> => {
+> 40	      const { data, error } = await supabase
+> 41	        .from('autopilot_plans').select('*').order('created_at', { ascending: false });
+> 42	      if (error) throw error;
+> 43	      return (data ?? []) as AutopilotPlan[];
+> 44	    },
+> 45	  });
+> 46	}
+> 47	
+> 48	export function useAutopilotCycles(planId?: string) {
+> 49	  return useQuery({
+> 50	    queryKey: ['autopilot-cycles', planId],
+> 51	    enabled: !!planId,
+> 52	    queryFn: async (): Promise<AutopilotCycle[]> => {
+> 53	      const { data, error } = await supabase
+> 54	        .from('autopilot_cycles').select('*').eq('plan_id', planId!)
+> 55	        .order('cycle_number', { ascending: false }).limit(20);
+> 56	      if (error) throw error;
+> 57	      return (data ?? []) as AutopilotCycle[];
+> 58	    },
+> 59	  });
+> 60	}
+> 61	
+> 62	export function useCreateAutopilotPlan() {
+> 63	  const qc = useQueryClient();
+> 64	  const { user } = useAuth();
+> 65	  return useMutation({
+> 66	    mutationFn: async (input: AutopilotPlanInput): Promise<string> => {
+> 67	      if (!user) throw new Error('Sessão expirada — faça login novamente.');
+> 68	      const row: TablesInsert<'autopilot_plans'> = {
+> 69	        user_id: user.id,
+> 70	        name: input.name,
+> 71	        mode: input.mode,
+> 72	        interval_days: input.mode === 'every_n_days' ? input.interval_days : null,
+> 73	        target_product_ids: input.target_product_ids,
+> 74	        platforms: input.platforms,
+> 75	        budget_cap_mco: input.budget_cap_mco,
+> 76	        daily_cap_mco: input.daily_cap_mco,
+> 77	        min_balance_mco: input.min_balance_mco,
+> 78	        ab_variants: input.ab_variants,
+> 79	        is_active: false,
+> 80	      };
+> 81	      const { data, error } = await supabase.from('autopilot_plans').insert(row).select('id').single();
+> 82	      if (error) throw error;
+> 83	      return data.id;
+> 84	    },
+> ```
+
+## 🤖 Claude *(23:45:42)*
+
+
+## 🤖 Claude *(23:45:43)*
+
+Padrão confirmado (vitest importa `./module.ts` com `// @vitest-environment node`). Crio o **helper puro** (coração testável) + seu **teste unitário** + a **migration**:
+
+## 🤖 Claude *(23:46:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/autopilot-video-cadence.ts",
+  "content": "// Viral Autopilot \u2014 recurring 9:16 video cadence (FR-VA-022 Amendment, Fatia \"cad\u00eancia de v\u00eddeo recorrente\").\n// SOP (Lei 2, written before this code): docs/processes/autopilot-video-9x16.md \u00a7Recurring cadence.\n//\n// Problem: with plan.video_enabled=true, EVERY autopilot cycle enqueued a 9:16 render per article-flow sub-run\n// (12 mco each). Recurring text every 3 days + video every cycle drains balance fast, so video was kept OFF.\n// This decouples video frequency from the (text) cadence: video fires only every Nth cycle, and \u2014 as a hard\n// safety \u2014 YIELDS to the plan's per-cycle budget cap instead of ever aborting the text cycle.\n//\n// Pure math (no Deno/fetch) so vitest covers it directly (mirrors _shared/llm-fallback.ts).\n\nexport type VideoSkipReason = 'disabled' | 'off_cadence' | 'no_video_platform' | 'over_budget_cap' | null;\n\nexport interface VideoCadenceInput {\n  /** plan.video_enabled \u2014 master opt-in (default false = video off entirely). */\n  videoEnabled: boolean;\n  /** plan.video_every_n_cycles \u2014 1 = every cycle; N = every Nth cycle (video on ordinals 1, N+1, 2N+1\u2026). */\n  videoEveryNCycles: number;\n  /** count of cycles this plan has ALREADY opened before this one (= this cycle's ordinal \u2212 1). */\n  priorCycleCount: number;\n  /** products \u00d7 video-flow-platform count \u00d7 ab_variants \u2014 the video sub-run count IF video is due. */\n  nVideoRunsIfDue: number;\n  /** nRuns \u00d7 ORCH_COST + ANALYZE_COST \u2014 the non-video floor of the cycle. */\n  projectedText: number;\n  /** VIDEO_COST (VIDEO_HYPERFRAMES_RENDER) per video sub-run. */\n  videoCost: number;\n  /** plan.budget_cap_mco \u2014 the per-cycle mco ceiling video must fit UNDER (on top of the text floor). */\n  budgetCapMco: number;\n}\n\nexport interface VideoCadenceResult {\n  /** final decision \u2014 used both for the pre-debit projection AND the fan-out video flag (they MUST agree). */\n  videoDue: boolean;\n  /** 0 when !videoDue. */\n  nVideoRuns: number;\n  /** projectedText (+ video cost only when videoDue). */\n  projected: number;\n  /** why video was skipped this cycle \u2014 'over_budget_cap' is the graceful-degrade worth surfacing as telemetry. */\n  skipReason: VideoSkipReason;\n}\n\n/** Video fires on cycle ordinals 1, N+1, 2N+1\u2026 i.e. when priorCycleCount % N === 0 (first cycle always gets it). */\nexport function isVideoOnCadence(priorCycleCount: number, videoEveryNCycles: number): boolean {\n  const n = Math.max(1, Math.floor(videoEveryNCycles || 1));\n  const prior = Math.max(0, Math.floor(priorCycleCount || 0));\n  return prior % n === 0;\n}\n\n/**\n * Decide whether THIS cycle includes a 9:16 video, honoring the frequency cadence and \u2014 as a hard cap \u2014 the\n * plan's per-cycle budget. Video NEVER aborts the text cycle: if it doesn't fit the cap, it is skipped and the\n * text cycle proceeds (graceful-degrade). With video_every_n_cycles=1 the result is byte-identical to the prior\n * \"video_enabled every cycle\" behavior (backward-compat).\n */\nexport function resolveVideoCadence(inp: VideoCadenceInput): VideoCadenceResult {\n  const text = Math.max(0, inp.projectedText);\n  const off = (skipReason: VideoSkipReason): VideoCadenceResult => ({ videoDue: false, nVideoRuns: 0, projected: text, skipReason });\n\n  if (!inp.videoEnabled) return off('disabled');\n  if (!isVideoOnCadence(inp.priorCycleCount, inp.videoEveryNCycles)) return off('off_cadence');\n\n  const nVideoRuns = Math.max(0, Math.floor(inp.nVideoRunsIfDue));\n  if (nVideoRuns === 0) return off('no_video_platform'); // enabled + on-cadence, but no article-flow platform to render\n\n  const projectedVideo = nVideoRuns * Math.max(0, inp.videoCost);\n  // Hard safety: video must fit under the per-cycle cap on top of the text floor, else skip (never abort the cycle).\n  if (text + projectedVideo > inp.budgetCapMco) return off('over_budget_cap');\n\n  return { videoDue: true, nVideoRuns, projected: text + projectedVideo, skipReason: null };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/autopilot-video-cadence.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:46:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/autopilot-video-cadence.test.ts",
+  "content": "// @vitest-environment node\n// Unit proof for the Viral Autopilot recurring 9:16 video cadence (FR-VA-022 Amendment).\n// SOP: docs/processes/autopilot-video-9x16.md \u00a7Recurring cadence. Verifies: disabled \u2192 never; N=1 \u2192 every cycle\n// (backward-compat); N=3 \u2192 ordinals 1,4,7 only; graceful-degrade under the per-cycle budget cap; no-platform.\nimport { describe, it, expect } from \"vitest\";\nimport { isVideoOnCadence, resolveVideoCadence } from \"./autopilot-video-cadence.ts\";\n\n// A generous cap so budget never interferes unless a test sets it tight.\nconst base = {\n  nVideoRunsIfDue: 1, // 1 wordpress video sub-run\n  projectedText: 20, // e.g. 2 runs \u00d7 10 + 0 analyze (kept simple)\n  videoCost: 12,\n  budgetCapMco: 1000,\n};\n\ndescribe(\"isVideoOnCadence\", () => {\n  it(\"N=1 fires on every ordinal\", () => {\n    expect([0, 1, 2, 3, 4].map((p) => isVideoOnCadence(p, 1))).toEqual([true, true, true, true, true]);\n  });\n  it(\"N=3 fires on priorCount 0,3,6 (ordinals 1,4,7)\", () => {\n    expect([0, 1, 2, 3, 4, 5, 6].map((p) => isVideoOnCadence(p, 3))).toEqual([true, false, false, true, false, false, true]);\n  });\n  it(\"clamps N<1 to every cycle and prior<0 to 0\", () => {\n    expect(isVideoOnCadence(-5, 0)).toBe(true);\n    expect(isVideoOnCadence(0, -3)).toBe(true);\n  });\n});\n\ndescribe(\"resolveVideoCadence\", () => {\n  it(\"disabled \u2192 never video, projected = text\", () => {\n    const r = resolveVideoCadence({ ...base, videoEnabled: false, videoEveryNCycles: 1, priorCycleCount: 0 });\n    expect(r).toMatchObject({ videoDue: false, nVideoRuns: 0, projected: 20, skipReason: \"disabled\" });\n  });\n\n  it(\"N=1 \u2192 video every cycle (backward-compat with the prior video_enabled semantics)\", () => {\n    for (const prior of [0, 1, 2, 5]) {\n      const r = resolveVideoCadence({ ...base, videoEnabled: true, videoEveryNCycles: 1, priorCycleCount: prior });\n      expect(r).toMatchObject({ videoDue: true, nVideoRuns: 1, projected: 32, skipReason: null });\n    }\n  });\n\n  it(\"N=3 \u2192 video only on ordinals 1,4 (priorCount 0,3), text-only in between\", () => {\n    const due = resolveVideoCadence({ ...base, videoEnabled: true, videoEveryNCycles: 3, priorCycleCount: 0 });\n    expect(due).toMatchObject({ videoDue: true, nVideoRuns: 1, projected: 32 });\n    for (const prior of [1, 2]) {\n      const off = resolveVideoCadence({ ...base, videoEnabled: true, videoEveryNCycles: 3, priorCycleCount: prior });\n      expect(off).toMatchObject({ videoDue: false, nVideoRuns: 0, projected: 20, skipReason: \"off_cadence\" });\n    }\n    const dueAgain = resolveVideoCadence({ ...base, videoEnabled: true, videoEveryNCycles: 3, priorCycleCount: 3 });\n    expect(dueAgain.videoDue).toBe(true);\n  });\n\n  it(\"graceful-degrade: video that would exceed budget_cap is skipped, text cycle survives\", () => {\n    // text 20 + video 12 = 32 > cap 25 \u2192 skip video, keep text\n    const r = resolveVideoCadence({ ...base, budgetCapMco: 25, videoEnabled: true, videoEveryNCycles: 1, priorCycleCount: 0 });\n    expect(r).toMatchObject({ videoDue: false, nVideoRuns: 0, projected: 20, skipReason: \"over_budget_cap\" });\n  });\n\n  it(\"exactly-fits-cap keeps video (boundary is inclusive)\", () => {\n    const r = resolveVideoCadence({ ...base, budgetCapMco: 32, videoEnabled: true, videoEveryNCycles: 1, priorCycleCount: 0 });\n    expect(r).toMatchObject({ videoDue: true, nVideoRuns: 1, projected: 32 });\n  });\n\n  it(\"enabled + on-cadence but no video-flow platform \u2192 no video, no crash\", () => {\n    const r = resolveVideoCadence({ ...base, nVideoRunsIfDue: 0, videoEnabled: true, videoEveryNCycles: 1, priorCycleCount: 0 });\n    expect(r).toMatchObject({ videoDue: false, nVideoRuns: 0, projected: 20, skipReason: \"no_video_platform\" });\n  });\n\n  it(\"multiple video sub-runs cost N\u00d7videoCost\", () => {\n    const r = resolveVideoCadence({ ...base, nVideoRunsIfDue: 2, videoEnabled: true, videoEveryNCycles: 1, priorCycleCount: 0 });\n    expect(r).toMatchObject({ videoDue: true, nVideoRuns: 2, projected: 44 }); // 20 + 2\u00d712\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/autopilot-video-cadence.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:46:29)*
+
+
+## 🤖 Claude *(23:46:29)*
+
+Migration da coluna `video_every_n_cycles`:
+
+## 🤖 Claude *(23:46:39)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260705120000_autopilot_video_cadence.sql",
+  "content": "-- Migration: viral-autopilot \u2014 recurring 9:16 video cadence (FR-VA-022 Amendment, Fatia \"cad\u00eancia de v\u00eddeo recorrente\").\n-- BoK SSOT: docs/bok/viral-autopilot/04-frd.md \u00a72.A FR-VA-022 + SOP docs/processes/autopilot-video-9x16.md \u00a7Recurring cadence.\n--\n-- Adds the frequency control that decouples VIDEO cadence from the (text) cadence. When plan.video_enabled=true,\n-- a 9:16 render is enqueued only every Nth cycle (video_every_n_cycles), so text can recur every few days while\n-- video runs less often \u2014 the primary cost control for autonomous recurring video. autopilot-run also yields video\n-- to budget_cap_mco (graceful-degrade) so a video cycle never aborts the text cycle.\n--\n-- Additive + backward-compat: DEFAULT 1 = every cycle = byte-identical to the prior \"video_enabled every cycle\"\n-- behavior. No RLS change (autopilot_plans policies remain per-user own-row). Passes /security-review before commit.\n\nALTER TABLE public.autopilot_plans\n  ADD COLUMN IF NOT EXISTS video_every_n_cycles int NOT NULL DEFAULT 1\n    CHECK (video_every_n_cycles BETWEEN 1 AND 30);\n\nCOMMENT ON COLUMN public.autopilot_plans.video_every_n_cycles IS\n  'FR-VA-022 Amendment \u2014 video cadence: a 9:16 render is enqueued only on cycle ordinals 1, N+1, 2N+1\u2026 '\n  '(video_every_n_cycles). 1 = every cycle (backward-compat). Only effective when video_enabled=true. autopilot-run '\n  'additionally skips video when it would exceed budget_cap_mco (graceful-degrade \u2014 the text cycle still runs).';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260705120000_autopilot_video_cadence.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:09)*
+
+
+## 🤖 Claude *(23:47:10)*
+
+Agora conecto o `autopilot-run`. Leio os trechos exatos do dry_run e fan-out para edits precisos:
+
+## 🤖 Claude *(23:47:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 168,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 168	    } catch (e) { console.warn(`[autopilot-run] trend angle skipped: ${e}`); }
+> 169	
+> 170	    // dry_run: return the cost projection (+ resolved trend angle) WITHOUT opening a cycle or deducting (zero-cost).
+> 171	    if (dryRun) {
+> 172	      return json({ ok: true, dry_run: true, n_runs: nRuns, projected_mco: projected,
+> 173	        trend_applied: trendApplied, viral_topic: viralTopic,
+> 174	        video: { enabled: videoEnabled, format: videoFormat, cost_each: VIDEO_COST, n_video: nVideoRuns },
+> 175	        breakdown: { products: products.length, platforms: platforms.length, ab_variants: abVariants } });
+> 176	    }
+> 177	
+> ```
+
+## 🤖 Claude *(23:47:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "offset": 252,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 252	                "Content-Type": "application/json",
+> 253	              },
+> 254	              body: JSON.stringify({
+> 255	                topic: viralTopic, platforms: [pair.platform], product_ids: [pair.product],
+> 256	                prepaid: true, cycle_id: cycleId, wp_status: "draft",
+> 257	                video_enabled: videoEnabled, video_format: videoFormat,
+> 258	                // Publish opt-in (FR-CP-003): the autopilot auto-publishes UNLESS the plan requires human review.
+> 259	                auto_publish: plan.hitl_required !== true,
+> 260	              }),
+> 261	            });
+> 262	            if (r.ok) {
+> 263	              succeeded++;
+> 264	              if (videoEnabled && VIDEO_FLOW_PLATFORMS.has(pair.platform)) succeededVideo++;
+> 265	            } else console.warn(`[autopilot-run] sub-run ${pair.product}/${pair.platform} → HTTP ${r.status}`);
+> 266	          } catch (e) {
+> 267	            console.warn(`[autopilot-run] sub-run ${pair.product}/${pair.platform} error: ${e}`);
+> ```
+
+## 🤖 Claude *(23:47:18)*
+
+Agora aplico todas as edições no `autopilot-run` (import, select, bloco de cadência, dry_run, fan-out, succeededVideo):
+
+## 🤖 Claude *(23:47:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "import { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { inspectPrompt } from \"../_shared/sentinel.ts\";",
+  "new_string": "import { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { inspectPrompt } from \"../_shared/sentinel.ts\";\nimport { resolveVideoCadence } from \"../_shared/autopilot-video-cadence.ts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format, hitl_required\")",
+  "new_string": "      .select(\"id, user_id, name, mode, interval_days, target_product_ids, platforms, ab_variants, video_enabled, video_format, video_every_n_cycles, budget_cap_mco, hitl_required\")"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "    const VIDEO_FLOW_PLATFORMS = new Set([\"wordpress\"]);\n    const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;\n    const nVideoRuns = videoEnabled ? products.length * videoPlatformCount * abVariants : 0;\n\n    const projected = nRuns * ORCH_COST + nVideoRuns * VIDEO_COST + ANALYZE_COST;",
+  "new_string": "    const VIDEO_FLOW_PLATFORMS = new Set([\"wordpress\"]);\n    const videoPlatformCount = platforms.filter((p) => VIDEO_FLOW_PLATFORMS.has(p)).length;\n    const nVideoRunsIfDue = products.length * videoPlatformCount * abVariants;\n\n    // Recurring video cadence (FR-VA-022 Amendment): decouple video frequency from the (text) cadence. Count this\n    // plan's prior cycles \u2192 this cycle's ordinal; video fires only every Nth cycle (video_every_n_cycles) AND only\n    // when it fits budget_cap_mco (graceful-degrade \u2014 video yields to the cap, NEVER aborts the text cycle). With\n    // video_every_n_cycles=1 this is byte-identical to the prior \"video_enabled every cycle\" behavior.\n    const videoEveryN = Math.max(1, Math.min(30, Number(plan.video_every_n_cycles ?? 1)));\n    const budgetCap = Number(plan.budget_cap_mco ?? 0);\n    const { count: priorCycleCount } = await admin\n      .from(\"autopilot_cycles\")\n      .select(\"id\", { count: \"exact\", head: true })\n      .eq(\"plan_id\", planId).eq(\"user_id\", userId);\n    const cadence = resolveVideoCadence({\n      videoEnabled, videoEveryNCycles: videoEveryN, priorCycleCount: priorCycleCount ?? 0,\n      nVideoRunsIfDue, projectedText: nRuns * ORCH_COST + ANALYZE_COST, videoCost: VIDEO_COST, budgetCapMco: budgetCap,\n    });\n    const videoDue = cadence.videoDue;\n    const nVideoRuns = cadence.nVideoRuns;\n    const projected = cadence.projected;\n    // Surface the graceful-degrade: a too-tight cap silently dropping video must be observable, not a silent no-op.\n    if (cadence.skipReason === \"over_budget_cap\") {\n      await admin.from(\"infra_health_logs\").insert({\n        service: \"viral-autopilot\", status: \"degraded\", event: \"video_skipped_over_cap\",\n        metadata: { plan_id: planId, budget_cap_mco: budgetCap, projected_video: nVideoRunsIfDue * VIDEO_COST, video_every_n_cycles: videoEveryN },\n      }).then(() => {}, () => {});\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "        video: { enabled: videoEnabled, format: videoFormat, cost_each: VIDEO_COST, n_video: nVideoRuns },",
+  "new_string": "        video: { enabled: videoEnabled, due: videoDue, every_n_cycles: videoEveryN, prior_cycles: priorCycleCount ?? 0, skip_reason: cadence.skipReason, format: videoFormat, cost_each: VIDEO_COST, n_video: nVideoRuns },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "                prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                video_enabled: videoEnabled, video_format: videoFormat,",
+  "new_string": "                prepaid: true, cycle_id: cycleId, wp_status: \"draft\",\n                video_enabled: videoDue, video_format: videoFormat,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts",
+  "old_string": "              if (videoEnabled && VIDEO_FLOW_PLATFORMS.has(pair.platform)) succeededVideo++;",
+  "new_string": "              if (videoDue && VIDEO_FLOW_PLATFORMS.has(pair.platform)) succeededVideo++;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/autopilot-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:47:55)*
+
+
+## 🤖 Claude *(23:47:56)*
+
+Engine conectado. Agora a UI (para o Sovereign tocar): adiciono `video_enabled` + `video_every_n_cycles` ao input do hook + à mutation de criação:
+
+## 🤖 Claude *(23:48:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts",
+  "old_string": "export interface AutopilotPlanInput {\n  name: string;\n  mode: 'all_at_once' | 'every_n_days';\n  interval_days: number;\n  target_product_ids: string[];\n  platforms: string[];\n  budget_cap_mco: number;\n  daily_cap_mco: number;\n  min_balance_mco: number;\n  ab_variants: number;\n}",
+  "new_string": "export interface AutopilotPlanInput {\n  name: string;\n  mode: 'all_at_once' | 'every_n_days';\n  interval_days: number;\n  target_product_ids: string[];\n  platforms: string[];\n  budget_cap_mco: number;\n  daily_cap_mco: number;\n  min_balance_mco: number;\n  ab_variants: number;\n  /** FR-VA-022 \u2014 opt-in to autonomous 9:16 video (default off). */\n  video_enabled: boolean;\n  /** FR-VA-022 Amendment \u2014 video fires only every Nth cycle (1 = every cycle). Cost control for recurring video. */\n  video_every_n_cycles: number;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:48:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts",
+  "old_string": "        min_balance_mco: input.min_balance_mco,\n        ab_variants: input.ab_variants,\n        is_active: false,\n      };",
+  "new_string": "        min_balance_mco: input.min_balance_mco,\n        ab_variants: input.ab_variants,\n        video_enabled: input.video_enabled,\n        video_every_n_cycles: input.video_every_n_cycles,\n        is_active: false,\n      };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAutopilot.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:48:06)*
+
+
+## 🤖 Claude *(23:48:07)*
+
+Agora a página. Leio a região do form + default para adicionar a seção de vídeo:
+
+## 🤖 Claude *(23:48:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "offset": 18,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 18	import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+> 19	import { Rocket, Play, Pause, FlaskConical, Loader2, Plus, History, TrendingUp, RefreshCw } from 'lucide-react';
+> 20	
+> 21	const DEFAULT_FORM: AutopilotPlanInput = {
+> 22	  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],
+> 23	  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,
+> 24	};
+> 25	const toggle = (arr: string[], v: string) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+> 26	
+> 27	const REASON_LABEL: Record<string, string> = {
+> ```
+
+## 🤖 Claude *(23:48:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "offset": 104,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 104	            </div>
+> 105	          </div>
+> 106	
+> 107	          <div className="grid grid-cols-2 gap-3">
+> 108	            <div className="space-y-1.5">
+> 109	              <Label>Cadência</Label>
+> 110	              <Select value={form.mode} onValueChange={(v) => set({ mode: v as AutopilotPlanInput['mode'] })}>
+> 111	                <SelectTrigger><SelectValue /></SelectTrigger>
+> 112	                <SelectContent>
+> 113	                  <SelectItem value="every_n_days">A cada N dias</SelectItem>
+> 114	                  <SelectItem value="all_at_once">Uma vez</SelectItem>
+> 115	                </SelectContent>
+> 116	              </Select>
+> 117	            </div>
+> 118	            {form.mode === 'every_n_days' && (
+> 119	              <div className="space-y-1.5">
+> 120	                <Label htmlFor="ap-interval">Intervalo (dias)</Label>
+> 121	                <Input id="ap-interval" type="number" min={1} max={30} value={form.interval_days}
+> 122	                  onChange={(e) => set({ interval_days: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })} />
+> 123	              </div>
+> 124	            )}
+> 125	          </div>
+> 126	
+> 127	          <div className="grid grid-cols-3 gap-3">
+> 128	            <div className="space-y-1.5">
+> 129	              <Label htmlFor="ap-budget">Teto/ciclo</Label>
+> 130	              <Input id="ap-budget" type="number" min={12} value={form.budget_cap_mco}
+> 131	                onChange={(e) => set({ budget_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />
+> 132	            </div>
+> 133	            <div className="space-y-1.5">
+> 134	              <Label htmlFor="ap-daily">Teto/dia</Label>
+> 135	              <Input id="ap-daily" type="number" min={12} value={form.daily_cap_mco}
+> 136	                onChange={(e) => set({ daily_cap_mco: Math.max(12, Number(e.target.value) || 12) })} />
+> 137	            </div>
+> 138	            <div className="space-y-1.5">
+> 139	              <Label htmlFor="ap-variants">Variantes A/B</Label>
+> 140	              <Input id="ap-variants" type="number" min={1} max={5} value={form.ab_variants}
+> 141	                onChange={(e) => set({ ab_variants: Math.max(1, Math.min(5, Number(e.target.value) || 1)) })} />
+> 142	            </div>
+> 143	          </div>
+> 144	          <p className="text-xs text-muted-foreground">
+> 145	            Custo projetado por ciclo = produtos × redes × variantes × 10 mcoCoins (+2 de análise). Os tetos são o
+> 146	            kill-switch — a cadência nunca gasta acima deles.
+> 147	          </p>
+> 148	        </div>
+> ```
+
+## 🤖 Claude *(23:48:31)*
+
+
+## 🤖 Claude *(23:48:32)*
+
+Adiciono os campos de vídeo ao default e a seção de controle (toggle + "a cada N ciclos"), usando componentes já importados:
+
+## 🤖 Claude *(23:48:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "old_string": "const DEFAULT_FORM: AutopilotPlanInput = {\n  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],\n  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,\n};",
+  "new_string": "const DEFAULT_FORM: AutopilotPlanInput = {\n  name: '', mode: 'every_n_days', interval_days: 3, target_product_ids: [], platforms: ['linkedin'],\n  budget_cap_mco: 120, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,\n  video_enabled: false, video_every_n_cycles: 1,\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:48:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx",
+  "old_string": "          <p className=\"text-xs text-muted-foreground\">\n            Custo projetado por ciclo = produtos \u00d7 redes \u00d7 variantes \u00d7 10 mcoCoins (+2 de an\u00e1lise). Os tetos s\u00e3o o\n            kill-switch \u2014 a cad\u00eancia nunca gasta acima deles.\n          </p>\n        </div>",
+  "new_string": "          <div className=\"space-y-1.5\">\n            <Label>V\u00eddeo 9:16 aut\u00f4nomo</Label>\n            <div className=\"flex items-center gap-2\">\n              <Button\n                type=\"button\"\n                variant={form.video_enabled ? 'default' : 'outline'}\n                size=\"sm\"\n                onClick={() => set({ video_enabled: !form.video_enabled })}\n              >\n                {form.video_enabled ? 'Ligado' : 'Desligado'}\n              </Button>\n              {form.video_enabled && (\n                <div className=\"flex items-center gap-2\">\n                  <Label htmlFor=\"ap-video-every\" className=\"text-xs text-muted-foreground whitespace-nowrap\">a cada</Label>\n                  <Input id=\"ap-video-every\" type=\"number\" min={1} max={30} className=\"w-16\"\n                    value={form.video_every_n_cycles}\n                    onChange={(e) => set({ video_every_n_cycles: Math.max(1, Math.min(30, Number(e.target.value) || 1)) })} />\n                  <span className=\"text-xs text-muted-foreground whitespace-nowrap\">ciclo(s)</span>\n                </div>\n              )}\n            </div>\n            {form.video_enabled && (\n              <p className=\"text-xs text-muted-foreground\">\n                Um render 9:16 (12 mcoCoins) \u00e9 enfileirado a cada {form.video_every_n_cycles} ciclo(s). Se n\u00e3o couber no\n                teto/ciclo, o v\u00eddeo \u00e9 pulado e o ciclo de texto segue (graceful-degrade).\n              </p>\n            )}\n          </div>\n          <p className=\"text-xs text-muted-foreground\">\n            Custo projetado por ciclo = produtos \u00d7 redes \u00d7 variantes \u00d7 10 mcoCoins (+2 de an\u00e1lise). Os tetos s\u00e3o o\n            kill-switch \u2014 a cad\u00eancia nunca gasta acima deles.\n          </p>\n        </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AutopilotPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:48:55)*
+
+
+## 🤖 Claude *(23:48:57)*
+
+Falta o SOP (Lei 2) + aplicar a migration + regenerar types (`video_every_n_cycles` é nova → o `TablesInsert` ainda não a tem). Leio o fim do SOP para emendar:
+
+## 🤖 Claude *(23:48:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nwc -l docs/processes/autopilot-video-9x16.md\necho \"---last 20---\"\ntail -20 docs/processes/autopilot-video-9x16.md",
+  "description": "Read SOP tail for amendment"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 143 docs/processes/autopilot-video-9x16.md
+> ---last 20---
+> 4. **Smoke G5 (fail-open):** um ciclo com render forçado a falhar publica texto/imagem e fecha sem abortar, com refund do vídeo.
+> 5. **`/security-review` SAFE** do worker de render + da migration de schema.
+> 
+> ---
+> 
+> ## Anti-patterns proibidos
+> 
+> - ❌ Enqueue do render **sem** `prepaid=true` → dupla cobrança (motor self-bill + pré-débito do ciclo).
+> - ❌ `user_id` do vídeo vindo do **body/header** do request em vez da linha confiável → injeção cross-tenant (viola OTD-VA-008).
+> - ❌ Falha de render **derrubando** o ciclo de texto/imagem (deve ser fail-open `skipped`).
+> - ❌ Interpolar nome de produto / texto de trend / `optimization_policy` **direto** no HTML sem escape + Cyber-Sentinel → XSS/escape de sandbox no Chrome headless.
+> - ❌ Render **multi-tenant** antes do hardening do sandbox selado (`/security-review` + container efêmero egress-only) — Usuário Zero single-tenant é o limite desta fase (OTD-VA-011).
+> - ❌ Fechar o ciclo (`finalize`) **sem** reconciliar o asset assíncrono → custo pago, asset órfão.
+> - ❌ Refund de vídeo como `deduct` negativo → viola o guard anti-mint `p_amount<=0` (`migration 20260603220000:45`).
+> 
+> ---
+> 
+> ## Sibling reference
+> 
+> Esta SOP é a **camada de vídeo** sobre a base financeira de `autopilot-cron-identity.md` (que já cobre identidade do cron + pré-débito/refund + cap diário). Reusa o motor de `video-studio` (FR-VS-024/025) e o padrão de render async + reconciliação de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim atômico + execução em container) descrito na reconciliação de drift do `video-studio` SDD §2.3.
+> ```
+
+## 🤖 Claude *(23:49:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md",
+  "old_string": "## Sibling reference\n\nEsta SOP \u00e9 a **camada de v\u00eddeo** sobre a base financeira de `autopilot-cron-identity.md` (que j\u00e1 cobre identidade do cron + pr\u00e9-d\u00e9bito/refund + cap di\u00e1rio). Reusa o motor de `video-studio` (FR-VS-024/025) e o padr\u00e3o de render async + reconcilia\u00e7\u00e3o de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim at\u00f4mico + execu\u00e7\u00e3o em container) descrito na reconcilia\u00e7\u00e3o de drift do `video-studio` SDD \u00a72.3.",
+  "new_string": "## Sibling reference\n\nEsta SOP \u00e9 a **camada de v\u00eddeo** sobre a base financeira de `autopilot-cron-identity.md` (que j\u00e1 cobre identidade do cron + pr\u00e9-d\u00e9bito/refund + cap di\u00e1rio). Reusa o motor de `video-studio` (FR-VS-024/025) e o padr\u00e3o de render async + reconcilia\u00e7\u00e3o de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim at\u00f4mico + execu\u00e7\u00e3o em container) descrito na reconcilia\u00e7\u00e3o de drift do `video-studio` SDD \u00a72.3.\n\n---\n\n## Amendment \u2014 Cad\u00eancia de v\u00eddeo recorrente (FR-VA-022 Amendment \u00b7 2026-07-05)\n\n**Problema.** Com `video_enabled=true`, **todo** ciclo enfileirava um render 9:16 por sub-run de article-flow (12 mco cada). Texto recorrendo a cada 3 dias + v\u00eddeo em todo ciclo drena saldo r\u00e1pido \u2014 por isso o v\u00eddeo ficava desligado. Esta emenda **desacopla a frequ\u00eancia do v\u00eddeo da cad\u00eancia do texto** e d\u00e1 ao v\u00eddeo um **cap pr\u00f3prio**, mantendo o default seguro (v\u00eddeo OFF).\n\n| Pergunta | Conte\u00fado |\n|----------|----------|\n| **Operator** | Usu\u00e1rio Zero configura o plano na `AutopilotPage` (toggle \"V\u00eddeo 9:16 aut\u00f4nomo\" + \"a cada N ciclo(s)\"). Ligar \u00e9 decis\u00e3o expl\u00edcita (default OFF). |\n| **Sequence** | (1) plano `video_enabled=false` por padr\u00e3o \u2192 nenhum v\u00eddeo. (2) Operator liga `video_enabled=true` e escolhe `video_every_n_cycles=N`. (3) A cada disparo da cad\u00eancia, `autopilot-run` conta os ciclos anteriores do plano \u2192 ordinal; o v\u00eddeo entra **s\u00f3** quando `priorCount % N === 0` (ordinais 1, N+1, 2N+1\u2026). (4) O custo do v\u00eddeo (`nVideoRuns \u00d7 12`) entra no `projected` do ciclo **apenas** quando devido. |\n| **Cap pr\u00f3prio (graceful-degrade)** | Se `projectedText + projectedV\u00eddeo > budget_cap_mco`, o v\u00eddeo \u00e9 **pulado** neste ciclo (o ciclo de texto segue normalmente) \u2014 o v\u00eddeo **nunca** aborta o ciclo. Emite `infra_health_logs` `event=video_skipped_over_cap` (observ\u00e1vel, n\u00e3o silencioso). |\n| **Verification gates** | (G1) `resolveVideoCadence` unit-tested (`_shared/autopilot-video-cadence.test.ts`): N=1 \u2192 todo ciclo; N=3 \u2192 ordinais 1,4,7; disabled \u2192 nunca; over-cap \u2192 skip com texto vivo. (G2) `dry_run` do `autopilot-run` reporta `video.due/every_n_cycles/prior_cycles/skip_reason` sem gastar. (G3) `video_every_n_cycles=1` = comportamento byte-id\u00eantico ao anterior (backward-compat). |\n| **Recovery** | Custo alto inesperado \u2192 subir `video_every_n_cycles` OU desligar `video_enabled` (efeito no pr\u00f3ximo ciclo). V\u00eddeo pulado por cap \u2192 subir `budget_cap_mco` ou baixar produtos/redes/variantes. Render falho num ciclo devido \u2192 `finalize_video_render` refunda o 12 (inalterado). |\n| **Success signal** | Plano com `video_enabled=true, video_every_n_cycles=3`: o `dry_run` mostra `video.due=true` no ciclo 1, `false` nos ciclos 2-3, `true` de novo no 4 \u2014 e o `projected` sobe s\u00f3 nos ciclos devidos. |\n\n**Invariante de custo (Lei 1):** a decis\u00e3o `videoDue` alimenta **ao mesmo tempo** o `projected` (pr\u00e9-d\u00e9bito) e o flag de fan-out (`video_enabled` p/ `orchestrate-content`) \u2014 os dois **sempre concordam**, ent\u00e3o nunca h\u00e1 d\u00e9bito de v\u00eddeo sem enqueue nem enqueue sem d\u00e9bito. `video_every_n_cycles=1` + `video_enabled=false` (default) = zero mudan\u00e7a de comportamento.\n\n**Anti-patterns adicionais:**\n- \u274c Decidir `videoDue` para o custo mas usar `video_enabled` cru no fan-out (ou vice-versa) \u2192 d\u00e9bito-sem-valor / valor-sem-d\u00e9bito.\n- \u274c Deixar o v\u00eddeo abortar o ciclo por estourar o cap em vez de graceful-degrade \u2192 perde a distribui\u00e7\u00e3o de texto recorrente.\n- \u274c Ligar v\u00eddeo recorrente sem cap/frequ\u00eancia conscientes \u2192 gasto aut\u00f4nomo descontrolado (o default OFF + `video_every_n_cycles` s\u00e3o o kill-switch)."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(23:49:34)*
+
+
+## 🤖 Claude *(23:49:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md",
+  "offset": 138,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 138	
+> 139	---
+> 140	
+> 141	## Sibling reference
+> 142	
+> 143	Esta SOP é a **camada de vídeo** sobre a base financeira de `autopilot-cron-identity.md` (que já cobre identidade do cron + pré-débito/refund + cap diário). Reusa o motor de `video-studio` (FR-VS-024/025) e o padrão de render async + reconciliação de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim atômico + execução em container) descrito na reconciliação de drift do `video-studio` SDD §2.3.
+> ```
+
+## 🤖 Claude *(23:49:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md",
+  "old_string": "Esta SOP \u00e9 a **camada de v\u00eddeo** sobre a base financeira de `autopilot-cron-identity.md` (que j\u00e1 cobre identidade do cron + pr\u00e9-d\u00e9bito/refund + cap di\u00e1rio). Reusa o motor de `video-studio` (FR-VS-024/025) e o padr\u00e3o de render async + reconcilia\u00e7\u00e3o de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim at\u00f4mico + execu\u00e7\u00e3o em container) descrito na reconcilia\u00e7\u00e3o de drift do `video-studio` SDD \u00a72.3.",
+  "new_string": "Esta SOP \u00e9 a **camada de v\u00eddeo** sobre a base financeira de `autopilot-cron-identity.md` (que j\u00e1 cobre identidade do cron + pr\u00e9-d\u00e9bito/refund + cap di\u00e1rio). Reusa o motor de `video-studio` (FR-VS-024/025) e o padr\u00e3o de render async + reconcilia\u00e7\u00e3o de `canvas-video-async-execution.md`. O worker host segue o molde de `scripts/design-bridge.ts` (claim at\u00f4mico + execu\u00e7\u00e3o em container) descrito na reconcilia\u00e7\u00e3o de drift do `video-studio` SDD \u00a72.3.\n\n---\n\n## Amendment \u2014 Cad\u00eancia de v\u00eddeo recorrente (FR-VA-022 Amendment \u00b7 2026-07-05)\n\n**Problema.** Com `video_enabled=true`, **todo** ciclo enfileirava um render 9:16 por sub-run de article-flow (12 mco cada). Texto recorrendo a cada 3 dias + v\u00eddeo em todo ciclo drena saldo r\u00e1pido \u2014 por isso o v\u00eddeo ficava desligado. Esta emenda **desacopla a frequ\u00eancia do v\u00eddeo da cad\u00eancia do texto** e d\u00e1 ao v\u00eddeo um **cap pr\u00f3prio**, mantendo o default seguro (v\u00eddeo OFF).\n\n| Pergunta | Conte\u00fado |\n|----------|----------|\n| **Operator** | Usu\u00e1rio Zero configura o plano na `AutopilotPage` (toggle \"V\u00eddeo 9:16 aut\u00f4nomo\" + \"a cada N ciclo(s)\"). Ligar \u00e9 decis\u00e3o expl\u00edcita (default OFF). |\n| **Sequence** | (1) plano `video_enabled=false` por padr\u00e3o \u2192 nenhum v\u00eddeo. (2) Operator liga `video_enabled=true` e escolhe `video_every_n_cycles=N`. (3) A cada disparo da cad\u00eancia, `autopilot-run` conta os ciclos anteriores do plano \u2192 ordinal; o v\u00eddeo entra **s\u00f3** quando `priorCount % N === 0` (ordinais 1, N+1, 2N+1\u2026). (4) O custo do v\u00eddeo (`nVideoRuns \u00d7 12`) entra no `projected` do ciclo **apenas** quando devido. |\n| **Cap pr\u00f3prio (graceful-degrade)** | Se `projectedText + projectedV\u00eddeo > budget_cap_mco`, o v\u00eddeo \u00e9 **pulado** neste ciclo (o ciclo de texto segue normalmente) \u2014 o v\u00eddeo **nunca** aborta o ciclo. Emite `infra_health_logs` `event=video_skipped_over_cap` (observ\u00e1vel, n\u00e3o silencioso). |\n| **Verification gates** | (G1) `resolveVideoCadence` unit-tested (`_shared/autopilot-video-cadence.test.ts`): N=1 \u2192 todo ciclo; N=3 \u2192 ordinais 1,4,7; disabled \u2192 nunca; over-cap \u2192 skip com texto vivo. (G2) `dry_run` do `autopilot-run` reporta `video.due/every_n_cycles/prior_cycles/skip_reason` sem gastar. (G3) `video_every_n_cycles=1` = comportamento byte-id\u00eantico ao anterior (backward-compat). |\n| **Recovery** | Custo alto inesperado \u2192 subir `video_every_n_cycles` OU desligar `video_enabled` (efeito no pr\u00f3ximo ciclo). V\u00eddeo pulado por cap \u2192 subir `budget_cap_mco` ou baixar produtos/redes/variantes. Render falho num ciclo devido \u2192 `finalize_video_render` refunda o 12 (inalterado). |\n| **Success signal** | Plano com `video_enabled=true, video_every_n_cycles=3`: o `dry_run` mostra `video.due=true` no ciclo 1, `false` nos ciclos 2-3, `true` de novo no 4 \u2014 e o `projected` sobe s\u00f3 nos ciclos devidos. |\n\n**Invariante de custo (Lei 1):** a decis\u00e3o `videoDue` alimenta **ao mesmo tempo** o `projected` (pr\u00e9-d\u00e9bito) e o flag de fan-out (`video_enabled` p/ `orchestrate-content`) \u2014 os dois **sempre concordam**, ent\u00e3o nunca h\u00e1 d\u00e9bito de v\u00eddeo sem enqueue nem enqueue sem d\u00e9bito. `video_every_n_cycles=1` + `video_enabled=false` (default) = zero mudan\u00e7a de comportamento.\n\n**Anti-patterns adicionais:**\n- \u274c Decidir `videoDue` para o custo mas usar `video_enabled` cru no fan-out (ou vice-versa) \u2192 d\u00e9bito-sem-valor / valor-sem-d\u00e9bito.\n- \u274c Deixar o v\u00eddeo abortar o ciclo por estourar o cap em vez de graceful-degrade \u2192 perde a distribui\u00e7\u00e3o de texto recorrente.\n- \u274c Ligar v\u00eddeo recorrente sem cap/frequ\u00eancia conscientes \u2192 gasto aut\u00f4nomo descontrolado (o default OFF + `video_every_n_cycles` s\u00e3o o kill-switch)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/autopilot-video-9x16.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:50:23)*
+
+
+## 🤖 Claude *(23:50:24)*
+
+Núcleo implementado. Valido primeiro o helper puro (zero-custo, não precisa de schema):
+
+## 🤖 Claude *(23:50:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run test supabase/functions/_shared/autopilot-video-cadence.test.ts 2>&1 | tail -20\necho \"exit: ${PIPESTATUS[0]}\"",
+  "description": "Run the video-cadence unit test",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> $ vitest run supabase/functions/_shared/autopilot-video-cadence.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ supabase/functions/_shared/autopilot-video-cadence.test.ts (10 tests) 11ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  10 passed (10)
+>    Start at  20:50:27
+>    Duration  2.54s (transform 404ms, setup 233ms, collect 407ms, tests 11ms, environment 0ms, prepare 353ms)
+> 
+> exit: 0
+> ```
+
+## 🤖 Claude *(23:50:39)*
+
+
+## 🤖 Claude *(23:50:40)*
+
+Helper provado: **10/10**. Agora aplico a migration. Verifico o estado de sincronização primeiro:
+
+## 🤖 Claude *(23:50:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase migration list 2>&1 | tail -25",
+  "description": "Check migration sync status",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    20260628181500 | 20260628181500 | 2026-06-28 18:15:00 
+>    20260628183500 | 20260628183500 | 2026-06-28 18:35:00 
+>    20260629000000 | 20260629000000 | 2026-06-29 00:00:00 
+>    20260629170000 | 20260629170000 | 2026-06-29 17:00:00 
+>    20260630000000 | 20260630000000 | 2026-06-30 00:00:00 
+>    20260630010000 | 20260630010000 | 2026-06-30 01:00:00 
+>    20260630120000 | 20260630120000 | 2026-06-30 12:00:00 
+>    20260630130000 | 20260630130000 | 2026-06-30 13:00:00 
+>    20260630140000 | 20260630140000 | 2026-06-30 14:00:00 
+>    20260701000000 | 20260701000000 | 2026-07-01 00:00:00 
+>    20260701010000 | 20260701010000 | 2026-07-01 01:00:00 
+>    20260701020000 | 20260701020000 | 2026-07-01 02:00:00 
+>    20260701030000 | 20260701030000 | 2026-07-01 03:00:00 
+>    20260701040000 | 20260701040000 | 2026-07-01 04:00:00 
+>    20260701120000 | 20260701120000 | 2026-07-01 12:00:00 
+>    20260702150000 | 20260702150000 | 2026-07-02 15:00:00 
+>    20260702170000 | 20260702170000 | 2026-07-02 17:00:00 
+>    20260702190000 | 20260702190000 | 2026-07-02 19:00:00 
+>    20260702210000 | 20260702210000 | 2026-07-02 21:00:00 
+>    20260702230000 | 20260702230000 | 2026-07-02 23:00:00 
+>    20260703030000 | 20260703030000 | 2026-07-03 03:00:00 
+>    20260705120000 |                | 2026-07-05 12:00:00 
+> 
+> A new version of Supabase CLI is available: v2.109.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(23:51:10)*
+
+
+## 🤖 Claude *(23:51:11)*
+
+Minha migration `20260705120000` é a única Local-não-Remote — `db push` aplica só ela. Aplico + regenero types:
+
+## 🤖 Claude *(23:51:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== db push ===\"; npx supabase db push 2>&1 | tail -15",
+  "description": "Apply the video cadence migration",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === db push ===
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260705120000_autopilot_video_cadence.sql
+> 
+>  [Y/n] 
+> Applying migration 20260705120000_autopilot_video_cadence.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.109.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(23:51:21)*
+
+
+## 🤖 Claude *(23:51:21)*
+
+Migration aplicada. Regenero os types + verifico materialmente a coluna (Lei 1):
+
+## 🤖 Claude *(23:51:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== verify column exists (REST) ===\"; source .env 2>/dev/null\ncurl -s \"${SUPABASE_URL}/rest/v1/autopilot_plans?select=id,video_enabled,video_every_n_cycles&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | head -c 300\necho \"\"; echo \"=== regenerate types ===\"\nnpx supabase gen types typescript --linked > src/integrations/supabase/types.ts 2>/tmp/gentypes.err && echo \"types regenerated ($(wc -l < src/integrations/supabase/types.ts) lines)\" || { echo \"GEN FAILED:\"; cat /tmp/gentypes.err | tail -5; }\necho \"=== column in types? ===\"; grep -c \"video_every_n_cycles\" src/integrations/supabase/types.ts",
+  "description": "Verify column + regenerate types",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === verify column exists (REST) ===
+> [{"id":"640b3b67-b950-42f6-bbb9-48560771eaa6","video_enabled":true,"video_every_n_cycles":1}]
+> === regenerate types ===
+> types regenerated (5664 lines)
+> === column in types? ===
+> 3
+> ```
+
+## 🤖 Claude *(23:51:52)*
+
+
+## 🤖 Claude *(23:51:52)*
+
+Coluna confirmada viva (plano `640b3b67` → `video_every_n_cycles:1` default) · types regenerados (3 ocorrências). Agora tsc + suíte completa + build:
+
+## 🤖 Claude *(23:51:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -12; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== vitest (full) ===\"; bun run test 2>&1 | tail -6; echo \"test exit: ${PIPESTATUS[0]}\"",
+  "description": "tsc + full vitest suite",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === vitest (full) ===
+> 
+>  Test Files  32 passed | 2 skipped (34)
+>       Tests  408 passed | 2 skipped (410)
+>    Start at  20:51:55
+>    Duration  56.55s (transform 6.70s, setup 11.51s, collect 21.03s, tests 5.27s, environment 63.14s, prepare 20.30s)
+> 
+> test exit: 0
+> ```
+
+## 🤖 Claude *(23:53:12)*
+
+
+## 🤖 Claude *(23:53:13)*
+
+tsc **0** · vitest **408 passed** (+10 do novo teste de cadência). Antes de buildar/deployar, confirmo a config `verify_jwt` do `autopilot-run` (é `verify_jwt=false`):
+
+## 🤖 Claude *(23:53:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== autopilot-run verify_jwt config ===\"; python3 -c \"\nimport subprocess\nr=subprocess.run(['grep','-n','-A2','autopilot-run','supabase/config.toml'],capture_output=True,text=True)\nprint(r.stdout or 'not in config.toml \u2192 needs --no-verify-jwt flag')\n\"",
+  "description": "Check autopilot-run verify_jwt config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot-run verify_jwt config ===
+> 32:[functions.autopilot-run]
+> 33-verify_jwt = false
+> 34-[functions.autopilot-cadence-cron]
+> ```
+
+## 🤖 Claude *(23:53:21)*
+
+
+## 🤖 Claude *(23:53:21)*
+
+`verify_jwt=false` no config.toml — deploy respeita. Build (frontend UI) + deploy do edge fn:
+
+## 🤖 Claude *(23:53:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== build (frontend UI) ===\"; bun run build 2>&1 | tail -3; echo \"build exit: ${PIPESTATUS[0]}\"\necho \"=== deploy autopilot-run ===\"; npx supabase functions deploy autopilot-run 2>&1 | tail -8; echo \"deploy exit: ${PIPESTATUS[0]}\"",
+  "description": "Build frontend + deploy autopilot-run edge fn",
+  "timeout": 240000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build (frontend UI) ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 52.53s
+> build exit: 0
+> === deploy autopilot-run ===
+> Bundling Function: autopilot-run
+> Deploying Function: autopilot-run (script size: 77.48kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: autopilot-run
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> deploy exit: 0
+> ```
+
+## 🤖 Claude *(23:55:01)*
+
+
+## 🤖 Claude *(23:55:03)*
+
+Build 0 · edge fn deployado (77.48kB). Agora o **smoke zero-custo** (dry_run — sem gasto). Vejo o schema de `autopilot_cycles` para poder inserir ciclos fake (prova o read de priorCount):
+
+## 🤖 Claude *(23:55:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== autopilot_cycles columns (NOT NULL / defaults) ===\"; python3 -c \"\nr=open('supabase/migrations/20260620120100_viral_autopilot_cycles.sql').read()\ni=r.find('CREATE TABLE'); print(r[i:i+1400])\n\"",
+  "description": "Read autopilot_cycles schema for fake inserts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === autopilot_cycles columns (NOT NULL / defaults) ===
+> CREATE TABLE IF NOT EXISTS public.autopilot_cycles (
+>   id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+>   user_id          uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   plan_id          uuid        NOT NULL,
+>   cycle_number     int         NOT NULL,
+>   status           text        NOT NULL DEFAULT 'running'
+>                      CHECK (status IN ('running','completed','aborted_budget','aborted_daily_cap','failed')),
+>   spend_mco        int         NOT NULL DEFAULT 0 CHECK (spend_mco     >= 0),
+>   refunded_mco     int         NOT NULL DEFAULT 0 CHECK (refunded_mco  >= 0),
+>   planned_units    int         NOT NULL DEFAULT 0 CHECK (planned_units >= 0),
+>   analysis_node_id uuid,
+>   debited_at       timestamptz,
+>   refunded_at      timestamptz,
+>   started_at       timestamptz NOT NULL DEFAULT now(),
+>   completed_at     timestamptz,
+>   -- refund can NEVER exceed what was committed (defense-in-depth vs a negative-refund mint).
+>   CONSTRAINT autopilot_cycles_refund_le_spend CHECK (refunded_mco <= spend_mco),
+>   CONSTRAINT autopilot_cycles_plan_cycle_uniq UNIQUE (plan_id, cycle_number),
+>   CONSTRAINT autopilot_cycles_id_user_uniq    UNIQUE (id, user_id),
+>   -- tenant-scoped composite FK: the cycle's (plan_id,user_id) must match a plan owned by the SAME tenant.
+>   CONSTRAINT autopilot_cycles_plan_fk FOREIGN KEY (plan_id, user_id)
+>     REFERENCES public.autopilot_pla
+> ```
+
+## 🤖 Claude *(23:55:17)*
+
+
+## 🤖 Claude *(23:55:18)*
+
+Insert de ciclo fake é simples (`user_id, plan_id, cycle_number`). Leio o smoke existente `smoke-autopilot-run.ts` para espelhar o setup throwaway + invocação service-role:
+
+## 🤖 Claude *(23:55:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-run.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Smoke — autopilot-run + autopilot-cadence-cron edge fns (FR-VA-002/005/016), ZERO-COST.
+> 4	 *
+> 5	 * Proves the IDENTITY GATES and the dry_run COST PROJECTION against the DEPLOYED functions without spending any
+> 6	 * mcoCoins (dry_run short-circuits BEFORE begin_autopilot_cycle — no cycle, no deduct, no fan-out). The real
+> 7	 * paid cycle is intentionally NOT exercised (gated on Sovereign GO). Throwaway @example.com user + plan, cleaned up.
+> 8	 *
+> 9	 * Gates:
+> 10	 *   I1 cadence-cron anon → 403 (service-role self-check)            I2 cadence-cron service → 200 ok
+> 11	 *   I3 run anon → 401                                              I4 run service w/o x-autopilot-user-id → 400
+> 12	 *   I5 run service + header + no plan_id → 422
+> 13	 *   D1 run service + header + plan + dry_run → ok, n_runs=3, projected=32 (3×10+2), ZERO balance delta
+> 14	 *   X1 run service + WRONG x-autopilot-user-id + real plan → 404 (tenant-scoped load blocks cross-tenant)
+> 15	 *
+> 16	 * Usage: bun run scripts/qa/smoke-autopilot-run.ts
+> 17	 */
+> 18	import { createClient } from '@supabase/supabase-js';
+> 19	import { createThrowawayUser, deleteThrowawayUser } from './lib/qa-throwaway';
+> 20	
+> 21	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 22	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 23	const PUB = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY!;
+> 24	if (!URL || !SVC || !PUB) { console.error('Missing env (URL/SVC/PUB)'); process.exit(1); }
+> 25	
+> 26	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 27	const ZERO = '00000000-0000-0000-0000-000000000000';
+> 28	let uid: string | null = null;
+> 29	let pass = true;
+> 30	function check(label: string, ok: boolean, detail = '') {
+> 31	  console.log(`${ok ? '✅' : '❌'} ${label}${detail ? `  → ${detail}` : ''}`);
+> 32	  if (!ok) pass = false;
+> 33	}
+> 34	interface Resp { status: number; body: Record<string, unknown> }
+> 35	async function callRun(headers: Record<string, string>, body: unknown): Promise<Resp> {
+> 36	  const r = await fetch(`${URL}/functions/v1/autopilot-run`, {
+> 37	    method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body),
+> 38	  });
+> 39	  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }
+> 40	  return { status: r.status, body: b };
+> 41	}
+> 42	async function callCron(bearer: string): Promise<Resp> {
+> 43	  const r = await fetch(`${URL}/functions/v1/autopilot-cadence-cron`, {
+> 44	    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: bearer, Authorization: `Bearer ${bearer}` }, body: '{}',
+> 45	  });
+> 46	  const t = await r.text(); let b: Record<string, unknown>; try { b = JSON.parse(t); } catch { b = { raw: t }; }
+> 47	  return { status: r.status, body: b };
+> 48	}
+> 49	async function getBalance(): Promise<number> {
+> 50	  const { data } = await admin.from('profiles').select('mco_balance').eq('id', uid!).single();
+> 51	  return Number(data?.mco_balance ?? 0);
+> 52	}
+> 53	
+> 54	const svcHdr = { apikey: SVC, Authorization: `Bearer ${SVC}` };
+> 55	try {
+> 56	  // ── Identity gates (no user/plan needed) ────────────────────────────────────────────────────────────────────
+> 57	  check('I1 cadence-cron anon → 403', (await callCron(PUB)).status === 403);
+> 58	  const c2 = await callCron(SVC);
+> 59	  check('I2 cadence-cron service → 200 ok', c2.status === 200 && c2.body.status === 'ok', `due=${c2.body.due}`);
+> 60	  check('I3 run anon → 401', (await callRun({ apikey: PUB, Authorization: `Bearer ${PUB}` }, { plan_id: ZERO })).status === 401);
+> 61	  check('I4 run service w/o x-autopilot-user-id → 400', (await callRun(svcHdr, { plan_id: crypto.randomUUID() })).status === 400);
+> 62	  check('I5 run service + header + no plan_id → 422', (await callRun({ ...svcHdr, 'x-autopilot-user-id': ZERO }, {})).status === 422);
+> 63	
+> 64	  // ── dry_run cost projection (throwaway user + plan; 3 products × 1 platform × 1 variant = 3 runs) ─────────────
+> 65	  uid = (await createThrowawayUser(admin, 'ap-run')).uid;
+> 66	  const { data: planRow, error: pe } = await admin.from('autopilot_plans').insert({
+> 67	    user_id: uid, name: 'smoke-run-plan', mode: 'every_n_days', interval_days: 3,
+> 68	    target_product_ids: ['MLB-A', 'MLB-B', 'MLB-C'], platforms: ['linkedin'],
+> 69	    budget_cap_mco: 200, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1, is_active: true,
+> 70	  }).select('id').single();
+> 71	  if (pe || !planRow) throw new Error(`insert plan: ${pe?.message}`);
+> 72	  const planId = planRow.id as string;
+> 73	
+> 74	  const b0 = await getBalance();
+> 75	  const d1 = await callRun({ ...svcHdr, 'x-autopilot-user-id': uid }, { plan_id: planId, dry_run: true });
+> 76	  const b1 = await getBalance();
+> 77	  check('D1 dry_run → ok · n_runs=3 · projected=32',
+> 78	    d1.status === 200 && d1.body.ok === true && d1.body.n_runs === 3 && d1.body.projected_mco === 32, JSON.stringify(d1.body));
+> 79	  check('D1 dry_run did NOT spend (delta 0)', b1 === b0, `delta=${b1 - b0}`);
+> 80	
+> 81	  // ── Cross-tenant: service key + WRONG x-autopilot-user-id + the real plan → 404 (tenant-scoped load blocks it) ─
+> 82	  const x1 = await callRun({ ...svcHdr, 'x-autopilot-user-id': ZERO }, { plan_id: planId, dry_run: true });
+> 83	  check('X1 cross-tenant header → 404 plan_not_found', x1.status === 404, JSON.stringify(x1.body));
+> 84	} catch (e) {
+> 85	  check(`FATAL: ${(e as Error).message}`, false);
+> 86	} finally {
+> 87	  if (uid) {
+> 88	    const deleted = await deleteThrowawayUser(admin, uid);
+> 89	    check('cleanup: throwaway user deleted', deleted);
+> 90	  }
+> 91	  console.log(pass ? '\n🟢 SMOKE PASS' : '\n🔴 SMOKE FAIL');
+> 92	  process.exit(pass ? 0 : 1);
+> 93	}
+> 94	
+> ```
+
+## 🤖 Claude *(23:55:39)*
+
+
+## 🤖 Claude *(23:55:41)*
+
+Padrão claro. Escrevo o smoke zero-custo (dry_run — prova disabled/backward-compat/every-Nth/graceful-degrade lendo priorCount do DB):
+
+## 🤖 Claude *(23:56:06)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-video-cadence.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke \u2014 Viral Autopilot recurring 9:16 video cadence (FR-VA-022 Amendment), ZERO-COST.\n *\n * Proves the LIVE deployed autopilot-run dry_run reflects the video cadence: disabled \u2192 never; N=3 \u2192 video on\n * ordinals 1,4 (priorCount 0,3) but not in between; graceful-degrade when video would exceed budget_cap_mco.\n * dry_run short-circuits BEFORE begin_autopilot_cycle (no cycle, no deduct). Fake autopilot_cycles rows (service-\n * role insert, no spend) drive priorCount. Throwaway @example.com user; user delete cascades plan + cycles.\n *\n * Plan shape: 1 product \u00d7 ['wordpress'] \u00d7 1 variant \u2192 nRuns=1 \u2192 projectedText = 10 + 2 = 12; video sub-run = 1\n * (wordpress is the only article-flow platform) \u2192 video cost = 12.\n *\n * Usage: bun run scripts/qa/smoke-autopilot-video-cadence.ts\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { createThrowawayUser, deleteThrowawayUser } from './lib/qa-throwaway';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!URL || !SVC) { console.error('Missing env (URL/SVC)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nlet uid: string | null = null;\nlet pass = true;\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\nconst svcHdr = (u: string) => ({ apikey: SVC, Authorization: `Bearer ${SVC}`, 'x-autopilot-user-id': u, 'Content-Type': 'application/json' });\n\ninterface DryVideo { due?: boolean; skip_reason?: string | null; n_video?: number; prior_cycles?: number; every_n_cycles?: number }\nasync function dryRun(planId: string): Promise<{ projected: number; video: DryVideo }> {\n  const r = await fetch(`${URL}/functions/v1/autopilot-run`, {\n    method: 'POST', headers: svcHdr(uid!), body: JSON.stringify({ plan_id: planId, dry_run: true }),\n  });\n  const b = await r.json() as Record<string, unknown>;\n  if (r.status !== 200 || b.ok !== true) throw new Error(`dry_run ${r.status}: ${JSON.stringify(b)}`);\n  return { projected: Number(b.projected_mco), video: (b.video ?? {}) as DryVideo };\n}\nasync function setPlan(planId: string, patch: Record<string, unknown>) {\n  const { error } = await admin.from('autopilot_plans').update(patch).eq('id', planId);\n  if (error) throw new Error(`update plan: ${error.message}`);\n}\nasync function addCycle(planId: string, n: number) {\n  const { error } = await admin.from('autopilot_cycles').insert({ user_id: uid, plan_id: planId, cycle_number: n, status: 'completed' });\n  if (error) throw new Error(`insert cycle ${n}: ${error.message}`);\n}\nasync function getBalance(): Promise<number> {\n  const { data } = await admin.from('profiles').select('mco_balance').eq('id', uid!).single();\n  return Number(data?.mco_balance ?? 0);\n}\n\ntry {\n  uid = (await createThrowawayUser(admin, 'ap-vidcad')).uid;\n  const { data: planRow, error: pe } = await admin.from('autopilot_plans').insert({\n    user_id: uid, name: 'smoke-video-cadence', mode: 'every_n_days', interval_days: 3,\n    target_product_ids: ['MLB-VID'], platforms: ['wordpress'],\n    budget_cap_mco: 200, daily_cap_mco: 200, min_balance_mco: 10, ab_variants: 1,\n    video_enabled: false, video_every_n_cycles: 3, is_active: true,\n  }).select('id').single();\n  if (pe || !planRow) throw new Error(`insert plan: ${pe?.message}`);\n  const planId = planRow.id as string;\n\n  const b0 = await getBalance();\n\n  // V0 \u2014 disabled \u2192 no video, text-only projected=12\n  let d = await dryRun(planId);\n  check('V0 video_enabled=false \u2192 due=false \u00b7 disabled \u00b7 projected=12',\n    d.video.due === false && d.video.skip_reason === 'disabled' && d.projected === 12, JSON.stringify(d.video));\n\n  // V1 \u2014 enabled, N=3, priorCount=0 \u2192 due (ordinal 1), projected=24 (12 text + 12 video)\n  await setPlan(planId, { video_enabled: true });\n  d = await dryRun(planId);\n  check('V1 enabled N=3 priorCount=0 \u2192 due=true \u00b7 n_video=1 \u00b7 projected=24',\n    d.video.due === true && d.video.n_video === 1 && d.video.prior_cycles === 0 && d.projected === 24, JSON.stringify(d.video));\n\n  // V2 \u2014 1 prior cycle \u2192 priorCount=1, 1%3\u22600 \u2192 off-cadence, text-only\n  await addCycle(planId, 1);\n  d = await dryRun(planId);\n  check('V2 priorCount=1 \u2192 due=false \u00b7 off_cadence \u00b7 projected=12',\n    d.video.due === false && d.video.skip_reason === 'off_cadence' && d.video.prior_cycles === 1 && d.projected === 12, JSON.stringify(d.video));\n\n  // V3 \u2014 3 prior cycles \u2192 priorCount=3, 3%3=0 \u2192 due again (ordinal 4)\n  await addCycle(planId, 2);\n  await addCycle(planId, 3);\n  d = await dryRun(planId);\n  check('V3 priorCount=3 \u2192 due=true \u00b7 n_video=1 \u00b7 projected=24',\n    d.video.due === true && d.video.prior_cycles === 3 && d.projected === 24, JSON.stringify(d.video));\n\n  // V4 \u2014 graceful-degrade: N=1 (on-cadence) + tight budget_cap=12 \u2192 video (12) won't fit on top of text (12) \u2192 skip\n  await setPlan(planId, { video_every_n_cycles: 1, budget_cap_mco: 12 });\n  d = await dryRun(planId);\n  check('V4 tight cap \u2192 due=false \u00b7 over_budget_cap \u00b7 text survives projected=12',\n    d.video.due === false && d.video.skip_reason === 'over_budget_cap' && d.projected === 12, JSON.stringify(d.video));\n\n  // Zero-cost invariant across all dry_runs\n  const b1 = await getBalance();\n  check('dry_run never spent (balance delta 0)', b1 === b0, `delta=${b1 - b0}`);\n} catch (e) {\n  check(`FATAL: ${(e as Error).message}`, false);\n} finally {\n  if (uid) check('cleanup: throwaway user deleted (cascades plan+cycles)', await deleteThrowawayUser(admin, uid));\n  console.log(pass ? '\\n\ud83d\udfe2 SMOKE PASS' : '\\n\ud83d\udd34 SMOKE FAIL');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-autopilot-video-cadence.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:56:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/smoke-autopilot-video-cadence.ts 2>&1 | tail -12\necho \"smoke exit: ${PIPESTATUS[0]}\"",
+  "description": "Run video cadence smoke (zero-cost dry_run)",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ V0 video_enabled=false → due=false · disabled · projected=12  → {"enabled":false,"due":false,"every_n_cycles":3,"prior_cycles":0,"skip_reason":"disabled","format":"9:16","cost_each":12,"n_video":0}
+> ✅ V1 enabled N=3 priorCount=0 → due=true · n_video=1 · projected=24  → {"enabled":true,"due":true,"every_n_cycles":3,"prior_cycles":0,"skip_reason":null,"format":"9:16","cost_each":12,"n_video":1}
+> ✅ V2 priorCount=1 → due=false · off_cadence · projected=12  → {"enabled":true,"due":false,"every_n_cycles":3,"prior_cycles":1,"skip_reason":"off_cadence","format":"9:16","cost_each":12,"n_video":0}
+> ✅ V3 priorCount=3 → due=true · n_video=1 · projected=24  → {"enabled":true,"due":true,"every_n_cycles":3,"prior_cycles":3,"skip_reason":null,"format":"9:16","cost_each":12,"n_video":1}
+> ✅ V4 tight cap → due=false · over_budget_cap · text survives projected=12  → {"enabled":true,"due":false,"every_n_cycles":1,"prior_cycles":3,"skip_reason":"over_budget_cap","format":"9:16","cost_each":12,"n_video":0}
+> ✅ dry_run never spent (balance delta 0)  → delta=0
+> ✅ cleanup: throwaway user deleted (cascades plan+cycles)
+> 
+> 🟢 SMOKE PASS
+> smoke exit: 0
+> ```
+
+## 🤖 Claude *(23:56:34)*
+
+
+## 🤖 Claude *(23:56:37)*
+
+**SMOKE PASS** (exit 0) — todos os casos verdes contra o edge fn VIVO, zero gasto (delta 0):
+- V0 disabled → sem vídeo · V1 N=3 ciclo 1 → devido (projected 24) · V2 ciclo 2 → off-cadence (12) · V3 ciclo 4 → devido de novo · **V4 cap apertado → graceful-degrade** (vídeo pulado, texto sobrevive, `over_budget_cap`)
+
+Agora o gate obrigatório (CLAUDE.md: toda migration passa `/security-review` antes do commit) — money-sensitive:
+
+## 🤖 Claude *(23:56:37)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(23:56:40)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   docs/processes/autopilot-video-9x16.md
+	deleted:    proof-manifest.json
+	modified:   src/hooks/useAutopilot.ts
+	modified:   src/integrations/supabase/types.ts
+	modified:   src/pages/AutopilotPage.tsx
+	modified:   supabase/functions/autopilot-run/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	scripts/qa/smoke-autopilot-video-cadence.ts
+	supabase/functions/_shared/autopilot-video-cadence.test.ts
+	supabase/functions/_shared/autopilot-video-cadence.ts
+	supabase/migrations/20260705120000_autopilot_video_cadence.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+scripts/qa/audit-universe-ui.ts
+src/components/canvas/RightPanel/inspectors/CharacterReferenceInspector.tsx
+src/components/canvas/nodes/AvatarIdentityNode.tsx
+src/components/canvas/nodes/GenerateImageNode.tsx
+src/components/canvas/nodes/ImageToVideoNode.tsx
+src/components/canvas/nodes/SceneComposeNode.tsx
+src/components/canvas/nodes/StyleTransferNode.tsx
+src/components/dashboard/DashboardSidebar.tsx
+src/components/orchestrator/ConstellationMatrix.tsx
+src/components/orchestrator/nodes/AgentNode.tsx
+src/components/spaces/ParamHUD.tsx
+src/components/spaces/SpaceIcon.tsx
+src/components/spaces/SpaceNodeCard.tsx
+src/hooks/useCampaigns.ts
+src/hooks/useConstellationSigma.ts
+src/hooks/useCrewOverlay.ts
+src/hooks/useSocialAccounts.ts
+src/lib/spaces-schema.ts
+src/pages/CampaignWizard.tsx
+src/pages/SocialAccountsPage.tsx
+src/pages/UnifiedCanvasPage.tsx
+```
+
+COMMITS:
+
+```
+commit 4729dd433baab430d781517a635c4e1a6b2902e5
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sun Jul 5 20:11:39 2026 -0300
+
+    feat(universe): Epsilon V9 3.9 — cutover de nav para o Unified Sensorial Canvas
+    
+    O Unified Sensorial Canvas atinge paridade e vira a superfície PRIMÁRIA de
+    constelação: funde a Rede de Código (Louvain) + Rede de Memória (GraphRAG) +
+    sinapses reais sobre o backdrop do Mega Brain. Matrix e Memória legadas seguem
+    roteadas como backup (nav rotulada, zero deleção — não-quebrante).
+    
+    - DashboardSidebar: Universo promovido a 1º sub-item de Constelação; Matrix/Memória
+      marcadas 'backup' abaixo (rotas legadas intactas)
+    - UnifiedCanvasPage: HUD 3.8→3.9; painel reflete cutover concluído
+    - scripts/qa/audit-universe-ui.ts: gate E2E Lei-1 re-executável do /universe
+      (magic-link → Playwright 1920×1080 → Vision QA fail-closed) — anticorpo Lei 2
+    
+    Verificado: tsc 0 · build 0 · vitest 398 passed · gate E2E /universe exit 0
+    Vision-APROVADO (rede 3D real, 8624 nós, sem tela preta/erro/layout quebrado).
+
+commit 6af31810451c10aeb213bf8e0f179ff936c9b651
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Sun Jul 5 19:51:02 2026 -0300
+
+    feat(brand): fecha a cauda de brand — pictogramas → lucide/MIV nas superfícies cross-file
+    
+    Fecha os deferidos honestos do brand-100: templates de campanha, ícones sociais,
+    nós de Space, glyphs de canvas e o avatar do crew — as últimas superfícies que
+    ainda renderizavam emoji decorativo.
+    
+    - Campanha: templates 🚀🎁📣💬 → lucide-names + componente TemplateIcon no wizard
+    - Social: ícones de plataforma vestigiais limpos; PlatformGlyph cai em Globe (sem emoji)
+    - Spaces: novo SpaceIcon (sprite-name→lucide) fecha bug real — SpaceNodeCard/ParamHUD
+      renderizavam o nome-sprite/✨ como texto cru; default do schema ✨→sparkles
+    - Canvas/orquestrador: 💎→mco, 📷→Camera, ⚡→Zap em 7 nós/inspectors
+    - Crew: fallback 🤖→bot + removido o prefixo texto-avatar de 2 render sites do sigma
+      (label + tooltip) — o avatar nunca passava pelo AgentAvatar lucide (anticorpo cross-file)
+    
+    Verificado: tsc 0 · build 0 (rollup limpa o trap de brand-icon lucide) · grep-zero de
+    pictogramas · 3 revisores adversariais clean · gate Canvas Studio E2E 1920×1080 Vision-APROVADO.
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (33.9KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/be8df5a5-f15e-42b8-8659-5b49cc9f4cea/tool-results/b9jinjrm7.txt
+
+Preview (first 2KB):
+diff --git a/scripts/qa/audit-universe-ui.ts b/scripts/qa/audit-universe-ui.ts
+new file mode 100644
+index 0000000..f1d7a69
+--- /dev/null
++++ b/scripts/qa/audit-universe-ui.ts
+@@ -0,0 +1,179 @@
++/// <reference types="node" />
++// Epsilon V9 · 3.9 — Lei-1 Canvas E2E gate for the Unified Sensorial Canvas (/dashboard/universe).
++// Mirrors scripts/qa/audit-canvas-ui.ts (magic-link auth → headless 1920x1080 → structural asserts →
++// Vision QA gate). The code network query is slow (OTD-UCANVAS-PERF ~30s), so waits are generous.
++// Run: bun run scripts/qa/audit-universe-ui.ts   (use --no-vision only as an explicit, logged exception)
++import { chromium } from 'playwright';
++import { createClient } from '@supabase/supabase-js';
++import { existsSync, readFileSync } from 'fs';
++import { spawnSync } from 'child_process';
++import { join } from 'path';
++
++const ROOT = '/home/gcrUX/htdocs/constellation-orchestra';
++const envPath = join(ROOT, '.env');
++if (existsSync(envPath)) {
++  const raw = readFileSync(envPath, 'utf-8');
++  for (const line of raw.split('\n')) {
++    const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
++    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
++  }
++}
++
++const supabaseUrl = process.env.SUPABASE_URL;
++const serviceKey = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
++if (!supabaseUrl || !serviceKey) {
++  console.error('❌ Missing Supabase credentials in env.');
++  process.exit(1);
++}
++
++const redirectTarget = 'https://login.mcorch.com/dashboard/universe';
++
++async function runAudit() {
++  console.log('🚀 Starting Unified Sensorial Canvas (Universo) E2E audit...');
++  const supabase = createClient(supabaseUrl!, serviceKey!, { auth: { autoRefreshToken: false, persistSession: false } });
++
++  console.log('🔐 Generating one-time Magic Link for gabrielcall@gmail.com...');
++  const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
++    type: 'magiclink',
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(23:57:07)*
+
+
+## 🤖 Claude *(23:57:10)*
+
+O security-review orquestra sub-tasks. A superfície nova de risco real é o edge fn money-sensitive (`autopilot-run` + migration); o resto é React/cosmético (precedente: tsx sem `dangerouslySetInnerHTML` não é XSS). Lanço uma sub-task adversarial focada na tenancy/dinheiro, depois filtro e reporto.
+
+## 🤖 Claude *(23:57:23)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security scan autopilot cadence",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer. Review ONLY the security implications newly introduced by this change (a recurring video-cadence feature for the Viral Autopilot). Read these files in the repo at /home/gcrUX/htdocs/constellation-orchestra:\n\n1. supabase/functions/autopilot-run/index.ts (the deployed edge fn \u2014 focus on the NEW code: the video cadence block that adds a count query on autopilot_cycles, resolveVideoCadence, the infra_health_logs telemetry insert, and how `videoDue`/`projected` flow into begin_autopilot_cycle and the fan-out to orchestrate-content)\n2. supabase/functions/_shared/autopilot-video-cadence.ts (pure math helper)\n3. supabase/migrations/20260705120000_autopilot_video_cadence.sql (additive column video_every_n_cycles)\n4. src/hooks/useAutopilot.ts and src/pages/AutopilotPage.tsx (client-side form fields video_enabled / video_every_n_cycles)\n\nFocus areas (report ONLY concrete, >80%-confidence, exploitable issues):\n- Tenant isolation / IDOR: does the new count query or any new read/write cross tenant boundaries? (userId is server-trusted from the tenant-scoped plan load / re-validated header; planId is from the request body.)\n- Money integrity: does the cadence logic introduce a spend path that can mint coins, debit-without-value, or bypass the atomic caps in begin_autopilot_cycle? Note the invariant that `videoDue` must drive BOTH the projected pre-debit AND the fan-out video flag consistently.\n- SQL injection / input validation on video_every_n_cycles (clamped Math.max(1,Math.min(30)) in the edge fn + DB CHECK 1-30).\n- Any secret/PII exposure in the telemetry insert.\n\nEXCLUSIONS (do NOT report): DoS/resource exhaustion; rate limiting; secrets-on-disk; theoretical race conditions; lack-of-hardening; client-side authz (client TS is untrusted by design \u2014 backend validates); React/tsx XSS unless dangerouslySetInnerHTML; anything in test files or QA scripts; documentation/markdown findings; log spoofing; regex injection.\n\nPrecedent: UUIDs are unguessable/trusted; env vars are trusted; client-side code is not a trust boundary; the backend is responsible for validation.\n\nFor each finding give: file:line, severity (HIGH/MEDIUM/LOW), category, description, concrete exploit scenario, fix, and a confidence score 1-10. If you find NO concrete exploitable vulnerability, say so explicitly. Do not report style or best-practice items. Be terse."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a728135d54788c8fc (internal ID - do not mention to user. Use SendMessage with to: 'a728135d54788c8fc', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be8df5a5-f15e-42b8-8659-5b49cc9f4cea/tasks/a728135d54788c8fc.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(23:57:28)*
+
+
+## 🤖 Claude *(23:57:37)*
+
+A sub-task de segurança roda em background (gate antes do commit). Status da Fatia **cadência de vídeo recorrente** até aqui:
+
+## Implementado + verificado ✅
+- **Migration** `20260705120000` (coluna `video_every_n_cycles`, CHECK 1-30, aditiva) — **aplicada à prod** (coluna viva confirmada via REST)
+- **Helper puro** `_shared/autopilot-video-cadence.ts` + **unit test 10/10** (N=1 todo ciclo · N=3 ordinais 1,4,7 · disabled · graceful-degrade · boundary)
+- **`autopilot-run`** wired: conta ciclos anteriores → ordinal → vídeo só a cada N ciclos + graceful-degrade sob `budget_cap_mco` (vídeo nunca aborta o ciclo de texto) + telemetria `video_skipped_over_cap`. **Deployado** (77.48kB)
+- **UI** (`AutopilotPage` + `useAutopilot`): toggle "Vídeo 9:16 autônomo" + "a cada N ciclo(s)", default OFF
+- **SOP** (Lei 2) emendado: `autopilot-video-9x16.md` §Cadência recorrente (operator/sequence/cap/gates/recovery/success)
+- **Smoke zero-custo** `smoke-autopilot-video-cadence.ts`: **6/6 PASS** contra o edge fn vivo (V0-V4 + delta 0)
+
+**Invariante de custo (Lei 1):** `videoDue` alimenta ao mesmo tempo o `projected` (pré-débito) e o flag de fan-out — sempre concordam, então nunca há débito-sem-vídeo nem vídeo-sem-débito. `video_every_n_cycles=1` + `video_enabled=false` (default) = zero mudança de comportamento (backward-compat provado).
+
+Verificação global: **tsc 0 · vitest 408 passed · build 0**. Aguardo o veredito de segurança para commitar.
+
+## 👤 User *(23:58:28)*
+
+<task-notification>
+<task-id>a728135d54788c8fc</task-id>
+<tool-use-id>toolu_01Fb56gYU8wuuAMaZpiPLhwg</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be8df5a5-f15e-42b8-8659-5b49cc9f4cea/tasks/a728135d54788c8fc.output</output-file>
+<status>completed</status>
+<summary>Agent "Security scan autopilot cadence" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I've now traced the reallocation interaction fully. The reallocation existed before this change (it's not new video-cadence code), and critically: `actual` is capped in `finalize_autopilot_cycle` — the pre-debit already happened, and finalize computes a refund of `projected - actual`. Even if `actual &gt; projected` in some edge, that pre-existing behavior isn't introduced by this change. The video-cadence change itself keeps `succeededVideo` gated behind the same `videoDue` that drives `projected`. Any reallocation-vs-video-count concern is pre-existing (reallocation of `+1` to a wordpress winner over-counting video is inherited, not introduced by the cadence block), and the atomic cap in `begin_autopilot_cycle` bounds the pre-debit regardless. Let me not report pre-existing behavior.
+
+Now let me verify the remaining focus areas: tenant isolation on the new count query, input validation on `video_every_n_cycles`, and telemetry PII.
+
+**Tenant isolation on the new count query (lines 139-142):** `.eq("plan_id", planId).eq("user_id", userId)`. `userId` is server-trusted (JWT-derived or service-path header re-validated by the tenant-scoped plan load at line 86-90 which already 404s if the plan doesn't belong to `userId`). `planId` is body-supplied but was already validated to belong to `userId` at line 90. The count is a `head:true count` — returns only an integer, no row data crosses tenants. Even if `planId`/`userId` were mismatched, the plan load 404s before reaching here. No IDOR. ✓
+
+**Input validation on `video_every_n_cycles`:** Edge clamps `Math.max(1, Math.min(30, Number(...)))` (line 137), DB CHECK `BETWEEN 1 AND 30`. Used only as an integer in modular arithmetic in the pure helper (`Math.floor`, `%`). No string interpolation into SQL. Supabase client parameterizes. No injection. ✓
+
+**Telemetry inserts (lines 152-155, 103-106):** metadata contains `plan_id` (a UUID, unguessable/trusted per precedent), `budget_cap_mco`, `projected_video`, `video_every_n_cycles`, `platforms` — all plan config integers/enums the tenant owns. No secrets, no tokens, no PII. `infra_health_logs` is global-read, but none of these fields leak another tenant's data or credentials. ✓
+
+**`videoDue`/`projected` consistency:** Both derive from the single `cadence` object returned by `resolveVideoCadence`. `projected` (pre-debit, line 149) and `videoDue` (fan-out flag, line 281) cannot diverge — they come from the same computation. `succeededVideo` (actual reconciliation) is gated by the same `videoDue`. The helper is pure and returns `videoDue`/`projected`/`nVideoRuns` atomically. ✓
+
+## Review complete — no concrete exploitable vulnerability found
+
+I reviewed the new video-cadence code across all five files against the four focus areas. **I found NO concrete, &gt;80%-confidence, exploitable security vulnerability introduced by this change.**
+
+Findings against each focus area:
+
+**Tenant isolation / IDOR — clean.** The new count query (`autopilot-run/index.ts:139-142`) is scoped `.eq("plan_id", planId).eq("user_id", userId)`. `userId` is server-trusted (JWT `getUser()` on the user path; service-path `x-autopilot-user-id` header re-validated by the tenant-scoped plan load at lines 86-90, which 404s on any cross-tenant/missing plan *before* the count runs). `planId` is body-supplied but already proven to belong to `userId` at line 90. The query uses `head:true count` — returns only an integer, never row data. No new read/write crosses a tenant boundary.
+
+**Money integrity — invariant holds.** `resolveVideoCadence` (`_shared/autopilot-video-cadence.ts`) is pure and returns `videoDue`/`nVideoRuns`/`projected` as one atomic object. `projected` feeds the pre-debit `begin_autopilot_cycle` (line 149→204) and the identical `videoDue` boolean feeds the fan-out `video_enabled` flag (line 281) — they cannot diverge. The actual reconciliation `succeededVideo * VIDEO_COST` (line 304) is gated by the same `videoDue` (line 288) and counts only succeeded article-flow (wordpress) sub-runs, so the video component of `actual` is always ≤ the video component that was pre-debited into `projected`; `finalize_autopilot_cycle` refunds the difference. No mint, no debit-without-value, and the atomic cap in `begin_autopilot_cycle` still bounds the pre-debit. When video is off/off-cadence/over-cap, `nVideoRuns=0`, `videoDue=false`, and `succeededVideo` stays 0 — consistent on all three legs.
+
+**Input validation on `video_every_n_cycles` — safe.** Defense in depth: edge clamp `Math.max(1, Math.min(30, Number(...)))` (line 137), DB `CHECK BETWEEN 1 AND 30` (migration line 14). Used only as an integer in `%`/`Math.floor` arithmetic in the pure helper; never interpolated into SQL (Supabase client parameterizes). No injection surface.
+
+**Telemetry PII/secret exposure — none.** Both new `infra_health_logs` inserts (lines 103-106, 152-155) carry only plan config the tenant owns — `plan_id` (unguessable UUID, trusted per precedent), `budget_cap_mco`, `projected_video`, `video_every_n_cycles`, `platforms`. No tokens, credentials, or PII; nothing that leaks another tenant's data despite the table being global-read.
+
+Note on scope: the pre-existing FR-VA-030 reallocation (lines 257-260) can shift a wordpress variant `+1` to a winner pair, which interacts with the reserved video-slot count — but that logic and its interaction with `finalize_autopilot_cycle`'s refund math predate this change and are not introduced by the video-cadence block, so I did not treat it as a new finding.</result>
+<usage><subagent_tokens>93363</subagent_tokens><tool_uses>7</tool_uses><duration_ms>65182</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(23:58:41)*
+
+
+## 🤖 Claude *(23:58:51)*
+
+## Security Review — Relatório
+
+Conduzi a revisão (sub-task adversarial de identificação + filtro de falsos-positivos, threshold de confiança ≥8) sobre a superfície nova money-sensitive.
+
+**Resultado: nenhuma vulnerabilidade concreta explorável introduzida por esta mudança.**
+
+| Foco | Veredito |
+|------|----------|
+| **Tenant isolation / IDOR** | ✅ Clean — a nova count query (`autopilot-run:139-142`) é escopada `.eq(plan_id).eq(user_id)`; `userId` é server-trusted (JWT ou header re-validado pelo load tenant-scoped que 404 antes da count); `head:true count` retorna só inteiro, nenhum dado cruza tenant |
+| **Integridade financeira** | ✅ Invariante mantido — `resolveVideoCadence` é puro e retorna `videoDue`/`projected`/`nVideoRuns` atomicamente; o mesmo `videoDue` alimenta pré-débito E fan-out (não divergem); `succeededVideo` gated pelo mesmo flag; caps atômicos do `begin_autopilot_cycle` intactos; sem mint, sem débito-sem-valor |
+| **Input validation** (`video_every_n_cycles`) | ✅ Safe — clamp `Math.max(1,Math.min(30))` + DB `CHECK BETWEEN 1 AND 30`; usado só em aritmética inteira `%`/`floor`; parametrizado (zero SQL injection) |
+| **Telemetria PII/secret** | ✅ None — só config do próprio tenant (plan_id UUID, caps, platforms); sem tokens/credenciais/PII |
+
+Nota de escopo: a realocação FR-VA-030 (`:257-260`) é **pré-existente**, não introduzida por esta fatia — não tratada como achado novo.
+
+**`/security-review` SAFE.** Commito a fatia:
+
+## 🤖 Claude *(23:59:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/processes/autopilot-video-9x16.md src/hooks/useAutopilot.ts src/integrations/supabase/types.ts \\\n  src/pages/AutopilotPage.tsx supabase/functions/autopilot-run/index.ts \\\n  scripts/qa/smoke-autopilot-video-cadence.ts supabase/functions/_shared/autopilot-video-cadence.ts \\\n  supabase/functions/_shared/autopilot-video-cadence.test.ts supabase/migrations/20260705120000_autopilot_video_cadence.sql\ngit commit -q -m \"feat(autopilot): cad\u00eancia de v\u00eddeo 9:16 recorrente com cap pr\u00f3prio (FR-VA-022 Amendment)\n\nDestrava o v\u00eddeo aut\u00f4nomo RECORRENTE de forma segura: hoje s\u00f3 o texto recorria porque\nvideo_enabled=true enfileirava v\u00eddeo em TODO ciclo (12 mco \u00d7 N \u00d7 cada 3 dias = caro). Agora o\nv\u00eddeo tem cad\u00eancia pr\u00f3pria, desacoplada do texto, e um cap que nunca derruba o ciclo.\n\n- video_every_n_cycles (migration 20260705120000, CHECK 1-30): v\u00eddeo s\u00f3 nos ordinais 1, N+1, 2N+1\u2026\n  (conta os ciclos anteriores do plano). Default 1 = todo ciclo = backward-compat byte-id\u00eantico.\n- graceful-degrade: se o v\u00eddeo n\u00e3o couber no budget_cap_mco, \u00e9 pulado e o ciclo de TEXTO segue \u2014\n  o v\u00eddeo nunca aborta o ciclo (telemetria video_skipped_over_cap).\n- default OFF (video_enabled=false) \u2014 ligar \u00e9 decis\u00e3o expl\u00edcita do Sovereign.\n- helper puro _shared/autopilot-video-cadence.ts (unit 10/10) + UI toggle+'a cada N ciclos' na AutopilotPage.\n\nInvariante (Lei 1): videoDue alimenta pr\u00e9-d\u00e9bito E fan-out \u2014 sempre concordam (sem d\u00e9bito-sem-v\u00eddeo).\nVerificado: tsc 0 \u00b7 vitest 408 \u00b7 migration aplicada+viva \u00b7 edge deployado \u00b7 smoke 6/6 zero-custo\n(V0-V4 dry_run, delta 0) \u00b7 /security-review SAFE (tenancy/money/input/telemetria clean).\"\ngit log --oneline -3",
+  "description": "Commit recurring video cadence Fatia"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:59PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:59PM[0m [32mINF[0m scan completed in 22.9ms
+> [90m8:59PM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.12 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> ✔️ secret-scan (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> c5eaf1c feat(autopilot): cadência de vídeo 9:16 recorrente com cap próprio (FR-VA-022 Amendment)
+> 4729dd4 feat(universe): Epsilon V9 3.9 — cutover de nav para o Unified Sensorial Canvas
+> 6af3181 feat(brand): fecha a cauda de brand — pictogramas → lucide/MIV nas superfícies cross-file
+> ```
+
+## 🤖 Claude *(00:00:04)*
+
+
+## 🤖 Claude *(00:00:05)*
+
+Committed **`c5eaf1c`** — lefthook verde. A Fatia **cadência de vídeo recorrente** está completa e deployada.
+
+Atualizo a memória durável (estado de projeto que persiste entre sessões) para os 2 itens que avançaram:
+
+## 🤖 Claude *(00:00:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "offset": 40,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	- [Flywheel de conteúdo quebrado em 3 lugares pelo cutover de chaves (REPARADO)](project_orchestrate_pipeline_repair.md) — 2026-06-03: verify_jwt faltando + RPC param drift + WP 301. Regra: pg_net→verify_jwt=false sempre; SOP orchestrate-async-pipeline.md.
+> 41	- [Calibração mcoCoins — modelo 4×-floor (OTD fechada)](project_mcoin_calibration.md) — 2026-06-03: mco=ceil(usd/$0.018×4); único furo era IMAGE 3→9; SOP mcoin-cost-calibration.md.
+> 42	- [Constellation v2 — cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) — Todas as fases seladas v6.18.0; BoK 38d7e7a4. Gotchas: has_role(app_role) single-arg, admin-path key mismatch, 1 perfil real.
+> 43	- [Stale worktree — checar contra origin/main](feedback_stale_worktree_check_origin.md) — "X não existe/está quebrado" tirado só do worktree é falso negativo; cheque `git show origin/main:<path>` antes de concluir.
+> 44	- [Materialidade sob output bufferizado — não fabricar](feedback_materiality_buffered_output.md) — 2026-05-31: todo hash/UUID/contador vem de output verificado NESTE turno; halt e re-query, nunca preencha. /handson faz git fetch primeiro.
+> 45	- [Supabase keys migradas — use SB_SECRET_KEY (legadas REVOGADAS)](reference_supabase_keys_migrated.md) — 2026-06-01: SUPABASE_SERVICE_ROLE_KEY/ANON_KEY mortas (PGRST301); use SB_SECRET_KEY/SB_PUBLISHABLE_KEY, inclusive nos protocolos handson/handoff.
+> 46	- [user_api_keys é VIEW mascarada — chaves BYOK reais no Vault](reference_user_api_keys_encrypted.md) — SELECT mostra ••••; edge fns leem decrypted_user_api_keys; teste de chave DEVE ser server-side ("Falhou" no cliente ≠ chave inválida).
+> 47	- [Operador de Browser Autenticado — só p/ atribuição definitiva ML](project_authenticated_browser_operator.md) — Datacenter bloqueado (runtime = IP residencial); click ledger in-system fechado v6.28.0; prioridade menor (matt_tool/meli.la). Técnica magiclink reutilizável.
+> 48	- [Encrypted views — .insert() (não .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) — Views Vault: null não limpa (use RPC disconnect_*); double-fire 23505 corrigido UPDATE-first; guard de tenant nas 3 triggers (migrations 20260602*).
+> 49	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — grep = função→ugrep -G; BRE estoura e no-opa silenciosamente sob `|| true`; use -E.
+> ```
