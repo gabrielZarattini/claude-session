@@ -11390,3 +11390,16 @@ Tick (17:45). Ritual:
 > ```
 > Next wakeup scheduled for 18:06:00 (in 1234s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a33248f50594146ba]]
+%% --- TIMELINE END --- %%
