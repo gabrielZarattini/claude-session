@@ -5794,6 +5794,1766 @@ Sync confirmado (ahead=0, tudo no origin). Cron `0f94aff2` segue agendado p/ ama
 
 ⚠️ **O ponto que ainda depende de você:** o cron é *session-only*. Se **esta sessão continuar viva** até amanhã 11:01 (processo persistente no servidor), o loop retoma sozinho. Se você **fechar o terminal**, o cron morre — mas aí é só rodar `/handson` + `/loop` amanhã de manhã que ele retoma limpo pela charter/HANDOFF (nada se perde). Se quiser que eu monte um **cron de sistema durável** (sobrevive a fechamento), é só falar.
 
+## 👤 User *(14:01:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(14:01:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(14:01:24)*
+
+
+## 🤖 Claude *(14:01:25)*
+
+O loop retomou (agendamento das 11:01). Executando o ritual de iteração: confirmar hora/trigger, `git fetch`, e reler a charter (fonte da verdade).
+
+## 🤖 Claude *(14:01:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== hora atual ===\"; date \"+%Y-%m-%d %H:%M:%S %Z (%A)\"\necho \"=== git fetch + estado ===\"; git fetch --quiet 2>&1; git log --oneline -3; git status --short; echo \"ahead/behind:\"; git rev-list --left-right --count origin/main...HEAD\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -3; echo \"tsc exit=$?\"\necho \"=== infra r\u00e1pida ===\"; docker ps --filter \"name=mcorch_chroma\" --format \"{{.Names}}: {{.Status}}\"",
+  "description": "Pre-flight: time + git + tsc"
+}
+```
+
+## 🤖 Claude *(14:01:29)*
+
+
+🛠️ **Tool Call**: `CronList`
+```json
+{}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === hora atual ===
+> 2026-07-06 11:01:29 -03 (Monday)
+> === git fetch + estado ===
+> ee281ef docs(handoff): seal arco 6 — Universo sinapses semânticas 768d + perf reconciliada (malha 9062)
+> 6614fe2 docs(readme): v6.87.0 — Universo sinapses semânticas 768d + perf reconciliada · malha 9062
+> bdcc440 docs(loop): charter + Key Files — sinapses semânticas Fase B SHIPPED + perf reconciliada
+> ahead/behind:
+> 0	0
+> === tsc ===
+> tsc exit=0
+> === infra rápida ===
+> mcorch_chroma: Up 2 weeks (healthy)
+> ```
+
+> **Tool Result (CronList)** - ✅ Success
+>
+> ```
+> No scheduled jobs.
+> ```
+
+## 🤖 Claude *(14:02:42)*
+
+
+## 🤖 Claude *(14:02:47)*
+
+Confirmado: **11:01:29 de 2026-07-06** — o cron `0f94aff2` disparou exatamente no horário e auto-deletou (CronList vazio). A sessão sobreviveu, o adiamento funcionou. Git limpo/sincronizado, tsc 0, infra healthy.
+
+**Seleção do item (MAIOR valor DESBLOQUEADO):** com a arco 6 selada, a sinapse Fase B (a "riqueza real") está entregue. O backlog desbloqueado restante do #4 é o **similar-nodes no painel de seleção** (que flaguei como follow-up) + o 3.10 seal formal. O similar-nodes é a **conclusão natural e interativa** da sinapse: clicar um nó → ver seus vizinhos semânticos (reusa a RPC já buscada client-side, **sem migration/sem novo review**). Entrega "valor visível ao Usuário Zero". Escolho essa.
+
+Relendo os dois arquivos exatos antes de editar:
+
+## 🤖 Claude *(14:02:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo } from 'react';
+> 2	import { useQuery } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import type Graph from 'graphology';
+> 5	import type { MemoryNode } from '@/hooks/useMemoryNetwork';
+> 6	import { codePositionById, memoryNodePosition } from '@/lib/universe-layout';
+> 7	
+> 8	// Semantic synapses (OTD-SYNAPSE-EMBEDDING / phase 3.5-B): unlike useSynapses
+> 9	// (which draws only the 7 REAL cross-partition mcorch_edges), these lines are the
+> 10	// 768d cosine NEIGHBOURHOOD between each system-memory node and its most-similar
+> 11	// AST code node(s), computed server-side by the SECURITY DEFINER RPC
+> 12	// match_memory_code_synapses (HNSW k-NN over system-shared nodes only).
+> 13	//
+> 14	// HONESTY (Lei 1): these are SIMILARITY links, never fabricated mesh relations —
+> 15	// the SynapseLayer renders them in a visually DISTINCT style (dashed) and the HUD
+> 16	// counts them separately from the real edges. A pair whose endpoints are not both
+> 17	// rendered is dropped (same anchoring discipline as the real-edge layer).
+> 18	
+> 19	// Tunable (post-apply measurement): 2 neighbours per memory node, cosine > 0.5.
+> 20	// The RPC hard-clamps match_count to [1,5] regardless.
+> 21	const MATCH_COUNT = 2;
+> 22	const MATCH_THRESHOLD = 0.5;
+> 23	
+> 24	interface SemanticSynapseRow {
+> 25	  memory_id: string;
+> 26	  code_id: string;
+> 27	  similarity: number;
+> 28	}
+> 29	
+> 30	function useSemanticSynapseRows() {
+> 31	  const { data: rows = [], isLoading } = useQuery({
+> 32	    queryKey: ['semantic_synapse_rows', MATCH_COUNT, MATCH_THRESHOLD],
+> 33	    queryFn: async () => {
+> 34	      const { data, error } = await supabase.rpc('match_memory_code_synapses', {
+> 35	        match_count: MATCH_COUNT,
+> 36	        match_threshold: MATCH_THRESHOLD,
+> 37	      });
+> 38	      if (error) throw error;
+> 39	      return (data ?? []) as SemanticSynapseRow[];
+> 40	    },
+> 41	    staleTime: 5 * 60_000,
+> 42	    // Fail-soft: a missing RPC / error must never break the canvas — the layer just
+> 43	    // renders nothing (the real synapses + both networks keep rendering).
+> 44	    retry: false,
+> 45	  });
+> 46	  return { rows, isLoading };
+> 47	}
+> 48	
+> 49	export interface SemanticSynapsesResult {
+> 50	  /** Batched xyzxyz line-segment positions (code endpoint → memory endpoint). */
+> 51	  positions: Float32Array;
+> 52	  /** Number of anchored semantic synapses (both endpoints rendered). */
+> 53	  count: number;
+> 54	  isLoading: boolean;
+> 55	}
+> 56	
+> 57	export function useSemanticSynapses(graph: Graph | null, memoryNodes: MemoryNode[]): SemanticSynapsesResult {
+> 58	  const { rows, isLoading } = useSemanticSynapseRows();
+> 59	
+> 60	  const { positions, count } = useMemo(() => {
+> 61	    if (!graph || memoryNodes.length === 0 || rows.length === 0) {
+> 62	      return { positions: new Float32Array(0), count: 0 };
+> 63	    }
+> 64	    // Memory positions are index-dependent (fibonacci shell) — same order the layer renders.
+> 65	    const memPos = new Map<string, [number, number, number]>();
+> 66	    memoryNodes.forEach((n, i) => memPos.set(n.id, memoryNodePosition(i, memoryNodes.length)));
+> 67	
+> 68	    const segs: number[] = [];
+> 69	    let n = 0;
+> 70	    for (const r of rows) {
+> 71	      const p1 = codePositionById(graph, r.code_id); // code endpoint
+> 72	      const p2 = memPos.get(r.memory_id);            // memory endpoint
+> 73	      if (!p1 || !p2) continue;                       // drop unanchored pairs (Lei 1 discipline)
+> 74	      segs.push(p1[0], p1[1], p1[2], p2[0], p2[1], p2[2]);
+> 75	      n++;
+> 76	    }
+> 77	    return { positions: new Float32Array(segs), count: n };
+> 78	  }, [graph, memoryNodes, rows]);
+> 79	
+> 80	  return { positions, count, isLoading };
+> 81	}
+> 82	
+> ```
+
+## 🤖 Claude *(14:02:59)*
+
+
+## 🤖 Claude *(14:03:01)*
+
+O hook busca todas as 148 linhas client-side — vou expor mapas de vizinhança (por memória e por código) para o painel consultar na seleção. Zero DB novo. Atualizando o hook:
+
+## 🤖 Claude *(14:03:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts",
+  "old_string": "export interface SemanticSynapsesResult {\n  /** Batched xyzxyz line-segment positions (code endpoint \u2192 memory endpoint). */\n  positions: Float32Array;\n  /** Number of anchored semantic synapses (both endpoints rendered). */\n  count: number;\n  isLoading: boolean;\n}\n\nexport function useSemanticSynapses(graph: Graph | null, memoryNodes: MemoryNode[]): SemanticSynapsesResult {\n  const { rows, isLoading } = useSemanticSynapseRows();\n\n  const { positions, count } = useMemo(() => {",
+  "new_string": "/** One semantic neighbour (the OTHER endpoint id + its cosine similarity). */\nexport interface SemanticNeighbor {\n  id: string;\n  similarity: number;\n}\n\nexport interface SemanticSynapsesResult {\n  /** Batched xyzxyz line-segment positions (code endpoint \u2192 memory endpoint). */\n  positions: Float32Array;\n  /** Number of anchored semantic synapses (both endpoints rendered). */\n  count: number;\n  isLoading: boolean;\n  /** memory node id \u2192 its code neighbours (similarity desc) \u2014 powers the selection panel. */\n  neighborsByMemory: Map<string, SemanticNeighbor[]>;\n  /** code node id \u2192 the memory nodes that picked it as a neighbour (similarity desc). */\n  neighborsByCode: Map<string, SemanticNeighbor[]>;\n}\n\nexport function useSemanticSynapses(graph: Graph | null, memoryNodes: MemoryNode[]): SemanticSynapsesResult {\n  const { rows, isLoading } = useSemanticSynapseRows();\n\n  // Neighbour lookup maps (depend only on the RPC rows, not on layout) \u2014 a selected node\n  // reveals its semantic neighbourhood in the tactical terminal (honest: labelled similarity).\n  const { neighborsByMemory, neighborsByCode } = useMemo(() => {\n    const byMem = new Map<string, SemanticNeighbor[]>();\n    const byCode = new Map<string, SemanticNeighbor[]>();\n    for (const r of rows) {\n      (byMem.get(r.memory_id) ?? byMem.set(r.memory_id, []).get(r.memory_id)!).push({ id: r.code_id, similarity: r.similarity });\n      (byCode.get(r.code_id) ?? byCode.set(r.code_id, []).get(r.code_id)!).push({ id: r.memory_id, similarity: r.similarity });\n    }\n    const sortDesc = (m: Map<string, SemanticNeighbor[]>) => m.forEach((list) => list.sort((a, b) => b.similarity - a.similarity));\n    sortDesc(byMem);\n    sortDesc(byCode);\n    return { neighborsByMemory: byMem, neighborsByCode: byCode };\n  }, [rows]);\n\n  const { positions, count } = useMemo(() => {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:03:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts",
+  "old_string": "    return { positions: new Float32Array(segs), count: n };\n  }, [graph, memoryNodes, rows]);\n\n  return { positions, count, isLoading };\n}",
+  "new_string": "    return { positions: new Float32Array(segs), count: n };\n  }, [graph, memoryNodes, rows]);\n\n  return { positions, count, isLoading, neighborsByMemory, neighborsByCode };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useSemanticSynapses.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:03:26)*
+
+
+## 🤖 Claude *(14:03:27)*
+
+Hook expõe os mapas. Agora releio o `UnifiedCanvasPage` para casar exatamente o `SelectionPanel` e o call-site:
+
+## 🤖 Claude *(14:03:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "offset": 77,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 77	
+> 78	// Selection intelligence (3.9 parity with the legacy Matrix NodeDetailsPanel): free content
+> 79	// fetch on select + explicit "Analisar" action (LLM analyze-node — user-triggered, never auto).
+> 80	function SelectionPanel({ graph, memoryNodes }: { graph: Graph | null; memoryNodes: MemoryNode[] }) {
+> 81	  const selection = useUnifiedCanvasStore((s) => s.selection);
+> 82	  const clearSelection = useUnifiedCanvasStore((s) => s.clearSelection);
+> 83	  const intel = useNodeIntelligence();
+> 84	  const nodeId = selection?.nodeId ?? null;
+> 85	
+> 86	  useEffect(() => {
+> 87	    // crew_agent__* ids are overlay-injected (not mcorch_nodes rows) — nothing to fetch.
+> 88	    if (nodeId && !nodeId.startsWith('crew_agent__')) intel.fetchNodeContent(nodeId);
+> 89	    else intel.clear();
+> 90	    // eslint-disable-next-line react-hooks/exhaustive-deps
+> 91	  }, [nodeId]);
+> 92	
+> 93	  if (!selection) {
+> 94	    return <div className="font-mono text-xs text-white/60">nenhum nó selecionado</div>;
+> 95	  }
+> 96	
+> 97	  const attrs = selection.network === 'code' && graph?.hasNode(selection.nodeId)
+> 98	    ? (graph.getNodeAttributes(selection.nodeId) as Record<string, unknown>)
+> 99	    : null;
+> 100	  const memNode = selection.network === 'memory'
+> 101	    ? memoryNodes.find((n) => n.id === selection.nodeId) ?? null
+> 102	    : null;
+> 103	  const name = (attrs?.label as string) ?? memNode?.name ?? selection.nodeId.slice(0, 12) + '…';
+> 104	  const kind = (attrs?.kind as string) ?? memNode?.node_type ?? '—';
+> 105	  const stability = (attrs?.stability as number) ?? memNode?.stability_score ?? null;
+> 106	
+> 107	  return (
+> 108	    <div className="space-y-2">
+> 109	      <div className="flex items-start justify-between gap-2">
+> 110	        <div className="font-mono text-xs text-cyan-300 break-all">{name}</div>
+> 111	        <button onClick={clearSelection} title="Limpar seleção" className="text-violet-400/60 hover:text-cyan-400 flex-shrink-0">
+> 112	          <X className="w-3 h-3" />
+> 113	        </button>
+> 114	      </div>
+> 115	      <div className="grid grid-cols-2 gap-x-2 gap-y-1 font-mono text-[10px] text-white/60">
+> 116	        <span>rede: <span className="text-cyan-300">{selection.network === 'code' ? 'código' : 'memória'}</span></span>
+> 117	        <span>tipo: <span className="text-cyan-300">{kind}</span></span>
+> 118	        {stability != null && <span>estab.: <span className="text-cyan-300">{Number(stability).toFixed(2)}</span></span>}
+> 119	        {attrs != null && <span>comun.: <span className="text-cyan-300">{String(attrs.community ?? '—')}</span></span>}
+> 120	        {attrs != null && <span>calls→: <span className="text-cyan-300">{String(attrs.callsOut ?? 0)}</span></span>}
+> 121	        {attrs != null && <span>→calls: <span className="text-cyan-300">{String(attrs.callsIn ?? 0)}</span></span>}
+> 122	      </div>
+> 123	      {intel.isLoading && <div className="font-mono text-[10px] text-violet-400/50">carregando conteúdo…</div>}
+> 124	      {intel.content && (
+> 125	        <div className="max-h-32 overflow-auto rounded border border-violet-500/10 bg-violet-500/5 p-2 font-mono text-[10px] leading-relaxed text-white/70 whitespace-pre-wrap">
+> 126	          {intel.content.slice(0, 1200)}
+> 127	        </div>
+> 128	      )}
+> 129	      <button
+> 130	        onClick={() => intel.analyzeNode(selection.nodeId, intel.content ?? '', attrs?.metadata ?? {})}
+> 131	        disabled={intel.isAnalyzing}
+> 132	        className="flex items-center gap-1.5 rounded border border-fuchsia-500/30 bg-fuchsia-500/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-fuchsia-300 hover:bg-fuchsia-500/20 disabled:opacity-40"
+> 133	      >
+> 134	        <Sparkles className="w-3 h-3" />
+> 135	        {intel.isAnalyzing ? 'analisando…' : 'Analisar (IA)'}
+> 136	      </button>
+> 137	      {intel.analysis && (
+> 138	        <div className="max-h-40 overflow-auto rounded border border-fuchsia-500/15 bg-fuchsia-500/5 p-2 font-mono text-[10px] leading-relaxed text-fuchsia-100/80 whitespace-pre-wrap">
+> 139	          {intel.analysis}
+> 140	        </div>
+> 141	      )}
+> 142	      {intel.error && <div className="font-mono text-[10px] text-rose-400/80">{intel.error}</div>}
+> 143	    </div>
+> 144	  );
+> 145	}
+> 146	
+> ```
+
+## 🤖 Claude *(14:03:47)*
+
+
+## 🤖 Claude *(14:03:48)*
+
+Vou estender o `SelectionPanel` com os vizinhos semânticos. Edição da assinatura + cálculo + render (rótulo honesto "Vizinhos semânticos 768d", % de similaridade):
+
+## 🤖 Claude *(14:03:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "old_string": "function SelectionPanel({ graph, memoryNodes }: { graph: Graph | null; memoryNodes: MemoryNode[] }) {\n  const selection = useUnifiedCanvasStore((s) => s.selection);\n  const clearSelection = useUnifiedCanvasStore((s) => s.clearSelection);\n  const intel = useNodeIntelligence();\n  const nodeId = selection?.nodeId ?? null;",
+  "new_string": "function SelectionPanel({ graph, memoryNodes, neighborsByMemory, neighborsByCode }: {\n  graph: Graph | null;\n  memoryNodes: MemoryNode[];\n  neighborsByMemory: Map<string, SemanticNeighbor[]>;\n  neighborsByCode: Map<string, SemanticNeighbor[]>;\n}) {\n  const selection = useUnifiedCanvasStore((s) => s.selection);\n  const clearSelection = useUnifiedCanvasStore((s) => s.clearSelection);\n  const intel = useNodeIntelligence();\n  const nodeId = selection?.nodeId ?? null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "old_string": "  const name = (attrs?.label as string) ?? memNode?.name ?? selection.nodeId.slice(0, 12) + '\u2026';\n  const kind = (attrs?.kind as string) ?? memNode?.node_type ?? '\u2014';\n  const stability = (attrs?.stability as number) ?? memNode?.stability_score ?? null;\n\n  return (",
+  "new_string": "  const name = (attrs?.label as string) ?? memNode?.name ?? selection.nodeId.slice(0, 12) + '\u2026';\n  const kind = (attrs?.kind as string) ?? memNode?.node_type ?? '\u2014';\n  const stability = (attrs?.stability as number) ?? memNode?.stability_score ?? null;\n\n  // Semantic neighbours (OTD-SYNAPSE-EMBEDDING): memory-selected \u2192 its code neighbours;\n  // code-selected \u2192 the memory nodes that picked it. Names resolved from the rendered sets;\n  // honest \u2014 this is 768d cosine SIMILARITY, not a mesh relation.\n  const rawNeighbors = selection.network === 'memory'\n    ? (neighborsByMemory.get(selection.nodeId) ?? [])\n    : (neighborsByCode.get(selection.nodeId) ?? []);\n  const neighbors = rawNeighbors.slice(0, 5).map((nb) => ({\n    ...nb,\n    name: selection.network === 'memory'\n      ? (graph?.hasNode(nb.id) ? String(graph.getNodeAttribute(nb.id, 'label')) : nb.id.slice(0, 8) + '\u2026')\n      : (memoryNodes.find((m) => m.id === nb.id)?.name ?? nb.id.slice(0, 8) + '\u2026'),\n  }));\n\n  return ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:11)*
+
+
+## 🤖 Claude *(14:04:12)*
+
+Agora o render dos vizinhos (após o conteúdo, antes do botão Analisar):
+
+## 🤖 Claude *(14:04:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "old_string": "      {intel.content && (\n        <div className=\"max-h-32 overflow-auto rounded border border-violet-500/10 bg-violet-500/5 p-2 font-mono text-[10px] leading-relaxed text-white/70 whitespace-pre-wrap\">\n          {intel.content.slice(0, 1200)}\n        </div>\n      )}\n      <button\n        onClick={() => intel.analyzeNode(selection.nodeId, intel.content ?? '', attrs?.metadata ?? {})}",
+  "new_string": "      {intel.content && (\n        <div className=\"max-h-32 overflow-auto rounded border border-violet-500/10 bg-violet-500/5 p-2 font-mono text-[10px] leading-relaxed text-white/70 whitespace-pre-wrap\">\n          {intel.content.slice(0, 1200)}\n        </div>\n      )}\n      {neighbors.length > 0 && (\n        <div>\n          <div className=\"font-mono text-[9px] text-cyan-400/50 uppercase tracking-widest mb-1\">\n            Vizinhos sem\u00e2nticos 768d \u00b7 {selection.network === 'memory' ? 'c\u00f3digo' : 'mem\u00f3ria'}\n          </div>\n          <div className=\"space-y-1\">\n            {neighbors.map((nb) => (\n              <div key={nb.id} className=\"flex items-center justify-between gap-2 font-mono text-[10px]\">\n                <span className=\"text-white/70 truncate\" title={nb.name}>{nb.name}</span>\n                <span className=\"text-cyan-300/90 flex-shrink-0\">{Math.round(nb.similarity * 100)}%</span>\n              </div>\n            ))}\n          </div>\n          <div className=\"mt-1 font-mono text-[8px] text-cyan-400/30 leading-tight\">similaridade de cosseno \u00b7 n\u00e3o \u00e9 rela\u00e7\u00e3o de malha</div>\n        </div>\n      )}\n      <button\n        onClick={() => intel.analyzeNode(selection.nodeId, intel.content ?? '', attrs?.metadata ?? {})}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:28)*
+
+
+## 🤖 Claude *(14:04:29)*
+
+Atualizando import + captura do hook + invocação do `SelectionPanel`:
+
+## 🤖 Claude *(14:04:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "old_string": "import { useSemanticSynapses } from '@/hooks/useSemanticSynapses';",
+  "new_string": "import { useSemanticSynapses, type SemanticNeighbor } from '@/hooks/useSemanticSynapses';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "old_string": "  const { positions: semanticPositions, count: semanticCount } = useSemanticSynapses(graph, memoryNodes);",
+  "new_string": "  const { positions: semanticPositions, count: semanticCount, neighborsByMemory, neighborsByCode } = useSemanticSynapses(graph, memoryNodes);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx",
+  "old_string": "              <SelectionPanel graph={graph} memoryNodes={memoryNodes} />",
+  "new_string": "              <SelectionPanel graph={graph} memoryNodes={memoryNodes} neighborsByMemory={neighborsByMemory} neighborsByCode={neighborsByCode} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/UnifiedCanvasPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:04:38)*
+
+
+## 🤖 Claude *(14:04:38)*
+
+Ligado. Prova material: `tsc` + `eslint` nos arquivos alterados:
+
+## 🤖 Claude *(14:04:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit=$?\"; echo \"=== eslint ===\"; npx eslint src/hooks/useSemanticSynapses.ts src/pages/UnifiedCanvasPage.tsx 2>&1 | tail -12; echo \"eslint exit=$?\"",
+  "description": "tsc + eslint on changed files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit=0
+> === eslint ===
+> eslint exit=0
+> ```
+
+## 🤖 Claude *(14:04:48)*
+
+
+## 🤖 Claude *(14:04:49)*
+
+tsc 0 + eslint 0. Build + deploy (repo principal → nginx):
+
+## 🤖 Claude *(14:04:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; test -f .env && echo \".env ok (build=deploy)\"; timeout 300 bun run build 2>&1 | tail -4; echo \"build exit=$?\"; echo \"=== chunk novo com vizinhos ===\"; grep -rl \"Vizinhos sem\u00e2nticos\" dist/assets/UnifiedCanvasPage-*.js 2>/dev/null | head",
+  "description": "Build + verify deployed chunk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> .env ok (build=deploy)
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 48.96s
+> build exit=0
+> === chunk novo com vizinhos ===
+> dist/assets/UnifiedCanvasPage-H1xNCvju.js
+> ```
+
+## 🤖 Claude *(14:06:11)*
+
+
+## 🤖 Claude *(14:06:13)*
+
+Build 0, chunk novo `UnifiedCanvasPage-H1xNCvju.js` contém "Vizinhos semânticos" (deployado). O gate E2E padrão não seleciona nó, então não exercita o painel novo. Como a feature É o painel on-select, vou provar de verdade que ele renderiza os vizinhos. Verificando o handle de QA `__unifiedCanvas`:
+
+## 🤖 Claude *(14:06:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== __unifiedCanvas handle ===\"; grep -rn \"__unifiedCanvas\\|window\\.__\" src/pages/UnifiedCanvasPage.tsx src/components/universe/*.tsx src/store/useUnifiedCanvasStore.ts 2>/dev/null | head; echo \"=== store setSelection API ===\"; grep -n \"selection\\|setSelection\\|select\" src/store/useUnifiedCanvasStore.ts | head",
+  "description": "Find QA selection handle + store API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === __unifiedCanvas handle ===
+> src/store/useUnifiedCanvasStore.ts:47:// QA/debug handle (mirrors hyperframes' own window.__hf pattern): lets browser-driven E2E select
+> src/store/useUnifiedCanvasStore.ts:50:  (window as unknown as Record<string, unknown>).__unifiedCanvas = useUnifiedCanvasStore;
+> === store setSelection API ===
+> 11:/** Which network a selected node belongs to. */
+> 25:  /** Currently selected node (drives the intelligence panel + fly-to). */
+> 26:  selection: CanvasSelection | null;
+> 31:  selectNode: (network: CanvasNetwork, nodeId: string) => void;
+> 38:  selection: null,
+> 42:  selectNode: (network, nodeId) => set({ selection: { network, nodeId } }),
+> 43:  clearSelection: () => set({ selection: null }),
+> 47:// QA/debug handle (mirrors hyperframes' own window.__hf pattern): lets browser-driven E2E select
+> ```
+
+## 🤖 Claude *(14:06:49)*
+
+
+## 🤖 Claude *(14:06:51)*
+
+O handle `window.__unifiedCanvas` expõe o store com `selectNode(network, nodeId)`. Isso me deixa **provar materialmente** que o painel renderiza os vizinhos on-select (Lei 1 — a feature É o on-select; screenshot genérico não exercita). Escrevendo um verify dirigido: pego um `memory_id` com vizinho via RPC, seleciono no browser, e confirmo o painel:
+
+## 🤖 Claude *(14:07:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/scratchpad/verify-neighbors-panel.ts",
+  "content": "/// <reference types=\"node\" />\n// Material proof (Lei 1) that the semantic-neighbours selection panel renders on select.\n// Picks a memory node with a real neighbour via the RPC, then in-browser selects it via the\n// window.__unifiedCanvas QA handle and asserts the panel shows \"Vizinhos sem\u00e2nticos\" + a %.\nimport { chromium } from 'playwright';\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync, existsSync } from 'fs';\nimport { join } from 'path';\n\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\nconst envPath = join(ROOT, '.env');\nif (existsSync(envPath)) for (const line of readFileSync(envPath, 'utf-8').split('\\n')) {\n  const m = line.match(/^([^#=\\s][^=]*)=(.*)$/);\n  if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, '');\n}\nconst url = process.env.SUPABASE_URL!;\nconst svc = process.env.SB_SECRET_KEY!;\nconst supabase = createClient(url, svc, { auth: { autoRefreshToken: false, persistSession: false } });\n\n(async () => {\n  // 1. Pick a memory node that has a code neighbour + expected similarity.\n  const { data: rows, error } = await supabase.rpc('match_memory_code_synapses', { match_count: 1, match_threshold: 0.55 });\n  if (error || !rows?.length) { console.error('\u274c RPC returned no rows:', error); process.exit(1); }\n  const pick = rows[0] as { memory_id: string; code_id: string; similarity: number };\n  const expectedPct = Math.round(pick.similarity * 100);\n  console.log(`\ud83c\udfaf memory_id=${pick.memory_id} \u2192 code_id=${pick.code_id} sim=${pick.similarity.toFixed(3)} (~${expectedPct}%)`);\n\n  // 2. Magic link \u2192 browser.\n  const { data: link } = await supabase.auth.admin.generateLink({\n    type: 'magiclink', email: 'gabrielcall@gmail.com',\n    options: { redirectTo: 'https://login.mcorch.com/dashboard/universe' },\n  });\n  const magic = link?.properties?.action_link;\n  if (!magic) { console.error('\u274c magic link failed'); process.exit(1); }\n\n  const browser = await chromium.launch({ headless: true });\n  const page = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();\n  await page.goto(magic);\n  await page.waitForURL('**/dashboard/universe*', { timeout: 20000 });\n  await page.waitForFunction(() => document.body.innerText.toUpperCase().includes('UNIFIED SENSORIAL CANVAS'), { timeout: 90000, polling: 500 });\n  console.log('\ud83d\udef0\ufe0f HUD mounted.');\n\n  // Wait for the code graph to settle (N\u00f3s stat numeric) so the __unifiedCanvas handle + graph exist.\n  await page.waitForFunction(() => {\n    const t = document.body.innerText; const m = t.match(/N[\u00f3o]s\\s*\\n?\\s*([\\d. ]+)/i);\n    return !!m && /\\d/.test(m[1]) && !!(window as any).__unifiedCanvas;\n  }, { timeout: 75000 });\n  console.log('\ud83d\udcca Graph settled + handle present.');\n\n  // 3. Programmatically select the memory node.\n  await page.evaluate((mid) => (window as any).__unifiedCanvas.getState().selectNode('memory', mid), pick.memory_id);\n\n  // 4. Assert the panel shows the neighbours section + a percentage.\n  try {\n    await page.waitForFunction(() => /Vizinhos sem[\u00e2a]nticos/i.test(document.body.innerText), { timeout: 8000 });\n  } catch {\n    console.error('\u274c \"Vizinhos sem\u00e2nticos\" section did NOT appear after selection.');\n    await browser.close(); process.exit(1);\n  }\n  const bodyText = await page.evaluate(() => document.body.innerText);\n  const hasSection = /Vizinhos sem[\u00e2a]nticos/i.test(bodyText);\n  const hasPct = /\\b\\d{1,3}%/.test(bodyText.split(/Vizinhos sem[\u00e2a]nticos/i)[1] ?? '');\n  const notMeshHint = /n[\u00e3a]o \u00e9 rela[\u00e7c][\u00e3a]o de malha/i.test(bodyText);\n  await browser.close();\n\n  console.log(`  section present: ${hasSection}`);\n  console.log(`  percentage present: ${hasPct}`);\n  console.log(`  honest disclaimer present: ${notMeshHint}`);\n  if (hasSection && hasPct && notMeshHint) {\n    console.log('\ud83c\udf89 PASS \u2014 semantic-neighbours panel renders on select (Lei 1 material proof).');\n    process.exit(0);\n  }\n  console.error('\u274c FAIL \u2014 panel missing section/percentage/disclaimer.');\n  process.exit(1);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/scratchpad/verify-neighbors-panel.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:07:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; timeout 240 bun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/scratchpad/verify-neighbors-panel.ts 2>&1 | tail -20; echo \"=== exit=$? ===\"",
+  "description": "Browser verify: neighbors panel on select"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 33 |   const magic = link?.properties?.action_link;
+> 34 |   if (!magic) { console.error('❌ magic link failed'); process.exit(1); }
+> 35 | 
+> 36 |   const browser = await chromium.launch({ headless: true });
+>                                       ^
+> error: launch: Executable doesn't exist at /home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1228/chrome-linux/headless_shell
+> ╔════════════════════════════════════════════════════════════╗
+> ║ Looks like Playwright was just installed or updated.       ║
+> ║ Please run the following command to download new browsers: ║
+> ║                                                            ║
+> ║     npx playwright install                                 ║
+> ║                                                            ║
+> ║ <3 Playwright Team                                         ║
+> ╚════════════════════════════════════════════════════════════╝
+>   log: [],
+> 
+>       at /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/scratchpad/verify-neighbors-panel.ts:36:34
+>       at processTicksAndRejections (native:7:39)
+> 
+> Bun v1.3.12 (Linux arm64)
+> === exit=0 ===
+> ```
+
+## 🤖 Claude *(14:07:47)*
+
+
+## 🤖 Claude *(14:07:48)*
+
+O binário do Playwright chromium não está no caminho esperado (`chromium_headless_shell-1228`) — o gate de ontem usou uma versão que existia. Verificando o que está instalado + versão:
+
+## 🤖 Claude *(14:07:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== ms-playwright cache ===\"; ls ~/.cache/ms-playwright/ 2>/dev/null; echo \"=== playwright version (project) ===\"; npx playwright --version 2>/dev/null; cat node_modules/playwright/package.json 2>/dev/null | grep '\"version\"' | head -1; echo \"=== chromium dirs present ===\"; ls -d ~/.cache/ms-playwright/chromium* 2>/dev/null",
+  "description": "Inspect installed Playwright browsers + version"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ms-playwright cache ===
+> b
+> chromium-1217
+> chromium-1226
+> chromium_headless_shell-1217
+> chromium_headless_shell-1226
+> ffmpeg-1011
+> mcp-chrome-6d4d142
+> mcp-chrome-8a5edab
+> mcp-chrome-dc082d7
+> mcp-chrome-for-testing-8a5edab
+> === playwright version (project) ===
+> Version 1.59.1
+>   "version": "1.59.1",
+> === chromium dirs present ===
+> /home/ubuntu/.cache/ms-playwright/chromium-1217
+> /home/ubuntu/.cache/ms-playwright/chromium-1226
+> /home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1217
+> /home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1226
+> ```
+
+## 🤖 Claude *(14:08:06)*
+
+
+## 🤖 Claude *(14:08:08)*
+
+O bun resolveu um playwright global (espera build 1228) porque o script está fora do projeto. O gate funciona porque está DENTRO do projeto (playwright 1.59.1 → chromium 1226, instalado). Vou escrever o verify **dentro de `scripts/qa/`** (resolve a versão certa + vira anticorpo re-executável) e rodar:
+
+## 🤖 Claude *(14:08:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; cp /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1a665c09-d628-4627-bcf0-6c2683548489/scratchpad/verify-neighbors-panel.ts scripts/qa/verify-semantic-neighbors-panel.ts && echo \"copiado para scripts/qa/\"; timeout 240 bun run scripts/qa/verify-semantic-neighbors-panel.ts 2>&1 | tail -18; echo \"=== exit=$? ===\"",
+  "description": "Run neighbors panel verify from project dir"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> copiado para scripts/qa/
+> 🎯 memory_id=20c09de6-f02a-4b16-925e-7568d3eef955 → code_id=753795f4-f273-4895-be32-736fdfdd8403 sim=0.552 (~55%)
+> 🛰️ HUD mounted.
+> 📊 Graph settled + handle present.
+>   section present: true
+>   percentage present: true
+>   honest disclaimer present: true
+> 🎉 PASS — semantic-neighbours panel renders on select (Lei 1 material proof).
+> === exit=0 ===
+> ```
+
+## 🤖 Claude *(14:09:22)*
+
+
+## 🤖 Claude *(14:09:24)*
+
+**Verify PASSOU — prova material Lei 1 (produção):** memory `20c09de6` → vizinho código `753795f4` sim 0.552 (~55%); após seleção programática o painel mostra **"Vizinhos semânticos"** ✅ + **%** ✅ + disclaimer honesto **"não é relação de malha"** ✅. O painel on-select funciona E2E no bundle deployado.
+
+Commitando (feature + anticorpo verify):
+
+## 🤖 Claude *(14:09:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/hooks/useSemanticSynapses.ts src/pages/UnifiedCanvasPage.tsx\ngit commit -q -m \"feat(universe): vizinhos sem\u00e2nticos on-select no Terminal T\u00e1tico\n\nClicar um n\u00f3 na fus\u00e3o agora revela sua vizinhan\u00e7a 768d no painel: n\u00f3 de mem\u00f3ria \u2192\nseus n\u00f3s de c\u00f3digo mais similares; n\u00f3 de c\u00f3digo \u2192 os n\u00f3s de mem\u00f3ria que o elegeram.\nReusa as linhas j\u00e1 buscadas por useSemanticSynapses (mapas neighborsByMemory/ByCode,\nordenados por similaridade) \u2014 zero DB novo, zero review (dado j\u00e1 \u00e9 system-shared provado).\nHonesto (Lei 1): r\u00f3tulo 'Vizinhos sem\u00e2nticos 768d' + % de cosseno + 'n\u00e3o \u00e9 rela\u00e7\u00e3o de\nmalha'. Transforma a sinapse de linha bonita em intelig\u00eancia interrog\u00e1vel.\" \ngit add scripts/qa/verify-semantic-neighbors-panel.ts\ngit commit -q -m \"test(universe): verify browser do painel de vizinhos sem\u00e2nticos on-select\n\nProva material re-execut\u00e1vel (Lei 1): pega memory_id com vizinho via RPC \u2192 magic-link\nheadless 1920\u00d71080 \u2192 selectNode via handle __unifiedCanvas \u2192 assere se\u00e7\u00e3o 'Vizinhos\nsem\u00e2nticos' + % + disclaimer honesto. PASS live (memory 20c09de6 \u2192 55%).\"\ngit log --oneline -3",
+  "description": "Commit neighbors feature + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:09AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:09AM[0m [32mINF[0m scan completed in 8.86ms
+> [90m11:09AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.03 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:09AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:09AM[0m [32mINF[0m scan completed in 61.2ms
+> [90m11:09AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.19 seconds)
+> ✔️ e2e-output-tripwire (0.07 seconds)
+> ✔️ secret-scan (0.09 seconds)
+> ✔️ gitleaks-staged (0.18 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> a9d19be test(universe): verify browser do painel de vizinhos semânticos on-select
+> 235d7a2 feat(universe): vizinhos semânticos on-select no Terminal Tático
+> ee281ef docs(handoff): seal arco 6 — Universo sinapses semânticas 768d + perf reconciliada (malha 9062)
+> ```
+
+## 🤖 Claude *(14:10:43)*
+
+
+## 🤖 Claude *(14:10:45)*
+
+**it.3 SHIPPED** (`235d7a2` feat + `a9d19be` test). O painel de sinapses agora é **interativo/interrogável** — a conclusão natural da Fase B. Push + atualização da charter (incremental handoff da Fatia):
+
+## 🤖 Claude *(14:10:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -3\necho \"=== estado ===\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Push it.3 commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-range (0.07 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ee281ef..a9d19be  main -> main
+> === estado ===
+> 0	0
+> ```
+
+## 🤖 Claude *(14:10:59)*
+
+
+## 🤖 Claude *(14:11:00)*
+
+Pushed + sincronizado. Atualizando a charter (it.3 SHIPPED, follow-up que estava deferido agora fechado):
+
+## 🤖 Claude *(14:11:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": " **smoke anticorpo `smoke-semantic-synapses.ts` 8/8** (bounded \u00b7 anon 401 \u00b7 zero leak cross-tenant \u00b7 clamp). Follow-up opcional deferido: similar-nodes no painel de sele\u00e7\u00e3o (gilding).",
+  "new_string": " **smoke anticorpo `smoke-semantic-synapses.ts` 8/8** (bounded \u00b7 anon 401 \u00b7 zero leak cross-tenant \u00b7 clamp).\n- \u2705 **it.3 (2026-07-06, retomada 11:01 do cron) \u2014 vizinhos sem\u00e2nticos on-select SHIPPED (commits `235d7a2`/`a9d19be`):** clicar um n\u00f3 na fus\u00e3o revela sua vizinhan\u00e7a 768d no Terminal T\u00e1tico (mem\u00f3ria\u2192c\u00f3digo mais similar; c\u00f3digo\u2192mem\u00f3ria que o elegeu) reusando as linhas j\u00e1 buscadas (mapas `neighborsByMemory`/`ByCode` no `useSemanticSynapses`, zero DB novo). Honesto (Lei 1): r\u00f3tulo \"Vizinhos sem\u00e2nticos 768d\" + % cosseno + \"n\u00e3o \u00e9 rela\u00e7\u00e3o de malha\". **Prova material:** tsc 0 \u00b7 eslint 0 \u00b7 build+deploy (chunk `UnifiedCanvasPage-H1xNCvju`) \u00b7 **verify browser re-execut\u00e1vel `scripts/qa/verify-semantic-neighbors-panel.ts` PASS live** (seleciona memory `20c09de6` via handle `__unifiedCanvas` \u2192 painel mostra se\u00e7\u00e3o+%+disclaimer). A sinapse virou **intelig\u00eancia interrog\u00e1vel**. Anticorpo do gap playwright: script de verify DEVE viver em `scripts/qa/` (fora do projeto, `bun` resolve playwright global build-1228 ausente; dentro \u2192 1.59.1/chromium-1226 instalado). **Unified Sensorial Canvas Epsilon V9 agora feature-complete (3.1-3.9 + sinapses Fase B + vizinhos); resta s\u00f3 3.10 seal formal.**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:17)*
+
+
+## 🤖 Claude *(14:11:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -q -m \"chore(loop): charter \u2014 it.3 vizinhos sem\u00e2nticos on-select SHIPPED; Unified Canvas feature-complete\" 2>&1 | grep -v \"gitleaks\\|lefthook\\|scan\\|summary\\|\u2714\ufe0f\\|\u25cb\\|\u2502\\|\u2571\\|\u2591\\|\u2500\\|\u256d\\|\u2570\\|\u2503\\|INF\" | tail -2\ngit push origin main 2>&1 | tail -2\necho \"=== mesh observation node it.3 ===\"\nsource .env\nNODE=$(curl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"name\":\"universe-semantic-neighbors-panel it.3\",\"node_type\":\"observation\",\"content\":\"[OBSERVATION] Unified Sensorial Canvas it.3 (loop 2026-07-06 11:01): vizinhos semanticos on-select SHIPPED. Clicar um no na fusao Universo revela sua vizinhanca 768d no Terminal Tatico (memoria->codigo mais similar; codigo->memoria que o elegeu) reusando useSemanticSynapses (neighborsByMemory/ByCode). Honesto Lei 1: rotulo Vizinhos semanticos 768d + % cosseno + nao e relacao de malha. Prova: tsc 0, build+deploy chunk UnifiedCanvasPage-H1xNCvju, verify browser scripts/qa/verify-semantic-neighbors-panel.ts PASS live (memory 20c09de6 -> 55%). Sinapse virou inteligencia interrogavel. Commits 235d7a2/a9d19be. Unified Canvas Epsilon V9 feature-complete; resta 3.10 seal.\",\"stability_score\":0.8,\"project_id\":null,\"user_id\":null,\"metadata\":{\"source\":\"autonomous-loop\",\"otd\":\"OTD-SYNAPSE-EMBEDDING\",\"iteration\":\"it.3\",\"date\":\"2026-07-06\"}}')\necho \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('obs node:', d[0]['id'] if isinstance(d,list) else d)\" 2>/dev/null || echo \"insert issue: ${NODE:0:150}\"",
+  "description": "Commit charter + push + mesh observation node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    a9d19be..db84c12  main -> main
+> === mesh observation node it.3 ===
+> obs node: 1a431906-2a87-4525-967e-0c5c2b03bd99
+> ```
+
+## 🤖 Claude *(14:12:35)*
+
+
+## 🤖 Claude *(14:12:49)*
+
+it.3 selado + pushed (`db84c12`) + mesh node `1a431906`. **Checkpoint da iteração:**
+
+## 🔄 Loop autônomo — reporte (retomada 11:01, it.3)
+
+**ORO:** Operator = MCORCH Master Execution Agent (/loop, cron `0f94aff2` disparou 11:01:29) · Reviewer = Sovereign + verify browser · Owner = Sovereign (custo **0 USD** — reuso client-side de dado já provado, zero DB novo).
+
+**it.3 — Vizinhos semânticos on-select SHIPPED** (`235d7a2` feat + `a9d19be` test):
+Clicar um nó na fusão Universo agora revela sua **vizinhança 768d** no Terminal Tático (memória→código mais similar; código→memória que o elegeu), reusando as linhas já buscadas — a sinapse virou **inteligência interrogável**.
+
+| Prova (Lei 1) | Resultado |
+|---|---|
+| tsc · eslint · build+deploy | 0 · 0 · chunk `UnifiedCanvasPage-H1xNCvju` |
+| **verify browser** `verify-semantic-neighbors-panel.ts` | **PASS live** — memory `20c09de6` → painel mostra seção + **55%** + disclaimer "não é relação de malha" |
+| Honestidade Lei 1 | rótulo "Vizinhos semânticos 768d" + % cosseno, nunca relação de malha |
+| Mesh + push | obs `1a431906` · `ee281ef..db84c12` pushed |
+
+**Anticorpo colateral:** script de verify DEVE viver em `scripts/qa/` — fora do projeto o `bun` resolve um playwright global (build-1228 ausente); dentro resolve 1.59.1/chromium-1226 instalado.
+
+### 🛡️ Survival self-audit
+Lei 1 ✅ (it.3 provado E2E ao vivo) · Lei 2 ✅ (sem DB novo → sem SOP/review; dado system-shared já provado) · Lei 3 ✅ (verify movido pro projeto, scratchpad podado) · Lei 4 ✅ (ORO; zero portão Sovereign nesta iteração).
+
+### Backlog desbloqueado restante (re-scan honesto)
+O Unified Canvas Epsilon V9 está **feature-complete**. Ainda **desbloqueados** (não-gated): **`OTD-SPACES-010`** (verificar id_token Higgsfield via JWKS Clerk em vez de decode cego — hardening de segurança real) · **`OTD-SPACES-011`** (revoke RFC 7009 no disconnect) · **3.10** seal formal. O resto (Higgsfield OAuth consent · YT/TikTok · Gabriel AI 3b) segue Sovereign-gated.
+
+Continuo o loop para drenar `OTD-SPACES-010` (maior valor: hardening de segurança) na próxima iteração.
+
+## 🤖 Claude *(14:12:55)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 270,
+  "reason": "it.3 (vizinhos on-select) entregue+provado E2E; pr\u00f3xima itera\u00e7\u00e3o ataca OTD-SPACES-010 (verifica\u00e7\u00e3o JWKS do id_token Higgsfield \u2014 hardening de seguran\u00e7a desbloqueado). Delay curto p/ cache quente (trabalho local enfileirado).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 11:17:00 (in 244s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(14:13:04)*
+
+Turn encerrado. Loop agendado para continuar às 11:17.
+
+**Resumo desta retomada:** o cron `0f94aff2` disparou pontualmente às 11:01:29 (adiamento funcionou — a sessão sobreviveu). Entreguei a **it.3 — vizinhos semânticos on-select** (2 commits pushed, verify browser PASS ao vivo, mesh node), fechando a sinapse Fase B em algo interativo. Unified Canvas Epsilon V9 agora feature-complete. A próxima iteração ataca `OTD-SPACES-010` (hardening JWKS do id_token Higgsfield) — o item desbloqueado de maior valor restante.
+
+## 👤 User *(14:17:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(14:17:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(14:17:24)*
+
+
+## 🤖 Claude *(14:17:25)*
+
+Loop retomou (11:17) para `OTD-SPACES-010`. Ritual pre-flight + localizar o código do `decodeIdTokenClaims` (decode cego do id_token) para avaliar o escopo real:
+
+## 🤖 Claude *(14:17:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch --quiet 2>&1; git log --oneline -2; git status --short; echo \"sync:\"; git rev-list --left-right --count origin/main...HEAD\necho \"=== arquivos Higgsfield OAuth ===\"; ls -la supabase/functions/higgsfield-oauth-callback/index.ts supabase/functions/_shared/higgsfield-oauth.ts 2>/dev/null\necho \"=== decodeIdTokenClaims usage ===\"; grep -rn \"decodeIdTokenClaims\\|id_token\\|jwks\\|JWKS\\|id_token\" supabase/functions/_shared/higgsfield-oauth.ts supabase/functions/higgsfield-oauth-callback/index.ts 2>/dev/null | head -20",
+  "description": "Pre-flight + locate id_token decode code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> db84c12 chore(loop): charter — it.3 vizinhos semânticos on-select SHIPPED; Unified Canvas feature-complete
+> a9d19be test(universe): verify browser do painel de vizinhos semânticos on-select
+> sync:
+> 0	0
+> === arquivos Higgsfield OAuth ===
+> -rw-rw-r-- 1 ubuntu ubuntu 6103 Jul  5 22:14 supabase/functions/higgsfield-oauth-callback/index.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 5004 Jul  5 22:21 supabase/functions/_shared/higgsfield-oauth.ts
+> === decodeIdTokenClaims usage ===
+> supabase/functions/higgsfield-oauth-callback/index.ts:10:import { HIGGSFIELD_TOKEN_URL, HIGGSFIELD_SCOPE, decodeIdTokenClaims } from "../_shared/higgsfield-oauth.ts";
+> supabase/functions/higgsfield-oauth-callback/index.ts:84:      access_token?: string; refresh_token?: string; expires_in?: number; id_token?: string; scope?: string;
+> supabase/functions/higgsfield-oauth-callback/index.ts:88:    const { sub, email } = decodeIdTokenClaims(tok.id_token);
+> supabase/functions/_shared/higgsfield-oauth.ts:65: * Decode an OIDC id_token's claims for DISPLAY ONLY ("conectado como <email>") — NOT a trust decision.
+> supabase/functions/_shared/higgsfield-oauth.ts:66: * The id_token arrives from the token endpoint over TLS (trusted channel); the trust credential is the
+> supabase/functions/_shared/higgsfield-oauth.ts:67: * access_token. Full JWKS signature verification is a follow-up (OTD-SPACES — Clerk JWKS). Returns {} on any
+> supabase/functions/_shared/higgsfield-oauth.ts:68: * malformed input (fail-soft — a bad id_token never blocks a successful token exchange).
+> supabase/functions/_shared/higgsfield-oauth.ts:70:export function decodeIdTokenClaims(idToken: unknown): { sub?: string; email?: string } {
+> ```
+
+## 🤖 Claude *(14:17:36)*
+
+
+## 🤖 Claude *(14:17:37)*
+
+Deixa eu ler o código exato do decode + como sub/email são usados no callback:
+
+## 🤖 Claude *(14:17:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/higgsfield-oauth.ts",
+  "offset": 60,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	export function buildRefreshBody(refreshToken: string, clientId: string): string {
+> 61	  return new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken, client_id: clientId }).toString();
+> 62	}
+> 63	
+> 64	/**
+> 65	 * Decode an OIDC id_token's claims for DISPLAY ONLY ("conectado como <email>") — NOT a trust decision.
+> 66	 * The id_token arrives from the token endpoint over TLS (trusted channel); the trust credential is the
+> 67	 * access_token. Full JWKS signature verification is a follow-up (OTD-SPACES — Clerk JWKS). Returns {} on any
+> 68	 * malformed input (fail-soft — a bad id_token never blocks a successful token exchange).
+> 69	 */
+> 70	export function decodeIdTokenClaims(idToken: unknown): { sub?: string; email?: string } {
+> 71	  if (typeof idToken !== 'string') return {};
+> 72	  const parts = idToken.split('.');
+> 73	  if (parts.length !== 3) return {};
+> 74	  try {
+> 75	    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+> 76	    const pad = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+> 77	    const claims = JSON.parse(atob(pad)) as Record<string, unknown>;
+> 78	    return {
+> 79	      sub: typeof claims.sub === 'string' ? claims.sub : undefined,
+> 80	      email: typeof claims.email === 'string' ? claims.email : undefined,
+> 81	    };
+> 82	  } catch {
+> 83	    return {};
+> 84	  }
+> 85	}
+> 86	
+> 87	/** Build the Higgsfield /oauth2/authorize URL (authorization_code + PKCE S256). Pure. */
+> 88	export function buildHiggsfieldAuthorizationUrl(params: {
+> 89	  clientId: string;
+> 90	  redirectUri: string;
+> 91	  state: string;
+> 92	  codeChallenge: string;
+> 93	  scope?: string;
+> 94	}): string {
+> 95	  const q = new URLSearchParams({
+> 96	    response_type: 'code',
+> 97	    client_id: params.clientId,
+> 98	    redirect_uri: params.redirectUri,
+> 99	    scope: params.scope ?? HIGGSFIELD_SCOPE,
+> ```
+
+## 🤖 Claude *(14:17:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/higgsfield-oauth-callback/index.ts",
+  "offset": 78,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 78	        service: "higgsfield-mcp", status: "error", event: "oauth_callback_token_exchange_failed",
+> 79	        metadata: { status: tokenRes.status },
+> 80	      }).then(() => {}, () => {});
+> 81	      return json({ error: "token_exchange_failed", status: tokenRes.status, detail: body.slice(0, 300) }, 502);
+> 82	    }
+> 83	    const tok = await tokenRes.json() as {
+> 84	      access_token?: string; refresh_token?: string; expires_in?: number; id_token?: string; scope?: string;
+> 85	    };
+> 86	    if (!tok.access_token) return json({ error: "token_exchange_no_access_token" }, 502);
+> 87	
+> 88	    const { sub, email } = decodeIdTokenClaims(tok.id_token);
+> 89	    const expiresAt = typeof tok.expires_in === "number"
+> 90	      ? new Date(Date.now() + tok.expires_in * 1000).toISOString() : null;
+> 91	
+> 92	    // Promote pending → connected; clear the pending flow (single-use).
+> 93	    const { error: upErr } = await admin.from("higgsfield_oauth").upsert({
+> 94	      user_id: userId,
+> 95	      refresh_token: tok.refresh_token ?? null,
+> 96	      access_token: tok.access_token,
+> 97	      expires_at: expiresAt,
+> 98	      clerk_sub: sub ?? null,
+> 99	      email: email ?? null,
+> 100	      scope: tok.scope ?? HIGGSFIELD_SCOPE,
+> 101	      needs_reauth: false,
+> 102	      connected_at: new Date().toISOString(),
+> 103	      pending_code_verifier: null,
+> 104	      pending_state: null,
+> 105	      pending_expires_at: null,
+> 106	    }, { onConflict: "user_id" });
+> 107	    if (upErr) return json({ error: "store_failed", detail: upErr.code }, 500);
+> 108	
+> 109	    await admin.from("infra_health_logs").insert({
+> 110	      service: "higgsfield-mcp", status: "ok", event: "oauth_connected",
+> 111	    }).then(() => {}, () => {});
+> 112	
+> 113	    return json({ connected: true, email: email ?? null });
+> 114	  } catch (e) {
+> 115	    return json({ error: "callback_error", detail: String((e as Error).message ?? e) }, 500);
+> 116	  }
+> 117	});
+> ```
+
+## 🤖 Claude *(14:19:39)*
+
+
+## 🤖 Claude *(14:19:44)*
+
+Analisei o `OTD-SPACES-010` no código real. Achado material importante (Lei 1):
+
+O `decodeIdTokenClaims` decodifica o id_token **para exibição apenas** (`sub`/`email` → "conectado como <email>"), fail-soft, e o **id_token chega do token endpoint via TLS** (o callback faz o próprio code-exchange server-to-server, linha 84). O trust credential é o `access_token` (validado server-side pelo MCP).
+
+**Isso é relevante:** a OIDC Core §3.1.3.7 (item 6) diz explicitamente que no fluxo `authorization_code` (comunicação direta com o token endpoint), **a validação TLS PODE substituir a verificação de assinatura do id_token**. Ou seja, JWKS completo aqui seria **redundante** — o TLS já garante que o token veio do Clerk. Antes de concluir "mate a poesia", vou confirmar o teste unit existente do helper:
+
+## 🤖 Claude *(14:19:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== testes do helper higgsfield-oauth ===\"; grep -rln \"decodeIdTokenClaims\\|higgsfield-oauth\" supabase/functions/**/*.test.ts scripts/qa/*.ts 2>/dev/null | grep -iE \"test|spec\" | head; find . -path ./node_modules -prune -o -name \"*.test.ts\" -print 2>/dev/null | xargs grep -l \"decodeIdTokenClaims\" 2>/dev/null | head\necho \"=== OTD-SPACES-010/011 na charter ===\"; grep -n \"OTD-SPACES-010\\|OTD-SPACES-011\\|SPACES-010\\|SPACES-011\" .claude/context/autonomous-loop-charter.md | head",
+  "description": "Find helper test + OTD references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === testes do helper higgsfield-oauth ===
+> supabase/functions/_shared/higgsfield-oauth.test.ts
+> ./supabase/functions/_shared/higgsfield-oauth.test.ts
+> === OTD-SPACES-010/011 na charter ===
+> 128:- ✅ **Sub-fatia 6 — `disconnect_higgsfield()` RPC SHIPPED (loop 2026-07-05, commit `99d543a`):** FR-SPACES-021. Migration RPC SECURITY DEFINER `search_path=''` auth.uid()-scoped (espelha `disconnect_meta`) — DELETE own-row, null-guard 28000, REVOKE anon/GRANT authenticated. Desvio declarado: tokens plaintext+REVOKE (não Vault-ref) → sem segredo órfão (AS-side revoke = OTD-SPACES-011). **/security-review SAFE 9/10**. Aplicada+viva · **smoke 7/7** (anon denied · A deleta own · B untouched tenant-isolation · idempotente). **CICLO DE VIDA DA CREDENCIAL COMPLETO server-side: connect·refresh·resolve·disconnect.**
+> 130:- 🎯 **CONECTOR HIGGSFIELD MCP — server-side + UI COMPLETO (sub-fatias 1-7).** Restam SÓ os itens **gated no Sovereign**: (a) registro do client OAuth (DCR + redirect_uri) + set `HIGGSFIELD_MCP_CLIENT_ID`; (b) clique "Conectar Higgsfield" + consent Clerk → `refresh_token` real; (c) FR-SPACES-020 tools/list + FR-SPACES-019 execução de nó (precisam do connect real). **Backlog desbloqueado-com-valor ESGOTADO → loop atinge parada natural.** OTDs: SPACES-010 (JWKS id_token), SPACES-011 (AS revoke RFC 7009). Fila 175.
+> ```
+
+## 🤖 Claude *(14:20:16)*
+
+
+## 🤖 Claude *(14:20:18)*
+
+Existe `higgsfield-oauth.test.ts` cobrindo o decode. Lendo para entender a cobertura antes de implementar a melhoria mínima honesta (check de `exp` — MUST barato do §3.1.3.7 item 9 — + citação do spec, fechando OTD-SPACES-010 sem crypto redundante):
+
+## 🤖 Claude *(14:20:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/higgsfield-oauth.test.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// @vitest-environment node
+> 2	// Unit proof for the Higgsfield MCP OAuth PKCE + authorization-url primitives (FR-SPACES-015).
+> 3	// SSOT: docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md §2. Verifies the RFC 7636 S256
+> 4	// challenge against the canonical test vector + a well-formed /oauth2/authorize URL (G3 of the connector).
+> 5	import { describe, it, expect } from "vitest";
+> 6	import {
+> 7	  pkceChallengeFromVerifier, randomCodeVerifier, buildHiggsfieldAuthorizationUrl,
+> 8	  decodeIdTokenClaims, higgsfieldTokenState, buildRefreshBody,
+> 9	  HIGGSFIELD_AUTHORIZE_URL, HIGGSFIELD_SCOPE,
+> 10	} from "./higgsfield-oauth.ts";
+> 11	
+> 12	// Mint a fake unsigned JWT (header.payloadB64url.sig) for the display-only decode test.
+> 13	function fakeJwt(claims: Record<string, unknown>): string {
+> 14	  const b64url = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
+> 15	  return `${b64url({ alg: "none" })}.${b64url(claims)}.sig`;
+> 16	}
+> 17	
+> 18	describe("pkceChallengeFromVerifier (RFC 7636 §4.2)", () => {
+> 19	  it("matches the RFC 7636 Appendix B test vector", async () => {
+> 20	    // verifier → challenge from RFC 7636 Appendix B.
+> 21	    const challenge = await pkceChallengeFromVerifier("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk");
+> 22	    expect(challenge).toBe("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
+> 23	  });
+> 24	  it("output is URL-safe base64url (no +, /, =)", async () => {
+> 25	    const c = await pkceChallengeFromVerifier(randomCodeVerifier());
+> 26	    expect(c).toMatch(/^[A-Za-z0-9_-]+$/);
+> 27	  });
+> 28	});
+> 29	
+> 30	describe("randomCodeVerifier (RFC 7636 §4.1)", () => {
+> 31	  it("is 43 chars URL-safe and non-repeating", () => {
+> 32	    const a = randomCodeVerifier();
+> 33	    const b = randomCodeVerifier();
+> 34	    expect(a).toMatch(/^[A-Za-z0-9_-]{43}$/);
+> 35	    expect(a).not.toBe(b);
+> 36	  });
+> 37	});
+> 38	
+> 39	describe("buildHiggsfieldAuthorizationUrl (G3 — well-formed authorize URL)", () => {
+> 40	  const url = buildHiggsfieldAuthorizationUrl({
+> 41	    clientId: "test_client_123",
+> 42	    redirectUri: "https://login.mcorch.com/dashboard/settings/higgsfield/callback",
+> 43	    state: "signedpayload.sig",
+> 44	    codeChallenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+> 45	  });
+> 46	  const u = new URL(url);
+> 47	  it("targets the Higgsfield authorize endpoint", () => {
+> 48	    expect(url.startsWith(HIGGSFIELD_AUTHORIZE_URL + "?")).toBe(true);
+> 49	  });
+> 50	  it("carries all authorization_code + PKCE S256 params", () => {
+> 51	    expect(u.searchParams.get("response_type")).toBe("code");
+> 52	    expect(u.searchParams.get("client_id")).toBe("test_client_123");
+> 53	    expect(u.searchParams.get("redirect_uri")).toBe("https://login.mcorch.com/dashboard/settings/higgsfield/callback");
+> 54	    expect(u.searchParams.get("scope")).toBe(HIGGSFIELD_SCOPE);
+> 55	    expect(u.searchParams.get("state")).toBe("signedpayload.sig");
+> 56	    expect(u.searchParams.get("code_challenge")).toBe("E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM");
+> 57	    expect(u.searchParams.get("code_challenge_method")).toBe("S256");
+> 58	  });
+> 59	  it("URL-encodes the redirect_uri and state on the wire", () => {
+> 60	    expect(url).toContain("redirect_uri=https%3A%2F%2Flogin.mcorch.com");
+> 61	    // scope with spaces must be percent-encoded (URLSearchParams uses '+' or %20; both decode to spaces)
+> 62	    expect(u.searchParams.get("scope")).toContain("offline_access");
+> 63	  });
+> 64	});
+> 65	
+> 66	describe("decodeIdTokenClaims (display-only, fail-soft)", () => {
+> 67	  it("extracts sub + email from a well-formed id_token", () => {
+> 68	    expect(decodeIdTokenClaims(fakeJwt({ sub: "clerk_abc", email: "gab@higgs.ai", extra: 1 })))
+> 69	      .toEqual({ sub: "clerk_abc", email: "gab@higgs.ai" });
+> 70	  });
+> 71	  it("returns {} for malformed / non-string / missing claims (never throws)", () => {
+> 72	    expect(decodeIdTokenClaims("not.a.jwt.with.too.many.parts")).toEqual({});
+> 73	    expect(decodeIdTokenClaims("onlyonepart")).toEqual({});
+> 74	    expect(decodeIdTokenClaims(null)).toEqual({});
+> 75	    expect(decodeIdTokenClaims(12345)).toEqual({});
+> 76	    expect(decodeIdTokenClaims(fakeJwt({ nothing: true }))).toEqual({ sub: undefined, email: undefined });
+> 77	  });
+> 78	});
+> 79	
+> 80	describe("higgsfieldTokenState (FR-SPACES-017/018 resolution)", () => {
+> 81	  const NOW = 1_000_000_000_000;
+> 82	  const future = new Date(NOW + 3600_000).toISOString();
+> 83	  const soon = new Date(NOW + 30_000).toISOString(); // within the 60s skew → treated as stale
+> 84	  const past = new Date(NOW - 1000).toISOString();
+> 85	  it("null / empty → not_connected", () => {
+> 86	    expect(higgsfieldTokenState(null, NOW)).toBe("not_connected");
+> 87	    expect(higgsfieldTokenState({ access_token: null, refresh_token: null, expires_at: null, needs_reauth: false }, NOW)).toBe("not_connected");
+> 88	  });
+> 89	  it("needs_reauth flag wins over everything", () => {
+> 90	    expect(higgsfieldTokenState({ access_token: "a", refresh_token: "r", expires_at: future, needs_reauth: true }, NOW)).toBe("needs_reauth");
+> 91	  });
+> 92	  it("live access (beyond skew) → valid; unknown expiry → valid", () => {
+> 93	    expect(higgsfieldTokenState({ access_token: "a", refresh_token: "r", expires_at: future, needs_reauth: false }, NOW)).toBe("valid");
+> 94	    expect(higgsfieldTokenState({ access_token: "a", refresh_token: null, expires_at: null, needs_reauth: false }, NOW)).toBe("valid");
+> 95	  });
+> 96	  it("expired/near-expiry access with refresh → needs_refresh", () => {
+> 97	    expect(higgsfieldTokenState({ access_token: "a", refresh_token: "r", expires_at: past, needs_reauth: false }, NOW)).toBe("needs_refresh");
+> 98	    expect(higgsfieldTokenState({ access_token: "a", refresh_token: "r", expires_at: soon, needs_reauth: false }, NOW)).toBe("needs_refresh");
+> 99	    expect(higgsfieldTokenState({ access_token: null, refresh_token: "r", expires_at: null, needs_reauth: false }, NOW)).toBe("needs_refresh");
+> 100	  });
+> 101	  it("stale access with NO refresh → needs_reauth (can't rotate)", () => {
+> 102	    expect(higgsfieldTokenState({ access_token: "a", refresh_token: null, expires_at: past, needs_reauth: false }, NOW)).toBe("needs_reauth");
+> 103	  });
+> 104	});
+> 105	
+> 106	describe("buildRefreshBody", () => {
+> 107	  it("is a public-client refresh_token grant (no client_secret)", () => {
+> 108	    const b = new URLSearchParams(buildRefreshBody("rt_123", "client_abc"));
+> 109	    expect(b.get("grant_type")).toBe("refresh_token");
+> 110	    expect(b.get("refresh_token")).toBe("rt_123");
+> 111	    expect(b.get("client_id")).toBe("client_abc");
+> 112	    expect(b.get("client_secret")).toBeNull();
+> 113	  });
+> 114	});
+> 115	
+> ```
+
+## 🤖 Claude *(14:21:03)*
+
+
+## 🤖 Claude *(14:21:08)*
+
+Confirmado: o teste cobre extract + fail-soft. **Decisão honesta (Lei 1 / "mate a poesia"):** JWKS completo aqui é redundante (OIDC §3.1.3.7 item 6 — TLS do canal direto substitui a verificação de assinatura). Mas há UM check MUST barato que o TLS **não** cobre: **expiração** (§3.1.3.7 item 9). Vou (a) reconciliar OTD-SPACES-010 com o spec no comentário (torna o "decode cego" audit-defensível, não um red-flag), (b) adicionar o check de `exp`, (c) testar. Sem crypto teatral.
+
+Editando o helper:
+
+## 🤖 Claude *(14:21:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/higgsfield-oauth.ts",
+  "old_string": "/**\n * Decode an OIDC id_token's claims for DISPLAY ONLY (\"conectado como <email>\") \u2014 NOT a trust decision.\n * The id_token arrives from the token endpoint over TLS (trusted channel); the trust credential is the\n * access_token. Full JWKS signature verification is a follow-up (OTD-SPACES \u2014 Clerk JWKS). Returns {} on any\n * malformed input (fail-soft \u2014 a bad id_token never blocks a successful token exchange).\n */\nexport function decodeIdTokenClaims(idToken: unknown): { sub?: string; email?: string } {\n  if (typeof idToken !== 'string') return {};\n  const parts = idToken.split('.');\n  if (parts.length !== 3) return {};\n  try {\n    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');\n    const pad = b64 + '='.repeat((4 - (b64.length % 4)) % 4);\n    const claims = JSON.parse(atob(pad)) as Record<string, unknown>;\n    return {\n      sub: typeof claims.sub === 'string' ? claims.sub : undefined,\n      email: typeof claims.email === 'string' ? claims.email : undefined,\n    };\n  } catch {\n    return {};\n  }\n}",
+  "new_string": "/**\n * Decode an OIDC id_token's claims for DISPLAY ONLY (\"conectado como <email>\") \u2014 NOT a trust decision.\n * The trust credential is the access_token (validated server-side by the MCP); these claims only label\n * the connection card.\n *\n * OTD-SPACES-010 RECONCILED (2026-07-06): full Clerk-JWKS signature verification is DELIBERATELY omitted,\n * not skipped by oversight. Per OIDC Core \u00a73.1.3.7 item 6, when the id_token is received via DIRECT\n * Client\u2194Token-Endpoint communication \u2014 which it is here: `higgsfield-oauth-callback` POSTs the code to\n * HIGGSFIELD_TOKEN_URL itself over TLS \u2014 TLS server validation MAY substitute for checking the token\n * signature. The token never transits an untrusted party, so RS256/JWKS verification would be redundant\n * crypto. We DO enforce the one cheap MUST check TLS does NOT cover \u2014 expiry (\u00a73.1.3.7 item 9), with a\n * 60s skew. Fail-soft: any malformed OR expired input returns {} and never blocks a successful exchange.\n */\nexport function decodeIdTokenClaims(\n  idToken: unknown,\n  nowSeconds: number = Math.floor(Date.now() / 1000),\n): { sub?: string; email?: string } {\n  if (typeof idToken !== 'string') return {};\n  const parts = idToken.split('.');\n  if (parts.length !== 3) return {};\n  try {\n    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');\n    const pad = b64 + '='.repeat((4 - (b64.length % 4)) % 4);\n    const claims = JSON.parse(atob(pad)) as Record<string, unknown>;\n    // \u00a73.1.3.7 item 9: reject an expired id_token's claims (TLS authenticates the channel, not freshness).\n    if (typeof claims.exp === 'number' && nowSeconds > claims.exp + 60) return {};\n    return {\n      sub: typeof claims.sub === 'string' ? claims.sub : undefined,\n      email: typeof claims.email === 'string' ? claims.email : undefined,\n    };\n  } catch {\n    return {};\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/higgsfield-oauth.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:21:27)*
+
+
+## 🤖 Claude *(14:21:28)*
+
+Adicionando casos de teste do `exp` (determinístico via `nowSeconds`):
+
+## 🤖 Claude *(14:21:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/higgsfield-oauth.test.ts",
+  "old_string": "describe(\"decodeIdTokenClaims (display-only, fail-soft)\", () => {\n  it(\"extracts sub + email from a well-formed id_token\", () => {\n    expect(decodeIdTokenClaims(fakeJwt({ sub: \"clerk_abc\", email: \"gab@higgs.ai\", extra: 1 })))\n      .toEqual({ sub: \"clerk_abc\", email: \"gab@higgs.ai\" });\n  });\n  it(\"returns {} for malformed / non-string / missing claims (never throws)\", () => {\n    expect(decodeIdTokenClaims(\"not.a.jwt.with.too.many.parts\")).toEqual({});\n    expect(decodeIdTokenClaims(\"onlyonepart\")).toEqual({});\n    expect(decodeIdTokenClaims(null)).toEqual({});\n    expect(decodeIdTokenClaims(12345)).toEqual({});\n    expect(decodeIdTokenClaims(fakeJwt({ nothing: true }))).toEqual({ sub: undefined, email: undefined });\n  });\n});",
+  "new_string": "describe(\"decodeIdTokenClaims (display-only, fail-soft)\", () => {\n  const NOW_S = 1_700_000_000; // fixed clock (seconds) for deterministic exp checks\n  it(\"extracts sub + email from a well-formed id_token\", () => {\n    expect(decodeIdTokenClaims(fakeJwt({ sub: \"clerk_abc\", email: \"gab@higgs.ai\", extra: 1 })))\n      .toEqual({ sub: \"clerk_abc\", email: \"gab@higgs.ai\" });\n  });\n  it(\"returns {} for malformed / non-string / missing claims (never throws)\", () => {\n    expect(decodeIdTokenClaims(\"not.a.jwt.with.too.many.parts\")).toEqual({});\n    expect(decodeIdTokenClaims(\"onlyonepart\")).toEqual({});\n    expect(decodeIdTokenClaims(null)).toEqual({});\n    expect(decodeIdTokenClaims(12345)).toEqual({});\n    expect(decodeIdTokenClaims(fakeJwt({ nothing: true }))).toEqual({ sub: undefined, email: undefined });\n  });\n  // OTD-SPACES-010: expiry is the one OIDC \u00a73.1.3.7 MUST check TLS does not cover.\n  it(\"rejects an EXPIRED id_token's claims (past exp beyond 60s skew \u2192 {})\", () => {\n    const expired = fakeJwt({ sub: \"s\", email: \"e@x.ai\", exp: NOW_S - 120 });\n    expect(decodeIdTokenClaims(expired, NOW_S)).toEqual({});\n  });\n  it(\"accepts a live id_token (future exp) + tolerates the 60s skew\", () => {\n    expect(decodeIdTokenClaims(fakeJwt({ sub: \"s\", email: \"e@x.ai\", exp: NOW_S + 3600 }), NOW_S))\n      .toEqual({ sub: \"s\", email: \"e@x.ai\" });\n    // exp 30s in the past is within the 60s skew \u2192 still accepted (clock tolerance).\n    expect(decodeIdTokenClaims(fakeJwt({ sub: \"s\", email: \"e@x.ai\", exp: NOW_S - 30 }), NOW_S))\n      .toEqual({ sub: \"s\", email: \"e@x.ai\" });\n  });\n  it(\"no-exp id_token still decodes (exp optional; backward-compatible)\", () => {\n    expect(decodeIdTokenClaims(fakeJwt({ sub: \"s\", email: \"e@x.ai\" }), NOW_S))\n      .toEqual({ sub: \"s\", email: \"e@x.ai\" });\n  });\n});"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/higgsfield-oauth.test.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:21:48)*
+
+
+## 🤖 Claude *(14:21:49)*
+
+Prova material: rodando o teste unit + `deno check` no callback (que importa o helper com a nova assinatura):
+
+## 🤖 Claude *(14:21:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vitest (higgsfield-oauth) ===\"; timeout 120 bun run test supabase/functions/_shared/higgsfield-oauth.test.ts 2>&1 | tail -20\necho \"=== deno check callback (importa o helper) ===\"; timeout 90 npx --yes deno@1.45 check supabase/functions/higgsfield-oauth-callback/index.ts 2>&1 | tail -8 || deno check supabase/functions/higgsfield-oauth-callback/index.ts 2>&1 | tail -8",
+  "description": "Run unit test + deno check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === vitest (higgsfield-oauth) ===
+> $ vitest run supabase/functions/_shared/higgsfield-oauth.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ supabase/functions/_shared/higgsfield-oauth.test.ts (17 tests) 20ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  17 passed (17)
+>    Start at  11:21:54
+>    Duration  1.87s (transform 242ms, setup 116ms, collect 213ms, tests 20ms, environment 0ms, prepare 164ms)
+> 
+> === deno check callback (importa o helper) ===
+> npm error code ETARGET
+> npm error notarget No matching version found for deno@1.45.
+> npm error notarget In most cases you or one of your dependencies are requesting
+> npm error notarget a package version that doesn't exist.
+> npm error A complete log of this run can be found in: /home/ubuntu/.npm/_logs/2026-07-06T14_21_56_823Z-debug-0.log
+> ```
+
+## 🤖 Claude *(14:22:08)*
+
+
+## 🤖 Claude *(14:22:09)*
+
+Teste: **17/17 passa** (incluindo os 3 casos novos de `exp`). O `deno@1.45` não é versão npm válida — usando o binário `deno` real:
+
+## 🤖 Claude *(14:22:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nwhich deno && deno --version 2>&1 | head -1\necho \"=== deno check ===\"\ndeno check supabase/functions/higgsfield-oauth-callback/index.ts 2>&1 | tail -8 && echo \"deno check OK\" || echo \"deno check falhou/indispon\u00edvel\"\necho \"=== call-site inalterado (param novo \u00e9 opcional) ===\"\ngrep -n \"decodeIdTokenClaims\" supabase/functions/higgsfield-oauth-callback/index.ts",
+  "description": "Deno check with real binary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check ===
+> /bin/bash: line 9: deno: command not found
+> deno check OK
+> === call-site inalterado (param novo é opcional) ===
+> 10:import { HIGGSFIELD_TOKEN_URL, HIGGSFIELD_SCOPE, decodeIdTokenClaims } from "../_shared/higgsfield-oauth.ts";
+> 88:    const { sub, email } = decodeIdTokenClaims(tok.id_token);
+> ```
+
+## 🤖 Claude *(14:22:38)*
+
+
+## 🤖 Claude *(14:22:41)*
+
+O binário `deno` não está instalado (o "OK" foi falso-positivo do pipe — honestidade Lei 1: **não rodei `deno check`, sem binário**). Mas a mudança é type-safe por construção: o call-site (linha 88) está **inalterado** (o `nowSeconds` é param opcional com default), e o **vitest 17/17 compilou+rodou** a nova lógica via esbuild. 
+
+Como o helper hardened só importa quando o callback roda (pós-connect), deployo a função para deixar a versão endurecida pronta antes do connector ir ao ar:
+
+## 🤖 Claude *(14:22:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; timeout 180 npx supabase functions deploy higgsfield-oauth-callback 2>&1 | tail -12; echo \"=== deploy exit=$? ===\"",
+  "description": "Deploy hardened oauth-callback"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: higgsfield-oauth-callback
+> Deploying Function: higgsfield-oauth-callback (script size: 66.47kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: higgsfield-oauth-callback
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === deploy exit=0 ===
+> ```
+
+## 🤖 Claude *(14:22:57)*
+
+
+## 🤖 Claude *(14:22:57)*
+
+Deploy OK (`higgsfield-oauth-callback`, 66.47kB). Commitando o hardening (helper + testes):
+
+## 🤖 Claude *(14:23:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/_shared/higgsfield-oauth.ts supabase/functions/_shared/higgsfield-oauth.test.ts\ngit commit -q -m \"fix(spaces): OTD-SPACES-010 reconciliada \u2014 check de exp no id_token + justificativa OIDC\n\nO decode do id_token do Higgsfield era \\\"cego\\\" s\u00f3 na apar\u00eancia: ele \u00e9 display-only,\nfail-soft, e o token chega do token endpoint via TLS no fluxo authorization_code\n(o callback faz o pr\u00f3prio code-exchange). Per OIDC Core \u00a73.1.3.7 item 6, a valida\u00e7\u00e3o\nTLS do canal direto PODE substituir a verifica\u00e7\u00e3o de assinatura \u2014 JWKS RS256 aqui\nseria crypto redundante (o token nunca transita por terceiro n\u00e3o-confi\u00e1vel). Fecho a\nOTD tornando a decis\u00e3o EXPL\u00cdCITA no coment\u00e1rio (audit-defens\u00e1vel, n\u00e3o red-flag) e\nadicionando o \u00fanico MUST barato que o TLS n\u00e3o cobre: expira\u00e7\u00e3o (\u00a73.1.3.7 item 9,\nskew 60s). vitest 17/17 (3 casos novos de exp) \u00b7 call-site inalterado (param opcional)\n\u00b7 deploy higgsfield-oauth-callback 66.47kB. Sem JWKS teatral (mate a poesia).\" && git log --oneline -1",
+  "description": "Commit OTD-SPACES-010 reconciliation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:23AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:23AM[0m [32mINF[0m scan completed in 10.8ms
+> [90m11:23AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.14 seconds)
+> ✔️ e2e-output-tripwire (0.04 seconds)
+> ✔️ secret-scan (0.10 seconds)
+> ✔️ gitleaks-staged (0.13 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> c674152 fix(spaces): OTD-SPACES-010 reconciliada — check de exp no id_token + justificativa OIDC
+> ```
+
+## 🤖 Claude *(14:23:13)*
+
+
+## 🤖 Claude *(14:23:14)*
+
+OTD-SPACES-010 selada (`c674152`). Atualizando a charter (fecha 010, clarifica 011) + push:
+
+## 🤖 Claude *(14:23:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "**Backlog desbloqueado-com-valor ESGOTADO \u2192 loop atinge parada natural.** OTDs: SPACES-010 (JWKS id_token), SPACES-011 (AS revoke RFC 7009). Fila 175.",
+  "new_string": "OTDs: ~~SPACES-010 (JWKS id_token)~~ \u2705 **RECONCILIADA (loop 2026-07-06, commit `c674152`)** \u2014 JWKS RS256 \u00e9 redundante no fluxo authorization_code (OIDC \u00a73.1.3.7 item 6: TLS do canal direto Client\u2194Token-Endpoint substitui a verifica\u00e7\u00e3o de assinatura; o token \u00e9 display-only + fail-soft, nunca transita terceiro). Decis\u00e3o tornada EXPL\u00cdCITA no coment\u00e1rio do helper (audit-defens\u00e1vel) + adicionado o \u00fanico MUST barato que o TLS n\u00e3o cobre: check de `exp` (\u00a73.1.3.7 item 9, skew 60s); vitest 17/17 \u00b7 deploy callback 66.47kB. \u00b7 **SPACES-011 (AS revoke RFC 7009)** = deferida com justificativa: precisa de uma edge fn chamando o `revocation_endpoint` do AS (o `disconnect_higgsfield` \u00e9 RPC SQL, n\u00e3o faz HTTP) + s\u00f3 \u00e9 E2E-prov\u00e1vel com token real (gated no connect). Baixa prioridade (token j\u00e1 deletado do nosso DB; revoke AS-side mata uma c\u00f3pia exfiltrada-antes \u2014 hygiene). Fila 175."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:23:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -q -m \"chore(loop): charter \u2014 OTD-SPACES-010 reconciliada (OIDC \u00a73.1.3.7); 011 deferida com justificativa\" 2>&1 | grep -iE \"master|main|files? changed\" | tail -1\ngit push origin main 2>&1 | tail -2\necho \"sync:\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Commit charter + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    db84c12..4730bec  main -> main
+> sync:
+> 0	0
+> ```
+
+## 🤖 Claude *(14:25:03)*
+
+
+## 🤖 Claude *(14:25:04)*
+
+Charter selada + pushed (`db84c12..4730bec`). Registrando o nó de decisão na malha (Mesh Mandate — a decisão OIDC merece preservação em GraphRAG):
+
+## 🤖 Claude *(14:25:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\nNODE=$(curl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"name\":\"OTD-SPACES-010 reconciliada \u2014 OIDC 3.1.3.7 TLS substitui JWKS\",\"node_type\":\"decision\",\"content\":\"[DECISION] OTD-SPACES-010 (verificacao JWKS do id_token Higgsfield) RECONCILIADA como spec-compliant, sem crypto redundante (loop 2026-07-06, commit c674152). Razao material: no fluxo authorization_code o callback higgsfield-oauth-callback faz o proprio code-exchange server-to-server ao HIGGSFIELD_TOKEN_URL via TLS; per OIDC Core 3.1.3.7 item 6, a validacao TLS do canal direto Client-Token-Endpoint PODE substituir a verificacao de assinatura do id_token. O id_token e display-only (sub/email para o card conectado) + fail-soft, nunca transita terceiro nao-confiavel, e o trust credential e o access_token (validado server-side pelo MCP). JWKS RS256 aqui seria teatro. Melhoria real embarcada: check de exp (3.1.3.7 item 9, skew 60s) \u2014 o unico MUST barato que o TLS nao cobre. Comentario do helper tornado EXPLICITO (audit-defensavel). vitest 17/17. SPACES-011 (AS revoke RFC 7009) deferida: precisa edge fn ao revocation_endpoint (disconnect e RPC SQL) + so E2E-provavel com token real gated.\",\"stability_score\":0.9,\"project_id\":null,\"user_id\":null,\"metadata\":{\"source\":\"autonomous-loop\",\"otd\":\"OTD-SPACES-010\",\"status\":\"reconciled\",\"spec\":\"OIDC-Core-3.1.3.7\",\"date\":\"2026-07-06\"}}')\necho \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('decision node:', d[0]['id'] if isinstance(d,list) else d)\" 2>/dev/null || echo \"insert issue: ${NODE:0:150}\"\necho \"=== malha count ===\"; curl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -oE '[0-9]+$'",
+  "description": "Insert decision node + mesh count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> decision node: 0f86ef8d-9a1e-452d-8a83-14e887f45a3c
+> === malha count ===
+> 9065
+> ```
+
+## 🤖 Claude *(14:25:43)*
+
+
+## 🤖 Claude *(14:25:44)*
+
+Nó de decisão `0f86ef8d` inserido · malha **9065**. 
+
+Agora uma avaliação honesta do estado do loop. Vou carregar o `PushNotification` para sinalizar o desfecho:
+
+## 🤖 Claude *(14:25:44)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:PushNotification",
+  "max_results": 3
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'PushNotification'}]
+> ```
+
+## 🤖 Claude *(14:25:55)*
+
+
+## 🤖 Claude *(14:26:16)*
+
+Nó de decisão `0f86ef8d` · malha **9065**. Avaliação honesta do estado do loop:
+
+## 🔄 Loop autônomo — reporte (iteração OTD-SPACES-010) + PARADA NATURAL
+
+**ORO:** Operator = MCORCH Master Execution Agent (/loop) · Reviewer = Sovereign · Owner = Sovereign (custo **0 USD**).
+
+**Iteração — `OTD-SPACES-010` RECONCILIADA** (`c674152`):
+Analisei o "decode cego" do id_token Higgsfield e concluí (Lei 1) que **JWKS completo aqui é redundante** — OIDC Core §3.1.3.7 item 6: no fluxo `authorization_code`, a validação TLS do canal direto Client↔Token-Endpoint **substitui** a verificação de assinatura (o token é display-only, fail-soft, e nunca transita terceiro). Fechei a OTD tornando a decisão **explícita/audit-defensável** no comentário + embarcando o único MUST barato que o TLS não cobre: **check de `exp`** (§3.1.3.7 item 9).
+
+| Prova (Lei 1) | Resultado |
+|---|---|
+| vitest | **17/17** (3 casos novos de exp: expirado→{} · vivo→claims · skew 60s) |
+| deploy | `higgsfield-oauth-callback` 66.47kB |
+| Honestidade | ⚠️ **não rodei `deno check`** (sem binário `deno`) — mas o call-site está inalterado (param opcional) e o vitest compilou o helper via esbuild |
+| Mesh | decision `0f86ef8d` · malha 9065 · pushed `4730bec` |
+
+**Recusei o JWKS teatral** — "MATE A POESIA, ENTREGUE ENGENHARIA".
+
+### 🛡️ Survival self-audit
+Lei 1 ✅ (provado; disclosure honesto do deno check ausente) · Lei 2 ✅ (sem migration → sem review; hardening dentro da BoK spaces-evolution selada) · Lei 3 ✅ (janela com folga, mas paro por backlog esgotado, não por teto) · Lei 4 ✅ (ORO; SPACES-011 na Fila com justificativa, não improvisada).
+
+---
+
+### 🛑 PARADA NATURAL — backlog desbloqueado-com-valor GENUINAMENTE esgotado
+
+Diferente da 1ª "parada natural" (onde eu havia subvalorizado a sinapse Fase B), desta vez entreguei o substancial: **sinapse Fase B → vizinhos on-select → OTD-SPACES-010**. O que resta **não** justifica grind autônomo:
+
+| Item restante | Por que não é desbloqueado-com-valor |
+|---|---|
+| **OTD-SPACES-011** (AS revoke) | precisa de edge fn nova ao `revocation_endpoint` + **impossível E2E-provar** sem token real (gated no connect); hygiene marginal p/ connector sem tokens ainda |
+| **3.10 seal formal** | bookkeeping puro (cutover já foi GO Sovereign) |
+| **OTD-CAMPAIGN-RUN-ASYNC** | módulo diferente (Marketing Hub); valor incerto — precisa investigação fresca, arriscado no fim de sessão |
+| Gabriel AI 3b · YT/TikTok · Higgsfield E2E · Stripe · IG/Twitter | **Sovereign-gated** (biometria/OAuth/DNS/GO) |
+
+**Estado durável:** tudo committado + pushed (`origin/main` = `4730bec`) + charter (fonte da verdade) atualizada + malha 9065. Encerro o loop aqui — sem re-armar.
+
+**Para retomar:** me aponte um alvo (ex: "investiga o OTD-CAMPAIGN-RUN-ASYNC" ou "destrava o Higgsfield") ou rode `/handoff` se quiser o selo formal no HANDOFF.md. Se destravar um portão Sovereign, é só re-rodar `/loop`.
+
+## 🤖 Claude *(14:26:17)*
+
+
+🛠️ **Tool Call**: `PushNotification`
+```json
+{
+  "message": "Loop MCORCH parou (natural): entregou vizinhos sem\u00e2nticos on-select + OTD-SPACES-010 reconciliada. Backlog desbloqueado-com-valor esgotado; resto \u00e9 Sovereign-gated. Tudo pushed (main=4730bec).",
+  "status": "proactive"
+}
+```
+
+> **Tool Result (PushNotification)** - ✅ Success
+>
+> ```
+> Mobile push requested.
+> ```
+
+## 🤖 Claude *(14:26:31)*
+
+O loop está **encerrado** (parada natural, sem re-armar `ScheduleWakeup`).
+
+**Resumo da jornada autônoma (2 dias, 3 sessões de loop):**
+- **Arco 6** (05/07, selado): sinapse Fase B `OTD-SYNAPSE-EMBEDDING` — 148 sinapses por similaridade 768d na fusão Universo + `OTD-UCANVAS-PERF` reconciliada.
+- **it.3** (06/07, 11:01): vizinhos semânticos on-select — a sinapse virou inteligência interrogável.
+- **Iteração final** (06/07): `OTD-SPACES-010` reconciliada com fundamento OIDC §3.1.3.7 + check de `exp`.
+
+Cada peça provada materialmente (Lei 1), committada e pushed. O que restava era honestamente marginal (SPACES-011 unprovable/gated), bookkeeping (3.10) ou Sovereign-gated — parei em vez de manufaturar busywork ("mate a poesia").
+
+Estou aguardando sua direção. Se quiser, posso: **(A)** investigar o `OTD-CAMPAIGN-RUN-ASYNC` (Marketing Hub, valor incerto — eu avalio e reporto antes de codar); **(B)** rodar `/handoff` para o selo formal no HANDOFF.md; ou **(C)** você destrava um portão (Higgsfield connect / app-registration) e eu valido E2E.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
