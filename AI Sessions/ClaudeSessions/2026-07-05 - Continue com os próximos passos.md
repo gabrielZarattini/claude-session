@@ -1,4 +1,4 @@
-# Continue com os próximos passos
+# [[2026-07-06 - Continue com os próximos passos|Continue com os próximos passos]]
 **Date:** 2026-07-05 | **Session ID:** `be8df5a5-f15e-42b8-8659-5b49cc9f4cea`
 
 ---

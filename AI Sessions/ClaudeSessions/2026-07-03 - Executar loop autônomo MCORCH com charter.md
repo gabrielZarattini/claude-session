@@ -1,4 +1,4 @@
-# Executar loop autônomo MCORCH com charter
+# [[2026-07-02 - Executar loop autônomo MCORCH com charter|Executar loop autônomo MCORCH com charter]]
 **Date:** 2026-07-03 | **Session ID:** `28820a11-b589-46cb-b09c-1d1f5a4e56ed`
 
 ---
@@ -14172,3 +14172,16 @@ Print seal summary in **Portuguese (Brasil)**:
 <system-reminder>
 The user named this session "[Handoff] v6.73.1". This may indicate the session's focus or intent.
 </system-reminder>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - 7bb4586f-3050-4a11-99ef-569c4b75c080]]
+> * **Próxima Sessão**: [[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma]]
+%% --- TIMELINE END --- %%

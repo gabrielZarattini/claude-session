@@ -909,4 +909,5 @@ Quer que eu **acompanhe isso ativamente** (re-checar o paper de trend daqui a al
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-06 - Continue com os próximos passos]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a6cf83bd7fa3e9633]]
 %% --- TIMELINE END --- %%
