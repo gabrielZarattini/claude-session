@@ -3831,7 +3831,7 @@ Audit-log registrado, sprint-priorities preenchido com scores reais. O projeto e
 
 ## 👤 User *(16:20:44)*
 
-Continue com os próximos passos.  Te mandei errado o conteudo da ultima sessão que tive com o gemini flash.: 
+[[2026-07-05 - Continue com os próximos passos|Continue com os próximos passos]].  Te mandei errado o conteudo da ultima sessão que tive com o gemini flash.: 
 
 # Chat Conversation
 

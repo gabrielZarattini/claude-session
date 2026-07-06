@@ -8512,3 +8512,1364 @@ Atualizo a memória durável (estado de projeto que persiste entre sessões) par
 > 48	- [Encrypted views — .insert() (não .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) — Views Vault: null não limpa (use RPC disconnect_*); double-fire 23505 corrigido UPDATE-first; guard de tenant nas 3 triggers (migrations 20260602*).
 > 49	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — grep = função→ugrep -G; BRE estoura e no-opa silenciosamente sob `|| true`; use -E.
 > ```
+
+## 🤖 Claude *(00:00:15)*
+
+
+## 🤖 Claude *(00:00:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Viral Autopilot \u2014 motor R1-R4 completo, ATIVADO 2026-06-23](project_viral_autopilot.md) \u2014 BoK 9/9; Fatias 1/1b/2; 1\u00ba ciclo pago `947ef8b5`; pg_cron jobid 3; FR-VA-018 trend angle hardened; v\u00eddeo 9:16 integrado. Constraints e hist\u00f3rico no arquivo.",
+  "new_string": "- [Viral Autopilot \u2014 motor R1-R4 completo, ATIVADO 2026-06-23](project_viral_autopilot.md) \u2014 BoK 9/9; Fatias 1/1b/2; 1\u00ba ciclo pago `947ef8b5`; pg_cron jobid 3; FR-VA-018 trend angle hardened; v\u00eddeo 9:16 integrado + **cad\u00eancia de v\u00eddeo recorrente 2026-07-05 `c5eaf1c`** (`video_every_n_cycles` a cada N ciclos + graceful-degrade sob budget_cap; default OFF; helper `_shared/autopilot-video-cadence.ts` unit 10/10 + smoke 6/6; SOP autopilot-video-9x16 \u00a7Recurring). Constraints e hist\u00f3rico no arquivo."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:00:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Unified Sensorial Canvas \u2014 Phase Epsilon V9 (/dashboard/universe)](project_unified_sensorial_canvas.md) \u2014 Funde Core-Fable+Matrix+Mem\u00f3ria (Via 4). 3.1-3.6 LIVE (sinapses reais + fly-to 2026-07-01); restam 3.7 perf \u00b7 3.8 poda \u00b7 3.9 paridade/cutover \u00b7 3.10 seal.",
+  "new_string": "- [Unified Sensorial Canvas \u2014 Phase Epsilon V9 (/dashboard/universe)](project_unified_sensorial_canvas.md) \u2014 Funde Core-Fable+Matrix+Mem\u00f3ria (Via 4). 3.1-3.9 LIVE (**3.9 cutover 2026-07-05 `4729dd4`**: Universo \u00e9 a superf\u00edcie PRIM\u00c1RIA de constela\u00e7\u00e3o; Matrix/Mem\u00f3ria viram backup na nav; gate E2E `scripts/qa/audit-universe-ui.ts` Vision-APROVADO). Resta s\u00f3 3.10 (seal formal). 3.7 perf (~30s query) segue como OTD-UCANVAS-PERF."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:00:35)*
+
+
+## 🤖 Claude *(00:00:49)*
+
+Índice de memória atualizado. 
+
+---
+
+## Sessão — resumo executivo (3 milestones entregues, verificados e deployados)
+
+Diretiva: *"continue com os próximos passos"* → você sequenciou **Unified Canvas 3.5-3.10 → Viral Autopilot - Video**. Entreguei os dois, mais a cauda de brand que ficou pendente:
+
+| # | Milestone | Commit | Prova material |
+|---|-----------|--------|----------------|
+| 1 | **Cauda de brand (100%)** | `6af3181` | tsc 0 · build 0 · grep-zero pictogramas · 3 revisores adversariais clean · Canvas Studio E2E Vision-APROVADO |
+| 2 | **Unified Canvas 3.9 — cutover** | `4729dd4` | Universo = superfície primária; gate E2E `/universe` Vision-APROVADO (8624 nós); vitest 398 |
+| 3 | **Cadência de vídeo recorrente** | `c5eaf1c` | migration aplicada+viva · edge deployado · unit 10/10 · smoke 6/6 zero-custo · /security-review SAFE |
+
+**Destaques honestos (Lei 1):**
+- A cauda de brand pegou o **anticorpo cross-file** que o último seal avisou: o avatar do crew renderizava como texto cru no label/tooltip do sigma (não passava pelo `AgentAvatar` lucide) — trocar `🤖`→`bot` cegamente teria mostrado "bot Nome". Removi o prefixo dos 2 render sites.
+- O **Viral Autopilot - Video estava materialmente completo** (motor + editor billável + 1º ciclo pago 9:16 já witnessed em 2026-06-26). A fatia real que faltava era a **recorrência segura** — entregue: vídeo a cada N ciclos + graceful-degrade sob o cap, **default OFF**.
+
+**Gated no seu GO (não posso destravar):** ligar a recorrência de vídeo real (setar `video_enabled=true` + `video_every_n_cycles` + ativar o plano na `/dashboard/autopilot` → gasto autônomo real); publish vertical TikTok/IG/YT (OAuth+App Review); cert `video.mcorch.com` (sudo).
+
+---
+
+O roadmap que você nomeou está **esgotado** — gatilho de seal da Lei 3. Recomendo rodar **`/handoff`** para selar (commits granulares já feitos, insere o nó milestone na malha, atualiza o HANDOFF.md, roda a auto-auditoria das Leis). 
+
+Quer que eu sele agora com `/handoff`, ou prefere puxar mais alguma frente antes?
+
+## 👤 User *(00:44:11)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(00:44:11)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(00:44:36)*
+
+
+## 🤖 Claude *(00:44:38)*
+
+Entrando em **malha fechada autônoma** (modo dinâmico, self-paced). Iteração 1: leio a charter (SSOT do estado), sincronizo com origin, e meço a janela (crítico para o gatilho de PARADA da Lei 3).
+
+## 🤖 Claude *(00:44:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== charter exists? ===\"; ls -la .claude/context/autonomous-loop-charter.md 2>/dev/null && echo \"---\" && wc -l .claude/context/autonomous-loop-charter.md || echo \"NO CHARTER FILE\"\necho \"\"; echo \"=== git fetch + status ===\"; git fetch origin 2>&1 | tail -3; git status --short; git log --oneline -3\necho \"\"; echo \"=== window measure (Lei 3 stop gate) ===\"; ls .claude/scripts/session-inspect.ts 2>/dev/null && echo \"tool present\" || echo \"no session-inspect\"",
+  "description": "Read charter + git fetch + check window tool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === charter exists? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 55078 Jul  3 11:40 .claude/context/autonomous-loop-charter.md
+> ---
+> 203 .claude/context/autonomous-loop-charter.md
+> 
+> === git fetch + status ===
+>  D proof-manifest.json
+> c5eaf1c feat(autopilot): cadência de vídeo 9:16 recorrente com cap próprio (FR-VA-022 Amendment)
+> 4729dd4 feat(universe): Epsilon V9 3.9 — cutover de nav para o Unified Sensorial Canvas
+> 6af3181 feat(brand): fecha a cauda de brand — pictogramas → lucide/MIV nas superfícies cross-file
+> 
+> === window measure (Lei 3 stop gate) ===
+> .claude/scripts/session-inspect.ts
+> tool present
+> ```
+
+## 🤖 Claude *(00:44:51)*
+
+
+## 🤖 Claude *(00:44:53)*
+
+Charter existe (SSOT do loop). Antes de carregar 55KB dela, meço a janela — se eu estiver perto de 95%, o correto é selar, não continuar:
+
+## 🤖 Claude *(00:44:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run .claude/scripts/session-inspect.ts 2>&1 | tail -25 || npx tsx .claude/scripts/session-inspect.ts 2>&1 | tail -25",
+  "description": "Measure exact context window usage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🧭 MCORCH Session Inspect
+>    sessão: be8df5a5-f15e-42b8-8659-5b49cc9f4cea.jsonl  (720 linhas · 355 turnos · 173 tool-calls)
+> 
+>    Janela de contexto (Lei 3):
+>    [███████████████████░░░░░░░░░░░░░░░░░░░|░░] 46.6%   (| = teto de seal 95%)
+>    usado 466k / 1000k  ·  livre 534k  ·  custo do seal ~50k
+>    output gasto na sessão: 685k tokens
+> 
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> 
+>    🔎 Maiores tool-results em contexto (candidatos a poda — Lei 3):
+>        295kB  Read  (linha 357)
+>         27kB  Bash  (linha 76)
+>         24kB  Read  (linha 480)
+>         20kB  Read  (linha 101)
+>         20kB  Read  (linha 50)
+> ```
+
+## 🤖 Claude *(00:45:08)*
+
+
+## 🤖 Claude *(00:45:12)*
+
+**Janela: 46,6%** (466k/1000k) — saudável, ~534k livres. Veredito: continuar. (Nota Lei 3: o Read de 295kB na linha 357 é o screenshot do canvas — poda candidata, conclusão já extraída; sem urgência a 46%.)
+
+Loop autorizado a prosseguir. Leio a charter (SSOT do backlog/estado):
+
+## 🤖 Claude *(00:45:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>[Truncated: PARTIAL view — showing lines 1-165 of 204 total (26220 tokens, cap 25000). Call Read with offset=166 limit=165 for the next page, or Grep to find a specific section. Do NOT answer from this page alone if the answer may be further in the file.]</system-reminder>
+> 
+> 1	# Autonomous Loop Charter — MCORCH Malha Fechada
+> 2	
+> 3	> Fonte da verdade do `/loop` auto-ritmado. Lida no início de CADA iteração.
+> 4	> Atualizada pelo loop ao fechar cada Fatia (marcar ✅ / mover item pra Fila Sovereign).
+> 5	> Criada 2026-06-30 a partir do estado selado (handoff `c138539f`, mesh 8996).
+> 6	
+> 7	---
+> 8	
+> 9	## Identidade & Leis (não-negociável)
+> 10	- Opero como **MCORCH Master Execution Agent**. Penso em inglês, reporto em **PT-BR**.
+> 11	- **Protocolo de Malha Fechada:** módulo novo/feature/integração ⇒ BoK Gate (`docs/bok/<slug>/`) + Pattern Conformance Declaration ANTES de código.
+> 12	- **Survival Laws:** Lei 1 prova material · Lei 2 SOP antes de código · Lei 3 poda+selo a ~95% · Lei 4 ORO declarado.
+> 13	- **Reviewer = Sovereign (Gabriel).** Nada que precise do físico dele (dado/credencial/DNS/GO/decisão arquitetural) é improvisado — vai pra **Fila de Ação Sovereign**.
+> 14	- **Doutrina open-source-first (Diretiva Sovereign 2026-06-30):** tudo que dá pra construir open-source/self-hosted **DENTRO do MCORCH** vira microserviço/módulo/menu/página da infra própria (não SaaS pago externo) — cada peça agrega **equity**. Default = open-source/self-hosted/BYOK-grátis; SaaS pago só com **OTD** justificando. **Custo USD real ao Sovereign = 0** é meta de projeto. Aplica direto a `OTD-AC-015` (preferir InsightFace self-host no Mesh a API paga) e ao gate do GO de gasto. (memória `feedback_opensource_first_zero_cost_equity`)
+> 15	
+> 16	## Ritual por iteração
+> 17	1. `git fetch` + reler **Pending Actions** do `HANDOFF.md` + esta charter.
+> 18	2. Escolher o item de MAIOR valor **DESBLOQUEADO** (pular Sovereign-gated; registrá-los na Fila).
+> 19	3. Ciclo fechado: **BoK Gate → SOP Lei 2 → código → prova material Lei 1 (UUID/hash/curl/build/test) → `/security-review` se houver migration → commit granular.**
+> 20	4. Ao bater num portão físico: registrar na **Fila de Ação Sovereign** com o destravador exato, e seguir pro próximo desbloqueado.
+> 21	5. **Survival Laws self-audit** (1/2/3/4).
+> 22	6. `/handoff` incremental ao fechar cada Fatia. **Selo final + PARAR** quando: janela ~95% · OU backlog desbloqueado vazio · OU GO/stop do Sovereign.
+> 23	
+> 24	## Padrão de execução
+> 25	- Tarefa substantiva ⇒ **Workflow** (ultracode on): decompor + verificar adversarialmente antes de commitar.
+> 26	- Mecânico/trivial ⇒ solo.
+> 27	- Sempre Vision QA (`scripts/qa/vision-qa.ts`) em print de inspeção + criativo antes de declarar pronto.
+> 28	- UI ⇒ browser-verify real (vite preview do dist + sessão injetada) antes de "pronto".
+> 29	
+> 30	---
+> 31	
+> 32	## Backlog (ordem de valor — só DESBLOQUEADOS executam)
+> 33	
+> 34	### ✅ Fix Assets — mídia privada assinável pelo dono em TODO o ecossistema — SHIPPED E2E (loop 2026-07-03)
+> 35	- **Regressão diagnosticada (Lei 1):** os buckets de mídia são PRIVADOS (correto), mas o app resolvia URL **pública** (`/object/public/…` → 400) e o cliente não conseguia **assinar** objetos com prefixo ≠ uid (owner NULL nos uploads service-role). 84 creative_assets + 68 vm_canvas_executions + 32 graphs + 1 space com URL morta — **TODOS do User 0** (não era lixo de throwaway; hipótese do Sovereign refutada no DB).
+> 36	- **Fix:** migration `20260703030000` (3 policies owner-scoped, 4 rotas `=auth.uid()`: creative_assets/spaces/vm_canvas_projects/uid-prefix + **2 triggers de id server-side INSERT+UPDATE** fechando claim/PK-swap + data-repair `is_public`) · fix bug vivo `canvas-execute:555` (`is_public:true`→false, cunhava row morta a cada exec) · lib `asset-url.ts` (`toDisplayUrl`/`useDisplayUrl` re-assina no render — cura pública-morta E assinada-expirada, sem reescrever jsonb) · `<StorageImg/Video/Audio>` fiado em **13 superfícies** (Biblioteca, 5 nós, LeftPanel, Spaces cluster+refs, 3 inspectors, VideoEditor) · `resolveAssetUrl` chaveia pelo bucket real (não pela coluna `is_public` mentirosa). SOP `docs/processes/private-bucket-asset-signing.md`.
+> 37	- **Provas (Lei 1):** `/security-review` **CLOSED 9/10** (achou+fechou 1 HIGH cross-tenant que EU introduzi) · migration aplicada (3/1/0) · signing re-provado (antes FAIL→SIGNED 200) · **cross-tenant BLOCKED ao vivo** (sign/claim/PK-swap) · tsc 0 · build+deploy · **E2E local determinístico: Biblioteca 67/71 imgs+19 vídeos, Canvas 17/17+4 vídeos, 0 dead-public, Vision APROVADO ×2, confirmação ocular (90 assets)**.
+> 38	- **Herança:** Spaces cluster só renderiza com nó selecionado (wiring idêntico ao Canvas, provado). content_library/affiliate = keys/external (não afetados).
+> 39	- ✅ **Anticorpo re-executável SHIPPED (loop 2026-07-03 it.1, commits `44d3d3f`+`324d9a6`):** o Fix Assets tinha SOP mas não um guard automático (gap do Mandato Obstáculo→Síntese). `scripts/qa/smoke-asset-owner-signing.ts` (hermético, minta owner+attacker throwaway + objeto privado sob prefixo de projeto, owner=NULL) prova **6/6 LIVE**: S1 dono assina→HTTP 200 · S2 cross-sign BLOCKED · S3 enumeração 0 · S4/S4b id-squat de `vm_canvas_projects` neutralizado (trigger regenera id) + assinatura segue BLOCKED · S5 invariante `is_public`=0. tsc 0 · gitleaks limpo · 0 usuário órfão. SOP+Key Files atualizados. **RODAR antes de qualquer mudança em storage RLS.** Disparado por pergunta direta do Sovereign ("a correção de segurança ainda está corrigida e estamos seguros?") → verificado ao vivo + vacinado.
+> 40	
+> 41	
+> 42	### ✅ Smart-Delete MVP — SHIPPED (loop it.1-3, 2026-07-01) — gate BoK selado `33fadb0`
+> 43	- ✅ **FR-SD-001 `check-post-existence`** (commit `174d30c`): edge fn read-only, resolve id das 2 fontes, `deletable_via_api` derivado no SERVIDOR (Matriz), sinal correto por API (X data-vs-errors, YT items=[], WP/Pin 200/404, FB/IG code 100). Per-user fail-closed (501 deletáveis) / honestidade non-deletable. WP per-user PURO (o smoke pegou o probe cross-tenant do fallback global → corrigido). deno check · deployed 63.65kB · smoke **9/9** zero-cost · /security-review **NO FINDINGS**.
+> 44	- ✅ **FR-SD-002 `delete-remote-post`** (commit `358d825`): destrutivo, golden-rule (zero flag do cliente), DELETE idempotente WP(force=false Trash)/X/Pinterest, nó Mesh no 1º delete, NÃO apaga local (502 mantém âncora). **Workflow adversarial 4-lentes `wf_ad2b6722` pegou HIGH false-success** (X devolve errors[] p/ 401/403/429 → reportava deleted com tweet no ar) → classificadores puros `_shared/smart-delete-classify.ts` **deno test 15/15** (inclui a regressão 403). deployed 64.57kB · smoke **8/8** zero-cost NÃO-destrutivo.
+> 45	- ✅ **FR-SD-003 UI 3-ramos** (commit `edc27df`): `useSmartDelete` (hook) + `SmartDeleteDialog` (display) + `smart-delete.ts` (branchFor/labels). Fiado nos 2 call-sites do calendário. tsc 0 · eslint 0 novo · build ok · branchFor **7/7** · **browser-verified** (dist servido, sessão User 0 injetada — ramo transparência LinkedIn correto) · **Vision QA confidence high** (sem tela branca/quebra).
+> 46	- 🔒 **Fila Sovereign:** E2E destrutivo REAL (deletar post vivo WP/X/Pinterest + re-verify `exists=false`) — irreversível, Owner=Sovereign, precisa post descartável real + GO. · OTD-SD-001/002 (re-OAuth FB/YT p/ delete) · OTD-SD-006 (WP force=true permanente).
+> 47	
+> 48	### ✅ B4 EWMA multi-ciclo no analyze — SHIPPED (loop 2026-07-02 it.4, commit `bbc7ad9`)
+> 49	- FRD v0.3 "fixes embarcados" implementado: reward sobre janela dos últimos M=5 ciclos do plano, peso `0.5^idade` (anti-thrash); semântica documentada (janela lembra; plano virgem → `has_real_data=false`); auditoria `reward_vector.ewma`. Provas: deno check · deployado · **smoke 13/13** (L7: WIN 2+10·0,5=7 vence NEW=3 — single-cycle teria flipado). **Restam do arco Learning:** ~~B5 pauta de receita~~ ✅ · V4-2 experimento · coluna `reward_weights` config-as-data (NFR-VA-010).
+> 50	
+> 51	### ✅ Spaces Fase 1b — execução runGraph + ledger `generations` — SHIPPED LIVE (GO Sovereign 2026-07-02, apply+E2E na mesma sessão)
+> 52	- **GO recebido e executado:** migration `20260702190000` aplicada via Management API (HTTP 201) + registrada no ledger (RETURNING version) + **prova material 8/8** (16 cols · 2 policies · svc-only grants, client=0 · 5 idx · trigger · RLS on · anchor). **Drift do ledger FECHADO junto:** 11 locais sem registro → 10 provadas aplicadas por sonda de assinatura DDL e registradas (146→156); `20260630140000` gate_mode deixada de fora DE PROPÓSITO (pendência legítima do GO 3b). `audit-schema-drift.sh` **exit 0 NO DRIFT**. `db push` seguro de novo.
+> 53	- **Fix pós-smoke (commit `4753119`):** smoke expôs inversão de ordem de guards — dispatch do branch Spaces estava DEPOIS dos pré-checks 402 legados (payload inválido c/ saldo 0 → 402 em vez de 422/404). Corrigido: dispatch antes; teto diário extraído p/ `enforceDailyCanvasCap` compartilhado; branch Spaces faz saldo+cap próprios PÓS-validação (ordem canônica 401→422→404→402). deno check ✓ · redeploy 160.2kB.
+> 54	- **Provas (Lei 1):** smoke **13/13** (T1-T8 contra prod real: atômicos begin/dup/rollback/refund-clamp + RLS + 42501) · types regen (+`generations`+2 RPCs, tsc 0) · vitest **375 passed** · **E2E browser User 0 PAGO**: space `059fe777` → nó prompt-generator via Spotlight → Estimar ("1 mco projetado, sem débito" G7) → Rodar → **`generations 7add79b2` done, mco_charged=1, saldo 4624→4623 exato, latency 2400ms, result.enhanced_prompt real** → nó mesh `5f9c870b` (`spaces-first-run-…`) → **Vision QA APROVADO high cost 0**. Space de teste deletado (cascade ok, trilha `mcoin_transactions` preservada). Canvas→conteúdo pago **FECHADO**.
+> 55	- **Restam do Spaces:** Fase 2 restante (Workflow Apps · FX · multi-page · voz CLONADA [Fila: biometria] · **OTD-SPACES-003** composer provider-drift) · Fase 3 (collab).
+> 56	
+> 57	### ✅ Spaces Fase 2d — Designer/composer — **FUNCIONANDO E2E (OTD-SPACES-003 FECHADA, loop 2026-07-03)**
+> 58	- **SOP S30-S32 ANTES:** scene_compose SYNC via generateHiggsfield legado; custo 18 PINADO (classe F1); guards prompt+≥1 imagem; cap 2 = verdade do server; `NODE_PORTS.composer` declarado (image-1/image-2/prompt, threading ordenado); picker parametrizado (designer=2, imagem=4); skip no-op.
+> 59	- **ACHADO MATERIAL (E2E pago it.6):** Higgsfield rejeita `mode='compose'` — o compose LEGADO do Canvas Studio estava igualmente quebrado; slice falhava honesto com estorno integral.
+> 60	- **✅ 2d-bis (2026-07-03) — provider truth por sondagem 422 zero-custo:** `soul/compose` NUNCA existiu (`mode` é literal de PATH ∈ reference|character|standard); refs exigem `custom_reference_id` cunhado async em `/v1/custom-references` (fila de MINUTOS — incompatível com a janela sync). **Fix shipado:** engine do compose = **OpenRouter Nano Banana multimodal** (caminho de refs da 2b já provado), custo re-pinado **10** (4×-floor, o 18 precificava ficção), BYOK openrouter fail-closed (C4 novo), `model_key='openrouter/scene-compose'`, AR enum do Soul corrigido (4:5/5:4 mortos). **+ Achado colateral P1 consertado:** `canvas-assets` é PRIVADO desde a criação — 3 call-sites `getPublicUrl` (legacy image/voice WAV/spaces image) + `useReferenceUpload` produziam URLs 400 mortas → server assina 7d, refs do cliente 365d (S33). **+ Anticorpo permanente:** sentinel `smoke-higgsfield-schema.ts` 7/7 pina o contrato vivo (drift = exit 1). SOP Amendment 2d-bis + OTD-SPACES-004/005/006/007.
+> 61	- **Provas (Lei 1):** smoke **31/31** (C4 402 pré-débito zero-row · C3 pinado 10 com provider forjado) · sentinel 7/7 · vitest **398** · tsc 0 · deno check · deploy 167.9kB · **E2E PAGO: space `4909d024` "E2E 2d compose" (MANTIDO) → generation `cc789ada` done 12,1s → PNG 919.943B URL ASSINADA HTTP 200 → saldo 4581→4571 (10 exato) → Vision QA high custo 0**.
+> 62	
+> 63	### ✅ Spaces Fase 2c — voice_over (voiceover stock) — SHIPPED E2E PAGO (loop 2026-07-02 it.5, commits `694d836`+`bfd2b29`)
+> 64	- **SOP S26-S29 ANTES:** motor = `tts-speak` reusado COM O JWT DO USUÁRIO (re-valida, BYOK google, devolve WAV, **não cobra** — zero double-charge sem precisar de prepaid); custo declarado **2 mco** (4×-floor); guards 422 pré-débito; WAV → bucket → `finalize(done, result.audio_url)`; falha → refund total na mesma request. Voz CLONADA (Gabriel) segue **Fila Sovereign** (biometria).
+> 65	- **/security-review independente: APPROVED** (SOUND em double-charge/mint/JWT-forward/guard-order/output-parity/DoS/legacy). LOW **F1 corrigido** (provider forjado inflava a cobrança até 65 → PINADA em `CREDIT_COSTS['voice-over']`; gate A4 prova) + F2 typeof + F4 telemetria. **F3/F5 registrados como OTDs** (abaixo).
+> 66	- **Provas:** smoke **27/27** (A1/A1b/A2/A3 chave fake→refund/A4 pinned) · vitest **393** (+G15) · tsc 0 · **E2E PAGO**: space `1d77b500` "E2E 2c voice" (MANTIDO) → Estimar 2 exato → Rodar → **WAV 436.410 bytes audio/wav HTTP 200 (9s de fala)** → `<audio>` player no cluster → saldo **4583→4581 (2 exato)** → Vision QA high. Custo real: 2 mco + ~US$0,005 BYOK.
+> 67	- **OTD-SPACES-001 (do review, pré-existente):** `canvas-assets` é bucket público com SELECT anônimo em `storage.objects` ⇒ lista+leitura mundial de imagens/vídeos/WAVs de todos os tenants. Fix = bucket privado + signed URLs em todo o slice (imagem/vídeo/voz) OU restringir list. Não-bloqueante desta fatia; herdado do legado.
+> 68	- **OTD-SPACES-002 (do review, pré-existente):** INSERT policy de `spaces` não constrange `id` do cliente (poluição de namespace de prefixo no storage; sem leitura/overwrite cross-tenant alcançável). Hardening: id server-side.
+> 69	
+> 70	### ✅ Spaces Fase 2b — References picker — SHIPPED (loop 2026-07-02 it.4, commit `4abddf7`)
+> 71	- **SOP S23-S25 ANTES:** refs em `node.data.references` (schema 1a); upload client-side ao `canvas-assets` `<uid>/spaces-refs/` (policies existentes exigem prefixo — zero migration/zero server novo); **cap ativo 4 = verdade do server** (`generateOpenRouter` anexa slice(0,4) multimodal; divergência do BoK 8 declarada); refs nunca cobram.
+> 72	- **Provas (Lei 1):** `mergeReferenceUrls` explícitas+upstream dedupe cap 4 — **G14 vitest 4 novos (388 total)** · tsc 0 · eslint limpo · **browser-verify**: upload REAL (URL do bucket com prefixo do uid = policy provada) → chip → `graph.references` persistido no DB → reload hidrata → contador honesto "1/4 ativas no run · referências não são cobradas" → **Vision QA confidence high**. Placeholder "chegam na Fase 2" morto.
+> 73	
+> 74	### ✅ Spaces Fase 2a-CLIENTE — vídeo E2E PAGO PROVADO (loop 2026-07-02 it.3, commits `ea5a4b9`+`54b404a`)
+> 75	- **SOP S19-S22 ANTES do código:** poller 5s/12min lê a própria row e flipa o nó (runState = dispatch-completo); threading imagem→handle `first-frame` → `input_asset_url` (skip honesto sem imagem); **batch de vídeo forçado 1** (×8 acidental = 1.280 mco); custo HUD = espelho 1:1 (mirror-parity mecânico parseando o fonte do edge fn — S22/G13).
+> 76	- **Código:** `video-generator` em EXECUTABLE_TYPES · payload `image_to_video` higgsfield duration 5 · ParamHUD com 5 modelos precificados inline · GenerationCluster renderiza `<video>` de `result.video_url`. vitest **384** (+9 G13) · tsc 0 · eslint limpo.
+> 77	- **E2E PAGO REAL (User 0, GO precedente de vídeo):** space `51b229cf` "E2E 2a video" (MANTIDO vivo p/ o Sovereign abrir) — grafo imagem→vídeo via UI (Spotlight + params; edge injetada no graph persistido, hidratação zod ok) → **Estimar 40 exato** (10+30, G7) → Rodar → imagem done 10 mco → vídeo 202/queued, `operation_id` Higgsfield real + token hash na row → **webhook REAL finalizou `done`**: MP4 **11.292.652 bytes video/mp4 HTTP 200** em `canvas-assets/51b229cf…/3e120f3d….mp4` → **poller flipou o nó `done` na UI + `<video>` no cluster** → saldo **4623→4583 (40 exato)** · `canvas_video_spend=0` (S16 provado com webhook real) · **Vision QA no VÍDEO: APROVADO high cost 0** ("robô aspirador futurista, câmera orbital suave, íntegro"). Custo real: 40 mco + ~US$0,13 BYOK Higgsfield.
+> 78	- **Gotcha de E2E anotado:** refs do agent-browser ficam stale depois de toast (clique em "Rodar" acertou "Estimar" — sempre re-snapshot antes de clicar pós-toast).
+> 79	
+> 80	### ✅ Spaces Fase 2a-SERVER — vídeo async no slice — SHIPPED (loop 2026-07-02 it.2, commits `9db732b`+`df41d1d`+`7b0742d`)
+> 81	- **Lei 2 ANTES do código:** SOP Amendment S14-S18 + gates G8-G12 (`spaces-graph-execution.md`) — ledger-first no submit; correlação webhook por **SHA-256-only** na row (plaintext vazaria ao próprio dono via RLS SELECT-own → forjaria failure-callback p/ refund + vídeo grátis; precedente PAT vision-mcp); supressão TOTAL do deduct legado no webhook (classe OTD-VA-010); sweep S17; guards S18 preço-declarado-only.
+> 82	- **Migration `20260702210000`** (webhook_token_hash + operation_id + UNIQUE parcial) aplicada+registrada+provada (new_cols=2, idx=1). **/security-review independente: NO P0/HIGH** (1 MEDIUM done-fallback no webhook + 2 LOW ordem-BYOK/status-passthrough — **TODOS corrigidos**; SOUND em mint/double-charge/cross-tenant/secret-leak/replay/SSRF-parity).
+> 83	- **Código:** `canvas-execute` image_to_video no slice (422 allowlist/input/duração + BYOK fail-closed 402 pós-404 + begin output_type=video + refund total em submit-fail com redação de token) + `higgsfieldSubmit` extraído/compartilhado c/ legado · `higgsfield-webhook` branch `?spaces_token=` (falha→refund; sucesso→download/validate/upload→done+result.video_url com **retry+done-fallback claim-guarded**; replay no-op; ZERO deduct legado). deno check ✓ · deployados 163.7kB+85.37kB · types regen (tsc 0).
+> 84	- **Prova (Lei 1):** smoke **22/22 ×3** contra prod (13 gates 1b + V1-V4 guards + W1-W5 ciclo webhook SIMULADO zero-Higgsfield; W5 = submit real com chave fake → 401 → refund na mesma request, G8 E2E) · vitest 375 passed · vacina de orphan (chave vault do W5 bloqueava deleteUser — limpeza da base table no finally).
+> 85	- **Notas honestas:** E2E pago real (dop-lite ~30 mco + ~$0.13 BYOK Higgsfield) fica p/ 2a-cliente. INFO-3 do review (legado retorna webhook_token plaintext ao cliente — pré-existente, candidato a retrofit do design hash) + INFO-2 (canvas-assets é bucket público desde o legado) registrados como follow-ups não-bloqueantes.
+> 86	
+> 87	### 🗄️ Spaces Fase 1b — histórico código-completo (referência)
+> 88	- **Mapeamento**: Workflow `wf_b4abf175-410` (6 readers + síntese; 24 contradições resolvidas, corte de fatia selado). **SOP Lei 2** `docs/processes/spaces-graph-execution.md` (decisões S1-S13 + gates G1-G7) ANTES do código.
+> 89	- **Entregue (working tree, NÃO commitado — commit gated no apply)**: migration `20260702190000_spaces_generations_ledger.sql` (tabela `generations` stub BoK verbatim + hardening D1/D2/D3/D8 + RPCs `begin_space_generation` [ledger-first: row running + deduct MESMA tx, ON CONFLICT idempotente] / `finalize_space_generation` [claim first-finalizer-wins, refund clamped + row simétrica `spaces.node.refund`], service-role-only) · branch Spaces no `canvas-execute` (extensão aditiva `space_id`+`node_run_id`, exclusivo do caminho legado; 422 guards pré-débito; teto diário estendido p/ `spaces.node.run` via IN-list; retry provider 1×/5s; refund total em falha; `finalizeWithRetry` + done-fallback + resposta honesta `refund_pending`; observation node first-run fail-open) · client `useGenerationLedger` (runGraph camadas Kahn + BFS blocked + batch=N runs + threading S11) / `useSpaceSession` / `spaces-execution.ts` lib pura / `GenerationCluster` (lazy ≤24, cursor created_at) / botões Estimar+Rodar / serializer reseta status transitório (S9) / estimate=cobrança (G7) · `scripts/self-heal-spaces.sh` (sweep on-demand, só estorna rows SEM valor entregue).
+> 90	- **Provas até aqui (Lei 1)**: deno check ✓ · vitest lib pura **14/14** · eslint 0 · **/security-review independente**: núcleo do dinheiro SOUND (zero mint/double-charge/cross-tenant/cap-bypass), 1 MEDIUM + 2 LOW + 1 INFO **TODOS corrigidos** (finalize retry + refund_pending honesto + done-fallback + sweep guard + frozen→403 genérico + dup lookup tenant-filtrado).
+> 91	- **🔒 GATED**: o classificador de permissões do harness bloqueou o apply da migration em prod sob modo auto ("/loop genérico ≠ autorização específica p/ DDL em produção"). **Restante pós-GO**: apply+register → `npx supabase gen types` regen → tsc 0 → deploy `canvas-execute` → smoke zero-cost G1-G6 → browser E2E + Vision QA → commits granulares → seal. Ver Fila.
+> 92	
+> 93	### ✅ Spaces Fase 1a — canvas 72/28 VIVO (loop 2026-07-02 it.3, commit `9ea6ac0`)
+> 94	- Primeira fatia visível do módulo Spaces (BoK 9/9 selada it anterior → gate aberto): rota `/dashboard/spaces` (home) + `/dashboard/spaces/:id` (canvas 72/28), sobre o scaffold Phase 0 promovido. **Zero execução/ledger** (Fase 1b) — só cria/edita/persiste. **SOP Lei 2** `spaces-canvas-persistence.md` (5 gates) ANTES do código. Migration `20260702170000` (tabela `spaces` graph jsonb desnormalizado DM-SPACES-002, RLS-own 4 policies) — **/security-review NO FINDINGS** · aplicada+registrada · RLS+4 policies provados live · types regen. useSpaces (guard hidratação zod dropa inválido nunca white-screena FMEA-SPACES-007 + guard empty-over-nonempty FMEA-SPACES-006) · SpaceNodeCard/Spotlight(26 tipos)/ParamHUD render-only · fix a11y do CommandDialog compartilhado (DialogTitle sr-only — limpa erro Radix em todo cmdk do app). **Prova (Lei 1):** vitest **5/5** · tsc 0 · eslint 0 · build · **E2E browser User 0**: criar space → Spotlight insere 2 nós → **DB graph=2 nós com portas corretas** → reload hidrata → HUD → **0 erro console** · **Vision-QA APROVADO high**. Space de teste deletado. **Restam do Spaces:** Fase 1b (execução: `runGraph`→`canvas-execute`, ledger, clusters de geração) · Fase 2 (breadth) · Fase 3 (collab). **Arco Learning: só V4-2 (experiment-gated) resta.**
+> 95	
+> 96	### ✅ `reward_weights` config-as-data NFR-VA-010 — SHIPPED (loop 2026-07-02 it.2, commit `6058e78`)
+> 97	- Pesos do reward (FR-VA-029) + knobs EWMA (B4) viraram DADO por plano: coluna `autopilot_plans.reward_weights jsonb` (migration `20260702150000`, aplicada+registrada via Management API, coluna+CHECK provados live) + `resolveRewardConfig` no `autopilot-analyze` (validação dura: 4 pesos finitos ≥0 soma>0 → **normalizados**; `ewma_m` 1..12; `ewma_decay` (0,1); inválido → defaults fail-safe) + auditoria `reward_vector.{weights, weights_source}` por policy row (versionamento NFR-VA-010). Escopo honesto: pesos governam só o caminho multimétrico; fallback afiliado fixo. **SOP Amendment (c)** ANTES do código. Provas: **/security-review NO FINDINGS** (sub-agente independente — cota resetou) · deno check · deployado · **smoke 16/16** (L8a default→REACHY · L8b rev-heavy→MONEY pesos 0.05/0.05/0.05/0.85 exatos · L9 inválido→`default_invalid` · L5-L7 retrocompat; fixture fix: `publication_metrics` FK→`content_library` ancorado) · tsc 0. **Arco Learning: só resta V4-2 (experiment-gated).** Nota: iteração atravessou queda de conexão — retomada sem perda (working tree íntegro). Seal /handoff desta Fatia = batch com a próxima (precedente it.2-3).
+> 98	- ⚠️ **Cota de subagents RESETOU** (~12:45 BRT provado pelo sub-agente do review) — Workflows disponíveis de novo; ultracode está OFF nesta sessão (opt-in padrão do Workflow tool aplica).
+> 99	
+> 100	### ✅ B5 Pauta de Receita FR-VA-031 (HITL) — SHIPPED (loop re-armado 2026-07-02 it.1, commit `367db9b`)
+> 101	- Superfície read-only na `AutopilotPage`: criativos com desempenho REAL (`creative_metrics` agregado) ranqueados como candidatos a monetização; status derivado de `affiliate_links.content_id` (candidato/monetizado/convertendo); esforço = product_id rastreado ("Baixo — anexar link ML"). Decisão permanece humana. **SOP Lei 2 ANTES do código** (`docs/processes/revenue-opportunity-pauta.md`, 4 gates). Provas: ranking puro `src/lib/revenue-pauta.ts` vitest **7/7** · tsc 0 · eslint 0 · build+deploy · **browser-verify** (preview+sessão User 0; linha #1 ↔ `content_library e27a09e7` do ciclo pago; 0 erros console) · **Vision-QA APROVADO high cost 0**. Sem migration. Nota honesta: métricas hoje = 0 impressões (coletor aguarda re-OAuth IG insights — Fila); a pauta já ordena e mostra status corretos.
+> 102	- **Contexto da sessão:** suíte BoK `spaces-evolution` completada ANTES do loop re-armar (pedido direto do Sovereign): 06/07/08 + Pattern Conformance §11 + renames canônicos + seal `8f5fd3fd` (commit `4a8fee0`) → **25/25 suítes verdes; BoK Gate do Spaces Fase 1 ABERTO** (novo item desbloqueado de alto valor: MVP canvas 72/28). ⚠️ Cota de subagents esgotada até 4:20am BRT → Workflows indisponíveis; iterações rodam inline (precedente v6.36.1).
+> 103	
+> 104	### ✅ Vision-gate mecânico nos 2 harnesses — SHIPPED (loop 2026-07-02 it.2-3, commits `8a41457`+`e511862`)
+> 105	- Diretiva Sovereign 2026-06-26 (regra comportamental) virou **gate mecânico**: **(it.2)** `audit-canvas-ui.ts` — screenshot em memória → bucket privado `qa-audits/` → signed URL 1h → `vision-qa.ts` com veredito estruturado APROVADO/REPROVADO bloqueando o exit; fail-closed sem `VISION_MCP_PAT` (`--no-vision` = exceção explícita); **fix de segurança em passing:** removida a cópia pública `dist/canvas_e2e_latest.png` (print de dashboard LOGADO servido pelo nginx). Provado LIVE em prod (29 nós → APROVADO high, cost 0). **(it.3)** `e2e-user-zero` — `lib/vision-gate.ts` julga até 3 screenshots do flow; REPROVADO → **Finding P1/ux** (flipa o NO-GO); fecha a heurística deferida (c) do classifier. tsc 0 · vitest 6/6 · **prova adversarial LIVE: PNG branco 1920×1080 → REPROVADO → P1**. SOP `creative-qa-vision-gate.md` Amendment 2026-07-02.
+> 106	
+> 107	### 0. Direção fresca do Sovereign (docs committados `c880fcf`/`a29627b`, 2026-06-30) — PRIORIDADE
+> 108	- ✅ **Observability gap FECHADO (it.9 + loop 2026-07-01 it.4):** helper `logLlmUsage(fn,model,usage)` em `_shared/llm-fallback.ts` (agregado fn/model/tokens, SEM user_id — infra_health_logs é global-read) fiado em `orchestrate-step` (article @325 + atomizer @431) + `lead-score`. Emite `event='llm_usage'`. **Provado LIVE** (lead-score → row). **+ `logImageUsage(fn,model,count)` (commit `282edf3`):** imagens não têm token usage (custo por-imagem) → `generate-image` emite `event='image_usage'` {fn/model/image_count} pós-sucesso, taggeando o modelo por branch (flux-1.1-pro/gemini-2.5-flash-image/dall-e-3). **Provado LIVE** (helper real → row `{model:black-forest-labs/flux-1.1-pro, image_count:1}`). Custo texto+imagem agora **MEDIDO** → destrava o GO $0. **✅ STREAMING FECHADO (commit `c5614f7`):** `generate-content` pede `stream_options.include_usage` + tee TransformStream passthrough fareja o `usage` do chunk final → `logLlmUsage` no flush (bytes ao cliente inalterados). E2E provado (HTTP 200, 12720 chars, row `{fn:generate-content, total_tokens:208}`). **Arco de observability zero-USD 100% COMPLETO** (texto não-streaming + imagem + texto streaming).
+> 109	- 🔧 **Swaps doutrina (pós-observability):** **IMAGEM — NÃO suprimir (correção it.10, Lei 1):** a suposição do audit ("desperdício puro, não entra no MP4") estava **incompleta** — o `reshape-pillar` **consome a imagem gerada** (`content_library type=image` por `campaign_id`, `reshape-pillar:274-276`) e a **reframa** em variantes por canal (IG photo · Pinterest pin · FB photo, `:42-43`/`:132-136`). Suprimir quebraria os posts de imagem sociais. Caminho $0 da IMAGE = **rotear `pref_image_provider='replicate'` FLUX self-host** (infra, Fila) — NÃO suprimir. **TEXTO** → `:free`/Ollama só no autopilot (D) = decisão de qualidade do Sovereign (Fila).
+> 110	- ✅ **HyperFrames nativo SHIPPED (loop 2026-07-01, commits `c422de7` docs + `2ce09b3` código):** render de studio-project agora roda **NATIVO sobre `@hyperframes/core` (Apache-2.0, LICENSE shipado no tarball — verificado Lei 1)** — `bundleToSingleHtml` → Playwright dirige `__player.renderSeek(i/fps)` → FFmpeg bitexact compartilhado. **Elimina `HF_CLI`/`HF_NODE`/trap ARM64 do caminho default** (wrap CLI preservado só como rollback `STUDIO_RENDER_ENGINE=cli`; deletar após 1º render editor-initiated). SDD **§VS-UI-C (Amendment v0.6)**: OTD-VS-020 (substrato B) + FR-VS-050; fundamentado no Workflow 4-lentes `wf_bbc8402d-096` (achado-chave: runtime core = CLI **byte-idêntico** sha256 `1bc431f0…`; o "engine do CLI" é só harness de injeção). **Gates todos verdes:** frame-diff sha256-distinto t=1s/t=6s · byte-determinismo 2× `c721f8f4…` (386.795B) · Vision-QA confidence **high** "Aprovado" · **A/B SSIM 0.9934** vs referência CLI (PSNR 46.8dB) · guard smoke 4/4 · tsc 0 · **worker E2E** `video_renders 020e9bef` done → bucket HTTP 200 **byte-idêntico ao render local** (determinismo cross-run). ⚠️ Honesto: o CLI global segue instalado — o **editor vanilla (Fase A)** ainda roda `hyperframes preview`; sai só quando a Fase B swapar o service (container próprio).
+> 111	
+> 112	
+> 113	
+> 114	### 0b. Higgsfield MCP oficial — conector per-user OAuth (OTD-SPACES-007, direção Sovereign 2026-07-03)
+> 115	- **Diretiva:** "usar o MCP oficial da Higgsfield nos nós do Spaces, modelos gratuitos nos testes, BYOK per-user". Payoff: 30+ modelos (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro, Soul 2.0, 3D, TTS, upscale, dubbing) atrás de UMA integração com schema auto-descritivo (`tools/list`).
+> 116	- ✅ **BoK amendment SHIPPED (loop 2026-07-03 it.2, commit pendente):** `docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md` — gate Closed-Loop 3.5 FECHADO. FR-SPACES-015..021 + tabela `higgsfield_oauth` (classe social_credentials) + Pattern Conformance (7 padrões `yes`) + OTD-SPACES-007/008/009 + FMEA FM-HF-01..05 + 8 verification gates + Success signal.
+> 117	- **CORREÇÃO MATERIAL (Lei 1, probes vivos 2026-07-03) da nota anterior:** o `/mcp` retorna **401 sem OAuth** (`www-authenticate: Bearer … scope="openid email offline_access"`, upstream **Clerk**) — a Platform API key BYOK vale para `api.higgsfield.ai`, **NÃO** para o MCP. O conector é genuinamente **OAuth authorization_code+PKCE(S256)**. **Dynamic Client Registration PÚBLICA provada:** `POST /oauth2/register`→**201** `client_id` public-client (`auth_method=none`). Dois fluxos: `authorization_code_pkce` (web, nosso) · `device_code` (fnf-device-auth, CLI/OpenClaw futuro — OTD-SPACES-009 deferido).
+> 118	- 🔒 **PRÓXIMO (Fatia de código, parcialmente gated):** migration `higgsfield_oauth` + edge fns init/callback/refresh/disconnect + UI card + introspecção `tools/list`. **Desbloqueado:** todo o código + contract-smokes. **Sovereign-gated:** o clique "Conectar Higgsfield" + consent Clerk (conta do Gabriel) é o único caminho pro `refresh_token` real → E2E que materializa valor trava aí (Fila). REST legado + sentinel seguram o caminho atual (coexistência OTD-SPACES-008, sem big-bang).
+> 119	
+> 120	### 1. Gabriel AI — Fatia 3b (avatarIdentity + Identity Gate)  ⟶ programa-topo, estende a seal de hoje
+> 121	- ✅ **Emenda BoK VLM-soft SHIPPED (it.1, commit `7b81bfd`):** `10-amendment-3b-identity-gate-vlm-soft.md` — Identity Gate dual-mode (VLM-soft MVP / ArcFace-hard deferido), verificado adversarialmente (wf_188ce24c-881 APPROVE, 6 issues dobradas). FR-AC-013b compare enum + gate_mode discriminador + telemetry key-migration definidos.
+> 122	- ✅ **Fundação 3b SHIPPED (it.2, commit `541f707`):** lib de compare VLM-soft `src/lib/avatar-identity.ts` (FR-AC-013b — parse fail-soft + bands + reconcile N≥2 anti-oscilação, 15/15 testes) + migration `gate_mode` `20260630140000` (§4b, /security-review NO FINDINGS, aplicação deferida ao GO 3b). tsc 0.
+> 123	- ✅ **Nó avatarIdentity SHIPPED + DEPLOYED (it.3, commit `12d06c0`):** FR-AC-012 — type+factory+componente+inspector+registry+nodeTypes+dispatch; upload multi-retrato (canvas-assets `user_id/`), ConsentWizard (train_lora+face_embedding Art.11), provider/tier, botão "Treinar" fail-closed honesto (OTD-AC-017). tsc 0 · eslint 0 · vite build 0. **Browser-verificado** (Usuário Zero, preview): nó no palette Cmd+K + render no canvas + inspector íntegro + zero crash/console-error. **Deployed** ao `dist/` servido (chunk `CanvasEditorPage-DEjSoHib.js` 165.844B contém o nó; env baked). Valor visível ao Sovereign LIVE.
+> 124	- 🔒 **3b DESBLOQUEADO ESGOTADO** — o que resta é todo Sovereign-gated: edge `avatar-identity-train` (OTD-AC-017), gate-into-pipeline + telemetry migration §4b.2 (dependem do train+geração), calibração biométrica (OTD-AC-015). Próximo item do loop = **backlog #2 (YT/TikTok)** OU /handoff seal se janela ~95%.
+> 125	- **HALT (Fila Sovereign):** edge `avatar-identity-train` (OTD-AC-017 Higgsfield) · treino/calibração com **frames biométricos reais do Gabriel** (OTD-AC-015) · GO de produção.
+> 126	
+> 127	### 2. Brand-persona YT/TikTok (post-engine)  ⟶ serve diretiva brand-first + distribuição/receita
+> 128	- ✅ **QUASE TODO SHIPPED (seal 8973, `311a55b1`) — verificado por probe material (loop it.1, 2026-06-30):** `publish-social` TikTok/YouTube/Pinterest com vídeo (linhas 263–616) · OAuth init/callback/refresh dos 3 (`social-auth-*`) · enum `social_platform` já tem yt/tiktok/pinterest · `social_accounts`/`social_app_config` (migration `20260627120000`) · **gap `auto-publish` video_url CLOSED** (resolve+assina content_library/channel_variants → `auto-publish:111`) · BoK `10-amendment-social-connect-*` FR-PE-005..016. Publish/OAuth/refresh/tables = SHIPPED.
+> 129	- ✅ **RENDER-DECOUPLING RESOLVIDO POR ARQUITETURA — verificado no DB vivo (loop 2026-07-02 it.1):** a opção "reusar 1 render/ciclo" JÁ EXISTE e JÁ MATERIALIZOU — o ciclo pago `77e02fca` produziu `channel_variants` de vídeo p/ **tiktok·youtube/short·pinterest·instagram·facebook·twitter_x·linkedin TODOS `reused_master`** (1 master 9:16, zero re-render; matching por `pillar_run_id` server-trusted) + 4 com `scheduled_post_id`. O item "slice de código" era STALE: o espinhaço reshaper (FR-CP-002/003) + kick do video-bridge já implementam o design correto. Sub-runs diretos por plataforma de vídeo seriam ERRADOS (re-render redundante viola doutrina USD=0).
+> 130	- ✅ **Fatia it.1 SHIPPED (2026-07-02):** os 2 gaps reais que o probe expôs — **(a) imagem-pilar `gap` nas 5 surfaces** (resolução era campaign_id-only e autopilot nunca cunha um; `campaigns` é FK): fix = âncora `metadata.pillar_run_id` no insert da imagem (`orchestrate-step`) + resolução 2-passos no `reshape-pillar` (run-tag primário → campaign fallback). **(b) fan-out hygiene** (`autopilot-run`): plataformas sem step (yt/tiktok/pinterest/ig) filtradas ANTES do pré-débito + telemetria `fanout_platform_skipped` (antes: 10 mco por run knowledge_mesh-only). SOPs Lei 2 amendadas (channel-reshaper G7 + autopilot-cron-identity). Provas: deno check 3/3 · tsc 0 · deploy 3 fns · **smoke 18/18** (cenário B G7: campaign NULL → JPEGs geometria exata `ready`, draft-only) · regressão reshape-pillar PASS.
+> 131	- 🔒 **VALOR OAuth-GATED (último salto):** publish visível trava nos audits (TikTok Content Posting ~2-6sem · YouTube gates A+B · Pinterest Trial→Standard) — **e o app nem foi registrado** (amendment §6 step 1) → sem `client_id` nada roda. App-registration é O unlock (Fila). Motor interno completo: pilar+master+variants+drafts provados; falta só a credencial do último salto.
+> 132	
+> 133	### 3. HyperFrames Studio editor Fase B (editor VIRA módulo próprio billável · doutrina equity)  ⟶ pivô ativo do loop (it.2+)
+> 134	- ✅ **Gate Lei 2 SHIPPED (it.2, 2026-06-30):** emenda BoK `video-studio` SDD **§VS-UI-B (Amendment v0.5)** (FR-VS-047/048/049) — verificação empírica Lei 1 dos pacotes **publicados** @hyperframes/studio@0.7.5 + core@0.7.5 (`npm pack` do dist) + Workflow adversarial `wf_b0a6c005-8c2` (APPROVE_WITH_FIXES). Contrato McorchAdapter completeness **PROVADA** (13 métodos = 13 call-sites reais; rotas de arquivo são FS-based → materialização Storage↔volume mandatória). **Deploy = reuso do `video.mcorch.com`** (swap do `video-studio.service` na mesma porta 3210) → **DNS `studio.mcorch.com` NÃO é mais necessário** (portão Sovereign evitado).
+> 135	- ✅ **render-parity RESOLVIDO por prova material (it.3):** em vez de reimplementar seek (risco de MP4-branco), **envolver `hyperframes render`** (renderer de referência local, USD=0) → paridade **definitional**. **Provado E2E:** projeto studio real → `ref-render.mp4` **505.761 B · 1080×1920 · 24fps · 192 frames**; frames t=1s (195.693 B)/t=6s (355.388 B) com **sha256 distintos** = animado + não-branco. Trap ARM64 resolvido (`HYPERFRAMES_BROWSER_PATH`→chromium Playwright). §B.3 emendada.
+> 136	- ✅ **Wiring SHIPPED + provado E2E (it.4):** `renderStudioProject` (render-core.ts, envolve `hyperframes render` + path-safety) + branch `studio-project` no `video-bridge.ts`. Render real `9069bb7d` → bucket 720.678 B (HTTP 200) → `video_assets`+`creative_assets`(1080×1920/8s)+mesh. **Bônus:** achei+corrigi bug TDZ (`ap` usado antes da declaração) que fazia o dual-write de vídeo→`creative_assets` SEMPRE pular silenciosamente; agora renders do editor entram na Biblioteca de Assets. serviço reiniciado (código vivo). `tsc` 0.
+> 137	- ✅ **Guard de segurança blindado (it.6):** `scripts/qa/smoke-studio-project-guard.ts` 4/4 (sub-segundo, sem render) — path-safety do `renderStudioProject` rejeita execução de dir arbitrário (escape absoluto/traversal/vazio) antes de qualquer spawn. Lei 2 hardening do código shipped.
+> 138	- ✅ **GATE FR-VS-047 TOTALMENTE VERDE (it.5):** (a) determinismo → 2 renders args-idênticos **sha256-idêntico** (`1db99067…`, 465.054 B) = NFR-VS-016 mantido; (b) **Vision-QA** (diretiva Sovereign, cost 0) `vision_analyze_video` confidence **high** = composição 9:16 correta (gradiente/logo/título/CTA fade-in, não-branco). Render-parity provado em 3 níveis (frame-diff · byte-determinismo · semântico). **worker-side COMPLETO.**
+> 139	- ✅ **Sub-fatia 2a SHIPPED (loop 2026-07-01, commit `2123a79`):** `scripts/video-studio-host/` — servidor `createStudioApi(mcorchAdapter)` loopback 3211 (vanilla 3210 intocado até o swap 2c) + **McorchAdapter 13 métodos** (§B.2; FS local canônico v1) + **FR-VS-048 (A) PROVADO E2E PAGO**: startRender minta JWT User 0 → `video-render` (chokepoint) → **202 (12 mco, row `b25838a0`)** → worker **nativo FR-VS-050** → done → MP4 materializado em `renders/` **386.795B sha `c721f8f4` (4º render byte-idêntico em 4 contextos)** → download HTTP 200 → SSE `complete`. Smoke **6/6** zero-cost (`smoke-studio-host.ts`) + SOP Lei 2 (`video-studio-host-fase-b.md`). **ACHADO: `VIDEO_HYPERFRAMES_WEBHOOK=poll://` JÁ ESTÁ ATIVO** (billing do editor-render vivo — item da Fila era stale; débito real testemunhado 4636→4624).
+> 140	- ✅ **Sub-fatia 2b SHIPPED (loop 2026-07-01 it.4, commit `4fd9b89`):** FR-VS-049 durabilidade Storage↔volume — sweep write-back periódico+SIGTERM (`sync.ts`: mtime-delta upsert p/ bucket privado `video-studio-projects`, exclui `renders/`+temp, best-effort nunca bloqueia o editor) + materialização no `resolveProject` (staging+rename atômico, negative-cache 60s). Migration `20260701120000` aplicada via Management API (bucket `public:false` verificado). **Provas:** smoke **7/7** (round-trip sha256-igual · renders/ excluído · ghost honesto) · journal `[sync] uploaded 14 files` · `mcorch-video` espelhado no bucket · **/security-review NO FINDINGS** (guard `..` do forward-note aplicado como anticorpo) · tsc 0.
+> 141	- ✅ **Sub-fatia 2c SHIPPED — EDITOR BILLÁVEL VIVO NO 3210 (loop 2026-07-01, commit `e8979e2`):** achado decisivo = `@hyperframes/studio` shipa o **app inteiro pré-buildado** em `dist/` (React 19 bundlado DENTRO; Apache-2.0 LICENSE no tarball; telemetria só same-origin) → zero build próprio; carrier isolado `packages/video-studio-host-ui/` (react@19 NUNCA hoisted no SPA React 18). `server.ts` serve o SPA estático (jail+fallback) same-origin com `/api`. **`video-studio.service` SWAPADO** (vanilla `hyperframes preview` license-None → nosso host, MESMA porta 3210 = mesmo vhost; rollback comentado no unit file). **Provas:** browser-verify no 3210 `#project/mcorch-video` (formato do hash corrigido empiricamente — é `#project/<id>` não `#project=`) → file-tree + preview 9:16 + timeline com tracks reais Glow/Brand/Hook + **0 erros console** · **Vision-QA confidence high "Aprovado"** · multi-projeto (upgrade vs vanilla single) · systemd active + **self-healed** pós-kill. **Fase B restante:** deletar wrap CLI + desinstalar `hyperframes` global (pós uso real do editor pelo Sovereign) · `/dashboard/canvas/video` iframe já existe (vhost cert = Fila OTD-VS-015).
+> 142	- ✅ **OTD-VS-015 FECHADA (verificada it.5, 2026-07-01):** `video.mcorch.com` LIVE ponta-a-ponta (CF+cert+gate+proxy→3210). Fase B toda entregue e PÚBLICA (SSO-gated).
+> 143	
+> 144	### 4. Unified Sensorial Canvas — Fases 3.5-3.10  ⟶ engenharia pura, SEM portão Sovereign (filler sempre disponível)
+> 145	- ✅ **3.5 SINAPSES + 3.6 FLY-TO SHIPPED (loop 2026-07-01 it.6, commit `645a16e`):** sinapses = arestas REAIS de `mcorch_edges` ancoradas por membership dos 2 sets renderizados (**25 vivas**; censo por node_type=7 — ambos honestos, membership é a verdade do render); fetch escopado a DERIVES_FROM/observes (~3k rows) + classificação client-side; matemática de layout extraída p/ `lib/universe-layout.ts` (fonte única: layers+sinapses+fly-to). CameraRig: clique em nó (2 redes) → seleção + órbita próxima (getState em handler/useFrame, guarda Error #185). **Provas:** browser-verify (8.599 nós/8.816 arestas/775 comunidades; clique sintético → `memory · af33a839…` + câmera voou; 0 erros console) · **Vision-QA high** ("linhas de sinapse visíveis, layout íntegro") · tsc 0 · deployado (chunk `UnifiedCanvasPage-oTw8MRCw.js`). **✅ 3.7 PERF + 3.8 PODA SHIPPED (loop 2026-07-02 it.7, commit `5cc1022`):** load do universo **21-25s → 2.496ms** (medido in-browser; janela REST 2.181ms/31 reqs). 3 fixes compostos provados por resource-timing forense: páginas paralelas pós-count · memo graphology+Louvain gated até TODOS os inputs (rodava 3× com dado parcial bloqueando o main thread) · **MegaBrainVisualizer montado só pós-load** (compile do shader raymarch stallava ~10s até fetches alheias). 3.8: query `crew_module_ownership` morta (0 rows, Decisão B) → `enableOwnership` opt-in default-off (Matrix legado passa true, backup intacto). Vision-QA high (backdrop presente pós-load) · 0 erros console · tsc 0 · deployado. **✅ 3.9-PARIDADE SHIPPED (loop 2026-07-02 it.8, commit pós-5cc1022):** painel de inteligência on-select no Terminal Tático (nome/tipo/estab/comunidade/calls + conteúdo real fetch grátis + botão "Analisar (IA)" explícito — paridade com o NodeDetailsPanel do Matrix legado). QA handle `window.__unifiedCanvas` (padrão __hf; raycast headless flaky a 1920 — click path provado na it.6). Browser-verify 1920×1080 (gate E2E): nó real `835c8a43` → painel com conteúdo "[HANDOFF SEAL]…" · 0 erros · Vision-QA high · deployado. **Paridade restante (declarada honesta):** crew-overlay de agentes no universo (Matrix tem; follow-up) · toggles no Sidebar (in-page existe). **🔒 CUTOVER DE NAV = DECISÃO SOVEREIGN (Fila)** · 3.10 seal após. Plano: `.claude/context/unified-core-sensorial-canvas-plan.md`.
+> 146	- **ACHADO 3.5 (loop 2026-07-01 it.6, Lei 1 — GO/NO-GO respondido via SQL live):** só **7 arestas cross-partition reais** em `mcorch_edges` (4 `DERIVES_FROM` + 3 `observes`; partição = `node_type like 'ast_%'` ~8.2k vs conhecimento; colunas: `source_id`/`target_id`/`relation_type`). Fase A da 3.5 = 7 linhas (trivial, payoff visual baixo); riqueza real = Fase B `OTD-SYNAPSE-EMBEDDING` (similaridade 768d, rotulada como similarity — nunca relação fabricada). Implementar 3.5-A junto com 3.6 fly-to numa iteração só (mesmos arquivos).
+> 147	- ⚠️ **Evento 2026-07-01 ~20:20: session limit Anthropic** (subagentes rejeitados, reset 23:10 BRT) matou o Workflow `wf_4674cd50-64c` — loop pausado até o reset; retomar com understand solo dos 4 arquivos do canvas (CodeNetworkLayer/MemoryNetworkLayer/UnifiedCanvasPage/useUnifiedCanvasStore) OU re-rodar o Workflow (script salvo: `workflows/scripts/synapse-35-understand-wf_4674cd50-64c.js`).
+> 148	- **HALT:** nenhum até cutover de nav (3.9) — aí confirmar com Sovereign.
+> 149	
+> 150	### 5. Security — OTD-SEC-006 (sentinel-wiring) + OTD-SEC-007 (lefthook/gitleaks)  ⟶ hardening
+> 151	- ✅ **OTD-SEC-007 já estava FECHADA** (`lefthook.yml` + `.gitleaks.toml` ativos — provado nos pre-commit desta sessão).
+> 152	- ✅ **OTD-SEC-006 sentinel-wiring FECHADO (it.7):** `generate-content` (inspeciona `prompt` antes do LLM) + `lead-score` (inspeciona `intent_signal`+`context` antes do débito de 1 mco) fiados+deployados+**provados LIVE** — injeção→403 `prompt_injection_suspected`, legítimo→não-403 (sem FP), lead-score bloqueia com **saldo intacto** (sem charge-without-value).
+> 153	- ✅ **FR-SEC-014 parte 1 FECHADA (it.8):** migration `20260701000000_security_events_ledger.sql` (ledger imutável) + `logSentinelBlock`. `/security-review` NO FINDINGS. Provado LIVE.
+> 154	- ✅ **FR-SEC-014 parte 2 FECHADA + P0 DE MINT PRÉ-EXISTENTE FECHADO (loop 2026-07-01, commit `9fe1e36`):** migration `20260701010000` — freeze econômico (`is_frozen` + `deduct_mco_coins`+Guard 3 [byte-VERBATIM provado vs corpo vivo, só o guard adicionado] + trigger `quarantine_on_critical_event` [critical→freeze na mesma txn + n8n pg_net Vault-gated] + `admin_set_frozen` has_role-gated). **BÔNUS decisivo:** o smoke desenterrou um **P0 pré-existente de MINT** — cliente cunhava o próprio `mco_balance` direto (grant UPDATE table-level + RLS own-row; `REVOKE(col)` é no-op) → **FECHADO** com trigger `BEFORE UPDATE` por `current_user` (memória [[reference_profiles_column_guard_mint_hole]]). Aplicada à prod + **smoke 11/11** funcional+segurança (freeze/42501/regressão/privesc/RLS/mint-block/no-over-block). ✅ **`/security-review` independente de backstop = CLEAN** (commit `bb5d600`; sub-agente pós-reset varreu todas as fns que escrevem balance→só deduct[guarded]/admin_set_frozen[has_role] client-reachable, resto service-role-only, overload legado dropado; privesc/RLS/Vault/over-under-block/search_path todos fechados). Aplicada a 1 observação non-blocking: `BEGIN/EXCEPTION` no `PERFORM net.http_post` do trigger (falha do webhook nunca reverte o freeze). **Item da Fila FECHADO.**
+> 155	
+> 156	---
+> 157	
+> 158	## Fila de Ação Sovereign (SÓ você destrava — preenchida pelo loop)
+> 159	- [x] **✅ Fix Assets — SHIPPED E2E (GO Sovereign 2026-07-03, `! bash apply-asset-signing-migration.sh` executado):** migration `20260703030000` aplicada+registrada+provada (new_policies=3, id_trigger=1, remaining_public_on_private=0). Signing re-provado com JWT do User 0 (project-prefixed + video-studio antes FAIL → agora SIGNED 200). **Cross-tenant provado BLOCKED ao vivo** (throwaway: sign direto + claim INSERT + PK-swap UPDATE todos BLOCKED — o furo que você exige fechado permanece fechado). `canvas-execute` deployado (fix bug vivo `:555`). Frontend build+deploy (bundle baked). **E2E determinístico (preview local + sessão injetada): Biblioteca 67/71 imgs+19 vídeos+90 signed+0 dead-public / Canvas 17/17+4 vídeos+21 signed+0 dead → Vision APROVADO ambos + confirmação ocular (90 assets renderizando).** Ver backlog SHIPPED. **Herança:** o cluster de geração do Spaces só mostra mídia com nó selecionado (wiring provado idêntico ao Canvas — não testado por seleção); superfícies content_library/affiliate são external/keys (não afetadas).
+> 160	
+> 161	- [x] **GO: aplicar migration Spaces 1b em prod — EXECUTADO (GO Sovereign 2026-07-02):** aplicada+registrada+provada; drift do ledger fechado (10 registradas, `audit-schema-drift.sh` exit 0); smoke 13/13; E2E pago provado (`generations 7add79b2`, saldo −1 exato); Vision QA APROVADO. Ver item ✅ no backlog.
+> 162	- [ ] **Smart-Delete — E2E destrutivo REAL (witness):** com um post descartável REAL publicado (WP/X/Pinterest), clicar "Deletar da rede + MCORCH" e confirmar `check-post-existence` pós-delete → `exists=false` (SOP success signal). Irreversível (Owner=Sovereign) → precisa GO + post descartável. O código está pronto+provado (fail-closed/idempotente/golden-rule); só o witness destrutivo é gated.
+> 163	- [ ] **OTD-AC-015 (Gabriel AI 3b — ArcFace-HARD):** decidir/provisionar motor de embedding facial (InsightFace self-host no Mesh OU API paga Rekognition/Azure/Face++) + custo/credencial. Sem isso o Identity Gate fica VLM-soft (human-review-assist, não anti-impersonation automático).
+> 164	- [ ] **OTD-AC-015b — biometria calibração-grade:** frames reais do Gabriel rotulados (mesma/diferente) p/ FAR/FRR/EER — só após o motor ArcFace existir.
+> 165	- [ ] **OTD-AC-017 (Soul ID train):** credencial Higgsfield + confirmar API self-serve de treino (≥20 fotos); senão fallback Tier1/Tier2 ou LoRA-FLUX (gated commercial-license).
+> ```
+
+## 🤖 Claude *(00:45:43)*
+
+
+## 🤖 Claude *(00:45:45)*
+
+A charter é o SSOT — quase tudo SHIPPED. O item de maior valor **DESBLOQUEADO** é o **#0b — conector Higgsfield MCP OAuth** (BoK amendment já selado, gate aberto; todo o código + contract-smokes desbloqueados, só o clique de consent é Sovereign-gated). Leio o resto (Fila + notas finais) para confirmar antes de escolher:
+
+## 🤖 Claude *(00:45:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "offset": 166,
+  "limit": 39
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 166	- [ ] **Licença comercial (FM-AC-001/OTD-AC-011):** confirmar checkpoint comercial da base de geração (FLUX.1-dev é non-commercial) — Sovereign + jurídico flipam `commercial_license_ok`.
+> 167	- [ ] **GO de produção 3b** sobre o Usuário Zero + GO de gasto do loop de verificação caso não use BYOK openrouter (com BYOK = cost 0).
+> 168	- [x] **Editor render user-initiated (FR-VS-048/VS-009): JÁ ATIVO — achado material 2026-07-01.** `VIDEO_HYPERFRAMES_WEBHOOK=poll://` estava setado (desde a fatia autopilot-vídeo); o loop testemunhou débito real 12 mco (4636→4624, row `b25838a0`) + render nativo + refund-path intacto. Item era stale — nenhuma ação restante.
+> 169	- [x] **GO de gasto — 1º ciclo PAGO de vídeo: FEITO E TESTEMUNHADO (2026-07-01).** GO Sovereign dado; `video_enabled=true` no plano `640b3b67`; ciclo `77e02fca` completed (actual **32 mco**, saldo 4669→4637); render `561a31df` done (MP4 **776.522B** 1080×1920 5s no bucket `video-studio-assets`); reconciliação FR-VA-025 → `content_library e27a09e7` type=video. Título trend-informed ("Do iPhone de 2007 ao Roborock de 2024"). **Doutrina reconciliada** (audit `wf_6d3bdbd6-eb7`, memória `feedback_opensource_first_zero_cost_equity`): render HyperFrames self-hosted USD=0; texto/imagem ~$0.05/ciclo na BYOK OpenRouter do Sovereign → **Gemini 2.5 Pro MANTIDO** (qualidade brand-first vale). Ollama self-host = hardening diferido. **Próximo (opcional):** `is_active=true` liga a cadência pg_cron (vídeo autônomo a cada 3 dias) · telemetria `llm_usage` p/ tornar o USD visível · cortar imagem AI redundante.
+> 170	- [x] **DNS/vhost `video.mcorch.com`: VERIFICADO LIVE (loop 2026-07-01 it.5)** — cadeia pública E2E provada: CF (SSL válido) → nginx origem (302 sem cookie) → sso-auth-gate ES256 (cookie=JWT User 0 mintado) → 127.0.0.1:3210 nosso host (`/healthz {ok,ui:true}` + `/api/projects` + SPA **rebrandada 'MCORCH Studio'** via sub_filter do vhost, logo HeyGen oculto — Apache-2.0 §6 ok). **Editor billável acessível ao Sovereign**: `video.mcorch.com` ou `/dashboard/canvas/video`. Pendente só `design.mcorch.com`.
+> 171	- [ ] **App registration (STEP 0 — o unlock de TODO o #2, ainda NÃO feito, lead ~horas-2d):** registrar apps TikTok (Content Posting API Direct Post + add persona como sandbox user) · YouTube/Google Cloud (canal Brand + OAuth consent External) · Pinterest (Business + Developer Terms + privacy URL → Trial). Sem `client_id`/`secret` nenhum OAuth começa. Submeter os audits no MESMO dia (lead-time corre em paralelo ao código).
+> 172	- [ ] **OAuth/App Review (após registration, lead semanas):** TikTok Content Posting audit (~2-6sem — levanta SELF_ONLY) · YouTube gate A (OAuth verify ~10d) + gate B (API Audit & Quota, serial+independente) · Pinterest Trial→Standard · Instagram App Review · Twitter Basic tier · re-OAuth IG insights (analytics visível).
+> 173	- [ ] **Universe 3.9 — GO de cutover de nav (ÚNICO passo restante, zero gaps):** paridade TOTAL atingida (render+sinapses+fly-to+painel de inteligência+**crew overlay 19 agentes**+**entrada 'Universo' no Sidebar** — it.9 2026-07-02, Vision-QA high). Você já pode ABRIR: Constelação→Universo. Decisão: trocar os destinos da nav legada pro `/universe` (legadas ficam de backup) → depois 3.10 seal fecha a Phase Epsilon V9.
+> 174	- [ ] **scheduled_posts do ciclo 77e02fca sumiram (4 posts de vídeo, criados 2026-07-01 01:13):** tabela `scheduled_posts` está VAZIA apesar de `channel_variants.scheduled_post_id` preenchidos. `auto-publish` só faz UPDATE (nunca delete); smokes deletam escopado a throwaway; sem audit trail. **Confirmar:** você limpou o calendário manualmente? (Se sim, mistério fechado; se não, investigar deleção não-rastreada.)
+> 175	- [ ] **Higgsfield MCP — autorização OAuth E2E (OTD-SPACES-007, único gate do valor):** após o código da Fatia (migration+edge fns+UI), o Sovereign clica "Conectar Higgsfield" e completa login/consent no **Clerk** (a conta Higgsfield é dele) → só então existe `refresh_token` real p/ provar o fluxo ponta-a-ponta + o 1º `tools/call`. Confirmar também a `redirect_uri` canônica final (`login.mcorch.com/dashboard/settings/higgsfield/callback`) p/ registrar o client de produção. GO de gasto no 1º call pago (Higgsfield não tem modelo grátis na API). BoK selado em `docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md`.
+> 176	- [ ] **Postback ML definitivo:** IP residencial / portal ML (matt_tool/meli.la).
+> 177	- [ ] **Stripe live keys:** ao primeiro cliente externo.
+> 178	
+> 179	---
+> 180	
+> 181	## Parar quando
+> 182	janela ~95% (selo final) · OU backlog desbloqueado vazio · OU GO/stop explícito do Sovereign.
+> 183	
+> 184	---
+> 185	
+> 186	## Como religar / continuar o loop (prompt canônico STATELESS)
+> 187	
+> 188	> O loop se re-agenda sozinho via `ScheduleWakeup` ao fechar cada ciclo — **não precisa re-colar entre ciclos**. Cole o prompt abaixo SÓ para **religar após um stop**. É *stateless* de propósito: o estado vive nesta charter + no HANDOFF.md, então este texto nunca apodrece (nunca embuta "Estado: it.X / Próximo = …", que fica obsoleto).
+> 189	
+> 190	```
+> 191	/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia
+> 192	.claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git
+> 193	fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada
+> 194	iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo
+> 195	fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review
+> 196	se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao
+> 197	bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise —
+> 198	registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff
+> 199	incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog
+> 200	desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+> 201	```
+> 202	
+> 203	**Redirecionar/parar:** mande PT-BR normal ("pula pra YT/TikTok", "para e mostra a Fila Sovereign", "stop") — interrompe o laço e reabsorvo a direção.
+> 204	
+> ```
+
+## 🤖 Claude *(00:47:31)*
+
+
+## 🤖 Claude *(00:47:35)*
+
+Charter reconciliada. Confirmações:
+- **Fila linha 173** (Universe 3.9 cutover) → **resolvida por esta sessão** (`4729dd4`, o Sovereign deu o GO explícito).
+- Item **#0b Higgsfield MCP OAuth connector** é o de **maior valor DESBLOQUEADO**: BoK amendment já selado (gate 3.5 fechado), todo o código + contract-smokes desbloqueados; só o clique de consent Clerk é gated (Fila linha 175).
+
+**Iteração 1 — escolha: Higgsfield MCP connector (Fatia de código).** Leio o BoK amendment (spec/Lei 2 SSOT) para escopar a 1ª sub-fatia:
+
+## 🤖 Claude *(00:47:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# spaces-evolution — Amendment: Conector Higgsfield MCP oficial (OAuth per-user)
+> 2	
+> 3	> **Tipo:** Emenda de FRD/SDD/Data-Model (nova Fatia · OTD-SPACES-007) · **Status:** proposta (gate de código pós-aprovação Sovereign — Lei 4 Reviewer).
+> 4	> **Lente BoK:** SWEBOK + CISSP CBK (execução) · CXBOK (fluxo "Conectar") · 21 Agentic Patterns (`docs/architecture/agentic-vision.md`).
+> 5	> **Posição no Closed-Loop Protocol (CLAUDE.md §1):** emenda à SDD selada `05-sdd.md` + ao `04-frd.md` (novos `FR-SPACES-015..021`) + ao `06-data-model.md` (tabela `higgsfield_oauth`). Carrega a **Pattern Conformance Declaration** (§7) — declaração, não sign-off.
+> 6	> **API Tenancy Model (CLAUDE.md):** integração externa nova ⇒ credencial resolvida **per-user** (`auth.uid()`), fail-closed 402/501, telemetria em `infra_health_logs`. Este doc É o passo 5 (SOP Lei 2) exigido antes do código.
+> 7	> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer · Reviewer = Sovereign (Gabriel — dono da conta Higgsfield/Clerk e do GO) · Owner = Sovereign.
+> 8	
+> 9	---
+> 10	
+> 11	## 1. Contexto e motivação
+> 12	
+> 13	A diretiva Sovereign (2026-07-03) determina: **"usar o MCP oficial da Higgsfield nos nós do Spaces, modelos gratuitos nos testes, BYOK per-user"**. Hoje o Spaces fala com a Higgsfield via **Platform REST API** com BYOK `user_api_keys.higgsfield_api_key` (+ `_secret`) no Vault — um contrato manual, propenso a *provider-drift* (OTD-SPACES-003: `soul/compose` nunca existiu; o path real é `soul/{mode}`, refs = `custom_reference_id` assíncrono). O sentinel `scripts/qa/smoke-higgsfield-schema.ts` segura esse contrato REST, mas cada endpoint novo é engenharia reversa.
+> 14	
+> 15	O **MCP oficial** (`https://mcp.higgsfield.ai/mcp`) inverte isso: um único endpoint **auto-descritivo** (`tools/list`) expõe 30+ modelos (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro, Soul 2.0, 3D, TTS, upscale, dubbing) atrás de UMA integração — o problema de payload morre por introspecção. Payoff estratégico alto; alinha com a doutrina open-source-first/equity (uma integração durável no Mesh próprio, não N clientes REST frágeis).
+> 16	
+> 17	### 1.1. Achados materiais do contrato VIVO (Lei 1 — probes de 2026-07-03)
+> 18	
+> 19	Todas as afirmações abaixo vêm de `curl` real contra os endpoints públicos de discovery + registro:
+> 20	
+> 21	| Fato provado | Evidência (HTTP) |
+> 22	|---|---|
+> 23	| **O `/mcp` exige OAuth — NÃO a Platform API key BYOK.** | `POST /mcp` sem token → **HTTP 401** `www-authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource", scope="openid email offline_access"`. **Corrige** a nota anterior do charter #0b (a Platform API key BYOK vale para `api.higgsfield.ai`, **não** para o MCP). |
+> 24	| **Dynamic Client Registration é PÚBLICA e funciona.** | `POST /oauth2/register` (client metadata mínimo) → **HTTP 201** `{"client_id":"4JjXwHf16bytDbkQ","token_endpoint_auth_method":"none","client_secret_expires_at":0,…}` → cliente **público** (PKCE, sem secret). MCORCH registra o próprio client programaticamente (1×, guardado como config). |
+> 25	| **AS discovery completo.** | `GET /.well-known/oauth-authorization-server` → `authorization_endpoint=/oauth2/authorize` · `token_endpoint=/oauth2/token` · `registration_endpoint=/oauth2/register` · `grant_types=[authorization_code, refresh_token]` · `code_challenge_methods=[S256]` · `scopes=[openid, email, offline_access]` · upstream = **Clerk** (`clerk.higgsfield.ai`). |
+> 26	| **Dois fluxos, escolha por capacidade do cliente.** | `/.well-known/oauth-protected-resource` → `authorization_code_pkce` (redirect, upstream Clerk) **[nosso caminho web]** · `device_code` (`fnf-device-auth.higgsfield.ai`, polling) **[futuro CLI/OpenClaw]**. |
+> 27	| **`offline_access` ⇒ refresh_token.** | scope suportado; grant `refresh_token` no AS → sessão durável per-user sem re-login constante. |
+> 28	
+> 29	**Conclusão de design:** o conector é **genuinamente OAuth per-user** (authorization_code + PKCE), com upstream Clerk. O último salto — o usuário **clicar "Conectar Higgsfield" e autorizar na tela do Clerk** — é **Sovereign-gated** (a conta é do Gabriel). Tudo antes disso (registro do client, tabela, edge fns, UI, introspecção de tools) é **desbloqueado**.
+> 30	
+> 31	---
+> 32	
+> 33	## 2. Abordagem — conector OAuth authorization_code + PKCE
+> 34	
+> 35	```
+> 36	[UI Settings→Conectores] "Conectar Higgsfield"
+> 37	   │  (FR-SPACES-015) edge higgsfield-oauth-init: gera code_verifier+challenge(S256)+state,
+> 38	   │                   grava pending (per-user), retorna authorization_url (Clerk upstream)
+> 39	   ▼
+> 40	[Browser] redirect → mcp.higgsfield.ai/oauth2/authorize → Clerk login/consent (Sovereign)
+> 41	   ▼  redirect_uri = login.mcorch.com/dashboard/settings/higgsfield/callback?code&state
+> 42	[UI callback] (FR-SPACES-016) edge higgsfield-oauth-callback:
+> 43	   │   valida state (CSRF) + troca code+code_verifier no /oauth2/token → {access_token, refresh_token, expires_in}
+> 44	   │   grava refresh_token no VAULT (classe social_credentials), access_token+expiry na linha per-user
+> 45	   ▼
+> 46	[Nó do Spaces executa] (FR-SPACES-018/019) resolve token per-user:
+> 47	   │   access_token válido? usa. expirado? (FR-SPACES-017) refresh via /oauth2/token grant=refresh_token
+> 48	   │   Bearer <access_token> → POST mcp.higgsfield.ai/mcp (JSON-RPC): tools/list (cacheado) → tools/call
+> 49	   ▼  fail-closed: sem conexão per-user → 402/501 {error:"higgsfield_not_connected", action:"/dashboard/settings"}
+> 50	```
+> 51	
+> 52	- **Registro do client (1× infra):** `POST /oauth2/register` → `client_id` guardado como **config de sistema** (não é segredo — public client `auth_method=none`). Idempotência operacional: registrar uma vez, versionar o `client_id` em config; re-registrar só se revogado. NÃO registrar por-request (evita poluir o AS).
+> 53	- **PKCE S256 obrigatório:** `code_verifier` por-fluxo, nunca reutilizado; `state` aleatório CSRF-bound ao `user_id`, TTL curto (≤10min, espelha o gotcha de state TTL do TikTok/YouTube — `reference_tiktok_unaudited_private_account`).
+> 54	- **Introspecção de tools:** `tools/list` cacheado por curto TTL (o catálogo é auto-descritivo → resolve payload por schema, mata o provider-drift). O sentinel REST atual continua guardando o caminho legado durante a coexistência.
+> 55	- **Modelos grátis nos testes:** a Higgsfield não tem modelo grátis na própria API; os **testes E2E** usam BYOK OpenRouter (Nano Banana / modelos baratos) como hoje, e o conector Higgsfield é exercitado com o **menor-custo** disponível só sob GO de gasto Sovereign.
+> 56	
+> 57	---
+> 58	
+> 59	## 3. Requisitos funcionais (emenda ao `04-frd.md`)
+> 60	
+> 61	- **`FR-SPACES-015` — Iniciar conexão OAuth.** Edge `higgsfield-oauth-init` (JWT do user): gera PKCE (`code_verifier`/`code_challenge` S256) + `state` CSRF, persiste pending per-user (TTL ≤10min), retorna `authorization_url`. Sem custo mco.
+> 62	- **`FR-SPACES-016` — Callback/troca de código.** Edge `higgsfield-oauth-callback`: valida `state` (rejeita mismatch → 400), troca `code`+`code_verifier` no `token_endpoint`, grava `refresh_token`→Vault + `access_token`/`expires_at` na linha per-user. Idempotente por `state`.
+> 63	- **`FR-SPACES-017` — Refresh de token.** Helper server-side: `access_token` expirado ⇒ `grant_type=refresh_token` → rotaciona; refresh inválido/revogado ⇒ marca `needs_reauth=true` + fail-closed com ação de reconectar (espelha o reauth gate do `publish-meta`).
+> 64	- **`FR-SPACES-018` — Resolução de credencial per-user (fail-closed).** Ordem: (1) conexão OAuth per-user ativa → Bearer; (2) **sem** fallback global silencioso; (3) hard-fail `402/501 {error:"higgsfield_not_connected", action:"Conecte o Higgsfield em /dashboard/settings"}`. (API Tenancy Model.)
+> 65	- **`FR-SPACES-019` — Execução de nó via MCP.** O motor de execução do Spaces (`spaces-execution.ts`/`canvas-execute`) despacha `tools/call` no MCP com o token per-user; mapeia o tipo de nó → tool (introspecção `tools/list`); reconcilia custo mco no card (`FR-SPACES-014`) via calibração 4×-floor (`docs/processes/mcoin-cost-calibration.md`).
+> 66	- **`FR-SPACES-020` — Catálogo/introspecção.** `tools/list` cacheado alimenta o palette do Spaces (modelos disponíveis por conexão), sem hardcode de endpoint.
+> 67	- **`FR-SPACES-021` — Desconectar/erasure.** RPC `disconnect_higgsfield()` (espelha `disconnect_meta`/`disconnect_wordpress`): nula a linha per-user + **revoga o segredo Vault órfão**, `auth.uid()`-scoped. Best-effort revoke no AS quando suportado.
+> 68	
+> 69	---
+> 70	
+> 71	## 4. Data model (emenda ao `06-data-model.md`)
+> 72	
+> 73	Tabela `higgsfield_oauth` — **classe `social_credentials`** (per-user OAuth), RLS own, token cifrado no Vault:
+> 74	
+> 75	| Coluna | Tipo | Nota |
+> 76	|---|---|---|
+> 77	| `user_id` | uuid PK/FK `auth.users` | tenant scope `= auth.uid()` |
+> 78	| `refresh_token` | text (Vault id) | trigger de encriptação idempotente (espelha `20260602140000`); **column-REVOKE** no client |
+> 79	| `access_token` | text (Vault id) | curto-lived; cache server-side |
+> 80	| `expires_at` | timestamptz | dispara refresh (FR-SPACES-017) |
+> 81	| `clerk_sub` / `email` | text | claim do id_token (identidade da conta conectada; exibir "conectado como…") |
+> 82	| `scope` | text | `openid email offline_access` |
+> 83	| `needs_reauth` | boolean | gate de reconexão |
+> 84	| `connected_at` / `updated_at` | timestamptz | telemetria |
+> 85	
+> 86	- **RLS:** `SELECT/UPDATE/DELETE` own-row (`auth.uid() = user_id`); `service_role` isento (edge fns). Colunas de token **REVOKE** no `authenticated` (padrão coluna-guard — `reference_profiles_column_guard_mint_hole`: REVOKE(col) é no-op sob table-grant ⇒ usar **trigger BEFORE UPDATE** por `current_user` se a coluna for sensível/derivável).
+> 87	- **Client config (sistema):** `client_id` da DCR guardado como config de sistema (não per-user, não segredo). O `code_verifier`/`state` pending vivem numa tabela efêmera per-user com TTL (ou em `higgsfield_oauth` com colunas `pending_*`).
+> 88	- **Migration:** exige `/security-review` antes do commit (FMEA-011). RLS default-deny + UNIQUE(`user_id`).
+> 89	
+> 90	---
+> 91	
+> 92	## 5. Segurança & telemetria (CISSP CBK)
+> 93	
+> 94	- **PKCE S256 + state CSRF** obrigatórios; `state` bound ao `user_id`, TTL ≤10min, uso único.
+> 95	- **Refresh token só no Vault**, nunca em coluna clara nem exposto ao client (safe-columns select, espelha `META_SAFE_COLUMNS`).
+> 96	- **Fail-closed** em toda resolução (FR-SPACES-018) — zero fallback global silencioso (anti-pattern proibido do API Tenancy Model).
+> 97	- **Segredo bound ao host próprio:** `redirect_uri` fixo em `login.mcorch.com` (allowlist no client registrado) — rejeita redirect forjado.
+> 98	- **Telemetria `infra_health_logs`** `service='higgsfield-mcp'` em cada path (init/callback/refresh/execute/disconnect · success/degraded/error), allowlist sem vazar per-tenant (tabela global-read).
+> 99	- **Erasure LGPD** (FR-SPACES-021): desconectar revoga o segredo Vault órfão (lição dos 12 órfãos meta — `20260602160000`).
+> 100	
+> 101	---
+> 102	
+> 103	## 6. Portões Sovereign (Fila de Ação — NÃO improvisar)
+> 104	
+> 105	| Gate | Destravador exato |
+> 106	|---|---|
+> 107	| **Autorização OAuth E2E** | Sovereign clica "Conectar Higgsfield" e completa o login/consent no **Clerk** (conta Higgsfield é dele) → só então há `refresh_token` real para provar o fluxo ponta-a-ponta. |
+> 108	| **GO de gasto** | 1º `tools/call` pago (a Higgsfield não tem modelo grátis na API) — sob GO Sovereign; testes de contrato usam introspecção (`tools/list`, sem custo) + BYOK OpenRouter barato. |
+> 109	| **Registro do client de produção** | `POST /oauth2/register` com o `redirect_uri` canônico definitivo (desbloqueado — pode ser automatizado; só confirmar a URL final do callback com o Sovereign). |
+> 110	
+> 111	**Desbloqueado (código pode nascer sem Sovereign):** tabela+migration, edge fns init/callback/refresh/disconnect, RPC disconnect, UI card, introspecção `tools/list` (o handshake é gated por token, mas o *código* e os *contract-smokes* type-poisoning não). O E2E que **materializa valor** trava no clique do Sovereign.
+> 112	
+> 113	---
+> 114	
+> 115	## 7. Pattern Conformance Declaration (mini — CLAUDE.md §1 Step 3.5)
+> 116	
+> 117	Módulo encarna ≥3 padrões ⇒ tabela obrigatória (subset dos 21 de `docs/architecture/agentic-vision.md`; herda o Master Template de `docs/bok/agentic-governance/09-pattern-conformance.md`):
+> 118	
+> 119	| # | Padrão | Implemented? | How / Why-deferred |
+> 120	|---|---|---|---|
+> 121	| 4 | **Tool Use / Function Calling** | `yes` | O MCP `tools/list`→`tools/call` É tool-use nativo, auto-descritivo — núcleo do conector (FR-SPACES-019/020). |
+> 122	| 5 | **Guardrails / Safety** | `yes` | Fail-closed 402/501 (FR-SPACES-018) · PKCE+state CSRF · token só-Vault · redirect allowlist. |
+> 123	| 8 | **Memory Management** | `yes` | Sessão durável per-user via `refresh_token` (offline_access) — reconexão só quando revogado (FR-SPACES-017). |
+> 124	| 13 | **Human-in-the-Loop** | `yes` | O consentimento OAuth (tela Clerk) é HITL explícito; reauth gate quando o refresh morre. |
+> 125	| 15 | **Inter-Agent (MCP/A2A)** | `yes` | Integração É um cliente MCP oficial (Streamable HTTP + OAuth resource) — padrão A2A por protocolo. |
+> 126	| 18 | **Guardrails de custo** | `yes` | Reconciliação 4×-floor no card (FR-SPACES-014/019) + GO de gasto Sovereign no 1º call pago. |
+> 127	| 19 | **Observability** | `yes` | `infra_health_logs service='higgsfield-mcp'` em todos os paths. |
+> 128	| — | demais padrões | `n-a` | Conector de credencial/execução — não encarna planning/multi-agent-orchestration/reflection de forma não-trivial. |
+> 129	
+> 130	---
+> 131	
+> 132	## 8. OTDs & FMEA
+> 133	
+> 134	- **OTD-SPACES-007** (esta Fatia) — conector Higgsfield MCP OAuth per-user. **Aberta**; destravada por §6 (autorização Sovereign) para o E2E; código desbloqueado.
+> 135	- **OTD-SPACES-008** — coexistência REST↔MCP: durante a migração, os nós legados seguem no contrato REST (sentinel `smoke-higgsfield-schema.ts` ativo); cutover por nó só após `tools/call` provado. Sem big-bang.
+> 136	- **OTD-SPACES-009** — device_code flow para OpenClaw/CLI (fnf-device-auth) — **deferido** (não bloqueia o conector web; útil quando os agentes OpenClaw consumirem o MCP).
+> 137	
+> 138	| FM | Falha | Efeito | Mitigação |
+> 139	|---|---|---|---|
+> 140	| FM-HF-01 | `state`/PKCE reusado ou vazado | CSRF / troca de código sequestrada | state único TTL≤10min bound ao user; verifier nunca logado |
+> 141	| FM-HF-02 | Fallback global silencioso p/ conta do Sovereign | Fraude de quota/atribuição cross-tenant | fail-closed 402 (FR-SPACES-018); zero env global no path user-facing |
+> 142	| FM-HF-03 | Refresh token em coluna clara | Exfil de sessão durável | só-Vault + safe-columns select + column-guard |
+> 143	| FM-HF-04 | Redirect_uri forjado | Roubo de código de autorização | allowlist fixa `login.mcorch.com` no client registrado |
+> 144	| FM-HF-05 | Provider-drift do schema de tool | Nó quebra silencioso | introspecção `tools/list` + contract-smoke type-poisoning (herda a doutrina do sentinel REST) |
+> 145	
+> 146	---
+> 147	
+> 148	## 9. Verification gates (SOP Lei 2 — o que prova cada passo)
+> 149	
+> 150	- **G1 (discovery vivo):** `curl` dos 3 `.well-known` + `/oauth2/register` 201 — **já provado** nesta emenda (§1.1).
+> 151	- **G2 (client registrado):** `client_id` de produção emitido + guardado em config; `redirect_uri` canônico aceito.
+> 152	- **G3 (init):** `higgsfield-oauth-init` retorna `authorization_url` bem-formada (PKCE+state presentes) para um JWT de teste.
+> 153	- **G4 (callback → token):** após autorização Sovereign, `/oauth2/token` devolve `access_token`+`refresh_token`; linha per-user gravada; token **só no Vault** (safe-columns select não mostra clear-text).
+> 154	- **G5 (refresh):** access expirado → refresh rotaciona sem re-login; refresh revogado → `needs_reauth` + fail-closed.
+> 155	- **G6 (introspecção):** `Bearer <access_token>` → `tools/list` 200 com ≥1 tool de geração de vídeo (schema auto-descritivo capturado).
+> 156	- **G7 (fail-closed):** user sem conexão → `402 higgsfield_not_connected` (zero fallback global — provado com throwaway).
+> 157	- **G8 (disconnect):** `disconnect_higgsfield()` nula linha + revoga segredo Vault; re-select mostra zero-residue tenant-guarded.
+> 158	
+> 159	**Recovery:** callback falha (state mismatch) → reiniciar init (novo state); refresh 400 → `needs_reauth`, UI pede reconectar; tool schema mudou → re-introspectar `tools/list` (nunca hardcode). **Nunca** afrouxar para fallback global.
+> 160	
+> 161	## 10. Success signal
+> 162	
+> 163	Um usuário conecta a própria conta Higgsfield uma vez (consent Clerk), e daí em diante os nós do Spaces executam modelos Higgsfield via MCP com **a credencial dele** (Bearer per-user), catálogo resolvido por `tools/list` (sem endpoint hardcoded), custo reconciliado no card, e um segundo tenant **nunca** usa a conexão do primeiro (fail-closed provado). Desconectar apaga a sessão sem resíduo.
+> 164	
+> ```
+
+## 🤖 Claude *(00:49:03)*
+
+
+## 🤖 Claude *(00:49:06)*
+
+BoK amendment é o SOP Lei 2 completo (FR-SPACES-015..021, schema, gates G1-G8, Pattern Conformance). Gate aberto. 
+
+**Iteração 1 — sub-fatia: sentinel de contrato G1** (o anticorpo/drift-guard que todo o conector depende, 100% witnessable, zero Sovereign gate). Primeiro re-verifico o contrato VIVO (Lei 1 — os probes da emenda são de 2026-07-03, podem ter driftado):
+
+## 🤖 Claude *(00:49:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== G1a: AS discovery ===\"; curl -s --max-time 15 https://mcp.higgsfield.ai/.well-known/oauth-authorization-server 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print('auth_ep:',d.get('authorization_endpoint')); print('token_ep:',d.get('token_endpoint')); print('reg_ep:',d.get('registration_endpoint')); print('grants:',d.get('grant_types_supported')); print('pkce:',d.get('code_challenge_methods_supported')); print('scopes:',d.get('scopes_supported'))\" 2>&1 | head -10\necho \"\"; echo \"=== G1c: /mcp tokenless \u2192 401 + www-authenticate ===\"; curl -s --max-time 15 -o /dev/null -w \"status=%{http_code}\\n\" -X POST https://mcp.higgsfield.ai/mcp -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}' 2>/dev/null\ncurl -s --max-time 15 -D - -o /dev/null -X POST https://mcp.higgsfield.ai/mcp -H \"Content-Type: application/json\" -d '{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}' 2>/dev/null | grep -i \"www-authenticate\" | head -1\necho \"\"; echo \"=== G1b: protected-resource ===\"; curl -s --max-time 15 https://mcp.higgsfield.ai/.well-known/oauth-protected-resource 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print('auth_servers:',d.get('authorization_servers')); print('scopes:',d.get('scopes_supported'))\" 2>&1 | head -5",
+  "description": "Probe live Higgsfield MCP OAuth contract (Lei 1)",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === G1a: AS discovery ===
+> auth_ep: https://mcp.higgsfield.ai/oauth2/authorize
+> token_ep: https://mcp.higgsfield.ai/oauth2/token
+> reg_ep: https://mcp.higgsfield.ai/oauth2/register
+> grants: ['authorization_code', 'refresh_token']
+> pkce: ['S256']
+> scopes: ['openid', 'email', 'offline_access']
+> 
+> === G1c: /mcp tokenless → 401 + www-authenticate ===
+> status=401
+> www-authenticate: Bearer resource_metadata="https://mcp.higgsfield.ai/.well-known/oauth-protected-resource/mcp", scope="openid email offline_access"
+> 
+> === G1b: protected-resource ===
+> auth_servers: ['https://mcp.higgsfield.ai', 'https://fnf-device-auth.higgsfield.ai']
+> scopes: ['openid', 'email', 'offline_access']
+> ```
+
+## 🤖 Claude *(00:49:27)*
+
+
+## 🤖 Claude *(00:49:27)*
+
+O contrato VIVO bate **exatamente** com a emenda (fresco 2026-07-05): grants `[authorization_code, refresh_token]`, PKCE `S256`, scopes `[openid, email, offline_access]`, `/mcp` tokenless → **401** com `www-authenticate` (prova que exige OAuth, não a Platform key). Escrevo o sentinel de contrato (anticorpo re-executável, zero-custo, sem efeito colateral):
+
+## 🤖 Claude *(00:49:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-higgsfield-mcp-contract.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Sentinel \u2014 Higgsfield MCP OAuth contract (OTD-SPACES-007, G1 of the connector amendment).\n * BoK SSOT: docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md \u00a71.1/\u00a79.\n *\n * Pins the LIVE OAuth-2.1 discovery contract the connector (edge fns init/callback/refresh + node execution)\n * is built on, so a provider drift is caught BEFORE it breaks the connector \u2014 the same doctrine as the REST\n * sentinel `smoke-higgsfield-schema.ts`. Read-only: 3 GETs on public discovery + one TOKENLESS POST to /mcp\n * (no auth, no side effects \u2014 never registers a client, never spends). Drift \u21d2 exit 1.\n *\n * The decisive assertion: /mcp WITHOUT a bearer \u2192 401 + www-authenticate. This is the correction the amendment\n * makes to charter #0b \u2014 the Platform API key BYOK is for api.higgsfield.ai, NOT the MCP, which is genuine OAuth.\n *\n * Usage: bun run scripts/qa/smoke-higgsfield-mcp-contract.ts\n */\nconst MCP_BASE = 'https://mcp.higgsfield.ai';\nconst T = 15000;\nlet pass = true;\nfunction check(label: string, ok: boolean, detail = '') {\n  console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`);\n  if (!ok) pass = false;\n}\nconst has = (arr: unknown, v: string) => Array.isArray(arr) && (arr as unknown[]).includes(v);\n\nasync function getJson(path: string): Promise<Record<string, unknown>> {\n  const r = await fetch(`${MCP_BASE}${path}`, { signal: AbortSignal.timeout(T) });\n  if (!r.ok) throw new Error(`${path} \u2192 HTTP ${r.status}`);\n  return await r.json() as Record<string, unknown>;\n}\n\ntry {\n  // \u2500\u2500 G1a \u2014 Authorization Server metadata (RFC 8414) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const as = await getJson('/.well-known/oauth-authorization-server');\n  check('G1a authorization_endpoint = /oauth2/authorize', as.authorization_endpoint === `${MCP_BASE}/oauth2/authorize`, String(as.authorization_endpoint));\n  check('G1a token_endpoint = /oauth2/token', as.token_endpoint === `${MCP_BASE}/oauth2/token`, String(as.token_endpoint));\n  check('G1a registration_endpoint = /oauth2/register (public DCR)', as.registration_endpoint === `${MCP_BASE}/oauth2/register`, String(as.registration_endpoint));\n  check('G1a grant_types \u2287 [authorization_code, refresh_token]',\n    has(as.grant_types_supported, 'authorization_code') && has(as.grant_types_supported, 'refresh_token'), JSON.stringify(as.grant_types_supported));\n  check('G1a PKCE S256 supported', has(as.code_challenge_methods_supported, 'S256'), JSON.stringify(as.code_challenge_methods_supported));\n  check('G1a scopes \u2287 [openid, email, offline_access] (offline_access \u21d2 refresh_token)',\n    has(as.scopes_supported, 'openid') && has(as.scopes_supported, 'email') && has(as.scopes_supported, 'offline_access'), JSON.stringify(as.scopes_supported));\n\n  // \u2500\u2500 G1b \u2014 Protected Resource metadata (RFC 9728): both flows advertised \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const pr = await getJson('/.well-known/oauth-protected-resource');\n  check('G1b protected-resource lists the web AS (mcp.higgsfield.ai)', has(pr.authorization_servers, `${MCP_BASE}`), JSON.stringify(pr.authorization_servers));\n  check('G1b device-auth AS advertised (device_code flow \u2014 OTD-SPACES-009 deferred)',\n    has(pr.authorization_servers, 'https://fnf-device-auth.higgsfield.ai'), JSON.stringify(pr.authorization_servers));\n\n  // \u2500\u2500 G1c \u2014 /mcp requires OAuth (NOT the Platform API key) \u2014 the amendment's decisive correction \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const r = await fetch(`${MCP_BASE}/mcp`, {\n    method: 'POST', headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ jsonrpc: '2.0', method: 'tools/list', id: 1 }), signal: AbortSignal.timeout(T),\n  });\n  check('G1c tokenless /mcp \u2192 401 (OAuth required, not BYOK key)', r.status === 401, `status=${r.status}`);\n  const wwwAuth = r.headers.get('www-authenticate') ?? '';\n  check('G1c 401 carries www-authenticate: Bearer + resource_metadata',\n    /bearer/i.test(wwwAuth) && /resource_metadata=/i.test(wwwAuth), wwwAuth.slice(0, 120));\n  check('G1c www-authenticate scope \u2287 offline_access', /offline_access/.test(wwwAuth), wwwAuth.slice(0, 120));\n} catch (e) {\n  check(`FATAL: ${(e as Error).message}`, false);\n} finally {\n  console.log(pass ? '\\n\ud83d\udfe2 CONTRACT PINNED \u2014 no drift' : '\\n\ud83d\udd34 DRIFT DETECTED \u2014 the connector contract moved (see docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md)');\n  process.exit(pass ? 0 : 1);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-higgsfield-mcp-contract.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:49:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/smoke-higgsfield-mcp-contract.ts 2>&1 | tail -16\necho \"sentinel exit: ${PIPESTATUS[0]}\"",
+  "description": "Run Higgsfield MCP contract sentinel",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G1a authorization_endpoint = /oauth2/authorize  → https://mcp.higgsfield.ai/oauth2/authorize
+> ✅ G1a token_endpoint = /oauth2/token  → https://mcp.higgsfield.ai/oauth2/token
+> ✅ G1a registration_endpoint = /oauth2/register (public DCR)  → https://mcp.higgsfield.ai/oauth2/register
+> ✅ G1a grant_types ⊇ [authorization_code, refresh_token]  → ["authorization_code","refresh_token"]
+> ✅ G1a PKCE S256 supported  → ["S256"]
+> ✅ G1a scopes ⊇ [openid, email, offline_access] (offline_access ⇒ refresh_token)  → ["openid","email","offline_access"]
+> ✅ G1b protected-resource lists the web AS (mcp.higgsfield.ai)  → ["https://mcp.higgsfield.ai","https://fnf-device-auth.higgsfield.ai"]
+> ✅ G1b device-auth AS advertised (device_code flow — OTD-SPACES-009 deferred)  → ["https://mcp.higgsfield.ai","https://fnf-device-auth.higgsfield.ai"]
+> ✅ G1c tokenless /mcp → 401 (OAuth required, not BYOK key)  → status=401
+> ✅ G1c 401 carries www-authenticate: Bearer + resource_metadata  → Bearer resource_metadata="https://mcp.higgsfield.ai/.well-known/oauth-protected-resource/mcp", scope="openid email offli
+> ✅ G1c www-authenticate scope ⊇ offline_access  → Bearer resource_metadata="https://mcp.higgsfield.ai/.well-known/oauth-protected-resource/mcp", scope="openid email offli
+> 
+> 🟢 CONTRACT PINNED — no drift
+> sentinel exit: 0
+> ```
+
+## 🤖 Claude *(00:50:53)*
+
+
+## 🤖 Claude *(00:50:55)*
+
+Sentinel **11/11 · CONTRACT PINNED · exit 0** — G1 provado ao vivo. Sem migration nesta sub-fatia → sem /security-review. Iteração bem-escopada e verificada (melhor que uma migration apressada — a próxima iteração estuda o padrão Vault do meta com cuidado). Commito:
+
+## 🤖 Claude *(00:51:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/smoke-higgsfield-mcp-contract.ts\ngit commit -q -m \"feat(spaces): sentinel de contrato Higgsfield MCP OAuth (G1 \u00b7 OTD-SPACES-007)\n\n1\u00aa sub-fatia do conector Higgsfield MCP (BoK amendment 13 selado, gate aberto): o anticorpo\nde drift que todo o conector OAuth depende. Pina o contrato VIVO de discovery OAuth-2.1 antes\nde qualquer edge fn nascer \u2014 mesma doutrina do sentinel REST smoke-higgsfield-schema.ts.\n\n- G1a AS metadata: authorize/token/register endpoints \u00b7 grants [authorization_code, refresh_token]\n  \u00b7 PKCE S256 \u00b7 scopes [openid, email, offline_access]\n- G1b protected-resource: AS web (mcp) + device-auth (OTD-SPACES-009 deferido)\n- G1c /mcp tokenless \u2192 401 + www-authenticate Bearer (prova decisiva: exige OAuth, N\u00c3O a Platform\n  key BYOK \u2014 a corre\u00e7\u00e3o que a emenda faz ao charter #0b)\n\nRead-only (3 GET + 1 POST tokenless, zero efeito colateral/custo/registro). Provado LIVE 11/11\nexit 0 (contrato bate com a emenda, fresco 2026-07-05). Drift \u21d2 exit 1. Desbloqueado, zero Sovereign gate.\"\ngit log --oneline -1",
+  "description": "Commit Higgsfield MCP contract sentinel"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:51PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:51PM[0m [32mINF[0m scan completed in 11.1ms
+> [90m9:51PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 268d436 feat(spaces): sentinel de contrato Higgsfield MCP OAuth (G1 · OTD-SPACES-007)
+> ```
+
+## 🤖 Claude *(00:51:20)*
+
+
+## 🤖 Claude *(00:51:23)*
+
+Committed **`268d436`** — lefthook verde. Reconcilio a charter (SSOT do loop): marco a sub-fatia G1 + os 3 milestones desta sessão + resolvo a Fila do cutover:
+
+## 🤖 Claude *(00:51:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- \ud83d\udd12 **PR\u00d3XIMO (Fatia de c\u00f3digo, parcialmente gated):** migration `higgsfield_oauth` + edge fns init/callback/refresh/disconnect + UI card + introspec\u00e7\u00e3o `tools/list`. **Desbloqueado:** todo o c\u00f3digo + contract-smokes. **Sovereign-gated:** o clique \"Conectar Higgsfield\" + consent Clerk (conta do Gabriel) \u00e9 o \u00fanico caminho pro `refresh_token` real \u2192 E2E que materializa valor trava a\u00ed (Fila). REST legado + sentinel seguram o caminho atual (coexist\u00eancia OTD-SPACES-008, sem big-bang).",
+  "new_string": "- \u2705 **Sub-fatia 1 \u2014 Sentinel de contrato G1 SHIPPED (loop 2026-07-05, commit `268d436`):** `scripts/qa/smoke-higgsfield-mcp-contract.ts` pina o contrato OAuth-2.1 vivo (11/11 exit 0, fresco 2026-07-05 = id\u00eantico \u00e0 emenda): G1a AS metadata (authorize/token/register + grants authorization_code/refresh_token + PKCE S256 + scopes openid/email/offline_access) \u00b7 G1b protected-resource (AS web + device-auth) \u00b7 G1c `/mcp` tokenless\u2192401 www-authenticate (prova: exige OAuth, N\u00c3O a Platform key). Read-only, zero efeito colateral. Drift\u21d2exit 1. **Anticorpo que blinda todas as edge fns futuras.**\n- \ud83d\udd12 **PR\u00d3XIMO (sub-fatia 2, desbloqueado):** migration `higgsfield_oauth` (data model \u00a74, classe social_credentials, Vault + RLS own + column-guard \u2014 precisa /security-review) \u2192 depois edge fns init/callback/refresh/disconnect + UI card + introspec\u00e7\u00e3o `tools/list`. **Sovereign-gated:** s\u00f3 o clique \"Conectar Higgsfield\" + consent Clerk (Fila linha 175) \u2014 E2E que materializa valor trava a\u00ed. REST legado + sentinel seguram o caminho atual (coexist\u00eancia OTD-SPACES-008)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:51:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "- [ ] **Universe 3.9 \u2014 GO de cutover de nav (\u00daNICO passo restante, zero gaps):** paridade TOTAL atingida (render+sinapses+fly-to+painel de intelig\u00eancia+**crew overlay 19 agentes**+**entrada 'Universo' no Sidebar** \u2014 it.9 2026-07-02, Vision-QA high). Voc\u00ea j\u00e1 pode ABRIR: Constela\u00e7\u00e3o\u2192Universo. Decis\u00e3o: trocar os destinos da nav legada pro `/universe` (legadas ficam de backup) \u2192 depois 3.10 seal fecha a Phase Epsilon V9.",
+  "new_string": "- [x] **Universe 3.9 \u2014 cutover de nav EXECUTADO (GO Sovereign expl\u00edcito 2026-07-05, commit `4729dd4`):** o Sovereign direcionou \"Unified Canvas 3.5-3.10 para ficar 100%\" \u2192 cutover feito: Universo promovido a 1\u00ba sub-item de Constela\u00e7\u00e3o (prim\u00e1rio); Matrix/Mem\u00f3ria rotuladas 'backup' abaixo (rotas legadas intactas, zero dele\u00e7\u00e3o). Gate E2E `scripts/qa/audit-universe-ui.ts` (magic-link\u2192Playwright 1920\u00d71080\u2192Vision QA) **APROVADO** (8624 n\u00f3s, rede 3D real). Resta s\u00f3 3.10 (seal formal). \u26a0\ufe0f perf ~30s vira OTD-UCANVAS-PERF (nota: a it.7 mediu 2.5s in-browser \u2014 o gate E2E do loop 2026-07-05 mediu ~30s de query REST bruta; reconciliar)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:51:50)*
+
+
+## 🤖 Claude *(00:51:51)*
+
+Adiciono uma nota de reconciliação dos 2 milestones desta sessão ainda não refletidos (brand tail + cadência de vídeo recorrente) no topo do backlog:
+
+## 🤖 Claude *(00:52:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "## Backlog (ordem de valor \u2014 s\u00f3 DESBLOQUEADOS executam)\n\n### \u2705 Fix Assets \u2014 m\u00eddia privada assin\u00e1vel pelo dono em TODO o ecossistema \u2014 SHIPPED E2E (loop 2026-07-03)",
+  "new_string": "## Backlog (ordem de valor \u2014 s\u00f3 DESBLOQUEADOS executam)\n\n### \u2705 Sess\u00e3o interativa 2026-07-05 \u2014 3 milestones (pr\u00e9-loop, GO Sovereign direto)\n- \u2705 **Cauda de brand 100% (commit `6af3181`):** pictogramas\u2192lucide/MIV nas superf\u00edcies cross-file (templates campanha, \u00edcones sociais, n\u00f3s Space via novo `SpaceIcon`, glyphs canvas \ud83d\udc8e\u2192mco/\ud83d\udcf7\u2192Camera/\u26a1\u2192Zap, avatar crew \ud83e\udd16\u2192bot). Anticorpo cross-file: avatar do crew renderizava texto cru no label/tooltip do sigma (n\u00e3o passava pelo AgentAvatar lucide) \u2192 removido. tsc 0 \u00b7 build 0 \u00b7 grep-zero \u00b7 3 revisores adversariais clean \u00b7 Canvas E2E Vision-APROVADO.\n- \u2705 **Unified Canvas 3.9 cutover (commit `4729dd4`):** ver Fila (resolvida) + backlog #4.\n- \u2705 **Cad\u00eancia de v\u00eddeo recorrente FR-VA-022 Amendment (commit `c5eaf1c`):** `autopilot_plans.video_every_n_cycles` (migration `20260705120000` aplicada+viva) \u2014 v\u00eddeo 9:16 s\u00f3 a cada N ciclos (desacopla do texto) + graceful-degrade sob `budget_cap_mco` (v\u00eddeo nunca aborta o ciclo de texto; telemetria `video_skipped_over_cap`). Default OFF. Helper puro `_shared/autopilot-video-cadence.ts` unit 10/10 + smoke `smoke-autopilot-video-cadence.ts` 6/6 zero-custo + UI toggle na AutopilotPage + SOP \u00a7Recurring. /security-review SAFE (tenancy/money/input/telemetria clean). **Destrava a Fila linha 169** \"ciclos de v\u00eddeo recorrentes\" (agora seguro por design; ligar = GO Sovereign).\n\n### \u2705 Fix Assets \u2014 m\u00eddia privada assin\u00e1vel pelo dono em TODO o ecossistema \u2014 SHIPPED E2E (loop 2026-07-03)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:52:07)*
+
+
+## 🤖 Claude *(00:52:08)*
+
+Commito a charter atualizada (o loop mantém o SSOT):
+
+## 🤖 Claude *(00:52:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -q -m \"chore(loop): reconcilia charter \u2014 3 milestones da sess\u00e3o + G1 sentinel Higgsfield + Fila cutover resolvida\n\n- Higgsfield #0b: sub-fatia 1 G1 sentinel \u2705 (commit 268d436); pr\u00f3ximo = migration higgsfield_oauth\n- Fila Universe 3.9 cutover: [x] resolvida (GO Sovereign 2026-07-05, 4729dd4)\n- Sess\u00e3o 2026-07-05: cauda de brand + unified cutover + cad\u00eancia de v\u00eddeo recorrente (destrava Fila 169)\"\ngit log --oneline -5",
+  "description": "Commit charter reconciliation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:52PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:52PM[0m [32mINF[0m scan completed in 17ms
+> [90m9:52PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 0b77b9e chore(loop): reconcilia charter — 3 milestones da sessão + G1 sentinel Higgsfield + Fila cutover resolvida
+> 268d436 feat(spaces): sentinel de contrato Higgsfield MCP OAuth (G1 · OTD-SPACES-007)
+> c5eaf1c feat(autopilot): cadência de vídeo 9:16 recorrente com cap próprio (FR-VA-022 Amendment)
+> 4729dd4 feat(universe): Epsilon V9 3.9 — cutover de nav para o Unified Sensorial Canvas
+> 6af3181 feat(brand): fecha a cauda de brand — pictogramas → lucide/MIV nas superfícies cross-file
+> ```
+
+## 🤖 Claude *(00:53:10)*
+
+
+## 🤖 Claude *(00:53:17)*
+
+**Iteração 1 do loop — completa.** Sub-fatia G1 (sentinel de contrato Higgsfield) shipped + charter reconciliada. 5 commits na branch.
+
+### Survival Laws Self-audit (iteração 1)
+- **Lei 1 (Materialidade):** ✅ sentinel provado LIVE 11/11 exit 0 (curl real contra `mcp.higgsfield.ai`); hashes reais (`268d436`, `0b77b9e`). Zero fabricação.
+- **Lei 2 (Processo):** ✅ BoK amendment 13 É o SOP (spec antes do código); sentinel é guard de QA, sem SOP novo.
+- **Lei 3 (Poda):** ✅ janela 46,6% no início (saudável); Read de 295kB (screenshot) flagado como poda candidata; sem seal.
+- **Lei 4 (ORO):** ✅ Operator=MCORCH Agent · Reviewer/Owner=Sovereign. Portão OAuth consent NÃO improvisado — já na Fila (linha 175).
+
+**Próxima iteração:** sub-fatia 2 — migration `higgsfield_oauth` (data model §4, classe social_credentials, Vault + RLS own + column-guard), estudando o padrão Vault do `meta_config` p/ replicar com cuidado → `/security-review` → apply. Zero portão Sovereign.
+
+Estou me auto-ritmando (sem Monitor — é loop de trabalho, não de polling de evento externo). Rodei a iteração agora; agendo a próxima com folga curta (mantém o cache quente, retoma pronto).
+
+## 🤖 Claude *(00:53:22)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 60,
+  "reason": "Loop de constru\u00e7\u00e3o aut\u00f4noma \u2014 retomar r\u00e1pido (cache quente) p/ a sub-fatia 2: migration higgsfield_oauth. Sem evento externo a aguardar.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 21:55:00 (in 98s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(00:53:30)*
+
+
+## 🤖 Claude *(00:53:34)*
+
+Iteração 1 encerrada. Próxima disparo em ~98s (retoma a sub-fatia 2: migration `higgsfield_oauth`). O harness me re-invoca automaticamente — nada mais a fazer neste turno.
+
+**Resumo da malha fechada até aqui (sessão + loop it.1):**
+- 5 commits na branch: `6af3181` brand · `4729dd4` unified cutover · `c5eaf1c` cadência vídeo recorrente · `268d436` Higgsfield G1 sentinel · `0b77b9e` charter
+- Janela: 46,6% (folga ampla até o teto de seal 95%)
+- Todos os itens desbloqueados de alto valor sendo drenados; o que resta majoritariamente Sovereign-gated está na Fila de Ação
+
+## 👤 User *(00:55:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(00:55:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(00:55:39)*
+
+
+## 🤖 Claude *(00:55:41)*
+
+Iteração 2 do loop. `git fetch` + a charter está fresca no contexto (acabei de reconciliar). Item: **sub-fatia 2 — migration `higgsfield_oauth`** (data model §4). Tem migration → estudo o padrão Vault do `meta_config` (a emenda diz "espelha") para replicar o armazenamento seguro de token corretamente:
+
+## 🤖 Claude *(00:55:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch origin 2>&1 | tail -2; echo \"HEAD: $(git rev-parse --short HEAD) \u00b7 ahead: $(git rev-list --count origin/main..HEAD)\"\necho \"\"; echo \"=== meta_config foundation (Vault pattern to mirror) ===\"; sed -n '1,80p' supabase/migrations/20260530210000_meta_api_foundation.sql",
+  "description": "git fetch + read meta foundation Vault pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HEAD: 0b77b9e · ahead: 5
+> 
+> === meta_config foundation (Vault pattern to mirror) ===
+> -- Migration: meta-api foundation — meta_config + meta_posts (Passo 1: publish-meta)
+> -- BoK SSOT: docs/bok/meta-api/06-data-model.md (§1.1, §1.2, §2, §3.1)
+> -- SOP: docs/processes/meta-credential-resolution.md (Lei 2 — written before this migration)
+> -- API Tenancy Model: per-user credentials, RLS-isolated, column-grant on tokens.
+> --
+> -- SECURITY NOTE (OTD-META-ENCRYPT): Meta OAuth tokens are stored as TEXT plaintext
+> -- protected by RLS + column-level REVOKE (Sovereign directive 2026-05-30: consistent with
+> -- social_accounts.access_token / user_api_keys, which already store same-class tokens plaintext).
+> -- NFR-META-001 (AES-256-GCM / pgsodium at-rest) is tracked project-wide as OTD-META-ENCRYPT;
+> -- encrypting only meta_config while social_accounts stays plaintext would be security theater.
+> -- whatsapp_leads + meta_ads_metrics are deferred to their own migrations (Passo 2 / Passo 3).
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- Shared updated_at trigger function (idempotent — may already exist)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+> RETURNS TRIGGER AS $$
+> BEGIN
+>     NEW.updated_at = now();
+>     RETURN NEW;
+> END;
+> $$ LANGUAGE plpgsql;
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 1. meta_config — per-user Meta credentials & linked accounts (UNIQUE per user)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE TABLE IF NOT EXISTS public.meta_config (
+>     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>     facebook_user_id TEXT,                                  -- populated by OAuth flow; nullable for BYOK
+>     long_lived_token TEXT NOT NULL,                         -- 60-day Meta user token (plaintext+RLS; see OTD-META-ENCRYPT)
+>     scopes TEXT[] NOT NULL DEFAULT '{}',
+>     pages JSONB NOT NULL DEFAULT '[]'::jsonb,               -- [{ page_id, name, access_token }] — token-bearing, REVOKE'd below
+>     instagram_business_account_id TEXT,
+>     whatsapp_phone_number_id TEXT,
+>     whatsapp_waba_id TEXT,
+>     meta_ad_account_id TEXT,
+>     requires_reauth BOOLEAN NOT NULL DEFAULT FALSE,
+>     token_expires_at TIMESTAMPTZ,
+>     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+>     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+>     CONSTRAINT unique_user_meta UNIQUE (user_id)
+> );
+> 
+> ALTER TABLE public.meta_config ENABLE ROW LEVEL SECURITY;
+> 
+> -- Default-deny: only the owner tenant can touch their row.
+> CREATE POLICY "Users manage their own Meta config" ON public.meta_config
+>     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> 
+> CREATE TRIGGER tr_update_meta_config_updated_at
+>     BEFORE UPDATE ON public.meta_config
+>     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 
+> -- Column-level hardening: token columns are WRITE-ONLY for clients (BYOK paste via INSERT/UPDATE),
+> -- never returned via PostgREST. service_role (edge functions) bypasses grants to read for publishing.
+> -- Clients must select explicit safe columns (useMetaConfig); `select=*` will be denied by design.
+> REVOKE SELECT (long_lived_token, pages) ON public.meta_config FROM anon, authenticated;
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 2. meta_posts — publication history (links + status per published post)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE TABLE IF NOT EXISTS public.meta_posts (
+>     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>     campaign_id UUID,
+>     platform TEXT NOT NULL,                                 -- 'instagram' | 'facebook'
+>     meta_post_id TEXT NOT NULL,                             -- id returned by Meta Graph API
+>     post_url TEXT,
+>     caption TEXT,
+>     media_url TEXT,
+>     status TEXT NOT NULL DEFAULT 'published',               -- 'published' | 'failed'
+>     error_message TEXT,
+>     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+> );
+> 
+> ALTER TABLE public.meta_posts ENABLE ROW LEVEL SECURITY;
+> 
+> CREATE POLICY "Users manage their own Meta posts" ON public.meta_posts
+>     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> ```
+
+## 🤖 Claude *(00:57:16)*
+
+
+## 🤖 Claude *(00:57:19)*
+
+O padrão do `meta_config` (sibling direto "classe social_credentials") é **plaintext + RLS + column-REVOKE** — NÃO o masked-view/vault complexo. A nota de segurança dele é explícita: encriptar só uma tabela enquanto meta/social ficam plaintext seria "security theater"; at-rest é OTD-META-ENCRYPT project-wide. Sigo esse padrão provado (consistente + /security-review-aprovado no meta), declarando a escolha no header (Lei 1). Escrevo a migration `higgsfield_oauth`:
+
+## 🤖 Claude *(00:57:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260705140000_higgsfield_oauth.sql",
+  "content": "-- Migration: spaces-evolution \u2014 higgsfield_oauth (Higgsfield MCP OAuth per-user, OTD-SPACES-007, sub-fatia 2).\n-- BoK SSOT: docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md \u00a74 (data model) + \u00a75 (security).\n-- SOP (Lei 2, written before code): the amendment IS the SOP (\u00a72 flow \u00b7 \u00a79 gates G4/G7/G8).\n-- API Tenancy Model (CLAUDE.md): per-user OAuth credential, RLS-isolated, token columns REVOKE'd from clients.\n--\n-- SECRET STORAGE \u2014 declared choice (Lei 1, reconciling the amendment's two references): the amendment \u00a75 cites\n-- BOTH \"espelha 20260602140000\" (Vault-encrypted, user_api_keys style) AND \"espelha META_SAFE_COLUMNS\" (plaintext +\n-- column-REVOKE, meta_config style). This migration follows the meta_config pattern \u2014 the DIRECT sibling of the\n-- amendment's own \"classe social_credentials\" designation: OAuth tokens as TEXT protected by RLS + column-level\n-- REVOKE SELECT, consistent with social_accounts.access_token / meta_config.long_lived_token / user_api_keys.\n-- At-rest encryption is tracked project-wide as OTD-META-ENCRYPT (encrypting only higgsfield while meta/social stay\n-- plaintext would be security theater \u2014 meta_config:8-13). FM-HF-03 (refresh-token exfil) is closed by REVOKE\n-- SELECT on the token/verifier columns: clients cannot read them via PostgREST; only service_role (edge fns) does.\n--\n-- Additive: new table, nothing reads/writes it yet (edge fns are later sub-fatias). RLS default-deny + UNIQUE(user_id).\n-- Passes /security-review before commit (FMEA-011 / FM-HF-02/03/04 cross-tenant + secret-exfil family).\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- higgsfield_oauth \u2014 one row per tenant (PK user_id). Created in the PENDING state by higgsfield-oauth-init\n-- (PKCE verifier + state, no tokens), promoted to CONNECTED by higgsfield-oauth-callback (tokens + identity).\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.higgsfield_oauth (\n  user_id               uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,\n  -- Connected session (FR-SPACES-016/017) \u2014 token-bearing, REVOKE'd from clients below. NULL until callback.\n  refresh_token         text,                                   -- offline_access durable session (server-only)\n  access_token          text,                                   -- short-lived Bearer; refreshed via FR-SPACES-017\n  expires_at            timestamptz,                            -- access_token expiry \u2192 drives refresh\n  clerk_sub             text,                                   -- id_token 'sub' (connected account identity)\n  email                 text,                                   -- id_token 'email' (\"conectado como\u2026\")\n  scope                 text,                                   -- granted scope (openid email offline_access)\n  needs_reauth          boolean     NOT NULL DEFAULT false,     -- refresh dead \u2192 UI asks to reconnect (FR-SPACES-017)\n  -- Pending OAuth flow (FR-SPACES-015) \u2014 ephemeral, TTL-bound. code_verifier is a SERVER SECRET (REVOKE'd);\n  -- state is client-visible (it is echoed in the authorization_url), so it is NOT REVOKE'd.\n  pending_code_verifier text,\n  pending_state         text,\n  pending_expires_at    timestamptz,                            -- state/PKCE TTL (\u226410min, enforced in the edge fn)\n  connected_at          timestamptz,\n  created_at            timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),\n  updated_at            timestamptz NOT NULL DEFAULT timezone('utc'::text, now())\n);\n\nALTER TABLE public.higgsfield_oauth ENABLE ROW LEVEL SECURITY;\n\n-- Default-deny: only the owner tenant can touch their row (FM-HF-02 cross-tenant). service_role (edge fns) bypasses.\nCREATE POLICY \"Users manage their own Higgsfield OAuth\" ON public.higgsfield_oauth\n  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\n\nCREATE TRIGGER tr_update_higgsfield_oauth_updated_at\n  BEFORE UPDATE ON public.higgsfield_oauth\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\n-- Column-level hardening (FM-HF-03): the durable refresh_token, the short-lived access_token, and the PKCE\n-- code_verifier are NEVER returned to a client via PostgREST \u2014 clients select explicit safe columns (a\n-- HIGGSFIELD_SAFE_COLUMNS list in the hook, mirroring META_SAFE_COLUMNS); `select=*` is denied for these by design.\n-- service_role reads them server-side for the token exchange / refresh / MCP calls.\nREVOKE SELECT (refresh_token, access_token, pending_code_verifier) ON public.higgsfield_oauth FROM anon, authenticated;\n\nCOMMENT ON TABLE public.higgsfield_oauth IS\n  'Higgsfield MCP OAuth per-user (OTD-SPACES-007). One row/tenant: PENDING (PKCE verifier+state) \u2192 CONNECTED '\n  '(tokens+identity). Tokens/verifier REVOKE-SELECT from clients (FM-HF-03); at-rest = OTD-META-ENCRYPT project-wide.';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260705140000_higgsfield_oauth.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:58:10)*
+
+
+## 🤖 Claude *(00:58:12)*
+
+`/security-review` obrigatório (migration). O arquivo é um espelho quase-verbatim do `meta_config` (que passou). Lanço uma sub-task adversarial focada na migration (a essência do gate):
+
+## 🤖 Claude *(00:58:24)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review higgsfield_oauth migration",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing ONE new database migration for concrete, exploitable vulnerabilities. Repo: /home/gcrUX/htdocs/constellation-orchestra.\n\nReview `supabase/migrations/20260705140000_higgsfield_oauth.sql` (new per-user OAuth credential table for the Higgsfield MCP connector). Compare it against the SANCTIONED sibling pattern it mirrors: `supabase/migrations/20260530210000_meta_api_foundation.sql` (meta_config \u2014 same class of per-user OAuth token storage, already /security-review-approved).\n\nFocus ONLY on concrete, >80%-confidence, exploitable issues in these categories:\n1. **Cross-tenant / RLS**: can one tenant read/write/enumerate another tenant's row or tokens? Check the RLS policy (`FOR ALL USING auth.uid()=user_id WITH CHECK ...`), the PK (user_id), and whether default-deny holds.\n2. **Secret exfiltration (FM-HF-03)**: are the token columns (refresh_token, access_token) and the PKCE `pending_code_verifier` prevented from being read by a client via PostgREST? The migration uses `REVOKE SELECT (refresh_token, access_token, pending_code_verifier) FROM anon, authenticated`. Is that sufficient given RLS + table grants? Note the project precedent (reference_profiles_column_guard_mint_hole): REVOKE SELECT(col) blocks SELECT but NOT UPDATE \u2014 assess whether a client being able to UPDATE their OWN token column is a real exploit (cross-tenant/mint) or merely self-sabotage.\n3. **pending_state NOT revoked**: is leaving `pending_state` client-readable a vulnerability? (state is a CSRF token echoed to the client in the authorization_url by design.)\n4. **Missing hardening vs meta_config**: does this migration OMIT any security control that meta_config has and needs?\n\nEXCLUSIONS (do NOT report): DoS; at-rest plaintext encryption gaps (tracked project-wide as OTD-META-ENCRYPT, consistent with meta_config/social_accounts \u2014 NOT a new finding); lack-of-hardening/best-practice; theoretical races; anything requiring env-var/service-role compromise; documentation.\n\nPrecedents: UUIDs unguessable; service_role is trusted (bypasses RLS by design); client-side code is not a trust boundary. Report file:line, severity (HIGH/MEDIUM/LOW), category, concrete exploit scenario, fix, and confidence 1-10. If NO concrete exploitable vuln (confidence \u22658), say so explicitly and confirm parity with meta_config. Be terse; read the two files directly."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a6cf83bd7fa3e9633 (internal ID - do not mention to user. Use SendMessage with to: 'a6cf83bd7fa3e9633', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be8df5a5-f15e-42b8-8659-5b49cc9f4cea/tasks/a6cf83bd7fa3e9633.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(00:58:55)*
+
+
+## 🤖 Claude *(00:59:00)*
+
+A sub-task de segurança da migration roda em background (gate obrigatório antes de aplicar/commitar DDL). É harness-tracked → me re-invoca ao terminar. Agendo só um fallback longo (rede de segurança caso o agente trave); a notificação do agente é o sinal primário.
+
+**Iteração 2 em progresso:** migration `higgsfield_oauth` escrita (espelha `meta_config`, RLS own + REVOKE tokens/verifier, FM-HF-03 fechado) → aguardando veredito de segurança → depois apply (atento ao precedente charter linha 91: DDL sob /loop pode ser bloqueada pelo classificador → se bloquear, Fila + segue) → verify → commit.
+
+## 🤖 Claude *(00:59:06)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Fallback de seguran\u00e7a \u2014 a sub-task de /security-review da migration \u00e9 harness-tracked e me acorda ao terminar; este wakeup s\u00f3 dispara se ela travar.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 22:20:00 (in 1253s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(00:59:31)*
+
+
+## 🤖 Claude *(00:59:35)*
+
+**Veredito de segurança: SAFE (confiança 9/10, paridade total com `meta_config`).** Todas as 4 categorias limpas — cross-tenant/RLS (PK user_id = fronteira de tenant), exfil FM-HF-03 (REVOKE nos tokens+verifier; UPDATE-own é só self-sabotage), pending_state client-visible por design, zero hardening faltando. Nota informativa: validação do id_token fica no callback edge fn (fora do escopo da migration).
+
+`/security-review` SAFE. Aplico a migration (atento ao precedente charter linha 91 — DDL sob /loop pode ser bloqueada; se bloquear, Fila):
+
+## 🤖 Claude *(00:59:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== db push ===\"; npx supabase db push 2>&1 | tail -8; echo \"push exit: ${PIPESTATUS[0]}\"\necho \"\"; echo \"=== verify table live (REST safe-columns) ===\"; source .env 2>/dev/null\ncurl -s -o /dev/null -w \"safe-col select \u2192 HTTP %{http_code}\\n\" \"${SUPABASE_URL}/rest/v1/higgsfield_oauth?select=user_id,email,scope,needs_reauth,connected_at&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null\necho \"=== verify REVOKE (token column select via service = ok; via anon key = should fail) ===\"\ncurl -s -w \"\\nanon refresh_token select \u2192 HTTP %{http_code}\\n\" \"${SUPABASE_URL}/rest/v1/higgsfield_oauth?select=refresh_token&limit=1\" -H \"apikey: ${SUPABASE_PUBLISHABLE_KEY:-$SB_PUBLISHABLE_KEY}\" -H \"Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY:-$SB_PUBLISHABLE_KEY}\" 2>/dev/null | head -c 200",
+  "description": "Apply higgsfield_oauth migration + verify table/RLS/REVOKE",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === db push ===
+> Do you want to push these migrations to the remote database?
+>  • 20260705140000_higgsfield_oauth.sql
+> 
+>  [Y/n] 
+> Applying migration 20260705140000_higgsfield_oauth.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.109.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> push exit: 0
+> 
+> === verify table live (REST safe-columns) ===
+> safe-col select → HTTP 404
+> === verify REVOKE (token column select via service = ok; via anon key = should fail) ===
+> {"code":"PGRST205","details":null,"hint":null,"message":"Could not find the table 'public.higgsfield_oauth' in the schema cache"}
+> anon refresh_token select → HTTP 404
+> ```
+
+## 🤖 Claude *(01:00:03)*
+
+
+## 🤖 Claude *(01:00:05)*
+
+Migration aplicada (exit 0), mas o REST retorna 404 PGRST205 — cache de schema do PostgREST ainda stale pós-DDL (lag comum, auto-reload em segundos). Prova material autoritativa que não depende do cache: **regenerar types** (lê o catálogo vivo direto) + confirmar a tabela/colunas:
+
+## 🤖 Claude *(01:00:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== regen types (reads live catalog) ===\"; npx supabase gen types typescript --linked > src/integrations/supabase/types.ts 2>/tmp/gt.err && echo \"regen ok ($(wc -l < src/integrations/supabase/types.ts) lines)\" || { echo FAIL; tail -3 /tmp/gt.err; }\necho \"=== higgsfield_oauth in types (Row/Insert/Update + columns)? ===\"\npython3 -c \"\nimport subprocess\nr=subprocess.run(['grep','-n','higgsfield_oauth\\|refresh_token\\|pending_code_verifier\\|clerk_sub','src/integrations/supabase/types.ts'],capture_output=True,text=True)\nprint(r.stdout[:900] or 'NOT FOUND')\n\"\necho \"=== retry REST safe-col (cache may have reloaded) ===\"; source .env 2>/dev/null\ncurl -s -o /dev/null -w \"safe-col \u2192 HTTP %{http_code}\\n\" \"${SUPABASE_URL}/rest/v1/higgsfield_oauth?select=user_id,email&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null",
+  "description": "Regen types + verify higgsfield_oauth in live schema",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === regen types (reads live catalog) ===
+> regen ok (5715 lines)
+> === higgsfield_oauth in types (Row/Insert/Update + columns)? ===
+> <string>:3: SyntaxWarning: invalid escape sequence '\|'
+> 91:          refresh_token: string | null
+> 108:          refresh_token?: string | null
+> 125:          refresh_token?: string | null
+> 2037:      higgsfield_oauth: {
+> 2040:          clerk_sub: string | null
+> 2046:          pending_code_verifier: string | null
+> 2049:          refresh_token: string | null
+> 2056:          clerk_sub?: string | null
+> 2062:          pending_code_verifier?: string | null
+> 2065:          refresh_token?: string | null
+> 2072:          clerk_sub?: string | null
+> 2078:          pending_code_verifier?: string | null
+> 2081:          refresh_token?: string | null
+> 3281:          refresh_token: string | null
+> 3296:          refresh_token?: string | null
+> 3311:          refresh_token?: string | null
+> 4859:          refresh_token: string | null
+> 4975:          refresh_token: string | null
+> 4990:          refresh_token?: never
+> 5005:          refresh_token?: never
+> 
+> === retry REST safe-col (cache may have reloaded) ===
+> safe-col → HTTP 200
+> ```

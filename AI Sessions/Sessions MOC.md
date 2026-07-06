@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1875
-> * **Sessões do Claude**: 1829
+> * **Total de Sessões Registradas**: 1879
+> * **Sessões do Claude**: 1833
 > * **Sessões do Gemini**: 46
 
 ---
@@ -82,7 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-05 - agent-aad83b7211d9ed913]]` - *2026-07-05*
 *   `[[2026-07-05 - agent-aa75d3f9ced0f5fd0]]` - *2026-07-05*
 *   `[[2026-07-05 - agent-aa544592e8d37d212]]` - *2026-07-05*
-*   *... e mais 1824 sessões nessa categoria.*
+*   *... e mais 1828 sessões nessa categoria.*
 
 ---
 
@@ -1758,10 +1758,13 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-05 - agent-a7584bd5dc3619acd]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a71f8ccdd8851474a]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a6f6d7b592e0033f7]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-a6ef2aa6973ff0568]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a6b20252670fd9eec]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a6a93acfa21317a09]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-a68655101878ac750]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a5a9e1885184fa7e1]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a4ba9a9944cdf4add]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-a443ce514261433d1]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a441863132fd93670]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a42411ea60f58ccf2]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a3ca1126a57578159]]` (ClaudeSessions)
@@ -1773,6 +1776,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-05 - agent-a192df5a655a73942]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a175006cdedbd1286]]` (ClaudeSessions)
 *   `[[2026-07-05 - agent-a0fd80537b214f83b]]` (ClaudeSessions)
+*   `[[2026-07-05 - agent-a0579cfe2a5d02c2a]]` (ClaudeSessions)
 *   `[[2026-07-05 - Verificar sinais de negociação no Telegram]]` (ClaudeSessions)
 *   `[[2026-07-05 - E2E visual testing and Handson protocol review]]` (ClaudeSessions)
 *   `[[2026-07-04 - agent-aea4cc075927ec918]]` (ClaudeSessions)
