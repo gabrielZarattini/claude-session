@@ -1332,3 +1332,16 @@ Agora o dado que responde "já temos algo assertivo": os round-trips das trilhas
 >   "available": "0.00000
 > Shell cwd was reset to /home/gcrux-tradeux
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Continue com os próximos passos]]
+> * **Próxima Sessão**: [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]
+%% --- TIMELINE END --- %%

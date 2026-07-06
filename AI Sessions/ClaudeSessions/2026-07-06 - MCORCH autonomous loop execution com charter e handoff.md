@@ -1,5 +1,5 @@
 # MCORCH autonomous loop execution com charter e handoff
-**Date:** 2026-07-06 | **Session ID:** `1e83e67f-65c1-47b1-8a26-b8b7d6db07ae`
+**Date:** 2026-07-06 | **Session ID:** `ab8c4379-5c3c-4680-8780-9cbdc9717a69`
 
 ---
 
@@ -11068,19 +11068,68 @@ O sweep terminou (exit 0). Lendo a prova:
 }
 ```
 
+## 👤 User *(20:34:31)*
+
+ainda faltam 7 minutos isso é muito. Consegue adiantar?
+
+## 🤖 Claude *(20:35:01)*
+
+
+## 🤖 Claude *(20:35:01)*
+
+
+## 🤖 Claude *(20:35:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch --quiet 2>&1; git log --oneline -2; git status --short\necho \"sync:\"; git rev-list --left-right --count origin/main...HEAD\necho \"=== estado novo? (mudan\u00e7as desde o \u00faltimo commit ae57b7a) ===\"\ngit log ae57b7a..origin/main --oneline 2>/dev/null | head -3 || echo \"nada novo no remote\"",
+  "description": "Iteration ritual: fetch + new state check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ae57b7a feat(qa): guard-sweep.sh — regressão consolidada de produção (7/7 all-green provado)
+> ff8b1cf docs(handoff): seal arco 7 — vizinhos on-select + OTD-010 + backlog-drenado + hardening 478 testes (malha 9067)
+> sync:
+> 0	0
+> === estado novo? (mudanças desde o último commit ae57b7a) ===
+> ```
+
+## 🤖 Claude *(20:35:31)*
+
+
+## 🤖 Claude *(20:35:31)*
+
+
+## 🤖 Claude *(20:35:36)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 270,
+  "reason": "Sovereign pediu cad\u00eancia mais r\u00e1pida \u2014 tick curto de ~4,5min (dentro da janela de cache) enquanto ele est\u00e1 ativo dirigindo; mensagem dele adianta na hora.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
 > **Tool Result (ScheduleWakeup)** - ✅ Success
 >
 > ```
-> Next wakeup scheduled for 17:58:00 (in 1801s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> Next wakeup scheduled for 17:40:00 (in 264s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
 
-## 👤 User *(20:31:03)*
+## 👤 User *(20:40:00)*
 
 <command-message>loop</command-message>
 <command-name>/loop</command-name>
 <command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
 
-## 👤 User *(20:31:03)*
+## 👤 User *(20:40:00)*
 
 # /loop — schedule a recurring or self-paced prompt
 
@@ -11156,52 +11205,48 @@ The user wants you to self-pace. Decide what makes the next iteration worth runn
 
 Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
 
-## 🤖 Claude *(20:31:13)*
+## 🤖 Claude *(20:40:09)*
 
 
-## 🤖 Claude *(20:31:13)*
+## 🤖 Claude *(20:40:09)*
 
-Tick de monitoramento (17:58). Checando estado novo (push/gate/diretiva) — sem fabricar trabalho:
+Tick do loop (17:40). Ritual rápido:
 
-## 🤖 Claude *(20:31:19)*
+## 🤖 Claude *(20:40:11)*
 
 
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch --quiet 2>&1\necho \"=== HEAD local vs origin ===\"; git log --oneline -1; git rev-list --left-right --count origin/main...HEAD\necho \"=== mudan\u00e7as locais n\u00e3o-commitadas? ===\"; git status --short | head -5; echo \"(fim status)\"\necho \"=== gate destravado? (HIGGSFIELD_MCP_CLIENT_ID no vault seria sinal \u2014 checo higgsfield_oauth por linhas novas) ===\"\nsource .env\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/higgsfield_oauth?select=user_id,connected_at,needs_reauth&limit=3\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | head -c 300; echo\necho \"=== infra pulso ===\"; docker ps --filter \"name=mcorch_chroma\" --format \"{{.Status}}\" | head -1",
-  "description": "Idle tick: check for new state"
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch --quiet 2>&1; git log --oneline -1; git status --short\necho \"sync:\"; git rev-list --left-right --count origin/main...HEAD\necho \"novo no remote:\"; git log HEAD..origin/main --oneline | head -3; echo \"(fim)\"",
+  "description": "Tick ritual: fetch + new state check"
 }
 ```
 
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> === HEAD local vs origin ===
 > ae57b7a feat(qa): guard-sweep.sh — regressão consolidada de produção (7/7 all-green provado)
+> sync:
 > 0	0
-> === mudanças locais não-commitadas? ===
-> (fim status)
-> === gate destravado? (HIGGSFIELD_MCP_CLIENT_ID no vault seria sinal — checo higgsfield_oauth por linhas novas) ===
-> []
-> === infra pulso ===
-> Up 3 weeks (healthy)
+> novo no remote:
+> (fim)
 > ```
 
-## 🤖 Claude *(20:31:31)*
+## 🤖 Claude *(20:40:29)*
 
 
-## 🤖 Claude *(20:31:31)*
+## 🤖 Claude *(20:40:29)*
 
 
-## 🤖 Claude *(20:31:37)*
+## 🤖 Claude *(20:40:34)*
 
 
 🛠️ **Tool Call**: `ScheduleWakeup`
 ```json
 {
-  "delaySeconds": 1800,
-  "reason": "Tick idle sem estado novo (git sync, gates fechados, infra ok) \u2014 mant\u00e9m a vig\u00edlia de 30min sem fabricar trabalho.",
+  "delaySeconds": 270,
+  "reason": "2\u00ba tick vazio \u2014 mantenho curto porque o Sovereign est\u00e1 ativo e pediu cad\u00eancia r\u00e1pida; no pr\u00f3ximo vazio alongo para n\u00e3o queimar contexto.",
   "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
 }
 ```
@@ -11209,5 +11254,139 @@ Tick de monitoramento (17:58). Checando estado novo (push/gate/diretiva) — sem
 > **Tool Result (ScheduleWakeup)** - ✅ Success
 >
 > ```
-> Next wakeup scheduled for 18:02:00 (in 1823s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> Next wakeup scheduled for 17:45:00 (in 265s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(20:45:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(20:45:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(20:45:07)*
+
+
+## 🤖 Claude *(20:45:07)*
+
+Tick (17:45). Ritual:
+
+## 🤖 Claude *(20:45:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch --quiet 2>&1; git log --oneline -1; git status --short\necho \"sync:\"; git rev-list --left-right --count origin/main...HEAD\necho \"novo no remote:\"; git log HEAD..origin/main --oneline | head -3; echo \"(fim)\"",
+  "description": "Tick ritual: fetch + new state check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ae57b7a feat(qa): guard-sweep.sh — regressão consolidada de produção (7/7 all-green provado)
+> sync:
+> 0	0
+> novo no remote:
+> (fim)
+> ```
+
+## 🤖 Claude *(20:45:20)*
+
+
+## 🤖 Claude *(20:45:20)*
+
+
+## 🤖 Claude *(20:45:25)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "3\u00ba tick vazio consecutivo \u2014 alongado p/ 20min conforme avisado; mensagem do Sovereign adianta na hora.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada itera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao bater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014 registre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 18:06:00 (in 1234s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
