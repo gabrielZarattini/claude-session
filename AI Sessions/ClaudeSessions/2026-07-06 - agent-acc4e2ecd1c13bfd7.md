@@ -1211,3 +1211,16 @@ Perfect. Now I have all the information I need. Let me create the final structur
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - agent-ac0baed1f369a85e1]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-acd0df9feaf743ae8]]
+%% --- TIMELINE END --- %%

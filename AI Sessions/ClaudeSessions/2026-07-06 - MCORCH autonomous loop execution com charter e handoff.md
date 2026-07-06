@@ -11391,15 +11391,218 @@ Tick (17:45). Ritual:
 > Next wakeup scheduled for 18:06:00 (in 1234s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
 
+## 👤 User *(21:06:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.</command-args>
+
+## 👤 User *(21:06:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, call ScheduleWakeup** with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 — the Monitor remains the wake signal; this only resets the safety net.
+6. **To stop the loop**, omit the ScheduleWakeup call and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(21:06:18)*
+
+
+## 🤖 Claude *(21:06:18)*
+
+Tick (18:06). Ritual:
+
+## 🤖 Claude *(21:06:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit fetch --quiet 2>&1; git log --oneline -1; git status --short\necho \"sync:\"; git rev-list --left-right --count origin/main...HEAD\necho \"novo no remote:\"; git log HEAD..origin/main --oneline | head -3; echo \"(fim)\"",
+  "description": "Tick ritual: fetch + new state check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ae57b7a feat(qa): guard-sweep.sh — regressão consolidada de produção (7/7 all-green provado)
+> sync:
+> 0	0
+> novo no remote:
+> (fim)
+> ```
+
+## 🤖 Claude *(21:06:37)*
+
+
+## 🤖 Claude *(21:06:37)*
+
+
+## 🤖 Claude *(21:06:39)*
+
+
+🛠️ **Tool Call**: `PushNotification`
+```json
+{
+  "message": "Loop MCORCH encerrado pelo crit\u00e9rio do charter (4 ticks sem estado novo, backlog provadamente vazio). Tudo verde e selado (main=ae57b7a, 478 testes, guard-sweep 7/7). Religa com /loop ou uma decis\u00e3o/gate.",
+  "status": "proactive"
+}
+```
+
+> **Tool Result (PushNotification)** - ✅ Success
+>
+> ```
+> Mobile push not sent (Remote Control inactive).
+> ```
+
+## 🤖 Claude *(21:06:54)*
+
+O loop está **encerrado** — desta vez pelo critério objetivo do próprio charter (backlog desbloqueado vazio, confirmado por varredura sistemática + 4 ticks sem estado novo), não por palpite. Sem `ScheduleWakeup` armado; nada dispara sozinho.
+
+**Estado final durável:** `origin/main = ae57b7a` · suite 478 testes verde · guard-sweep 7/7 all-green · HANDOFF arco 7 selado (prova material 15/15) · malha 9068 · charter com o veredito no topo.
+
+Estou aqui quando precisar — uma mensagem religa tudo na hora.
+
+## 👤 User *(21:14:00)*
+
+então não temos mais próximos passos?
+
+## 🤖 Claude *(21:14:32)*
+
+
+## 🤖 Claude *(21:14:49)*
+
+Temos — e vários. O que acabou não foi o roadmap: foi o **subconjunto que eu consigo executar sozinho**. Todos os próximos passos reais agora passam por uma ação ou decisão sua — e assim que qualquer uma acontece, eu volto a ter horas de trabalho autônomo pela frente. O mapa, por alavancagem:
+
+## 🥇 Maior alavancagem — distribuição social (o gargalo do 1º R$, pela sua própria diretiva)
+**Você faz:** registrar os apps (STEP 0 da Fila) — TikTok (Content Posting API + persona como sandbox user), YouTube/Google Cloud (canal Brand + OAuth consent), Pinterest (Business → Trial). ~horas de formulário.
+**Por que agora:** os audits levam **2–6 semanas** e o relógio só começa no registro. O motor interno inteiro (pilar → master 9:16 → variants por canal → drafts) está pronto e provado — falta só a credencial do último salto.
+**Eu entrego em seguida:** OAuth flows E2E, publish vertical TikTok/YT/Pinterest, submissão dos audits no mesmo dia.
+
+## 🥈 Destravamento de minutos — conector Higgsfield MCP
+**Você faz:** registrar o client OAuth (DCR + `redirect_uri`) + setar `HIGGSFIELD_MCP_CLIENT_ID` + clicar **"Conectar Higgsfield"** em Settings→Conectores (consent Clerk).
+**Eu entrego:** `tools/list` + execução de nó no Spaces — **30+ modelos** (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro…) atrás de uma integração já 100% codada.
+
+## ⚡ Decisões de 1 palavra (sim/não)
+1. **Cron do guard-sweep** — regressão semanal automática com telemetria?
+2. **Ligar a cadência de vídeo recorrente** — `video_every_n_cycles` está pronto e OFF; um GO liga vídeo 9:16 autônomo a cada N ciclos do Autopilot.
+3. **Mistério dos `scheduled_posts`** — os 4 posts do ciclo `77e02fca` sumiram do calendário: você limpou manualmente? (Se sim, caso encerrado; se não, eu investigo deleção não-rastreada.)
+
+## 🧬 Programas maiores aguardando insumo físico seu
+- **Gabriel AI 3b (anti-impersonation real):** decidir o motor ArcFace (recomendo InsightFace self-host, doutrina USD=0) + fornecer frames biométricos rotulados p/ calibração.
+- **Landing swap:** a Landing V2 está pronta em `/lp` — o swap para `/` + favicon + rollout app-wide são estágios gated seus (e destravam re-submeter o **TikTok app review**, que reprovou por branding).
+- **Smart-Delete witness:** um post descartável real + GO → eu provo o delete destrutivo E2E.
+- **Postback ML definitivo:** IP residencial / portal ML. · **Stripe live:** só ao 1º cliente externo (intencional).
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+Resumindo: o loop não parou por falta de trabalho no projeto — parou porque **o próximo lote de trabalho precisa de chaves que só você tem**. Minha recomendação de sequência: **(1) registro dos apps sociais hoje** (o relógio de semanas começa a correr), **(2) conector Higgsfield** (5 minutos, destrava um módulo inteiro), **(3)** as três decisões de 1 palavra na resposta que você mandar. Qualquer uma delas me religa na hora.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
-> * **Próxima Sessão**: [[2026-07-06 - agent-a33248f50594146ba]]
-%% --- TIMELINE END --- %%
+## 👤 User *(22:25:33)*
+
+então o loop não esta funcionando muito bem com o prompt ne?: /loop Você é o MCORCH Master Execution Agent em MALHA FECHADA AUTÔNOMA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git fetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter está. A cada iteração: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo fechado — BoK Gate → SOP Lei 2 → código → prova material Lei 1 → /security-review se houver migration → commit granular (Workflow p/ tarefas substantivas); (3) ao bater em portão Sovereign (biometria/DNS/OAuth/GO/decisão), NÃO improvise — registre na Fila de Ação Sovereign e pule; (4) Survival self-audit; (5) /handoff incremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog desbloqueado vazio OU GO/stop. Reporte em PT-BR cada iteração.
+
+## 🤖 Claude *(22:26:28)*
+
+
+## 🤖 Claude *(22:26:46)*
+
+Diagnóstico honesto: **o prompt funcionou muito bem para o que ele codifica — e o que você viu de "mau funcionamento" é o prompt obedecendo a si mesmo.** Deixa eu separar as duas coisas:
+
+**O que funcionou (evidência):** enquanto havia backlog desbloqueado, o ciclo fechado entregou muito — conector Higgsfield (7 sub-fatias), sinapses 768d, vizinhos on-select, 2 OTDs reconciliadas, +53 testes, guard-sweep — tudo com prova material, ~30 commits. A disciplina (BoK→SOP→prova→review→commit) está correta e eu manteria intacta.
+
+**Onde o prompt falha para o que VOCÊ quer:** ele tem escrito **"PARE quando backlog desbloqueado vazio"** — e não define o que fazer no estado "drenado". Resultado: toda vez que o backlog esvazia, eu paro (obedecendo o prompt), você re-arma, eu improviso um modo novo (hardening, guardião, tick lento), e o atrito se repete. Seu comportamento revelado é claro: você não quer que o loop *pare* — quer que ele **mude de modo** quando não há feature para construir.
+
+**A correção é codificar a escada de modos no próprio prompt.** Versão reescrita, pronta para colar:
+
+```
+/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA PERPÉTUA. Leia
+.claude/context/autonomous-loop-charter.md (fonte da verdade) + git fetch + Fila de
+Ação Sovereign, e opere no MODO que o estado pedir:
+· MODO EXECUTOR (há item desbloqueado): ciclo fechado — BoK Gate → SOP Lei 2 →
+  código → prova material Lei 1 → /security-review se migration → commit granular
+  (Workflow p/ substantivo) → /handoff ao fechar Fatia.
+· MODO GUARDIÃO (backlog desbloqueado vazio): a cada ~6h rode
+  scripts/qa/guard-sweep.sh e inspecione infra_health_logs + ciclos do autopilot por
+  erros/regressões novas; qualquer RED vira item EXECUTOR na hora. Entre sweeps,
+  tick lento (30–60min) só checando estado novo — sem relatório se nada mudou.
+· SEMPRE: portão Sovereign (biometria/DNS/OAuth/GO/decisão) → registre na Fila e
+  pule, NUNCA improvise; em todo reporte, liste em 1 linha o topo da Fila (gates
+  visíveis). NUNCA fabrique busywork (Lei 1). NUNCA pare sozinho — só com "stop"
+  explícito do Sovereign OU janela ~95% (selar /handoff antes). Reporte em PT-BR.
+```
+
+As três mudanças que resolvem o atrito: **(1)** "PARE quando vazio" → **"mude para GUARDIÃO"** (só "stop" seu ou janela cheia encerram); **(2)** o modo drenado ganha função definida e útil (guard-sweep periódico + monitoramento de `infra_health_logs`/autopilot — vigilância real, não busywork); **(3)** ticks vazios ficam silenciosos e baratos, e os gates da Fila aparecem em todo reporte para você nunca perder de vista o que destrava valor.
+
+**Um caveat estrutural que prompt nenhum resolve:** este loop vive na sessão — se o terminal cair, ele morre. Para vigilância 24/7 de verdade, o guard-sweep deveria também virar **cron de sistema** (o mesmo mecanismo do watchdog, com telemetria em `infra_health_logs`) — aí o loop de sessão vira a camada interativa e o cron a rede de segurança permanente.
+
+Quer que eu: **(A)** atualize a charter para o ritual de modos e já religue o loop com o prompt novo, **(B)** faça o A + instale o guard-sweep no crontab de sistema (6/6h), ou **(C)** só deixe o prompt aí para você usar quando quiser?

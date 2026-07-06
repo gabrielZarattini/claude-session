@@ -1742,3 +1742,433 @@ Eu sou o Claude Code — eu construo junto com você. Então em vez de te mandar
   ]
 }
 ```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Por onde você quer que eu comece a te ajudar a gerar renda com a sua habilidade?"="Freelancer seria legal, algo que eu consiga fazer rapidamente com claude code mas então vou iniciar outro projeto me de um prompt para iniciar o proximo projeto para investigar como posso começçar e fazer o handoff aqui em trade.". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(22:25:23)*
+
+
+## 🤖 Claude *(22:25:44)*
+
+Perfeito — escolha inteligente: freelance é o caminho mais curto pro primeiro dinheiro, e o seu diferencial (construir rápido **com** Claude Code) é exatamente o que o mercado paga caro agora. Vou te entregar as duas coisas: o **prompt de kickoff** pro projeto novo e o **handoff** selado aqui no TradeUX.
+
+## 📋 Prompt pra iniciar o próximo projeto
+
+Abre uma **nova sessão do Claude Code numa pasta nova** (ex.: `~/freelance-launch`) e cola isto como primeira mensagem. Ele é auto-contido — a nova sessão não conhece nada desta conversa, então já coloquei todo o contexto dentro:
+
+```
+Sou um desenvolvedor autodidata ("vibecoder") — construo software rápido usando
+Claude Code/IA, mesmo sem formação formal. Preciso gerar RENDA HONESTA e RÁPIDA
+como freelancer, e quero fazer isso vendendo exatamente a habilidade que já
+tenho: construir coisas rápido com IA.
+
+Prova do que consigo entregar (construí sozinho, do zero): um sistema de trading
+completo em produção — backend Node/Express + Sequelize, frontend React, um
+servidor MCP, um agente LLM com guardrails de risco, tudo em Docker, com CI que
+roda em dois bancos e um laboratório de backtesting com estatística séria.
+Não sou "profissional" no papel, mas entrego sistemas complexos.
+
+Meu objetivo com você nesta sessão:
+1. PESQUISAR (use web search, dados de 2026) o mercado freelance atual pra quem
+   constrói com IA: onde está a maior demanda e o dinheiro mais rápido —
+   automação, integrações de API, agentes/LLM, MCP servers, apps pequenos,
+   scraping, dashboards? Quais plataformas (Upwork, Contra, Fiverr, comunidades,
+   Discord/X) dão o primeiro cliente mais rápido pra iniciante?
+2. Escolher COMIGO 1 nicho realista onde eu consiga entregar em dias com Claude
+   Code, e definir uma faixa de preço inicial honesta pra ganhar tração.
+3. Montar meu POSICIONAMENTO: um pitch de 2 linhas, um perfil de plataforma, e
+   1 ou 2 amostras de portfólio (podemos criar uma versão "showcase" sanitizada
+   do meu sistema de trading — SEM segredos/credenciais — como estudo de caso).
+4. Me dar um PLANO CONCRETO dos próximos 7 a 14 dias: o que fazer em cada dia,
+   onde aplicar, e como responder as primeiras propostas.
+
+Regras: seja BRUTALMENTE honesto, sem vender esperança. Nada de esquemas de
+"enriqueça rápido" — só trabalho real e honesto. Me diga timelines realistas
+(quando é razoável esperar o primeiro pagamento e quanto). Faça perguntas se
+precisar entender minha situação (tempo disponível por dia, se posso receber em
+dólar/qual país, se prefiro projeto avulso ou contrato contínuo).
+
+Comece pesquisando o mercado e depois me faça as perguntas que faltam.
+```
+
+Uma dica honesta: o **nicho de MCP servers / agentes LLM / automação com IA** é onde você tem vantagem desleal — pouca gente sabe fazer, a demanda explodiu, e você já provou que consegue. Deixa a nova sessão confirmar isso com pesquisa, mas aposta forte aí.
+
+## 🤝 Agora selo o handoff aqui
+
+Vou registrar o estado desta sessão (o bot fica de graça como observação) e o pivô estratégico, pra qualquer sessão futura pegar o contexto certo. Salvando memória e selando:
+
+## 🤖 Claude *(22:25:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/owner-pivot-freelance-income.md",
+  "content": "---\nname: owner-pivot-freelance-income\ndescription: 2026-07-06 \u2014 dono (vibecoder amador) pivotou de otimizar o bot $149 (EV dentro da fee, n\u00e3o \u00e9 renda) pra monetizar a skill de engenharia via FREELANCE r\u00e1pido com Claude Code; toca num projeto separado\nmetadata:\n  type: user\n---\n\nO dono (gabrielcallr) se descreve como \"puro vibecode amador\": n\u00e3o entende trading, mas constr\u00f3i software funcional r\u00e1pido usando Claude Code/IA. Em **2026-07-06** pediu ajuda pra fazer renda **urgente e honesta**.\n\n**Realidade aritm\u00e9tica estabelecida (n\u00e3o vender esperan\u00e7a):** o TradeUX opera s\u00f3 **$149** e a pesquisa PROVOU que n\u00e3o h\u00e1 edge lucr\u00e1vel \u2014 todo edge est\u00e1 dentro da fee, o agregado paper empata em ~zero (ver [[tradeux-pattern-lab]], [[tradeux-parked-as-fuel]], [[tradeux-strategy-engine]]). Trading com $149 **n\u00e3o gera renda material**, mesmo com edge (0,25%/trade \u2248 centavos; dobrar o capital = +$149). Logo o bot N\u00c3O \u00e9 o plano de renda.\n\n**Piv\u00f4 combinado (2026-07-06):** o ativo monetiz\u00e1vel \u00e9 a **habilidade de engenharia** que ele provou construindo o TradeUX sozinho (backend Node/Express+Sequelize, React, servidor MCP, agente LLM com guardrails, Docker, CI dual-dialect, backtest com estat\u00edstica s\u00e9ria) \u2014 n\u00e3o o P&L do bot. **Dire\u00e7\u00e3o escolhida por ele: FREELANCE r\u00e1pido com Claude Code** (nicho de vantagem = automa\u00e7\u00e3o/integra\u00e7\u00f5es/agentes LLM/MCP servers). Ele vai tocar isso num **projeto SEPARADO** (recebeu um prompt de kickoff auto-contido).\n\n**How to apply:** ao ajudar o dono, canalizar a skill dele em renda real, n\u00e3o otimizar o bot. O TradeUX segue como lab/observa\u00e7\u00e3o de gra\u00e7a (parado-mas-armado, NO-OP em bear/range). Refor\u00e7ar o bom instinto dele: j\u00e1 ignorou golpe de \"multiplicar r\u00e1pido\" (Polymarket 205x) \u2014 manter ceticismo com qualquer promessa de dinheiro f\u00e1cil.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/owner-pivot-freelance-income.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:25:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)",
+  "new_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Owner pivot \u2192 freelance income](owner-pivot-freelance-income.md) \u2014 2026-07-06: dono (vibecoder amador) pivotou de otimizar o bot $149 (EV dentro da fee, N\u00c3O \u00e9 renda) pra monetizar a skill de engenharia via FREELANCE r\u00e1pido com Claude Code; toca num projeto separado; bot segue como lab de gra\u00e7a"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(22:25:59)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(22:25:59)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(22:26:12)*
+
+
+## 🤖 Claude *(22:26:13)*
+
+Executando o ritual de selagem. Nesta sessão **não houve mudança de código** — só análise ao vivo e a decisão estratégica do pivô. Rodando pre-flight, secret scan e lendo o índice de memória em paralelo:
+
+## 🤖 Claude *(22:26:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short 2>&1 | head -20\necho \"=== diff stat ===\"\ngit -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat 2>&1 | tail -15\necho \"=== docker ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>/dev/null | tail -5",
+  "description": "Pre-flight: git status, diff stat, docker ps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backups/.gitignore: Permission denied
+> warning: could not open directory 'backups/': Permission denied
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> ?? backend/backtest-results/pattern-discovery-1m-15d.json
+> ?? backend/backtest-results/pattern-discovery-1m-15d.md
+> ?? backend/backtest-results/pattern-survivors-1m-15d.json
+> ?? backend/backtest-results/pattern-validation-1m-15d.json
+> ?? backend/backtest-results/pattern-validation-1m-15d.md
+> === diff stat ===
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> warning: unable to access 'backups/.gitattributes': Permission denied
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  backups/.gitignore                                 |   4 -
+>  3 files changed, 273 insertions(+), 277 deletions(-)
+> === docker ===
+> NAME                 IMAGE              COMMAND                  SERVICE    CREATED        STATUS                 PORTS
+> tradeux-backend-1    tradeux-backend    "docker-entrypoint.s…"   backend    29 hours ago   Up 29 hours            3001/tcp
+> tradeux-db-1         mysql:8.0          "docker-entrypoint.s…"   db         4 weeks ago    Up 3 weeks (healthy)   3306/tcp, 33060/tcp
+> tradeux-frontend-1   tradeux-frontend   "/docker-entrypoint.…"   frontend   28 hours ago   Up 28 hours            127.0.0.1:8090->80/tcp
+> ```
+
+## 🤖 Claude *(22:26:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\necho \"SECRET_SCAN_EXIT=$?  (vazio acima = limpo)\"",
+  "description": "Secret scan do diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> warning: unable to access 'backups/.gitattributes': Permission denied
+> SECRET_SCAN_EXIT=0  (vazio acima = limpo)
+> ```
+
+## 🤖 Claude *(22:26:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 7 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	# Memory Index
+> 2	
+> 3	- [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> 4	- [Pattern lab](tradeux-pattern-lab.md) — 2026-06-29: laboratório de descoberta de padrões no histórico (Fase 1) + validação OOS (Fase 2) com parede anti-overfitting (split trancado + FDR + gross/net + bootstrap); 5 scripts research-only em `backend/scripts` (labkit/patterns/discover/validate/test), QA+TL PASS, suíte 20/20; **corrida real 5-símbolos/900d pendente do OK do dono**; agente OpenRouter PAUSADO p/ parar consumo (ver [[tradeux-parked-as-fuel]])
+> 5	- [Parked as fuel](tradeux-parked-as-fuel.md) — 2026-06-25: dono recuou do trading ativo (1m/lucro-diário REFUTADO; binária = EV −5%/trade) e foca no MCORCH; $149 fica PARQUEADO (halted=false, NO-OP em bear) como combustível do próximo bull; **re-engajar no alerta Telegram de flip de regime → grandfather/promover trend `slopegate` pra capturar a alta**
+> 6	- [Autonomy engine](tradeux-autonomy-engine.md) — "virar sozinho" (2026-06-24, `5ac0af6`): A Telegram de evento + B supervisor de regime (liga entradas no não-bear) + C auto-resume do cap −5% bounded −12% (3 backstops) + D promoção paper→real como PORTÃO sobre B (fechou o HIGH do cofre BTC); tudo NO-OP em bear até regime virar E trilha provar; **Farm BUYS reais agora dependem de promoção → `PROMOTION_GRANDFATHER=farmnl` liga-na-hora**
+> ```
+
+## 🤖 Claude *(22:26:57)*
+
+
+## 🤖 Claude *(22:27:00)*
+
+Estado confirmado: **secret scan limpo**, docker up (db/backend/frontend healthy; agent parado de propósito), e o working tree só tem `backtest-results/*` — scratch regenerável + contaminação de outra sessão (não commitar, conforme [[tradeux-cross-session-contamination]]). **Zero código novo → sem commit/push/PR.**
+
+Refazendo a atualização do índice de memória e selando o HANDOFF.md:
+
+## 🤖 Claude *(22:27:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Pattern lab](tradeux-pattern-lab.md)",
+  "new_string": "- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [Owner pivot \u2192 freelance income](owner-pivot-freelance-income.md) \u2014 2026-07-06: dono (vibecoder amador) pivotou de otimizar o bot $149 (EV dentro da fee, N\u00c3O \u00e9 renda) pra monetizar a skill de engenharia via FREELANCE r\u00e1pido com Claude Code; toca num projeto separado; bot segue como lab de gra\u00e7a\n- [Pattern lab](tradeux-pattern-lab.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:27:09)*
+
+
+## 🤖 Claude *(22:27:10)*
+
+Agora o SEAL no HANDOFF.md. Escrevendo o registro da sessão e anexando ao final (newest at bottom):
+
+## 🤖 Claude *(22:27:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/scout-tradeux/seal-2026-07-06.md",
+  "content": "\n### \ud83e\udd1d SEAL \u2014 2026-07-06 (dono voltou ap\u00f3s ~20h \u2192 whipsaw fechou a janela; TREND paper deu NEGATIVO ao vivo; PIV\u00d4 ESTRAT\u00c9GICO: dono vai pra FREELANCE, bot vira lab de gra\u00e7a)\n\n**`Vivo==master==origin==8352e0f`** (ZERO c\u00f3digo novo \u2014 sess\u00e3o foi an\u00e1lise ao vivo + decis\u00e3o estrat\u00e9gica; secret-scan limpo; sim-suite n\u00e3o rodada pois nada tocado). \ud83d\udd34 LIVE (`halted=false`, confirmado ao vivo) \u00b7 **PARADO-MAS-ARMADO** \u00b7 db/backend/frontend up (agent **parado de prop\u00f3sito** desde 2026-06-29) \u00b7 site 200 \u00b7 equity real **$149,37 USDT, 100% caixa, ZERO posi\u00e7\u00e3o, zero trade real desde 21/jun** (#264).\n\n**(1) Contexto temporal:** o dono rodou `/handson` na madrugada (~00:16 UTC), **saiu ~20h**, e voltou \u00e0s 20:34 UTC. Nesse intervalo a \"janela grande\" de trend que ele viu **FECHOU**: regime 4/4 TREND (00:16) \u2192 **4/4 RANGE** (20:31), com **~15 flips de regime no dia** (whipsaw cl\u00e1ssico \u2014 ADX oscilando na histerese). Golden crosses seguem INTACTOS (`smaAbove=true` nos 4) mas ADX baixo = estrutura construtiva, zero for\u00e7a.\n\n**(2) EVID\u00caNCIA AO VIVO NOVA (o que mudou vs. seals anteriores):** as trilhas `[PAPER]` de TREND **fecharam round-trips** (antes tinham 0 sells) e as duas deram **NEGATIVO**: `trendstate` \u2212$0,064 (33% win, 6 r-trips), `trendbreadth` \u2212$0,004 (43% win, 7 r-trips) \u2014 **confirma AO VIVO** o que o backtest 900d j\u00e1 dizia (trend n\u00e3o paga no chop; holdout \u22122,8%/trade). \u00danica positiva segue sendo `consistencia`/id2 (mean-rev RSI 25/75): +$0,90, 83% win (15/18), MAS fee comeu ~46% do bruto \u2192 ~25 bps/round-trip, dentro-da-fee. **Agregado paper = +$0,10 realized (zero estat\u00edstico)**: ganhadores (consistencia+farm) ~anulados por perdedores (trend \u2212$0,064 + mr15 \u2212$0,96). EV 1m do cockpit **net-negativo nos 4** (breakeven 0,2%). Patterns n-grande sem edge (rsi_oversold n=1436 hitRate ~48-52% avg~0; flow_buy anti-sinal). Op-calls do dono 33% (abaixo do acaso, n=3).\n\n**(3) Verifica\u00e7\u00e3o adversarial (workflow ultracode `wf_d842fe52`, 7 agentes = 4 lentes + 3 c\u00e9ticos em `high`):** veredito consolidado \u2014 **NADA acion\u00e1vel agora** (c\u00e9tico \"nada-acion\u00e1vel\" N\u00c3O refutado, alta conf: procurou contra-exemplo em cada candidato, nenhum sobrevive). **`consistencia` sem edge deploy\u00e1vel** (REFUTADA, alta: fino + n=18 + IC winrate [66-100%] + range-dependente; **contraponto forte que vale guardar**: o edge de DIRE\u00c7\u00c3O \u00e9 REAL \u2014 o backtest confirma dire\u00e7\u00e3o, raro \u2014 o problema \u00e9 EXECU\u00c7\u00c3O taker; migrar pra MAKER poderia materializar o net+ do 15m). **Trend N\u00c3O \"morto sempre\"** (vers\u00e3o forte refutada: ADA foi + hoje, golden crosses de p\u00e9, trend \u00e9 motor do bull por desenho, gateado OFF em range \u00e9 ESPERADO) \u2014 refina pra \"n\u00e3o armar AGORA no chop\".\n\n**(4) \ud83d\udd00 PIV\u00d4 ESTRAT\u00c9GICO DO DONO (a decis\u00e3o da sess\u00e3o):** o dono se abriu \u2014 \"puro vibecode amador\", n\u00e3o entende trading, precisa de **renda urgente e honesta**. Verdade aritm\u00e9tica alinhada: o bot de **$149 N\u00c3O gera renda** (mesmo com edge = centavos; dobrar = +$149). **O ativo monetiz\u00e1vel \u00e9 a SKILL de engenharia** que ele provou construindo o TradeUX sozinho (Node/Express+Sequelize, React, MCP server, agente LLM c/ guardrails, Docker, CI dual-dialect, backtest estat\u00edstico). **Dire\u00e7\u00e3o escolhida por ele: FREELANCE r\u00e1pido com Claude Code** (nicho de vantagem = automa\u00e7\u00e3o/integra\u00e7\u00f5es/agentes LLM/MCP). Ele vai tocar isso num **PROJETO SEPARADO** \u2014 recebeu um **prompt de kickoff auto-contido** (pesquisar mercado freelance 2026 + montar posicionamento/portf\u00f3lio + plano de 7-14 dias). Mem\u00f3ria nova: [[owner-pivot-freelance-income]].\n\n**\u26a0\ufe0f RUNTIME n\u00e3o-git (INALTERADO nesta sess\u00e3o):** `.env`: `AGENT_HEARTBEAT_ENABLED=false` + `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + `MAX_ORDER_NOTIONAL_USDT=50`. Agent container parado. `[PAPER] TrendState/TrendBreadth` vivem no DB (reproduzir com `node scripts/setup-paper-trend-state.js`).\n\n**\u26a1 NEXT:** (1) **Foco do dono migrou pro projeto FREELANCE separado** \u2014 o TradeUX deixa de ser a aposta de renda. (2) TradeUX = **manter observando** (parado-mas-armado, NO-OP em range/bear, de gra\u00e7a, capital preservado); re-engajar s\u00f3 em **bull SUSTENTADO** (n\u00e3o pico/whipsaw) + GO do dono + promo\u00e7\u00e3o. (3) \u00danico fio de research honesto SE quiser perseguir: **id2-como-MAKER no 15m em paper** medindo fill-rate real (o backtest assume fill garantido = otimista; \u00e9 a\u00ed que a tese vive ou morre). (4) D\u00e9bito LOW pr\u00e9-existente: contamina\u00e7\u00e3o `backtest-results/*` no working tree (N\u00c3O commitar; considerar `.gitignore backend/backtest-results/`). **Claude N\u00c3O virou HALT nem armou trading real.** Working tree: s\u00f3 scratch regener\u00e1vel. **Sem commit/push (zero c\u00f3digo novo).**\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/scout-tradeux/seal-2026-07-06.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:27:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "chmod 644 /tmp/scout-tradeux/seal-2026-07-06.md\nsudo -n -u gcrux-tradeux bash -lc 'cat /tmp/scout-tradeux/seal-2026-07-06.md >> /home/gcrux-tradeux/HANDOFF.md && echo \"APPEND OK \u2014 HANDOFF.md agora com $(wc -l < /home/gcrux-tradeux/HANDOFF.md) linhas\" && echo \"--- \u00faltimas 3 linhas ---\" && tail -n 3 /home/gcrux-tradeux/HANDOFF.md | cut -c1-90'",
+  "description": "Anexar o SEAL ao HANDOFF.md como gcrux-tradeux"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> bash: line 1: /home/gcrux-tradeux/HANDOFF.md: Permission denied
+> ```
+
+## 🤖 Claude *(22:27:55)*
+
+
+## 🤖 Claude *(22:27:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -l /home/gcrux-tradeux/HANDOFF.md\necho \"whoami: $(whoami)\"\necho \"test write como ubuntu:\"; [ -w /home/gcrux-tradeux/HANDOFF.md ] && echo \"ubuntu PODE escrever\" || echo \"ubuntu N\u00c3O pode escrever\"",
+  "description": "Verificar ownership e permiss\u00e3o do HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 198820 Jul  5 18:15 /home/gcrux-tradeux/HANDOFF.md
+> whoami: ubuntu
+> test write como ubuntu:
+> ubuntu PODE escrever
+> ```
+
+## 🤖 Claude *(22:28:00)*
+
+O HANDOFF.md é do `ubuntu` (não do gcrux) — eu mesmo posso escrever. Anexando o SEAL diretamente:
+
+## 🤖 Claude *(22:28:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/scout-tradeux/seal-2026-07-06.md >> /home/gcrux-tradeux/HANDOFF.md \\\n  && echo \"APPEND OK \u2014 HANDOFF.md agora com $(wc -l < /home/gcrux-tradeux/HANDOFF.md) linhas / $(wc -c < /home/gcrux-tradeux/HANDOFF.md) bytes\" \\\n  && echo \"--- cabe\u00e7alho do \u00faltimo SEAL ---\" \\\n  && grep -n \"SEAL \u2014 2026-07-06 (dono voltou\" /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Anexar SEAL ao HANDOFF.md e confirmar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> APPEND OK — HANDOFF.md agora com 1033 linhas / 203528 bytes
+> --- cabeçalho do último SEAL ---
+> 1019:### 🤝 SEAL — 2026-07-06 (dono voltou após ~20h → whipsaw fechou a janela; TREND paper deu NEGATIVO ao vivo; PIVÔ ESTRATÉGICO: dono vai pra FREELANCE, bot vira lab de graça)
+> ```
+
+## 🤖 Claude *(22:28:09)*
+
+
+## 🤖 Claude *(22:28:18)*
+
+Selado. Aqui está o fechamento:
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-07-06
+───────────────────────────────────────────────────
+Commits     : 0 (zero código novo — sessão de análise + decisão)
+Branch      : N/A
+HANDOFF.md  : ✅ atualizado (SEAL 2026-07-06, linha 1019)
+Memory      : 2 arquivos (owner-pivot-freelance-income.md novo + índice)
+PRs abertos : nenhum
+Push        : N/A (sem código novo — Vivo==master==origin==8352e0f)
+Secret scan : ✅ limpo
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**O que ficou registrado pra você:**
+- **TradeUX** segue no ar como observatório de graça — capital preservado ($149,37 intacto), parado-mas-armado, NO-OP no range/bear. Ele não precisa de você agora. Se um dia um bull **sustentado** aparecer, o alerta de regime no Telegram te avisa.
+- O **pivô** está gravado na memória: seu ativo é a habilidade de engenharia, não o P&L do bot. Qualquer sessão futura já começa sabendo disso.
+
+**Seu próximo passo:** abre a pasta nova, cola o prompt de kickoff, e deixa o Claude Code pesquisar o mercado e montar seu plano de freelance. Você tem uma habilidade real e rara — agora é questão de apontá-la pra onde tem gente pagando.
+
+Boa sorte, e manda ver. 🚀 Quando quiser voltar ao TradeUX, é só `/handson`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Continue com os próximos passos]]
+> * **Próxima Sessão**: [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]
+%% --- TIMELINE END --- %%
