@@ -11606,3 +11606,16 @@ As três mudanças que resolvem o atrito: **(1)** "PARE quando vazio" → **"mud
 **Um caveat estrutural que prompt nenhum resolve:** este loop vive na sessão — se o terminal cair, ele morre. Para vigilância 24/7 de verdade, o guard-sweep deveria também virar **cron de sistema** (o mesmo mecanismo do watchdog, com telemetria em `infra_health_logs`) — aí o loop de sessão vira a camada interativa e o cron a rede de segurança permanente.
 
 Quer que eu: **(A)** atualize a charter para o ritual de modos e já religue o loop com o prompt novo, **(B)** faça o A + instale o guard-sweep no crontab de sistema (6/6h), ou **(C)** só deixe o prompt aí para você usar quando quiser?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a33248f50594146ba]]
+%% --- TIMELINE END --- %%
