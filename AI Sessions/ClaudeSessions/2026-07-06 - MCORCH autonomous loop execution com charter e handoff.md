@@ -8588,3 +8588,16 @@ Build 0. Commit + push (refactor + testes de qualidade):
 > sync:
 > 0	0
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a33248f50594146ba]]
+%% --- TIMELINE END --- %%
