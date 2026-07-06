@@ -5793,3 +5793,16 @@ Sync confirmado (ahead=0, tudo no origin). Cron `0f94aff2` segue agendado p/ ama
 2. **Handoff rodado** ✅ — todo o trabalho de hoje está **selado em disco e no `origin/main`** (7 commits + HANDOFF.md + malha). 
 
 ⚠️ **O ponto que ainda depende de você:** o cron é *session-only*. Se **esta sessão continuar viva** até amanhã 11:01 (processo persistente no servidor), o loop retoma sozinho. Se você **fechar o terminal**, o cron morre — mas aí é só rodar `/handson` + `/loop` amanhã de manhã que ele retoma limpo pela charter/HANDOFF (nada se perde). Se quiser que eu monte um **cron de sistema durável** (sobrevive a fechamento), é só falar.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a33248f50594146ba]]
+%% --- TIMELINE END --- %%
