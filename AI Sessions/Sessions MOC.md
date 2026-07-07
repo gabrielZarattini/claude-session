@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1931
-> * **Sessões do Claude**: 1885
+> * **Total de Sessões Registradas**: 1936
+> * **Sessões do Claude**: 1890
 > * **Sessões do Gemini**: 46
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-07*
 *   `[[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-06*
 *   `[[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-04*
 *   `[[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-03*
@@ -51,8 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` - *2026-06-27*
 *   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` - *2026-06-26*
 *   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-25*
-*   `[[2026-06-24 - Lovable Loop self-host + n8n 2.27.3 + Safe Browsing]]` - *2026-06-24*
-*   *... e mais 6 sessões nessa categoria.*
+*   *... e mais 7 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
@@ -71,18 +71,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-07 - agent-ac5a4dfe28c890617]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-ac21c97295c524e52]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-aa474a97bb25489dd]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-a76261a47a12fbe10]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-a740f9831227f2e09]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-a6c9dd66cf44ca412]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-a5ba75d87aca616f1]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-a300075194b3bd4f3]]` - *2026-07-07*
 *   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` - *2026-07-07*
 *   `[[2026-07-06 - agent-afda494dc1ce9a2f9]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-af2080f3e4ec22283]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-aebd1ca3ae6bbd5af]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-ae23c4478cf3f2955]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-ad2498bb59ce24b1a]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-acd0df9feaf743ae8]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-acc4e2ecd1c13bfd7]]` - *2026-07-06*
-*   *... e mais 1879 sessões nessa categoria.*
+*   *... e mais 1883 sessões nessa categoria.*
 
 ---
 
@@ -1739,10 +1739,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-07 - agent-ac5a4dfe28c890617]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-ac21c97295c524e52]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aa474a97bb25489dd]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a76261a47a12fbe10]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a740f9831227f2e09]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a6c9dd66cf44ca412]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a5ba75d87aca616f1]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a300075194b3bd4f3]]` (ClaudeSessions)
 *   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` (ClaudeSessions)
+*   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-afda494dc1ce9a2f9]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-af2080f3e4ec22283]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-aebd1ca3ae6bbd5af]]` (ClaudeSessions)

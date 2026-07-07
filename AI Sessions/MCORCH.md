@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 69
-> * **Total de Sessões**: 1926
+> * **Total de Sessões**: 1931
 
 ---
 
@@ -93,10 +93,15 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-07-07 - agent-ac5a4dfe28c890617]]` (ClaudeSessions) - *2026-07-07*
+*   `[[2026-07-07 - agent-ac21c97295c524e52]]` (ClaudeSessions) - *2026-07-07*
 *   `[[2026-07-07 - agent-aa474a97bb25489dd]]` (ClaudeSessions) - *2026-07-07*
 *   `[[2026-07-07 - agent-a76261a47a12fbe10]]` (ClaudeSessions) - *2026-07-07*
+*   `[[2026-07-07 - agent-a740f9831227f2e09]]` (ClaudeSessions) - *2026-07-07*
+*   `[[2026-07-07 - agent-a6c9dd66cf44ca412]]` (ClaudeSessions) - *2026-07-07*
+*   `[[2026-07-07 - agent-a5ba75d87aca616f1]]` (ClaudeSessions) - *2026-07-07*
 *   `[[2026-07-07 - agent-a300075194b3bd4f3]]` (ClaudeSessions) - *2026-07-07*
 *   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` (ClaudeSessions) - *2026-07-07*
+*   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` (ClaudeSessions) - *2026-07-07*
 *   `[[2026-07-06 - agent-afda494dc1ce9a2f9]]` (ClaudeSessions) - *2026-07-06*
 *   `[[2026-07-06 - agent-af2080f3e4ec22283]]` (ClaudeSessions) - *2026-07-06*
 *   `[[2026-07-06 - agent-aebd1ca3ae6bbd5af]]` (ClaudeSessions) - *2026-07-06*
