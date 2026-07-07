@@ -2406,3 +2406,16 @@ Ontem às 23h (UTC) aconteceu a **primeira promoção real** do motor de autonom
 Anotei no backlog (sem construir nada): endurecer o critério de promoção v2, criar "demoção" (hoje uma promoção é permanente), e um teto de exposição acumulada pro baseline. Tudo custo-zero de anotar, nada urgente com ordens de $5.
 
 **Resumo em uma frase**: o cockpit verde era um bounce clássico de bear market — a máquina reagiu certo, armou o mínimo com prova mínima, e o melhor trade agora continua sendo o teu foco no freelance enquanto ela espera o marco objetivo por você. 📊
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+> * **Próxima Sessão**: [[2026-07-07 - agent-a02f28dec762dc307]]
+%% --- TIMELINE END --- %%
