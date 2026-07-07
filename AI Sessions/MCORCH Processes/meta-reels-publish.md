@@ -57,10 +57,3 @@ clica num asset de **vídeo** → diálogo → escreve a legenda → **Publicar 
 ## Success signal (materialmente observável)
 Um **Reel real publicado** no IG/FB do tenant (URL abre o vídeo), linha `meta_posts status=published`, e o nó
 `observation` `meta_publish` na malha. Loop criação→fluxo→**distribuição** fechado.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
