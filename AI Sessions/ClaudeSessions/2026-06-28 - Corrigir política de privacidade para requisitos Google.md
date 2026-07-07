@@ -1,4 +1,4 @@
-# Corrigir política de privacidade para requisitos Google
+# [[2026-06-29 - Corrigir política de privacidade para requisitos Google|Corrigir política de privacidade para requisitos Google]]
 **Date:** 2026-06-28 | **Session ID:** `760b6087-837f-483e-be18-bcfc2f4fc89a`
 
 ---
