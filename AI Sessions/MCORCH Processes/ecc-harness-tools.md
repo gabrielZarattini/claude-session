@@ -65,3 +65,10 @@ o `doctor` imprime o comando exato de remediação; não o executa. (Divergênci
 O `mcorch-doctor` engloba git/Docker/Chroma/BoK/sentinel → substitui/consolida os comandos avulsos do Passo 1.
 O `session-inspect` calibra o orçamento de contexto ao longo da sessão. Ambos referenciados no
 Passo 4 de `.agents/workflows/handson.md`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

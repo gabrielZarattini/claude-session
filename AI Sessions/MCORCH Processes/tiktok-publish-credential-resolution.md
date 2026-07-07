@@ -217,3 +217,10 @@ Decisão registrada no blueprint §7 #2 (FILE_UPLOAD vence verificar-domínio).
 - **Lei 2 (Anticipated Process):** este SOP escrito ANTES do código (requisito API Tenancy item 5 + PASSO 0 do fatiamento §8).
 - **Lei 3 (Pruning):** resolução stateless por request; nada acumulado além da idempotency guard keyed por content/run id.
 - **Lei 4 (ORO):** triplet declarado acima; Reviewer = Sovereign aprova migration + smoke + autoriza ir-público pós-audit.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

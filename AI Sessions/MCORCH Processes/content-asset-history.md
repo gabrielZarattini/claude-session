@@ -104,3 +104,10 @@ metadata.assets = [
 
 - Histórico de **imagens** (append em `generate-image`/frontend) — v1 cobre vídeo; imagem fica como fast-follow.
 - RPC atômica de append; deleção/pin de assets na galeria.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

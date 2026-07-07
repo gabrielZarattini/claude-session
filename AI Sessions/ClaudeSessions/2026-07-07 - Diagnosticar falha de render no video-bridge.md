@@ -1266,3 +1266,16 @@ Encontrei a falha exata no log do systemd. Vou confirmar a causa checando a linh
 **PROPOSED_FIX:** Em `supabase/functions/video-render/index.ts`, antes do `deduct_mco_coins` (linha ~99), adicionar uma validação para `engine === 'hyperframes'`: exigir que `composition` seja um objeto com `props` OU `mode === 'studio-project'`; caso contrário retornar 422 `{error:"composition_required"}` (mesmo padrão do 422 `engine_invalid` já existente na linha 50-52) — nunca cobrar por um render estruturalmente fadado a falhar. Secundariamente, remover/desabilitar a opção `hyperframes` do seletor genérico em `src/pages/VideoStudioPage.tsx` (linhas 16-18/38), já que a autoria real de HyperFrames hoje passa pelo Studio editor (`scripts/video-studio-host/adapter.ts`), que sempre envia `composition` válido.
 
 **CONFIDENCE:** high
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - agent-afda494dc1ce9a2f9]]
+> * **Próxima Sessão**: [[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]
+%% --- TIMELINE END --- %%

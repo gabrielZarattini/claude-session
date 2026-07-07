@@ -76,3 +76,10 @@ a credencial do usuário, sem expor segredo em arquivo versionado.
 | Mint de PAT (ops) | `scripts/qa/mint-vision-pat.ts` |
 | Handshake de prova (G1) | `scripts/qa/handshake-vision-pat.ts` |
 | Verify do PAT no servidor | `packages/vision-mcp-core/src/auth/pat.ts` · SOP `vision-mcp-pat-and-erasure.md` |
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
