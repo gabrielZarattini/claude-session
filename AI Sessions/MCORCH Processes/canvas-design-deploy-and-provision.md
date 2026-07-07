@@ -106,10 +106,3 @@ com o worker sob systemd sobrevivendo a reboot. Editor interativo acessível log
 GA do Canvas Design é **gated** numa extensão do `delete-account` para purgar o `OD_DATA_DIR` +
 `OD_MEDIA_CONFIG_DIR` (+ a config global de provider, agora que ela carrega a chave BYOK do user) + um
 teste de verificação de erasure. NÃO marcar Canvas Design como GA antes disso.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
