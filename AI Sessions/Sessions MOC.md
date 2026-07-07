@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1926
-> * **Sessões do Claude**: 1880
+> * **Total de Sessões Registradas**: 1931
+> * **Sessões do Claude**: 1885
 > * **Sessões do Gemini**: 46
 
 ---
@@ -70,6 +70,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-07 - agent-ac5a4dfe28c890617]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-aa474a97bb25489dd]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-a76261a47a12fbe10]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-a300075194b3bd4f3]]` - *2026-07-07*
+*   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` - *2026-07-07*
 *   `[[2026-07-06 - agent-afda494dc1ce9a2f9]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-af2080f3e4ec22283]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-aebd1ca3ae6bbd5af]]` - *2026-07-06*
@@ -77,12 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-06 - agent-ad2498bb59ce24b1a]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-acd0df9feaf743ae8]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-acc4e2ecd1c13bfd7]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-ac0baed1f369a85e1]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-abda84e4ebe35679a]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-abca924b2456f0ff7]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-aaf6d109d71d8cc92]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-aa693f551a0db9a3d]]` - *2026-07-06*
-*   *... e mais 1874 sessões nessa categoria.*
+*   *... e mais 1879 sessões nessa categoria.*
 
 ---
 
@@ -1738,6 +1738,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-07 - agent-ac5a4dfe28c890617]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-aa474a97bb25489dd]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a76261a47a12fbe10]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a300075194b3bd4f3]]` (ClaudeSessions)
+*   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-afda494dc1ce9a2f9]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-af2080f3e4ec22283]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-aebd1ca3ae6bbd5af]]` (ClaudeSessions)
