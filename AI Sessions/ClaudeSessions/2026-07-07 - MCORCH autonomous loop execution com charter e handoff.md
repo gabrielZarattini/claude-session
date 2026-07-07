@@ -11999,3 +11999,921 @@ Tick do guardião (21:06). Ritual + peek de vigilância leve:
 > ```
 > Next wakeup scheduled for 22:04:00 (in 3348s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
+
+## 👤 User *(00:41:29)*
+
+temos que organizar esse loop corretamente, veja que tivemos um erro e por isso travou e agendou o loop para mais de 1 horas depois ou 1 horas mias ou menos. Exit code 1
+sBc96cf feat(loop): charter v2 - malha perpetua com escada de rodos EXECUTOR/GUARDIAO
+sync: 8 8
+=== infra_health_logs: erros nas ultimas 3h? ===
+Traceback (rost recent call last):
+File "estrings", line 1, in <module>
+TypeError: string indices must be integers, not 'str'
+4 erro(s)
+=== ultiro autopilot_cycle ===
+Traceback (rost recent call last):
+File "estrings", line 1, in <module>
+KeyError: 8
+Rawed API responses (verify parse failure cause) v
+ed /home/gerUX/htdocs/conatellation-orcheatra
+souree .env
+echo " == ran: infre_health_lags query=
+eur1 -s "https://beyvddsykvehvpwst1fa.supabase.co/rest/vi/infra_health_loga?
+select-sorvice,atatua,ovent,ereated_at&status=eq.error&erented_at=gte.s(date -u -d '3 hours ago' +kY-Ma-
+
+-H "apikey: $[88_SECRET_KEY]" -H "Authorization: Bearer $[88_SECRET_KEY]" | head -c 508; echo
+echo " == raw: autepilot_eyeles query =.. "
+cur1 -s "https://beyvddsykvehvpwat1fa.supobae.co/rest/vi/autopilot_eyeles?
+select-id,status,created_at&order-created_at.descßlimit-1" \
+-H "apikey: $[8B_SECRET_KEY]" -H "Authorization: Bearer $[88_SECRET_KEY]" | head -c 508; echo
+
+=== raw: imfra_health_logs query ===
+{"code":"42783", "details":null,"hint":null, "message":"column infra_health_logs.created_at does not exis
+
+=== ram: autopilot_cycles query ===
+{"code":"42783", "details":null, "hint":null, "message":"column autopilot_cycles.created_at does not exis
+t"}
+Found real timestamp column names v
+ş ed /home/gerUX/htdocs/conatellation-orcheatra
+echo " == colunas reais (types.ts) =.= "
+grep -A12 "infra_health_logs: {" are/integrations/supabaso/types.ts | grep -E MAla+
+(checked_at|loggod_at|created_at|timeatamp|_at)" | head -4
+grep -A6 ""Row"" /dav/null 2>/dev/null
+python3 - << 'PY"
+import re
+are = epen("are/integrations/supabese/types.ts' ).read()
+for table im ['infra_health_logs", 'autopilot_cyeles"]:
+m= re.soareh(table + r':\s*\f\s*Row:\a*\f( .* 2)\]', arc, re.s)
+
+cols = re.findall(r'(\n+):', m.group(1))
+ta = [e for e in cols if e.endswith("_at") or 'tine' in c.lowr()]
+print(f"{table]: timatanp cola = {ts]")
+
+=== colunas reais (types.ts) ===
+infra health logs: timestanp cols = ['last_seen_at"]
+autopilot_cycles: timestarp cols = ['completed_at', 'debited_at'. 'refunded_at", 'started_at']
+Executado Corrected guardian checks v
+ed /home/gerUX/htdocs/conatellation-orcheatra
+souree .env
+echo " == infra_health_loga: erroa viatos nka ultimks 3h (laat_soen_at) =.= "
+eur1 -s "https://beyvddsykvehvpwst1fa.supabase.co/rest/vi/infra_health_loga?
+select-service,statua,ovent,last_soen_at&atatus=eq.error&last_soen_at=gte.s(date -u -d '3 hours ago' +kY-Am-
+
+-H "apikey: $[88_SECRET_KEY]" -H "Authorization: Bearer $[88_SECRET_KEY]"; echa
+echo " == iltimoa 2 autopilot_cyeles (started_at) =. "
+cur1 -s "https://beyvddsykvehvpwat1fa.supabise.co/rest/vi/autopilot_eyeles?
+select=id,status,startod_at,completed_atiorder-started_at.descklimit=2" \
+-H "apikey: $[8B_SECRET_KEY]" -H "Authorization: Bearer $[88_SECRET_KEY]"; echo
+
+=== infra_health_logs: erros vistos nas últimas 3h (last_seen_at) ===
+
+=== últimos 2 autopilot_cycles (started_at) ===
+[{"id":"77e82fca-9384-4ae6-9242-5b17d3ec9aa7","status":"completed","started_at":"2826-87-81T81:18:38.98
+1662+88:08*,"completed_at":"2826-87-81T81:18:33.283544+88:08"}
+{"id":"2483bfcb-f8d8-4683-b9c2-51a88676d172","status":"completed","started_at":"2826-86-26T88:46:18.65
+983+88:88","completed_at":"2826-86-26T88:46:22.128789+B8:B8"}]
+Editado autonomous-loop-charter.md +1-1
+Commit feito 9538e09
+Usou ScheduleWakeup
+delaySeconds: 3388
+reason: Guardiace tick 21:07 verde; proximo tick intermediario -55min, sweep completo -23:25 (ch após o all-green de
+17:25).
+prompt: /loop Você é o MCORCH Master Execution Agent em MALHA FECHADA PERPETUA. Leia
+claude/context/autonomous-loop-charter.md (fonte da verdade) + git fetch + Fila de Acao Sovereign, e opere no MODO
+que o estado pedir: . MODO EXECUTOR (ha item desbloqueado): ciclo fechado - BoK Gate > SOP Lei 2 > codigo > prova
+material Lei1>/security-review se migration > commit granular (Workflow p/ substantivo) > /handoff ao fechar Fatia ..
+MODO GUARDIÃO (backlog desbloqueado vazio):a cada -oh rode scripts/qa/guard-sweep.sh e inspecione
+infra_health_logs + ciclos do autopilot por erros/regressoes novas; qualquer RED vira item EXECUTOR na hora. Entre
+sweeps, tick lento (30-60min) so checando estado novo - sem relatório se nada mudou. -SEMPRE: portão Sovereign
+(biometria/DNS/OAuth/GO/decisão) > registre na Fila e pule, NUNCA improvise; em todo reporte, liste em 1 linha o topo da
+Fila (gates visiveis). NUNCA fabrique busywork (Lei 1). NUNCA pare sozinho - so com "stop" explicito do Sovereign OU
+janela -95% (selar /handoff antes). Reporte em PT-BR.
+Next wakeup scheduled for 22:04:00 (in 3348s). Nothing more to do this turn - the harness re-invokes you when the
+
+## 🤖 Claude *(00:42:16)*
+
+
+## 🤖 Claude *(00:42:16)*
+
+
+## 🤖 Claude *(00:42:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/guardian-tick.ts",
+  "content": "/// <reference types=\"node\" />\n// guardian-tick.ts \u2014 the DETERMINISTIC guardian heartbeat for the perpetual loop (charter v2).\n// One command, robust parsing, no improvised inline scripts (born from the 21:07 false alarm:\n// an ad-hoc check mis-read a PostgREST error object as \"4 erros\" \u2014 Mandato Obst\u00e1culo\u2192S\u00edntese).\n//\n// Checks (read-only, zero side effects beyond the state file):\n//   T1  git fetch + local\u2194origin sync\n//   T2  infra_health_logs errors in the last 3h (time column: last_seen_at \u2014 NOT created_at)\n//   T3  latest autopilot_cycles health (time column: started_at)\n//   T4  full-sweep cadence \u2014 reads/updates .claude/context/guardian-state.json (last_sweep_at);\n//       when >6h elapsed, tells the caller to run scripts/qa/guard-sweep.sh\n//\n// Exit codes:  0 = GREEN (nothing to do) \u00b7 1 = RED (real finding OR the guardian itself cannot\n// see \u2014 both become EXECUTOR items) \u00b7 10 = SWEEP_DUE (run guard-sweep.sh, then re-run with\n// --record-sweep <verdict> to stamp the state file).\nimport { readFileSync, writeFileSync, existsSync } from 'fs';\nimport { join } from 'path';\nimport { spawnSync } from 'child_process';\n\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\nconst STATE_PATH = join(ROOT, '.claude/context/guardian-state.json');\nconst SWEEP_INTERVAL_MS = 6 * 3600 * 1000;\n\nconst envPath = join(ROOT, '.env');\nif (existsSync(envPath)) for (const line of readFileSync(envPath, 'utf-8').split('\\n')) {\n  const m = line.match(/^([^#=\\s][^=]*)=(.*)$/);\n  if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, '');\n}\nconst url = process.env.SUPABASE_URL;\nconst key = process.env.SB_SECRET_KEY;\n\ninterface GuardianState { last_sweep_at?: string; last_sweep_verdict?: string }\nconst readState = (): GuardianState => {\n  try { return JSON.parse(readFileSync(STATE_PATH, 'utf-8')) as GuardianState; } catch { return {}; }\n};\n\n// --record-sweep <verdict>: stamp the state file after a completed guard-sweep and exit.\nconst recIdx = process.argv.indexOf('--record-sweep');\nif (recIdx !== -1) {\n  const verdict = process.argv[recIdx + 1] ?? 'unknown';\n  writeFileSync(STATE_PATH, JSON.stringify({ last_sweep_at: new Date().toISOString(), last_sweep_verdict: verdict }, null, 2));\n  console.log(`state recorded: last_sweep_at=now verdict=${verdict}`);\n  process.exit(0);\n}\n\n/** REST GET that DISTINGUISHES rows from a PostgREST error object (the 21:07 bug). */\nasync function restRows(path: string): Promise<{ rows: unknown[] } | { apiError: string }> {\n  try {\n    const r = await fetch(`${url}/rest/v1/${path}`, { headers: { apikey: key!, Authorization: `Bearer ${key}` } });\n    const body = await r.json();\n    if (Array.isArray(body)) return { rows: body };\n    const msg = (body as Record<string, unknown>)?.message ?? JSON.stringify(body).slice(0, 160);\n    return { apiError: `HTTP ${r.status} \u2014 ${msg}` };\n  } catch (e) {\n    return { apiError: String((e as Error).message ?? e) };\n  }\n}\n\n(async () => {\n  const findings: string[] = [];\n  let red = false;\n\n  // T1 \u2014 git sync\n  spawnSync('git', ['fetch', '--quiet'], { cwd: ROOT });\n  const rl = spawnSync('git', ['rev-list', '--left-right', '--count', 'origin/main...HEAD'], { cwd: ROOT, encoding: 'utf-8' });\n  const [behind, ahead] = (rl.stdout ?? '0\\t0').trim().split(/\\s+/).map(Number);\n  if (behind > 0) findings.push(`T1 git: ${behind} commit(s) novos no origin (estado novo \u2192 avaliar EXECUTOR)`);\n  console.log(`T1 git sync: behind=${behind} ahead=${ahead} ${behind === 0 && ahead === 0 ? '\u2705' : '\u26a0\ufe0f'}`);\n\n  if (!url || !key) { console.log('\ud83d\udd34 GUARDIAN: RED \u2014 credenciais Supabase ausentes no .env'); process.exit(1); }\n\n  // T2 \u2014 infra errors (last 3h, last_seen_at)\n  const since = new Date(Date.now() - 3 * 3600 * 1000).toISOString();\n  const infra = await restRows(`infra_health_logs?select=service,status,event,last_seen_at&status=eq.error&last_seen_at=gte.${since}&order=last_seen_at.desc&limit=8`);\n  if ('apiError' in infra) { red = true; findings.push(`T2 infra CHECK QUEBRADO: ${infra.apiError}`); }\n  else if (infra.rows.length > 0) {\n    red = true;\n    for (const r of infra.rows as Record<string, string>[]) findings.push(`T2 infra error: ${r.service} ${r.event ?? ''} @ ${r.last_seen_at}`);\n  }\n  console.log(`T2 infra errors (3h): ${'apiError' in infra ? '\ud83d\udd34 check quebrado' : `${infra.rows.length} ${infra.rows.length === 0 ? '\u2705' : '\ud83d\udd34'}`}`);\n\n  // T3 \u2014 autopilot cycles (started_at)\n  const cyc = await restRows(`autopilot_cycles?select=id,status,started_at&order=started_at.desc&limit=2`);\n  if ('apiError' in cyc) { red = true; findings.push(`T3 autopilot CHECK QUEBRADO: ${cyc.apiError}`); }\n  else {\n    const bad = (cyc.rows as Record<string, string>[]).filter((c) => !['completed', 'running', 'queued'].includes(c.status));\n    if (bad.length > 0) { red = true; for (const b of bad) findings.push(`T3 cycle ${b.status}: ${b.id} @ ${b.started_at}`); }\n    console.log(`T3 autopilot: last=${(cyc.rows[0] as Record<string, string>)?.status ?? 'none'} ${bad.length === 0 ? '\u2705' : '\ud83d\udd34'}`);\n  }\n\n  // T4 \u2014 sweep cadence\n  const state = readState();\n  const lastSweep = state.last_sweep_at ? Date.parse(state.last_sweep_at) : 0;\n  const dueInMs = lastSweep + SWEEP_INTERVAL_MS - Date.now();\n  const sweepDue = dueInMs <= 0;\n  console.log(`T4 sweep: last=${state.last_sweep_at ?? 'never'} (${state.last_sweep_verdict ?? '\u2014'}) \u2192 ${sweepDue ? 'DUE NOW' : `pr\u00f3ximo em ~${Math.round(dueInMs / 60000)}min`}`);\n\n  for (const f of findings) console.log(`   \u00b7 ${f}`);\n  if (red) { console.log('\ud83d\udd34 GUARDIAN: RED \u2014 tratar cada finding como item EXECUTOR (Lei 1)'); process.exit(1); }\n  if (sweepDue) { console.log('\ud83d\udfe1 GUARDIAN: SWEEP_DUE \u2014 rodar scripts/qa/guard-sweep.sh e depois `guardian-tick.ts --record-sweep <verdict>`'); process.exit(10); }\n  console.log(`\ud83d\udfe2 GUARDIAN: GREEN${behind > 0 ? ' (com estado novo no origin \u2014 avaliar)' : ''}`);\n  process.exit(0);\n})();\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/guardian-tick.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:42:56)*
+
+
+## 🤖 Claude *(00:42:56)*
+
+Semeando o estado com o sweep real das 17:25 BRT e provando o tick (Lei 1):
+
+## 🤖 Claude *(00:42:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > .claude/context/guardian-state.json <<'EOF'\n{\n  \"last_sweep_at\": \"2026-07-06T20:25:00.000Z\",\n  \"last_sweep_verdict\": \"7/7 all-green (wf_1dacd877 + guard-sweep.sh E2E)\"\n}\nEOF\necho \"=== prova: guardian-tick ===\"\nbun run scripts/qa/guardian-tick.ts; echo \"TICK_EXIT=$?\"",
+  "description": "Seed state + prove guardian-tick"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === prova: guardian-tick ===
+> T1 git sync: behind=0 ahead=0 ✅
+> T2 infra errors (3h): 0 ✅
+> T3 autopilot: last=completed ✅
+> T4 sweep: last=2026-07-06T20:25:00.000Z (7/7 all-green (wf_1dacd877 + guard-sweep.sh E2E)) → próximo em ~102min
+> 🟢 GUARDIAN: GREEN
+> TICK_EXIT=0
+> ```
+
+## 🤖 Claude *(00:43:11)*
+
+
+## 🤖 Claude *(00:43:11)*
+
+
+## 🤖 Claude *(00:43:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "**\u00b7 MODO GUARDI\u00c3O** (backlog desbloqueado vazio):\n   a. A cada **~6h**: rodar `scripts/qa/guard-sweep.sh` + inspecionar `infra_health_logs` (status=error recentes \u2014 coluna de tempo \u00e9 **`last_seen_at`**, N\u00c3O created_at) + \u00faltimos `autopilot_cycles` por falha/regress\u00e3o (coluna **`started_at`**). Registrar na charter o timestamp do \u00faltimo sweep. \u00daltimo sweep: **2026-07-06 ~17:25 BRT \u2014 7/7 all-green** (n\u00f3 `f98e5abf`); tick de vigil\u00e2ncia 21:07 verde (0 erros infra 3h; cycles completed).\n   b. **Qualquer RED/erro vira item EXECUTOR na hora** (diagn\u00f3stico \u2192 fix \u2192 prova \u2192 commit).\n   c. Entre sweeps: **tick lento (30\u201360min)** s\u00f3 checando estado novo (git/Fila/diretiva). Tick vazio = reporte de 1 linha no m\u00e1ximo; nada mudou = sil\u00eancio.",
+  "new_string": "**\u00b7 MODO GUARDI\u00c3O** (backlog desbloqueado vazio):\n   a. Todo tick = **UM comando determin\u00edstico**: `bun run scripts/qa/guardian-tick.ts` (T1 git sync \u00b7 T2 `infra_health_logs` erros 3h [`last_seen_at`] \u00b7 T3 `autopilot_cycles` [`started_at`] \u00b7 T4 cad\u00eancia do sweep via `.claude/context/guardian-state.json`). **Exit 0=GREEN \u00b7 1=RED \u00b7 10=SWEEP_DUE.** ZERO checks improvisados inline (anticorpo do falso-alarme 21:07: parse ad-hoc leu objeto de erro PostgREST como \"4 erros\").\n   b. **Exit 10** \u2192 rodar `scripts/qa/guard-sweep.sh`; ao terminar, `bun run scripts/qa/guardian-tick.ts --record-sweep \"<verdict>\"` grava o estado.\n   c. **Exit 1 (RED) vira item EXECUTOR na hora** (diagn\u00f3stico \u2192 fix \u2192 prova \u2192 commit) \u2014 inclusive quando o RED \u00e9 o pr\u00f3prio check quebrado (guardi\u00e3o cego = achado).\n   d. Entre sweeps: **tick a cada ~30min**. Tick GREEN = reporte de 1 linha no m\u00e1ximo; nada mudou = sil\u00eancio. \u00daltimo sweep registrado no state file (n\u00e3o mais aqui \u2014 fonte \u00fanica)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:43:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/guardian-tick.ts .claude/context/autonomous-loop-charter.md .claude/context/guardian-state.json\ngit commit -m \"feat(loop): guardian-tick.ts \u2014 heartbeat determin\u00edstico do guardi\u00e3o (fim do improviso)\n\nOrganiza o loop conforme diretiva do Sovereign: o tick de vigil\u00e2ncia era inline\nbash+python e quebrou (coluna errada + objeto de erro PostgREST lido como '4 erros'\n\u2014 falso alarme 21:07). Agora todo tick \u00e9 UM comando: guardian-tick.ts (T1 git sync \u00b7\nT2 infra_health_logs last_seen_at 3h \u00b7 T3 autopilot_cycles started_at \u00b7 T4 cad\u00eancia\n6h do sweep via guardian-state.json). Exit 0=GREEN/1=RED/10=SWEEP_DUE; --record-sweep\ngrava o estado p\u00f3s-sweep; parse distingue rows de erro de API (check quebrado = RED\nvis\u00edvel, nunca falso-positivo). Provado live: GREEN exit 0, pr\u00f3ximo sweep ~102min.\nCad\u00eancia de tick apertada p/ ~30min. Charter GUARDI\u00c3O v2.1.\" 2>&1 | tail -3\ngit log --oneline -1; git push origin main 2>&1 | tail -1",
+  "description": "Commit guardian-tick + charter v2.1"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  3 files changed, 111 insertions(+), 3 deletions(-)
+>  create mode 100644 .claude/context/guardian-state.json
+>  create mode 100644 scripts/qa/guardian-tick.ts
+> 4e5c865 feat(loop): guardian-tick.ts — heartbeat determinístico do guardião (fim do improviso)
+>    9538e09..4e5c865  main -> main
+> ```
+
+## 🤖 Claude *(00:43:49)*
+
+
+## 🤖 Claude *(00:43:49)*
+
+
+## 🤖 Claude *(00:43:55)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Guardi\u00e3o v2.1: tick determin\u00edstico GREEN; cad\u00eancia padronizada em 30min por prefer\u00eancia do Sovereign; sweep completo vence ~23:25 (o pr\u00f3prio tick sinaliza com exit 10).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA PERP\u00c9TUA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade) + git fetch + Fila de A\u00e7\u00e3o Sovereign, e opere no MODO que o estado pedir: \u00b7 MODO EXECUTOR (h\u00e1 item desbloqueado): ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se migration \u2192 commit granular (Workflow p/ substantivo) \u2192 /handoff ao fechar Fatia. \u00b7 MODO GUARDI\u00c3O (backlog desbloqueado vazio): todo tick = bun run scripts/qa/guardian-tick.ts (exit 0=GREEN silencioso \u00b7 1=RED vira item EXECUTOR na hora \u00b7 10=rodar scripts/qa/guard-sweep.sh e gravar com --record-sweep); ticks a cada ~30min. \u00b7 SEMPRE: port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o) \u2192 registre na Fila e pule, NUNCA improvise; em todo reporte, liste em 1 linha o topo da Fila (gates vis\u00edveis). NUNCA fabrique busywork (Lei 1). NUNCA pare sozinho \u2014 s\u00f3 com \"stop\" expl\u00edcito do Sovereign OU janela ~95% (selar /handoff antes). Reporte em PT-BR."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 22:14:00 (in 1804s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(00:57:51)*
+
+Dinovo agora foi para 1804s... isso ta errado. Crie uma analise profuda de tudo que precisamos fazer e um loop que se auto corrigi usando todos as metodologias MAPE- K Enterprise grade
+
+## 🤖 Claude *(00:58:39)*
+
+
+## 🤖 Claude *(00:58:39)*
+
+
+## 🤖 Claude *(00:58:50)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Explore cron/telemetry/notification infra",
+  "subagent_type": "Explore",
+  "prompt": "Explore the MCORCH constellation-orchestra infrastructure for autonomic-loop building blocks. Root: /home/gcrUX/htdocs/constellation-orchestra. Read-only. Report concisely with file:line evidence.\n\nI need to understand 5 things:\n\n1. **System cron infrastructure**: Run `crontab -l` (as current user) and also check what cron entries exist (the project docs mention watchdog */5, auto-publish */5, audit-4cs weekly, nightly-bridge 02:30, morning-briefing 03:30, QA sweep 04:00). List ALL current entries verbatim. Also read `scripts/watchdog-mcorch.sh` \u2014 how does it write telemetry to infra_health_logs (exact pattern: curl? which columns? service/status/event/metadata)? How does it handle errors/self-heal?\n\n2. **Notification paths**: Read `scripts/morning-briefing.sh` and any Telegram integration \u2014 how does the system POST to Telegram @claw_gcrux (bot token from where, chat_id, exact curl pattern)? Is there any other alerting path (n8n webhook, email)?\n\n3. **Headless Claude invocation**: grep the repo (scripts/, .claude/) for any existing pattern of invoking `claude` CLI headless/non-interactively (e.g., `claude -p`, `claude --print`, ANTHROPIC_API_KEY usage in scripts). Does any cron job already invoke an LLM/agent?\n\n4. **infra_health_logs write pattern**: Find 2-3 examples (edge functions or scripts) of how rows are inserted \u2014 exact columns (service, status, event, metadata, last_seen_at?) and whether there's UPSERT/dedup logic. Check the table schema in supabase/migrations (the migration 20260615170000_infra_health_logs_metadata.sql and any earlier one defining the table).\n\n5. **Existing state/knowledge files for the loop**: List what exists in .claude/context/ related to the loop (autonomous-loop-charter.md size/structure, guardian-state.json content) and scripts/qa/guardian-tick.ts + scripts/qa/guard-sweep.sh (just confirm they exist and their exit-code contracts from the header comments).\n\nReturn a structured report: (1) crontab entries verbatim, (2) telemetry write pattern with example, (3) Telegram/notification pattern with example, (4) headless claude findings (or \"none exists\"), (5) loop state files inventory. Medium breadth."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: a81b084da9dd26baf (internal ID - do not mention to user. Use SendMessage with to: 'a81b084da9dd26baf', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ab8c4379-5c3c-4680-8780-9cbdc9717a69/tasks/a81b084da9dd26baf.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(00:58:58)*
+
+
+## 🤖 Claude *(00:58:58)*
+
+Enquanto a exploração roda, começo o arquivo de plano com a análise profunda que já tenho desta sessão (histórico completo do loop, modos de falha, mapa do backlog):
+
+## 🤖 Claude *(00:59:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/plans/dinovo-agora-foi-para-snazzy-crescent.md",
+  "content": "# Plano \u2014 Loop Auton\u00f4mico MAPE-K Enterprise-Grade (MCORCH)\n\n## Context (por que esta mudan\u00e7a)\n\nO Sovereign dirigiu o `/loop` por ~2 dias. O loop **entregou muito** no modo executor (conector Higgsfield, sinapses 768d, vizinhos on-select, 2 OTDs, +53 testes, guard-sweep), mas o **pacing/vigil\u00e2ncia foi improvisado a cada turno**, gerando os atritos que ele apontou:\n\n1. **Paradas prematuras** (\"backlog vazio \u2192 PARE\") que ele teve que re-armar 5\u00d7.\n2. **Falso alarme 21:07** \u2014 check de vigil\u00e2ncia inline (bash+python ad-hoc) quebrou em nome de coluna e leu um objeto de erro PostgREST como \"4 erros\".\n3. **Pacing err\u00e1tico** \u2014 270s \u2192 1200s \u2192 1800s \u2192 3300s decididos pelo LLM a cada turno; o Sovereign viu \"1804s\" e concluiu (corretamente) que a malha n\u00e3o est\u00e1 *engenheirada*.\n4. **Fragilidade estrutural** \u2014 o loop vive na sess\u00e3o: fecha o terminal, morre a vigil\u00e2ncia inteira.\n\n**Causa-raiz (diagn\u00f3stico MAPE-K):** as fases **Monitor** e **Analyze** est\u00e3o presas dentro da sess\u00e3o LLM \u2014 justamente as fases que a refer\u00eancia IBM de Autonomic Computing manda serem **mec\u00e2nicas, determin\u00edsticas e perp\u00e9tuas**. O LLM s\u00f3 deveria entrar em **Plan/Execute** (trabalho cognitivo). O CLAUDE.md j\u00e1 declara a doutrina (\"Harness Engineering / Autonomic Computing\", watchdog, self-healing) \u2014 o loop nunca a implementou de verdade.\n\n**Resultado pretendido:** uma malha MAPE-K com plano de controle **mec\u00e2nico em cron de sistema** (sobrevive \u00e0 sess\u00e3o, cad\u00eancia exata, zero improviso) + plano **cognitivo** (sess\u00e3o Claude) acionado por evento com trabalho real \u2014 auto-corrig\u00edvel (falha do pr\u00f3prio monitor = sintoma vis\u00edvel) e audit\u00e1vel (todo estado em K compartilhado).\n\n---\n\n## An\u00e1lise profunda \u2014 TUDO que precisamos fazer (estado 2026-07-06)\n\n### A. O que est\u00e1 PROVADAMENTE completo (n\u00e3o retrabalhar)\n- Backlog aut\u00f4nomo de *feature*: **drenado** (varredura 7-agentes `wf_f4481b27` cross-checada com git; n\u00f3 `aaf7a126`).\n- Sa\u00fade de produ\u00e7\u00e3o: **guard-sweep 7/7 all-green** (n\u00f3 `f98e5abf`): doctor 9/9 \u00b7 IoC limpo \u00b7 drift zero \u00b7 storage-RLS 6/6 \u00b7 RPC synapses 8/8 \u00b7 sentinels Higgsfield 7/7 e 11/11.\n- Suite: 478 testes verdes \u00b7 HANDOFF arco 7 selado (prova material 15/15) \u00b7 malha 9068.\n\n### B. Fila de A\u00e7\u00e3o Sovereign (gates \u2014 s\u00f3 o Sovereign destrava)\n| # | Gate | Lead time | Destrava |\n|---|------|-----------|----------|\n| 1 | **Registro de apps sociais** (TikTok Content Posting \u00b7 YouTube/GCloud \u00b7 Pinterest Business) | ~horas de formul\u00e1rio; audits 2-6 SEMANAS correm depois | Distribui\u00e7\u00e3o vertical = gargalo do 1\u00ba R$ (diretiva do pr\u00f3prio Sovereign) |\n| 2 | **Conector Higgsfield MCP** \u2014 DCR do client + `HIGGSFIELD_MCP_CLIENT_ID` + clicar \"Conectar\" (consent Clerk) | ~5 min | tools/list + execu\u00e7\u00e3o de n\u00f3 (30+ modelos) \u2014 c\u00f3digo 100% pronto |\n| 3 | Decis\u00f5es de 1 palavra: cron guard-sweep (s/n) \u00b7 ligar `video_every_n_cycles` (s/n) \u00b7 mist\u00e9rio `scheduled_posts` (limpou manualmente?) | ~1 min | Vigil\u00e2ncia automatizada \u00b7 v\u00eddeo aut\u00f4nomo recorrente \u00b7 fechar investiga\u00e7\u00e3o |\n| 4 | Gabriel AI 3b: motor ArcFace (recom.: InsightFace self-host, USD=0) + frames biom\u00e9tricos | decis\u00e3o + upload | Identity Gate anti-impersonation real |\n| 5 | Landing swap `/` (V2 pronta em `/lp`) + favicon + rollout | GO | Re-submeter TikTok app review (reprovou por branding) |\n| 6 | Menores: Smart-Delete witness (post descart\u00e1vel) \u00b7 Postback ML (IP residencial) \u00b7 Stripe live (ao 1\u00ba cliente) | \u2014 | \u2014 |\n\n### C. O que o LOOP deve fazer perpetuamente (a lacuna desta iniciativa)\n- Vigiar produ\u00e7\u00e3o (sweep 6/6h + sensores cont\u00ednuos) **sem depender da sess\u00e3o**.\n- Reagir a RED com ciclo fechado EXECUTOR (diagn\u00f3stico\u2192fix\u2192prova\u2192commit).\n- Detectar estado novo (push, gate destravado, diretiva) e engajar.\n- **Auto-corrigir-se**: monitor quebrado/heartbeat ausente = sintoma de primeira classe.\n- Nunca fabricar busywork; nunca parar sozinho; pacing determin\u00edstico (n\u00e3o-LLM).\n\n---\n\n## Arquitetura MAPE-K proposta\n\n*(se\u00e7\u00f5es M/A/P/E/K detalhadas ap\u00f3s explora\u00e7\u00e3o da infra de cron/telemetria/notifica\u00e7\u00e3o existente e do Plan agent \u2014 em andamento)*\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/plans/dinovo-agora-foi-para-snazzy-crescent.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:59:46)*
+
+
+## 🤖 Claude *(00:59:46)*
+
+O arquivo de plano está iniciado com o Context + a análise profunda (mapa completo A/B/C: o que está completo, os 6 gates da Fila Sovereign com lead times, e a lacuna que o MAPE-K fecha). 
+
+A exploração da infra existente (crontab real, padrão de telemetria do watchdog, caminho Telegram, invocação headless de Claude, state files) está rodando — quando voltar, lanço o agente de design para a arquitetura M/A/P/E/K detalhada e completo o plano para sua aprovação.
+
+## 👤 User *(01:02:30)*
+
+<task-notification>
+<task-id>a81b084da9dd26baf</task-id>
+<tool-use-id>toolu_016QEBKfVRNvevkeKSNdjvfk</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ab8c4379-5c3c-4680-8780-9cbdc9717a69/tasks/a81b084da9dd26baf.output</output-file>
+<status>completed</status>
+<summary>Agent "Explore cron/telemetry/notification infra" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Perfect. Now I have all the information needed. Let me compile a comprehensive report:
+
+---
+
+## MCORCH Autonomic-Loop Infrastructure Report
+
+### 1. SYSTEM CRON INFRASTRUCTURE
+
+**Active Crontab Entries (verbatim from `crontab -l`):**
+
+```
+*/5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh &gt;&gt; /var/log/mcorch-watchdog.log 2&gt;&amp;1
+*/5 * * * * /usr/bin/sudo /home/ubuntu/scripts/mysql-self-heal.sh
+0 6 * * * cd /home/gcrUX/htdocs/constellation-orchestra &amp;&amp; set -a &amp;&amp; . ./.env &amp;&amp; set +a &amp;&amp; /home/ubuntu/.nvm/versions/node/v22.22.3/bin/node scripts/ingest-codebase.ts --quiet &gt;&gt; /tmp/mcorch-ingest.log 2&gt;&amp;1
+*/5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/auto-publish-cron.sh &gt;&gt; /home/ubuntu/logs/mcorch-auto-publish.log 2&gt;&amp;1
+0 12 * * 1 /home/gcrUX/htdocs/constellation-orchestra/scripts/audit-4cs.sh &gt;&gt; /var/log/mcorch-audit.log 2&gt;&amp;1
+0 3 * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage1-light-sleep.sh
+0 5 * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage2-deep-sleep.sh
+0 7 * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/nightly-stage3-rem.sh
+*/30 * * * * /home/ubuntu/scripts/sync_sessions.sh &gt;&gt; /home/ubuntu/scripts/sync_sessions.log 2&gt;&amp;1
+*/5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/canvas-video-watchdog.sh &gt;&gt; /var/log/mcorch-canvas-watchdog.log 2&gt;&amp;1
+5 7 * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/agent-daily-pulse.sh &gt; /dev/null 2&gt;&amp;1
+0 */6 * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/affiliate-enrich-cron.sh &gt;&gt; /var/log/mcorch-affiliate-enrich.log 2&gt;&amp;1
+0 4 * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/qa-sweep-cron.sh &gt;&gt; /home/ubuntu/logs/mcorch-qa-sweep.log 2&gt;&amp;1
+*/15 * * * * cd /home/gcrUX/htdocs/constellation-orchestra &amp;&amp; set -a &amp;&amp; . ./.env &amp;&amp; set +a &amp;&amp; /home/ubuntu/.bun/bin/bun run scripts/reconcile-kanban-roadmap.ts &gt;&gt; /home/ubuntu/.mcorch/logs/kanban-reconcile.log 2&gt;&amp;1
+```
+
+**Mapping to project docs:**
+- `*/5`: watchdog-mcorch.sh (health probe + escalation)
+- `*/5`: auto-publish-cron.sh (scheduled publishing)
+- `0 12 * * 1`: audit-4cs.sh (weekly audit Monday 12:00)
+- `0 3 * * *`: nightly-stage1-light-sleep.sh (02:30 mentioned as nightly-bridge; this is 03:00)
+- `5 7 * * *`: agent-daily-pulse.sh (daily pulse 07:05 ≠ 03:30 morning-briefing mentioned in docs)
+- `0 4 * * *`: qa-sweep-cron.sh (QA sweep 04:00 as documented)
+
+**NOT in crontab but referenced in project docs:** nightly-bridge 02:30, morning-briefing 03:30 (morning-briefing.sh exists but no cron entry visible—likely triggered by `nightly-stage3-rem.sh` at 07:00 or manually).
+
+---
+
+### 2. TELEMETRY WRITE PATTERN: `infra_health_logs`
+
+**Schema (from migration 20260425210000_mcorch_tenant_isolation.sql):**
+```sql
+CREATE TABLE IF NOT EXISTS public.infra_health_logs (
+  id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  service      text        NOT NULL,
+  status       text        NOT NULL,
+  last_seen_at timestamptz NOT NULL DEFAULT now()
+);
+```
+
+**Extended in migration 20260615170000_infra_health_logs_metadata.sql:**
+```sql
+ALTER TABLE public.infra_health_logs ADD COLUMN IF NOT EXISTS event    text;
+ALTER TABLE public.infra_health_logs ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}'::jsonb;
+```
+
+**Columns:**
+- `service`: text (e.g., 'mcorch_claude_mem', 'mcorch_chroma', 'openclaw-escalation', 'agent-daily-pulse')
+- `status`: text ('healthy', 'unhealthy', 'unknown', 'error', or custom strings like 'triggered:container:count')
+- `event`: text (optional; e.g., 'tool_ok', 'sentinel_block', 'container_health', deepsearch state)
+- `metadata`: jsonb (no PII/secrets; e.g., `{tool, cost, state, refund}`)
+- `last_seen_at`: timestamptz (NOT created_at—tracks last observation time for deduplication)
+
+**Write Pattern Examples:**
+
+From **watchdog-mcorch.sh** (lines 65–76):
+```bash
+write_health() {
+    local SERVICE="$1"
+    local STATUS="$2"
+    curl -s -X POST "${SUPABASE_URL}/rest/v1/infra_health_logs" \
+        -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+        -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "{\"service\":\"${SERVICE}\",\"status\":\"${STATUS}\"}" &gt; /dev/null 2&gt;&amp;1
+}
+write_health "mcorch_claude_mem" "${HEALTH:-unknown}"
+write_health "mcorch_chroma"     "${CHROMA_STATUS}"
+```
+**Pattern:** Simple INSERT via Supabase REST API; columns `service` + `status`. Table keeps history (no explicit dedup—row per insert).
+
+From **agent-daily-pulse.sh** (line ~192):
+```bash
+curl -s -X POST "$SUPA_URL/rest/v1/infra_health_logs" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{\"service\":\"agent-daily-pulse\",\"status\":\"healthy\",\"last_seen_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}"
+```
+**Pattern:** Same; explicit `last_seen_at` timestamp override (else defaults to `now()`).
+
+---
+
+### 3. NOTIFICATION PATHS: TELEGRAM &amp; ALERTING
+
+**Primary: Telegram via `morning-briefing.sh` (lines 75–87)**
+
+Token source (post-migration 2026-05-16):
+```bash
+SECRETS_FILE=/home/ubuntu/.openclaw/secrets.json
+TOKEN=$(jq -r '.keys.telegramBotToken' "$SECRETS_FILE")
+```
+
+Curl pattern:
+```bash
+curl -sS -o /tmp/morning-briefing-tg-response.json -w "%{http_code}" -X POST \
+    "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+    -H "Content-Type: application/json" \
+    -d "$(jq -n --arg c "$TG_CHAT" --arg t "$BRIEF" \
+      '{chat_id:$c, text:$t, disable_web_page_preview:true}')"
+```
+
+**Endpoints:**
+- Telegram Bot API: `https://api.telegram.org/bot&lt;TOKEN&gt;/sendMessage`
+- Chat target: `$TG_CHAT` (default: `5835174772` Sovereign's user ID; override: `@public_channel`)
+- Payload: `{chat_id, text, disable_web_page_preview:true}`
+
+**Secondary: n8n Webhook (OpenClaw escalation)**
+
+From `watchdog-mcorch.sh` (lines 123–132):
+```bash
+if curl -sf "http://127.0.0.1:18789/health" &gt; /dev/null 2&gt;&amp;1; then
+    curl -sf -X POST "http://127.0.0.1:18789/agents/engineer/incidents" \
+        -H "Content-Type: application/json" \
+        --data "@${INCIDENT_FILE}" &gt; /dev/null 2&gt;&amp;1
+fi
+```
+**Pattern:** POST JSON incident file to local gateway `127.0.0.1:18789/agents/engineer/incidents` (best-effort; file inbox `$INCIDENT_DIR` is the durable fallback).
+
+**Tertiary: Incident file inbox (durable fallback)**
+
+```bash
+INCIDENT_DIR="/tmp/openclaw-incidents"
+INCIDENT_FILE="${INCIDENT_DIR}/${INCIDENT_ID}.json"
+cat &gt; "${INCIDENT_FILE}" &lt;&lt;JSON
+{ "id": "${INCIDENT_ID}", "container": "${CONTAINER}", "claude_mem_status": "...", ... }
+JSON
+```
+**Pattern:** JSON files dropped to `/tmp/openclaw-incidents/` (world-writable, ephemeral) for async consumption by OpenClaw engineer agent.
+
+---
+
+### 4. HEADLESS CLAUDE INVOCATION (LLM in Cron/Scripts)
+
+**Finding: NO direct Claude CLI or SDK usage in cron scripts.**
+
+**Existing LLM invocation pattern:**
+- **Groq (not Claude)** is the default for cron LLM tasks.
+  - `scripts/agent-daily-pulse.sh` line ~82–120: Calls Groq `llama-3.3-70b-versatile` via `https://api.groq.com/openai/v1/chat/completions`.
+  - Token from `user_api_keys` table (`groq_api_key` column).
+  - Response parsed, tokens metered, cost calculated via Supabase RPC `calc_agent_cost_mcoin`.
+
+**Pattern (from agent-daily-pulse.sh):**
+```bash
+GROQ_KEY=$(curl -s "$SUPA_URL/rest/v1/user_api_keys?user_id=eq.$SOV&amp;select=groq_api_key" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" | python3 -c "import json,sys; print(json.load(sys.stdin)[0]['groq_api_key'])")
+
+BODY=$(jq -n --arg sys "Você é $NAME, Director..." --arg q "$TASK" \
+  '{"model":"llama-3.3-70b-versatile","messages":[...],"max_tokens":500}')
+RESP=$(curl -s -X POST "https://api.groq.com/openai/v1/chat/completions" \
+  -H "Authorization: Bearer $GROQ_KEY" -H "Content-Type: application/json" -d "$BODY")
+```
+
+**No Claude invocation found** in:
+- `/scripts/*.sh` (no `claude` CLI or SDK)
+- `/scripts/*.ts` (no `@anthropic-ai/sdk` or API calls in scheduled scripts)
+- Crontab (no `claude -p` or headless patterns)
+
+---
+
+### 5. LOOP STATE &amp; KNOWLEDGE FILES
+
+**Location:** `/home/gcrUX/htdocs/constellation-orchestra/.claude/context/`
+
+**Inventory:**
+
+| File | Size | Purpose | Status |
+|------|------|---------|--------|
+| `autonomous-loop-charter.md` | 67.7 KB, 238 lines | MCORCH Master Execution Agent charter (v2 refined 2026-07-06); Malha Fechada protocol; Survival Laws; Backlog; Exit contracts | **ACTIVE** — source of truth for loop iteration protocol |
+| `guardian-state.json` | 126 bytes | `{last_sweep_at, last_sweep_verdict}` JSON; written by `guardian-tick.ts --record-sweep` | **ACTIVE** — 2026-07-06 20:25 UTC, verdict "7/7 all-green (wf_1dacd877 + guard-sweep.sh E2E)" |
+
+**Supporting Scripts:**
+
+| File | Type | Purpose | Exit Codes | Status |
+|------|------|---------|-----------|--------|
+| `scripts/qa/guardian-tick.ts` | TypeScript/Node | Deterministic heartbeat: T1 git sync · T2 infra_health_logs errors (3h) · T3 autopilot_cycles health · T4 sweep cadence. Reads `.claude/context/guardian-state.json`, queries Supabase. | **0**=GREEN · **1**=RED (real finding or check broken) · **10**=SWEEP_DUE | **ACTIVE** — lines 1–103 |
+| `scripts/qa/guard-sweep.sh` | Bash | Consolidated regression battery (7 guards by default, +2 if `--fast` not set): asset-signing, semantic-synapses, higgsfield-schema, higgsfield-mcp-contract, IoC scan, schema-drift, mcorch-doctor. | **0**=all green · **&gt;0**=count of failing guards | **ACTIVE** — lines 1–62; born from 2026-07-06 all-green sweep |
+
+**Charter Structure (first 100 lines):**
+- Lines 1–14: Identity &amp; Survival Laws (4 non-negotiable rules)
+- Lines 15–40: Ritual per iteration (2 modes: EXECUTOR &amp; GUARDIAN; cadence ~30min for ticks)
+- Lines 43–100+: Backlog (order of value; ✅ completed items; 🛑 parada natural confirmed; entries include commits, migrations, proofs)
+
+**Guardian-state.json current content:**
+```json
+{
+  "last_sweep_at": "2026-07-06T20:25:00.000Z",
+  "last_sweep_verdict": "7/7 all-green (wf_1dacd877 + guard-sweep.sh E2E)"
+}
+```
+
+**Contract &amp; Exit Semantics:**
+
+From `guardian-tick.ts` (lines 13–15, 37–43):
+```typescript
+// Exit codes:  0 = GREEN (nothing to do) · 1 = RED (real finding OR the guardian itself cannot
+// see — both become EXECUTOR items) · 10 = SWEEP_DUE (run guard-sweep.sh, then re-run with
+// --record-sweep &lt;verdict&gt; to stamp the state file).
+```
+
+From `guard-sweep.sh` (line 14, 62):
+```bash
+# Exit code = number of failing guards (0 = all green).
+```
+
+---
+
+## Summary
+
+**Cron Infrastructure:**  
+12 active scheduled jobs; watchdog every 5 min (health probes + Layer 2 escalation to `/tmp/openclaw-incidents`); nightly stages 3–5 AM BRT; QA sweep 04:00; daily pulse 07:05 (Groq, not Claude).
+
+**Telemetry:**  
+`infra_health_logs` table: 5 columns (id, service, status, event, metadata, last_seen_at); POSTed via Supabase REST (no explicit dedup—keeps history); used by watchdog (mcorch_claude_mem, mcorch_chroma), agent-daily-pulse, escalation tracking.
+
+**Notifications:**  
+Telegram via Bot API (`telegram.org/bot&lt;TOKEN&gt;/sendMessage`); token from `/home/ubuntu/.openclaw/secrets.json`; chat_id=5835174772 (Sovereign) or override; fallback n8n webhook to `127.0.0.1:18789/agents/engineer/incidents`; file inbox `/tmp/openclaw-incidents/` durable.
+
+**LLM Invocation:**  
+Groq llama-3.3-70b only (not Claude); via OpenAI-compatible endpoint; keyed from `user_api_keys.groq_api_key`; cost metered via Supabase RPC. **No Claude SDK or CLI found in cron/scripts**.
+
+**Loop State &amp; Knowledge:**  
+`autonomous-loop-charter.md` (67.7 KB; Malha Fechada v2); `guardian-state.json` (last sweep 2026-07-06, all-green); `guardian-tick.ts` &amp; `guard-sweep.sh` (exit codes 0=GREEN, 1=RED, 10=SWEEP_DUE; 7 guards re-executable).</result>
+<usage><subagent_tokens>54102</subagent_tokens><tool_uses>30</tool_uses><duration_ms>220574</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:02:52)*
+
+
+## 🤖 Claude *(01:02:54)*
+
+Exploração completa — achados decisivos: já existem **12 crons mecânicos** (watchdog */5, nightly stages, qa-sweep), padrão de telemetria pronto (`infra_health_logs` via REST), **canal Telegram operante** (token em `~/.openclaw/secrets.json`, chat do Sovereign) + inbox de incidentes OpenClaw — e **nenhuma invocação headless de Claude** existe ainda (crons usam Groq). Isso molda o design. Lançando o agente de arquitetura:
+
+## 🤖 Claude *(01:03:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Design MAPE-K loop architecture",
+  "subagent_type": "Plan",
+  "prompt": "Design an enterprise-grade MAPE-K (Monitor, Analyze, Plan, Execute over shared Knowledge) autonomic loop architecture for the MCORCH constellation-orchestra project. Root: /home/gcrUX/htdocs/constellation-orchestra. You are the architect; produce a detailed implementation plan (files, contracts, sequences). READ-ONLY \u2014 do not modify anything.\n\n## Problem (root cause)\nThe current \"/loop\" lives inside a Claude session: the LLM improvises pacing (ScheduleWakeup 270s\u21923300s ad-hoc), vigilance checks were inline scripts that broke (false alarm), and everything dies when the session closes. The Sovereign (owner) demands: Monitor+Analyze must be MECHANICAL and PERPETUAL (system cron, deterministic), the LLM only enters at Plan/Execute (cognitive work), the loop must be SELF-CORRECTING (a broken monitor is itself a first-class symptom), and all state must live in shared Knowledge (auditable).\n\n## Existing building blocks (REUSE, do not reinvent)\n1. **Mechanical sensors already built (exit-code contracts):**\n   - `scripts/qa/guardian-tick.ts` \u2014 T1 git sync \u00b7 T2 infra_health_logs errors 3h (col last_seen_at) \u00b7 T3 autopilot_cycles (col started_at) \u00b7 T4 sweep cadence via `.claude/context/guardian-state.json`. Exit 0=GREEN, 1=RED, 10=SWEEP_DUE. Has `--record-sweep <verdict>`.\n   - `scripts/qa/guard-sweep.sh` \u2014 7-guard regression battery (hermetic smokes + sentinels + IoC + drift + doctor), exit = number of failing guards. `--fast` skips 2 slow ones.\n2. **Cron layer:** 12 existing crontab entries (watchdog-mcorch.sh */5 with telemetry + Layer-2 escalation writing incident JSON to /tmp/openclaw-incidents/ + POST to OpenClaw gateway 127.0.0.1:18789/agents/engineer/incidents; qa-sweep 04:00; nightly stages 03/05/07h; agent-daily-pulse 07:05 which calls Groq LLM with cost metering).\n3. **Telemetry:** `infra_health_logs` (service, status, event, metadata jsonb, last_seen_at) via Supabase REST POST with SB_SECRET_KEY from .env. Simple INSERT, history kept.\n4. **Notification:** Telegram Bot API \u2014 token `jq -r '.keys.telegramBotToken' /home/ubuntu/.openclaw/secrets.json`, chat_id 5835174772 (Sovereign), pattern in scripts/morning-briefing.sh. Plus OpenClaw incident file inbox (durable) + gateway POST (best-effort).\n5. **Knowledge:** `.claude/context/autonomous-loop-charter.md` (67KB \u2014 the loop's protocol+backlog source of truth), `guardian-state.json`, the Knowledge Mesh (mcorch_nodes REST insert + embed-mcorch-node edge fn), HANDOFF.md.\n6. **NO headless Claude exists yet.** Cron LLM = Groq only. Claude Code CLI is available on the machine (`claude` binary \u2014 the interactive session runs on it); `claude -p \"<prompt>\"` headless invocation is POSSIBLE but is NEW infrastructure (auth via existing login; token cost; must be rate-limited/guarded).\n7. Project laws: Lei 1 materiality (never fabricate success), Lei 2 SOP-before-code (docs/processes/<slug>.md), granular commits, /security-review for migrations. The SOP for this feature will be docs/processes/autonomic-loop-mape-k.md.\n\n## Design requirements\n- **M (Monitor)**: system cron running guardian-tick every N minutes (choose N; consider existing */5 watchdog \u2014 avoid redundancy, guardian-tick covers DIFFERENT signals: git/infra-errors/autopilot/sweep-cadence) + guard-sweep on 6h cadence (triggered via tick exit 10 or its own cron entry \u2014 choose and justify). Every run writes a heartbeat row to infra_health_logs (service='guardian', event='tick', metadata={verdict,exit}).\n- **A (Analyze)**: mechanical classification of symptoms into: HEARTBEAT_MISSING (self-correction: the monitor itself died \u2014 detected how? a second cheap cron? the existing watchdog extended?), RED_FINDING, SWEEP_DUE, NEW_STATE (origin commits ahead / Fila changed), NOTHING. Where does analysis live \u2014 inside guardian-tick (already partially) or a separate analyzer script that reads telemetry? Keep it simple/deterministic.\n- **P+E (Plan/Execute, cognitive)**: on RED/NEW_STATE, escalation ladder: (level 1) Telegram alert to Sovereign with symptom + suggested action; (level 2, optional/gated) headless `claude -p` invocation with a bounded remediation prompt (budget/time-capped, logs transcript, NEVER auto-pushes without gates? or allowed to run the full closed-loop with commits?); (level 3) the interactive /loop session when open (it should READ the same Knowledge and pick up incidents from a queue instead of polling). Design the incident queue format (reuse /tmp/openclaw-incidents/? or a new .claude/context/incidents/ dir that survives reboot? or infra_health_logs rows as the queue?). Consider idempotency/dedup (same symptom shouldn't spam Telegram every 5 min \u2014 design a cooldown/dedup keyed on symptom hash with state in guardian-state.json or a new file).\n- **K (Knowledge)**: formalize guardian-state.json schema (last_sweep_at, last_sweep_verdict, last_tick_at, open_incidents[], notified{symptom_hash: ts}, mode). Single writer discipline? Charter stays the protocol doc; state file is the machine state.\n- **Self-correction requirements**: (a) guardian-tick crash/hang \u2192 detected within \u226415min and alerted; (b) guard-sweep failing repeatedly \u2192 escalation not spam; (c) cron removed/disabled \u2192 detected (how? heartbeat-absence check needs to run somewhere that is NOT the same cron \u2014 consider extending the EXISTING watchdog-mcorch.sh */5 to also check guardian heartbeat age in infra_health_logs, since watchdog is already battle-tested infrastructure).\n- **Session /loop v3 contract**: when the Sovereign runs /loop interactively, the session becomes the cognitive layer: reads state file + incident queue, works incidents/EXECUTOR items, and does NOT do its own polling ScheduleWakeup ticks for monitoring (the cron layer owns monitoring). ScheduleWakeup only as coarse fallback (e.g., 30-60min) or on pending cognitive work. Also define what the canonical /loop v3 prompt in the charter should say.\n- Everything zero-USD (self-hosted, existing infra) except optional headless Claude tokens (subscription \u2014 flag it as the Sovereign's call).\n\n## Deliverable\nA concrete implementation plan: (1) component diagram/flow in text; (2) exact files to create/modify with responsibilities (scripts/qa/guardian-tick.ts changes, new cron wrapper script(s) with locking [flock] and env loading pattern copied from existing cron entries, crontab lines to add, watchdog-mcorch.sh extension for heartbeat-absence, notification helper reuse, state schema JSON, SOP outline per Lei 2 with Operator/Sequence/Gates/Recovery/Success-signal); (3) escalation ladder with dedup/cooldown design; (4) headless-claude option design (bounded prompt, flags, safety rails) marked as GATED on Sovereign approval; (5) test/verification plan (how to prove each MAPE phase materially \u2014 simulate RED, kill the cron, check alert, etc.); (6) rollout order in small slices with the project's granular-commit convention. Be specific about file paths and reuse. Keep the total design lean \u2014 this must be maintainable by one person."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully.\nagentId: ac40d2c0edfa508cd (internal ID - do not mention to user. Use SendMessage with to: 'ac40d2c0edfa508cd', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ab8c4379-5c3c-4680-8780-9cbdc9717a69/tasks/ac40d2c0edfa508cd.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(01:03:45)*
+
+
+## 🤖 Claude *(01:03:45)*
+
+Enquanto o arquiteto desenha, incorporo o inventário de infra ao plano:
+
+## 🤖 Claude *(01:04:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/plans/dinovo-agora-foi-para-snazzy-crescent.md",
+  "old_string": "## Arquitetura MAPE-K proposta\n\n*(se\u00e7\u00f5es M/A/P/E/K detalhadas ap\u00f3s explora\u00e7\u00e3o da infra de cron/telemetria/notifica\u00e7\u00e3o existente e do Plan agent \u2014 em andamento)*",
+  "new_string": "## Invent\u00e1rio de infra existente (explora\u00e7\u00e3o 2026-07-06 \u2014 REUSAR, n\u00e3o reinventar)\n\n| Bloco | O que existe | Relev\u00e2ncia MAPE-K |\n|-------|--------------|-------------------|\n| **Cron mec\u00e2nico** | 12 entradas ativas: `watchdog-mcorch.sh */5` (probes + escala\u00e7\u00e3o L2), `qa-sweep 04:00`, nightly stages 03/05/07h, `agent-daily-pulse 07:05` (LLM Groq c/ custo medido), auto-publish */5, kanban-reconcile */15 | **M** \u2014 o padr\u00e3o de cron c/ env-loading + log j\u00e1 \u00e9 maduro; watchdog \u00e9 o lugar natural p/ detectar heartbeat ausente (self-correction) |\n| **Sensores prontos** | `guardian-tick.ts` (T1 git \u00b7 T2 infra erros 3h \u00b7 T3 autopilot \u00b7 T4 cad\u00eancia sweep; exit 0/1/10 + `--record-sweep`) \u00b7 `guard-sweep.sh` (7 guardas; exit = n\u00ba REDs; `--fast`) | **M/A** \u2014 os sensores determin\u00edsticos J\u00c1 existem; falta mov\u00ea-los da sess\u00e3o p/ cron |\n| **Telemetria** | `infra_health_logs` (service/status/event/metadata/last_seen_at) via REST POST; padr\u00e3o `write_health()` do watchdog | **K/A** \u2014 heartbeat do guardi\u00e3o vira linhas aqui; an\u00e1lise de aus\u00eancia l\u00ea daqui |\n| **Notifica\u00e7\u00e3o** | Telegram Bot API (token `~/.openclaw/secrets.json`, chat Sovereign 5835174772; padr\u00e3o em `morning-briefing.sh`) + inbox dur\u00e1vel `/tmp/openclaw-incidents/` + gateway OpenClaw `127.0.0.1:18789` | **E (n\u00edvel 1)** \u2014 alerta ao Sovereign sem c\u00f3digo novo de canal |\n| **Knowledge** | `autonomous-loop-charter.md` (protocolo, 67KB) \u00b7 `guardian-state.json` (last_sweep) \u00b7 Knowledge Mesh (mcorch_nodes) \u00b7 HANDOFF.md | **K** \u2014 formalizar schema do state file; charter segue como doc de protocolo |\n| **Headless LLM** | **N\u00e3o existe invoca\u00e7\u00e3o headless de Claude**; crons usam Groq. `claude` CLI presente na m\u00e1quina (sess\u00e3o atual roda nele) \u2192 `claude -p` \u00e9 vi\u00e1vel mas \u00e9 infra NOVA (custo/token/guard-rails) | **E (n\u00edvel 2)** \u2014 a remedia\u00e7\u00e3o aut\u00f4noma via headless \u00e9 poss\u00edvel mas GATED |\n\n## Arquitetura MAPE-K proposta\n\n*(design detalhado do Plan agent em andamento \u2014 ser\u00e1 consolidado abaixo)*"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/plans/dinovo-agora-foi-para-snazzy-crescent.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:10)*
+
+
+## 🤖 Claude *(01:04:10)*
+
+Inventário consolidado no plano. Aguardando o design do arquiteto (M/A/P/E/K, escada de escalação, auto-correção, fatias de rollout) — quando voltar, reviso, faço as perguntas-chave a você (ex.: nível de autonomia da remediação — só alerta Telegram vs. headless Claude gated) e finalizo o plano para aprovação.
+
+## 👤 User *(01:10:17)*
+
+<task-notification>
+<task-id>ac40d2c0edfa508cd</task-id>
+<tool-use-id>toolu_014j7YcfJg8hLSo4osYH1Tas</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ab8c4379-5c3c-4680-8780-9cbdc9717a69/tasks/ac40d2c0edfa508cd.output</output-file>
+<status>completed</status>
+<summary>Agent "Design MAPE-K loop architecture" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>The exploration is complete. I verified all building blocks in the live repo: `guardian-tick.ts` exit-code contract, `guard-sweep.sh`, the ubuntu-user crontab (watchdog */5, qa-sweep 04:00, nightly stages, daily-pulse 07:05), the watchdog's flock + telemetry + Layer-2 incident pattern, the Telegram pattern in `morning-briefing.sh`, the `infra_health_logs` schema (`event`/`metadata` added by migration `20260615170000`), the charter's canonical /loop prompt (lines ~219-238), and the SOP format (`docs/processes/schema-drift-audit.md`). Two latent defects found that the plan must fix (marked below). Here is the architecture.
+
+---
+
+# MAPE-K Autonomic Loop — Implementation Plan (MCORCH)
+
+## 0. Two real bugs found during exploration (must be fixed in Slice 2)
+
+1. **`--record-sweep` clobbers the state file.** `/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/guardian-tick.ts:41` does `writeFileSync(STATE_PATH, JSON.stringify({ last_sweep_at, last_sweep_verdict }))` — a whole-file overwrite. Any richer schema (incidents, cooldowns) dies on the next sweep record. Must become read-merge-write.
+2. **Self-feedback hazard in T2.** The design requires every tick to write a heartbeat row to `infra_health_logs`, and incidents to mirror there as `status='error'`. T2 queries `status=eq.error` in the last 3h — the guardian would eat its own error rows and lock into permanent RED. Rule: **everything the guardian subsystem writes uses `service='guardian'`, and T2 adds `&amp;service=neq.guardian`.** This one line is load-bearing.
+
+Also: `.claude/context/guardian-state.json` is **git-tracked** (`git ls-files` confirms). A cron writing `last_tick_at` every 5 minutes into a tracked file = permanently dirty tree. It must be untracked (`git rm --cached` + `.gitignore`) with the schema documented in the SOP.
+
+---
+
+## 1. Component diagram / flow
+
+```
+                       ┌──────────────────── KNOWLEDGE (K) ────────────────────┐
+                       │ .claude/context/guardian-state.json   (machine state, │
+                       │        single writer = guardian-tick.ts subcommands)  │
+                       │ .claude/context/incidents/INC-*.json  (durable queue) │
+                       │ infra_health_logs (service='guardian') (audit trail)  │
+                       │ autonomous-loop-charter.md            (protocol doc)  │
+                       └───────▲───────────────▲───────────────────▲───────────┘
+                               │               │                   │
+  cron */5 ──► guardian-tick-cron.sh ──► guardian-tick.ts --cron   │
+  (MONITOR)    flock + timeout 180s        M: T1 git · T2 infra    │
+                    │                          T3 autopilot ·      │
+                    │ exit 10                  T4 sweep · T5 wd    │
+                    ▼                      A: classify symptoms ──►│ write heartbeat,
+               guardian-sweep-runner.sh       {RED_FINDING,        │ open/refresh/auto-
+               (detached, own flock,           SWEEP_DUE,          │ resolve incidents,
+                timeout 30min)                 NEW_STATE,          │ dedup+cooldown
+                    │                          NOTHING}            │
+                    └─► guard-sweep.sh ─► tick --record-sweep ─────┘
+                                               │
+                       new incident (not deduped)
+                               │
+               ┌───────────────┼──────────────────────────────┐
+               ▼               ▼                              ▼
+  LEVEL 1 (always)      LEVEL 2 (GATED, mode=            LEVEL 3 (when open)
+  notify-telegram.sh    auto-remediate + budget)          interactive /loop v3
+  → Sovereign chat      guardian-remediate.sh             session reads state +
+  5835174772            → claude -p (bounded,             incidents/, works them
+                          diagnose-only tier A)           as EXECUTOR items,
+                                                          resolves via
+                                                          tick --resolve &lt;id&gt;
+
+  SELF-CORRECTION (independent process, battle-tested cron):
+  watchdog-mcorch.sh (*/5, already exists) + ~30 new lines:
+    reads infra_health_logs latest service='guardian' event='tick' row
+    age &gt; 15 min OR absent → Telegram (stamp-file cooldown 6h)
+                           + durable incident file INC-guardian-heartbeat.json
+  Mutual watch: tick's new T5 checks watchdog's own telemetry freshness (&gt;20min = RED).
+  Both crons dead simultaneously → residual risk accepted; morning-briefing silence
+  at 03:30 is the human-visible backstop (documented in SOP; systemd timer = future option).
+```
+
+**MAPE-K phase ownership**
+
+| Phase | Owner | Mechanical? |
+|---|---|---|
+| Monitor | `guardian-tick-cron.sh` (cron */5) + `guardian-sweep-runner.sh` (6h via T4) | Yes — deterministic, perpetual |
+| Analyze | `guardian-tick.ts --cron` (classification + dedup) · watchdog extension (HEARTBEAT_MISSING only) | Yes — pure rules, no LLM |
+| Plan+Execute | L1 Telegram → L2 `claude -p` (gated) → L3 interactive /loop v3 | Cognitive, on-demand only |
+| Knowledge | state JSON + incidents dir + `infra_health_logs` + charter | Auditable, single-writer discipline |
+
+**Key cadence decisions, justified**
+
+- **Tick N=5 min.** Matches the battle-tested watchdog cadence; zero redundancy (watchdog = container health, tick = git/infra-errors/autopilot/sweep — disjoint signals). Cost per run: 1 `git fetch` + 2 indexed REST reads + 1 REST insert (~3s). Only N=5 satisfies the "detect dead monitor ≤15 min" SLO: absence threshold = 15 min = 3 missed ticks, watchdog checks every 5 → detection at 15–20 min worst case. N=10 would force a 25–30 min threshold.
+- **Sweep is tick-driven (exit 10), not its own cron entry.** One scheduling authority; state stamped in one place; if a sweep dies before `--record-sweep`, the next tick re-fires it automatically (free retry). The runner is **detached with its own flock** so the tick lock releases immediately and heartbeats continue every 5 min during a 10-minute sweep (otherwise sweeps would trip the absence detector — this is why the runner must be a separate process).
+- **Analyze lives inside `guardian-tick.ts`, not a separate analyzer.** It already classifies (findings → RED/SWEEP_DUE); adding a second script reading telemetry would duplicate the PostgREST parsing that caused the 21:07 false alarm. Exception: HEARTBEAT_MISSING *cannot* be self-detected by a dead tick — it lives in the watchdog (different binary, different cron line, already proven).
+
+---
+
+## 2. Exact files to create / modify
+
+### CREATE `scripts/lib/notify-telegram.sh` (~35 lines)
+Single notification codepath, extracted from the proven `morning-briefing.sh` pattern (lines 60-87):
+- Usage: `notify-telegram.sh "&lt;message&gt;"`, honors `TG_CHAT_OVERRIDE`, default chat `5835174772`.
+- Token: `jq -r '.keys.telegramBotToken' /home/ubuntu/.openclaw/secrets.json`; missing token → exit 2 (never silent-pass, Lei 1).
+- Truncate to 4000 chars, plain-text JSON POST via `jq -n`, check HTTP 200, exit code = material result.
+- Consumers: guardian-tick.ts (`spawnSync`), watchdog extension, guardian-remediate.sh. `morning-briefing.sh` is NOT refactored now (avoid regression in working infra; note as follow-up).
+
+### MODIFY `scripts/qa/guardian-tick.ts` (the M+A brain; keep exit contract 0/1/10 intact — the charter references it)
+- **Fix the `--record-sweep` clobber**: read-merge-write; also accept `--fails N` so the sweep-runner reports RED sweeps through the single writer (opens/refreshes a `SWEEP_RED` incident, increments `sweep_consecutive_red`, resets on green).
+- **Fix T2 self-feedback**: append `&amp;service=neq.guardian` to the T2 query.
+- **New T5 (mutual watch)**: latest `infra_health_logs` row with `service=in.(mcorch_claude_mem,mcorch_chroma)` older than 20 min → RED finding `WATCHDOG_STALE` (watchdog writes every 5 min today, so 20 min = 4 missed).
+- **New `--cron` flag** — side-effects ONLY under this flag (interactive/charter usage stays read-only, contract unbroken). Under `--cron`, after computing findings:
+  1. **Heartbeat**: POST `infra_health_logs` `{service:'guardian', status:'healthy', event:'tick', metadata:{verdict:'GREEN|RED|SWEEP_DUE', exit, findings, behind, ahead, duration_ms}}`. Heartbeat is always `status:'healthy'` — it asserts "monitor alive"; the verdict lives in metadata (avoids T2 feedback and keeps absence-detection semantics clean).
+  2. **Classify** findings → symptom classes: `RED_FINDING` (T2/T3/T5/broken-check), `NEW_STATE` (T1 behind&gt;0, dedup key = origin HEAD sha), `SWEEP_DUE` (T4; handled by wrapper, no incident), `NOTHING`.
+  3. **Incident lifecycle** in `.claude/context/incidents/`: `symptom_hash = sha1(class + stable_key)` (stable_key excludes timestamps — e.g. `T2:vision-mcp:job_failed`). Existing open incident with same hash → bump `count`, `last_seen_at`. New hash → write `INC-&lt;utcstamp&gt;-&lt;hash8&gt;.json`, mirror row to telemetry (`service:'guardian', status:'error', event:'incident_open', metadata:{id, class, symptom_hash}`), and notify (see §3).
+  4. **Auto-resolve**: symptom no longer observed for a clean tick → mark incident `resolved`, mirror `event:'incident_resolved'`, move file to `incidents/archive/`. Specifically: a successful tick always auto-resolves an open `INC-guardian-heartbeat` (alive ⇒ symptom gone — the self-correcting handshake with the watchdog).
+- **New subcommands** (all preserve single-writer discipline — nothing else ever writes state/incidents):
+  - `--list-incidents` — table of open incidents (what /loop v3 runs at session start).
+  - `--resolve &lt;id&gt; --note "&lt;resolution&gt;"` — session closes an incident.
+  - `--consume-remediation-budget` — atomic daily counter check+increment; exit 1 when exhausted (used by Level 2).
+
+### Incident file schema (`.claude/context/incidents/INC-*.json`)
+```json
+{ "id": "INC-20260706T2140Z-a1b2c3d4", "class": "RED_FINDING",
+  "symptom_hash": "…", "symptom": "T2 infra error: vision-mcp job_failed",
+  "source": "tick|sweep|watchdog", "first_seen_at": "…", "last_seen_at": "…",
+  "count": 3, "details": ["raw finding lines"], "suggested_action": "…",
+  "status": "open|resolved", "resolved_at": null, "resolution": null,
+  "remediation_report": null }
+```
+Why this queue and not the alternatives: `/tmp/openclaw-incidents/` is ephemeral (reboot loses it) and owned by the OpenClaw engineer-agent contract; `infra_health_logs` rows as a queue would need status-mutation semantics on an append-only history table. A repo-local dir survives reboot, is trivially greppable by the session, and the audit trail still lands in telemetry via mirror rows. The dir is **gitignored** (machine state; resolutions worth remembering go to charter/HANDOFF as today).
+
+### `guardian-state.json` schema v2 (documented in the SOP; file untracked)
+```json
+{ "schema_version": 2,
+  "mode": "observe",
+  "last_tick_at": "…", "last_tick_verdict": "GREEN", "last_tick_exit": 0,
+  "last_sweep_at": "…", "last_sweep_verdict": "7/7 all-green",
+  "sweep_consecutive_red": 0,
+  "open_incidents": ["INC-…"],
+  "notified": { "&lt;symptom_hash&gt;": "2026-07-06T21:40:00Z" },
+  "remediate": { "day": "2026-07-06", "daily_count": 0, "max_per_day": 4 } }
+```
+`mode`: `observe` (Level 1 only) | `auto-remediate` (Level 2 armed) — set only by the Sovereign. `notified` entries pruned after 7 days by the tick.
+
+### CREATE `scripts/guardian-tick-cron.sh` (~30 lines — pattern copied from watchdog + qa-sweep-cron)
+```bash
+exec 200&gt;/tmp/mcorch-guardian-tick.lock; flock -n 200 || exit 0
+COMPOSE_DIR=/home/gcrUX/htdocs/constellation-orchestra
+cd "$COMPOSE_DIR"; set -a; source .env; set +a
+timeout 180 /home/ubuntu/.bun/bin/bun run scripts/qa/guardian-tick.ts --cron
+EXIT=$?
+[ "$EXIT" -eq 10 ] &amp;&amp; nohup "$COMPOSE_DIR/scripts/qa/guardian-sweep-runner.sh" &gt;/dev/null 2&gt;&amp;1 &amp;
+if [ "$EXIT" -ne 0 ] &amp;&amp; [ "$EXIT" -ne 1 ] &amp;&amp; [ "$EXIT" -ne 10 ]; then
+  # tick crashed/timed out (e.g. 124) — post a crash row; absence detector is the alerter
+  curl -s -X POST "$SUPABASE_URL/rest/v1/infra_health_logs" ... \
+    -d "{\"service\":\"guardian\",\"status\":\"error\",\"event\":\"tick_crash\",\"metadata\":{\"exit\":$EXIT}}"
+fi
+```
+(Crash rows are `event='tick_crash'`, not `event='tick'` — they don't count as heartbeats, so persistent crashing still trips the ≤15 min absence alarm. `service='guardian'` keeps them out of T2.)
+
+### CREATE `scripts/qa/guardian-sweep-runner.sh` (~25 lines)
+```bash
+exec 200&gt;/tmp/mcorch-guard-sweep.lock; flock -n 200 || exit 0
+cd /home/gcrUX/htdocs/constellation-orchestra; set -a; source .env; set +a
+timeout 1800 bash scripts/qa/guard-sweep.sh; FAILS=$?
+bun run scripts/qa/guardian-tick.ts --record-sweep "cron $( [ $FAILS -eq 0 ] &amp;&amp; echo all-green || echo "${FAILS} RED" )" --fails "$FAILS"
+```
+Verdict recorded even on RED (so T4 doesn't re-fire every 5 min — retry lands at the next 6h boundary; the RED itself persists as an open incident, which is the correct escalation channel).
+
+### MODIFY `scripts/watchdog-mcorch.sh` (append ~30 lines after Layer-2 block — the ONLY change to battle-tested code, purely additive)
+- GET `infra_health_logs?service=eq.guardian&amp;event=eq.tick&amp;order=last_seen_at.desc&amp;limit=1`, parse `last_seen_at` with python3 (same parsing stack the repo's crons already use — never regex-parse JSON inline; that was the 21:07 lesson).
+- Age &gt; 900s **or zero rows** → `bash scripts/lib/notify-telegram.sh "🔴 GUARDIAN HEARTBEAT MISSING (…min) — cron dead/hung. Check: crontab -l | grep guardian; tail /home/ubuntu/logs/mcorch-guardian.log"`, gated by stamp-file cooldown `/tmp/mcorch-guardian-absence-notified` (6h); write durable fixed-name incident `.claude/context/incidents/INC-guardian-heartbeat.json` only if absent (dedup by filename); telemetry row `{service:'guardian', status:'error', event:'heartbeat_missing'}`.
+- This covers all three failure shapes with one check: tick crashing (crash rows ≠ heartbeats), tick hung (killed by timeout, no heartbeat), **cron line removed/disabled** (no rows at all). The check runs in a different process on a different crontab line — the monitor of the monitor shares no code path with the monitor.
+
+### Crontab line to ADD (ubuntu's crontab, alongside the existing 12)
+```
+*/5 * * * * /home/gcrUX/htdocs/constellation-orchestra/scripts/guardian-tick-cron.sh &gt;&gt; /home/ubuntu/logs/mcorch-guardian.log 2&gt;&amp;1
+```
+
+### MODIFY `.gitignore` + one-time `git rm --cached .claude/context/guardian-state.json`
+```
+.claude/context/guardian-state.json
+.claude/context/incidents/
+```
+
+### MODIFY `.claude/context/autonomous-loop-charter.md` — MODO GUARDIÃO §a-c rewritten + new canonical /loop v3 prompt (see §5 below).
+
+### CREATE `docs/processes/autonomic-loop-mape-k.md` (Lei 2 — written BEFORE code)
+Outline, mirroring the house SOP format (`schema-drift-audit.md`):
+- **Born from**: the ScheduleWakeup-improvised /loop v2 (270s→3300s ad-hoc pacing) + the 21:07 false alarm — monitoring by LLM is neither perpetual nor deterministic.
+- **Operator**: Human = Sovereign (crontab install, mode flag, Telegram receipt). Agent = cron (M+A) / claude session (P+E).
+- **Sequence** (each step w/ material success criterion): tick every 5 min → heartbeat row · exit 10 → detached sweep → record · symptom → incident file + mirror + Telegram (cooldown) · watchdog absence check ≤15 min · session start = `--list-incidents` · close = `--resolve`.
+- **Gates**: T2 must exclude `service=guardian` (self-feedback) · heartbeat always `status=healthy` · single writer = tick subcommands only · Level 2 requires `mode=auto-remediate` AND budget AND class ∈ {RED_FINDING, SWEEP_RED}.
+- **Recovery paths**: heartbeat-missing runbook (crontab check → log tail → manual tick run) · repeated RED sweep · state file corrupted (tick treats unparseable state as `{}` and rebuilds — already the current behavior at line 34).
+- **Success signal**: `infra_health_logs` shows `service='guardian' event='tick'` rows every 5 min for 24h with zero absence alerts; one simulated RED produced exactly one Telegram.
+
+### CREATE (Slice 6, GATED) `scripts/guardian-remediate.sh` + `scripts/lib/remediation-prompt.md` — see §4.
+
+---
+
+## 3. Escalation ladder with dedup/cooldown
+
+| Level | Trigger | Action | Anti-spam |
+|---|---|---|---|
+| **L1 Telegram** | New incident (hash not in `notified` within cooldown) | `notify-telegram.sh` — symptom + count + suggested action + incident id + "reply /loop to engage" | `notified[symptom_hash]` cooldown: **6h** RED_FINDING/SWEEP_RED · **12h** NEW_STATE (dedup key = origin sha, so genuinely-new commits always notify once) · heartbeat-missing uses the watchdog's own 6h stamp file |
+| **L1 re-ping** | Incident open &gt; 24h | One daily reminder ("STILL OPEN, 24h+, count=N") | Re-arm = cooldown expiry; never per-tick |
+| **L2 headless** (GATED) | New RED_FINDING/SWEEP_RED incident AND `mode=auto-remediate` AND daily budget left | `guardian-remediate.sh &lt;incident-file&gt;` (§4) | Budget `max_per_day:4` via `--consume-remediation-budget`; one attempt per symptom_hash per day; never fires for HEARTBEAT_MISSING (a dead monitor must not be the thing spawning LLMs) |
+| **L3 session** | Sovereign opens /loop v3 | Reads state + queue, incidents become EXECUTOR items, closes via `--resolve` | n/a — human-initiated |
+
+Repeated sweep failure (requirement b): `sweep_consecutive_red` increments per RED sweep; the SWEEP_RED incident is refreshed (count++), not re-notified until cooldown; at 3 consecutive REDs the re-ping message escalates severity wording. T4 keeps its 6h cadence regardless — retries are bounded by design.
+
+---
+
+## 4. Headless-claude option (Level 2) — GATED on Sovereign approval
+
+Marked explicitly: **costs subscription tokens; enabling it = flipping `mode` to `auto-remediate` in guardian-state.json — the Sovereign's call.** Cron user is `ubuntu`; `claude` 2.1.201 at `/home/ubuntu/.local/bin/claude` with existing login, so cron invocation works with `HOME=/home/ubuntu` exported in the script.
+
+`scripts/guardian-remediate.sh &lt;incident.json&gt;`:
+1. Gate chain (each logs its refusal): `mode == auto-remediate` → `--consume-remediation-budget` exits 0 → class allowed → no other remediation running (flock `/tmp/mcorch-remediate.lock`).
+2. **Tier A — diagnose-only (the only tier built in v1):**
+```bash
+timeout 1200 /home/ubuntu/.local/bin/claude -p "$(render remediation-prompt.md + incident JSON)" \
+  --model claude-sonnet-4-5 --max-turns 30 --output-format json \
+  --allowedTools "Read" "Grep" "Glob" \
+    "Bash(bun run scripts/qa/*)" "Bash(git status)" "Bash(git log:*)" "Bash(git diff:*)" \
+    "Bash(bash scripts/qa/guard-sweep.sh --fast)" \
+  &gt; /home/ubuntu/logs/mcorch-remediate/&lt;incident-id&gt;.json
+```
+   No Edit/Write tools, no `--dangerously-skip-permissions`, read-only bash allowlist. Prompt contract (in `scripts/lib/remediation-prompt.md`): "Diagnose only. End with `DIAGNOSIS:` / `PROPOSED_FIX:` / `CONFIDENCE: high|medium|low`. Never claim success without material proof (Lei 1)."
+3. Post-run: extract the final message from the JSON transcript, write it into the incident's `remediation_report` (via a tick subcommand or by the remediate script owning only that field — document the exception in the SOP), Telegram a ≤15-line summary, post telemetry `{service:'guardian', event:'remediation', metadata:{incident, turns, cost_hint}}`.
+4. **Tier B (full closed-loop: Edit + granular commits, NO push, `/security-review` still human-gated)** is *documented in the SOP as a future GO*, not built. Rationale: the incident classes we can see today (infra errors, autopilot failures, sweep REDs) need diagnosis quality proven first; auto-committing on an unproven diagnoser violates Lei 1's spirit.
+
+---
+
+## 5. /loop v3 session contract + canonical charter prompt
+
+Session responsibilities change: **the cron layer owns M+A; the session is P+E only.** No per-tick ScheduleWakeup monitoring; ScheduleWakeup only 30–60 min coarse fallback when cognitive work is pending. Replacement canonical prompt for the charter (keeps the stateless doctrine of the current one):
+
+```
+/loop Você é o MCORCH Master Execution Agent — camada COGNITIVA (Plan+Execute) do
+laço autonômico MAPE-K. Monitor+Analyze são MECÂNICOS e PERPÉTUOS (cron guardian-tick
+*/5 + guard-sweep 6h) — NUNCA faça polling próprio de monitoramento. No início e a
+cada retomada: leia .claude/context/autonomous-loop-charter.md + rode
+`bun run scripts/qa/guardian-tick.ts --list-incidents` + git fetch + Fila Sovereign.
+· INCIDENTES ABERTOS têm prioridade: cada um é item EXECUTOR (diagnóstico → fix →
+  prova material Lei 1 → commit granular) e fecha com
+  `guardian-tick.ts --resolve &lt;id&gt; --note "&lt;prova&gt;"`.
+· Sem incidentes: MODO EXECUTOR no backlog desbloqueado (BoK Gate → SOP Lei 2 →
+  código → prova → /security-review se migration → /handoff ao fechar Fatia).
+· Sem incidentes E sem backlog: NÃO vigie (o cron vigia) — ScheduleWakeup 30-60min
+  só para re-checar a fila de incidentes; sem relatório se nada mudou.
+· SEMPRE: portão Sovereign → Fila e pule; topo da Fila em 1 linha em todo reporte;
+  NUNCA fabrique busywork; parar SÓ com "stop" ou janela ~95% (/handoff antes).
+```
+
+---
+
+## 6. Test / verification plan (material proof per phase)
+
+| # | Phase | Test | Material success criterion |
+|---|---|---|---|
+| V1 | M | Run `guardian-tick-cron.sh` manually as ubuntu | REST GET shows fresh `service=guardian event=tick` row; exit code logged |
+| V2 | M | Launch it twice concurrently | Second run exits 0 immediately (flock skip line in log) |
+| V3 | M | Run tick with `SUPABASE_URL=http://127.0.0.1:1 ` | Exit 1 in wrapper path; no false heartbeat; crash row only on non-{0,1,10} |
+| V4 | A | `curl` a fake error row (`service='qa-simulated-red'`) into `infra_health_logs`, run tick `--cron` | Incident file created, mirror row present, exactly ONE Telegram; second run within cooldown → count++ and NO second Telegram |
+| V5 | A | Delete the fake row, run tick | Incident auto-resolved → `incidents/archive/`, `incident_resolved` mirror row |
+| V6 | Sweep | Hand-set `last_sweep_at` 7h back (test-only exception to single-writer), run wrapper | Exit 10 → runner spawns detached → verdict merge-recorded (other state keys intact = clobber fix proven), sweep telemetry row |
+| V7 | Self-corr (a,c) | Comment the guardian crontab line for 25 min | Watchdog Telegram alert within ≤20 min + `INC-guardian-heartbeat.json` exists; restore cron → next tick auto-resolves it; no second alert within 6h cooldown |
+| V8 | Self-corr (b) | Force a RED sweep (temporarily break one smoke's env) twice | One Telegram at first RED; second RED = count++ only; `sweep_consecutive_red=2` |
+| V9 | L2 gate | `mode=observe` → run `guardian-remediate.sh` with synthetic incident | Exits "gated", zero claude invocation; then `mode=auto-remediate` → transcript JSON exists, `git status` clean (read-only proven), budget counter=1 |
+| V10 | L3 | Open /loop v3 with V4's incident present | Session lists it, resolves via `--resolve`, state + archive consistent |
+| V11 | 24h soak | Leave running one day | 288±sweep-gaps heartbeat rows, zero absence alerts, zero spurious Telegrams |
+
+---
+
+## 7. Rollout order (granular commits, Lei 2 first)
+
+1. **Slice 0 — SOP**: `docs/processes/autonomic-loop-mape-k.md` (full doc incl. state schema v2 + incident schema). *Commit: `docs(sop): autonomic-loop MAPE-K — Lei 2 before code`.*
+2. **Slice 1 — notification helper**: `scripts/lib/notify-telegram.sh` + manual send proof. *Commit.*
+3. **Slice 2 — brain**: `guardian-tick.ts` — merge-write fix, T2 `neq.guardian`, T5, `--cron` (heartbeat + incidents + dedup + Telegram), `--list-incidents`, `--resolve`, `--fails`; plus `.gitignore` + `git rm --cached guardian-state.json`. Verify V4/V5. *2 commits: (a) fixes [clobber + T2 exclusion — standalone bugfixes], (b) --cron analyzer + subcommands.*
+4. **Slice 3 — cron layer**: `guardian-tick-cron.sh` + `guardian-sweep-runner.sh` committed; then crontab line installed; V1/V2/V3/V6 + verify heartbeat rows flowing before proceeding. *Commit + crontab (execution step, Sovereign-visible).*
+5. **Slice 4 — self-correction**: watchdog-mcorch.sh extension (only after heartbeats verifiably flowing, else instant false alarm on deploy). V7. *Commit.*
+6. **Slice 5 — charter v3**: rewrite MODO GUARDIÃO + canonical prompt; HANDOFF note. V10. *Commit.*
+7. **Slice 6 — GATED L2**: `guardian-remediate.sh` + prompt template, shipped with `mode=observe` (dormant); V9 dry-run; enabling = Sovereign flips the flag. *Commit, explicitly marked GATED.*
+
+No migrations are needed (the `event`/`metadata` columns already exist via `20260615170000_infra_health_logs_metadata.sql`), so `/security-review` is not mandatory — but Slice 6 touches LLM-with-shell-access and deserves one anyway; recommend it.
+
+---
+
+### Critical Files for Implementation
+- /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/guardian-tick.ts — becomes the M+A brain (--cron, incidents, dedup, subcommands; fix clobber at line 41 and T2 self-feedback at line 74)
+- /home/gcrUX/htdocs/constellation-orchestra/scripts/watchdog-mcorch.sh — additive heartbeat-absence extension (the monitor's monitor)
+- /home/gcrUX/htdocs/constellation-orchestra/scripts/guardian-tick-cron.sh — NEW cron wrapper (flock/timeout/env pattern from qa-sweep-cron.sh + watchdog)
+- /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md — /loop v3 canonical prompt + MODO GUARDIÃO rewrite
+- /home/gcrUX/htdocs/constellation-orchestra/docs/processes/autonomic-loop-mape-k.md — NEW SOP (Lei 2, written first; hosts state/incident schemas)
+
+Supporting: /home/gcrUX/htdocs/constellation-orchestra/scripts/lib/notify-telegram.sh (new), /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/guardian-sweep-runner.sh (new), /home/gcrUX/htdocs/constellation-orchestra/scripts/guardian-remediate.sh (new, gated).</result>
+<usage><subagent_tokens>68463</subagent_tokens><tool_uses>15</tool_uses><duration_ms>399294</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:10:33)*
+
+
+## 🤖 Claude *(01:10:35)*
+
+O design está completo e forte — inclusive achou **2 bugs latentes reais** no que shipei hoje (o `--record-sweep` sobrescreve o state file inteiro; e o T2 leria os próprios erros do guardião = RED permanente — corrigidos no plano). Antes de finalizar, duas decisões são genuinamente suas:
+
+## 🤖 Claude *(01:10:45)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "N\u00edvel 2 (auto-remedia\u00e7\u00e3o via Claude headless): quando um incidente RED surge, o cron pode invocar `claude -p` DIAGN\u00d3STICO-ONLY (read-only, sem Edit/commit, budget 4/dia, timeout 20min) e te mandar o diagn\u00f3stico no Telegram. Custa tokens da assinatura quando ligado. Construir agora?",
+      "header": "N\u00edvel 2 LLM",
+      "options": [
+        {
+          "label": "Construir dormante (Recomendado)",
+          "description": "Slice 6 entra no rollout com mode=observe (desligado); ligar depois = flipar 1 flag no state file. Zero custo at\u00e9 voc\u00ea armar."
+        },
+        {
+          "label": "S\u00f3 alertas Telegram (v1 enxuta)",
+          "description": "Pula o Slice 6 inteiro. Incidente \u2192 Telegram \u2192 voc\u00ea abre /loop. Menos c\u00f3digo; L2 vira follow-up futuro."
+        },
+        {
+          "label": "Construir E j\u00e1 armar",
+          "description": "Slice 6 + mode=auto-remediate desde o dia 1 \u2014 todo RED novo gera diagn\u00f3stico autom\u00e1tico (gasta tokens sem voc\u00ea pedir)."
+        }
+      ],
+      "multiSelect": false
+    },
+    {
+      "question": "Papel da sess\u00e3o /loop interativa depois que o cron assumir Monitor+Analyze: como voc\u00ea prefere operar no dia a dia?",
+      "header": "Sess\u00e3o /loop",
+      "options": [
+        {
+          "label": "Sob demanda (Recomendado)",
+          "description": "Cron vigia 24/7 e te alerta no Telegram; voc\u00ea abre /loop s\u00f3 quando h\u00e1 incidente ou diretiva. Sem sess\u00e3o eterna pendurada."
+        },
+        {
+          "label": "Sess\u00e3o sempre viva",
+          "description": "Al\u00e9m do cron, manter a sess\u00e3o /loop v3 aberta com fallback de 30-60min re-checando a fila de incidentes \u2014 pega incidentes sem voc\u00ea abrir nada, mas depende do terminal vivo."
+        }
+      ],
+      "multiSelect": false
+    }
+  ]
+}
+```
