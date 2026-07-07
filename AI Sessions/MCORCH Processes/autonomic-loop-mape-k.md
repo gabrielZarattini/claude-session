@@ -107,3 +107,10 @@ State ilegível/corrompido → tick trata como `{}` e reconstrói (fail-safe já
 - ❌ Escrita no state/incidentes fora dos subcomandos do tick (exceção única: `remediation_report`).
 - ❌ L2 disparando para monitor-morto ou sem budget/flock.
 - ❌ `git`-trackear state/incidentes (árvore perpetuamente suja).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
