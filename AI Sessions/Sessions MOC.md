@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1916
-> * **Sessões do Claude**: 1870
+> * **Total de Sessões Registradas**: 1926
+> * **Sessões do Claude**: 1880
 > * **Sessões do Gemini**: 46
 
 ---
@@ -82,7 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-06 - agent-abca924b2456f0ff7]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-aaf6d109d71d8cc92]]` - *2026-07-06*
 *   `[[2026-07-06 - agent-aa693f551a0db9a3d]]` - *2026-07-06*
-*   *... e mais 1864 sessões nessa categoria.*
+*   *... e mais 1874 sessões nessa categoria.*
 
 ---
 
@@ -1754,17 +1754,27 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-06 - agent-a9cc1a6607f97bad7]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a96920d277767fd36]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a96084da1a1bc4921]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a9559c3952d63b6fd]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a7c0a6744ffad738e]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a79e7f5e7d0a31c04]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a6fed0c57434a2619]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a6ed5dd50f9ca5c0e]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a6cf83bd7fa3e9633]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a63c3983484030ad5]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a5b50200bb317d974]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a5a9c95c86c42a33d]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a58d6c50c15099215]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a56786aa7348be35d]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a5014f43bf1d98d12]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a4fb9e620f719317d]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a3c10b42a21eee3fc]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a365a47cc42944290]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a33248f50594146ba]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a323fab5912e9b163]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a320f71461436a655]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a22c611bda3e1ef77]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a19704211797d4107]]` (ClaudeSessions)
+*   `[[2026-07-06 - agent-a18acb77dbdbc6a94]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-a0184792be790a9ca]]` (ClaudeSessions)
 *   `[[2026-07-06 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` (ClaudeSessions)
 *   `[[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]` (ClaudeSessions)
