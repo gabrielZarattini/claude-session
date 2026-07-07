@@ -189,6 +189,56 @@ mudança de integração Higgsfield; drift = exit 1):
 - **OTD-SPACES-006** — refs por PATH + re-assinatura on-read (mata o rot de 365d/7d).
 - **OTD-SPACES-007** — conector per-user do **MCP oficial Higgsfield** (`mcp.higgsfield.ai/mcp`): handshake+tools/list funcionam com `Bearer <api_key>` BYOK (provado), mas tools de CONTA (generate/balance/media) exigem OAuth de conta (`openid email offline_access`). Caminho viável provado: `registration_endpoint` público + grants `authorization_code`+`refresh_token` + device-flow (`fnf-device-auth.higgsfield.ai`) ⇒ fluxo "Conectar Higgsfield" per-user com refresh token no Vault (classe `social_credentials`). Destrava 30+ modelos (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro, Soul 2.0) atrás de UMA integração com schema auto-descritivo. **BoK amendment obrigatória antes do código** (Closed-Loop Step 3.5).
 
+### Amendment it.2a — project-dispatch + catálogo-completo no ledger (2026-07-07, ANTES do código — Amendment 14 FR-SPACES-024)
+
+**Contexto:** a superfície consolidada (`/dashboard/spaces`, corpo Canvas Studio, `vm_canvas_projects`) migra do
+deduct-after-success para o ledger-first. Mapa vivo: `wf_b0473f31` (5 leitores). D1 = **Opção A** (aditiva).
+
+**Operator (manual hoje):** rodar um nó pago na UI consolidada → débito só após sucesso (sem row antes, sem refund
+automático); recuperação de vídeo órfão = cron `canvas-video-watchdog.sh` (só `vm_canvas_executions`).
+
+**Sequence (it.2a — servidor, provável sem UI):**
+1. **Migration `generations` project-dispatch (D1-A, tudo aditivo):**
+   `vm_canvas_projects` ganha âncora `UNIQUE (id, user_id)` (metadata-only; PK(id) já implica) →
+   `generations.space_id` DROP NOT NULL + `project_id uuid` + FK composta `(project_id, owner_id) →
+   vm_canvas_projects(id, user_id)` ON DELETE CASCADE + CHECK `num_nonnulls(space_id, project_id) = 1` +
+   índice parcial. `begin_space_generation` re-criada com `p_project_id uuid DEFAULT NULL` (**param names
+   existentes intocados** — T6a-f/T8 do smoke sobrevivem verbatim), guard XOR interno, INSERT do project_id;
+   DROP da assinatura antiga (ambiguidade PostgREST) + **trailer REVOKE/GRANT re-emitido** (lição grant-drift).
+   `finalize_space_generation` = ZERO mudança (keyed por node_run_id, surface-agnóstica).
+2. **Edge fn `canvas-execute`:** dispatch ledger vira `(space_id || project_id) && node_run_id`; ownership 404
+   pre-check na tabela certa (spaces OU vm_canvas_projects, ambas owner-scoped); catálogo-completo do slice =
+   resolução de custo fail-closed por `CREDIT_COSTS` (reusa `resolveHiggsfieldSoulKey` + `provider/model`;
+   chave ausente → 422 pré-débito) substituindo o set-membership `SPACES_IMAGE_MODELS`; braço `style_transfer`
+   (o único post-proc que a UI emite); magic_prompt com contexto de campanha (lookup `vm_canvas_projects →
+   campaigns` do path legado); `scene_compose` coalesce `input_image_1/2/layout` → reference list; **GAP-8**:
+   refund/response usam `effectiveCost` (não `creditCost`).
+3. **Testes na MESMA mudança:** mirror-parity (count vídeo dinâmico · scalars ancorados no bloco CREDIT_COSTS ·
+   describe catálogo-completo · pin do dispatch guard) · fixtures negativas do smoke viram sentinelas permanentes
+   (`qa_never_supported` / `qa/never-a-model`) ANTES do widening · P-series (project 422/404/402/idempotência/
+   cross-surface-confusion 404) · **gate single-money-path** (run consolidado ⇒ 0 rows `vm_canvas_executions` +
+   0 ações legadas em `mcoin_transactions` — fecha OTD-SPACES-012).
+4. `/security-review` independente (money path) → apply via Management API + registro no ledger → deploy fn →
+   smoke completo zero-custo.
+
+**it.2b (cliente — fatia seguinte):** chokepoint `useCanvasExecute` minta `node_run_id = crypto.randomUUID()` por
+tentativa + envia `project_id`; dual-read HistoryTab/AssetsTab/StatusBar (union `vm_canvas_executions ∪
+generations`); settle de vídeo async via poller portado (`watchVideoGeneration`) — sem mudar publication realtime.
+**it.2c (watchdog):** 2º passe do `canvas-video-watchdog.sh` sobre `generations` (`operation_id not null`, BYOK
+per-owner na consulta Higgsfield; failed/timeout → `finalize` error+refund idempotente; completed → entrada de
+resgate service-role no `higgsfield-webhook` por `node_run_id` + `Bearer SB_SECRET_KEY` [hash-only impede replay]);
+`self-heal-spaces.sh` ganha `&operation_id=is.null` ANTES de qualquer cron (blind-refund só para engines síncronos).
+
+**Verification gates:** G-P1 ladder 401→422→404→402 contra id de `vm_canvas_projects` · G-P2 idempotência
+duplicate:true zero-2º-débito · G-P3 single-money-path · G-P4 cross-surface 404 · G-P5 mirror-parity verde ·
+G-P6 (it.2c) row stale semeada → recuperada com refund exato.
+
+**Recovery:** migration é aditiva (rollback = DROP COLUMN/CONSTRAINT novos + re-CREATE RPC antiga); edge fn com
+deploy anterior preservado; nenhum dado existente muda (6 rows fixtures satisfazem o XOR).
+
+**Success signal:** smoke completo verde incl. P-series + single-money-path; nenhuma transação legada nova após
+o flip do cliente (it.2b).
+
 ---
 
 %% --- PROJECT METADATA START --- %%
