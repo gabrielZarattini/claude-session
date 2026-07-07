@@ -1,4 +1,4 @@
-# MCORCH autonomous loop execution com charter e handoff
+# [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff|MCORCH autonomous loop execution com charter e handoff]]
 **Date:** 2026-07-07 | **Session ID:** `ab8c4379-5c3c-4680-8780-9cbdc9717a69`
 
 ---
@@ -16689,3 +16689,16 @@ Não — **está tudo certo**: esse bash em execução é exatamente o **Monitor
 Se em algum momento quiser derrubá-lo (ex.: para encerrar a sessão limpa), é um comando: eu rodo `TaskStop` no `b4uy1zhux` — ou ele morre sozinho quando a sessão fechar (e aí a vigilância continua 100% com o cron + Telegram, que não dependem da sessão).
 
 **📌 Topo da Fila:** registro apps TikTok/YT/Pinterest · conector Higgsfield (5min) · UX-Explorer estreia 05:37 (digest no seu Telegram).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - agent-afda494dc1ce9a2f9]]
+> * **Próxima Sessão**: [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%
