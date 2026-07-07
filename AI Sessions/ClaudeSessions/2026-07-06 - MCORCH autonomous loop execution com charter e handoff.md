@@ -1,4 +1,4 @@
-# MCORCH autonomous loop execution com charter e handoff
+# [[2026-07-07 - MCORCH autonomous loop execution com charter e handoff|MCORCH autonomous loop execution com charter e handoff]]
 **Date:** 2026-07-06 | **Session ID:** `ab8c4379-5c3c-4680-8780-9cbdc9717a69`
 
 ---

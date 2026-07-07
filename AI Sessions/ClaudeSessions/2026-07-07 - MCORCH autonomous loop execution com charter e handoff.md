@@ -1,4 +1,4 @@
-# [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff|MCORCH autonomous loop execution com charter e handoff]]
+# MCORCH autonomous loop execution com charter e handoff
 **Date:** 2026-07-07 | **Session ID:** `ab8c4379-5c3c-4680-8780-9cbdc9717a69`
 
 ---
@@ -16619,15 +16619,73 @@ Verificando `inotifywait` (event-driven puro) e armando o monitor da fila:
 > Next wakeup scheduled for 03:14:00 (in 3619s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
 > ```
 
----
+## 👤 User *(06:59:18)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+tem algo de errado com bash em execução?
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-06 - agent-afda494dc1ce9a2f9]]
-> * **Próxima Sessão**: [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(06:59:46)*
+
+
+## 🤖 Claude *(06:59:46)*
+
+Deixa eu verificar materialmente o que está rodando:
+
+## 🤖 Claude *(06:59:46)*
+
+
+🛠️ **Tool Call**: `TaskList`
+```json
+{}
+```
+
+> **Tool Result (TaskList)** - ✅ Success
+>
+> ```
+> #1 [completed] Fatia 0 — SOP autonomic-loop-mape-k.md (Lei 2)
+> #2 [completed] Fatia 1 — notify-telegram.sh + prova de envio
+> #3 [completed] Fatia 2 — guardian-tick.ts: bugfixes + --cron + subcomandos + toggle
+> #4 [completed] Fatia 3 — wrappers cron + crontab + V1-V6
+> #5 [completed] Fatia 4 — extensão do watchdog (heartbeat-absence) + V7
+> #6 [completed] Fatia 5 — charter v3 (/loop v3) + HANDOFF note
+> #7 [completed] Fatia 6 — guardian-remediate.sh (L2 ARMADO) + /security-review + V9
+> #8 [completed] Fatia 7 — UX-Explorer nightly + V11
+> ```
+
+## 🤖 Claude *(06:59:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ps aux | grep -E \"sleep 20|incidents\" | grep -v grep | head -4; echo \"---\"; ls /home/gcrUX/htdocs/constellation-orchestra/.claude/context/incidents/INC-*.json 2>/dev/null | wc -l | xargs echo \"incidentes abertos:\"",
+  "description": "Check running monitor process + queue state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ubuntu   3310064  0.0  0.0   7120  3328 ?        Ss   02:12   0:00 /bin/bash -c source /home/ubuntu/.claude/shell-snapshots/snapshot-bash-1783379405448-ffartt.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'DIR=/home/gcrUX/htdocs/constellation-orchestra/.claude/context/incidents mkdir -p "$DIR" seen=$(ls "$DIR"/INC-*.json 2>/dev/null | sort) while true; do   sleep 20   cur=$(ls "$DIR"/INC-*.json 2>/dev/null | sort)   new=$(comm -13 <(printf '"'"'%s\n'"'"' "$seen") <(printf '"'"'%s\n'"'"' "$cur"))   if [ -n "$new" ]; then     while IFS= read -r f; do       [ -n "$f" ] && echo "🔴 INCIDENTE NOVO na fila: $(basename "$f")"     done <<< "$new"   fi   seen=$cur done' < /dev/null && pwd -P >| /tmp/claude-5e90-cwd
+> ubuntu   3531186  0.0  0.0   5224  1740 ?        S    03:59   0:00 sleep 20
+> ---
+> incidentes abertos: 0
+> ```
+
+## 🤖 Claude *(07:00:08)*
+
+
+## 🤖 Claude *(07:00:08)*
+
+Não — **está tudo certo**: esse bash em execução é exatamente o **Monitor da fila de incidentes** que armamos há pouco (o "onEvent" que você pediu). O que você está vendo:
+
+| O que | Estado |
+|---|---|
+| PID `3310064` — o loop `while true; sleep 20; …` | É o Monitor `b4uy1zhux` vigiando `.claude/context/incidents/` — **por design ele nunca termina** (persistente até o fim da sessão) |
+| Consumo | **0.0% CPU, ~3MB RAM** — ele dorme 20s, faz um `ls`, compara e volta a dormir |
+| Silêncio atual | Correto: **0 incidentes abertos** → zero eventos emitidos (ele só fala quando um `INC-*.json` novo aparece) |
+
+É a natureza de um watcher event-driven: o processo fica vivo esperando, em vez de eu acordar de tempos em tempos para perguntar. "Rodando para sempre em silêncio" aqui é o comportamento saudável — o análogo de um `tail -f`.
+
+Se em algum momento quiser derrubá-lo (ex.: para encerrar a sessão limpa), é um comando: eu rodo `TaskStop` no `b4uy1zhux` — ou ele morre sozinho quando a sessão fechar (e aí a vigilância continua 100% com o cron + Telegram, que não dependem da sessão).
+
+**📌 Topo da Fila:** registro apps TikTok/YT/Pinterest · conector Higgsfield (5min) · UX-Explorer estreia 05:37 (digest no seu Telegram).
