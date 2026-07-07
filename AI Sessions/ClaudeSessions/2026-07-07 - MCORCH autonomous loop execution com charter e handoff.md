@@ -1,4 +1,4 @@
-# MCORCH autonomous loop execution com charter e handoff
+# [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff|MCORCH autonomous loop execution com charter e handoff]]
 **Date:** 2026-07-07 | **Session ID:** `ab8c4379-5c3c-4680-8780-9cbdc9717a69`
 
 ---
@@ -16820,3 +16820,16 @@ If this event is something the user would act on now, send a PushNotification. R
 > === OPENROUTER key no .env? (nomes só) ===
 > OPENROUTER_API_KEY=
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-07 - Diagnosticar falha de render no video-bridge]]
+> * **Próxima Sessão**: [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%
