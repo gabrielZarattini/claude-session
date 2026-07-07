@@ -57,3 +57,10 @@ First green: 2026-06-03 post-remediation (8 checks green; ledger 96==96).
 **Any prod hotfix MUST be back-filled as a migration in the same session.** The async incident was a hotfix that
 skipped this — that omission, not the rename itself, is what let the divergence persist silently. If you can't write
 the migration now, you can't make the hotfix now.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
