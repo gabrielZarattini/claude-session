@@ -1216,3 +1216,16 @@ Perfect. Now I have all the information I need to make an accurate assessment. L
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - agent-acc4e2ecd1c13bfd7]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-ae23c4478cf3f2955]]
+%% --- TIMELINE END --- %%
