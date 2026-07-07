@@ -1845,3 +1845,564 @@ Gotcha conhecido das aspas — vou por arquivo Python e checar o nome certo da s
 >    4/4: 04/07 18:05 → 05/07 05:05 (11.0h)
 >    4/4: 06/07 00:05 → 06/07 03:05 (3.0h)
 > ```
+
+## 🤖 Claude *(05:08:46)*
+
+
+## 🤖 Claude *(05:08:46)*
+
+
+## 🤖 Claude *(05:09:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md",
+  "content": "# CONTEXTO CONSOLIDADO \u2014 TradeUX, sess\u00e3o 2026-07-07 (~05:10 UTC)\n\nPergunta do dono: \"parece ter bastante oportunidade no cockpit, ficou bastante tempo tudo verde\" \u2014 h\u00e1 oportunidade ACION\u00c1VEL?\n\n## Fatos verificados ao vivo (nesta sess\u00e3o)\n\n### Evento novo n\u00ba 1 \u2014 PRIMEIRA PROMO\u00c7\u00c3O real do motor\n- `promotionJob` promoveu a trilha `consistencia` em 2026-07-06T22:59:58Z: 20 sells (round-trips), realizedPnl +$1,18 (crit\u00e9rio: \u226520 round-trips, net realizado >0, \u226550% s\u00edmbolos n\u00e3o-negativos).\n- 43s depois o `groupSupervisorJob` ATIVOU o baseline REAL: id2 \"Baseline RSI Buy BTCUSDT\" + id3 Sell (log: \"ATIVOU ... (regime=range (n\u00e3o-bear))\"). Grupos agora: baseline 2/2 ATIVO, farm 3/6 (vendas), trend 0/8, paper 60/60.\n- id2 real: `RSI_14_1m<25 && REGIME!=='bear' && REGIME!=='trend' && FLOW fresco(<180s) && imbalance>-0.4` \u2192 MARKET BUY BTCUSDT, quantity=MIN_NOTIONAL \u00d71 (~$10-12). id3 real: `RSI_14_1m>75 && REGIME!=='trend'` \u2192 MARKET SELL MIN_NOTIONAL.\n- Paper `consistencia` (a prova): `RSI_14_1m<25 && !=bear && !=trend` nos 4 s\u00edmbolos, SEM flow gate. PnL por s\u00edmbolo: LTC +$0,60, ADA +$0,39, BNB +$0,15, **BTC s\u00f3 +$0,05** \u2014 ou seja ~96% do edge provado veio das alts; o que foi armado real \u00e9 S\u00d3 BTC (com gate extra de flow).\n- Paper consistencia completo: realized +$1,18 / unrealized **\u2212$1,16** / total +$0,02 (zero); 24 buys/20 sells, 85% win; fees $0,88 (fee comeu ~43% do gross).\n\n### Evento novo n\u00ba 2 \u2014 o \"verde\" foi real e longo (timeline do regime.log, desde 01/jul)\n- ADA: 68h em trend (45,6%), janela cont\u00ednua de **65h** (03/jul 10h \u2192 06/jul 03h), 7 transi\u00e7\u00f5es.\n- BNB: 48h cont\u00ednuas em trend (04/jul 18h \u2192 06/jul 18h), 3 transi\u00e7\u00f5es.\n- BTC: 40h em trend (janela de 33h em 04-05/jul + 7h em 06/jul), 9 transi\u00e7\u00f5es.\n- LTC: 40h em trend picotadas em 4 janelas, 15 transi\u00e7\u00f5es (whipsaw).\n- Breadth: 4/4 trend por 14h (11h em 04-05/jul + 3h em 06/jul); \u22653/4 por 40h.\n- Golden crosses INTACTOS nos 4 (LTC 29/jun, ADA 01/jul, BTC 02/jul, BNB 03/jul); smaAbove=true nos 4; margens fast/slow: BTC +2,9%, LTC +3,0%, BNB +3,2%, ADA +12,1%.\n- AGORA (07/jul ~05h): regime **range 4/4** (ADX esfriou: BTC 18,9; LTC 19,8; BNB 19,4; ADA 19,9), BTC $63.097 (caiu de ~$64.500 na noite de 06/jul).\n\n### Dado mais duro \u2014 paper de trend PERDEU durante o verde\nAs trilhas [PAPER] de trend rodaram ligadas durante todo o verde e fecharam NEGATIVAS, sem posi\u00e7\u00e3o aberta agora:\n- `trendstate` (entra em REGIME==='trend'): \u2212$0,064 realized, 6 rt, 33% win.\n- `trendbreadth` (entra com \u22653/4 trend): \u2212$0,004 realized, 7 rt, 43% win.\n- Confirma ao vivo o backtest 900d: entrada por estado ADX \u00e9 ruim (compra tarde, sai devolvendo); holdout do motor trend atual \u22122,8%/trade.\n\n### Resto do paper (totais: realized +$0,38, unrealized \u2212$2,98, total \u2212$2,60)\n- `farmnl`: total \u2212$0,92 (saco submerso, 1 rt).\n- `mr15`: total \u2212$1,63 (40% win) \u2014 pior trilha.\n- `slopegate`/`macro`: sem round-trips (n\u00e3o aparecem no report).\n\n### Estado real (dinheiro de verdade)\n- Equity $149,37 USDT, 100% caixa, ZERO trade real desde 21/jun (\u00faltima ordem #264). HALT=false, sources=[].\n- Prote\u00e7\u00f5es: cap di\u00e1rio \u22125% (auto-resume, piso duro \u221212%), teto $50/ordem, 20% equity/ordem, Farm $25/s\u00edmbolo, riskGuard, bot\u00e3o de p\u00e2nico.\n- Agente LLM parado de prop\u00f3sito (desde 29/jun). Fase 4 observation: 49 registros [fase4-observe] no funnel.log (armador disparou na sa\u00edda do bear).\n- Cockpit BTC agora: EV 1m gross +0,038% / net \u22120,162% (breakeven 0,2%); flow imbalance \u22120,4245 \u2192 **baseline VETADO pelo flow gate neste momento** (\"fluxo em capitula\u00e7\u00e3o: baseline BTC veta o dip\").\n- Patterns (gravador, n grande): rsi_oversold n=1500, hitRate ~48-52%, avgPct ~0 \u2014 1m sem edge re-confirmado.\n\n## Priores relevantes (validados em sess\u00f5es anteriores)\n- Backtest trend 900d/12 moedas: l\u00f3gica atual net-negativa no holdout (\u22122,8%/trade, IC exclui 0); \"re-armar no flip de regime\" REFUTADO (pior). Valor real do motor = preserva\u00e7\u00e3o de capital em bear.\n- 1m taker: refutado 2\u00d7 (backtest + journal vivo). \u00danico fio honesto: id2-como-MAKER no 15m (backtest net+ no holdout +0,188%/trade, IC [0,015%, 0,379%] \u2014 no fio; assume fill garantido = otimista).\n- Playbook do dono: re-engajar trading real agressivo s\u00f3 em bull SUSTENTADO + GO expl\u00edcito do dono; grandfather (`PROMOTION_GRANDFATHER=slopegate` etc.) \u00e9 decis\u00e3o DELE. Claude N\u00c3O vira HALT nem arma trading sozinho.\n- Capital $149 = mesmo com edge, renda \u00e9 centavos; dono pivotou pra freelance (2026-07-06); bot \u00e9 lab de gra\u00e7a + combust\u00edvel do pr\u00f3ximo bull.\n\n## Acesso (read-only!) para verifica\u00e7\u00e3o\n- API: `TOKEN=$(cat /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/token.txt)`; `curl -s http://127.0.0.1:8090/api/<rota> -H \"Authorization: $TOKEN\"` (header CRU, sem Bearer). Rotas: /analysis/regime-status, /analysis/paper, /analysis/cockpit, /system/halt, /system/supervisor, /system/promotions.\n- DB (read-only): `sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && P=$(grep -E \"^DB_PWD=\" .env | cut -d= -f2-); N=$(grep -E \"^DB_NAME=\" .env | cut -d= -f2-); U=$(grep -E \"^DB_USER=\" .env | cut -d= -f2-); docker compose exec -T db mysql -u\"$U\" -p\"$P\" \"$N\" -e \"<SQL>\"'` \u2014 tabelas: automations, orderTemplates, actions, orders (filtrar isTestnet=0!), paperOrders, paperPositions, regimeStates.\n- Logs: `sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose exec -T backend cat /app/logs/<arquivo>'` \u2014 regime.log, supervisor.log, funnel.log, flow.log, signals.log, A2.log (automa\u00e7\u00e3o id2).\n- Klines p\u00fablicas Binance (sem auth): `curl -s \"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=40\"`.\n- C\u00f3digo: /home/gcrux-tradeux/tradeux/backend/src/jobs/promotionJob.js, groupSupervisorJob.js, regimeJob.js, beholder.js (ler como ubuntu ok).\n- Arquivos j\u00e1 coletados: /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/{regime-full.log,paper.json,cockpit.json,automations.json,supervisor.json,promotions.json,regime-status.json}\n\n## REGRAS PARA AGENTES\n- READ-ONLY absoluto: N\u00c3O tocar em HALT, .env, automa\u00e7\u00f5es (nada de PATCH/POST exceto login se precisar), N\u00c3O parar/reiniciar containers, N\u00c3O colocar ordens. S\u00f3 GET/SELECT/cat.\n- N\u00e3o commitar nada, n\u00e3o editar arquivos do repo.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:10:35)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'cockpit-opportunity-audit',\n  description: 'Auditar ao vivo se o \"verde\" do cockpit \u00e9 oportunidade acion\u00e1vel \u2014 4 lentes + 3 c\u00e9ticos adversariais',\n  phases: [\n    { title: 'Lentes', detail: '4 an\u00e1lises independentes sobre os dados vivos' },\n    { title: 'C\u00e9ticos', detail: '3 refutadores adversariais sobre as conclus\u00f5es' },\n  ],\n}\n\nconst CTX = '/tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md'\n\nconst LENS_SCHEMA = {\n  type: 'object',\n  properties: {\n    conclusao: { type: 'string', description: 'Conclus\u00e3o principal em 2-4 frases (pt-BR)' },\n    evidencias: { type: 'array', items: { type: 'string' }, description: 'Fatos NOVOS verificados por voc\u00ea (com n\u00fameros), n\u00e3o repeti\u00e7\u00e3o do contexto' },\n    recomendacao: { type: 'string', description: 'A\u00e7\u00e3o recomendada (ou \"nada\") com justificativa curta' },\n    confianca: { type: 'string', enum: ['alta', 'media', 'baixa'] },\n    riscos: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['conclusao', 'evidencias', 'recomendacao', 'confianca', 'riscos'],\n}\n\nconst SKEPTIC_SCHEMA = {\n  type: 'object',\n  properties: {\n    alvo: { type: 'string' },\n    veredito: { type: 'string', enum: ['REFUTADO', 'SOBREVIVE', 'PARCIAL'] },\n    argumento: { type: 'string', description: 'O ataque mais forte que voc\u00ea montou e o que aconteceu com ele' },\n    contra_exemplos: { type: 'array', items: { type: 'string' }, description: 'Contra-exemplos concretos com n\u00fameros/fontes' },\n    confianca: { type: 'string', enum: ['alta', 'media', 'baixa'] },\n  },\n  required: ['alvo', 'veredito', 'argumento', 'contra_exemplos', 'confianca'],\n}\n\nconst COMMON = `Leia PRIMEIRO o contexto consolidado em ${CTX} (use Read). Voc\u00ea est\u00e1 numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) est\u00e3o no contexto. REGRA ABSOLUTA: read-only \u2014 nenhum PATCH/POST (exceto re-login se o token expirar), nenhuma ordem, nenhum restart, nenhum arquivo do repo editado. Trabalhe com DADOS (colete voc\u00ea mesmo o que faltar), n\u00e3o com opini\u00e3o. Responda em pt-BR. Seu texto final \u00e9 dado bruto para o orquestrador, n\u00e3o mensagem ao usu\u00e1rio.`\n\nphase('Lentes')\nconst lenses = await parallel([\n  () => agent(`${COMMON}\n\nLENTE 1 \u2014 ESTRUTURA DE MERCADO: o \"verde\" de 03-06/jul \u00e9 uma virada sustentada (sa\u00edda real do bear) ou mais um chop/whipsaw?\nColete klines p\u00fablicas da Binance (1d e 4h, 30-60 velas) para BTCUSDT/LTCUSDT/BNBUSDT/ADAUSDT e avalie com n\u00fameros: (a) pre\u00e7o vs SMA200-1h e vs SMA50/200 di\u00e1rios \u2014 a estrutura di\u00e1ria confirma ou o golden cross 1h \u00e9 s\u00f3 bounce dentro de um downtrend di\u00e1rio? (b) higher-highs/higher-lows nos \u00faltimos 30d? (c) o rally que gerou os golden crosses (que % subiu do fundo, quando foi o fundo)? (d) volume confirma? (e) drawdown do topo do ciclo. Crit\u00e9rio do playbook: \"bull SUSTENTADO, n\u00e3o pico/flip isolado\". D\u00ea veredito: sustentada / chop / cedo-demais-para-dizer, com os n\u00fameros que sustentam.`, { label: 'lente:estrutura', phase: 'Lentes', schema: LENS_SCHEMA, effort: 'high' }),\n\n  () => agent(`${COMMON}\n\nLENTE 2 \u2014 AUDITORIA DA PROMO\u00c7\u00c3O da trilha \"consistencia\" (a 1\u00aa promo\u00e7\u00e3o real do motor). A promo\u00e7\u00e3o \u00e9 estatisticamente honesta e o que ela armou faz sentido?\nVerifique: (a) leia backend/src/jobs/promotionJob.js \u2014 o crit\u00e9rio exato implementado (o que conta como round-trip, o net usado \u00e9 realized-only?); (b) puxe do DB os paperOrders da consistencia (WHERE name/automationId das trilhas consistencia) e recompute: net realizado por s\u00edmbolo, distribui\u00e7\u00e3o dos 20 round-trips no TEMPO (foram concentrados no rally 03-06/jul? isso \u00e9 regime-depend\u00eancia), tamanho m\u00e9dio do ganho por trade vs fee; (c) o problema do descasamento: a prova veio ~96% das alts mas o real armado \u00e9 S\u00d3 BTC (+ flow gate extra que o paper n\u00e3o tem) \u2014 a promo\u00e7\u00e3o transfere a prova? (d) unrealized \u2212$1,16 com 4 posi\u00e7\u00f5es abertas: o crit\u00e9rio realized-only \u00e9 enganoso aqui? (e) estat\u00edstica: 20 round-trips com avg ~$0,06/trade \u2014 IC bootstrap simples do net m\u00e9dio cruza zero? Veredito: promo\u00e7\u00e3o honesta / falso-positivo prov\u00e1vel / honesta-mas-n\u00e3o-transfere.`, { label: 'lente:promocao', phase: 'Lentes', schema: LENS_SCHEMA, effort: 'high' }),\n\n  () => agent(`${COMMON}\n\nLENTE 3 \u2014 RISCO OPERACIONAL do baseline REAL armado (id2/id3 ativas desde 06/jul 23:00 UTC, primeira automa\u00e7\u00e3o de COMPRA real ativa desde 21/jun). Quantifique o pior caso:\n(a) leia backend/src/beholder.js e o caminho de execu\u00e7\u00e3o \u2014 a id2 tem cooldown/anti-refire? Se RSI_14_1m fica <25 por 20 ticks seguidos, ela coloca 20 ordens ou 1? (procure LOCK, LAST_ORDER, cooldown, throttle); (b) com que frequ\u00eancia hist\u00f3rica o gatilho completo dispara? (use o gravador: rsi_oversold n=1500 em ~11 dias no 1m, mas o gatilho real exige regime range/mixed + flow imbalance>-0.4 \u2014 estime disparos/dia; o log A2.log tem hist\u00f3rico de execu\u00e7\u00f5es da automa\u00e7\u00e3o 2); (c) pior dia: N compras de MIN_NOTIONAL (~$10-12 MARKET) \u2014 os tetos ($50/ordem, 20% equity, cap di\u00e1rio \u22125% com piso \u221212%, riskGuard) seguram o qu\u00ea exatamente? Qual o m\u00e1ximo te\u00f3rico de exposi\u00e7\u00e3o BTC que a id2 pode acumular num dia? (d) a id3 (sell RSI>75) fecha a posi\u00e7\u00e3o \u2014 mas se o regime virar 'trend', a id3 fica gateada (!=trend) e a posi\u00e7\u00e3o fica presa? Quem vende nesse caso? (e) o restart do backend preserva o isActive? Veredito: risco bounded-ok / risco-de-aten\u00e7\u00e3o / desarmar-recomendado, com n\u00fameros.`, { label: 'lente:risco', phase: 'Lentes', schema: LENS_SCHEMA, effort: 'high' }),\n\n  () => agent(`${COMMON}\n\nLENTE 4 \u2014 MAPA DE A\u00c7\u00d5ES CANDIDATAS: dado tudo (verde real de 40-65h nas alts, golden crosses de p\u00e9, promo\u00e7\u00e3o consistencia, baseline real armado, paper trend negativo AO VIVO durante o verde, regime agora range 4/4, capital $149, dono pivotou pra freelance), qual \u00e9 o conjunto de a\u00e7\u00f5es com melhor EV? Avalie CADA candidata com dados a favor/contra e um score honesto:\n(1) NADA \u2014 manter observa\u00e7\u00e3o (a m\u00e1quina j\u00e1 virou sozinha o que tinha que virar);\n(2) GRANDFATHER slopegate (armar compras reais de trend agora) \u2014 decis\u00e3o do dono; contraste com: paper trend negativo no verde, holdout \u22122,8%/trade, regime esfriou pra range;\n(3) expandir a consistencia real pras ALTS (onde a prova veio) \u2014 o que exigiria (novas automa\u00e7\u00f5es reais = money-path = gate QA/TL + GO do dono), EV esperado honesto em $ (com o realized paper de ~$1,18/2 semanas em 4 s\u00edmbolos como teto);\n(4) subir o size da id2 real (MIN_NOTIONAL\u2192mais) \u2014 prematuro?\n(5) montar o experimento id2-como-MAKER 15m em paper (o \u00fanico fio net+ do backtest) \u2014 custo ~0, mede fill-rate real;\n(6) alguma coisa no paper que valha ligar/desligar (mr15 est\u00e1 \u2212$1,63 e sangrando \u2014 desligar trilha perdedora? slopegate/macro sem round-trips \u2014 por qu\u00ea? investigue rapidamente).\nPriorize por EV\u00d7custo\u00d7risco. LEMBRE: Claude n\u00e3o vira HALT nem grandfather sozinho; recomenda\u00e7\u00f5es s\u00e3o para o DONO decidir.`, { label: 'lente:acoes', phase: 'Lentes', schema: LENS_SCHEMA, effort: 'high' }),\n])\n\nconst [estrutura, promocao, risco, acoes] = lenses\nconst lensSummary = JSON.stringify({ estrutura, promocao, risco, acoes }, null, 1)\nlog('Lentes conclu\u00eddas \u2014 lan\u00e7ando c\u00e9ticos adversariais')\n\nphase('C\u00e9ticos')\nconst skeptics = await parallel([\n  () => agent(`${COMMON}\n\nC\u00c9TICO 1 \u2014 alvo: \"h\u00e1 oportunidade acion\u00e1vel agora\". As 4 lentes conclu\u00edram isto:\n${lensSummary}\n\nSua miss\u00e3o: REFUTAR qualquer recomenda\u00e7\u00e3o de a\u00e7\u00e3o que as lentes tenham feito (exceto \"nada\"). Para cada a\u00e7\u00e3o recomendada, monte o ataque mais forte com dados vivos (colete o que precisar). Padr\u00f5es de erro a procurar: regime-depend\u00eancia (edge que s\u00f3 existiu no rally 03-06/jul), n pequeno vestido de signific\u00e2ncia, custo/fee ignorado, \"verde no cockpit\" confundido com EV, a\u00e7\u00e3o cujo upside em $ \u00e9 irrelevante (capital $149) vs custo de aten\u00e7\u00e3o do dono que agora foca em freelance. Se uma a\u00e7\u00e3o SOBREVIVER ao seu melhor ataque, diga explicitamente e por qu\u00ea.`, { label: 'cetico:acionavel', phase: 'C\u00e9ticos', schema: SKEPTIC_SCHEMA, effort: 'high' }),\n\n  () => agent(`${COMMON}\n\nC\u00c9TICO 2 \u2014 alvo: \"a promo\u00e7\u00e3o da consistencia \u00e9 confi\u00e1vel e o baseline real armado \u00e9 seguro\". Conclus\u00f5es das lentes:\n${lensSummary}\n\nSua miss\u00e3o: atacar DOS DOIS LADOS e dizer qual sobrevive: (a) ataque \"a promo\u00e7\u00e3o \u00e9 falso-positivo\" \u2014 n=20, realized-only ignorando unrealized \u2212$1,16, prova das alts transferida pro BTC, edge concentrado no rally; (b) ataque \"o baseline real armado \u00e9 perigoso\" \u2014 procure um cen\u00e1rio CONCRETO em que a id2/id3 real perde mais do que os tetos sugerem (gaps, posi\u00e7\u00e3o presa quando regime vira trend e a id3 gateia, MARKET slippage, multi-fill, restart) usando o c\u00f3digo real (backend/src/beholder.js, riskGuard em exchange/ordersController, dailyCapJob). Se os dois ataques falharem, o veredito \u00e9 SOBREVIVE com o porqu\u00ea. Seja espec\u00edfico: arquivo:linha quando citar c\u00f3digo.`, { label: 'cetico:promocao', phase: 'C\u00e9ticos', schema: SKEPTIC_SCHEMA, effort: 'high' }),\n\n  () => agent(`${COMMON}\n\nC\u00c9TICO 3 \u2014 alvo duplo sobre a estrutura de mercado: (a) a tese \"o verde de 03-06/jul \u00e9 virada sustentada \u2192 hora de armar trend real\"; (b) a tese oposta \"\u00e9 s\u00f3 whipsaw, ignorar\". Conclus\u00f5es das lentes:\n${lensSummary}\n\nAtaque as DUAS com dados de mercado que voc\u00ea mesmo coletar (klines p\u00fablicas 1d/4h/1w, 60-90 velas, dos 4 s\u00edmbolos + talvez ETHUSDT/total-proxy). Contra (a): estrutura di\u00e1ria ainda bearish? rally de X% em 10 dias ap\u00f3s queda de Y% \u00e9 bear-market-rally cl\u00e1ssico? ADX 1h esfriou pra range=fato. Contra (b): golden crosses 1h nos 4 + 65h de trend na ADA + smaAbove com margem crescente n\u00e3o acontecem em qualquer bounce; quanto tempo desde o \u00faltimo evento assim (procure no regime-full.log do scratchpad + regimeStates do DB)? Qual tese sobrevive melhor, e qual TESTE OBJETIVO (verific\u00e1vel nos dados do pr\u00f3prio sistema) separaria as duas nas pr\u00f3ximas 1-2 semanas?`, { label: 'cetico:estrutura', phase: 'C\u00e9ticos', schema: SKEPTIC_SCHEMA, effort: 'high' }),\n])\n\nreturn { lenses: { estrutura, promocao, risco, acoes }, skeptics: skeptics.filter(Boolean) }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wyestzd28
+> Summary: Auditar ao vivo se o "verde" do cockpit é oportunidade acionável — 4 lentes + 3 céticos adversariais
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/subagents/workflows/wf_8a3650df-445
+> Script file: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/workflows/scripts/cockpit-opportunity-audit-wf_8a3650df-445.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/workflows/scripts/cockpit-opportunity-audit-wf_8a3650df-445.js"} to iterate without resending the script.)
+> Run ID: wf_8a3650df-445
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/workflows/scripts/cockpit-opportunity-audit-wf_8a3650df-445.js", resumeFromRunId: "wf_8a3650df-445"}) — completed agents return cached results.
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(05:10:44)*
+
+
+## 🤖 Claude *(05:10:44)*
+
+
+## 🤖 Claude *(05:10:45)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Auditoria do \"verde\" no cockpit",
+  "summary": "Dono viu oportunidade/tudo verde; coleta ao vivo + workflow adversarial pra veredito de acionabilidade"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Auditoria do "verde" no cockpit". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(05:10:48)*
+
+
+🛠️ **Tool Call**: `Monitor`
+```json
+{}
+```
+
+> **Tool Result (Monitor)** - ❌ Error
+>
+> ```
+> <tool_use_error>InputValidationError: Monitor failed due to the following issue:
+> The required parameter `description` is missing
+> 
+> This tool's schema was not sent to the API — it was not in the discovered-tool set derived from message history. Without the schema in your prompt, typed parameters (arrays, numbers, booleans) get emitted as strings and the client-side parser rejects them. Load the tool first: call ToolSearch with query "select:Monitor", then retry this call. For reference, this tool's input schema is: {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"description":{"description":"Short human-readable description of what you are monitoring (shown in notifications).","type":"string"},"timeout_ms":{"description":"Kill the monitor after this deadline. Default 300000ms, max 3600000ms. Ignored when persistent is true.","default":300000,"type":"number","minimum":1000},"persistent":{"description":"Run for the lifetime of the session (no timeout). Use for session-length watches like PR monitoring or log tails. Stop with TaskStop.","default":false,"type":"boolean"},"command":{"description":"Shell command or script. Each stdout line is an event; exit ends the watch.","type":"string"},"ws":{"description":"WebSocket to open. Each text frame is an event; binary frames are reported as a placeholder line. Socket close ends the watch. Cannot be combined with command.","type":"object","properties":{"url":{"type":"string"},"protocols":{"type":"array","items":{"type":"string","pattern":"^[!#$%&'*+.^_`|~0-9A-Za-z-]+$"}}},"required":["url"],"additionalProperties":false}},"required":["description","timeout_ms","persistent"],"additionalProperties":false}</tool_use_error>
+> ```
+
+## 🤖 Claude *(05:11:14)*
+
+
+## 🤖 Claude *(05:11:14)*
+
+Enquanto os céticos trabalham, o resumo do que **já é fato verificado** (o veredito adversarial completo chega em alguns minutos):
+
+## O que aconteceu de verdade — você viu certo, e a máquina reagiu sozinha
+
+**1. O "verde" foi real e longo.** Não foi o whipsaw de 6/jul: desde 01/jul a ADA ficou **65 horas seguidas** em trend, BNB 48h, BTC 33h, e houve **11h com os 4 símbolos verdes** em 04–05/jul. Os golden crosses SMA50/200 seguem de pé nos 4 símbolos, com preço acima das médias.
+
+**2. A máquina "virou sozinha" pela primeira vez** — o evento que esperávamos desde o motor de autonomia de 24/jun:
+- Ontem às 22:59 UTC o `promotionJob` **promoveu a trilha `consistencia`** (RSI 25/75): cruzou o critério com 20 round-trips e +$1,18 líquido realizado no paper, 85% de acerto.
+- 43 segundos depois o supervisor **ativou o Baseline REAL** (compra e venda de BTC por RSI). É a primeira automação de **compra real** armada desde 21/jun. Ela ainda não comprou nada — e neste exato momento o gate de fluxo está vetando o dip (imbalance −0,42). A ordem, se sair, é mínima (~$10–12), coberta pelos tetos ($50/ordem, cap diário −5%, piso −12%).
+
+**3. Mas o lado frio dos dados, antes de animar:**
+- As trilhas paper de **trend** estavam ligadas durante TODO o verde e mesmo assim **perderam** (trendstate −$0,06 com 33% win; trendbreadth −$0,00 com 43% win). Surfar o flip de ADX segue não pagando, ao vivo — igual ao backtest.
+- O regime **esfriou de volta pra range 4/4** hoje de madrugada (ADX ~19 nos quatro). O verde de agora é estrutura construtiva (médias cruzadas), não força em curso.
+- Da prova da `consistencia`, ~96% do lucro veio das **alts** (LTC/ADA/BNB) — e o que existe armado real é só o **BTC**, justamente o menor contribuidor.
+
+Lancei 4 lentes + 3 céticos adversariais sobre tudo isso (estrutura de mercado com klines frescas, auditoria estatística da promoção, risco operacional do baseline armado, e o mapa de ações candidatas). Assim que fecharem, trago o veredito: o que é oportunidade de verdade, o que é miragem, e o que eu recomendo você decidir.
+
+## 👤 User *(05:27:12)*
+
+<task-notification>
+<task-id>wyestzd28</task-id>
+<tool-use-id>toolu_016qrFCkMN7MDK6WeYur99B3</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/tasks/wyestzd28.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Auditar ao vivo se o "verde" do cockpit é oportunidade acionável — 4 lentes + 3 céticos adversariais" completed</summary>
+<result>{"lenses":{"estrutura":{"conclusao":"O \"verde\" de 03-06/jul foi um bounce de bear-market de 5-6 dias, não uma virada sustentada. A estrutura DIÁRIA segue de baixa nos 4 símbolos: preço abaixo da SMA50d e da SMA200d em todos, SMA50d abaixo da SMA200d (alinhamento de death cross) por −10,8% a −29,5%, e o rally do BTC morreu num lower high (64.700) abaixo tanto da SMA50d (66.555) quanto dos pivôs de junho (65.622/67.292), após lows descendentes (62.272→58.115→57.800). Volume NÃO confirma (BTC −20%, BNB −37% na semana do rally vs média 30d) e o golden cross 1h já está frágil (preço abaixo da SMA50-1h nos 4; ADX esfriou pra range 4/4). Veredito: CHOP/bounce dentro de downtrend — critério \"bull SUSTENTADO\" do playbook NÃO atendido.","evidencias":["(a) Preço vs SMAs diárias — TODOS abaixo: BTC $63.054 = −5,3% da SMA50d ($66.555) e −15,5% da SMA200d ($74.652); LTC −5,3%/−23,4%; BNB −5,0%/−15,2%; ADA −4,8%/−32,9%. SMA50d &lt; SMA200d nos 4 (BTC −10,8%, BNB −10,8%, LTC −19,1%, ADA −29,5%) — regime diário é death-cross, o golden cross é só no 1h.","(a2) 1h: preço ainda acima da SMA200-1h (BTC +2,8%, BNB +2,5%, LTC +0,8% — quase encostando, ADA +8,0%), mas JÁ abaixo da SMA50-1h nos 4 (BTC −0,1%, BNB −0,7%, LTC −2,1%, ADA −3,5%) → momentum de curto prazo rolando pra baixo; o cross 1h de LTC está a &lt;1% de ser desfeito.","(b) HH/HL 30d — BTC: pivôs de alta 67.292 (15/jun) → 65.622 (22/jun) → 64.700 (06/jul) = LOWER HIGHS; pivôs de baixa 62.272 → 58.115 → 57.800 (01/jul) = LOWER LOWS. BNB idem (632,9→602,3→593,5 e 570,8→540,6→537,25). LTC: lower high (46,15 &lt; 46,36 de 16/jun) com um higher low (41,14 &gt; 39,28). ADA é o ÚNICO com higher high (0,20 &gt; 0,19 de 15/jun), mas já devolveu −10,2% do pico.","(c) O rally que gerou os crosses: fundos em 25/jun (LTC 39,28; ADA 0,1382) e 01/jul (BTC 57.800; BNB 537,25) — mínimas de ciclo FRESCAS, 6-12 dias atrás. Subida fundo→pico: BTC +11,9% (pico 64.700 em 06/jul), BNB +10,5%, LTC +17,5%, ADA +44,7%. Pullback atual do pico: BTC −2,5%, BNB −2,5%, LTC −4,7%, ADA −10,2%. Magnitude de +8-12% nos majors após low de ciclo = tamanho clássico de bear-market rally; o BTC nem alcançou a SMA50 diária no pico.","(d) Volume NÃO confirma: quote-volume médio dos últimos 7d vs 30d anteriores — BTC −20,2%, BNB −36,7%, LTC −6,1%; só ADA +17,3%. Em BTC, volume médio dos dias de queda ($1,13bi) &gt; dias de alta ($1,06bi) nos últimos 30d = distribuição, não acumulação.","(e) Drawdown do topo do ciclo (janela 1000d): BTC −50,0% (topo $126.200 em 06/out/2025), BNB −57,9% ($1.375 em out/2025), LTC −70,1% ($147 em dez/2024), ADA −86,5% ($1,326 em dez/2024). Os fundos de 25/jun-01/jul foram as mínimas do ciclo até aqui — o rally partiu de mínimas novas, não de uma base construída.","(f) Cross-check com o regime interno: ADX esfriou pra range 4/4 na manhã de 07/jul (BTC 18,9) e BTC já caiu de ~$64.500 pra $63.054 — o próprio sistema já classificou o fim do impulso; consistente com os números acima."],"recomendacao":"NADA de re-engajamento agressivo agora — o critério do playbook (bull SUSTENTADO) não está atendido; o verde foi um bounce estatisticamente típico dentro de downtrend diário intacto. Marcos objetivos que mudariam o veredito (para monitorar, não agir): (1) fechamento DIÁRIO do BTC acima da SMA50d (~$66.500) e retomada do pivô de 65.622-67.292 (quebraria a sequência de lower highs); (2) higher low acima de 57.800 seguido de novo teste do topo com volume 7d &gt; média 30d; (3) SMA50d virando pra cima. Até lá, tratar os golden crosses 1h como sinal tático de bounce, não de regime.","confianca":"alta","riscos":["Fundos de 25/jun-01/jul PODEM vir a ser o fundo do ciclo — 'não é sustentado AINDA' não é previsão de queda; um rompimento diário acima da SMA50d com volume invalidaria este veredito em dias.","ADA diverge positivamente (higher high + volume +17%) — se for leading indicator de alt-season precoce, o quadro pode virar mais rápido nos alts do que o BTC sugere; mas ADA está −86% do topo e sozinho não define regime.","Snapshot de 07/jul ~05:20 UTC; SMAs diárias usam a última vela fechada, e o pullback em curso (BTC −2,5% do pico) ainda está se formando — números intradiários mudam.","Pivôs HH/HL calculados com janela simples de 2 velas (fractal 5-barras) sobre 35d; outra parametrização pode deslocar pivôs marginais (ex.: o higher low de LTC), mas não muda o quadro agregado."]},"promocao":{"conclusao":"Veredito: HONESTA-MAS-NÃO-TRANSFERE, com falso-positivo estatístico provável. O mecanismo é limpo (realized-only fee-inclusive, sem cherry-picking; recompute do DB bate exato com o gravado: +$1,1829 sobre 20 sells), mas a prova é estatisticamente marginal (bootstrap 95% CI da média [−$0,013, +$0,126] CRUZA zero; P(média≤0)=5,1%), é regime-dependente (100%+ do net veio da janela do rally 02–06/jul: +$1,46 em 13 rt, enquanto a janela 19–23/jun deu −$0,28 em 7 rt) e NÃO transfere para o que foi armado: a trilha provou em 4 símbolos com 96% do edge nas alts (LTC 15 dos 20 round-trips, +$0,60; ADA e BNB com n=1 cada), e o real armado é SÓ BTC (n=3 no paper, +$0,047 total) com um flow gate extra (imbalance&gt;−0,4) que o paper nunca teve — estratégia real ≠ estratégia testada. Agrava: o unrealized atual (−$1,183 em 4 bags abertos comprados nas horas em torno da promoção, no topo local) anula exatamente o realized → total da trilha em 18 dias = $0,00.","evidencias":["CRITÉRIO (promotionJob.js + promotionStore.evaluatePromotion, lidos): rt = COUNT(SELL); net = soma de realizedPnl (fee-inclusive), unrealized EXCLUÍDO por desenho; consistência = símbolos com realized ≥0 sobre símbolos 'traded' (zero conta como não-negativo; símbolo só com bag aberto e realized=0 também conta como positivo); win-rate ignorado de propósito; thresholds ≥20 rt, net&gt;0, ≥50% símbolos; check a cada 6h; promoção só escreve allowlist — quem ativa é o groupSupervisorJob via PROMO_MAP 'baseline:consistencia' (default hardcoded, groupSupervisorJob.js:48)","RECOMPUTE DO DB (paperOrders, 20 SELLs): soma = +$1,18286, IGUAL ao promotions.json (1.1828551375) — sem discrepância; por símbolo: LTC +$0,595 em 15 rt, ADA +$0,390 em 1 rt, BNB +$0,151 em 1 rt, BTC +$0,047 em 3 rt (0,078%/trade sobre notional ~$20) — a consistência '4/4 símbolos' apoia-se em n=1 para 2 dos 4 símbolos","DISTRIBUIÇÃO NO TEMPO: jun 19–23 (7 rt) = −$0,28; gap ZERO trades 23/jun→02/jul (bear); jul 02–06 (13 rt) = +$1,46; só 05–06/jul (8 rt) = +$0,72 — todo o net positivo veio da janela do rally; o 20º round-trip fechou 06/jul 21:10 e a promoção disparou no check das 22:59:58, exatamente no pico do verde","TAMANHO vs FEE: média +$0,059/trade (líquido), mediana +$0,036, desvio $0,163; fee round-trip ~$0,040 → gross médio ~$0,099, fee come ~40% do gross; perfil ganha-pouco/perde-grande: maior perda única −$0,423 (11× a mediana de ganho)","BOOTSTRAP (20k resamples): 95% CI da média [−$0,0131, +$0,1259] cruza zero; 90% CI [−$0,0003, +$0,1159] — no fio exato; P(média≤0)=5,1%; LTC-only (n=15): P(≤0)=16,8%","UNREALIZED AGORA (paperPositions + preços spot ao vivo): 4 bags abertos, todos comprados 06/jul 23:20 → 07/jul 02:31 (pós/peri-promoção, topo local): LTC −$0,47, ADA −$0,28, BNB −$0,23, BTC −$0,21 = −$1,183 total → realized +1,183 + unrealized −1,183 = +$0,0003 em 18 dias de trilha","TRANSFERÊNCIA: a promoção da consistencia destrava o grupo baseline REAL = id2 BUY BTCUSDT (com flow gate imbalance&gt;−0,4 inexistente no paper; flow VETANDO neste momento) + id3 SELL e baselineSell (venda do cofre BTC) — inócua hoje pois a carteira é 100% USDT, 0 BTC; ordem real capada em MIN_NOTIONAL ~$10-12 + tetos/cap diário/HALT intactos → risco monetário imediato pequeno"],"recomendacao":"Não tratar a promoção como evidência de edge no baseline BTC real — ela não é (BTC no paper: n=3, +$0,047; CI global cruza zero; prova concentrada em LTC no rally). Risco imediato é pequeno (MIN_NOTIONAL ~$10-12, flow gate vetando, cap −5%/HALT valendo), então NÃO precisa desarmar às pressas; mas reportar ao dono que a 1ª promoção é
+... (truncated 26449 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/tasks/wyestzd28.output)</result>
+<usage><agent_count>7</agent_count><subagent_tokens>453736</subagent_tokens><tool_uses>100</tool_uses><duration_ms>997260</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(05:27:16)*
+
+
+## 🤖 Claude *(05:27:17)*
+
+Workflow concluído — lendo o resultado completo (lentes de risco/ações + os 3 céticos).
+
+## 🤖 Claude *(05:27:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/tasks/wyestzd28.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Auditar ao vivo se o \"verde\" do cockpit é oportunidade acionável — 4 lentes + 3 céticos adversariais",
+> 3	  "agentCount": 7,
+> 4	  "logs": [
+> 5	    "Lentes concluídas — lançando céticos adversariais"
+> 6	  ],
+> 7	  "result": {
+> 8	    "lenses": {
+> 9	      "estrutura": {
+> 10	        "conclusao": "O \"verde\" de 03-06/jul foi um bounce de bear-market de 5-6 dias, não uma virada sustentada. A estrutura DIÁRIA segue de baixa nos 4 símbolos: preço abaixo da SMA50d e da SMA200d em todos, SMA50d abaixo da SMA200d (alinhamento de death cross) por −10,8% a −29,5%, e o rally do BTC morreu num lower high (64.700) abaixo tanto da SMA50d (66.555) quanto dos pivôs de junho (65.622/67.292), após lows descendentes (62.272→58.115→57.800). Volume NÃO confirma (BTC −20%, BNB −37% na semana do rally vs média 30d) e o golden cross 1h já está frágil (preço abaixo da SMA50-1h nos 4; ADX esfriou pra range 4/4). Veredito: CHOP/bounce dentro de downtrend — critério \"bull SUSTENTADO\" do playbook NÃO atendido.",
+> 11	        "evidencias": [
+> 12	          "(a) Preço vs SMAs diárias — TODOS abaixo: BTC $63.054 = −5,3% da SMA50d ($66.555) e −15,5% da SMA200d ($74.652); LTC −5,3%/−23,4%; BNB −5,0%/−15,2%; ADA −4,8%/−32,9%. SMA50d < SMA200d nos 4 (BTC −10,8%, BNB −10,8%, LTC −19,1%, ADA −29,5%) — regime diário é death-cross, o golden cross é só no 1h.",
+> 13	          "(a2) 1h: preço ainda acima da SMA200-1h (BTC +2,8%, BNB +2,5%, LTC +0,8% — quase encostando, ADA +8,0%), mas JÁ abaixo da SMA50-1h nos 4 (BTC −0,1%, BNB −0,7%, LTC −2,1%, ADA −3,5%) → momentum de curto prazo rolando pra baixo; o cross 1h de LTC está a <1% de ser desfeito.",
+> 14	          "(b) HH/HL 30d — BTC: pivôs de alta 67.292 (15/jun) → 65.622 (22/jun) → 64.700 (06/jul) = LOWER HIGHS; pivôs de baixa 62.272 → 58.115 → 57.800 (01/jul) = LOWER LOWS. BNB idem (632,9→602,3→593,5 e 570,8→540,6→537,25). LTC: lower high (46,15 < 46,36 de 16/jun) com um higher low (41,14 > 39,28). ADA é o ÚNICO com higher high (0,20 > 0,19 de 15/jun), mas já devolveu −10,2% do pico.",
+> 15	          "(c) O rally que gerou os crosses: fundos em 25/jun (LTC 39,28; ADA 0,1382) e 01/jul (BTC 57.800; BNB 537,25) — mínimas de ciclo FRESCAS, 6-12 dias atrás. Subida fundo→pico: BTC +11,9% (pico 64.700 em 06/jul), BNB +10,5%, LTC +17,5%, ADA +44,7%. Pullback atual do pico: BTC −2,5%, BNB −2,5%, LTC −4,7%, ADA −10,2%. Magnitude de +8-12% nos majors após low de ciclo = tamanho clássico de bear-market rally; o BTC nem alcançou a SMA50 diária no pico.",
+> 16	          "(d) Volume NÃO confirma: quote-volume médio dos últimos 7d vs 30d anteriores — BTC −20,2%, BNB −36,7%, LTC −6,1%; só ADA +17,3%. Em BTC, volume médio dos dias de queda ($1,13bi) > dias de alta ($1,06bi) nos últimos 30d = distribuição, não acumulação.",
+> 17	          "(e) Drawdown do topo do ciclo (janela 1000d): BTC −50,0% (topo $126.200 em 06/out/2025), BNB −57,9% ($1.375 em out/2025), LTC −70,1% ($147 em dez/2024), ADA −86,5% ($1,326 em dez/2024). Os fundos de 25/jun-01/jul foram as mínimas do ciclo até aqui — o rally partiu de mínimas novas, não de uma base construída.",
+> 18	          "(f) Cross-check com o regime interno: ADX esfriou pra range 4/4 na manhã de 07/jul (BTC 18,9) e BTC já caiu de ~$64.500 pra $63.054 — o próprio sistema já classificou o fim do impulso; consistente com os números acima."
+> 19	        ],
+> 20	        "recomendacao": "NADA de re-engajamento agressivo agora — o critério do playbook (bull SUSTENTADO) não está atendido; o verde foi um bounce estatisticamente típico dentro de downtrend diário intacto. Marcos objetivos que mudariam o veredito (para monitorar, não agir): (1) fechamento DIÁRIO do BTC acima da SMA50d (~$66.500) e retomada do pivô de 65.622-67.292 (quebraria a sequência de lower highs); (2) higher low acima de 57.800 seguido de novo teste do topo com volume 7d > média 30d; (3) SMA50d virando pra cima. Até lá, tratar os golden crosses 1h como sinal tático de bounce, não de regime.",
+> 21	        "confianca": "alta",
+> 22	        "riscos": [
+> 23	          "Fundos de 25/jun-01/jul PODEM vir a ser o fundo do ciclo — 'não é sustentado AINDA' não é previsão de queda; um rompimento diário acima da SMA50d com volume invalidaria este veredito em dias.",
+> 24	          "ADA diverge positivamente (higher high + volume +17%) — se for leading indicator de alt-season precoce, o quadro pode virar mais rápido nos alts do que o BTC sugere; mas ADA está −86% do topo e sozinho não define regime.",
+> 25	          "Snapshot de 07/jul ~05:20 UTC; SMAs diárias usam a última vela fechada, e o pullback em curso (BTC −2,5% do pico) ainda está se formando — números intradiários mudam.",
+> 26	          "Pivôs HH/HL calculados com janela simples de 2 velas (fractal 5-barras) sobre 35d; outra parametrização pode deslocar pivôs marginais (ex.: o higher low de LTC), mas não muda o quadro agregado."
+> 27	        ]
+> 28	      },
+> 29	      "promocao": {
+> 30	        "conclusao": "Veredito: HONESTA-MAS-NÃO-TRANSFERE, com falso-positivo estatístico provável. O mecanismo é limpo (realized-only fee-inclusive, sem cherry-picking; recompute do DB bate exato com o gravado: +$1,1829 sobre 20 sells), mas a prova é estatisticamente marginal (bootstrap 95% CI da média [−$0,013, +$0,126] CRUZA zero; P(média≤0)=5,1%), é regime-dependente (100%+ do net veio da janela do rally 02–06/jul: +$1,46 em 13 rt, enquanto a janela 19–23/jun deu −$0,28 em 7 rt) e NÃO transfere para o que foi armado: a trilha provou em 4 símbolos com 96% do edge nas alts (LTC 15 dos 20 round-trips, +$0,60; ADA e BNB com n=1 cada), e o real armado é SÓ BTC (n=3 no paper, +$0,047 total) com um flow gate extra (imbalance>−0,4) que o paper nunca teve — estratégia real ≠ estratégia testada. Agrava: o unrealized atual (−$1,183 em 4 bags abertos comprados nas horas em torno da promoção, no topo local) anula exatamente o realized → total da trilha em 18 dias = $0,00.",
+> 31	        "evidencias": [
+> 32	          "CRITÉRIO (promotionJob.js + promotionStore.evaluatePromotion, lidos): rt = COUNT(SELL); net = soma de realizedPnl (fee-inclusive), unrealized EXCLUÍDO por desenho; consistência = símbolos com realized ≥0 sobre símbolos 'traded' (zero conta como não-negativo; símbolo só com bag aberto e realized=0 também conta como positivo); win-rate ignorado de propósito; thresholds ≥20 rt, net>0, ≥50% símbolos; check a cada 6h; promoção só escreve allowlist — quem ativa é o groupSupervisorJob via PROMO_MAP 'baseline:consistencia' (default hardcoded, groupSupervisorJob.js:48)",
+> 33	          "RECOMPUTE DO DB (paperOrders, 20 SELLs): soma = +$1,18286, IGUAL ao promotions.json (1.1828551375) — sem discrepância; por símbolo: LTC +$0,595 em 15 rt, ADA +$0,390 em 1 rt, BNB +$0,151 em 1 rt, BTC +$0,047 em 3 rt (0,078%/trade sobre notional ~$20) — a consistência '4/4 símbolos' apoia-se em n=1 para 2 dos 4 símbolos",
+> 34	          "DISTRIBUIÇÃO NO TEMPO: jun 19–23 (7 rt) = −$0,28; gap ZERO trades 23/jun→02/jul (bear); jul 02–06 (13 rt) = +$1,46; só 05–06/jul (8 rt) = +$0,72 — todo o net positivo veio da janela do rally; o 20º round-trip fechou 06/jul 21:10 e a promoção disparou no check das 22:59:58, exatamente no pico do verde",
+> 35	          "TAMANHO vs FEE: média +$0,059/trade (líquido), mediana +$0,036, desvio $0,163; fee round-trip ~$0,040 → gross médio ~$0,099, fee come ~40% do gross; perfil ganha-pouco/perde-grande: maior perda única −$0,423 (11× a mediana de ganho)",
+> 36	          "BOOTSTRAP (20k resamples): 95% CI da média [−$0,0131, +$0,1259] cruza zero; 90% CI [−$0,0003, +$0,1159] — no fio exato; P(média≤0)=5,1%; LTC-only (n=15): P(≤0)=16,8%",
+> 37	          "UNREALIZED AGORA (paperPositions + preços spot ao vivo): 4 bags abertos, todos comprados 06/jul 23:20 → 07/jul 02:31 (pós/peri-promoção, topo local): LTC −$0,47, ADA −$0,28, BNB −$0,23, BTC −$0,21 = −$1,183 total → realized +1,183 + unrealized −1,183 = +$0,0003 em 18 dias de trilha",
+> 38	          "TRANSFERÊNCIA: a promoção da consistencia destrava o grupo baseline REAL = id2 BUY BTCUSDT (com flow gate imbalance>−0,4 inexistente no paper; flow VETANDO neste momento) + id3 SELL e baselineSell (venda do cofre BTC) — inócua hoje pois a carteira é 100% USDT, 0 BTC; ordem real capada em MIN_NOTIONAL ~$10-12 + tetos/cap diário/HALT intactos → risco monetário imediato pequeno"
+> 39	        ],
+> 40	        "recomendacao": "Não tratar a promoção como evidência de edge no baseline BTC real — ela não é (BTC no paper: n=3, +$0,047; CI global cruza zero; prova concentrada em LTC no rally). Risco imediato é pequeno (MIN_NOTIONAL ~$10-12, flow gate vetando, cap −5%/HALT valendo), então NÃO precisa desarmar às pressas; mas reportar ao dono que a 1ª promoção é um caso-teste do critério, não um sinal de trade, e propor endurecer o evaluatePromotion (v2): (1) mínimo de round-trips POR símbolo (mata o n=1 de ADA/BNB), (2) exigir prova NO símbolo/configuração que será armada (BTC-only com o mesmo flow gate, i.e. trilha paper espelho do real), (3) considerar mark-to-market total >0 ou penalizar unrealized (bag aberto mascarou o zero-a-zero), (4) split temporal ou CI bootstrap >0 (mata a regime-dependência do rally). Nenhuma ação de escrita minha — read-only.",
+> 41	        "confianca": "alta",
+> 42	        "riscos": [
+> 43	          "Se o flow gate destravar (imbalance>−0,4) num dip de BTC em regime range, o id2 real compra ~$10-12 com base numa prova que no BTC é n=3/+$0,047 — perda potencial pequena em $ mas é trade real sem edge demonstrado no símbolo",
+> 44	          "O critério atual promoverá as próximas trilhas com a mesma fragilidade (farmnl→farm, slopegate→trend no PROMO_MAP): qualquer rally de 3-4 dias pode empurrar uma trilha medíocre acima dos 20 rt/net>0 — falso-positivo sistemático em bull curto",
+> 45	          "baselineSell (venda do cofre BTC) fica permanentemente destravada pela promoção; hoje inócua (0 BTC), mas se o cofre voltar a ter BTC a venda RSI>75 do baseline estará armada sem prova específica",
+> 46	          "Meu unrealized (−$1,18) foi marcado a preço spot de agora (BTC $63.022, LTC $44,01); se o mercado recuperar, o 'total=zero' melhora — a crítica estatística (CI cruza zero, regime-dependência) permanece válida independente disso",
+> 47	          "Bootstrap com n=20 e 1 outlier (−$0,42) tem CI instável; a conclusão 'marginal' é robusta, mas o P exato (5,1%) não deve ser lido como preciso"
+> 48	        ]
+> 49	      },
+> 50	      "risco": {
+> 51	        "conclusao": "Risco operacional do baseline real é BOUNDED-OK nos números: anti-refire triplo (edge-trigger via condição invertida + lock de 60s pós-disparo + regime/flow como gates passivos) garante 1 ordem por cruzamento (não 20), ordem de $5 (minNotional), frequência real observada de 0-1 disparo/dia (0 ordens reais em ~30h armada; flow gate vetou o único gatilho). O furo estrutural é assimetria de saída: não há teto de exposição ACUMULADA do baseline e a posição fica presa (sem venda automática) se o regime virar trend ou bear — mas com exposição plausível de $5-65 num equity de $149, a perda de cauda é de dígito único a ~$30.",
+> 52	        "evidencias": [
+> 53	          "Anti-refire confirmado no código: beholder.js:899-900 aplica invertCondition (linhas 141-153) → RSI<25 só dispara com previous>25 (edge); beholder.js:988-992 tranca a automação por AUTOMATION_INTERVAL=60000ms após disparo (teto duro 1 ordem/min); regimeJob.js:100 e flowJob.js:85 escrevem REGIME/FLOW com executeAutomations=false (não re-disparam a id2)",
+> 54	          "Ordem real = $5,00, não $10-12: id2 usa quoteOrderQty=calcQuoteQty=minNotional do BTCUSDT ($5.00000000 na tabela symbols, multiplier 1.00); MIN_ORDER_NOTIONAL_FLOOR=12 do .env é piso do CAP do riskGuard, não da ordem",
+> 55	          "Frequência: 54 crossings RSI(14)1m abaixo de 25 em 6,9 dias de klines Binance que computei (7,8/dia, pior dia 13 em 06/jul), mas com gates reais o paper consistencia BTC (mesmo gatilho sem flow) fez só 4 BUYs em 18 dias (máx 1/dia); id2 REAL: 0 ordens desde a ativação (A2.log = 1 linha 'has started' 06/jul 23:00:41; última ordem real do sistema segue #264 de 21/jun) — o paper disparou 07/jul 02:27 e o real foi vetado pelo flow gate (1/1 vetos)",
+> 56	          "Pior caso quantificado: teto por ordem = min($100 env, 20%×$149,37=$29,87) → $5 sempre passa; SEM teto de exposição acumulada do baseline (FARM_MAX_NOTIONAL_USDT=25 só casa /^Farm Buy /, beholder.js:495); máx teórico = ~29 ordens até esgotar $149 de USDT (lock 60s → 30 min); pior dia plausível = 13×$5=$65 (44% do equity); dailyCap trava ordens novas em −5% de drawdown (−$7,47, auto-resume 3h máx 2×, piso duro −12%=−$17,92) mas NÃO liquida posição",
+> 57	          "Posição presa confirmada em DOIS regimes: id3 tem !=trend na condição (DB) e o groupSupervisorJob DESATIVA a id3 em bear (baseline sell ativa sse regime!=bear); nenhuma outra automação vende BTC do baseline (id7 vende TREND_QTY, farm vende FARM_QTY de alts); saída exige regime fora de trend/bear + cruzamento fresco RSI>75, e vende só $5/disparo (N compras ≈ N cruzamentos para zerar); resto <$5 em BTC vira dust invendável pela id3",
+> 58	          "Restart preserva o armamento: isActive=1 no DB (updatedAt 2026-07-06 23:00:41), server.js:64-65 recarrega automações ativas no boot, regime recarrega de regimeStates (loadPersistedState), HALT persiste em logs/risk_state.json (TRADING_HALT=true do .env é só semente do 1º boot — o floor liberado pelo dono prevalece); flap possível de ≤60s do supervisor se regime desconhecido no boot, auto-corrigido no ciclo seguinte"
+> 59	        ],
+> 60	        "recomendacao": "Manter armado (não desarmar): risco bounded-ok. Duas mitigações baratas se o dono quiser apertar: (1) reduzir MAX_ORDER_PCT_EQUITY ou criar teto de exposição acumulada para o baseline (hoje só o Farm tem, o baseline pode teoricamente ir all-in $149 num dia patológico de whipsaw); (2) decidir doutrina de saída para posição presa em trend/bear (hoje o BTC comprado pela id2 não tem stop nem vendedor nesses regimes — só venda manual). Nenhuma das duas é urgente com ordem de $5 e 0-1 disparo/dia.",
+> 61	        "confianca": "alta",
+> 62	        "riscos": [
+> 63	          "Acumulação sem teto: dia patológico de RSI whipsaw em torno de 25 (vela fecha >25, dip <25, repetido) com regime range e flow >−0,4 pode empilhar 1 ordem/min até esgotar os $149 de USDT em ~30 min — probabilidade baixa (pior dia real teve 13 crossings e o flow veta os dips fundos), mas o caminho existe",
+> 64	          "Posição presa vira perda aberta: BTC comprado em range que emenda em bear cai sem venda automática (dailyCap só trava ordens novas); com exposição de $65, um BTC −30% custa ~$20 (−13% do equity) sem nenhum freio vender",
+> 65	          "Assimetria buy/sell: compras disparam em crossings de RSI<25 (7,8/dia disponíveis) e vendas exigem crossings de RSI>75 fora de trend + $5 por vez — em range largo a posição tende a crescer mais rápido do que descarrega",
+> 66	          "Dust: sobra de BTC <$5 fica invendável pela id3 (quoteOrderQty exige minNotional), acumulando resíduo a cada ciclo incompleto",
+> 67	          "Intra-candle refire: o edge-trigger usa a vela em formação — enquanto a vela anterior fechar >25, o mesmo minuto oversold pode re-disparar após o lock de 60s (o teto é o lock, não o edge)"
+> 68	        ]
+> 69	      },
+> 70	      "acoes": {
+> 71	        "conclusao": "Ranking por EV×custo×risco: (1) NADA/observar vence com folga — a máquina já fez sozinha o que tinha que fazer (promoção consistencia → baseline BTC real armado com proteções), o regime esfriou pra range 4/4 e não há sinal pendente pra capturar. Segundo lugar empatado: (5) experimento maker-15m em paper (único fio net+ do backtest, mas custo real = feature nova no paperEngine, que hoje preenche tudo instantâneo a mercado) e (6) na forma de FIX, não toggle: descobri a causa-raiz dos 0 trades de slopegate/macro — os 4 golden crosses dispararam com o símbolo ainda em bear e o TREND_CROSS é sinal de borda, então o gate !=bear vetou tudo e nunca re-disparou; a trilha nunca testou a hipótese. Isso derruba o candidato (2): grandfather slopegate AGORA seria no-op (o sinal já passou) e, sem o fix do re-arm, seria vetado de novo no próximo ciclo; (3) e (4) são prematuros/centavos.",
+> 72	        "evidencias": [
+> 73	          "CAUSA-RAIZ slopegate/macro 0 trades: golden crosses dispararam DURANTE bear no mesmo tick — LTC cross 29/jun 21:03 vs saída do bear 02/jul 08:03 (~58h antes), ADA 01/jul 16:03 vs 03/jul 10:03 (~42h), BTC 02/jul 21:03 vs 04/jul 07:03 (~34h), BNB 03/jul 14:03 vs 04/jul 18:03 (~28h); TREND_CROSS_1h é edge-signal que volta a 'none' no tick seguinte (regimeJob.js:150-161), então o gate REGIME!=='bear' das buys (autos 44-81) vetou 4/4 entradas sem re-disparo — gap estrutural: na saída de bear o cross 50/200 precede o flip de regime por construção",
+> 74	          "mr15 −$1,63 é 81% UM trade legado: LTC BUY 22/jun @44,4622 → SELL 25/jun @41,5992 = −$1,3241 (queda pega em janela pré-bear-gate); os 3 round-trips LTC recentes (05-06/jul) somam +$0,25; não está sangrando ativamente",
+> 75	          "Candidato (5) não é custo zero: paperEngine.js (174 linhas) trata qualquer type exceto OCO como fill INSTANTÂNEO ao MINI_TICKER (linhas 71-134) — não existe simulação de LIMIT repousada; medir fill-rate maker exige feature nova (fill quando preço cruza o limit)",
+> 76	          "id2/id3 reais ativas desde 2026-07-06 23:00:41 (A2.log/A3.log 'has started'), ZERO ordens reais desde a ativação (orders isTestnet=0 pós-22:59 = 0; última real segue #264 de 21/jun) e flow gate vetando agora (imbalance −0,4245) — subir size (candidato 4) não tem nem 1 fill pra calibrar",
+> 77	          "Consistencia (prova da promoção): janela 19/jun 17:01 → 07/jul 02:31 (~2,5 semanas), realized +$1,18 mas totalPnl +$0,02 (unrealized −$1,16 em 4 sacos abertos comprados perto do topo do verde, ex.: ADA avgCost 0,1824 vs mercado caindo; BTC avgCost 63.691 vs spot 63.097) — teto honesto de EV real pras alts ≈ $0-0,5/mês líquido",
+> 78	          "trendstate −$0,064 (6 rt, 33% win) e trendbreadth −$0,004 (7 rt, 43% win) fecharam o verde SEM posição aberta e negativas — confirmação viva do holdout −2,8%/trade do motor por-estado-ADX"
+> 79	        ],
+> 80	        "recomendacao": "MAPA pro dono, em ordem: (1) NADA agora — score 9/10: regime range 4/4, sem sinal pendente, id2 real já armada e protegida; deixar a id2 provar (ou não) com fills reais. (5) maker-15m paper — score 7/10: melhor próximo passo de LAB, mas com custo honesto de 1 sessão de dev no paperEngine (simular LIMIT repousada + fill por cruzamento de preço; research-only, fora do money-path, sem gate QA/TL pesado); mr15 fica LIGADO como braço taker de controle. (6) — score 6/10 como FIX, não toggle: corrigir o gap cross-antes-do-flip (re-emitir TREND_CROSS na saída do bear se smaAbove=true, ou avaliar o gate fora do mesmo-tick) é PRÉ-REQUISITO pra slopegate um dia significar algo — sem isso nem grandfather funciona; NÃO desligar mr15 (perda é legada + é controle; paper é grátis). (2) grandfather slopegate AGORA — score 2/10: no-op garantido (sinal de borda já passou; próximo cross tende a ser death), trilha paper com 0 evidência, holdout −2,8%/trade, trend paper perdeu no verde ao vivo, regime esfriou — NÃO recomendar; revisitar só após o fix do item 6 + próximo ciclo. (3) consistencia real nas alts — score 3/10: EV teto ≈ centavos/mês (total paper +$0,02), custo QA/TL + money-path novo; não vale como renda, só como exercício se sobrar tempo do freelance. (4) subir size id2 — score 1/10: prematuro por definição, zero fills reais. Tudo é decisão do dono; Claude não vira HALT/grandfather.",
+> 81	        "confianca": "alta",
+> 82	        "riscos": [
+> 83	          "O fix do gap TREND_CROSS (re-arm na saída do bear) mexe no regimeJob que alimenta automações REAIS (id6/id7) — se implementado, precisa de gate QA/TL apesar de parecer research-only, senão um re-disparo indevido pode virar compra real de trend num futuro grandfather",
+> 84	          "Manter id2 real armada não é risco zero: um flush de RSI<25 com flow>-0,4 em queda forte compra o dip real (MIN_NOTIONAL ~$10-12, capado); é o design, mas o primeiro fill real pode vir em condição feia",
+> 85	          "O +$1,18 realized da consistencia pode ser artefato do verde (comprar dips num mercado subindo): com regime agora range e BTC caindo, a mesma lógica tende a acumular sacos — o unrealized −$1,16 já mostra isso",
+> 86	          "Simulação maker no paper vai continuar OTIMISTA mesmo com a feature (fill por cruzamento ignora fila/queue position) — o resultado será teto superior, não estimativa",
+> 87	          "Conclusões sobre slopegate assumem que a ordem cross-antes-do-flip se repete no próximo ciclo; num bull que começa sem bear profundo (regime já range), o gate não vetaria e a trilha operaria"
+> 88	        ]
+> 89	      }
+> 90	    },
+> 91	    "skeptics": [
+> 92	      {
+> 93	        "alvo": "\"Há oportunidade acionável agora\" — especificamente as 4 ações recomendadas pelas lentes além de 'nada': (A) experimento maker-15m no paperEngine, (B) fix do re-arm TREND_CROSS na saída do bear, (C) endurecer evaluatePromotion v2, (D) mitigações de risco do baseline (teto de exposição acumulada + doutrina de saída de posição presa)",
+> 94	        "veredito": "REFUTADO",
+> 95	        "argumento": "Ataque mais forte: contra o fix TREND_CROSS re-arm (a ação mais bem pontuada pelas lentes, 6/10, vendida como 'pré-requisito'). Ele é EXATAMENTE o mecanismo 're-armar no flip de regime' que o próprio backtest 900d/12-moedas do dono já REFUTOU como PIOR (motor trend −2,8%/trade no holdout, IC exclui 0). Testei a favor dele com dados vivos: simulei a trilha consertada no melhor ciclo possível (o rally 02-06/jul que motivou tudo), entrando no bear-exit real de cada símbolo via klines Binance 1h. Resultado: mesmo com venda no timing PERFEITO (fim exato do trend) daria +$3,86 em notional $25×4; segurando até agora cai pra +$2,05 e derretendo (BNB já −0,23%); e com a saída REAL da trilha (sell só no death cross 50/200 1h — confirmei nas automations 57/81 que é a única saída), o exit aterrissa ≈ na SMA200-1h → média estimada −1,3% LÍQUIDO (BTC −2,2%, BNB −2,7%, ADA −1,7%, LTC +1,3%). Ou seja: a 'oportunidade perdida' que justificaria o fix é ≈ $0 a −$1 no MELHOR ciclo em 900 dias — e o fix mexe no regimeJob que alimenta id6/id7 REAIS (exige QA/TL). O ataque sobreviveu a tudo: é um caso de amostra n=1 ciclo (regime-dependência) vestida de causa-raiz, com prior explicitamente negativo. As demais ações caem pelo mesmo padrão: upside em centavos num capital de $149 vs custo de sessões dev do dono que pivotou pra freelance em 2026-07-06. O que sobrevive é apenas o degrau de custo ZERO: reportar ao dono que a 1ª promoção é caso-teste (não sinal) e anotar a spec v2 + marcos de regime como texto de backlog — isso não é 'ação' no sentido do alvo. 'NADA/observar' (fora do meu escopo de ataque) segue sendo o único vencedor.",
+> 96	        "contra_exemplos": [
+> 97	          "(B) Fix TREND_CROSS: simulação com klines Binance 1h nas entradas de bear-exit reais (LTC 02/jul 08h @42,95; ADA 03/jul 10h @0,1682; BTC 04/jul 07h @62.576; BNB 04/jul 18h @576,87): timing perfeito = +3,86% médio líquido; hold-até-agora = +2,05% e caindo (BNB −0,23%); com a saída real por death cross (≈SMA200-1h: BTC ~61.336, BNB ~562,6, ADA ~0,1657, LTC ~43,66) ≈ −1,3% líquido médio. Prior: backtest 900d do dono já refutou 're-armar no flip' como PIOR. Upside real do fix ≈ $0-2 por ciclo de bull; custo = dev + QA/TL em código que alimenta automações reais id6/id7.",
+> 98	          "(A) Maker-15m: EV$ = CI do backtest [0,015%, 0,379%]/trade × notional $25 × frequência viva do mr15 (5 round-trips em ~18 dias ≈ 0,28/dia) = $0,09 a $2,40/MÊS, midpoint ~$0,40/mês. A própria lente admite que mesmo com a feature o resultado segue sendo TETO SUPERIOR (fila/queue ignorada, adverse selection de limit em mean-reversion não modelada) → o experimento não pode autorizar flip real = zero valor de decisão. Controle taker vivo (mr15): total −$1,63 (realized −$0,96 + unrealized −$0,67, 2/5 wins); o único verde (+$0,25 em 3 rt LTC) é 100% da janela do rally 05-06/jul = mesma regime-dependência que condena a consistencia. Custo: 1 sessão dev no paperEngine do backend VIVO (deploy/restart de sistema com $ real) numa semana em que o dono fatura freelance.",
+> 99	          "(C) Promotion v2 agora: dano que ela evitaria é bounded em dígito único — id2 real compra $5/ordem, dailyCap trava em −$7,47/dia, piso duro −$17,92, flow gate vetando (verificado ao vivo: 0 ordens reais desde a promoção de 06/jul 22:59; cockpit EV 1m net −0,161%), e toda ordem notifica no Telegram. Endurecer exige mexer no caminho promotionJob→groupSupervisor (ativação REAL) com QA/TL; e com exigência per-symbol ≥20 rt, no ritmo real do BTC paper (3 rt em 18 dias) qualquer prova levaria ~4 meses → zero efeito em $ no horizonte relevante. Sobrevive só como NOTA de backlog (custo zero) + reporte ao dono.",
+> 100	          "(D) Mitigações de risco: a própria lente de risco classificou como 'não urgente'. Cauda já bounded: pior caso absoluto −12% = −$17,92; cenário whipsaw 1-ordem/min exige flow imbalance >−0,4 DURANTE flush de RSI<25 — anticorrelado por construção (flush = capitulação; ao vivo agora: imbalance vetando) e o pior dia real teve 13 crossings, não 29. Posição presa a proteger = $0,00 de BTC hoje (0 fills em 30h+ armada; paper BTC baseline = 4 buys em 18 dias). Doutrina de saída pode ser decidida NO primeiro fill: exposição inicial $5, pior caso enquanto se decide ≈ −$1,50. Custo da mitigação = mexer no riskGuard (core do money-path) + QA/TL + deploy num sistema vivo.",
+> 101	          "Padrão transversal (regime-dependência): TODA evidência positiva citada pelas lentes vem da mesma janela 02-06/jul — consistencia +$1,46 dos +$1,18 totais, mr15 +$0,25, o hipotético slopegate +2-4% — e o sistema já saiu dela (range 4/4, BTC $62.880 caindo do pico $64.700, unrealized do paper −$2,98). Nenhuma ação proposta tem evidência FORA do rally.",
+> 102	          "Custo de oportunidade quantificado: teto de EV de TODO o bot com $149 e os edges medidos (consistencia total +$0,02 em 18 dias; BTC paper +$0,047 em 3 rt; maker-15m ~$0,40/mês midpoint) = centavos a poucos dólares/mês; 1 sessão dev de freelance do dono vale ordens de magnitude mais — qualquer ação de código no bot agora tem EV líquido negativo em $/hora."
+> 103	        ],
+> 104	        "confianca": "alta"
+> 105	      },
+> 106	      {
+> 107	        "alvo": "\"A promoção da consistencia é confiável e o baseline real armado é seguro\" (claim composto: confiabilidade estatística da 1ª promoção do promotionJob + segurança operacional do id2/id3 real BTCUSDT)",
+> 108	        "veredito": "PARCIAL",
+> 109	        "argumento": "Ataquei os dois lados com dados re-derivados por mim (não confiei nas lentes). LADO (a) 'promoção é falso-positivo': VENCEU. Recompute independente do DB bate o gravado (+$1,1829/20 sells — mecanismo honesto, sem cherry-picking), mas meu bootstrap próprio (20k resamples, seed independente) dá P(média≤0)=5,1% e 95% CI [−$0,0131,+$0,1259] cruzando zero; o net é 100%+ regime-dependente (19–23/jun=−$0,280; 02–06/jul=+$1,463); a 'consistência 4/4' apoia-se em n=1 pra ADA e BNB porque promotionStore.js:74-78 conta realized=0 e bag-aberto como não-negativo; o que foi armado (BTC-only, n=3/+$0,047 no paper, + flow gate imbalance>-0.4 que o paper nunca testou) não é o que foi provado (LTC=15/20 rt, 96% do edge nas alts); e a promoção é IRREVERSÍVEL — promote() é one-way idempotente (promotionStore.js:52-59) e não existe demoção no código (grep demot/revok = zero) → um falso-positivo fica armado pra sempre. Conclusão: 'confiável como evidência de edge no que foi armado' = REFUTADO. LADO (b) 'baseline armado é perigoso': FALHOU em achar perda grande, mas expôs rótulo falso. Meu melhor cenário concreto: whipsaw de RSI(1m) em torno de 25 com flow>-0,4 e regime=range empilha $5/ordem a cada 60s (lock beholder.js:988-992; ordem real=$5,00 pois symbols.minNotional BTCUSDT=5.00×1.00, não $10-12) SEM teto de exposição acumulada (beholder.js:495 só capa /^Farm Buy /); regime vira trend/bear → id3 morre (condição !='trend' no DB + groupSupervisorJob.js:19-20,81-84 desativa em bear) → posição presa sem vendedor nem stop; e os 'tetos' −5%/−12% NÃO limitam perda — dailyCapJob.js:166-177 só bloqueia ordens novas (nunca liquida) e :228 reseta o baseline por DIA (sangria lenta multi-dia nunca tripa). PORÉM a magnitude não fecha o ataque: pior dia empírico = 13 crossings → $65 exposto; BTC −30% em cima = ~−$20 (−13% do equity); o all-in teórico ($149 em 30 min) exige 30 crossings consecutivos minuto-a-minuto com flow>-0,4 — estruturalmente possível, probabilisticamente remoto, e o flow gate é anti-correlacionado com flushes (vetando agora em −0,42). Os anti-refire são reais e fail-closed (invertCondition beholder.js:141-153; boot race morre em beholder.js:896-897 porque id2 declara RSI+REGIME+FLOW nos indexes e evalDecision exige todos presentes; flow stale >180s falha fechado na própria condição). Veredito composto: metade 1 REFUTADA (promoção não é evidência confiável de edge transferível), metade 2 SOBREVIVE em termos monetários (cauda ~dezenas de dólares, não catástrofe) com a ressalva de que 'seguro por causa dos tetos' é enganoso — os tetos limitam ordens, não perdas de posição.",
+> 110	        "contra_exemplos": [
+> 111	          "Bootstrap independente (20k resamples) sobre os 20 realizedPnl re-extraídos do DB: média $0,0591, P(média≤0)=5,1%, 95% CI [−$0,0131, +$0,1259] — a 'prova' não separa de zero a 95%; removendo 1 outlier (−$0,423 de 23/jun) o net saltaria 36% → CI instável com n=20",
+> 112	          "Split temporal re-derivado do DB: 7 sells de 19–23/jun = −$0,2799; 13 sells de 02–06/jul = +$1,4627 — todo o net positivo veio da janela do rally; o 20º rt fechou 06/jul 21:10 e a promoção disparou 22:59:58, no pico do verde",
+> 113	          "Transferência quebrada (DB): LTC 15 rt/+$0,5951 (50% dos trades, 50% do net), ADA 1 rt/+$0,3896, BNB 1 rt/+$0,1513, BTC 3 rt/+$0,0469 — o real armado é SÓ BTC (n=3) com flow gate imbalance>-0.4 inexistente no paper (condição id2 verificada no DB); promotionStore.js:74-78 conta símbolo n=1 e até realized=0/bag-aberto como 'não-negativo' no critério de consistência",
+> 114	          "Sem demoção: promote() é one-way (promotionStore.js:52-59, idempotente) e não há demote/revoke em promotionJob.js nem promotionStore.js (grep = zero) — se a consistencia sangrar daqui pra frente, o baseline real continua destravado até intervenção manual do dono",
+> 115	          "Tetos não limitam perda: dailyCapJob.js:166-177 (softTrip −5%/hardHalt −12%) só bloqueia ordens NOVAS, nunca vende; :228 reseta dayBase a cada dia UTC → posição presa sangrando −4%/dia por 10 dias = −26%+ sem nenhum trip; cenário concreto: 13 crossings num dia (pior dia real medido) × $5 = $65 exposto, regime vira bear (id3 desativada, groupSupervisorJob.js:19-20), BTC −30% = −$20 ≈ −13% do equity, furando o 'teto' de −12%",
+> 116	          "Mitigadores verificados que seguram o lado (b): ordem real = $5,00 (symbols.minNotional=5.00 ×1.00, DB), lock 60s pós-fire (beholder.js:988-992, AUTOMATION_INTERVAL=60000 no .env), edge-trigger real (invertCondition beholder.js:141-153), boot fail-closed (beholder.js:896-897 exige RSI+REGIME+FLOW presentes; flow stale >180s falha fechado), teto por ordem min($100, 20%×$149=$29,87) em exchange.js:105-121, 0 ordens reais em ~30h armada (A2.log) e flow vetando (−0,4245)"
+> 117	        ],
+> 118	        "confianca": "alta"
+> 119	      },
+> 120	      {
+> 121	        "alvo": "Tese dupla sobre o verde de 03-06/jul: (a) \"virada sustentada → armar trend real\" vs (b) \"só whipsaw, ignorar\"",
+> 122	        "veredito": "PARCIAL",
+> 123	        "argumento": "Tese (a) REFUTADA com dado novo (kill-shot): o cluster \"golden cross 1h nos 4 símbolos + smaAbove com margem\" NÃO é raro nem preditivo — o evento IDÊNTICO E MAIS FORTE aconteceu 3 semanas antes (12-18/jun: janela 4/4 de 124h vs 88h do atual; margens de pico BTC +3,49% e LTC +4,30% vs +3,21%/+3,51% agora, klines 1h Binance que computei) e resolveu em death cross 4/4 (18-19/jun) com BTC caindo de 67.292→57.800 (−14%, NOVA mínima de ciclo). O log do sistema não viu esse precedente porque só começa em 19/06 (regime-full.log linha 1: \"Estado de cross recarregado ... above=false ×4\") — o \"nunca vi um verde assim\" é artefato de 17 dias de histórico, não raridade. Base rate: 19/19 bounces ≥8% do BTC desde o topo do ciclo morreram (o atual, +11,9%, é o nº 20 e nem reconquistou a SMA50d — pico a −2,8% dela — enquanto 6 dos mortos reconquistaram e morreram assim mesmo); margens 1h já encolhendo em 3/4 símbolos (BTC +3,20→+2,87% em 24h). Tese (b) SOBREVIVE como default estatístico, mas meu melhor ataque contra ela (\"ignorar descarta informação\") acertou de raspão: o evento atual tem 2 ingredientes que o fakeout de junho NÃO tinha — ADA com margem 3,2× a de junho (+16,31% vs +5,09%, higher high em 30d, único com volume 7d +17%) e ETH reconquistando a SMA50d (+1,6%, primeiro reclaim desde 06/mai; em junho não reconquistou). Ou seja: tratar como whipsaw ATÉ prova objetiva, mas monitorar, não ignorar cegamente. TESTE OBJETIVO que separa as duas em 1-2 semanas, verificável nos dados do próprio sistema: pró-(b) = aparecer \"SMA DEATH cross\" no regime.log em ≥2 dos 4 símbolos (LTC é o canário: preço já −2,1% da SMA50-1h, margem a <1% de desfazer) OU BTC fechar diário abaixo do higher-low 57.800 → confirmou réplica de junho; pró-(a) = a janela 4/4 sobreviver além das 124h de junho até ≥14/jul (o dobro) E BTC imprimir fechamento DIÁRIO acima da SMA50d (~$66.500) rompendo o pivô 64.700 com volume 7d>média 30d → aí sim o critério \"bull sustentado\" do playbook abre, e a decisão de grandfather volta pro dono. Junho deu o desfecho em ≤6 dias do pico; o prazo de 1-2 semanas é suficiente.",
+> 124	        "contra_exemplos": [
+> 125	          "PRECEDENTE 12-18/jun/2026 (klines 1h Binance, 1000 velas): golden cross 1h nos 4 símbolos em 12-13/jun, janela 4/4 smaAbove de 124h (13/jun 04h → 18/jun 08h) — MAIS LONGA que as 88h do evento atual (03/jul 13h → 07/jul 05h) — com margens de pico BTC +3,49% e LTC +4,30% (vs +3,21%/+3,51% agora); morreu em death crosses 18-19/jun e BTC caiu de 67.292 (15/jun) para 57.800 (01/jul), −14%, nova mínima de ciclo. O evento 'que não acontece em qualquer bounce' aconteceu no bounce anterior e era armadilha.",
+> 126	          "BASE RATE BTC desde o topo do ciclo ($126.200, 06/out/25): 19 bounces ≥8% low→high catalogados (algoritmo swing +8%/término −5%), TODOS mortos; 6 deles reconquistaram a SMA50d (10/out +7,1%, 27/out +1,9%, 14/jan +8,9%, 17/mar +7,2%, 17/abr +11,8%, 06/mai +13,4%) e morreram mesmo assim; o bounce atual (+11,9%) teve pico a −2,8% da SMA50d — mais fraco que os 6 que reconquistaram e falharam.",
+> 127	          "ETH (proxy macro, mesmo método): 45 bounces ≥8% desde o topo de ago/25, todos mortos até o atual; MAS o atual (+21,3% do low 1.512 de 26/jun) RECONQUISTOU a SMA50d (+1,6%, em curso, primeiro reclaim desde 06/mai) — ponto contra o 'ignorar' puro da tese (b).",
+> 128	          "ADA diverge do template de junho: margem 1h de pico +16,31% no evento atual vs +5,09% no de junho (3,2×), único símbolo com higher high em 30d (0,20 > 0,19) e volume 7d +17% vs média 30d — segundo ponto contra o 'ignorar' cego.",
+> 129	          "SEMANAL (contexto que nenhuma das lentes citou): BTC fechou a −10,2% da SMA20w e −28,9% da SMA50w; ETH −12,7%/−40,1%; últimas 8 semanas do BTC: 77,5k→77,1k→73,7k→63,3k→65,8k→63,3k→59,6k→63,7k — estrutura semanal integralmente de baixa, sem nem o primeiro degrau de reversão macro.",
+> 130	          "MOMENTUM JÁ ROLANDO: margens SMA50/200-1h encolhendo em 3/4 símbolos nas últimas 24h (BTC +3,20%→+2,87%, LTC +3,51%→+2,92%, ADA +15,97%→+11,86%; só BNB estável +3,20%) — réplica do padrão de 17-18/jun na véspera dos death crosses; LTC a <1% de desfazer o cross é o canário imediato.",
+> 131	          "LIMITAÇÃO DO HISTÓRICO INTERNO: regime-full.log começa em 2026-06-19T17:35 com above=false ×4 (pós-death-cross de junho) — o sistema literalmente nasceu depois do fakeout anterior, então 'primeiro 4/4 da história do log' não é evidência de raridade; nas klines o intervalo entre os dois eventos 4/4 foi de apenas 15 dias."
+> 132	        ],
+> 133	        "confianca": "alta"
+> 134	      }
+> 135	    ]
+> 136	  },
+> 137	  "workflowProgress": [
+> 138	    {
+> 139	      "type": "workflow_phase",
+> 140	      "index": 1,
+> 141	      "title": "Lentes"
+> 142	    },
+> 143	    {
+> 144	      "type": "workflow_phase",
+> 145	      "index": 2,
+> 146	      "title": "Céticos"
+> 147	    },
+> 148	    {
+> 149	      "type": "workflow_agent",
+> 150	      "index": 1,
+> 151	      "label": "lente:estrutura",
+> 152	      "phaseIndex": 1,
+> 153	      "phaseTitle": "Lentes",
+> 154	      "agentId": "a3ac7522c5935865b",
+> 155	      "model": "claude-fable-5",
+> 156	      "state": "done",
+> 157	      "startedAt": 1783401035432,
+> 158	      "queuedAt": 1783401035360,
+> 159	      "attempt": 1,
+> 160	      "lastToolName": "StructuredOutput",
+> 161	      "lastToolSummary": "O \"verde\" de 03-06/jul foi um bounce de bear-market de 5-6 …",
+> 162	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 163	      "lastProgressAt": 1783401130865,
+> 164	      "tokens": 41255,
+> 165	      "toolCalls": 3,
+> 166	      "durationMs": 95433,
+> 167	      "resultPreview": "{\"conclusao\":\"O \\\"verde\\\" de 03-06/jul foi um bounce de bear-market de 5-6 dias, não uma virada sustentada. A estrutura DIÁRIA segue de baixa nos 4 símbolos: preço abaixo da SMA50d e da SMA200d em todos, SMA50d abaixo da SMA200d (alinhamento de death cross) por −10,8% a −29,5%, e o rally do BTC morreu num lower high (64.700) abaixo tanto da SMA50d (66.555) quanto dos pivôs de junho (65.622/67.292)…"
+> 168	    },
+> 169	    {
+> 170	      "type": "workflow_agent",
+> 171	      "index": 2,
+> 172	      "label": "lente:promocao",
+> 173	      "phaseIndex": 1,
+> 174	      "phaseTitle": "Lentes",
+> 175	      "agentId": "adb7c6490855aad92",
+> 176	      "model": "claude-fable-5",
+> 177	      "state": "done",
+> 178	      "startedAt": 1783401035433,
+> 179	      "queuedAt": 1783401035361,
+> 180	      "attempt": 1,
+> 181	      "lastToolName": "StructuredOutput",
+> 182	      "lastToolSummary": "Veredito: HONESTA-MAS-NÃO-TRANSFERE, com falso-positivo est…",
+> 183	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 184	      "lastProgressAt": 1783401223905,
+> 185	      "tokens": 58754,
+> 186	      "toolCalls": 13,
+> 187	      "durationMs": 188472,
+> 188	      "resultPreview": "{\"conclusao\":\"Veredito: HONESTA-MAS-NÃO-TRANSFERE, com falso-positivo estatístico provável. O mecanismo é limpo (realized-only fee-inclusive, sem cherry-picking; recompute do DB bate exato com o gravado: +$1,1829 sobre 20 sells), mas a prova é estatisticamente marginal (bootstrap 95% CI da média [−$0,013, +$0,126] CRUZA zero; P(média≤0)=5,1%), é regime-dependente (100%+ do net veio da janela do ra…"
+> 189	    },
+> 190	    {
+> 191	      "type": "workflow_agent",
+> 192	      "index": 3,
+> 193	      "label": "lente:risco",
+> 194	      "phaseIndex": 1,
+> 195	      "phaseTitle": "Lentes",
+> 196	      "agentId": "aaef65e0a28b7da7b",
+> 197	      "model": "claude-fable-5",
+> 198	      "state": "done",
+> 199	      "startedAt": 1783401130866,
+> 200	      "queuedAt": 1783401035361,
+> 201	      "attempt": 1,
+> 202	      "lastToolName": "StructuredOutput",
+> 203	      "lastToolSummary": "Risco operacional do baseline real é BOUNDED-OK nos números…",
+> 204	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 205	      "lastProgressAt": 1783401529426,
+> 206	      "tokens": 96825,
+> 207	      "toolCalls": 27,
+> 208	      "durationMs": 398559,
+> 209	      "resultPreview": "{\"conclusao\":\"Risco operacional do baseline real é BOUNDED-OK nos números: anti-refire triplo (edge-trigger via condição invertida + lock de 60s pós-disparo + regime/flow como gates passivos) garante 1 ordem por cruzamento (não 20), ordem de $5 (minNotional), frequência real observada de 0-1 disparo/dia (0 ordens reais em ~30h armada; flow gate vetou o único gatilho). O furo estrutural é assimetri…"
+> 210	    },
+> 211	    {
+> 212	      "type": "workflow_agent",
+> 213	      "index": 4,
+> 214	      "label": "lente:acoes",
+> 215	      "phaseIndex": 1,
+> 216	      "phaseTitle": "Lentes",
+> 217	      "agentId": "a8b9f60bdb3d3802a",
+> 218	      "model": "claude-fable-5",
+> 219	      "state": "done",
+> 220	      "startedAt": 1783401223908,
+> 221	      "queuedAt": 1783401035361,
+> 222	      "attempt": 1,
+> 223	      "lastToolName": "StructuredOutput",
+> 224	      "lastToolSummary": "Ranking por EV×custo×risco: (1) NADA/observar vence com fol…",
+> 225	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 226	      "lastProgressAt": 1783401434490,
+> 227	      "tokens": 56561,
+> 228	      "toolCalls": 16,
+> 229	      "durationMs": 210582,
+> 230	      "resultPreview": "{\"conclusao\":\"Ranking por EV×custo×risco: (1) NADA/observar vence com folga — a máquina já fez sozinha o que tinha que fazer (promoção consistencia → baseline BTC real armado com proteções), o regime esfriou pra range 4/4 e não há sinal pendente pra capturar. Segundo lugar empatado: (5) experimento maker-15m em paper (único fio net+ do backtest, mas custo real = feature nova no paperEngine, que ho…"
+> 231	    },
+> 232	    {
+> 233	      "type": "workflow_agent",
+> 234	      "index": 5,
+> 235	      "label": "cetico:acionavel",
+> 236	      "phaseIndex": 2,
+> 237	      "phaseTitle": "Céticos",
+> 238	      "agentId": "aea2fab15215e3c1f",
+> 239	      "model": "claude-fable-5",
+> 240	      "state": "done",
+> 241	      "startedAt": 1783401529500,
+> 242	      "queuedAt": 1783401529429,
+> 243	      "attempt": 1,
+> 244	      "lastToolName": "StructuredOutput",
+> 245	      "lastToolSummary": "\"Há oportunidade acionável agora\" — especificamente as 4 aç…",
+> 246	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 247	      "lastProgressAt": 1783401806703,
+> 248	      "tokens": 61504,
+> 249	      "toolCalls": 10,
+> 250	      "durationMs": 277202,
+> 251	      "resultPreview": "{\"alvo\":\"\\\"Há oportunidade acionável agora\\\" — especificamente as 4 ações recomendadas pelas lentes além de 'nada': (A) experimento maker-15m no paperEngine, (B) fix do re-arm TREND_CROSS na saída do bear, (C) endurecer evaluatePromotion v2, (D) mitigações de risco do baseline (teto de exposição acumulada + doutrina de saída de posição presa)\",\"veredito\":\"REFUTADO\",\"argumento\":\"Ataque mais forte: …"
+> 252	    },
+> 253	    {
+> 254	      "type": "workflow_agent",
+> 255	      "index": 6,
+> 256	      "label": "cetico:promocao",
+> 257	      "phaseIndex": 2,
+> 258	      "phaseTitle": "Céticos",
+> 259	      "agentId": "aa65d0ad0c39c343b",
+> 260	      "model": "claude-fable-5",
+> 261	      "state": "done",
+> 262	      "startedAt": 1783401529502,
+> 263	      "queuedAt": 1783401529430,
+> 264	      "attempt": 1,
+> 265	      "lastToolName": "StructuredOutput",
+> 266	      "lastToolSummary": "\"A promoção da consistencia é confiável e o baseline real a…",
+> 267	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 268	      "lastProgressAt": 1783401845502,
+> 269	      "tokens": 75888,
+> 270	      "toolCalls": 24,
+> 271	      "durationMs": 315999,
+> 272	      "resultPreview": "{\"alvo\":\"\\\"A promoção da consistencia é confiável e o baseline real armado é seguro\\\" (claim composto: confiabilidade estatística da 1ª promoção do promotionJob + segurança operacional do id2/id3 real BTCUSDT)\",\"veredito\":\"PARCIAL\",\"argumento\":\"Ataquei os dois lados com dados re-derivados por mim (não confiei nas lentes). LADO (a) 'promoção é falso-positivo': VENCEU. Recompute independente do DB b…"
+> 273	    },
+> 274	    {
+> 275	      "type": "workflow_agent",
+> 276	      "index": 7,
+> 277	      "label": "cetico:estrutura",
+> 278	      "phaseIndex": 2,
+> 279	      "phaseTitle": "Céticos",
+> 280	      "agentId": "a4ec15c15c87cebd7",
+> 281	      "model": "claude-fable-5",
+> 282	      "state": "done",
+> 283	      "startedAt": 1783401806707,
+> 284	      "queuedAt": 1783401529430,
+> 285	      "attempt": 1,
+> 286	      "lastToolName": "StructuredOutput",
+> 287	      "lastToolSummary": "Tese dupla sobre o verde de 03-06/jul: (a) \"virada sustenta…",
+> 288	      "promptPreview": "Leia PRIMEIRO o contexto consolidado em /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/scratchpad/context.md (use Read). Você está numa VPS com acesso read-only ao sistema TradeUX vivo (bot Binance Spot mainnet, $149 reais). As receitas de acesso (API/DB/logs/klines) estão no contexto. REGRA ABSOLUTA: read-only — nenhum PATCH/POST (exceto re-login se o token expirar), ne…",
+> 289	      "lastProgressAt": 1783402032572,
+> 290	      "tokens": 62949,
+> 291	      "toolCalls": 7,
+> 292	      "durationMs": 225864,
+> 293	      "resultPreview": "{\"alvo\":\"Tese dupla sobre o verde de 03-06/jul: (a) \\\"virada sustentada → armar trend real\\\" vs (b) \\\"só whipsaw, ignorar\\\"\",\"veredito\":\"PARCIAL\",\"argumento\":\"Tese (a) REFUTADA com dado novo (kill-shot): o cluster \\\"golden cross 1h nos 4 símbolos + smaAbove com margem\\\" NÃO é raro nem preditivo — o evento IDÊNTICO E MAIS FORTE aconteceu 3 semanas antes (12-18/jun: janela 4/4 de 124h vs 88h do atua…"
+> 294	    }
+> 295	  ],
+> 296	  "totalTokens": 453736,
+> 297	  "totalToolCalls": 100
+> 298	}
+> ```
+
+## 🤖 Claude *(05:27:59)*
+
+
+## 🤖 Claude *(05:27:59)*
+
+
+## 🤖 Claude *(05:28:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-first-promotion-baseline-armed.md",
+  "content": "---\nname: tradeux-first-promotion-baseline-armed\ndescription: 2026-07-06 23:00Z \u2014 1\u00aa promo\u00e7\u00e3o real do motor (consistencia) \u2192 supervisor ARMOU baseline REAL id2/id3 BTC ($5/ordem); auditoria 7-agentes = promo\u00e7\u00e3o honesta-mas-N\u00c3O-transfere, verde 03-06/jul = r\u00e9plica do fakeout de 12-18/jun; NADA acion\u00e1vel; testes objetivos anotados\nmetadata:\n  type: project\n---\n\n**O evento (2026-07-06):** `promotionJob` promoveu `consistencia` \u00e0s 22:59:58Z (20 round-trips, realized +$1,18, 85% win) \u2192 43s depois `groupSupervisorJob` **ATIVOU o baseline REAL** (id2 Buy + id3 Sell BTCUSDT, \"regime=range (n\u00e3o-bear)\"). Primeira automa\u00e7\u00e3o de COMPRA real armada desde 21/jun. O motor A-D de [[tradeux-autonomy-engine]] funcionou fim-a-fim sozinho. Ordem real = **$5,00** (symbols.minNotional BTCUSDT=5.00, N\u00c3O $10-12); 0 ordens reais em 30h+ armada (flow gate vetou o \u00fanico gatilho; conferir `orders isTestnet=0` > id 264 pra saber se j\u00e1 houve fill).\n\n**Auditoria adversarial (wf_8a3650df, 4 lentes + 3 c\u00e9ticos, 2026-07-07):**\n- **Promo\u00e7\u00e3o = HONESTA-MAS-N\u00c3O-TRANSFERE**: recompute do DB bate exato (+$1,1829/20 sells), mas bootstrap 95% CI da m\u00e9dia [\u2212$0,013, +$0,126] CRUZA zero (P(\u22640)=5,1%); 100% do net veio do rally 02-06/jul (19-23/jun = \u2212$0,28); 96% do edge veio das ALTS (LTC 15/20 rt) e o armado real \u00e9 S\u00d3 BTC (n=3, +$0,047) com flow gate extra que o paper n\u00e3o tem; unrealized \u2212$1,18 anula o realized \u2192 total da trilha em 18d = $0,00.\n- **Verde 03-06/jul = bounce, n\u00e3o virada** (kill-shot do c\u00e9tico): evento ID\u00caNTICO E MAIS FORTE em **12-18/jun** (4/4 verde por 124h vs 88h; margens maiores) morreu em death cross 4/4 com BTC 67.292\u219257.800 (\u221214%, nova m\u00ednima). O regime.log s\u00f3 come\u00e7a em 19/jun (p\u00f3s-fakeout) \u2192 \"primeiro 4/4 da hist\u00f3ria\" era artefato do hist\u00f3rico curto. Base rate: 19/19 bounces \u22658% do BTC desde o topo do ciclo morreram; estrutura DI\u00c1RIA/semanal segue bearish (pre\u00e7o < SMA50d < SMA200d nos 4; volume n\u00e3o confirma). Paper de trend PERDEU durante o pr\u00f3prio verde (trendstate \u2212$0,06/33% win; trendbreadth \u2212$0,00/43%).\n- **Risco do baseline armado = BOUNDED-OK**: edge-trigger (invertCondition beholder.js:141-153) + lock 60s (beholder.js:988-992) = 1 ordem/cruzamento; pior dia real 13 crossings \u2248 $65 exposto. **Furos anotados (LOW, sem urg\u00eancia)**: sem teto de exposi\u00e7\u00e3o ACUMULADA do baseline (FARM_MAX_NOTIONAL s\u00f3 casa /^Farm Buy /); posi\u00e7\u00e3o fica PRESA se regime vira trend/bear (id3 gateada !=trend e desativada em bear; dailyCap s\u00f3 bloqueia ordens novas, nunca liquida); **n\u00e3o existe DEMO\u00c7\u00c3O** (promote() \u00e9 one-way, promotionStore.js:52-59) \u2014 falso-positivo fica armado at\u00e9 interven\u00e7\u00e3o manual; dust <$5 invend\u00e1vel.\n- **Gap estrutural descoberto**: slopegate/macro papers t\u00eam 0 trades porque o golden cross 1h dispara DURANTE bear (edge-signal vetado pelo gate !=bear, 4/4 casos, 28-58h antes do flip). Consertar (re-arm na sa\u00edda do bear) = o mecanismo \"re-armar no flip\" J\u00c1 REFUTADO pelo backtest 900d; c\u00e9tico simulou o fix no melhor ciclo: \u2248 **\u22121,3% l\u00edquido** com a sa\u00edda real. N\u00c3O construir; s\u00f3 anotar.\n\n**Why:** a pr\u00f3xima sess\u00e3o precisa saber que dinheiro real pode ter sido movimentado pela id2 ($5/fill) e que a 1\u00aa promo\u00e7\u00e3o \u00e9 caso-teste do crit\u00e9rio, n\u00e3o sinal de edge; e n\u00e3o re-derivar a auditoria.\n\n**How to apply:** no /handson checar `orders isTestnet=0` acima da #264 e o estado id2/id3. **Testes objetivos que separam bounce\u00d7virada** (verific\u00e1veis no pr\u00f3prio sistema, ~1-2 semanas de 07/jul): pr\u00f3-whipsaw = \"SMA DEATH cross\" no regime.log em \u22652 s\u00edmbolos (LTC \u00e9 o can\u00e1rio, margem <1%) OU BTC fechar di\u00e1rio <57.800; pr\u00f3-virada = 4/4 verde sobreviver AL\u00c9M de 124h (at\u00e9 \u226514/jul) E BTC fechar di\u00e1rio > SMA50d (~$66.500) com volume 7d > m\u00e9dia 30d \u2192 s\u00f3 a\u00ed o crit\u00e9rio \"bull sustentado\" do playbook de [[tradeux-parked-as-fuel]] abre. Diverg\u00eancias honestas a observar: ADA (higher high 30d + volume +17%) e ETH (reconquistou SMA50d, 1\u00ba reclaim desde 06/mai). Backlog custo-zero (n\u00e3o construir sem GO): promotion v2 (prova per-symbol/na config armada, CI>0, mark-to-market), demo\u00e7\u00e3o, teto de exposi\u00e7\u00e3o do baseline, doutrina de sa\u00edda de posi\u00e7\u00e3o presa.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-first-promotion-baseline-armed.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:28:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)",
+  "new_string": "# Memory Index\n\n- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)\n- [First promotion + baseline armed](tradeux-first-promotion-baseline-armed.md) \u2014 2026-07-06: 1\u00aa promo\u00e7\u00e3o real (consistencia) \u2192 baseline REAL id2/id3 BTC ARMADO ($5/ordem, 0 fills at\u00e9 07/jul); auditoria 7-agentes: promo\u00e7\u00e3o n\u00e3o-transfere (CI cruza zero, edge das alts), verde 03-06/jul = r\u00e9plica do fakeout 12-18/jun; NADA acion\u00e1vel; testes objetivos bounce\u00d7virada anotados"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(05:28:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -3 /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md",
+  "description": "Ver in\u00edcio do MEMORY.md pra editar o \u00edndice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # Memory Index
+> 
+> - [Respond in pt-BR](respond-in-pt-br.md) — think in English, always reply to the user in Brazilian Portuguese (workspace rule)
+> ```
+
+## 🤖 Claude *(05:28:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\npath = '/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/MEMORY.md'\nwith open(path) as f:\n    content = f.read()\nanchor = '- [Respond in pt-BR](respond-in-pt-br.md) \u2014 think in English, always reply to the user in Brazilian Portuguese (workspace rule)'\nnew_line = '- [First promotion + baseline armed](tradeux-first-promotion-baseline-armed.md) \u2014 2026-07-06: 1\u00aa promo\u00e7\u00e3o real (consistencia) \u2192 baseline REAL id2/id3 BTC ARMADO ($5/ordem, 0 fills at\u00e9 07/jul); auditoria 7-agentes: promo\u00e7\u00e3o n\u00e3o-transfere (CI cruza zero, edge das alts), verde 03-06/jul = r\u00e9plica do fakeout 12-18/jun; NADA acion\u00e1vel; testes objetivos bounce\u00d7virada anotados'\nassert anchor in content, 'anchor not found'\ncontent = content.replace(anchor, anchor + '\\n' + new_line, 1)\nwith open(path, 'w') as f:\n    f.write(content)\nprint('ok')\nPY",
+  "description": "Adicionar linha da mem\u00f3ria nova no \u00edndice MEMORY.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ok
+> ```
+
+## 🤖 Claude *(05:29:22)*
+
+
+## 🤖 Claude *(05:29:22)*
+
+Memória gravada. Agora o veredito completo:
+
+---
+
+## Você viu certo — e a máquina até agiu sozinha. Mas a auditoria diz: **ainda não é a virada.**
+
+### ✅ O que você viu era real
+
+O verde não foi ilusão: desde 01/jul a **ADA ficou 65 horas seguidas em trend**, BNB 48h, BTC 33h, e houve ~11h com **os 4 símbolos verdes ao mesmo tempo** (04–05/jul). Os golden crosses SMA50/200 no gráfico de 1h aconteceram nos 4 símbolos entre 29/jun e 03/jul.
+
+### 🤖 E a máquina fez, sozinha, exatamente o que foi desenhada pra fazer
+
+Ontem às 23h (UTC) aconteceu a **primeira promoção real** do motor de autonomia: a trilha paper `consistencia` (compra RSI<25 / vende RSI>75) cruzou o critério — 20 operações completas, +$1,18 líquido, 85% de acerto — e o supervisor **armou o Baseline REAL de BTC** 43 segundos depois. É a primeira automação de compra real ativa desde 21/jun. Até agora ela **não comprou nada**: o único gatilho que apareceu foi vetado pelo filtro de fluxo (o mercado estava em capitulação vendedora). Se comprar, é **$5 por ordem**, com todos os tetos valendo.
+
+### ❌ Por que a auditoria derrubou a "oportunidade" (7 agentes, dados vivos + histórico da Binance)
+
+**1. O kill-shot: esse filme já passou, há 3 semanas.** Um evento *idêntico e mais forte* aconteceu em **12–18/jun**: 4/4 verde por **124 horas** (mais que as 88h de agora), margens maiores — e terminou em death cross nos 4 símbolos com o BTC caindo 14% pra nova mínima do ciclo. Nosso log de regime só começa em 19/jun (o sistema "nasceu" logo depois desse fakeout), por isso o verde de agora parecia inédito. Desde o topo do ciclo, **19 de 19 bounces ≥8% do BTC morreram** — este é o nº 20, e nem alcançou a média de 50 dias.
+
+**2. A estrutura de fundo continua de baixa.** O golden cross é só no gráfico de **1 hora**. No **diário**, os 4 símbolos estão abaixo da SMA50 e da SMA200, com topos e fundos descendentes no BTC, e o volume do rally foi *menor* que a média (BTC −20%). O próprio sistema já esfriou: regime **range 4/4** hoje de madrugada, BTC de volta a ~$63.100.
+
+**3. O paper de trend perdeu dinheiro DURANTE o verde.** As duas trilhas que surfavam exatamente essas janelas fecharam negativas (33% e 43% de acerto). Surfar o flip de regime segue não pagando — ao vivo, não só no backtest.
+
+**4. A promoção é honesta, mas a prova não transfere.** Os números batem (reconferimos no banco), mas: 96% do lucro veio das **alts** (LTC sozinho: 15 das 20 operações) e o que foi armado real é **só BTC** (que no paper fez +$0,05 em 3 trades); todo o lucro veio da janela do rally; e estatisticamente a média por trade não se separa de zero (o intervalo de confiança cruza o zero). Detalhe cruel: as 4 posições que o paper ainda carrega, compradas perto do topo do verde, estão −$1,18 — **anulando exatamente** o +$1,18 realizado. Total da trilha em 18 dias: $0,00.
+
+### 🎯 O que fazer (recomendação: quase nada — e é isso que o sistema quer)
+
+- **Deixar como está.** O baseline real de $5 é o experimento perfeito rodando sozinho: risco limitado, e vai gerar o primeiro dado REAL de edge. Não subir o size (zero fills ainda), não armar o trend (`grandfather`) — seria comprar o bounce que 19/19 vezes morreu.
+- **Os marcos objetivos que transformariam isso em virada de verdade** (aí sim me chama):
+  - 🟢 **Vira jogo se**: o verde 4/4 sobreviver além de 14/jul (batendo o recorde do fakeout de junho) **e** o BTC fechar o **diário** acima de ~$66.500 (SMA50d) com volume acima da média.
+  - 🔴 **Confirma réplica de junho se**: aparecer death cross em 2+ símbolos (o LTC é o canário — está a <1% de desfazer o cross) ou o BTC fechar abaixo de $57.800.
+- Dois sinais divergentes honestos que valem observar: **ADA** (único com topo mais alto em 30d e volume crescendo) e **ETH** (reconquistou a SMA50 diária pela primeira vez desde maio).
+
+Anotei no backlog (sem construir nada): endurecer o critério de promoção v2, criar "demoção" (hoje uma promoção é permanente), e um teto de exposição acumulada pro baseline. Tudo custo-zero de anotar, nada urgente com ordens de $5.
+
+**Resumo em uma frase**: o cockpit verde era um bounce clássico de bear market — a máquina reagiu certo, armou o mínimo com prova mínima, e o melhor trade agora continua sendo o teu foco no freelance enquanto ela espera o marco objetivo por você. 📊

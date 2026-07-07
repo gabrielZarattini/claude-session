@@ -16332,6 +16332,293 @@ Diagnóstico com file:line preciso. **Lei 1: verifico os fatos eu mesmo antes de
 > HTTP=200
 > ```
 
+## 🤖 Claude *(05:01:48)*
+
+
+## 🤖 Claude *(05:01:48)*
+
+
+## 🤖 Claude *(05:01:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env\necho \"=== saldo do User 0 (coluna certa: id) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/profiles?id=eq.ada39fae-2921-4bd5-a4a9-a04d34f9d059&select=mco_balance\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | head -c 200\necho \"\"\necho \"=== transa\u00e7\u00f5es mco dos \u00faltimos 10min (deve haver ZERO video_render) ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcoin_transactions?select=action,amount,created_at&order=created_at.desc&limit=3\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -m json.tool 2>/dev/null | head -14",
+  "description": "Verify no debit (correct columns)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === saldo do User 0 (coluna certa: id) ===
+> []
+> === transações mco dos últimos 10min (deve haver ZERO video_render) ===
+> [
+>     {
+>         "action": "spend",
+>         "amount": -12,
+>         "created_at": "2026-07-07T02:43:17.436051+00:00"
+>     },
+>     {
+>         "action": "spaces.node.run",
+>         "amount": -30,
+>         "created_at": "2026-07-07T02:39:27.210366+00:00"
+>     },
+>     {
+>         "action": "spaces.node.run",
+>         "amount": -10,
+> ```
+
+## 🤖 Claude *(05:02:10)*
+
+
+## 🤖 Claude *(05:02:10)*
+
+
+## 🤖 Claude *(05:02:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/video-render/index.ts src/pages/VideoStudioPage.tsx\ngit commit -q -m \"fix(video): 422 composition_required antes do d\u00e9bito \u2014 fecha o charge\u2192fail\u2192refund\n\nPrimeiro incidente do la\u00e7o MAPE-K resolvido ponta-a-ponta (INC-20260707T0432Z-\n1f2942b6, diagn\u00f3stico L2 high-confidence VALIDADO fato-a-fato pela sess\u00e3o): a UI\ngen\u00e9rica do Est\u00fadio de V\u00eddeo submetia hyperframes SEM composition; o video-render\ngravava composition=null, COBRAVA 12 mco e o worker falhava garantido\n(composition_missing_or_invalid) \u2192 ciclo charge\u2192fail\u2192refund (render real 0537b99d,\nrefund 3s depois). Fix: (a) edge fn valida composition (studio-project OU props)\nANTES do deduct \u2192 422 composition_required; autopilot intacto (INSERT direto, n\u00e3o\npassa pela fn) e Studio editor intacto (envia mode=studio-project \u2014 smoke dry-run\n200); (b) op\u00e7\u00e3o hyperframes removida do seletor gen\u00e9rico (autoria real = editor\nStudio) + banner/coment\u00e1rio 'n\u00e3o debita' STALE corrigidos (o motor debita desde\n01/07). Provas: tsc 0 \u00b7 deploy \u00b7 422 LIVE sem transa\u00e7\u00e3o nova (trilha mcoin parou\nno d\u00e9bito do incidente) \u00b7 dry-run studio-project 200.\"\ngit log --oneline -1\necho \"=== resolver o incidente (fecha o ciclo MAPE-K) ===\"\nbun run scripts/qa/guardian-tick.ts --resolve \"INC-20260707T0432Z-1f2942b6\" --note \"fix deployado: 422 composition_required pr\u00e9-d\u00e9bito (commit $(git rev-parse --short HEAD)) + op\u00e7\u00e3o removida da UI gen\u00e9rica; provado LIVE 422-sem-transa\u00e7\u00e3o + studio-project dry-run 200; diagn\u00f3stico L2 validado fato-a-fato\"\nbun run scripts/qa/guardian-tick.ts --list-incidents\ngit push origin main 2>&1 | tail -2",
+  "description": "Commit fix + resolve incident + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m2:02AM[0m [32mINF[0m 1 commits scanned.
+> [90m2:02AM[0m [32mINF[0m scan completed in 42.6ms
+> [90m2:02AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> f678cb3 fix(video): 422 composition_required antes do débito — fecha o charge→fail→refund
+> === resolver o incidente (fecha o ciclo MAPE-K) ===
+> ✅ INC-20260707T0432Z-1f2942b6 resolvido → archive/
+> nenhum incidente aberto
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    828cb67..f678cb3  main -> main
+> ```
+
+## 🤖 Claude *(05:02:48)*
+
+
+## 🤖 Claude *(05:02:48)*
+
+
+## 🤖 Claude *(05:02:55)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "L3 fallback do regime v3: fila zerada ap\u00f3s resolver o 1\u00ba incidente real; o cron vigia \u2014 este wakeup s\u00f3 re-checa a fila de incidentes em 30min.",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent \u2014 camada COGNITIVA (Plan+Execute) do la\u00e7o auton\u00f4mico MAPE-K. Monitor+Analyze s\u00e3o MEC\u00c2NICOS e PERP\u00c9TUOS (cron guardian-tick */5 + guard-sweep 6h + watchdog) \u2014 NUNCA fa\u00e7a polling pr\u00f3prio de monitoramento. No in\u00edcio e a cada retomada: leia .claude/context/autonomous-loop-charter.md + rode `bun run scripts/qa/guardian-tick.ts --list-incidents` + git fetch + Fila Sovereign. \u00b7 INCIDENTES ABERTOS t\u00eam prioridade: cada um \u00e9 item EXECUTOR (diagn\u00f3stico \u2192 fix \u2192 prova material Lei 1 \u2192 commit granular; use o remediation_report do L2 se houver) e fecha com `guardian-tick.ts --resolve <id> --note \"<prova>\"`. \u00b7 Sem incidentes: MODO EXECUTOR no backlog desbloqueado (BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova \u2192 /security-review se migration \u2192 /handoff ao fechar Fatia). \u00b7 Sem incidentes E sem backlog: N\u00c3O vigie (o cron vigia) \u2014 ScheduleWakeup 30-60min s\u00f3 para re-checar a fila de incidentes; sem relat\u00f3rio se nada mudou. \u00b7 SEMPRE: port\u00e3o Sovereign \u2192 Fila e pule, NUNCA improvise; topo da Fila em 1 linha em todo reporte; NUNCA fabrique busywork (Lei 1); parar S\u00d3 com \"stop\" expl\u00edcito OU janela ~95% (selar /handoff antes). Reporte em PT-BR."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 02:33:00 (in 1804s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 👤 User *(05:11:32)*
+
+Next wakeup scheduled for 02:33:00 (in 1804s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+
+---
+
+Isso significa que o prompt esta errado com a questão de ScheduleWakeup 30-60min só para re-checar a fila de incidentes; sem relatório se nada mudou... 
+
+É possivel mudar essa parte para que seja algo onEvent ou com trigger sem ser por scheduled?
+
+## 🤖 Claude *(05:11:56)*
+
+
+## 🤖 Claude *(05:11:56)*
+
+
+## 🤖 Claude *(05:11:56)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:Monitor,TaskList",
+  "max_results": 3
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'Monitor'}, {'type': 'tool_reference', 'tool_name': 'TaskList'}]
+> ```
+
+## 🤖 Claude *(05:12:21)*
+
+
+## 🤖 Claude *(05:12:21)*
+
+Verificando `inotifywait` (event-driven puro) e armando o monitor da fila:
+
+## 🤖 Claude *(05:12:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "which inotifywait && inotifywait --help 2>&1 | head -2 || echo \"inotifywait AUSENTE \u2014 uso poll local leve\"",
+  "description": "Check inotifywait availability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> inotifywait AUSENTE — uso poll local leve
+> ```
+
+## 🤖 Claude *(05:12:34)*
+
+
+🛠️ **Tool Call**: `Monitor`
+```json
+{
+  "command": "DIR=/home/gcrUX/htdocs/constellation-orchestra/.claude/context/incidents\nmkdir -p \"$DIR\"\nseen=$(ls \"$DIR\"/INC-*.json 2>/dev/null | sort)\nwhile true; do\n  sleep 20\n  cur=$(ls \"$DIR\"/INC-*.json 2>/dev/null | sort)\n  new=$(comm -13 <(printf '%s\\n' \"$seen\") <(printf '%s\\n' \"$cur\"))\n  if [ -n \"$new\" ]; then\n    while IFS= read -r f; do\n      [ -n \"$f\" ] && echo \"\ud83d\udd34 INCIDENTE NOVO na fila: $(basename \"$f\")\"\n    done <<< \"$new\"\n  fi\n  seen=$cur\ndone",
+  "description": "fila de incidentes MAPE-K (.claude/context/incidents) \u2014 evento por incidente novo",
+  "persistent": true,
+  "timeout_ms": 3600000
+}
+```
+
+> **Tool Result (Monitor)** - ✅ Success
+>
+> ```
+> Monitor started (task b4uy1zhux, persistent — runs until TaskStop or session end). You will be notified on each event. Keep working — do not poll or sleep. Events may arrive while you are waiting for the user — an event is not their reply.
+> ```
+
+## 🤖 Claude *(05:12:46)*
+
+
+## 🤖 Claude *(05:12:46)*
+
+
+## 🤖 Claude *(05:12:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "   d. Sem incidentes E sem backlog: a sess\u00e3o N\u00c3O vigia (o cron vigia) \u2014 `ScheduleWakeup` s\u00f3 como fallback grosso 30\u201360min para re-checar a fila; nada mudou = sil\u00eancio.",
+  "new_string": "   d. Sem incidentes E sem backlog: a sess\u00e3o N\u00c3O vigia (o cron vigia) e N\u00c3O faz polling \u2014 **arma UM `Monitor` persistente na fila** (`.claude/context/incidents/`, evento por `INC-*.json` novo; poll local 20s emitindo s\u00f3 na mudan\u00e7a \u2014 inotifywait ausente no host). O Monitor \u00e9 o **sinal prim\u00e1rio de wake** (\u226420s ap\u00f3s o cron abrir incidente; cobre at\u00e9 a morte do pr\u00f3prio cron, pois o watchdog cria `INC-guardian-heartbeat.json` no mesmo dir). **Antes de armar: `TaskList` \u2014 se j\u00e1 existe monitor da fila rodando, N\u00c3O duplicar.** `ScheduleWakeup` vira s\u00f3 rede de seguran\u00e7a longa (3600s) e **silenciosa** (nada mudou = re-arma sem relat\u00f3rio)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:12:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "\u00b7 Sem incidentes E sem backlog: N\u00c3O vigie (o cron vigia) \u2014 ScheduleWakeup 30-60min\n  s\u00f3 para re-checar a fila de incidentes; sem relat\u00f3rio se nada mudou.",
+  "new_string": "\u00b7 Sem incidentes E sem backlog: N\u00c3O vigie e N\u00c3O fa\u00e7a polling \u2014 arme UM Monitor\n  persistente na fila .claude/context/incidents/ (evento por INC-*.json novo; cheque\n  TaskList antes \u2014 nunca duplicar) como sinal PRIM\u00c1RIO de wake; ScheduleWakeup s\u00f3\n  como rede de seguran\u00e7a longa (3600s) e SILENCIOSA (nada mudou = re-arma sem\n  relat\u00f3rio)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:13:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -q -m \"docs(loop): charter v3.1 \u2014 L3 event-driven via Monitor na fila (fim do polling da sess\u00e3o)\n\nRefinamento do Sovereign: o ScheduleWakeup 30-60min re-checando a fila era polling\ndisfar\u00e7ado. Agora a sess\u00e3o arma UM Monitor persistente em .claude/context/incidents/\n(evento por INC-*.json novo, \u226420s de lat\u00eancia; poll local 20s emitindo s\u00f3 na mudan\u00e7a\n\u2014 inotifywait ausente no host) como sinal PRIM\u00c1RIO de wake. Cobre at\u00e9 a morte do\npr\u00f3prio cron (o watchdog cria INC-guardian-heartbeat.json no mesmo dir \u2192 vira evento\np/ a sess\u00e3o). Anti-duplica\u00e7\u00e3o: TaskList antes de armar. ScheduleWakeup rebaixado a\nrede de seguran\u00e7a de 3600s SILENCIOSA. Prompt can\u00f4nico atualizado.\" 2>&1 | tail -2\ngit log --oneline -1; git push origin main 2>&1 | tail -1",
+  "description": "Commit charter v3.1 event-driven + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> 9b2974d docs(loop): charter v3.1 — L3 event-driven via Monitor na fila (fim do polling da sessão)
+>    f678cb3..9b2974d  main -> main
+> ```
+
+## 🤖 Claude *(05:13:31)*
+
+
+## 🤖 Claude *(05:13:31)*
+
+
+## 🤖 Claude *(05:13:40)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 3600,
+  "reason": "Rede de seguran\u00e7a silenciosa (o Monitor b4uy1zhux na fila de incidentes \u00e9 o sinal prim\u00e1rio de wake; este wakeup s\u00f3 cobre a morte improv\u00e1vel do Monitor).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent \u2014 camada COGNITIVA (Plan+Execute) do la\u00e7o auton\u00f4mico MAPE-K. Monitor+Analyze s\u00e3o MEC\u00c2NICOS e PERP\u00c9TUOS (cron guardian-tick */5 + guard-sweep 6h + watchdog) \u2014 NUNCA fa\u00e7a polling pr\u00f3prio de monitoramento. No in\u00edcio e a cada retomada: leia .claude/context/autonomous-loop-charter.md + rode `bun run scripts/qa/guardian-tick.ts --list-incidents` + git fetch + Fila Sovereign. \u00b7 INCIDENTES ABERTOS t\u00eam prioridade: cada um \u00e9 item EXECUTOR (diagn\u00f3stico \u2192 fix \u2192 prova material Lei 1 \u2192 commit granular; use o remediation_report do L2 se houver) e fecha com `guardian-tick.ts --resolve <id> --note \"<prova>\"`. \u00b7 Sem incidentes: MODO EXECUTOR no backlog desbloqueado (BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova \u2192 /security-review se migration \u2192 /handoff ao fechar Fatia). \u00b7 Sem incidentes E sem backlog: N\u00c3O vigie e N\u00c3O fa\u00e7a polling \u2014 arme UM Monitor persistente na fila .claude/context/incidents/ (evento por INC-*.json novo; cheque TaskList antes \u2014 nunca duplicar) como sinal PRIM\u00c1RIO de wake; ScheduleWakeup s\u00f3 como rede de seguran\u00e7a longa (3600s) e SILENCIOSA (nada mudou = re-arma sem relat\u00f3rio). \u00b7 SEMPRE: port\u00e3o Sovereign \u2192 Fila e pule, NUNCA improvise; topo da Fila em 1 linha em todo reporte; NUNCA fabrique busywork (Lei 1); parar S\u00d3 com \"stop\" expl\u00edcito OU janela ~95% (selar /handoff antes). Reporte em PT-BR."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 03:14:00 (in 3619s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
