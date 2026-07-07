@@ -1154,3 +1154,16 @@ continue
   "timeout": 600000
 }
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a0184792be790a9ca]]
+%% --- TIMELINE END --- %%

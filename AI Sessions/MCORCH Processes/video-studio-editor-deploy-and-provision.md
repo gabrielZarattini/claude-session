@@ -73,3 +73,10 @@ o que o restringe à sessão MCORCH logada.
 `https://video.mcorch.com` (logado) abre o editor NLE HyperFrames com o projeto 9:16; o Sovereign edita
 cenas/camadas/overlays-alpha/efeitos/transições e dá preview ao vivo. **Fase B** (próxima): botão Export →
 `McorchAdapter.startRender` → `video-render` (motor MCORCH + mcoCoins prepaid) em vez do engine local.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
