@@ -68,5 +68,5 @@ Rules (Survival Law 1 — materiality):
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-06 - agent-ae23c4478cf3f2955]]
-> * **Próxima Sessão**: [[2026-07-06 - agent-afda494dc1ce9a2f9]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-af2080f3e4ec22283]]
 %% --- TIMELINE END --- %%
