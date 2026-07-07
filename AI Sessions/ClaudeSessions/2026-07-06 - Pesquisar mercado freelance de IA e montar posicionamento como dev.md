@@ -1,4 +1,4 @@
-# Pesquisar mercado freelance de IA e montar posicionamento como dev
+# [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev|Pesquisar mercado freelance de IA e montar posicionamento como dev]]
 **Date:** 2026-07-06 | **Session ID:** `3562232e-cb65-439c-b99c-a8f274a24b81`
 
 ---
