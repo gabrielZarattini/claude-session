@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1942
-> * **Sessões do Claude**: 1896
+> * **Total de Sessões Registradas**: 1945
+> * **Sessões do Claude**: 1899
 > * **Sessões do Gemini**: 46
 
 ---
@@ -82,7 +82,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-07 - agent-a6c9dd66cf44ca412]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-a63f424575019ce6c]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-a5e992487ea01da0b]]` - *2026-07-07*
-*   *... e mais 1889 sessões nessa categoria.*
+*   *... e mais 1892 sessões nessa categoria.*
 
 ---
 
@@ -1752,8 +1752,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-07 - agent-a5e992487ea01da0b]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a5ba75d87aca616f1]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a300075194b3bd4f3]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a02f28dec762dc307]]` (ClaudeSessions)
+*   `[[2026-07-07 - Revisar status do cockpit]]` (ClaudeSessions)
 *   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` (ClaudeSessions)
 *   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` (ClaudeSessions)
+*   `[[2026-07-07 - Diagnosticar falha de render no video-bridge]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-afda494dc1ce9a2f9]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-af2080f3e4ec22283]]` (ClaudeSessions)
 *   `[[2026-07-06 - agent-aebd1ca3ae6bbd5af]]` (ClaudeSessions)
