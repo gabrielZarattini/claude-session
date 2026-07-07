@@ -84,10 +84,3 @@ Um PAT válido roda só as tools dos seus scopes (403 nos demais), é tenant-bou
 A vhost SSE-tuned (`nginx/mcp.mcorch.com.conf`) faz `proxy_pass` p/ `127.0.0.1:3200` com `proxy_buffering off`
 + timeouts longos (jobs de minutos) + heartbeat ≤25s sob o idle ~100s do Cloudflare. **Ativação depende de ação
 Sovereign** (root tem o agente, mas o DNS é da conta Cloudflare): ver runbook no fim de `nginx/mcp.mcorch.com.conf`.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

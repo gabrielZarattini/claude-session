@@ -11607,6 +11607,144 @@ As três mudanças que resolvem o atrito: **(1)** "PARE quando vazio" → **"mud
 
 Quer que eu: **(A)** atualize a charter para o ritual de modos e já religue o loop com o prompt novo, **(B)** faça o A + instale o guard-sweep no crontab de sistema (6/6h), ou **(C)** só deixe o prompt aí para você usar quando quiser?
 
+## 👤 User *(23:08:23)*
+
+Precisa/loop Você é o MCORCH Master Execution Agent em MALHA FECHADA PERPÉTUA. Leia
+.claude/context/autonomous-loop-charter.md (fonte da verdade) + git fetch + Fila de
+Ação Sovereign, e opere no MODO que o estado pedir:
+· MODO EXECUTOR (há item desbloqueado): ciclo fechado — BoK Gate → SOP Lei 2 →
+  código → prova material Lei 1 → /security-review se migration → commit granular
+  (Workflow p/ substantivo) → /handoff ao fechar Fatia.
+· MODO GUARDIÃO (backlog desbloqueado vazio): a cada ~6h rode
+  scripts/qa/guard-sweep.sh e inspecione infra_health_logs + ciclos do autopilot por
+  erros/regressões novas; qualquer RED vira item EXECUTOR na hora. Entre sweeps,
+  tick lento (30–60min) só checando estado novo — sem relatório se nada mudou.
+· SEMPRE: portão Sovereign (biometria/DNS/OAuth/GO/decisão) → registre na Fila e
+  pule, NUNCA improvise; em todo reporte, liste em 1 linha o topo da Fila (gates
+  visíveis). NUNCA fabrique busywork (Lei 1). NUNCA pare sozinho — só com "stop"
+  explícito do Sovereign OU janela ~95% (selar /handoff antes). Reporte em PT-BR.mos refinar essa malha
+
+## 🤖 Claude *(23:09:13)*
+
+
+## 🤖 Claude *(23:09:14)*
+
+"Precisamos refinar essa malha" — GO recebido. Refinando agora: o ponto-chave é que **a escada de modos precisa viver na charter** (a fonte da verdade que toda iteração relê), não só no texto do `/loop` — assim qualquer religada, com qualquer prompt, já opera no regime novo. Editando o ritual, o critério de parada e o prompt canônico:
+
+## 🤖 Claude *(23:09:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "## Ritual por itera\u00e7\u00e3o\n1. `git fetch` + reler **Pending Actions** do `HANDOFF.md` + esta charter.\n2. Escolher o item de MAIOR valor **DESBLOQUEADO** (pular Sovereign-gated; registr\u00e1-los na Fila).\n3. Ciclo fechado: **BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 (UUID/hash/curl/build/test) \u2192 `/security-review` se houver migration \u2192 commit granular.**\n4. Ao bater num port\u00e3o f\u00edsico: registrar na **Fila de A\u00e7\u00e3o Sovereign** com o destravador exato, e seguir pro pr\u00f3ximo desbloqueado.\n5. **Survival Laws self-audit** (1/2/3/4).\n6. `/handoff` incremental ao fechar cada Fatia. **Selo final + PARAR** quando: janela ~95% \u00b7 OU backlog desbloqueado vazio \u00b7 OU GO/stop do Sovereign.",
+  "new_string": "## Ritual por itera\u00e7\u00e3o (v2 \u2014 MALHA PERP\u00c9TUA, refinada com o Sovereign 2026-07-06)\n1. `git fetch` + reler **Fila de A\u00e7\u00e3o Sovereign** + esta charter \u2192 determinar o **MODO**:\n\n**\u00b7 MODO EXECUTOR** (h\u00e1 item DESBLOQUEADO no backlog):\n   a. Escolher o item de MAIOR valor desbloqueado (pular Sovereign-gated; registr\u00e1-los na Fila).\n   b. Ciclo fechado: **BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 (UUID/hash/curl/build/test) \u2192 `/security-review` se houver migration \u2192 commit granular** (Workflow p/ substantivo).\n   c. `/handoff` incremental ao fechar cada Fatia.\n\n**\u00b7 MODO GUARDI\u00c3O** (backlog desbloqueado vazio):\n   a. A cada **~6h**: rodar `scripts/qa/guard-sweep.sh` + inspecionar `infra_health_logs` (status=error recentes) + \u00faltimos `autopilot_cycles` por falha/regress\u00e3o. Registrar na charter o timestamp do \u00faltimo sweep.\n   b. **Qualquer RED/erro vira item EXECUTOR na hora** (diagn\u00f3stico \u2192 fix \u2192 prova \u2192 commit).\n   c. Entre sweeps: **tick lento (30\u201360min)** s\u00f3 checando estado novo (git/Fila/diretiva). Tick vazio = reporte de 1 linha no m\u00e1ximo; nada mudou = sil\u00eancio.\n\n**\u00b7 SEMPRE (ambos os modos):**\n   - Port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o) \u2192 registrar na **Fila** com o destravador exato e pular. NUNCA improvisar.\n   - Em todo reporte: **1 linha com o topo da Fila** (gates sempre vis\u00edveis).\n   - NUNCA fabricar busywork (Lei 1). **NUNCA parar sozinho** \u2014 s\u00f3 com **\"stop\" expl\u00edcito do Sovereign** OU **janela ~95%** (selar `/handoff` antes).\n   - **Survival Laws self-audit** (1/2/3/4) em itera\u00e7\u00f5es substantivas."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:09:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "## Parar quando\njanela ~95% (selo final) \u00b7 OU backlog desbloqueado vazio \u00b7 OU GO/stop expl\u00edcito do Sovereign.",
+  "new_string": "## Parar quando (v2)\n**S\u00d3** com \"stop\" expl\u00edcito do Sovereign \u00b7 OU janela ~95% (selar /handoff antes). Backlog vazio **N\u00c3O** para o loop \u2014 muda para MODO GUARDI\u00c3O (vigil\u00e2ncia real: guard-sweep 6/6h + infra_health_logs + autopilot)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:09:37)*
+
+
+## 🤖 Claude *(23:09:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md",
+  "old_string": "```\n/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA AUT\u00d4NOMA. Leia\n.claude/context/autonomous-loop-charter.md (fonte da verdade do estado) + git\nfetch + Pending Actions do HANDOFF.md, e CONTINUE de onde a charter est\u00e1. A cada\nitera\u00e7\u00e3o: (1) escolha o item de MAIOR valor DESBLOQUEADO no backlog; (2) ciclo\nfechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review\nse houver migration \u2192 commit granular (Workflow p/ tarefas substantivas); (3) ao\nbater em port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o), N\u00c3O improvise \u2014\nregistre na Fila de A\u00e7\u00e3o Sovereign e pule; (4) Survival self-audit; (5) /handoff\nincremental ao fechar Fatia; selo final + PARE quando janela ~95% OU backlog\ndesbloqueado vazio OU GO/stop. Reporte em PT-BR cada itera\u00e7\u00e3o.\n```",
+  "new_string": "```\n/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA PERP\u00c9TUA. Leia\n.claude/context/autonomous-loop-charter.md (fonte da verdade) + git fetch + Fila de\nA\u00e7\u00e3o Sovereign, e opere no MODO que o estado pedir:\n\u00b7 MODO EXECUTOR (h\u00e1 item desbloqueado): ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192\n  c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se migration \u2192 commit granular\n  (Workflow p/ substantivo) \u2192 /handoff ao fechar Fatia.\n\u00b7 MODO GUARDI\u00c3O (backlog desbloqueado vazio): a cada ~6h rode\n  scripts/qa/guard-sweep.sh e inspecione infra_health_logs + ciclos do autopilot por\n  erros/regress\u00f5es novas; qualquer RED vira item EXECUTOR na hora. Entre sweeps,\n  tick lento (30\u201360min) s\u00f3 checando estado novo \u2014 sem relat\u00f3rio se nada mudou.\n\u00b7 SEMPRE: port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o) \u2192 registre na Fila e\n  pule, NUNCA improvise; em todo reporte, liste em 1 linha o topo da Fila (gates\n  vis\u00edveis). NUNCA fabrique busywork (Lei 1). NUNCA pare sozinho \u2014 s\u00f3 com \"stop\"\n  expl\u00edcito do Sovereign OU janela ~95% (selar /handoff antes). Reporte em PT-BR.\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/autonomous-loop-charter.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:10:00)*
+
+
+## 🤖 Claude *(23:10:00)*
+
+
+## 🤖 Claude *(23:10:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/autonomous-loop-charter.md\ngit commit -m \"feat(loop): charter v2 \u2014 malha perp\u00e9tua com escada de modos EXECUTOR/GUARDI\u00c3O\n\nRefinamento direto com o Sovereign: o crit\u00e9rio 'PARE quando backlog vazio' colidia\ncom a prefer\u00eancia revelada (loop nunca para sozinho). v2: backlog vazio \u2192 MODO\nGUARDI\u00c3O (guard-sweep 6/6h + infra_health_logs + autopilot_cycles; RED vira item\nEXECUTOR na hora; ticks lentos silenciosos entre sweeps). Parada s\u00f3 com stop\nexpl\u00edcito OU janela ~95%. Topo da Fila em todo reporte (gates vis\u00edveis). Prompt\ncan\u00f4nico de religada atualizado na pr\u00f3pria charter \u2014 o regime vive na fonte da\nverdade, n\u00e3o no texto do /loop.\" 2>&1 | tail -3\ngit log --oneline -1\ngit push origin main 2>&1 | tail -2; echo \"sync:\"; git rev-list --left-right --count origin/main...HEAD",
+  "description": "Commit + push charter v2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> [main a0c96cf] feat(loop): charter v2 — malha perpétua com escada de modos EXECUTOR/GUARDIÃO
+>  1 file changed, 34 insertions(+), 19 deletions(-)
+> a0c96cf feat(loop): charter v2 — malha perpétua com escada de modos EXECUTOR/GUARDIÃO
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    ae57b7a..a0c96cf  main -> main
+> sync:
+> 0	0
+> ```
+
+## 🤖 Claude *(23:10:26)*
+
+
+## 🤖 Claude *(23:10:26)*
+
+
+## 🤖 Claude *(23:10:33)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 3300,
+  "reason": "MODO GUARDI\u00c3O v2: \u00faltimo sweep 17:25 all-green, pr\u00f3ximo ~23:25; tick lento intermedi\u00e1rio s\u00f3 checa estado novo (regime silencioso).",
+  "prompt": "/loop Voc\u00ea \u00e9 o MCORCH Master Execution Agent em MALHA FECHADA PERP\u00c9TUA. Leia .claude/context/autonomous-loop-charter.md (fonte da verdade) + git fetch + Fila de A\u00e7\u00e3o Sovereign, e opere no MODO que o estado pedir: \u00b7 MODO EXECUTOR (h\u00e1 item desbloqueado): ciclo fechado \u2014 BoK Gate \u2192 SOP Lei 2 \u2192 c\u00f3digo \u2192 prova material Lei 1 \u2192 /security-review se migration \u2192 commit granular (Workflow p/ substantivo) \u2192 /handoff ao fechar Fatia. \u00b7 MODO GUARDI\u00c3O (backlog desbloqueado vazio): a cada ~6h rode scripts/qa/guard-sweep.sh e inspecione infra_health_logs + ciclos do autopilot por erros/regress\u00f5es novas; qualquer RED vira item EXECUTOR na hora. Entre sweeps, tick lento (30\u201360min) s\u00f3 checando estado novo \u2014 sem relat\u00f3rio se nada mudou. \u00b7 SEMPRE: port\u00e3o Sovereign (biometria/DNS/OAuth/GO/decis\u00e3o) \u2192 registre na Fila e pule, NUNCA improvise; em todo reporte, liste em 1 linha o topo da Fila (gates vis\u00edveis). NUNCA fabrique busywork (Lei 1). NUNCA pare sozinho \u2014 s\u00f3 com \"stop\" expl\u00edcito do Sovereign OU janela ~95% (selar /handoff antes). Reporte em PT-BR."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 21:06:00 (in 3327s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
