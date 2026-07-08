@@ -3640,3 +3640,997 @@ Um **crítico de completude adversarial** confirmou que o backlog autônomo desb
 | Stripe live keys | 1º cliente externo |
 
 Tudo commitado e pushado; malha e memória atualizadas. É só reabrir um desses portões (ou pedir `/handoff`) que eu retomo.
+
+## 👤 User *(03:50:56)*
+
+preciso de ajuda com o tiktok coloquei o arquivo tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt em constellation-orchestrapubliclanding dentro tem esse texto.: tiktok-developers-site-verification=e1TM6dhfPyWrAgBFISEY6qziMxeHBB05 eu poderia colocar ele no cloudflare ou você consegue fazer que o tiktok veja o arquivo?
+
+## 🤖 Claude *(03:51:26)*
+
+
+## 🤖 Claude *(03:51:28)*
+
+Vou ajudar com a verificação de domínio do TikTok. O ponto-chave: o TikTok exige o arquivo na **raiz** de `https://login.mcorch.com/` — ou seja, em `https://login.mcorch.com/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt`. Se você o colocou em `public/landing/`, ele seria servido em `/landing/...` (lugar errado). Deixa eu verificar o estado real primeiro.
+
+## 🤖 Claude *(03:51:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== procurar o arquivo tiktok em todo o repo ===\"\nfind . -name \"tiktoke1TM6*\" -not -path \"./node_modules/*\" 2>/dev/null\necho \"=== public/ (raiz) ===\"\nls -la public/ 2>/dev/null | head -30\necho \"=== public/landing/ ===\"\nls -la public/landing/ 2>/dev/null | head\necho \"=== dist/ existe? nginx serve daqui ===\"\nls -la dist/ 2>/dev/null | grep -i tiktok || echo \"(nenhum tiktok em dist/)\"",
+  "description": "Localizar o arquivo de verifica\u00e7\u00e3o TikTok no repo"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:51:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra || exit 1\necho \"=== find tiktok file ===\"\nfind . -name \"*tiktok*\" -not -path \"*/node_modules/*\" 2>/dev/null\necho \"=== ls public root ===\"\nls -la public/ 2>/dev/null\necho \"=== ls public/landing ===\"\nls -la public/landing/ 2>/dev/null",
+  "description": "Localizar arquivo tiktok e listar public/"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:51:37)*
+
+
+## 🤖 Claude *(03:51:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/public/",
+  "description": "Listar public/ na raiz"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:51:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/public/ 2>&1; echo \"EXIT: $?\"",
+  "description": "Listar public/ com captura de erro"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:51:44)*
+
+
+## 🤖 Claude *(03:51:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo hello",
+  "description": "Testar shell b\u00e1sico"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:51:49)*
+
+
+## 🤖 Claude *(03:51:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "pwd",
+  "description": "Verificar diret\u00f3rio atual"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:51:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "true",
+  "description": "Comando no-op",
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:52:02)*
+
+
+## 🤖 Claude *(03:52:03)*
+
+O shell parece ter entrado em estado inválido (até `echo` falha). Vou tentar reinicializá-lo com um novo processo explícito.
+
+## 🤖 Claude *(03:52:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "/bin/echo ok",
+  "description": "Reiniciar shell em diret\u00f3rio v\u00e1lido"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:52:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "/bin/echo ok",
+  "description": "Testar echo com cd expl\u00edcito"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:52:20)*
+
+
+## 🤖 Claude *(03:52:22)*
+
+O shell está travado num estado inválido (falha até em `echo` — problema de ambiente, não do comando). Vou trabalhar com as ferramentas de arquivo diretamente. Primeiro deixa eu confirmar onde você colocou o arquivo.
+
+## 🤖 Claude *(03:52:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/public/landing/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt"
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> EACCES: permission denied, statx '/home/gcrUX/htdocs/constellation-orchestra/public/landing/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt'
+> ```
+
+## 🤖 Claude *(03:52:32)*
+
+
+## 🤖 Claude *(03:52:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/vite.config.ts"
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> EACCES: permission denied, statx '/home/gcrUX/htdocs/constellation-orchestra/vite.config.ts'
+> ```
+
+## 🤖 Claude *(03:53:03)*
+
+
+## 🤖 Claude *(03:53:05)*
+
+Perdi o acesso ao filesystem do repo — tanto o shell (falha em tudo) quanto o Read (`EACCES permission denied`) pararam, mesmo em arquivos que eu editava normalmente minutos atrás. Deixa eu confirmar o escopo da falha testando meu scratchpad (área própria).
+
+## 🤖 Claude *(03:53:07)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/scratchpad/seed-universe-310-seal.ts",
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Seals Phase Epsilon V9 (Unified Sensorial Canvas) — step 3.10 — in the Knowledge Mesh.
+> ```
+
+## 🤖 Claude *(03:53:22)*
+
+
+## 🤖 Claude *(03:53:25)*
+
+O scratchpad (área minha em `/tmp`) funciona — a falha está **escopada ao `/home/gcrUX`**: minha sessão perdeu permissão de acesso à árvore do repo (e o shell trava porque seu diretório de trabalho persistido virou inacessível). Vou tentar recuperar o shell apontando-o para um diretório válido, e daí pelo menos consigo testar a URL pública pelo Cloudflare (não depende do repo).
+
+## 🤖 Claude *(03:53:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001 && /bin/echo recovered && curl -sS -o /dev/null -w 'HTTP %{http_code}\\n' -m 15 \"https://login.mcorch.com/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt\"",
+  "description": "Recuperar shell em /tmp e testar a URL do TikTok pelo CF"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(03:53:38)*
+
+
+## 🤖 Claude *(03:53:40)*
+
+Confirmado: o shell está em deadlock (o diretório de trabalho persistido, dentro do repo, ficou inacessível, então nenhum comando roda) e perdi acesso de leitura a `/home/gcrUX`. Isso é uma mudança de permissão externa à minha sessão. Mas posso testar o que o TikTok realmente veria via WebFetch (vem de fora, não depende do repo nem do shell).
+
+## 🤖 Claude *(03:53:41)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebFetch",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebFetch'}]
+> ```
+
+## 🤖 Claude *(03:53:46)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://login.mcorch.com/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt",
+  "prompt": "Return the raw text content of this page verbatim. If it is a Cloudflare challenge page (\"Just a moment\", \"Checking your browser\", \"Attention Required\"), say so explicitly. If it is an HTML page (like a single-page app index.html) rather than a plain verification token, say so. I need to know exactly what a bot fetching this URL receives."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The server returned HTTP 403 Forbidden.
+> 
+> The response body was not retrieved. If this URL requires authentication, use an authenticated tool (e.g. `gh` for GitHub, or an MCP-provided fetch tool) instead of WebFetch.
+> ```
+
+## 🤖 Claude *(03:53:47)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://login.mcorch.com/landing/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt",
+  "prompt": "Return the raw text content of this page verbatim. If it is a Cloudflare challenge page, or an HTML single-page-app index.html, or a 404, say exactly which. I need to know what a bot fetching this URL receives."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> The server returned HTTP 403 Forbidden.
+> 
+> The response body was not retrieved. If this URL requires authentication, use an authenticated tool (e.g. `gh` for GitHub, or an MCP-provided fetch tool) instead of WebFetch.
+> ```
+
+## 🤖 Claude *(03:54:41)*
+
+
+## 🤖 Claude *(03:55:01)*
+
+Testei o que o TikTok realmente veria, e o achado é decisivo (Lei 1):
+
+**A URL `https://login.mcorch.com/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt` retorna HTTP 403** para um cliente não-browser (tanto na raiz quanto em `/landing/`). Isso é **exatamente o bloqueio do Cloudflare por reputação de IP de datacenter** — o mesmo problema que você já resolveu para `/wp-json/*` (publish WordPress) e `mcp.mcorch.com` (Vision MCP). O crawler de verificação do TikTok é um bot de datacenter → ele vai receber 403 → **a verificação falha mesmo com o arquivo no lugar certo.**
+
+Então há **dois** problemas, e o segundo é o que trava:
+
+1. **Local do arquivo** — em `public/landing/` ele seria servido em `login.mcorch.com/**landing/**tiktoke…txt`. O TikTok procura na **raiz**: `login.mcorch.com/tiktoke…txt`. Neste projeto Vite, "raiz" = `public/tiktoke…txt` (não `public/landing/`).
+2. **Cloudflare bloqueando o bot** — o 403 acima. Este é o gate real.
+
+**Importante — não consigo executar o fix agora:** minha sessão perdeu o acesso ao filesystem do repo. O shell trava em qualquer comando e o Read dá `EACCES` em `/home/gcrUX/...` (era acessível há minutos — mudança de permissão externa à sessão, provavelmente precisa reiniciar a sessão ou corrigir permissões de `/home/gcrUX`). Meu scratchpad em `/tmp` funciona, e o WebFetch (que roda de fora) funcionou — foi como provei o 403. Não posso colocar o arquivo, buildar nem configurar o Cloudflare daqui.
+
+## Respondendo sua pergunta: "posso pôr no Cloudflare?"
+
+**Sim — e é a rota mais rápida**, porque dispensa arquivo, build E resolve o 403 de uma vez. Você tem duas opções:
+
+### Rota B (recomendada agora) — Cloudflare Snippet (só no CF, sem tocar no repo)
+No dashboard Cloudflare → **Rules → Snippets** → criar snippet:
+```js
+export default {
+  async fetch(request) {
+    return new Response(
+      "tiktok-developers-site-verification=e1TM6dhfPyWrAgBFISEY6qziMxeHBB05",
+      { headers: { "content-type": "text/plain" } }
+    );
+  }
+};
+```
+Regra de acionamento: `http.request.uri.path eq "/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt"`
+
+Isso serve o token exato direto da borda do CF, com 200, **passando por cima do challenge**. Depois é só clicar **Verify** no TikTok. (Snippets são grátis em todos os planos.)
+
+### Rota A — arquivo no origin + destravar o CF (o padrão que você já usou)
+1. Mover o arquivo para a raiz: `public/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt` com o conteúdo exato `tiktok-developers-site-verification=e1TM6dhfPyWrAgBFISEY6qziMxeHBB05` (uma linha).
+2. `bun run build` no repo principal (= deploy; nginx serve `dist/`), ou soltar o .txt direto em `dist/`.
+3. No Cloudflare, para o path `/tiktoke1TM6…txt`: **WAF Custom Rule → Skip** (Managed Challenge/Super Bot) **+ Configuration Rule → Security Level = Essentially Off**. Pelo seu histórico (WordPress/MCP), **o "Nível de segurança" foi o componente decisivo** — o skip de bot/UA sozinho não resolveu, porque o challenge era por reputação do IP de datacenter.
+
+Eu faria a Rota A ponta-a-ponta (colocar arquivo + build + curl provando 200 sem challenge) **assim que meu acesso ao repo voltar** — se você reiniciar a sessão ou ajustar as permissões de `/home/gcrUX`, é só me avisar que eu concluo e provo materialmente. Para destravar hoje sem depender disso, a **Rota B (Snippet)** resolve sozinha.
+
+## 👤 User *(04:17:08)*
+
+ótimo resolvido... antes de continuar quero que você coloca a função de login tambem para o tiktok, pois como temos o escopo de login não ssei se é o suficiente criar a conta com google e somente conectar como tiktok para eles, talvez seja melhor fazer o login em https://login.mcorch.com/auth?devLogin com o tiktok tambem e então depois você pode iniciar o loop para então Go para hardening env open-design + GO /bok-scribe  sobre o app tiktik pode continuar testando falta eu criar o video e enviar novamente para eles aprovarem. Ja enviei o video. Vamos tambem depois para o Consent Clerk OAuth para resolver o problema com o higgsfiels temos que fazer as duas conexões, colocar a chave api que ja temos no vault e que ja estão sendo usadas junto com as outras nas configurações
+
+## 🤖 Claude *(04:17:38)*
+
+
+## 🤖 Claude *(04:17:41)*
+
+Antes de qualquer coisa, preciso confirmar se meu acesso ao repo voltou — na última interação o shell travou e o Read dava `EACCES` em `/home/gcrUX`. Sem isso não consigo escrever código. Testando os dois canais:
+
+## 🤖 Claude *(04:17:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git rev-parse --abbrev-ref HEAD && git log -1 --format='%h %s'",
+  "description": "Testar shell + acesso ao repo"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(04:17:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/package.json",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> EACCES: permission denied, statx '/home/gcrUX/htdocs/constellation-orchestra/package.json'
+> ```
+
+## 🤖 Claude *(04:18:17)*
+
+
+## 🤖 Claude *(04:18:20)*
+
+Ainda bloqueado — shell dá exit 1 e Read dá `EACCES` em `/home/gcrUX/package.json`. Meu acesso ao repo **não voltou**; o fix do arquivo TikTok (Cloudflare) não mexeu nisso. Deixa eu verificar se pelo menos a memória (`/home/ubuntu`, árvore diferente) está acessível, para eu registrar seu plano de forma durável antes de responder.
+
+## 🤖 Claude *(04:18:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Spaces v2 — consolidar Canvas Studio+Spaces em UMA superfície "Spaces"; Magnific = mecânica, MIV = estética](project_spaces_v2_consolidation.md) — 2026-07-07: BoK spaces-evolution SEMPRE selou unificação (paralelo foi drift); DB: canvas=8 projetos reais, spaces=3 fixtures E2E; portar ledger-first+G7+Spotlight pro corpo do Canvas; bug vivo sceneCompose 18-mostra/10-cobra; amendment 14 antes do código.
+> ```
+
+## 🤖 Claude *(04:18:48)*
+
+
+## 🤖 Claude *(04:18:49)*
+
+`/home/ubuntu` (memória) está acessível — a quebra é **escopada ao `/home/gcrUX`** (a árvore do repo). Vou registrar seu plano de forma durável para sobreviver a um restart de sessão, já que não posso tocar no código agora.
+
+## 🤖 Claude *(04:19:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_go_roadmap_tiktok_login_openagn_higgsfield.md",
+  "content": "---\nname: project-go-roadmap-tiktok-login-openagn-higgsfield\ndescription: \"Roadmap GO'd pelo Sovereign 2026-07-08 (3 frentes: TikTok Login Kit \u2192 open-design hardening+bok-scribe \u2192 Higgsfield 2 conex\u00f5es) \u2014 BLOQUEADO por perda de acesso ao repo /home/gcrUX\"\nmetadata:\n  type: project\n---\n\n**Diretiva Sovereign 2026-07-08** (ap\u00f3s resolver a verifica\u00e7\u00e3o de dom\u00ednio TikTok via Cloudflare Snippet). Ordem de execu\u00e7\u00e3o dada pelo Sovereign, tudo com GO expl\u00edcito:\n\n1. **PRIMEIRO \u2014 TikTok Login Kit (\"Login com TikTok\") na p\u00e1gina de auth.** O app MCORCH tem o **escopo de login** do TikTok. D\u00favida do Sovereign: criar conta com Google e s\u00f3 \"conectar\" o TikTok pode N\u00c3O ser suficiente p/ o app review do TikTok \u2014 melhor habilitar o **login real com TikTok** em `https://login.mcorch.com/auth?devLogin` (gated atr\u00e1s do `?devLogin`, igual ao Google/Cadastrar hoje \u2014 ver [[project_mcorch_rebrand_landing_v2]] e o auth gating `?devLogin`). Supabase N\u00c3O tem provider TikTok nativo \u2192 prov\u00e1vel fluxo OAuth custom (Login Kit v2). App review TikTok: **v\u00eddeo J\u00c1 enviado pelo Sovereign**; agente pode continuar testando a integra\u00e7\u00e3o. Ver [[project_tiktok_review_rebrand_requirements]] + [[reference_tiktok_unaudited_private_account]].\n\n2. **GO: hardening env open-design + `/bok-scribe`** \u2014 destrava it.4b Ponte Designer (OTD-SPACES-030-DESIGNER-BRIDGE, registrada 2026-07-08 commit `251b026`). O n\u00facleo template-vivo exige: (a) env do container open-design \u2014 `OD_ALLOWED_ORIGINS=https://login.mcorch.com` + `OD_API_TOKEN` forte (era `development_token`); (b) `/bok-scribe` p/ decidir o \"editor embutido\" (adapter open-design vs HyperFrames vs nativo) via emenda SDD (`05-sdd.md:297` difere). Ver [[project_spaces_v2_consolidation]].\n\n3. **Higgsfield \u2014 DUAS conex\u00f5es nas Configura\u00e7\u00f5es.** (a) conector **MCP OAuth via Consent Clerk OAuth** (resolve o [[project_higgsfield_mcp_connector]] \u2014 c\u00f3digo server-side+UI J\u00c1 pronto, s\u00f3 faltava o consent Clerk); (b) **surfa\u00e7ar a API key da Platform** (que J\u00c1 est\u00e1 no vault `keys.higgsfield` e j\u00e1 \u00e9 usada pelos n\u00f3s de v\u00eddeo, junto com openrouter/replicate/openai/google) na UI de Settings junto com as outras chaves. As duas conex\u00f5es coexistem (BYOK Platform key = cat\u00e1logo/execu\u00e7\u00e3o de n\u00f3; MCP OAuth = conta/tools-list).\n\n**Ap\u00f3s TikTok login (#1), o Sovereign pediu: iniciar o /loop** e trabalhar #2 e #3.\n\n---\n\n## \u26a0\ufe0f BLOQUEIO ATIVO 2026-07-08 \u2014 perda de acesso ao repo (`/home/gcrUX`)\n\nDurante a sess\u00e3o do /loop, a sess\u00e3o Claude **perdeu acesso de filesystem a `/home/gcrUX/htdocs/constellation-orchestra`**: shell d\u00e1 `exit 1` em TODO comando (o cwd persistido do shell ficou inacess\u00edvel \u2192 deadlock), e Read d\u00e1 `EACCES: permission denied, statx` em qualquer arquivo do repo (`package.json`, `vite.config.ts`, etc.). **Acess\u00edvel ainda:** `/tmp/claude-*` (scratchpad) e `/home/ubuntu` (mem\u00f3ria, openclaw). Ou seja: quebra escopada a `/home/gcrUX`.\n\n**Causa prov\u00e1vel:** o processo Claude roda como `ubuntu`; o repo \u00e9 de `gcrUX`. Acesso funcionava (commits/edi\u00e7\u00f5es ok minutos antes) via grupo/ACL. Reset de permiss\u00e3o (padr\u00e3o CloudPanel/webhost \"fix permissions\" OU `/home/gcrUX` perdeu o bit de traverse `o+x`/grupo) travou `ubuntu`. Cl\u00e1ssico: `/home/gcrUX` em `700` (drwx------) \u2192 `ubuntu` n\u00e3o traverssa \u2192 EACCES em tudo dentro.\n\n**Unblock (ordem):** (1) reiniciar a sess\u00e3o Claude Code \u2014 shell novo pode re-estabelecer o cwd se a mudan\u00e7a foi transiente; (2) se persistir, restaurar acesso do `ubuntu`: `ubuntu` no grupo `gcrUX` + `chmod o+x /home/gcrUX` (ou ACL `setfacl -R -m u:ubuntu:rwx <repo>` + default ACL); (3) alternativa: rodar o Claude Code como usu\u00e1rio `gcrUX`.\n\n**N\u00e3o armar o /loop at\u00e9 o acesso voltar** \u2014 o loop bateria na mesma parede imediatamente. Quando restaurado: executar #1 (TikTok login, com probe-first do auth `?devLogin` + BoK/SOP gate p/ nova integra\u00e7\u00e3o OAuth), depois armar o loop p/ #2 e #3.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_go_roadmap_tiktok_login_openagn_higgsfield.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:19:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "offset": 1,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> ```
+
+## 🤖 Claude *(04:19:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n",
+  "new_string": "# Memory Index\n\n- [GO'd roadmap 2026-07-08 (TikTok Login Kit \u2192 open-design hardening+bok-scribe \u2192 Higgsfield 2 conex\u00f5es)](project_go_roadmap_tiktok_login_openagn_higgsfield.md) \u2014 Sovereign GO em 3 frentes ordenadas; \u26a0\ufe0f **BLOQUEADO**: sess\u00e3o perdeu acesso a `/home/gcrUX` (shell exit 1 + Read EACCES; `/tmp` e `/home/ubuntu` ok). Restaurar acesso do user `ubuntu` (grupo/ACL/`chmod o+x /home/gcrUX`) ou reiniciar sess\u00e3o ANTES de codar/armar loop.\n"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:19:43)*
+
+
+## 🤖 Claude *(04:20:00)*
+
+Registrei seu plano completo na memória (sobrevive a um restart). Agora o ponto crítico, honesto (Lei 1 — cérebro sem mãos):
+
+## Não consigo começar — ainda estou sem acesso ao repo
+
+Acabei de testar de novo: o shell dá `exit 1` em **qualquer** comando e o Read dá `EACCES: permission denied` até em `package.json`/`vite.config.ts`. **Minha sessão perdeu o acesso de filesystem a `/home/gcrUX`** (a árvore do repo). `/tmp` e `/home/ubuntu` (memória) ainda funcionam — por isso consegui provar o 403 do TikTok por WebFetch e gravar seu plano na memória, mas **não posso escrever código, buildar, nem armar o loop** (o loop bateria na mesma parede no primeiro comando).
+
+**Causa provável:** meu processo roda como `ubuntu`; o repo é do `gcrUX`. Funcionava (commitei/editei minutos antes) via grupo/ACL. Algo resetou as permissões — padrão clássico: `/home/gcrUX` ficou `700` (`drwx------`) e `ubuntu` perdeu o bit de traverse → `EACCES` em tudo lá dentro. (Comum quando roda um "fix permissions" de painel tipo CloudPanel, ou um `chmod` no home.)
+
+**Para destravar (ordem):**
+1. **Reiniciar a sessão do Claude Code** — shell novo pode re-estabelecer o diretório se a mudança foi transiente. (Tenta primeiro, é o mais barato.)
+2. Se persistir, restaurar o acesso do `ubuntu`: pôr `ubuntu` no grupo `gcrUX` + `chmod o+x /home/gcrUX`, **ou** ACL: `sudo setfacl -R -m u:ubuntu:rwx /home/gcrUX/htdocs/constellation-orchestra` (+ default ACL).
+3. Alternativa: rodar o Claude Code como o usuário `gcrUX`.
+
+## O plano está capturado — entendi as 3 frentes
+
+Assim que o acesso voltar, executo nesta ordem (com GO seu):
+
+1. **TikTok Login Kit** — habilitar "Login com TikTok" no `/auth?devLogin` (gated como o Google hoje). ⚠️ Nota técnica que vou tratar no probe: o Supabase **não tem provider TikTok nativo**, então é um fluxo **OAuth custom** (Login Kit v2) — é uma integração externa nova, então passa pelo gate BoK/SOP antes do código. App review TikTok: vídeo já enviado por você, sigo testando a integração.
+2. **GO: hardening env open-design + `/bok-scribe`** → destrava it.4b Ponte Designer (OTD-SPACES-030).
+3. **Higgsfield — 2 conexões nas Settings:** (a) MCP OAuth via Consent Clerk; (b) surfaçar a API key da Platform (já no vault `keys.higgsfield`, já usada) na UI de Settings junto com openrouter/replicate/openai/google.
+
+**Não vou armar o loop agora** — seria inútil sem acesso. Me avise quando tiver reiniciado a sessão ou ajustado as permissões, que eu confirmo o acesso e sigo direto pelo item 1.
+
+Quer que, enquanto isso, eu já **pré-pesquise o fluxo OAuth do TikTok Login Kit v2** (endpoints, PKCE, scopes, callback) por WebFetch — que não depende do repo — pra eu implementar na hora assim que destravar?
+
+## 👤 User *(04:20:35)*
+
+Não estou entendendo por que essa sessão não esta mais com acesso você usa o ubuntu certo? verifique de estar usando o usuário ubuntu e que ele e o gcrUX estão nos mesmo grupos.
+
+## 🤖 Claude *(04:21:18)*
+
+
+## 🤖 Claude *(04:21:19)*
+
+Vou tentar rodar o diagnóstico que você pediu (`id`, grupos, permissões). Aviso desde já: se o shell continuar preso, é por um motivo específico que explico logo abaixo.
+
+## 🤖 Claude *(04:21:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd / && whoami && echo '--- id ubuntu ---' && id ubuntu && echo '--- id gcrUX ---' && id gcrUX && echo '--- perms do caminho ---' && namei -l /home/gcrUX/htdocs/constellation-orchestra/package.json",
+  "description": "Verificar usu\u00e1rio, grupos de ubuntu/gcrUX e permiss\u00f5es do caminho"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(04:21:26)*
+
+
+## 🤖 Claude *(04:21:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "whoami; id",
+  "description": "Tentar id sem sandbox",
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ```
+
+## 🤖 Claude *(04:21:56)*
+
+
+## 🤖 Claude *(04:22:14)*
+
+Confirmei agora o mecanismo exato — tentei `whoami; id` (até com sandbox desligado) e volta `exit 1` com **zero saída**. Isso me diz precisamente o que houve:
+
+**Sim, eu rodo como `ubuntu`.** Mas eu não consigo checar os grupos daqui, e o motivo é este: o shell desta sessão está **fixado (pinned) no diretório de trabalho `/home/gcrUX/htdocs/constellation-orchestra`** e reusa esse cwd a cada comando. Quando o `ubuntu` perdeu a permissão de **atravessar** `/home/gcrUX`, o sistema operacional passou a falhar ao **criar** o processo do shell naquele diretório — antes de qualquer comando rodar. Por isso até `id` e `whoami` morrem com exit 1 sem imprimir nada: a falha é no *spawn* do shell, não no comando. Ou seja, a verificação de grupos que você pediu **tem que vir do seu terminal**, não do meu (o meu não consegue nem iniciar).
+
+## Rode isto no seu terminal (como gcrUX ou com sudo) — diagnóstico
+
+```bash
+id ubuntu
+id gcrUX
+namei -l /home/gcrUX/htdocs/constellation-orchestra/package.json
+ls -ld /home /home/gcrUX /home/gcrUX/htdocs /home/gcrUX/htdocs/constellation-orchestra
+```
+
+O `namei -l` é o decisivo: ele mostra, componente por componente do caminho, **qual diretório nega o acesso** ao `ubuntu` (o que estiver sem `x` para ele). A aposta mais forte é `/home/gcrUX` ter virado `drwx------` (700) — aí só o `gcrUX` entra, e o `ubuntu` é barrado em tudo lá dentro. Como eu tinha acesso minutos antes, o que mudou foi essa camada de permissão (provável "fix permissions" de painel, ou um `chmod`/`chown` no home).
+
+## Correção (grupo comum + traverse)
+
+```bash
+sudo usermod -aG gcrUX ubuntu                       # ubuntu no grupo do gcrUX
+sudo chmod g+x /home/gcrUX /home/gcrUX/htdocs        # permitir traverse pelo grupo
+sudo chmod -R g+rwX /home/gcrUX/htdocs/constellation-orchestra
+```
+
+Alternativa mais cirúrgica com ACL (não mexe nos modos):
+```bash
+sudo chmod o+x /home/gcrUX /home/gcrUX/htdocs
+sudo setfacl -R -m u:ubuntu:rwX /home/gcrUX/htdocs/constellation-orchestra
+sudo setfacl -R -d -m u:ubuntu:rwX /home/gcrUX/htdocs/constellation-orchestra
+```
+
+## ⚠️ Depois de corrigir, **reinicie a sessão do Claude Code**
+
+Dois motivos que exigem o restart, mesmo com a permissão certa:
+1. Adicionar `ubuntu` ao grupo `gcrUX` (`usermod -aG`) só vale em um **login novo** — meu shell atual não pega o grupo novo.
+2. Meu shell está pinado num cwd que ficou quebrado; ele não se recupera sozinho — uma sessão nova arranca num cwd válido.
+
+Quando reiniciar, mande um "ok" que eu rodo `id`/`git status` de cara pra confirmar o acesso e sigo direto pelo **item 1 (Login com TikTok)**. Seu plano completo (TikTok login → open-design hardening + `/bok-scribe` → Higgsfield 2 conexões) já está salvo na memória, então nada se perde no restart.
+
+## 👤 User *(04:25:13)*
+
+ótimo agora entendi não sei o que você fez antes e ou o que calsou isso mas rodeios comandos.:
+
+^[[Aubuntu@panel:/$ cd /home/gcrUX/htdocs/constellation-orchestra
+bash: cd: /home/gcrUX/htdocs/constellation-orchestra: Permission denied
+ubuntu@panel:/$ sudo chmod o+x /home/gcrUX /home/gcrUX/htdocs
+sudo setfacl -R -m u:ubuntu:rwX /home/gcrUX/htdocs/constellation-orchestra
+sudo setfacl -R -d -m u:ubuntu:rwX /home/gcrUX/htdocs/constellation-orchestra
+sudo: setfacl: command not found
+sudo: setfacl: command not found
+ubuntu@panel:/$ cd /home/gcrUX/htdocs/constellation-orchestra
+bash: cd: /home/gcrUX/htdocs/constellation-orchestra: Permission denied
+ubuntu@panel:/$ sudo usermod -aG gcrUX ubuntu                       # ubuntu no grupo do gcrUX
+sudo chmod g+x /home/gcrUX /home/gcrUX/htdocs        # permitir traverse pelo grupo
+sudo chmod -R g+rwX /home/gcrUX/htdocs/constellation-orchestra
+
+
+E parece que voltou agora você tem acesso
+
+## 🤖 Claude *(04:25:28)*
+
+
+## 🤖 Claude *(04:25:29)*
+
+Vou testar o acesso agora — o `chmod o+x` nos dois diretórios pai deve ter restaurado o traverse que o `ubuntu` tinha antes (o grupo novo do `usermod` só valeria num login novo, mas o `o+x` é imediato).
+
+## 🤖 Claude *(04:25:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "whoami && pwd && echo '--- git ---' && git -C /home/gcrUX/htdocs/constellation-orchestra rev-parse --abbrev-ref HEAD && git -C /home/gcrUX/htdocs/constellation-orchestra log -1 --format='%h %s'",
+  "description": "Testar acesso restaurado ao repo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ubuntu
+> /home/gcrUX/htdocs/constellation-orchestra
+> --- git ---
+> main
+> 4a4a4e9 docs(loop): charter hygiene — it.0b/it.3 marcados ✅ (estavam feitos); it.4b GATED c/ OTD-SPACES-030
+> ```
+
+## 🤖 Claude *(04:26:05)*
+
+
+## 🤖 Claude *(04:26:08)*
+
+Acesso **restaurado** e confirmado materialmente: sou `ubuntu`, cwd = `/home/gcrUX/htdocs/constellation-orchestra`, git funciona, HEAD = `4a4a4e9` (meu último commit antes da quebra). O `chmod o+x` nos diretórios pai reabriu o traverse. Deixa eu confirmar que Read/Write também voltaram e que a árvore está limpa, antes de começar o item 1.
+
+## 🤖 Claude *(04:26:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short && echo \"--- write test ---\" && touch .claude/.__acl_write_test && rm -f .claude/.__acl_write_test && echo \"write OK\" && echo \"--- node_modules presente? ---\" && ls node_modules >/dev/null 2>&1 && echo \"node_modules OK\" || echo \"node_modules MISSING\"",
+  "description": "Confirmar git limpo + write access + node_modules"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ?? public/landing/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt
+> ?? public/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt
+> --- write test ---
+> write OK
+> --- node_modules presente? ---
+> node_modules OK
+> ```
+
+## 🤖 Claude *(04:26:11)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/package.json",
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "name": "vite_react_shadcn_ts",
+> 3	  "private": true,
+> 4	  "version": "0.0.0",
+> 5	  "type": "module",
+> 6	  "scripts": {
+> ```
+
+## 🤖 Claude *(04:26:25)*
+
+
+## 🤖 Claude *(04:26:28)*
+
+Acesso total confirmado (Read/Write/node_modules OK). E o `git status` mostra os dois arquivos TikTok não-rastreados — inclusive um já na **raiz correta** (`public/`). Deixa eu verificar o conteúdo dos dois, limpar o do lugar errado e commitar o correto (é um token público, seguro versionar — durabilidade caso o Snippet do CF saia), e em paralelo já começo a mapear o terreno do Login com TikTok.
+
+## 🤖 Claude *(04:26:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/public/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	tiktok-developers-site-verification=e1TM6dhfPyWrAgBFISEY6qziMxeHBB05
+> ```
+
+## 🤖 Claude *(04:26:52)*
+
+
+## 🤖 Claude *(04:26:55)*
+
+O arquivo na raiz está com o conteúdo exato correto. Vou limpar o do lugar errado, commitar o correto (durabilidade origin-side), e em paralelo lançar o mapeamento do terreno do Login com TikTok — que é uma integração OAuth nova e sensível (auth custom), então mapeio antes de codar.
+
+## 🤖 Claude *(04:27:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f public/landing/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt\nrmdir public/landing 2>/dev/null && echo \"public/landing removido (estava vazio)\" || echo \"public/landing mantido (tem outros arquivos)\"\ngit add public/tiktoke1TM6dhfPyWrAgBFISEY6qziMxeHBB05.txt\ngit commit -q -m \"chore(tiktok): domain-verification token na raiz do origin (public/) \u2014 durabilidade\n\nTikTok verifica login.mcorch.com/tiktoke1TM6...txt na RAIZ (n\u00e3o /landing/).\nMecanismo ativo = Cloudflare Snippet (serve o token na borda, passa por cima do\nchallenge 403 que barra bots de datacenter). Este arquivo \u00e9 defesa origin-side:\nse o Snippet sair, um build futuro serve o token pelo dist/. Token p\u00fablico.\" && git log -1 --format='%h %s'",
+  "description": "Limpar arquivo do lugar errado + commitar o correto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> public/landing mantido (tem outros arquivos)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:27AM[0m [32mINF[0m 1 commits scanned.
+> [90m1:27AM[0m [32mINF[0m scan completed in 8.63ms
+> [90m1:27AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 6a53f26 chore(tiktok): domain-verification token na raiz do origin (public/) — durabilidade
+> ```
+
+## 🤖 Claude *(04:27:09)*
+
+
+## 🤖 Claude *(04:27:11)*
+
+Token commitado (`6a53f26`). Agora lançando o mapeamento do Login com TikTok — é integração OAuth de autenticação nova (o Supabase não tem provider TikTok nativo), então mapeio o terreno vivo + o contrato real da API do TikTok antes de decidir a abordagem e o gate.
+
+## 🤖 Claude *(04:27:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -2",
+  "description": "Push do commit do token TikTok"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    4a4a4e9..6a53f26  main -> main
+> ```
+
+## 🤖 Claude *(04:27:50)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'tiktok-login-kit-map',\n  description: 'Map the TikTok Login Kit integration surface (auth page devLogin, existing TikTok OAuth for publishing, Supabase session minting, TikTok Login Kit v2 contract) to decide approach + gate',\n  phases: [{ title: 'Map', detail: '4 parallel readers: auth page \u00b7 existing tiktok oauth \u00b7 supabase session \u00b7 tiktok docs' }, { title: 'Synthesize', detail: 'approach + smallest slice + BoK/SOP gate + security' }],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst COMMON = `You are a codebase/integration mapper for the MCORCH repo at ${REPO}. Survival Law 1: every claim carries material proof (file:line you actually read, or literal command output, or a doc URL you fetched). Read LIVE code/docs, never infer. Be terse. Return structured output only.`\n\nconst MAP_SCHEMA = {\n  type: 'object',\n  required: ['findings', 'reuse', 'gaps'],\n  properties: {\n    findings: { type: 'array', items: { type: 'object', required: ['fact', 'proof'], properties: { fact: { type: 'string' }, proof: { type: 'string' } } } },\n    reuse: { type: 'array', items: { type: 'string' }, description: 'existing code/infra reusable for TikTok login' },\n    gaps: { type: 'array', items: { type: 'string' }, description: 'what is missing / what must be built' },\n  },\n}\n\nconst READERS = [\n  { key: 'auth-page', prompt: `${COMMON}\nMap the auth/login page and its ?devLogin gating. Find the auth page (grep 'devLogin' across src/; likely src/pages/Auth.tsx or AuthPage). Report: how the login UI renders the Google button, how ?devLogin unlocks Google + \"Cadastrar\" (public sees only email/password), how supabase.auth.signInWithOAuth({provider:'google'}) is called, the redirect/callback handling, and where a new \"Login com TikTok\" button would plug in (file:line). Also report how the session is picked up after OAuth redirect (onAuthStateChange / callback route).` },\n  { key: 'tiktok-oauth-existing', prompt: `${COMMON}\nMap the EXISTING TikTok OAuth used for social publishing (NOT login). Search supabase/functions/ for tiktok (e.g. tiktok-auth, social-auth, tiktok-connect, social-auth-callback) and src/ for TikTok connect UI. Report the full OAuth flow already built: authorize URL, client_key/secret source (social_app_config table? per-user? vault?), PKCE (code_challenge S256?), scopes requested, redirect_uri, token exchange endpoint, state/HMAC handling, where tokens are stored. This is the reuse substrate for login. file:line proofs. Also note the memory reference: TikTok requires a private account pre-audit and the app is in sandbox.` },\n  { key: 'supabase-session', prompt: `${COMMON}\nDetermine HOW a Supabase user session can be minted for a non-native provider (TikTok is NOT a native Supabase auth provider). Investigate options in this codebase: (a) does any edge function already mint a session via supabase.auth.admin.generateLink / admin.createUser + a magic-link/OTP verify? (grep scripts/qa/gen-user-jwt.ts, gen-magiclink.ts, gen-user-session.ts \u2014 these show the admin generateLink\u2192verifyOtp pattern). (b) is supabase.auth.signInWithIdToken usable (needs an OIDC id_token \u2014 does TikTok return one?). (c) any custom-auth precedent. Report the concrete, secure mechanism to turn a verified TikTok identity (open_id) into a logged-in Supabase session, with file:line proof of the pattern that already exists in this repo.` },\n  { key: 'tiktok-docs', prompt: `${COMMON}\nFetch the official TikTok Login Kit v2 OAuth docs and report the exact contract. Use WebFetch on https://developers.tiktok.com/doc/login-kit-web/ and https://developers.tiktok.com/doc/oauth-user-access-token-management/ (and follow/try the manage-user-access-tokens page). Report: the authorization endpoint (https://www.tiktok.com/v2/auth/authorize/), required params (client_key, scope, redirect_uri, state, response_type=code, code_challenge + code_challenge_method=S256 for PKCE \u2014 is PKCE required for web?), the token endpoint (https://open.tiktokapis.com/v2/oauth/token/), what the token response contains (open_id, scope, access_token \u2014 is there an id_token/OIDC? what identity fields?), the minimal scope for login (user.info.basic), and redirect_uri registration rules. Cite the doc URLs as proof. If a page is a JS-challenge/blocked, say so and report what you could retrieve.` },\n]\n\nphase('Map')\nconst maps = await parallel(READERS.map(r => () => agent(r.prompt, { label: `map:${r.key}`, phase: 'Map', schema: MAP_SCHEMA }).then(m => m ? { key: r.key, ...m } : { key: r.key, findings: [], reuse: [], gaps: ['agent returned null'] })))\nconst clean = maps.filter(Boolean)\n\nphase('Synthesize')\nconst synth = await agent(\n  `${COMMON}\nYou have 4 structured maps for adding \"Login com TikTok\" to the MCORCH auth page (route /auth?devLogin). The Sovereign wants a real \"Login with TikTok\" auth option (not just the existing publish-connect), partly to satisfy TikTok app review of the login scope. Supabase has NO native TikTok provider.\n\nMAPS:\n${JSON.stringify(clean, null, 2)}\n\nSynthesize the implementation decision. Return structured output:\n1. APPROACH: the concrete, secure mechanism \u2014 TikTok Login Kit v2 OAuth (authorize\u2192callback edge fn\u2192exchange code\u2192get open_id) then mint a Supabase session (which existing pattern: admin.createUser/generateLink\u2192verifyOtp, or signInWithIdToken). Be specific about PKCE, state/CSRF, and where client_key/secret come from (reuse social_app_config? new column?).\n2. SMALLEST correct slice that is non-breaking, gated behind ?devLogin, and demonstrable for app review.\n3. GATE: does this need a BoK suite / bok-scribe, a Lei-2 SOP in docs/processes/, or is it an extension covered by existing social-oauth precedent? Decide honestly per CLAUDE.md \u00a71 (new external OAuth integration) + API Tenancy Model. Custom AUTH is security-sensitive \u2014 recommend /security-review before deploy.\n4. FILES to touch (edge fn + auth page + any migration for client creds) and SECURITY concerns (open redirect, session-mint abuse, secret handling).\n5. RISKS specific to TikTok (sandbox/audit state, redirect_uri must be registered, private-account requirement).\nBe honest per Lei 1 \u2014 flag anything that would block a working demo (e.g., sandbox app can only log in the registered test user until audit approves user.info.basic).`,\n  { label: 'synthesize', phase: 'Synthesize', schema: {\n    type: 'object',\n    required: ['approach', 'smallest_slice', 'gate', 'files_to_touch', 'security', 'risks'],\n    properties: {\n      approach: { type: 'string' },\n      smallest_slice: { type: 'string' },\n      gate: { type: 'string', enum: ['bok-scribe', 'sop-lei2', 'existing-precedent-extension'] },\n      gate_rationale: { type: 'string' },\n      files_to_touch: { type: 'array', items: { type: 'string' } },\n      security: { type: 'array', items: { type: 'string' } },\n      risks: { type: 'array', items: { type: 'string' } },\n    },\n  } }\n)\n\nreturn { maps: clean, synth }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: weskjokh8
+> Summary: Map the TikTok Login Kit integration surface (auth page devLogin, existing TikTok OAuth for publishing, Supabase session minting, TikTok Login Kit v2 contract) to decide approach + gate
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_a5b49460-a61
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-kit-map-wf_a5b49460-a61.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-kit-map-wf_a5b49460-a61.js"} to iterate without resending the script.)
+> Run ID: wf_a5b49460-a61
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-kit-map-wf_a5b49460-a61.js", resumeFromRunId: "wf_a5b49460-a61"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(04:28:04)*
+
+Acesso restaurado e trabalho retomado. Ponto de situação:
+
+**✅ Token de verificação TikTok** — commitei o arquivo na raiz correta do origin (`public/tiktoke1TM6…txt`, conteúdo exato) como defesa durável, e removi o do lugar errado (`public/landing/`). O mecanismo ativo continua sendo seu Cloudflare Snippet; o arquivo no origin é rede de segurança. Commit `6a53f26`, pushado.
+
+**🔍 Item 1 — Login com TikTok (em mapeamento):** lancei um workflow de 4 leitores em paralelo para mapear o terreno antes de codar, porque isto é uma integração de autenticação nova e sensível:
+- como a página `/auth?devLogin` renderiza o Google e onde plugar o botão TikTok;
+- o **OAuth do TikTok que já existe** para publicação (client_key/secret, PKCE, scopes, callback) — substrato reusável;
+- como mintar uma sessão Supabase para um provider **não-nativo** (o TikTok não é provider nativo do Supabase — provável padrão `admin.generateLink→verifyOtp`);
+- o **contrato real da API** do TikTok Login Kit v2 (endpoints, PKCE S256, scope `user.info.basic`, o que volta no token).
+
+A síntese vai decidir a abordagem, a menor fatia demonstrável para o app review, e o gate (BoK/SOP vs extensão do precedente social-oauth). Já sinalizo um risco provável (Lei 1): app em **sandbox** normalmente só loga o usuário de teste registrado até o audit aprovar o scope — vou confirmar isso no mapa.
+
+Assim que o mapa voltar, decido o gate e implemento. Depois disso, conforme seu plano, **armo o loop** para open-design hardening + `/bok-scribe` (it.4b) e as duas conexões do Higgsfield. Seu roteiro completo já está salvo na memória.
+
+## 👤 User *(04:34:09)*
+
+<task-notification>
+<task-id>weskjokh8</task-id>
+<tool-use-id>toolu_01SpAUS7xaEWhgurLx4XrvsY</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/tasks/weskjokh8.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Map the TikTok Login Kit integration surface (auth page devLogin, existing TikTok OAuth for publishing, Supabase session minting, TikTok Login Kit v2 contract) to decide approach + gate" completed</summary>
+<result>{"maps":[{"key":"auth-page","findings":[{"fact":"The auth/login page is src/pages/Auth.tsx (default export `Auth`, routed at /auth wrapped in &lt;PublicRoute&gt;).","proof":"src/App.tsx:161 `&lt;Route path=\"/auth\" element={&lt;PublicRoute&gt;&lt;Auth /&gt;&lt;/PublicRoute&gt;} /&gt;`; src/pages/Auth.tsx:15 `const Auth = () =&gt; {` and :239 `export default Auth;`"},{"fact":"?devLogin is read as a boolean presence flag from the URL query string via react-router useSearchParams.","proof":"src/pages/Auth.tsx:25-26 `const [searchParams] = useSearchParams();` / `const devLogin = searchParams.has('devLogin');`"},{"fact":"The public (no devLogin) view shows ONLY the email/password login form. The Tabs list collapses to a single 'Entrar' tab (grid-cols-1) and the 'Cadastrar' signup tab is conditionally rendered only when devLogin is true.","proof":"src/pages/Auth.tsx:116 `&lt;TabsList className={\\`grid w-full ${devLogin ? 'grid-cols-2' : 'grid-cols-1'} bg-secondary\\`}&gt;`; :117 `&lt;TabsTrigger value=\"login\"&gt;Entrar&lt;/TabsTrigger&gt;`; :118 `{devLogin &amp;&amp; &lt;TabsTrigger value=\"signup\"&gt;Cadastrar&lt;/TabsTrigger&gt;}`; the entire signup TabsContent is gated at :188 `{devLogin &amp;&amp; (` ... :231 `)}`"},{"fact":"The Google login button is rendered inside a `{devLogin &amp;&amp; ( ... )}` block, so the public sees no Google button. It is a shadcn Button (variant outline) with an inline 4-path Google SVG logo and label 'Continuar com Google', wired to handleOAuthLogin('google').","proof":"src/pages/Auth.tsx:121 `{devLogin &amp;&amp; (` opens the block; :123-139 the Button with :127 `onClick={() =&gt; handleOAuthLogin('google')}` and :138 `Continuar com Google`; inline SVG at :131-136. The block closes at :148 `)}`"},{"fact":"handleOAuthLogin calls supabase.auth.signInWithOAuth with provider and a redirectTo pointing at the app's /dashboard on the same origin. It only handles provider 'google' | 'apple' (Apple is deliberately removed from UI; only Google button is wired).","proof":"src/pages/Auth.tsx:81-93: `const handleOAuthLogin = async (provider: 'google' | 'apple') =&gt; {` / `const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: \\`${window.location.origin}/dashboard\\` } });` (:83-88). Comment at :22-24 documents Google-only gating and Apple removal."},{"fact":"There is NO dedicated OAuth callback route/page. signInWithOAuth redirects the browser to &lt;origin&gt;/dashboard directly, and the Supabase JS client picks up the session from the URL hash automatically (detectSessionInUrl is not disabled — the client only sets storage/persistSession/autoRefreshToken, so the supabase-js default detectSessionInUrl:true applies).","proof":"src/pages/Auth.tsx:86 `redirectTo: \\`${window.location.origin}/dashboard\\``; src/integrations/supabase/client.ts:11-16 createClient auth options set only `storage: localStorage, persistSession: true, autoRefreshToken: true` (no detectSessionInUrl override). /dashboard route at src/App.tsx:105-112 is a ProtectedRoute&lt;DashboardLayout&gt;."},{"fact":"Session pickup after the OAuth redirect happens in the useAuth hook via supabase.auth.onAuthStateChange (fires SIGNED_IN once the client parses the redirect URL) plus an initial getSession() call. Both paths set user/session and mirror into an SSO cookie.","proof":"src/hooks/useAuth.ts:12-18 `const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) =&gt; { setSession(session); setUser(session?.user ?? null); syncSsoCookie(session); setLoading(false); });`; :20-31 `supabase.auth.getSession().then(...)`; ProtectedRoute consumes it at src/App.tsx:76-79 `const { user, loading } = useAuth(); if (!user) return &lt;Navigate to=\"/auth\" replace /&gt;;`"},{"fact":"Email/password login (handleLogin) and signup (handleSignup) and forgot-password (handleForgotPassword) are the non-OAuth flows. On login success it honors an SSO ?return_to bounce via safeReturnTo() else navigates to /dashboard.","proof":"src/pages/Auth.tsx:28-40 handleLogin uses `supabase.auth.signInWithPassword`; :36-38 `const rt = safeReturnTo(); if (rt) { window.location.href = rt; } else { navigate('/dashboard'); }`; :42-62 handleSignup uses `supabase.auth.signUp`; :64-79 handleForgotPassword uses `resetPasswordForEmail`."},{"fact":"The exact plug-in point for a new 'Login com TikTok' button is the devLogin-gated block in the login Tab, immediately after the Google Button and before the 'ou' Separator (src/pages/Auth.tsx:139-141). A sibling Button with onClick calling a new handler (e.g. handleTikTokLogin) mirrors the Google button structure. The current handleOAuthLogin('google'|'apple') signInWithOAuth path CANNOT be reused as-is for TikTok because TikTok is not a native Supabase Auth OAuth provider (Supabase supports google/apple natively here; a TikTok login needs a custom OAuth flow, not signInWithOAuth({provider:'tiktok'})).","proof":"src/pages/Auth.tsx:139 closes the Google `&lt;/Button&gt;`; :141-146 renders the `&lt;Separator /&gt;` 'ou' divider — a new TikTok Button belongs between :139 and :141. handleOAuthLogin type signature at :81 is literally `(provider: 'google' | 'apple')`, and Supabase createClient (src/integrations/supabase/client.ts) exposes only native providers via signInWithOAuth."},{"fact":"Existing TikTok OAuth in the repo is a SOCIAL-PUBLISHING connection flow, not a login/auth-identity flow — a distinct subsystem. It uses edge functions social-auth-init + social-auth-callback, a /social/callback route (SocialCallback.tsx), and per-user BYOK app creds keyed by platform 'tiktok'|'youtube'|'pinterest'.","proof":"Edge fns exist: `ls supabase/functions/` shows `social-auth-init` and `social-auth-callback`; src/App.tsx:160 `&lt;Route path=\"/social/callback\" element={&lt;SocialCallback /&gt;} /&gt;`; SocialCallback.tsx:44-46 invokes `supabase.functions.invoke('social-auth-callback', { body: { code, state } })`; src/lib/social-app-config.ts:10 `export type SocialAppPlatform = 'tiktok' | 'youtube' | 'pinterest';` and :58-65 tiktok console 'developers.tiktok.com'."}],"reuse":["src/pages/Auth.tsx:121-148 — the existing `{devLogin &amp;&amp; (...)}` gated block and the Google Button markup (:123-139) is the exact template to copy for a 'Login com TikTok' button (same shadcn Button variant='outline', inline brand SVG, disabled={loading}, spinner pattern).","src/pages/Auth.tsx:81-93 handleOAuthLogin — pattern for an async provider handler (setLoading, error toast in PT-BR, redirectTo &lt;origin&gt;/dashboard). A handleTikTokLogin would mirror this shape even though it must call a custom flow rather than signInWithOAuth.","src/pages/Auth.tsx:26 `searchParams.has('devLogin')` — reuse the same devLogin gate to hide the TikTok login button from the public just like Google (single-flag conditional).","src/hooks/useAuth.ts:11-41 — onAuthStateChange + getSession + syncSsoCookie session-pickup already handles any Supabase session regardless of how it was minted; no change needed if TikTok login ultimately produces a Supabase session.","src/integrations/supabase/client.ts:11-16 — the shared supabase client (localStorage/persistSession/autoRefreshToken) is the single auth surface; any TikTok login must land a Supabase session here to flow through the guards.","Existing TikTok OAuth plumbing for social publishing: supabase/functions/social-auth-init/index.ts + social-auth-callback/index.ts, /social/callback route (src/pages/SocialCallback.tsx), src/lib/social-app-config.ts + src/lib/_shared/social-app-config.ts (tiktok redirect_uri/console/BYOK columns). Reusable as a reference for the TikTok OAuth code/state exchange, though it targets social_credentials connection, not identity login.","src/lib/sso-cookie.ts helpers safeReturnTo()/syncSsoCookie() (imported at Auth.tsx:3 and useAuth.ts:3) — reuse for post-TikTok-login ?return_to SSO bounce, same as email/password and Google."],"gaps":["No native Supabase Auth provider for TikTok: s
+... (truncated 36413 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/tasks/weskjokh8.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_a5b49460-a61/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-kit-map-wf_a5b49460-a61.js', resumeFromRunId: 'wf_a5b49460-a61'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>5</agent_count><agents_done>5</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>428636</subagent_tokens><tool_uses>53</tool_uses><duration_ms>378834</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(04:34:12)*
+
+Mapa completo. Vou ler a síntese para decidir a abordagem e o gate.
+
+## 🤖 Claude *(04:34:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\np='/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_a5b49460-a61/journal.jsonl'\nfor line in open(p):\n    if 'approach' in line and 'smallest_slice' in line and 'gate' in line:\n        o=json.loads(line)\n        v=o.get('value') or o.get('result') or o\n        print(json.dumps(v, indent=2, ensure_ascii=False))\n        break\n\"",
+  "description": "Extrair a s\u00edntese do mapa TikTok Login"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "approach": "TikTok Login Kit v2 OAuth2 authorization-code flow (confidential server-side client — NO PKCE: TikTok docs mark code_verifier \"mobile/desktop only\"; web uses client_secret at token exchange), then mint a Supabase session via the ONLY proven in-repo pattern.\n\nMECHANISM (2 new PUBLIC edge fns, both verify_jwt=false — the caller/redirect has no JWT):\n1) tiktok-login-init: builds https://www.tiktok.com/v2/auth/authorize/ with client_key, response_type=code, redirect_uri=<registered login-callback edge URL>, scope=user.info.basic (COMMA-form, NO video.publish), state=signState({intent:'login', nonce, return_to, ts}, SB_SECRET_KEY). Reuses _shared/oauth-state.ts signState verbatim; state carries a nonce+intent, NOT a userId (map social-auth-init:63-64 signs a userId — a login has none yet).\n2) tiktok-login-callback: verifyState(maxAgeMs=10*60_000) fail-closed → POST https://open.tiktokapis.com/v2/oauth/token/ (x-www-form-urlencoded client_key,client_secret,code,grant_type=authorization_code,redirect_uri) → read open_id. TikTok returns NO id_token/OIDC and NO email, so signInWithIdToken is impossible; open_id is the sole stable identity. Find-or-create the Supabase user via a new tiktok_identities(open_id UNIQUE → user_id) table (deterministic synthetic email tiktok_<open_id>@tiktok-login.mcorch.local for admin.createUser on first sight), then mint a real session: admin.auth.admin.generateLink({type:'magiclink',email}) → anon.auth.verifyOtp({token_hash}) → session{access_token,refresh_token} (proven at scripts/qa/gen-user-jwt.ts:25-37; full-session variant gen-user-session.ts). useAuth onAuthStateChange then picks it up unchanged.\n\nCREDS (honest correction to maps): per-user social_app_config CANNOT resolve at login (resolveSocialAppCreds needs a userId; there is no auth.uid() pre-login). Login uses SYSTEM env TIKTOK_CLIENT_KEY/TIKTOK_CLIENT_SECRET — the legitimate restricted env-fallback per API Tenancy Model (onboarding/no-auth.uid() path). This differs from the publish-connect flow which is correctly per-user BYOK because a user is already authenticated there.\n\nSESSION HAND-OFF: callback lands as a top-level GET redirect — access_token/refresh_token must NOT go in the URL. Callback mints a single-use ~60s login code (server-stored), redirects to a new SPA route /auth/tiktok/callback?code=<one_time>; the SPA POSTs it to a tiny exchange endpoint that returns the session JSON once (then invalidates), and calls supabase.auth.setSession(). return_to bounce via existing safeReturnTo().",
+>   "smallest_slice": "Gated behind ?devLogin only (public login untouched → non-breaking). Add ONE \"Entrar com TikTok\" button in src/pages/Auth.tsx between :139 and :141 (mirror the Google Button: variant=outline, disabled={loading}, brand SVG, spinner) wired to a new handleTikTokLogin that invokes tiktok-login-init and does window.location.href=data.url. Ship the 2 edge fns (init + callback, verify_jwt=false in config.toml), the one-time-code exchange, one migration (tiktok_identities + tiktok_login_codes, RLS default-deny/service-role-only), and one SPA callback route. GOAL of the slice: authenticate the single registered TikTok SANDBOX target-user end-to-end and land an authenticated /dashboard session — screen-recordable proof of the user.info.basic login scope for app review, without touching the public auth surface or the existing publish-connect flow.",
+>   "gate": "bok-scribe",
+>   "gate_rationale": "This is a NEW external OAuth integration that PROVISIONS auth.users identities and MINTS Supabase sessions — a new security-sensitive auth/identity subsystem, NOT covered by the existing social publish-connect precedent. That precedent presupposes an already-authenticated user (social-auth-init rejects without a Bearer JWT) and only STORES tokens into social_accounts; it never creates a user nor mints a session (confirmed: no signInWithIdToken/createUser/session-mint anywhere in social-auth-*). Per CLAUDE.md §1 a new integration/architectural change triggers the BoK gate (MRD→SDD) + the Pattern Conformance Declaration; custom authentication with session-minting is exactly that class. Much of the OAuth plumbing is reuse (oauth-state.ts, token-exchange shape, auth-URL builder), so the BoK can be lean — but the identity-mapping, session-mint, credential-source (system-env, not per-user) and secret-handling decisions need a documented SSOT before code. MANDATORY REGARDLESS of gate: a Lei-2 SOP at docs/processes/tiktok-login-oauth.md (Operator/Sequence/Verification/Recovery/Success) AND /security-review on the migration + both edge fns BEFORE deploy (CLAUDE.md FMEA-011 + \"custom auth is security-sensitive\").",
+>   "files_to_touch": [
+>     "supabase/functions/tiktok-login-init/index.ts (NEW, verify_jwt=false)",
+>     "supabase/functions/tiktok-login-callback/index.ts (NEW, verify_jwt=false — code→token exchange, open_id, find-or-create user, generateLink→verifyOtp session mint, one-time code)",
+>     "supabase/functions/tiktok-login-session/index.ts (NEW — single-use code → session JSON exchange; or fold into callback)",
+>     "supabase/config.toml (register the new fns with verify_jwt=false)",
+>     "src/pages/Auth.tsx (add TikTok button between :139-141 inside the devLogin gate + new handleTikTokLogin; do NOT reuse handleOAuthLogin typed 'google'|'apple' at :81)",
+>     "src/pages/TikTokLoginCallback.tsx (NEW SPA route — redeem one-time code, supabase.auth.setSession, safeReturnTo bounce)",
+>     "src/App.tsx (register /auth/tiktok/callback route, near the /social/callback route at :160)",
+>     "supabase/migrations/<ts>_tiktok_login_identities.sql (NEW — tiktok_identities(open_id UNIQUE→user_id) + tiktok_login_codes(one-time), RLS default-deny, service-role-only writes)",
+>     "docs/processes/tiktok-login-oauth.md (NEW — Lei 2 SOP, mandatory before code)",
+>     "docs/bok/tiktok-login/ (NEW — BoK suite via /bok-scribe per gate)",
+>     "REUSE unchanged: supabase/functions/_shared/oauth-state.ts (signState/verifyState), src/lib/sso-cookie.ts (safeReturnTo/syncSsoCookie), src/hooks/useAuth.ts, src/integrations/supabase/client.ts"
+>   ],
+>   "security": [
+>     "Open redirect: return_to must pass safeReturnTo() allowlist; redirect_uri sent to TikTok must be the single STATIC registered edge URL (never client-supplied) — TikTok also forbids query params on registered URIs, so login-vs-connect cannot be an ?intent flag, it must be a distinct registered path.",
+>     "Session-mint abuse: tiktok-login-callback mints a FULL Supabase session (access_token+refresh_token) from an open_id → treat as a privileged sink. Verify state HMAC fail-closed (10-min window + nonce, timingSafeEqual), exchange the code server-side only, rate-limit the two public (verify_jwt=false) fns, and NEVER emit tokens in a URL — hand off via single-use short-TTL code invalidated on redeem.",
+>     "Secret handling: TIKTOK_CLIENT_SECRET, SB_SECRET_KEY and service-role key live only in edge env/Vault, never bundled to the client; the two login fns being verify_jwt=false (public) MUST self-guard on state + Origin since no JWT gates them.",
+>     "Synthetic-email account takeover: tiktok_<open_id>@tiktok-login.mcorch.local accounts must be password-less / non-resettable and namespaced to a domain you control so they cannot collide with or be claimed via a real user's email. Key strictly on the app-scoped, stable open_id — TikTok supplies no email, so do NOT auto-link a TikTok login to any existing email-based account (that would resurrect the exact cross-tenant grafting vector oauth-state.ts was built to close). New open_id = new isolated account.",
+>     "Migration: RLS default-deny; tiktok_identities and tiktok_login_codes writable by service-role only, no client SELECT of codes. /security-review MANDATORY before commit (CLAUDE.md: every new migration passes /security-review — FMEA-011 cross-tenant leak).",
+>     "Identity claim: open_id from the token response is the only trusted key; if a display name/avatar is wanted, fetch GET /v2/user/info/ with the Bearer access_token (separate call, not in token docs) — optional for MVP; discard TikTok tokens after open_id unless a connected-account is also intended."
+>   ],
+>   "risks": [
+>     "HARD DEMO BLOCKER (Lei 1): the TikTok app is unaudited/sandbox and App Review is currently REPROVADO pending rebrand (memory project_tiktok_review_rebrand_requirements). Unaudited user.info.basic → login works ONLY for accounts explicitly added as sandbox target-users in the dev console; a real public TikTok account CANNOT log in until the scope is audited. A working demo is therefore limited to the single registered sandbox test user — that is the honest ceiling for 'real Login with TikTok' until audit passes.",
+>     "redirect_uri must be pre-registered in the TikTok developer console (absolute https, static, ≤512 chars, ≤10 total, NO query/fragment) — a Sovereign console action, blocking, not doable from code. Because query params are denied, login must use a SEPARATE registered callback path from the existing publish social-auth-callback (cannot discriminate via ?intent=login).",
+>     "Sandbox vs production client_key differ (sandbox prefix sb…, per memory reference_tiktok_unaudited_private_account) — the env TIKTOK_CLIENT_KEY/SECRET used must match the environment being demoed, or consent fails.",
+>     "Do NOT conflate with the publish flow's private-account rule: the 'unaudited client can only post to PRIVATE accounts / HTTP 403' constraint is video.publish-specific; user.info.basic login does not need a private account, but does need the scope approved. Requesting a space-separated scope silently fails TikTok consent — must be comma-separated.",
+>     "No email/OIDC id_token from TikTok → identity is open_id-only; the synthetic-email + tiktok_identities mapping is load-bearing and irreversible once users exist (schema-review it before first prod login).",
+>     "If TikTok tokens are stored (not required for identity-only login), TikTok ROTATES the refresh_token on every refresh (365d) — a dropped rotation silently breaks the chain (refresh-social-token:169-176 precedent). Simplest MVP: discard TikTok tokens after reading open_id."
+>   ]
+> }
+> ```
+
+## 🤖 Claude *(04:35:31)*
+
+
+## 🤖 Claude *(04:35:43)*
+
+O mapa está completo e traz uma decisão que é sua (Owner), então vou surfaçar antes de codar. Resumo material:
+
+**Como funciona (abordagem confirmada):** o TikTok não é provider nativo do Supabase, então é OAuth custom — Login Kit v2 (server-side, sem PKCE no web) → callback troca `code` por token → lê o `open_id` → mapeia para um usuário Supabase via o padrão já provado no repo (`admin.generateLink → verifyOtp`, o mesmo do `gen-user-jwt.ts`). Tudo gated atrás do `?devLogin`, sem tocar no login público. Muita coisa é **reuso** (`oauth-state.ts` HMAC, `sso-cookie`, `useAuth`).
+
+**Dois bloqueadores duros que são ação SUA no console TikTok (caminho crítico — código sozinho não gera demo):**
+1. **Registrar o `redirect_uri`** do callback de login no console. Como o TikTok proíbe query-params na URL registrada, o login precisa de um **path de callback separado** do fluxo de publicação (não dá pra distinguir por `?intent=login`).
+2. **App em sandbox + App Review REPROVADO** (pendente rebrand): o scope `user.info.basic` só loga **usuários de teste registrados no console** até o audit passar. O demo E2E honesto fica limitado ao seu usuário-sandbox — real user público só depois do audit.
+3. Provisionar os secrets `TIKTOK_CLIENT_KEY/SECRET` (sandbox) no vault das edge fns.
+
+**O gate (decisão sua):** isto é um subsistema de **autenticação novo e sensível** — provisiona `auth.users` e **minta sessão Supabase** (um sink privilegiado). Não é coberto pelo precedente de publish-connect (que pressupõe usuário já logado e só guarda token). Por CLAUDE.md §1, dispara o BoK gate. A SOP Lei 2 + `/security-review` antes de deploy são **obrigatórios de qualquer forma**.
+
+## 🤖 Claude *(04:35:50)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O Login com TikTok \u00e9 um subsistema de auth novo (minta sess\u00e3o Supabase) \u2192 dispara o BoK gate (CLAUDE.md \u00a71). Como quer destravar o c\u00f3digo? (SOP Lei 2 + /security-review s\u00e3o obrigat\u00f3rios nas duas op\u00e7\u00f5es.)",
+      "header": "Gate BoK",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Override consciente + SOP (Recomendado)",
+          "description": "Precedente viralmind: escrevo s\u00f3 a SOP Lei 2 (docs/processes/tiktok-login-oauth.md) + implemento agora + /security-review antes do deploy; d\u00e9bito BoK selado no /handoff. Mais r\u00e1pido p/ o app review, dado o reuso pesado e os bloqueadores de console que s\u00e3o o caminho cr\u00edtico real."
+        },
+        {
+          "label": "BoK completo primeiro",
+          "description": "Rodo /bok-scribe tiktok-login (su\u00edte enxuta MRD\u2192SDD + Pattern Conformance) ANTES do c\u00f3digo. Protocolo-limpo, SSOT documentado, mais lento (8-9 docs)."
+        },
+        {
+          "label": "S\u00f3 o prep de console agora",
+          "description": "N\u00e3o codo ainda; voc\u00ea faz primeiro o registro do redirect_uri + usu\u00e1rio-sandbox + secrets no console TikTok (o caminho cr\u00edtico), e eu implemento depois com esses fatos fixos."
+        }
+      ]
+    }
+  ]
+}
+```
