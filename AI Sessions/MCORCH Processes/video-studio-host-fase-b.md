@@ -138,10 +138,3 @@ Sovereign copiaria o dir do projeto à mão (`tar` + upload). Com 2b o host espe
 
 Smoke verde (throwaway round-trip sha-igual) + objeto real de `mcorch-video` visível no bucket após
 sweep + journal com `[sync] uploaded N files`.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

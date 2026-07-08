@@ -1,4 +1,4 @@
-# Revisar status do cockpit
+# [[2026-07-07 - Revisar status do cockpit|Revisar status do cockpit]]
 **Date:** 2026-07-08 | **Session ID:** `050518ea-3975-4115-ba2b-fbf8a7c86941`
 
 ---
@@ -3393,3 +3393,16 @@ A pesquisa (papers de 2025, docs da Binance, avisos de FTC/CFTC) bateu na mesma 
 - **Renda de verdade:** empacotar 2-3 peças do TradeUX como **estudo de caso** (one-pager + perfil), ~4h, zero código novo. Isso testa se o portfólio converte num gig antes de investir mais — e é onde o EV realmente está.
 
 Quer que eu **(a)** rode o kill-test do maker pra fechar a questão do trading de vez, ou **(b)** já monte o rascunho do estudo de caso/one-pager do TradeUX pra você usar no pitch de freelance? Posso fazer os dois, mas se for um, começaria pelo **(b)** — é onde o dinheiro está.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
+> * **Próxima Sessão**: [[2026-07-08 - agent-a0b13f35b35bdfe4d]]
+%% --- TIMELINE END --- %%
