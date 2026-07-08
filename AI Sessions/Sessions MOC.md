@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1977
-> * **Sessões do Claude**: 1931
+> * **Total de Sessões Registradas**: 1986
+> * **Sessões do Claude**: 1940
 > * **Sessões do Gemini**: 46
 
 ---
@@ -72,19 +72,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-08 - agent-ad3285847f0e86721]]` - *2026-07-08*
+*   `[[2026-07-08 - agent-ac941ae9600af3850]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-abfa56b405652824f]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-abd16b4d8e06b049a]]` - *2026-07-08*
+*   `[[2026-07-08 - agent-aa4534738a76019f4]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-aa38efef31fe34339]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-a9b27b654a2de3db9]]` - *2026-07-08*
+*   `[[2026-07-08 - agent-a7fe9bed523fbcc1e]]` - *2026-07-08*
+*   `[[2026-07-08 - agent-a691827e871e80c88]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-a5e59ccfc91da27bd]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-a5d73c4b8c9758062]]` - *2026-07-08*
-*   `[[2026-07-08 - agent-a0b13f35b35bdfe4d]]` - *2026-07-08*
-*   `[[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]` - *2026-07-07*
-*   `[[2026-07-07 - agent-af96053c11e119a7a]]` - *2026-07-07*
-*   `[[2026-07-07 - agent-aee8e2bbba9c2b055]]` - *2026-07-07*
-*   `[[2026-07-07 - agent-aea2fab15215e3c1f]]` - *2026-07-07*
-*   `[[2026-07-07 - agent-ae8b55cfa8ed13151]]` - *2026-07-07*
-*   *... e mais 1922 sessões nessa categoria.*
+*   `[[2026-07-08 - agent-a4a89359e7f1f32bb]]` - *2026-07-08*
+*   *... e mais 1931 sessões nessa categoria.*
 
 ---
 
@@ -1740,14 +1740,23 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-08 - agent-ad3285847f0e86721]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-ac941ae9600af3850]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-abfa56b405652824f]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-abd16b4d8e06b049a]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-aa4534738a76019f4]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-aa38efef31fe34339]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-a9b27b654a2de3db9]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-a7fe9bed523fbcc1e]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-a691827e871e80c88]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-a5e59ccfc91da27bd]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-a5d73c4b8c9758062]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-a4a89359e7f1f32bb]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-a3566ccdf2cf43a76]]` (ClaudeSessions)
+*   `[[2026-07-08 - agent-a34d07cf03191ddac]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-a0b13f35b35bdfe4d]]` (ClaudeSessions)
 *   `[[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` (ClaudeSessions)
+*   `[[2026-07-08 - Montar loop para próximos passos]]` (ClaudeSessions)
 *   `[[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-af96053c11e119a7a]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aee8e2bbba9c2b055]]` (ClaudeSessions)
