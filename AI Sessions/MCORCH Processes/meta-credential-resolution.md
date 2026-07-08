@@ -117,3 +117,10 @@ A publicação omnichannel na Meta (Instagram Business + Facebook Page) exige um
 - **Lei 2 (Anticipated Process):** este SOP escrito ANTES do código (requisito API Tenancy item 5).
 - **Lei 3 (Pruning):** resolução stateless por request; nada acumulado.
 - **Lei 4 (ORO):** triplet declarado acima; Reviewer = Sovereign aprova migration + smoke antes do deploy.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

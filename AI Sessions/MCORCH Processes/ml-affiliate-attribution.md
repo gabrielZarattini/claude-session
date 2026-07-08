@@ -99,3 +99,10 @@ e o trilho de auditoria README/BoK/HANDOFF o citam). `grep -c panel.gcrux.com sc
 
 ---
 _Ref: docs/bok/mercado-livre-api/ (OTD-ML-001/002/CLICKS) · commit eebea0a · seal 45bc299b · hybrid v6.20.0 · click-ledger v6.28.0_
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
