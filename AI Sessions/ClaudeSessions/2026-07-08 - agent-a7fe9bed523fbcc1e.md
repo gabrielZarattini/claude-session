@@ -270,3 +270,16 @@ The daemon is LIVE. The public 302 is the intentional SSO auth-gate (the redirec
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - agent-a691827e871e80c88]]
+> * **Próxima Sessão**: [[2026-07-08 - agent-a9b27b654a2de3db9]]
+%% --- TIMELINE END --- %%
