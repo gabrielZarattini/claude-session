@@ -9896,15 +9896,79 @@ Recipe claro (sessão em `/tmp/sb-session.json` → localStorage `sb-<ref>-auth-
 >    a18f975..989e560  main -> main
 > ```
 
----
+## 🤖 Claude *(10:35:37)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]
-> * **Próxima Sessão**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(10:35:40)*
+
+Item 3(a) shipado e pushado (`989e560`). Fiz um balanço do que resta: os itens restantes ou são **Sovereign-gated** (só surfaçar) ou dependem de **uma decisão arquitetural sua** (o "editor embutido" da Ponte Designer, que define como eu rodo o bok-scribe do it.4b). Vou encerrar o loop aqui — a próxima etapa precisa do seu input, não de um wakeup — reportar, e te passar essa decisão.
+
+## 🤖 Claude *(10:35:40)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "stop": true
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Loop stopped — no further wakeups scheduled. If you armed a Monitor for this loop, TaskStop it now; otherwise nothing more to do this turn.
+> ```
+
+## 🤖 Claude *(10:35:44)*
+
+
+## 🤖 Claude *(10:35:57)*
+
+Loop encerrado. Balanço deste ciclo e o ponto de decisão:
+
+## ✅ Entregue neste ciclo (código completo + verificado)
+
+| Item | Estado | Prova |
+|---|---|---|
+| **1 — Login com TikTok** | Código+deploy completo | BoK 9/9 (`299b9f36`) · migration aplicada · 3 edge fns deployadas · **1 HIGH CSRF fechado+reverificado** · smoke 8/8 · browser-verify PASS. Commits até `a18f975` |
+| **3(a) — Higgsfield Platform key nas Settings** | Shipado | Campos key+secret em Settings→IA (trigger de encriptação confirmado) · tsc/eslint 0 · browser-verify logado PASS. Commit `989e560` |
+
+## 🔒 Ações Sovereign (paralelas — só surfaço, não executo)
+
+1. **TikTok Login E2E** (item 1) — P1 registrar `redirect_uri` `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/tiktok-login-callback` · P2 conta-sandbox target-user · P3 secrets `TIKTOK_CLIENT_KEY/SECRET`.
+2. **Higgsfield MCP OAuth** (item 3b) — o código server-side+UI **já está pronto** (`HiggsfieldConnectorCard`, sessão anterior); falta você **registrar o client OAuth no Clerk + clicar "Conectar Higgsfield"** em Settings→Conectores. Isso destrava o `tools/list` e a execução de nó via MCP (complementar à Platform key que acabei de surfaçar).
+3. **open-design env hardening** (item 2, se escolher a rota adapter) — `OD_ALLOWED_ORIGINS=https://login.mcorch.com` + `OD_API_TOKEN` forte no container.
+
+## ⚙️ Item 2 — decisão que destrava o `/bok-scribe` do it.4b
+
+O núcleo template-vivo da Ponte Designer (camadas linkadas a fontes dinâmicas + galeria dentro do editor) exige decidir **qual "editor embutido"** antes de eu especificar/codar. Essa escolha muda tudo no bok-scribe — é sua (Owner):
+
+## 🤖 Claude *(10:36:06)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Item 2 \u2014 qual abordagem de 'editor embutido' para a Ponte Designer (it.4b / OTD-SPACES-030)? Isso define como eu rodo o /bok-scribe e implemento as camadas linkadas a fontes din\u00e2micas.",
+      "header": "Editor Designer",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "HyperFrames Studio (reuso)",
+          "description": "Reusar o HyperFrames Studio (j\u00e1 deployado em video.mcorch.com, j\u00e1 tem StudioApiAdapter provado no m\u00f3dulo V\u00eddeo) como editor da Ponte Designer, estendendo p/ camadas de arte est\u00e1tica. PR\u00d3: sem fork do open-design, seam de adapter j\u00e1 existe. CONTRA: HyperFrames \u00e9 orientado a v\u00eddeo \u2014 edi\u00e7\u00e3o de camadas de imagem precisa de trabalho."
+        },
+        {
+          "label": "Adapter no open-design",
+          "description": "Fork/estender o open-design (design.mcorch.com) p/ expor uma ponte postMessage/adapter, colocando o painel Nodes|Assets + camadas-fonte DENTRO dele. PR\u00d3: reusa o editor open-design que j\u00e1 est\u00e1 no ar. CONTRA: fork do open-design (que a diretiva queria evitar) + exige o env hardening (a\u00e7\u00e3o Sovereign)."
+        },
+        {
+          "label": "Editor de camadas nativo",
+          "description": "Construir um editor de camadas React nativo leve no canvas do Spaces (sem iframe, sem cross-origin, sem fork). PR\u00d3: controle total, zero fric\u00e7\u00e3o cross-origin/fork. CONTRA: mais esfor\u00e7o de build (\u00e9 o do zero)."
+        }
+      ]
+    }
+  ]
+}
+```
