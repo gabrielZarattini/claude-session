@@ -173,3 +173,16 @@ The entire claimed exploit reduces to "unauthenticated endpoint costs a DB round
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - agent-ab7d23b3dea423f99]]
+> * **Próxima Sessão**: [[2026-07-08 - agent-abd16b4d8e06b049a]]
+%% --- TIMELINE END --- %%
