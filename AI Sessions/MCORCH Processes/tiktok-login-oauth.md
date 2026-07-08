@@ -16,9 +16,9 @@ O **Sovereign** no TikTok Developer Portal + o **usuário final** no browser. Ho
 |---|------|------------------------------|
 | P1 | Registrar o **`redirect_uri` do login** no TikTok console — path **SEPARADO** do publish (TikTok proíbe query-params na URI registrada, então não dá `?intent=login`). Valor: `https://<edge-host>/functions/v1/tiktok-login-callback` (https absoluto, sem query/fragment). | A URI aparece na lista "Redirect URI" do app (≤10 total, ≤512 chars). |
 | P2 | Adicionar a **conta TikTok de teste** como *sandbox target-user* (o app está unaudited → `user.info.basic` só loga usuários-sandbox registrados). | A conta aparece em Sandbox → Target users. |
-| P3 | Provisionar secrets no vault das edge fns: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` (do ambiente que será demonstrado — sandbox `sb…` vs prod diferem). | `npx supabase secrets list` mostra as duas chaves. |
+| ~~P3~~ | ~~Provisionar secrets `TIKTOK_CLIENT_KEY/SECRET`~~ **ELIMINADO 2026-07-08** — o app TikTok é UM só; o login **reusa a mesma chave** que o connect `/dashboard/social` já tem (`social_app_config`, via `_shared/tiktok-login-creds.ts` → `decrypted_social_app_config` da única linha tiktok ativa; env `TIKTOK_CLIENT_KEY/SECRET` = override opcional). Login **não pode ser per-user** (sem `auth.uid()` pré-sessão) → usa a credencial GLOBAL do app = a mesma chave. Provado: init → URL com `client_key=sbaw15…` (sandbox). | Reuso automático — nada a provisionar. |
 
-> Sem P1–P3 o fluxo **não completa** — o código pode ser deployado e testado até o ponto do redirect, mas o consent/callback falha. Isso é o teto honesto (Lei 1).
+> Sem **P1** o fluxo **não completa** — TikTok valida o `redirect_uri` no authorize. A chave já vem do connect (P3 eliminado); resta só registrar o callback de login (P1) + a conta-sandbox (P2). Teto honesto (Lei 1).
 
 ## Sequence — em que ordem? (cada passo com critério material)
 

@@ -1,4 +1,4 @@
-# [[2026-07-07 - Revisar status do cockpit|Revisar status do cockpit]]
+# Revisar status do cockpit
 **Date:** 2026-07-08 | **Session ID:** `050518ea-3975-4115-ba2b-fbf8a7c86941`
 
 ---
@@ -3394,15 +3394,277 @@ A pesquisa (papers de 2025, docs da Binance, avisos de FTC/CFTC) bateu na mesma 
 
 Quer que eu **(a)** rode o kill-test do maker pra fechar a questão do trading de vez, ou **(b)** já monte o rascunho do estudo de caso/one-pager do TradeUX pra você usar no pitch de freelance? Posso fazer os dois, mas se for um, começaria pelo **(b)** — é onde o dinheiro está.
 
----
+## 👤 User *(22:05:02)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+ok B
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
-> * **Próxima Sessão**: [[2026-07-08 - agent-a0b13f35b35bdfe4d]]
-%% --- TIMELINE END --- %%
+## 👤 User *(22:05:14)*
+
+[Request interrupted by user]
+
+## 👤 User *(22:05:26)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(22:05:26)*
+
+# ShakeHands — /handoff (TradeUX session seal)
+
+Execute the ShakeHands `/handoff` ritual to seal this session. Leaves zero
+orphaned state. (See skill `shake-hands`.)
+
+## PRE-FLIGHT
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' status --short
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD --stat
+sudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps'
+```
+
+## PHASE 1 — SECRET SCAN (BLOCKS the seal on any finding)
+```bash
+git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' diff HEAD \
+  | grep -E "(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\s*=\s*\S)" \
+  | grep -v "example\|<.*>\|=\s*$" | head
+```
+`.env` must stay gitignored. Binance + OpenRouter keys NEVER get committed. If a key
+shows up in the diff → STOP, scrub, do not push.
+
+## PHASE 2 — COMMIT BY LAYER (branch + PR)
+| Layer | Pattern | Prefix |
+|---|---|---|
+| Backend (Beholder core — careful) | `backend/**` | `feat(backend):` / `fix(backend):` |
+| Frontend | `frontend/**` | `feat(frontend):` / `fix(frontend):` |
+| Agent / MCP | `tradeux-agent/**`, `tradeux-mcp/**` | `feat(agent):` |
+| Deploy | `docker-compose*.yml`, `setup.sh`, `Makefile` | `chore(deploy):` |
+| Docs | `*.md` | `docs:` |
+
+Commit each layer separately, append `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+Do it on a branch (we ship via PR, not direct-to-master).
+
+## PHASE 3 — UPDATE `HANDOFF.md`
+Mark completed items ✅, add pending, refresh Next Steps + Tech Debt + Open PRs,
+append a dated **Session Record** paragraph.
+
+## PHASE 4 — MEMORY FILES
+Update `/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/` (+ `MEMORY.md` index)
+with anything durable + non-obvious learned this session.
+
+> No Supabase Knowledge Mesh / system_milestones here — that's constellation-orchestra.
+> HANDOFF.md + memory ARE our mesh.
+
+## PHASE 5 — PUSH (mandatory final act)
+```bash
+sudo env GIT_SSH_COMMAND="ssh -i /home/ubuntu/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' push -u origin <branch>
+sudo chown -R gcrux-tradeux:gcrux-tradeux /home/gcrux-tradeux/tradeux
+```
+Surface the printed `…/pull/new/<branch>` URL — opening/merging the PR is the user's
+action (no `gh`/token on this box).
+
+## OUTPUT
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — <data ISO>
+───────────────────────────────────────────────────
+Commits     : <N> (<prefixes>)  |  Branch: <branch>
+HANDOFF.md  : ✅ atualizado
+Memory      : <N> arquivos
+PRs abertos : <urls — aguardando merge>
+Push        : <✅ origin sincronizado / N/A sem código novo>
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+
+## 🤖 Claude *(22:05:33)*
+
+
+## 🤖 Claude *(22:05:35)*
+
+O `/handoff` tem prioridade — vou selar a sessão. (O "ok B" fica registrado como próximo passo pra próxima sessão.) Rodando pré-flight + secret scan.
+
+## 🤖 Claude *(22:05:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== status ===\"\ngit -c safe.directory='*' status --short 2>&1 | grep -v \"Permission denied\\|could not open\"\necho \"=== diff stat ===\"\ngit -c safe.directory='*' diff HEAD --stat 2>&1 | tail -5\necho \"=== docker ps ===\"\nsudo -n -u gcrux-tradeux bash -lc 'cd /home/gcrux-tradeux/tradeux && docker compose ps' 2>/dev/null | awk '{print $1, $NF}'\necho \"=== branch atual + head ===\"\ngit -c safe.directory='*' rev-parse --abbrev-ref HEAD 2>/dev/null\ngit -c safe.directory='*' log --oneline -1 2>/dev/null",
+  "description": "Pr\u00e9-flight do handoff: status, diff, containers, branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status ===
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.json
+>  M backend/backtest-results/farm-funnel-1h-full-macro500.md
+> ?? backend/backtest-results/farm-funnel-1h-full.json
+> ?? backend/backtest-results/farm-funnel-1h-full.md
+> ?? backend/backtest-results/pattern-discovery-1m-15d.json
+> ?? backend/backtest-results/pattern-discovery-1m-15d.md
+> ?? backend/backtest-results/pattern-survivors-1m-15d.json
+> ?? backend/backtest-results/pattern-validation-1m-15d.json
+> ?? backend/backtest-results/pattern-validation-1m-15d.md
+> === diff stat ===
+> warning: unable to access 'backups/.gitattributes': Permission denied
+>  .../farm-funnel-1h-full-macro500.json              | 484 ++++++++++-----------
+>  .../farm-funnel-1h-full-macro500.md                |  62 +--
+>  backups/.gitignore                                 |   4 -
+>  3 files changed, 273 insertions(+), 277 deletions(-)
+> === docker ps ===
+> NAME PORTS
+> tradeux-backend-1 3001/tcp
+> tradeux-db-1 33060/tcp
+> tradeux-frontend-1 127.0.0.1:8090->80/tcp
+> === branch atual + head ===
+> master
+> 8352e0f feat(cockpit): move HUD da vela ao vivo pro topo do grid (order:-1)
+> ```
+
+## 🤖 Claude *(22:05:44)*
+
+
+## 🤖 Claude *(22:05:46)*
+
+Working tree só tem scratch de `backtest-results/*` (contaminação de outra origem + research regenerável) e o falso-positivo do `backups/.gitignore` — **nada de código novo desta sessão** (foi tudo pesquisa/análise via API/DB + memória). Rodando o secret scan por disciplina.
+
+## 🤖 Claude *(22:05:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrux-tradeux/tradeux\necho \"=== secret scan do diff ===\"\ngit -c safe.directory='*' diff HEAD 2>/dev/null \\\n  | grep -E \"(sk-or-v1-[a-zA-Z0-9]{20,}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{20,}|SECRET_KEY|ACCESS_KEY|DEFAULT_SETTINGS_(ACCESS|SECRET)_KEY\\s*=\\s*\\S)\" \\\n  | grep -v \"example\\|<.*>\\|=\\s*$\" | head\necho \"=== fim (vazio = limpo) ===\"",
+  "description": "Secret scan do diff antes de selar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === secret scan do diff ===
+> === fim (vazio = limpo) ===
+> ```
+
+## 🤖 Claude *(22:05:52)*
+
+Secret scan limpo. Sem código novo → sem commit/push (fase 2 e 5 = N/A). Vou atualizar o `HANDOFF.md` com o Session Record desta sessão.
+
+## 🤖 Claude *(22:05:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "offset": 1,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# TradeUX — HANDOFF (single source of truth)
+> 2	
+> 3	> ShakeHands continuity doc. `/handson` reads this FIRST. Newest record at the bottom.
+> 4	> Project: **TradeUX** — Beholder-based multi-coin Binance Spot bot + LLM agent (**mainnet/testnet dual-env**).
+> 5	> Updated: **2026-06-29** · Phase: **GO-LIVE MAINNET — 🔴 LIVE (`halted=false`) · PARADO-MAS-ARMADO** (capital parqueado como combustível do bull; regime BEAR → supervisor NO-OP) · `Vivo==master==origin==78515ae` · ⚠️ runtime não-git: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + **`AGENT_HEARTBEAT_ENABLED=false` (agente LLM PAUSADO p/ parar consumo OpenRouter — `docker compose stop agent`; religar no flip)**; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` · ver SEAL 2026-06-29 no rodapé · *(linha histórica abaixo)* · **Canary FARM-ONLY** (vendas no-loss id10/12/14 — **AGORA FUNCIONAM**; compras off) · **SESSÃO 21/jun (maratona): incidente Earn auto-subscribe diagnosticado+resolvido + 4 bugs corrigidos/gated/deployados** → `c6d0853` (dailyCap conta `LD*` do Earn = fim do HALT-falso), `457e25a` (silencia PUSH `[PAPER]` + alerta Telegram em falha real), **`fb932a1` (venda do Farm EDGE→LEVEL-trigger = 1ª saída no-loss do Farm a EXECUTAR no mainnet)** → **LTC vendido +$0,49** (ordem 264 @ $44,54, FARM_DCA→0, equity **$149,39**) · ⚠️ **runtime não-git (reaplicar se reset):** `.env MAX_ORDER_NOTIONAL_USDT=25→50` (band-aid: o teto bloqueava a VENDA de $40), DB `monitors`#2 `*:BOOK isActive=1` · proteções: cap diário −5%, teto **$50/ordem**, Farm $25/símbolo, riskGuard, pânico, painel de grupos · Meta: **realista ≈ flat com ~$149** · Vivo==master==origin==**`6cec694`** (re-revisão de design 2026-06-22 **100% ZERADA** — só RBAC=DEFER; agente caiu por toggle ZDR do OpenRouter e VOLTOU; ver SEAL 2026-06-24 no rodapé)
+> 6	
+> ```
+
+## 🤖 Claude *(22:06:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrux-tradeux/HANDOFF.md",
+  "old_string": "> Updated: **2026-06-29** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`) \u00b7 PARADO-MAS-ARMADO** (capital parqueado como combust\u00edvel do bull; regime BEAR \u2192 supervisor NO-OP) \u00b7 `Vivo==master==origin==78515ae` \u00b7 \u26a0\ufe0f runtime n\u00e3o-git: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + **`AGENT_HEARTBEAT_ENABLED=false` (agente LLM PAUSADO p/ parar consumo OpenRouter \u2014 `docker compose stop agent`; religar no flip)**; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` \u00b7 ver SEAL 2026-06-29 no rodap\u00e9",
+  "new_string": "> Updated: **2026-07-08** \u00b7 Phase: **GO-LIVE MAINNET \u2014 \ud83d\udd34 LIVE (`halted=false`) \u00b7 1\u00aa PROMO\u00c7\u00c3O REAL DISPAROU \u2192 BASELINE BTC ARMADO E J\u00c1 COMPROU 2\u00d7 ($5 cada)** \u00b7 `Vivo==master==origin==8352e0f` \u00b7 \u26a0\ufe0f runtime n\u00e3o-git: `.env FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + `AGENT_HEARTBEAT_ENABLED=false` (agente LLM PAUSADO desde 29/jun \u2014 `docker compose stop agent`; religar no flip) + `MAX_ORDER_NOTIONAL_USDT=50`; `tradeux-agent/.env INTERVAL=900000`+`MAX_ROUNDS=10` \u00b7 **NOVO estado (07-08/jul): `promotionJob` promoveu `consistencia` (06/jul 22:59Z) \u2192 supervisor ATIVOU id2/id3 REAL BTC \u2192 id2 comprou 0.00014985 BTC em 2 fills ($63.386 + $61.928, custo $9,40, avg ~$62.734), unrealized ~\u2212$0,14; \u26a0\ufe0f VENDA (id3) GATEADA OFF agora (regime BTC=trend), posi\u00e7\u00e3o temporariamente presa \u2014 ver SEAL 2026-07-08 + mem\u00f3ria [[tradeux-first-promotion-baseline-armed]]** \u00b7 ver SEAL 2026-07-08 no rodap\u00e9"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrux-tradeux/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:06:08)*
+
+Agora o Session Record no rodapé (registro mais recente por último):
+
+## 🤖 Claude *(22:06:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -3 /home/gcrux-tradeux/HANDOFF.md",
+  "description": "Ver as \u00faltimas linhas pra ancorar o append"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> **⚠️ RUNTIME não-git (INALTERADO nesta sessão):** `.env`: `AGENT_HEARTBEAT_ENABLED=false` + `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + `MAX_ORDER_NOTIONAL_USDT=50`. Agent container parado. `[PAPER] TrendState/TrendBreadth` vivem no DB (reproduzir com `node scripts/setup-paper-trend-state.js`).
+> 
+> **⚡ NEXT:** (1) **Foco do dono migrou pro projeto FREELANCE separado** — o TradeUX deixa de ser a aposta de renda. (2) TradeUX = **manter observando** (parado-mas-armado, NO-OP em range/bear, de graça, capital preservado); re-engajar só em **bull SUSTENTADO** (não pico/whipsaw) + GO do dono + promoção. (3) Único fio de research honesto SE quiser perseguir: **id2-como-MAKER no 15m em paper** medindo fill-rate real (o backtest assume fill garantido = otimista; é aí que a tese vive ou morre). (4) Débito LOW pré-existente: contaminação `backtest-results/*` no working tree (NÃO commitar; considerar `.gitignore backend/backtest-results/`). **Claude NÃO virou HALT nem armou trading real.** Working tree: só scratch regenerável. **Sem commit/push (zero código novo).**
+> ```
+
+## 🤖 Claude *(22:07:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat >> /home/gcrux-tradeux/HANDOFF.md <<'SEAL'\n\n### \ud83e\udd1d SEAL \u2014 2026-07-08 (1\u00aa PROMO\u00c7\u00c3O REAL disparou \u2192 baseline BTC comprou 2\u00d7 de verdade; auditoria 7-agentes do \"verde\"; deepsearch \"onde criar rob\u00f4s\" \u2192 resposta = FREELANCE, n\u00e3o operar $149)\n\n**`Vivo==master==origin==8352e0f`** (ZERO c\u00f3digo novo \u2014 sess\u00e3o foi an\u00e1lise ao vivo + 2 workflows adversariais + mem\u00f3ria; secret-scan limpo; sim-suite n\u00e3o rodada pois nada tocado). \ud83d\udd34 LIVE (`halted=false`, confirmado ao vivo `sources=[]`) \u00b7 db/backend/frontend up (agent **parado de prop\u00f3sito** desde 29/jun) \u00b7 site 200. **MUDAN\u00c7A MATERIAL: a m\u00e1quina virou sozinha e MOVIMENTOU DINHEIRO REAL pela 1\u00aa vez desde 21/jun.**\n\n**(1) \ud83c\udfaf 1\u00aa PROMO\u00c7\u00c3O + BASELINE REAL ARMADO E EXECUTADO (ver [[tradeux-first-promotion-baseline-armed]]):** `promotionJob` promoveu `consistencia` em **06/jul 22:59:58Z** (20 round-trips, realized +$1,18, 85% win) \u2192 43s depois `groupSupervisorJob` **ATIVOU id2/id3 REAL BTC** (\"regime=range n\u00e3o-bear\"). A id2 ent\u00e3o **COMPROU BTC de verdade 2\u00d7**: `id265` 0.00006993 BTC @ **$63.386** (07/jul 23:54Z, net $4,44) + `id266` 0.00007992 BTC @ **$61.928** (08/jul 08:38Z, net $4,96). **Posi\u00e7\u00e3o: 0.00014985 BTC, custo $9,40, pre\u00e7o m\u00e9dio ~$62.734**; @ ~$61.9k = unrealized **\u2212$0,14 (\u22121,4%)**. Ordem real = **$5,00** (symbols.minNotional BTCUSDT=5.00, N\u00c3O $10-12). **3 achados ao vivo (todos = furos previstos na auditoria):** (a) **POSI\u00c7\u00c3O PRESA CONFIRMADA** \u2014 regime BTC virou `trend` \u00e0s **09:04Z 08/jul** (whipsaw range\u2192mixed\u2192trend) e id3 tem `RSI>75 && REGIME!=='trend'` \u2192 **venda GATEADA OFF agora**; s\u00f3 vende quando RSI_1m>75 E regime sair de trend; nenhuma outra automa\u00e7\u00e3o vende esse BTC (dailyCap s\u00f3 trava ordens novas, nunca liquida). (b) **id3 dispara sem checar saldo** \u2014 1 SELL falhou em 07/jul 10:04Z (`-2010 insufficient balance`, antes de haver BTC) \u2192 ordem REJECTED/ru\u00eddo Telegram (bug LOW). (c) **DUST** \u2014 id3 vende `quoteOrderQty=$5` fixo; com ~$9,3 de BTC, 1 venda deixa ~$4,3 < MIN_NOTIONAL $5 = res\u00edduo invend\u00e1vel. Risco monet\u00e1rio total = centavos ($9,4 de exposi\u00e7\u00e3o, tetos/cap\u22125%/\u221212%/p\u00e2nico intactos) \u2192 N\u00c3O desarmar \u00e0s pressas; \u00e9 o experimento de $5 rodando ao vivo.\n\n**(2) AUDITORIA ADVERSARIAL DO \"VERDE\" (wf_8a3650df, 4 lentes + 3 c\u00e9ticos, `high`):** o dono viu \"tudo verde/oportunidade no cockpit\". Veredito consolidado = **NADA acion\u00e1vel; \u00e9 bounce de bear-market, n\u00e3o virada.** KILL-SHOT do c\u00e9tico: o cluster \"golden cross 1h nos 4 + smaAbove\" **J\u00c1 ocorreu 12-18/jun (4/4 por 124h vs 88h agora, margens MAIORES) e morreu em death cross com BTC 67.292\u219257.800 (\u221214%)**; o regime.log s\u00f3 come\u00e7a em 19/jun (p\u00f3s-fakeout) \u2192 \"primeiro 4/4 da hist\u00f3ria\" era artefato de 17d de hist\u00f3rico. Estrutura DI\u00c1RIA/semanal segue bearish (pre\u00e7o<SMA50d<SMA200d nos 4; volume n\u00e3o confirma; 19/19 bounces \u22658% do BTC desde o topo morreram). Paper de trend PERDEU no pr\u00f3prio verde (trendstate \u2212$0,06/33%win, trendbreadth \u2212$0,00/43%). Promo\u00e7\u00e3o = **honesta-mas-N\u00c3O-transfere** (bootstrap CI da m\u00e9dia cruza zero P(\u22640)=5,1%; 96% do edge veio das ALTS/LTC, armado real \u00e9 s\u00f3 BTC n=3; unrealized \u2212$1,18 anula o realized \u2192 total 18d=$0). **TESTES OBJETIVOS anotados** (separam bounce\u00d7virada em ~1-2 sem): pr\u00f3-whipsaw = death cross em \u22652 s\u00edmbolos (LTC=can\u00e1rio, j\u00e1 abaixo das 2 SMAs) OU BTC di\u00e1rio <57.800; pr\u00f3-virada = 4/4 verde sobreviver AL\u00c9M de 124h (\u226514/jul) E BTC di\u00e1rio >SMA50d (~$66,5k) com volume 7d>m\u00e9dia. Corre\u00e7\u00e3o-chave dada ao dono: **regime `trend` = ADX forte, N\u00c3O \"subindo\"** \u2014 hoje os 4 est\u00e3o `trend` mas TODOS vermelhos 24h e 3/4 j\u00e1 abaixo das duas SMAs (golden crosses prestes a inverter) = trend de QUEDA.\n\n**(3) \ud83d\udd0e DEEPSEARCH \"onde vale criar rob\u00f4s\" (wf_17d3284e, 4 frentes web + s\u00edntese c\u00e9tica, fontes 2025-2026, ver [[tradeux-pattern-lab]] + [[owner-pivot-freelance-income]]):** pedido do dono. Ranking honesto: **\ud83c\udfc6 FREELANCE de automa\u00e7\u00e3o/agentes/MCP (9/10)** \u2014 1h faturada ($90-250/h) supera **10-30\u00d7 o lucro ANUAL** plaus\u00edvel dos $149; o TradeUX \u00e9 o portf\u00f3lio; vender SERVI\u00c7O n\u00e3o produto (SaaS de bot = armadilha churn 40%/CAC $1.200). Trading: **maker id2 (3/10) ENFRAQUECIDO** \u2014 sem rebate maker no SPOT Binance (s\u00f3 futures institucional); *Maker's Dilemma* (arXiv 2502.18625) prova adverse selection (buy-limit em RSI-baixo enche quando o pre\u00e7o CONTINUA caindo; rebate \u22120,5bp n\u00e3o compensa) \u2192 o \"fill garantido\" do nosso backtest \u00e9 a hip\u00f3tese refutada; **kill-test barato = re-backtest com fill CONDICIONAL no Paper Engine (~1 dia)**. IA prevendo pre\u00e7o = **refutado por literatura** (Profit Mirage \u221250/\u221272% OOS=memoriza\u00e7\u00e3o; StockBench n\u00e3o bate buy&hold; FinGPT 45-53% acc) + FTC/CFTC crackdown. Arb/stat-arb/MM/grid = **descartar** ($149 < m\u00ednimos $5k-250k / edge<fee / exige futures). Aconselhei o dono a N\u00c3O religar o agente `:free` (observador, sem edge, queima cota).\n\n**\u26a0\ufe0f RUNTIME n\u00e3o-git (INALTERADO):** `.env`: `AGENT_HEARTBEAT_ENABLED=false` + `FLOW_NOTIFY_ENABLED=false` + `AGENT_HEARTBEAT_STALE_MS=2700000` + `MAX_ORDER_NOTIONAL_USDT=50`. Agent parado. Trilhas `[PAPER]` no DB (`setup-paper-trend-state.js`). \u26a0\ufe0f **Nada acion\u00e1vel foi feito no sistema \u2014 READ-ONLY total** (Claude N\u00c3O virou HALT, N\u00c3O desarmou id2/id3, N\u00c3O religou agente).\n\n**\u26a1 NEXT:** (1) **O DONO ESCOLHEU \"B\" (interrompido pelo /handoff): montar o rascunho de ESTUDO DE CASO / one-pager do TradeUX pro pitch de freelance** (empacotar servidor MCP c/ tool-gating fail-close + agente Telegram supervisionado + sim-suite que achou 3 bugs; ~4h, zero c\u00f3digo novo) \u2014 **come\u00e7ar a pr\u00f3xima sess\u00e3o por isso.** (2) Alternativa de trading oferecida (n\u00e3o escolhida): kill-test do maker (fill condicional, ~1 dia) pra fechar o \u00faltimo lever. (3) Monitorar os testes objetivos bounce\u00d7virada (venda do BTC destrava quando regime sair de trend). (4) D\u00e9bitos LOW: id3 dispara sem checar saldo (ordem-fantasma), dust do baseline, sem demo\u00e7\u00e3o no promotionJob, sem teto de exposi\u00e7\u00e3o acumulada do baseline \u2014 todos anotados em [[tradeux-first-promotion-baseline-armed]], nenhum urgente com ordem de $5. (5) contamina\u00e7\u00e3o `backtest-results/*` no working tree (N\u00c3O commitar). **Sem commit/push (zero c\u00f3digo novo).**\nSEAL\necho \"append ok\"; tail -2 /home/gcrux-tradeux/HANDOFF.md | head -1 | cut -c1-80",
+  "description": "Anexar Session Record 2026-07-08 ao HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> append ok
+> ```
+
+## 🤖 Claude *(22:07:07)*
+
+
+## 🤖 Claude *(22:07:31)*
+
+Sessão selada. Memória e HANDOFF.md atualizados; sem código novo → sem commit/push.
+
+```
+═══════════════════════════════════════════════════
+  🤝 HANDOFF — 2026-07-08
+───────────────────────────────────────────────────
+Commits     : 0 (sessão read-only: análise + 2 workflows + memória)  |  Branch: master (8352e0f)
+HANDOFF.md  : ✅ atualizado (header + SEAL 2026-07-08)
+Memory      : 4 arquivos
+              • tradeux-first-promotion-baseline-armed.md (NOVO + fills reais)
+              • owner-pivot-freelance-income.md (dados de mercado do deepsearch)
+              • tradeux-pattern-lab.md (maker enfraquecido: adverse selection)
+              • MEMORY.md (índice)
+PRs abertos : nenhum
+Push        : N/A — zero código novo (só leitura/análise; secret-scan limpo)
+Stack       : db/backend/frontend up · agent parado (de propósito) · site 200
+───────────────────────────────────────────────────
+  Próxima sessão começa com: /handson
+═══════════════════════════════════════════════════
+```
+
+**Resumo do que ficou registrado desta sessão:**
+- 🎯 **A máquina virou sozinha e mexeu dinheiro real** — 1ª promoção (`consistencia`) → baseline BTC comprou 2× ($5 cada, ~$9,4, avg $62.734, −$0,14). ⚠️ **venda travada agora** (regime=trend gateia a id3) — posição temporariamente presa, mas risco de centavos.
+- 🔍 **Auditoria do "verde"**: bounce de bear-market (réplica do fakeout de 12-18/jun), nada acionável; testes objetivos bounce×virada anotados.
+- 💡 **Deepsearch**: operar $149 = EV de centavos em todas as frentes; o EV real é **vender a engenharia via freelance** (10-30× o lucro anual do bot).
+
+**⚡ Próxima sessão começa pelo que você escolheu (B):** montar o **estudo de caso / one-pager do TradeUX** pro pitch de freelance — ~4h, zero código novo, empacotando o servidor MCP, o agente supervisionado e a sim-suite como prova de skill. Ficou no topo do NEXT do seal. Até lá. 🤝
