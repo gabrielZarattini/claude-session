@@ -259,3 +259,24 @@ o flip do cliente (it.2b).
 browser+Vision no nó/inspector · **lote ≥3 itens (~30 mco) = GO de gasto na Fila** (gate §9 do Amendment 14).
 **Recovery:** expansão é client-side; cada item é um run ledger independente (refund automático por item — nada novo).
 **Success signal:** 1 template + lista de N produtos ML → N imagens consistentes na Biblioteca com provenance por item.
+
+### Amendment it.4c — nó Upscale REAL (Magnific-signature, Replicate real-esrgan) — 2026-07-07, ANTES do código
+
+**Contexto:** o Sovereign pediu paridade "exponencial" com o Magnific, cuja capacidade-assinatura é UPSCALE.
+Provider CERTO (probe 2026-07-07 com a chave Replicate do vault do User 0): `nightmareai/real-esrgan`
+version `b3ef194191d1…` — input `{image, scale∈{2,4}, face_enhance}`, output URL. NÃO é placeholder: é uma
+operação real de imagem→imagem. upscale-2x=8 / upscale-4x=20 já em CREDIT_COSTS.
+**Operator (manual hoje):** rodar real-esrgan no site do Replicate à mão e baixar. Sem nó nativo.
+
+**Sequence:**
+1. Provider fn `generateReplicateUpscale(key, imageUrl, scale, faceEnhance)` — cria prediction + poll (mesmo
+   padrão de `generateReplicate`), version pinada.
+2. `executeSpacesNode`: `upscale` entra no slice gate; custo = `upscale-${scale}x` fail-closed (scale∉{2,4}→422);
+   422 se sem imagem de entrada (input_asset_url OU reference upstream); BYOK replicate fail-closed 402;
+   dispatch no retry loop → generateReplicateUpscale; modelKey `replicate/real-esrgan`; materializa + creative_assets.
+3. Cliente: kind `upscale` + factory + node + inspector (2x/4x + face_enhance) + registry (Transform) + dispatch +
+   resolveExecutePayload (`node_type:'upscale'`, scale/face_enhance em parameters) + estimateNodeCost (`upscale-${scale}x`)
+   + pipeline (upscale QUER imagem upstream, como styleTransfer: `input_asset_url` = findUpstreamImage).
+**Verification gates:** unit do custo por scale · tsc 0 · **witness pago** (imagem real → upscale 2x, saldo −8 exato,
+asset registrado) · browser render + Vision. **Recovery:** run ledger independente (refund automático em falha).
+**Success signal:** conectar Gerar Imagem → Upscale → imagem em alta no `creative_assets`, cobrança exata por scale.
