@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1953
-> * **Sessões do Claude**: 1907
+> * **Total de Sessões Registradas**: 1960
+> * **Sessões do Claude**: 1914
 > * **Sessões do Gemini**: 46
 
 ---
@@ -55,6 +55,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   *... e mais 7 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
+*   `[[2026-07-07 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` - *2026-07-07*
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
 *   `[[2026-06-21 - Validar studio design e canvas studio end-to-end]]` - *2026-06-21*
 *   `[[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]` - *2026-06-01*
@@ -71,6 +72,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-aee8e2bbba9c2b055]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-aea2fab15215e3c1f]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-ae8b55cfa8ed13151]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-adb7c6490855aad92]]` - *2026-07-07*
@@ -78,11 +80,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-07 - agent-ac40d2c0edfa508cd]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-ac21c97295c524e52]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-aaef65e0a28b7da7b]]` - *2026-07-07*
+*   `[[2026-07-07 - agent-aa84bdbe287f4626a]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-aa65d0ad0c39c343b]]` - *2026-07-07*
 *   `[[2026-07-07 - agent-aa474a97bb25489dd]]` - *2026-07-07*
-*   `[[2026-07-07 - agent-a96c9b2e4922d7144]]` - *2026-07-07*
-*   `[[2026-07-07 - agent-a8b9f60bdb3d3802a]]` - *2026-07-07*
-*   *... e mais 1900 sessões nessa categoria.*
+*   *... e mais 1906 sessões nessa categoria.*
 
 ---
 
@@ -1739,6 +1740,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-aee8e2bbba9c2b055]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aea2fab15215e3c1f]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-ae8b55cfa8ed13151]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-adb7c6490855aad92]]` (ClaudeSessions)
@@ -1746,8 +1748,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-07 - agent-ac40d2c0edfa508cd]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-ac21c97295c524e52]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aaef65e0a28b7da7b]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-aa84bdbe287f4626a]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aa65d0ad0c39c343b]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aa474a97bb25489dd]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a9840a3102bb82988]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a96c9b2e4922d7144]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a8b9f60bdb3d3802a]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a81b084da9dd26baf]]` (ClaudeSessions)
@@ -1758,10 +1762,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-07 - agent-a5e992487ea01da0b]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a5ba75d87aca616f1]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a4ec15c15c87cebd7]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a464c82a538ba60aa]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a3ac7522c5935865b]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a300075194b3bd4f3]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a2e7756494153f89b]]` (ClaudeSessions)
+*   `[[2026-07-07 - agent-a15c30666efb0ac20]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-a02f28dec762dc307]]` (ClaudeSessions)
 *   `[[2026-07-07 - Revisar status do cockpit]]` (ClaudeSessions)
+*   `[[2026-07-07 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` (ClaudeSessions)
 *   `[[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]` (ClaudeSessions)
 *   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` (ClaudeSessions)
 *   `[[2026-07-07 - Diagnosticar falha de render no video-bridge]]` (ClaudeSessions)
