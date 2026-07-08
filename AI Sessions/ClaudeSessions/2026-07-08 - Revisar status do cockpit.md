@@ -1,4 +1,4 @@
-# Revisar status do cockpit
+# [[2026-07-07 - Revisar status do cockpit|Revisar status do cockpit]]
 **Date:** 2026-07-08 | **Session ID:** `050518ea-3975-4115-ba2b-fbf8a7c86941`
 
 ---
@@ -3668,3 +3668,16 @@ Stack       : db/backend/frontend up · agent parado (de propósito) · site 200
 - 💡 **Deepsearch**: operar $149 = EV de centavos em todas as frentes; o EV real é **vender a engenharia via freelance** (10-30× o lucro anual do bot).
 
 **⚡ Próxima sessão começa pelo que você escolheu (B):** montar o **estudo de caso / one-pager do TradeUX** pro pitch de freelance — ~4h, zero código novo, empacotando o servidor MCP, o agente supervisionado e a sim-suite como prova de skill. Ficou no topo do NEXT do seal. Até lá. 🤝
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
+> * **Próxima Sessão**: [[2026-07-08 - agent-a0b13f35b35bdfe4d]]
+%% --- TIMELINE END --- %%
