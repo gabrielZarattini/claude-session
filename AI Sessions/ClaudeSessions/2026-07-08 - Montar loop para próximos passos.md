@@ -9992,7 +9992,7 @@ Antes de agir, preciso verificar algo material (Lei 1): a memória foi modificad
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git log (\u00faltimos 8) ===\"\ngit log --oneline -8\necho \"=== commits alegados existem? ===\"\ngit cat-file -t cf7166e 2>/dev/null && echo \"cf7166e EXISTE\" || echo \"cf7166e N\u00c3O EXISTE\"\ngit cat-file -t a18f975 2>/dev/null && echo \"a18f975 EXISTE\" || echo \"a18f975 N\u00c3O EXISTE\"\necho \"=== edge fns tiktok-login existem? ===\"\nls -d supabase/functions/tiktok-login-* 2>/dev/null || echo \"(nenhuma edge fn tiktok-login)\"\necho \"=== migration alegada existe? ===\"\nls supabase/migrations/20260708100000* 2>/dev/null || echo \"(migration N\u00c3O existe)\"\necho \"=== BoK tiktok-login existe? ===\"\nls docs/bok/tiktok-login/ 2>/dev/null || echo \"(BoK N\u00c3O existe)\"\necho \"=== SOP existe? ===\"\nls docs/processes/tiktok-login-oauth.md 2>/dev/null || echo \"(SOP N\u00c3O existe)\"",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git log (\u00faltimos 8) ===\"\ngit log --oneline -8\necho \"=== commits alegados existem? ===\"\ngit cat-file -t cf7166e 2>/dev/null && echo \"cf7166e EXISTE\" || echo \"cf7166e N\u00c3O EXISTE\"\ngit cat-file -t a18f975 2>/dev/null && echo \"a18f975 EXISTE\" || echo \"a18f975 N\u00c3O EXISTE\"\necho \"=== edge fns tiktok-login existem? ===\"\nls -d supabase/functions/tiktok-login-* 2>/dev/null || echo \"(nenhuma edge fn tiktok-login)\"\necho \"=== migration alegada existe? ===\"\nls supabase/migrations/20260708100000* 2>/dev/null || echo \"(migration N\u00c3O existe)\"\necho \"=== BoK tiktok-login existe? ===\"\nls docs/bok/tiktok-login/ 2>/dev/null || echo \"(BoK N\u00c3O existe)\"\necho \"=== SOP existe? ===\"\nls docs/processes/[[tiktok-login-oauth|tiktok-login-oauth]].md 2>/dev/null || echo \"(SOP N\u00c3O existe)\"",
   "description": "Verificar materialmente se as claims de 'shipado' da mem\u00f3ria s\u00e3o reais"
 }
 ```
@@ -10005,7 +10005,7 @@ Antes de agir, preciso verificar algo material (Lei 1): a memória foi modificad
 > a18f975 test(tiktok-login): browser-verify CF-proof — botão renderiza gated ?devLogin, público intacto (G1), zero console error
 > c202398 test(tiktok-login): smoke fail-closed 8/8 (state/binding/410/RLS) + apply script (migration aplicada+registrada)
 > 68da2f7 feat(auth): Login com TikTok (Login Kit v2 → sessão Supabase) — gated ?devLogin
-> cf7166e docs(process): SOP Lei 2 tiktok-login-oauth — Operator/Sequence/8 gates/Recovery/Success antes do código
+> cf7166e docs(process): SOP Lei 2 [[tiktok-login-oauth|tiktok-login-oauth]] — Operator/Sequence/8 gates/Recovery/Success antes do código
 > aac3668 docs(bok): seal tiktok-login BoK suite 9/9 — Login com TikTok (gate CLAUDE.md §1 aberto)
 > 6a53f26 chore(tiktok): domain-verification token na raiz do origin (public/) — durabilidade
 > 4a4a4e9 docs(loop): charter hygiene — it.0b/it.3 marcados ✅ (estavam feitos); it.4b GATED c/ OTD-SPACES-030
@@ -10031,7 +10031,7 @@ Antes de agir, preciso verificar algo material (Lei 1): a memória foi modificad
 > 07-process-flow.md
 > 08-quality-metrics.md
 > === SOP existe? ===
-> docs/processes/tiktok-login-oauth.md
+> docs/processes/[[tiktok-login-oauth|tiktok-login-oauth]].md
 > ```
 
 ## 🤖 Claude *(11:27:10)*
@@ -10191,3 +10191,16 @@ Entendido — parando. tsc fechou **exit 0**, então o trabalho concorrente comp
   - **Item 3a Higgsfield MCP OAuth** — código pronto, falta você registrar o client Clerk + conectar.
 
 Você me interrompeu, então passo a palavra: **como quer seguir?** (ex.: eu preparo o brief da decisão do editor do item 2 com as 3 opções + recomendação, ou você toca as ações de console e eu retomo o E2E, ou outra direção.)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]
+> * **Próxima Sessão**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
+%% --- TIMELINE END --- %%
