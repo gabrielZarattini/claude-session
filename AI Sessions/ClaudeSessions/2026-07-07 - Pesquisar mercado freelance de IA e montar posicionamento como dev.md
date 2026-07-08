@@ -2490,5 +2490,5 @@ Então vamos focar nisso, o seu plano e tambem o deepserarch que fez antes traz 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]
-> * **Próxima Sessão**: [[2026-07-07 - Revisar status do cockpit]]
+> * **Próxima Sessão**: [[2026-07-07 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
 %% --- TIMELINE END --- %%

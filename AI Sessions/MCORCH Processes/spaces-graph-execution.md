@@ -239,9 +239,23 @@ deploy anterior preservado; nenhum dado existente muda (6 rows fixtures satisfaz
 **Success signal:** smoke completo verde incl. P-series + single-money-path; nenhuma transação legada nova após
 o flip do cliente (it.2b).
 
----
+### Amendment it.4a — nó Lista (productList) + batch template×dados (2026-07-07, ANTES do código — FR-SPACES-029)
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+**Referência mecânica:** Magnific Lists (frame-a-frame 2026-07-07): lista como NÓ; template × itens → N criativos.
+**Operator (manual hoje):** o Sovereign duplica um nó de imagem por produto e edita o prompt à mão (ou roda
+`canvas-campaign-build.ts` por CLI) — sem lote nativo no canvas.
+
+**Sequence (MVP):**
+1. Node kind novo `productList` (client-only, zero migration): `items[] {name, description?, image_url?, external_id?}`,
+   fontes = manual + picker de `vm_affiliate_products` (hook `useAffiliateProducts` existente). Cap 8 itens (paridade batch).
+2. Conexão `productList → generateImage`: o prompt do generateImage vira TEMPLATE com placeholders
+   `{{name}}`/`{{description}}` (substituição client-side pura, testável).
+3. Run do generateImage com lista upstream = EXPANSÃO em N execuções ledger-first (1 node_run_id fresco por item;
+   `reference_image_urls` do item quando `image_url` presente — consistência por produto). Custo mostrado = N × preço
+   do modelo (G7); saldo insuficiente bloqueia ANTES.
+4. Provenance: cada output já entra em `creative_assets` (spine, prompt do item) — N criativos rastreáveis.
+
+**Verification gates:** unit da expansão/substituição (puro) · tsc 0 · witness pago 1 item (≤10 mco, saldo exato) ·
+browser+Vision no nó/inspector · **lote ≥3 itens (~30 mco) = GO de gasto na Fila** (gate §9 do Amendment 14).
+**Recovery:** expansão é client-side; cada item é um run ledger independente (refund automático por item — nada novo).
+**Success signal:** 1 template + lista de N produtos ML → N imagens consistentes na Biblioteca com provenance por item.
