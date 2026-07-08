@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 1969
-> * **Sessões do Claude**: 1923
+> * **Total de Sessões Registradas**: 1970
+> * **Sessões do Claude**: 1924
 > * **Sessões do Gemini**: 46
 
 ---
@@ -55,6 +55,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   *... e mais 7 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
+*   `[[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` - *2026-07-08*
 *   `[[2026-07-07 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` - *2026-07-07*
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
 *   `[[2026-06-21 - Validar studio design e canvas studio end-to-end]]` - *2026-06-21*
@@ -1739,6 +1740,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` (ClaudeSessions)
 *   `[[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-af96053c11e119a7a]]` (ClaudeSessions)
 *   `[[2026-07-07 - agent-aee8e2bbba9c2b055]]` (ClaudeSessions)
