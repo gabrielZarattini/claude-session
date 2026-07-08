@@ -1,4 +1,4 @@
-# Revisar status do cockpit
+# [[2026-07-08 - Revisar status do cockpit|Revisar status do cockpit]]
 **Date:** 2026-07-07 | **Session ID:** `050518ea-3975-4115-ba2b-fbf8a7c86941`
 
 ---

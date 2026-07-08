@@ -1,4 +1,4 @@
-# [[2026-07-07 - Revisar status do cockpit|Revisar status do cockpit]]
+# Revisar status do cockpit
 **Date:** 2026-07-08 | **Session ID:** `050518ea-3975-4115-ba2b-fbf8a7c86941`
 
 ---
@@ -2848,15 +2848,548 @@ As 4 frentes:
 
 A síntese vai ranquear onde vale a pena de verdade, cortar o hype, e cruzar com o que já provamos (fee mata retail, capital é a trava, maker é otimista, discricionário refutado). Volto com o veredito.
 
----
+## 👤 User *(20:09:18)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+<task-notification>
+<task-id>wo5nlvcyf</task-id>
+<tool-use-id>toolu_016R2gKGmkRg1vmoSpoeivmi</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/tasks/wo5nlvcyf.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Deepsearch enxuto: onde criar robôs de trading/automação tem edge REAL vs hype — 4 frentes web + síntese cética" completed</summary>
+<result>{"research":[{"angulo":"FRENTE 1 — Estratégias com edge real pra retail pequeno em SPOT sem alavancagem (2025-2026), avaliadas contra nossa restrição de conta $149 USDT, Binance spot, solo, VPS simples, fee ~0,2% round-trip. Avaliei (a) market making/maker rebate, (b) funding-rate arb, (c) cross-exchange/triangular arb, (d) stat arb/pairs, (e) grid/DCA — cada uma com capital mínimo e o que trava um operador de $149. Mais o ângulo honesto: operar $149 vs construir bots via freelance.","veredito":"NÃO construir robô de arb/MM/grid pro nosso caso — nenhuma frente tem edge que sobreviva à fee de 0,2% e ao capital de $149, e as viáveis (funding/pairs) exigem futuros ou $5k-250k. Único caminho com EV positivo: monetizar a engenharia via FREELANCE (bot dev $50-80/h), tratando o $149 como lab de graça.","achados":[{"claim":"(c) Triangular arb — estudo empírico Binance: em 1 semana, 4.879 oportunidades identificadas, MAS a maioria ofertava só 0%-0,025% bruto; após taxas reais da Binance a lucratividade da maioria é ELIMINADA. Para trader normal restaram apenas 18 ops lucrativas na semana (~2% total se pegas instantâneas). Precisa de spread bruto ~0,3-0,5% só pra sobrar ~0,1% líquido.","fonte":"ScienceDirect 'Wish or reality? On the exploitability of triangular arbitrage in cryptocurrency markets' (2024) — https://www.sciencedirect.com/science/article/pii/S154461232401537X","confiabilidade":"alta"},{"claim":"(c) Arb (tri e cross-exchange) é latency/execution-sensitive: institucionais sub-ms co-located; retail 100-500ms em cloud só pega discrepâncias lentas que persistem minutos. Espere dedicar 'ao menos metade dos lucros mensais' a taxas a menos que faça bilhões/mês ou exchange fee-zero. Big players evitam mercados &lt;$10M/dia — janela retail estreita.","fonte":"Everstrike '7 Arbitrage Strategies Still Accessible to Retail Quants' — https://blog.everstrike.io/7-arbitrage-strategies-are-still-accessible-to-retail-quants-in-2025/","confiabilidade":"media"},{"claim":"(b) Funding-rate arb: retornos realistas 8-20% APY delta-neutro (agressivo 15-40% APR; picos spot-perp ~0,3%/dia em bull efêmeros). FATAL pro nosso caso: EXIGE FUTUROS/PERP (short perp + long spot). Sweet-spot $5.000-$50.000 POR oportunidade — abaixo disso mínimos de ordem e taxas fixas de transferência comem o edge. Com $149 e sem futuros = inviável por definição.","fonte":"ArbitrageScanner 'Delta-Neutral Guide 8-20% APY' + Gate Learn 2025 — https://arbitragescanner.io/blog/crypto-funding-rate-arbitrage-guide","confiabilidade":"media"},{"claim":"(d) Stat arb / pairs: mínimo realista ~$50k+ POR PAR após taxas/funding; mean-reversion pede $250k+ porque desvios persistem mais que o esperado. Edge acadêmico existe (BTC-ETH pairs 16,34% anualizado, Sharpe 2,45, jan/22-out/24) MAS retail com 3-5 pares sofre variância de par-único vs institucional 50-200 pares; desvio ETH/BTC persiste dias-semanas travando capital.","fonte":"Sharpe.ai statistical arbitrage guide + CoinCryptoRank stat-arb deep-dive 2025 — https://www.sharpe.ai/arbitrage/guide/statistical","confiabilidade":"media"},{"claim":"(a) Market making/maker rebate (Hummingbot): open-source self-hosted sem SaaS fee. Rebate de afiliado reduz taxa — 'redução de 10-20% na taxa é a diferença entre lucrativo e não'. MAS lucratividade MISTA, curva íngreme + tuning; 'self-hosting não adequado pro retail típico'; 'liquidez, taxas e slippage frequentemente apagam o edge'. Melhor pra experiente.","fonte":"Hummingbot.org + Finestel Review 2026 — https://finestel.com/blog/hummingbot-review/","confiabilidade":"media"},{"claim":"(e) Grid/DCA: funciona em LATERAL/ranging; MORRE em trending ('vender short quando o ativo é bullish' + grids pequenos que 'não cobrem as taxas' são as fraquezas citadas). Backtests de fornecedor mostram Sharpe ~5,7 e 200%/5a mas vêm de plataformas VENDENDO o bot (3Commas/WunderTrading) — survivorship/hindsight; 'gap comum backtest×ao-vivo'. Sem edge estrutural: aposta em range + risco de cauda no rompimento.","fonte":"3Commas blog + Medium Ziad Francis + WunderTrading (fontes de VENDA, rebaixadas) — https://3commas.io/blog/maximize-grid-bot-performance-automatic-backtesting","confiabilidade":"suspeita-hype"},{"claim":"Ângulo freelance (construir bots pra terceiros): dev de trading bot cobra $50-80/h no Upwork; ~$100k/ano a $50/h×2000h; renda média ~$104.422/ano. Mercado de trading bots projetado US$135,7 bi até 2032. VALOR está em construir/vender a engenharia, NÃO em operar $149. Gigs 'bot lucrativo $300'/'arbitragem garantida' = red-flags de scam/afiliado, rebaixar.","fonte":"Finxter 'Crypto Trading Bot Developer Income' + LaborX/Fiverr — https://blog.finxter.com/crypto-trading-bot-developer-income/","confiabilidade":"media"}],"aplica_ao_nosso_caso":"NENHUMA das 5 estratégias tem edge capturável numa conta de $149 spot solo. Por letra: (b) funding arb e spot-perp EXIGEM FUTUROS — descartadas por decisão nossa, mínimo $5k-50k/oportunidade. (c) triangular/cross-exchange: o edge bruto (0-0,025%) é MENOR que nossa fee de 0,2% round-trip — negativo antes mesmo da latência; nossa VPS 100-500ms nunca ganha a corrida; só 18 ops/semana sobrevivem às taxas e exigem execução instantânea que não temos. (d) stat arb/pairs: mínimo $50k+/par e $250k+ pra aguentar persistência — $149 nem cobre 1 par com sizing seguro, variância de par-único mata. (a) market making: é a ÚNICA que cabe em spot e conversa com nosso único lever aberto (MAKER/limit repousada), MAS o edge do MM É o rebate/fee-tier — que em $149 de volume é ZERO (sem tier na Binance spot retail), então viramos provedor de liquidez pagando spread adverso sem o rebate que paga a conta. (e) grid: sem edge estrutural, aposta em range + risco de rompimento; grids pequenos 'não cobrem as taxas' — exatamente nosso inimigo nº1. TODAS batem na mesma parede já mapeada: fee 0,2% &gt; edge disponível, e capital insuficiente pros mínimos de ordem/tier. Único fato acionável: o ângulo freelance — a mesma skill (Node/MCP/agentes/Hummingbot-tuning) vale $50-80/h pra terceiros, ordens de magnitude acima de qualquer EV de operar $149."},{"angulo":"FRENTE 2 — Execução MAKER e fees na Binance SPOT: existe rebate maker? Qual o custo real de adverse selection de ordem LIMIT repousada? Isso confirma ou mata a tese de rodar a id2 como maker no 15m?","achados":[{"claim":"Binance SPOT fee padrão (Regular/VIP 0) = 0,10% maker E 0,10% taker. Com desconto BNB de 25% cai para ~0,075% por lado. Round-trip maker+BNB = ~0,15% (vs ~0,20% que assumimos no taker sem BNB). Maker NÃO é de graça, só ~25% mais barato que taker no SPOT.","fonte":"Binance Fee Schedule / cryptopotato Binance Fees 2025 (binance.com/en/fee/spotMaker)","confiabilidade":"alta"},{"claim":"NÃO existe rebate maker (fee negativa) no SPOT da Binance em nenhum tier acessível. Fee negativa/rebate só aparece em DERIVATIVOS (futures) para market-makers de programa institucional. No SPOT o piso é ~zero, nunca negativo. Tiers VIP 1-9 exigem &gt;$1M de volume 30d + 25 a 1000+ BNB em saldo — irrelevante para conta de $149.","fonte":"Binance VIP Program announcement + Whaleportal/coinspot fee guides 2025","confiabilidade":"alta"},{"claim":"MAKER'S DILEMMA (experimento LIVE em Binance BTC perpétuo): ordens limit repousadas sofrem adverse selection medido. Correlação NEGATIVA entre probabilidade de fill e retorno pós-fill. Fills front-of-queue (0-10% da fila) em imbalance favorável renderam -0,058 bp; back-of-queue (75-100%) renderam -0,775 bp (13x pior). Prob de fill varia de ~30% (fila perto grande) a &gt;90% (fila oposta grande) — e as condições de fill alto são exatamente as de retorno pior.","fonte":"Albers/Cucuringu/Howison/Shestopaloff, 'The Market Maker's Dilemma' arXiv 2502.18625 (2025)","confiabilidade":"alta"},{"claim":"No mesmo paper, MESMO com rebate maker de -0,5 bp modelado, o rebate NÃO compensa a adverse selection na maioria dos cenários; os autores concluem que 'estratégias naturais e comumente citadas' de maker/taker são 'altamente não-lucrativas' líq
+... (truncated 21282 chars, full result in /tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/tasks/wo5nlvcyf.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/subagents/workflows/wf_17d3284e-778/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/workflows/scripts/onde-vale-criar-robos-wf_17d3284e-778.js', resumeFromRunId: 'wf_17d3284e-778'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>5</agent_count><agents_done>5</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>219684</subagent_tokens><tool_uses>40</tool_uses><duration_ms>364106</duration_ms></usage>
+</task-notification>
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
-> * **Próxima Sessão**: [[2026-07-08 - agent-a0b13f35b35bdfe4d]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(20:09:20)*
+
+Deepsearch fechou. Vou ler o resultado completo (frentes 3/4 + a síntese cética) antes de te resumir.
+
+## 🤖 Claude *(20:09:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrux-tradeux/050518ea-3975-4115-ba2b-fbf8a7c86941/tasks/wo5nlvcyf.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Deepsearch enxuto: onde criar robôs de trading/automação tem edge REAL vs hype — 4 frentes web + síntese cética",
+> 3	  "agentCount": 5,
+> 4	  "logs": [
+> 5	    "Pesquisa: 4/4 frentes concluídas — sintetizando"
+> 6	  ],
+> 7	  "result": {
+> 8	    "research": [
+> 9	      {
+> 10	        "angulo": "FRENTE 1 — Estratégias com edge real pra retail pequeno em SPOT sem alavancagem (2025-2026), avaliadas contra nossa restrição de conta $149 USDT, Binance spot, solo, VPS simples, fee ~0,2% round-trip. Avaliei (a) market making/maker rebate, (b) funding-rate arb, (c) cross-exchange/triangular arb, (d) stat arb/pairs, (e) grid/DCA — cada uma com capital mínimo e o que trava um operador de $149. Mais o ângulo honesto: operar $149 vs construir bots via freelance.",
+> 11	        "veredito": "NÃO construir robô de arb/MM/grid pro nosso caso — nenhuma frente tem edge que sobreviva à fee de 0,2% e ao capital de $149, e as viáveis (funding/pairs) exigem futuros ou $5k-250k. Único caminho com EV positivo: monetizar a engenharia via FREELANCE (bot dev $50-80/h), tratando o $149 como lab de graça.",
+> 12	        "achados": [
+> 13	          {
+> 14	            "claim": "(c) Triangular arb — estudo empírico Binance: em 1 semana, 4.879 oportunidades identificadas, MAS a maioria ofertava só 0%-0,025% bruto; após taxas reais da Binance a lucratividade da maioria é ELIMINADA. Para trader normal restaram apenas 18 ops lucrativas na semana (~2% total se pegas instantâneas). Precisa de spread bruto ~0,3-0,5% só pra sobrar ~0,1% líquido.",
+> 15	            "fonte": "ScienceDirect 'Wish or reality? On the exploitability of triangular arbitrage in cryptocurrency markets' (2024) — https://www.sciencedirect.com/science/article/pii/S154461232401537X",
+> 16	            "confiabilidade": "alta"
+> 17	          },
+> 18	          {
+> 19	            "claim": "(c) Arb (tri e cross-exchange) é latency/execution-sensitive: institucionais sub-ms co-located; retail 100-500ms em cloud só pega discrepâncias lentas que persistem minutos. Espere dedicar 'ao menos metade dos lucros mensais' a taxas a menos que faça bilhões/mês ou exchange fee-zero. Big players evitam mercados <$10M/dia — janela retail estreita.",
+> 20	            "fonte": "Everstrike '7 Arbitrage Strategies Still Accessible to Retail Quants' — https://blog.everstrike.io/7-arbitrage-strategies-are-still-accessible-to-retail-quants-in-2025/",
+> 21	            "confiabilidade": "media"
+> 22	          },
+> 23	          {
+> 24	            "claim": "(b) Funding-rate arb: retornos realistas 8-20% APY delta-neutro (agressivo 15-40% APR; picos spot-perp ~0,3%/dia em bull efêmeros). FATAL pro nosso caso: EXIGE FUTUROS/PERP (short perp + long spot). Sweet-spot $5.000-$50.000 POR oportunidade — abaixo disso mínimos de ordem e taxas fixas de transferência comem o edge. Com $149 e sem futuros = inviável por definição.",
+> 25	            "fonte": "ArbitrageScanner 'Delta-Neutral Guide 8-20% APY' + Gate Learn 2025 — https://arbitragescanner.io/blog/crypto-funding-rate-arbitrage-guide",
+> 26	            "confiabilidade": "media"
+> 27	          },
+> 28	          {
+> 29	            "claim": "(d) Stat arb / pairs: mínimo realista ~$50k+ POR PAR após taxas/funding; mean-reversion pede $250k+ porque desvios persistem mais que o esperado. Edge acadêmico existe (BTC-ETH pairs 16,34% anualizado, Sharpe 2,45, jan/22-out/24) MAS retail com 3-5 pares sofre variância de par-único vs institucional 50-200 pares; desvio ETH/BTC persiste dias-semanas travando capital.",
+> 30	            "fonte": "Sharpe.ai statistical arbitrage guide + CoinCryptoRank stat-arb deep-dive 2025 — https://www.sharpe.ai/arbitrage/guide/statistical",
+> 31	            "confiabilidade": "media"
+> 32	          },
+> 33	          {
+> 34	            "claim": "(a) Market making/maker rebate (Hummingbot): open-source self-hosted sem SaaS fee. Rebate de afiliado reduz taxa — 'redução de 10-20% na taxa é a diferença entre lucrativo e não'. MAS lucratividade MISTA, curva íngreme + tuning; 'self-hosting não adequado pro retail típico'; 'liquidez, taxas e slippage frequentemente apagam o edge'. Melhor pra experiente.",
+> 35	            "fonte": "Hummingbot.org + Finestel Review 2026 — https://finestel.com/blog/hummingbot-review/",
+> 36	            "confiabilidade": "media"
+> 37	          },
+> 38	          {
+> 39	            "claim": "(e) Grid/DCA: funciona em LATERAL/ranging; MORRE em trending ('vender short quando o ativo é bullish' + grids pequenos que 'não cobrem as taxas' são as fraquezas citadas). Backtests de fornecedor mostram Sharpe ~5,7 e 200%/5a mas vêm de plataformas VENDENDO o bot (3Commas/WunderTrading) — survivorship/hindsight; 'gap comum backtest×ao-vivo'. Sem edge estrutural: aposta em range + risco de cauda no rompimento.",
+> 40	            "fonte": "3Commas blog + Medium Ziad Francis + WunderTrading (fontes de VENDA, rebaixadas) — https://3commas.io/blog/maximize-grid-bot-performance-automatic-backtesting",
+> 41	            "confiabilidade": "suspeita-hype"
+> 42	          },
+> 43	          {
+> 44	            "claim": "Ângulo freelance (construir bots pra terceiros): dev de trading bot cobra $50-80/h no Upwork; ~$100k/ano a $50/h×2000h; renda média ~$104.422/ano. Mercado de trading bots projetado US$135,7 bi até 2032. VALOR está em construir/vender a engenharia, NÃO em operar $149. Gigs 'bot lucrativo $300'/'arbitragem garantida' = red-flags de scam/afiliado, rebaixar.",
+> 45	            "fonte": "Finxter 'Crypto Trading Bot Developer Income' + LaborX/Fiverr — https://blog.finxter.com/crypto-trading-bot-developer-income/",
+> 46	            "confiabilidade": "media"
+> 47	          }
+> 48	        ],
+> 49	        "aplica_ao_nosso_caso": "NENHUMA das 5 estratégias tem edge capturável numa conta de $149 spot solo. Por letra: (b) funding arb e spot-perp EXIGEM FUTUROS — descartadas por decisão nossa, mínimo $5k-50k/oportunidade. (c) triangular/cross-exchange: o edge bruto (0-0,025%) é MENOR que nossa fee de 0,2% round-trip — negativo antes mesmo da latência; nossa VPS 100-500ms nunca ganha a corrida; só 18 ops/semana sobrevivem às taxas e exigem execução instantânea que não temos. (d) stat arb/pairs: mínimo $50k+/par e $250k+ pra aguentar persistência — $149 nem cobre 1 par com sizing seguro, variância de par-único mata. (a) market making: é a ÚNICA que cabe em spot e conversa com nosso único lever aberto (MAKER/limit repousada), MAS o edge do MM É o rebate/fee-tier — que em $149 de volume é ZERO (sem tier na Binance spot retail), então viramos provedor de liquidez pagando spread adverso sem o rebate que paga a conta. (e) grid: sem edge estrutural, aposta em range + risco de rompimento; grids pequenos 'não cobrem as taxas' — exatamente nosso inimigo nº1. TODAS batem na mesma parede já mapeada: fee 0,2% > edge disponível, e capital insuficiente pros mínimos de ordem/tier. Único fato acionável: o ângulo freelance — a mesma skill (Node/MCP/agentes/Hummingbot-tuning) vale $50-80/h pra terceiros, ordens de magnitude acima de qualquer EV de operar $149."
+> 50	      },
+> 51	      {
+> 52	        "angulo": "FRENTE 2 — Execução MAKER e fees na Binance SPOT: existe rebate maker? Qual o custo real de adverse selection de ordem LIMIT repousada? Isso confirma ou mata a tese de rodar a id2 como maker no 15m?",
+> 53	        "achados": [
+> 54	          {
+> 55	            "claim": "Binance SPOT fee padrão (Regular/VIP 0) = 0,10% maker E 0,10% taker. Com desconto BNB de 25% cai para ~0,075% por lado. Round-trip maker+BNB = ~0,15% (vs ~0,20% que assumimos no taker sem BNB). Maker NÃO é de graça, só ~25% mais barato que taker no SPOT.",
+> 56	            "fonte": "Binance Fee Schedule / cryptopotato Binance Fees 2025 (binance.com/en/fee/spotMaker)",
+> 57	            "confiabilidade": "alta"
+> 58	          },
+> 59	          {
+> 60	            "claim": "NÃO existe rebate maker (fee negativa) no SPOT da Binance em nenhum tier acessível. Fee negativa/rebate só aparece em DERIVATIVOS (futures) para market-makers de programa institucional. No SPOT o piso é ~zero, nunca negativo. Tiers VIP 1-9 exigem >$1M de volume 30d + 25 a 1000+ BNB em saldo — irrelevante para conta de $149.",
+> 61	            "fonte": "Binance VIP Program announcement + Whaleportal/coinspot fee guides 2025",
+> 62	            "confiabilidade": "alta"
+> 63	          },
+> 64	          {
+> 65	            "claim": "MAKER'S DILEMMA (experimento LIVE em Binance BTC perpétuo): ordens limit repousadas sofrem adverse selection medido. Correlação NEGATIVA entre probabilidade de fill e retorno pós-fill. Fills front-of-queue (0-10% da fila) em imbalance favorável renderam -0,058 bp; back-of-queue (75-100%) renderam -0,775 bp (13x pior). Prob de fill varia de ~30% (fila perto grande) a >90% (fila oposta grande) — e as condições de fill alto são exatamente as de retorno pior.",
+> 66	            "fonte": "Albers/Cucuringu/Howison/Shestopaloff, 'The Market Maker's Dilemma' arXiv 2502.18625 (2025)",
+> 67	            "confiabilidade": "alta"
+> 68	          },
+> 69	          {
+> 70	            "claim": "No mesmo paper, MESMO com rebate maker de -0,5 bp modelado, o rebate NÃO compensa a adverse selection na maioria dos cenários; os autores concluem que 'estratégias naturais e comumente citadas' de maker/taker são 'altamente não-lucrativas' líquidas de fee + adverse selection. Ordem que fura a fila enche com probabilidade ~1 justamente quando o preço vai CONTRA você.",
+> 71	            "fonte": "arXiv 2502.18625 (2025), regressão R²=0,946",
+> 72	            "confiabilidade": "alta"
+> 73	          },
+> 74	          {
+> 75	            "claim": "Mean-reversion por RSI (comprar RSI baixo, vender RSI alto) 'não parece efetivo' em Bitcoin — o mercado cripto se comporta diferente de ações. Uma config específica (RSI25, entra <30, sai >80) mostrou profit factor 1,95 / 57,7% win, mas em timeframe alto e com saída assumida — não sobrevive a custo de fee em intraday e cheira a curve-fit.",
+> 76	            "fonte": "QuantifiedStrategies — Bitcoin RSI Trading Strategy (backtest)",
+> 77	            "confiabilidade": "media"
+> 78	          },
+> 79	          {
+> 80	            "claim": "Consenso de fontes de execução: limit controla preço mas PERDE entradas; a suposição de 'fill garantido' é a fonte de otimismo nº1 do backtest. Frameworks sérios (hftbacktest) exigem modelar queue position + latência justamente porque sem isso o backtest superestima o edge do maker.",
+> 81	            "fonte": "hftbacktest docs/GitHub (nkaz001) + Moallemi 'Queue Position Valuation'",
+> 82	            "confiabilidade": "alta"
+> 83	          }
+> 84	        ],
+> 85	        "aplica_ao_nosso_caso": "Aplica direto e é DESCONFORTÁVEL para a tese. (1) Fee: maker no SPOT com BNB baixa o round-trip de ~0,20% para ~0,15% — ganho REAL de ~25%, mas o inimigo continua vivo, não some. Não há rebate/fee-negativa acessível: isso exige futures + volume institucional, fora do nosso perímetro ($149, spot, solo). (2) O ponto que MATA: nosso backtest da id2-como-maker assume 'fill garantido' — e a literatura mostra que isso é exatamente o erro. Uma buy-limit repousada quando o RSI está oversold enche preferencialmente quando o preço CONTINUA caindo (adverse selection), não quando quica; você fica comprado no fundo errado. O -0,5bp de 'rebate' que sonhamos nem existe no spot, e mesmo se existisse não paga a adverse selection. (3) Nosso lever 'maker' não é edge grátis: é troca de fee menor por (a) risco de não-fill e (b) fill enviesado contra. Só vira net+ se modelarmos queue position + fill condicional — que é o que ainda NÃO fizemos.",
+> 86	        "veredito": "nao — o maker no SPOT reduz fee ~0,20%→~0,15% (ganho marginal real) mas NÃO tem rebate e NÃO escapa da adverse selection; a tese 'id2 como maker no 15m' fica ENFRAQUECIDA, não confirmada, porque o 'fill garantido' do nosso backtest é justamente a hipótese que a literatura refuta. Antes de construir robô nessa frente: re-backtestar com fill condicional (só enche se preço tocar o limit) + assumir que os fills bons são os que MENOS enchem; se o edge sobreviver a isso, aí sim vale — caso contrário é o scalping-1m de novo com outra roupa."
+> 87	      },
+> 88	      {
+> 89	        "angulo": "FRENTE 3 — Bots de \"IA\"/LLM pra trading: onde há alpha real vs teatro/scam (evidência 2024-2026). Foco em separar (a) previsão de preço por LLM = refutado/memorização, de (b) usos reais de IA no fluxo (parsing de sentimento/news, research, geração de estratégia, ops).",
+> 90	        "achados": [
+> 91	          {
+> 92	            "claim": "PROVA DEFINITIVA de que agentes LLM de trading NÃO preveem, MEMORIZAM: quando testados DEPOIS do knowledge cutoff do modelo (out-of-sample real), o retorno total DESPENCA 50,18% a 71,85% e o Sharpe cai 51,48% a 62,23% em 4 frameworks famosos (QuantAgent, TradingAgents, FinCON, FinMem). FinMem — o de 'memória em camadas' — é o pior (−71,85% retorno). Conclusão textual do paper: 'LLM-based financial agents are not trading; they are regurgitating history.' Causa = contaminação de pré-treino (o modelo já viu os preços/explicações post-hoc no corpus).",
+> 93	            "fonte": "arXiv 2510.07920 'Profit Mirage: Revisiting Information Leakage in LLM-based Financial Agents' (2025) https://arxiv.org/html/2510.07920v1",
+> 94	            "confiabilidade": "alta"
+> 95	          },
+> 96	          {
+> 97	            "claim": "StockBench (benchmark realista de trading contínuo, não QA estático): a MAIORIA dos agentes LLM NÃO consegue bater um buy-and-hold simples (que fez modestos +0,4% com −15,2% drawdown no período). Insight central: 'forte desempenho em perguntas-e-respostas financeiras estáticas NÃO se traduz em comportamento de trading efetivo.' Alguns modelos gerenciam risco melhor que o passivo, mas superar o baseline de retorno é exceção, não regra.",
+> 98	            "fonte": "arXiv 2510.02209 'StockBench: Can LLM Agents Trade Stocks Profitably In Real-world Markets?' (2025) https://arxiv.org/abs/2510.02209",
+> 99	            "confiabilidade": "alta"
+> 100	          },
+> 101	          {
+> 102	            "claim": "FinGPT (LLM financeiro open-source de referência) — o padrão CLÁSSICO: ÓTIMO em tarefas de linguagem (sentiment F1 ~87,6%, classificação de manchete F1 ~95,5%, nível GPT-4), mas PÉSSIMO em prever movimento de preço: acurácia/F1 de 45–53% (= cara-ou-coroa). E inconsistente por ativo: excess return +17,84% na AAPL mas −42,75% na Tencent — vieses do dado de treino, generalização ruim.",
+> 103	            "fonte": "Golden Touchstone benchmark / FinGPT (2024-2025) https://www.emergentmind.com/topics/fingpt",
+> 104	            "confiabilidade": "alta"
+> 105	          },
+> 106	          {
+> 107	            "claim": "Reguladores marcaram explicitamente o marketing de 'bot de IA que faz dinheiro': a CFTC emitiu advisory 'AI Won't Turn Trading Bots into Money Machines' e a FTC fez crackdown (Operation AI Comply, set/2024) contra esquemas de 'renda passiva com IA' — FBA Machine ($15M fraudados), Click Profit (cobrava $15k–$40k por 'loja com IA' + dashboards e ganhos FALSOS). Idosos perderam >$2,8 bi em 2024. Retorno 'garantido/alto' + marca 'IA' = red flag de fraude por definição.",
+> 108	            "fonte": "CFTC Advisory (cftc.gov/LearnAndProtect/.../AITradingBots) + FTC Operation AI Comply (ftc.gov, set/2024)",
+> 109	            "confiabilidade": "alta"
+> 110	          },
+> 111	          {
+> 112	            "claim": "ONDE IA REALMENTE AJUDA (usos honestos, não-mágicos): (1) parsing de sentimento/news — LLM bate dicionário Loughran-McDonald de longe; (2) geração/backtest de código de estratégia — surgiram benchmarks dedicados (QuantCode-Bench, BacktestBench) medindo LLM gerando estratégias executáveis; (3) research/síntese e ops/monitoramento (leitura de estado, alertas em linguagem natural). Nenhum desses é 'previsão de preço' — são camadas de PLN e engenharia em volta do trade.",
+> 113	            "fonte": "arXiv 2604.15151 QuantCode-Bench; arXiv 2605.17937 BacktestBench; arXiv 2408.06361 'LLM Agent in Financial Trading: A Survey'",
+> 114	            "confiabilidade": "media"
+> 115	          },
+> 116	          {
+> 117	            "claim": "ALERTA DE HYPE (rebaixar): claims de Sharpe 3,05 com sentimento-LLM em news 2010–2023 e 'multi-agente debate = +15% de retorno' / 'Sharpe >2,0' aparecem MUITO, mas (a) são in-sample ou dentro da janela de treino do modelo = exatamente a contaminação que o Profit Mirage prova destruir o edge, e (b) dependem de um CROSS-SECTION de ações + fluxo de notícias + universo amplo. É o resultado bonito que evapora fora de amostra.",
+> 118	            "fonte": "researchgate 392526363 (Sharpe 3,05) + claims survey via arXiv 2408.06361 — contextualizados contra arXiv 2510.07920",
+> 119	            "confiabilidade": "suspeita-hype"
+> 120	          }
+> 121	        ],
+> 122	        "aplica_ao_nosso_caso": "Para a conta $149 BTC spot solo: previsão de preço por LLM está REFUTADA pela literatura — bate exatamente nosso prior (LLM discricionário pra prever 1m = lixo; FinGPT prevê a 45-53% = o mesmo ~49% do nosso journal humano). Pior: os frameworks 'de ponta' só pareciam funcionar por MEMORIZAÇÃO (perdem 50-72% out-of-sample). Nada disso vence a fee de 0,2% num único par. O uso honesto que sobra — sentimento/news por LLM — precisa de um CROSS-SECTION de ativos + universo + capital que NÃO temos (1 par BTC, $149, sem alavancagem); num único símbolo o sinal de news não paga a fee nem tem o que arbitrar. Ops/monitoramento por LLM (ler estado, alertar) JÁ é o que o nosso agente Telegram faz e é o uso legítimo. A conclusão que importa pro dono: o valor real da IA aqui não é gerar sinais mágicos — é (1) a camada de ENGENHARIA/AGENTES/ops em volta do trade e (2) o fato de o mercado estar cheio de gente querendo 'bot de IA' (daí o crackdown da FTC/CFTC), o que valida o pivô FREELANCE: construir automação/agentes LLM honestos (parsing, research, ops, código de estratégia, dashboards) pra terceiros vale MUITO mais que apostar os $149.",
+> 123	        "veredito": "NÃO construir robô de 'IA que prevê preço' — refutado por benchmarks adversariais (Profit Mirage: −50 a −72% de retorno out-of-sample = memorização, não previsão; StockBench: não bate buy-and-hold; FinGPT: 45-53% acc = cara-ou-coroa). IA só ajuda de verdade em sentiment/research/ops/geração-de-código — camadas que exigem universo/capital que nossa conta $149 BTC-spot-solo não tem. O sinal forte pro dono é o pivô: a demanda por 'bots de IA' é tão grande (e tão mal servida, vide FTC/CFTC) que vale infinitamente mais VENDER a engenharia de agentes LLM honesta via freelance do que rodar o robô nos $149."
+> 124	      },
+> 125	      {
+> 126	        "angulo": "FRENTE 4 — \"Vender pás\": construir automação/bots/agentes como serviço freelance ou produto paga mais que operar $149 na Binance spot? Economia real 2025-2026 de (a) freelance de bots/API/agentes LLM/MCP, (b) modelos de produto SaaS/copy-trading, (c) comparação fria de EV.",
+> 127	        "achados": [
+> 128	          {
+> 129	            "claim": "Freelance de agentes LLM/MCP em 2026: junior $50-90/h, mid $90-150/h, senior $150-250/h, especialista $250-500+/h. Projeto simples (1 workflow) $5k-15k; media complexidade $15k-50k; multi-agente avancado $50k-150k+. Premio de escassez explicito: menos de 18 meses de experiencia real de agente em producao existe em qualquer lugar.",
+> 130	            "fonte": "ai-agentsplus.com/blog/ai-agent-freelance-rates-2026",
+> 131	            "confiabilidade": "media"
+> 132	          },
+> 133	          {
+> 134	            "claim": "Devs de agentes de IA (LangChain/CrewAI/AutoGen/MCP) cobram $180-300/h no nivel senior; MCP como projeto completo $5.000 a $150.000+. Categoria AI agent developer separou-se de ML tradicional em 2026, comandando premio por escassez e por problemas nao-resolvidos (confiabilidade/alucinacao/custo).",
+> 135	            "fonte": "WebSearch agregado (index.dev, tripleminds.co, ai-agentsplus); tripleminds e agencia (marketing de venda)",
+> 136	            "confiabilidade": "media"
+> 137	          },
+> 138	          {
+> 139	            "claim": "Chatbot/bot dev comum no Upwork: $30-61/h, mediana $45/h. AI/ML mediana $100/h. Projetos de trading bot cripto frequentemente postados como FIXED-PRICE baixos (vaga real AI Quantitative Crypto Trading Bot a $50 fixo) - o piso do mercado de bot de trading e comoditizado e mal-pago.",
+> 140	            "fonte": "upwork.com/hire/chatbot-developers/cost + vagas reais Upwork (fev/2026)",
+> 141	            "confiabilidade": "alta"
+> 142	          },
+> 143	          {
+> 144	            "claim": "Automacao n8n/Make: especialistas cobram $100+/h por workflows customizados; Upwork reportou +25% YoY em gigs de automacao (2024). SMB e o comprador primario (lead-gen, CRM, atendimento), buscando IA sem custo de contratacao full-time. Mercado ainda NAO saturado em implementacao de qualidade.",
+> 145	            "fonte": "blockchain.news/ainews (n8n/Make demand) + jobbers.io",
+> 146	            "confiabilidade": "media"
+> 147	          },
+> 148	          {
+> 149	            "claim": "Trading bot SaaS solo e armadilha de unit economics: retencao bruta mediana de SaaS AI-native = 40% (metade da receita evapora em 1 ano); produtos budget-tier <$50/mes retem so 23% dos usuarios vs 70% para tiers >$250/mes; CAC B2B medio $1.200/cliente, mediana gasta $2 para adquirir $1 de ARR novo. Churn de logo >5%/mes = product/fit quebrado, quase inatingivel solo.",
+> 150	            "fonte": "wearefounders.uk/saas-churn-rates + artisangrowthstrategies.com/saas-churn-benchmarks-2026",
+> 151	            "confiabilidade": "alta"
+> 152	          },
+> 153	          {
+> 154	            "claim": "Solo AI freelancer/micro-agencia reportando $8k-15k/mes e casos de $10k/mes e $720k/ano. FORTE vies de sobrevivencia e conteudo de venda de curso/afiliado - numeros de topo, nao medianos; canais citados (LinkedIn outreach) sao os mesmos de qualquer venda de servico.",
+> 155	            "fonte": "medium.com/@mrbox27 + bestearningsource.com (blogs de hype/afiliado)",
+> 156	            "confiabilidade": "suspeita-hype"
+> 157	          },
+> 158	          {
+> 159	            "claim": "Listicles Top Crypto Trading Bot Development Companies 2025 (BlockchainX, SoluLab, Bitdeal, Clarisco) e mercado de bots chega a $71,7B ate 2028 sao SEO lead-gen de agencias vendendo o servico - inflam a demanda percebida; NAO sao evidencia de que um solo vende o produto com lucro.",
+> 160	            "fonte": "blockchainx.tech, solulab.com, linkedin/pulse market-CAGR posts",
+> 161	            "confiabilidade": "suspeita-hype"
+> 162	          },
+> 163	          {
+> 164	            "claim": "EV de operar $149 spot ja refutado no nosso proprio lab: edge dentro da fee (~0,2% round-trip), 1m taker negativo, humano ~49%, trend no chop -2,8%/trade. Cenario otimista de +5%/mes = ~$7,45/mes bruto antes de fee/tempo - ordem de grandeza de CENTAVOS-a-dolares.",
+> 165	            "fonte": "MEMORY interno (owner-pivot, first-promotion-baseline, 1m-scalping)",
+> 166	            "confiabilidade": "alta"
+> 167	          }
+> 168	        ],
+> 169	        "aplica_ao_nosso_caso": "Aplica DIRETAMENTE e a comparacao nao e proxima. Operar os $149: mesmo com execucao maker perfeita (unico lever aberto, e otimista), o EV e de centavos/mes - capital pequeno demais para qualquer edge percentual virar renda. UMA hora de freelance de agente/MCP no nivel do dono (mid-senior: $90-250/h) rende 10-30x o lucro ANUAL plausivel da conta inteira. O dono ja construiu sozinho exatamente o que o mercado paga caro: agentes LLM, servidor MCP, automacao Node/Docker, gating de risco, integracoes de API de exchange - portfolio pronto ($5k-50k/projeto). Onde NAO aplica: o modelo de PRODUTO (bot SaaS/copy-trading) herda os males que ja matam o lab (edge fragil, fee) MAIS churn de 23-40%, CAC de $1.200 e nicho saturado de vendedores de curso/agencias de SEO - inviavel solo. Ponte com o pivo freelance: vender SERVICO (projeto/retainer $500-5k/mes), nao produto; o bot vira peca de portfolio/estudo de caso, nao fonte de renda.",
+> 170	        "veredito": "SIM (vender pas), mas como SERVICO freelance de automacao/agentes/MCP - nao produto de trading bot. Uma hora faturada (~$90-250) supera o lucro anual realista dos $149; construir SaaS de bot para terceiros e armadilha de churn/CAC e deve ser evitado."
+> 171	      }
+> 172	    ],
+> 173	    "sintese": {
+> 174	      "ranking": [
+> 175	        {
+> 176	          "frente": "FREELANCE de automação/agentes/MCP como SERVIÇO (vender pás, não produto)",
+> 177	          "score": "9/10",
+> 178	          "porque": "Comparação fria de EV: uma hora faturada no nível do dono ($90-250/h para agentes LLM/MCP mid-senior) supera 10-30x o lucro ANUAL plausível dos $149 inteiros. O melhor cenário do bot (+5%/mês otimista com maker perfeito) = ~$7,45/mês bruto antes de fee/tempo = centavos. O dono JÁ construiu sozinho exatamente o portfolio que o mercado paga caro ($5k-50k/projeto): agentes LLM, servidor MCP, automação Node/Docker, gating de risco, integrações de exchange API, dedup semântico, sim-suite determinística. Escassez explícita: <18 meses de experiência de agente em produção existe no mercado. Demanda por automação +25% YoY no Upwork; n8n/Make ainda não saturado em implementação de qualidade.",
+> 179	          "proximo_passo_barato": "Empacotar 2-3 peças JÁ CONSTRUÍDAS do TradeUX como estudos de caso anonimizados (servidor MCP com tool-gating fail-close, agente Telegram supervisionado com watchdog/dedup, sim-suite que achou 3 bugs reais) num one-pager + perfil Upwork/LinkedIn. Custo: ~4h de escrita, zero código novo. Testa se o portfolio converte em 1 gig de retainer $500-2k antes de investir mais."
+> 180	        },
+> 181	        {
+> 182	          "frente": "Execução MAKER na id2 (15m) — re-backtest com fill CONDICIONAL (único lever de trading que sobra)",
+> 183	          "score": "3/10",
+> 184	          "porque": "É a única frente de TRADING que ainda não foi formalmente refutada e conversa com nosso único lever aberto. MAS enfraquecida, não confirmada: maker no SPOT com desconto BNB baixa o round-trip de ~0,20%→~0,15% (ganho real ~25%, o inimigo não morre). NÃO existe rebate/fee-negativa no spot Binance em nenhum tier acessível (só em futures institucional, fora do perímetro). Pior: a literatura (Maker's Dilemma, arXiv 2502.18625) mostra que buy-limit repousada em RSI oversold enche preferencialmente quando o preço CONTINUA caindo (adverse selection medida: back-of-queue 13x pior que front), e mesmo com rebate modelado de -0,5bp isso NÃO compensa. O 'fill garantido' do nosso backtest é exatamente a hipótese que a literatura refuta.",
+> 185	          "proximo_passo_barato": "Re-rodar o backtest da id2-como-maker no motor de paper que JÁ temos, mas com fill CONDICIONAL (só enche se o preço tocar o limit) + premissa de que os fills bons são os que MENOS enchem (penalizar o retorno pós-fill por queue position). Custo: ~1 dia no Paper Engine existente. Critério de kill: se o edge não sobrevive a fill condicional + fee 0,15%, é o scalping-1m de novo com outra roupa — arquivar."
+> 186	        },
+> 187	        {
+> 188	          "frente": "IA/LLM como camada de OPS/research/sentiment (não previsão de preço)",
+> 189	          "score": "2/10 (para nosso trading) / reciclar para freelance",
+> 190	          "porque": "Como sinal de trading no NOSSO caso: morto. Previsão de preço por LLM refutada (Profit Mirage: -50 a -72% out-of-sample = memorização; StockBench: não bate buy-and-hold; FinGPT: 45-53% acc = cara-ou-coroa, bate nosso prior do humano ~49%). O uso honesto que sobra (sentiment/news por LLM) precisa de CROSS-SECTION de ativos + universo + capital que 1 par BTC / $149 não tem — num único símbolo o sinal de news não paga a fee. O único uso legítimo (ops/monitoramento por LLM: ler estado, alertar) JÁ é o que nosso agente Telegram faz. O valor real aqui NÃO é sinal mágico — é a engenharia de agentes honestos, que realimenta a frente 1 (freelance).",
+> 191	          "proximo_passo_barato": "Não construir sinal de IA para o bot. Reciclar: transformar o agente Telegram + cockpit intelligence num template de 'agente de ops/observability em linguagem natural' vendável — é a mesma skill que a frente 1 monetiza. Zero experimento de trading novo."
+> 192	        },
+> 193	        {
+> 194	          "frente": "Arb (triangular/cross-exchange/funding), stat-arb/pairs, market-making puro, grid/DCA",
+> 195	          "score": "1/10 — DESCARTAR",
+> 196	          "porque": "Nenhuma cabe em $149 spot solo. Funding/spot-perp EXIGEM FUTUROS (decisão nossa) + $5k-50k/oportunidade. Triangular: edge bruto (0-0,025%) é MENOR que nossa fee 0,2% round-trip = negativo antes da latência; nossa VPS 100-500ms nunca ganha a corrida; só 18 ops/semana sobrevivem e exigem execução instantânea que não temos. Stat-arb/pairs: mínimo $50k+/par, $250k+ pra aguentar persistência de dias-semanas; $149 nem cobre 1 par com sizing seguro. Market-making puro: o edge É o rebate/fee-tier, que em $149 de volume é ZERO — viramos provedor de liquidez pagando spread adverso sem o rebate que paga a conta. Grid: sem edge estrutural, aposta em range + risco de cauda no rompimento; grids pequenos 'não cobrem as taxas'.",
+> 197	          "proximo_passo_barato": "NENHUM. Não gastar mais tempo de pesquisa nem de código aqui — todas batem na parede já mapeada (fee > edge, capital < mínimos). Marcar como fechado no lab."
+> 198	        }
+> 199	      ],
+> 200	      "hype_cortado": [
+> 201	        "Grid/DCA Sharpe ~5,7 e 200%/5a (3Commas/WunderTrading): fontes VENDENDO o próprio bot — survivorship/hindsight, 'gap comum backtest×ao-vivo'. Rebaixado a suspeita-hype: sem edge estrutural, só aposta em range.",
+> 202	        "Sentiment-LLM Sharpe 3,05 e 'multi-agente debate = +15% retorno / Sharpe >2,0': in-sample ou dentro da janela de treino do modelo = exatamente a contaminação que o Profit Mirage prova evaporar out-of-sample. Resultado bonito que some fora de amostra.",
+> 203	        "Frameworks LLM de trading 'de ponta' (QuantAgent/TradingAgents/FinCON/FinMem): pareciam funcionar por MEMORIZAÇÃO — perdem 50-72% de retorno quando testados após o knowledge cutoff. Não preveem, regurgitam história.",
+> 204	        "'Bot de IA que faz dinheiro' / 'renda passiva com IA' / 'arbitragem garantida $300': marcado por CFTC (advisory 'AI Won't Turn Trading Bots into Money Machines') e FTC (Operation AI Comply, $2,8bi fraudados de idosos em 2024). Retorno garantido + marca 'IA' = red flag de fraude por definição.",
+> 205	        "Solo AI freelancer '$8k-15k/mês', '$720k/ano' (Medium/bestearningsource): forte viés de sobrevivência + conteúdo de venda de curso/afiliado — números de TOPO, não medianos. Piso real do mercado de bot de trading é comoditizado ($30-61/h, vaga real de trading bot a $50 FIXO).",
+> 206	        "Listicles 'Top Crypto Trading Bot Dev Companies 2025' + 'mercado $71,7B/$135,7B até 2028/2032': SEO lead-gen de agências vendendo o serviço — inflam demanda percebida, NÃO são evidência de que um solo vende o PRODUTO com lucro.",
+> 207	        "Produto SaaS de trading bot / copy-trading: armadilha de unit economics — retenção AI-native 40%, tier <$50/mês retém só 23%, CAC B2B $1.200/cliente, churn >5%/mês = fit quebrado. Inviável solo E herda o edge frágil + fee que já mata o lab. Cortado como modelo.",
+> 208	        "Funding-rate arb 8-40% APY / 'spot-perp 0,3%/dia': relevante mas EXIGE FUTUROS (fora do perímetro) + $5k-50k/oportunidade. Cortado por capital/infra que não temos, não por ser falso."
+> 209	      ],
+> 210	      "veredito_final": "Operar os $149 NÃO vale — construir bots pra outros vale, e a diferença é de ordens de magnitude, não de margem. Mesmo no cenário mais otimista (execução maker perfeita, o único lever de trading que sobrou), o EV da conta inteira é de centavos-a-poucos-dólares por mês, porque $149 × qualquer edge percentual real vira troco, e a fee de ~0,2% round-trip (0,15% no melhor caso maker+BNB) engole o edge disponível em TODAS as frentes de trading testadas. Cruzando com nossos priores: fee-bound e capital-constrained matam arb/pairs/MM/grid (edge < fee ou mínimo $5k-250k); LLM discricionário/preditivo já refutado por nós e agora pela literatura adversarial (memorização, não previsão); o lever maker fica ENFRAQUECIDO — não confirmado — porque o 'fill garantido' do nosso backtest é justamente o que o Maker's Dilemma refuta (adverse selection + zero rebate no spot). O caminho com EV positivo real é vender a ENGENHARIA: uma hora de freelance de agentes/MCP ($90-250/h) supera o lucro anual plausível dos $149, e o dono já tem o portfolio construído. Ação: manter o bot como lab/estudo-de-caso de graça (NO-OP em bear já é o comportamento certo), fazer o re-backtest maker-condicional de 1 dia só pra fechar honestamente o último lever, e investir o tempo real em empacotar o TradeUX como prova de skill para gigs de automação.",
+> 211	      "confianca": "alta"
+> 212	    }
+> 213	  },
+> 214	  "workflowProgress": [
+> 215	    {
+> 216	      "type": "workflow_phase",
+> 217	      "index": 1,
+> 218	      "title": "Pesquisa"
+> 219	    },
+> 220	    {
+> 221	      "type": "workflow_phase",
+> 222	      "index": 2,
+> 223	      "title": "Síntese"
+> 224	    },
+> 225	    {
+> 226	      "type": "workflow_agent",
+> 227	      "index": 1,
+> 228	      "label": "f1:estrategias",
+> 229	      "phaseIndex": 1,
+> 230	      "phaseTitle": "Pesquisa",
+> 231	      "agentId": "acb338ca499e0c7d2",
+> 232	      "model": "claude-opus-4-8",
+> 233	      "state": "done",
+> 234	      "startedAt": 1783540994119,
+> 235	      "queuedAt": 1783540994051,
+> 236	      "attempt": 1,
+> 237	      "lastToolName": "StructuredOutput",
+> 238	      "lastToolSummary": "FRENTE 1 — Estratégias com edge real pra retail pequeno em …",
+> 239	      "promptPreview": "Você é um pesquisador quant cético. Use WebSearch (carregue via ToolSearch com \"select:WebSearch,WebFetch\" se ainda não estiver disponível) e WebFetch nas 2-4 fontes mais fortes. Priorize fontes de 2024-2026, com DADOS CONCRETOS (números, custos, retornos, requisitos de capital). DESCONFIE e rebaixe: conteúdo de venda de curso, afiliado, \"ganhe X% com esse bot\", influencer, survivorship bias — mar…",
+> 240	      "lastProgressAt": 1783541153515,
+> 241	      "tokens": 46845,
+> 242	      "toolCalls": 10,
+> 243	      "durationMs": 159395,
+> 244	      "resultPreview": "{\"angulo\":\"FRENTE 1 — Estratégias com edge real pra retail pequeno em SPOT sem alavancagem (2025-2026), avaliadas contra nossa restrição de conta $149 USDT, Binance spot, solo, VPS simples, fee ~0,2% round-trip. Avaliei (a) market making/maker rebate, (b) funding-rate arb, (c) cross-exchange/triangular arb, (d) stat arb/pairs, (e) grid/DCA — cada uma com capital mínimo e o que trava um operador de…"
+> 245	    },
+> 246	    {
+> 247	      "type": "workflow_agent",
+> 248	      "index": 2,
+> 249	      "label": "f2:maker-fee",
+> 250	      "phaseIndex": 1,
+> 251	      "phaseTitle": "Pesquisa",
+> 252	      "agentId": "afb798f9019a787ca",
+> 253	      "model": "claude-opus-4-8",
+> 254	      "state": "done",
+> 255	      "startedAt": 1783540994121,
+> 256	      "queuedAt": 1783540994052,
+> 257	      "attempt": 1,
+> 258	      "lastToolName": "StructuredOutput",
+> 259	      "lastToolSummary": "FRENTE 2 — Execução MAKER e fees na Binance SPOT: existe re…",
+> 260	      "promptPreview": "Você é um pesquisador quant cético. Use WebSearch (carregue via ToolSearch com \"select:WebSearch,WebFetch\" se ainda não estiver disponível) e WebFetch nas 2-4 fontes mais fortes. Priorize fontes de 2024-2026, com DADOS CONCRETOS (números, custos, retornos, requisitos de capital). DESCONFIE e rebaixe: conteúdo de venda de curso, afiliado, \"ganhe X% com esse bot\", influencer, survivorship bias — mar…",
+> 261	      "lastProgressAt": 1783541100409,
+> 262	      "tokens": 39487,
+> 263	      "toolCalls": 8,
+> 264	      "durationMs": 106287,
+> 265	      "resultPreview": "{\"angulo\":\"FRENTE 2 — Execução MAKER e fees na Binance SPOT: existe rebate maker? Qual o custo real de adverse selection de ordem LIMIT repousada? Isso confirma ou mata a tese de rodar a id2 como maker no 15m?\",\"achados\":[{\"claim\":\"Binance SPOT fee padrão (Regular/VIP 0) = 0,10% maker E 0,10% taker. Com desconto BNB de 25% cai para ~0,075% por lado. Round-trip maker+BNB = ~0,15% (vs ~0,20% que ass…"
+> 266	    },
+> 267	    {
+> 268	      "type": "workflow_agent",
+> 269	      "index": 3,
+> 270	      "label": "f3:ia-trading",
+> 271	      "phaseIndex": 1,
+> 272	      "phaseTitle": "Pesquisa",
+> 273	      "agentId": "a77426ba941e84ae1",
+> 274	      "model": "claude-opus-4-8",
+> 275	      "state": "done",
+> 276	      "startedAt": 1783541100411,
+> 277	      "queuedAt": 1783540994052,
+> 278	      "attempt": 1,
+> 279	      "lastToolName": "StructuredOutput",
+> 280	      "lastToolSummary": "FRENTE 3 — Bots de \"IA\"/LLM pra trading: onde há alpha real…",
+> 281	      "promptPreview": "Você é um pesquisador quant cético. Use WebSearch (carregue via ToolSearch com \"select:WebSearch,WebFetch\" se ainda não estiver disponível) e WebFetch nas 2-4 fontes mais fortes. Priorize fontes de 2024-2026, com DADOS CONCRETOS (números, custos, retornos, requisitos de capital). DESCONFIE e rebaixe: conteúdo de venda de curso, afiliado, \"ganhe X% com esse bot\", influencer, survivorship bias — mar…",
+> 282	      "lastProgressAt": 1783541236080,
+> 283	      "tokens": 45206,
+> 284	      "toolCalls": 12,
+> 285	      "durationMs": 135668,
+> 286	      "resultPreview": "{\"angulo\":\"FRENTE 3 — Bots de \\\"IA\\\"/LLM pra trading: onde há alpha real vs teatro/scam (evidência 2024-2026). Foco em separar (a) previsão de preço por LLM = refutado/memorização, de (b) usos reais de IA no fluxo (parsing de sentimento/news, research, geração de estratégia, ops).\",\"achados\":[{\"claim\":\"PROVA DEFINITIVA de que agentes LLM de trading NÃO preveem, MEMORIZAM: quando testados DEPOIS do…"
+> 287	    },
+> 288	    {
+> 289	      "type": "workflow_agent",
+> 290	      "index": 4,
+> 291	      "label": "f4:vender-pas",
+> 292	      "phaseIndex": 1,
+> 293	      "phaseTitle": "Pesquisa",
+> 294	      "agentId": "a1f9eb97bfb247f2b",
+> 295	      "model": "claude-opus-4-8",
+> 296	      "state": "done",
+> 297	      "startedAt": 1783541153518,
+> 298	      "queuedAt": 1783540994053,
+> 299	      "attempt": 1,
+> 300	      "lastToolName": "StructuredOutput",
+> 301	      "lastToolSummary": "FRENTE 4 — \"Vender pás\": construir automação/bots/agentes c…",
+> 302	      "promptPreview": "Você é um pesquisador quant cético. Use WebSearch (carregue via ToolSearch com \"select:WebSearch,WebFetch\" se ainda não estiver disponível) e WebFetch nas 2-4 fontes mais fortes. Priorize fontes de 2024-2026, com DADOS CONCRETOS (números, custos, retornos, requisitos de capital). DESCONFIE e rebaixe: conteúdo de venda de curso, afiliado, \"ganhe X% com esse bot\", influencer, survivorship bias — mar…",
+> 303	      "lastProgressAt": 1783541296700,
+> 304	      "tokens": 46237,
+> 305	      "toolCalls": 9,
+> 306	      "durationMs": 143182,
+> 307	      "resultPreview": "{\"angulo\":\"FRENTE 4 — \\\"Vender pás\\\": construir automação/bots/agentes como serviço freelance ou produto paga mais que operar $149 na Binance spot? Economia real 2025-2026 de (a) freelance de bots/API/agentes LLM/MCP, (b) modelos de produto SaaS/copy-trading, (c) comparação fria de EV.\",\"achados\":[{\"claim\":\"Freelance de agentes LLM/MCP em 2026: junior $50-90/h, mid $90-150/h, senior $150-250/h, es…"
+> 308	    },
+> 309	    {
+> 310	      "type": "workflow_agent",
+> 311	      "index": 5,
+> 312	      "label": "sintese",
+> 313	      "phaseIndex": 2,
+> 314	      "phaseTitle": "Síntese",
+> 315	      "agentId": "ac8d752c37b12b30a",
+> 316	      "model": "claude-opus-4-8",
+> 317	      "state": "done",
+> 318	      "startedAt": 1783541296759,
+> 319	      "queuedAt": 1783541296702,
+> 320	      "attempt": 1,
+> 321	      "lastToolName": "StructuredOutput",
+> 322	      "lastToolSummary": "Operar os $149 NÃO vale — construir bots pra outros vale, e…",
+> 323	      "promptPreview": "Você é um pesquisador quant cético. Use WebSearch (carregue via ToolSearch com \"select:WebSearch,WebFetch\" se ainda não estiver disponível) e WebFetch nas 2-4 fontes mais fortes. Priorize fontes de 2024-2026, com DADOS CONCRETOS (números, custos, retornos, requisitos de capital). DESCONFIE e rebaixe: conteúdo de venda de curso, afiliado, \"ganhe X% com esse bot\", influencer, survivorship bias — mar…",
+> 324	      "lastProgressAt": 1783541358104,
+> 325	      "tokens": 41909,
+> 326	      "toolCalls": 1,
+> 327	      "durationMs": 61344,
+> 328	      "resultPreview": "{\"ranking\":[{\"frente\":\"FREELANCE de automação/agentes/MCP como SERVIÇO (vender pás, não produto)\",\"score\":\"9/10\",\"porque\":\"Comparação fria de EV: uma hora faturada no nível do dono ($90-250/h para agentes LLM/MCP mid-senior) supera 10-30x o lucro ANUAL plausível dos $149 inteiros. O melhor cenário do bot (+5%/mês otimista com maker perfeito) = ~$7,45/mês bruto antes de fee/tempo = centavos. O dono…"
+> 329	    }
+> 330	  ],
+> 331	  "totalTokens": 219684,
+> 332	  "totalToolCalls": 40
+> 333	}
+> ```
+
+## 🤖 Claude *(20:09:50)*
+
+
+## 🤖 Claude *(20:09:52)*
+
+Deepsearch fechado com fontes fortes (papers de 2025, docs da Binance, reguladores). Vou registrar o achado técnico novo na memória e já te dou o veredito.
+
+## 🤖 Claude *(20:09:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 2 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: tradeux-pattern-lab
+> 3	description: "laboratório de descoberta de padrões no histórico (Fase 1) + validação out-of-sample (Fase 2) com parede anti-overfitting; scripts research-only em backend/scripts, zero money-path"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 2b75f395-3d0c-474f-a0c9-ab9fb903cc72
+> 8	---
+> 9	
+> 10	**Pedido do dono (2026-06-29):** "gastar tokens com algoritmos voltando no passado, identificar o maior número de padrões pra uma fase mais intensa depois (simulações dentro de um mesmo algoritmo)." Decisões dele (todas a recomendação): **dados** = BTC/ETH/LTC/BNB/ADA, ~2-3 anos, 1h/15m/1m; **padrões** = clássicos + conjunções; **arranque** = construir o lab primeiro e trazer pra aprovar antes de minerar.
+> 11	
+> 12	**O LAB (5 arquivos novos em `backend/scripts/`, research puro, ZERO money-path/DB/ordens/live; rodam no HOST com node v22 — `/app` NÃO é bind-mount):**
+> 13	- `lib/labkit.js` — kit: fetch klines estendido (`-ext`, mantém taker-buy-volume p/ proxy de fluxo histórico; throttle 120ms/página), indicadores Wilder (RSI/SMA/EMA/ATR/ADX-DMI/Bollinger/MACD/ROC/vol/percentil rolante), estatística (`tTest` aprox-normal, **`benjaminiHochberg` FDR**, bonferroni, barra-de-ruído √(2lnN), **bootstrap de blocos** com RNG mulberry32 semeado), `forwardReturn` **{gross,net}** sem lookahead, `splitByTime` (parede), `computeIndicators` (catálogo causal + `regimeBar` por barra).
+> 14	- `lib/patterns.js` — universo PRÉ-REGISTRADO de ~40 padrões (RSI/SMA/ADX/Bollinger/MACD/ROC/breakout/vol/flow/regime + conjunções) + `thin` (afinamento anti-overlap). **Compartilhado pelas 2 fases** → a `fn` é idêntica dos dois lados da parede (sem drift = a integridade da validação).
+> 15	- `pattern-discover.js` — **Fase 1**: fetch→split (tranca holdout)→indicadores SÓ no in-sample→testa cada (padrão×horizonte), FDR sobre o **GROSS** (direção), reporta net+`tradeável long`. Saída `pattern-discovery-<tag>.md/json` + manifesto `pattern-survivors-<tag>.json` (grava `cutMs` por símbolo).
+> 16	- `pattern-validate.js` — **Fase 2**: lê o manifesto, reusa o **mesmo `cutMs`** (parede não dá drift entre fases), testa sobreviventes SÓ no holdout (t≥cutMs), bootstrap CI; veredito = **direção (gross sameSign + IC exclui 0)** + **acionável (`bootN.lo>0` = net paga a fee → tradeável long)**.
+> 17	- `sim/labkit.test.js` — 45 asserts determinísticos (auto-descoberto pelo `run.js` → entra no CI/`test:sim` sem mexer em nada).
+> 18	
+> 19	**MÉTODO (anti-overfitting em camadas):** parede temporal trancada (holdout nunca lido na descoberta) · afinamento anti-overlap (retornos ~independentes → t-stat honesto) · correção de múltiplos testes (BH-FDR + Bonferroni) · **GROSS=direção / NET=acionabilidade** (o smoke pegou o bug de usar net p/ direção: o fee-drag round-trip −0,2% fingia "edge bearish"; corrigido nos 2 lados) · bootstrap de blocos no holdout. Fee 0,1%/lado, exec no open seguinte (igual `backtest.js`).
+> 20	
+> 21	**GATES (2026-06-29):** **QA = PASS COM RESSALVAS** (validou com EDGE PLANTADO: random-walk→0 sobreviventes [nulo honesto], edge plantado→96→74→33 [tem poder E especificidade]; determinístico byte-a-byte; sem lookahead/vazamento/div0). **TL = APPROVE COM SUGESTÕES** (zero must-fix; "parede correta e não-driftável", "gross/net é o ponto forte"). Ressalvas LOW aplicadas (throttle, guarda NaN no pct, rótulo BH, doc do regime fraco no início). Suíte de sim **20/20** (labkit 45/45 + 19 pré-existentes intactos).
+> 22	
+> 23	**COMO RODAR:**
+> 24	```
+> 25	cd backend
+> 26	node scripts/pattern-discover.js --interval=1h --days=900 --symbols=BTCUSDT,ETHUSDT,LTCUSDT,BNBUSDT,ADAUSDT --holdout=0.3 --horizons=1,5,10,20,50 --fdr=0.10
+> 27	node scripts/pattern-validate.js --tag=1h-900d --minN=20
+> 28	```
+> 29	
+> 30	**EXPECTATIVA HONESTA (taxa-base):** a maioria dos padrões NÃO sobrevive ao holdout+fee — e isso é o sistema funcionando. No smoke (1h/365d/2-símbolos) deu 0 sobreviventes FDR. O prêmio realista: mapear COM confiança estatística onde (se) sobra edge + caracterizar melhor o trend/regime (o único que segurou) + deixar um "matador de ideias barato". Consistente com tudo já refutado (ver [[tradeux-1m-scalping-and-cockpit]], [[tradeux-strategy-engine]], [[tradeux-parked-as-fuel]]). Próximo da ponte: tradeáveis → motor `[PAPER]` antes de qualquer real.
+> 31	
+> 32	**🎯 CORRIDA REAL RODADA (2026-06-29, 5 símbolos/900d, holdout corte 2025-10-02, horizontes 1/5/10/20/50):**
+> 33	- **1h:** 92/200 sobreviveram FDR in-sample → no holdout **1/92 confirma direção, 0 tradeáveis long**. O único: `death_cross_50_200@5` (bear, gross −0,28% OOS) = sinal de SAÍDA real (valida o death-cross-exit do trend que o sistema já usa).
+> 34	- **15m:** 114/200 in-sample → holdout **3/114 confirmam direção, 0 tradeáveis long**. Os bull: **`rsi30_AND_above_sma200@5 e @20`** (= a TESE DA id2 ao vivo: comprar dip RSI<30 em uptrend) — direção replica OOS com gross +0,14%/+0,25% (IC>0!), MAS net −0,06%/+0,05% (fica EXATO na linha da fee, IC não passa de 0). 
+> 35	- **VEREDITO:** ZERO edge tradeável-long em 2 timeframes/ciclos inteiros. A parede matou ~99% como overfitting (ex.: `boll_lower_break@50` in-sample +0,65% → holdout −1,14%, direção INVERTEU). **O sinal que SOBREVIVE é exatamente a lógica que o sistema já tem (death-cross=saída; RSI-dip-em-uptrend=id2) — direção real, mas o move não paga os 0,2% de round-trip.** O inimigo é a FEE, não a ausência de sinal. Re-confirma INDEPENDENTEMENTE tudo já refutado + valida a arquitetura atual + a tese parqueado-como-combustível. **Próxima fase POSSÍVEL (fase intensa do dono):** simular um motor único sobre `rsi30_AND_above_sma200` com redução de fee (maker/BNB), sizing, gate de regime e hold mais longo → ver se cruza de "direção-confirmada-mas-comida-pela-fee" pra net+.
+> 36	
+> 37	**🧪 FASE 3 — SIMULAÇÃO DIRIGIDA do sobrevivente (`pattern-sim.js`, event-driven 1-entrada × saídas × custos, mesma parede):** alvo = `rsi30_AND_above_sma200` (a id2). Resultado HONESTO e FRÁGIL:
+> 38	- **15m:** melhor config in-sample (`fixed20`/maker-BNB 0,04%) → holdout **+0,188%/trade, IC [0,015%, 0,379%]** (cruza o zero, mas o piso é um fio de cabelo). Estrutura ROBUSTA da grade: net/trade cai MONOTÔNICO conforme o custo sobe → **o edge é do TAMANHO DA FEE: positivo só com execução MAKER (limite ~0,04%/lado), NEGATIVO no taker (0,075-0,1%+slip = o default de hoje).** Gate ADX e stops NÃO ajudaram; saída mais simples + fee menor venceu.
+> 39	- **1h (teste de robustez):** **NÃO replica** — n raso (22-35 no holdout), melhor config holdout −0,70% (IC enorme cruzando 0). Edge é timeframe-específico (15m sim, 1h não).
+> 40	- **VEREDITO FASE 3:** NÃO é edge deployável. É "talvez, como MAKER, no 15m" — frágil em 2 eixos (execução maker-only + timeframe-específico + IC no fio). O ganho estrutural real: **provado com dado que NÃO há edge taker-executável em lugar nenhum, e que o lever (se houver) é EXECUÇÃO MAKER, não sinal.** A id2 é o sinal real, comido pela fee taker. Único caminho disciplinado se quiser perseguir: motor `[PAPER]` com semântica MAKER (limite) medindo fill-rate real — a sim ASSUME que a maker preenche (otimista). Senão, banco o achado.
+> 41	
+> 42	**🔁 RE-CORRIDA "GANHAR DO FEE" (2026-07-03, pedido do dono: taxa embutida na fórmula + 15d/1m/muitas moedas):** 15 moedas líquidas (BTC/ETH/BNB/SOL/XRP/ADA/DOGE/LTC/LINK/AVAX/DOT/TRX/ATOM/NEAR/UNI), 1m, 15d, horizontes 1/5/15/30/60/120/240 (280 testes). **Fase 1:** 155/280 sobrevivem FDR de direção, 25 Bonferroni, **0 tradeáveis (net>0)**. **Maior edge long de TODAS as 15 moedas = apenas 5,30 bps de gross** (`rsi30_AND_flow_buy@60`, win 38,9%); ZERO padrões bull com gross>15bps (BNB) ou >20bps (taker); só 24/175 bull têm gross>0. **Fase 2 (holdout trancado, corte 2026-06-29):** 4/155 confirmam direção, **0 tradeáveis**. **Insight decisivo:** como `net≈gross−2·fee`, a varredura de taxa vira "existe padrão com gross robusto e quão grande?" → maior=5,3 bps ⟹ nenhum cenário de taxa real fecha (fecha só se fee_rt<5,3bps; taker=20, BNB=15, maker-ideal=0). **Teste extra de BARREIRA TRIPLA** (`/tmp/triplebarrier.js`, saída por EVENTO: alvo/stop múltiplos-da-fee, timeout, trades não-sobrepostos, 7 sinais×12 grade=84 configs, in-sample×holdout): **taker → 0/84 passam** (todas net<0 nas 2 metades); **fee=0 (teto MAKER ideal) → 0/84 passam** — as "positivas" do holdout são TODAS in-sample-NEGATIVAS (ex.: `rsi30_not_bear|160|80|480` ins −1,5 / oos +18,6 bps) = sorte de regime numa janela de 4,5d, NÃO edge estável atravessando a parede. **VEREDITO REFORÇADO vs a nota "maker é o lever":** no 1m/15d/15-moedas o edge direcional do sinal **não é sequer estável a custo zero** — o gargalo é o TAMANHO+ESTABILIDADE do sinal, não só a taxa. Ganhar do fee exige um edge maior E estável, que a reversão/breakout/momentum de 1m não têm nessas moedas; os lever reais são ESTRUTURAIS e fora da busca 1m: (1) trend no timescale nativo (horas-dias/ciclo, onde 20bps é ruído — é a maquinária do golden-cross já pronta e desarmada por escolha), (2) tier de fee BNB+volume, (3) market-making capturando o spread (outro jogo, risco de inventário). Consistente com [[tradeux-1m-scalping-and-cockpit]], [[tradeux-parked-as-fuel]]. Scripts research-only; ZERO money-path.
+> 43	
+> 44	**🧭 BACKTEST DO MOTOR DE TREND SPOT (2026-07-03, meta do dono = crescer capital / compor 80% do lucro):** long-only spot, saída = death cross OU regime→bear, net taxa BNB 0,075%+slip 0,02%/lado, 12 moedas, 900d/1h, split 70/30. Comparei **A = entrada ATUAL** (`golden && !bear`) vs **B = "conserto" que EU propus** (re-arma no flip nao-bear + estrutura de alta, pra pegar casos tipo ADA-que-cruzou-em-bear). **RESULTADO: o "conserto" B está REFUTADO** (mediana por moeda −7,6% vs +9,1% da A; ADA B −23,3% vs A +95,5%; holdout B −1,63%/trade win25% IC[−2,1,−1,2]) — re-armar entra mais e pega whipsaw; a A (só no cross) é mais seletiva e melhor. **NÃO repetir a ideia do re-arm.** MAS o achado mais importante: **a PRÓPRIA lógica atual (A) é net-NEGATIVA no holdout** = −2,83%/trade, win 21%, **IC [−4,0%, −1,7%]** (exclui 0 no lado negativo); os números lindos da A (DOGE +203%, ADA +95%, BTC +89%) são TODOS in-sample (bull antigo). **VEREDITO:** nos últimos ~9 meses (holdout = mercado recente, picotado/bear) seguir tendência SANGRA — armar o trend HOJE provavelmente PERDE. O valor REAL e PROVADO do motor é **preservação de capital** (trend→caixa no bear deu mediana +9,1% vs buy&hold **−36,5%** nos 900d = num mercado que caiu 1/3, manteve perto do flat — é por isso que os $149 do dono estão intactos). É uma **mola carregada** pro PRÓXIMO bull sustentado, não um gerador de renda agora. **Consequência p/ o objetivo do dono:** compor (reinvestir 80%) uma expectância negativa só perde mais rápido — composição só ajuda DEPOIS que existe regime que paga. **Nada testado nesta sessão (1m, barreira tripla, trend A, trend B) tem expectância positiva OOS no mercado atual.** Caminho correto: preservar + esperar **gatilho de BULL SUSTENTADO** (não um pico como a ADA +16,7%; ex.: N/5 símbolos em `trend` por X dias, breadth) → aí armar a lógica ATUAL + composição. Ganho garantido enquanto isso = só estrutural (fee BNB, aportar capital). Próximo passo oferecido: construir o DETECTOR de bull-sustentado (research-only, alerta Telegram). Scripts `/tmp/trendbt*.js` (não versionados). Consistente com [[tradeux-farm-funnel-backtest]] (que dizia "trend=+22% no bull" — VERDADE só no bull; refina: em chop/bear o trend é net−), [[tradeux-parked-as-fuel]] (vindica o parqueado), [[tradeux-1m-scalping-and-cockpit]].
+> 45	
+> 46	**BACKTEST RSI-BANDA maker vs taker (2026-07-05, `/tmp/rsiband.js`, 5 símbolos BTC/LTC/BNB/ADA/ETH, 15d 1m; pedido do dono "os sinais parecem 100% assertivos"):** entra RSI<buyTh, sai RSI>exitTh(50/55/70), não-sobreposto. **TAKER (BNB 0,075%+slip 2bps, ~19bps RT): net-NEGATIVO em TODOS os 5 símbolos e todo exitTh; BTC o PIOR (−19bps/trade, win 13-48%).** **MAKER (otimista, fee 0, fill garantido na banda no close do sinal): marginal nas ALTS (LTC +2..+6, ADA +4..+11, ETH +1..+3bps) MAS BTC segue NEGATIVO mesmo a taxa zero (−0,1..−0,6bps).** Média taker −15..−18bps / maker +1,4..+4,4bps. ⚠️ maker é OTIMISTA (ignora fill-rate<100%; maker real no spot Binance ≈0,075% BNB, NÃO 0). Confirma: o "100% assertivo" do olho é ilusão (RSI extremo cai perto de topo/fundo por definição); pro **BTC de 1m NÃO há estratégia lucrável** nem como maker; nas alts só como maker e frágil. Verificação adversarial em workflow caiu no LIMITE DE SESSÃO (números determinísticos + confirmatórios do prior, sem carimbo dos céticos).
+> 47	
+> 48	**STATUS:** lab construído+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`** (20 arquivos: 6 scripts + 14 relatórios; `.git` ownership limpo gcrux-tradeux; farm-funnel de outra origem NÃO incluído — ver [[tradeux-cross-session-contamination]]). **origin/master ainda em `701b7e7` → local 1 commit à frente (fast-forward limpo); PUSH pendente** (remote SSH `git@github.com:gabrielZarattini/tradeux.git` → só a chave do ubuntu empurra → push-como-ubuntu + chown-back do `.git`, ver [[github-ssh-key-on-ubuntu]] e [[git-ownership-gotcha]]). `backtest-data/` gitignored.
+> 49	
+> ```
+
+## 🤖 Claude *(20:09:59)*
+
+
+## 🤖 Claude *(20:10:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md",
+  "old_string": "**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`**",
+  "new_string": "**\ud83d\udd0e DEEPSEARCH \"onde vale criar rob\u00f4s\" (2026-07-08, wf_17d3284e, 4 frentes web + s\u00edntese c\u00e9tica, fontes 2025-2026):** cruzou o lever MAKER com literatura fresca e **ENFRAQUECEU-O (n\u00e3o confirmou)**: (1) **N\u00c3O existe rebate maker no SPOT Binance** em nenhum tier acess\u00edvel (fee-negativa s\u00f3 em futures institucional); maker+BNB = ~0,075%/lado \u2192 round-trip ~0,15% (vs ~0,20% taker) = al\u00edvio de s\u00f3 ~25%, o inimigo n\u00e3o morre. (2) **Maker's Dilemma** (arXiv 2502.18625, experimento live BTC-perp): ordem limit repousada sofre **adverse selection medida** \u2014 buy-limit em RSI oversold enche preferencialmente quando o pre\u00e7o CONTINUA caindo (back-of-queue 13\u00d7 pior que front); e **mesmo com rebate \u22120,5bp modelado N\u00c3O compensa**. Ou seja, o \"fill garantido\" da Fase 3/rsiband \u00e9 EXATAMENTE a hip\u00f3tese que a literatura refuta \u2192 o edge maker-15m pode ser ilus\u00e3o de backtest otimista. **Kill-test barato definido:** re-backtestar a id2-como-maker no Paper Engine com **fill CONDICIONAL** (s\u00f3 enche se o pre\u00e7o tocar o limit) + penalizar retorno p\u00f3s-fill por queue-position; se n\u00e3o sobreviver a isso + fee 0,15%, arquivar como \"scalping-1m com outra roupa\". Demais frentes de trading (arb tri/cross/funding, stat-arb/pairs, MM puro, grid) todas DESCARTADAS pra $149 (edge<fee ou m\u00ednimo $5k-250k / exige futures / rebate-tier=0 em $149 de volume). **Conclus\u00e3o do deepsearch = a mesma parede, agora com fontes externas: operar $149 tem EV de centavos; o EV real est\u00e1 em VENDER a engenharia (ver [[owner-pivot-freelance-income]]).**\n\n**STATUS:** lab constru\u00eddo+gated+testado+corridas Fase 1/2/3 rodadas + **COMMITADO LOCAL `78515ae`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/tradeux-pattern-lab.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:10:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/owner-pivot-freelance-income.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: owner-pivot-freelance-income
+> 3	description: "2026-07-06 — dono (vibecoder amador) pivotou de otimizar o bot $149 (EV dentro da fee, não é renda) pra monetizar a skill de engenharia via FREELANCE rápido com Claude Code; toca num projeto separado"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: user
+> 7	  originSessionId: ff4ccd13-e013-42b6-89d4-f117ead74b1e
+> 8	---
+> 9	
+> 10	O dono (gabrielcallr) se descreve como "puro vibecode amador": não entende trading, mas constrói software funcional rápido usando Claude Code/IA. Em **2026-07-06** pediu ajuda pra fazer renda **urgente e honesta**.
+> 11	
+> 12	**Realidade aritmética estabelecida (não vender esperança):** o TradeUX opera só **$149** e a pesquisa PROVOU que não há edge lucrável — todo edge está dentro da fee, o agregado paper empata em ~zero (ver [[tradeux-pattern-lab]], [[tradeux-parked-as-fuel]], [[tradeux-strategy-engine]]). Trading com $149 **não gera renda material**, mesmo com edge (0,25%/trade ≈ centavos; dobrar o capital = +$149). Logo o bot NÃO é o plano de renda.
+> 13	
+> 14	**Pivô combinado (2026-07-06):** o ativo monetizável é a **habilidade de engenharia** que ele provou construindo o TradeUX sozinho (backend Node/Express+Sequelize, React, servidor MCP, agente LLM com guardrails, Docker, CI dual-dialect, backtest com estatística séria) — não o P&L do bot. **Direção escolhida por ele: FREELANCE rápido com Claude Code** (nicho de vantagem = automação/integrações/agentes LLM/MCP servers). Ele vai tocar isso num **projeto SEPARADO** (recebeu um prompt de kickoff auto-contido).
+> 15	
+> 16	**How to apply:** ao ajudar o dono, canalizar a skill dele em renda real, não otimizar o bot. O TradeUX segue como lab/observação de graça (parado-mas-armado, NO-OP em bear/range). Reforçar o bom instinto dele: já ignorou golpe de "multiplicar rápido" (Polymarket 205x) — manter ceticismo com qualquer promessa de dinheiro fácil.
+> 17	
+> ```
+
+## 🤖 Claude *(20:10:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/owner-pivot-freelance-income.md",
+  "old_string": "**How to apply:** ao ajudar o dono, canalizar a skill dele em renda real, n\u00e3o otimizar o bot. O TradeUX segue como lab/observa\u00e7\u00e3o de gra\u00e7a (parado-mas-armado, NO-OP em bear/range). Refor\u00e7ar o bom instinto dele: j\u00e1 ignorou golpe de \"multiplicar r\u00e1pido\" (Polymarket 205x) \u2014 manter ceticismo com qualquer promessa de dinheiro f\u00e1cil.",
+  "new_string": "**Dados de mercado do deepsearch (2026-07-08, wf_17d3284e \u2014 refor\u00e7o quantitativo):** freelance de agentes LLM/MCP em 2026 = mid **$90-150/h**, senior **$150-250/h**; projeto MCP/multi-agente **$5k-150k**; automa\u00e7\u00e3o n8n/Make **$100+/h** (+25% YoY de demanda no Upwork). **Uma hora faturada supera 10-30\u00d7 o lucro ANUAL plaus\u00edvel dos $149.** \u26a0\ufe0f **Vender SERVI\u00c7O (projeto/retainer $500-5k/m\u00eas), N\u00c3O produto** \u2014 bot SaaS/copy-trading \u00e9 armadilha de unit-economics (reten\u00e7\u00e3o AI-native ~40%, tier <$50 ret\u00e9m 23%, CAC B2B ~$1.200, nicho saturado de ag\u00eancias SEO/curso). O piso do mercado de \"trading bot\" \u00e9 comoditizado ($30-61/h, vagas a $50 fixo) \u2192 posicionar como **automa\u00e7\u00e3o/agentes/integra\u00e7\u00f5es**, n\u00e3o \"fa\u00e7o bot de trading\". O pr\u00f3prio TradeUX \u00e9 o portf\u00f3lio (servidor MCP com tool-gating fail-close, agente Telegram supervisionado c/ watchdog+dedup, sim-suite que achou 3 bugs reais) \u2014 empacotar 2-3 pe\u00e7as como estudo de caso = ~4h, zero c\u00f3digo novo. B\u00f4nus: literatura adversarial 2025 CONFIRMA que \"bot de IA que prev\u00ea pre\u00e7o\" \u00e9 memoriza\u00e7\u00e3o, n\u00e3o previs\u00e3o (Profit Mirage \u221250/\u221272% OOS; StockBench n\u00e3o bate buy&hold; FinGPT 45-53% acc) + FTC/CFTC em crackdown \u2192 o mercado quer \"agentes de IA honestos\" e \u00e9 mal servido = a vantagem do dono \u00e9 fazer o HONESTO.\n\n**How to apply:** ao ajudar o dono, canalizar a skill dele em renda real, n\u00e3o otimizar o bot. O TradeUX segue como lab/observa\u00e7\u00e3o de gra\u00e7a (parado-mas-armado, NO-OP em bear/range). Refor\u00e7ar o bom instinto dele: j\u00e1 ignorou golpe de \"multiplicar r\u00e1pido\" (Polymarket 205x) \u2014 manter ceticismo com qualquer promessa de dinheiro f\u00e1cil."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrux-tradeux/memory/owner-pivot-freelance-income.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:11:04)*
+
+Memória atualizada. Veredito do deepsearch:
+
+## Resposta curta: onde vale criar robôs não é *pra operar $149 — é pra vender pra terceiros.* E a diferença é de ordem de magnitude, não de margem.
+
+A pesquisa (papers de 2025, docs da Binance, avisos de FTC/CFTC) bateu na mesma parede que já tínhamos, mas agora com fonte externa. Ranking:
+
+| Frente | Score | Por quê |
+|---|---|---|
+| **🏆 Freelance de automação/agentes/MCP (serviço)** | **9/10** | 1h faturada ($90-250/h) = **10-30× o lucro ANUAL** plausível dos $149 inteiros. Você já construiu o portfólio. |
+| Execução MAKER na id2 (re-teste) | 3/10 | Único lever de trading que sobra — mas **enfraquecido**, não confirmado (ver abaixo). |
+| IA/LLM como ops/research | 2/10 | Como sinal de preço = morto pela literatura. Como camada de ops = já é o que o agente Telegram faz → recicla pro freelance. |
+| Arb / stat-arb / MM puro / grid | 1/10 | **Descartar.** Nenhum cabe em $149 spot. |
+
+## As 3 coisas que respondem direto às tuas ideias de antes
+
+**1. O lever "maker" (id2 como maker) levou uma pancada honesta.** Eu vinha dizendo que era o "único fio aberto". A pesquisa mostrou:
+- **Não existe rebate maker no spot da Binance** — fee negativa só em futures institucional. Maker+BNB baixa o round-trip de ~0,20% pra ~0,15% (alívio de só 25%, o inimigo não morre).
+- Pior: o paper *Maker's Dilemma* (2025, experimento ao vivo) prova que uma ordem limit de compra em RSI baixo **enche justamente quando o preço continua caindo** (adverse selection) — e mesmo com rebate simulado isso não compensa. Ou seja, o "fill garantido" dos nossos backtests é exatamente a hipótese errada.
+- **Tem um kill-test barato** (~1 dia no Paper Engine que já temos): re-rodar assumindo fill condicional. Se não sobreviver, arquiva de vez. É a única coisa de *trading* que ainda vale 1 dia.
+
+**2. Micro-agentes de IA prevendo mercado = refutado, agora com prova acadêmica.** Lembra que eu te desaconselhei religar o agente `:free`? A literatura confirmou forte: os frameworks LLM "de ponta" (QuantAgent, FinMem, TradingAgents) **perdem 50-72% do retorno** quando testados fora da janela de treino — eles *memorizam história, não preveem*. FinGPT prevê a 45-53% (cara-ou-coroa, igual aos ~49% do teu olho no journal). E FTC/CFTC estão em crackdown contra "bot de IA que faz dinheiro" ($2,8 bi fraudados em 2024). **Onde IA ajuda de verdade**: sentiment/news, geração de código de estratégia, e ops/monitoramento — que é engenharia, não mágica.
+
+**3. A ironia que fecha tudo:** o mercado está *faminto* por "agentes de IA honestos" (por isso o crackdown — tá cheio de vigarista). E você é literalmente a pessoa que constrói o honesto. O TradeUX inteiro — servidor MCP com trava fail-close, agente supervisionado com watchdog, sim-suite que caçou 3 bugs reais — é portfólio pronto que o mercado paga $5k-50k/projeto.
+
+## O que eu faria (concreto)
+
+- **Trading:** fechar a última porta com o **kill-test maker** (1 dia, barato, honesto) — e o bot segue de graça como lab/estudo de caso. Nada de religar o agente pago nem armar trend no chop.
+- **Renda de verdade:** empacotar 2-3 peças do TradeUX como **estudo de caso** (one-pager + perfil), ~4h, zero código novo. Isso testa se o portfólio converte num gig antes de investir mais — e é onde o EV realmente está.
+
+Quer que eu **(a)** rode o kill-test do maker pra fechar a questão do trading de vez, ou **(b)** já monte o rascunho do estudo de caso/one-pager do TradeUX pra você usar no pitch de freelance? Posso fazer os dois, mas se for um, começaria pelo **(b)** — é onde o dinheiro está.
