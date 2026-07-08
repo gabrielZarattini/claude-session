@@ -5342,6 +5342,2352 @@ Enquanto roda, resumo do estado e do que vem:
 
 Aviso assim que a suíte terminar para revisarmos os IDs/traceabilidade antes de eu escrever a SOP e o código.
 
+## 👤 User *(09:51:17)*
+
+<task-notification>
+<task-id>w6283cbdj</task-id>
+<tool-use-id>toolu_017nLtTPG3Bw614bmXmhZJup</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/tasks/w6283cbdj.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Author the tiktok-login BoK suite (9 docs) grounded in the material map, dependency-ordered for ID coherence + traceability" completed</summary>
+<result>{"foundation":{"mr_ids":["MR-TL-001","MR-TL-002","MR-TL-003","MR-TL-004","MR-TL-005","MR-TL-006","MR-TL-007","MR-TL-008","MR-TL-009","MR-TL-010"],"br_ids":["BR-TL-001","BR-TL-002","BR-TL-003","BR-TL-004","BR-TL-005","BR-TL-006","BR-TL-007","BR-TL-008","BR-TL-009","BR-TL-010"],"pr_ids":["PR-TL-001","PR-TL-002","PR-TL-003","PR-TL-004","PR-TL-005","PR-TL-006","PR-TL-007","PR-TL-008","PR-TL-009","PR-TL-010","PR-TL-011","PR-TL-012"],"mvp_scope":"MVP = the six Must PRs, delivered gated behind `?devLogin` (mirroring today's Google button): PR-TL-001 (TikTok login button + custom `handleTikTokLogin`, not reusing `handleOAuthLogin`), PR-TL-002 (`tiktok-login-init` edge fn — authorize URL, comma-separated `user.info.basic` scope, HMAC-signed state, system-env `TIKTOK_CLIENT_KEY`), PR-TL-003 (`tiktok-login-callback` edge fn — `verifyState` fail-closed + server-side token exchange, no PKCE), PR-TL-004 (session mint from `open_id` via `generateLink→verifyOtp`), PR-TL-005 (identity-map migration `tiktok_identities` + `tiktok_login_codes`, RLS default-deny service-role-only), PR-TL-006 (single-use code hand-off + SPA `/auth/tiktok/callback` → `setSession` → `safeReturnTo`). Requires 3 new `verify_jwt=false` edge functions + 1 migration (flagged for the FRD/SDD). Shoulds (v1.0): PR-TL-007 name/avatar via `user/info`, PR-TL-008 LGPD identity erasure. Coulds: PR-TL-009 consented link-to-existing. Won't: PR-TL-010 auto-link by email, PR-TL-011 persist TikTok tokens, PR-TL-012 public exposure pre-audit. mcoCoins cost = 0 across every PR (invariant BO-TL-006).","summary":"Authored 3 grounded BoK docs for slug `tiktok-login` at /home/gcrUX/htdocs/constellation-orchestra/docs/bok/tiktok-login/ — 01-mrd.md, 02-brd.md, 03-prd.md (565 lines total; each with the v1.0.0 footer; English headings, PT-BR narrative). Every technical claim is grounded in the material map (.claude/context/tiktok-login-map-2026-07-08.md) or verified repo code — I confirmed the load-bearing citations against real source: Auth.tsx devLogin gate + Google button block :121-148 and `handleOAuthLogin` typed 'google'|'apple' :81-93; gen-user-jwt.ts generateLink→verifyOtp mint :25-37; oauth-state.ts signState/verifyState HMAC fail-closed :26-31,55-59. Positioned honestly as a zero-coin internal enabler (login never debits mcoCoins, never returns 402 by balance) with B2C/LGPD framing: the raison d'être is passing the TikTok App Review login-scope (`user.info.basic`) demo, plus a social-login alternative to Google. Key grounded constraints surfaced: sandbox/unaudited ceiling (1 sandbox user), redirect_uri registration + secrets provisioning as blocking Sovereign console actions, open_id-only identity (no OIDC/email → no signInWithIdToken), no-auto-link anti-grafting rule, comma-separated scope, no-PKCE confidential web flow, and no-token-in-URL single-use hand-off. Traceability closes end-to-end: 10 MR-TL → 10 BR-TL → 12 PR-TL (3 of which are documented Won't exclusions, not orphans). ID spaces: MR-TL-001..010, BR-TL-001..010, PR-TL-001..012. Next in the BoK gate: 04-frd.md + 05-sdd.md (which must carry the Pattern Conformance Declaration) before any code."},"core":{"fr_ids":["FR-TL-001","FR-TL-002","FR-TL-003","FR-TL-004","FR-TL-005","FR-TL-006","FR-TL-007","FR-TL-008","FR-TL-009","FR-TL-010","FR-TL-011"],"nfr_ids":["NFR-TL-001","NFR-TL-002","NFR-TL-003","NFR-TL-004","NFR-TL-005","NFR-TL-006","NFR-TL-007","NFR-TL-008","NFR-TL-009","NFR-TL-010","NFR-TL-011","NFR-TL-012"],"otd_ids":["OTD-TL-001","OTD-TL-002","OTD-TL-003","OTD-TL-004","OTD-TL-005","OTD-TL-006","OTD-TL-007","OTD-TL-008","OTD-TL-009","OTD-TL-010","OTD-TL-011"],"fmea_high_rpn":["FM-TL-01 (RPN 180)","FM-TL-09 (RPN 180)","FM-TL-03 (RPN 144)","FM-TL-02 (RPN 128)","FM-TL-06 (RPN 128)"],"pattern_conformance_included":true,"summary":"Authored 04-frd.md (211 lines) and 05-sdd.md (400 lines) for slug tiktok-login at /home/gcrUX/htdocs/constellation-orchestra/docs/bok/tiktok-login/, both with the v1.0.0 footer, English headings + PT-BR narrative, IDs zero-padded 3-digit. Every technical claim is grounded in the material map (.claude/context/tiktok-login-map-2026-07-08.md) or verified against real source: Auth.tsx handleOAuthLogin('google'|'apple'):81-93 + devLogin/Google block:121-148; oauth-state.ts signState/verifyState/timingSafeEqual fail-closed:26-61; gen-user-jwt.ts generateLink-&gt;verifyOtp mint:25-38; social-auth-init TikTok authorize + comma-scope + signState(userId):103-121; social-auth-callback TikTok exchange open.tiktokapis.com/v2/oauth/token/ form-encoded + open_id:184-204; sso-cookie safeReturnTo:30-39; config.toml dozens of verify_jwt=false entries.\n\nFRD (SWEBOK): 11 FRs across UI (button gated devLogin + handleTikTokLogin custom NOT reusing handleOAuthLogin; SPA /auth/tiktok/callback), EdgeFn (tiktok-login-init comma-scope + signState intent+nonce-not-userId; tiktok-login-callback verifyState fail-closed + server-side exchange + open_id + find-or-create + generateLink-&gt;verifyOtp mint + single-use code hand-off; tiktok-login-session redeem-once; public-fn registration + Origin/state self-guard; graceful error return + telemetry; user/info Should), DB (tiktok_identities + tiktok_login_codes RLS default-deny; erasure RPC Should). 12 NFRs (fail-closed state, no-token-in-URL, secrets server-side, rate-limit, availability-at-zero-balance, LGPD erasability, zero-regression, observability, zero-coin invariant, WCAG AA). Full edge-fn req/resp/error contracts + data validation rules + zero-cost test matrix + PR-&gt;FR traceability (all Must/Should PRs covered; Won't/Could documented as exclusions).\n\nSDD (SWEBOK+CISSP): Harness layer map, component catalog (3 verify_jwt=false edge fns + Auth.tsx edit + TikTokLoginCallback.tsx + App.tsx route + 2 migrations + erasure RPC), end-to-end login data flow + fail-closed paths + identity-resolution anti-auto-link flow, API contracts (method/path/auth/req/resp/errors), STRIDE per component (FM-TL-01..11), RLS default-deny service-role-only policy defs, secrets inventory (TIKTOK_CLIENT_KEY/SECRET/SB_SECRET_KEY names only), explicit NO-AUTO-LINK-BY-EMAIL rule (anti cross-tenant grafting), infra touchpoints (infra_health_logs tiktok_login_success/degraded/error, PII-allowlisted), migration stubs (open_id UNIQUE-&gt;user_id; single-use code_hash TTL + consumed_at), OTD-TL-001..011 (redirect_uri = Sovereign console action; sandbox audit ceiling; discard TikTok tokens; separate callback path vs ?intent; 3 fns vs 2; mesh-node deferred pending LGPD).\n\nMANDATORY Pattern Conformance Declaration included in 05-sdd.md §9: full 21-row table (verbatim canonical names from agentic-vision.md). Honest scoreboard for an auth/identity enabler: yes x5 (#11 Goal Monitoring, #12 Exception Recovery, #13 HITL, #18 Guardrails, #19 Evaluation), deferred x1 (#8 Memory Management -&gt; OTD-TL-011), n-a x15 — execution patterns marked n-a with reason (no LLM/orchestration/fan-out). No inflation. Five FMEA-worthy candidates with RPN&gt;100 surfaced in §5.1 note (full FMEA reserved for 08)."},"derivatives":[{"file":"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/tiktok-login/06-data-model.md","ids_minted":["DD-TL-001","DD-TL-002","DD-TL-003","DD-TL-004","DD-TL-005","DD-TL-006","DD-TL-007"],"summary":"Authored docs/bok/tiktok-login/06-data-model.md (DMBOK v2), 240 lines, grounded verbatim in the material map + sealed 04-frd.md/05-sdd.md. Sections: (1) Conceptual model + text ERD — tiktok_identities (open_id UNIQUE → user_id, the isolation boundary, 1:1), tiktok_login_codes (single-use hand-off), auth.users link, plus reuse (profiles/infra_health_logs); (2) Logical model per table with columns/types/constraints/FK ON DELETE CASCADE; (3) Supabase physical stubs reproduced copy-ready from SDD §7 (RLS default-deny service-role-only; indexes: open_id UNIQUE, code_hash partial WHERE consumed_at IS NULL, expires_at TTL) + disconnect_tiktok_identity() RPC; (4) GraphRAG nodes; (5) Tenant Isolation Map — identity tables are service-role
+... (truncated 6688 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/tasks/w6283cbdj.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_de2ab537-fff/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-bok-author-wf_de2ab537-fff.js', resumeFromRunId: 'wf_de2ab537-fff'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>6</agent_count><agents_done>6</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1019621</subagent_tokens><tool_uses>92</tool_uses><duration_ms>1907265</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(09:51:25)*
+
+
+## 🤖 Claude *(09:51:27)*
+
+Suíte gerada. Vou verificar materialmente os 9 arquivos + o resultado da validação de traceabilidade (Lei 1 — não confio no relato, confirmo no disco).
+
+## 🤖 Claude *(09:51:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== arquivos da su\u00edte ===\"\nls -la docs/bok/tiktok-login/\necho \"=== wc ===\"\nwc -l docs/bok/tiktok-login/*.md | tail -1\necho \"=== Pattern Conformance no SDD? ===\"\ngrep -c \"Pattern Conformance\" docs/bok/tiktok-login/05-sdd.md\necho \"=== footer em todos? ===\"\ngrep -l \"MCORCH BoK Scribe Agent v1.0.0\" docs/bok/tiktok-login/*.md | wc -l",
+  "description": "Confirmar 9 arquivos + Pattern Conformance + footers"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos da suíte ===
+> total 228
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jul  8 06:50 .
+> drwxrwxr-x 28 gcrUX  gcrUX   4096 Jul  8 06:22 ..
+> -rw-rw-r--  1 ubuntu ubuntu 13491 Jul  8 06:50 00-index.md
+> -rw-rw-r--  1 ubuntu ubuntu 17996 Jul  8 06:22 01-mrd.md
+> -rw-rw-r--  1 ubuntu ubuntu 20279 Jul  8 06:24 02-brd.md
+> -rw-rw-r--  1 ubuntu ubuntu 17746 Jul  8 06:26 03-prd.md
+> -rw-rw-r--  1 ubuntu ubuntu 25108 Jul  8 06:36 04-frd.md
+> -rw-rw-r--  1 ubuntu ubuntu 39563 Jul  8 06:35 05-sdd.md
+> -rw-rw-r--  1 ubuntu ubuntu 21548 Jul  8 06:41 06-data-model.md
+> -rw-rw-r--  1 ubuntu ubuntu 23268 Jul  8 06:41 07-process-flow.md
+> -rw-rw-r--  1 ubuntu ubuntu 26179 Jul  8 06:46 08-quality-metrics.md
+> === wc ===
+>   1953 total
+> === Pattern Conformance no SDD? ===
+> 1
+> === footer em todos? ===
+> 9
+> ```
+
+## 🤖 Claude *(09:51:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\np='/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_de2ab537-fff/journal.jsonl'\nfor line in open(p):\n    if 'traceability_ok' in line:\n        o=json.loads(line)\n        v=o.get('value') or o.get('result') or o\n        print(json.dumps(v, indent=2, ensure_ascii=False)); break\n\"",
+  "description": "Extrair resultado da valida\u00e7\u00e3o de traceabilidade (index agent)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "index_written": true,
+>   "traceability_ok": true,
+>   "orphans": [],
+>   "issues": []
+> }
+> ```
+
+## 🤖 Claude *(09:51:48)*
+
+
+## 🤖 Claude *(09:51:50)*
+
+Todos os 9 arquivos no disco (1953 linhas), Pattern Conformance no SDD, footers em todos, e a validação de traceabilidade passou (0 órfãos, 0 issues). Antes de selar, vou fazer um spot-check material do documento mais crítico (SDD — Pattern Conformance + Security), porque não confio cegamente nos agentes (Lei 1).
+
+## 🤖 Claude *(09:51:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== \u00a79 Pattern Conformance (linha) ===\"\ngrep -n \"Pattern Conformance\\|## 9\\|## 8\\|## 10\" docs/bok/tiktok-login/05-sdd.md | head\necho \"=== contagem de linhas da tabela de padr\u00f5es (21 esperado) ===\"\ngrep -nE \"yes|deferred|n-a|n/a\" docs/bok/tiktok-login/05-sdd.md | grep -iE \"\\| (yes|deferred|n-a|n/a)\" | wc -l",
+  "description": "Localizar Pattern Conformance no SDD"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === §9 Pattern Conformance (linha) ===
+> 348:## 8. Open Technical Decisions
+> 366:## 9. Pattern Conformance Declaration (CLAUDE.md §1 Step 3.5)
+> === contagem de linhas da tabela de padrões (21 esperado) ===
+> 16
+> ```
+
+## 🤖 Claude *(09:51:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/tiktok-login/05-sdd.md",
+  "offset": 366,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 366	## 9. Pattern Conformance Declaration (CLAUDE.md §1 Step 3.5)
+> 367	
+> 368	> **Lente:** os 21 padrões agênticos canônicos de `docs/architecture/agentic-vision.md §2` (template mestre `docs/bok/agentic-governance/09-pattern-conformance.md` Bloco A). **Declaração, não sign-off.** Nomes verbatim — não renomear/reordenar.
+> 369	>
+> 370	> **Natureza do módulo (Lei 1 — fundamentação honesta):** `tiktok-login` é um **enabler de auth/identidade** — na essência uma superfície de **Guardrails + HITL + Exception-handling** com monitoramento/avaliação, **não** um módulo de execução agêntica (não orquestra trabalho, não usa LLM, não faz fan-out). Por isso os padrões de *execução* (chaining, routing, parallelization, planning, multi-agent, reasoning) são `n-a` com razão — sem inflação. Os `yes` são exatamente os que a função do módulo encarna.
+> 371	
+> 372	| # | Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred |
+> 373	|---|---------|:------------------------------:|---|
+> 374	| 1 | Prompt Chaining | n-a | Sem encadeamento de steps de LLM. A sequência init→callback→session é um protocolo OAuth, não prompt chaining. |
+> 375	| 2 | Routing | n-a | Provedor único (TikTok); não há dispatch semântico/por-modelo. |
+> 376	| 3 | Parallelization | n-a | Fluxo estritamente sequencial (redirect-based); sem fan-out. |
+> 377	| 4 | Reflection | n-a | Sem laço Generator-Critic. |
+> 378	| 5 | Tool Use | n-a | Não é um agente usando ferramentas — é uma integração OAuth direta com o TikTok. |
+> 379	| 6 | Planning | n-a | Sem geração de plano; fluxo fixo especificado no FRD. |
+> 380	| 7 | Multi-Agent | n-a | Superfície single-purpose de auth; não é um coletivo de agentes. |
+> 381	| 8 | Memory Management | deferred | O módulo persiste `tiktok_identities` (mapa de identidade em DB), mas **não escreve na Knowledge Mesh** neste ciclo — o nó `observation` de 1º-login PII-safe é **OTD-TL-011** (`open_id` é dado pessoal e `mcorch_nodes` é broadly-readable → gate LGPD). Nunca `yes` sem o nó real. |
+> 382	| 9 | Learning & Adaptation | n-a | Fluxo de auth estático; sem loop de feedback/adaptação. |
+> 383	| 10 | Model Context Protocol | n-a | Não expõe nem consome MCP. |
+> 384	| 11 | Goal Setting & Monitoring | **yes** | Emite `infra_health_logs service='tiktok-login'` (success/degraded/error — FR-TL-009 · NFR-TL-009) monitorando a meta KPI-TL-003 (session-mint success rate) → Neural HUD via `get-infra-status`. |
+> 385	| 12 | Exception Handling & Recovery | **yes** | Retorno de erro gracioso: `verifyState` fail-closed + `?tiktok_error=<state_expired\|not_authorized\|exchange_failed>` → toast PT-BR → retry com `state` fresco (FR-TL-009 · Journey 2/3); resgate de código atômico replay-proof (410). |
+> 386	| 13 | Human-in-the-Loop | **yes** | ORO: o Sovereign é gate bloqueante — registra `redirect_uri`, provê secrets, adiciona a conta sandbox, aprova `/security-review` (CON-TL-002/003 · OTD-TL-001/002); o App Reviewer humano do TikTok é o gatekeeper externo (SH-TL-003). |
+> 387	| 14 | Knowledge Retrieval (RAG) | n-a | Sem retrieval semântico. |
+> 388	| 15 | Inter-Agent Communication (A2A) | n-a | Sem troca de mensagens entre agentes. |
+> 389	| 16 | Resource-Aware Optimization | n-a | Login é **zero-coin por invariante** (BO-TL-006 · NFR-TL-011) — não há consumo de mcoCoins a otimizar; nunca chama `deduct_mco_coins`. |
+> 390	| 17 | Reasoning Techniques | n-a | Sem raciocínio LLM; fluxo determinístico. |
+> 391	| 18 | Guardrails / Safety | **yes** | **Padrão-espinha do módulo:** state HMAC fail-closed (`timingSafeEqual` + janela 10min — FM-TL-01), zero token em URL (código single-use — FM-TL-02), **NO-AUTO-LINK-BY-EMAIL** anti-grafting (§5.5 · FM-TL-03), RLS default-deny service-role-only (FM-TL-05), Origin self-guard nas fns `verify_jwt=false`, `/security-review` obrigatório (FMEA-011), secrets server-side only (FM-TL-07). |
+> 392	| 19 | Evaluation & Monitoring | **yes** | Gate de avaliação material: suite de zero-regressão do `/auth` (KPI-TL-004 · NFR-TL-008), smokes zero-cost (`smoke-tiktok-login.ts`: state forjado/expirado, replay 410, no-token-in-URL), `/security-review` SAFE e prova material da sessão (UUID em `auth.sessions`/`tiktok_identities` — KPI-TL-002). |
+> 393	| 20 | Prioritization | n-a | Fluxo único; sem scheduler/álgebra de priorização. |
+> 394	| 21 | Exploration & Discovery | n-a | Sem exploração generativa; superfície confirmatória de auth. |
+> 395	
+> 396	**Placar deste módulo:** `yes` × **5** (#11 Goal Monitoring · #12 Exception Recovery · #13 HITL · #18 Guardrails · #19 Evaluation) · `deferred` × 1 (#8 Memory Management → OTD-TL-011) · `n-a` × 15. A concentração em **Guardrails + Exception-handling + HITL + Monitoring/Evaluation** confirma materialmente a natureza declarada: um enabler de auth cuja essência é **segurança de um sink privilegiado sob supervisão humana**, medido por telemetria e provado por regressão-zero — não um módulo de execução agêntica.
+> 397	
+> 398	---
+> 399	
+> 400	_Generated by MCORCH BoK Scribe Agent v1.0.0_
+> 401	
+> ```
+
+## 🤖 Claude *(09:52:16)*
+
+
+## 🤖 Claude *(09:52:19)*
+
+A Pattern Conformance Declaration está impecável — 21 padrões, placar honesto (5 yes / 1 deferred com OTD-TL-011 / 15 n-a com razão), **zero inflação**, tudo ancorado em FRs/FMs/KPIs. A suíte está sólida e grounded. Vou selar na Knowledge Mesh (Phase 7 do bok-scribe). Primeiro identifico o seal-pai semântico correto para o DERIVES_FROM (Lei 1 — não chutar o nome):
+
+## 🤖 Claude *(09:52:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource <(grep -E '^(SUPABASE_URL|SB_SECRET_KEY)=' .env | sed 's/^/export /')\ncurl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&name=like.bok-scribe-seal-*&select=name&order=name\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; [print(n['name']) for n in json.load(sys.stdin)]\" | grep -iE \"identity|meta|security|social|constellation|auth\"",
+  "description": "Listar seals candidatos a DERIVES_FROM pai"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bok-scribe-seal-authenticated-browser-operator-v1
+> bok-scribe-seal-constellation-v2-v1
+> bok-scribe-seal-identity-fabric-v1
+> bok-scribe-seal-mcorch-constellation-v1
+> bok-scribe-seal-meta-api-v1
+> ```
+
+## 🤖 Claude *(09:52:33)*
+
+
+## 🤖 Claude *(09:52:34)*
+
+`identity-fabric` é o pai semântico correto (subsistema de identidade). Vou pegar as contagens de linha por arquivo e escrever o seed script (padrão canônico Phase 7), depois selar.
+
+## 🤖 Claude *(09:52:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l docs/bok/tiktok-login/*.md",
+  "description": "Contagem de linhas por documento"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    134 docs/bok/tiktok-login/00-index.md
+>    157 docs/bok/tiktok-login/01-mrd.md
+>    169 docs/bok/tiktok-login/02-brd.md
+>    239 docs/bok/tiktok-login/03-prd.md
+>    211 docs/bok/tiktok-login/04-frd.md
+>    400 docs/bok/tiktok-login/05-sdd.md
+>    240 docs/bok/tiktok-login/06-data-model.md
+>    224 docs/bok/tiktok-login/07-process-flow.md
+>    179 docs/bok/tiktok-login/08-quality-metrics.md
+>   1953 total
+> ```
+
+## 🤖 Claude *(09:53:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-tiktok-login-bok-seal.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Seals the tiktok-login BoK suite (9/9) in the Knowledge Mesh.\n * Inserts a documentation_suite node (stability 0.85) + a DERIVES_FROM edge to the parent\n * identity-fabric BoK seal (nearest identity/auth family). Embedding fires automatically via\n * trg_mcorch_embed_on_insert. Idempotent: UNIQUE name violation \u2192 log + exit 0.\n *\n * Usage: bun run scripts/seed-tiktok-login-bok-seal.ts\n */\nimport { createClient } from '@supabase/supabase-js';\n\nconst SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst SERVICE_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;\nif (!SUPABASE_URL || !SERVICE_KEY) {\n  console.error('Missing SUPABASE_URL or SB_SECRET_KEY');\n  process.exit(1);\n}\n\nconst supabase = createClient(SUPABASE_URL, SERVICE_KEY);\n\nconst PARENT_SEAL = 'bok-scribe-seal-identity-fabric-v1'; // nearest identity/auth family parent\n\nconst sealNode = {\n  name: 'bok-scribe-seal-tiktok-login-v1',\n  node_type: 'documentation_suite',\n  project_id: 'tiktok-login',\n  stability_score: 0.85,\n  revenue_impact: 0, // internal enabler \u2014 unblocks TikTok distribution channel + app-review login-scope; login itself is zero-coin (never bills)\n  content: `tiktok-login \u2014 \"Entrar com TikTok\" como provider de LOGIN/identidade real na p\u00e1gina /auth?devLogin do MCORCH (n\u00e3o o connect de publica\u00e7\u00e3o existente). Enabler B2C zero-coin cujo raison d'\u00eatre \u00e9 passar o App Review do TikTok sobre o scope de login (user.info.basic) + oferecer login social alternativo ao Google, gated atr\u00e1s de ?devLogin (login p\u00fablico intocado).\n\nARQUITETURA (grounded em .claude/context/tiktok-login-map-2026-07-08.md \u2014 contrato real da API TikTok Login Kit v2 + mapa vivo do repo): OAuth2 authorization-code server-side confidencial (SEM PKCE no web; client_secret na troca de token). TikTok N\u00c3O retorna id_token/OIDC nem email \u2192 open_id \u00e9 a \u00daNICA identidade est\u00e1vel \u21d2 signInWithIdToken imposs\u00edvel. Mint de sess\u00e3o Supabase pelo padr\u00e3o provado no repo admin.generateLink\u2192verifyOtp (gen-user-jwt.ts:25-37). 3 edge fns p\u00fablicas verify_jwt=false auto-protegidas por state HMAC (reusa _shared/oauth-state.ts) + Origin: tiktok-login-init (authorize URL, scope V\u00cdRGULA-separado, signState nonce+intent N\u00c3O userId), tiktok-login-callback (verifyState fail-closed \u2192 token exchange \u2192 open_id \u2192 find-or-create tiktok_identities \u2192 mint sess\u00e3o \u2192 hand-off por c\u00f3digo single-use SEM token em URL), tiktok-login-session/SPA callback (resgate replay-proof \u2192 setSession \u2192 safeReturnTo). Credenciais de SISTEMA env TIKTOK_CLIENT_KEY/SECRET (fallback restrito leg\u00edtimo do API Tenancy Model \u2014 login n\u00e3o tem auth.uid()). NUNCA auto-linkar a conta email existente (anti grafting cross-tenant); email sint\u00e9tico namespaced password-less. Tabelas tiktok_identities(open_id UNIQUE\u2192user_id) + tiktok_login_codes (single-use TTL) RLS default-deny service-role-only.\n\nGATES/RISCOS: app sandbox + App Review REPROVADO \u2192 login s\u00f3 p/ usu\u00e1rio-sandbox registrado at\u00e9 audit passar (teto honesto do demo). redirect_uri deve ser pr\u00e9-registrado no console TikTok em path SEPARADO do publish (TikTok pro\u00edbe query-params na URI) = a\u00e7\u00e3o Sovereign bloqueante. sandbox vs prod client_key diferem. SOP Lei 2 docs/processes/tiktok-login-oauth.md + /security-review na migration + edge fns OBRIGAT\u00d3RIOS antes de deploy (FMEA-011).\n\nPattern Conformance (\u00a79 SDD): yes\u00d75 (Goal Monitoring, Exception Recovery, HITL, Guardrails, Evaluation) \u00b7 deferred\u00d71 (Memory Management \u2192 OTD-TL-011, n\u00f3 observation PII-safe gated LGPD) \u00b7 n-a\u00d715 (padr\u00f5es de execu\u00e7\u00e3o \u2014 sem LLM/orquestra\u00e7\u00e3o/fan-out). Placar honesto de um enabler de auth = Guardrails + Exception-handling + HITL + Monitoring, sink privilegiado sob supervis\u00e3o humana. Traceabilidade validada end-to-end, 0 \u00f3rf\u00e3os.`,\n  metadata: {\n    bok_version: '1.0.0',\n    documents: ['00-index', '01-mrd', '02-brd', '03-prd', '04-frd', '05-sdd', '06-data-model', '07-process-flow', '08-quality-metrics'],\n    document_lines: {\n      '00-index': 134, '01-mrd': 157, '02-brd': 169, '03-prd': 239, '04-frd': 211,\n      '05-sdd': 400, '06-data-model': 240, '07-process-flow': 224, '08-quality-metrics': 179, total_suite: 1953,\n    },\n    phase_completed: 'Phase 7',\n    traceability_validated: true,\n    traceability_orphans: 0,\n    id_space: {\n      MR: 'MR-TL-001..010', BR: 'BR-TL-001..010', PR: 'PR-TL-001..012',\n      FR: 'FR-TL-001..011', NFR: 'NFR-TL-001..012', OTD: 'OTD-TL-001..011',\n      DD: 'DD-TL-001..007', FMEA: 'FM-TL-01..11',\n    },\n    pattern_conformance: { yes: 5, deferred: 1, na: 15 },\n    fmea_high_rpn_count: 5,\n    fmea_high_rpn_items: ['FM-TL-01 (RPN 180)', 'FM-TL-09 (RPN 180)', 'FM-TL-03 (RPN 144)', 'FM-TL-02 (RPN 128)', 'FM-TL-06 (RPN 128)'],\n    new_migrations: 1, // tiktok_identities + tiktok_login_codes (+ disconnect_tiktok_identity RPC)\n    new_edge_functions: 3, // tiktok-login-init, tiktok-login-callback, tiktok-login-session (all verify_jwt=false)\n    integration_surface: 'extends-mcorch', // extends the /auth surface\n    regulatory_profile: 'LGPD',\n    market_segment: 'B2C',\n    monetization: 'internal-enabler-zero-coin',\n    grounding_source: '.claude/context/tiktok-login-map-2026-07-08.md (workflow wf_a5b49460 \u2014 real TikTok Login Kit v2 contract + live repo map)',\n    derives_from_seal: PARENT_SEAL,\n    depends_on_sop: 'docs/processes/tiktok-login-oauth.md (Lei 2 \u2014 a escrever antes do c\u00f3digo)',\n    mandatory_gates: ['SOP Lei 2 tiktok-login-oauth.md', '/security-review migration + edge fns (FMEA-011)'],\n    sovereign_console_actions: ['registrar redirect_uri em path separado do publish', 'adicionar usu\u00e1rio-sandbox alvo', 'provisionar TIKTOK_CLIENT_KEY/SECRET (sandbox) no vault'],\n    motivating_directive: 'Sovereign 2026-07-08: adicionar Login com TikTok em /auth?devLogin p/ satisfazer o App Review do scope de login',\n    tags: ['bok-scribe', 'tiktok-login', 'oauth', 'authentication', 'identity', 'login-kit', 'B2C', 'LGPD', 'sovereign-mesh'],\n  },\n};\n\nconsole.log('\ud83d\udcdd Sealing BoK suite \"tiktok-login\"...');\nconsole.log(`   Project: ${sealNode.project_id} \u00b7 Stability: ${sealNode.stability_score} \u00b7 Revenue: ${sealNode.revenue_impact} (internal enabler)`);\n\nconst { data: node, error } = await supabase\n  .from('mcorch_nodes')\n  .insert(sealNode)\n  .select('id, name, node_type, stability_score, created_at')\n  .single();\n\nif (error) {\n  if (String(error.message || '').match(/duplicate|unique/i)) {\n    console.log(`\u2139\ufe0f  Seal already exists (idempotent exit 0): ${sealNode.name}`);\n    process.exit(0);\n  }\n  console.error('\u274c Seal failed:', error);\n  process.exit(1);\n}\n\nconsole.log(`\\n\u2705 Seal node inserted:`);\nconsole.log(`   ID: ${node.id} \u00b7 Name: ${node.name} \u00b7 Created: ${node.created_at}`);\n\nconst { data: parent } = await supabase\n  .from('mcorch_nodes')\n  .select('id')\n  .eq('name', PARENT_SEAL)\n  .single();\n\nif (parent?.id) {\n  const { data: edge, error: edgeErr } = await supabase\n    .from('mcorch_edges')\n    .insert({ source_id: node.id, target_id: parent.id, relation_type: 'DERIVES_FROM', weight: 1.0 })\n    .select('id')\n    .single();\n  if (edgeErr) {\n    console.log(`\u26a0\ufe0f  DERIVES_FROM edge insert failed (non-fatal): ${edgeErr.message}`);\n  } else {\n    console.log(`\ud83d\udd17 DERIVES_FROM edge: ${edge.id} \u2192 ${PARENT_SEAL} (${parent.id})`);\n  }\n} else {\n  console.log(`\u26a0\ufe0f  Parent seal ${PARENT_SEAL} not found \u2014 edge skipped.`);\n}\n\nconsole.log(`\\n\ud83e\udde0 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).`);\nconsole.log(`   Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '${node.id}';`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/seed-tiktok-login-bok-seal.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:53:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource <(grep -E '^(SUPABASE_URL|SB_SECRET_KEY)=' .env | sed 's/^/export /')\nbun run scripts/seed-tiktok-login-bok-seal.ts",
+  "description": "Executar o seal do BoK tiktok-login na malha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 📝 Sealing BoK suite "tiktok-login"...
+>    Project: tiktok-login · Stability: 0.85 · Revenue: 0 (internal enabler)
+> 
+> ✅ Seal node inserted:
+>    ID: 299b9f36-e979-4dd6-a7b1-7aaa9b63a605 · Name: bok-scribe-seal-tiktok-login-v1 · Created: 2026-07-08T09:53:23.318294+00:00
+> 🔗 DERIVES_FROM edge: 4ba0968a-5753-4c4b-b929-c94e2e52020a → bok-scribe-seal-identity-fabric-v1 (39392a3e-3a38-4805-b3f7-42cd9ccfb12f)
+> 
+> 🧠 Embedding fires automatically via trg_mcorch_embed_on_insert (pg_net async).
+>    Confirm: SELECT embedding IS NOT NULL FROM mcorch_nodes WHERE id = '299b9f36-e979-4dd6-a7b1-7aaa9b63a605';
+> ```
+
+## 🤖 Claude *(09:53:30)*
+
+
+## 🤖 Claude *(09:53:31)*
+
+BoK selado — nó `299b9f36`, DERIVES_FROM `4ba0968a` → identity-fabric. Verificando o embedding e commitando a suíte + seed + mapa:
+
+## 🤖 Claude *(09:53:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource <(grep -E '^(SUPABASE_URL|SB_SECRET_KEY)=' .env | sed 's/^/export /')\nsleep 6\necho \"=== embedding do seal? ===\"\ncurl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.299b9f36-e979-4dd6-a7b1-7aaa9b63a605&select=name,embedding\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; d=json.load(sys.stdin)[0]; print('name:', d['name']); print('embedding:', 'NOT NULL ('+str(len(d['embedding'].split(',')))+' dims)' if d.get('embedding') else 'NULL (ainda async)')\"",
+  "description": "Confirmar embedding do seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embedding do seal? ===
+> name: bok-scribe-seal-tiktok-login-v1
+> embedding: NOT NULL (768 dims)
+> ```
+
+## 🤖 Claude *(09:53:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/tiktok-login/ scripts/seed-tiktok-login-bok-seal.ts .claude/context/tiktok-login-map-2026-07-08.md\ngit commit -q -m \"docs(bok): seal tiktok-login BoK suite 9/9 \u2014 Login com TikTok (gate CLAUDE.md \u00a71 aberto)\n\nSu\u00edte grounded no mapa material (contrato real TikTok Login Kit v2 + mapa vivo do\nrepo, workflow wf_a5b49460). OAuth2 server-side confidencial \u2192 open_id \u2192 mint sess\u00e3o\nSupabase (generateLink\u2192verifyOtp) \u2192 tiktok_identities; 3 edge fns verify_jwt=false\nauto-protegidas por state HMAC; creds de sistema; anti auto-link cross-tenant.\nPattern Conformance \u00a79: yes\u00d75/deferred\u00d71/n-a\u00d715 (honesto p/ enabler de auth).\nTraceabilidade validada 0 \u00f3rf\u00e3os. FMEA 5\u00d7RPN>100. Seal 299b9f36 (768d) DERIVES_FROM\nidentity-fabric. Gates pendentes: SOP Lei 2 + /security-review antes do c\u00f3digo/deploy.\" && git log -1 --format='%h %s' && git push origin main 2>&1 | tail -1",
+  "description": "Commit + push da su\u00edte BoK tiktok-login"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m6:53AM[0m [32mINF[0m 1 commits scanned.
+> [90m6:53AM[0m [32mINF[0m scan completed in 155ms
+> [90m6:53AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.40 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.07 seconds)
+> ✔️ gitleaks-staged (0.39 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> aac3668 docs(bok): seal tiktok-login BoK suite 9/9 — Login com TikTok (gate CLAUDE.md §1 aberto)
+>    6a53f26..aac3668  main -> main
+> ```
+
+## 🤖 Claude *(09:54:12)*
+
+
+## 🤖 Claude *(09:54:14)*
+
+BoK selado (`aac3668`, embedding 768d confirmado) — **o BoK Gate do `tiktok-login` está aberto**. Próximo gate obrigatório antes do código: a **SOP Lei 2**. Vou medir o orçamento de contexto (Lei 3) para calibrar o ritmo e escrever a SOP.
+
+## 🤖 Claude *(09:54:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run .claude/scripts/session-inspect.ts 2>&1 | head -12",
+  "description": "Medir janela de contexto (Lei 3)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🧭 MCORCH Session Inspect
+>    sessão: 0040fea6-03c6-4785-867c-7c9249855765.jsonl  (582 linhas · 267 turnos · 123 tool-calls)
+> 
+>    Janela de contexto (Lei 3):
+>    [████████████████░░░░░░░░░░░░░░░░░░░░░░|░░] 39.4%   (| = teto de seal 95%)
+>    usado 394k / 1000k  ·  livre 606k  ·  custo do seal ~50k
+>    output gasto na sessão: 430k tokens
+> 
+>    📋 Veredito: Cedo p/ selar — probe-first: puxe o próximo pendente em vez de selar
+> 
+>    🔎 Maiores tool-results em contexto (candidatos a poda — Lei 3):
+>         44kB  Read  (linha 44)
+> ```
+
+## 🤖 Claude *(09:54:26)*
+
+
+## 🤖 Claude *(09:54:27)*
+
+39,4% usado, 606k livres — janela folgada, sigo. Escrevendo a **SOP Lei 2** (último gate antes do código), grounded no mapa/FRD/SDD:
+
+## 🤖 Claude *(09:55:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/tiktok-login-oauth.md",
+  "content": "# SOP \u2014 TikTok Login (Login Kit v2) OAuth \u2192 Supabase session\n\n> **Lei 2 (Processo Antecipado).** O processo humano equivalente do \"Entrar com TikTok\" ANTES de qualquer automa\u00e7\u00e3o. Fonte da verdade: BoK `docs/bok/tiktok-login/` (seal `299b9f36`) + mapa `.claude/context/tiktok-login-map-2026-07-08.md`. Gate CLAUDE.md \u00a71.\n>\n> **ORO:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign + `/security-review` independente \u00b7 Owner = Sovereign (sink privilegiado de auth; a\u00e7\u00f5es de console do TikTok; USD 0).\n\n---\n\n## Operator \u2014 quem executa manualmente hoje?\n\nO **Sovereign** no TikTok Developer Portal + o **usu\u00e1rio final** no browser. Hoje, sem esta feature, o \"login social\" existe s\u00f3 via Google (`Auth.tsx` `handleOAuthLogin('google')`). O connect do TikTok que existe (`social-auth-init`/`-callback`) \u00e9 para **publica\u00e7\u00e3o** (pressup\u00f5e usu\u00e1rio j\u00e1 logado) \u2014 N\u00c3O cria usu\u00e1rio nem minta sess\u00e3o. Este SOP cobre o fluxo NOVO de **login/identidade**.\n\n## Pr\u00e9-condi\u00e7\u00f5es (a\u00e7\u00f5es Sovereign no console \u2014 BLOQUEANTES, paraleliz\u00e1veis ao c\u00f3digo)\n\n| # | A\u00e7\u00e3o | Crit\u00e9rio de sucesso material |\n|---|------|------------------------------|\n| P1 | Registrar o **`redirect_uri` do login** no TikTok console \u2014 path **SEPARADO** do publish (TikTok pro\u00edbe query-params na URI registrada, ent\u00e3o n\u00e3o d\u00e1 `?intent=login`). Valor: `https://<edge-host>/functions/v1/tiktok-login-callback` (https absoluto, sem query/fragment). | A URI aparece na lista \"Redirect URI\" do app (\u226410 total, \u2264512 chars). |\n| P2 | Adicionar a **conta TikTok de teste** como *sandbox target-user* (o app est\u00e1 unaudited \u2192 `user.info.basic` s\u00f3 loga usu\u00e1rios-sandbox registrados). | A conta aparece em Sandbox \u2192 Target users. |\n| P3 | Provisionar secrets no vault das edge fns: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` (do ambiente que ser\u00e1 demonstrado \u2014 sandbox `sb\u2026` vs prod diferem). | `npx supabase secrets list` mostra as duas chaves. |\n\n> Sem P1\u2013P3 o fluxo **n\u00e3o completa** \u2014 o c\u00f3digo pode ser deployado e testado at\u00e9 o ponto do redirect, mas o consent/callback falha. Isso \u00e9 o teto honesto (Lei 1).\n\n## Sequence \u2014 em que ordem? (cada passo com crit\u00e9rio material)\n\n| # | Passo | Ator | Crit\u00e9rio de sucesso material |\n|---|-------|------|------------------------------|\n| S1 | Usu\u00e1rio abre `/auth?devLogin` e clica **\"Entrar com TikTok\"** | Usu\u00e1rio | Bot\u00e3o vis\u00edvel S\u00d3 com `?devLogin` (p\u00fablico n\u00e3o v\u00ea); clique chama `handleTikTokLogin` \u2192 invoca `tiktok-login-init`. |\n| S2 | `tiktok-login-init` monta a authorize URL e retorna `{ url }` | Edge fn | `https://www.tiktok.com/v2/auth/authorize/?client_key=\u2026&scope=user.info.basic&response_type=code&redirect_uri=<P1>&state=<HMAC>`; scope **v\u00edrgula-separado**; `state=signState({intent:'login',nonce,return_to,ts})` (nonce, **n\u00e3o** userId). |\n| S3 | Browser redireciona ao TikTok; usu\u00e1rio consente | Usu\u00e1rio + TikTok | TikTok redireciona a `<P1>?code=\u2026&state=\u2026`. |\n| S4 | `tiktok-login-callback` valida state + troca code por token | Edge fn | `verifyState(maxAge 10min)` **fail-closed**; POST `https://open.tiktokapis.com/v2/oauth/token/` form-encoded (`client_key,client_secret,code,grant_type=authorization_code,redirect_uri`) \u2192 resposta com `open_id`. |\n| S5 | Find-or-create identidade + mint sess\u00e3o | Edge fn | `tiktok_identities` lookup por `open_id`; se ausente \u2192 `admin.createUser` (email sint\u00e9tico `tiktok_<open_id>@tiktok-login.mcorch.local`, password-less) + insert. Sess\u00e3o via `admin.generateLink({type:'magiclink'})` \u2192 `verifyOtp({token_hash})` \u2192 `{access_token,refresh_token}`. |\n| S6 | Hand-off SEM token na URL | Edge fn | Gera c\u00f3digo single-use (`tiktok_login_codes`, TTL ~60s, `code_hash`), redireciona a `/auth/tiktok/callback?code=<one_time>`. **Nenhum access/refresh token na URL.** |\n| S7 | SPA resgata o c\u00f3digo \u2192 `setSession` | `TikTokLoginCallback.tsx` | POST do c\u00f3digo a `tiktok-login-session` \u2192 retorna sess\u00e3o UMA vez (invalida/consumed_at) \u2192 `supabase.auth.setSession(...)`. |\n| S8 | Sess\u00e3o ativa \u2192 bounce | `useAuth` + `safeReturnTo` | `onAuthStateChange` dispara SIGNED_IN; `safeReturnTo()` (allowlist) ou `/dashboard`. |\n\n## Verification gates (como o operator confirma cada passo)\n\n- **G1 (regress\u00e3o-zero):** login p\u00fablico (email/senha) e Google intactos \u2014 `?devLogin` ausente N\u00c3O mostra o bot\u00e3o TikTok. Prova: browser em `/auth` (sem param) s\u00f3 mostra email/senha.\n- **G2 (state fail-closed):** `tiktok-login-callback` com `state` forjado/expirado/ausente \u2192 **rejeita** (nunca minta sess\u00e3o). Prova: smoke `smoke-tiktok-login.ts` cen\u00e1rio state-forjado \u2192 4xx, zero linha em `tiktok_identities`.\n- **G3 (no-token-in-URL):** nenhuma URL do fluxo cont\u00e9m `access_token`/`refresh_token`. Prova: inspe\u00e7\u00e3o do redirect S6 (s\u00f3 `?code=<opaco>`).\n- **G4 (replay-proof):** resgatar o c\u00f3digo single-use 2\u00d7 \u2192 2\u00aa vez **410/consumido**. Prova: smoke replay.\n- **G5 (anti-grafting):** login TikTok NUNCA linka a conta email existente \u2014 `open_id` novo = conta nova isolada. Prova: 2 open_ids distintos \u2192 2 `user_id` distintos; nenhum match por email.\n- **G6 (RLS):** `tiktok_identities`/`tiktok_login_codes` default-deny; cliente anon/autenticado **n\u00e3o** l\u00ea os c\u00f3digos. Prova: `/security-review` + SELECT anon \u2192 0 rows.\n- **G7 (security-review):** `/security-review` independente **SAFE** na migration + 3 edge fns ANTES do deploy (FMEA-011). Bloqueante.\n- **G8 (E2E sandbox):** com P1\u2013P3 feitos, a conta-sandbox loga ponta-a-ponta e cai autenticada em `/dashboard`; sess\u00e3o material em `auth.sessions` + linha em `tiktok_identities`. Prova: screen-record + UUID da sess\u00e3o + Vision QA da tela logada.\n\n## Recovery path \u2014 falha no passo N?\n\n- **S2/S3 consent falha (`redirect_uri mismatch`):** P1 n\u00e3o registrado OU host divergente \u2192 registrar a URI EXATA no console (n\u00e3o improvisar path). Re-tentar.\n- **S3 `scope not authorized` / usu\u00e1rio barrado:** conta n\u00e3o \u00e9 sandbox target-user (P2) OU app n\u00e3o audited \u2192 adicionar a conta em Sandbox; para user p\u00fablico, aguardar audit (teto honesto). Toast PT-BR `not_authorized`.\n- **S4 state inv\u00e1lido:** `verifyState` fail-closed \u2192 redireciona a `/auth?tiktok_error=state_expired` \u2192 usu\u00e1rio re-inicia (state fresco). **NUNCA** retry silencioso que aceite state velho.\n- **S4 token exchange falha (client_key/secret errado ou ambiente trocado):** conferir P3 (sandbox vs prod). `/auth?tiktok_error=exchange_failed`; telemetria `infra_health_logs service='tiktok-login' event='error'`.\n- **S5 createUser colide (email sint\u00e9tico):** improv\u00e1vel (namespaced por `open_id` \u00fanico); se colidir, \u00e9 sinal de bug de chave \u2014 abortar, N\u00c3O reusar conta alheia (G5). Investigar `open_id`.\n- **S7 c\u00f3digo expirado/consumido:** `/auth?tiktok_error=expired` \u2192 re-login. C\u00f3digos expiram por TTL + `consumed_at`.\n- **Rollback total:** remover o bot\u00e3o de `Auth.tsx` (feature some da UI) \u2014 as edge fns/migration ficam inertes (nenhum caller). Zero impacto no login existente.\n\n## Success signal \u2014 sinal materialmente observ\u00e1vel do flow completo\n\nA conta TikTok-sandbox clica \"Entrar com TikTok\" em `/auth?devLogin`, consente no TikTok, e **cai autenticada em `/dashboard`** com: (a) linha nova em `tiktok_identities(open_id\u2192user_id)`; (b) sess\u00e3o v\u00e1lida em `auth.sessions`; (c) `infra_health_logs service='tiktok-login' event='success'`; (d) Vision QA APROVADO da tela logada; (e) nenhum token em URL em nenhum passo. Para o **App Review**: screen-record desse fluxo ponta-a-ponta prova o scope `user.info.basic` funcionando.\n\n## Anti-patterns proibidos\n\n- \u274c Reusar `handleOAuthLogin('google'|'apple')` \u2014 TikTok n\u00e3o \u00e9 provider nativo Supabase.\n- \u274c `signInWithIdToken` \u2014 TikTok n\u00e3o retorna `id_token`/OIDC.\n- \u274c Token em query string / hash da URL de redirect.\n- \u274c Auto-link de login TikTok a conta email existente (grafting cross-tenant).\n- \u274c Scope espa\u00e7o-separado (o consent do TikTok falha silencioso \u2014 usar v\u00edrgula).\n- \u274c `redirect_uri` com query-param, ou o MESMO path do publish.\n- \u274c `deduct_mco_coins` no fluxo (login \u00e9 zero-coin por invariante).\n- \u274c Deploy antes de `/security-review` SAFE (G7).\n\n## Refer\u00eancias\n- BoK: `docs/bok/tiktok-login/` (FR-TL / OTD-TL / FM-TL / DD-TL).\n- Mapa material: `.claude/context/tiktok-login-map-2026-07-08.md`.\n- Reuso: `supabase/functions/_shared/oauth-state.ts`, `src/lib/sso-cookie.ts`, `src/hooks/useAuth.ts`, `scripts/qa/gen-user-jwt.ts` (padr\u00e3o generateLink\u2192verifyOtp), precedente `social-auth-init`/`-callback`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/tiktok-login-oauth.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:55:39)*
+
+
+## 🤖 Claude *(09:55:40)*
+
+SOP escrita. Gates satisfeitos (BoK + SOP). Vou commitar a SOP e ler os arquivos de reuso com precisão antes de codar (Lei 1 — casar os idiomas existentes, não inventar).
+
+## 🤖 Claude *(09:55:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/processes/tiktok-login-oauth.md\ngit commit -q -m \"docs(process): SOP Lei 2 tiktok-login-oauth \u2014 Operator/Sequence/8 gates/Recovery/Success antes do c\u00f3digo\" && git log -1 --format='%h %s'",
+  "description": "Commit da SOP Lei 2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m6:55AM[0m [32mINF[0m 1 commits scanned.
+> [90m6:55AM[0m [32mINF[0m scan completed in 10.4ms
+> [90m6:55AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> cf7166e docs(process): SOP Lei 2 tiktok-login-oauth — Operator/Sequence/8 gates/Recovery/Success antes do código
+> ```
+
+## 🤖 Claude *(09:55:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/_shared/oauth-state.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Signed OAuth state (HMAC-SHA256) — closes the cross-tenant account-linking / CSRF vector in social-auth.
+> 2	//
+> 3	// The OAuth callback (social-auth-callback) is hit by the PROVIDER's browser redirect, which carries NO user JWT —
+> 4	// the `state` param is the ONLY proof of which user initiated the connect. Previously social-auth-init emitted an
+> 5	// UNSIGNED base64 state and the callback trusted the `userId` inside it verbatim, writing social_accounts for
+> 6	// whatever user_id the (forgeable) state claimed → an attacker could link their own OAuth account to a victim's
+> 7	// tenant (or graft a victim's tokens onto their own row). Signing the state with a server-only key (SB_SECRET_KEY)
+> 8	// means ONLY social-auth-init (which authenticated the user via JWT before signing) can mint a state the callback
+> 9	// will accept. Format: "<payloadB64>.<sigB64url>". payloadB64 keeps standard base64 (+/=) — URL-encoded on the wire
+> 10	// and round-tripped intact by the provider (same as the previous unsigned scheme); the sig is URL-safe base64url.
+> 11	
+> 12	const enc = new TextEncoder();
+> 13	
+> 14	function b64url(bytes: Uint8Array): string {
+> 15	  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+> 16	}
+> 17	
+> 18	async function hmacSha256(key: string, msg: string): Promise<Uint8Array> {
+> 19	  const cryptoKey = await crypto.subtle.importKey(
+> 20	    "raw", enc.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+> 21	  );
+> 22	  return new Uint8Array(await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(msg)));
+> 23	}
+> 24	
+> 25	// Constant-time string compare (avoids leaking the valid signature via timing).
+> 26	export function timingSafeEqual(a: string, b: string): boolean {
+> 27	  if (a.length !== b.length) return false;
+> 28	  let r = 0;
+> 29	  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+> 30	  return r === 0;
+> 31	}
+> 32	
+> 33	// Sign a state payload → "<payloadB64>.<sigB64url>".
+> 34	export async function signState(payload: Record<string, unknown>, key: string): Promise<string> {
+> 35	  const payloadB64 = btoa(JSON.stringify(payload));
+> 36	  const sig = b64url(await hmacSha256(key, payloadB64));
+> 37	  return `${payloadB64}.${sig}`;
+> 38	}
+> 39	
+> 40	// Verify "<payloadB64>.<sig>" → parsed payload, or null if missing/malformed/tampered/expired. Fail-closed by design.
+> 41	// When opts.maxAgeMs is given, the signed `ts` becomes load-bearing: a missing/expired/future ts → reject (bounds
+> 42	// replay of a leaked-but-valid state to that window).
+> 43	export async function verifyState<T = Record<string, unknown>>(
+> 44	  state: string, key: string, opts?: { maxAgeMs?: number },
+> 45	): Promise<T | null> {
+> 46	  if (typeof state !== "string") return null;
+> 47	  const dot = state.lastIndexOf(".");
+> 48	  if (dot <= 0 || dot === state.length - 1) return null;   // need both a non-empty payload and a signature
+> 49	  const payloadB64 = state.slice(0, dot);
+> 50	  const sig = state.slice(dot + 1);
+> 51	  const expected = b64url(await hmacSha256(key, payloadB64));
+> 52	  if (!timingSafeEqual(sig, expected)) return null;        // tamper / wrong key → reject
+> 53	  let parsed: unknown;
+> 54	  try { parsed = JSON.parse(atob(payloadB64)); } catch { return null; }
+> 55	  if (opts?.maxAgeMs != null) {
+> 56	    const ts = (parsed as { ts?: unknown }).ts;
+> 57	    // fail-closed: ts must be a number, not older than maxAgeMs, and not absurdly in the future (60s skew).
+> 58	    if (typeof ts !== "number" || Date.now() - ts > opts.maxAgeMs || ts - Date.now() > 60_000) return null;
+> 59	  }
+> 60	  return parsed as T;
+> 61	}
+> 62	
+> 63	// HMAC-SHA256 as lowercase hex (for provider webhook signatures, e.g. Meta's `sha256=<hex>`).
+> 64	export async function hmacSha256Hex(key: string, msg: string): Promise<string> {
+> 65	  const bytes = await hmacSha256(key, msg);
+> 66	  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+> 67	}
+> 68	
+> ```
+
+## 🤖 Claude *(09:55:43)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	import { verifyState } from "../_shared/oauth-state.ts";
+> 3	import {
+> 4	  resolveSocialAppCreds,
+> 5	  SocialAppConfigError,
+> 6	  socialAppConfigErrorResponse,
+> 7	} from "../_shared/social-app-config.ts";
+> 8	
+> 9	Deno.serve(async (req) => {
+> 10	  const url = new URL(req.url);
+> 11	
+> 12	  let code: string | null;
+> 13	  let stateStr: string | null;
+> 14	  let error: string | null;
+> 15	
+> 16	  if (req.method === "GET") {
+> 17	    code = url.searchParams.get("code");
+> 18	    stateStr = url.searchParams.get("state");
+> 19	    error = url.searchParams.get("error");
+> 20	  } else if (req.method === "POST") {
+> 21	    const body = await req.json();
+> 22	    code = body.code;
+> 23	    stateStr = body.state;
+> 24	    error = null;
+> 25	  } else if (req.method === "OPTIONS") {
+> 26	    return new Response("ok", {
+> 27	      headers: {
+> 28	        "Access-Control-Allow-Origin": "*",
+> 29	        "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 30	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token",
+> 31	      },
+> 32	    });
+> 33	  } else {
+> 34	    return new Response("Method not allowed", { status: 405 });
+> 35	  }
+> 36	
+> 37	  if (error) {
+> 38	    return redirectWithError(error);
+> 39	  }
+> 40	
+> 41	  if (!code || !stateStr) {
+> 42	    return redirectWithError("Missing code or state");
+> 43	  }
+> 44	
+> 45	  try {
+> 46	    // SECURITY: the callback carries no user JWT — the HMAC signature is the ONLY proof that this userId actually
+> 47	    // initiated the connect. Verify it before trusting any field (fail-closed): a forged/tampered state → reject,
+> 48	    // so social_accounts can never be written for an attacker-chosen tenant (cross-tenant account-linking).
+> 49	    const stateKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 50	    // 10-min replay window — the `ts` signed by social-auth-init is enforced fail-closed (bounds leaked-state replay).
+> 51	    const state = await verifyState<{ userId: string; platform: string; redirect_uri: string }>(
+> 52	      stateStr, stateKey, { maxAgeMs: 10 * 60 * 1000 },
+> 53	    );
+> 54	    if (!state || typeof state.userId !== "string" || typeof state.platform !== "string") {
+> 55	      console.error("[social-auth-callback] invalid or tampered state — rejecting");
+> 56	      return redirectWithError("Invalid state");
+> 57	    }
+> 58	    const { userId, platform, redirect_uri } = state;
+> 59	
+> 60	    const supabase = createClient(
+> 61	      Deno.env.get("SUPABASE_URL")!,
+> 62	      (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!
+> 63	    );
+> 64	
+> 65	    const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/social-auth-callback`;
+> 66	
+> 67	    let accessToken: string;
+> 68	    let refreshToken: string | null = null;
+> 69	    let expiresIn: number | null = null;
+> 70	    let platformUserId: string | null = null;
+> 71	    let platformUsername: string | null = null;
+> 72	    let scopes: string[] = [];
+> 73	    // Per-platform extra fields stashed in social_accounts.metadata (e.g. YouTube channel_id,
+> 74	    // Pinterest refresh_token_expires_at). Empty for platforms that don't need it.
+> 75	    let metadata: Record<string, unknown> = {};
+> 76	
+> 77	    if (platform === "linkedin") {
+> 78	      const clientId = Deno.env.get("LINKEDIN_CLIENT_ID")!;
+> 79	      const clientSecret = Deno.env.get("LINKEDIN_CLIENT_SECRET")!;
+> 80	
+> 81	      const tokenRes = await fetch("https://www.linkedin.com/oauth/v2/accessToken", {
+> 82	        method: "POST",
+> 83	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+> 84	        body: new URLSearchParams({
+> 85	          grant_type: "authorization_code",
+> 86	          code,
+> 87	          redirect_uri: callbackUrl,
+> 88	          client_id: clientId,
+> 89	          client_secret: clientSecret,
+> 90	        }),
+> 91	      });
+> 92	      const tokenData = await tokenRes.json();
+> 93	      if (!tokenRes.ok) throw new Error(tokenData.error_description || "LinkedIn token exchange failed");
+> 94	
+> 95	      accessToken = tokenData.access_token;
+> 96	      refreshToken = tokenData.refresh_token || null;
+> 97	      expiresIn = tokenData.expires_in;
+> 98	      scopes = (tokenData.scope || "").split(" ");
+> 99	
+> 100	      const profileRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+> 101	        headers: { Authorization: `Bearer ${accessToken}` },
+> 102	      });
+> 103	      const profile = await profileRes.json();
+> 104	      platformUserId = profile.sub;
+> 105	      platformUsername = profile.name || profile.email;
+> 106	
+> 107	    } else if (platform === "instagram" || platform === "facebook") {
+> 108	      const appId = Deno.env.get("INSTAGRAM_APP_ID")!;
+> 109	      const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET")!;
+> 110	
+> 111	      // Instagram Login — short-lived token
+> 112	      const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
+> 113	        method: "POST",
+> 114	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+> 115	        body: new URLSearchParams({
+> 116	          client_id: appId,
+> 117	          client_secret: appSecret,
+> 118	          grant_type: "authorization_code",
+> 119	          redirect_uri: callbackUrl,
+> 120	          code,
+> 121	        }),
+> 122	      });
+> 123	      const tokenData = await tokenRes.json();
+> 124	      if (!tokenRes.ok || tokenData.error_type) throw new Error(tokenData.error_message || "Instagram token exchange failed");
+> 125	
+> 126	      const shortToken = tokenData.access_token;
+> 127	      platformUserId = String(tokenData.user_id);
+> 128	
+> 129	      // Exchange for long-lived token (60 days)
+> 130	      const longRes = await fetch(
+> 131	        `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${appSecret}&access_token=${shortToken}`
+> 132	      );
+> 133	      const longData = await longRes.json();
+> 134	      accessToken = longData.access_token || shortToken;
+> 135	      expiresIn = longData.expires_in || null;
+> 136	      scopes = ["instagram_business_basic", "instagram_business_content_publish"];
+> 137	
+> 138	      // Fetch username
+> 139	      const meRes = await fetch(`https://graph.instagram.com/v21.0/me?fields=username,name&access_token=${accessToken}`);
+> 140	      const me = await meRes.json();
+> 141	      platformUsername = me.username || me.name || platformUserId;
+> 142	
+> 143	    } else if (platform === "twitter") {
+> 144	      const clientId = Deno.env.get("TWITTER_CLIENT_ID")!;
+> 145	      const clientSecret = Deno.env.get("TWITTER_CLIENT_SECRET")!;
+> 146	
+> 147	      // PKCE code verifier = the state used as plain challenge
+> 148	      const codeVerifier = stateStr.slice(0, 43);
+> 149	
+> 150	      const tokenRes = await fetch("https://api.x.com/2/oauth2/token", {
+> 151	        method: "POST",
+> 152	        headers: {
+> 153	          "Content-Type": "application/x-www-form-urlencoded",
+> 154	          Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+> 155	        },
+> 156	        body: new URLSearchParams({
+> 157	          grant_type: "authorization_code",
+> 158	          code,
+> 159	          redirect_uri: callbackUrl,
+> 160	          code_verifier: codeVerifier,
+> 161	        }),
+> 162	      });
+> 163	      const tokenData = await tokenRes.json();
+> 164	      if (!tokenRes.ok) throw new Error(tokenData.error_description || tokenData.detail || "Twitter token exchange failed");
+> 165	
+> 166	      accessToken = tokenData.access_token;
+> 167	      refreshToken = tokenData.refresh_token || null;
+> 168	      expiresIn = tokenData.expires_in;
+> 169	      scopes = (tokenData.scope || "").split(" ");
+> 170	
+> 171	      // Fetch user info
+> 172	      const meRes = await fetch("https://api.x.com/2/users/me", {
+> 173	        headers: { Authorization: `Bearer ${accessToken}` },
+> 174	      });
+> 175	      const meData = await meRes.json();
+> 176	      platformUserId = meData.data?.id;
+> 177	      platformUsername = meData.data?.username;
+> 178	
+> 179	    } else if (platform === "tiktok") {
+> 180	      // App credentials resolve per-user → env fallback → hard-fail (FR-PE-005/009).
+> 181	      const creds = await resolveSocialAppCreds(supabase, userId, "tiktok");
+> 182	
+> 183	      // Exchange code → token (form-encoded; client_key/client_secret per TikTok OAuth).
+> 184	      const tokenRes = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
+> 185	        method: "POST",
+> 186	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+> 187	        body: new URLSearchParams({
+> 188	          client_key: creds.clientId,
+> 189	          client_secret: creds.clientSecret,
+> 190	          code,
+> 191	          grant_type: "authorization_code",
+> 192	          redirect_uri: callbackUrl,
+> 193	        }),
+> 194	      });
+> 195	      const tokenData = await tokenRes.json();
+> 196	      if (!tokenRes.ok || tokenData.error) {
+> 197	        throw new Error(tokenData.error_description || tokenData.error || "TikTok token exchange failed");
+> 198	      }
+> 199	
+> 200	      accessToken = tokenData.access_token;
+> 201	      refreshToken = tokenData.refresh_token || null;
+> 202	      expiresIn = tokenData.expires_in ?? 86400; // 24h
+> 203	      platformUserId = tokenData.open_id || null;
+> 204	      platformUsername = tokenData.open_id || null; // TikTok has no handle in the token resp
+> 205	      scopes = (tokenData.scope || "").split(/[\s,]+/).filter(Boolean);
+> 206	
+> 207	    } else if (platform === "youtube") {
+> 208	      // App credentials resolve per-user → env fallback → hard-fail (FR-PE-005/009).
+> 209	      const creds = await resolveSocialAppCreds(supabase, userId, "youtube");
+> 210	
+> 211	      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+> 212	        method: "POST",
+> 213	        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+> 214	        body: new URLSearchParams({
+> 215	          client_id: creds.clientId,
+> 216	          client_secret: creds.clientSecret,
+> 217	          code,
+> 218	          grant_type: "authorization_code",
+> 219	          redirect_uri: callbackUrl,
+> 220	        }),
+> 221	      });
+> 222	      const tokenData = await tokenRes.json();
+> 223	      if (!tokenRes.ok || tokenData.error) {
+> 224	        throw new Error(tokenData.error_description || tokenData.error || "YouTube token exchange failed");
+> 225	      }
+> 226	
+> 227	      accessToken = tokenData.access_token;
+> 228	      // CRITICAL: Google returns refresh_token ONLY on first auth (access_type=offline + prompt=consent).
+> 229	      // If absent, leave it null — the upsert/refresh path must never overwrite a good token with empty.
+> 230	      refreshToken = tokenData.refresh_token || null;
+> 231	      expiresIn = tokenData.expires_in ?? 3600; // ~1h
+> 232	      scopes = (tokenData.scope || "").split(/[\s,]+/).filter(Boolean);
+> 233	
+> 234	      // Resolve the Brand channel: id → platform_user_id, title → platform_username.
+> 235	      const channelsRes = await fetch(
+> 236	        "https://www.googleapis.com/youtube/v3/channels?part=id,snippet&mine=true",
+> 237	        { headers: { Authorization: `Bearer ${accessToken}` } },
+> 238	      );
+> 239	      const channelsData = await channelsRes.json();
+> 240	      const channel = channelsData.items?.[0];
+> 241	      platformUserId = channel?.id || null;
+> 242	      platformUsername = channel?.snippet?.title || platformUserId;
+> 243	      if (channel?.id) metadata = { ...metadata, channel_id: channel.id };
+> 244	
+> 245	    } else if (platform === "pinterest") {
+> 246	      // App credentials resolve per-user → env fallback → hard-fail (FR-PE-005/009).
+> 247	      const creds = await resolveSocialAppCreds(supabase, userId, "pinterest");
+> 248	
+> 249	      // Pinterest v5: client creds go in HTTP Basic auth, not the form body.
+> 250	      const tokenRes = await fetch("https://api.pinterest.com/v5/oauth/token", {
+> 251	        method: "POST",
+> 252	        headers: {
+> 253	          "Content-Type": "application/x-www-form-urlencoded",
+> 254	          Authorization: `Basic ${btoa(`${creds.clientId}:${creds.clientSecret}`)}`,
+> 255	        },
+> 256	        body: new URLSearchParams({
+> 257	          grant_type: "authorization_code",
+> 258	          code,
+> 259	          redirect_uri: callbackUrl,
+> 260	        }),
+> 261	      });
+> 262	      const tokenData = await tokenRes.json();
+> 263	      if (!tokenRes.ok || tokenData.error) {
+> 264	        throw new Error(tokenData.error_description || tokenData.message || tokenData.error || "Pinterest token exchange failed");
+> 265	      }
+> 266	
+> 267	      accessToken = tokenData.access_token;
+> 268	      refreshToken = tokenData.refresh_token || null; // rotating
+> 269	      expiresIn = tokenData.expires_in ?? 2592000; // 30d
+> 270	      scopes = (tokenData.scope || "").split(/[\s,]+/).filter(Boolean);
+> 271	      // Persist the refresh-token expiry so the refresh path can keep the 60d rotation chain alive.
+> 272	      if (tokenData.refresh_token_expires_at) {
+> 273	        metadata = { ...metadata, refresh_token_expires_at: tokenData.refresh_token_expires_at };
+> 274	      }
+> 275	
+> 276	      // Resolve identity → platform_username (no stable numeric id in v5 user_account).
+> 277	      const meRes = await fetch("https://api.pinterest.com/v5/user_account", {
+> 278	        headers: { Authorization: `Bearer ${accessToken}` },
+> 279	      });
+> 280	      const me = await meRes.json();
+> 281	      platformUsername = me.username || null;
+> 282	      platformUserId = me.username || null;
+> 283	
+> 284	    } else {
+> 285	      throw new Error(`Unsupported platform: ${platform}`);
+> 286	    }
+> 287	
+> 288	    const expiresAt = expiresIn
+> 289	      ? new Date(Date.now() + expiresIn * 1000).toISOString()
+> 290	      : null;
+> 291	
+> 292	    // Upsert social account
+> 293	    const { error: dbError } = await supabase
+> 294	      .from("social_accounts")
+> 295	      .upsert(
+> 296	        {
+> 297	          user_id: userId,
+> 298	          platform,
+> 299	          access_token: accessToken,
+> 300	          refresh_token: refreshToken,
+> 301	          token_expires_at: expiresAt,
+> 302	          platform_user_id: platformUserId,
+> 303	          platform_username: platformUsername,
+> 304	          scopes,
+> 305	          metadata,
+> 306	          is_active: true,
+> 307	        },
+> 308	        { onConflict: "user_id,platform" }
+> 309	      );
+> 310	
+> 311	    if (dbError) {
+> 312	      console.error("DB upsert error:", dbError);
+> 313	      await supabase.from("social_accounts").insert({
+> 314	        user_id: userId,
+> 315	        platform,
+> 316	        access_token: accessToken,
+> 317	        refresh_token: refreshToken,
+> 318	        token_expires_at: expiresAt,
+> 319	        platform_user_id: platformUserId,
+> 320	        platform_username: platformUsername,
+> 321	        scopes,
+> 322	        metadata,
+> 323	        is_active: true,
+> 324	      });
+> 325	    }
+> 326	
+> 327	    // Materiality (Lei 1) — best-effort telemetry: a connect that persisted tokens is the success signal.
+> 328	    supabase.from("infra_health_logs")
+> 329	      .insert({ service: `social-auth-${platform}`, status: dbError ? "degraded" : "healthy" })
+> 330	      .then(() => {}, () => {});
+> 331	
+> 332	    // Redirect back to frontend
+> 333	    if (req.method === "GET") {
+> 334	      const frontendUrl = redirect_uri || "https://login.mcorch.com";
+> 335	      return new Response(null, {
+> 336	        status: 302,
+> 337	        headers: { Location: `${frontendUrl}?platform=${platform}&success=true` },
+> 338	      });
+> 339	    }
+> 340	
+> 341	    return new Response(JSON.stringify({ success: true, platform }), {
+> 342	      headers: {
+> 343	        "Access-Control-Allow-Origin": "*",
+> 344	        "Content-Type": "application/json",
+> 345	      },
+> 346	    });
+> 347	  } catch (err) {
+> 348	    console.error("social-auth-callback error:", err);
+> 349	
+> 350	    // Best-effort error telemetry (Lei 1) — fail-open, never block the response on logging.
+> 351	    try {
+> 352	      const admin = createClient(
+> 353	        Deno.env.get("SUPABASE_URL")!,
+> 354	        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 355	      );
+> 356	      admin.from("infra_health_logs")
+> 357	        .insert({ service: "social-auth-callback", status: "degraded" })
+> 358	        .then(() => {}, () => {});
+> 359	    } catch (_) { /* ignore */ }
+> 360	
+> 361	    // Fail-closed app-credential resolution (FR-PE-005/009): never fall through to a shared/default key.
+> 362	    // For browser GET callbacks render the actionable PT-BR message; for POST return the structured 402.
+> 363	    if (err instanceof SocialAppConfigError) {
+> 364	      if (req.method === "GET") {
+> 365	        return redirectWithError(err.body.action);
+> 366	      }
+> 367	      const corsHeaders = { "Access-Control-Allow-Origin": "*" };
+> 368	      return socialAppConfigErrorResponse(err, corsHeaders)!;
+> 369	    }
+> 370	
+> 371	    if (req.method === "GET") {
+> 372	      return redirectWithError(err instanceof Error ? err.message : String(err));
+> 373	    }
+> 374	    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
+> 375	      status: 500,
+> 376	      headers: {
+> 377	        "Access-Control-Allow-Origin": "*",
+> 378	        "Content-Type": "application/json",
+> 379	      },
+> 380	    });
+> 381	  }
+> 382	});
+> 383	
+> 384	function redirectWithError(msg: string) {
+> 385	  const safe = msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+> 386	  return new Response(`<html><body><p>Error: ${safe}</p><script>setTimeout(()=>window.close(),3000)</script></body></html>`, {
+> 387	    status: 200,
+> 388	    headers: { "Content-Type": "text/html" },
+> 389	  });
+> 390	}
+> 391	
+> ```
+
+## 🤖 Claude *(09:55:52)*
+
+
+## 🤖 Claude *(09:55:54)*
+
+Padrões confirmados (state HMAC + token exchange TikTok). Preciso do `social-auth-init` (como monta a authorize URL do TikTok), do `gen-user-jwt.ts` (mint de sessão) e do `Auth.tsx` + `config.toml`. Lendo em paralelo:
+
+## 🤖 Claude *(09:55:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 2	import { signState } from "../_shared/oauth-state.ts";
+> 3	import {
+> 4	  resolveSocialAppCreds,
+> 5	  SocialAppConfigError,
+> 6	  socialAppConfigErrorResponse,
+> 7	} from "../_shared/social-app-config.ts";
+> 8	
+> 9	const corsHeaders = {
+> 10	  "Access-Control-Allow-Origin": "*",
+> 11	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 12	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 13	};
+> 14	
+> 15	const LINKEDIN_AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization";
+> 16	const INSTAGRAM_AUTH_URL = "https://api.instagram.com/oauth/authorize";
+> 17	const TWITTER_AUTH_URL = "https://twitter.com/i/oauth2/authorize";
+> 18	const TIKTOK_AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
+> 19	const YOUTUBE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+> 20	const PINTEREST_AUTH_URL = "https://www.pinterest.com/oauth/";
+> 21	
+> 22	Deno.serve(async (req) => {
+> 23	  if (req.method === "OPTIONS") {
+> 24	    return new Response("ok", { headers: corsHeaders });
+> 25	  }
+> 26	
+> 27	  try {
+> 28	    const authHeader = req.headers.get("Authorization");
+> 29	    if (!authHeader?.startsWith("Bearer ")) {
+> 30	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 31	        status: 401,
+> 32	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 33	      });
+> 34	    }
+> 35	
+> 36	    const supabase = createClient(
+> 37	      Deno.env.get("SUPABASE_URL")!,
+> 38	      (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 39	      { global: { headers: { Authorization: authHeader } } }
+> 40	    );
+> 41	
+> 42	    const { data: { user }, error: userError } = await supabase.auth.getUser();
+> 43	    if (userError || !user) {
+> 44	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 45	        status: 401,
+> 46	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 47	      });
+> 48	    }
+> 49	
+> 50	    const userId = user.id;
+> 51	    const { platform, redirect_uri } = await req.json();
+> 52	
+> 53	    if (!platform || !redirect_uri) {
+> 54	      return new Response(JSON.stringify({ error: "platform and redirect_uri required" }), {
+> 55	        status: 400,
+> 56	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 57	      });
+> 58	    }
+> 59	
+> 60	    const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/social-auth-callback`;
+> 61	    // Signed state (HMAC-SHA256, SB_SECRET_KEY) — the callback has no user JWT, so the signature is the only proof
+> 62	    // that THIS userId actually initiated the connect (closes cross-tenant account-linking). `ts` bounds replay.
+> 63	    const stateKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 64	    const state = await signState({ userId, platform, redirect_uri, ts: Date.now() }, stateKey);
+> 65	
+> 66	    let authUrl: string;
+> 67	
+> 68	    if (platform === "linkedin") {
+> 69	      const clientId = Deno.env.get("LINKEDIN_CLIENT_ID");
+> 70	      if (!clientId) {
+> 71	        return new Response(JSON.stringify({ error: "LinkedIn not configured" }), {
+> 72	          status: 500,
+> 73	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 74	        });
+> 75	      }
+> 76	      const scopes = "openid profile email w_member_social";
+> 77	      authUrl = `${LINKEDIN_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scopes)}`;
+> 78	
+> 79	    } else if (platform === "instagram" || platform === "facebook") {
+> 80	      const appId = Deno.env.get("INSTAGRAM_APP_ID");
+> 81	      if (!appId) {
+> 82	        return new Response(JSON.stringify({ error: "Instagram/Facebook not configured" }), {
+> 83	          status: 500,
+> 84	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 85	        });
+> 86	      }
+> 87	      const scopes = "instagram_business_basic,instagram_business_content_publish,instagram_business_manage_comments,instagram_business_manage_messages";
+> 88	      authUrl = `${INSTAGRAM_AUTH_URL}?client_id=${appId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scopes)}&response_type=code`;
+> 89	
+> 90	    } else if (platform === "twitter") {
+> 91	      const clientId = Deno.env.get("TWITTER_CLIENT_ID");
+> 92	      if (!clientId) {
+> 93	        return new Response(JSON.stringify({ error: "Twitter/X not configured" }), {
+> 94	          status: 500,
+> 95	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 96	        });
+> 97	      }
+> 98	      // Twitter OAuth 2.0 with PKCE
+> 99	      const codeChallenge = state.slice(0, 43); // simple challenge for demo; production should use S256
+> 100	      const scopes = "tweet.read tweet.write users.read offline.access";
+> 101	      authUrl = `${TWITTER_AUTH_URL}?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(state)}&scope=${encodeURIComponent(scopes)}&code_challenge=${codeChallenge}&code_challenge_method=plain`;
+> 102	
+> 103	    } else if (platform === "tiktok") {
+> 104	      // App creds resolve per-user → env fallback → hard-fail (API Tenancy Model · FR-PE-006).
+> 105	      // Service-role client reads the decrypted_social_app_config view (mirrors social-auth-callback).
+> 106	      const serviceClient = createClient(
+> 107	        Deno.env.get("SUPABASE_URL")!,
+> 108	        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 109	      );
+> 110	      let creds;
+> 111	      try {
+> 112	        creds = await resolveSocialAppCreds(serviceClient, userId, "tiktok");
+> 113	      } catch (err) {
+> 114	        const failClosed = socialAppConfigErrorResponse(err, corsHeaders);
+> 115	        if (failClosed) return failClosed;
+> 116	        throw err;
+> 117	      }
+> 118	      // Scope MUST be COMMA-separated — a space silently fails the consent (doc 10 §TikTok).
+> 119	      // video.publish = Direct Post (autonomous); NEVER video.upload (draft-to-inbox needs a human).
+> 120	      const scopes = "video.publish,user.info.basic";
+> 121	      authUrl = `${TIKTOK_AUTH_URL}?client_key=${encodeURIComponent(creds.clientId)}&response_type=code&redirect_uri=${encodeURIComponent(callbackUrl)}&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
+> 122	
+> 123	    } else if (platform === "youtube") {
+> 124	      // App creds resolve per-user → env fallback → hard-fail (API Tenancy Model · FR-PE-007).
+> 125	      const serviceClient = createClient(
+> 126	        Deno.env.get("SUPABASE_URL")!,
+> 127	        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 128	      );
+> 129	      let creds;
+> 130	      try {
+> 131	        creds = await resolveSocialAppCreds(serviceClient, userId, "youtube");
+> 132	      } catch (err) {
+> 133	        const failClosed = socialAppConfigErrorResponse(err, corsHeaders);
+> 134	        if (failClosed) return failClosed;
+> 135	        throw err;
+> 136	      }
+> 137	      // access_type=offline + prompt=consent are CRITICAL: without prompt=consent a re-auth
+> 138	      // returns a NULL refresh_token silently (doc 10 §YouTube).
+> 139	      const scopes = "https://www.googleapis.com/auth/youtube.upload";
+> 140	      authUrl = `${YOUTUBE_AUTH_URL}?client_id=${encodeURIComponent(creds.clientId)}&redirect_uri=${encodeURIComponent(callbackUrl)}&response_type=code&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
+> 141	
+> 142	    } else if (platform === "pinterest") {
+> 143	      // App creds resolve per-user → env fallback → hard-fail (API Tenancy Model · FR-PE-008).
+> 144	      const serviceClient = createClient(
+> 145	        Deno.env.get("SUPABASE_URL")!,
+> 146	        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 147	      );
+> 148	      let creds;
+> 149	      try {
+> 150	        creds = await resolveSocialAppCreds(serviceClient, userId, "pinterest");
+> 151	      } catch (err) {
+> 152	        const failClosed = socialAppConfigErrorResponse(err, corsHeaders);
+> 153	        if (failClosed) return failClosed;
+> 154	        throw err;
+> 155	      }
+> 156	      // Plan the FULL scope set up-front — adding a scope later forces a full re-authorization
+> 157	      // (doc 10 §Pinterest). redirect_uri must match EXACTLY (no wildcard).
+> 158	      const scopes = "boards:read,boards:write,pins:read,pins:write,user_accounts:read";
+> 159	      authUrl = `${PINTEREST_AUTH_URL}?client_id=${encodeURIComponent(creds.clientId)}&redirect_uri=${encodeURIComponent(callbackUrl)}&response_type=code&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
+> 160	
+> 161	    } else {
+> 162	      return new Response(JSON.stringify({ error: `Platform ${platform} not yet supported for OAuth` }), {
+> 163	        status: 400,
+> 164	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 165	      });
+> 166	    }
+> 167	
+> 168	    return new Response(JSON.stringify({ url: authUrl }), {
+> 169	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 170	    });
+> 171	  } catch (err) {
+> 172	    console.error("social-auth-init error:", err);
+> 173	    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }), {
+> 174	      status: 500,
+> 175	      headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 176	    });
+> 177	  }
+> 178	});
+> 179	
+> ```
+
+## 🤖 Claude *(09:55:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gen-user-jwt.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+> 4	 * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+> 5	 * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+> 6	 *
+> 7	 * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+> 8	 *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+> 9	 *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+> 10	 */
+> 11	import { createClient } from '@supabase/supabase-js';
+> 12	
+> 13	const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> 14	const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 15	const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> 16	const email = process.argv[2];
+> 17	if (!URL || !SVC || !ANON || !email) {
+> 18	  console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+> 19	  process.exit(1);
+> 20	}
+> 21	
+> 22	const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> 23	const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 24	
+> 25	const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> 26	if (error || !data.properties?.hashed_token) {
+> 27	  console.error('generateLink error:', error?.message ?? 'no hashed_token');
+> 28	  process.exit(1);
+> 29	}
+> 30	const tokenHash = data.properties.hashed_token;
+> 31	
+> 32	let accessToken: string | null = null;
+> 33	for (const type of ['magiclink', 'email'] as const) {
+> 34	  const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });
+> 35	  if (!vErr && sess?.session?.access_token) { accessToken = sess.session.access_token; break; }
+> 36	}
+> 37	if (!accessToken) { console.error('verifyOtp failed for both magiclink/email types'); process.exit(1); }
+> 38	console.log(accessToken);
+> 39	
+> ```
+
+## 🤖 Claude *(09:55:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "offset": 1,
+  "limit": 150
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from 'react';
+> 2	import { useNavigate, useSearchParams } from 'react-router-dom';
+> 3	import { safeReturnTo } from '@/lib/sso-cookie';
+> 4	import { supabase } from '@/integrations/supabase/client';
+> 5	import { Button } from '@/components/ui/button';
+> 6	import { Input } from '@/components/ui/input';
+> 7	import { Label } from '@/components/ui/label';
+> 8	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+> 9	import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+> 10	import { useToast } from '@/hooks/use-toast';
+> 11	import { Loader2 } from 'lucide-react';
+> 12	import { Separator } from '@/components/ui/separator';
+> 13	import { SigilMark } from '@/components/landing-v2/Brand';
+> 14	
+> 15	const Auth = () => {
+> 16	  const [loading, setLoading] = useState(false);
+> 17	  const [email, setEmail] = useState('');
+> 18	  const [password, setPassword] = useState('');
+> 19	  const [fullName, setFullName] = useState('');
+> 20	  const navigate = useNavigate();
+> 21	  const { toast } = useToast();
+> 22	  // Social logins (Google/Apple) are hidden by default in production. The Sovereign keeps testing via the
+> 23	  // `?devLogin` URL param, which re-shows the Google button (gabrielcall@gmail.com = Usuário Zero). Apple
+> 24	  // stays removed for now. Temporary gate — remove when social login is re-enabled for all users.
+> 25	  const [searchParams] = useSearchParams();
+> 26	  const devLogin = searchParams.has('devLogin');
+> 27	
+> 28	  const handleLogin = async (e: React.FormEvent) => {
+> 29	    e.preventDefault();
+> 30	    setLoading(true);
+> 31	    const { error } = await supabase.auth.signInWithPassword({ email, password });
+> 32	    setLoading(false);
+> 33	    if (error) {
+> 34	      toast({ title: 'Erro ao entrar', description: error.message, variant: 'destructive' });
+> 35	    } else {
+> 36	      // SSO loop: if we arrived from an isolated app (design/video.mcorch.com) via ?return_to, bounce back.
+> 37	      const rt = safeReturnTo();
+> 38	      if (rt) { window.location.href = rt; } else { navigate('/dashboard'); }
+> 39	    }
+> 40	  };
+> 41	
+> 42	  const handleSignup = async (e: React.FormEvent) => {
+> 43	    e.preventDefault();
+> 44	    setLoading(true);
+> 45	    const { error } = await supabase.auth.signUp({
+> 46	      email,
+> 47	      password,
+> 48	      options: {
+> 49	        data: { full_name: fullName },
+> 50	        emailRedirectTo: window.location.origin,
+> 51	      },
+> 52	    });
+> 53	    setLoading(false);
+> 54	    if (error) {
+> 55	      toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
+> 56	    } else {
+> 57	      toast({
+> 58	        title: 'Cadastro realizado!',
+> 59	        description: 'Verifique seu email para confirmar a conta.',
+> 60	      });
+> 61	    }
+> 62	  };
+> 63	
+> 64	  const handleForgotPassword = async () => {
+> 65	    if (!email) {
+> 66	      toast({ title: 'Informe seu email', variant: 'destructive' });
+> 67	      return;
+> 68	    }
+> 69	    setLoading(true);
+> 70	    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+> 71	      redirectTo: `${window.location.origin}/reset-password`,
+> 72	    });
+> 73	    setLoading(false);
+> 74	    if (error) {
+> 75	      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+> 76	    } else {
+> 77	      toast({ title: 'Email enviado', description: 'Verifique sua caixa de entrada.' });
+> 78	    }
+> 79	  };
+> 80	
+> 81	  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
+> 82	    setLoading(true);
+> 83	    const { error } = await supabase.auth.signInWithOAuth({
+> 84	      provider,
+> 85	      options: {
+> 86	        redirectTo: `${window.location.origin}/dashboard`,
+> 87	      },
+> 88	    });
+> 89	    if (error) {
+> 90	      toast({ title: `Erro ao entrar com ${provider}`, description: error.message, variant: 'destructive' });
+> 91	      setLoading(false);
+> 92	    }
+> 93	  };
+> 94	
+> 95	  return (
+> 96	    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+> 97	      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+> 98	        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+> 99	        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/5 blur-3xl" />
+> 100	      </div>
+> 101	
+> 102	      <Card className="w-full max-w-md glass-panel border-border/50 relative z-10">
+> 103	        <CardHeader className="text-center space-y-2">
+> 104	          <div className="flex items-center justify-center gap-2 mb-2">
+> 105	            <SigilMark size={26} />
+> 106	            <CardTitle className="text-3xl font-bold text-gradient-primary" style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>
+> 107	              MCORCH
+> 108	            </CardTitle>
+> 109	          </div>
+> 110	          <CardDescription className="text-muted-foreground" style={{ letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11 }}>
+> 111	            A agência autônoma · Operada por IA
+> 112	          </CardDescription>
+> 113	        </CardHeader>
+> 114	        <CardContent>
+> 115	          <Tabs defaultValue="login" className="w-full">
+> 116	            <TabsList className={`grid w-full ${devLogin ? 'grid-cols-2' : 'grid-cols-1'} bg-secondary`}>
+> 117	              <TabsTrigger value="login">Entrar</TabsTrigger>
+> 118	              {devLogin && <TabsTrigger value="signup">Cadastrar</TabsTrigger>}
+> 119	            </TabsList>
+> 120	
+> 121	            {devLogin && (
+> 122	              <div className="mt-4 space-y-3">
+> 123	                <Button
+> 124	                  type="button"
+> 125	                  variant="outline"
+> 126	                  className="w-full"
+> 127	                  onClick={() => handleOAuthLogin('google')}
+> 128	                  disabled={loading}
+> 129	                >
+> 130	                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+> 131	                    <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+> 132	                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+> 133	                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+> 134	                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+> 135	                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+> 136	                    </svg>
+> 137	                  )}
+> 138	                  Continuar com Google
+> 139	                </Button>
+> 140	
+> 141	                <div className="relative">
+> 142	                  <Separator />
+> 143	                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+> 144	                    ou
+> 145	                  </span>
+> 146	                </div>
+> 147	              </div>
+> 148	            )}
+> 149	
+> 150	            <TabsContent value="login">
+> ```
+
+## 🤖 Claude *(09:57:12)*
+
+
+## 🤖 Claude *(09:57:14)*
+
+Tenho tudo que preciso (state HMAC, token exchange TikTok em `open.tiktokapis.com/v2/oauth/token/`, mint via generateLink→verifyOtp, o bloco devLogin do Auth.tsx). Vou confirmar o padrão do `config.toml` (verify_jwt do callback) e o estilo de uma migration recente antes de escrever:
+
+## 🤖 Claude *(09:57:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== config.toml: entradas social-auth ===\"\ngrep -n -A2 \"functions.social-auth\" supabase/config.toml\necho \"=== rota /social/callback + PublicRoute no App.tsx ===\"\ngrep -n \"social/callback\\|SocialCallback\\|PublicRoute\" src/App.tsx | head\necho \"=== migration recente p/ estilo RLS/service-role ===\"\nls -t supabase/migrations/*.sql | head -1",
+  "description": "Confirmar config.toml verify_jwt + rota callback + migration recente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === config.toml: entradas social-auth ===
+> 97:[functions.social-auth-callback]
+> 98-verify_jwt = false
+> 99-
+> 100:[functions.social-auth-init]
+> 101-verify_jwt = false
+> 102-
+> === rota /social/callback + PublicRoute no App.tsx ===
+> 30:const SocialCallback = lazy(() => import("./pages/SocialCallback.tsx"));
+> 82:function PublicRoute({ children }: { children: React.ReactNode }) {
+> 160:              <Route path="/social/callback" element={<SocialCallback />} />
+> 161:              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> === migration recente p/ estilo RLS/service-role ===
+> supabase/migrations/20260707230000_creative_assets_allow_spaces_source.sql
+> ```
+
+## 🤖 Claude *(09:57:28)*
+
+
+## 🤖 Claude *(09:57:30)*
+
+Ambas as social-auth são `verify_jwt=false` e `/social/callback` é rota bare — vou espelhar. Deixa eu ver o estilo exato de uma migration com tabela + RLS + RPC service-role (a de vision_jobs é próxima do que preciso):
+
+## 🤖 Claude *(09:57:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260615180000_vision_mcp_access_tokens.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: vision-mcp PAT — mcp_access_tokens (FR-VM-003 · FM-VM-06). Fatia 3 core.
+> 2	-- BoK SSOT: docs/bok/vision-mcp/05-sdd.md §7 (migration 1) + §5.2 (RLS) + 06-data-model.md §2.1.
+> 3	-- SOP: docs/processes/vision-mcp-pat-and-erasure.md (Lei 2 — Parte A).
+> 4	--
+> 5	-- External MCP clients authenticate with a bearer PAT `mcorch_pat_<rand>`; the DB stores ONLY the SHA-256
+> 6	-- hash (never plaintext / never Vault-reversible). The container looks up the hash via the service key (sole
+> 7	-- reader). Scopes are a CLOSED vocabulary enforced at the DB by an ALLOWLIST CHECK (subsumes the old
+> 8	-- credentials:*/billing:* blocklist — a leaked PAT can never reach credential mgmt nor the wallet beyond tool
+> 9	-- consumption, FM-VM-06). Expiry has a physical 365d ceiling (DD-VM-002). Revocation = UPDATE revoked_at (no
+> 10	-- client DELETE). RLS: own SELECT/INSERT/UPDATE only. Passes /security-review before commit (FMEA-011/NFR-VM-007).
+> 11	
+> 12	CREATE TABLE IF NOT EXISTS public.mcp_access_tokens (
+> 13	  id            uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+> 14	  user_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 15	  token_hash    char(64)    NOT NULL UNIQUE,          -- SHA-256 hex; NUNCA plaintext
+> 16	  token_prefix  text        NOT NULL,                 -- ex.: 'mcorch_pat_3f9a…' p/ exibição
+> 17	  label         text,
+> 18	  scopes        text[]      NOT NULL,
+> 19	  expires_at    timestamptz NOT NULL,
+> 20	  revoked_at    timestamptz,
+> 21	  last_used_at  timestamptz,
+> 22	  created_at    timestamptz NOT NULL DEFAULT now(),
+> 23	  -- ALLOWLIST no DB (não blocklist): scope fora do vocabulário fechado é rejeitado na escrita.
+> 24	  CONSTRAINT scopes_allowed CHECK (
+> 25	    scopes <@ ARRAY['vision:read','deepsearch:run','mesh:read','mesh:write']
+> 26	    AND array_length(scopes, 1) >= 1
+> 27	  ),
+> 28	  -- Teto de validade físico no DB (DD-VM-002): default 90d na app, máximo 365d hard no schema.
+> 29	  CONSTRAINT pat_expiry_ceiling CHECK (expires_at <= created_at + interval '365 days')
+> 30	);
+> 31	
+> 32	ALTER TABLE public.mcp_access_tokens ENABLE ROW LEVEL SECURITY;
+> 33	
+> 34	-- Own SELECT/INSERT/UPDATE only (revocation = UPDATE revoked_at). NO DELETE policy → client cannot delete.
+> 35	-- The container reads the hash via the service key (bypasses RLS) — it is the ONLY reader of token_hash.
+> 36	CREATE POLICY "mcp_tokens_select_own" ON public.mcp_access_tokens
+> 37	  FOR SELECT USING (user_id = auth.uid());
+> 38	CREATE POLICY "mcp_tokens_insert_own" ON public.mcp_access_tokens
+> 39	  FOR INSERT WITH CHECK (user_id = auth.uid());
+> 40	CREATE POLICY "mcp_tokens_update_own" ON public.mcp_access_tokens
+> 41	  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+> 42	
+> 43	CREATE INDEX IF NOT EXISTS mcp_tokens_hash_idx ON public.mcp_access_tokens (token_hash) WHERE revoked_at IS NULL;
+> 44	CREATE INDEX IF NOT EXISTS mcp_tokens_user_idx ON public.mcp_access_tokens (user_id);
+> 45	
+> 46	COMMENT ON TABLE public.mcp_access_tokens IS
+> 47	  'Vision MCP external bearer PATs (FR-VM-003). SHA-256 hash only; closed-vocabulary scopes (DB allowlist CHECK); '
+> 48	  '365d expiry ceiling; revoke via UPDATE revoked_at. Container reads hash via service key (sole reader).';
+> 49	
+> ```
+
+## 🤖 Claude *(09:57:48)*
+
+
+## 🤖 Claude *(09:57:49)*
+
+Estilo confirmado. Agora vou escrever a implementação completa. Começando pela **migration** (tabelas de identidade + códigos single-use, RLS default-deny service-role-only):
+
+## 🤖 Claude *(09:58:16)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708100000_tiktok_login_identities.sql",
+  "content": "-- Migration: tiktok-login \u2014 identity mapping + single-use session hand-off codes (FR-TL-005 \u00b7 DD-TL-001..004).\n-- BoK SSOT: docs/bok/tiktok-login/05-sdd.md \u00a77 + 06-data-model.md \u00b7 SOP: docs/processes/tiktok-login-oauth.md (Lei 2).\n--\n-- \"Entrar com TikTok\" mints a Supabase session from a TikTok open_id (TikTok returns NO id_token/OIDC/email \u2192\n-- open_id is the ONLY stable identity). Two service-role-only tables:\n--   1. tiktok_identities \u2014 the open_id \u2192 user_id boundary (1:1). Chaveia ESTRITAMENTE por open_id app-scoped;\n--      NUNCA auto-linka a uma conta email existente (anti cross-tenant grafting \u2014 FM-TL-03). Synthetic email\n--      tiktok_<open_id>@tiktok-login.mcorch.local, password-less, namespaced a dom\u00ednio controlado.\n--   2. tiktok_login_codes \u2014 single-use, short-TTL hand-off. The callback redirects the browser with an OPAQUE\n--      code (NEVER the session tokens \u2014 FM-TL-02); the SPA redeems it once \u2192 the session fn re-mints a session\n--      for user_id. Stores ONLY the SHA-256 hash of the code + user_id (no session tokens at rest).\n-- RLS: default-deny, service-role only (the edge fns read/write via the service key which bypasses RLS).\n-- Passes /security-review before commit (FMEA-011 \u00b7 NFR-TL-003).\n\n-- 1. Identity mapping: open_id \u2192 user_id (the tenant isolation boundary for TikTok logins).\nCREATE TABLE IF NOT EXISTS public.tiktok_identities (\n  id            uuid        DEFAULT gen_random_uuid() PRIMARY KEY,\n  open_id       text        NOT NULL UNIQUE,              -- TikTok app-scoped stable id; the ONLY trusted key\n  user_id       uuid        NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,\n  last_login_at timestamptz NOT NULL DEFAULT now(),\n  created_at    timestamptz NOT NULL DEFAULT now()\n);\n\nALTER TABLE public.tiktok_identities ENABLE ROW LEVEL SECURITY;\n-- NO client policies BY DESIGN \u2192 default-deny; only the service key (edge fns) reads/writes. The open_id\u2192user_id\n-- map is the isolation boundary; exposing it to clients would leak the identity graph.\nCREATE INDEX IF NOT EXISTS tiktok_identities_user_idx ON public.tiktok_identities (user_id);\n\nCOMMENT ON TABLE public.tiktok_identities IS\n  'tiktok-login identity map (FR-TL-005). open_id (app-scoped) \u2192 user_id, 1:1. Service-role only (RLS default-deny). '\n  'NUNCA auto-link by email (anti cross-tenant grafting, FM-TL-03); new open_id = new isolated account.';\n\n-- 2. Single-use, short-TTL session hand-off codes (no session tokens at rest \u2014 re-mint on redeem).\nCREATE TABLE IF NOT EXISTS public.tiktok_login_codes (\n  code_hash   char(64)    PRIMARY KEY,                    -- SHA-256 hex of the opaque one-time code; NUNCA plaintext\n  user_id     uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  return_to   text,                                       -- validated SSO bounce target (may be null)\n  created_at  timestamptz NOT NULL DEFAULT now(),\n  expires_at  timestamptz NOT NULL,\n  consumed_at timestamptz,                                -- set atomically on first redeem (replay guard, FM-TL-... )\n  -- Physical TTL ceiling: a hand-off code lives at most 5 minutes (app sets ~60s).\n  CONSTRAINT tiktok_code_ttl_ceiling CHECK (expires_at <= created_at + interval '5 minutes')\n);\n\nALTER TABLE public.tiktok_login_codes ENABLE ROW LEVEL SECURITY;\n-- NO client policies BY DESIGN \u2192 default-deny; only the service key (edge fns) reads/writes. Clients must NEVER\n-- SELECT codes (a readable code = session-mint bearer). Redeem is an atomic service-role UPDATE...RETURNING.\nCREATE INDEX IF NOT EXISTS tiktok_login_codes_unconsumed_idx\n  ON public.tiktok_login_codes (code_hash) WHERE consumed_at IS NULL;\nCREATE INDEX IF NOT EXISTS tiktok_login_codes_expiry_idx ON public.tiktok_login_codes (expires_at);\n\nCOMMENT ON TABLE public.tiktok_login_codes IS\n  'tiktok-login single-use session hand-off (FR-TL-006). SHA-256 code_hash \u2192 user_id; TTL<=5min; single-use via '\n  'consumed_at. NO session tokens stored (re-mint on redeem). Service-role only. NUNCA token in URL (FM-TL-02).';\n\n-- 3. LGPD/self-service: caller unlinks their own TikTok identity (auth.uid()-scoped). Does NOT delete auth.users\n--    (that is a separate account-deletion flow); just severs the open_id map so a future TikTok login re-creates it.\nCREATE OR REPLACE FUNCTION public.disconnect_tiktok_identity()\nRETURNS void\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nBEGIN\n  IF auth.uid() IS NULL THEN\n    RAISE EXCEPTION 'not authenticated';\n  END IF;\n  DELETE FROM public.tiktok_identities WHERE user_id = auth.uid();\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.disconnect_tiktok_identity() FROM public, anon;\nGRANT EXECUTE ON FUNCTION public.disconnect_tiktok_identity() TO authenticated;\n\nCOMMENT ON FUNCTION public.disconnect_tiktok_identity() IS\n  'tiktok-login LGPD unlink (DD-TL-006): deletes the caller''s tiktok_identities row (auth.uid()-scoped).';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708100000_tiktok_login_identities.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:59:07)*
+
+
+## 🤖 Claude *(09:59:08)*
+
+Migration escrita. Agora as **3 edge functions**. Começando pela `tiktok-login-init` (monta a authorize URL + assina o state — o segredo do HMAC exige servidor):
+
+## 🤖 Claude *(09:59:23)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-init/index.ts",
+  "content": "// tiktok-login-init (FR-TL-002) \u2014 PUBLIC (verify_jwt=false): the login page has no JWT.\n// Builds the TikTok Login Kit v2 authorize URL and signs an HMAC state. Login has NO auth.uid(), so app creds\n// come from SYSTEM env TIKTOK_CLIENT_KEY (the restricted env-fallback of the API Tenancy Model \u2014 onboarding/no-user\n// path). The state HMAC key (SB_SECRET_KEY) is server-only \u2192 the authorize URL cannot be forged client-side.\n// SOP: docs/processes/tiktok-login-oauth.md \u00b7 BoK: docs/bok/tiktok-login/05-sdd.md \u00a74.\nimport { signState } from \"../_shared/oauth-state.ts\";\n\nconst TIKTOK_AUTH_URL = \"https://www.tiktok.com/v2/auth/authorize/\";\n// Login scope only (user.info.basic) \u2014 NEVER video.publish here (that is the publish-connect flow, per-user BYOK).\n// Comma-separated (a SPACE silently fails TikTok consent). Single scope today, comma-form kept for correctness.\nconst LOGIN_SCOPE = \"user.info.basic\";\n\nconst ALLOWED_ORIGINS = [\n  \"https://login.mcorch.com\",\n  \"http://localhost:8080\",\n  \"http://localhost:5173\",\n  \"http://localhost:4173\",\n];\n\nfunction cors(origin: string | null) {\n  const allow = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];\n  return {\n    \"Access-Control-Allow-Origin\": allow,\n    \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n    \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n    \"Vary\": \"Origin\",\n  };\n}\n\nDeno.serve(async (req) => {\n  const origin = req.headers.get(\"Origin\");\n  const headers = { ...cors(origin), \"Content-Type\": \"application/json\" };\n\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: cors(origin) });\n  if (req.method !== \"POST\") return new Response(JSON.stringify({ error: \"Method not allowed\" }), { status: 405, headers });\n\n  const clientKey = Deno.env.get(\"TIKTOK_CLIENT_KEY\");\n  const stateKey = Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\");\n  if (!clientKey || !stateKey) {\n    // Fail-closed structured error (the Sovereign must provision TIKTOK_CLIENT_KEY \u2014 SOP P3).\n    return new Response(\n      JSON.stringify({ error: \"tiktok_login_not_configured\", action: \"TikTok login n\u00e3o est\u00e1 configurado (secrets ausentes).\" }),\n      { status: 501, headers },\n    );\n  }\n\n  const callbackUrl = `${Deno.env.get(\"SUPABASE_URL\")}/functions/v1/tiktok-login-callback`;\n  // State carries intent + nonce + ts (NOT a userId \u2014 a login has none yet). ts bounds replay (verified fail-closed\n  // in the callback with maxAgeMs). nonce gives per-attempt uniqueness.\n  const state = await signState(\n    { intent: \"login\", nonce: crypto.randomUUID(), ts: Date.now() },\n    stateKey,\n  );\n\n  const authUrl =\n    `${TIKTOK_AUTH_URL}?client_key=${encodeURIComponent(clientKey)}` +\n    `&response_type=code&scope=${encodeURIComponent(LOGIN_SCOPE)}` +\n    `&redirect_uri=${encodeURIComponent(callbackUrl)}` +\n    `&state=${encodeURIComponent(state)}`;\n\n  return new Response(JSON.stringify({ url: authUrl }), { headers });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-init/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:59:26)*
+
+
+## 🤖 Claude *(09:59:27)*
+
+Agora a `tiktok-login-callback` — a função crítica de segurança (verifica state fail-closed, troca token, find-or-create identidade, gera código single-use SEM token na URL):
+
+## 🤖 Claude *(09:59:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-callback/index.ts",
+  "content": "// tiktok-login-callback (FR-TL-003/005/006) \u2014 PUBLIC (verify_jwt=false): hit by TikTok's browser redirect, which\n// carries NO JWT and NO apikey. The HMAC state is the ONLY proof this flow was initiated by tiktok-login-init.\n// Flow (fail-closed): verifyState \u2192 token exchange (system client_key/secret) \u2192 open_id \u2192 find-or-create identity\n// \u2192 mint a single-use hand-off code (NO session tokens in the URL) \u2192 302 to the SPA callback.\n// TikTok returns NO id_token/OIDC/email \u2192 open_id is the ONLY trusted key; NUNCA auto-link by email (anti grafting).\n// SOP: docs/processes/tiktok-login-oauth.md \u00b7 BoK: docs/bok/tiktok-login/05-sdd.md \u00a74/\u00a75.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\nimport { verifyState } from \"../_shared/oauth-state.ts\";\n\nconst TIKTOK_TOKEN_URL = \"https://open.tiktokapis.com/v2/oauth/token/\";\nconst APP_ORIGIN = () => Deno.env.get(\"APP_ORIGIN\") ?? \"https://login.mcorch.com\";\n\nfunction redirectTo(path: string) {\n  return new Response(null, { status: 302, headers: { Location: `${APP_ORIGIN()}${path}` } });\n}\nfunction fail(reason: string) {\n  // Only emit a closed vocabulary of reasons (never raw provider text) \u2192 no reflected-XSS / info-leak surface.\n  const safe = [\"state_expired\", \"not_authorized\", \"exchange_failed\", \"server_error\"].includes(reason) ? reason : \"server_error\";\n  return redirectTo(`/auth?tiktok_error=${safe}`);\n}\n\nasync function sha256Hex(s: string): Promise<string> {\n  const buf = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(s));\n  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, \"0\")).join(\"\");\n}\nfunction randomCode(): string {\n  const bytes = new Uint8Array(32);\n  crypto.getRandomValues(bytes);\n  return btoa(String.fromCharCode(...bytes)).replace(/\\+/g, \"-\").replace(/\\//g, \"_\").replace(/=+$/, \"\");\n}\n\nDeno.serve(async (req) => {\n  if (req.method !== \"GET\") return new Response(\"Method not allowed\", { status: 405 });\n\n  const url = new URL(req.url);\n  const providerError = url.searchParams.get(\"error\");\n  const code = url.searchParams.get(\"code\");\n  const stateStr = url.searchParams.get(\"state\");\n\n  if (providerError) return fail(\"not_authorized\");\n  if (!code || !stateStr) return fail(\"state_expired\");\n\n  const admin = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n    { auth: { persistSession: false } },\n  );\n\n  const logTelemetry = (event: string, status: string) => {\n    admin.from(\"infra_health_logs\").insert({ service: \"tiktok-login\", event, status }).then(() => {}, () => {});\n  };\n\n  try {\n    // 1. Verify state fail-closed (10-min window; intent must be 'login'). Forged/expired/tampered \u2192 reject.\n    const stateKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n    const state = await verifyState<{ intent: string; nonce: string; ts: number }>(\n      stateStr, stateKey, { maxAgeMs: 10 * 60 * 1000 },\n    );\n    if (!state || state.intent !== \"login\") {\n      logTelemetry(\"state_verify\", \"degraded\");\n      return fail(\"state_expired\");\n    }\n\n    // 2. Exchange code \u2192 token (system creds; login has no auth.uid()). NO PKCE on web (client_secret).\n    const clientKey = Deno.env.get(\"TIKTOK_CLIENT_KEY\");\n    const clientSecret = Deno.env.get(\"TIKTOK_CLIENT_SECRET\");\n    if (!clientKey || !clientSecret) { logTelemetry(\"config\", \"error\"); return fail(\"server_error\"); }\n\n    const callbackUrl = `${Deno.env.get(\"SUPABASE_URL\")}/functions/v1/tiktok-login-callback`;\n    const tokenRes = await fetch(TIKTOK_TOKEN_URL, {\n      method: \"POST\",\n      headers: { \"Content-Type\": \"application/x-www-form-urlencoded\" },\n      body: new URLSearchParams({\n        client_key: clientKey,\n        client_secret: clientSecret,\n        code,\n        grant_type: \"authorization_code\",\n        redirect_uri: callbackUrl,\n      }),\n    });\n    const tokenData = await tokenRes.json();\n    if (!tokenRes.ok || tokenData.error || !tokenData.open_id) {\n      console.error(\"[tiktok-login-callback] token exchange failed:\", tokenData.error ?? tokenRes.status);\n      logTelemetry(\"token_exchange\", \"error\");\n      return fail(\"exchange_failed\");\n    }\n    const openId: string = tokenData.open_id;\n    // Identity-only login \u2192 we do NOT persist TikTok tokens (OTD-TL: discard after open_id).\n\n    // 3. Find-or-create the Supabase identity keyed STRICTLY on open_id (NUNCA by email \u2014 anti grafting FM-TL-03).\n    let userId: string;\n    const { data: existing } = await admin\n      .from(\"tiktok_identities\").select(\"user_id\").eq(\"open_id\", openId).maybeSingle();\n\n    if (existing?.user_id) {\n      userId = existing.user_id;\n      await admin.from(\"tiktok_identities\").update({ last_login_at: new Date().toISOString() }).eq(\"open_id\", openId);\n    } else {\n      const email = `tiktok_${openId}@tiktok-login.mcorch.local`; // namespaced, password-less, controlled domain\n      const { data: created, error: cErr } = await admin.auth.admin.createUser({\n        email,\n        email_confirm: true,\n        user_metadata: { provider: \"tiktok\", tiktok_open_id: openId },\n      });\n      if (cErr || !created?.user?.id) {\n        console.error(\"[tiktok-login-callback] createUser failed:\", cErr?.message);\n        logTelemetry(\"create_user\", \"error\");\n        return fail(\"server_error\");\n      }\n      userId = created.user.id;\n      const { error: iErr } = await admin.from(\"tiktok_identities\").insert({ open_id: openId, user_id: userId });\n      if (iErr) {\n        // Race: another callback created the same open_id between our SELECT and INSERT \u2192 re-read the winner.\n        const { data: raced } = await admin.from(\"tiktok_identities\").select(\"user_id\").eq(\"open_id\", openId).maybeSingle();\n        if (raced?.user_id) userId = raced.user_id;\n        else { logTelemetry(\"identity_insert\", \"error\"); return fail(\"server_error\"); }\n      }\n    }\n\n    // 4. Mint a single-use, short-TTL hand-off code (NO session tokens in the URL \u2014 FM-TL-02).\n    const oneTimeCode = randomCode();\n    const codeHash = await sha256Hex(oneTimeCode);\n    const { error: codeErr } = await admin.from(\"tiktok_login_codes\").insert({\n      code_hash: codeHash,\n      user_id: userId,\n      expires_at: new Date(Date.now() + 60 * 1000).toISOString(), // ~60s\n    });\n    if (codeErr) { logTelemetry(\"code_insert\", \"error\"); return fail(\"server_error\"); }\n\n    logTelemetry(\"login\", \"healthy\");\n    return redirectTo(`/auth/tiktok/callback?code=${encodeURIComponent(oneTimeCode)}`);\n  } catch (err) {\n    console.error(\"[tiktok-login-callback] error:\", err instanceof Error ? err.message : String(err));\n    logTelemetry(\"callback\", \"error\");\n    return fail(\"server_error\");\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-callback/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:00:01)*
+
+
+## 🤖 Claude *(10:00:02)*
+
+Agora a `tiktok-login-session` — resgate atômico replay-proof do código single-use → re-minta a sessão:
+
+## 🤖 Claude *(10:00:23)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-session/index.ts",
+  "content": "// tiktok-login-session (FR-TL-006) \u2014 PUBLIC (verify_jwt=false): the SPA callback has no session yet.\n// Redeems the single-use hand-off code (atomic consume \u2192 replay-proof) and re-mints a Supabase session for the\n// mapped user via the proven admin.generateLink \u2192 verifyOtp pattern (scripts/qa/gen-user-jwt.ts). Returns the\n// session ONCE; the code is invalidated on first redeem. NO session tokens were ever in a URL.\n// SOP: docs/processes/tiktok-login-oauth.md \u00b7 BoK: docs/bok/tiktok-login/05-sdd.md \u00a74.\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst ALLOWED_ORIGINS = [\n  \"https://login.mcorch.com\",\n  \"http://localhost:8080\",\n  \"http://localhost:5173\",\n  \"http://localhost:4173\",\n];\nfunction cors(origin: string | null) {\n  const allow = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];\n  return {\n    \"Access-Control-Allow-Origin\": allow,\n    \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n    \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n    \"Vary\": \"Origin\",\n  };\n}\nasync function sha256Hex(s: string): Promise<string> {\n  const buf = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(s));\n  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, \"0\")).join(\"\");\n}\n\nDeno.serve(async (req) => {\n  const origin = req.headers.get(\"Origin\");\n  const headers = { ...cors(origin), \"Content-Type\": \"application/json\" };\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: cors(origin) });\n  if (req.method !== \"POST\") return new Response(JSON.stringify({ error: \"method_not_allowed\" }), { status: 405, headers });\n\n  let code: string | null = null;\n  try { code = (await req.json())?.code ?? null; } catch { /* noop */ }\n  if (!code || typeof code !== \"string\") return new Response(JSON.stringify({ error: \"missing_code\" }), { status: 400, headers });\n\n  const admin = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n    { auth: { persistSession: false } },\n  );\n  const anon = createClient(\n    Deno.env.get(\"SUPABASE_URL\")!,\n    (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!,\n    { auth: { persistSession: false } },\n  );\n\n  try {\n    const codeHash = await sha256Hex(code);\n    // ATOMIC consume: mark consumed only if still unconsumed AND unexpired, RETURNING user_id. A second redeem\n    // (replay) matches 0 rows \u2192 null. This single UPDATE is the replay guard (no read-then-write race).\n    const { data: consumed } = await admin\n      .from(\"tiktok_login_codes\")\n      .update({ consumed_at: new Date().toISOString() })\n      .eq(\"code_hash\", codeHash)\n      .is(\"consumed_at\", null)\n      .gt(\"expires_at\", new Date().toISOString())\n      .select(\"user_id\")\n      .maybeSingle();\n\n    if (!consumed?.user_id) {\n      return new Response(JSON.stringify({ error: \"code_invalid_or_expired\" }), { status: 410, headers });\n    }\n\n    // Resolve the mapped user's (synthetic) email, then mint a fresh session (generateLink \u2192 verifyOtp).\n    const { data: userRes, error: uErr } = await admin.auth.admin.getUserById(consumed.user_id);\n    if (uErr || !userRes?.user?.email) {\n      admin.from(\"infra_health_logs\").insert({ service: \"tiktok-login\", event: \"session_user_lookup\", status: \"error\" }).then(() => {}, () => {});\n      return new Response(JSON.stringify({ error: \"server_error\" }), { status: 500, headers });\n    }\n    const email = userRes.user.email;\n\n    const { data: link, error: lErr } = await admin.auth.admin.generateLink({ type: \"magiclink\", email });\n    if (lErr || !link.properties?.hashed_token) {\n      admin.from(\"infra_health_logs\").insert({ service: \"tiktok-login\", event: \"generate_link\", status: \"error\" }).then(() => {}, () => {});\n      return new Response(JSON.stringify({ error: \"server_error\" }), { status: 500, headers });\n    }\n    const tokenHash = link.properties.hashed_token;\n\n    let session: { access_token: string; refresh_token: string } | null = null;\n    for (const type of [\"magiclink\", \"email\"] as const) {\n      const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });\n      if (!vErr && sess?.session?.access_token && sess.session.refresh_token) {\n        session = { access_token: sess.session.access_token, refresh_token: sess.session.refresh_token };\n        break;\n      }\n    }\n    if (!session) {\n      admin.from(\"infra_health_logs\").insert({ service: \"tiktok-login\", event: \"verify_otp\", status: \"error\" }).then(() => {}, () => {});\n      return new Response(JSON.stringify({ error: \"server_error\" }), { status: 500, headers });\n    }\n\n    admin.from(\"infra_health_logs\").insert({ service: \"tiktok-login\", event: \"session_minted\", status: \"healthy\" }).then(() => {}, () => {});\n    return new Response(JSON.stringify(session), { headers });\n  } catch (err) {\n    console.error(\"[tiktok-login-session] error:\", err instanceof Error ? err.message : String(err));\n    return new Response(JSON.stringify({ error: \"server_error\" }), { status: 500, headers });\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-session/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:00:33)*
+
+
+## 🤖 Claude *(10:00:34)*
+
+As 3 edge functions escritas. Agora registro no `config.toml` (verify_jwt=false), adiciono a página SPA de callback + rota, e o botão + handler no Auth.tsx:
+
+## 🤖 Claude *(10:00:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.social-auth-init]\nverify_jwt = false\n",
+  "new_string": "[functions.social-auth-init]\nverify_jwt = false\n\n# tiktok-login (Login Kit v2 \u2192 Supabase session). All PUBLIC: init/session are called from the pre-auth login\n# page (no JWT); callback is hit by TikTok's redirect (no JWT/apikey). Security = HMAC state + single-use code.\n[functions.tiktok-login-init]\nverify_jwt = false\n\n[functions.tiktok-login-callback]\nverify_jwt = false\n\n[functions.tiktok-login-session]\nverify_jwt = false\n"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(10:00:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "offset": 95,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	verify_jwt = false
+> 96	
+> 97	[functions.social-auth-callback]
+> 98	verify_jwt = false
+> 99	
+> 100	[functions.social-auth-init]
+> 101	verify_jwt = false
+> 102	
+> 103	[functions.aios-chat-gateway]
+> 104	verify_jwt = false
+> ```
+
+## 🤖 Claude *(10:00:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml",
+  "old_string": "[functions.social-auth-init]\nverify_jwt = false\n\n[functions.aios-chat-gateway]",
+  "new_string": "[functions.social-auth-init]\nverify_jwt = false\n\n# tiktok-login (Login Kit v2 \u2192 Supabase session). All PUBLIC: init/session are called from the pre-auth login\n# page (no JWT); callback is hit by TikTok's redirect (no JWT/apikey). Security = HMAC state + single-use code.\n[functions.tiktok-login-init]\nverify_jwt = false\n\n[functions.tiktok-login-callback]\nverify_jwt = false\n\n[functions.tiktok-login-session]\nverify_jwt = false\n\n[functions.aios-chat-gateway]"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/config.toml has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:00:54)*
+
+
+## 🤖 Claude *(10:00:55)*
+
+Vou espelhar o `SocialCallback.tsx` para a nova página de callback do TikTok:
+
+## 🤖 Claude *(10:00:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SocialCallback.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useState } from 'react';
+> 2	import { useNavigate, useSearchParams } from 'react-router-dom';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+> 5	
+> 6	export default function SocialCallback() {
+> 7	  const [searchParams] = useSearchParams();
+> 8	  const navigate = useNavigate();
+> 9	  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+> 10	  const [message, setMessage] = useState('Conectando sua conta...');
+> 11	
+> 12	  useEffect(() => {
+> 13	    const platform = searchParams.get('platform');
+> 14	    const success = searchParams.get('success');
+> 15	    const error = searchParams.get('error');
+> 16	
+> 17	    // Flow A: edge function already handled OAuth and redirected here with result
+> 18	    if (success === 'true' && platform) {
+> 19	      setStatus('success');
+> 20	      setMessage(`${platform.charAt(0).toUpperCase() + platform.slice(1)} conectado com sucesso!`);
+> 21	      setTimeout(() => navigate('/dashboard/social'), 1500);
+> 22	      return;
+> 23	    }
+> 24	
+> 25	    if (error) {
+> 26	      setStatus('error');
+> 27	      setMessage(`Autorização negada: ${searchParams.get('error_description') || error}`);
+> 28	      setTimeout(() => navigate('/dashboard/social'), 3000);
+> 29	      return;
+> 30	    }
+> 31	
+> 32	    // Flow B: direct callback with code+state (fallback for platforms that redirect here directly)
+> 33	    const code = searchParams.get('code');
+> 34	    const state = searchParams.get('state');
+> 35	
+> 36	    if (!code || !state) {
+> 37	      setStatus('error');
+> 38	      setMessage('Parâmetros de callback inválidos.');
+> 39	      setTimeout(() => navigate('/dashboard/social'), 3000);
+> 40	      return;
+> 41	    }
+> 42	
+> 43	    (async () => {
+> 44	      try {
+> 45	        const { data, error: fnError } = await supabase.functions.invoke('social-auth-callback', {
+> 46	          body: { code, state },
+> 47	        });
+> 48	
+> 49	        if (fnError) throw fnError;
+> 50	        setStatus('success');
+> 51	        setMessage(`${data?.platform ?? 'Conta'} conectada com sucesso!`);
+> 52	        setTimeout(() => navigate('/dashboard/social'), 2000);
+> 53	      } catch (err: any) {
+> 54	        setStatus('error');
+> 55	        setMessage(err.message || 'Erro ao processar callback.');
+> 56	        setTimeout(() => navigate('/dashboard/social'), 3000);
+> 57	      }
+> 58	    })();
+> 59	  }, [searchParams, navigate]);
+> 60	
+> 61	  return (
+> 62	    <div className="min-h-screen bg-background flex items-center justify-center">
+> 63	      <div className="text-center space-y-4">
+> 64	        {status === 'loading' && <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />}
+> 65	        {status === 'success' && <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto" />}
+> 66	        {status === 'error' && <XCircle className="h-12 w-12 text-destructive mx-auto" />}
+> 67	        <p className="text-lg text-foreground">{message}</p>
+> 68	        <p className="text-sm text-muted-foreground">Redirecionando...</p>
+> 69	      </div>
+> 70	    </div>
+> 71	  );
+> 72	}
+> 73	
+> ```
+
+## 🤖 Claude *(10:01:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx",
+  "content": "import { useEffect, useState } from 'react';\nimport { useNavigate, useSearchParams } from 'react-router-dom';\nimport { safeReturnTo } from '@/lib/sso-cookie';\nimport { supabase } from '@/integrations/supabase/client';\nimport { Loader2, CheckCircle2, XCircle } from 'lucide-react';\n\n/**\n * TikTok Login completion (FR-TL-006). The callback edge fn redirected here with a single-use ?code (NO session\n * tokens in the URL). We redeem it once at tiktok-login-session \u2192 { access_token, refresh_token } \u2192 setSession,\n * then bounce via safeReturnTo() (SSO) or /dashboard. On any failure, back to /auth with a PT-BR reason.\n */\nexport default function TikTokLoginCallback() {\n  const [searchParams] = useSearchParams();\n  const navigate = useNavigate();\n  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');\n  const [message, setMessage] = useState('Concluindo login com TikTok...');\n\n  useEffect(() => {\n    const code = searchParams.get('code');\n    if (!code) {\n      navigate('/auth?tiktok_error=state_expired', { replace: true });\n      return;\n    }\n\n    (async () => {\n      try {\n        const { data, error } = await supabase.functions.invoke('tiktok-login-session', { body: { code } });\n        if (error || !data?.access_token || !data?.refresh_token) {\n          throw new Error('code_invalid_or_expired');\n        }\n        const { error: sErr } = await supabase.auth.setSession({\n          access_token: data.access_token,\n          refresh_token: data.refresh_token,\n        });\n        if (sErr) throw sErr;\n\n        setStatus('success');\n        setMessage('Login conclu\u00eddo!');\n        const rt = safeReturnTo();\n        if (rt) { window.location.href = rt; } else { navigate('/dashboard', { replace: true }); }\n      } catch {\n        setStatus('error');\n        setMessage('N\u00e3o foi poss\u00edvel concluir o login com TikTok.');\n        setTimeout(() => navigate('/auth?tiktok_error=expired', { replace: true }), 2500);\n      }\n    })();\n  }, [searchParams, navigate]);\n\n  return (\n    <div className=\"min-h-screen bg-background flex items-center justify-center\">\n      <div className=\"text-center space-y-4\">\n        {status === 'loading' && <Loader2 className=\"h-12 w-12 animate-spin text-primary mx-auto\" />}\n        {status === 'success' && <CheckCircle2 className=\"h-12 w-12 text-emerald-400 mx-auto\" />}\n        {status === 'error' && <XCircle className=\"h-12 w-12 text-destructive mx-auto\" />}\n        <p className=\"text-lg text-foreground\">{message}</p>\n        <p className=\"text-sm text-muted-foreground\">Aguarde...</p>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:01:13)*
+
+
+## 🤖 Claude *(10:01:14)*
+
+Registrando a rota no App.tsx (import lazy + rota bare como a `/social/callback`):
+
+## 🤖 Claude *(10:01:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const SocialCallback = lazy(() => import(\"./pages/SocialCallback.tsx\"));",
+  "new_string": "const SocialCallback = lazy(() => import(\"./pages/SocialCallback.tsx\"));\nconst TikTokLoginCallback = lazy(() => import(\"./pages/TikTokLoginCallback.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(10:01:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "              <Route path=\"/social/callback\" element={<SocialCallback />} />",
+  "new_string": "              <Route path=\"/social/callback\" element={<SocialCallback />} />\n              <Route path=\"/auth/tiktok/callback\" element={<TikTokLoginCallback />} />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(10:01:21)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 28,
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 28	const VideoStudioPage = lazy(() => import("./pages/VideoStudioPage.tsx"));
+> 29	const SocialAccountsPage = lazy(() => import("./pages/SocialAccountsPage.tsx"));
+> 30	const SocialCallback = lazy(() => import("./pages/SocialCallback.tsx"));
+> 31	const ContentLibraryPage = lazy(() => import("./pages/ContentLibraryPage.tsx"));
+> 32	const CalendarPage = lazy(() => import("./pages/CalendarPage.tsx"));
+> ```
+
+## 🤖 Claude *(10:01:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "offset": 158,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 158	              </Route>
+> 159	              <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+> 160	              <Route path="/social/callback" element={<SocialCallback />} />
+> 161	              <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+> 162	              <Route path="/reset-password" element={<ResetPassword />} />
+> 163	              <Route path="/privacy" element={<PrivacyPolicy />} />
+> ```
+
+## 🤖 Claude *(10:01:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const SocialCallback = lazy(() => import(\"./pages/SocialCallback.tsx\"));\nconst ContentLibraryPage = lazy(() => import(\"./pages/ContentLibraryPage.tsx\"));",
+  "new_string": "const SocialCallback = lazy(() => import(\"./pages/SocialCallback.tsx\"));\nconst TikTokLoginCallback = lazy(() => import(\"./pages/TikTokLoginCallback.tsx\"));\nconst ContentLibraryPage = lazy(() => import(\"./pages/ContentLibraryPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:01:33)*
+
+
+## 🤖 Claude *(10:01:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "              <Route path=\"/social/callback\" element={<SocialCallback />} />\n              <Route path=\"/auth\" element={<PublicRoute><Auth /></PublicRoute>} />",
+  "new_string": "              <Route path=\"/social/callback\" element={<SocialCallback />} />\n              <Route path=\"/auth/tiktok/callback\" element={<TikTokLoginCallback />} />\n              <Route path=\"/auth\" element={<PublicRoute><Auth /></PublicRoute>} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:02:04)*
+
+
+## 🤖 Claude *(10:02:05)*
+
+Agora o Auth.tsx — handler `handleTikTokLogin`, toast de erro `?tiktok_error`, e o botão espelhando o do Google. Primeiro o import + handler + useEffect:
+
+## 🤖 Claude *(10:02:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "import { useState } from 'react';\nimport { useNavigate, useSearchParams } from 'react-router-dom';",
+  "new_string": "import { useEffect, useState } from 'react';\nimport { useNavigate, useSearchParams } from 'react-router-dom';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:02:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "  const handleOAuthLogin = async (provider: 'google' | 'apple') => {\n    setLoading(true);\n    const { error } = await supabase.auth.signInWithOAuth({\n      provider,\n      options: {\n        redirectTo: `${window.location.origin}/dashboard`,\n      },\n    });\n    if (error) {\n      toast({ title: `Erro ao entrar com ${provider}`, description: error.message, variant: 'destructive' });\n      setLoading(false);\n    }\n  };",
+  "new_string": "  const handleOAuthLogin = async (provider: 'google' | 'apple') => {\n    setLoading(true);\n    const { error } = await supabase.auth.signInWithOAuth({\n      provider,\n      options: {\n        redirectTo: `${window.location.origin}/dashboard`,\n      },\n    });\n    if (error) {\n      toast({ title: `Erro ao entrar com ${provider}`, description: error.message, variant: 'destructive' });\n      setLoading(false);\n    }\n  };\n\n  // TikTok is NOT a native Supabase provider \u2014 custom OAuth (Login Kit v2). tiktok-login-init signs the state\n  // server-side and returns the authorize URL; we top-level navigate to it. Completion lands at /auth/tiktok/callback.\n  const handleTikTokLogin = async () => {\n    setLoading(true);\n    try {\n      const { data, error } = await supabase.functions.invoke('tiktok-login-init', { body: {} });\n      if (error || !data?.url) throw error ?? new Error('no_url');\n      window.location.href = data.url;\n    } catch {\n      setLoading(false);\n      toast({\n        title: 'Erro ao entrar com TikTok',\n        description: 'N\u00e3o foi poss\u00edvel iniciar o login com TikTok. Tente novamente.',\n        variant: 'destructive',\n      });\n    }\n  };\n\n  // Surface a returned ?tiktok_error (from the callback fail-closed redirects) as a PT-BR toast.\n  useEffect(() => {\n    const err = searchParams.get('tiktok_error');\n    if (!err) return;\n    const messages: Record<string, string> = {\n      state_expired: 'Sua sess\u00e3o de login com TikTok expirou. Tente novamente.',\n      not_authorized: 'Autoriza\u00e7\u00e3o negada no TikTok. Em modo sandbox, sua conta precisa estar registrada como usu\u00e1rio de teste.',\n      exchange_failed: 'Falha ao validar o login com TikTok. Verifique a configura\u00e7\u00e3o do app.',\n      expired: 'O c\u00f3digo de login expirou. Tente novamente.',\n      server_error: 'Erro ao concluir o login com TikTok. Tente novamente.',\n    };\n    toast({ title: 'Login com TikTok', description: messages[err] ?? 'N\u00e3o foi poss\u00edvel concluir o login.', variant: 'destructive' });\n  }, [searchParams, toast]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:02:25)*
+
+Agora o botão TikTok, espelhando o do Google (dentro do bloco `devLogin`, entre o Google e o separador):
+
+## 🤖 Claude *(10:02:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "                  Continuar com Google\n                </Button>\n\n                <div className=\"relative\">\n                  <Separator />",
+  "new_string": "                  Continuar com Google\n                </Button>\n\n                <Button\n                  type=\"button\"\n                  variant=\"outline\"\n                  className=\"w-full\"\n                  onClick={handleTikTokLogin}\n                  disabled={loading}\n                >\n                  {loading ? <Loader2 className=\"mr-2 h-4 w-4 animate-spin\" /> : (\n                    <svg className=\"mr-2 h-4 w-4\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\">\n                      <path d=\"M16.6 5.82a4.28 4.28 0 0 1-1.1-2.82h-3.2v12.9a2.6 2.6 0 1 1-2.6-2.6c.27 0 .53.04.78.12v-3.3a5.9 5.9 0 0 0-.78-.05 5.9 5.9 0 1 0 5.9 5.9V9.4a7.5 7.5 0 0 0 4.3 1.36V7.5a4.28 4.28 0 0 1-3.3-1.68z\" />\n                    </svg>\n                  )}\n                  Entrar com TikTok\n                </Button>\n\n                <div className=\"relative\">\n                  <Separator />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:02:35)*
+
+
+## 🤖 Claude *(10:02:37)*
+
+Todo o código está escrito (migration + 3 edge fns + config.toml + Auth.tsx botão/handler/toast + SPA callback + rota). Vou verificar que compila (tsc frontend + deno check edge fns) antes do `/security-review`:
+
+## 🤖 Claude *(10:02:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc frontend ===\"\nnpx tsc --noEmit 2>&1 | tail -15 && echo \"tsc: 0 erros\"\necho \"=== deno check edge fns ===\"\nfor fn in tiktok-login-init tiktok-login-callback tiktok-login-session; do\n  echo \"--- $fn ---\"\n  deno check \"supabase/functions/$fn/index.ts\" 2>&1 | tail -5\ndone",
+  "description": "tsc frontend + deno check das 3 edge fns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc frontend ===
+> tsc: 0 erros
+> === deno check edge fns ===
+> --- tiktok-login-init ---
+> /bin/bash: line 14: deno: command not found
+> --- tiktok-login-callback ---
+> /bin/bash: line 14: deno: command not found
+> --- tiktok-login-session ---
+> /bin/bash: line 14: deno: command not found
+> ```
+
+## 🤖 Claude *(10:02:46)*
+
+
+## 🤖 Claude *(10:02:47)*
+
+tsc frontend limpo (0 erros). O `deno` não está no PATH — vou localizá-lo (o repo usa deno pras edge fns):
+
+## 🤖 Claude *(10:02:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nwhich deno 2>/dev/null || ls ~/.deno/bin/deno 2>/dev/null || find /usr/local/bin /home/ubuntu -maxdepth 3 -name deno -type f 2>/dev/null | head -3 || echo \"deno n\u00e3o encontrado\"",
+  "description": "Localizar o bin\u00e1rio deno"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/ubuntu/.deno/bin/deno
+> ```
+
+## 🤖 Claude *(10:02:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"$HOME/.deno/bin:$PATH\"\nfor fn in tiktok-login-init tiktok-login-callback tiktok-login-session; do\n  echo \"--- $fn ---\"\n  deno check \"supabase/functions/$fn/index.ts\" 2>&1 | tail -6\ndone",
+  "description": "deno check das 3 edge fns com PATH correto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- tiktok-login-init ---
+> [0m[32mCheck[0m supabase/functions/tiktok-login-init/index.ts
+> --- tiktok-login-callback ---
+> [0m[32mCheck[0m supabase/functions/tiktok-login-callback/index.ts
+> --- tiktok-login-session ---
+> [0m[32mCheck[0m supabase/functions/tiktok-login-session/index.ts
+> ```
+
+## 🤖 Claude *(10:03:08)*
+
+
+## 🤖 Claude *(10:03:09)*
+
+Todas as 3 edge fns passam no `deno check` e o tsc está limpo. Agora o gate **obrigatório** antes de qualquer deploy/commit do código: `/security-review` na migration + edge fns (G7, FMEA-011). Acionando:
+
+## 🤖 Claude *(10:03:09)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(10:03:09)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/App.tsx
+	modified:   src/pages/Auth.tsx
+	modified:   supabase/config.toml
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	src/pages/TikTokLoginCallback.tsx
+	supabase/functions/tiktok-login-callback/
+	supabase/functions/tiktok-login-init/
+	supabase/functions/tiktok-login-session/
+	supabase/migrations/20260708100000_tiktok_login_identities.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+docs/processes/tiktok-login-oauth.md
+```
+
+COMMITS:
+
+```
+commit cf7166e7b8a4eabf9f52558c3d323accdc9fc14b
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jul 8 06:55:42 2026 -0300
+
+    docs(process): SOP Lei 2 tiktok-login-oauth — Operator/Sequence/8 gates/Recovery/Success antes do código
+```
+
+DIFF CONTENT:
+
+```
+diff --git a/docs/processes/tiktok-login-oauth.md b/docs/processes/tiktok-login-oauth.md
+new file mode 100644
+index 0000000..5f036a0
+--- /dev/null
++++ b/docs/processes/tiktok-login-oauth.md
+@@ -0,0 +1,75 @@
++# SOP — TikTok Login (Login Kit v2) OAuth → Supabase session
++
++> **Lei 2 (Processo Antecipado).** O processo humano equivalente do "Entrar com TikTok" ANTES de qualquer automação. Fonte da verdade: BoK `docs/bok/tiktok-login/` (seal `299b9f36`) + mapa `.claude/context/tiktok-login-map-2026-07-08.md`. Gate CLAUDE.md §1.
++>
++> **ORO:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign + `/security-review` independente · Owner = Sovereign (sink privilegiado de auth; ações de console do TikTok; USD 0).
++
++---
++
++## Operator — quem executa manualmente hoje?
++
++O **Sovereign** no TikTok Developer Portal + o **usuário final** no browser. Hoje, sem esta feature, o "login social" existe só via Google (`Auth.tsx` `handleOAuthLogin('google')`). O connect do TikTok que existe (`social-auth-init`/`-callback`) é para **publicação** (pressupõe usuário já logado) — NÃO cria usuário nem minta sessão. Este SOP cobre o fluxo NOVO de **login/identidade**.
++
++## Pré-condições (ações Sovereign no console — BLOQUEANTES, paralelizáveis ao código)
++
++| # | Ação | Critério de sucesso material |
++|---|------|------------------------------|
++| P1 | Registrar o **`redirect_uri` do login** no TikTok console — path **SEPARADO** do publish (TikTok proíbe query-params na URI registrada, então não dá `?intent=login`). Valor: `https://<edge-host>/functions/v1/tiktok-login-callback` (https absoluto, sem query/fragment). | A URI aparece na lista "Redirect URI" do app (≤10 total, ≤512 chars). |
++| P2 | Adicionar a **conta TikTok de teste** como *sandbox target-user* (o app está unaudited → `user.info.basic` só loga usuários-sandbox registrados). | A conta aparece em Sandbox → Target users. |
++| P3 | Provisionar secrets no vault das edge fns: `TIKTOK_CLIENT_KEY`, `TIKTOK_CLIENT_SECRET` (do ambiente que será demonstrado — sandbox `sb…` vs prod diferem). | `npx supabase secrets list` mostra as duas chaves. |
++
++> Sem P1–P3 o fluxo **não completa** — o código pode ser deployado e testado até o ponto do redirect, mas o consent/callback falha. Isso é o teto honesto (Lei 1).
++
++## Sequence — em que ordem? (cada passo com critério material)
++
++| # | Passo | Ator | Critério de sucesso material |
++|---|-------|------|------------------------------|
++| S1 | Usuário abre `/auth?devLogin` e clica **"Entrar com TikTok"** | Usuário | Botão visível SÓ com `?devLogin` (público não vê); clique chama `handleTikTokLogin` → invoca `tiktok-login-init`. |
++| S2 | `tiktok-login-init` monta a authorize URL e retorna `{ url }` | Edge fn | `https://www.tiktok.com/v2/auth/authorize/?client_key=…&scope=user.info.basic&response_type=code&redirect_uri=<P1>&state=<HMAC>`; scope **vírgula-separado**; `state=signState({intent:'login',nonce,return_to,ts})` (nonce, **não** userId). |
++| S3 | Browser redireciona ao TikTok; usuário consente | Usuário + TikTok | TikTok redireciona a `<P1>?code=…&state=…`. |
++| S4 | `tiktok-login-callback` valida state + troca code por token | Edge fn | `verifyState(maxAge 10min)` **fail-closed**; POST `https://open.tiktokapis.com/v2/oauth/token/` form-encoded (`client_key,client_secret,code,grant_type=authorization_code,redirect_uri`) → resposta com `open_id`. |
++| S5 | Find-or-create identidade + mint sessão | Edge fn | `tiktok_identities` lookup por `open_id`; se ausente → `admin.createUser` (email sintético `tiktok_<open_id>@tiktok-login.mcorch.local`, password-less) + insert. Sessão via `admin.generateLink({type:'magiclink'})` → `verifyOtp({token_hash})` → `{access_token,refresh_token}`. |
++| S6 | Hand-off SEM token na URL | Edge fn | Gera código single-use (`tiktok_login_codes`, TTL ~60s, `code_hash`), redireciona a `/auth/tiktok/callback?code=<one_time>`. **Nenhum access/refresh token na URL.** |
++| S7 | SPA resgata o código → `setSession` | `TikTokLoginCallback.tsx` | POST do código a `tiktok-login-session` → retorna sessão UMA vez (invalida/consumed_at) → `supabase.auth.setSession(...)`. |
++| S8 | Sessão ativa → bounce | `useAuth` + `safeReturnTo` | `onAuthStateChange` dispara SIGNED_IN; `safeReturnTo()` (allowlist) ou `/dashboard`. |
++
++## Verification gates (como o operator confirma cada passo)
++
++- **G1 (regressão-zero):** login público (email/senha) e Google intactos — `?devLogin` ausente NÃO mostra o botão TikTok. Prova: browser em `/auth` (sem param) só mostra email/senha.
++- **G2 (state fail-closed):** `tiktok-login-callback` com `state` forjado/expirado/ausente → **rejeita** (nunca minta sessão). Prova: smoke `smoke-tiktok-login.ts` cenário state-forjado → 4xx, zero linha em `tiktok_identities`.
++- **G3 (no-token-in-URL):** nenhuma URL do fluxo contém `access_token`/`refresh_token`. Prova: inspeção do redirect S6 (só `?code=<opaco>`).
++- **G4 (replay-proof):** resgatar o código single-use 2× → 2ª vez **410/consumido**. Prova: smoke replay.
++- **G5 (anti-grafting):** login TikTok NUNCA linka a conta email existente — `open_id` novo = conta nova isolada. Prova: 2 open_ids distintos → 2 `user_id` distintos; nenhum match por email.
++- **G6 (RLS):** `tiktok_identities`/`tiktok_login_codes` default-deny; cliente anon/autenticado **não** lê os códigos. Prova: `/security-review` + SELECT anon → 0 rows.
++- **G7 (security-review):** `/security-review` independente **SAFE** na migration + 3 edge fns ANTES do deploy (FMEA-011). Bloqueante.
++- **G8 (E2E sandbox):** com P1–P3 feitos, a conta-sandbox loga ponta-a-ponta e cai autenticada em `/dashboard`; sessão material em `auth.sessions` + linha em `tiktok_identities`. Prova: screen-record + UUID da sessão + Vision QA da tela logada.
++
++## Recovery path — falha no passo N?
++
++- **S2/S3 consent falha (`redirect_uri mismatch`):** P1 não registrado OU host divergente → registrar a URI EXATA no console (não improvisar path). Re-tentar.
++- **S3 `scope not authorized` / usuário barrado:** conta não é sandbox target-user (P2) OU app não audited → adicionar a conta em Sandbox; para user público, aguardar audit (teto honesto). Toast PT-BR `not_authorized`.
++- **S4 state inválido:** `verifyState` fail-closed → redireciona a `/auth?tiktok_error=state_expired` → usuário re-inicia (state fresco). **NUNCA** retry silencioso que aceite state velho.
++- **S4 token exchange falha (client_key/secret errado ou ambiente trocado):** conferir P3 (sandbox vs prod). `/auth?tiktok_error=exchange_failed`; telemetria `infra_health_logs service='tiktok-login' event='error'`.
++- **S5 createUser colide (email sintético):** improvável (namespaced por `open_id` único); se colidir, é sinal de bug de chave — abortar, NÃO reusar conta alheia (G5). Investigar `open_id`.
++- **S7 código expirado/consumido:** `/auth?tiktok_error=expired` → re-login. Códigos expiram por TTL + `consumed_at`.
++- **Rollback total:** remover o botão de `Auth.tsx` (feature some da UI) — as edge fns/migration ficam inertes (nenhum caller). Zero impacto no login existente.
++
++## Success signal — sinal materialmente observável do flow completo
++
++A conta TikTok-sandbox clica "Entrar com TikTok" em `/auth?devLogin`, consente no TikTok, e **cai autenticada em `/dashboard`** com: (a) linha nova em `tiktok_identities(open_id→user_id)`; (b) sessão válida em `auth.sessions`; (c) `infra_health_logs service='tiktok-login' event='success'`; (d) Vision QA APROVADO da tela logada; (e) nenhum token em URL em nenhum passo. Para o **App Review**: screen-record desse fluxo ponta-a-ponta prova o scope `user.info.basic` funcionando.
++
++## Anti-patterns proibidos
++
++- ❌ Reusar `handleOAuthLogin('google'|'apple')` — TikTok não é provider nativo Supabase.
++- ❌ `signInWithIdToken` — TikTok não retorna `id_token`/OIDC.
++- ❌ Token em query string / hash da URL de redirect.
++- ❌ Auto-link de login TikTok a conta email existente (grafting cross-tenant).
++- ❌ Scope espaço-separado (o consent do TikTok falha silencioso — usar vírgula).
++- ❌ `redirect_uri` com query-param, ou o MESMO path do publish.
++- ❌ `deduct_mco_coins` no fluxo (login é zero-coin por invariante).
++- ❌ Deploy antes de `/security-review` SAFE (G7).
++
++## Referências
++- BoK: `docs/bok/tiktok-login/` (FR-TL / OTD-TL / FM-TL / DD-TL).
++- Mapa material: `.claude/context/tiktok-login-map-2026-07-08.md`.
++- Reuso: `supabase/functions/_shared/oauth-state.ts`, `src/lib/sso-cookie.ts`, `src/hooks/useAuth.ts`, `scripts/qa/gen-user-jwt.ts` (padrão generateLink→verifyOtp), precedente `social-auth-init`/`-callback`.
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
