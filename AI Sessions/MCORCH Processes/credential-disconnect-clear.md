@@ -179,3 +179,10 @@ WHERE s.name ~ '^(meta_config_(long_lived_token|pages)|social_accounts_(access_t
   AND NOT EXISTS (SELECT 1 FROM public.meta_config_table m   WHERE m.id::text  = right(s.name,36))
   AND NOT EXISTS (SELECT 1 FROM public.social_accounts_table sa WHERE sa.id::text = right(s.name,36));
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

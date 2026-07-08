@@ -47,3 +47,10 @@ Publishers audit-gated (TikTok SELF_ONLY · YouTube forced-private pré-Gate-B �
 **Gate G7 (novo, material):** run autopilot-shaped (`campaign_id` NULL) com imagem taggeada → surfaces de imagem `asset_status='ready'` (não `gap`). Provado zero-cost por `scripts/qa/smoke-reframe-image.ts` (cenário B, throwaway user, `auto_publish=false` ⇒ draft — sem side effect outward).
 
 **Nota de índice:** o filtro `metadata->>pillar_run_id` roda sem índice (escala Usuário Zero ok); se `content_library` crescer ordens de magnitude, criar índice por expressão.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
