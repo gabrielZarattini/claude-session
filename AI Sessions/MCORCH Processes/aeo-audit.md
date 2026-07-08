@@ -46,10 +46,3 @@ HTTP 200 `{status:'ok', audit_id, citation_rate, findings[]}` + N linhas em `aeo
 ## ORO
 
 - **Operator:** tenant (humano) · **Reviewer:** `/security-review` da migration `aeo_audits` + policy de débito atômico · **Owner:** Sovereign (blast radius = 5 mcoCoins/run + qualidade da recomendação; provider degradado documentado, sem risco outward).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
