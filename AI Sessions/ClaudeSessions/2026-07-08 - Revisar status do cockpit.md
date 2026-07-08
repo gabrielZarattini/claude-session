@@ -1,4 +1,4 @@
-# Revisar status do cockpit
+# [[2026-07-07 - Revisar status do cockpit|Revisar status do cockpit]]
 **Date:** 2026-07-08 | **Session ID:** `050518ea-3975-4115-ba2b-fbf8a7c86941`
 
 ---
@@ -2642,3 +2642,16 @@ Você tem razão no incômodo, mas o bot **não tem retrovisor** — ele reage a
 Nada pra entrar em pânico: são **$9,40 no total**, risco de centavos, praticamente empatado. Mas a verdade dura, já dita na auditoria: **essa estratégia tem edge marginal** (o intervalo de confiança cruza o zero) e a posição está **temporariamente presa** pelo gate de trend. Ela é, na prática, o experimento de $5 rodando ao vivo pra gerar o primeiro dado real.
 
 Eu **não mexo em nada sozinho** (não desarmo nem forço venda). Se você quiser, posso: (a) te avisar quando o regime sair de trend e a venda destravar, ou (b) preparar um ajuste pra a venda liquidar a posição inteira em vez de $5 fixo (resolve o dust) e checar saldo antes de disparar (mata a ordem-fantasma) — mas isso mexe em money-path, então passaria por QA/TL e pela sua autorização. Qual faz sentido?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
+> * **Próxima Sessão**: [[2026-07-08 - agent-a0b13f35b35bdfe4d]]
+%% --- TIMELINE END --- %%
