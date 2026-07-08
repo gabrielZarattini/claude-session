@@ -112,10 +112,3 @@ do publish). Anexo no publish-social (LinkedIn/X/Meta) e featured-image WP = **d
 - **Reviewer:** Sovereign (Gabriel) + `/security-review` (migration `creative_metrics`) + revisão adversarial.
 - **Owner:** Sovereign — blast radius = mudança de comportamento de geração + gasto de carteira no E2E +
   links monetizados publicados sob a conta do tenant.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
