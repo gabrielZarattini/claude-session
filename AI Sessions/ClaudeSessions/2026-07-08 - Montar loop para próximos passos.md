@@ -9992,7 +9992,7 @@ Antes de agir, preciso verificar algo material (Lei 1): a memória foi modificad
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git log (\u00faltimos 8) ===\"\ngit log --oneline -8\necho \"=== commits alegados existem? ===\"\ngit cat-file -t cf7166e 2>/dev/null && echo \"cf7166e EXISTE\" || echo \"cf7166e N\u00c3O EXISTE\"\ngit cat-file -t a18f975 2>/dev/null && echo \"a18f975 EXISTE\" || echo \"a18f975 N\u00c3O EXISTE\"\necho \"=== edge fns tiktok-login existem? ===\"\nls -d supabase/functions/tiktok-login-* 2>/dev/null || echo \"(nenhuma edge fn tiktok-login)\"\necho \"=== migration alegada existe? ===\"\nls supabase/migrations/20260708100000* 2>/dev/null || echo \"(migration N\u00c3O existe)\"\necho \"=== BoK tiktok-login existe? ===\"\nls docs/bok/tiktok-login/ 2>/dev/null || echo \"(BoK N\u00c3O existe)\"\necho \"=== SOP existe? ===\"\nls docs/processes/[[tiktok-login-oauth|tiktok-login-oauth]].md 2>/dev/null || echo \"(SOP N\u00c3O existe)\"",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git log (\u00faltimos 8) ===\"\ngit log --oneline -8\necho \"=== commits alegados existem? ===\"\ngit cat-file -t cf7166e 2>/dev/null && echo \"cf7166e EXISTE\" || echo \"cf7166e N\u00c3O EXISTE\"\ngit cat-file -t a18f975 2>/dev/null && echo \"a18f975 EXISTE\" || echo \"a18f975 N\u00c3O EXISTE\"\necho \"=== edge fns tiktok-login existem? ===\"\nls -d supabase/functions/tiktok-login-* 2>/dev/null || echo \"(nenhuma edge fn tiktok-login)\"\necho \"=== migration alegada existe? ===\"\nls supabase/migrations/20260708100000* 2>/dev/null || echo \"(migration N\u00c3O existe)\"\necho \"=== BoK tiktok-login existe? ===\"\nls docs/bok/tiktok-login/ 2>/dev/null || echo \"(BoK N\u00c3O existe)\"\necho \"=== SOP existe? ===\"\nls docs/processes/tiktok-login-oauth.md 2>/dev/null || echo \"(SOP N\u00c3O existe)\"",
   "description": "Verificar materialmente se as claims de 'shipado' da mem\u00f3ria s\u00e3o reais"
 }
 ```
@@ -10005,7 +10005,7 @@ Antes de agir, preciso verificar algo material (Lei 1): a memória foi modificad
 > a18f975 test(tiktok-login): browser-verify CF-proof — botão renderiza gated ?devLogin, público intacto (G1), zero console error
 > c202398 test(tiktok-login): smoke fail-closed 8/8 (state/binding/410/RLS) + apply script (migration aplicada+registrada)
 > 68da2f7 feat(auth): Login com TikTok (Login Kit v2 → sessão Supabase) — gated ?devLogin
-> cf7166e docs(process): SOP Lei 2 [[tiktok-login-oauth|tiktok-login-oauth]] — Operator/Sequence/8 gates/Recovery/Success antes do código
+> cf7166e docs(process): SOP Lei 2 tiktok-login-oauth — Operator/Sequence/8 gates/Recovery/Success antes do código
 > aac3668 docs(bok): seal tiktok-login BoK suite 9/9 — Login com TikTok (gate CLAUDE.md §1 aberto)
 > 6a53f26 chore(tiktok): domain-verification token na raiz do origin (public/) — durabilidade
 > 4a4a4e9 docs(loop): charter hygiene — it.0b/it.3 marcados ✅ (estavam feitos); it.4b GATED c/ OTD-SPACES-030
@@ -10031,7 +10031,7 @@ Antes de agir, preciso verificar algo material (Lei 1): a memória foi modificad
 > 07-process-flow.md
 > 08-quality-metrics.md
 > === SOP existe? ===
-> docs/processes/[[tiktok-login-oauth|tiktok-login-oauth]].md
+> docs/processes/tiktok-login-oauth.md
 > ```
 
 ## 🤖 Claude *(11:27:10)*
@@ -10192,15 +10192,131 @@ Entendido — parando. tsc fechou **exit 0**, então o trabalho concorrente comp
 
 Você me interrompeu, então passo a palavra: **como quer seguir?** (ex.: eu preparo o brief da decisão do editor do item 2 com as 3 opções + recomendação, ou você toca as ações de console e eu retomo o E2E, ou outra direção.)
 
----
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Item 2 — qual abordagem de 'editor embutido' para a Ponte Designer (it.4b / OTD-SPACES-030)? Isso define como eu rodo o /bok-scribe e implemento as camadas linkadas a fontes dinâmicas."="HyperFrames Studio (reuso)". You can now continue with these answers in mind.
+> ```
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+## 🤖 Claude *(19:43:15)*
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]
-> * **Próxima Sessão**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
-%% --- TIMELINE END --- %%
+
+## 🤖 Claude *(19:43:16)*
+
+O Sovereign escolheu **HyperFrames Studio (reuso)** — a rota natural (o `StudioApiAdapter` já é provado no módulo Vídeo, sem fork do open-design, sem env hardening). Vou registrar essa decisão de forma durável (na OTD-SPACES-030 + memória) para o próximo arco começar grounded, já que o spec+build do it.4b via HyperFrames é um arco focado próprio.
+
+## 🤖 Claude *(19:43:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/14-amendment-spaces-v2-consolidation.md",
+  "old_string": "  - **Unblock correto:** `/bok-scribe` decide o \"editor embutido\" (emenda SDD \u00a79/\u00a710) **e** o Sovereign hardening o env OD; s\u00f3 ent\u00e3o a it.4b \u00e9 cod\u00e1vel de fato. Rebaixa a linha it.4b do \u00a79 (verification gates) a *pendente do unblock*.",
+  "new_string": "  - **DECIS\u00c3O SOVEREIGN 2026-07-08 \u2014 editor embutido = HyperFrames Studio (reuso).** Escolhido entre 3 op\u00e7\u00f5es (AskUserQuestion): (A) **HyperFrames Studio [ESCOLHIDO]** \u2014 reusar o Studio j\u00e1 deployado em `video.mcorch.com` (j\u00e1 tem `StudioApiAdapter` provado no m\u00f3dulo V\u00eddeo \u2014 ver [[project_video_studio]] + blueprint `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md`), estendendo p/ camadas de arte est\u00e1tica; **sem fork do open-design, sem env hardening OD** (o gate de env vira n-a p/ esta rota). (B) adapter no open-design (rejeitado \u2014 fork). (C) editor nativo (rejeitado \u2014 build do zero). **Consequ\u00eancia:** o open-design env-hardening SAI do caminho cr\u00edtico do it.4b (permanece s\u00f3 p/ o card de preview open-design, n\u00e3o p/ a Ponte Designer). \n  - **Pr\u00f3ximo arco (unblock restante):** deepsearch do `StudioApiAdapter`/HyperFrames p/ edi\u00e7\u00e3o de camadas de IMAGEM est\u00e1tica + link camada\u2192fonte-din\u00e2mica (o `hyperframes-studio-integration-blueprint` cobriu render de v\u00eddeo; falta a sem\u00e2ntica de layer-source p/ arte est\u00e1tica) \u2192 emenda SDD `spaces-evolution` \u00a79/\u00a710 especificando FR-SPACES-030 via HyperFrames \u2192 implementa\u00e7\u00e3o (painel Nodes|Assets no Studio + camadas linkadas + galeria de presets) \u2192 /security-review \u2192 E2E+Vision. Rebaixa a linha it.4b do \u00a79 (verification gates) a *pendente deste arco*."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/14-amendment-spaces-v2-consolidation.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_go_roadmap_tiktok_login_openagn_higgsfield.md",
+  "old_string": "2. **GO: hardening env open-design + `/bok-scribe`** \u2014 destrava it.4b Ponte Designer (OTD-SPACES-030-DESIGNER-BRIDGE, registrada 2026-07-08 commit `251b026`). O n\u00facleo template-vivo exige: (a) env do container open-design \u2014 `OD_ALLOWED_ORIGINS=https://login.mcorch.com` + `OD_API_TOKEN` forte (era `development_token`); (b) `/bok-scribe` p/ decidir o \"editor embutido\" (adapter open-design vs HyperFrames vs nativo) via emenda SDD (`05-sdd.md:297` difere). Ver [[project_spaces_v2_consolidation]].",
+  "new_string": "2. **it.4b Ponte Designer (OTD-SPACES-030-DESIGNER-BRIDGE).** **DECIS\u00c3O SOVEREIGN 2026-07-08: editor embutido = HyperFrames Studio (reuso)** \u2014 reusar o Studio de `video.mcorch.com` (`StudioApiAdapter` j\u00e1 provado no [[project_video_studio]]), estendendo p/ camadas de arte est\u00e1tica. **Rejeitados:** adapter no open-design (fork) e editor nativo (do zero). **Consequ\u00eancia:** o open-design env-hardening SAI do caminho cr\u00edtico do it.4b (permanece s\u00f3 p/ o card de preview). **Pr\u00f3ximo arco (focado):** deepsearch do `StudioApiAdapter` p/ edi\u00e7\u00e3o de camadas de IMAGEM + link layer\u2192fonte-din\u00e2mica \u2192 emenda SDD `spaces-evolution` \u00a79/\u00a710 (FR-SPACES-030 via HyperFrames) \u2192 implementa\u00e7\u00e3o (painel Nodes|Assets + camadas linkadas + galeria presets) \u2192 /security-review \u2192 E2E+Vision. Decis\u00e3o registrada na OTD-SPACES-030 (Amendment 14). Ver [[project_spaces_v2_consolidation]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_go_roadmap_tiktok_login_openagn_higgsfield.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/spaces-evolution/14-amendment-spaces-v2-consolidation.md\ngit commit -q -m \"docs(spaces): OTD-SPACES-030 \u2014 decis\u00e3o Sovereign do editor embutido = HyperFrames Studio (reuso)\n\nit.4b Ponte Designer: escolhido HyperFrames Studio (StudioApiAdapter j\u00e1 provado no\nm\u00f3dulo V\u00eddeo) sobre adapter-open-design (fork) e editor-nativo. open-design env-hardening\nsai do caminho cr\u00edtico. Pr\u00f3ximo arco: deepsearch StudioApiAdapter p/ camadas de imagem +\nlink layer\u2192fonte \u2192 emenda SDD \u00a79/\u00a710 \u2192 implementa\u00e7\u00e3o \u2192 /security-review \u2192 E2E.\" && git log -1 --format='%h %s'\ngit push origin main 2>&1 | tail -1",
+  "description": "Commit da decis\u00e3o do editor + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:43PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:43PM[0m [32mINF[0m scan completed in 11.6ms
+> [90m4:43PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.25 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.23 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 3e45e08 docs(spaces): OTD-SPACES-030 — decisão Sovereign do editor embutido = HyperFrames Studio (reuso)
+>    989e560..3e45e08  main -> main
+> ```
+
+## 🤖 Claude *(19:44:04)*
+
+
+## 🤖 Claude *(19:44:17)*
+
+Decisão registrada e pushada (`3e45e08`). Chegamos a um ponto de parada limpo. Recap desta sessão-maratona:
+
+## O que foi entregue (tudo commitado + pushado)
+
+| Frente | Estado |
+|---|---|
+| **Universe 3.10** | ✅ Phase Epsilon V9 selada (nó `c20153c1`) — verificação adversarial 8-frentes, re-escopo honesto do 3.2 |
+| **Verificação de domínio TikTok** | ✅ diagnóstico (CF 403 barra bots) + Cloudflare Snippet + token no origin (`6a53f26`) |
+| **Item 1 — Login com TikTok** | ✅ **código completo + deploy**: BoK 9/9 (`299b9f36`) · SOP Lei 2 · migration aplicada · 3 edge fns deployadas · **1 HIGH login-CSRF fechado + reverificado** · smoke 8/8 · browser-verify PASS |
+| **Item 3(a) — Higgsfield Platform key nas Settings** | ✅ campos key+secret na aba BYOK (`989e560`), browser-verify logado PASS |
+| **Item 2 — decisão do editor** | ✅ **HyperFrames Studio (reuso)** registrada na OTD-SPACES-030 (`3e45e08`) |
+
+## O que depende de você agora (paralelo)
+
+1. **TikTok Login E2E** — as 3 ações de console (P1 `redirect_uri`, P2 conta-sandbox, P3 secrets). Feito isso, grava o screen-record que o app review pede. *(Seu vídeo já foi enviado.)*
+2. **Higgsfield MCP OAuth** — registrar o client OAuth no Clerk + clicar "Conectar Higgsfield" (Settings→Conectores). O código já está pronto.
+
+## Próximo arco (it.4b Ponte Designer, decisão travada)
+
+Com HyperFrames escolhido, o caminho é: deepsearch do `StudioApiAdapter` para edição de camadas de **imagem estática** + link camada→fonte-dinâmica → emenda SDD `spaces-evolution` §9/§10 → implementar (painel Nodes|Assets + camadas linkadas + galeria de presets) → `/security-review` → E2E. É um build focado próprio — não emendei ele no fim desta sessão (já longa) para não fazer uma geração arquitetural apressada. **É só me dar o GO** (ou re-armar o loop) que eu começo por esse deepsearch.
+
+Não re-armei o loop: o que resta é Sovereign-gated ou esse arco novo. Tudo está durável na malha + memória, então nada se perde se você seguir amanhã.
