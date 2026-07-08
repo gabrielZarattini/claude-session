@@ -4635,6 +4635,713 @@ O mapa está completo e traz uma decisão que é sua (Owner), então vou surfaç
 }
 ```
 
+## 👤 User *(09:15:19)*
+
+ok continue
+
+## 🤖 Claude *(09:15:56)*
+
+
+## 🤖 Claude *(09:15:59)*
+
+Entendido — "continue". O gate correto aqui é o BoK (subsistema de auth novo), e a Refusal Mode do CLAUDE.md me permite acionar o `/bok-scribe` eu mesmo. Vou seguir o protocolo: primeiro salvo o mapa/síntese num context file (para fundamentar o BoK — nada inventado, Lei 1), depois aciono o `/bok-scribe tiktok-login` grounded nesse mapa.
+
+Primeiro, persistindo o mapa como fonte fundamentada:
+
+## 🤖 Claude *(09:16:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/tiktok-login-map-2026-07-08.md",
+  "content": "# TikTok Login Kit v2 \u2014 mapa material + s\u00edntese (2026-07-08)\n\n> Fonte fundamentada (Lei 1) para o BoK `tiktok-login`. Mapa vivo do repo + contrato da API do TikTok via workflow `wf_a5b49460` (4 leitores + s\u00edntese). NADA inventado \u2014 cada decis\u00e3o tem prova de c\u00f3digo (`file:line`) ou doc URL.\n\n## Objetivo\nAdicionar \"Entrar com TikTok\" \u00e0 p\u00e1gina `/auth?devLogin` (gated como o Google hoje), como **login/identidade real** (n\u00e3o o connect de publica\u00e7\u00e3o existente). Motiva\u00e7\u00e3o Sovereign: satisfazer o app review do TikTok sobre o scope de login (`user.info.basic`).\n\n## Abordagem (confirmada)\nTikTok Login Kit v2 \u2014 OAuth2 authorization-code **server-side confidencial**. TikTok marca `code_verifier`/PKCE como \"mobile/desktop only\" \u2192 web usa `client_secret` na troca de token (sem PKCE). O TikTok **n\u00e3o retorna `id_token`/OIDC nem email** \u2192 `open_id` \u00e9 a \u00daNICA identidade est\u00e1vel \u21d2 `signInWithIdToken` \u00e9 imposs\u00edvel.\n\nMint de sess\u00e3o Supabase pelo \u00daNICO padr\u00e3o provado no repo: `admin.auth.admin.generateLink({type:'magiclink'})` \u2192 `anon.auth.verifyOtp({token_hash})` \u2192 `session{access_token,refresh_token}` (provado em `scripts/qa/gen-user-jwt.ts:25-37`; variante full-session `gen-user-session.ts`). O `useAuth` (`onAuthStateChange`) pega a sess\u00e3o sem altera\u00e7\u00e3o.\n\n**Fluxo (2-3 edge fns p\u00fablicas `verify_jwt=false` \u2014 o caller/redirect n\u00e3o tem JWT):**\n1. `tiktok-login-init`: monta `https://www.tiktok.com/v2/auth/authorize/` com `client_key`, `response_type=code`, `redirect_uri=<edge callback registrado>`, `scope=user.info.basic` (**v\u00edrgula-separado, NUNCA espa\u00e7o** \u2014 espa\u00e7o faz o consent falhar silencioso), `state=signState({intent:'login',nonce,return_to,ts}, SB_SECRET_KEY)`. Reusa `_shared/oauth-state.ts` `signState` verbatim; state carrega nonce+intent, **N\u00c3O** um userId (login ainda n\u00e3o tem \u2014 difere de `social-auth-init:63-64` que assina userId).\n2. `tiktok-login-callback`: `verifyState(maxAgeMs=600_000)` fail-closed \u2192 POST `https://open.tiktokapis.com/v2/oauth/token/` (x-www-form-urlencoded `client_key,client_secret,code,grant_type=authorization_code,redirect_uri`) \u2192 l\u00ea `open_id` \u2192 find-or-create usu\u00e1rio via nova tabela `tiktok_identities(open_id UNIQUE \u2192 user_id)` (email sint\u00e9tico determin\u00edstico `tiktok_<open_id>@tiktok-login.mcorch.local` no `admin.createUser` no 1\u00ba contato) \u2192 minta sess\u00e3o (generateLink\u2192verifyOtp) \u2192 **hand-off SEM tokens na URL**: gera c\u00f3digo single-use ~60s (server-stored `tiktok_login_codes`), redireciona p/ SPA `/auth/tiktok/callback?code=<one_time>`.\n3. SPA `/auth/tiktok/callback` faz POST do c\u00f3digo a um exchange (retorna a sess\u00e3o UMA vez, invalida) \u2192 `supabase.auth.setSession()` \u2192 bounce `safeReturnTo()`.\n\n## Credenciais (corre\u00e7\u00e3o honesta ao mapa)\n`social_app_config` **per-user N\u00c3O resolve no login** (`resolveSocialAppCreds` precisa de userId; n\u00e3o h\u00e1 `auth.uid()` pr\u00e9-login). Login usa **env de sistema** `TIKTOK_CLIENT_KEY`/`TIKTOK_CLIENT_SECRET` \u2014 o fallback env restrito LEG\u00cdTIMO do API Tenancy Model (path sem `auth.uid()`, onboarding). Difere do connect de publish (per-user BYOK, pois l\u00e1 o user j\u00e1 est\u00e1 logado).\n\n## Reuso (n\u00e3o reescrever)\n- `supabase/functions/_shared/oauth-state.ts` \u2014 `signState`/`verifyState` HMAC (verbatim).\n- `src/lib/sso-cookie.ts` \u2014 `safeReturnTo`/`syncSsoCookie` (bounce `?return_to`).\n- `src/hooks/useAuth.ts:11-41` \u2014 pega qualquer sess\u00e3o Supabase, seja como for mintada (sem mudan\u00e7a).\n- `src/pages/Auth.tsx:121-148` \u2014 bloco `{devLogin && (...)}` + markup do bot\u00e3o Google = template exato p/ o bot\u00e3o TikTok (Button outline, SVG de marca, spinner). **N\u00c3O** reusar `handleOAuthLogin` (tipado `'google'|'apple'`) \u2014 TikTok exige fluxo custom.\n- `scripts/qa/gen-user-jwt.ts` / `gen-user-session.ts` \u2014 padr\u00e3o generateLink\u2192verifyOtp (mint de sess\u00e3o).\n- `social-auth-init`/`social-auth-callback` \u2014 REFER\u00caNCIA do code/state exchange (mas alvo \u00e9 `social_credentials`, n\u00e3o identidade).\n\n## Seguran\u00e7a (cr\u00edtica \u2014 auth custom = sink privilegiado)\n- **Open redirect:** `return_to` passa pelo allowlist `safeReturnTo()`; `redirect_uri` p/ o TikTok \u00e9 o path est\u00e1tico registrado (nunca client-supplied). TikTok pro\u00edbe query-params na URI registrada \u21d2 login precisa de **path de callback SEPARADO** do publish (n\u00e3o d\u00e1 `?intent=login`).\n- **Abuso de mint de sess\u00e3o:** o callback minta sess\u00e3o COMPLETA a partir de `open_id` \u2192 tratar como sink privilegiado. HMAC state fail-closed (janela 10min + nonce, `timingSafeEqual`), exchange server-side only, rate-limit nas 2 fns p\u00fablicas, NUNCA token em URL (hand-off por c\u00f3digo single-use TTL curto invalidado no resgate).\n- **Account takeover por email sint\u00e9tico:** contas `tiktok_<open_id>@tiktok-login.mcorch.local` s\u00e3o password-less/non-resettable, namespaced a dom\u00ednio controlado. Chavear ESTRITAMENTE por `open_id` app-scoped. **N\u00c3O auto-linkar** um login TikTok a conta email existente (ressuscitaria o vetor de grafting cross-tenant que o `oauth-state.ts` fechou). Novo `open_id` = conta nova isolada.\n- **Migration:** RLS default-deny; `tiktok_identities`/`tiktok_login_codes` grav\u00e1veis s\u00f3 service-role, sem SELECT client dos c\u00f3digos. `/security-review` OBRIGAT\u00d3RIO antes do commit (FMEA-011).\n- **Secrets:** `TIKTOK_CLIENT_SECRET`/`SB_SECRET_KEY`/service-role s\u00f3 no env das edge fns, nunca no bundle. As 2 fns `verify_jwt=false` DEVEM se auto-proteger por state + Origin.\n\n## Riscos (Lei 1 \u2014 bloqueadores de demo)\n1. **App unaudited/sandbox + App Review REPROVADO** (pendente rebrand \u2014 `project_tiktok_review_rebrand_requirements`). `user.info.basic` unaudited \u2192 login s\u00f3 p/ **usu\u00e1rios-alvo adicionados como sandbox no console**; user p\u00fablico real s\u00f3 ap\u00f3s audit. Teto honesto do demo = 1 usu\u00e1rio-sandbox registrado.\n2. **`redirect_uri` deve ser pr\u00e9-registrado** no console (https absoluto, est\u00e1tico, \u2264512 chars, \u226410 total, SEM query/fragment) \u2014 **A\u00c7\u00c3O SOVEREIGN, bloqueante**. Path separado do publish.\n3. **Sandbox vs prod client_key diferem** (sandbox prefixo `sb\u2026`) \u2014 env deve casar com o ambiente do demo.\n4. `user.info.basic` login N\u00c3O precisa de conta privada (isso \u00e9 regra do `video.publish`); precisa \u00e9 do scope aprovado. Scope espa\u00e7o-separado falha o consent \u2192 v\u00edrgula.\n5. Sem email/OIDC \u2192 identidade `open_id`-only; o mapping email-sint\u00e9tico + `tiktok_identities` \u00e9 load-bearing e irrevers\u00edvel uma vez com users (schema-review ANTES do 1\u00ba login prod).\n6. Se tokens TikTok forem guardados (n\u00e3o requerido p/ identity-only), o TikTok ROTACIONA o refresh_token a cada refresh \u2014 MVP simples: **descartar tokens TikTok ap\u00f3s ler `open_id`**.\n\n## Gate & a\u00e7\u00f5es Sovereign\n- **Gate:** BoK `tiktok-login` (via `/bok-scribe`) + Pattern Conformance Declaration \u2014 novo subsistema de auth/identidade. SOP Lei 2 `docs/processes/tiktok-login-oauth.md` + `/security-review` = obrigat\u00f3rios antes de deploy, independente.\n- **A\u00e7\u00f5es Sovereign (caminho cr\u00edtico, paraleliz\u00e1veis):** (a) registrar `redirect_uri` do callback de login no console; (b) adicionar o usu\u00e1rio-sandbox alvo; (c) prover `TIKTOK_CLIENT_KEY/SECRET` (sandbox) no vault das edge fns.\n\n## Arquivos a tocar\n- `supabase/functions/tiktok-login-init/index.ts` (NOVO, `verify_jwt=false`)\n- `supabase/functions/tiktok-login-callback/index.ts` (NOVO, `verify_jwt=false`)\n- `supabase/functions/tiktok-login-session/index.ts` (NOVO \u2014 exchange do c\u00f3digo single-use; ou dobrar no callback)\n- `supabase/config.toml` (registrar as fns `verify_jwt=false`)\n- `src/pages/Auth.tsx` (bot\u00e3o TikTok entre :139-141 no gate devLogin + `handleTikTokLogin`)\n- `src/pages/TikTokLoginCallback.tsx` (NOVO \u2014 resgata c\u00f3digo, `setSession`, bounce)\n- `src/App.tsx` (rota `/auth/tiktok/callback`)\n- `supabase/migrations/<ts>_tiktok_login_identities.sql` (NOVO \u2014 `tiktok_identities` + `tiktok_login_codes`, RLS default-deny service-role-only)\n- `docs/processes/tiktok-login-oauth.md` (NOVO \u2014 SOP Lei 2, antes do c\u00f3digo)\n- `docs/bok/tiktok-login/` (NOVO \u2014 su\u00edte BoK via `/bok-scribe`)\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/context/tiktok-login-map-2026-07-08.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:16:55)*
+
+Mapa persistido. Agora acionando o `/bok-scribe` para selar a suíte BoK do `tiktok-login`, grounded nesse mapa (Fonte da Verdade antes do código):
+
+## 🤖 Claude *(09:17:09)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "tiktok-login \u2014 \"Entrar com TikTok\" como provider de LOGIN/identidade real na p\u00e1gina /auth?devLogin do MCORCH (n\u00e3o o connect de publica\u00e7\u00e3o existente). Objetivo de neg\u00f3cio: satisfazer o app review do TikTok sobre o scope de login (user.info.basic) e oferecer login social alternativo ao Google, gated atr\u00e1s de ?devLogin (login p\u00fablico intocado). \n\nGROUNDING OBRIGAT\u00d3RIO (Lei 1 \u2014 N\u00c3O inventar): baseie TODA a su\u00edte no mapa material j\u00e1 pesquisado em `.claude/context/tiktok-login-map-2026-07-08.md` (contrato real da API TikTok Login Kit v2 + mapa vivo do repo via workflow wf_a5b49460). Leia esse arquivo PRIMEIRO e trate-o como a pesquisa fundamentada.\n\nEss\u00eancia t\u00e9cnica a documentar: OAuth2 authorization-code server-side confidencial (SEM PKCE no web; client_secret na troca de token); TikTok N\u00c3O retorna id_token/OIDC nem email \u2192 open_id \u00e9 a \u00fanica identidade est\u00e1vel; mint de sess\u00e3o Supabase via o padr\u00e3o provado no repo admin.generateLink\u2192verifyOtp (gen-user-jwt.ts); nova tabela tiktok_identities(open_id UNIQUE\u2192user_id) + tiktok_login_codes (hand-off single-use, sem token em URL); 2-3 edge fns p\u00fablicas verify_jwt=false auto-protegidas por state HMAC (reusa _shared/oauth-state.ts) + Origin; credenciais de SISTEMA env TIKTOK_CLIENT_KEY/SECRET (fallback restrito leg\u00edtimo do API Tenancy Model \u2014 login n\u00e3o tem auth.uid()); scope v\u00edrgula-separado; NUNCA auto-linkar a conta email existente (evita grafting cross-tenant); email sint\u00e9tico namespaced password-less; RLS default-deny service-role-only. \n\nRiscos/gates a registrar como OTD/FMEA: app sandbox+App Review REPROVADO (login s\u00f3 p/ usu\u00e1rio-sandbox registrado at\u00e9 audit); redirect_uri deve ser pr\u00e9-registrado no console TikTok em path SEPARADO do publish (a\u00e7\u00e3o Sovereign bloqueante, TikTok pro\u00edbe query-params na URI); sandbox vs prod client_key diferem; /security-review obrigat\u00f3rio na migration + edge fns antes de deploy (FMEA-011); SOP Lei 2 docs/processes/tiktok-login-oauth.md antes do c\u00f3digo. Inclua a Pattern Conformance Declaration (21 padr\u00f5es ag\u00eanticos). Reuso pesado: oauth-state.ts, sso-cookie, useAuth, precedente social-auth-*."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(09:17:09)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `tiktok-login — "Entrar com TikTok" como provider de LOGIN/identidade real na página /auth?devLogin do MCORCH (não o connect de publicação existente). Objetivo de negócio: satisfazer o app review do TikTok sobre o scope de login (user.info.basic) e oferecer login social alternativo ao Google, gated atrás de ?devLogin (login público intocado). 
+
+GROUNDING OBRIGATÓRIO (Lei 1 — NÃO inventar): baseie TODA a suíte no mapa material já pesquisado em `.claude/context/tiktok-login-map-2026-07-08.md` (contrato real da API TikTok Login Kit v2 + mapa vivo do repo via workflow wf_a5b49460). Leia esse arquivo PRIMEIRO e trate-o como a pesquisa fundamentada.
+
+Essência técnica a documentar: OAuth2 authorization-code server-side confidencial (SEM PKCE no web; client_secret na troca de token); TikTok NÃO retorna id_token/OIDC nem email → open_id é a única identidade estável; mint de sessão Supabase via o padrão provado no repo admin.generateLink→verifyOtp (gen-user-jwt.ts); nova tabela tiktok_identities(open_id UNIQUE→user_id) + tiktok_login_codes (hand-off single-use, sem token em URL); 2-3 edge fns públicas verify_jwt=false auto-protegidas por state HMAC (reusa _shared/oauth-state.ts) + Origin; credenciais de SISTEMA env TIKTOK_CLIENT_KEY/SECRET (fallback restrito legítimo do API Tenancy Model — login não tem auth.uid()); scope vírgula-separado; NUNCA auto-linkar a conta email existente (evita grafting cross-tenant); email sintético namespaced password-less; RLS default-deny service-role-only. 
+
+Riscos/gates a registrar como OTD/FMEA: app sandbox+App Review REPROVADO (login só p/ usuário-sandbox registrado até audit); redirect_uri deve ser pré-registrado no console TikTok em path SEPARADO do publish (ação Sovereign bloqueante, TikTok proíbe query-params na URI); sandbox vs prod client_key diferem; /security-review obrigatório na migration + edge fns antes de deploy (FMEA-011); SOP Lei 2 docs/processes/tiktok-login-oauth.md antes do código. Inclua a Pattern Conformance Declaration (21 padrões agênticos). Reuso pesado: oauth-state.ts, sso-cookie, useAuth, precedente social-auth-*.`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in tiktok-login — "Entrar com TikTok" como provider de LOGIN/identidade real na página /auth?devLogin do MCORCH (não o connect de publicação existente). Objetivo de negócio: satisfazer o app review do TikTok sobre o scope de login (user.info.basic) e oferecer login social alternativo ao Google, gated atrás de ?devLogin (login público intocado). 
+
+GROUNDING OBRIGATÓRIO (Lei 1 — NÃO inventar): baseie TODA a suíte no mapa material já pesquisado em `.claude/context/tiktok-login-map-2026-07-08.md` (contrato real da API TikTok Login Kit v2 + mapa vivo do repo via workflow wf_a5b49460). Leia esse arquivo PRIMEIRO e trate-o como a pesquisa fundamentada.
+
+Essência técnica a documentar: OAuth2 authorization-code server-side confidencial (SEM PKCE no web; client_secret na troca de token); TikTok NÃO retorna id_token/OIDC nem email → open_id é a única identidade estável; mint de sessão Supabase via o padrão provado no repo admin.generateLink→verifyOtp (gen-user-jwt.ts); nova tabela tiktok_identities(open_id UNIQUE→user_id) + tiktok_login_codes (hand-off single-use, sem token em URL); 2-3 edge fns públicas verify_jwt=false auto-protegidas por state HMAC (reusa _shared/oauth-state.ts) + Origin; credenciais de SISTEMA env TIKTOK_CLIENT_KEY/SECRET (fallback restrito legítimo do API Tenancy Model — login não tem auth.uid()); scope vírgula-separado; NUNCA auto-linkar a conta email existente (evita grafting cross-tenant); email sintético namespaced password-less; RLS default-deny service-role-only. 
+
+Riscos/gates a registrar como OTD/FMEA: app sandbox+App Review REPROVADO (login só p/ usuário-sandbox registrado até audit); redirect_uri deve ser pré-registrado no console TikTok em path SEPARADO do publish (ação Sovereign bloqueante, TikTok proíbe query-params na URI); sandbox vs prod client_key diferem; /security-review obrigatório na migration + edge fns antes de deploy (FMEA-011); SOP Lei 2 docs/processes/tiktok-login-oauth.md antes do código. Inclua a Pattern Conformance Declaration (21 padrões agênticos). Reuso pesado: oauth-state.ts, sso-cookie, useAuth, precedente social-auth-*.):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(09:17:27)*
+
+
+## 🤖 Claude *(09:17:29)*
+
+O skill do bok-scribe carregou. Inputs derivados: slug=`tiktok-login`, surface=extends-auth, regulatório=LGPD, enabler (não-monetizado direto). Vou ler a definição do agente + templates para seguir a estrutura exata, depois gero a suíte grounded no mapa.
+
+## 🤖 Claude *(09:17:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(09:17:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe/templates/ 2>/dev/null; echo \"--- exemplo de su\u00edte recente p/ formato (vision-mcp 00-index) ---\"; ls docs/bok/vision-mcp/",
+  "description": "Listar templates do bok-scribe + su\u00edte exemplo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 68
+> drwxrwxr-x 2 gcrUX gcrUX 4096 May  6 13:37 .
+> drwxrwxr-x 3 gcrUX gcrUX 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 gcrUX gcrUX 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 gcrUX gcrUX 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 gcrUX gcrUX 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 gcrUX gcrUX 7550 May  6 13:37 08-quality-metrics.md
+> --- exemplo de suíte recente p/ formato (vision-mcp 00-index) ---
+> 00-deepsearch-blueprint.md
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 09-agent-system.md
+> ```
+
+## 🤖 Claude *(09:18:14)*
+
+
+## 🤖 Claude *(09:18:16)*
+
+Tenho o workflow completo do bok-scribe (9 documentos 00-08, SDD com Pattern Conformance). O grounding já está pronto no mapa. Vou gerar a suíte com um workflow que respeita a cadeia de dependência (foundation → core → derivativos) para manter o espaço de IDs coerente e a traceabilidade íntegra — cada agente lê o mapa e escreve seu(s) documento(s).
+
+## 🤖 Claude *(09:19:30)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'tiktok-login-bok-author',\n  description: 'Author the tiktok-login BoK suite (9 docs) grounded in the material map, dependency-ordered for ID coherence + traceability',\n  phases: [\n    { title: 'Foundation', detail: '01-mrd + 02-brd + 03-prd (locks MR/BR/PR IDs)' },\n    { title: 'Core', detail: '04-frd + 05-sdd with Pattern Conformance (locks FR/NFR/OTD/FMEA)' },\n    { title: 'Derivatives', detail: '06-data-model \u00b7 07-process-flow \u00b7 08-quality-metrics (parallel)' },\n    { title: 'Index', detail: '00-index manifest + traceability validation' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst MAP = `${REPO}/.claude/context/tiktok-login-map-2026-07-08.md`\nconst DIR = `${REPO}/docs/bok/tiktok-login`\nconst AGENTDEF = `${REPO}/.claude/agents/bok-scribe-agent.md`\nconst EXEMPLAR = `${REPO}/docs/bok/vision-mcp`\n\nconst COMMON = `You are the MCORCH BoK Scribe. Survival Law 1: NEVER invent \u2014 every requirement/decision must be grounded in the material map at ${MAP} (READ IT FIRST \u2014 it is the researched Source of Truth: real TikTok Login Kit v2 contract + live repo map). Also read the doc-structure spec at ${AGENTDEF} (Output File Map + per-phase section lists) and skim one exemplar suite at ${EXEMPLAR}/ (e.g. 04-frd.md, 05-sdd.md) for house style, ID formatting, traceability tables, and the Pattern Conformance table format.\n\nPROJECT: slug=tiktok-login \u00b7 market=B2C (platform end-users) \u00b7 monetization=internal-enabler (zero-coin; login has no mcoCoins cost) \u00b7 regulatory=LGPD (identity/session, open_id personal data) \u00b7 integration=extends-mcorch (extends the /auth surface).\n\nSTYLE (non-negotiable): English headings/labels; PT-BR narrative allowed in prose. IDs zero-padded 3 digits with prefixes. Markdown tables with header rows. Footer each file: '_Generated by MCORCH BoK Scribe Agent v1.0.0_'. Ground EVERY technical claim in the map (cite file:line or the TikTok doc where the map does). Write the ACTUAL file(s) with the Write tool to ${DIR}/<name>. Keep each doc focused and real \u2014 no filler.`\n\nconst FOUNDATION_SCHEMA = {\n  type: 'object', required: ['mr_ids', 'br_ids', 'pr_ids', 'mvp_scope', 'summary'],\n  properties: {\n    mr_ids: { type: 'array', items: { type: 'string' } },\n    br_ids: { type: 'array', items: { type: 'string' } },\n    pr_ids: { type: 'array', items: { type: 'string' } },\n    mvp_scope: { type: 'string', description: 'the Must-have PRs that form the MVP' },\n    summary: { type: 'string' },\n  },\n}\nconst CORE_SCHEMA = {\n  type: 'object', required: ['fr_ids', 'nfr_ids', 'otd_ids', 'fmea_high_rpn', 'pattern_conformance_included', 'summary'],\n  properties: {\n    fr_ids: { type: 'array', items: { type: 'string' } },\n    nfr_ids: { type: 'array', items: { type: 'string' } },\n    otd_ids: { type: 'array', items: { type: 'string' } },\n    fmea_high_rpn: { type: 'array', items: { type: 'string' }, description: 'FMEA items with RPN>100 (id + rpn)' },\n    pattern_conformance_included: { type: 'boolean' },\n    summary: { type: 'string' },\n  },\n}\nconst DOC_SCHEMA = {\n  type: 'object', required: ['file', 'ids_minted', 'summary'],\n  properties: { file: { type: 'string' }, ids_minted: { type: 'array', items: { type: 'string' } }, summary: { type: 'string' } },\n}\n\nphase('Foundation')\nconst foundation = await agent(\n  `${COMMON}\n\nAuthor THREE files, grounded in the map:\n- ${DIR}/01-mrd.md \u2014 Market Requirements (BABOK): exec summary, market problem (TikTok app-review requires a working login-scope demo; users want social login alt to Google), segments+TAM/SAM/SOM (light, honest \u2014 this is an enabler not a revenue line), competitive landscape (Google OAuth, Apple, email/pass \u2014 min 3), opportunity/timing, MR-TL-001..NNN (Critical/High/Med/Low), market KPIs, LGPD/compliance context, MR\u2192BR stub. Prefix MR-TL-.\n- ${DIR}/02-brd.md \u2014 Business Requirements (BABOK): exec summary, SMART objectives (\u22653; e.g. pass TikTok login-scope audit, zero regression on public auth), stakeholder register, BR-TL-001..NNN traced to MR-TL, ROI model (enabler \u2014 cost = eng time; benefit = unblocks TikTok distribution channel + audit), mcoCoins economics (ZERO \u2014 login is not billed), constraints/assumptions (sandbox ceiling, redirect_uri registration is a Sovereign console action), business risks table, business acceptance criteria, MR\u2192BR\u2192PR stub. Prefix BR-TL-.\n- ${DIR}/03-prd.md \u2014 Product Requirements (ProdBOK+CXBOK): product vision (one sentence), \u22652 personas (Usu\u00e1rio Zero / new social-login user), user journeys (happy path: click Entrar com TikTok \u2192 consent \u2192 /dashboard; +2 edge cases: state expired, sandbox-user-not-registered), feature inventory MoSCoW PR-TL-001..NNN (Must: the login button+init+callback+session-mint+identity-map; Should: display name/avatar via user/info; Could: link-to-existing when already logged; Won't: auto-link by email), release phasing (MVP=Musts, gated ?devLogin), Luxury UX (mirror Google button in Auth.tsx:121-148, brand SVG, PT-BR toasts), Gherkin acceptance criteria, MR\u2192BR\u2192PR matrix. Prefix PR-TL-.\n\nKeep IDs consistent and traceable. Return the ID lists + MVP scope.`,\n  { label: 'author:foundation', phase: 'Foundation', schema: FOUNDATION_SCHEMA, agentType: 'general-purpose' }\n)\n\nphase('Core')\nconst core = await agent(\n  `${COMMON}\n\nThe foundation docs (01-mrd/02-brd/03-prd) are written. Their ID space:\n${JSON.stringify(foundation)}\nRead ${DIR}/03-prd.md to trace FRs to the real PR-TL ids.\n\nAuthor TWO files, grounded in the map (the map's \"Abordagem\", \"Seguran\u00e7a\", \"Riscos\", \"Arquivos a tocar\" sections are your primary source):\n- ${DIR}/04-frd.md \u2014 Functional Requirements (SWEBOK): scope, FR-TL-001..NNN (each: id, title, desc, priority, PR-TL traced, acceptance-test id, Category UI|EdgeFn|DB). Cover: login button (UI, gated devLogin), tiktok-login-init (EdgeFn verify_jwt=false, authorize URL, comma-scope, signState nonce+intent), tiktok-login-callback (EdgeFn, verifyState fail-closed, token exchange client_secret, open_id, find-or-create via tiktok_identities, generateLink\u2192verifyOtp session mint, one-time code hand-off), tiktok-login-session/SPA callback (redeem single-use code\u2192setSession\u2192safeReturnTo), tiktok_identities + tiktok_login_codes (DB). NFR-TL-001..NNN (perf, security fail-closed, no-token-in-URL, rate-limit public fns, availability, LGPD erasability). Interface contracts (edge fn req/resp/error shapes). Data validation rules. Test strategy matrix. PR\u2192FR matrix. Prefix FR-TL-/NFR-TL-.\n- ${DIR}/05-sdd.md \u2014 System Design (SWEBOK+CISSP): architecture overview (Harness layer map), component catalog (3 edge fns, Auth.tsx button+handler, TikTokLoginCallback.tsx SPA route, migration), data flow (login use case end-to-end), API contracts (the 3 edge fns: method/path/auth/req/resp/errors \u2014 NOTE verify_jwt=false + self-guard by state+Origin), Security Design = STRIDE per component (spoofing\u2192HMAC state, tampering\u2192timingSafeEqual, repudiation\u2192telemetry, info-disclosure\u2192no-token-in-URL, DoS\u2192rate-limit, elevation\u2192session-mint sink guard) + RLS policy defs (default-deny service-role-only) + secrets inventory (TIKTOK_CLIENT_KEY/SECRET system-env, SB_SECRET_KEY) + the NO-AUTO-LINK-BY-EMAIL rule (anti cross-tenant grafting), infra touchpoints (infra_health_logs events tiktok_login_success/degraded/error), migration stubs (tiktok_identities open_id UNIQUE\u2192user_id; tiktok_login_codes one-time TTL), OTD-TL-001..NNN (each options+recommendation \u2014 include: redirect_uri registration is Sovereign console action; sandbox audit ceiling; whether to store TikTok tokens [rec: discard after open_id]; separate callback path vs ?intent). **MANDATORY: a Pattern Conformance Declaration table (all 21 agentic patterns from docs/architecture/agentic-vision.md: Pattern | Implemented yes/deferred/n-a | How/Why) \u2014 CLAUDE.md \u00a71 Step 3.5.** Prefix FR-TL-/OTD-TL-. Include FMEA-worthy notes but the full FMEA lives in 08.\n\nReturn FR/NFR/OTD ids, FMEA-worthy high-RPN candidates, and confirm Pattern Conformance included.`,\n  { label: 'author:core', phase: 'Core', schema: CORE_SCHEMA, agentType: 'general-purpose' }\n)\n\nphase('Derivatives')\nconst derivatives = await parallel([\n  () => agent(\n    `${COMMON}\\n\\nFoundation+Core are written. Read ${DIR}/04-frd.md and ${DIR}/05-sdd.md for the real FR-TL/OTD-TL ids and the migration stubs.\\nAuthor ${DIR}/06-data-model.md (DMBOK): conceptual model (tiktok_identities, tiktok_login_codes, auth.users link), logical model (per table: columns/types/constraints/FK), Supabase physical stubs (CREATE TABLE skeleton + RLS default-deny service-role-only + indexes: open_id UNIQUE, code lookup, TTL), GraphRAG nodes (does login emit a mesh observation node on first login? \u2014 yes, observation node 'tiktok_login_first_seen'; no new node_type), tenant isolation map (these are IDENTITY tables \u2014 service-role-only, no per-user RLS SELECT of codes; open_id\u2192user_id mapping is the isolation boundary), data quality rules (open_id non-null unique; synthetic email regex tiktok_<open_id>@tiktok-login.mcorch.local; code single-use TTL), retention/archival (LGPD: erase tiktok_identities row on account deletion; codes auto-expire). Ground in map security section. Return the file + ids.`,\n    { label: 'author:data-model', phase: 'Derivatives', schema: DOC_SCHEMA, agentType: 'general-purpose' }\n  ),\n  () => agent(\n    `${COMMON}\\n\\nFoundation+Core are written. Read ${DIR}/04-frd.md and ${DIR}/05-sdd.md.\\nAuthor ${DIR}/07-process-flow.md (BPM CBOK): process inventory (Login-with-TikTok flow; token-cleanup; account-erasure), BPMN-lite maps with swimlanes User|Auth.tsx|tiktok-login-init|TikTok|tiktok-login-callback|DB|SPA-callback for the full login happy path + error branches (state expired\u2192re-init; sandbox-user-not-registered\u2192PT-BR error; token exchange fail\u2192fail-closed), orchestration integration points (NONE in orchestrate-content \u2014 login is standalone auth; note it), error handling & retry per step (fail-closed, NO silent retry on state failure), SLA per step (authorize redirect <1s; token exchange <5s; session mint <2s), cron jobs (tiktok_login_codes TTL cleanup \u2014 is a sweep needed or is TTL-on-read enough? recommend TTL check on redeem + optional daily sweep). Ground in map. Return the file + ids.`,\n    { label: 'author:process-flow', phase: 'Derivatives', schema: DOC_SCHEMA, agentType: 'general-purpose' }\n  ),\n  () => agent(\n    `${COMMON}\\n\\nFoundation+Core are written. Read ${DIR}/04-frd.md and ${DIR}/05-sdd.md for FR-TL/OTD-TL ids.\\nAuthor ${DIR}/08-quality-metrics.md (CMQ/OE): quality objectives (aligned to BRD), KPI dashboard (login success rate, callback error rate, session-mint latency, state-verify failure rate \u2014 with formula/target/threshold/source), **FMEA table** per critical FR (Function|Failure Mode|Effect|S|O|D|RPN=SxOxD|Action) \u2014 MUST cover: forged state\u2192session takeover (high S), token in URL leak, synthetic-email collision/account-takeover, auto-link-by-email cross-tenant grafting, one-time code replay, sandbox client_key mismatch, redirect_uri not registered. Every RPN>100 needs a Recommended Action. Prefix FMEA-TL-. Self-optimization loops (state-failure spike\u2192alert), self-healing (infra_health_logs telemetry + code TTL sweep), SLA/SLO/SLI, PDCA cadence, observability checklist (log events, alert rules). Ground in map risks/security. Return the file + FMEA ids (flag which RPN>100).`,\n    { label: 'author:quality', phase: 'Derivatives', schema: DOC_SCHEMA, agentType: 'general-purpose' }\n  ),\n]).then(r => r.filter(Boolean))\n\nphase('Index')\nconst index = await agent(\n  `${COMMON}\\n\\nAll 8 content docs are written in ${DIR}/. Read the directory (ls) and each file's header to build the manifest.\nAuthor ${DIR}/00-index.md \u2014 project manifest: metadata (slug tiktok-login, market B2C, monetization internal-enabler zero-coin, regulatory LGPD, integration extends-mcorch, date 2026-07-08, version v1.0), file registry table with all 9 files marked [x] complete + one-line purpose each, ID-space summary (MR-TL/BR-TL/PR-TL/FR-TL/NFR-TL/OTD-TL/FMEA-TL ranges \u2014 read the real ranges from the files), the Sovereign-console action list (register redirect_uri separate path, add sandbox test user, provision TIKTOK_CLIENT_KEY/SECRET), the mandatory gates (SOP docs/processes/tiktok-login-oauth.md + /security-review before deploy), and a Closed-Loop note (BoK Gate for tiktok-login OPEN after this seal).\n\nTHEN run traceability validation (Phase 6): read all files, assert MR\u2192BR\u2192PR\u2192FR chains have no orphans, every edge fn lists secrets+verify_jwt, every new table has RLS default-deny, every FMEA RPN>100 has an action. Report the validation result.`,\n  { label: 'author:index+validate', phase: 'Index', schema: {\n    type: 'object', required: ['index_written', 'traceability_ok', 'orphans', 'issues'],\n    properties: { index_written: { type: 'boolean' }, traceability_ok: { type: 'boolean' }, orphans: { type: 'array', items: { type: 'string' } }, issues: { type: 'array', items: { type: 'string' } } },\n  }, agentType: 'general-purpose' }\n)\n\nreturn { foundation, core, derivatives, index }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w6283cbdj
+> Summary: Author the tiktok-login BoK suite (9 docs) grounded in the material map, dependency-ordered for ID coherence + traceability
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_de2ab537-fff
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-bok-author-wf_de2ab537-fff.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-bok-author-wf_de2ab537-fff.js"} to iterate without resending the script.)
+> Run ID: wf_de2ab537-fff
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-bok-author-wf_de2ab537-fff.js", resumeFromRunId: "wf_de2ab537-fff"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(09:19:42)*
+
+O bok-scribe está gerando a suíte `tiktok-login` (9 documentos, dependency-ordered para traceabilidade coerente) em background — Foundation (MRD/BRD/PRD) → Core (FRD/SDD com Pattern Conformance) → Derivativos em paralelo (data-model/process-flow/quality-metrics) → Index + validação de traceabilidade. Tudo grounded no mapa material (Lei 1, nada inventado).
+
+Enquanto roda, resumo do estado e do que vem:
+
+- ✅ **Token TikTok** commitado no origin (`6a53f26`), Cloudflare Snippet ativo.
+- ✅ **Acesso ao repo** restaurado e verificado.
+- ✅ **Mapa do Login TikTok** pesquisado e persistido (`.claude/context/tiktok-login-map-2026-07-08.md`).
+- 🔄 **BoK `tiktok-login`** gerando (gate do CLAUDE.md §1).
+
+**Sequência após o BoK selar:** SOP Lei 2 (`docs/processes/tiktok-login-oauth.md`) → implementar as 3 edge fns + migration + botão/callback → `/security-review` (obrigatório na migration + edge fns) → deploy → **suas ações de console** (registrar `redirect_uri` em path separado, adicionar usuário-sandbox, provisionar `TIKTOK_CLIENT_KEY/SECRET`) → E2E + Vision. Só então o item 1 fecha; depois **armo o loop** para open-design hardening + `/bok-scribe` (it.4b) e as duas conexões do Higgsfield.
+
+Aviso assim que a suíte terminar para revisarmos os IDs/traceabilidade antes de eu escrever a SOP e o código.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
