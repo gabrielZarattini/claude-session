@@ -41,7 +41,8 @@ O **Sovereign** no TikTok Developer Portal + o **usuário final** no browser. Ho
 - **G4 (replay-proof):** resgatar o código single-use 2× → 2ª vez **410/consumido**. Prova: smoke replay.
 - **G5 (anti-grafting):** login TikTok NUNCA linka a conta email existente — `open_id` novo = conta nova isolada. Prova: 2 open_ids distintos → 2 `user_id` distintos; nenhum match por email.
 - **G6 (RLS):** `tiktok_identities`/`tiktok_login_codes` default-deny; cliente anon/autenticado **não** lê os códigos. Prova: `/security-review` + SELECT anon → 0 rows.
-- **G7 (security-review):** `/security-review` independente **SAFE** na migration + 3 edge fns ANTES do deploy (FMEA-011). Bloqueante.
+- **G7 (security-review):** `/security-review` independente **SAFE** na migration + 3 edge fns ANTES do deploy (FMEA-011). Bloqueante. **Achado fechado 2026-07-08:** login-CSRF/session-fixation HIGH (código de hand-off não ligado ao browser iniciador) → **browser-binding** `src/lib/tiktok-login-binding.ts` (segredo por-tentativa em `sessionStorage`; hash assinado no state → gravado em `tiktok_login_codes.binding_hash` NOT NULL → exigido no resgate atômico `eq('binding_hash')`). Só o browser iniciador resgata; código capturado por atacante falha no browser da vítima. Re-verificado FIX_CONFIRMED.
+- **G9 (browser-binding anti-CSRF):** resgatar um código num browser SEM o `binding` (sessionStorage de outra origem/tab) → **410** (0 rows no consume). Prova: smoke cenário binding-mismatch.
 - **G8 (E2E sandbox):** com P1–P3 feitos, a conta-sandbox loga ponta-a-ponta e cai autenticada em `/dashboard`; sessão material em `auth.sessions` + linha em `tiktok_identities`. Prova: screen-record + UUID da sessão + Vision QA da tela logada.
 
 ## Recovery path — falha no passo N?

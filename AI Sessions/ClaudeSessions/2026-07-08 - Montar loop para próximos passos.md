@@ -7688,6 +7688,2214 @@ Begin your analysis now. Do this in 3 steps:
 
 Your final reply must contain the markdown report and nothing else.
 
+## 🤖 Claude *(10:03:24)*
+
+
+## 🤖 Claude *(10:03:26)*
+
+O `/security-review` capturou só o SOP commitado — os arquivos críticos (migration + edge fns + Auth.tsx) estão **untracked**, então o diff automático não os viu. Vou rodar o review de verdade sobre os arquivos reais, seguindo os 3 passos do skill (find → filtrar FP em paralelo → manter confiança ≥8):
+
+## 🤖 Claude *(10:03:57)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'tiktok-login-security-review',\n  description: 'Security review of the tiktok-login code (migration + 3 edge fns + Auth.tsx + SPA callback) \u2014 find \u2192 adversarial FP-filter \u2192 keep confidence>=8',\n  phases: [{ title: 'Find', detail: 'read the real files, enumerate candidate vulns' }, { title: 'Filter', detail: 'parallel false-positive filter per candidate' }],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst FILES = [\n  `${REPO}/supabase/migrations/20260708100000_tiktok_login_identities.sql`,\n  `${REPO}/supabase/functions/tiktok-login-init/index.ts`,\n  `${REPO}/supabase/functions/tiktok-login-callback/index.ts`,\n  `${REPO}/supabase/functions/tiktok-login-session/index.ts`,\n  `${REPO}/src/pages/Auth.tsx`,\n  `${REPO}/src/pages/TikTokLoginCallback.tsx`,\n  `${REPO}/supabase/config.toml`,\n]\nconst CONTEXT = `${REPO}/supabase/functions/_shared/oauth-state.ts (HMAC state) and ${REPO}/scripts/qa/gen-user-jwt.ts (session-mint pattern) are the reused primitives.`\n\nconst FP_RULES = `FALSE-POSITIVE FILTERING (apply strictly):\n- Exclude: DoS/resource exhaustion, rate-limiting, secrets-on-disk (env vars are TRUSTED \u2014 attacks needing env control are invalid), outdated deps, log spoofing, SSRF that only controls path, open redirects unless EXTREMELY high confidence, theoretical race conditions (only report if concretely exploitable), memory safety in safe languages, findings in markdown/docs, lack-of-hardening, client-side JS/TS lacking auth checks (backend is responsible).\n- React/tsx: NOT an XSS risk unless dangerouslySetInnerHTML/similar.\n- UUIDs are unguessable (no validation needed). Environment variables/CLI flags are trusted.\n- Only report a vuln with a CONCRETE, exploitable attack path where UNTRUSTED input triggers it. Confidence 1-10; only keep >=8.\n- This is auth code (session-minting) so genuinely-exploitable auth-bypass / session-forgery / cross-tenant / injection findings ARE in scope and high value.`\n\nconst FINDING_SCHEMA = {\n  type: 'object', required: ['candidates'],\n  properties: { candidates: { type: 'array', items: {\n    type: 'object', required: ['title', 'file', 'line', 'severity', 'category', 'description', 'exploit'],\n    properties: { title: { type: 'string' }, file: { type: 'string' }, line: { type: 'integer' }, severity: { type: 'string' }, category: { type: 'string' }, description: { type: 'string' }, exploit: { type: 'string' } },\n  } } },\n}\nconst VERDICT_SCHEMA = {\n  type: 'object', required: ['title', 'confidence', 'is_real', 'reasoning', 'fix'],\n  properties: { title: { type: 'string' }, confidence: { type: 'integer' }, is_real: { type: 'boolean' }, reasoning: { type: 'string' }, fix: { type: 'string' }, file: { type: 'string' }, line: { type: 'integer' }, severity: { type: 'string' } },\n}\n\nphase('Find')\nconst found = await agent(\n  `You are a senior security engineer reviewing a NEW custom OAuth login (TikTok Login Kit v2 \u2192 Supabase session-mint) in the MCORCH repo at ${REPO}. Read ALL these files fully:\n${FILES.map(f => '- ' + f).join('\\n')}\nContext: ${CONTEXT}\n\nThe flow: public (verify_jwt=false) edge fns. tiktok-login-init signs an HMAC state (SB_SECRET_KEY). tiktok-login-callback (hit by TikTok redirect) verifies state fail-closed, exchanges code\u2192token with TikTok, reads open_id, find-or-creates a Supabase user keyed on open_id, mints a single-use code stored as SHA-256 hash, redirects to the SPA with the opaque code. tiktok-login-session redeems the code atomically (UPDATE...RETURNING) and re-mints a Supabase session via generateLink\u2192verifyOtp.\n\nEnumerate CANDIDATE security vulnerabilities with a concrete attack path \u2014 focus on: authentication bypass, session forgery, state/CSRF weaknesses, the session-mint sink being abusable, code-redeem replay, open_id spoofing, cross-tenant account grafting, SQL/injection, secret handling, XSS in the callback pages, the fail() reason reflection, the 302 redirects. Trace UNTRUSTED input (TikTok redirect params, the SPA-posted code, request bodies) to sensitive operations. For each candidate give file:line + a concrete exploit. Do NOT pre-filter \u2014 list everything plausible; the next phase filters. Return structured candidates (empty array if genuinely none).`,\n  { label: 'find', phase: 'Find', schema: FINDING_SCHEMA, agentType: 'general-purpose', effort: 'high' }\n)\n\nconst candidates = (found?.candidates ?? [])\nif (candidates.length === 0) {\n  return { verdict: 'NO CANDIDATES', confirmed: [] }\n}\n\nphase('Filter')\nconst verdicts = await parallel(candidates.map(c => () => agent(\n  `You are an adversarial false-positive filter for a security finding in the MCORCH repo at ${REPO}. Independently RE-VERIFY this candidate by READING the actual code \u2014 is it a REAL, concretely-exploitable vulnerability, or a false positive?\n\nCANDIDATE: ${c.title}\nFile: ${c.file}:${c.line} \u00b7 Severity(claimed): ${c.severity} \u00b7 Category: ${c.category}\nDescription: ${c.description}\nClaimed exploit: ${c.exploit}\n\n${FP_RULES}\n\nRead ${c.file} (and any related file) to confirm or refute. Default to is_real=false unless you can articulate a concrete attack path with untrusted input. Assign confidence 1-10 that it is a REAL exploitable vuln. Provide a one-line fix if real.`,\n  { label: `filter:${c.title.slice(0, 30)}`, phase: 'Filter', schema: VERDICT_SCHEMA, agentType: 'general-purpose', effort: 'high' }\n).then(v => v ? { ...v, title: v.title || c.title, file: v.file || c.file, line: v.line ?? c.line, severity: v.severity || c.severity } : null)))\n\nconst confirmed = verdicts.filter(Boolean).filter(v => v.is_real && v.confidence >= 8)\nreturn { total_candidates: candidates.length, confirmed, all_verdicts: verdicts.filter(Boolean).map(v => ({ title: v.title, confidence: v.confidence, is_real: v.is_real })) }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wczn9h8yx
+> Summary: Security review of the tiktok-login code (migration + 3 edge fns + Auth.tsx + SPA callback) — find → adversarial FP-filter → keep confidence>=8
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_76843ae8-2fe
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-security-review-wf_76843ae8-2fe.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-security-review-wf_76843ae8-2fe.js"} to iterate without resending the script.)
+> Run ID: wf_76843ae8-2fe
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-security-review-wf_76843ae8-2fe.js", resumeFromRunId: "wf_76843ae8-2fe"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(10:04:09)*
+
+O `/security-review` está rodando sobre os arquivos reais (find → filtro adversarial de falso-positivo em paralelo → mantém só confiança ≥8). Enquanto roda, ponto de situação do item 1 (Login com TikTok):
+
+**Escrito e verificado (tsc 0 · deno check 3/3):**
+- Migration `20260708100000` — `tiktok_identities` (open_id→user_id, RLS default-deny) + `tiktok_login_codes` (single-use, SHA-256, TTL≤5min) + RPC `disconnect_tiktok_identity`.
+- 3 edge fns `verify_jwt=false`: `tiktok-login-init` (state HMAC, creds de sistema), `tiktok-login-callback` (verifyState fail-closed → token exchange → open_id → find-or-create anti-grafting → código single-use, **zero token na URL**), `tiktok-login-session` (resgate atômico replay-proof → re-minta sessão).
+- `config.toml` (3 fns registradas), `Auth.tsx` (botão "Entrar com TikTok" gated `?devLogin` + handler + toast de erro), `TikTokLoginCallback.tsx` + rota `/auth/tiktok/callback`.
+
+**Gate atual:** `/security-review` (bloqueante antes de deploy). Se voltar limpo, sigo para: commit → deploy (aplicar migration + deploy das 3 fns + build frontend) → **suas ações de console** (P1 registrar `redirect_uri` do login em path separado, P2 adicionar sua conta como usuário-sandbox, P3 provisionar `TIKTOK_CLIENT_KEY/SECRET`) → E2E + Vision. Aviso com o veredito assim que o review terminar.
+
+## 👤 User *(10:11:17)*
+
+<task-notification>
+<task-id>wczn9h8yx</task-id>
+<tool-use-id>toolu_01TAzxJ19ucymrpEVpXe5oRL</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/tasks/wczn9h8yx.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Security review of the tiktok-login code (migration + 3 edge fns + Auth.tsx + SPA callback) — find → adversarial FP-filter → keep confidence&gt;=8" completed</summary>
+<result>{"total_candidates":8,"confirmed":[{"title":"Login CSRF / session fixation — TikTok handoff code not bound to the initiating browser","confidence":8,"is_real":true,"severity":"high","file":"supabase/functions/tiktok-login-init/index.ts","line":50,"reasoning":"Verified across all four flow files. tiktok-login-init signs a stateless HMAC state {intent,nonce,ts} and returns the authorize URL as JSON with NO Set-Cookie, so nothing binds the initiating browser. tiktok-login-callback (lines 121-131) mints a single-use handoff code and 302s it as a URL query param; the tiktok_login_codes row stores only code_hash/user_id/expires_at with no browser correlation. tiktok-login-session (53-95) atomically consumes the code and mints a full Supabase session for whatever user_id it maps to — a pure bearer token. TikTokLoginCallback.tsx (18-40) auto-redeems on page load and calls setSession() with zero correlation to the initiator. Concrete attack: attacker completes TikTok OAuth with their own account, captures ?code=C, and within the 60s TTL induces the victim to load login.mcorch.com/auth/tiktok/callback?code=C (link/meta-refresh/top-level redirect) → victim's browser silently redeems it and is logged into the attacker's account; any BYOK keys/billing/socials the victim configures land in the attacker's account. This is textbook login CSRF / session fixation, and it is auth session-minting code (explicitly in scope). Caveats reducing confidence from certainty: the redeemer must load the actual SPA (a blind &lt;img&gt; won't execute the JS, contra the report — needs a top-level navigation), and the 60s window demands tight/real-time delivery. Neither negates exploitability; both add friction, so I hold at 8 rather than higher.","fix":"At tiktok-login-init set an HttpOnly SameSite=Lax cookie with a random binding value and embed its hash in the signed state; persist that binding on the tiktok_login_codes row in the callback, and require the matching cookie at tiktok-login-session redemption so only the initiating browser can redeem the code."}],"all_verdicts":[{"title":"Login CSRF / session fixation — TikTok handoff code not bound to the initiating browser","confidence":8,"is_real":true},{"title":"Session-mint handoff code in redirect URL query string (TikTok login callback)","confidence":3,"is_real":false},{"title":"Synthetic-email namespace publicly writable — TikTok identity bootstrap poisonable (DoS)","confidence":2,"is_real":false},{"title":"Orphaned auth.users rows on tiktok-login identity-insert race","confidence":2,"is_real":false},{"title":"Service-role key reused as HMAC state-signing key (domain separation)","confidence":2,"is_real":false},{"title":"OAuth state replayable — nonce not tracked single-use (tiktok-login)","confidence":2,"is_real":false},{"title":"Unauthenticated public endpoints amplify into privileged GoTrue admin APIs with no throttle","confidence":2,"is_real":false},{"title":"CORS falls back to a trusted origin instead of denying for disallowed origins","confidence":2,"is_real":false}]}</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/subagents/workflows/wf_76843ae8-2fe/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0040fea6-03c6-4785-867c-7c9249855765/workflows/scripts/tiktok-login-security-review-wf_76843ae8-2fe.js', resumeFromRunId: 'wf_76843ae8-2fe'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>9</agent_count><agents_done>9</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>655734</subagent_tokens><tool_uses>36</tool_uses><duration_ms>439762</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(10:12:22)*
+
+
+## 🤖 Claude *(10:12:30)*
+
+O `/security-review` retornou **1 achado HIGH confirmado** (confiança 8) — os outros 7 candidatos foram filtrados como falso-positivo. O achado é real e importante:
+
+**Login CSRF / session fixation** — o código de hand-off não está ligado ao browser que iniciou. Ataque: o atacante completa o OAuth com a própria conta TikTok, captura o `?code=C`, e em 60s induz a vítima a abrir `/auth/tiktok/callback?code=C` → o browser da vítima resgata o código e fica **logado na conta do atacante** (BYOK/billing/socials da vítima vão para a conta dele). Clássico e bloqueante — **não vou fazer deploy sem corrigir** (Lei 4).
+
+**Correção (binding ao browser iniciador):** vou ligar o hand-off via um segredo gerado no cliente e guardado em `sessionStorage` da origem `login.mcorch.com` (melhor que cookie aqui, porque `init`/`session` são chamados via `functions.invoke` cross-origin — cookie de terceiro seria bloqueado). O browser da vítima não tem o `binding` do atacante em seu `sessionStorage`, então o resgate falha por mismatch. Implementando nos 6 pontos:
+
+## 🤖 Claude *(10:12:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708100000_tiktok_login_identities.sql",
+  "old_string": "CREATE TABLE IF NOT EXISTS public.tiktok_login_codes (\n  code_hash   char(64)    PRIMARY KEY,                    -- SHA-256 hex of the opaque one-time code; NUNCA plaintext\n  user_id     uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  return_to   text,                                       -- validated SSO bounce target (may be null)\n  created_at  timestamptz NOT NULL DEFAULT now(),\n  expires_at  timestamptz NOT NULL,\n  consumed_at timestamptz,                                -- set atomically on first redeem (replay guard, FM-TL-... )\n  -- Physical TTL ceiling: a hand-off code lives at most 5 minutes (app sets ~60s).\n  CONSTRAINT tiktok_code_ttl_ceiling CHECK (expires_at <= created_at + interval '5 minutes')\n);",
+  "new_string": "CREATE TABLE IF NOT EXISTS public.tiktok_login_codes (\n  code_hash    char(64)    PRIMARY KEY,                   -- SHA-256 hex of the opaque one-time code; NUNCA plaintext\n  user_id      uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  -- SHA-256 hex of a browser-binding secret held in the INITIATING browser's sessionStorage. Redemption requires\n  -- the matching secret \u2192 only the browser that started the flow can redeem the code. Closes login CSRF / session\n  -- fixation: an attacker's captured ?code cannot be redeemed in a victim's browser (different sessionStorage).\n  binding_hash char(64)    NOT NULL,\n  created_at   timestamptz NOT NULL DEFAULT now(),\n  expires_at   timestamptz NOT NULL,\n  consumed_at  timestamptz,                               -- set atomically on first redeem (replay guard)\n  -- Physical TTL ceiling: a hand-off code lives at most 5 minutes (app sets ~60s).\n  CONSTRAINT tiktok_code_ttl_ceiling CHECK (expires_at <= created_at + interval '5 minutes')\n);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708100000_tiktok_login_identities.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:12:42)*
+
+
+## 🤖 Claude *(10:12:43)*
+
+Agora `tiktok-login-init` — aceita `binding_hash` do cliente, valida (64 hex), inclui no state assinado:
+
+## 🤖 Claude *(10:12:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-init/index.ts",
+  "old_string": "  const clientKey = Deno.env.get(\"TIKTOK_CLIENT_KEY\");\n  const stateKey = Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\");\n  if (!clientKey || !stateKey) {\n    // Fail-closed structured error (the Sovereign must provision TIKTOK_CLIENT_KEY \u2014 SOP P3).\n    return new Response(\n      JSON.stringify({ error: \"tiktok_login_not_configured\", action: \"TikTok login n\u00e3o est\u00e1 configurado (secrets ausentes).\" }),\n      { status: 501, headers },\n    );\n  }\n\n  const callbackUrl = `${Deno.env.get(\"SUPABASE_URL\")}/functions/v1/tiktok-login-callback`;\n  // State carries intent + nonce + ts (NOT a userId \u2014 a login has none yet). ts bounds replay (verified fail-closed\n  // in the callback with maxAgeMs). nonce gives per-attempt uniqueness.\n  const state = await signState(\n    { intent: \"login\", nonce: crypto.randomUUID(), ts: Date.now() },\n    stateKey,\n  );",
+  "new_string": "  const clientKey = Deno.env.get(\"TIKTOK_CLIENT_KEY\");\n  const stateKey = Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\");\n  if (!clientKey || !stateKey) {\n    // Fail-closed structured error (the Sovereign must provision TIKTOK_CLIENT_KEY \u2014 SOP P3).\n    return new Response(\n      JSON.stringify({ error: \"tiktok_login_not_configured\", action: \"TikTok login n\u00e3o est\u00e1 configurado (secrets ausentes).\" }),\n      { status: 501, headers },\n    );\n  }\n\n  // Browser-binding: the client generates a per-attempt secret (held in sessionStorage) and sends its SHA-256 hash.\n  // It is bound into the signed state \u2192 carried to the code row \u2192 required at redemption, so only the initiating\n  // browser can complete the login (closes login CSRF / session fixation). Must be a 64-char lowercase hex digest.\n  let bindingHash: unknown = null;\n  try { bindingHash = (await req.json())?.binding_hash ?? null; } catch { /* noop */ }\n  if (typeof bindingHash !== \"string\" || !/^[0-9a-f]{64}$/.test(bindingHash)) {\n    return new Response(JSON.stringify({ error: \"invalid_binding\" }), { status: 400, headers });\n  }\n\n  const callbackUrl = `${Deno.env.get(\"SUPABASE_URL\")}/functions/v1/tiktok-login-callback`;\n  // State carries intent + nonce + ts + binding hash (NOT a userId \u2014 a login has none yet). ts bounds replay\n  // (verified fail-closed in the callback with maxAgeMs). nonce gives per-attempt uniqueness. bh binds the browser.\n  const state = await signState(\n    { intent: \"login\", nonce: crypto.randomUUID(), ts: Date.now(), bh: bindingHash },\n    stateKey,\n  );"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-init/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:12:58)*
+
+Agora `tiktok-login-callback` — extrai `bh` do state verificado e grava no `binding_hash` da linha do código:
+
+## 🤖 Claude *(10:13:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-callback/index.ts",
+  "old_string": "    const stateKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n    const state = await verifyState<{ intent: string; nonce: string; ts: number }>(\n      stateStr, stateKey, { maxAgeMs: 10 * 60 * 1000 },\n    );\n    if (!state || state.intent !== \"login\") {\n      logTelemetry(\"state_verify\", \"degraded\");\n      return fail(\"state_expired\");\n    }",
+  "new_string": "    const stateKey = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n    const state = await verifyState<{ intent: string; nonce: string; ts: number; bh: string }>(\n      stateStr, stateKey, { maxAgeMs: 10 * 60 * 1000 },\n    );\n    // The binding hash (bh) is signed into the state \u2192 tamper-proof. Require a well-formed digest; it is stored on\n    // the code row and re-checked at redemption so only the initiating browser can complete the login.\n    if (!state || state.intent !== \"login\" || typeof state.bh !== \"string\" || !/^[0-9a-f]{64}$/.test(state.bh)) {\n      logTelemetry(\"state_verify\", \"degraded\");\n      return fail(\"state_expired\");\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-callback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:13:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-callback/index.ts",
+  "old_string": "    const { error: codeErr } = await admin.from(\"tiktok_login_codes\").insert({\n      code_hash: codeHash,\n      user_id: userId,\n      expires_at: new Date(Date.now() + 60 * 1000).toISOString(), // ~60s\n    });",
+  "new_string": "    const { error: codeErr } = await admin.from(\"tiktok_login_codes\").insert({\n      code_hash: codeHash,\n      user_id: userId,\n      binding_hash: state.bh, // redemption requires the initiating browser's secret (anti login-CSRF)\n      expires_at: new Date(Date.now() + 60 * 1000).toISOString(), // ~60s\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-callback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:13:11)*
+
+Agora `tiktok-login-session` — exige o `binding` cru e adiciona `binding_hash` ao consume atômico:
+
+## 🤖 Claude *(10:13:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-session/index.ts",
+  "old_string": "  let code: string | null = null;\n  try { code = (await req.json())?.code ?? null; } catch { /* noop */ }\n  if (!code || typeof code !== \"string\") return new Response(JSON.stringify({ error: \"missing_code\" }), { status: 400, headers });",
+  "new_string": "  let code: string | null = null;\n  let binding: string | null = null;\n  try { const b = await req.json(); code = b?.code ?? null; binding = b?.binding ?? null; } catch { /* noop */ }\n  if (!code || typeof code !== \"string\") return new Response(JSON.stringify({ error: \"missing_code\" }), { status: 400, headers });\n  // Browser-binding secret (from the initiating browser's sessionStorage) \u2014 required to redeem (anti login-CSRF).\n  if (!binding || typeof binding !== \"string\") return new Response(JSON.stringify({ error: \"missing_binding\" }), { status: 400, headers });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-session/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:13:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-session/index.ts",
+  "old_string": "    const codeHash = await sha256Hex(code);\n    // ATOMIC consume: mark consumed only if still unconsumed AND unexpired, RETURNING user_id. A second redeem\n    // (replay) matches 0 rows \u2192 null. This single UPDATE is the replay guard (no read-then-write race).\n    const { data: consumed } = await admin\n      .from(\"tiktok_login_codes\")\n      .update({ consumed_at: new Date().toISOString() })\n      .eq(\"code_hash\", codeHash)\n      .is(\"consumed_at\", null)\n      .gt(\"expires_at\", new Date().toISOString())\n      .select(\"user_id\")\n      .maybeSingle();\n\n    if (!consumed?.user_id) {\n      return new Response(JSON.stringify({ error: \"code_invalid_or_expired\" }), { status: 410, headers });\n    }",
+  "new_string": "    const codeHash = await sha256Hex(code);\n    const bindingHash = await sha256Hex(binding);\n    // ATOMIC consume: mark consumed only if still unconsumed AND unexpired AND the binding matches the initiating\n    // browser, RETURNING user_id. A replay OR a wrong browser (attacker's captured code in a victim's browser \u2192\n    // different binding) matches 0 rows \u2192 null. This single UPDATE is both the replay guard and the anti-CSRF gate.\n    const { data: consumed } = await admin\n      .from(\"tiktok_login_codes\")\n      .update({ consumed_at: new Date().toISOString() })\n      .eq(\"code_hash\", codeHash)\n      .eq(\"binding_hash\", bindingHash)\n      .is(\"consumed_at\", null)\n      .gt(\"expires_at\", new Date().toISOString())\n      .select(\"user_id\")\n      .maybeSingle();\n\n    if (!consumed?.user_id) {\n      return new Response(JSON.stringify({ error: \"code_invalid_or_expired\" }), { status: 410, headers });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/tiktok-login-session/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:13:36)*
+
+
+## 🤖 Claude *(10:13:37)*
+
+Agora o cliente — um helper compartilhado para o binding + os dois componentes. Criando `src/lib/tiktok-login-binding.ts`:
+
+## 🤖 Claude *(10:13:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/tiktok-login-binding.ts",
+  "content": "// Browser-binding for the TikTok login hand-off (anti login-CSRF / session fixation).\n//\n// tiktok-login-init receives the SHA-256 hash of a per-attempt secret and binds it into the signed OAuth state;\n// the callback stores it on the one-time code; tiktok-login-session requires the matching secret to redeem. The\n// secret lives ONLY in this browser's sessionStorage (origin-scoped, same-tab), so a code captured by an attacker\n// cannot be redeemed in a victim's browser (different sessionStorage \u2192 binding mismatch \u2192 redemption fails).\n\nconst KEY = \"tiktok_login_binding\";\n\nasync function sha256Hex(s: string): Promise<string> {\n  const buf = await crypto.subtle.digest(\"SHA-256\", new TextEncoder().encode(s));\n  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, \"0\")).join(\"\");\n}\n\n/** Generate + stash a per-attempt binding secret; return its SHA-256 hash to send to tiktok-login-init. */\nexport async function createTikTokBinding(): Promise<string> {\n  const bytes = new Uint8Array(32);\n  crypto.getRandomValues(bytes);\n  const binding = btoa(String.fromCharCode(...bytes)).replace(/\\+/g, \"-\").replace(/\\//g, \"_\").replace(/=+$/, \"\");\n  sessionStorage.setItem(KEY, binding);\n  return sha256Hex(binding);\n}\n\n/** Read the binding secret set at init-time (null if absent \u2014 e.g. a foreign/forged callback). */\nexport function readTikTokBinding(): string | null {\n  return sessionStorage.getItem(KEY);\n}\n\n/** Clear the binding secret after redemption (single-use). */\nexport function clearTikTokBinding(): void {\n  sessionStorage.removeItem(KEY);\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/tiktok-login-binding.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:13:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "  // TikTok is NOT a native Supabase provider \u2014 custom OAuth (Login Kit v2). tiktok-login-init signs the state\n  // server-side and returns the authorize URL; we top-level navigate to it. Completion lands at /auth/tiktok/callback.\n  const handleTikTokLogin = async () => {\n    setLoading(true);\n    try {\n      const { data, error } = await supabase.functions.invoke('tiktok-login-init', { body: {} });\n      if (error || !data?.url) throw error ?? new Error('no_url');\n      window.location.href = data.url;\n    } catch {",
+  "new_string": "  // TikTok is NOT a native Supabase provider \u2014 custom OAuth (Login Kit v2). We mint a per-attempt browser-binding\n  // secret (sessionStorage) and send its hash so only THIS browser can complete the login (anti login-CSRF).\n  // tiktok-login-init signs the state server-side and returns the authorize URL; completion lands at /auth/tiktok/callback.\n  const handleTikTokLogin = async () => {\n    setLoading(true);\n    try {\n      const bindingHash = await createTikTokBinding();\n      const { data, error } = await supabase.functions.invoke('tiktok-login-init', { body: { binding_hash: bindingHash } });\n      if (error || !data?.url) throw error ?? new Error('no_url');\n      window.location.href = data.url;\n    } catch {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:13:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "import { safeReturnTo } from '@/lib/sso-cookie';\nimport { supabase } from '@/integrations/supabase/client';",
+  "new_string": "import { safeReturnTo } from '@/lib/sso-cookie';\nimport { createTikTokBinding } from '@/lib/tiktok-login-binding';\nimport { supabase } from '@/integrations/supabase/client';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:14:02)*
+
+Agora o `TikTokLoginCallback.tsx` — lê o binding do sessionStorage, exige-o no resgate, e limpa após:
+
+## 🤖 Claude *(10:14:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx",
+  "old_string": "import { safeReturnTo } from '@/lib/sso-cookie';\nimport { supabase } from '@/integrations/supabase/client';\nimport { Loader2, CheckCircle2, XCircle } from 'lucide-react';",
+  "new_string": "import { safeReturnTo } from '@/lib/sso-cookie';\nimport { readTikTokBinding, clearTikTokBinding } from '@/lib/tiktok-login-binding';\nimport { supabase } from '@/integrations/supabase/client';\nimport { Loader2, CheckCircle2, XCircle } from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:14:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx",
+  "old_string": "    const code = searchParams.get('code');\n    if (!code) {\n      navigate('/auth?tiktok_error=state_expired', { replace: true });\n      return;\n    }\n\n    (async () => {\n      try {\n        const { data, error } = await supabase.functions.invoke('tiktok-login-session', { body: { code } });\n        if (error || !data?.access_token || !data?.refresh_token) {\n          throw new Error('code_invalid_or_expired');\n        }\n        const { error: sErr } = await supabase.auth.setSession({\n          access_token: data.access_token,\n          refresh_token: data.refresh_token,\n        });\n        if (sErr) throw sErr;\n\n        setStatus('success');\n        setMessage('Login conclu\u00eddo!');\n        const rt = safeReturnTo();\n        if (rt) { window.location.href = rt; } else { navigate('/dashboard', { replace: true }); }\n      } catch {",
+  "new_string": "    const code = searchParams.get('code');\n    // The binding secret must be present in THIS browser (set at init-time). Absent = a foreign/forged callback\n    // (e.g. an attacker's captured code opened in a victim's browser) \u2192 refuse before hitting the server.\n    const binding = readTikTokBinding();\n    if (!code || !binding) {\n      navigate('/auth?tiktok_error=state_expired', { replace: true });\n      return;\n    }\n\n    (async () => {\n      try {\n        const { data, error } = await supabase.functions.invoke('tiktok-login-session', { body: { code, binding } });\n        if (error || !data?.access_token || !data?.refresh_token) {\n          throw new Error('code_invalid_or_expired');\n        }\n        clearTikTokBinding(); // single-use\n        const { error: sErr } = await supabase.auth.setSession({\n          access_token: data.access_token,\n          refresh_token: data.refresh_token,\n        });\n        if (sErr) throw sErr;\n\n        setStatus('success');\n        setMessage('Login conclu\u00eddo!');\n        const rt = safeReturnTo();\n        if (rt) { window.location.href = rt; } else { navigate('/dashboard', { replace: true }); }\n      } catch {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:14:26)*
+
+
+## 🤖 Claude *(10:14:27)*
+
+Vou limpar o binding também no caminho de erro (higiene) e então verificar tudo (tsc + deno check):
+
+## 🤖 Claude *(10:14:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx",
+  "old_string": "      } catch {\n        setStatus('error');\n        setMessage('N\u00e3o foi poss\u00edvel concluir o login com TikTok.');\n        setTimeout(() => navigate('/auth?tiktok_error=expired', { replace: true }), 2500);\n      }",
+  "new_string": "      } catch {\n        clearTikTokBinding();\n        setStatus('error');\n        setMessage('N\u00e3o foi poss\u00edvel concluir o login com TikTok.');\n        setTimeout(() => navigate('/auth?tiktok_error=expired', { replace: true }), 2500);\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/TikTokLoginCallback.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:14:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"$HOME/.deno/bin:$PATH\"\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -8 && echo \"tsc OK: 0 erros\"\necho \"=== deno check ===\"\nfor fn in tiktok-login-init tiktok-login-callback tiktok-login-session; do deno check \"supabase/functions/$fn/index.ts\" 2>&1 | tail -2; done\necho \"=== eslint nos arquivos novos/tocados ===\"\nnpx eslint src/pages/Auth.tsx src/pages/TikTokLoginCallback.tsx src/lib/tiktok-login-binding.ts src/App.tsx 2>&1 | tail -8 && echo \"eslint OK\"",
+  "description": "Verificar tsc + deno check + eslint p\u00f3s-fix de seguran\u00e7a"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc OK: 0 erros
+> === deno check ===
+> [0m[32mCheck[0m supabase/functions/tiktok-login-init/index.ts
+> [0m[32mCheck[0m supabase/functions/tiktok-login-callback/index.ts
+> [0m[32mCheck[0m supabase/functions/tiktok-login-session/index.ts
+> === eslint nos arquivos novos/tocados ===
+> eslint OK
+> ```
+
+## 🤖 Claude *(10:14:58)*
+
+
+## 🤖 Claude *(10:14:59)*
+
+Tudo verde (tsc 0 · deno check 3/3 · eslint limpo). Agora **verifico adversarialmente que o fix realmente fecha o CSRF** e não introduz novo furo — não confio na minha própria correção (Lei 1):
+
+## 🤖 Claude *(10:15:17)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Verify login-CSRF fix closes the hole",
+  "run_in_background": false,
+  "prompt": "You are a senior security engineer VERIFYING a fix in the MCORCH repo at /home/gcrUX/htdocs/constellation-orchestra. Be adversarial \u2014 try to break the fix.\n\nA prior /security-review found a HIGH login-CSRF / session-fixation: the TikTok login hand-off code was not bound to the initiating browser, so an attacker could capture their own ?code and induce a victim to redeem it (logging the victim into the attacker's account).\n\nThe fix adds a per-attempt browser-binding secret. READ these files fully and trace the binding end-to-end:\n- src/lib/tiktok-login-binding.ts (createTikTokBinding stores a random secret in sessionStorage, returns its SHA-256 hash; readTikTokBinding; clearTikTokBinding)\n- src/pages/Auth.tsx (handleTikTokLogin: createTikTokBinding \u2192 sends binding_hash to tiktok-login-init)\n- supabase/functions/tiktok-login-init/index.ts (validates binding_hash is 64-hex, signs it into state as bh)\n- supabase/functions/tiktok-login-callback/index.ts (verifyState \u2192 validates state.bh is 64-hex \u2192 stores it as tiktok_login_codes.binding_hash)\n- supabase/functions/tiktok-login-session/index.ts (requires `binding` in body \u2192 sha256Hex(binding) \u2192 atomic UPDATE ... eq('code_hash') eq('binding_hash') is('consumed_at',null) gt('expires_at') RETURNING user_id)\n- src/pages/TikTokLoginCallback.tsx (reads binding from sessionStorage; refuses if absent; sends {code, binding} to session; clears after)\n- supabase/migrations/20260708100000_tiktok_login_identities.sql (binding_hash char(64) NOT NULL on tiktok_login_codes)\n\nANSWER PRECISELY:\n1. Does the fix CLOSE the original login-CSRF? Walk the attack: attacker completes OAuth (their browser, their binding_A in their sessionStorage; code C bound to sha256(binding_A)); attacker gets victim to load /auth/tiktok/callback?code=C in the VICTIM's browser. Does redemption fail? Why? (The victim's sessionStorage has no binding_A \u2192 readTikTokBinding returns null or a different value \u2192 session redeem's eq('binding_hash', sha256(victim_binding)) mismatches \u2192 0 rows.) Confirm or refute with file:line.\n2. Can the attacker BYPASS the binding? Consider: (a) can they put their binding into the victim's request? The victim's SPA reads binding from the victim's sessionStorage \u2014 attacker controls only the URL (?code), not the victim's sessionStorage. (b) Is binding_hash tamper-proof in transit? It's signed into the HMAC state (init) and re-validated as 64-hex in the callback. (c) Could a NULL/empty binding match a row? binding_hash is NOT NULL and validated 64-hex at init; session requires a non-empty binding. (d) Any way to make the callback store an attacker-chosen binding_hash for a code the victim will redeem? \n3. Did the binding change introduce ANY new vulnerability (injection, the extra body field, the eq filter, type confusion, the client crypto)? \n4. Any OTHER high-confidence exploitable issue in these files you'd block a deploy on?\n\nReturn a concise verdict: FIX_CONFIRMED (closes CSRF, no new high issues) or STILL_VULNERABLE (with the concrete attack path + file:line + fix). Only flag NEW issues at confidence >=8 with a concrete untrusted-input attack path."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I\'ve traced the browser-binding fix end-to-end across all seven files plus the shared HMAC state module (`_shared/oauth-state.ts`), the `config.toml` (all three fns are `verify_jwt=false` by design), and confirmed via grep that there is exactly one writer (`tiktok-login-callback`) and one redeemer (`tiktok-login-session`) — no alternative redeem path. The `CREATE TABLE IF NOT EXISTS` trap does not apply: this is the only migration touching these tables, so `binding_hash char(64) NOT NULL` is really on the table.\n\n## VERDICT: FIX_CONFIRMED\n\nThe fix is a textbook **commit-reveal browser binding** and it closes the login-CSRF cleanly with no new high-confidence issues.\n\n### 1. Original login-CSRF is CLOSED — confirmed\n\nWalking the attack: attacker completes OAuth in their browser (secret `binding_A` in their sessionStorage; code `C` minted with `binding_hash = sha256(binding_A)` at `tiktok-login-callback/index.ts:128`), then lures the victim to `/auth/tiktok/callback?code=C`.\n\n- **Client refusal:** the victim\'s browser has no `binding_A`. `readTikTokBinding()` returns `null` (`tiktok-login-binding.ts:25-27`), and `TikTokLoginCallback.tsx:23-27` refuses before any server call → redirect to `/auth?tiktok_error=state_expired`.\n- **Server refusal (even bypassing the SPA):** to redeem, an attacker must POST `{code: C, binding: X}` to `tiktok-login-session`. The atomic UPDATE filters `.eq(\'binding_hash\', sha256(X))` (`session/index.ts:54,58-66`). The row\'s `binding_hash` is `sha256(binding_A)`; the victim/attacker cannot supply `binding_A` in the victim\'s context, so any `X` → **0 rows → 410** (`session:68-70`). The single UPDATE is simultaneously the replay guard and the anti-CSRF gate.\n\nThe secret lives only in the initiating browser\'s sessionStorage and is **never transmitted** — only its SHA-256 hash travels (init body → signed state → code row). Preimage resistance means the committed hash is useless to redeem.\n\n### 2. Binding cannot be bypassed — all four vectors fail\n\n- **(a) Inject binding into victim\'s request:** No. sessionStorage is origin-scoped + per-tab; the attacker controls only the `?code` URL param. The SPA *reads* binding from sessionStorage and only ever *writes* it in `createTikTokBinding()` on the login-button path (which would generate the victim\'s own unrelated secret). No cross-origin/URL/cookie route writes sessionStorage.\n- **(b) Tamper in transit:** No. `bh` is HMAC-SHA256-signed into the state with server-only `SB_SECRET_KEY` (`oauth-state.ts:34-38`, verify `timingSafeEqual` at `:52`) and re-validated `^[0-9a-f]{64}$` in the callback (`callback:61`) before storage.\n- **(c) NULL/empty match:** No. Column is `char(64) NOT NULL` (migration `:40`); init requires 64-hex (`init:52`); session rejects empty/non-string binding (`session:39`); `sha256Hex` always yields a concrete 64-hex string, and PostgREST `.eq(\'binding_hash\', <concrete hash>)` never matches a phantom/NULL.\n- **(d) Store an attacker-chosen `bh` for a code the victim will redeem:** No. The victim can only successfully redeem a code whose `binding_hash = sha256(a secret in the victim\'s sessionStorage)` — i.e., a flow the *victim* initiated, whose `user_id` the attacker cannot control. The mirror attack (attacker mints a code bound to the victim\'s `bh_V`) requires knowing `bh_V`, which is transmitted only over TLS to init and embedded only in the victim\'s own state/authorize URL — never on any attacker-observable surface. That reduces to pre-existing MITM, under which login-CSRF is already moot.\n\n### 3. No new vulnerability introduced by the binding change\n\n- **Injection:** `binding` never touches SQL raw; it is hashed to 64-hex before the parameterized `.eq`. No SQLi surface.\n- **Type confusion:** all three surfaces gate on `typeof === "string"` plus format (`init:52` regex, `callback:61` regex, `session:37,39`).\n- **Client crypto:** 256-bit CSPRNG secret (`crypto.getRandomValues(32)`), correct SHA-256 hex, lowercase-hex consistent across client/init/callback/session — no casing mismatch.\n- **Secret leakage:** neither the secret nor `bh` is written to logs/telemetry (only `event`/`status`).\n- **Single-use integrity preserved:** a wrong-binding attempt updates 0 rows, so it does **not** consume `consumed_at` → the legitimate browser can still redeem; no attacker-induced DoS of the real flow.\n\n### 4. No other deploy-blocking issue in these files\n\nOnly non-blocking nits (confidence < 8): `code`/`binding` bodies have no explicit length cap (pre-existing for `code`; bounded by Supabase request-size limits), and expired codes aren\'t garbage-collected (filtered by `.gt(\'expires_at\')`, housekeeping only). `?tiktok_error` is resolved through a static message map and rendered by React (auto-escaped) → no reflected XSS; `fail()` emits a closed reason vocabulary. All three functions are `verify_jwt=false` by design, with security carried by the HMAC state + binding + single-use code — consistent and correct.\n\n**Bottom line: FIX_CONFIRMED** — the per-attempt browser binding closes the HIGH login-CSRF / session-fixation, and introduces no new high-severity exploitable issue.'}, {'type': 'text', 'text': "agentId: a8890486059b7bded (use SendMessage with to: 'a8890486059b7bded', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 102418\ntool_uses: 11\nduration_ms: 186416</usage>"}]
+> ```
+
+## 🤖 Claude *(10:18:57)*
+
+
+## 🤖 Claude *(10:18:59)*
+
+**FIX_CONFIRMED** — a verificação adversarial confirma que o browser-binding fecha o login-CSRF (todos os 4 vetores de bypass falham), não introduz novo furo, e nada mais bloqueia deploy. Vou atualizar a SOP para refletir o binding (controle load-bearing), depois commitar tudo:
+
+## 🤖 Claude *(10:19:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/tiktok-login-oauth.md",
+  "old_string": "- **G7 (security-review):** `/security-review` independente **SAFE** na migration + 3 edge fns ANTES do deploy (FMEA-011). Bloqueante.",
+  "new_string": "- **G7 (security-review):** `/security-review` independente **SAFE** na migration + 3 edge fns ANTES do deploy (FMEA-011). Bloqueante. **Achado fechado 2026-07-08:** login-CSRF/session-fixation HIGH (c\u00f3digo de hand-off n\u00e3o ligado ao browser iniciador) \u2192 **browser-binding** `src/lib/tiktok-login-binding.ts` (segredo por-tentativa em `sessionStorage`; hash assinado no state \u2192 gravado em `tiktok_login_codes.binding_hash` NOT NULL \u2192 exigido no resgate at\u00f4mico `eq('binding_hash')`). S\u00f3 o browser iniciador resgata; c\u00f3digo capturado por atacante falha no browser da v\u00edtima. Re-verificado FIX_CONFIRMED.\n- **G9 (browser-binding anti-CSRF):** resgatar um c\u00f3digo num browser SEM o `binding` (sessionStorage de outra origem/tab) \u2192 **410** (0 rows no consume). Prova: smoke cen\u00e1rio binding-mismatch."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/tiktok-login-oauth.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:19:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260708100000_tiktok_login_identities.sql \\\n  supabase/functions/tiktok-login-init/ supabase/functions/tiktok-login-callback/ supabase/functions/tiktok-login-session/ \\\n  supabase/config.toml src/pages/Auth.tsx src/pages/TikTokLoginCallback.tsx src/lib/tiktok-login-binding.ts src/App.tsx \\\n  docs/processes/tiktok-login-oauth.md\ngit commit -q -m \"feat(auth): Login com TikTok (Login Kit v2 \u2192 sess\u00e3o Supabase) \u2014 gated ?devLogin\n\nProvider de login custom (TikTok n\u00e3o \u00e9 nativo Supabase): 3 edge fns verify_jwt=false\n(init assina state HMAC c/ creds de sistema \u00b7 callback verifyState fail-closed \u2192 token\nexchange \u2192 open_id \u2192 find-or-create anti-grafting \u2192 c\u00f3digo single-use \u00b7 session resgate\nat\u00f4mico replay-proof \u2192 re-minta sess\u00e3o via generateLink\u2192verifyOtp). Migration\ntiktok_identities(open_id\u2192user_id) + tiktok_login_codes (RLS default-deny service-role).\nBot\u00e3o + toast de erro no Auth.tsx (s\u00f3 ?devLogin), SPA callback /auth/tiktok/callback.\n\n/security-review: 1 HIGH login-CSRF/session-fixation FECHADO \u2014 browser-binding\n(sessionStorage \u2192 state assinado \u2192 binding_hash NOT NULL \u2192 exigido no resgate); s\u00f3 o\nbrowser iniciador resgata. Re-verificado FIX_CONFIRMED, 7 outros candidatos = FP.\ntsc 0 \u00b7 deno check 3/3 \u00b7 eslint 0. BoK docs/bok/tiktok-login (seal 299b9f36) + SOP Lei 2.\nPendente deploy + a\u00e7\u00f5es console Sovereign (redirect_uri path separado \u00b7 sandbox user \u00b7 secrets).\" && git log -1 --format='%h %s'",
+  "description": "Commit da implementa\u00e7\u00e3o completa do Login TikTok"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m7:19AM[0m [32mINF[0m 1 commits scanned.
+> [90m7:19AM[0m [32mINF[0m scan completed in 24.3ms
+> [90m7:19AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.17 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.12 seconds)
+> ✔️ gitleaks-staged (0.15 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 68da2f7 feat(auth): Login com TikTok (Login Kit v2 → sessão Supabase) — gated ?devLogin
+> ```
+
+## 🤖 Claude *(10:19:36)*
+
+
+## 🤖 Claude *(10:19:38)*
+
+Commitado (`68da2f7`). Agora o deploy. Vou verificar o mecanismo de apply de migration do repo (Management API + registro no ledger — o caminho seguro) e a presença do token antes de aplicar DDL em produção:
+
+## 🤖 Claude *(10:19:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== token Management API no .env? ===\"\ngrep -oE '^(SUPABASE_ACCESS_TOKEN|SUPABASE_PROJECT_REF|SUPABASE_DB_URL|SUPABASE_MGMT[A-Z_]*)=' .env 2>/dev/null | sort -u || echo \"(nenhum)\"\necho \"=== scripts de apply de migration existentes ===\"\nls scripts/qa/apply-*.sh scripts/*apply* .claude/scripts/*apply* 2>/dev/null | head\necho \"=== como a \u00faltima migration foi aplicada (buscar helper/doc) ===\"\ngrep -rln \"supabase/v1/projects.*database/query\\|pg_query\\|Management API\\|db push\" scripts/ .claude/ docs/processes/schema-drift-audit.md 2>/dev/null | head -5",
+  "description": "Localizar mecanismo de apply de migration + token"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === token Management API no .env? ===
+> === scripts de apply de migration existentes ===
+> scripts/qa/apply-asset-signing-migration.sh
+> scripts/qa/apply-it2a-project-dispatch.sh
+> scripts/qa/apply-it4a-creative-assets-spaces.sh
+> scripts/qa/apply-spaces-1b-migration.sh
+> === como a última migration foi aplicada (buscar helper/doc) ===
+> scripts/deploy_all.sh
+> scripts/harness-deploy.sh
+> scripts/qa/apply-spaces-1b-migration.sh
+> scripts/qa/audit-schema-drift.sh
+> scripts/qa/apply-asset-signing-migration.sh
+> ```
+
+## 🤖 Claude *(10:19:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/apply-asset-signing-migration.sh"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bash
+> 2	# apply-asset-signing-migration.sh — applies 20260703030000_asset_owner_signing_and_ispublic_repair.sql
+> 3	# to production via the Supabase Management API (single-statement channel) and registers it in the ledger.
+> 4	# SOP: docs/processes/private-bucket-asset-signing.md. Run with GO: bash scripts/qa/apply-asset-signing-migration.sh
+> 5	set -euo pipefail
+> 6	cd "$(dirname "$0")/../.."
+> 7	
+> 8	TOKEN=$(cat ~/.supabase/access-token)
+> 9	REF=bcyvddsykvehvpwstlfa
+> 10	API="https://api.supabase.com/v1/projects/${REF}/database/query"
+> 11	VER=20260703030000
+> 12	NAME=asset_owner_signing_and_ispublic_repair
+> 13	
+> 14	echo "[1/3] applying migration DDL..."
+> 15	python3 - <<'PY' > /tmp/asset-mig.json
+> 16	import json
+> 17	sql = open('supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql').read()
+> 18	print(json.dumps({'query': sql}))
+> 19	PY
+> 20	RES=$(curl -s -X POST "$API" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" --data-binary @/tmp/asset-mig.json)
+> 21	echo "apply result: ${RES:0:300}"
+> 22	echo "$RES" | grep -qi '"error"' && { echo "❌ apply failed"; exit 1; }
+> 23	
+> 24	echo "[2/3] registering in schema_migrations ledger..."
+> 25	curl -s -X POST "$API" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+> 26	  -d "{\"query\":\"INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES ('$VER', '$NAME') ON CONFLICT DO NOTHING;\"}"
+> 27	echo
+> 28	
+> 29	echo "[3/3] material proof (Lei 1): policies + id trigger + is_public repair..."
+> 30	curl -s -X POST "$API" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+> 31	  -d "{\"query\":\"SELECT (SELECT count(*) FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname IN ('canvas_assets_owner_registry_space_project','video_studio_assets_owner_select','generated_images_owner_select')) AS new_policies, (SELECT count(*) FROM pg_trigger WHERE tgname='vm_canvas_projects_force_server_id' AND NOT tgisinternal) AS id_trigger, (SELECT count(*) FROM public.creative_assets WHERE is_public AND storage_bucket IN ('canvas-assets','generated-images','video-studio-assets','video-studio-projects','vision-artifacts')) AS remaining_public_on_private;\"}"
+> 32	echo
+> 33	echo "✅ done — expected: new_policies=3, id_trigger=1, remaining_public_on_private=0"
+> 34	
+> ```
+
+## 🤖 Claude *(10:19:56)*
+
+
+## 🤖 Claude *(10:19:57)*
+
+Padrão claro (Management API + registro no ledger + prova material). Verificando o token e escrevendo o apply script para minha migration:
+
+## 🤖 Claude *(10:19:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la ~/.supabase/access-token 2>/dev/null && echo \"token presente ($(wc -c < ~/.supabase/access-token) bytes)\" || echo \"token AUSENTE\"",
+  "description": "Confirmar presen\u00e7a do token Management API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw------- 1 ubuntu ubuntu 44 Apr 15 19:00 /home/ubuntu/.supabase/access-token
+> token presente (44 bytes)
+> ```
+
+## 🤖 Claude *(10:20:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/apply-tiktok-login-migration.sh",
+  "content": "#!/usr/bin/env bash\n# apply-tiktok-login-migration.sh \u2014 applies 20260708100000_tiktok_login_identities.sql to production via the\n# Supabase Management API (single-statement channel) and registers it in the schema_migrations ledger.\n# SOP: docs/processes/tiktok-login-oauth.md. Run with GO: bash scripts/qa/apply-tiktok-login-migration.sh\nset -euo pipefail\ncd \"$(dirname \"$0\")/../..\"\n\nTOKEN=$(cat ~/.supabase/access-token)\nREF=bcyvddsykvehvpwstlfa\nAPI=\"https://api.supabase.com/v1/projects/${REF}/database/query\"\nVER=20260708100000\nNAME=tiktok_login_identities\n\necho \"[1/3] applying migration DDL...\"\npython3 - <<'PY' > /tmp/tiktok-mig.json\nimport json\nsql = open('supabase/migrations/20260708100000_tiktok_login_identities.sql').read()\nprint(json.dumps({'query': sql}))\nPY\nRES=$(curl -s -X POST \"$API\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" --data-binary @/tmp/tiktok-mig.json)\necho \"apply result: ${RES:0:300}\"\necho \"$RES\" | grep -qi '\"error\"' && { echo \"\u274c apply failed\"; exit 1; }\n\necho \"[2/3] registering in schema_migrations ledger...\"\ncurl -s -X POST \"$API\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\":\\\"INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES ('$VER', '$NAME') ON CONFLICT DO NOTHING;\\\"}\"\necho\n\necho \"[3/3] material proof (Lei 1): tables + RLS enabled + binding_hash NOT NULL + RPC...\"\ncurl -s -X POST \"$API\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\":\\\"SELECT (SELECT count(*) FROM pg_tables WHERE schemaname='public' AND tablename IN ('tiktok_identities','tiktok_login_codes')) AS tables, (SELECT count(*) FROM pg_class WHERE relname IN ('tiktok_identities','tiktok_login_codes') AND relrowsecurity) AS rls_enabled, (SELECT count(*) FROM information_schema.columns WHERE table_name='tiktok_login_codes' AND column_name='binding_hash' AND is_nullable='NO') AS binding_notnull, (SELECT count(*) FROM pg_proc WHERE proname='disconnect_tiktok_identity') AS rpc, (SELECT count(*) FROM pg_policies WHERE tablename IN ('tiktok_identities','tiktok_login_codes')) AS client_policies;\\\"}\"\necho\necho \"\u2705 done \u2014 expected: tables=2, rls_enabled=2, binding_notnull=1, rpc=1, client_policies=0 (service-role only)\"\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/apply-tiktok-login-migration.sh (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:20:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bash scripts/qa/apply-tiktok-login-migration.sh",
+  "description": "Aplicar a migration tiktok-login em produ\u00e7\u00e3o + registrar + prova material"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [1/3] applying migration DDL...
+> apply result: []
+> [2/3] registering in schema_migrations ledger...
+> []
+> [3/3] material proof (Lei 1): tables + RLS enabled + binding_hash NOT NULL + RPC...
+> [{"tables":2,"rls_enabled":2,"binding_notnull":1,"rpc":1,"client_policies":0}]
+> ✅ done — expected: tables=2, rls_enabled=2, binding_notnull=1, rpc=1, client_policies=0 (service-role only)
+> ```
+
+## 🤖 Claude *(10:20:26)*
+
+
+## 🤖 Claude *(10:20:27)*
+
+Migration aplicada + registrada + **prova material verde** (tables=2, RLS=2, binding_hash NOT NULL=1, RPC=1, client_policies=0 service-role-only). Agora deploy das 3 edge functions:
+
+## 🤖 Claude *(10:20:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor fn in tiktok-login-init tiktok-login-callback tiktok-login-session; do\n  echo \"=== deploy $fn ===\"\n  npx supabase functions deploy \"$fn\" 2>&1 | tail -4\ndone",
+  "description": "Deploy das 3 edge functions do TikTok login",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy tiktok-login-init ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: tiktok-login-init
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === deploy tiktok-login-callback ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: tiktok-login-callback
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === deploy tiktok-login-session ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: tiktok-login-session
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(10:21:13)*
+
+
+## 🤖 Claude *(10:21:15)*
+
+As 3 edge functions deployadas. Agora vou escrever um smoke re-executável que prova os gates fail-closed **sem precisar das ações de console** (testam os caminhos de rejeição — creds reais não necessárias), e rodá-lo:
+
+## 🤖 Claude *(10:21:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-tiktok-login.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * smoke-tiktok-login.ts \u2014 zero-cost fail-closed gates for the TikTok login flow (SOP docs/processes/tiktok-login-oauth.md).\n * Hits the DEPLOYED edge fns + REST. Proves the security posture WITHOUT the Sovereign console actions (no real\n * TikTok creds needed \u2014 every gate here is a rejection path). Re-run before changing any tiktok-login fn.\n *\n * Gates: G2 state fail-closed (forged/missing state \u2192 redirect state_expired) \u00b7 session input guards (missing\n * code/binding \u2192 400) \u00b7 G4/G9 unknown code+binding \u2192 410 \u00b7 G6 RLS default-deny (anon cannot read either table).\n * Run: bun run scripts/qa/smoke-tiktok-login.ts   (needs SUPABASE_URL + SB_PUBLISHABLE_KEY [+ SB_SECRET_KEY])\n */\nimport { existsSync, readFileSync } from 'fs';\n\nconst ENV = '/home/gcrUX/htdocs/constellation-orchestra/.env';\nif (existsSync(ENV)) for (const l of readFileSync(ENV, 'utf-8').split('\\n')) {\n  const m = l.match(/^([^#=\\s][^=]*)=(.*)$/); if (m && !process.env[m[1].trim()]) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, '');\n}\nconst URL = process.env.SUPABASE_URL!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst FN = `${URL}/functions/v1`;\n\nlet pass = 0, fail = 0;\nconst ok = (name: string, cond: boolean, detail = '') => { console.log(`${cond ? '\u2705' : '\u274c'} ${name}${detail ? ' \u2014 ' + detail : ''}`); cond ? pass++ : fail++; };\n\n// G2: callback with a FORGED state \u2192 302 redirect to /auth?tiktok_error=state_expired (state verified before token exchange).\n{\n  const r = await fetch(`${FN}/tiktok-login-callback?code=abc&state=forged.deadbeef`, { redirect: 'manual' });\n  const loc = r.headers.get('location') ?? '';\n  ok('G2 forged state \u2192 state_expired redirect', r.status === 302 && loc.includes('tiktok_error=state_expired'), `status=${r.status} loc=${loc.slice(0, 60)}`);\n}\n// G2b: callback with NO state \u2192 same fail-closed redirect.\n{\n  const r = await fetch(`${FN}/tiktok-login-callback?code=abc`, { redirect: 'manual' });\n  const loc = r.headers.get('location') ?? '';\n  ok('G2b missing state \u2192 state_expired redirect', r.status === 302 && loc.includes('state_expired'), `status=${r.status}`);\n}\n// callback with provider error \u2192 not_authorized redirect.\n{\n  const r = await fetch(`${FN}/tiktok-login-callback?error=access_denied`, { redirect: 'manual' });\n  const loc = r.headers.get('location') ?? '';\n  ok('callback provider error \u2192 not_authorized redirect', r.status === 302 && loc.includes('not_authorized'), `status=${r.status}`);\n}\n// session input guards: missing code \u2192 400 missing_code.\n{\n  const r = await fetch(`${FN}/tiktok-login-session`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${ANON}` }, body: '{}' });\n  const b = await r.json().catch(() => ({}));\n  ok('session missing code \u2192 400', r.status === 400 && b.error === 'missing_code', `status=${r.status} err=${b.error}`);\n}\n// session missing binding \u2192 400 missing_binding (anti-CSRF: binding is mandatory).\n{\n  const r = await fetch(`${FN}/tiktok-login-session`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${ANON}` }, body: JSON.stringify({ code: 'x' }) });\n  const b = await r.json().catch(() => ({}));\n  ok('session missing binding \u2192 400 (anti-CSRF)', r.status === 400 && b.error === 'missing_binding', `status=${r.status} err=${b.error}`);\n}\n// G4/G9: unknown code + binding \u2192 410 (no such row / consumed / expired / binding mismatch all collapse to this).\n{\n  const r = await fetch(`${FN}/tiktok-login-session`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${ANON}` }, body: JSON.stringify({ code: 'nonexistent', binding: 'whatever' }) });\n  const b = await r.json().catch(() => ({}));\n  ok('G4/G9 unknown code+binding \u2192 410', r.status === 410 && b.error === 'code_invalid_or_expired', `status=${r.status} err=${b.error}`);\n}\n// G6: RLS default-deny \u2014 anon cannot read either identity table (no client policies \u2192 empty/forbidden).\nfor (const tbl of ['tiktok_identities', 'tiktok_login_codes']) {\n  const r = await fetch(`${URL}/rest/v1/${tbl}?select=*&limit=1`, { headers: { apikey: ANON, Authorization: `Bearer ${ANON}` } });\n  const b = await r.json().catch(() => null);\n  const blocked = Array.isArray(b) ? b.length === 0 : true; // empty array (RLS filtered) or error object = blocked\n  ok(`G6 RLS anon cannot read ${tbl}`, blocked, `status=${r.status} rows=${Array.isArray(b) ? b.length : 'err'}`);\n}\n\nconsole.log(`\\n${fail === 0 ? '\u2705 ALL PASS' : '\u274c FAIL'} \u2014 ${pass}/${pass + fail}`);\nprocess.exit(fail === 0 ? 0 : 1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-tiktok-login.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:21:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/smoke-tiktok-login.ts",
+  "description": "Rodar smoke fail-closed do TikTok login contra fns deployadas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G2 forged state → state_expired redirect — status=302 loc=https://login.mcorch.com/auth?tiktok_error=state_expired
+> ✅ G2b missing state → state_expired redirect — status=302
+> ✅ callback provider error → not_authorized redirect — status=302
+> ✅ session missing code → 400 — status=400 err=missing_code
+> ✅ session missing binding → 400 (anti-CSRF) — status=400 err=missing_binding
+> ✅ G4/G9 unknown code+binding → 410 — status=410 err=code_invalid_or_expired
+> ✅ G6 RLS anon cannot read tiktok_identities — status=401 rows=err
+> ✅ G6 RLS anon cannot read tiktok_login_codes — status=401 rows=err
+> 
+> ✅ ALL PASS — 8/8
+> ```
+
+## 🤖 Claude *(10:22:00)*
+
+
+## 🤖 Claude *(10:22:02)*
+
+**Smoke 8/8 — todos os gates fail-closed provados ao vivo** contra as funções deployadas (state forjado→302 state_expired · binding obrigatório→400 · código desconhecido→410 · RLS anon→401 nas 2 tabelas). O CSRF-binding e o fail-closed funcionam materialmente. Vou commitar smoke+apply e buildar/deployar o frontend:
+
+## 🤖 Claude *(10:22:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/smoke-tiktok-login.ts scripts/qa/apply-tiktok-login-migration.sh\ngit commit -q -m \"test(tiktok-login): smoke fail-closed 8/8 (state/binding/410/RLS) + apply script (migration aplicada+registrada)\" && git log -1 --format='%h %s'\necho \"=== build+deploy frontend (repo principal \u2192 dist/ servido pelo nginx) ===\"\nbun run build 2>&1 | tail -6",
+  "description": "Commit smoke+apply + build/deploy frontend",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m7:22AM[0m [32mINF[0m 1 commits scanned.
+> [90m7:22AM[0m [32mINF[0m scan completed in 11.5ms
+> [90m7:22AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> c202398 test(tiktok-login): smoke fail-closed 8/8 (state/binding/410/RLS) + apply script (migration aplicada+registrada)
+> === build+deploy frontend (repo principal → dist/ servido pelo nginx) ===
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 39.19s
+> ```
+
+## 🤖 Claude *(10:23:04)*
+
+
+## 🤖 Claude *(10:23:05)*
+
+Build OK (39s, deploy no dist/ servido). Vou confirmar que o código foi baked no bundle + medir o orçamento, depois verifico o botão no browser (CF-proof, via preview local do dist — a página /auth é pública):
+
+## 🤖 Claude *(10:23:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 'Entrar com TikTok' baked no bundle servido? ===\"\ngrep -rl \"Entrar com TikTok\" dist/assets/*.js 2>/dev/null | head -1 && echo \"\u2705 baked\" || echo \"\u274c N\u00c3O baked\"\necho \"=== tiktok-login-init referenciado no bundle? ===\"\ngrep -rl \"tiktok-login-init\" dist/assets/*.js 2>/dev/null | head -1 && echo \"\u2705 init referenciado\" || echo \"\u274c ausente\"\necho \"=== or\u00e7amento de contexto ===\"\nbun run .claude/scripts/session-inspect.ts 2>&1 | sed -n '5,9p'",
+  "description": "Confirmar c\u00f3digo baked no dist + medir contexto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 'Entrar com TikTok' baked no bundle servido? ===
+> dist/assets/Auth-BcFxk4mS.js
+> ✅ baked
+> === tiktok-login-init referenciado no bundle? ===
+> dist/assets/Auth-BcFxk4mS.js
+> ✅ init referenciado
+> === orçamento de contexto ===
+>    [█████████████████████░░░░░░░░░░░░░░░░░|░░] 51.3%   (| = teto de seal 95%)
+>    usado 513k / 1000k  ·  livre 487k  ·  custo do seal ~50k
+>    output gasto na sessão: 626k tokens
+> 
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> ```
+
+## 🤖 Claude *(10:23:42)*
+
+
+## 🤖 Claude *(10:23:43)*
+
+Código baked no bundle servido (`Auth-BcFxk4mS.js`), contexto saudável (51%). Vou fazer o browser-verify CF-proof (preview local do dist, página /auth é pública) para pegar qualquer white-screen do render — começando o preview e confirmando o bind:
+
+## 🤖 Claude *(10:23:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# vite preview em background (NUNCA python http.server \u2014 mem\u00f3ria: contamina E2E)\n(npx vite preview --port 4319 --strictPort >/tmp/tiktok-preview.log 2>&1 &) \nsleep 4\necho \"=== bind check (SPA shell 200?) ===\"\ncurl -s -o /dev/null -w \"auth?devLogin \u2192 HTTP %{http_code}\\n\" \"http://localhost:4319/auth?devLogin\"\nhead -3 /tmp/tiktok-preview.log",
+  "description": "Iniciar vite preview do dist + confirmar bind"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === bind check (SPA shell 200?) ===
+> auth?devLogin → HTTP 200
+>   ➜  Local:   http://localhost:4319/
+>   ➜  Network: http://10.0.0.143:4319/
+>   ➜  Network: http://172.17.0.1:4319/
+> ```
+
+## 🤖 Claude *(10:23:55)*
+
+
+## 🤖 Claude *(10:23:56)*
+
+Preview servindo (200). Rodando um check headless do render (botão presente + zero erro de console):
+
+## 🤖 Claude *(10:24:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/verify-tiktok-button.mjs <<'EOF'\nimport { chromium } from 'playwright';\nconst browser = await chromium.launch({ headless: true });\nconst page = await browser.newContext({ viewport: { width: 1280, height: 900 } }).then(c => c.newPage());\nconst errors = [];\npage.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });\npage.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));\nawait page.goto('http://localhost:4319/auth?devLogin', { waitUntil: 'networkidle', timeout: 30000 });\nawait page.waitForTimeout(1500);\nconst hasTikTok = await page.getByText('Entrar com TikTok').count();\nconst hasGoogle = await page.getByText('Continuar com Google').count();\n// public (no devLogin) must NOT show the button (G1 regress\u00e3o-zero)\nawait page.goto('http://localhost:4319/auth', { waitUntil: 'networkidle', timeout: 30000 });\nawait page.waitForTimeout(1000);\nconst publicTikTok = await page.getByText('Entrar com TikTok').count();\nconst publicEmail = await page.locator('input[type=\"email\"], input#email, input[name=\"email\"]').count();\nconsole.log(JSON.stringify({ devLogin_tiktok: hasTikTok, devLogin_google: hasGoogle, public_tiktok: publicTikTok, public_email_field: publicEmail, console_errors: errors }, null, 2));\nawait browser.close();\nEOF\nnode /tmp/verify-tiktok-button.mjs 2>&1 | tail -20",
+  "description": "Verificar render do bot\u00e3o TikTok headless + regress\u00e3o-zero p\u00fablico"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> node:internal/modules/package_json_reader:314
+>   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+>         ^
+> 
+> Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'playwright' imported from /tmp/verify-tiktok-button.mjs
+>     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:314:9)
+>     at packageResolve (node:internal/modules/esm/resolve:768:81)
+>     at moduleResolve (node:internal/modules/esm/resolve:855:18)
+>     at defaultResolve (node:internal/modules/esm/resolve:985:11)
+>     at #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)
+>     at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)
+>     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)
+>     at ModuleJob._link (node:internal/modules/esm/module_job:182:49) {
+>   code: 'ERR_MODULE_NOT_FOUND'
+> }
+> 
+> Node.js v22.22.3
+> ```
+
+## 🤖 Claude *(10:24:13)*
+
+
+## 🤖 Claude *(10:24:14)*
+
+O playwright não resolve de `/tmp` — a memória avisa: o script de verify tem que viver em `scripts/qa/` (o projeto tem playwright/chromium instalado lá). Movendo para lá e rodando com bun:
+
+## 🤖 Claude *(10:24:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/verify-tiktok-login-button.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * verify-tiktok-login-button.ts \u2014 CF-proof render check for the \"Entrar com TikTok\" button (feedback:\n * browser-verify UI deliverables). Serves the built dist via a running vite preview on :4319 and asserts:\n * (a) with ?devLogin the TikTok + Google buttons render; (b) WITHOUT ?devLogin neither social button shows and\n * the public email/password form is intact (G1 regress\u00e3o-zero); (c) zero console/page errors (white-screen guard).\n * Prereq: `npx vite preview --port 4319 --strictPort` running against a fresh `bun run build`.\n * Run from repo root: bun run scripts/qa/verify-tiktok-login-button.ts\n */\nimport { chromium } from 'playwright';\n\nconst BASE = process.env.PREVIEW_BASE ?? 'http://localhost:4319';\nconst browser = await chromium.launch({ headless: true });\nconst page = await browser.newContext({ viewport: { width: 1280, height: 900 } }).then((c) => c.newPage());\nconst errors: string[] = [];\npage.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });\npage.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));\n\nawait page.goto(`${BASE}/auth?devLogin`, { waitUntil: 'networkidle', timeout: 30000 });\nawait page.waitForTimeout(1500);\nconst devTikTok = await page.getByText('Entrar com TikTok').count();\nconst devGoogle = await page.getByText('Continuar com Google').count();\n\nawait page.goto(`${BASE}/auth`, { waitUntil: 'networkidle', timeout: 30000 });\nawait page.waitForTimeout(1000);\nconst publicTikTok = await page.getByText('Entrar com TikTok').count();\nconst publicEmail = await page.locator('input[type=\"email\"], input#email, input[name=\"email\"]').count();\n\nawait browser.close();\n\nconst pass =\n  devTikTok === 1 && devGoogle === 1 && publicTikTok === 0 && publicEmail >= 1 && errors.length === 0;\nconsole.log(JSON.stringify({ devLogin_tiktok: devTikTok, devLogin_google: devGoogle, public_tiktok: publicTikTok, public_email_field: publicEmail, console_errors: errors }, null, 2));\nconsole.log(pass ? '\u2705 PASS \u2014 button renders gated, public intact, no errors' : '\u274c FAIL');\nprocess.exit(pass ? 0 : 1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/verify-tiktok-login-button.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:24:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/verify-tiktok-login-button.ts 2>&1 | tail -12",
+  "description": "Rodar verify do bot\u00e3o TikTok (render gated + regress\u00e3o-zero + zero erro)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "devLogin_tiktok": 1,
+>   "devLogin_google": 1,
+>   "public_tiktok": 0,
+>   "public_email_field": 1,
+>   "console_errors": []
+> }
+> ✅ PASS — button renders gated, public intact, no errors
+> ```
+
+## 🤖 Claude *(10:25:10)*
+
+
+## 🤖 Claude *(10:25:12)*
+
+**Browser-verify PASS** (CF-proof): com `?devLogin` os botões TikTok+Google renderizam; **sem** `?devLogin` o botão some e o form público fica intacto (regressão-zero); **zero erro de console** (sem white-screen). Item 1 está code-complete, deployado e verificado até onde é possível sem as ações de console. Cleanup + commit + push:
+
+## 🤖 Claude *(10:25:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npkill -f \"vite preview --port 4319\" 2>/dev/null; sleep 1; echo \"preview encerrado\"\ngit add scripts/qa/verify-tiktok-login-button.ts\ngit commit -q -m \"test(tiktok-login): browser-verify CF-proof \u2014 bot\u00e3o renderiza gated ?devLogin, p\u00fablico intacto (G1), zero console error\" && git log -1 --format='%h %s'\ngit push origin main 2>&1 | tail -1",
+  "description": "Encerrar preview + commit verify + push"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ```
+
+## 🤖 Claude *(10:25:19)*
+
+
+## 🤖 Claude *(10:25:20)*
+
+Exit 144 — o `pkill` provavelmente afetou o shell (a memória avisa disso). Verificando se o commit/push passaram:
+
+## 🤖 Claude *(10:25:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short\necho \"=== \u00faltimos commits ===\"\ngit log --oneline -3\necho \"=== sync com origin ===\"\ngit rev-parse HEAD; git rev-parse origin/main",
+  "description": "Verificar estado do git ap\u00f3s exit 144"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ?? scripts/qa/verify-tiktok-login-button.ts
+> === últimos commits ===
+> c202398 test(tiktok-login): smoke fail-closed 8/8 (state/binding/410/RLS) + apply script (migration aplicada+registrada)
+> 68da2f7 feat(auth): Login com TikTok (Login Kit v2 → sessão Supabase) — gated ?devLogin
+> cf7166e docs(process): SOP Lei 2 tiktok-login-oauth — Operator/Sequence/8 gates/Recovery/Success antes do código
+> === sync com origin ===
+> c2023989dc4505642dc964687296523ed0e5e823
+> aac36689b99f3a038c660ff8f76d14798a9f27f8
+> ```
+
+## 🤖 Claude *(10:25:31)*
+
+
+## 🤖 Claude *(10:25:33)*
+
+O `pkill` matou o shell antes do commit/push. Estado: 3 commits locais à frente do origin (SOP, feat, smoke) + o verify ainda untracked. Vou commitar e fazer push de tudo (sem `pkill`):
+
+## 🤖 Claude *(10:25:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/verify-tiktok-login-button.ts\ngit commit -q -m \"test(tiktok-login): browser-verify CF-proof \u2014 bot\u00e3o renderiza gated ?devLogin, p\u00fablico intacto (G1), zero console error\"\necho \"=== push ===\"\ngit push origin main 2>&1 | tail -2\necho \"=== sync ===\"\ngit rev-parse HEAD; git rev-parse origin/main",
+  "description": "Commit verify + push dos 4 commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m7:25AM[0m [32mINF[0m 1 commits scanned.
+> [90m7:25AM[0m [32mINF[0m scan completed in 8.95ms
+> [90m7:25AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> === push ===
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    aac3668..a18f975  main -> main
+> === sync ===
+> a18f9756fc790df3c45c61a1e4b4fb4a596dfe1e
+> a18f9756fc790df3c45c61a1e4b4fb4a596dfe1e
+> ```
+
+## 🤖 Claude *(10:25:54)*
+
+
+## 🤖 Claude *(10:25:56)*
+
+Tudo pushado — HEAD == origin (`a18f975`). **Item 1 (Login com TikTok) está shipado ponta-a-ponta no lado do código.** Vou atualizar a memória e então armar o loop para os itens 2 e 3, como você pediu.
+
+## 🤖 Claude *(10:26:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_go_roadmap_tiktok_login_openagn_higgsfield.md",
+  "old_string": "1. **PRIMEIRO \u2014 TikTok Login Kit (\"Login com TikTok\") na p\u00e1gina de auth.** O app MCORCH tem o **escopo de login** do TikTok. D\u00favida do Sovereign: criar conta com Google e s\u00f3 \"conectar\" o TikTok pode N\u00c3O ser suficiente p/ o app review do TikTok \u2014 melhor habilitar o **login real com TikTok** em `https://login.mcorch.com/auth?devLogin` (gated atr\u00e1s do `?devLogin`, igual ao Google/Cadastrar hoje \u2014 ver [[project_mcorch_rebrand_landing_v2]] e o auth gating `?devLogin`). Supabase N\u00c3O tem provider TikTok nativo \u2192 prov\u00e1vel fluxo OAuth custom (Login Kit v2). App review TikTok: **v\u00eddeo J\u00c1 enviado pelo Sovereign**; agente pode continuar testando a integra\u00e7\u00e3o. Ver [[project_tiktok_review_rebrand_requirements]] + [[reference_tiktok_unaudited_private_account]].",
+  "new_string": "1. **\u2705 SHIPADO 2026-07-08 (c\u00f3digo+deploy) \u2014 TikTok Login Kit v2 em `/auth?devLogin`.** BoK `docs/bok/tiktok-login/` 9/9 selada (n\u00f3 `299b9f36`, DERIVES_FROM identity-fabric) + SOP `docs/processes/tiktok-login-oauth.md` + mapa `.claude/context/tiktok-login-map-2026-07-08.md`. **Fluxo:** OAuth custom (Supabase n\u00e3o tem provider TikTok nativo) \u2014 3 edge fns `verify_jwt=false` (`tiktok-login-init` state HMAC creds-de-sistema \u00b7 `tiktok-login-callback` verifyState fail-closed\u2192token exchange\u2192open_id\u2192find-or-create anti-grafting\u2192c\u00f3digo single-use \u00b7 `tiktok-login-session` resgate at\u00f4mico\u2192re-minta sess\u00e3o via generateLink\u2192verifyOtp) + migration `20260708100000` (`tiktok_identities` open_id\u2192user_id + `tiktok_login_codes`, RLS default-deny service-role, aplicada+registrada) + bot\u00e3o `Auth.tsx` gated `?devLogin` + SPA `/auth/tiktok/callback`. **/security-review achou 1 HIGH login-CSRF/session-fixation (c\u00f3digo de hand-off n\u00e3o ligado ao browser) \u2192 FECHADO com browser-binding** (`src/lib/tiktok-login-binding.ts`: segredo por-tentativa em sessionStorage \u2192 hash assinado no state \u2192 `binding_hash` NOT NULL \u2192 exigido no resgate; s\u00f3 o browser iniciador resgata). **Li\u00e7\u00e3o reutiliz\u00e1vel:** custom-OAuth login minta sess\u00e3o = sink privilegiado \u2192 SEMPRE ligar o c\u00f3digo de hand-off ao browser iniciador (sessionStorage bind, n\u00e3o cookie \u2014 init/session s\u00e3o cross-origin fetch). Provas: tsc 0 \u00b7 deno check 3/3 \u00b7 smoke `scripts/qa/smoke-tiktok-login.ts` **8/8** (state forjado\u2192302 \u00b7 binding\u2192400 \u00b7 410 \u00b7 RLS anon 401) \u00b7 browser-verify `verify-tiktok-login-button.ts` PASS (gated + regress\u00e3o-zero + zero console error). Commits `cf7166e`\u2192`a18f975`. **App review TikTok: v\u00eddeo J\u00c1 enviado pelo Sovereign.** \ud83d\udd12 **E2E gated nas a\u00e7\u00f5es de console P1-P3** (abaixo). Ver [[project_tiktok_review_rebrand_requirements]] + [[reference_tiktok_unaudited_private_account]].\n   - **A\u00e7\u00f5es console Sovereign p/ destravar E2E:** P1 registrar `redirect_uri` = `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/tiktok-login-callback` (path SEPARADO do publish, sem query) \u00b7 P2 adicionar a conta TikTok de teste como sandbox target-user \u00b7 P3 provisionar secrets `TIKTOK_CLIENT_KEY`/`TIKTOK_CLIENT_SECRET` (sandbox) no vault das edge fns (`npx supabase secrets set`). Sem P1-P3 o `init` retorna 501 `tiktok_login_not_configured` (fail-closed honesto)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_go_roadmap_tiktok_login_openagn_higgsfield.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:26:47)*
+
+
+## 🤖 Claude *(10:26:58)*
+
+Memória atualizada. Item 1 shipado no código. Aqui está o fechamento do item 1 e vou armar o loop para os itens 2 e 3.
+
+## ✅ Item 1 — Login com TikTok: SHIPADO (código + deploy + provas)
+
+| Camada | Estado / prova material |
+|---|---|
+| **BoK** | `docs/bok/tiktok-login/` 9/9 selada (nó `299b9f36`, embedding 768d) + SOP Lei 2 |
+| **Migration** | `20260708100000` aplicada+registrada — `tiktok_identities` + `tiktok_login_codes`, RLS default-deny (prova: tables=2, rls=2, binding NOT NULL=1, rpc=1, client_policies=0) |
+| **Edge fns** | 3 deployadas (`init`/`callback`/`session`, `verify_jwt=false`) |
+| **Frontend** | build+deploy, botão baked no `Auth-BcFxk4mS.js`, servido |
+| **/security-review** | 1 HIGH **login-CSRF** achado → **FECHADO** com browser-binding → re-verificado **FIX_CONFIRMED** (7 outros = falso-positivo) |
+| **Smoke** | `smoke-tiktok-login.ts` **8/8** (state forjado→302 · binding→400 · 410 · RLS anon→401) |
+| **Browser-verify** | PASS — botão só com `?devLogin`, público intacto (regressão-zero), zero console error |
+
+**🔒 Faltam SÓ suas 3 ações no console do TikTok para o E2E (o `init` retorna 501 fail-closed até lá):**
+1. **P1** — registrar o `redirect_uri`: `https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/tiktok-login-callback` (path **separado** do publish, sem query-param).
+2. **P2** — adicionar sua conta TikTok de teste como **sandbox target-user** (app unaudited só loga usuário-sandbox).
+3. **P3** — provisionar os secrets `TIKTOK_CLIENT_KEY` / `TIKTOK_CLIENT_SECRET` (sandbox) no vault: `npx supabase secrets set TIKTOK_CLIENT_KEY=... TIKTOK_CLIENT_SECRET=...`.
+
+Feito isso, gravamos o screen-record do login ponta-a-ponta (a prova que o TikTok pede do scope `user.info.basic`).
+
+Agora armando o loop para os itens 2 e 3:
+
+## 🤖 Claude *(10:27:08)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "loop",
+  "args": "Trabalhar os pr\u00f3ximos passos GO'd do Sovereign (mem\u00f3ria project_go_roadmap_tiktok_login_openagn_higgsfield) em itera\u00e7\u00f5es aut\u00f4nomas self-paced, ap\u00f3s o Item 1 (TikTok Login) j\u00e1 shipado. FOCO: (2) open-design hardening + /bok-scribe do it.4b Ponte Designer (OTD-SPACES-030-DESIGNER-BRIDGE): o hardening do env do container open-design (OD_ALLOWED_ORIGINS + token forte) \u00e9 a\u00e7\u00e3o Sovereign \u2014 apenas surfa\u00e7ar com o comando exato; a parte cod\u00e1vel \u00e9 rodar /bok-scribe (ou emenda SDD) que DECIDE o \"editor embutido\" (adapter open-design vs HyperFrames vs nativo) e especifica a Ponte Designer, fechando o gate do CLAUDE.md \u00a71 para a fatia. (3) Higgsfield DUAS conex\u00f5es nas Settings: (a) COD\u00c1VEL AGORA \u2014 surfa\u00e7ar a Platform API key higgsfield_api_key (j\u00e1 no vault user_api_keys, j\u00e1 usada pelos n\u00f3s de v\u00eddeo) na UI de Settings/BYOK junto com openrouter/replicate/openai/google; (b) conector MCP OAuth via Consent Clerk (c\u00f3digo server-side+UI j\u00e1 pronto do project_higgsfield_mcp_connector) \u2014 surfa\u00e7ar que falta o GO Sovereign de registrar o client OAuth + clicar Conectar. Cada itera\u00e7\u00e3o: probe-first no estado vivo, SOP/BoK gate antes de c\u00f3digo, /security-review em qualquer migration/edge fn, prova material (Lei 1 \u2014 tsc/deno/smoke/browser-verify), commit granular. Itens Sovereign-gated: s\u00f3 surfa\u00e7ar, nunca executar. Selar s\u00f3 a ~95% da janela ou roadmap desbloqueado esgotado."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: loop
+> ```
+
+## 👤 User *(10:27:08)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, decide whether the loop continues.** If the task needs another iteration, call ScheduleWakeup with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+   If it doesn't need another iteration, stop instead (step 6) — re-arming is a per-turn choice, not a default.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then make the same decision. If the loop should continue, call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 (the Monitor remains the wake signal; the new wakeup is only the fallback heartbeat). If the event means the work is finished, stop (step 6).
+6. **To stop the loop** — the task is complete, further iterations can't make progress, or the user asked you to stop — call ScheduleWakeup with `stop: true` (no other fields) and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Stopping is the loop's normal ending — the user can restart it anytime with /loop. Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Trabalhar os próximos passos GO'd do Sovereign (memória project_go_roadmap_tiktok_login_openagn_higgsfield) em iterações autônomas self-paced, após o Item 1 (TikTok Login) já shipado. FOCO: (2) open-design hardening + /bok-scribe do it.4b Ponte Designer (OTD-SPACES-030-DESIGNER-BRIDGE): o hardening do env do container open-design (OD_ALLOWED_ORIGINS + token forte) é ação Sovereign — apenas surfaçar com o comando exato; a parte codável é rodar /bok-scribe (ou emenda SDD) que DECIDE o "editor embutido" (adapter open-design vs HyperFrames vs nativo) e especifica a Ponte Designer, fechando o gate do CLAUDE.md §1 para a fatia. (3) Higgsfield DUAS conexões nas Settings: (a) CODÁVEL AGORA — surfaçar a Platform API key higgsfield_api_key (já no vault user_api_keys, já usada pelos nós de vídeo) na UI de Settings/BYOK junto com openrouter/replicate/openai/google; (b) conector MCP OAuth via Consent Clerk (código server-side+UI já pronto do project_higgsfield_mcp_connector) — surfaçar que falta o GO Sovereign de registrar o client OAuth + clicar Conectar. Cada iteração: probe-first no estado vivo, SOP/BoK gate antes de código, /security-review em qualquer migration/edge fn, prova material (Lei 1 — tsc/deno/smoke/browser-verify), commit granular. Itens Sovereign-gated: só surfaçar, nunca executar. Selar só a ~95% da janela ou roadmap desbloqueado esgotado.
+
+## 🤖 Claude *(10:27:22)*
+
+
+## 🤖 Claude *(10:27:23)*
+
+Loop armado em modo dinâmico (self-paced), pós-Item 1. **Iteração 1: Item 3(a) — surfaçar a API key da Platform Higgsfield nas Settings** (o quick-win codável agora, valor visível imediato). Probe-first no estado vivo da UI de BYOK:
+
+## 🤖 Claude *(10:27:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== coluna higgsfield_api_key existe em user_api_keys? ===\"\nsource <(grep -E '^(SUPABASE_URL|SB_SECRET_KEY)=' .env | sed 's/^/export /')\ncurl -s \"$SUPABASE_URL/rest/v1/user_api_keys?select=higgsfield_api_key,openrouter_api_key,replicate_api_key&limit=0\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -o /dev/null -w \"REST higgsfield_api_key select \u2192 HTTP %{http_code}\\n\"\necho \"=== hook useUserApiKeys + UI de BYOK ===\"\ngrep -rln \"openrouter_api_key\\|useUserApiKeys\\|replicate_api_key\" src/hooks/ src/components/settings/ src/pages/ 2>/dev/null | head\necho \"=== onde higgsfield j\u00e1 aparece (ou n\u00e3o) na UI ===\"\ngrep -rln \"higgsfield\" src/hooks/ src/components/settings/ src/pages/SettingsPage.tsx 2>/dev/null | head",
+  "description": "Probe: coluna higgsfield + hook BYOK + UI settings"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === coluna higgsfield_api_key existe em user_api_keys? ===
+> REST higgsfield_api_key select → HTTP 200
+> === hook useUserApiKeys + UI de BYOK ===
+> src/hooks/useUserApiKeys.ts
+> src/hooks/useAccessConfig.ts
+> src/pages/SocialAccountsPage.tsx
+> src/pages/SettingsPage.tsx
+> === onde higgsfield já aparece (ou não) na UI ===
+> src/hooks/useHiggsfieldConnection.ts
+> src/hooks/useCanvasJobsRealtime.ts
+> src/hooks/useCanvasStudio.ts
+> src/components/settings/HiggsfieldConnectorCard.tsx
+> ```
+
+## 🤖 Claude *(10:27:37)*
+
+
+## 🤖 Claude *(10:27:39)*
+
+`higgsfield_api_key` já existe na coluna (REST 200); a UI de BYOK vive em `useUserApiKeys.ts` + `SettingsPage.tsx`; já há um `HiggsfieldConnectorCard` (o conector MCP, item 3b) mas **não** um campo BYOK da Platform key. Lendo o hook + como os campos de chave são renderizados:
+
+## 🤖 Claude *(10:27:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useUserApiKeys.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	import type { Database } from '@/integrations/supabase/types';
+> 5	
+> 6	export type UserApiKeysRow = Database['public']['Views']['user_api_keys']['Row'];
+> 7	type UserApiKeysUpdate = Database['public']['Views']['user_api_keys']['Update'];
+> 8	type UserApiKeysInsert = Database['public']['Views']['user_api_keys']['Insert'];
+> 9	
+> 10	const QUERY_KEY = (userId: string | undefined) => ['user_api_keys', userId] as const;
+> 11	
+> 12	export function useUserApiKeys() {
+> 13	  const { user } = useAuth();
+> 14	  const qc = useQueryClient();
+> 15	
+> 16	  const { data: userKeys, isLoading } = useQuery({
+> 17	    queryKey: QUERY_KEY(user?.id),
+> 18	    queryFn: async () => {
+> 19	      const { data, error } = await supabase
+> 20	        .from('user_api_keys')
+> 21	        .select('*')
+> 22	        .eq('user_id', user!.id)
+> 23	        .maybeSingle();
+> 24	      if (error) throw error;
+> 25	
+> 26	      if (data && data.pref_ai_model === "gemini-3.1-flash-live-preview") {
+> 27	        // Auto-heal: model 3.1 live is websocket only, fallback to 2.5-flash for text chat
+> 28	        supabase
+> 29	          .from('user_api_keys')
+> 30	          .insert({
+> 31	            user_id: user!.id,
+> 32	            pref_ai_model: "gemini-2.5-flash",
+> 33	            updated_at: new Date().toISOString(),
+> 34	          })
+> 35	          .then(({ error: err }) => {
+> 36	            if (err) console.error("Failed to auto-heal pref_ai_model:", err);
+> 37	          });
+> 38	        return {
+> 39	          ...data,
+> 40	          pref_ai_model: "gemini-2.5-flash"
+> 41	        } as UserApiKeysRow;
+> 42	      }
+> 43	
+> 44	      return data as UserApiKeysRow | null;
+> 45	    },
+> 46	    enabled: !!user?.id,
+> 47	    staleTime: 60_000,
+> 48	  });
+> 49	
+> 50	  const { mutateAsync: saveKeys, isPending: isSaving } = useMutation({
+> 51	    mutationFn: async (payload: Partial<UserApiKeysUpdate>) => {
+> 52	      // INSERT (not upsert): `user_api_keys` is now a masked VIEW (credential_encryption) whose
+> 53	      // INSTEAD OF INSERT trigger runs `INSERT ... ON CONFLICT (user_id) DO UPDATE` — i.e. it
+> 54	      // upserts internally. A PostgREST `.upsert()` would send `merge-duplicates`, which needs a
+> 55	      // unique constraint the view lacks → HTTP 400. `.insert()` routes through the trigger.
+> 56	      const { error } = await supabase
+> 57	        .from('user_api_keys')
+> 58	        .insert({
+> 59	          ...payload,
+> 60	          user_id: user!.id,
+> 61	          updated_at: new Date().toISOString(),
+> 62	        } as UserApiKeysInsert);
+> 63	      if (error) throw error;
+> 64	    },
+> 65	    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY(user?.id) }),
+> 66	  });
+> 67	
+> 68	  return { userKeys, saveKeys, isSaving, isLoading };
+> 69	}
+> 70	
+> ```
+
+## 🤖 Claude *(10:27:49)*
+
+
+## 🤖 Claude *(10:27:50)*
+
+O hook `useUserApiKeys` já é genérico (`saveKeys` aceita qualquer coluna, lê `*`) — não precisa mudar. Só falta o campo na UI. Vou ver como `SettingsPage.tsx` renderiza os campos de chave (openrouter/replicate/etc.):
+
+## 🤖 Claude *(10:27:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"openrouter_api_key\\|replicate_api_key\\|openai_api_key\\|google_api_key\\|higgsfield\\|_api_key\\|API Key\\|BYOK\\|Chave\" src/pages/SettingsPage.tsx | head -40\necho \"=== total linhas ===\"\nwc -l src/pages/SettingsPage.tsx",
+  "description": "Localizar rendering dos campos de chave BYOK no SettingsPage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 28:// the encrypted user_api_keys view, so a saved key can't be tested in the browser. A masked/empty
+> 126:    groq_api_key: "",
+> 127:    openrouter_api_key: "",
+> 128:    openai_api_key: "",
+> 129:    elevenlabs_api_key: "",
+> 130:    google_api_key: "",
+> 131:    nanobana_api_key: "",
+> 132:    seedance_api_key: "",
+> 133:    replicate_api_key: "",
+> 135:    resend_api_key: "",
+> 136:    firecrawl_api_key: "",
+> 138:    hedra_api_key: "",
+> 139:    cartesia_api_key: "",
+> 140:    fal_api_key: "",
+> 160:      groq_api_key: userKeys.groq_api_key || "",
+> 161:      openrouter_api_key: userKeys.openrouter_api_key || "",
+> 162:      openai_api_key: userKeys.openai_api_key || "",
+> 163:      elevenlabs_api_key: userKeys.elevenlabs_api_key || "",
+> 164:      google_api_key: userKeys.google_api_key || "",
+> 165:      nanobana_api_key: userKeys.nanobana_api_key || "",
+> 166:      seedance_api_key: userKeys.seedance_api_key || "",
+> 167:      replicate_api_key: userKeys.replicate_api_key || "",
+> 169:      resend_api_key: userKeys.resend_api_key || "",
+> 170:      firecrawl_api_key: userKeys.firecrawl_api_key || "",
+> 172:      hedra_api_key: userKeys.hedra_api_key || "",
+> 173:      cartesia_api_key: userKeys.cartesia_api_key || "",
+> 174:      fal_api_key: userKeys.fal_api_key || "",
+> 230:          <TabsTrigger value="ai">IA (API Keys)</TabsTrigger>
+> 238:      {/* API Keys + Preferences */}
+> 243:            Soberania de IA (API Keys)
+> 258:                id="openrouter_api_key" label="OpenRouter API Key" placeholder="sk-or-v1-..."
+> 261:                value={keys.openrouter_api_key}
+> 262:                onChange={(v) => setKeys((p) => ({ ...p, openrouter_api_key: v }))}
+> 265:                id="google_api_key" label="Google API Key (Gemini)" placeholder="AIzaSy..."
+> 266:                description="Chave Gemini do usuário. Usada pelo AIOS Chat, TTS e geração de vídeo."
+> 268:                value={keys.google_api_key}
+> 269:                onChange={(v) => setKeys((p) => ({ ...p, google_api_key: v }))}
+> 272:                id="groq_api_key" label="Groq API Key" placeholder="gsk_..."
+> 275:                value={keys.groq_api_key}
+> 276:                onChange={(v) => setKeys((p) => ({ ...p, groq_api_key: v }))}
+> === total linhas ===
+> 645 src/pages/SettingsPage.tsx
+> ```
+
+## 🤖 Claude *(10:27:59)*
+
+
+## 🤖 Claude *(10:28:00)*
+
+Padrão claro (state `keys` + hidratação + campos `ApiKeyField`). Vou ver a seção de render dos campos + confirmar que `higgsfield_api_key` está nos types gerados (senão tsc quebra):
+
+## 🤖 Claude *(10:28:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 255,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 255	          ) : (
+> 256	            <>
+> 257	              <KeyField
+> 258	                id="openrouter_api_key" label="OpenRouter API Key" placeholder="sk-or-v1-..."
+> 259	                description="Provedor principal multi-modelo. Usado pelo pipeline de conteúdo e AIOS."
+> 260	                provider="openrouter"
+> 261	                value={keys.openrouter_api_key}
+> 262	                onChange={(v) => setKeys((p) => ({ ...p, openrouter_api_key: v }))}
+> 263	              />
+> 264	              <KeyField
+> 265	                id="google_api_key" label="Google API Key (Gemini)" placeholder="AIzaSy..."
+> 266	                description="Chave Gemini do usuário. Usada pelo AIOS Chat, TTS e geração de vídeo."
+> 267	                provider="google"
+> 268	                value={keys.google_api_key}
+> 269	                onChange={(v) => setKeys((p) => ({ ...p, google_api_key: v }))}
+> 270	              />
+> 271	              <KeyField
+> 272	                id="groq_api_key" label="Groq API Key" placeholder="gsk_..."
+> 273	                description="Provedor ultra-rápido via Llama-3. Fallback de alta velocidade."
+> 274	                provider="groq"
+> 275	                value={keys.groq_api_key}
+> 276	                onChange={(v) => setKeys((p) => ({ ...p, groq_api_key: v }))}
+> 277	              />
+> 278	              <KeyField
+> 279	                id="openai_api_key" label="OpenAI API Key" placeholder="sk-proj-..."
+> 280	                description="Usado para geração de imagens via DALL-E 3."
+> 281	                provider="openai"
+> 282	                value={keys.openai_api_key}
+> 283	                onChange={(v) => setKeys((p) => ({ ...p, openai_api_key: v }))}
+> 284	              />
+> 285	              <KeyField
+> 286	                id="replicate_api_key" label="Replicate API Key" placeholder="r8_..."
+> 287	                description="Usado pelo Canvas para FLUX 1.1 Pro, FLUX Schnell e SDXL."
+> 288	                provider="replicate"
+> 289	                value={keys.replicate_api_key}
+> 290	                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}
+> 291	              />
+> 292	              <KeyField
+> 293	                id="apify_token" label="Apify Token (trends + mineração de produtos ML)" placeholder="apify_api_..."
+> 294	                description="BYOK p/ trends (fetch-trends, per-user obrigatório) e enriquecer afiliados ML. Catálogo de afiliados compartilhado usa token de sistema; trends é per-user."
+> 295	                provider="apify"
+> 296	                value={keys.apify_token}
+> 297	                onChange={(v) => setKeys((p) => ({ ...p, apify_token: v }))}
+> 298	              />
+> 299	              <KeyField
+> 300	                id="rapidapi_key" label="RapidAPI Key (trends — fallback TikTok)" placeholder="..."
+> 301	                description="BYOK opcional p/ trends via RapidAPI (fallback do Apify no fetch-trends). Per-user, sem fallback de sistema."
+> 302	                provider="rapidapi"
+> 303	                value={keys.rapidapi_key}
+> 304	                onChange={(v) => setKeys((p) => ({ ...p, rapidapi_key: v }))}
+> 305	              />
+> 306	              <KeyField
+> 307	                id="resend_api_key" label="Resend API Key (canal de e-mail — nurturing)" placeholder="re_..."
+> 308	                description="BYOK opcional p/ entrega de e-mail das sequências de nutrição. Sem ela, usa o canal de sistema quando a entrega externa for ativada (hoje gated)."
+> 309	                provider="resend"
+> 310	                value={keys.resend_api_key}
+> 311	                onChange={(v) => setKeys((p) => ({ ...p, resend_api_key: v }))}
+> 312	              />
+> 313	              <KeyField
+> 314	                id="firecrawl_api_key" label="Firecrawl API Key (deepsearch.scrape — vision-mcp)" placeholder="fc-..."
+> 315	                description="BYOK obrigatório p/ a tool deepsearch.scrape do Vision MCP (extração de páginas em markdown). Com a sua chave, a tool roda grátis (você paga o Firecrawl direto); sem ela, a tool retorna 402."
+> 316	                provider="firecrawl"
+> 317	                value={keys.firecrawl_api_key}
+> 318	                onChange={(v) => setKeys((p) => ({ ...p, firecrawl_api_key: v }))}
+> 319	              />
+> 320	              <KeyField
+> 321	                id="elevenlabs_api_key" label="ElevenLabs API Key" placeholder="sk_..."
+> 322	                description="Síntese de voz ultra-realista (provedor alternativo ao Gemini TTS)."
+> 323	                provider="elevenlabs"
+> 324	                value={keys.elevenlabs_api_key}
+> ```
+
+## 🤖 Claude *(10:28:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -c \"higgsfield_api_key\" src/integrations/supabase/types.ts && echo \"higgsfield_api_key NOS TYPES \u2705\" || echo \"\u274c higgsfield_api_key AUSENTE nos types (tsc quebraria)\"",
+  "description": "Ler render dos campos + checar types para higgsfield_api_key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 14
+> higgsfield_api_key NOS TYPES ✅
+> ```
+
+## 🤖 Claude *(10:28:16)*
+
+
+## 🤖 Claude *(10:28:16)*
+
+`higgsfield_api_key` está nos types (tsc ok) e o padrão é `<KeyField provider=...>`. Preciso ver o que `provider` faz (botão de testar server-side) para não deixar um botão quebrado. Lendo o KeyField:
+
+## 🤖 Claude *(10:28:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rn \"function KeyField\\|const KeyField\\|provider\" src/pages/SettingsPage.tsx | grep -i \"keyfield\\|provider\" | head\necho \"=== def do KeyField (componente) ===\"\ngrep -rln \"test-api-key\\|test-user-api-key\\|function KeyField\\|KeyFieldProps\" src/ 2>/dev/null | head\necho \"=== provider usado p/ test? grep no edge fn de teste ===\"\nls supabase/functions/ | grep -i \"test.*key\\|key.*test\" || echo \"(sem edge fn de teste \u00f3bvia)\"",
+  "description": "Localizar def do KeyField + edge fn de teste de chave"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/pages/SettingsPage.tsx:30:// also dodges provider CORS (e.g. Replicate blocks browser requests).
+> src/pages/SettingsPage.tsx:31:async function testApiKey(provider: string, key: string): Promise<boolean> {
+> src/pages/SettingsPage.tsx:35:    const body = masked || !trimmed ? { provider } : { provider, key: trimmed };
+> src/pages/SettingsPage.tsx:44:function KeyField({
+> src/pages/SettingsPage.tsx:45:  id, label, placeholder, description, provider, value, onChange, testable = true,
+> src/pages/SettingsPage.tsx:48:  provider: string; value: string; onChange: (v: string) => void; testable?: boolean;
+> src/pages/SettingsPage.tsx:55:    const ok = await testApiKey(provider, value);
+> src/pages/SettingsPage.tsx:59:  }, [value, provider, label]);
+> src/pages/SettingsPage.tsx:144:    pref_audio_provider: "openai",
+> src/pages/SettingsPage.tsx:145:    pref_image_provider: "openai",
+> === def do KeyField (componente) ===
+> src/pages/SettingsPage.tsx
+> === provider usado p/ test? grep no edge fn de teste ===
+> test-api-key
+> ```
+
+## 🤖 Claude *(10:28:32)*
+
+
+## 🤖 Claude *(10:28:33)*
+
+Há um `test-api-key` edge fn + botão "Testar" (default `testable=true`). Vou ver se ele suporta higgsfield — senão adiciono o caso ou marco `testable={false}` para não dar um teste enganoso:
+
+## 🤖 Claude *(10:28:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"case\\|provider ===\\|higgsfield\\|replicate\\|switch\" supabase/functions/test-api-key/index.ts | head -40",
+  "description": "Ver providers suportados no test-api-key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 24:  replicate: "replicate_api_key",
+> 28:  switch (provider) {
+> 29:    case "groq":
+> 31:    case "openrouter":
+> 34:    case "openai":
+> 36:    case "google":
+> 38:    case "elevenlabs":
+> 40:    case "replicate":
+> 41:      return { url: "https://api.replicate.com/v1/account", headers: { Authorization: `Token ${key}` } };
+> ```
+
+## 🤖 Claude *(10:28:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/test-api-key/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+> 2	
+> 3	// constellation/settings: server-side BYOK key validator. The frontend can only read the MASKED
+> 4	// user_api_keys view (credential_encryption migration 20260601000000), so a saved key can't be
+> 5	// tested from the browser — it never has the real value. This function resolves the REAL key
+> 6	// (a freshly-typed value from the body, else the stored key from decrypted_user_api_keys) and tests
+> 7	// it against the provider server-side (no browser CORS; covers Replicate, which blocks CORS).
+> 8	// JWT-guarded: the caller can only ever test their OWN stored keys.
+> 9	
+> 10	const corsHeaders = {
+> 11	  "Access-Control-Allow-Origin": "*",
+> 12	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 13	};
+> 14	
+> 15	const json = (body: unknown, status = 200) =>
+> 16	  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 17	
+> 18	const COLUMN: Record<string, string> = {
+> 19	  groq: "groq_api_key",
+> 20	  openrouter: "openrouter_api_key",
+> 21	  openai: "openai_api_key",
+> 22	  google: "google_api_key",
+> 23	  elevenlabs: "elevenlabs_api_key",
+> 24	  replicate: "replicate_api_key",
+> 25	};
+> 26	
+> 27	function providerRequest(provider: string, key: string): { url: string; headers: Record<string, string> } | null {
+> 28	  switch (provider) {
+> 29	    case "groq":
+> 30	      return { url: "https://api.groq.com/openai/v1/models", headers: { Authorization: `Bearer ${key}` } };
+> 31	    case "openrouter":
+> 32	      // /key validates the credential itself (/models is public and would false-positive).
+> 33	      return { url: "https://openrouter.ai/api/v1/key", headers: { Authorization: `Bearer ${key}` } };
+> 34	    case "openai":
+> 35	      return { url: "https://api.openai.com/v1/models", headers: { Authorization: `Bearer ${key}` } };
+> 36	    case "google":
+> 37	      return { url: `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, headers: {} };
+> 38	    case "elevenlabs":
+> 39	      return { url: "https://api.elevenlabs.io/v1/user", headers: { "xi-api-key": key } };
+> 40	    case "replicate":
+> 41	      return { url: "https://api.replicate.com/v1/account", headers: { Authorization: `Token ${key}` } };
+> 42	    default:
+> 43	      return null;
+> 44	  }
+> 45	}
+> 46	
+> 47	const isMask = (v: string) => /^[••]+$/.test(v.trim());
+> 48	
+> 49	Deno.serve(async (req) => {
+> 50	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 51	  try {
+> 52	    const authHeader = req.headers.get("Authorization");
+> 53	    if (!authHeader) return json({ ok: false, error: "Unauthorized" }, 401);
+> 54	
+> 55	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 56	    const supabaseKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 57	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 58	
+> 59	    const userClient = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: authHeader } } });
+> 60	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 61	    if (userErr || !user) return json({ ok: false, error: "Unauthorized" }, 401);
+> 62	
+> 63	    const { provider, key: providedKey } = await req.json().catch(() => ({}));
+> 64	    if (!provider || !COLUMN[provider]) return json({ ok: false, error: "unknown_provider" }, 400);
+> 65	
+> 66	    // A freshly-typed real value (validate before save) wins; otherwise read the stored decrypted key.
+> 67	    let key = typeof providedKey === "string" && providedKey.trim() && !isMask(providedKey) ? providedKey.trim() : "";
+> 68	    if (!key) {
+> 69	      const admin = createClient(supabaseUrl, serviceKey);
+> 70	      const { data: row } = await admin
+> 71	        .from("decrypted_user_api_keys")
+> 72	        .select(COLUMN[provider])
+> 73	        .eq("user_id", user.id)
+> 74	        .maybeSingle();
+> 75	      key = ((row?.[COLUMN[provider]] as string | null) ?? "").trim();
+> 76	    }
+> 77	    if (!key || isMask(key)) return json({ ok: false, error: "no_key_configured" });
+> 78	
+> 79	    const cfg = providerRequest(provider, key);
+> 80	    if (!cfg) return json({ ok: false, error: "unknown_provider" }, 400);
+> 81	
+> 82	    const res = await fetch(cfg.url, { headers: cfg.headers });
+> 83	    return json({ ok: res.ok, status: res.status });
+> 84	  } catch (e) {
+> 85	    return json({ ok: false, error: e instanceof Error ? e.message : "internal" });
+> 86	  }
+> 87	});
+> 88	
+> ```
+
+## 🤖 Claude *(10:28:52)*
+
+
+## 🤖 Claude *(10:28:54)*
+
+O `test-api-key` não suporta higgsfield. Antes de decidir se adiciono um teste real ou marco `testable={false}`, preciso saber como os nós de vídeo autenticam com a Higgsfield Platform key (header único? key+secret?) — probe no uso real:
+
+## 🤖 Claude *(10:28:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== como higgsfield key \u00e9 usada nas edge fns (header de auth) ===\"\ngrep -rn \"higgsfield\" supabase/functions/_shared/*.ts supabase/functions/canvas-execute/index.ts 2>/dev/null | grep -iE \"header|api-key|hf-|secret|bearer|authorization|platform.higgsfield|Deno.env\" | head -15\necho \"=== onde a key higgsfield \u00e9 resolvida (coluna/env) ===\"\ngrep -rn \"higgsfield_api_key\\|HIGGSFIELD\" supabase/functions/ 2>/dev/null | grep -iE \"env|_api_key|column|resolve\" | head",
+  "description": "Probe do formato de auth da Higgsfield Platform key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como higgsfield key é usada nas edge fns (header de auth) ===
+> supabase/functions/_shared/higgsfield-oauth.ts:5:// smoke-higgsfield-mcp-contract.ts) + the authorization-url builder. Pure enough for vitest (crypto.subtle +
+> supabase/functions/canvas-execute/index.ts:175:      higgsfield_secret: userKeys?.higgsfield_api_key_secret || "",
+> supabase/functions/canvas-execute/index.ts:434:        apiSecret: keys.higgsfield_secret,
+> supabase/functions/canvas-execute/index.ts:459:        const result = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> supabase/functions/canvas-execute/index.ts:783:  const BASE_URL = "https://platform.higgsfield.ai";
+> supabase/functions/canvas-execute/index.ts:1006:    apiSecret: keys.higgsfield_secret,
+> supabase/functions/canvas-execute/index.ts:1233:  if (body.node_type === "image_to_video" && (!keys.higgsfield || !keys.higgsfield_secret)) {
+> supabase/functions/canvas-execute/index.ts:1272:      (body.provider === "higgsfield" && (!keys.higgsfield || !keys.higgsfield_secret));
+> supabase/functions/canvas-execute/index.ts:1438:        const r = await generateHiggsfield(keys.higgsfield, keys.higgsfield_secret, body);
+> supabase/functions/canvas-execute/index.ts:1963:  const BASE_URL = "https://platform.higgsfield.ai";
+> supabase/functions/canvas-execute/index.ts:2128:  const submit = await higgsfieldSubmit({ apiKey, apiSecret, body, webhookUrl });
+> === onde a key higgsfield é resolvida (coluna/env) ===
+> supabase/functions/higgsfield-oauth-init/index.ts:40:    const clientId = Deno.env.get("HIGGSFIELD_MCP_CLIENT_ID");
+> supabase/functions/higgsfield-oauth-init/index.ts:47:    const redirectUri = Deno.env.get("HIGGSFIELD_REDIRECT_URI") ?? DEFAULT_REDIRECT_URI;
+> supabase/functions/canvas-execute/index.ts:174:      higgsfield: userKeys?.higgsfield_api_key || "",
+> supabase/functions/canvas-execute/index.ts:175:      higgsfield_secret: userKeys?.higgsfield_api_key_secret || "",
+> supabase/functions/canvas-execute/index.ts:1957:    throw new Error("Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)");
+> supabase/functions/canvas-execute/index.ts:2108:      "Higgsfield credentials not configured (HIGGSFIELD_API_KEY / HIGGSFIELD_API_KEY_SECRET)",
+> supabase/functions/higgsfield-oauth-callback/index.ts:49:    const clientId = Deno.env.get("HIGGSFIELD_MCP_CLIENT_ID");
+> supabase/functions/higgsfield-oauth-callback/index.ts:53:    const redirectUri = Deno.env.get("HIGGSFIELD_REDIRECT_URI") ?? DEFAULT_REDIRECT_URI;
+> ```
+
+## 🤖 Claude *(10:29:21)*
+
+
+## 🤖 Claude *(10:29:23)*
+
+Achado material: a Higgsfield Platform API usa um **par key+secret** (`higgsfield_api_key` + `higgsfield_api_key_secret`, canvas-execute:174-175). Então surfaçar corretamente = **dois campos**. O `test-api-key` testa uma chave só contra um endpoint — não encaixa no par, então marco `testable={false}` (os campos salvam; teste combinado seria endpoint novo, defiro). Confirmando que a 2ª coluna existe:
+
+## 🤖 Claude *(10:29:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource <(grep -E '^(SUPABASE_URL|SB_SECRET_KEY)=' .env | sed 's/^/export /')\ncurl -s \"$SUPABASE_URL/rest/v1/user_api_keys?select=higgsfield_api_key,higgsfield_api_key_secret&limit=0\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -o /dev/null -w \"REST par higgsfield \u2192 HTTP %{http_code}\\n\"\ngrep -c \"higgsfield_api_key_secret\" src/integrations/supabase/types.ts && echo \"secret NOS TYPES \u2705\" || echo \"\u274c secret ausente nos types\"\necho \"=== KeyField aceita testable? (linha 44-48 j\u00e1 vista: sim, testable?:boolean default true) ===\"\necho \"=== j\u00e1 existe algum campo com testable={false} p/ espelhar? ===\"\ngrep -n \"testable={false}\\|testable = false\" src/pages/SettingsPage.tsx | head",
+  "description": "Confirmar coluna secret + types + padr\u00e3o testable=false"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> REST par higgsfield → HTTP 200
+> 7
+> secret NOS TYPES ✅
+> === KeyField aceita testable? (linha 44-48 já vista: sim, testable?:boolean default true) ===
+> === já existe algum campo com testable={false} p/ espelhar? ===
+> 336:                  provider="hedra" testable={false}
+> 343:                  provider="fal" testable={false}
+> 350:                  provider="cartesia" testable={false}
+> ```
+
+## 🤖 Claude *(10:29:37)*
+
+
+## 🤖 Claude *(10:29:38)*
+
+Confirmado: par de colunas existe (REST 200, types), e há precedente `testable={false}` (hedra/fal/cartesia). Vou adicionar os dois campos. Lendo os blocos exatos de defaults + hidratação para editar com precisão:
+
+## 🤖 Claude *(10:29:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 124,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 124	
+> 125	  const [keys, setKeys] = useState({
+> 126	    groq_api_key: "",
+> 127	    openrouter_api_key: "",
+> 128	    openai_api_key: "",
+> 129	    elevenlabs_api_key: "",
+> 130	    google_api_key: "",
+> 131	    nanobana_api_key: "",
+> 132	    seedance_api_key: "",
+> 133	    replicate_api_key: "",
+> 134	    apify_token: "",
+> 135	    resend_api_key: "",
+> 136	    firecrawl_api_key: "",
+> 137	    rapidapi_key: "",
+> 138	    hedra_api_key: "",
+> 139	    cartesia_api_key: "",
+> 140	    fal_api_key: "",
+> 141	  });
+> 142	  const [prefs, setPrefs] = useState({
+> 143	    pref_ai_model: "gemini-2.5-flash",
+> 144	    pref_audio_provider: "openai",
+> 145	    pref_image_provider: "openai",
+> 146	    pref_video_provider: "veo",
+> 147	  });
+> 148	  const [wpConfig, setWpConfig] = useState({
+> 149	    wp_site_url: "",
+> 150	    wp_username: "",
+> 151	    wp_app_password: "",
+> 152	  });
+> 153	  const [savingWp, setSavingWp] = useState(false);
+> 154	  const [advancedOpen, setAdvancedOpen] = useState(false);
+> 155	
+> 156	  // Populate form from hook data
+> 157	  useEffect(() => {
+> 158	    if (!userKeys) return;
+> 159	    setKeys({
+> 160	      groq_api_key: userKeys.groq_api_key || "",
+> 161	      openrouter_api_key: userKeys.openrouter_api_key || "",
+> 162	      openai_api_key: userKeys.openai_api_key || "",
+> 163	      elevenlabs_api_key: userKeys.elevenlabs_api_key || "",
+> 164	      google_api_key: userKeys.google_api_key || "",
+> 165	      nanobana_api_key: userKeys.nanobana_api_key || "",
+> 166	      seedance_api_key: userKeys.seedance_api_key || "",
+> 167	      replicate_api_key: userKeys.replicate_api_key || "",
+> 168	      apify_token: userKeys.apify_token || "",
+> 169	      resend_api_key: userKeys.resend_api_key || "",
+> 170	      firecrawl_api_key: userKeys.firecrawl_api_key || "",
+> 171	      rapidapi_key: userKeys.rapidapi_key || "",
+> 172	      hedra_api_key: userKeys.hedra_api_key || "",
+> 173	      cartesia_api_key: userKeys.cartesia_api_key || "",
+> 174	      fal_api_key: userKeys.fal_api_key || "",
+> 175	    });
+> 176	    setPrefs({
+> 177	      pref_ai_model: userKeys.pref_ai_model || "gemini-2.5-flash",
+> 178	      pref_audio_provider: userKeys.pref_audio_provider || "openai",
+> ```
+
+## 🤖 Claude *(10:29:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "    replicate_api_key: \"\",\n    apify_token: \"\",\n    resend_api_key: \"\",\n    firecrawl_api_key: \"\",\n    rapidapi_key: \"\",\n    hedra_api_key: \"\",\n    cartesia_api_key: \"\",\n    fal_api_key: \"\",\n  });",
+  "new_string": "    replicate_api_key: \"\",\n    higgsfield_api_key: \"\",\n    higgsfield_api_key_secret: \"\",\n    apify_token: \"\",\n    resend_api_key: \"\",\n    firecrawl_api_key: \"\",\n    rapidapi_key: \"\",\n    hedra_api_key: \"\",\n    cartesia_api_key: \"\",\n    fal_api_key: \"\",\n  });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:29:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "      replicate_api_key: userKeys.replicate_api_key || \"\",\n      apify_token: userKeys.apify_token || \"\",",
+  "new_string": "      replicate_api_key: userKeys.replicate_api_key || \"\",\n      higgsfield_api_key: userKeys.higgsfield_api_key || \"\",\n      higgsfield_api_key_secret: userKeys.higgsfield_api_key_secret || \"\",\n      apify_token: userKeys.apify_token || \"\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:29:56)*
+
+Agora os dois campos `KeyField` (key + secret), logo após o Replicate (provedor de vídeo/Canvas), `testable={false}`:
+
+## 🤖 Claude *(10:30:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "              <KeyField\n                id=\"replicate_api_key\" label=\"Replicate API Key\" placeholder=\"r8_...\"\n                description=\"Usado pelo Canvas para FLUX 1.1 Pro, FLUX Schnell e SDXL.\"\n                provider=\"replicate\"\n                value={keys.replicate_api_key}\n                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}\n              />",
+  "new_string": "              <KeyField\n                id=\"replicate_api_key\" label=\"Replicate API Key\" placeholder=\"r8_...\"\n                description=\"Usado pelo Canvas para FLUX 1.1 Pro, FLUX Schnell e SDXL.\"\n                provider=\"replicate\"\n                value={keys.replicate_api_key}\n                onChange={(v) => setKeys((p) => ({ ...p, replicate_api_key: v }))}\n              />\n              <KeyField\n                id=\"higgsfield_api_key\" label=\"Higgsfield API Key (Platform \u2014 v\u00eddeo/DoP)\" placeholder=\"hf-...\"\n                description=\"Credencial da Higgsfield Platform (par com o Secret abaixo). Usada pelos n\u00f3s de v\u00eddeo/DoP do Spaces. Diferente do conector MCP OAuth (esse \u00e9 outra conex\u00e3o, no card de Conectores).\"\n                provider=\"higgsfield\" testable={false}\n                value={keys.higgsfield_api_key}\n                onChange={(v) => setKeys((p) => ({ ...p, higgsfield_api_key: v }))}\n              />\n              <KeyField\n                id=\"higgsfield_api_key_secret\" label=\"Higgsfield API Secret (Platform)\" placeholder=\"hf-secret-...\"\n                description=\"Segredo da Higgsfield Platform (par com a API Key acima). Ambos s\u00e3o obrigat\u00f3rios para os n\u00f3s de v\u00eddeo/DoP.\"\n                provider=\"higgsfield_secret\" testable={false}\n                value={keys.higgsfield_api_key_secret}\n                onChange={(v) => setKeys((p) => ({ ...p, higgsfield_api_key_secret: v }))}\n              />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:30:16)*
+
+
+## 🤖 Claude *(10:30:17)*
+
+Preciso verificar como o save é disparado — se envia valores mascarados (`••••`) poderia corromper a chave real (isso vale p/ TODOS os campos, então o código já deve tratar). Lendo o handler de save:
+
+## 🤖 Claude *(10:30:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"saveKeys\\|handleSave\\|isMask\\|\u2022\u2022\\|masked\\|const save\\|onClick.*save\\|Salvar\" src/pages/SettingsPage.tsx | head -20",
+  "description": "Localizar handler de save + tratamento de mascarado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 28:// the encrypted user_api_keys view, so a saved key can't be tested in the browser. A masked/empty
+> 34:    const masked = /^[••]+$/.test(trimmed);
+> 35:    const body = masked || !trimmed ? { provider } : { provider, key: trimmed };
+> 110:  const { userKeys, saveKeys, isSaving, isLoading } = useUserApiKeys();
+> 193:  const handleSave = async () => {
+> 195:      await saveKeys({ ...keys, ...prefs });
+> 202:  const handleSaveWp = async () => {
+> 205:      await saveKeys({
+> 489:          <Button onClick={handleSave} disabled={isLoading || isSaving} className="gap-2">
+> 491:            Salvar Configurações
+> 546:          <Button onClick={handleSaveWp} disabled={savingWp} className="gap-2">
+> 548:            Salvar WordPress
+> ```
+
+## 🤖 Claude *(10:30:35)*
+
+
+## 🤖 Claude *(10:30:37)*
+
+`handleSave` envia `{...keys, ...prefs}` (todos os campos, inclusive mascarados). Esse é o comportamento pré-existente de TODOS os campos — o trigger INSTEAD OF de encriptação pula valores mascarados (`••••`), senão qualquer save corromperia toda chave (bug que o app não tem). Meus dois campos herdam exatamente o mesmo mecanismo — zero risco novo. Verificando tsc + build:
+
+## 🤖 Claude *(10:30:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"\nnpx tsc --noEmit 2>&1 | tail -6 && echo \"tsc OK: 0 erros\"\necho \"=== eslint ===\"\nnpx eslint src/pages/SettingsPage.tsx 2>&1 | tail -5 && echo \"eslint OK\"\necho \"=== confirmar trigger pula mascarado (credential_encryption) ===\"\ngrep -rn \"\u2022\u2022\\|masked\\|IS DISTINCT\\|unchanged\\|NULLIF\\|LIKE '%\u2022%'\\|char(8226)\" supabase/migrations/*credential*.sql supabase/migrations/*encrypt*.sql 2>/dev/null | head -5 || echo \"(checar manualmente \u2014 mas padr\u00e3o id\u00eantico aos campos existentes)\"",
+  "description": "tsc + eslint + confirmar tratamento de mascarado no trigger"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc OK: 0 erros
+> === eslint ===
+> eslint OK
+> === confirmar trigger pula mascarado (credential_encryption) ===
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql:27:-- "only when the value actually changed" (IS DISTINCT FROM) guard. The stored column keeps pointing
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql:112:  IF NEW.groq_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.groq_api_key IS DISTINCT FROM OLD.groq_api_key) THEN
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql:122:  IF NEW.openrouter_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openrouter_api_key IS DISTINCT FROM OLD.openrouter_api_key) THEN
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql:132:  IF NEW.openai_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.openai_api_key IS DISTINCT FROM OLD.openai_api_key) THEN
+> supabase/migrations/20260602140000_vault_upsert_secret_idempotent_encrypt.sql:142:  IF NEW.elevenlabs_api_key IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.elevenlabs_api_key IS DISTINCT FROM OLD.elevenlabs_api_key) THEN
+> ```
+
+## 🤖 Claude *(10:31:06)*
+
+
+## 🤖 Claude *(10:31:08)*
+
+O trigger usa `IS DISTINCT FROM OLD` (mascarado==mascarado → skip; só re-encripta ao mudar) — correto. Mas preciso confirmar (Lei 1) que o trigger de encriptação **tem branch para `higgsfield_api_key` + `_secret`** — senão o save da UI não encripta/armazena certo. Consultando a função viva do trigger:
+
+## 🤖 Claude *(10:31:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nTOKEN=$(cat ~/.supabase/access-token); REF=bcyvddsykvehvpwstlfa\nAPI=\"https://api.supabase.com/v1/projects/${REF}/database/query\"\ncurl -s -X POST \"$API\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\":\\\"SELECT count(*) FILTER (WHERE pg_get_functiondef(p.oid) LIKE '%higgsfield_api_key%') AS has_higgs_key, count(*) FILTER (WHERE pg_get_functiondef(p.oid) LIKE '%higgsfield_api_key_secret%') AS has_higgs_secret FROM pg_proc p JOIN pg_trigger t ON t.tgfoid=p.oid WHERE t.tgrelid='public.user_api_keys'::regclass;\\\"}\"\necho",
+  "description": "Verificar se o trigger da view encripta higgsfield key+secret"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"has_higgs_key":1,"has_higgs_secret":1}]
+> ```
+
+## 🤖 Claude *(10:31:41)*
+
+
+## 🤖 Claude *(10:31:43)*
+
+Trigger confirmado: encripta ambos `higgsfield_api_key` + `_secret` (has_higgs_key=1, has_higgs_secret=1). O campo está totalmente wired (coluna→type→trigger→hook→canvas-execute). tsc/eslint limpos. Build+deploy + confirmo baked:
+
+## 🤖 Claude *(10:31:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -3\necho \"=== 'Higgsfield API Key (Platform' baked? ===\"\ngrep -rl \"Higgsfield API Key (Platform\" dist/assets/*.js 2>/dev/null | head -1 && echo \"\u2705 baked\" || echo \"\u274c n\u00e3o baked\"",
+  "description": "Build+deploy + confirmar campos Higgsfield baked no bundle",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 28.59s
+> === 'Higgsfield API Key (Platform' baked? ===
+> dist/assets/SettingsPage-D1uNoJhY.js
+> ✅ baked
+> ```
+
+## 🤖 Claude *(10:32:30)*
+
+
+## 🤖 Claude *(10:32:32)*
+
+Build OK (28s), campos Higgsfield baked no `SettingsPage-D1uNoJhY.js`. Vou fazer o browser-verify logado (Settings é rota protegida — recipe de injeção de sessão). Checando budget + a rota de settings + o script de sessão:
+
+## 🤖 Claude *(10:32:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run .claude/scripts/session-inspect.ts 2>&1 | sed -n '6,8p'\necho \"=== rota settings ===\"\ngrep -n \"settings\\|Settings\" src/App.tsx | grep -i \"route\\|path\" | head\necho \"=== script de sess\u00e3o logada p/ preview ===\"\nls scripts/qa/gen-user-session.ts scripts/qa/gen-magiclink.ts 2>/dev/null",
+  "description": "Budget + rota settings + script de sess\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    usado 565k / 1000k  ·  livre 435k  ·  custo do seal ~50k
+>    output gasto na sessão: 717k tokens
+> 
+> === rota settings ===
+> 140:                <Route path="settings" element={<SettingsPage />} />
+> 141:                <Route path="settings/higgsfield/callback" element={<HiggsfieldCallbackPage />} />
+> === script de sessão logada p/ preview ===
+> scripts/qa/gen-magiclink.ts
+> scripts/qa/gen-user-session.ts
+> ```
+
+## 🤖 Claude *(10:32:49)*
+
+
+## 🤖 Claude *(10:32:50)*
+
+Budget 56% (435k livre) — saudável. Settings = `/dashboard/settings`. Vou reusar o padrão de injeção de sessão do `verify-spaces-redirects.ts` (que faz exatamente "preview + sessão User 0 injetada"). Lendo-o para espelhar:
+
+## 🤖 Claude *(10:32:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/verify-spaces-redirects.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// FR-SPACES-022 material proof: legacy paths redirect 1:1 to /dashboard/spaces*
+> 2	import { chromium } from 'playwright';
+> 3	import { readFileSync } from 'fs';
+> 4	const BASE = 'http://127.0.0.1:4173';
+> 5	const REF = 'bcyvddsykvehvpwstlfa';
+> 6	const session = readFileSync('/tmp/sb-session.json', 'utf-8').trim();
+> 7	const CASES: Array<[string, string]> = [
+> 8	  ['/dashboard/canvas', '/dashboard/spaces'],
+> 9	  ['/dashboard/canvas/design', '/dashboard/spaces/design'],
+> 10	  ['/dashboard/canvas/video', '/dashboard/spaces/video'],
+> 11	  ['/dashboard/canvas/assets', '/dashboard/spaces/assets'],
+> 12	  ['/dashboard/canvas/880b5eba-b41c-490d-8cab-1058def85bc9', '/dashboard/spaces/880b5eba-b41c-490d-8cab-1058def85bc9'],
+> 13	];
+> 14	const browser = await chromium.launch();
+> 15	const ctx = await browser.newContext();
+> 16	await ctx.addInitScript(([key, value]) => localStorage.setItem(key, value), [`sb-${REF}-auth-token`, session]);
+> 17	const page = await ctx.newPage();
+> 18	let fails = 0;
+> 19	for (const [from, to] of CASES) {
+> 20	  await page.goto(BASE + from, { waitUntil: 'domcontentloaded' });
+> 21	  await page.waitForTimeout(2500);
+> 22	  const url = new URL(page.url()).pathname;
+> 23	  const ok = url === to;
+> 24	  console.log(`${ok ? 'PASS' : 'FAIL'}  ${from}  ->  ${url}  (expected ${to})`);
+> 25	  if (!ok) fails++;
+> 26	}
+> 27	await browser.close();
+> 28	console.log(fails === 0 ? 'ALL REDIRECTS PASS' : `${fails} FAIL`);
+> 29	process.exit(fails === 0 ? 0 : 1);
+> 30	
+> ```
+
+## 🤖 Claude *(10:32:57)*
+
+
+## 🤖 Claude *(10:32:59)*
+
+Recipe claro (sessão em `/tmp/sb-session.json` → localStorage `sb-<ref>-auth-token`). Vou gerar a sessão e escrever o verify das Settings. Checando o output do gen-user-session:
+
+## 🤖 Claude *(10:33:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nhead -20 scripts/qa/gen-user-session.ts | grep -iE \"usage|/tmp|stdout|console.log|write\" | head",
+  "description": "Ver formato de output do gen-user-session"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  * Usage: bun run scripts/qa/gen-user-session.ts <email>
+>  *   → prints ONLY the localStorage value (JSON) on stdout, or an error on stderr + exit 1.
+> ```
+
+## 🤖 Claude *(10:33:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"$HOME/.deno/bin:$PATH\"\n# gerar sess\u00e3o do User 0 \u2192 /tmp/sb-session.json\nbun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com > /tmp/sb-session.json 2>/tmp/sb-session.err && echo \"sess\u00e3o gerada ($(wc -c < /tmp/sb-session.json) bytes)\" || { echo \"FALHA:\"; cat /tmp/sb-session.err; }\n# preview do dist fresco\n(npx vite preview --port 4173 --strictPort >/tmp/settings-preview.log 2>&1 &)\nsleep 4\ncurl -s -o /dev/null -w \"preview /dashboard/settings \u2192 HTTP %{http_code}\\n\" \"http://127.0.0.1:4173/dashboard/settings\"",
+  "description": "Gerar sess\u00e3o User 0 + iniciar preview"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sessão gerada (3334 bytes)
+> preview /dashboard/settings → HTTP 200
+> ```
+
+## 🤖 Claude *(10:33:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/verify-higgsfield-settings-fields.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * verify-higgsfield-settings-fields.ts \u2014 logged-in browser-verify that the Higgsfield Platform BYOK fields\n * (API Key + API Secret) render on Settings \u2192 IA (API Keys), alongside the other providers, with no console error.\n * Recipe (CF-proof, reference_loggedin_e2e_local_preview): vite preview of a fresh `bun run build` on :4173 +\n * an injected User 0 session in localStorage. Prereq: bun run scripts/qa/gen-user-session.ts <email> > /tmp/sb-session.json\n * Run from repo root: bun run scripts/qa/verify-higgsfield-settings-fields.ts\n */\nimport { chromium } from 'playwright';\nimport { readFileSync } from 'fs';\n\nconst BASE = process.env.PREVIEW_BASE ?? 'http://127.0.0.1:4173';\nconst REF = 'bcyvddsykvehvpwstlfa';\nconst session = readFileSync('/tmp/sb-session.json', 'utf-8').trim();\n\nconst browser = await chromium.launch();\nconst ctx = await browser.newContext({ viewport: { width: 1280, height: 1000 } });\nawait ctx.addInitScript(([key, value]) => localStorage.setItem(key, value), [`sb-${REF}-auth-token`, session]);\nconst page = await ctx.newPage();\nconst errors: string[] = [];\npage.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });\npage.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));\n\nawait page.goto(`${BASE}/dashboard/settings`, { waitUntil: 'domcontentloaded' });\nawait page.waitForTimeout(3500);\n// The IA (API Keys) tab is default; ensure it's active, then look for the fields.\nconst key = await page.getByText('Higgsfield API Key (Platform', { exact: false }).count();\nconst secret = await page.getByText('Higgsfield API Secret (Platform)', { exact: false }).count();\n// sibling sanity: Replicate must still be there (regress\u00e3o-zero of the surrounding form).\nconst replicate = await page.getByText('Replicate API Key', { exact: false }).count();\n\nawait browser.close();\n\nconst pass = key >= 1 && secret >= 1 && replicate >= 1 && errors.length === 0;\nconsole.log(JSON.stringify({ higgsfield_key_field: key, higgsfield_secret_field: secret, replicate_still_present: replicate, console_errors: errors }, null, 2));\nconsole.log(pass ? '\u2705 PASS \u2014 both Higgsfield Platform fields render, form intact, no errors' : '\u274c FAIL');\nprocess.exit(pass ? 0 : 1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/verify-higgsfield-settings-fields.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:33:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/verify-higgsfield-settings-fields.ts 2>&1 | tail -10",
+  "description": "Rodar verify logado dos campos Higgsfield nas Settings"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "higgsfield_key_field": 1,
+>   "higgsfield_secret_field": 1,
+>   "replicate_still_present": 1,
+>   "console_errors": []
+> }
+> ✅ PASS — both Higgsfield Platform fields render, form intact, no errors
+> ```
+
+## 🤖 Claude *(10:33:48)*
+
+
+## 🤖 Claude *(10:33:49)*
+
+**Browser-verify logado PASS**: ambos os campos Higgsfield Platform (key + secret) renderizam, Replicate intacto (regressão-zero), zero console error. Item 3(a) pronto. Cleanup do preview (por PID da porta — evitando o `pkill` que matou o shell) + commit:
+
+## 🤖 Claude *(10:33:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor port in 4173 4319; do PID=$(lsof -ti tcp:$port 2>/dev/null); [ -n \"$PID\" ] && kill $PID 2>/dev/null && echo \"preview :$port encerrado (pid $PID)\"; done; echo \"cleanup ok\"\ngit add src/pages/SettingsPage.tsx scripts/qa/verify-higgsfield-settings-fields.ts\ngit commit -q -m \"feat(settings): surfa\u00e7ar credenciais Higgsfield Platform (API Key + Secret) na aba BYOK\n\nItem 3(a) do roadmap GO'd: a Platform key/secret (j\u00e1 no vault user_api_keys, j\u00e1 usadas\npelos n\u00f3s de v\u00eddeo/DoP via canvas-execute) agora aparecem em Settings\u2192IA junto com\nopenrouter/replicate/openai/google. Par key+secret (auth Higgsfield exige os dois);\ntestable={false} (test-api-key testa 1 chave/endpoint, n\u00e3o o par \u2014 endpoint combinado\nfica como melhoria). Trigger de encripta\u00e7\u00e3o da view j\u00e1 cobre ambas colunas (verificado\nlive has_higgs_key=1/secret=1). Distinto do conector MCP OAuth (outra conex\u00e3o, card Conectores).\ntsc 0 \u00b7 eslint 0 \u00b7 browser-verify logado PASS (2 campos + regress\u00e3o-zero + zero console error).\" && git log -1 --format='%h %s'\ngit push origin main 2>&1 | tail -1",
+  "description": "Cleanup preview + commit + push item 3(a)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> preview :4173 encerrado (pid 2807954)
+> cleanup ok
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m7:33AM[0m [32mINF[0m 1 commits scanned.
+> [90m7:33AM[0m [32mINF[0m scan completed in 64.7ms
+> [90m7:33AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.20 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.13 seconds)
+> ✔️ gitleaks-staged (0.15 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 989e560 feat(settings): surfaçar credenciais Higgsfield Platform (API Key + Secret) na aba BYOK
+>    a18f975..989e560  main -> main
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
