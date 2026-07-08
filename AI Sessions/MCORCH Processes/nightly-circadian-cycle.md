@@ -76,3 +76,10 @@ OpenClaw native cron `Memory Dreaming Promotion` (em `~/.openclaw/cron/jobs.json
 - `~/.openclaw/cron/jobs.json` (OpenClaw native `Memory Dreaming Promotion` 03:00)
 - `.claude/context/survival-audit-v1.md` §2 Pillar 4 (Observability gap que motiva infra_health_logs writes)
 - SSP-01 OE03 diretiva Sovereign (2026-05-17)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
