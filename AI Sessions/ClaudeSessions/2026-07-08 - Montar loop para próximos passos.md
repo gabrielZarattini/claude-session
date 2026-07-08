@@ -9972,3 +9972,16 @@ O núcleo template-vivo da Ponte Designer (camadas linkadas a fontes dinâmicas 
   ]
 }
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-07 - cb5f809e-2729-43ec-a140-b1ce7ab38de2]]
+> * **Próxima Sessão**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
+%% --- TIMELINE END --- %%
