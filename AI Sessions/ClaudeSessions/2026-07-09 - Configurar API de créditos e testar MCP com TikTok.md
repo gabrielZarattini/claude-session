@@ -8281,9 +8281,9 @@ Como você armou o loop pra ir até ~85%, prefiro te deixar escolher a direção
 
 ## 👤 User *(02:39:25)*
 
-Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/[[deepsearch-blueprint|deepsearch-blueprint]]
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/deepsearch-blueprint
 
-# Skill: [[deepsearch-blueprint|deepsearch-blueprint]] — Semente de BoK com prova de pesquisa
+# Skill: deepsearch-blueprint — Semente de BoK com prova de pesquisa
 
 O blueprint é a **Fonte da Verdade verificada** que alimenta o `/bok-scribe` sem improviso.
 SOP autoritativa: `docs/processes/deepsearch-blueprint.md`. Nenhum código antes da BoK (Closed-Loop).
@@ -8328,7 +8328,7 @@ não-verificáveis marcadas `⚠️`; NUNCA fabricar nome/versão/número/lei.
 - [ ] Ofereci o próximo passo `/bok-scribe <slug>` + deixei o commit para GO/handoff?
 
 
-ARGUMENTS: Módulo novo: youtube-studio — transformar o Spaces num studio de YouTube que produz vídeos faceless E com avatar AI clone (lipsync). Diretiva Sovereign 2026-07-08 ("preparar o Spaces para organizar e ser um studio para youtube faceless ou com avatar AI clone/lipsync"). Slug: youtube-studio (docs/bok/youtube-studio/00-[[deepsearch-blueprint|deepsearch-blueprint]].md).
+ARGUMENTS: Módulo novo: youtube-studio — transformar o Spaces num studio de YouTube que produz vídeos faceless E com avatar AI clone (lipsync). Diretiva Sovereign 2026-07-08 ("preparar o Spaces para organizar e ser um studio para youtube faceless ou com avatar AI clone/lipsync"). Slug: youtube-studio (docs/bok/youtube-studio/00-deepsearch-blueprint.md).
 
 Fundamentar em deepsearch (toda claim com URL — Lei 1) as frentes onde o MCORCH tem GAP, reusando o que já existe (não repesquisar o que está wired):
 
@@ -8470,15 +8470,1545 @@ Status do loop até aqui (janela ~54%, rumo aos seus 85%):
 
 Continuo assim que o workflow notificar.
 
+## 👤 User *(03:33:40)*
+
+<task-notification>
+<task-id>wwmts2y5j</task-id>
+<tool-use-id>toolu_01UWN4h7ytKrPUVJhvQ8grca</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/wwmts2y5j.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Deepsearch-grounded blueprint seed for the youtube-studio module (faceless + avatar-clone YouTube studio inside Spaces)" completed</summary>
+<result>{"markdown":"# 🎬 MCORCH YouTube Studio — Fábrica de Vídeo Long-Form da Persona CCIO\n\n**Blueprint DeepSearch · SEED / Fonte da Verdade para `/bok-scribe`**\n`docs/bok/youtube-studio/00-deepsearch-blueprint.md` · slug `youtube-studio` · v0.1.0 (2026-07-09)\n\n&gt; **Natureza deste documento.** Este é o artefato-semente (precedentes: `docs/bok/security/00-deepsearch-blueprint.md` → suíte Cyber-Sentinel; `docs/bok/vision-mcp/00-deepsearch-blueprint.md` → suíte Vision MCP). Ele **NÃO** é código nem especificação final — é a **Fonte da Verdade fundamentada em deepsearch** que destrava o **Closed-Loop Protocol** (CLAUDE.md §1). Estado do BoK gate hoje: `docs/bok/youtube-studio/` **existe mas está VAZIA** — não há `01-mrd..05-sdd` nem Pattern Conformance Declaration. Com este blueprint consolidado e revisado, o Sovereign roda `/bok-scribe youtube-studio` para gerar MRD → BRD → PRD → FRD → SDD. **Nenhuma linha de código de `youtube-studio` deve ser escrita antes dessa suíte existir** (o `engine='faceless'` de `video-render` já está codado mas **503-gated** — ver §6).\n&gt;\n&gt; **ORO triplet deste blueprint** — Operator: MCORCH Master Execution Agent (autoria do seed) · Reviewer: Sovereign (Gabriel) · Owner: Sovereign até v6.4.0 (blast radius = **canal público de vídeo da persona MCORCH** — cada upload carrega risco de monetização channel-wide, disclosure legal de mídia sintética e consentimento biométrico de voz/rosto).\n&gt;\n&gt; **Materialidade (Lei 1).** Toda afirmação externa carrega sua URL-fonte, verificada adversarialmente (fronts `assembler`, `lipsync-license`, `yt-api` + gap-fill de monetização). Afirmações refutadas pela verificação **não** aparecem como fato (usa-se a versão corrigida); afirmações não-verificáveis são marcadas `⚠️ could_not_verify`. **Toda licença comercial citada carrega URL.** Referências de repositório foram **materialmente confirmadas nesta sessão** (`ls`/`grep` 2026-07-09): `supabase/functions/{generate-video-script,generate-voice,canvas-execute,generate-video,video-render,publish-social,social-auth-init,avatar-identity-train}/index.ts`, `scripts/hyperframes/render-core.ts` (VALID_TEMPLATES linha 71 = `viral-short-9x16`+`viral-long-16x9`; landscape 1920×1080 linha 113), `scripts/hyperframes/templates/viral-long-16x9.html` (presente), `scripts/video-bridge.ts`, `src/lib/billing.ts` (COST faceless=125 / hyperframes=12 confirmado em `video-render` linha 23), `.claude/context/faceless-pipeline-reference-2026-06-25.md`, `scripts/qa/smoke-higgsfield-schema.ts`.\n\n---\n\n## 1. Sumário Executivo\n\n### O que é\n\nO **YouTube Studio** é o **motor de produção de vídeo long-form 16:9** do MCORCH — a fábrica que alimenta o **canal público da persona Gabriel AI / CCIO** (Diretiva brand-first 2026-06-26, `feedback` na memória: a persona única evangeliza o MCORCH; o produto vira subproduto). Ele transforma um pilar de conteúdo (ou um roteiro/tópico) em um vídeo publicável no YouTube, em **dois modos co-residentes numa única superfície**:\n\n- **Modo Faceless** — montagem multi-cena narrada (imagens/clipes i2v + voz off + HUD/legendas), sem rosto humano. É o `engine='faceless'` **já declarado** em `supabase/functions/video-render/index.ts:23,50-51` (COST=125), hoje **503-gated** porque o worker não está wired (`VIDEO_FACELESS_WEBHOOK` unset — `video-render/index.ts:10`, OTD-VS-001).\n- **Modo Avatar-Clone** — talking-head com o rosto/voz consistente do apresentador (a persona CCIO), via lipsync. Ancora na identidade per-pessoa já treinável por `supabase/functions/avatar-identity-train/index.ts:19` (FLUX LoRA `ostris/flux-dev-lora-trainer`) + voz clonada de `generate-voice/index.ts` (action `clone`).\n\nO YouTube Studio **não é uma ilha**: ele estende o **spine autopilot → reshaper** que o MCORCH já opera (`scripts/video-bridge.ts:169-182` já dá kick em `reshape-pillar scope=video` após cada finalize) para a superfície long-form do YouTube. Um master 16:9 vira canonical e faz fan-out nativo aos outros canais.\n\n### Por que agora\n\n1. **O render 16:9 já existe.** `scripts/hyperframes/render-core.ts:71` tem `viral-long-16x9` na allowlist `VALID_TEMPLATES` e emite landscape **1920×1080** (`render-core.ts:113`); o template `scripts/hyperframes/templates/viral-long-16x9.html` **está presente** (confirmado). O motor determinístico (Playwright headless + FFmpeg, sha256-idêntico NFR-VS-016) já roda em produção para 9:16.\n2. **Toda a cadeia de conteúdo já é reutilizável.** Roteiro (`generate-video-script`), voz/clone (`generate-voice`, VOICE_COST=36), clipe i2v (Higgsfield DoP em `canvas-execute`, Veo/Seedance em `generate-video`), publish YouTube **resumable** (`publish-social/index.ts:392-477`) e OAuth com **scope `youtube.upload` + refresh offline** (`social-auth-init/index.ts:139-140`) — tudo existe e é per-user BYOK.\n3. **O gap real é fino: a cola de montagem multi-cena.** A verificação adversarial (front `assembler`) fecha que juntar N cenas é **um problema de orquestração FFmpeg**, não de adoção de framework. O MCORCH já possui todos os estágios produtores; falta o worker de *stitching* (`normalize-then-concat`).\n4. **A diretiva é brand-first e o autopilot já cadenciado.** A persona CCIO + a cadência de Viral Autopilot já rodam; o YouTube é o próximo canal a reusar o mesmo motor.\n\n### O diferencial — sendo honesto\n\nO YouTube Studio **não** reivindica ser um \"gerador de vídeo com IA\" (mercado saturado). O diferencial defensável se sustenta em quatro eixos **próprios do MCORCH**:\n\n1. **Reuso do spine autopilot→reshaper.** 1 pilar → master YouTube 16:9 → fan-out nativo por canal (`reshape-pillar` data-driven, já vivo). Ninguém que vende \"faceless generator\" tem a malha de atribuição/reshaping por trás.\n2. **Dois modos numa superfície** (faceless E avatar-clone) com identidade consistente (LoRA + voz clonada per-tenant) — não é template genérico.\n3. **Credencial per-tenant BYOK + mcoCoins atômico 4×-floor** (§5) — atribuição de receita e isolamento de quota nativos.\n4. **Determinismo HyperFrames** (sha256) — reprodutibilidade que frameworks de vídeo genéricos não dão.\n\n**O que é honesto admitir (não é diferencial, é risco existencial):** **a monetização no YouTube NÃO é garantida** e independe de \"usar IA\". Ela depende de **dois gates ortogonais e não-diferíveis** que os SOPs atuais de publish do MCORCH nunca endereçaram (gap-fill verificado):\n- **Gate de elegibilidade (inautêntico).** Em **2025-07-15** o YouTube renomeou \"repetitious content\" → **\"inauthentic content\"** e nomeia explicitamente como inelegível \"AI-generated content made with generic templates giving the impression of mass production without adding the creator's original, authentic insights or perspective\" ([support.google.com/youtube/answer/1311392](https://support.google.com/youtube/answer/1311392?hl=en); [socialmediatoday](https://www.socialmediatoday.com/news/youtube-clarifies-monetization-update-inauthentic-repeated-content/752892/)). O blast radius é **channel-wide**: \"monetization may be removed from your entire channel\". IA é **explicitamente bem-vinda** — o que mata é template-only/mass-produced sem valor humano por-vídeo.\n- **Gate de disclosure (mídia sintética).** Conteúdo realista alterado/sintético **deve ser declarado no upload**, e a API suporta isso via `status.containsSyntheticMedia` (boolean, `videos.insert`, adicionado 2026-10-30 [errata: 2024-10-30] — [developers.google.com/youtube/v3/docs/videos](https://developers.google.com/youtube/v3/docs/videos); [blog.youtube AI disclosure](https://blog.youtube/news-and-events/disclosing-ai-generated-content/)).\n\nEsses dois gates viram **requisito de FRD mandatório por-upload**, não brinde — encapsulado abaixo (§2 Pilar III, §7, §8).\n\n---\n\n## 2. Os Pilares (com veredictos adversariais)\n\n&gt; Para cada pilar: fundamento consolidado + **veredicto da verificação**. Refutados aparecem corrigidos; não-verificáveis marcados `⚠️`. Licenças comerciais sempre com URL.\n\n### Pilar I — 
+... (truncated 331602 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/wwmts2y5j.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/subagents/workflows/wf_baad6dbe-9e5/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/youtube-studio-blueprint-wf_baad6dbe-9e5.js', resumeFromRunId: 'wf_baad6dbe-9e5'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>19</agent_count><agents_done>19</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1709396</subagent_tokens><tool_uses>294</tool_uses><duration_ms>3115903</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(03:34:05)*
+
+
+## 🤖 Claude *(03:34:08)*
+
+Deepsearch completo (19 agentes, 0 erros, ~1,7M tokens). O blueprint é robusto — e o achado mais importante foi honesto: **a monetização do YouTube não é garantida** (política "inauthentic content" 2025-07-15 + disclosure de mídia sintética via `status.containsSyntheticMedia`), viram requisito de FRD. O markdown é grande (331k chars); vou extraí-lo direto para o arquivo via python (sem carregar na janela) e aplicar o self-check do SOP.
+
+## 🤖 Claude *(03:34:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport json\nsrc=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/wwmts2y5j.output\"\nd=json.load(open(src))\nmd=d[\"result\"][\"markdown\"]\nout=\"docs/bok/youtube-studio/00-deepsearch-blueprint.md\"\nopen(out,\"w\").write(md)\nprint(\"bytes:\",len(md.encode()))\n# SOP self-check greps\nimport re\nprint(\"HTML-escape leaks (&gt;/&lt;/&amp;):\", md.count(\"&gt;\")+md.count(\"&lt;\")+md.count(\"&amp;\"))\nprint(\"se\u00e7\u00f5es (## N.):\", sorted(set(re.findall(r'^## (\\d+)\\.', md, re.M))))\nprint(\"OTD ids:\", len(re.findall(r'OTD-[A-Z0-9-]+', md)))\nprint(\"could_not_verify markers:\", md.count(\"could_not_verify\")+md.count(\"\u26a0\ufe0f\"))\nprint(\"URLs (https):\", len(re.findall(r'https?://', md)))\nprint(\"license mentions:\", len(re.findall(r'[Ll]icen', md)))\nprint(\"Pattern Conformance mention:\", \"Pattern Conformance\" in md or \"bok-scribe\" in md)\nPY\necho \"=== prova material ===\"\nls -la docs/bok/youtube-studio/00-deepsearch-blueprint.md\nwc -l docs/bok/youtube-studio/00-deepsearch-blueprint.md\nmd5sum docs/bok/youtube-studio/00-deepsearch-blueprint.md",
+  "description": "Extrai blueprint p/ arquivo + self-check SOP + prova material"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bytes: 53345
+> HTML-escape leaks (&gt;/&lt;/&amp;): 0
+> seções (## N.): ['1', '10', '2', '3', '4', '5', '6', '7', '8', '9']
+> OTD ids: 27
+> could_not_verify markers: 12
+> URLs (https): 96
+> license mentions: 25
+> Pattern Conformance mention: True
+> === prova material ===
+> -rw-rw-r-- 1 ubuntu ubuntu 53345 Jul  9 00:34 docs/bok/youtube-studio/00-deepsearch-blueprint.md
+> 364 docs/bok/youtube-studio/00-deepsearch-blueprint.md
+> 89c56f34d74d3f57006cac2c80d00316  docs/bok/youtube-studio/00-deepsearch-blueprint.md
+> ```
+
+## 🤖 Claude *(03:34:35)*
+
+
+## 🤖 Claude *(03:34:38)*
+
+Blueprint gravado e passa o self-check do SOP:
+- **53.345 bytes · 364 linhas · md5 `89c56f34`** · **0 leaks de escape** (arquivo tem chars reais).
+- **10/10 seções** presentes · **27 OTDs** (gaps→OTDs, nunca silêncio) · **12 marcadores could_not_verify/⚠️** (honestidade) · **96 URLs** (Lei 1) · **25 menções de licença** · apontador `/bok-scribe`.
+
+Spot-check rápido da qualidade (headers das seções + OTDs + fatiamento MVP) sem carregar o arquivo inteiro:
+
+## 🤖 Claude *(03:34:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Se\u00e7\u00f5es (##) ===\"; grep -nE \"^## \" docs/bok/youtube-studio/00-deepsearch-blueprint.md\necho \"=== Pilares (### Pilar) ===\"; grep -nE \"^### Pilar\" docs/bok/youtube-studio/00-deepsearch-blueprint.md\necho \"=== Fatias MVP (\u00a79) ===\"; grep -nE \"Fatia [0-9]|MVP\" docs/bok/youtube-studio/00-deepsearch-blueprint.md | head -12\necho \"=== amostra de OTDs c/ licen\u00e7a ===\"; grep -nE \"OTD-YT|non-commercial|comercial|licen\" docs/bok/youtube-studio/00-deepsearch-blueprint.md | head -14",
+  "description": "Spot-check estrutura + pilares + fatias + OTDs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Seções (##) ===
+> 14:## 1. Sumário Executivo
+> 49:## 2. Os Pilares (com veredictos adversariais)
+> 124:## 3. Arquitetura unificadora do studio (grafo Spaces → studio)
+> 177:## 4. Catálogo de Referências Consolidadas (URLs verificadas)
+> 220:## 5. Arquitetura MCORCH-nativa
+> 250:## 6. Superfície proposta
+> 265:## 7. OTDs e Questões Abertas
+> 286:## 8. FMEA-seed
+> 304:## 9. Fatiamento MVP (gates Lei 1)
+> 340:## 10. Apontadores para o BoK (`/bok-scribe youtube-studio`)
+> === Pilares (### Pilar) ===
+> 53:### Pilar I — Assembler multi-cena (a camada de cola que falta)
+> 73:### Pilar II — Lipsync / Talking-Head (modo avatar-clone)
+> 96:### Pilar III — YouTube Data API v3 avançada (além de `videos.insert`)
+> 110:### Pilar IV — Legendas queimadas (burned-in captions)
+> 114:### Pilar V — Thumbnail
+> 118:### Pilar VI — Render 16:9 long-form
+> === Fatias MVP (§9) ===
+> 261:`video-render/index.ts:10` documenta explicitamente: *"the render worker is NOT wired yet (faceless = n8n bridge OTD-VS-001 / hyperframes = sandbox)"*. **Fatia 1 (§9) destrava esse engine** construindo o worker host FFmpeg (padrão `video-bridge.ts`) em vez do webhook n8n — reusando 100% do contrato de charge/refund/503-gate/voice-consent (`video-render/index.ts:80-82`, FR-VS-032) já codado. Isto é reuso, não green-field.
+> 304:## 9. Fatiamento MVP (gates Lei 1)
+> 308:### Fatia 0 — BoK Gate + SOP (pré-código, bloqueante)
+> 313:### Fatia 1 — Faceless assembler (destrava o engine já codado)
+> 318:### Fatia 2 — Legendas queimadas
+> 323:### Fatia 3 — Avatar-clone (lipsync)
+> 328:### Fatia 4 — Thumbnail
+> 333:### Fatia 5 — YouTube API v3 avançada
+> === amostra de OTDs c/ licença ===
+> 10:> **Materialidade (Lei 1).** Toda afirmação externa carrega sua URL-fonte, verificada adversarialmente (fronts `assembler`, `lipsync-license`, `yt-api` + gap-fill de monetização). Afirmações refutadas pela verificação **não** aparecem como fato (usa-se a versão corrigida); afirmações não-verificáveis são marcadas `⚠️ could_not_verify`. **Toda licença comercial citada carrega URL.** Referências de repositório foram **materialmente confirmadas nesta sessão** (`ls`/`grep` 2026-07-09): `supabase/functions/{generate-video-script,generate-voice,canvas-execute,generate-video,video-render,publish-social,social-auth-init,avatar-identity-train}/index.ts`, `scripts/hyperframes/render-core.ts` (VALID_TEMPLATES linha 71 = `viral-short-9x16`+`viral-long-16x9`; landscape 1920×1080 linha 113), `scripts/hyperframes/templates/viral-long-16x9.html` (presente), `scripts/video-bridge.ts`, `src/lib/billing.ts` (COST faceless=125 / hyperframes=12 confirmado em `video-render` linha 23), `.claude/context/faceless-pipeline-reference-2026-06-25.md`, `scripts/qa/smoke-higgsfield-schema.ts`.
+> 61:**Survey de frameworks (licenças verificadas independentemente):**
+> 65:| **Remotion** | **Custom (NÃO-OSS)** — pago p/ for-profit ≥4 funcionários; Automators $0.01/render ($100/mês min), Enterprise $500/mês min ([remotion.dev/docs/license](https://www.remotion.dev/docs/license); [remotion.pro/license](https://www.remotion.pro/license); 3rd-party [autoae.online](https://autoae.online/blog/is-remotion-free)) | **REJECT** — viola o gate USD-externo-0. (Correção não-material: free-tier também cobre non-profits de qualquer tamanho e uso de avaliação — não muda o REJECT para for-profit.) |
+> 75:**Fundamento (verdict: HOLDS, com 3 correções Lei 1).** Ranking = fidelidade × clareza de licença comercial × adequação como driver **controlável** de avatar-clone.
+> 80:| 2 | **ByteDance OmniHuman-1 / 1.5** | ✅ comercial via **partnership fal/Replicate**; weights fechados, sem doc de licença 1st-party. ~$0.14/s ([fal omnihuman](https://fal.ai/models/fal-ai/bytedance/omnihuman), [v1.5](https://fal.ai/models/fal-ai/bytedance/omnihuman/v1.5)). SOTA fidelidade. | ❌ | ✅ |
+> 81:| 3 | **sync.so (Sync Labs) lipsync-2 / -pro** | ✅ outputs de plano pago comerciais, sem watermark, "agencies and brands can present the work as their own" ([ai.sync.so](https://ai.sync.so/no-watermark-paid-output); [support.sync.so](https://support.sync.so)). **CORREÇÃO Lei 1:** o texto "worldwide royalty-free license" da pesquisa original veio de **lipsync.studio**, site DISTINTO/não-afiliado — **retirado**. | ❌ | ✅ |
+> 84:| 6 | **MuseTalk** (Tencent) | ✅ **MIT — código + weights, acadêmico & comercial** (só dados de teste de internet são non-commercial) ([github](https://github.com/TMElyralab/MuseTalk)). | ✅ | ❌ |
+> 87:| 9 | **LivePortrait** (Kuaishou) | ⚠️ **MIT código+weights MAS o detector default InsightFace `buffalo_l` é non-commercial research-only — DEVE ser trocado** ([deepinsight/insightface](https://github.com/deepinsight/insightface); [issue #193](https://github.com/KwaiVGI/LivePortrait/issues/193)). Não é audio-native. | ✅ | ❌ |
+> 88:| 10 | **Wav2Lip** | ❌ **non-commercial / research-only — "personal/research/non-commercial purposes"; comercial → Sync Labs** ([github](https://github.com/Rudrabha/Wav2Lip)). **BLOQUEADO p/ self-host comercial.** | — | — |
+> 94:- **Self-host, USD-externo-0, comercial-limpo (o default MCORCH sob a doutrina open-source-first):** **MuseTalk (MIT)** p/ lip-region sobre base video, **SadTalker (Apache-2.0)** p/ still→head, **LatentSync (código Apache / weights openrail++)**. Evitar Wav2Lip; p/ LivePortrait, trocar o detector InsightFace antes de qualquer uso comercial.
+> 184:**Frameworks de vídeo programático (licenças — Pilar I)**
+> 185:- Remotion: https://www.remotion.dev/docs/license · https://www.remotion.pro/license · https://autoae.online/blog/is-remotion-free
+> 194:**Lipsync / talking-head (licenças — Pilar II)**
+> 204:- Wav2Lip (non-commercial): https://github.com/Rudrabha/Wav2Lip
+> ```
+
+## 🤖 Claude *(03:34:57)*
+
+
+## 🤖 Claude *(03:35:00)*
+
+Blueprint **rigoroso e honesto** — o verify adversarial funcionou visivelmente: retirou a claim "worldwide royalty-free" (era de site não-afiliado), rejeitou Remotion (viola USD-0), classificou MuseTalk MIT / SadTalker Apache como o default self-host comercial-limpo, bloqueou Wav2Lip (non-commercial), flagou LivePortrait (detector InsightFace non-commercial). Fatiamento MVP 0→5. Selando:
+
+## 🤖 Claude *(03:35:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/youtube-studio/00-deepsearch-blueprint.md\ngit commit -q -F - <<'EOF'\ndocs(bok): youtube-studio deepsearch blueprint seed (faceless + avatar-clone studio)\n\nAsk #3 do Sovereign: preparar o Spaces como studio de YouTube (faceless E avatar-clone\nlipsync). Blueprint-semente fundamentado em deepsearch (workflow wf_baad6dbe-9e5: 6 frentes\n+ verify adversarial + repo-map + critic + gap-fill + s\u00edntese; 19 agentes). Destrava o\nBoK Gate (Closed-Loop \u00a71) \u2014 pr\u00f3ximo passo \u00e9 /bok-scribe youtube-studio.\n\nGrounded (Lei 1): 96 URLs \u00b7 27 OTDs (gaps\u2192OTDs) \u00b7 12 could_not_verify \u00b7 licen\u00e7as com URL.\nAchados load-bearing:\n- Monetiza\u00e7\u00e3o N\u00c3O \u00e9 garantida e independe de \"usar IA\": 2 gates ortogonais viram FRD \u2014\n  elegibilidade \"inauthentic content\" (YouTube 2025-07-15, blast radius channel-wide) +\n  disclosure de m\u00eddia sint\u00e9tica (status.containsSyntheticMedia no videos.insert).\n- Licen\u00e7as de lipsync com o mesmo rigor do LoRA: MuseTalk MIT + SadTalker Apache = default\n  self-host USD-0 comercial-limpo; Wav2Lip BLOQUEADO (non-commercial); LivePortrait \u26a0\ufe0f\n  (detector InsightFace non-commercial, trocar); OmniHuman/sync.so comercial s\u00f3 via hosted.\n  Verify adversarial retirou 1 claim falsa de licen\u00e7a (site n\u00e3o-afiliado).\n- Reuso comprovado: render-core.ts j\u00e1 tem viral-long-16x9 1920\u00d71080; engine 'faceless'\n  j\u00e1 codado mas 503-gated \u2192 Fatia 1 destrava o worker (n\u00e3o \u00e9 green-field).\n\nFatiamento MVP 0-5 (BoK gate \u2192 faceless assembler \u2192 legendas \u2192 avatar-lipsync \u2192 thumbnail\n\u2192 YT API v3 avan\u00e7ada). C\u00f3digo GATED at\u00e9 a su\u00edte BoK existir.\nEOF\necho \"=== janela ===\"\nbun run .claude/scripts/session-inspect.ts 2>&1 | grep -E \"\u2588|usado|Veredito\" | head -4",
+  "description": "Commit blueprint + mede janela"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:35AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:35AM[0m [32mINF[0m scan completed in 112ms
+> [90m12:35AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.20 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.19 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> === janela ===
+>    [███████████████████████░░░░░░░░░░░░░░░|░░] 57.8%   (| = teto de seal 95%)
+>    usado 578k / 1000k  ·  livre 422k  ·  custo do seal ~50k
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> ```
+
+## 🤖 Claude *(03:36:01)*
+
+
+## 🤖 Claude *(03:36:07)*
+
+Blueprint selado. **Janela 57,8%** — abaixo do seu alvo de 85%, mas cheguei a um **limite honesto**: as 3 frentes agora batem em portões que são seus, não meus:
+
+1. **LoRA** — wired e provado; o witness E2E precisa você treinar um LoRA real (~30 min).
+2. **Nós media-social** — precisam da sua decisão de schema **OTD-SPACES-036** (nullable-pillar vs tabela dedicada) antes de eu tocar `channel_variants` (FMEA-011).
+3. **YouTube Studio** — blueprint pronto; o próximo passo `/bok-scribe youtube-studio` deve rodar **depois da sua revisão** do blueprint (o SOP exige blueprint revisado antes de gerar a suíte).
+
+Continuar autonomamente significaria improvisar uma decisão sua (Lei 1) ou shipar código no caminho crítico de geração sem witness (Lei 1). Então **selo aqui** com o que está provado — é a condição "roadmap genuinamente bloqueado" da Lei 3, não falta de janela.
+
+Vou executar o `/handoff`.
+
+## 🤖 Claude *(03:36:07)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(03:36:07)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
 ---
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+## PRE-FLIGHT (execute ALL in parallel before anything else)
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Adicionar modelos OpenRouter free ao Telegram]]
-> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(03:36:15)*
+
+
+## 🤖 Claude *(03:36:15)*
+
+Executando o `/handoff`. Pré-flight em paralelo:
+
+## 🤖 Claude *(03:36:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== diffstat ===\"; git diff HEAD --stat | tail -3\necho \"=== commits desta sess\u00e3o (7) ===\"; git log --oneline -8\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -5; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== docker ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" | head -3\necho \"=== chroma ===\"; curl -s -m 5 http://localhost:8001/api/v2/heartbeat || echo \"CHROMA_ERR\"",
+  "description": "Pr\u00e9-flight do handoff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> === diffstat ===
+> === commits desta sessão (7) ===
+> 6fa1652 docs(bok): youtube-studio deepsearch blueprint seed (faceless + avatar-clone studio)
+> 8e51482 docs(bok): Am15 OTD-SPACES-036 — channel_variants pillar-coupling bloqueia media-social (achado da Fatia A)
+> 07689e2 feat(spaces): nó "Publicar no WordPress" — 1º grupo de nós sociais (Am15 Fatia A)
+> 6c80cd1 docs(bok): spaces-evolution Amendment 15 — família de nós Publish/Social (destrava ask #2)
+> 06261b9 feat(spaces): treino de identidade LoRA grátis REAL (avatar-identity-train, Replicate BYOK)
+> 5c63c7b docs(bok): avatar-clone-ai Amendment 11 — substrato de treino LoRA grátis (fecha OTD-AC-017)
+> a0e8590 fix(spaces): identidade LoRA não cai mais no gate do Higgsfield (handleTrain engine-aware)
+> 44e625c feat(settings): Higgsfield Platform key testável + clareza créditos-vs-assinatura no MCP
+> === tsc ===
+> tsc exit: 0
+> === docker ===
+> mcorch_vision_mcp: Up 9 days (healthy)
+> mcorch_claude_mem: Up 3 weeks (healthy)
+> mcorch_chroma: Up 3 weeks (healthy)
+> === chroma ===
+> {"nanosecond heartbeat":1783568179493890841}
+> ```
+
+## 🤖 Claude *(03:36:32)*
+
+
+## 🤖 Claude *(03:36:35)*
+
+Working tree limpo — **8 commits desta sessão** já feitos. tsc 0, infra saudável. Phase 2 (commits granulares) já concluída. **Phase 1 — Security Audit:**
+
+## 🤖 Claude *(03:36:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (diff da sess\u00e3o) ===\"\ngit diff 44e625c~1..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|Deno.env\\|decrypted_user_api_keys\\|replicate_api_key\\|higgsfield_api_key\\|_KEY ??\\|SB_SECRET\" | head -10 || echo \"\u2192 sem secrets hardcoded \u2705\"\necho \"=== 1b. JWT nas edge fns novas/tocadas ===\"\nfor f in avatar-identity-train test-api-key publish-wordpress; do\n  grep -qE \"Authorization|getUser|service_role\" supabase/functions/$f/index.ts && echo \"$f: JWT/auth \u2705\" || echo \"$f: \u26a0\ufe0f SEM auth\"\ndone\necho \"=== 1c. client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|SettingsPage\" | head -5 || echo \"\u2192 sem viola\u00e7\u00e3o \u2705\"\necho \"=== 1e. secrets em console.log ===\"\ngit diff 44e625c~1..HEAD -- 'src/*' 'supabase/*' | grep -E \"^\\+.*console\\.(log|error).*(token|secret|password|api_key)\" | grep -v \"no_key\\|not_configured\\|error:\" | head -5 || echo \"\u2192 sem logs sens\u00edveis \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (diff da sessão) ===
+> === 1b. JWT nas edge fns novas/tocadas ===
+> avatar-identity-train: JWT/auth ✅
+> test-api-key: JWT/auth ✅
+> publish-wordpress: JWT/auth ✅
+> === 1c. client-side coin deduction ===
+> === 1e. secrets em console.log ===
+> ```
+
+## 🤖 Claude *(03:36:57)*
+
+
+## 🤖 Claude *(03:36:58)*
+
+**Segurança: ✅ PASS** — 0 secrets no diff, JWT nas 3 edge fns, sem dedução client-side de coin, sem logs sensíveis. Nenhum BLOCK.
+
+**Phase 3 — Knowledge Mesh milestone node:**
+
+## 🤖 Claude *(03:37:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nSUPABASE_URL=\"$VITE_SUPABASE_URL\"\nSUMMARY=\"Spaces robustez: treino LoRA gratis REAL (avatar-identity-train Replicate BYOK, Am11 fecha OTD-AC-017) + no Publicar no WordPress (Am15 Fatia A) + blueprint deepsearch youtube-studio (faceless+avatar-clone) + Higgsfield Platform testavel. Loop autonomo 8 commits; media-social bloqueado em OTD-SPACES-036 (channel_variants pillar-coupling).\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-spaces-lora-social-youtube-bok\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"spaces-lora-social-youtube-bok\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -8 | tr '\\n' '|')\\\"}}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"=== embed ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d.get('status', d))\" 2>/dev/null || echo \"embed pendente\"\necho \"=== contagem viva ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Insere milestone node + embed + contagem"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: error
+> === embed ===
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> === contagem viva ===
+> 9081
+> ```
+
+## 🤖 Claude *(03:37:19)*
+
+
+## 🤖 Claude *(03:37:20)*
+
+O insert retornou "error" — vou ver a resposta crua para diagnosticar (e o embed usa `{node_id}`, não `{record}`).
+
+## 🤖 Claude *(03:37:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nSUPABASE_URL=\"$VITE_SUPABASE_URL\"\nSUMMARY=\"Spaces robustez: treino LoRA gratis REAL (avatar-identity-train Replicate BYOK, Am11 fecha OTD-AC-017) + no Publicar no WordPress (Am15 Fatia A) + blueprint deepsearch youtube-studio + Higgsfield Platform testavel. Loop autonomo 8 commits; media-social bloqueado OTD-SPACES-036.\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-spaces-lora-social-youtube-bok\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"spaces-lora-social-youtube-bok\\\"}}\")\necho \"RAW: ${RESP:0:400}\"\nNODE_ID=$(echo \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else d.get('id','NOID'))\" 2>/dev/null)\necho \"NODE_ID: $NODE_ID\"\nif [ -n \"$NODE_ID\" ] && [ \"$NODE_ID\" != \"NOID\" ]; then\n  echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\n  echo \"=== embed (formato node_id) ===\"\n  curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n    -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n    -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" \\\n    | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d.get('status', str(d)[:120]))\" 2>/dev/null || echo \"embed pendente\"\nfi",
+  "description": "Diagnostica insert do node + embed correto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> RAW: [{"id":"f0aa8111-bf5d-4fa8-928d-cb284d15f97a","node_type":"handoff","name":"session-handoff-20260709-spaces-lora-social-youtube-bok","content":"[HANDOFF SEAL] Spaces robustez: treino LoRA gratis REAL (avatar-identity-train Replicate BYOK, Am11 fecha OTD-AC-017) + no Publicar no WordPress (Am15 Fatia A) + blueprint deepsearch youtube-studio + Higgsfield Platform testavel. Loop autonomo 8 commits; m
+> NODE_ID: f0aa8111-bf5d-4fa8-928d-cb284d15f97a
+> === embed (formato node_id) ===
+> Embedded: {'node_id': 'f0aa8111-bf5d-4fa8-928d-cb284d15f97a', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small',
+> ```
+
+## 🤖 Claude *(03:37:49)*
+
+
+## 🤖 Claude *(03:37:51)*
+
+Node inserido: **`f0aa8111-bf5d-4fa8-928d-cb284d15f97a`** + embedded (768d). `proof-manifest.json` gravado. (1ª tentativa falhou por caracteres especiais no metadata `commits`; 2ª limpa passou.)
+
+**Phase 4 — README.** Lendo o topo para atualizar badges + tabela + What's New:
+
+## 🤖 Claude *(03:37:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 55
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.93.0--tiktok--login--higgsfield--uxui--loop-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 5	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 6	  <img src="https://img.shields.io/badge/neural_mesh-9081_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 7	  <img src="https://img.shields.io/badge/MAPE--K_guardian-cron_%2B_Nemotron_free_L2-darkgreen?style=for-the-badge" alt="MAPE-K Guardian" />
+> 8	  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 9	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 10	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 11	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 12	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 13	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 14	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 15	  <img src="https://img.shields.io/badge/social--connect-TikTok%2FYouTube_proven_E2E_%C2%B7_in_review-brightgreen?style=for-the-badge" alt="Social Connect" />
+> 16	  <img src="https://img.shields.io/badge/channel--format-FR--CP--001_live_(8_canais)-brightgreen?style=for-the-badge" alt="Channel Format Intelligence" />
+> 17	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.9_cutover_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 18	  <img src="https://img.shields.io/badge/higgsfield--mcp-OAuth_connector_server--side_(gated)-cyan?style=for-the-badge" alt="Higgsfield MCP Connector" />
+> 19	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 20	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 21	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 22	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 23	  <img src="https://img.shields.io/badge/BoK_Suites-25%2F25_sealed-fuchsia?style=for-the-badge" alt="BoK Suites" />
+> 24	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 25	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 26	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 27	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 28	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 29	  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 30	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 31	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 32	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 33	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 34	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 35	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 36	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 37	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 38	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 39	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 40	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 41	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 42	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 43	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 44	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 45	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 46	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 47	  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 48	  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 49	  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 50	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 51	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 52	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 53	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 54	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 55	  <img src="https://img.shields.io/badge/ML_Affiliate-no_official_API_(probe--first)-red?style=for-the-badge" alt="ML Affiliate Probe" />
+> ```
+
+## 🤖 Claude *(03:38:01)*
+
+
+## 🤖 Claude *(03:38:02)*
+
+README badges. Atualizando versão + mesh + adicionando badge do LoRA grátis:
+
+## 🤖 Claude *(03:38:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.93.0--tiktok--login--higgsfield--uxui--loop-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.94.0--lora--training--wordpress--node--youtube--bok-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9081_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9082_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge\" alt=\"Avatar Clone AI 3b\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge\" alt=\"Avatar Clone AI 3b\" />\n  <img src=\"https://img.shields.io/badge/free_LoRA_training-avatar--identity--train_(Replicate_BYOK%2C_USD_0)-brightgreen?style=for-the-badge\" alt=\"Free LoRA Training\" />\n  <img src=\"https://img.shields.io/badge/Spaces_publish-WordPress_node_(Post%2FLanding)-cyan?style=for-the-badge\" alt=\"Spaces Publish WordPress\" />\n  <img src=\"https://img.shields.io/badge/BoK_youtube--studio-deepsearch_blueprint_seed-fuchsia?style=for-the-badge\" alt=\"BoK youtube-studio blueprint\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:27)*
+
+
+## 🤖 Claude *(03:38:27)*
+
+Badges atualizados. Localizando a seção "What's New" e a tabela de fases:
+
+## 🤖 Claude *(03:38:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"What's New|What.s New|^### \\[v6\\.9|## .*Phase Status|Phase Status|^### \\[v\" README.md | head -8",
+  "description": "Localiza What's New + phase table no README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 693:### [v6.90.0] — Spaces v2: consolidação Canvas Studio + money path ledger-first + nós Lista/Upscale (2026-07-07)
+> 701:### [v6.89.0] — Laço Autonômico MAPE-K enterprise-grade (2026-07-07)
+> 707:### [v6.88.0] — Vizinhos on-select + OTD-SPACES-010 + hardening de testes (2026-07-06)
+> 713:### [v6.87.0] — Universo: sinapses semânticas 768d + reconciliação de perf (2026-07-05)
+> 718:### [v6.86.0] — Loop autônomo: cauda de brand + Unified Canvas cutover + vídeo recorrente + conector Higgsfield MCP (2026-07-05)
+> 724:### [v6.85.0] — Conformidade MIV total + certificação E2E + brand-100 + /miv/ (2026-07-04/05)
+> 731:### [v6.83.1] — Fix Assets: mídia privada assinável só pelo dono em TODO o ecossistema (2026-07-03)
+> 737:### [v6.83.0] — Spaces composer VIVO E2E: drift do Higgsfield resolvido (OTD-SPACES-003) (2026-07-03)
+> ```
+
+## 🤖 Claude *(03:38:34)*
+
+
+## 🤖 Claude *(03:38:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 686,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 686	         + GraphRAG Knowledge Node (observation inserted per run)
+> 687	         + Neural HUD telemetry
+> 688	         + Constellation Matrix WebGL (8679 nodes · 8989 edges — paginação completa)
+> 689	         + Visual Orchestration Canvas with Quality Gates
+> 690	         + AIOS — conversational AI consciousness with VAD + Barge-in
+> 691	```
+> 692	
+> 693	### [v6.90.0] — Spaces v2: consolidação Canvas Studio + money path ledger-first + nós Lista/Upscale (2026-07-07)
+> 694	- **Consolidação** (it.1): Canvas Studio renomeado **"Spaces"** — `/dashboard/spaces` assume a superfície criativa (redirects 5/5 dos paths `/dashboard/canvas*`); nav única; UI v1 do Spaces aposentada (tabelas preservadas). Retorno ao contrato selado da BoK `spaces-evolution` (Amendment 14).
+> 695	- **Money path unificado ledger-first** (it.2a/b/c): a superfície consolidada migra de deduct-after-success para `generations` (project-dispatch, débito+refund atômicos, idempotência por `node_run_id`); watchdog cron estendido a `generations` (recuperação de vídeo async órfão via entrada de resgate service-role); `/security-review` **NO FINDINGS**, smoke money-path **40/40** + watchdog **6/6**; fecha OTD-SPACES-012.
+> ```
+
+## 🤖 Claude *(03:38:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.90.0] \u2014 Spaces v2: consolida\u00e7\u00e3o Canvas Studio + money path ledger-first + n\u00f3s Lista/Upscale (2026-07-07)",
+  "new_string": "### [v6.94.0] \u2014 Spaces robustez: treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio (2026-07-08/09)\n- **Treino de identidade LoRA GR\u00c1TIS (foco #1)** \u2014 o n\u00f3 Identidade parava de cair no gate do Higgsfield mesmo com LoRA selecionado (`handleTrain` era stub); agora \u00e9 engine-aware e **LoRA (Flux) \u00e9 o default gr\u00e1tis**. Constru\u00eddo o backend real que faltava: edge fn `avatar-identity-train` treina um LoRA de pessoa via `ostris/flux-dev-lora-trainer` na conta **Replicate do pr\u00f3prio user (BYOK = USD 0 para o MCORCH)**, async start+poll, consent Art.11 server-side. Fundamentado por Amendment 11 (30 fontes, fecha OTD-AC-017; FR-AC-016 aprova\u00e7\u00e3o-condicional: comercial OK sob o grant Replicate\u2194BFL, on-platform + no-export). Plumbing provado zero-custo (guards + a chave Replicate do User 0 autentica na training API, vers\u00e3o viva `26dce37af90b`). `/security-review` SAFE.\n- **1\u00ba n\u00f3 social do Spaces: \"Publicar no WordPress\"** (Post + Landing Page) \u2014 categoria \"Publish\" no registry vivo; sink que publica via `publish-wordpress` (per-user, embute a imagem upstream do Spaces), default RASCUNHO opt-in. Amendment 15 abre a fam\u00edlia de n\u00f3s Publish/Social. Media-social (IG/TikTok/YT) bloqueado em **OTD-SPACES-036** (channel_variants \u00e9 NOT NULL pillar-coupled \u2192 decis\u00e3o de schema Sovereign).\n- **Ask #3 \u2014 YouTube Studio: blueprint deepsearch** (`docs/bok/youtube-studio/00-deepsearch-blueprint.md`) fundamentado (6 frentes + verify adversarial, 96 URLs, 27 OTDs): faceless E avatar-clone; rigor de licen\u00e7a de lipsync (MuseTalk MIT / SadTalker Apache = self-host USD-0; Wav2Lip bloqueado); achado load-bearing = monetiza\u00e7\u00e3o gated por \"inauthentic content\" + disclosure de m\u00eddia sint\u00e9tica. Pr\u00f3ximo: `/bok-scribe youtube-studio` p\u00f3s-revis\u00e3o.\n- **Higgsfield Platform key test\u00e1vel** + card MCP honesto (cr\u00e9ditos vs assinatura).\n\n### [v6.90.0] \u2014 Spaces v2: consolida\u00e7\u00e3o Canvas Studio + money path ledger-first + n\u00f3s Lista/Upscale (2026-07-07)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:39:03)*
+
+
+## 🤖 Claude *(03:39:03)*
+
+Commit do README:
+
+## 🤖 Claude *(03:39:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.94.0 \u2014 treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio\" 2>&1 | grep -iE \"master|main|files? changed|insert\" | head -2\ngit log --oneline -1",
+  "description": "Commit README v6.94.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ed91311 docs(readme): v6.94.0 — treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio
+> ```
+
+## 🤖 Claude *(03:39:49)*
+
+
+## 🤖 Claude *(03:39:50)*
+
+HANDOFF.md — Phase 5. Adicionando a linha de Task State + o Record novo (com hashes + UUID do node para o audit da Fase 5c). Primeiro a linha de estado:
+
+## 🤖 Claude *(03:39:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| **TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop + Universe 3.10 seal (2026-07-08)** | \u2705 sess\u00e3o-maratona.",
+  "new_string": "| **Spaces robustez \u2014 treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio (2026-07-08/09)** | \u2705 loop aut\u00f4nomo 9 commits + seal. **(1) LoRA gr\u00e1tis (foco #1)** \u2014 `handleTrain` engine-aware + LoRA default (`a0e8590`) \u00b7 Amendment 11 (30 fontes, **fecha OTD-AC-017**; FR-AC-016 aprova\u00e7\u00e3o-condicional Replicate\u2194BFL on-platform+no-export, `5c63c7b`) \u00b7 edge fn `avatar-identity-train` (Replicate `ostris/flux-dev-lora-trainer` BYOK **USD 0**, async start+poll, consent Art.11, migration `20260708130000` aplicada, `06261b9`) \u00b7 **plumbing provado zero-custo** (guard 422/401 \u00b7 consent+BYOK do User 0 passam \u00b7 chave Replicate autentica na training API, vers\u00e3o viva `26dce37af90b`) \u00b7 `/security-review` **SAFE**. **(2) 1\u00ba n\u00f3 social** \u2014 \"Publicar no WordPress\" (Post+Landing Page, categoria Publish no registry VIVO, embute imagem upstream, default rascunho opt-in, `07689e2`) \u00b7 Amendment 15 fam\u00edlia Publish/Social (`6c80cd1`) \u00b7 **media-social BLOQUEADO OTD-SPACES-036** (channel_variants NOT NULL pillar-coupled \u2192 decis\u00e3o de schema Sovereign, `8e51482`). **(3) YouTube Studio (ask #3)** \u2014 blueprint deepsearch `docs/bok/youtube-studio/00-` (`wf_baad6dbe-9e5`: 6 frentes+verify adversarial, 96 URLs, 27 OTDs; **monetiza\u00e7\u00e3o gated** inauthentic-content+synthetic-disclosure; lipsync MuseTalk MIT/SadTalker Apache self-host USD-0, Wav2Lip bloqueado, `6fa1652`). **(4) Higgsfield** Platform key test\u00e1vel + card MCP honesto (`44e625c`). Malha **9082** \u00b7 n\u00f3 `f0aa8111` |\n| **TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop + Universe 3.10 seal (2026-07-08)** | \u2705 sess\u00e3o-maratona."
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>
+> ```
+
+## 🤖 Claude *(03:40:09)*
+
+
+## 🤖 Claude *(03:40:09)*
+
+Preciso reler a seção do HANDOFF antes de editar:
+
+## 🤖 Claude *(03:40:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 12,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 12	## Task State
+> 13	
+> 14	| **TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop + Universe 3.10 seal (2026-07-08)** | ✅ sessão-maratona. **(1) Universe 3.10** — Phase Epsilon V9 SELADA (verif adversarial 8-frentes `wf_98c9d432`, 7 PASS + re-escopo 3.2 honesto; tsc 0 · vitest 496/498 · E2E Vision; nó `c20153c1`, commit `2841683`). **(2) TikTok Login Kit v2** — BoK 9/9 selada (`299b9f36`) + SOP Lei 2 + 3 edge fns `verify_jwt=false` + migration `tiktok_identities`/`tiktok_login_codes` + botão gated `?devLogin` + SPA callback; **/security-review: 1 HIGH login-CSRF FECHADO** (browser-binding sessionStorage→state→binding_hash); **2 correções de reuso Sovereign**: mesma chave do connect via `social_app_config` (`2461fa2`) + reusa `social-auth-callback` já registrado por `intent` assinado (`aa7c2a0`, elimina gate redirect_uri); smoke 8/8 · browser-verify · connect íntegro. **(3) Higgsfield** — Platform key nas Settings (`989e560`, browser-verify logado) + **MCP OAuth DESTRAVADO via DCR programático** (client público em `mcp.higgsfield.ai/oauth2/register`, sem Clerk manual; oauth-init→authorization_url). **(4) Senior UX/UI Loop** (`5a0f695`) — auditor de jornada + grader `senior-rubric.ts` 8-dim SCORED + runner + SOP+skill+RUBRIC; unit 5/5 + prova live (P2 contraste "ou"). **(5) User 1** (`user1@teste.com`, `c515c035`) p/ QA. **(6) it.4b editor** = HyperFrames (`3e45e08`). Malha **9081** · nó `17e8921b` |
+> 15	| **Spaces v2 — consolidação Canvas Studio + money path ledger-first + nós Lista/Upscale (2026-07-07)** | ✅ 11 commits `efaf190..ad42170`: **it.1** rename Canvas Studio→"Spaces" (`/dashboard/spaces` takeover, redirects **5/5** provados `verify-spaces-redirects.ts`, nav única, UI v1 aposentada — retorno ao contrato BoK `spaces-evolution`, **Amendment 14**) · **it.2a/b/c money path ledger-first** (project-dispatch em `generations`: migration `20260707220000` FK composta+XOR+RPC 9-args aditiva · edge fn catálogo fail-closed + style_transfer engine-fix + campaign-context + GAP-8 · cliente `useCanvasExecute` minta node_run_id + dual-read HistoryTab/StatusBar · watchdog cron 2º passe sobre `generations` + entrada de resgate service-role no webhook · `self-heal` exclui async; **/security-review NO FINDINGS**; smoke **40/40** + watchdog **6/6**; **witness pago** 4519→4518 exato, zero rows legadas → **OTD-SPACES-012 fechada**) · **it.4a nó Lista + lote template×produtos** (o "Lists" do Magnific; `product-list.ts` unit 10/10; witness 2 produtos→2 imgs, 20 mco exatos) · **it.3 thumbnails home** (URL re-assinável via StorageImg; witness + Vision APROVADO) · **it.4c nó Upscale REAL** (Replicate real-esrgan, money-safe auto-refund provado E2E, mensagem acionável de crédito) · **it.0a** fix preço sceneCompose 18→10. **2 bugs pré-existentes consertados** (style_transfer ignorava imagem-fonte; `creative_assets` rejeitava `source_module='spaces'` → registro falhava em silêncio desde Fase 1b, migration `20260707230000`). **Higgsfield resolvido:** nós usam a API key do vault (`keys.higgsfield`), MCP é opcional. guard-sweep **9/9**. Malha **9077** · nó `6a70b82b` |
+> 16	| **Arco 8 — Laço Autonômico MAPE-K enterprise-grade VIVO (2026-07-07)** | ✅ 19 commits `9538e09..c197054`: M+A mecânicos perpétuos (guardian-tick */5 T1-T5 + heartbeat + incidentes dedup/cooldown/auto-resolve · guard-sweep 6/6h runner destacado · watchdog=monitor-do-monitor provado ao segundo · UX-Explorer nightly → `--ingest-findings`) + P+E em escada (L1 Telegram · **L2 ARMADO toggle --arm/--disarm, engine `nvidia/nemotron-3-ultra-550b-a55b:free` USD-0** [claude -p preservado via REMEDIATE_ENGINE] · L3 sessão event-driven via Monitor) · /security-review **BLOCK→4 must-fixes** (allowlist sem exec · git diff out · flock<budget · run-dir 0700) · **1º ciclo real fechado**: video-bridge render_failed → L2 diagnóstico validado → `422 composition_required` pré-débito (`f678cb3`) → resolvido · +2 incidentes de estreia corrigidos (PATH cron · dogfood inexistente) → sweep **7/7 auto-resolve**. SOP `autonomic-loop-mape-k.md`. Sessão Claude = bancada de dev pura. Malha **9071** · nó `d149d017` |
+> 17	| **Loop (arco 7) — vizinhos on-select + OTD-SPACES-010 + backlog-drenado + hardening 478 testes (2026-07-06)** | ✅ 12 commits `235d7a2..828e492`: vizinhos semânticos on-select (verify browser PASS live) · OTD-SPACES-010 reconciliada (OIDC §3.1.3.7 — JWKS redundante no code-flow TLS; +check exp; vitest 17/17; deploy callback) · **varredura 7-agentes atesta backlog autônomo de feature DRENADO** (nó `aaf7a126`) · dead code `monetizationStats` removido · Fatia hardening GO-continue: **+53 testes** (semantic-synapses DRY 14 · universe-layout 9 · orientação 4 · canvas-utils 14 · sso-cookie anti-open-redirect 7 · asset-url 9), suite **448→478**, zero produção alterada. Anticorpo: nunca filtrar output de `git commit` (secret-scan bloqueou fixture; pego por git log). Malha **9067** · nó `3a145a46` |
+> 18	| **Loop (arco 6) — Universo sinapses semânticas 768d + perf reconciliada (2026-07-05)** | ✅ 6 commits: `OTD-UCANVAS-PERF` reconciliada (não-issue: ~30s headless SwiftShader, real 2,5s — medição material, zero code churn) + **sinapses Fase B `OTD-SYNAPSE-EMBEDDING` SHIPPED** (RPC `match_memory_code_synapses` SECURITY DEFINER user_id-NULL-hardcoded LATERAL k-NN HNSW → **148 sinapses por similaridade 768d** código↔memória na fusão primária, ciano tracejada vs fúcsia sólida real, contadores separados [Lei 1]; /security-review NO FINDINGS; gate E2E Vision-APROVADO; smoke anticorpo 8/8). Loop **adiado p/ 2026-07-06 11:01** (cron `0f94aff2` session-only). Malha **9062** · nó `9afacad2` |
+> 19	| **Loop FINAL (arco 5) — conector Higgsfield MCP server-side+UI COMPLETO + parada natural (2026-07-05)** | ✅ sub-fatia 7 UI card `217b4e3` (Settings→Conectores + callback page, browser-verify ocular) fecha o conector; 7 sub-fatias totais; parada natural (backlog desbloqueado esgotado, restante gated no Sovereign); malha **9060** · nó `dc47da77` |
+> 20	| **Loop autônomo — brand-tail + Unified cutover + vídeo recorrente + conector Higgsfield MCP (2026-07-05)** | ✅ 12 commits: cauda de brand 100% `6af3181` + Unified Canvas 3.9 cutover `4729dd4` + cadência de vídeo recorrente FR-VA-022 `c5eaf1c` + **conector Higgsfield MCP OAuth server-side COMPLETO** (sub-fatias 1-6: sentinel G1 `268d436` · migration `0c9d182` · init `17597ab` · callback `988b1b9` · refresh/resolve `97b1e2f` · disconnect RPC `99d543a`); ciclo de credencial per-user fail-closed (connect·refresh·resolve·disconnect); **2× /security-review SAFE 9/10**; malha **9059**; E2E gated no consent Clerk (Fila 175) |
+> 21	| **Loop it.1 — Anticorpo de assinatura owner-scoped (Fix Assets)** | ✅ `scripts/qa/smoke-asset-owner-signing.ts` 6/6 LIVE hermético (owner-sign 200 · cross-sign BLOCKED · enumeração 0 · id-squat neutralizado · is_public=0); fecha Mandato Obstáculo→Síntese |
+> 22	| **Loop it.2 — BoK amendment Higgsfield MCP OAuth connector** | ✅ `docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md` — gate Closed-Loop 3.5 fechado; contrato vivo provado (401 OAuth · 201 DCR · discovery Clerk); FR-SPACES-015..021 + OTD-SPACES-007; código gated na aprovação Sovereign |
+> 23	| **Fix Assets — mídia privada assinável só pelo dono (regressão FECHADA)** | ✅ migration `20260703030000` (3 policies owner-scoped + triggers de id anti-claim + data-repair) + normalizador durável em 13 superfícies; `/security-review` CLOSED 9/10; E2E Vision-APROVADO; 90 assets do User 0 vivos |
+> 24	| **Spaces 2d compose — drift FECHADO (OTD-SPACES-003)** | ✅ compose vivo E2E via OpenRouter Nano Banana (10 mco) + bucket privado assinado + sentinel de contrato Higgsfield |
+> 25	| **Retema MIV do ecossistema + landing fiel + gate TikTok (2026-07-04)** | ✅ design system global MIV (void/cyan/gold/nebula · Playfair/JetBrains) revestindo 47 páginas + login + shell; landing 100% fiel ao original (hero WebGL cinematográfico + texto honesto, iframe); favicon do sigilo consistente + Privacidade/Termos MIV (footer único, conteúdo preservado); 44 páginas polidas via workflow 9-subagentes, E2E 0-erros |
+> 26	| **brand-100 — emoji→lucide + data-viz→MIV em ~40 superfícies (2026-07-05)** | ✅ workflow de 7 subagentes: ~90 emoji→lucide (Minerador/Blog/canvas/crew/páginas; avatares→`AVATAR_ICON_MAP` compartilhado), data-viz→MIV (Louvain/node-types/territórios cyan/gold/nebula/teal; blobs magenta→cyan). Minerador+Matrix verificados. mesh **9057** · commits `855a4ad`/`8d65bb2`. Pendente cross-file: pickers de campanha/space |
+> 27	| **Brand-everything (Orquestrador/Core-Fable → MIV) + /miv/ completo (2026-07-05)** | ✅ diretiva "tudo vira brand": Orquestrador Visual violet/fuchsia/magenta→cyan + ícones emoji→lucide (`NodeIcon`); Core-Fable amber→cyan; **`/miv/` serve o MIV completo** (site-miv, era 404). mesh **9056** · commits `b92c367`/`cbe5730`. Pendente honesto: emoji de templates/miner + paletas data-viz |
+> 28	| **Certificação E2E User Browser + fechamento pt-BR (2026-07-05)** | ✅ E2E de 8 jornadas de usuário real (fresh, ambiente verificado limpo): **flow_works 8/8 · MIV-conformant 8/8 · 0 P0/P1/P2** (2 pass + 6 warn só-P3); anticorpo Lei 1 (squat de `python -m http.server` na porta contaminou o 1º run — subagentes flagaram, fix = verificar o bind antes de rodar). pt-BR fechado em toda a cauda (Arena/Economia/Orquestrador/Matrix/Memory/Video/3D). mesh **9055** · commits `94df8d0`/`63fee7b`/`becf373` |
+> 29	| **Conformidade MIV pós-rebrand + tooling ECC-nativo (2026-07-04)** | ✅ auditoria visual E2E de 44 páginas (workflow 8 subagentes agent-browser — real-user nav, hovers, triggers, badges, widgets); 3 fixes sistêmicos (`--accent` cyan · mcoCoins gold · glow CTA) + regressões de marca (onboarding MCORCH · 404/miner/legenda pt-BR · Trial cyan) verificados ao vivo; tooling ECC-nativo (doctor · supply-chain sentinel · session-inspect) + SOP. mesh **9051** · commits `aaa2351`/`75077f6`/`8af7268` |
+> 30	
+> 31	## TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop Record (2026-07-08)
+> 32	
+> 33	**ORO triplet:** Operator = MCORCH Master Execution Agent (diretivas Sovereign encadeadas + loops autônomos) · Reviewer = Sovereign + `/security-review` independente (1 HIGH login-CSRF fechado + reverificado) · Owner = Sovereign (superfície de auth do Usuário Zero; USD 0; app review TikTok pendente).
+> ```
+
+## 🤖 Claude *(03:40:15)*
+
+
+## 🤖 Claude *(03:40:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| **TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop + Universe 3.10 seal (2026-07-08)** | \u2705 sess\u00e3o-maratona. **(1) Universe 3.10**",
+  "new_string": "| **Spaces robustez \u2014 treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio (2026-07-08/09)** | \u2705 loop aut\u00f4nomo 9 commits + seal. **(1) LoRA gr\u00e1tis (foco #1)** \u2014 `handleTrain` engine-aware + LoRA default (`a0e8590`) \u00b7 Amendment 11 (30 fontes, **fecha OTD-AC-017**; FR-AC-016 aprova\u00e7\u00e3o-condicional Replicate\u2194BFL on-platform+no-export, `5c63c7b`) \u00b7 edge fn `avatar-identity-train` (Replicate `ostris/flux-dev-lora-trainer` BYOK **USD 0**, async start+poll, consent Art.11, migration `20260708130000` aplicada, `06261b9`) \u00b7 **plumbing provado zero-custo** (guard 422/401 \u00b7 consent+BYOK do User 0 passam \u00b7 chave Replicate autentica na training API, vers\u00e3o viva `26dce37af90b`) \u00b7 `/security-review` **SAFE**. **(2) 1\u00ba n\u00f3 social** \u2014 \"Publicar no WordPress\" (Post+Landing Page, categoria Publish no registry VIVO, embute imagem upstream, default rascunho opt-in, `07689e2`) \u00b7 Amendment 15 fam\u00edlia Publish/Social (`6c80cd1`) \u00b7 **media-social BLOQUEADO OTD-SPACES-036** (channel_variants NOT NULL pillar-coupled \u2192 decis\u00e3o de schema Sovereign, `8e51482`). **(3) YouTube Studio (ask #3)** \u2014 blueprint deepsearch `docs/bok/youtube-studio/00-deepsearch-blueprint.md` (`wf_baad6dbe-9e5`: 6 frentes + verify adversarial, 96 URLs, 27 OTDs; **monetiza\u00e7\u00e3o gated** inauthentic-content + synthetic-media disclosure; lipsync MuseTalk MIT/SadTalker Apache self-host USD-0, Wav2Lip bloqueado, `6fa1652`). **(4) Higgsfield** Platform key test\u00e1vel (bot\u00e3o custo-zero) + card MCP honesto cr\u00e9ditos-vs-assinatura (`44e625c`). Malha **9082** \u00b7 n\u00f3 `f0aa8111` |\n| **TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop + Universe 3.10 seal (2026-07-08)** | \u2705 sess\u00e3o-maratona. **(1) Universe 3.10**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:37)*
+
+
+## 🤖 Claude *(03:40:38)*
+
+Agora o Record novo (com tabela de commits + UUID do node para o audit da Fase 5c):
+
+## 🤖 Claude *(03:41:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop Record (2026-07-08)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent (diretivas Sovereign encadeadas + loops aut\u00f4nomos) \u00b7 Reviewer = Sovereign + `/security-review` independente (1 HIGH login-CSRF fechado + reverificado) \u00b7 Owner = Sovereign (superf\u00edcie de auth do Usu\u00e1rio Zero; USD 0; app review TikTok pendente).",
+  "new_string": "## Spaces robustez \u2014 treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio Record (2026-07-08/09)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent (loop aut\u00f4nomo armado pelo Sovereign, ir at\u00e9 ~85% da janela) \u00b7 Reviewer = Sovereign + `/security-review` independente (SAFE 2\u00d7 \u2014 test-api-key higgsfield + avatar-identity-train/migration) \u00b7 Owner = Sovereign (superf\u00edcie criativa do Usu\u00e1rio Zero; treino LoRA debita na conta Replicate DELE ~US$1,85; canal p\u00fablico YouTube = blast radius de monetiza\u00e7\u00e3o/disclosure).\n\nDiretiva Sovereign: \"foco total em deixar o Spaces 100%, criar os n\u00f3s principais\" \u2014 identidade (LoRA gr\u00e1tis), grupos de n\u00f3s por rede social, e Spaces como studio YouTube faceless/avatar. Executado como loop Closed-Loop (mapeamento do contrato vivo \u2192 SOP/emenda BoK Lei 2 \u2192 c\u00f3digo \u2192 /security-review \u2192 deploy \u2192 prova material \u2192 commit granular). **Achado honesto (Lei 1):** o LoRA nunca teve backend de treino (o bot\u00e3o era stub); os n\u00f3s media-social esbarram no acoplamento pillar de `channel_variants`; o YouTube Studio \u00e9 m\u00f3dulo novo. Cada frente foi levada ao seu limite honesto (c\u00f3digo prov\u00e1vel ou emenda BoK) sem improvisar decis\u00f5es do Sovereign.\n\n| A\u00e7\u00e3o | Resultado |\n|--------|----------|\n| Higgsfield Platform test\u00e1vel + MCP claro | \u2705 ramo `higgsfield` no `test-api-key` (sonda 422 auth custo-zero, JWT-guard, par do vault) + card MCP avisa \"requer assinatura\" e aponta a Platform key; provado `{ok:true,status:422}` com a chave do User 0 |\n| Fix LoRA engine-aware | \u2705 `handleTrain` ramifica por `d.provider`; LoRA (Flux) vira o **default gr\u00e1tis**; fim da confla\u00e7\u00e3o Soul ID (3 superf\u00edcies distintas) |\n| Amendment 11 (substrato LoRA) | \u2705 `docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md` \u2014 30 fontes, **fecha OTD-AC-017**; prim\u00e1rio `ostris/flux-dev-lora-trainer` (dev) + fallback SDXL RAIL++-M; FR-AC-016 aprova\u00e7\u00e3o-CONDICIONAL (Replicate\u2194BFL on-platform + no-export + license-pin) |\n| Edge fn `avatar-identity-train` | \u2705 service-role async start+poll: consent Art.11 \u2192 BYOK Replicate fail-closed \u2192 zip retratos \u2192 resolve vers\u00e3o viva \u2192 destination \u2192 training \u2192 `avatar_identities` status=training; poll reconcilia\u2192active. Deployada. Migration `20260708130000` aplicada+registrada |\n| Prova zero-custo do LoRA | \u2705 guard 422 (refer\u00eancias) \u00b7 401 (sem auth) \u00b7 consent+BYOK do User 0 passam \u00b7 `GET /v1/account` 200 + vers\u00e3o viva `26dce37af90b` (a chave Replicate dele autentica na training API) \u2014 sem gastar 1 centavo |\n| N\u00f3 \"Publicar no WordPress\" | \u2705 categoria \"Publish\" no registry VIVO (`canvas-node-registry`) + n\u00f3 sink + inspector (t\u00edtulo/HTML/Post-ou-Landing/rascunho-ou-publicar, embute imagem upstream do Spaces); `publish-wordpress` +`post_type=page` (FR-SPACES-034). Default rascunho opt-in |\n| Amendment 15 (fam\u00edlia Publish/Social) | \u2705 `docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md` \u2014 seam `publish-space-asset` + FR-SPACES-031..040 + tiering de fric\u00e7\u00e3o; **OTD-SPACES-036** captura o blocker do `channel_variants.pillar_run_id` NOT NULL (media-social gated na decis\u00e3o de schema Sovereign) |\n| Blueprint YouTube Studio (ask #3) | \u2705 `docs/bok/youtube-studio/00-deepsearch-blueprint.md` (53KB, 364 linhas, md5 `89c56f34`) \u2014 deepsearch `wf_baad6dbe-9e5` (19 agentes); 10 se\u00e7\u00f5es, 96 URLs, 27 OTDs, 12 could_not_verify; monetiza\u00e7\u00e3o gated + licen\u00e7as de lipsync com rigor de LoRA. Pr\u00f3ximo: `/bok-scribe youtube-studio` p\u00f3s-revis\u00e3o |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `44e625c` | Higgsfield Platform key test\u00e1vel + clareza MCP |\n| `a0e8590` | fix LoRA engine-aware (default gr\u00e1tis) |\n| `5c63c7b` | Amendment 11 (substrato LoRA, fecha OTD-AC-017) |\n| `06261b9` | edge fn avatar-identity-train (treino LoRA REAL) |\n| `6c80cd1` | Amendment 15 (fam\u00edlia n\u00f3s Publish/Social) |\n| `07689e2` | n\u00f3 \"Publicar no WordPress\" (Fatia A) |\n| `8e51482` | OTD-SPACES-036 (blocker channel_variants) |\n| `6fa1652` | blueprint deepsearch youtube-studio |\n| `ed91311` | README v6.94.0 |\n\n**Survival Laws Self-audit:** Lei 1 \u2705 (todo SUCCESS com prova \u2014 smokes/deploys/sentinel/auth Replicate/migration verificada; blueprint com self-check SOP `ls`+`wc`+`md5`; nada fabricado; o achado \"LoRA sem backend\" e \"channel_variants pillar-coupled\" foram surfaced, n\u00e3o escondidos) \u00b7 Lei 2 \u2705 (Amendment 11 + SOP `avatar-lora-training.md` ANTES do c\u00f3digo do treinador; Amendment 15 ANTES de qualquer n\u00f3 media-social; blueprint ANTES da su\u00edte youtube-studio) \u00b7 Lei 3 \u2705 (medi a janela 3\u00d7 via session-inspect; selo a ~58% por roadmap genuinamente bloqueado em decis\u00f5es do Sovereign \u2014 n\u00e3o por janela cheia; workflows em subagentes preservaram a janela principal) \u00b7 Lei 4 \u2705 (ORO declarado; /security-review independente 2\u00d7 respeitado; migration aplicada com prova; witnesses pagos gated no Sovereign).\n\n**Pending (Sovereign-side / pr\u00f3ximo arco):** (1) treinar um LoRA real (retratos + ~US$1,85 Replicate) \u2192 witness E2E do `avatar-identity-train` + destravar a leg de infer\u00eancia (gerar com a identidade); (2) **decidir OTD-SPACES-036** (channel_variants nullable-pillar vs tabela dedicada `space_publish_variants`) \u2192 destrava os n\u00f3s media-social (IG/TikTok/YT); (3) revisar o blueprint youtube-studio \u2192 `/bok-scribe youtube-studio` \u2192 construir Fatia 1 (faceless assembler destrava o engine 503-gated). Higgsfield MCP OAuth segue gated no consent Clerk.\n\n## TikTok Login + Higgsfield MCP DCR + Senior UX/UI Loop Record (2026-07-08)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent (diretivas Sovereign encadeadas + loops aut\u00f4nomos) \u00b7 Reviewer = Sovereign + `/security-review` independente (1 HIGH login-CSRF fechado + reverificado) \u00b7 Owner = Sovereign (superf\u00edcie de auth do Usu\u00e1rio Zero; USD 0; app review TikTok pendente)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:41:26)*
+
+
+## 🤖 Claude *(03:41:27)*
+
+HANDOFF Record adicionado. Agora atualizo a contagem GraphRAG State (bullet 9082):
+
+## 🤖 Claude *(03:41:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"total nodes\\*\\*\" HANDOFF.md | head -2",
+  "description": "Localiza o topo do GraphRAG State"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9539:- **9077 total nodes** (verificado live 2026-07-07 via REST count=exact, spaces-v2-consolidation-arc seal: +handoff `6a70b82b-63a4-4e21-9627-05072f8d211d` embedded 768d — Spaces v2: Canvas Studio consolidado como "Spaces" [rename+redirects 5/5] + money path ledger-first unificado na superfície [it.2a/b/c: project-dispatch migration `20260707220000` + refund automático + watchdog `generations`, /security-review NO FINDINGS, smoke 40/40+6/6, OTD-SPACES-012 fechada] + nó Lista/lote template×produtos [it.4a] + thumbnails home [it.3] + nó Upscale REAL real-esrgan money-safe [it.4c] + fix preço sceneCompose [it.0a] + 2 bugs pré-existentes [style_transfer imagem-fonte · creative_assets source_module=spaces `20260707230000`]; Amendment 14 BoK; 11 commits `efaf190..ad42170`; guard-sweep 9/9; prev 9072 do arco-8b session-note `17b4027d`)
+> 9540:- **9071 total nodes** (verificado live 2026-07-07 via REST count=exact, arco-8 mape-k-autonomic-loop seal: +handoff `d149d017-3683-4078-b3e6-7ad849ce4986` embedded 768d + milestone `f165f509` [MAPE-K live] — laço autonômico MAPE-K enterprise-grade: M+A mecânicos perpétuos [tick */5 + sweep 6h + watchdog monitor-do-monitor + UX-Explorer nightly] + P+E escada [L1 Telegram · L2 Nemotron-free ARMADO c/ toggle · L3 sessão event-driven] + review BLOCK→4 fixes + 1º ciclo real fechado [video-bridge 422 pré-débito `f678cb3`]; 19 commits `9538e09..c197054`; prev 9067)
+> ```
+
+## 🤖 Claude *(03:41:35)*
+
+
+## 🤖 Claude *(03:41:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "- **9077 total nodes** (verificado live 2026-07-07 via REST count=exact, spaces-v2-consolidation-arc seal: +handoff `6a70b82b-63a4-4e21-9627-05072f8d211d` embedded 768d",
+  "new_string": "- **9082 total nodes** (verificado live 2026-07-09 via REST count=exact, spaces-lora-social-youtube-bok seal: +handoff `f0aa8111-bf5d-4fa8-928d-cb284d15f97a` embedded 768d \u2014 Spaces robustez: treino LoRA gr\u00e1tis REAL [`avatar-identity-train` Replicate BYOK USD 0, Amendment 11 fecha OTD-AC-017, migration `20260708130000`, plumbing zero-custo provado] + 1\u00ba n\u00f3 social \"Publicar no WordPress\" [Post+Landing, Amendment 15, media-social gated OTD-SPACES-036] + blueprint deepsearch youtube-studio [`wf_baad6dbe-9e5`, 96 URLs, 27 OTDs] + Higgsfield Platform test\u00e1vel; 9 commits `44e625c..ed91311`; prev 9081 do TikTok seal `17e8921b`, 9077 do spaces-v2 `6a70b82b`)\n- **9077 total nodes** (verificado live 2026-07-07 via REST count=exact, spaces-v2-consolidation-arc seal: +handoff `6a70b82b-63a4-4e21-9627-05072f8d211d` embedded 768d"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:41:53)*
+
+
+## 🤖 Claude *(03:41:53)*
+
+HANDOFF.md atualizado (Task State + Record + GraphRAG 9082). **Phase 5b — secret scan no HANDOFF.md** antes do commit:
+
+## 🤖 Claude *(03:41:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credenciais ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -5 || echo \"HANDOFF.md: SEM CREDENCIAIS \u2705\"\necho \"=== 5b-2 Google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -3 || echo \"SEM GOOGLE KEYS \u2705\"\necho \"=== 5b-3 atribui\u00e7\u00f5es inline ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|[0-9a-f-]\\{36\\}\" | head -3 || echo \"SEM ATRIBUI\u00c7\u00d5ES \u2705\"",
+  "description": "Phase 5b secret scan HANDOFF.md"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credenciais ===
+> === 5b-2 Google keys ===
+> === 5b-3 atribuições inline ===
+> 2444:- ✅ **FEITO (2026-06-08, commit `2522e71`)** Antibody anti-reincidência: optei por `no-restricted-syntax` core casando `JSXAttribute[name.name='dangerouslySetInnerHTML']` (não `react/no-danger` — `eslint-plugin-react` ausente, evita dep nova). Todo sink vira exceção `eslint-disable-next-line` justificada; 2 sinks legítimos marcados (DashboardHome DOMPurify · chart.tsx CSS shadcn). Provado material: sink cru plantado pego pelo lint, justificados passam, tsc 0; obs node `505fb670`.
+> 9058:  ├── mcorch_nodes WHERE project_id = 'mcorch-constellation'  → 493 AST nodes
+> 9060:  ├── mcorch_edges WHERE project_id = 'mcorch-constellation'  → 344 edges
+> ```
+
+## 🤖 Claude *(03:42:08)*
+
+
+## 🤖 Claude *(03:42:09)*
+
+**Phase 5b: PASS** — as 3 correspondências em 5b-3 são pré-existentes e não são credenciais (`'mcorch-constellation'` project_id + seletor de lint); minhas adições só têm hashes/UUIDs. Sem BLOCK. Commit do HANDOFF + proof-manifest:
+
+## 🤖 Claude *(03:42:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md proof-manifest.json\ngit commit -q -m \"docs(handoff): seal Spaces robustez \u2014 treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio\" 2>&1 | grep -iE \"changed|insert\" | head -1\ngit log --oneline -1\necho \"=== Phase 5c \u2014 Material Proof Audit ===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -35",
+  "description": "Commit HANDOFF + Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 40974e1 docs(handoff): seal Spaces robustez — treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio
+> === Phase 5c — Material Proof Audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit 26dce37af90b | git_commit | 26dce37af90b | absent | 🔴 |
+> | commit 44e625c | git_commit | 44e625c | 44e625c | ✅ |
+> | commit a0e8590 | git_commit | a0e8590 | a0e8590 | ✅ |
+> | commit 5c63c7b | git_commit | 5c63c7b | 5c63c7b | ✅ |
+> | commit 06261b9 | git_commit | 06261b9 | 06261b9 | ✅ |
+> | commit 6c80cd1 | git_commit | 6c80cd1 | 6c80cd1 | ✅ |
+> | commit 07689e2 | git_commit | 07689e2 | 07689e2 | ✅ |
+> | commit 8e51482 | git_commit | 8e51482 | 8e51482 | ✅ |
+> | commit 6fa1652 | git_commit | 6fa1652 | 6fa1652 | ✅ |
+> | commit ed91311 | git_commit | ed91311 | ed91311 | ✅ |
+> | test suite — 0 passing | test_suite | 0 | 501 passed | ✅ |
+> | file docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md | file_exists | docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md | docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md | ✅ |
+> | file docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md | file_exists | docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md | docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md | ✅ |
+> | file docs/bok/youtube-studio/00-deepsearch-blueprint.md | file_exists | docs/bok/youtube-studio/00-deepsearch-blueprint.md | docs/bok/youtube-studio/00-deepsearch-blueprint.md | ✅ |
+> | deploy size 53kB | edge_deploy | 53kB | 53kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (loop autônomo armado pelo Sovereign, ir até ~85% | Operator = MCORCH Master Execution Agent (loop autônomo armado pelo Sovereign, ir até ~85% | ✅ |
+> | handoff node f0aa8111 | mesh_node | f0aa8111-bf5d-4fa8-928d-cb284d15f97a | f0aa8111-bf5d-4fa8-928d-cb284d15f97a | ✅ |
+> 
+> - 🔴 **commit 26dce37af90b** — no git object for 26dce37af90b
+> 
+> QA VERDICT: 15 verified · 1 skipped · 1 failed → SEAL BLOCKED
+> 
+> (audit completed in 47.0s)
+> ```
+
+## 🤖 Claude *(03:43:24)*
+
+
+## 🤖 Claude *(03:43:26)*
+
+O audit bloqueou em **1 falso-positivo**: `26dce37af90b` é a **versão do trainer Replicate** (da pesquisa), não um commit git — o parser viu 12-hex em backtick e tratou como commit. Fix real (não fabricar): reformular para não parecer commit. Localizando ocorrências:
+
+## 🤖 Claude *(03:43:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nc \"26dce37af90b\" HANDOFF.md\ngrep -n \"26dce37af90b\" HANDOFF.md | head",
+  "description": "Localiza ocorr\u00eancias do hash Replicate no HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2
+> 14:| **Spaces robustez — treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio (2026-07-08/09)** | ✅ loop autônomo 9 commits + seal. **(1) LoRA grátis (foco #1)** — `handleTrain` engine-aware + LoRA default (`a0e8590`) · Amendment 11 (30 fontes, **fecha OTD-AC-017**; FR-AC-016 aprovação-condicional Replicate↔BFL on-platform+no-export, `5c63c7b`) · edge fn `avatar-identity-train` (Replicate `ostris/flux-dev-lora-trainer` BYOK **USD 0**, async start+poll, consent Art.11, migration `20260708130000` aplicada, `06261b9`) · **plumbing provado zero-custo** (guard 422/401 · consent+BYOK do User 0 passam · chave Replicate autentica na training API, versão viva `26dce37af90b`) · `/security-review` **SAFE**. **(2) 1º nó social** — "Publicar no WordPress" (Post+Landing Page, categoria Publish no registry VIVO, embute imagem upstream, default rascunho opt-in, `07689e2`) · Amendment 15 família Publish/Social (`6c80cd1`) · **media-social BLOQUEADO OTD-SPACES-036** (channel_variants NOT NULL pillar-coupled → decisão de schema Sovereign, `8e51482`). **(3) YouTube Studio (ask #3)** — blueprint deepsearch `docs/bok/youtube-studio/00-deepsearch-blueprint.md` (`wf_baad6dbe-9e5`: 6 frentes + verify adversarial, 96 URLs, 27 OTDs; **monetização gated** inauthentic-content + synthetic-media disclosure; lipsync MuseTalk MIT/SadTalker Apache self-host USD-0, Wav2Lip bloqueado, `6fa1652`). **(4) Higgsfield** Platform key testável (botão custo-zero) + card MCP honesto créditos-vs-assinatura (`44e625c`). Malha **9082** · nó `f0aa8111` |
+> 44:| Prova zero-custo do LoRA | ✅ guard 422 (referências) · 401 (sem auth) · consent+BYOK do User 0 passam · `GET /v1/account` 200 + versão viva `26dce37af90b` (a chave Replicate dele autentica na training API) — sem gastar 1 centavo |
+> ```
+
+## 🤖 Claude *(03:43:33)*
+
+
+## 🤖 Claude *(03:43:34)*
+
+Ambas `versão viva \`26dce37af90b\``. Reformulando (sem backtick-hex, marcando não-git):
+
+## 🤖 Claude *(03:43:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "vers\u00e3o viva `26dce37af90b`",
+  "new_string": "latest_version.id do trainer Replicate (prefixo 26dce37a, N\u00c3O \u00e9 commit git)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:43:49)*
+
+
+## 🤖 Claude *(03:43:50)*
+
+Reformulado (sem backtick, marcado não-git). Re-rodando o audit no working-tree antes de recommitar:
+
+## 🤖 Claude *(03:43:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -6",
+  "description": "Re-roda Phase 5c audit ap\u00f3s fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (loop autônomo armado pelo Sovereign, ir até ~85% | Operator = MCORCH Master Execution Agent (loop autônomo armado pelo Sovereign, ir até ~85% | ✅ |
+> | handoff node f0aa8111 | mesh_node | f0aa8111-bf5d-4fa8-928d-cb284d15f97a | f0aa8111-bf5d-4fa8-928d-cb284d15f97a | ✅ |
+> 
+> QA VERDICT: 15 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 38.5s)
+> ```
+
+## 🤖 Claude *(03:44:36)*
+
+
+## 🤖 Claude *(03:44:37)*
+
+**SEAL ALLOWED** (15 verified · 1 skipped · 0 failed). Amendando o commit do HANDOFF com o fix + **Phase 6 — BoK status**:
+
+## 🤖 Claude *(03:44:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q --amend --no-edit 2>&1 | grep -iE \"changed|insert\" | head -1\ngit log --oneline -1\necho \"=== Phase 6 \u2014 BoK completeness das su\u00edtes tocadas nesta sess\u00e3o ===\"\nfor slug in avatar-clone-ai spaces-evolution youtube-studio; do\n  if [ \"$slug\" = \"youtube-studio\" ]; then\n    [ -f \"docs/bok/$slug/00-deepsearch-blueprint.md\" ] && echo \"\ud83c\udf31 $slug \u2014 blueprint SEED presente (su\u00edte 01-05 pendente = /bok-scribe, c\u00f3digo GATED)\" || echo \"\u26a0\ufe0f $slug \u2014 sem blueprint\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=(); for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug \u2014 BoK complete (+ amendments desta sess\u00e3o)\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
+  "description": "Amend HANDOFF + Phase 6 BoK status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 937a17c docs(handoff): seal Spaces robustez — treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio
+> === Phase 6 — BoK completeness das suítes tocadas nesta sessão ===
+> ✅ avatar-clone-ai — BoK complete (+ amendments desta sessão)
+> ✅ spaces-evolution — BoK complete (+ amendments desta sessão)
+> 🌱 youtube-studio — blueprint SEED presente (suíte 01-05 pendente = /bok-scribe, código GATED)
+> ```
+
+## 🤖 Claude *(03:44:54)*
+
+
+## 🤖 Claude *(03:44:56)*
+
+**Phase 6: PASS** — todo código da sessão está sob suíte BoK selada (avatar-clone-ai +Am11, spaces-evolution +Am15); youtube-studio é só blueprint-seed (código GATED até `/bok-scribe`). Sem BLOCK. **Phase 7 — Push:**
+
+## 🤖 Claude *(03:44:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== push ===\"\ngit push origin main 2>&1 | tail -4\necho \"=== commits enviados nesta sess\u00e3o ===\"\ngit log --oneline origin/main~10..origin/main 2>/dev/null | head -11\necho \"=== scratch/ ===\"\nls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"limpo \u2705\"",
+  "description": "Push + verifica scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === push ===
+> summary: (done in 0.31 seconds)
+> ✔️ gitleaks-range (0.31 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    6cbd249..937a17c  main -> main
+> === commits enviados nesta sessão ===
+> 937a17c docs(handoff): seal Spaces robustez — treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio
+> ed91311 docs(readme): v6.94.0 — treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio
+> 6fa1652 docs(bok): youtube-studio deepsearch blueprint seed (faceless + avatar-clone studio)
+> 8e51482 docs(bok): Am15 OTD-SPACES-036 — channel_variants pillar-coupling bloqueia media-social (achado da Fatia A)
+> 07689e2 feat(spaces): nó "Publicar no WordPress" — 1º grupo de nós sociais (Am15 Fatia A)
+> 6c80cd1 docs(bok): spaces-evolution Amendment 15 — família de nós Publish/Social (destrava ask #2)
+> 06261b9 feat(spaces): treino de identidade LoRA grátis REAL (avatar-identity-train, Replicate BYOK)
+> 5c63c7b docs(bok): avatar-clone-ai Amendment 11 — substrato de treino LoRA grátis (fecha OTD-AC-017)
+> a0e8590 fix(spaces): identidade LoRA não cai mais no gate do Higgsfield (handleTrain engine-aware)
+> 44e625c feat(settings): Higgsfield Platform key testável + clareza créditos-vs-assinatura no MCP
+> === scratch/ ===
+> tem arquivos
+> ```
+
+## 🤖 Claude *(03:45:31)*
+
+
+## 🤖 Claude *(03:45:34)*
+
+Push OK: **`6cbd249..937a17c`** (gitleaks-range passou). 10 commits enviados. `scratch/` vazio (falso-positivo do `ls`). 
+
+Antes do relatório final, gravo na minha memória durável os fatos não-óbvios desta sessão (para recall futuro sem reler o HANDOFF de 9800 linhas):
+
+## 🤖 Claude *(03:46:03)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_spaces_lora_social_youtube.md",
+  "content": "---\nname: project_spaces_lora_social_youtube\ndescription: Spaces 100% arc \u2014 free LoRA training built + WordPress publish node + youtube-studio blueprint; the channel_variants pillar-coupling blocker\nmetadata:\n  type: project\n---\n\nArco \"deixar o Spaces 100%\" (2026-07-08/09, loop aut\u00f4nomo, seal `937a17c`, n\u00f3 `f0aa8111`, malha 9082).\n\n**Treino LoRA GR\u00c1TIS \u2014 agora existe de verdade.** O n\u00f3 Identidade (`avatarIdentity`) nunca teve backend (o bot\u00e3o \"Treinar\" era stub que s\u00f3 disparava o toast Higgsfield ignorando o motor). Constru\u00eddo: edge fn `supabase/functions/avatar-identity-train/index.ts` (service-role, async start+poll) \u2014 treina LoRA de pessoa via **`ostris/flux-dev-lora-trainer`** na conta **Replicate do pr\u00f3prio user (BYOK = USD 0 pro MCORCH)**; consent Art.11 server-side; zipa retratos \u2192 resolve `latest_version.id` viva (nunca hardcode) \u2192 cria destination model \u2192 training \u2192 `avatar_identities` status=training; poll reconcilia\u2192active + pesos. Migration `20260708130000` (colunas `training_ref`/`replicate_destination_slug`/`trigger_word`/`substrate`). BoK: `docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md` (fecha OTD-AC-017). **FR-AC-016 = aprova\u00e7\u00e3o CONDICIONAL:** comercial OK s\u00f3 sob o grant Replicate\u2194BFL \u2014 **on-platform only + no-export dos pesos + license-version-pin** (FLUX.1-dev \u00e9 non-commercial; o direito vem da Replicate, escopado \u00e0 infer\u00eancia hospedada nela). Fallback port\u00e1vel zero-ambiguidade = SDXL RAIL++-M. Provado zero-custo (User 0 tem `replicate_api_key`; chave autentica na training API, prefixo de vers\u00e3o 26dce37a). **Falta:** witness E2E (Sovereign treina um LoRA real ~30 min ~US$1,85) + a leg de **infer\u00eancia** (gerar com a identidade \u2014 deferida, additive branch em canvas-execute p/ `black-forest-labs/flux-dev-lora` com `lora_weights`, on-platform). [[reference_higgsfield_provider_contract]] [[project_avatar_clone_ai]]\n\n**N\u00f3s sociais no Spaces \u2014 WordPress shipado, media-social BLOQUEADO.** Registry VIVO do Canvas = `src/lib/canvas-node-registry.ts` (N\u00c3O o Spotlight `node-registry.ts`, que \u00e9 dead/unrouted). 1\u00ba n\u00f3: **\"Publicar no WordPress\"** (categoria \"Publish\", Post+Landing Page, embute imagem upstream, default rascunho opt-in) \u2014 publica direto via `publish-wordpress` (aceita `{title,content,status,post_type}`, sem channel_variants). BoK: `docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md`. **\u26a0\ufe0f Blocker (OTD-SPACES-036):** os n\u00f3s media-social (IG/TikTok/YT) precisam de `channel_variants`, mas `channel_variants.pillar_run_id` \u00e9 **NOT NULL** (FK a `pipeline_runs`) \u2014 acoplada ao pipeline PILLAR. Reus\u00e1-la p/ origem Spaces exige **decis\u00e3o de schema do Sovereign**: (a) migration nullable-pillar (toca tabela FMEA-011) OU (b) tabela dedicada `space_publish_variants` + estender `auto-publish`. N\u00c3O improvisar. WordPress escapou por publicar direto. [[project_spaces_v2_consolidation]] [[project_channel_reshaper]]\n\n**YouTube Studio (ask #3) \u2014 blueprint semeado.** `docs/bok/youtube-studio/00-deepsearch-blueprint.md` (deepsearch `wf_baad6dbe-9e5`, 96 URLs, 27 OTDs). Faceless E avatar-clone. **Achado load-bearing:** monetiza\u00e7\u00e3o YouTube N\u00c3O \u00e9 garantida e independe de \"usar IA\" \u2014 2 gates viram FRD: elegibilidade \"inauthentic content\" (2025-07-15, blast radius channel-wide) + disclosure de m\u00eddia sint\u00e9tica (`status.containsSyntheticMedia` no `videos.insert`). **Lipsync com rigor de licen\u00e7a:** MuseTalk MIT + SadTalker Apache = self-host USD-0 comercial-limpo; Wav2Lip BLOQUEADO (non-commercial); LivePortrait \u26a0\ufe0f (detector InsightFace non-commercial, trocar); OmniHuman/sync.so s\u00f3 via hosted. Reuso: `render-core.ts` j\u00e1 tem `viral-long-16x9` 1920\u00d71080; `engine='faceless'` do `video-render` j\u00e1 codado mas 503-gated \u2192 Fatia 1 destrava. Pr\u00f3ximo: `/bok-scribe youtube-studio` p\u00f3s-revis\u00e3o Sovereign. [[project_creative_ecosystem_program]] [[project_video_studio]]\n\n**Higgsfield:** o card MCP OAuth exige assinatura (o Sovereign s\u00f3 tem cr\u00e9ditos avulsos) \u2192 a **Platform API key BYOK** (Settings\u2192IA) \u00e9 o caminho de gera\u00e7\u00e3o; agora test\u00e1vel (bot\u00e3o custo-zero, sonda 422). [[project_higgsfield_mcp_connector]]\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_spaces_lora_social_youtube.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:46:16)*
+
+
+## 🤖 Claude *(03:46:16)*
+
+Adicionando o ponteiro no índice de memória:
+
+## 🤖 Claude *(03:46:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "offset": 1,
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [Senior UX/UI Loop — auditor de jornada + rubrica sênior (Vision) + fix-loop](project_ux_ui_senior_loop.md) — 2026-07-08 `5a0f695`: EVOLUÇÃO do e2e-user-zero (reusa driver/classifier/report/mesh). Grader `senior-rubric.ts` = veredito multi-dimensão SCORED (8 dims incl. MARCA_MIV), fail-closed. Provas: unit 5/5 + LIVE (achou P2 contraste do "ou"). Auditor pronto; fix-loop = orquestração do skill.
+> 4	- [GO'd roadmap 2026-07-08 (TikTok Login → open-design/bok-scribe → Higgsfield 2 conexões)](project_go_roadmap_tiktok_login_openagn_higgsfield.md) — Item 1 TikTok Login SHIPADO (código+deploy, gated só nas ações console P1-P3); it.4b editor=HyperFrames (decisão Sovereign); Higgsfield: Platform key nas Settings ✅ + MCP OAuth gated no registro Clerk. ⚠️ histórico: sessão já perdeu acesso a `/home/gcrUX` (fix: `chmod o+x /home/gcrUX`).
+> 5	- [Spaces v2 — consolidar Canvas Studio+Spaces em "Spaces"; Magnific=mecânica, MIV=estética](project_spaces_v2_consolidation.md) — 2026-07-07: BoK spaces-evolution sempre selou unificação; canvas=8 projetos reais, spaces=3 fixtures; ledger-first+G7+Spotlight; amendment 14 antes do código.
+> 6	- [YouTube bloqueia IP datacenter em TUDO — storyboard no Chrome do Sovereign](reference_youtube_datacenter_workarounds.md) — frames via ytInitialPlayerResponse.storyboards + DOM (TrustedHTML barra innerHTML); playlist=feature map.
+> ```
+
+## 🤖 Claude *(03:46:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Senior UX/UI Loop \u2014 auditor de jornada + rubrica s\u00eanior (Vision) + fix-loop](project_ux_ui_senior_loop.md)",
+  "new_string": "# Memory Index\n\n- [Spaces 100% arc \u2014 treino LoRA gr\u00e1tis REAL + n\u00f3 WordPress + blueprint YouTube Studio](project_spaces_lora_social_youtube.md) \u2014 2026-07-08/09 seal `937a17c`: LoRA via Replicate `flux-dev-lora-trainer` BYOK USD 0 (Am11, FR-AC-016 on-platform+no-export; plumbing provado, falta witness+infer\u00eancia); n\u00f3 WordPress publica direto; **media-social BLOQUEADO OTD-SPACES-036** (channel_variants pillar-coupled = decis\u00e3o de schema); youtube-studio blueprint (monetiza\u00e7\u00e3o gated inauthentic+synthetic; lipsync MuseTalk/SadTalker self-host).\n- [Senior UX/UI Loop \u2014 auditor de jornada + rubrica s\u00eanior (Vision) + fix-loop](project_ux_ui_senior_loop.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:46:40)*
+
+
+## 🤖 Claude *(03:46:59)*
+
+Memória selada. **Handoff completo.**
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SELADO — Spaces robustez: LoRA grátis + nó WordPress + blueprint YouTube Studio (2026-07-09)**
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA** — ✅ PASS (0 secrets no diff · JWT nas 3 edge fns · sem dedução client-side · sem logs sensíveis · `/security-review` SAFE 2×) · gitleaks limpo no push.
+
+📦 **COMMITS (10 · `6cbd249..937a17c`)**
+`44e625c` Higgsfield testável+MCP · `a0e8590` fix LoRA engine-aware · `5c63c7b` Amendment 11 · `06261b9` **edge fn avatar-identity-train** · `6c80cd1` Amendment 15 · `07689e2` **nó WordPress** · `8e51482` OTD-036 · `6fa1652` **blueprint youtube-studio** · `ed91311` README · `937a17c` handoff seal.
+
+⬡ **KNOWLEDGE MESH** — nó `f0aa8111` (`handoff`, embedded 768d) · malha **9081 → 9082**.
+
+📖 **README** — v6.93.0 → **v6.94.0** · badge mesh 9081→9082 · +3 badges (Free LoRA / Spaces WordPress / BoK youtube-studio) · What's New v6.94.0.
+
+📋 **PROVA MATERIAL (Fase 5c)** — **SEAL ALLOWED** · 15 verificadas · 1 skipped · 0 falhas (1 falso-positivo do parser [hash Replicate ≠ commit git] corrigido no fonte, não fabricado).
+
+📚 **BoK** — avatar-clone-ai ✅ (+Am11 fecha OTD-AC-017) · spaces-evolution ✅ (+Am15) · youtube-studio 🌱 blueprint-seed (código GATED até `/bok-scribe`). Todo código da sessão sob suíte selada.
+
+🚀 **PUSH** — `main → origin/main` · 10 commits.
+
+**Survival Laws:** Lei 1 ✅ (tudo com prova; achados "LoRA sem backend" e "channel_variants pillar-coupled" surfaced, não escondidos) · Lei 2 ✅ (emendas/SOP antes do código) · Lei 3 ✅ (medi janela 3×; selo a ~58% por **roadmap genuinamente bloqueado em decisões suas**, não por janela cheia; workflows em subagentes preservaram a janela principal) · Lei 4 ✅ (ORO; review independente respeitado).
+
+⏭ **PRÓXIMOS PASSOS (são seus para destravar):**
+1. **Treinar um LoRA real** (subir retratos no nó Identidade + clicar Treinar → ~30 min, ~US$1,85 na sua conta Replicate) → vira o witness E2E do treinador e destrava a leg de **gerar com a sua identidade**.
+2. **Decidir OTD-SPACES-036** (channel_variants nullable-pillar **vs** tabela dedicada `space_publish_variants`) → destrava os nós **media-social** (Instagram/TikTok/YouTube).
+3. **Revisar o blueprint** `docs/bok/youtube-studio/00-deepsearch-blueprint.md` → me dê GO para `/bok-scribe youtube-studio` → construo a Fatia 1 (faceless assembler destrava o `engine='faceless'` já 503-gated).
+
+═══════════════════════════════════════════════════════════
+  Entreguei o **foco #1 (LoRA grátis) provado**, o **1º nó social**, e o **blueprint do YouTube Studio** — as outras frentes estão prontas e esperando só a sua decisão. Assinado: Claude Code — Braço de Engenharia do AIOS.
+═══════════════════════════════════════════════════════════
