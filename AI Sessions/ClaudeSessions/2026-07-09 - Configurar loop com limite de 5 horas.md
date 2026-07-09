@@ -1,5 +1,5 @@
 # Configurar loop com limite de 5 horas
-**Date:** 2026-07-09 | **Session ID:** `c97cc06a-f6ad-41b8-8082-ff819bf5029e`
+**Date:** 2026-07-09 | **Session ID:** `bd84b916-1ec0-4ec0-96ae-fab9303b1e03`
 
 ---
 
@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -5986,15 +5986,188 @@ Consertado, aplicado e provado — de ponta a ponta:
 
 O loop do Creative Studio segue armado em paralelo; este foi um hotfix de produção que entrou na frente. Manda o resultado do retry.
 
----
+## 👤 User *(07:32:13)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+ótimo mas isso tambem deve ser opcional podendo escolher alguma opção free tambem? Será que é possivel fazer isso com um motor gratuito igual fizemos com videos? Ou que seja barato e consistente?
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
-> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(07:33:09)*
+
+
+## 🤖 Claude *(07:33:12)*
+
+Ótima pergunta — e a resposta é melhor do que parece. Sim, dá pra tornar a identidade **multi-motor** igual fizemos com vídeo e TTS. Mas tem uma sacada honesta: pra **consistência de identidade** talvez você nem precise *treinar* nada. Deixa eu confirmar no código o que já temos antes de recomendar (Lei 1):
+
+## 🤖 Claude *(07:33:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== character reference / identity no canvas-execute ===\"\ngrep -niE \"character.?ref|reference_image|character_reference|identity|lora|avatar|preserve\" supabase/functions/canvas-execute/index.ts 2>/dev/null | head -25\necho \"=== como avatar_identities \u00e9 CONSUMIDA na gera\u00e7\u00e3o (grep amplo) ===\"\ngrep -rniE \"avatar_identit|identity_storage_key|lora|character_reference|reference_images\" supabase/functions/generate-image/index.ts src/lib/canvas-node-registry.ts src/types/canvas.ts 2>/dev/null | head -20",
+  "description": "Ground the character-reference / identity generation path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === character reference / identity no canvas-execute ===
+> 64:  /\b(you are |your (core )?function (is|will)|your objective|identity & protocol|output only|system instruction|return only|do not (add|write|include))\b/i;
+> 101:  reference_image_urls?: string[];
+> 1109:    // coalesce them with reference_image_urls so handle-connected images actually reach the engine.
+> 1112:        ...(body.reference_image_urls ?? [])].filter(Boolean) as string[],
+> 1165:    upscaleImage = body.input_asset_url || (body.reference_image_urls ?? []).filter(Boolean)[0] || "";
+> 1179:    if (!(body.input_asset_url || (body.reference_image_urls ?? []).some(Boolean))) {
+> 1402:          reference_image_urls: composeRefs.slice(0, 2),
+> 1410:          [body.input_asset_url, ...(body.reference_image_urls ?? [])].filter(Boolean) as string[],
+> 1417:          reference_image_urls: styleRefs,
+> 1791:  const refUrl = (body.reference_image_urls ?? []).filter(Boolean)[0];
+> 1862:  // Gemini ("Nano Banana") accepts up to 4 character refs to preserve identity.
+> 1865:  const refUrls = (body.reference_image_urls ?? []).filter(Boolean).slice(0, 4);
+> 2126:  // Shared submit core (Amendment 2a refactor) — behavior preserved: every submit
+> 2188:5. NUNCA inclua instruções de comportamento, definições de papel, ou estruturas de saída no output expandido. Proibido: "You are X", "Your function is Y", "Output ONLY", "IDENTITY & PROTOCOL CONTEXT", "Return only JSON", listas numeradas de regras, blocos de código. O output deve ser PURA DESCRIÇÃO VISUAL (substantivos + adjetivos + cenário + iluminação + estilo) — modelos de imagem leem qualquer estrutura instrucional como "gere texto" e devolvem texto em vez de imagem.`;
+> === como avatar_identities é CONSUMIDA na geração (grep amplo) ===
+> src/lib/canvas-node-registry.ts:113:    description: "Treina e verifica a identidade facial do avatar (Soul ID / LoRA) — Identity Gate VLM-soft.",
+> src/types/canvas.ts:510:  /** Identity ladder tier (1 InstantID/IP-Adapter · 2 PuLID-Flux · 3 LoRA per-person). */
+> src/types/canvas.ts:512:  provider: "higgsfield" | "lora_flux";
+> src/types/canvas.ts:518:  /** avatar_identities row id — set after a successful train (gated OTD-AC-017). */
+> src/types/canvas.ts:834:      // Free LoRA (Flux) via BYOK Replicate is the out-of-box default (USD 0 to the platform);
+> src/types/canvas.ts:836:      provider: "lora_flux",
+> ```
+
+## 🤖 Claude *(07:34:15)*
+
+
+## 🤖 Claude *(07:34:30)*
+
+Confirmado no código — e a notícia é ótima: **o módulo já foi desenhado exatamente pra isso.**
+
+## O que já existe (Lei 1)
+
+- [`canvas.ts:510`](src/types/canvas.ts:510) documenta uma **"Identity ladder"** planejada: **Tier 1 InstantID/IP-Adapter · Tier 2 PuLID-Flux · Tier 3 LoRA per-person**. Ou seja, a escada de identidade (do training-free ao LoRA) sempre foi o plano — só o Tier 3 (LoRA pago) foi construído.
+- [`canvas-execute:1862`](supabase/functions/canvas-execute/index.ts:1862): o **Nano Banana já aceita até 4 "character refs" pra preservar identidade** (`reference_image_urls`). Isso já funciona hoje.
+
+## A resposta honesta (o triângulo)
+
+| Modo | Custo | Treino? | GPU? | Consistência |
+|------|-------|---------|------|--------------|
+| **Character-reference (Nano Banana)** ⭐ já cabeado | **~US$0,039/img** | ❌ nenhum | ❌ não precisa | Boa — passa os retratos como ref em cada geração |
+| **LoRA Replicate** (atual, opt-in) | **~US$1,85 uma vez** | ✅ | (deles) | Máxima — identidade treinada reutilizável |
+| **InstantID / PuLID self-host** (Tier 1-2, Apache-2.0) | **US$0** | ❌ | ✅ **precisa GPU** | Alta (rosto fiel) |
+
+**O ponto-chave:** pra *consistência de identidade* você **não precisa treinar**. O caminho **barato-consistente-e-que-roda-agora** (sem GPU) é o **character-reference** — ~4 centavos por imagem, zero treino, zero US$1,85 adiantado, e **já está no código**. Falta só **expor esse modo no nó** (uma slice pequena, não um motor novo).
+
+**Sobre "grátis igual FFmpeg" (honestidade):** o truly-free US$0 (InstantID/PuLID/LoRA self-host) precisa de **GPU** — e nosso host é **CPU-only** (confirmei: 4 cores, sem GPU). Diferente do vídeo (FFmpeg roda em CPU), identidade neural precisa de GPU. Então o US$0 self-host é **pós-renda** (aí InstantID/PuLID Apache-2.0 viram motor nativo, como o FFmpeg). Agora, o mais próximo de grátis **que funciona hoje** é o character-ref barato.
+
+## Recomendação
+
+Tornar o nó **Identidade multi-motor** (a escada que já foi desenhada):
+1. **Default barato/sem-treino:** "Só referência" (character-ref Nano Banana) — ~4¢/img, funciona já.
+2. **Opt-in premium:** LoRA Replicate (~US$1,85, agora destravado pelo fix do zip).
+3. **Pós-GPU (pós-renda):** InstantID/PuLID self-host US$0.
+
+Gravando a decisão:
+
+## 🤖 Claude *(07:34:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_avatar_identity_engines.md",
+  "content": "---\nname: reference_avatar_identity_engines\ndescription: Identidade de avatar = escada multi-motor; default barato/sem-treino = character-reference (Nano Banana, j\u00e1 cabeado ~4\u00a2/img); LoRA Replicate opt-in; InstantID/PuLID self-host US$0 p\u00f3s-GPU\nmetadata:\n  type: reference\n---\n\nDiretiva Sovereign 2026-07-09: o treino LoRA (avatar-identity-train, ~US$1,85 Replicate) deve ser **OPCIONAL** \u2014 como fizemos com v\u00eddeo (FFmpeg gr\u00e1tis), a identidade tamb\u00e9m deve ter op\u00e7\u00e3o free/barata-e-consistente.\n\n**Achado material (Lei 1):** o m\u00f3dulo J\u00c1 foi desenhado como **\"Identity ladder\"** (`src/types/canvas.ts:510`): **Tier 1 InstantID/IP-Adapter \u00b7 Tier 2 PuLID-Flux \u00b7 Tier 3 LoRA per-person**. S\u00f3 o Tier 3 (LoRA pago) foi constru\u00eddo. E o **Nano Banana j\u00e1 aceita at\u00e9 4 character refs** pra preservar identidade (`canvas-execute:1862`, `reference_image_urls`) \u2014 identidade consistente SEM treino, j\u00e1 funcionando.\n\n**O tri\u00e2ngulo de decis\u00e3o (para o n\u00f3 Identidade multi-motor):**\n| Modo | Custo | Treino | GPU | Nota |\n|------|-------|--------|-----|------|\n| **Character-reference (Nano Banana)** \u2b50 default | ~US$0,039/img | \u274c | \u274c (roda j\u00e1) | Passa retratos como ref por gera\u00e7\u00e3o; `reference_image_urls` j\u00e1 cabeado. Falta s\u00f3 EXPOR o modo no n\u00f3 (slice pequena). |\n| **LoRA Replicate** (opt-in premium) | ~US$1,85 1\u00d7 | \u2705 | (deles) | Identidade treinada reutiliz\u00e1vel, m\u00e1xima consist\u00eancia. Destravado 2026-07-09 (fix zip `f0743de`). |\n| **InstantID / PuLID self-host** (Tier 1-2, Apache-2.0) | US$0 | \u274c | \u2705 **precisa GPU** | Rosto fiel, motor nativo \u2014 mas host \u00e9 **CPU-only** (sem GPU) \u2192 **p\u00f3s-renda** (GPU) igual doutrina FFrmpeg. |\n\n**Honestidade \"free igual FFmpeg\":** v\u00eddeo roda gr\u00e1tis em CPU (FFmpeg); identidade neural (InstantID/PuLID/LoRA-self-host) precisa **GPU** \u2192 US$0 self-host \u00e9 p\u00f3s-renda. O mais-pr\u00f3ximo-de-gr\u00e1tis que roda HOJE (sem GPU) = character-ref barato (~4\u00a2). Licen\u00e7as training-free a confirmar no build: InstantID/IP-Adapter Apache-2.0, PuLID permissivo.\n\n**How to apply:** no n\u00f3 \"Identidade (avatar)\" adicionar tier \"reference\" (default, character-ref, sem treino) ao lado de `lora_flux`/`higgsfield` (`canvas.ts:512`); a gera\u00e7\u00e3o usa os retratos guardados como `reference_image_urls`. LoRA vira opt-in expl\u00edcito. InstantID/PuLID = slice p\u00f3s-GPU. Ver [[project_avatar_clone_ai]] \u00b7 [[feedback_paid_byok_post_revenue]] \u00b7 [[feedback_opensource_first_zero_cost_equity]] \u00b7 [[reference_image_gen_provider_cost]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_avatar_identity_engines.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:34:51)*
+
+
+## 🤖 Claude *(07:34:51)*
+
+Adicionando ao índice de memória:
+
+## 🤖 Claude *(07:34:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Imagem = Gemini Nano Banana; direct-Google mais barato que OpenRouter](reference_image_gen_provider_cost.md)",
+  "new_string": "- [Identidade avatar = escada multi-motor; char-ref barato sem-treino \u00e9 o default que roda hoje](reference_avatar_identity_engines.md) \u2014 2026-07-09: LoRA (~US$1,85) vira opt-in; default = character-reference Nano Banana (~4\u00a2/img, J\u00c1 cabeado `reference_image_urls`, sem treino, sem GPU); InstantID/PuLID self-host US$0 = p\u00f3s-GPU/p\u00f3s-renda (host CPU-only). Ladder j\u00e1 desenhada em `canvas.ts:510`.\n- [Imagem = Gemini Nano Banana; direct-Google mais barato que OpenRouter](reference_image_gen_provider_cost.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:35:10)*
+
+
+## 🤖 Claude *(07:35:18)*
+
+Registrado. Resumindo o encaminhamento:
+
+- **Decisão:** o nó Identidade vira **multi-motor** (a escada que já estava desenhada). Default = **character-reference** (barato ~4¢, sem treino, roda hoje, já cabeado); **LoRA = opt-in** (agora destravado); **InstantID/PuLID US$0 = pós-GPU**.
+- **É uma slice pequena** — expor o modo "Só referência" no nó (usar os retratos guardados como `reference_image_urls`, que a geração já consome). Não é motor novo; é destravar o que já existe. Vou enfileirar junto com o módulo Creative Studio.
+- **Nada urgente de você:** se quiser a identidade **premium reutilizável agora**, o fix do zip já te deixa treinar o LoRA (~US$1,85). Se preferir esperar o modo grátis-barato, ele vem como slice — e o **truly-free self-host** (InstantID/PuLID Apache-2.0, motor nativo igual FFmpeg) entra quando tivermos GPU, pós-renda.
+
+Então: **LoRA opcional, sim** — e o caminho barato-e-consistente já está a uma slice de distância, não precisa reinventar. O loop segue no módulo; dou o sinal quando os nós (incluindo essa opção de identidade) estiverem de pé com prova.
+
+## 👤 User *(07:56:07)*
+
+Olha o que eu encontrei.: https://github.com/duixcom/Duix-Avatar#4-open-apis veja se é possivel melhorar algo gratuitamente
+
+## 🤖 Claude *(07:57:16)*
+
+
+## 🤖 Claude *(07:57:19)*
+
+Boa caça — **Duix-Avatar** é um digital-human / talking-head open-source, e isso mira exatamente o gap do módulo avatar (hoje talking-head = Hedra/fal.ai **pago**). O que decide é: **licença** (comercial-safe?), o que ele faz, e se roda **sem GPU** (nosso host é CPU-only) ou é pós-renda. Vou avaliar em múltiplos ângulos via workflow (preserva meu contexto e cruza repo + landscape + fit):
+
+## 🤖 Claude *(07:57:51)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'duix-avatar-eval',\n  description: 'Evaluate Duix-Avatar (open-source talking-head) for a free/cheap avatar engine in MCORCH: license, capabilities, hardware, fit vs the paid Hedra/fal path',\n  phases: [\n    { title: 'Research', detail: 'repo deep-read + license/landscape comparison in parallel' },\n    { title: 'Verdict', detail: 'synthesize fit for MCORCH (CPU-only host, free/commercial-safe doctrine)' },\n  ],\n}\n\nconst REPO_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['what_it_does', 'license', 'license_confidence', 'hardware', 'realtime_or_batch', 'self_hostable', 'evidence_urls'],\n  properties: {\n    what_it_does: { type: 'string', description: 'talking-head? lip-sync? conversational? TTS included? driving image + audio -> video?' },\n    open_apis: { type: 'string', description: 'the #4-open-apis section: what APIs/endpoints it exposes' },\n    license: { type: 'string', description: 'EXACT license of code AND model weights (MIT/Apache-2.0/non-commercial/custom/unknown)' },\n    license_confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    commercial_safe: { type: 'string', description: 'yes/no/unclear + why (weights license is the crux)' },\n    hardware: { type: 'string', description: 'GPU required? VRAM? CPU-only possible? real-time on what?' },\n    realtime_or_batch: { type: 'string' },\n    platforms: { type: 'string', description: 'server/web/Android/iOS/SDK' },\n    languages: { type: 'string', description: 'multilingual? Portuguese / pt-BR supported?' },\n    self_hostable: { type: 'boolean' },\n    evidence_urls: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst LANDSCAPE_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['duix_license_note', 'comparison', 'best_free_commercial_selfhost'],\n  properties: {\n    duix_license_note: { type: 'string', description: 'anything found on Duix/DUIX/GuiJi commercial licensing terms beyond the repo' },\n    comparison: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        required: ['tool', 'license', 'self_host', 'gpu', 'note'],\n        properties: {\n          tool: { type: 'string' }, license: { type: 'string' }, self_host: { type: 'string' },\n          gpu: { type: 'string', description: 'GPU/VRAM needed; CPU-only possible?' }, note: { type: 'string', description: 'quality/pt-BR/realtime' },\n        },\n      },\n      description: 'Duix vs Hedra(paid) vs fal OmniHuman(paid) vs SadTalker vs MuseTalk vs LivePortrait vs Sonic',\n    },\n    best_free_commercial_selfhost: { type: 'string', description: 'the best FREE + commercial-safe + self-hostable talking-head today, with the GPU caveat' },\n    evidence_urls: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nphase('Research')\nconst [repo, landscape] = await parallel([\n  () => agent(\n    `WebFetch https://github.com/duixcom/Duix-Avatar (README) and focus on the \"#4-open-apis\" section. Determine PRECISELY: what it does (real-time talking-head? lip-sync from image+audio? conversational digital human? does it bundle TTS/ASR/LLM?), the Open APIs it exposes, the EXACT LICENSE of BOTH code and model weights (MIT/Apache-2.0/non-commercial/custom \u2014 the weights license is the crux for a PAID product), whether it is commercial-safe, hardware requirements (GPU? VRAM? CPU-only possible? real-time on what hardware?), platforms (server/web/Android/iOS/SDK), and language support (multilingual? Portuguese/pt-BR?). If the README links to docs/model cards, fetch those too. Ground every claim in a URL. Be honest about unknowns.`,\n    { label: 'repo', phase: 'Research', schema: REPO_SCHEMA },\n  ),\n  () => agent(\n    `Research the open-source talking-head / lip-sync landscape as of 2026 to place Duix-Avatar (duixcom / DUIX / GuiJi \u7845\u57fa\u667a\u80fd digital human) among alternatives. For EACH of Duix-Avatar, Hedra (paid API), fal.ai OmniHuman (paid), SadTalker, MuseTalk, LivePortrait, Sonic (Tencent): report license (commercial-safe or not), self-hostable, GPU/VRAM needs (can any run CPU-only?), and quality/pt-BR/real-time notes. Also find anything on Duix/GuiJi commercial licensing terms beyond the GitHub repo. Conclude which is the best FREE + commercial-safe + self-hostable talking-head today, with the honest GPU caveat. Use WebSearch + WebFetch; ground claims in URLs.`,\n    { label: 'landscape', phase: 'Research', schema: LANDSCAPE_SCHEMA },\n  ),\n])\n\nphase('Verdict')\nconst VERDICT_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['what_it_is', 'license_verdict', 'commercial_safe', 'improves_what', 'free_now_on_cpu', 'needs_gpu', 'fit_in_mcorch', 'recommendation', 'risks'],\n  properties: {\n    what_it_is: { type: 'string' },\n    license_verdict: { type: 'string' },\n    commercial_safe: { type: 'string', enum: ['yes', 'no', 'unclear'] },\n    improves_what: { type: 'string', description: 'what in MCORCH it could improve \u2014 talking-head avatar (replace paid Hedra/fal?), lipsync for youtube-studio, faceless?' },\n    free_now_on_cpu: { type: 'string', description: 'can it improve anything FREE on the CPU-only host RIGHT NOW, or is it GPU/post-revenue?' },\n    needs_gpu: { type: 'string' },\n    fit_in_mcorch: { type: 'string', description: 'where it slots: avatar-clone-ai module (Hedra/fal), youtube-studio lipsync (SadTalker/MuseTalk), Creative Studio' },\n    recommendation: { type: 'string', description: 'adopt now / adopt post-GPU / skip \u2014 with why' },\n    risks: { type: 'string' },\n  },\n}\nconst verdict = await agent(\n  `You are the MCORCH tech lead. Context: MCORCH avatar-clone-ai module does talking-head via Hedra/fal.ai OmniHuman (PAID BYOK); the youtube-studio blueprint flagged SadTalker/MuseTalk self-host for lipsync; the production host is CPU-ONLY (4 cores, 23GB RAM, NO GPU); doctrine = free/open-source-first, commercial-safe, self-host becomes our own microservice, PAID stays post-revenue, GPU is post-revenue. The Sovereign asked whether Duix-Avatar can \"improve something for free\". Synthesize a HONEST verdict from the research below: what Duix-Avatar is, its license verdict (commercial-safe for a PAID product?), what it could improve in MCORCH, whether it can improve anything FREE on the CPU-only host NOW vs needing a GPU (post-revenue), where it slots, a clear recommendation (adopt now / adopt post-GPU / skip), and risks. Do NOT overclaim; if it needs a GPU, say so plainly (like the FFmpeg-free-on-CPU vs neural-needs-GPU distinction). REPO: ${JSON.stringify(repo)} LANDSCAPE: ${JSON.stringify(landscape)}`,\n  { label: 'verdict', phase: 'Verdict', schema: VERDICT_SCHEMA, effort: 'high' },\n)\nreturn { repo, landscape, verdict }\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wcxwsec00
+> Summary: Evaluate Duix-Avatar (open-source talking-head) for a free/cheap avatar engine in MCORCH: license, capabilities, hardware, fit vs the paid Hedra/fal path
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/subagents/workflows/wf_580037ab-14c
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/workflows/scripts/duix-avatar-eval-wf_580037ab-14c.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/workflows/scripts/duix-avatar-eval-wf_580037ab-14c.js"} to iterate without resending the script.)
+> Run ID: wf_580037ab-14c
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/workflows/scripts/duix-avatar-eval-wf_580037ab-14c.js", resumeFromRunId: "wf_580037ab-14c"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(07:57:57)*
+
+
+## 🤖 Claude *(07:58:03)*
+
+Avaliação rodando em background (`wcxwsec00`) — cruzando 3 ângulos:
+
+1. **O repo em si** — o que o Duix-Avatar faz (talking-head real-time? lip-sync de imagem+áudio? conversacional?), as Open APIs, e a **licença exata dos pesos** (o que decide se serve produto pago).
+2. **Landscape** — Duix vs os que já mapeamos (Hedra/fal pago · SadTalker/MuseTalk/LivePortrait/Sonic self-host) por licença, self-host e **necessidade de GPU**.
+3. **Fit no MCORCH** — se melhora algo **grátis no host CPU-only agora**, ou se é neural-precisa-GPU (pós-renda), e onde encaixa (substitui o Hedra pago no avatar-clone-ai? lipsync do youtube-studio?).
+
+A pergunta-chave que vou responder com honestidade: **dá pra melhorar algo de graça HOJE, ou é ganho pós-GPU?** — a mesma distinção do "FFmpeg roda em CPU, mas neural precisa de GPU". Te reporto assim que fechar o veredito.
