@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -7418,7 +7418,7 @@ Tree limpo. Fazendo as 7 edições do `canvas.ts` (union, interface, data-union,
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
   "old_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n  }\n}",
-  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}"
+  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n  }\n}"
 }
 ```
 
@@ -10070,8 +10070,8 @@ Loop firing — construindo o Nó Cinematográfico. Oriento + as 7 edições do 
 {
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
-  "old_string": "    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}",
-  "new_string": "    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n    case \"cinematicVideo\":\n      return 12; // COST.hyperframes \u2014 free FFmpeg render, prepaid mco (refund-on-failure)\n  }\n}"
+  "old_string": "    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n  }\n}",
+  "new_string": "    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n    case \"cinematicVideo\":\n      return 12; // COST.hyperframes \u2014 free FFmpeg render, prepaid mco (refund-on-failure)\n  }\n}"
 }
 ```
 
@@ -10522,3 +10522,16 @@ O módulo que começou como "3 primitivos FFmpeg" agora tem sua espinha dorsal d
 - **Próximo (loop 08:12):** o **fan-out** — botão no Roteiro que cria um nó "Gerar Imagem" por cena (com o prompt já preenchido), fechando a cadeia **Roteiro → Imagens → Criativo** visualmente no canvas.
 
 Honestidade da maratona: foi longa, mas ela pariu **software real, vivo e provado** — não slides. Os dois motores que você pediu ("faceless/avatar" + "criativos sofisticados") têm agora nós de verdade no Spaces, e a cadeia que você desenhou está a um fan-out de ficar visual ponta a ponta. O loop segue; te reporto com o fan-out (ou o obstáculo honesto).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%
