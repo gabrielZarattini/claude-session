@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2060
-> * **Sessões do Claude**: 2014
+> * **Total de Sessões Registradas**: 2062
+> * **Sessões do Claude**: 2016
 > * **Sessões do Gemini**: 46
 
 ---
@@ -84,7 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-09 - agent-ad61f711d13c16624]]` - *2026-07-09*
 *   `[[2026-07-09 - agent-acd44d3fde350a2b1]]` - *2026-07-09*
 *   `[[2026-07-09 - agent-acb4c3f7368f22374]]` - *2026-07-09*
-*   *... e mais 2005 sessões nessa categoria.*
+*   *... e mais 2007 sessões nessa categoria.*
 
 ---
 
@@ -1753,9 +1753,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-09 - agent-acd44d3fde350a2b1]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-acb4c3f7368f22374]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-ac8ed49ec134655da]]` (ClaudeSessions)
+*   `[[2026-07-09 - agent-ac73ef4e7114d14dc]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-ab4d4554097aff1c1]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-ab374034d4411dc33]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-ab11d8a733da2317a]]` (ClaudeSessions)
+*   `[[2026-07-09 - agent-aaa340ed149f0caf0]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-a9dff01b28d265502]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-a98ca7cf6546ed09f]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-a98211d51bebfabb6]]` (ClaudeSessions)
