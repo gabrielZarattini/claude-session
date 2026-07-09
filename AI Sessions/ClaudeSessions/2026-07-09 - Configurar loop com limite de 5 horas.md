@@ -1,5 +1,5 @@
 # Configurar loop com limite de 5 horas
-**Date:** 2026-07-09 | **Session ID:** `eb61c3bb-6060-4462-9486-085ad5b66177`
+**Date:** 2026-07-09 | **Session ID:** `c97cc06a-f6ad-41b8-8082-ff819bf5029e`
 
 ---
 
@@ -550,10 +550,643 @@ Contexto coletado. Segue o brief.
 
 O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a única frente que não depende de uma decisão de arquitetura sua, só de autorizar o gasto de ~US$1,85. Quer que eu prepare o witness E2E, ou prefere resolver primeiro a decisão de schema da OTD-SPACES-036?
 
-## 👤 User *(05:00:28)*
+## 👤 User *(05:00:52)*
 
 otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
 
-## 👤 User *(05:00:32)*
+## 🤖 Claude *(05:03:15)*
 
-[Request interrupted by user]
+
+## 🤖 Claude *(05:03:27)*
+
+Entendido. Antes de armar qualquer coisa, preciso ser honesto sobre uma tensão material:
+
+**Ultracode está ligado** (default: fan-out pesado de Workflow, "custo não é constraint") — mas você acabou de me dar uma instrução direta em sentido oposto: **limite de 5h em 91%**. Instrução explícita do Sovereign no momento vence o default permanente. A 91% de uma janela rolante de 5h, disparar um workflow multi-agente agora bateria no teto no meio da tarefa — exatamente o halt-mid-work que as Leis de Sobrevivência existem para evitar. Então **vou rodar enxuto de propósito**: zero fan-out pesado este turno, um incremento cirúrgico agora, e o loop armado com hop longo pra janela recuperar antes de qualquer trabalho pesado.
+
+Dos 3 próximos passos, o que é **seguro + autônomo + maior desbloqueio** agora é o **#2 (OTD-SPACES-036)** — porque:
+- **#1 (witness LoRA)** está bloqueado em inputs que eu não tenho: retratos reais de uma pessoa + GO explícito pra debitar ~US$1,85 da sua conta Replicate. Não é autônomo.
+- **#3 (`/bok-scribe youtube-studio`)** é pesado (suíte 9-docs) — errado a 91%.
+- **#2** é uma decisão de schema que é *sua*, mas eu posso preparar o ADR (as 2 opções + trade-offs + recomendação + DDL sketch) sem cruzar a fronteira "Sovereign decide". Isso destrava toda a família de nós media-social (IG/TikTok/YT) assim que você escolher.
+
+Deixa eu fundamentar materialmente antes de escrever (Lei 1) — lendo a Amendment 15 e o schema real de `channel_variants`.
+
+## 🤖 Claude *(05:03:28)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Loop enxuto @91% \u2014 OTD-SPACES-036",
+  "summary": "Loop aut\u00f4nomo armado com disciplina de budget (5h em 91%); incremento cir\u00fargico = ADR da decis\u00e3o de schema OTD-SPACES-036"
+}
+```
+
+## 🤖 Claude *(05:03:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md"
+}
+```
+
+## 🤖 Claude *(05:03:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls docs/bok/spaces-evolution/ | tail -20; echo \"=== channel_variants schema ===\"; grep -rn \"channel_variants\" supabase/migrations/20260627150000*.sql | head -40",
+  "description": "List spaces BoK docs + channel_variants schema grep"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Loop enxuto @91% — OTD-SPACES-036". Continue your current work.'}]
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# spaces-evolution — Amendment 15: Família de nós Publish/Social (distribuição nativa por canal)
+> 2	
+> 3	> **Tipo:** Emenda de PRD/FRD/SDD/Data-Model (nova família de nós · OTD-SPACES-031-SEAM) · **Status:** proposta (gate de código pós-aprovação Sovereign — Lei 4 Reviewer).
+> 4	> **Lente BoK:** SWEBOK + CISSP CBK (execução) · CXBOK (jornada gerar→publicar) · ProdBOK (Growth) · 21 Agentic Patterns (`docs/architecture/agentic-vision.md`).
+> 5	> **Posição no Closed-Loop Protocol (CLAUDE.md §1):** emenda à SDD selada `05-sdd.md` (novo `SpaceNodeCategory 'publish'`) + `04-frd.md` (novos `FR-SPACES-031..040`) + `11-node-registry-spaces.md` (novas linhas NR). Carrega Pattern Conformance (§7).
+> 6	> **API Tenancy Model:** publicação resolve credencial **per-user** (`social_accounts`/`social_app_config`/`meta_config`, `auth.uid()`), fail-closed. Reusa os motores JÁ selados; não cria provider novo.
+> 7	> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer/marketing-growth · Reviewer = Sovereign + `/security-review` (owner-scoping de asset, FMEA-011) · Owner = Sovereign.
+> 8	>
+> 9	> **Fundamentação (Lei 1):** workflow de mapeamento `wf_56638299-cf0` (5 leitores) — matriz de capacidade de publicação por plataforma + o seam ausente, todos grounded em `file:line` (§1.1). Nenhuma capacidade fabricada.
+> 10	
+> 11	---
+> 12	
+> 13	## 1. Contexto e motivação
+> 14	
+> 15	Diretiva Sovereign (2026-07-08): **"cada rede social deve ter seus grupos de nós"** — WordPress→Posts/Blogs/Landing Pages; Instagram→Feed(Carrossel)/Reels/Stories/Conexões(MCP/Manychat/webhooks); TikTok→vídeos/shop; YouTube→longos/shorts/comunidade/membros/posts. Hoje o Spaces é **puramente criativo**: gera imagem/vídeo/áudio via `canvas-execute` → `vm_canvas_assets`+`creative_assets`, mas **nenhum publisher lê `creative_assets`** e **não existe nó de publicação**. A distribuição vive num mundo paralelo (o pipeline PILLAR: `orchestrate-content`→`reshape-pillar`→`channel_variants`→`auto-publish`→`publish-*`), que **não consome saída do Spaces**.
+> 16	
+> 17	**O gap arquitetural load-bearing (OTD-SPACES-031-SEAM):** falta o **adaptador** entre o mundo criativo (Spaces) e o mundo de distribuição (channel_variants/scheduled_posts/publish-*). Esta emenda define esse seam + a família de nós que o expõe.
+> 18	
+> 19	### 1.1. Estado material das superfícies de publicação (o que já existe — Lei 1)
+> 20	
+> 21	| Plataforma | Publica HOJE (fn · file:line) | FALTA |
+> 22	|-----------|-------------------------------|-------|
+> 23	| **WordPress** | Posts/Blogs (`publish-wordpress/index.ts:145`, `POST /wp/v2/posts`) | **Pages/Landing** (`/wp/v2/pages` — nunca tocado) |
+> 24	| **Instagram** | Feed imagem · Reels (`publish-social/index.ts:149`; `publish-meta/index.ts:143`) | **Carrossel** (sem CAROUSEL/children) · **Stories** (sem STORIES) · **Conexões** (`instagram-webhook` só LOGA, sem dispatch/Manychat) |
+> 25	| **TikTok** | Vídeo Direct Post (`publish-social/index.ts:263`, scope `video.publish`) | **Shop** (sem scope/commerce) |
+> 26	| **YouTube** | Vídeo · Shorts (`publish-social/index.ts:392`, `videos.insert`, scope `youtube.upload`) | **Comunidade** · **Membros** · **Posts** (sem API/scope) |
+> 27	| **LinkedIn** | Texto (`publish-social/index.ts:123`) | **Carrossel PDF/imagem/vídeo** (asset construído por `generate-carousel`, publisher adiado OTD-CP-010) |
+> 28	| **X/Twitter** | Tweet + thread (`publish-social/index.ts:230`) | **Vídeo** (adiado) |
+> 29	| **Facebook** | Foto/texto (`publish-social/index.ts:206`) | **Reels** (adiado OTD-CP-010) |
+> 30	| **Pinterest** | Pin vídeo/imagem (`publish-social/index.ts:479`) | — |
+> 31	
+> 32	**Motores selados a REUSAR (não reconstruir):** `channel_profiles.transform_recipe` (migration `20260627140000`, 17 surfaces), `channel_variants` (owner-scoped), `publish-channel-variant` (opt-in manual), `auto-publish` (resolve asset **owner-scoped** de `channel_variants`, assina URL 6h, chama `publish-social` — `auto-publish/index.ts:104-135`, FMEA-011-safe), `reshape-pillar` (variante nativa por canal, anti-cross-post FR-CP-007), o padrão OAuth per-user PKCE da Amendment 13.
+> 33	
+> 34	### 1.2. Alvo de código: o sistema Canvas Studio VIVO (não o Spotlight selado)
+> 35	
+> 36	Achado crítico do mapeamento: há **dois** sistemas de nós. O catálogo Magnific "Spotlight" (`src/lib/node-registry.ts`) que a BoK `11-node-registry-spaces.md` documenta está **NÃO-ROTEADO** (`SpaceCanvasPage` ausente do `App.tsx`; consolidação Amendment 14). O sistema **VIVO** em `/dashboard/spaces/:id` é `CanvasEditorPage` → `src/lib/canvas-node-registry.ts` (`CANVAS_NODE_REGISTRY`, 9 kinds) + `AddNodeMenu` + `CanvasNodeKind` (`src/types/canvas.ts`). **Toda a família de nós de publicação é adicionada ao sistema VIVO** (Canvas Studio registry), seguindo o precedente `voiceClone`/`avatarIdentity`: nó chama **edge fn NET-NEW**, `resolveExecutePayload → null` (bypassa o enum congelado `vm_node_type`, 12 valores, zero ADD-VALUE). A BoK `11-node-registry-spaces.md` é reconciliada como a superfície de design Magnific; o contrato de código VIVO é `canvas-node-registry.ts`.
+> 37	
+> 38	---
+> 39	
+> 40	## 2. Abordagem — o seam + a família de nós
+> 41	
+> 42	### 2.1. O adaptador (SEAM) — `publish-space-asset` (edge fn NET-NEW)
+> 43	
+> 44	```
+> 45	[Nó Publish no grafo] recebe um asset upstream (image|video|text) + escolha de canal/formato
+> 46	   │  (FR-SPACES-031) edge publish-space-asset (user-JWT):
+> 47	   │    1. resolve o asset do nó upstream → creative_assets/vm_canvas_assets (owner-scoped, auth.uid())
+> 48	   │    2. resolve credencial per-user do canal (social_accounts/meta_config/social_app_config) — fail-closed
+> 49	   │    3. mapeia (canal, formato) → uma linha channel_variants (draft) OU scheduled_posts, reusando
+> 50	   │       o owner-scoped signing do auto-publish (nunca assina de metadata user-writable — FMEA-011)
+> 51	   │    4. default RASCUNHO; publica na hora só com opt-in explícito do nó (auto_publish=true)
+> 52	   ▼  fail-closed: sem credencial per-user → 402 {error:"<canal>_not_connected", action:"/dashboard/settings"}
+> 53	```
+> 54	
+> 55	O seam **não reconstrói** publishers — ele **alimenta** o contrato `channel_variants`/`scheduled_posts` que `auto-publish`/`publish-channel-variant`/`publish-social`/`publish-meta`/`publish-wordpress` já consomem. Um asset do Spaces vira distribuível pela mesma via segura do pipeline PILLAR.
+> 56	
+> 57	### 2.2. A família de nós (grupos por rede)
+> 58	
+> 59	Nova `SpaceNodeCategory 'publish'` (precedent NR-SPACES-005 = categoria `'app'`). Cada rede é um **grupo** com um nó por formato (o "grupo de nós" pedido). Um nó de publicação é um **sink tipado** (só input, sem output) que consome o handle de um asset upstream.
+> 60	
+> 61	| Grupo (rede) | Nós (formato) | Friction |
+> 62	|--------------|---------------|----------|
+> 63	| WordPress | Post/Blog · **Landing Page** | baixa (Landing = `post_type=page`) |
+> 64	| Instagram | Feed · **Carrossel** · Reels · **Stories** · **Conexões** | média (carrossel/stories = container novo; conexões = automação, BoK própria) |
+> 65	| TikTok | Vídeo · **Shop** | vídeo baixa · **shop = scope+app-review (adiado)** |
+> 66	| YouTube | Vídeo · Shorts · **Comunidade** · **Membros** · **Posts** | vídeo/shorts baixa · **comunidade/membros = API+scope novos (adiado, ver módulo youtube-studio)** |
+> 67	| LinkedIn | Texto · **Carrossel/Imagem/Vídeo** | binários = fecha OTD-CP-010 |
+> 68	| X | Tweet/Thread · **Vídeo** | vídeo = fecha OTD-CP-010 |
+> 69	| Facebook | Foto/Texto · **Reels** | reels = fecha OTD-CP-010 |
+> 70	| Pinterest | Pin | pronto |
+> 71	
+> 72	---
+> 73	
+> 74	## 3. Requisitos funcionais (emenda ao `04-frd.md`)
+> 75	
+> 76	- **`FR-SPACES-031` — Seam publish-space-asset.** Edge NET-NEW (user-JWT): resolve asset upstream owner-scoped → mapeia (canal, formato) → `channel_variants` draft/`scheduled_posts`, reusando o owner-scoped signing do `auto-publish`. Default rascunho; publica só com opt-in. Fail-closed per-canal 402.
+> 77	- **`FR-SPACES-032` — Categoria `'publish'` + registro dos nós.** Nova `SpaceNodeCategory 'publish'` no LIVE `canvas-node-registry.ts` + `CanvasNodeKind` por formato; `resolveExecutePayload → null` (bypassa `vm_node_type`); inspector + `AddNodeMenu` group.
+> 78	- **`FR-SPACES-033` — Nó sink tipado.** Nó de publicação consome 1 handle de asset upstream (image|video|text) + params de canal/formato; sem output; `estimateNodeCost` (custo de publicação = 0 mco na maioria; cobrança só onde há geração, ex. reframe).
+> 79	- **`FR-SPACES-034` — WordPress Pages/Landing.** `publish-wordpress` ganha branch `post_type=page` (`POST /wp/v2/pages`, espelha o fluxo de posts:145) + surface `wordpress/landing_page` em `channel_profiles`.
+> 80	- **`FR-SPACES-035` — Instagram Carrossel + Stories.** `publish-social`/`publish-meta` ganham fluxo CAROUSEL (N children `is_carousel_item=true`→parent `media_type=CAROUSEL`) + STORIES container (9:16 reuso do master); surfaces novas em `channel_profiles`.
+> 81	- **`FR-SPACES-036` — LinkedIn binários (fecha OTD-CP-010).** Publisher document(PDF carrossel — asset já em `generate-carousel`)/imagem/vídeo; flipa `isOperational` (`reshape-pillar:37`) p/ incluir linkedin nesses kinds.
+> 82	- **`FR-SPACES-037` — Facebook Reels + X Vídeo (fecha OTD-CP-010).** Branch FB Reels em `publish-social` + upload de vídeo no X; estende `isOperational` video list.
+> 83	- **`FR-SPACES-038` — Credencial per-user + anti-cross-post.** Cada nó resolve OAuth per-user (`social_accounts`, padrão Am13 PKCE p/ redes sem token) fail-closed; a cópia por canal reusa a reescrita nativa do `reshape-pillar` FR-CP-007 (não repostar idêntico).
+> 84	- **`FR-SPACES-039` — Opt-in de publicação (HITL).** Default rascunho (`channel_variants.status='draft'`); o nó publica só sob toggle explícito, espelhando o modelo opt-in do `publish-channel-variant`.
+> 85	- **`FR-SPACES-040` — Telemetria.** Cada path (draft/enqueue/publish/fail) emite `infra_health_logs service='publish-space-<canal>'`.
+> 86	
+> 87	---
+> 88	
+> 89	## 4. Open Technical Decisions
+> 90	
+> 91	| ID | Descrição | Decisão | Owner | Classe |
+> 92	|----|-----------|---------|-------|--------|
+> 93	| **OTD-SPACES-031-SEAM** | O adaptador Spaces→distribuição | `publish-space-asset` mapeia asset→channel_variants reusando owner-scoped signing do auto-publish (não reconstruir publishers). | engineer | arquitetura load-bearing |
+> 94	| **OTD-SPACES-032-IG-CONEXOES** | Instagram Conexões (Manychat/MCP/webhooks) | **Adiado/BoK própria** — `instagram-webhook` só loga hoje; automação de resposta/DM = módulo novo (Lei 2), não um nó simples. | Sovereign | novo módulo |
+> 95	| **OTD-SPACES-033-TIKTOK-SHOP** | TikTok Shop | **Adiado** — exige scope commerce + app-review + endpoints novos; zero hoje. | Sovereign | app-review |
+> 96	| **OTD-SPACES-034-YT-COMMUNITY-MEMBERS** | YouTube Comunidade/Membros/Posts | **Adiado → módulo `youtube-studio`** — API/scope novos (Data API v3 community, membership); casa com o studio faceless/avatar. | Sovereign | novo módulo |
+> 97	| **OTD-SPACES-035-CROSSPOST-GUARD** | Não repostar idêntico cross-canal | Reusa a reescrita nativa FR-CP-007 do `reshape-pillar`; nó nunca posta a mesma cópia em N canais. | engineer | compliance de alcance |
+> 98	| **OTD-SPACES-036-CV-PILLAR-COUPLING** | `channel_variants.pillar_run_id` é **NOT NULL** (FK a `pipeline_runs`) — os nós **media-social** (IG/TikTok/YouTube) NÃO podem inserir um variant sem um pillar_run. | **Aberto — bloqueia a Fatia B media-social.** Achado material 2026-07-08 (`git show 07689e2`). Opções: (a) migration tornando `pillar_run_id` nullable + relaxar a UNIQUE p/ origem Spaces (toca tabela FMEA-011 — /security-review); (b) tabela dedicada `space_publish_variants` espelhando o padrão owner-scoped de asset + estender `auto-publish` p/ resolvê-la; (c) pillar sintético por publish. **Decisão pendente Sovereign/design** — NÃO improvisar. WordPress (Fatia A) escapou por publicar direto (`publish-wordpress`, sem channel_variants). | engineer + Sovereign | arquitetura load-bearing (FMEA-011) |
+> 99	
+> 100	---
+> 101	
+> 102	## 5. Sequenciamento de fatias (código, pós-selo)
+> 103	
+> 104	1. **Fatia A — seam + 1 nó template** (`publish-space-asset` + categoria `'publish'` + nó WordPress Post end-to-end): prova o adaptador. `/security-review` (owner-scoping).
+> 105	2. **Fatia B — fan-out dos nós que já têm publisher** (IG feed/reels, FB foto, TikTok vídeo, YouTube vídeo/shorts, LinkedIn texto, X thread, Pinterest): puro registro + clone-por-nó.
+> 106	3. **Fatia C — publishers de baixa fricção** (WP Landing FR-034, IG Carrossel/Stories FR-035, LinkedIn binários FR-036, FB Reels/X vídeo FR-037): fecha OTD-CP-010.
+> 107	4. **Adiadas (gated Sovereign/app-review):** IG Conexões, TikTok Shop, YouTube Comunidade/Membros → seus próprios módulos/BoK.
+> 108	
+> 109	---
+> 110	
+> 111	## 6. Data model (emenda ao `06-data-model.md`)
+> 112	
+> 113	Sem tabela nova obrigatória — reusa `channel_variants` + `scheduled_posts` + `channel_profiles`. Novas **surfaces** em `channel_profiles` (system rows, user_id NULL): `wordpress/landing_page`, `instagram/carousel`, `instagram/story`, `linkedin/document`, `facebook/reel`, `twitter/video`. Cada surface carrega `transform_recipe` + `publish_path` (molde das 17 existentes).
+> 114	
+> 115	---
+> 116	
+> 117	## 7. Pattern Conformance Declaration (Closed-Loop §3.5 — declaração, não sign-off)
+> 118	
+> 119	| # | Padrão | Implementado? | Como / Por-que-adiado |
+> 120	|---|--------|---------------|------------------------|
+> 121	| 4 | Tool Use / External API | **yes** | Reusa publish-social/-meta/-wordpress per-user OAuth. |
+> 122	| 9 | Routing / Dispatch | **yes** | (canal, formato) → surface/publisher via channel_profiles data-driven. |
+> 123	| 13 | Guardrails / Policy gate | **yes** | Per-user fail-closed + opt-in draft (HITL) + owner-scoped signing (FMEA-011) + anti-cross-post. |
+> 124	| 16 | HITL | **yes** | Default rascunho; publica só sob opt-in explícito do nó. |
+> 125	| 18 | Cost governance | **yes** | Publicação 0 mco; cobrança só onde há geração (reframe). |
+> 126	| 19 | Observability | **yes** | `infra_health_logs` por path. |
+> 127	| Demais | n-a/deferred | Conexões/Shop/Comunidade = módulos próprios (OTDs §4). |
+> 128	
+> 129	---
+> 130	
+> 131	## 8. Verification gates (antes de selar cada fatia de código)
+> 132	
+> 133	1. `/security-review` na Fatia A (o seam assina/resolve asset — owner-scoping cross-tenant é o gate-mãe, FMEA-011).
+> 134	2. Smoke zero-custo: nó publica em RASCUNHO por default (nada sai sem opt-in) · asset resolvido é do owner (cross-tenant BLOCKED) · fail-closed 402 sem credencial.
+> 135	3. Anti-cross-post: 2 canais recebem cópia NATIVA distinta (reshape-pillar FR-CP-007), nunca idêntica.
+> 136	4. Witness E2E (opt-in, GO Sovereign): 1 asset do Spaces → 1 rascunho no canal escolhido → publicado (post_id/permalink real).
+> 137	
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 09-live-recon-spaces.md
+> 10-ui-inventory-spaces.md
+> 11-node-registry-spaces.md
+> 12-node-anatomy-spaces.md
+> 13-amendment-higgsfield-mcp-connector.md
+> 14-amendment-spaces-v2-consolidation.md
+> 15-amendment-social-publish-nodes.md
+> IMPLEMENTATION-PROMPT.md
+> scaffold
+> === channel_variants schema ===
+> supabase/migrations/20260627150000_channel_variants.sql:1:-- Migration: channel_variants ledger + creative_metrics.hook_rate — Reshaper (FR-CP-003 / FR-CP-007 / FR-CP-011)
+> supabase/migrations/20260627150000_channel_variants.sql:4:-- Thesis: the reshaper emits ONE native variant per (pillar_run, channel, surface). channel_variants is BOTH the
+> supabase/migrations/20260627150000_channel_variants.sql:17:-- 1. channel_variants — the native-variant ledger + idempotency anchor
+> supabase/migrations/20260627150000_channel_variants.sql:19:CREATE TABLE IF NOT EXISTS public.channel_variants (
+> supabase/migrations/20260627150000_channel_variants.sql:32:    CONSTRAINT channel_variants_asset_status_chk CHECK (asset_status IN
+> supabase/migrations/20260627150000_channel_variants.sql:36:    CONSTRAINT channel_variants_status_chk CHECK (status IN ('draft','scheduled','published','skipped','failed')),
+> supabase/migrations/20260627150000_channel_variants.sql:41:  CONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)
+> supabase/migrations/20260627150000_channel_variants.sql:44:ALTER TABLE public.channel_variants ENABLE ROW LEVEL SECURITY;
+> supabase/migrations/20260627150000_channel_variants.sql:47:CREATE POLICY "channel_variants read own" ON public.channel_variants
+> supabase/migrations/20260627150000_channel_variants.sql:49:CREATE POLICY "channel_variants delete own" ON public.channel_variants
+> supabase/migrations/20260627150000_channel_variants.sql:52:CREATE TRIGGER tr_update_channel_variants_updated_at
+> supabase/migrations/20260627150000_channel_variants.sql:53:  BEFORE UPDATE ON public.channel_variants
+> supabase/migrations/20260627150000_channel_variants.sql:56:CREATE INDEX IF NOT EXISTS idx_channel_variants_run    ON public.channel_variants (pillar_run_id);
+> supabase/migrations/20260627150000_channel_variants.sql:57:CREATE INDEX IF NOT EXISTS idx_channel_variants_user   ON public.channel_variants (user_id, created_at DESC);
+> supabase/migrations/20260627150000_channel_variants.sql:58:CREATE INDEX IF NOT EXISTS idx_channel_variants_status ON public.channel_variants (status) WHERE status = 'draft';
+> supabase/migrations/20260627150000_channel_variants.sql:60:COMMENT ON TABLE public.channel_variants IS
+> ```
+
+## 🤖 Claude *(05:04:06)*
+
+
+## 🤖 Claude *(05:04:07)*
+
+Amendment 15 me dá o contexto completo do OTD-SPACES-036. Deixa eu ler o DDL real da tabela (linhas 19-60) pra ancorar o ADR com precisão material (Lei 1).
+
+## 🤖 Claude *(05:04:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627150000_channel_variants.sql",
+  "limit": 62
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: channel_variants ledger + creative_metrics.hook_rate — Reshaper (FR-CP-003 / FR-CP-007 / FR-CP-011)
+> 2	-- ─────────────────────────────────────────────────────────────────────────────
+> 3	-- BoK SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md §2 (data model delta).
+> 4	-- Thesis: the reshaper emits ONE native variant per (pillar_run, channel, surface). channel_variants is BOTH the
+> 5	-- native-variant ledger (anti cross-post audit, FR-CP-007) AND the idempotency anchor (UNIQUE) so a pg_net retry of
+> 6	-- the reshaper never double-inserts a variant nor double-enqueues a publish. Its `id` doubles as the logical
+> 7	-- content_variant_id that creative_metrics keys on (FR-CP-011 hook_rate added here too).
+> 8	--
+> 9	-- TENANCY (mirrors channel_profiles 20260627140000 + creative_metrics 20260619140000): SELECT/DELETE own only.
+> 10	-- NO INSERT/UPDATE policy for authenticated ⇒ default-deny writes: the reshaper edge fn (service-role, bypasses RLS)
+> 11	-- is the ONLY writer. user_id can never be forged by a client. No Vault/secrets here — RLS only.
+> 12	--
+> 13	-- Security posture: HARDENS (new RLS-isolated table, default-deny writes, no client-reachable SECURITY DEFINER).
+> 14	-- MANDATORY /security-review before commit (FMEA-011 cross-tenant leak class).
+> 15	
+> 16	-- ─────────────────────────────────────────────────────────────────────────────
+> 17	-- 1. channel_variants — the native-variant ledger + idempotency anchor
+> 18	-- ─────────────────────────────────────────────────────────────────────────────
+> 19	CREATE TABLE IF NOT EXISTS public.channel_variants (
+> 20	  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+> 21	  user_id           uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 22	  pillar_run_id     uuid NOT NULL,                 -- = pipeline_runs.id (links pillar_atoms + the source masters)
+> 23	  channel           text NOT NULL,                 -- channel_profiles.channel SPEC naming ('twitter_x' kept verbatim)
+> 24	  surface           text NOT NULL,
+> 25	  platform          public.social_platform,        -- enum value mapped for publishing; NULL = not directly publishable
+> 26	  publish_path      text,
+> 27	  native_text       jsonb NOT NULL DEFAULT '{}'::jsonb,  -- {caption|title|description|body|tweets[]|overlay_text|link}
+> 28	  asset_kind        text,                          -- 'video' | 'image' | 'none'
+> 29	  asset_bucket      text,                          -- per-row asset ref (fixes auto-publish single-video collision)
+> 30	  asset_key         text,
+> 31	  asset_status      text NOT NULL DEFAULT 'pending'
+> 32	    CONSTRAINT channel_variants_asset_status_chk CHECK (asset_status IN
+> 33	      ('pending','ready','reused_master','pending_render','pending_reframe','pending_publisher','gap')),
+> 34	  format_gate       jsonb NOT NULL DEFAULT '{}'::jsonb,  -- {ok,coerced_format,violations[]} (FR-CP-006)
+> 35	  status            text NOT NULL DEFAULT 'draft'
+> 36	    CONSTRAINT channel_variants_status_chk CHECK (status IN ('draft','scheduled','published','skipped','failed')),
+> 37	  scheduled_post_id uuid,                          -- set once enqueued (guards double-enqueue)
+> 38	  created_at        timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+> 39	  updated_at        timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+> 40	  -- Idempotency: one variant per (pillar run, channel, surface). Reshaper UPSERTs on this.
+> 41	  CONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)
+> 42	);
+> 43	
+> 44	ALTER TABLE public.channel_variants ENABLE ROW LEVEL SECURITY;
+> 45	
+> 46	-- SELECT own; DELETE own. NO INSERT/UPDATE policy ⇒ writes are service-role-only (the reshaper).
+> 47	CREATE POLICY "channel_variants read own" ON public.channel_variants
+> 48	  FOR SELECT USING (auth.uid() = user_id);
+> 49	CREATE POLICY "channel_variants delete own" ON public.channel_variants
+> 50	  FOR DELETE USING (auth.uid() = user_id);
+> 51	
+> 52	CREATE TRIGGER tr_update_channel_variants_updated_at
+> 53	  BEFORE UPDATE ON public.channel_variants
+> 54	  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 55	
+> 56	CREATE INDEX IF NOT EXISTS idx_channel_variants_run    ON public.channel_variants (pillar_run_id);
+> 57	CREATE INDEX IF NOT EXISTS idx_channel_variants_user   ON public.channel_variants (user_id, created_at DESC);
+> 58	CREATE INDEX IF NOT EXISTS idx_channel_variants_status ON public.channel_variants (status) WHERE status = 'draft';
+> 59	
+> 60	COMMENT ON TABLE public.channel_variants IS
+> 61	  'Reshaper native-variant ledger (FR-CP-003/007) + idempotency anchor UNIQUE(pillar_run_id,channel,surface). '
+> 62	  'One row per channel surface reshaped from a pillar. SELECT/DELETE own; writes service-role-only (reshaper). '
+> ```
+
+## 🤖 Claude *(05:04:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== auto-publish asset resolution (owner-scoped) ===\"; grep -n \"channel_variants\\|pillar_run_id\\|owner\\|signed\\|createSignedUrl\\|from('\" supabase/functions/auto-publish/index.ts 2>/dev/null | head -30; echo \"=== scheduled_posts columns ===\"; grep -rn \"CREATE TABLE.*scheduled_posts\\|scheduled_posts (\" supabase/migrations/*.sql 2>/dev/null | head -5",
+  "description": "auto-publish resolution + scheduled_posts schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === auto-publish asset resolution (owner-scoped) ===
+> 71:        // that sibling and sign it to a LONG-TTL URL so the URL survives Pinterest/IG's async fetch (a 1h signed URL
+> 93:                const { data: signed } = await adminClient.storage
+> 95:                  .createSignedUrl(storageKey, 21600);
+> 96:                videoUrl = signed?.signedUrl ?? null;
+> 107:        // private object). Instead resolve it from the server-trusted channel_variants row, filtered by the post's
+> 116:          // Resolve the asset from the owner-scoped ledger row (server-trusted), NOT from metadata.
+> 119:              .from("channel_variants")
+> 129:              else { const { data: signed } = await adminClient.storage.from(bucket).createSignedUrl(key, 21600); url = signed?.signedUrl ?? null; }
+> === scheduled_posts columns ===
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:158:CREATE TABLE public.scheduled_posts (
+> supabase/migrations/20260626130000_publication_metrics.sql:60:  ON public.scheduled_posts (platform_post_id);
+> ```
+
+## 🤖 Claude *(05:05:23)*
+
+
+## 🤖 Claude *(05:05:28)*
+
+Tenho a fundamentação material completa agora:
+- `channel_variants.pillar_run_id uuid NOT NULL` ([migration:22](supabase/migrations/20260627150000_channel_variants.sql:22)) + `UNIQUE(pillar_run_id, channel, surface)` (idempotency anchor, linha 41), writes **service-role-only** (sem policy INSERT/UPDATE).
+- `auto-publish` resolve o asset **owner-scoped** da linha `channel_variants` server-trusted e assina 6h ([auto-publish:116-129](supabase/functions/auto-publish/index.ts:116)) — nunca de metadata (FMEA-011-safe).
+- `scheduled_posts` existe desde `20260402`.
+- Opção (c) tocaria `pipeline_runs`, que é a **verdade financeira** de onde o Collective Efficiency Ledger deriva — injetar pillar sintético corromperia a métrica coletiva.
+
+Escrevendo o ADR (Lei 2 — documentação, zero código aplicado):
+
+## 🤖 Claude *(05:06:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md",
+  "content": "# spaces-evolution \u2014 Decision Record: OTD-SPACES-036 (schema da leg media-social)\n\n> **Tipo:** ADR / Decision Record \u2014 resolve `OTD-SPACES-036-CV-PILLAR-COUPLING` (aberto na Amendment 15 \u00a74). \u00b7 **Status:** **recomenda\u00e7\u00e3o pronta \u2014 aguardando escolha Sovereign (Lei 4 Reviewer/Owner).** NENHUM c\u00f3digo ou migration aplicado neste doc.\n> **Lente BoK:** SWEBOK + CISSP CBK (schema/seguran\u00e7a) \u00b7 DMBOK (data model) \u00b7 21 Agentic Patterns \u00a713 (Guardrails/FMEA-011).\n> **Posi\u00e7\u00e3o no Closed-Loop:** pr\u00e9-requisito da **Fatia B** (fan-out media-social) da Amendment 15 \u00a75. Destrava a inser\u00e7\u00e3o de variants de origem-Spaces para IG/TikTok/YouTube.\n> **ORO triplet:** Operator = MCORCH Master Execution Agent (prep da decis\u00e3o) \u00b7 **Reviewer/Owner = Sovereign** (a escolha do schema \u00e9 dele \u2014 Owner do blast radius FMEA-011 sobre a tabela do money-path) + `/security-review` independente na migration real.\n> **Fundamenta\u00e7\u00e3o (Lei 1):** DDL real lido em `supabase/migrations/20260627150000_channel_variants.sql:19-58`; resolu\u00e7\u00e3o owner-scoped em `supabase/functions/auto-publish/index.ts:107-129`; acoplamento de `pipeline_runs` \u00e0 verdade financeira em `CLAUDE.md` (Collective Efficiency Ledger) + `supabase/migrations/20260626120000_collective_efficiency_ledger.sql`.\n\n---\n\n## 1. O problema (o blocker material)\n\nO n\u00f3 \"Publicar no WordPress\" (Fatia A, commit `07689e2`) escapou porque publica **direto** via `publish-wordpress` \u2014 sem passar por `channel_variants`. Todo o resto da fam\u00edlia media-social (IG feed/reels, FB foto, TikTok v\u00eddeo, YouTube v\u00eddeo/shorts, LinkedIn, X, Pinterest) precisa alimentar o contrato `channel_variants` \u2192 `auto-publish` \u2192 `publish-*`, que \u00e9 a **\u00fanica via segura owner-scoped** j\u00e1 selada.\n\nO bloqueio \u00e9 uma linha de DDL:\n\n```\n-- channel_variants (20260627150000)\npillar_run_id uuid NOT NULL,                          -- FK l\u00f3gica a pipeline_runs.id\nCONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)\n```\n\n`channel_variants` \u00e9, por design (SSOT `docs/bok/post-engine/13-sdd-reshaper-atomizer.md`), **duas coisas ao mesmo tempo**: (1) o *ledger de variante nativa* do reshaper (auditoria anti-cross-post, FR-CP-007) e (2) a *\u00e2ncora de idempot\u00eancia* (`UNIQUE`) para o retry pg_net do reshaper n\u00e3o duplicar variant nem re-enfileirar publish. **Sua identidade inteira \u00e9 derivada de um pillar run.** Um asset criado no Spaces n\u00e3o tem pillar run \u2014 n\u00e3o passou pelo pipeline `orchestrate-content`\u2192`reshape-pillar`.\n\n**Invariantes que a decis\u00e3o N\u00c3O pode quebrar:**\n- **I1 \u2014 Money-path intacto:** o pipeline PILLAR de produ\u00e7\u00e3o escreve em `channel_variants` via `reshape-pillar` (service-role). Nenhuma regress\u00e3o nesse caminho.\n- **I2 \u2014 FMEA-011 (owner-scoping):** o asset publicado \u00e9 resolvido de uma **linha server-trusted** (nunca de metadata user-writable), assinado owner-scoped. \u00c9 o gate-m\u00e3e.\n- **I3 \u2014 Idempot\u00eancia:** um retry (pg_net/n\u00f3 re-executado) n\u00e3o pode duplicar a publica\u00e7\u00e3o.\n- **I4 \u2014 Verdade financeira limpa:** `pipeline_runs`/`autopilot_cycles` alimentam o `collective_efficiency_ledger` (anti-Goodhart). N\u00e3o poluir com linhas sint\u00e9ticas.\n\n---\n\n## 2. As tr\u00eas op\u00e7\u00f5es (grounded)\n\n### Op\u00e7\u00e3o (a) \u2014 `pillar_run_id` NULLABLE + relaxar a UNIQUE\n\nMigration sobre a pr\u00f3pria `channel_variants`: `ALTER COLUMN pillar_run_id DROP NOT NULL` + nova \u00e2ncora de idempot\u00eancia para linhas de origem-Spaces.\n\n| | |\n|---|---|\n| \u2705 Pr\u00f3s | Uma tabela s\u00f3; `auto-publish` quase inalterado (j\u00e1 resolve da linha). |\n| \u274c Contras | **Quebra I3:** `UNIQUE(pillar_run_id, channel, surface)` com `pillar_run_id IS NULL` \u2192 Postgres trata NULLs como distintos \u21d2 idempot\u00eancia evapora para Spaces (precisa de \u00e2ncora nova, ex. `NULLS NOT DISTINCT` PG15+ ou partial-unique sobre uma coluna `space_asset_id`). **Polui a sem\u00e2ntica (I1-adjacente):** o ledger deixa de ser \"uma variante nativa por pillar run\"; a auditoria anti-cross-post FR-CP-007 passa a misturar duas origens. **Blast radius alto:** altera uma tabela classificada FMEA-011 com escritores de produ\u00e7\u00e3o (reshaper) \u21d2 risco de regredir o money-path; `/security-review` obrigat\u00f3rio e mais amplo. |\n| Veredito | Reusa a maquinaria mas **corrompe o contrato de responsabilidade \u00fanica + idempot\u00eancia** da tabela mais quente do money-path. Risco desproporcional ao ganho. |\n\n### Op\u00e7\u00e3o (b) \u2014 tabela dedicada `space_publish_variants` \u2b50 RECOMENDADA\n\nNova tabela espelhando o padr\u00e3o owner-scoped de `channel_variants`, chaveada pela **linhagem do asset do Spaces** (n\u00e3o por pillar). `auto-publish` ganha um **branch aditivo** de resolu\u00e7\u00e3o.\n\n| | |\n|---|---|\n| \u2705 Pr\u00f3s | **Separa\u00e7\u00e3o limpa (I1):** money-path/`channel_variants`/reshaper **intocados** \u2192 zero risco de regress\u00e3o no pipeline pago. **FMEA-011-safe por constru\u00e7\u00e3o (I2):** RLS `SELECT/DELETE own` + zero policy INSERT/UPDATE \u21d2 escritor \u00fanico = a edge fn `publish-space-asset` (service-role); `auto-publish` assina o asset da **linha server-trusted**, igual ao branch existente `:116-129`. **Idempot\u00eancia natural (I3):** \u00e2ncora `UNIQUE(node_run_id, channel, surface)` = uma publica\u00e7\u00e3o por execu\u00e7\u00e3o-de-n\u00f3 (retry pg_net safe). **`/security-review` menor:** espelha um padr\u00e3o j\u00e1 revisado (tabela isolada, default-deny writes). **I4 preservado:** n\u00e3o toca `pipeline_runs`. |\n| \u274c Contras | Tabela nova + branch novo no `auto-publish` (e possivelmente `publish-channel-variant` irm\u00e3o). Mais superf\u00edcie que \"flipar uma coluna\". Leve duplica\u00e7\u00e3o conceitual do \"variant\". |\n| Veredito | **Mais c\u00f3digo, mas todo aditivo e isolado.** Protege o money-path, espelha o padr\u00e3o selado, minimiza a superf\u00edcie de revis\u00e3o. |\n\n### Op\u00e7\u00e3o (c) \u2014 pillar_run sint\u00e9tico por publish\n\nCada publish do Spaces cria uma linha throwaway em `pipeline_runs` s\u00f3 para satisfazer a FK.\n\n| | |\n|---|---|\n| \u2705 Pr\u00f3s | `channel_variants` estruturalmente intocada. |\n| \u274c Contras | **Viola I4 frontalmente:** `pipeline_runs` \u00e9 a verdade financeira de onde `collective_efficiency_ledger` deriva mco/resultado + overhead (anti-Goodhart). Injetar runs sint\u00e9ticos **distorce a m\u00e9trica coletiva** em produ\u00e7\u00e3o. **Mentira sem\u00e2ntica (esp\u00edrito da Lei 1):** um \"pillar run\" que nunca rodou um pillar = rela\u00e7\u00e3o fabricada. Cada publish do Spaces escreve uma linha-fantasma na tabela financeira. |\n| Veredito | **Rejeitada.** Corrompe a verdade financeira + o efficiency ledger. Pior op\u00e7\u00e3o. |\n\n---\n\n## 3. Recomenda\u00e7\u00e3o: Op\u00e7\u00e3o (b)\n\n**Por qu\u00ea, em uma frase:** \u00e9 a \u00fanica que respeita as 4 invariantes ao mesmo tempo \u2014 protege o money-path (I1), \u00e9 FMEA-011-safe por constru\u00e7\u00e3o (I2), tem idempot\u00eancia natural pela linhagem do n\u00f3 (I3) e n\u00e3o polui a verdade financeira (I4) \u2014 ao custo de c\u00f3digo aditivo isolado em vez de uma altera\u00e7\u00e3o de alto blast-radius numa tabela quente.\n\n### 3.1. DDL sketch (N\u00c3O aplicado \u2014 molde para a migration real p\u00f3s-GO)\n\n```sql\n-- \u26a0\ufe0f SKETCH \u2014 a migration real (com header BoK, timestamp, COMMENTs) s\u00f3 \u00e9 escrita ap\u00f3s o GO do Sovereign\n--    na Op\u00e7\u00e3o (b), e passa por /security-review ANTES do commit (FMEA-011).\nCREATE TABLE IF NOT EXISTS public.space_publish_variants (\n  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id           uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,\n  space_id          uuid,                    -- vm_canvas_projects.id de origem (nullable p/ publish de asset avulso)\n  node_run_id       uuid,                    -- execu\u00e7\u00e3o do n\u00f3 Publish (linhagem de idempot\u00eancia)\n  source_asset_id   uuid NOT NULL,           -- creative_assets/vm_canvas_assets.id (fonte owner-scoped)\n  channel           text NOT NULL,           -- naming SPEC do channel_profiles ('twitter_x' verbatim)\n  surface           text NOT NULL,\n  platform          public.social_platform,  -- enum mapeado p/ publish; NULL = n\u00e3o diretamente public\u00e1vel\n  publish_path      text,\n  native_text       jsonb NOT NULL DEFAULT '{}'::jsonb,\n  asset_kind        text,                    -- 'video'|'image'|'text'|'none'\n  asset_bucket      text,                    -- ref server-trusted por linha (auto-publish assina ISTO, nunca metadata)\n  asset_key         text,\n  asset_status      text NOT NULL DEFAULT 'pending'\n    CHECK (asset_status IN ('pending','ready','reused_master','pending_render','pending_reframe','pending_publisher','gap')),\n  status            text NOT NULL DEFAULT 'draft'\n    CHECK (status IN ('draft','scheduled','published','skipped','failed')),\n  scheduled_post_id uuid,                     -- set no enqueue (guarda double-enqueue)\n  created_at        timestamptz NOT NULL DEFAULT timezone('utc', now()),\n  updated_at        timestamptz NOT NULL DEFAULT timezone('utc', now()),\n  CONSTRAINT space_publish_variants_uq UNIQUE (node_run_id, channel, surface)  -- idempot\u00eancia por execu\u00e7\u00e3o-de-n\u00f3\n);\n\nALTER TABLE public.space_publish_variants ENABLE ROW LEVEL SECURITY;\n-- Espelha channel_variants: SELECT/DELETE own; SEM policy INSERT/UPDATE \u21d2 escritor \u00fanico = service-role (publish-space-asset).\nCREATE POLICY \"space_publish_variants read own\"   ON public.space_publish_variants FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"space_publish_variants delete own\" ON public.space_publish_variants FOR DELETE USING (auth.uid() = user_id);\n-- + trigger updated_at + \u00edndices (user_id,created_at DESC), (status) WHERE status='draft', (scheduled_post_id).\n```\n\n### 3.2. Extens\u00e3o de `auto-publish` (aditiva, n\u00e3o reescrita)\n\nHoje (`auto-publish/index.ts:116-129`) o asset \u00e9 resolvido da linha `channel_variants` server-trusted, filtrada pelo post. A op\u00e7\u00e3o (b) adiciona um **segundo branch**: quando a linha `scheduled_posts` tem origem Spaces (marcada por um campo de origem, ex. `source='space'` ou `space_publish_variant_id` n\u00e3o-nulo), resolve o asset de `space_publish_variants` (mesmo padr\u00e3o owner-scoped, `createSignedUrl(key, 21600)`). Zero mudan\u00e7a na resolu\u00e7\u00e3o do PILLAR.\n\n### 3.3. Sub-decis\u00f5es que a Op\u00e7\u00e3o (b) abre (resolver na SDD da Fatia B)\n\n- **SD-1 \u2014 Marcador de origem em `scheduled_posts`:** coluna `source text DEFAULT 'pillar'` (`'pillar'|'space'`) **ou** FK opcional `space_publish_variant_id`. Recomendo `source` + a FK opcional (o branch do auto-publish faz dispatch por `source`).\n- **SD-2 \u2014 Idempot\u00eancia do publish de asset avulso (sem n\u00f3):** `node_run_id NULL` \u2192 `UNIQUE` trata como distinto (perde idempot\u00eancia nesse caminho). Se o publish avulso precisar ser idempotente, usar partial-unique sobre `(source_asset_id, channel, surface) WHERE node_run_id IS NULL`. Adi\u00e1vel at\u00e9 existir o caminho avulso.\n- **SD-3 \u2014 Anti-cross-post (OTD-SPACES-035):** a c\u00f3pia por canal ainda reusa a reescrita nativa FR-CP-007; `space_publish_variants` guarda a variante nativa por canal (mesma auditoria que `channel_variants` d\u00e1 ao pillar).\n\n---\n\n## 4. O que muda no Amendment 15 quando o Sovereign aprovar (b)\n\n- `FR-SPACES-031` (seam `publish-space-asset`): escreve em **`space_publish_variants`** (n\u00e3o `channel_variants`) para media-social; WordPress segue direto.\n- Data model \u00a76: **passa a ter tabela nova** (`space_publish_variants`) \u2014 a linha \"sem tabela nova obrigat\u00f3ria\" da Amendment 15 \u00a76 \u00e9 reconciliada por esta decis\u00e3o.\n- Fatia B (\u00a75) fica **desbloqueada**.\n\n---\n\n## 5. Verification gates (para a migration real, p\u00f3s-GO)\n\n1. `/security-review` na migration + no branch do `auto-publish` (cross-tenant/owner-scoping \u00e9 o gate-m\u00e3e; provar que Spaces-origin n\u00e3o vaza asset de outro tenant).\n2. Smoke zero-custo: (a) insert service-role OK, insert authenticated NEGADO (default-deny) \u00b7 (b) cross-tenant SELECT retorna 0 \u00b7 (c) `auto-publish` resolve o asset da linha `space_publish_variants` do owner e falha-fechado para asset alheio \u00b7 (d) retry do n\u00f3 (mesmo `node_run_id`) n\u00e3o duplica variant (UNIQUE).\n3. Regress\u00e3o do money-path: smoke do PILLAR (`smoke-reshape-pillar.ts` 17/17) continua verde \u2014 prova I1 (channel_variants intocada).\n\n---\n\n## 6. Pergunta ao Sovereign (a \u00fanica decis\u00e3o que falta)\n\n**Escolha uma:**\n- **(b) \u2014 tabela dedicada `space_publish_variants`** \u2b50 (recomendada: protege o money-path, FMEA-011-safe, n\u00e3o polui a verdade financeira).\n- (a) \u2014 flipar `channel_variants.pillar_run_id` para nullable (mais barato em c\u00f3digo, mas corrompe idempot\u00eancia + sem\u00e2ntica do ledger quente).\n- (c) \u2014 pillar sint\u00e9tico (rejeitada: corrompe `pipeline_runs`/efficiency ledger).\n\nAp\u00f3s o GO em (b), a migration real + `/security-review` + a extens\u00e3o do `auto-publish` s\u00e3o o primeiro item do pr\u00f3ximo arco \u2014 e a Fatia B media-social inteira destrava.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:06:58)*
+
+
+## 🤖 Claude *(05:06:59)*
+
+ADR escrito e fundamentado. Committando granularmente (padrão do loop armado — os seals recentes committam direto em `main`):
+
+## 🤖 Claude *(05:07:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md && git commit -q -m \"docs(bok): OTD-SPACES-036 decision record \u2014 recomenda tabela dedicada space_publish_variants\n\nDestrava a decis\u00e3o de schema que bloqueia a Fatia B media-social (IG/TikTok/YouTube).\nAnalisa as 3 op\u00e7\u00f5es contra 4 invariantes (money-path intacto, FMEA-011 owner-scoping,\nidempotencia, verdade financeira limpa). Recomenda (b) tabela dedicada: protege\nchannel_variants/reshaper, espelha o padrao owner-scoped selado, nao polui pipeline_runs.\nRejeita (c) pillar sintetico (corrompe o collective_efficiency_ledger). Aguarda escolha\nSovereign; migration real + /security-review sao o 1o item do proximo arco.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit the OTD-SPACES-036 decision record"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m2:07AM[0m [32mINF[0m 1 commits scanned.
+> [90m2:07AM[0m [32mINF[0m scan completed in 31.5ms
+> [90m2:07AM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.21 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ gitleaks-staged (0.20 seconds)
+> ✔️ secret-scan (0.21 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 18669c4729c76895adcc1e1b3e79207ea07d7348 docs(bok): OTD-SPACES-036 decision record — recomenda tabela dedicada space_publish_variants
+> ```
+
+## 🤖 Claude *(05:07:11)*
+
+
+## 🤖 Claude *(05:07:12)*
+
+Committado: `18669c4` (gitleaks + secret-scan verdes). Agora **armando o loop** com disciplina de budget — hop no máximo (3600s = 1h) pra a janela de 5h recuperar antes de qualquer incremento pesado:
+
+## 🤖 Claude *(05:07:26)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 3600,
+  "reason": "Limite de 5h estava em 91%; hop m\u00e1ximo (1h) pra a janela rolante recuperar antes do pr\u00f3ximo incremento \u2014 evita bater no teto mid-task.",
+  "prompt": "Loop aut\u00f4nomo do roadmap Spaces (p\u00f3s-seal 937a17c, arco OTD-SPACES-036). DISCIPLINA DE BUDGET OBRIGAT\u00d3RIA: o limite de 5h estava em 91% quando o loop foi armado. Regras: (1) N\u00c3O disparar Workflow multi-agente pesado nem /bok-scribe at\u00e9 o Sovereign sinalizar que a janela de 5h recuperou \u2014 rodar ENXUTO (leituras cir\u00fargicas, 1 incremento por acorda). Medir a janela via .claude/scripts/session-inspect.ts quando poss\u00edvel (Lei 3). (2) Pr\u00f3ximos itens em ordem de seguran\u00e7a/autonomia: (2a) OTD-SPACES-036 \u2014 o ADR j\u00e1 est\u00e1 em docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md recomendando a op\u00e7\u00e3o (b) tabela dedicada space_publish_variants. SE o Sovereign j\u00e1 escolheu uma op\u00e7\u00e3o \u2192 escrever a migration real + /security-review + (na op\u00e7\u00e3o b) estender auto-publish com o branch aditivo de resolu\u00e7\u00e3o owner-scoped; SEN\u00c3O aguardar a escolha dele (\u00e9 decis\u00e3o Sovereign, n\u00e3o improvisar). (2b) Revisar o blueprint docs/bok/youtube-studio/00-deepsearch-blueprint.md e produzir uma NOTA DE PRONTID\u00c3O leve para /bok-scribe (n\u00e3o rodar o /bok-scribe ainda \u2014 \u00e9 pesado). (2c) Witness LoRA (avatar-identity-train) S\u00d3 com retratos reais + GO expl\u00edcito de gasto ~US$1,85 Replicate fornecidos pelo Sovereign \u2014 est\u00e1 bloqueado em inputs, n\u00e3o \u00e9 aut\u00f4nomo. (3) A cada acorda: se nada avan\u00e7\u00e1vel sem GO/decis\u00e3o do Sovereign, fazer o incremento leve 2b OU parar e reportar honestamente; NUNCA fabricar prova (Lei 1). Se o roadmap estiver genuinamente esgotado (tudo gated no Sovereign) e a janela de 5h n\u00e3o tiver folga, chamar ScheduleWakeup com stop:true e reportar. Manter commits granulares no padr\u00e3o dos seals (docs()/feat()/fix(), sem Co-Authored-By)."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 03:08:00 (in 3634s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(05:07:49)*
+
+
+## 🤖 Claude *(05:07:58)*
+
+Loop armado (acorda em ~1h, 03:08). Segue o fechamento do turno.
+
+**Feito neste turno (enxuto, respeitando o teto de 5h):**
+- **ADR do OTD-SPACES-036 escrito e committado** (`18669c4`) — [`16-decision-otd-spaces-036-media-social-schema.md`](docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md). Analisei as 3 opções contra 4 invariantes materiais (money-path intacto · FMEA-011 owner-scoping · idempotência · verdade financeira limpa), tudo ancorado no DDL real e no `auto-publish`. Converti o blocker numa **decisão pronta pra aprovar**.
+- **Loop armado** com hop de 1h e disciplina de budget encodada no prompt de continuação: sem Workflow pesado / `/bok-scribe` até você sinalizar que a janela de 5h recuperou; próximo incremento leve = nota de prontidão do blueprint youtube-studio.
+
+**Nota de compute honesta:** o Ultracode está ligado (default = fan-out pesado), mas sua instrução do teto de 5h em 91% vence isso. Não disparei workflow multi-agente de propósito — a 91% eu bateria no teto no meio da tarefa. Vou manter esse rigor no loop.
+
+O único bloqueio que sobra pro maior desbloqueio (toda a família de nós media-social IG/TikTok/YouTube) é uma escolha de schema que é genuinamente sua. Deixo pronta:
+
+## 🤖 Claude *(05:08:06)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "OTD-SPACES-036: como os n\u00f3s media-social (IG/TikTok/YouTube) do Spaces devem alimentar o pipeline de publica\u00e7\u00e3o? (channel_variants.pillar_run_id \u00e9 NOT NULL e os assets do Spaces n\u00e3o t\u00eam pillar run)",
+      "header": "Schema media-social",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "(b) Tabela dedicada space_publish_variants (Recomendada)",
+          "description": "Nova tabela espelhando o padr\u00e3o owner-scoped de channel_variants, chaveada pela linhagem do n\u00f3. Protege o money-path (reshaper/channel_variants intocados), FMEA-011-safe por constru\u00e7\u00e3o, n\u00e3o polui pipeline_runs. Custo: +1 tabela + branch aditivo no auto-publish. \u00c9 a \u00fanica que respeita as 4 invariantes."
+        },
+        {
+          "label": "(a) channel_variants.pillar_run_id nullable",
+          "description": "Flipa a coluna pra nullable + relaxa a UNIQUE. Mais barato em c\u00f3digo, mas quebra a idempot\u00eancia (NULLs s\u00e3o distintos no Postgres) e polui a sem\u00e2ntica do ledger quente do reshaper \u2014 alto blast-radius numa tabela do money-path."
+        },
+        {
+          "label": "(c) Pillar sint\u00e9tico por publish",
+          "description": "Rejeitada na an\u00e1lise: cria linha throwaway em pipeline_runs pra satisfazer a FK \u2014 corrompe a verdade financeira de onde o collective_efficiency_ledger deriva (anti-Goodhart). S\u00f3 listada pra transpar\u00eancia."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "OTD-SPACES-036: como os nós media-social (IG/TikTok/YouTube) do Spaces devem alimentar o pipeline de publicação? (channel_variants.pillar_run_id é NOT NULL e os assets do Spaces não têm pillar run)"="(b) Tabela dedicada space_publish_variants (Recomendada)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(05:13:07)*
+
+
+## 🤖 Claude *(05:13:09)*
+
+O Sovereign escolheu **(b) — tabela dedicada `space_publish_variants`**. GO na recomendação. 
+
+Antes de qualquer código, registro a decisão materialmente (Lei 1 — a escolha tem que viver no BoK, não só no chat), com edições enxutas:
+
+## 🤖 Claude *(05:13:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md",
+  "old_string": "> **Tipo:** ADR / Decision Record \u2014 resolve `OTD-SPACES-036-CV-PILLAR-COUPLING` (aberto na Amendment 15 \u00a74). \u00b7 **Status:** **recomenda\u00e7\u00e3o pronta \u2014 aguardando escolha Sovereign (Lei 4 Reviewer/Owner).** NENHUM c\u00f3digo ou migration aplicado neste doc.",
+  "new_string": "> **Tipo:** ADR / Decision Record \u2014 resolve `OTD-SPACES-036-CV-PILLAR-COUPLING` (aberto na Amendment 15 \u00a74). \u00b7 **Status:** \u2705 **DECIDIDO \u2014 op\u00e7\u00e3o (b) `space_publish_variants` (GO Sovereign 2026-07-09).** C\u00f3digo pendente: a migration real + `/security-review` + o branch aditivo do `auto-publish` s\u00e3o o 1\u00ba item do pr\u00f3ximo arco, gated na recupera\u00e7\u00e3o da janela de 5h (estava em 91% quando o loop foi armado). NENHUM c\u00f3digo aplicado ainda."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:13:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md",
+  "old_string": "| **OTD-SPACES-036-CV-PILLAR-COUPLING** | `channel_variants.pillar_run_id` \u00e9 **NOT NULL** (FK a `pipeline_runs`) \u2014 os n\u00f3s **media-social** (IG/TikTok/YouTube) N\u00c3O podem inserir um variant sem um pillar_run. | **Aberto \u2014 bloqueia a Fatia B media-social.** Achado material 2026-07-08 (`git show 07689e2`). Op\u00e7\u00f5es: (a) migration tornando `pillar_run_id` nullable + relaxar a UNIQUE p/ origem Spaces (toca tabela FMEA-011 \u2014 /security-review); (b) tabela dedicada `space_publish_variants` espelhando o padr\u00e3o owner-scoped de asset + estender `auto-publish` p/ resolv\u00ea-la; (c) pillar sint\u00e9tico por publish. **Decis\u00e3o pendente Sovereign/design** \u2014 N\u00c3O improvisar. WordPress (Fatia A) escapou por publicar direto (`publish-wordpress`, sem channel_variants). | engineer + Sovereign | arquitetura load-bearing (FMEA-011) |",
+  "new_string": "| **OTD-SPACES-036-CV-PILLAR-COUPLING** | `channel_variants.pillar_run_id` \u00e9 **NOT NULL** (FK a `pipeline_runs`) \u2014 os n\u00f3s **media-social** (IG/TikTok/YouTube) N\u00c3O podem inserir um variant sem um pillar_run. | \u2705 **DECIDIDO 2026-07-09 \u2192 op\u00e7\u00e3o (b): tabela dedicada `space_publish_variants`** (ADR `16-decision-otd-spaces-036-media-social-schema.md`, GO Sovereign). Espelha o padr\u00e3o owner-scoped de `channel_variants` (SELECT/DELETE own, writes service-role-only), chaveada pela linhagem do n\u00f3; `auto-publish` ganha branch aditivo de resolu\u00e7\u00e3o. Protege o money-path (channel_variants/reshaper intocados), FMEA-011-safe por constru\u00e7\u00e3o, n\u00e3o polui `pipeline_runs`/efficiency ledger. **C\u00f3digo pendente** (migration + /security-review + auto-publish branch) = 1\u00ba item do pr\u00f3ximo arco. Achado material 2026-07-08 (`git show 07689e2`). | engineer + Sovereign | arquitetura load-bearing (FMEA-011) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:13:27)*
+
+
+## 🤖 Claude *(05:13:27)*
+
+Committando o registro da decisão:
+
+## 🤖 Claude *(05:13:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md && git commit -q -m \"docs(bok): OTD-SPACES-036 DECIDIDO \u2014 GO Sovereign na op\u00e7\u00e3o (b) space_publish_variants\n\nSovereign escolheu a tabela dedicada. Marca o ADR e a linha OTD da Amendment 15 como\nresolvidos; codigo (migration + /security-review + branch auto-publish) fica como 1o item\ndo proximo arco, gated na recuperacao da janela de 5h. Destrava a Fatia B media-social.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit the OTD-SPACES-036 decision (GO option b)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m2:13AM[0m [32mINF[0m 1 commits scanned.
+> [90m2:13AM[0m [32mINF[0m scan completed in 9.22ms
+> [90m2:13AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.15 seconds)
+> ✔️ e2e-output-tripwire (0.10 seconds)
+> ✔️ secret-scan (0.12 seconds)
+> ✔️ gitleaks-staged (0.14 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> faa6fd4d65b1e475248f3865463856c610a20fad docs(bok): OTD-SPACES-036 DECIDIDO — GO Sovereign na opção (b) space_publish_variants
+> ```
+
+## 🤖 Claude *(05:13:43)*
+
+
+## 🤖 Claude *(05:13:57)*
+
+Decisão selada e committada: `faa6fd4` (gitleaks verde). Turno fechado com integridade de budget.
+
+## Resumo do turno
+
+| Item | Prova |
+|------|-------|
+| ADR OTD-SPACES-036 (3 opções × 4 invariantes → recomenda `space_publish_variants`) | commit `18669c4` |
+| GO Sovereign na opção (b) registrado no BoK (ADR + linha OTD da Amendment 15) | commit `faa6fd4` |
+| Loop autônomo armado com disciplina de budget | acorda 03:08 (~1h) |
+
+**Por que parei aqui e não escrevi já a migration:** você mesmo fixou o teto de 5h em 91%. O passo de código (migration `space_publish_variants` + `/security-review` + branch aditivo do `auto-publish`) é um bloco coeso que merece a janela inteira — rodar `/security-review` a 91% arriscaria bater no teto no meio da revisão (o falso-sucesso que a Lei 1 proíbe). Então ele é o **1º item do próximo arco**, e o loop o executa em ~1h, depois da janela rolante recuperar. Não desperdicei a decisão: ela está gravada, o caminho está desenhado (DDL sketch + shape do branch no [ADR §3](docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md)).
+
+**O que o loop faz ao acordar (03:08):** se a janela recuperou → escreve a migration (b) + `/security-review` + estende `auto-publish` + smokes owner-scoped → commita. Se ainda apertada → só a nota de prontidão leve do blueprint youtube-studio, e reporta.
+
+**Override na sua mão (você vê o %, eu não — Lei 1):** se a UI mostrar que o teto de 5h já tem folga e você quiser que eu **atravesse agora**, é só dizer *"pode ir agora"* — escrevo a migration + `/security-review` neste turno em vez de esperar 1h. Caso contrário, o loop cuida disso.
+
+Os outros dois itens do roadmap seguem gated em você: **witness LoRA** precisa de retratos reais + GO de gasto ~US$1,85 Replicate; **youtube-studio `/bok-scribe`** é pesado (espera a janela). Nenhum é autônomo agora.
