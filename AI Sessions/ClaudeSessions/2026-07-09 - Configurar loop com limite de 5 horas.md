@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -5985,3 +5985,16 @@ Consertado, aplicado e provado — de ponta a ponta:
 ⚠️ **Honestidade sobre o retry:** agora ele **passa do zip e entra no treino REAL do Replicate** — ou seja, vai **debitar ~US$1,85 da sua conta Replicate** e rodar assíncrono (uns minutos, com poll). Eu não disparei isso (é seu o gasto/GO). Se aparecer outro erro *depois* do zip, me manda que eu sigo o fio — mas o plumbing já estava provado até ali, então deve concluir e virar sua 1ª **identidade LoRA treinada de verdade** (o witness que faltava).
 
 O loop do Creative Studio segue armado em paralelo; este foi um hotfix de produção que entrou na frente. Manda o resultado do retry.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%
