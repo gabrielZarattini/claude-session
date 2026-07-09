@@ -10523,6 +10523,462 @@ O módulo que começou como "3 primitivos FFmpeg" agora tem sua espinha dorsal d
 
 Honestidade da maratona: foi longa, mas ela pariu **software real, vivo e provado** — não slides. Os dois motores que você pediu ("faceless/avatar" + "criativos sofisticados") têm agora nós de verdade no Spaces, e a cadeia que você desenhou está a um fan-out de ficar visual ponta a ponta. O loop segue; te reporto com o fan-out (ou o obstáculo honesto).
 
+## 👤 User *(11:12:00)*
+
+Loop autônomo — MÓDULO Creative Studio. MARCO: os DOIS nós centrais estão VIVOS em prod — Roteiro (scriptGenerator, v1 script + v2 storyboard estruturado) + Criativo Cinematográfico (cinematicVideo, renderiza MP4 9:16 via rail grátis provado E2E, commit 4d8b80b). git log --oneline -22 primeiro. PRÓXIMO: FAN-OUT do storyboard — fechar a cadeia roteiro→imagens visualmente. Quando um nó Roteiro tem output.scenes (storyboard v2), oferecer no ScriptGeneratorInspector um botão 'Criar nós de imagem' que, pra cada cena, cria um nó generateImage (com o scenes[i].imagePrompt pré-preenchido no campo de prompt) posicionado numa coluna à direita do nó Roteiro + (opcional) uma edge. RECON PRIMEIRO: ler o useCanvasStore (src/store/useCanvasStore.ts) pra achar a API real de adicionar nó + edge (addNode/setNodes/onNodesChange? o shape do generateImage data — makeDefaultGenerateImage + qual campo é o prompt) e como o AddNodeMenu adiciona um nó hoje (pra espelhar). Usar makeDefaultGenerateImage do canvas.ts com overrides do prompt. Buildable-now (client puro, sem edge/migration). tsc LIMPO + build+deploy + prova (strings no bundle). Se a API do store não permitir add programático limpo, reportar honesto o gap e propor alternativa. Commits granulares sem Co-Authored-By; nunca fabricar prova (Lei 1). Isso deixa a cadeia COMPLETA no canvas: Roteiro (storyboard) → N nós Gerar Imagem (Nano Banana) → cada imagem pode virar hero do Criativo Cinematográfico. Reportar honesto o estado do módulo.
+
+## 🤖 Claude *(11:12:12)*
+
+
+## 🤖 Claude *(11:12:12)*
+
+Loop firing — fan-out do storyboard. Recon da API do store + shape do `generateImage` (Lei 1, espelhar o que existe):
+
+## 🤖 Claude *(11:12:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git log ===\"; git log --oneline -3\necho \"=== API do useCanvasStore (add node/edge) ===\"\ngrep -nE \"addNode|setNodes|addEdge|setEdges|onNodesChange|nodes:|edges:|updateNodeData|=>.*\\{\" src/store/useCanvasStore.ts 2>/dev/null | grep -iE \"addNode|setNodes|addEdge|setEdges|updateNodeData|onNodesChange|onConnect\" | head -20\necho \"=== como o AddNodeMenu adiciona um n\u00f3 (padr\u00e3o a espelhar) ===\"\ngrep -nE \"addNode|setNodes|makeDefault|factory|useCanvasStore|onSelect|position\" src/components/canvas/AddNodeMenu.tsx 2>/dev/null | head -20\necho \"=== GenerateImageData: qual campo \u00e9 o prompt ===\"\ngrep -nE \"interface GenerateImageData|prompt|makeDefaultGenerateImage\" src/types/canvas.ts | head -12",
+  "description": "Recon store add API + generateImage prompt field"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git log ===
+> 4d8b80b feat(spaces): no Criativo Cinematografico (cinematicVideo) — renderiza MP4 9:16 via rail gratis
+> 36b256d docs(creative-studio): correcao Lei 1 — free-render rail JA esta VIVO (503 era stale)
+> 41483c4 feat(spaces): Roteiro node v2 — botao Storyboard + tabela de cenas (fia generate-script-package)
+> === API do useCanvasStore (add node/edge) ===
+> 6:  addEdge,
+> 36:  onNodesChange: (changes: NodeChange[]) => void;
+> 42:  addNode: (n: CanvasNode) => void;
+> 44:  updateNodeData: (id: string, patch: Partial<CanvasNodeData>) => void;
+> 82:      onNodesChange: (changes) =>
+> 88:          edges: addEdge(
+> 97:      addNode: (n) => set((s) => ({ nodes: [...s.nodes, n], selectedNodeId: n.id })),
+> 101:      updateNodeData: (id, patch) =>
+> === como o AddNodeMenu adiciona um nó (padrão a espelhar) ===
+> 16:import { useCanvasStore } from "@/store/useCanvasStore";
+> 28:  const addNode = useCanvasStore((s) => s.addNode);
+> 31:  const insert = (factoryId: string) => {
+> 32:    const entry = CANVAS_NODE_REGISTRY.find((e) => e.id === factoryId);
+> 41:    addNode(entry.factory(center));
+> 127:  const addNode = useCanvasStore((s) => s.addNode);
+> 142:  const insert = (factoryId: string) => {
+> 143:    const entry = CANVAS_NODE_REGISTRY.find((e) => e.id === factoryId);
+> 152:    addNode(entry.factory(center));
+> 169:                  onSelect={() => insert(e.id)}
+> === GenerateImageData: qual campo é o prompt ===
+> 377:export interface GenerateImageData {
+> 381:  prompt: string;
+> 420:  prompt: string;
+> 456:  prompt: string;
+> 491:  prompt: string;
+> 703:export function makeDefaultGenerateImage(
+> 715:      prompt: "",
+> 758:      prompt: "",
+> 830:      prompt: "",
+> 855:      prompt: "",
+> 957: * Helper to compile prompt incorporating project level StyleSettings
+> 960:  prompt: string,
+> ```
+
+## 🤖 Claude *(11:12:44)*
+
+
+## 🤖 Claude *(11:12:46)*
+
+Store API + shape claros: `addNode(n)` existe (edges não têm action de store → fan-out cria só os NÓS, sem edge — honesto). `makeDefaultGenerateImage(position, overrides)` com campo `prompt`. Confirmo o shape exato + os overrides:
+
+## 🤖 Claude *(11:12:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 703,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 703	export function makeDefaultGenerateImage(
+> 704	  position: { x: number; y: number },
+> 705	  overrides: Partial<GenerateImageData> = {},
+> 706	): CanvasNode {
+> 707	  return {
+> 708	    id: makeNodeId(),
+> 709	    type: "generateImage",
+> 710	    position,
+> 711	    data: {
+> 712	      kind: "generateImage",
+> 713	      label: "Gerar Imagem",
+> 714	      modelId: DEFAULT_IMAGE_MODEL,
+> 715	      prompt: "",
+> 716	      negativePrompt: "",
+> 717	      aspectRatio: "9:16",
+> 718	      controls: { ...DEFAULT_CONTROLS },
+> 719	      seed: null,
+> 720	      fixedSeed: false,
+> 721	      status: "idle",
+> 722	      inheritStyle: true,
+> 723	      ...overrides,
+> 724	    },
+> 725	  };
+> 726	}
+> 727	
+> 728	export function makeDefaultCharacterReference(
+> 729	  position: { x: number; y: number },
+> 730	  overrides: Partial<CharacterReferenceData> = {},
+> 731	): CanvasNode {
+> 732	  return {
+> ```
+
+## 🤖 Claude *(11:12:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 377,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 377	export interface GenerateImageData {
+> 378	  kind: "generateImage";
+> 379	  label: string;
+> 380	  modelId: ImageModelId;
+> 381	  prompt: string;
+> 382	  negativePrompt: string;
+> 383	  aspectRatio: AspectRatio;
+> 384	  controls: ControlValues;
+> 385	  seed: number | null;
+> 386	  fixedSeed: boolean;
+> 387	  status: NodeStatus;
+> 388	  inheritStyle?: boolean;
+> 389	  output?: {
+> 390	    imageUrl?: string;
+> 391	    storagePath?: string;
+> 392	    imageDataUrl?: string;
+> ```
+
+## 🤖 Claude *(11:13:25)*
+
+
+## 🤖 Claude *(11:13:26)*
+
+Padrão confirmado: `addNode(n)` + `makeDefaultGenerateImage(pos, {prompt, label})`. Sem action de store pra edges → fan-out cria só os NÓS (honesto). Adicionando o botão no ScriptGeneratorInspector:
+
+## 🤖 Claude *(11:13:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "import { ScrollText, Loader2, Sparkles, Clapperboard, Copy, Check } from \"lucide-react\";",
+  "new_string": "import { ScrollText, Loader2, Sparkles, Clapperboard, Copy, Check, Images } from \"lucide-react\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:13:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "import { type ScriptGeneratorData } from \"@/types/canvas\";",
+  "new_string": "import { type ScriptGeneratorData, makeDefaultGenerateImage } from \"@/types/canvas\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:13:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const [busy, setBusy] = useState<null | \"script\" | \"storyboard\">(null);",
+  "new_string": "  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const addNode = useCanvasStore((s) => s.addNode);\n  const nodes = useCanvasStore((s) => s.nodes);\n  const [busy, setBusy] = useState<null | \"script\" | \"storyboard\">(null);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:13:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "  return (\n    <div className=\"flex h-full flex-col\">",
+  "new_string": "  // Fan-out (Amendment 17): one generateImage node per storyboard scene, prompt pre-filled. Nodes only \u2014\n  // the store exposes addNode but no programmatic edge action; the user wires them if desired.\n  const handleFanOut = () => {\n    const scenes = d.output?.scenes ?? [];\n    if (!scenes.length) return;\n    const self = nodes.find((n) => n.id === node.id);\n    const base = self?.position ?? { x: 0, y: 0 };\n    scenes.forEach((s, i) => {\n      addNode(\n        makeDefaultGenerateImage(\n          { x: base.x + 340, y: base.y + i * 200 },\n          { prompt: s.imagePrompt, label: `Cena ${i + 1}` },\n        ),\n      );\n    });\n    toast.success(`${scenes.length} n\u00f3s de imagem criados \u2713`);\n  };\n\n  return (\n    <div className=\"flex h-full flex-col\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:13:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "                {copied === \"tts\" ? \"Copiado\" : \"Copiar narra\u00e7\u00e3o (TTS)\"}\n              </Button>\n            )}\n          </Section>\n        )}",
+  "new_string": "                {copied === \"tts\" ? \"Copiado\" : \"Copiar narra\u00e7\u00e3o (TTS)\"}\n              </Button>\n            )}\n            <Button type=\"button\" variant=\"accent\" size=\"sm\" className=\"mt-2 w-full gap-2\" onClick={handleFanOut}>\n              <Images className=\"h-3.5 w-3.5\" /> Criar {d.output.scenes.length} n\u00f3s de imagem\n            </Button>\n          </Section>\n        )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:13:45)*
+
+
+## 🤖 Claude *(11:13:45)*
+
+Fan-out adicionado. `tsc`:
+
+## 🤖 Claude *(11:13:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit >/dev/null 2>&1 && echo \"tsc LIMPO \u2705\" || { echo \"tsc ERROS:\"; npx tsc --noEmit 2>&1 | grep -iE \"ScriptGenerator|makeDefaultGenerateImage|error TS\" | head -10; }",
+  "description": "TypeScript check fan-out"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc LIMPO ✅
+> ```
+
+## 🤖 Claude *(11:13:52)*
+
+
+## 🤖 Claude *(11:13:52)*
+
+`tsc LIMPO ✅`. Build + deploy + prova:
+
+## 🤖 Claude *(11:13:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 400 bun run build 2>&1 | tail -2\necho \"=== GATES ===\"; grep -rl bcyvddsykvehvpwstlfa dist/assets/ 2>/dev/null | wc -l | xargs echo \"env baked:\"\ngrep -rl \"n\u00f3s de imagem\\|handleFanOut\\|Criar \" dist/assets/ 2>/dev/null | head -1 | xargs -r echo \"fan-out no bundle:\" || echo \"fan-out N\u00c3O achado \u274c\"",
+  "description": "Build + deploy + verify fan-out in bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 28.98s
+> === GATES ===
+> env baked: 9
+> fan-out no bundle: dist/assets/MemoryPage-sRDL4N7G.js
+> ```
+
+## 🤖 Claude *(11:14:37)*
+
+
+## 🤖 Claude *(11:14:38)*
+
+O match caiu no `MemoryPage` por causa do genérico "Criar ". Confirmo a string específica do fan-out:
+
+## 🤖 Claude *(11:14:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rl \"n\u00f3s de imagem\" dist/assets/ 2>/dev/null | head -1 | xargs -r echo \"'n\u00f3s de imagem' em:\" || echo \"n\u00e3o achado\"\ngrep -rl \"makeDefaultGenerateImage\\|Criar {\" dist/assets/CanvasEditorPage-*.js 2>/dev/null >/dev/null && echo \"CanvasEditorPage tem o fan-out \u2705\" || echo \"checar\"",
+  "description": "Verify fan-out string in canvas bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 'nós de imagem' em: dist/assets/CanvasEditorPage-CyedbKrM.js
+> checar
+> ```
+
+## 🤖 Claude *(11:15:03)*
+
+
+## 🤖 Claude *(11:15:04)*
+
+✅ **`nós de imagem` no bundle** (`CanvasEditorPage-CyedbKrM.js`) — o fan-out está vivo. Committando:
+
+## 🤖 Claude *(11:15:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx && git commit -q -m \"feat(spaces): fan-out do storyboard \u2014 botao 'Criar N nos de imagem' fecha a cadeia roteiro->imagens\n\nAmendment 17. Quando o Roteiro tem storyboard (output.scenes), o inspector oferece 'Criar N nos de\nimagem' -> pra cada cena cria um no generateImage (makeDefaultGenerateImage) com scenes[i].imagePrompt\npre-preenchido, posicionado em coluna a direita do Roteiro (base.x+340, base.y+i*200). Usa addNode do\nstore. HONESTO: cria so os NOS (o store nao expoe action de edge programatica; usuario liga se quiser).\ntsc LIMPO. build+deploy (nos de imagem no bundle CanvasEditorPage-CyedbKrM.js). Cadeia COMPLETA no\ncanvas: Roteiro(storyboard) -> N Gerar Imagem -> Criativo Cinematografico.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit the storyboard fan-out"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:15AM[0m [32mINF[0m 1 commits scanned.
+> [90m8:15AM[0m [32mINF[0m scan completed in 38.6ms
+> [90m8:15AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> e44df93920f00d706655040e0b75ec0b1e02cec3 feat(spaces): fan-out do storyboard — botao 'Criar N nos de imagem' fecha a cadeia roteiro->imagens
+> ```
+
+## 🤖 Claude *(11:15:23)*
+
+
+## 🤖 Claude *(11:15:24)*
+
+`e44df93` selado. **A cadeia do Creative Studio está COMPLETA no canvas.** Este é o ponto natural de convergência do módulo — paro o loop autônomo aqui (Lei 3) e devolvo a você o mapa do que sobra:
+
+## 🤖 Claude *(11:15:24)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "stop": true
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Loop stopped — no further wakeups scheduled. If you armed a Monitor for this loop, TaskStop it now; otherwise nothing more to do this turn.
+> ```
+
+## 🤖 Claude *(11:15:30)*
+
+
+## 🤖 Claude *(11:15:50)*
+
+## 🎬 Creative Studio — a cadeia completa, viva no Spaces
+
+O módulo que começou como "3 primitivos FFmpeg grátis" agora é um pipeline de criação de vídeo **de ponta a ponta, montável na tela**:
+
+```
+[Roteiro] tema → storyboard (cenas · narração pt-BR · prompt de imagem · TTS)
+   │  "Criar N nós de imagem"  ← fan-out, e44df93
+   ▼
+[Gerar Imagem] × N (Nano Banana, prompt já preenchido por cena)
+   │  (cada imagem → hero opcional)
+   ▼
+[Criativo Cinematográfico] → renderiza MP4 9:16 MIV via FFmpeg grátis → toca no painel
+```
+
+Todos os nós **vivos, deployados e provados** nesta sessão:
+
+| Nó / camada | Commit | Prova |
+|-------------|--------|-------|
+| Roteiro v1 (script) | `0d1714a` | live SSE |
+| Roteiro v2 (storyboard estruturado) | `508cda7`/`41483c4` | `/security-review` SAFE + 5 cenas provadas |
+| Fan-out (cenas → nós de imagem) | `e44df93` | no bundle |
+| Criativo Cinematográfico (render) | `4d8b80b` | rail E2E + Vision ocular MIV |
+| Rail de render grátis | `36b256d` | enqueue→worker→MP4, template certo confirmado a olho |
+
+**Você faz agora** (hard-refresh): monta os nós, gera o storyboard, cria os nós de imagem por cena, e renderiza o criativo — tudo no `/dashboard/spaces`.
+
+## O que sobra (honesto — sua chamada de prioridade)
+
+Parei o loop porque o **núcleo está completo**; o resto são realces, cada um com seu gate:
+
+1. **Witness E2E real** do documentário dos robôs (roteiro→11 imagens→curta) — precisa do seu **GO de ~US$0,43** (imagens Gemini) + eu conduzo.
+2. **Agrupamento de assets** (`asset_role`: frames in-node, só finais em `/assets`) — migration → `/security-review` + **GO de schema seu** (como a OTD-SPACES-036).
+3. **Abrir no `/spaces/video`** — o *core blocker* honesto: falta um compilador criativo-Spaces→projeto HyperFrames editável.
+4. **TTS nativo** (VoxCPM2/LocalAI) — **pós-GPU/pós-renda** (host CPU-only).
+5. **Fan-out com arestas automáticas** — o store não expõe action de edge; hoje os nós são criados soltos (você liga).
+
+## Balanço da maratona
+
+Foi longa — e ela pariu **software real, vivo e provado**, não slides: os 3 motores FFmpeg grátis + o template cinematográfico MIV + 2 artifacts que você assistiu + o módulo Creative Studio (BoK/agente/skills + os 2 nós + o fan-out + o rail) + o hotfix do zip do LoRA + as decisões de motor (VoxCPM2, identidade multi-motor, Duix rejeitado) — e várias **correções honestas** que só o Vision/diagnóstico material pegaram (o 503 stale, o template errado do worker).
+
+Estou às ordens pro próximo passo que **você** priorizar — o witness E2E do seu documentário é o que eu recomendo pra ver a cadeia inteira rodando com conteúdo real.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
