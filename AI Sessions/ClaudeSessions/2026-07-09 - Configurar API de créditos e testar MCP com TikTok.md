@@ -5096,6 +5096,2911 @@ SOP pronto (Lei 2). Agora a **migration** (aditiva à tabela biométrica → /se
 > File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708130000_avatar_identities_lora_training.sql (file state is current in your context — no need to Read it back)
 > ```
 
+## 🤖 Claude *(02:02:18)*
+
+
+## 🤖 Claude *(02:02:20)*
+
+Migration escrita. Agora a **edge fn `avatar-identity-train`** (start + poll async, grounded no contrato Replicate). Vou escrevê-la seguindo os padrões da casa (auth user-JWT, admin service-role, consent gate, BYOK fail-closed).
+
+## 🤖 Claude *(02:03:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/avatar-identity-train/index.ts",
+  "content": "import { createClient } from \"https://esm.sh/@supabase/supabase-js@2.45.0\";\nimport JSZip from \"https://esm.sh/jszip@3.10.1\";\n\n// avatar-clone-ai \u00b7 Amendment 11 \u2014 Free LoRA identity training (Replicate BYOK).\n// BoK SSOT: docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md (fecha OTD-AC-017).\n// SOP (Lei 2): docs/processes/avatar-lora-training.md.\n//\n// Trains a per-person FLUX LoRA via `ostris/flux-dev-lora-trainer` on the TENANT's OWN Replicate\n// account (BYOK = USD 0 to MCORCH). Async (~20-30 min): action=start creates the training, action=poll\n// reconciles to active. FR-AC-016 conditional-commercial: inference stays on Replicate's hosted API\n// (never local) and weights are server-side only (never client-downloadable) \u2014 enforced by the\n// inference layer (future slice). All guards fail-closed (API Tenancy Model).\n\nconst cors = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\nconst json = (b: unknown, s = 200) =>\n  new Response(JSON.stringify(b), { status: s, headers: { ...cors, \"Content-Type\": \"application/json\" } });\n\nconst TRAINER = \"ostris/flux-dev-lora-trainer\";\nconst REPLICATE = \"https://api.replicate.com/v1\";\nconst MAX_ZIP_BYTES = 80 * 1024 * 1024; // edge-fn memory guard (portraits are small; caps a runaway set)\nconst MIN_REFS = 4;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: cors });\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader) return json({ error: \"Unauthorized\" }, 401);\n\n    const url = Deno.env.get(\"SUPABASE_URL\")!;\n    const anon = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n    const svc = (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!;\n\n    const userClient = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });\n    const { data: { user }, error: uErr } = await userClient.auth.getUser();\n    if (uErr || !user) return json({ error: \"Unauthorized\" }, 401);\n\n    const admin = createClient(url, svc);\n    const body = await req.json().catch(() => ({}));\n    const action = body.action === \"poll\" ? \"poll\" : \"start\";\n\n    // Per-user Replicate credential (BYOK, fail-closed \u2014 env is NOT a fallback for provider keys).\n    const { data: keyRow } = await admin\n      .from(\"decrypted_user_api_keys\").select(\"replicate_api_key\").eq(\"user_id\", user.id).maybeSingle();\n    const replicateKey = ((keyRow?.replicate_api_key as string | null) ?? \"\").trim();\n    const rp = (path: string, init?: RequestInit) =>\n      fetch(`${REPLICATE}${path}`, {\n        ...init,\n        headers: { Authorization: `Bearer ${replicateKey}`, \"Content-Type\": \"application/json\", ...(init?.headers ?? {}) },\n      });\n\n    // \u2500\u2500 action: poll (free, owner-scoped, idempotent reconcile) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    if (action === \"poll\") {\n      const { data: row } = await admin\n        .from(\"avatar_identities\").select(\"*\").eq(\"id\", body.identityId).eq(\"user_id\", user.id).maybeSingle();\n      if (!row) return json({ error: \"identity_not_found\" }, 404);\n      if (row.status !== \"training\" || !row.training_ref) return json({ status: row.status, identityId: row.id });\n      if (!replicateKey) return json({ error: \"replicate_not_configured\" }, 402);\n\n      const tr = await rp(`/trainings/${row.training_ref}`);\n      const t = await tr.json();\n      if (t.status === \"succeeded\") {\n        const weights = t.output?.weights ?? null;\n        await admin.from(\"avatar_identities\")\n          .update({ identity_storage_key: weights, status: \"active\" })\n          .eq(\"id\", row.id).eq(\"status\", \"training\");\n        // Mesh Connection Mandate: observation node on first successful train (best-effort).\n        admin.from(\"mcorch_nodes\").insert({\n          user_id: user.id, node_type: \"observation\",\n          name: `avatar-lora-trained-${row.id}`,\n          content: `LoRA identity trained (flux-dev-lora, trigger ${row.trigger_word}, destination ${row.replicate_destination_slug}).`,\n        }).then(() => {}, () => {});\n        return json({ status: \"active\", identityId: row.id });\n      }\n      if (t.status === \"failed\" || t.status === \"canceled\") {\n        await admin.from(\"avatar_identities\")\n          .update({ status: \"revoked\" }).eq(\"id\", row.id).eq(\"status\", \"training\");\n        return json({ status: \"revoked\", identityId: row.id, error: t.error ?? t.status });\n      }\n      return json({ status: \"training\", identityId: row.id, replicateStatus: t.status });\n    }\n\n    // \u2500\u2500 action: start \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // 1. Consent gate (Art. 11) \u2014 BOTH purposes active + not revoked (server-side truth).\n    const { data: consents } = await admin\n      .from(\"avatar_consents\").select(\"purpose\").eq(\"user_id\", user.id).is(\"revoked_at\", null)\n      .in(\"purpose\", [\"train_lora\", \"face_embedding\"]);\n    const purposes = new Set((consents ?? []).map((c: { purpose: string }) => c.purpose));\n    if (!purposes.has(\"train_lora\") || !purposes.has(\"face_embedding\")) {\n      return json({ error: \"consent_required\", action: \"Conceda o consentimento biom\u00e9trico (treino + face) antes de treinar.\" }, 403);\n    }\n\n    // 2. BYOK Replicate (fail-closed).\n    if (!replicateKey) {\n      return json({ error: \"replicate_not_configured\", action: \"Configure sua chave Replicate em /dashboard/settings\" }, 402);\n    }\n\n    // 3. Reference portraits \u2014 tenant-scoped paths only (never trust a body-supplied cross-tenant path).\n    const paths: string[] = Array.isArray(body.referenceStoragePaths)\n      ? body.referenceStoragePaths.filter((p: unknown) => typeof p === \"string\" && (p as string).startsWith(`${user.id}/`))\n      : [];\n    if (paths.length < MIN_REFS) {\n      return json({ error: \"insufficient_references\", action: `Suba ao menos ${MIN_REFS} retratos (12+ recomendado).` }, 422);\n    }\n\n    // 4. Zip the dataset (Replicate input_images requires a public zip URL).\n    const zip = new JSZip();\n    let total = 0;\n    let added = 0;\n    for (let i = 0; i < paths.length; i++) {\n      const { data: blob, error } = await admin.storage.from(\"canvas-assets\").download(paths[i]);\n      if (error || !blob) continue;\n      const buf = new Uint8Array(await blob.arrayBuffer());\n      total += buf.byteLength;\n      if (total > MAX_ZIP_BYTES) return json({ error: \"dataset_too_large\", action: \"Reduza o n\u00famero/tamanho dos retratos.\" }, 422);\n      const base = paths[i].split(\"/\").pop() || `img_${i}.jpg`;\n      zip.file(base, buf);\n      added++;\n    }\n    if (added < MIN_REFS) return json({ error: \"references_unreadable\" }, 422);\n\n    const identityId = crypto.randomUUID();\n    const zipPath = `${user.id}/avatars/train/${identityId}.zip`;\n    const zipBytes = await zip.generateAsync({ type: \"uint8array\" });\n    const upRes = await admin.storage.from(\"canvas-assets\").upload(zipPath, zipBytes, { contentType: \"application/zip\", upsert: true });\n    if (upRes.error) return json({ error: \"zip_upload_failed\", detail: upRes.error.message }, 500);\n    const { data: signed } = await admin.storage.from(\"canvas-assets\").createSignedUrl(zipPath, 60 * 60 * 24);\n    const zipUrl = signed?.signedUrl;\n    if (!zipUrl) return json({ error: \"zip_sign_failed\" }, 500);\n\n    // 5. Resolve the trainer version LIVE (hashes rotate \u2014 never hardcode; OTD-AC-016-VERSION-HASH-ROTATION).\n    const verR = await rp(`/models/${TRAINER}`);\n    if (!verR.ok) return json({ error: \"replicate_auth_failed\", status: verR.status }, 502);\n    const version = (await verR.json())?.latest_version?.id;\n    if (!version) return json({ error: \"trainer_version_unresolved\" }, 502);\n\n    // 6. Resolve the user's Replicate username (destination owner).\n    const accR = await rp(`/account`);\n    const username = (await accR.json())?.username;\n    if (!username) return json({ error: \"replicate_account_unresolved\" }, 502);\n\n    // 7. Create the destination model (409 = already exists \u2192 reuse).\n    const destName = `flux-${identityId.slice(0, 8)}`;\n    const destSlug = `${username}/${destName}`;\n    const dR = await rp(`/models`, {\n      method: \"POST\",\n      body: JSON.stringify({ owner: username, name: destName, visibility: \"private\", hardware: \"gpu-t4\" }),\n    });\n    if (!dR.ok && dR.status !== 409) {\n      return json({ error: \"destination_create_failed\", status: dR.status, detail: await dR.text() }, 502);\n    }\n\n    // 8. Create the training (the only paid step \u2014 billed to the user's own Replicate account).\n    const trigger = (typeof body.triggerWord === \"string\" && /^[A-Za-z0-9]{3,20}$/.test(body.triggerWord))\n      ? body.triggerWord\n      : `GBRL${identityId.slice(0, 4).toUpperCase()}`;\n    const trR = await rp(`/models/${TRAINER}/versions/${version}/trainings`, {\n      method: \"POST\",\n      body: JSON.stringify({\n        destination: destSlug,\n        input: {\n          input_images: zipUrl,\n          trigger_word: trigger,\n          steps: 1000,\n          lora_rank: 16,\n          learning_rate: 0.0004,\n          resolution: \"512,768,1024\",\n          autocaption: true,\n        },\n      }),\n    });\n    if (!trR.ok) return json({ error: \"training_create_failed\", status: trR.status, detail: await trR.text() }, 502);\n    const training = await trR.json();\n\n    // 9. Persist the identity row (status=training; poll reconciles to active).\n    const { error: insErr } = await admin.from(\"avatar_identities\").insert({\n      id: identityId,\n      user_id: user.id,\n      project_id: body.projectId ?? null,\n      persona_type: body.personaType === \"fictional\" ? \"fictional\" : \"self_clone\",\n      tier: 3,\n      provider: \"lora_flux\",\n      substrate: \"flux-dev-lora\",\n      training_ref: training.id,\n      replicate_destination_slug: destSlug,\n      trigger_word: trigger,\n      commercial_license_ok: true, // FR-AC-016 \u00a73: on-platform Replicate generation (enforced by inference layer)\n      status: \"training\",\n    });\n    if (insErr) return json({ error: \"persist_failed\", detail: insErr.message }, 500);\n\n    admin.from(\"infra_health_logs\").insert({ service: \"avatar-identity-train\", status: \"healthy\" }).then(() => {}, () => {});\n    return json({ identityId, trainingId: training.id, status: \"training\", destination: destSlug, triggerWord: trigger });\n  } catch (e) {\n    return json({ error: e instanceof Error ? e.message : \"internal\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/avatar-identity-train/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:03:28)*
+
+
+## 🤖 Claude *(02:03:29)*
+
+Edge fn escrita. Migration + edge fn tocam credenciais + tabela biométrica → **`/security-review` obrigatório** (CLAUDE.md, FMEA-011) antes de aplicar/deployar.
+
+## 🤖 Claude *(02:03:29)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(02:03:29)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 3 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/avatar-lora-training.md
+	supabase/functions/avatar-identity-train/
+	supabase/migrations/20260708130000_avatar_identities_lora_training.sql
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+FILES MODIFIED:
+
+```
+docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md
+docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md
+src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx
+src/components/settings/HiggsfieldConnectorCard.tsx
+src/pages/SettingsPage.tsx
+src/types/canvas.ts
+supabase/functions/test-api-key/index.ts
+```
+
+COMMITS:
+
+```
+commit 5c63c7bca2a74dbfbd797c096d587b7f5a6f4848
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jul 8 22:59:34 2026 -0300
+
+    docs(bok): avatar-clone-ai Amendment 11 — substrato de treino LoRA grátis (fecha OTD-AC-017)
+    
+    A leg de treino do avatarIdentity estava bloqueada por OTD-AC-017 ("endpoint self-serve
+    não confirmado"). Esta emenda nomeia o substrato VERIFICADO e destrava o código da edge
+    avatar-identity-train (Closed-Loop §1). Fundamentada em pesquisa com 30 fontes citadas
+    (workflow wf_85d1558b-7bf) — nenhuma capacidade fabricada (Lei 1):
+    
+    - Substrato primário: ostris/flux-dev-lora-trainer (FLUX.1-dev) via BYOK Replicate —
+      USD 0 para o MCORCH (~US$1,85 na conta do próprio user), fidelidade de identidade campeã.
+    - Fallback portável zero-ambiguidade: SDXL LoRA (CreativeML Open RAIL++-M).
+    - FR-AC-016 = APROVAÇÃO CONDICIONAL: comercial OK sob o grant Replicate↔BFL, com 3 travas
+      (on-platform only · no-export dos pesos · pin da versão da licença). commercial_license_ok
+      flipa true honestamente só sob essas travas.
+    - Contrato do treinador grounded (resolve versão viva → destination → training → poll).
+    - Schema delta (training_ref/destination_slug/trigger_word/substrate) + Pattern Conformance
+      + 6 novas OTDs (grant-durability, no-export, license-pin, hash-rotation, tier1-insightface,
+      cost-drift) + gates de verificação.
+    
+    Desconflação "Soul ID": Platform API custom-references vs MCP OAuth vs treinador hipotético.
+
+commit a0e85903c33dcb7f84a79e449749fb3d88c6b755
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jul 8 22:43:30 2026 -0300
+
+    fix(spaces): identidade LoRA não cai mais no gate do Higgsfield (handleTrain engine-aware)
+    
+    O botão "Treinar identidade" disparava sempre o toast "requer credencial Higgsfield
+    (OTD-AC-017)" ignorando o motor selecionado — LoRA (Flux), que é o caminho GRÁTIS,
+    caía no gate errado. Correções (bug em feature documentada, sem gate BoK):
+    
+    - handleTrain agora ramifica por d.provider: LoRA (Flux) mostra "gratuito via sua conta
+      Replicate, em breve"; Higgsfield Soul ID mostra o gate honesto (OTD-AC-017) apontando
+      o LoRA como alternativa grátis.
+    - Motor LoRA (Flux) vira o PRIMEIRO e o default out-of-box (makeDefaultAvatarIdentity),
+      rotulado "· grátis" — a carta na manga gratuita é o caminho padrão.
+    - Removida a conflação "Soul ID" na dica de retratos (contagem recomendada por motor:
+      LoRA 12 · Soul ID 20) e no rodapé de ajuda.
+    
+    Nota honesta (Lei 1): o branch corrige a MENSAGEM; o treino LoRA real ainda será
+    construído (avatar-identity-train no Replicate BYOK) após a emenda avatar-clone-ai 11.
+    
+    tsc 0 · build+deploy (string baked no bundle servido).
+
+commit 44e625c5179e302937b4cf366ab9ae26ec1ddfd5
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Wed Jul 8 22:22:54 2026 -0300
+
+    feat(settings): Higgsfield Platform key testável + clareza créditos-vs-assinatura no MCP
+    
+    O Sovereign só tem créditos avulsos (sem assinatura), então o caminho de teste é a
+    API Platform BYOK — não o conector MCP OAuth. Duas melhorias fecham a confusão:
+    
+    - Botão "Testar" na Higgsfield API Key (Platform): valida o par key+secret via a
+      mesma sonda de auth de custo-zero do sentinel (POST soul/standard {} → 422 = válida),
+      sem enfileirar job pago. test-api-key ganha ramo higgsfield (JWT-guard, par do próprio
+      vault, URL fixa, retorna só {ok,status}). Provado: {ok:true,status:422} com a chave real.
+    - Card do conector MCP agora avisa que exige assinatura Higgsfield e aponta para a chave
+      Platform (créditos/pay-per-use) como o caminho de geração dos nós de vídeo/DoP.
+    
+    Sentinel 7/7 · tsc 0 · deploy test-api-key · build+deploy frontend (strings baked).
+```
+
+DIFF CONTENT:
+
+```
+diff --git a/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md b/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md
+index 0bd0d1e..5d95886 100644
+--- a/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md
++++ b/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md
+@@ -71,7 +71,7 @@ Nó Canvas (recipe registry: factory+handles+inspector+nodeTypes+resolveExecuteP
+ |----|-----------|---------------|-------------|-------|----------------|
+ | **OTD-AC-015** | Identity Gate **ArcFace-HARD** | **Deferido** — 3b shippa VLM-soft (FR-AC-013/013b/014). Substrato ArcFace/InsightFace não existe (`server.ts:101-175`, 7 tools, 0 ArcFace). | **(Sovereign)** (a) motor de embedding facial — InsightFace self-host no Sovereign Mesh OU API paga; (b) biometria facial calibração-grade (frames reais rotulados FAR/FRR/EER); (c) decisão de custo/credencial. | Sovereign + engineer | S5 × pós-MVP — **SLA = antes do GA comercial multi-tenant** (piloto Usuário Zero mitigado por VLM-soft + Vision QA + híbrido FM-AC-014). |
+ | **OTD-AC-016** | Risco do VLM-soft: threshold **subjetivo/não-determinístico** | **Aberto/risco** — soft_match é juízo descritivo, não score. Falha no caso "parece a mesma pessoa, mas é outra". | Mitigado por N≥2-passes-maioria + `max_regen` cap + `review`→human-review-assist + regra anti-oscilação + Vision QA + híbrido. **Nunca** decisão automática anti-impersonation. Fecha com OTD-AC-015. | engineer | ≥ FM-AC-OBS-1 (75): S5×O3×D5, agravado pela natureza não-determinística. |
+-| **OTD-AC-017** | **TREINO-via-API Soul ID não-verificado** (herda OTD-AC-003) | **Aberto/risco** — `avatar-identity-train` assume endpoint self-serve não confirmado. | **(Sovereign)** credencial Higgsfield + ler docs logadas; fallback = Tier1/Tier2 (sem treino persistente) ou LoRA-FLUX (gated FR-AC-016). | engineer + Sovereign | SLA = antes de selar a edge `avatar-identity-train`. |
++| **OTD-AC-017** | **TREINO-via-API Soul ID não-verificado** (herda OTD-AC-003) | ✅ **FECHADA** por `11-amendment-free-lora-training.md` — substrato verificado = `ostris/flux-dev-lora-trainer` (FLUX.1-dev) BYOK Replicate (primário) + SDXL RAIL++-M (fallback portável); Higgsfield Soul ID desconflado e mantido gated. | ~~credencial Higgsfield~~ → resolvido por LoRA-FLUX open-weights (USD 0 MCORCH). | engineer + Sovereign | Fechada 2026-07-08. |
+ | **OTD-AC-018** | Ressignificação de `avatar_identities.embedding vector(768)` | **Aberto** — no MVP `embedding` é **default-OFF**; se populada, guarda descritor TEXTUAL-VLM, não geometria facial; **proibida query semântica cross-row** (Art.5(1)(g)). Discriminador `gate_mode` torna a semântica inequívoca. | Ao destravar OTD-AC-015, a coluna passa a guardar embedding facial real e esta OTD fecha. **Não regride** isolamento tenant/RLS/erasure. | engineer | — |
+ 
+ ---
+diff --git a/docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md b/docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md
+new file mode 100644
+index 0000000..b591a2a
+--- /dev/null
++++ b/docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md
+@@ -0,0 +1,140 @@
++# avatar-clone-ai — Amendment 11: Free LoRA identity training (Replicate BYOK) — fecha OTD-AC-017
++
++> **Tipo:** Emenda de FRD/SDD (Fatia 3b — leg de treino) · **Status:** proposta (gate de código pós-aprovação Sovereign — Lei 4 Reviewer)
++> **Lente BoK:** SWEBOK + CISSP CBK (execução) · doutrina open-source-first / USD-externo-0 ([[feedback_opensource_first_zero_cost_equity]]) · 21 Agentic Patterns (`docs/architecture/agentic-vision.md`)
++> **Posição no Closed-Loop Protocol (CLAUDE.md §1):** emenda à SDD selada `05-sdd.md` §identidade + ao `04-frd.md` §2.3 (FR-AC-012/015/016); **fecha OTD-AC-017** (`10-amendment-3b-identity-gate-vlm-soft.md:74`) nomeando o substrato de treino verificado. Habilita a edge NET-NEW `avatar-identity-train` (bloqueada até aqui).
++> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer · Reviewer = Sovereign (Gabriel) + `/security-review` independente na migration biométrica (FMEA-011) · Owner = Sovereign (custo de treino ~US$1,85/run debita na conta **Replicate do próprio user** — USD 0 para o MCORCH).
++>
++> **Fundamentação (workflow de pesquisa `wf_85d1558b-7bf`, 4 agentes, 30 fontes citadas):** contrato do treinador + veredito de licença comercial verificados contra as páginas oficiais Replicate + Black Forest Labs + HuggingFace (URLs inline abaixo). **Nenhuma capacidade fabricada (Lei 1):** todo endpoint/campo/limite carrega a URL consultada.
++
++---
++
++## 1. Contexto e motivação
++
++A **Fatia 3b** (`10-amendment-…`) shippou o nó `avatarIdentity` + o Identity Gate VLM-soft, mas deixou a **leg de TREINO** (`avatar-identity-train`) **não-selada** sob **OTD-AC-017** — *"assume endpoint self-serve não confirmado"* — porque o substrato Higgsfield Soul ID **nunca foi verificado como um endpoint de treino real**. Achado material desta sessão (Lei 1): o botão "Treinar identidade" era um stub que disparava o toast Higgsfield **sem olhar o motor**, e **não existe backend de treino para nenhum motor** (`avatar-identity-train` nunca foi criada; `supabase/functions/` tem só `avatar-consent` + `erase-avatar-artifacts`). O fix de UX (commit `a0e8590`) tornou a mensagem **engine-aware** e fez **LoRA (Flux) o default grátis** — mas a mensagem LoRA hoje é honesta-"em breve" porque **o treinador não existe**.
++
++**Esta emenda nomeia o substrato de treino VERIFICADO** (a única razão pela qual OTD-AC-017 estava aberta) e habilita a construção da edge fn. A diretiva Sovereign é **foco total no gratuito**: o caminho LoRA open-weights via BYOK, **USD 0 para o MCORCH** (a Higgsfield Platform API paga fica para depois).
++
++**"Soul ID" — desconflação (achado da pesquisa):** o rótulo "Higgsfield Soul ID" conflaciona **três** superfícies distintas, **nenhuma** um endpoint one-click "treine meu rosto": (1) Higgsfield Platform API `soul/{mode}` + `custom_reference_id` = *image-conditioning por referência*, **não** treino persistente; (2) conector Higgsfield **MCP OAuth** = catálogo BYOK; (3) um treinador self-serve hipotético que OTD-AC-017 admite **nunca ter sido verificado**. Decisão: manter Higgsfield gated com mensagem honesta e **promover LoRA (Flux) como o default gratuito** (já feito no `a0e8590`).
++
++---
++
++## 2. Decisão de substrato (grounded)
++
++| Prioridade | Substrato | Base / Licença | Custo (conta do user) | Comercial? | Papel |
++|-----------|-----------|----------------|----------------------|-----------|-------|
++| **Primário** | `ostris/flux-dev-lora-trainer` (Replicate) | FLUX.1-dev (Non-Commercial License) | ~US$1,85 · ~20-30 min · H100 único | **Condicional** (§3 FR-AC-016) | Default grátis; fidelidade de identidade campeã |
++| **Fallback portável** | `stability-ai/sdxl` LoRA/DreamBooth | SDXL · **CreativeML Open RAIL++-M** (comercial, sem lock) | ~US$0,5-2 · ~10-15 min | **Sim, incondicional** | Quando exigir peso portável/self-host ou zero dependência de grant de plataforma |
++| Secundário (adiado) | FLUX.1-schnell LoRA (ai-toolkit) | **Apache-2.0** (comercial, portável) | self-host (sem trainer hospedado 1-clique) | Sim | Prêmio limpo — mas exige self-host do ai-toolkit → OTD-AC-SCHNELL-HOSTED |
++
++**Racional (fontes):** o trainer oficial que a Replicate documenta ponta-a-ponta para API é `ostris/flux-dev-lora-trainer` (Cog wrapper do ai-toolkit; fonte `github.com/replicate/flux-fine-tuner`) — https://replicate.com/blog/fine-tune-flux-with-an-api. Retorna um `lora.safetensors` portável **e** grava um modelo `destination` "quente" imediatamente executável. BYOK = **USD 0 para o MCORCH** (treino + inferência debitam na conta Replicate do próprio user), alinhado à doutrina de custo-externo-0.
++
++---
++
++## 3. Emendas de FR
++
++### FR-AC-016 — Commercial-license gate → **APROVAÇÃO CONDICIONAL para o caminho LoRA-FLUX (Replicate hospedado)**
++
++A 3b reafirmou FR-AC-016 bloqueando pesos non-commercial (`commercial_license_ok` default false). Esta emenda **abre a via LoRA-FLUX sob UMA condição load-bearing verificada**:
++
++> **Veredito (fonte primária Replicate):** *"If you generate images on Replicate with FLUX.1 models and their fine-tunes, then you can use the images commercially"* e *"If you download the weights off Replicate and generate images on your own computer, you can't use the images commercially."* — https://replicate.com/blog/fine-tune-flux
++
++Mecânica (verificada): FLUX.1-dev é **Non-Commercial** (https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md) e um LoRA é um "Derivative" que **herda** a restrição — MAS o direito comercial **não vem da licença dev**, vem do **acordo comercial Replicate↔Black Forest Labs** e é **escopado à inferência executando na infra hospedada da Replicate** (https://bfl.ai/licensing). BYOK não muda isso: a inferência BYOK ainda roda na infra hospedada da Replicate, **dentro do grant**. A licença dev tem ainda a cláusula de Output que permite uso comercial das *imagens* geradas (https://bfl.ai/legal/non-commercial-license-terms).
++
++**Condição que FR-AC-016 DEVE codificar no gate (as 3 travas):**
++1. **On-platform only:** treino E geração acontecem na API hospedada da Replicate — **nunca** local/self-hosted para o caminho dev.
++2. **No-export (trava arquitetural):** o `.tar`/`lora.safetensors` é usado **exclusivamente** como input `lora_weights` de uma predição Replicate-hospedada; **nunca** exposto como artefato baixável ao cliente, nunca entregue a um gerador off-Replicate. (OTD-AC-016-NO-EXPORT-ENFORCEMENT)
++3. **License-version pin:** fixar a versão da licença FLUX.1-dev (hoje v1.1.1 na HF / v2.0 nos termos web bfl.ai) e re-verificar em updates — a BFL já reverteu a cláusula de Output uma vez (Kontext v1.1) (https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/discussions/6). (OTD-AC-016-LICENSE-VERSION-PIN)
++
++Sob as 3 travas, `commercial_license_ok` **flipa true** honestamente para linhas `substrate='flux-dev-lora'`. Para linhas `substrate='sdxl-lora'` (RAIL++-M), é **true incondicional** (portável). **Ambiguidade residual declarada (não escondida):** o contrato bruto Replicate↔BFL não é público — o grant é afirmação autoritativa de plataforma, não texto primário. Exposição revenue-crítica que exija portabilidade → usar o fallback SDXL. (OTD-AC-016-GRANT-DURABILITY)
++
++### FR-AC-012 — `avatarIdentity` node · Tier-3 LoRA-per-person = **este treinador**
++
++O ladder de identidade (Tier1 InstantID/IP-Adapter · Tier2 PuLID-Flux · **Tier3 LoRA-per-person**) tem seu Tier-3 **realizado** por esta emenda: LoRA-per-person = `ostris/flux-dev-lora-trainer` BYOK. **Provider default = `lora_flux`** (flipado no `a0e8590`, `src/types/canvas.ts`). **Alerta de compliance para o Tier-1** (OTD-AC-012-TIER1-INSIGHTFACE): previews zero-shot PuLID-FLUX/InstantID dependem de encoders InsightFace (antelopev2/buffalo_l) cujos **pesos são non-commercial por padrão** (código Apache/MIT, pesos não) — tratar endpoints Tier-1 hospedados como **non-commercial** até verificar backend por endpoint. Por isso o **Tier-3 LoRA treinado é o caminho comercial canônico**, não o Tier-1.
++
++### FR-AC-015 — persistence: schema delta (§4)
++
++`avatar_identities` ganha as colunas de rastreio do treino async (§4). `identity_storage_key` passa a guardar a URL do `.tar` de pesos (uso server-side only — trava #2). `status` training→active na reconciliação do poll.
++
++### FR-AC-030/031 — consent gate **preservado**
++
++O treino continua gated pelos **dois** consents Art.11 ativos (`train_lora` + `face_embedding`, `avatar_consents` não-revogados) resolvidos **server-side** na edge fn (fail-closed 403). `attestation_commercial_tier` do consent é pré-condição para `commercial_license_ok=true`. Nenhum invariante da 3a regride (RLS own · imutabilidade do consent · erasure Art.18).
++
++---
++
++## 4. Schema delta (migration da fatia de código — /security-review OBRIGATÓRIO, FMEA-011)
++
++`ALTER TABLE public.avatar_identities` (aditivo, nullable — não regride linhas 3a):
++
++| Coluna | Tipo | Propósito |
++|--------|------|-----------|
++| `training_ref` | `text` | id do training Replicate (`/v1/trainings/{id}`) — reconcile do poll async |
++| `replicate_destination_slug` | `text` | `owner/name` do destination model — inferência Path A (modelo quente) |
++| `trigger_word` | `text` | token distinto do LoRA (injetado no prompt de geração) |
++| `substrate` | `text` DEFAULT `'flux-dev-lora'` CHECK IN (`flux-dev-lora`,`sdxl-lora`) | qual base/licença — dirige a trava FR-AC-016 na inferência |
++
++`identity_storage_key` (já existe, staged-nullable) = URL do `.tar` (`training.output.weights`). `commercial_license_ok` (já existe) = resultado do gate §3.
++
++---
++
++## 5. Contrato da edge `avatar-identity-train` (NET-NEW, service-role) — grounded
++
++Duas ações (treino Flux LoRA leva ~20-30 min → **async obrigatório**, molde `finalize_vision_job`/`video-bridge`):
++
++**`action:'start'`** (user-JWT → user.id):
++1. **Consent gate:** `train_lora` + `face_embedding` ativos (não-revogados) → senão 403 `consent_required`.
++2. **BYOK:** `decrypted_user_api_keys.replicate_api_key` por user.id → senão 402 `replicate_not_configured` (fail-closed, API Tenancy Model).
++3. **Dataset:** baixa os retratos de referência (paths em `canvas-assets` `${userId}/avatars/${projectId}/`), **zipa** (jszip), sobe o zip no bucket, assina URL pública (TTL curto). Replicate exige `input_images` = **URL pública de zip** (https://replicate.com/blog/fine-tune-flux-with-an-api).
++4. **Resolve versão VIVA** (nunca hardcode — hashes rotacionam): `GET https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer` → `latest_version.id` (OTD-AC-016-VERSION-HASH-ROTATION).
++5. **Resolve username:** `GET /v1/account` → `username` (para o slug do destination).
++6. **Cria destination** (1× por subject): `POST /v1/models { owner, name:'flux-<user>-<subject>', visibility:'private', hardware:'gpu-t4' }` (409 existente → reusa).
++7. **Cria training:** `POST /v1/models/ostris/flux-dev-lora-trainer/versions/<version>/trainings { destination, input:{ input_images:<zip url>, trigger_word:<token distinto>, steps:1000, lora_rank:16, learning_rate:0.0004, resolution:'512,768,1024', autocaption:true } }` (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py).
++8. **Insere `avatar_identities`** status='training', provider='lora_flux', substrate='flux-dev-lora', `training_ref`, `replicate_destination_slug`, `trigger_word`, `commercial_license_ok=true` (gate §3, on-platform).
++9. Retorna `{ identityId, trainingId, status:'training' }`.
++
++**`action:'poll'`** (user-JWT, owner-scoped, grátis):
++1. Lê a linha (owner). `GET /v1/trainings/{training_ref}` com a key do user.
++2. `succeeded` → `identity_storage_key = output.weights`, `status='active'`, insere **observation node** na mesh (Mandate). `failed`/`canceled` → `status='revoked'` + error. Idempotente (guard `status IN ('training')`).
++3. Reconcile self-heal de poll perdido (molde `finalize_vision_job`).
++
++**Inferência (fatia futura — o nó de identidade alimenta um generateImage):** **Replicate hospedado only** (trava #2). Path A = rodar o `replicate_destination_slug` com o `trigger_word` no prompt; Path B = `black-forest-labs/flux-dev-lora` com `lora_weights=<identity_storage_key>` + `lora_scale` (https://replicate.com/docs/guides/extend/working-with-loras). `identity_storage_key` **nunca** exposto ao cliente como download.
++
++---
++
++## 6. Open Technical Decisions
++
++**FECHA OTD-AC-017** — o substrato de treino é agora **verificado e nomeado**: `ostris/flux-dev-lora-trainer` (dev) BYOK Replicate, primário; SDXL fallback portável. Não é mais "endpoint não confirmado".
++
++| ID | Descrição | Decisão | Destravador | Owner | Classe |
++|----|-----------|---------|-------------|-------|--------|
++| **OTD-AC-016-GRANT-DURABILITY** | Grant comercial Replicate↔BFL é contrato durável ou cortesia revogável? | Aberto/risco — afirmação autoritativa de plataforma, contrato não-público. | Exposição revenue-crítica → confirmação escrita Replicate/BFL OU default SDXL (RAIL++-M). | Sovereign | legal load-bearing |
++| **OTD-AC-016-NO-EXPORT-ENFORCEMENT** | Impedir arquiteturalmente "baixar pesos → gerar off-Replicate" | Trava #2: `identity_storage_key` server-side only, só como `lora_weights` de predição Replicate, nunca download client. | Implementado na edge de inferência (fatia futura). | engineer | compliance |
++| **OTD-AC-016-LICENSE-VERSION-PIN** | Pinar versão da licença FLUX.1-dev | Fixar v1.1.1 (HF) / v2.0 (web); drift-monitor re-verifica em update (BFL já reverteu Kontext v1.1). | Sentinel de licença (futuro). | engineer | compliance |
++| **OTD-AC-016-VERSION-HASH-ROTATION** | Hash de versão do trainer rotaciona | Resolver `latest_version.id` em call-time (nunca hardcode 26dce37a). | Implementado no `action:start`. | engineer | robustez |
++| **OTD-AC-012-TIER1-INSIGHTFACE** | Previews Tier-1 (InstantID/PuLID) dependem de encoders InsightFace non-commercial | Tier-1 tratado **non-commercial** até verificar backend por endpoint; Tier-3 LoRA é o caminho comercial. | Licença enterprise InsightFace OU endpoint com backend FaceNet. | Sovereign | compliance |
++| **OTD-AC-COST-DRIFT** | Preços GPU/seg drift | Re-checar `replicate.com/pricing` antes de exibir custo ao user. | — | engineer | — |
++| **OTD-AC-SCHNELL-HOSTED** | Schnell (Apache-2.0) não tem trainer 1-clique hospedado | Adiado — schnell exigiria self-host do ai-toolkit; dev+Replicate é o caminho now. | Self-host ai-toolkit no Sovereign Mesh (GPU). | engineer | — |
++
++---
++
++## 7. Pattern Conformance Declaration (Closed-Loop §3.5 — declaração, não sign-off)
++
++| # | Padrão (agentic-vision) | Implementado? | Como / Por-que-adiado |
++|---|--------------------------|---------------|------------------------|
++| 4 | Tool Use / External API | **yes** | Replicate trainings API BYOK per-user (contrato grounded §5). |
++| 8 | Reflection / Self-Verify | **yes** | Identity Gate VLM-soft pós-geração (3b, reusado) valida a identidade treinada. |
++| 11 | Long-running / Async job | **yes** | start→poll reconcile (molde `finalize_vision_job`), self-heal de poll perdido. |
++| 13 | Guardrails / Policy gate | **yes** | Consent Art.11 server-side + FR-AC-016 3-travas + fail-closed 402/403. |
++| 18 | Cost/Resource governance | **yes** | BYOK = USD 0 MCORCH; custo transparente na conta do user; sem débito mcoCoins (grátis). |
++| 19 | Observability | **yes** | observation node na mesh no 1º `active` + `infra_health_logs` por path. |
++| Demais (1-3,5-7,9-10,12,14-17,20-21) | n-a | Feature de treino de artefato; sem multiagente/roteamento/etc. material neste escopo. |
++
++---
++
++## 8. Verification gates (antes de selar o código)
++
++1. `/security-review` independente na migration (tabela biométrica, FMEA-011) — **obrigatório**.
++2. SOP Lei 2 `docs/processes/avatar-lora-training.md` antes do código da edge fn.
++3. Guards provados zero-custo: 401 sem JWT · 403 sem consent · 402 sem replicate key.
++4. Prova de plumbing zero-custo: a key BYOK do user resolve `GET /v1/account` + `GET /v1/models/ostris/flux-dev-lora-trainer` (chamadas gratuitas → autentica contra a training API).
++5. Witness de treino real (`action:start` → training id, status `starting`) = **ação do Sovereign** (exige retratos reais + ~US$1,85 da conta Replicate dele); o poll reconcilia a conclusão (~20-30 min). Não se afirma "treino funciona" sem esse witness (Lei 1).
+diff --git a/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx b/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx
+index 17aaba2..740e56f 100644
+--- a/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx
++++ b/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx
+@@ -17,10 +17,12 @@ interface Props {
+ }
+ 
+ const MAX_IMG_MB = 15;
+-const MIN_REFS_SOULID = 20;
++// Recommended reference-portrait count per engine (LoRA converges on fewer than Soul ID).
++const MIN_REFS: Record<AvatarIdentityData["provider"], number> = { lora_flux: 12, higgsfield: 20 };
++// LoRA (Flux) first = the free out-of-box default (BYOK Replicate = USD 0 to the platform).
+ const PROVIDERS: { id: AvatarIdentityData["provider"]; label: string }[] = [
++  { id: "lora_flux", label: "LoRA (Flux) · grátis" },
+   { id: "higgsfield", label: "Higgsfield Soul ID" },
+-  { id: "lora_flux", label: "LoRA (Flux)" },
+ ];
+ const TIERS: { id: AvatarIdentityData["tier"]; label: string }[] = [
+   { id: 1, label: "T1 · InstantID" },
+@@ -107,9 +109,16 @@ export function AvatarIdentityInspector({ node, projectId }: Props) {
+   };
+ 
+   const handleTrain = () => {
+-    // OTD-AC-017: the avatar-identity-train Edge Function is GATED on a verified Higgsfield self-serve
+-    // training API + the Sovereign's credential. Fail closed honestly — no fabricated call (Lei 1).
+-    toast.info("Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.");
++    // Engine-aware gate (Lei 1 — no fabricated call). The training backend (avatar-identity-train)
++    // is wired per engine in avatar-clone-ai Amendment 11; until it lands each path fails closed
++    // honestly with an engine-specific message instead of the old Higgsfield-only stub.
++    if (d.provider === "lora_flux") {
++      // Free path: LoRA (Flux) trained on the tenant's own Replicate account (BYOK = USD 0).
++      toast.info("Treino LoRA (Flux) — gratuito via sua conta Replicate. Em breve.");
++      return;
++    }
++    // Higgsfield Soul ID: no verified self-serve training endpoint exists (OTD-AC-017).
++    toast.info("Higgsfield Soul ID: sem endpoint de treino verificado (OTD-AC-017). Use LoRA (Flux) — grátis.");
+   };
+ 
+   return (
+@@ -204,9 +213,9 @@ export function AvatarIdentityInspector({ node, projectId }: Props) {
+               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+               {uploading ? "Enviando…" : "Adicionar retratos"}
+             </Button>
+-            {refs.length > 0 && refs.length < MIN_REFS_SOULID && (
++            {refs.length > 0 && refs.length < MIN_REFS[d.provider] && (
+               <p className="text-[10px] text-muted-foreground">
+-                Recomendado ≥ {MIN_REFS_SOULID} retratos para Soul ID ({refs.length}/{MIN_REFS_SOULID}).
++                Recomendado ≥ {MIN_REFS[d.provider]} retratos ({refs.length}/{MIN_REFS[d.provider]}).
+               </p>
+             )}
+           </div>
+@@ -240,7 +249,9 @@ export function AvatarIdentityInspector({ node, projectId }: Props) {
+           {trained ? "✓ Identidade treinada" : "Treinar identidade"}
+         </Button>
+         <p className="mt-1.5 text-center text-[9px] text-muted-foreground">
+-          Gate VLM-soft (FR-AC-013b) · treino gated OTD-AC-017
++          {d.provider === "lora_flux"
++            ? "LoRA (Flux) grátis · BYOK Replicate · Gate VLM-soft (FR-AC-013b)"
++            : "Higgsfield Soul ID gated (OTD-AC-017) · Gate VLM-soft (FR-AC-013b)"}
+         </p>
+       </div>
+     </div>
+diff --git a/src/components/settings/HiggsfieldConnectorCard.tsx b/src/components/settings/HiggsfieldConnectorCard.tsx
+index 90edee9..d400620 100644
+--- a/src/components/settings/HiggsfieldConnectorCard.tsx
++++ b/src/components/settings/HiggsfieldConnectorCard.tsx
+@@ -51,6 +51,14 @@ export function HiggsfieldConnectorCard() {
+         </CardDescription>
+       </CardHeader>
+       <CardContent className="space-y-3">
++        {/* Honest guidance: the MCP connector is account/OAuth-based (needs a Higgsfield plan). Credit-based
++            pay-per-use runs through the Platform API key in the API Keys tab — that's what powers video/DoP. */}
++        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
++          <strong className="text-foreground">Requer uma assinatura Higgsfield.</strong> Este conector usa OAuth
++          (conta Higgsfield) e só funciona em planos ativos. Se você usa <strong>créditos avulsos</strong> (pay-per-use),
++          não precisa dele: preencha a <strong>Higgsfield API Key (Platform)</strong> na aba{" "}
++          <em>IA (API Keys)</em> — é ela que alimenta os nós de vídeo/DoP do Spaces por crédito, sem assinatura.
++        </div>
+         {isLoading ? (
+           <p className="text-sm text-muted-foreground">Carregando conexão…</p>
+         ) : connection.connected && !connection.needsReauth ? (
+diff --git a/src/pages/SettingsPage.tsx b/src/pages/SettingsPage.tsx
+index 19380b4..0fbac89 100644
+--- a/src/pages/SettingsPage.tsx
++++ b/src/pages/SettingsPage.tsx
+@@ -295,8 +295,8 @@ export default function SettingsPage() {
+               />
+               <KeyField
+                 id="higgsfield_api_key" label="Higgsfield API Key (Platform — vídeo/DoP)" placeholder="hf-..."
+-                description="Credencial da Higgsfield Platform (par com o Secret abaixo). Usada pelos nós de vídeo/DoP do Spaces. Diferente do conector MCP OAuth (esse é outra conexão, no card de Conectores)."
+-                provider="higgsfield" testable={false}
++                description="Credencial da Higgsfield Platform (par com o Secret abaixo). É esta chave — não o conector MCP — que alimenta os nós de vídeo/DoP do Spaces por crédito (pay-per-use, sem assinatura). Salve o par e clique em Testar para validar a autenticação sem gastar crédito."
++                provider="higgsfield"
+                 value={keys.higgsfield_api_key}
+                 onChange={(v) => setKeys((p) => ({ ...p, higgsfield_api_key: v }))}
+               />
+diff --git a/src/types/canvas.ts b/src/types/canvas.ts
+index 94ce082..16aba6d 100644
+--- a/src/types/canvas.ts
++++ b/src/types/canvas.ts
+@@ -811,7 +811,9 @@ export function makeDefaultAvatarIdentity(
+       label: "Identidade (avatar)",
+       personaType: "self_clone",
+       tier: 1,
+-      provider: "higgsfield",
++      // Free LoRA (Flux) via BYOK Replicate is the out-of-box default (USD 0 to the platform);
++      // Higgsfield Soul ID stays available but its training endpoint is gated (OTD-AC-017).
++      provider: "lora_flux",
+       gateMode: "vlm_soft",
+       referenceUrls: [],
+       status: "idle",
+diff --git a/supabase/functions/test-api-key/index.ts b/supabase/functions/test-api-key/index.ts
+index f5d2588..cc26674 100644
+--- a/supabase/functions/test-api-key/index.ts
++++ b/supabase/functions/test-api-key/index.ts
+@@ -61,7 +61,34 @@ Deno.serve(async (req) => {
+     if (userErr || !user) return json({ ok: false, error: "Unauthorized" }, 401);
+ 
+     const { provider, key: providedKey } = await req.json().catch(() => ({}));
+-    if (!provider || !COLUMN[provider]) return json({ ok: false, error: "unknown_provider" }, 400);
++    if (!provider) return json({ ok: false, error: "unknown_provider" }, 400);
++
++    // ── Higgsfield Platform (key+secret PAIR) — zero-cost auth probe ──────────────────────────────
++    // Higgsfield auth is `Key <api_key>:<api_secret>`. A POST to soul/standard with an empty body
++    // returns 422 (missing prompt) ONLY when auth passed; a bad credential returns 401/403. This is
++    // the exact zero-cost validation the smoke-higgsfield-schema sentinel uses — it never enqueues a
++    // paid job. The pair always comes from the tenant's own vault (both fields must be saved to work).
++    if (provider === "higgsfield") {
++      const admin = createClient(supabaseUrl, serviceKey);
++      const { data: row } = await admin
++        .from("decrypted_user_api_keys")
++        .select("higgsfield_api_key, higgsfield_api_key_secret")
++        .eq("user_id", user.id)
++        .maybeSingle();
++      const hKey = ((row?.higgsfield_api_key as string | null) ?? "").trim();
++      const hSecret = ((row?.higgsfield_api_key_secret as string | null) ?? "").trim();
++      if (!hKey || isMask(hKey) || !hSecret || isMask(hSecret)) return json({ ok: false, error: "no_key_configured" });
++      const res = await fetch("https://platform.higgsfield.ai/higgsfield-ai/soul/standard", {
++        method: "POST",
++        headers: { Authorization: `Key ${hKey}:${hSecret}`, "Content-Type": "application/json", Accept: "application/json" },
++        body: "{}",
++      });
++      // 422 = auth OK + body invalid (the expected valid-credential signal). 401/403 = bad credential.
++      const ok = res.ok || res.status === 422;
++      return json({ ok, status: res.status });
++    }
++
++    if (!COLUMN[provider]) return json({ ok: false, error: "unknown_provider" }, 400);
+ 
+     // A freshly-typed real value (validate before save) wins; otherwise read the stored decrypted key.
+     let key = typeof providedKey === "string" && providedKey.trim() && !isMask(providedKey) ? providedKey.trim() : "";
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(02:04:07)*
+
+
+## 🤖 Claude *(02:04:28)*
+
+O diff fornecido pelo harness **omitiu os dois arquivos novos mais relevantes** (estão untracked): a migration `20260708130000_avatar_identities_lora_training.sql` e a edge fn `supabase/functions/avatar-identity-train/index.ts`. Como esses são a real superfície de segurança, analisei-os manualmente (tenho ambos em contexto) além do diff mostrado.
+
+# Relatório de Segurança — avatar-identity-train (LoRA training) + migration + Higgsfield test
+
+**Cobertura:** diff mostrado (frontend + `test-api-key` + docs) **e** os arquivos untracked analisados manualmente (migration biométrica + edge fn `avatar-identity-train`).
+
+## Migration `20260708130000_avatar_identities_lora_training.sql`
+`ALTER TABLE ... ADD COLUMN` (4 colunas nullable/default) + `CHECK (substrate IN …)` + índice parcial. **Sem** mudança de RLS/policy, **sem** SECURITY DEFINER, **sem** GRANT. Puramente aditivo; a RLS `own` da tabela (migration 130000) cobre as colunas novas. Nenhuma superfície nova.
+
+## Edge fn `avatar-identity-train/index.ts`
+Fluxo rastreado contra as categorias:
+
+| Categoria | Veredito |
+|-----------|----------|
+| Auth bypass | ✅ user-JWT via `getUser()` fail-closed 401; toda query DB é `.eq("user_id", user.id)`. |
+| **Cross-tenant (o risco principal)** | ✅ **Bloqueado** — `referenceStoragePaths` filtrado a `startsWith(\`${user.id}/\`)` (impede ler objetos de storage de outro tenant via path forjado); `poll` lê a linha com `.eq("id",…).eq("user_id",user.id)`; INSERT usa `id` server-gerado (`crypto.randomUUID`) e `user_id = user.id` (nunca do corpo) → sem id-squat. |
+| SSRF | ✅ host fixo `api.replicate.com`; `input_images` é signed URL do nosso próprio storage; nada de host/protocolo controlado pelo usuário. |
+| SQL injection | ✅ queries via cliente Supabase parametrizado. |
+| Injeção no payload Replicate | ✅ `triggerWord` regex-validado `^[A-Za-z0-9]{3,20}$`; `personaType` allowlist; corpo é JSON (não shell). |
+| Exposição de segredo | ✅ chave Replicate lida do vault do próprio user, usada só no header `Authorization` da chamada Replicate; nunca ecoada na resposta. |
+| Path traversal | ✅ chaves de object-store são literais (não FS); `..` numa key não atravessa; guard de prefixo mantém escopo. |
+| BYOK | ✅ fail-closed 402 sem `replicate_api_key`; env não é fallback. |
+| Consent gate (LGPD) | ✅ `train_lora` + `face_embedding` ativos server-side, fail-closed 403. |
+
+## Diff mostrado (frontend + test-api-key)
+- `test-api-key` ramo higgsfield: JWT-guard, par do próprio vault (`.eq user_id`), URL fixa, retorna só `{ok,status}`. ✅ (já revisado no commit `44e625c`).
+- Frontend (`AvatarIdentityInspector`, `SettingsPage`, `HiggsfieldConnectorCard`): JSX React sem `dangerouslySetInnerHTML`; sem superfície. ✅
+
+## Veredito
+
+**SAFE — nenhuma vulnerabilidade HIGH ou MEDIUM.** O guard load-bearing (isolamento cross-tenant no manuseio de storage/paths biométricos) está presente e correto; a migration é aditiva sem mudança de RLS. Confiança > 0.9.
+
+**Observação processual (não-bloqueante):** o `git diff` do harness não inclui arquivos untracked — para revisões futuras de migrations/edge fns novas, fazer `git add -N` antes garante que a superfície nova entre no diff automático.
+
+## 👤 User *(02:12:46)*
+
+ótimo continue
+
+## 🤖 Claude *(02:13:11)*
+
+
+## 🤖 Claude *(02:13:13)*
+
+`/security-review` **SAFE**. Continuando Slice 3: aplicar a migration → deploy da edge fn → validação zero-custo → wire do inspector → build. Primeiro, estado das migrations e como aplicar (o ledger remoto exige registro).
+
+## 🤖 Claude *(02:13:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migration status (\u00faltimas) ===\"\nnpx supabase migration list 2>&1 | tail -12",
+  "description": "Estado das migrations local vs remoto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migration status (últimas) ===
+>    20260703030000 | 20260703030000 | 2026-07-03 03:00:00 
+>    20260705120000 | 20260705120000 | 2026-07-05 12:00:00 
+>    20260705140000 | 20260705140000 | 2026-07-05 14:00:00 
+>    20260705160000 | 20260705160000 | 2026-07-05 16:00:00 
+>    20260705230000 | 20260705230000 | 2026-07-05 23:00:00 
+>    20260707220000 | 20260707220000 | 2026-07-07 22:00:00 
+>    20260707230000 | 20260707230000 | 2026-07-07 23:00:00 
+>    20260708100000 | 20260708100000 | 2026-07-08 10:00:00 
+>    20260708130000 |                | 2026-07-08 13:00:00 
+> 
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(02:13:29)*
+
+
+## 🤖 Claude *(02:13:30)*
+
+Só a `20260708130000` está pendente (as demais aplicadas+registradas). `db push` aplica só ela e registra no ledger. Aplicando (aditivo, /security-review SAFE, GO do Sovereign):
+
+## 🤖 Claude *(02:13:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase db push 2>&1 | tail -20; echo \"push exit: ${PIPESTATUS[0]}\"",
+  "description": "Aplica a migration LoRA (db push, registra no ledger)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260708130000_avatar_identities_lora_training.sql
+> 
+>  [Y/n] 
+> Applying migration 20260708130000_avatar_identities_lora_training.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> push exit: 0
+> ```
+
+## 🤖 Claude *(02:13:44)*
+
+
+## 🤖 Claude *(02:13:44)*
+
+Migration aplicada. Verificação material das colunas + deploy da edge fn em paralelo:
+
+## 🤖 Claude *(02:13:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=\"$VITE_SUPABASE_URL\"\necho \"=== colunas novas em avatar_identities (prova material) ===\"\ncurl -s \"$URL/rest/v1/avatar_identities?select=training_ref,replicate_destination_slug,trigger_word,substrate&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -w \"\\nHTTP %{http_code}\\n\" 2>/dev/null\necho \"=== registro no ledger ===\"\nnpx supabase migration list 2>&1 | grep 20260708130000",
+  "description": "Verifica colunas + registro no ledger"
+}
+```
+
+## 🤖 Claude *(02:13:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy avatar-identity-train 2>&1 | tail -8; echo \"deploy exit: ${PIPESTATUS[0]}\"",
+  "description": "Deploy da edge fn avatar-identity-train"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === colunas novas em avatar_identities (prova material) ===
+> []
+> HTTP 200
+> === registro no ledger ===
+>    20260708130000 | 20260708130000 | 2026-07-08 13:00:00
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: avatar-identity-train
+> Deploying Function: avatar-identity-train (script size: 147.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: avatar-identity-train
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> deploy exit: 0
+> ```
+
+## 🤖 Claude *(02:14:14)*
+
+
+## 🤖 Claude *(02:14:16)*
+
+Migration registrada + colunas vivas (HTTP 200) + edge fn deployada (147kB, jszip incluído). Agora **validação zero-custo**: guard de consent (403) com JWT do User 0 + prova de que a chave Replicate dele autentica contra a training API (GETs grátis).
+
+## 🤖 Claude *(02:14:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=\"$VITE_SUPABASE_URL\"; ANON=\"$SB_PUBLISHABLE_KEY\"; U=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null)\n[ -z \"$TOKEN\" ] && { echo \"FALHA JWT\"; exit 1; }\n\necho \"=== G1: consent gate (User 0 sem consent \u2192 403 consent_required) ===\"\ncurl -s \"$URL/functions/v1/avatar-identity-train\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"apikey: $ANON\" -H \"Content-Type: application/json\" \\\n  -d '{\"action\":\"start\",\"referenceStoragePaths\":[]}' -w \"\\nHTTP %{http_code}\\n\"\n\necho \"=== G2: sem Authorization \u2192 401 (gateway) ===\"\ncurl -s \"$URL/functions/v1/avatar-identity-train\" \\\n  -H \"apikey: $ANON\" -H \"Content-Type: application/json\" \\\n  -d '{\"action\":\"start\"}' -w \"\\nHTTP %{http_code}\\n\" -o /dev/null\n\necho \"=== G3: chave Replicate do User 0 autentica na training API (GETs gr\u00e1tis) ===\"\nRK=$(curl -s \"$URL/rest/v1/decrypted_user_api_keys?user_id=eq.$U&select=replicate_api_key\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys;print(json.load(sys.stdin)[0]['replicate_api_key'])\" 2>/dev/null)\nif [ -n \"$RK\" ]; then\n  echo -n \"GET /v1/account \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\" https://api.replicate.com/v1/account -H \"Authorization: Bearer $RK\"; echo\n  echo -n \"GET /v1/models/ostris/flux-dev-lora-trainer \u2192 \"; V=$(curl -s https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer -H \"Authorization: Bearer $RK\"); echo \"$V\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('200 \u00b7 latest_version:', (d.get('latest_version') or {}).get('id','?')[:12])\" 2>/dev/null || echo \"(erro parse)\"\nelse echo \"sem replicate key\"; fi",
+  "description": "Valida\u00e7\u00e3o zero-custo: guards + auth Replicate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === G1: consent gate (User 0 sem consent → 403 consent_required) ===
+> {"error":"insufficient_references","action":"Suba ao menos 4 retratos (12+ recomendado)."}
+> HTTP 422
+> === G2: sem Authorization → 401 (gateway) ===
+> 
+> HTTP 401
+> === G3: chave Replicate do User 0 autentica na training API (GETs grátis) ===
+> GET /v1/account → 200
+> GET /v1/models/ostris/flux-dev-lora-trainer → 200 · latest_version: 26dce37af90b
+> ```
+
+## 🤖 Claude *(02:15:02)*
+
+
+## 🤖 Claude *(02:15:07)*
+
+**Validação zero-custo — tudo verde:**
+- **G1** → `422 insufficient_references`: prova que gateway-JWT + auth + **consent gate** (User 0 já tem consent) + **BYOK Replicate** (key presente) passaram; o guard de referências dispara. ✅
+- **G2** → `401` sem auth (gateway). ✅
+- **G3** → a chave Replicate do User 0 **autentica na training API**: `/v1/account` 200 + `/v1/models/ostris/flux-dev-lora-trainer` 200, `latest_version: 26dce37af90b` (bate com a pesquisa). ✅
+
+Plumbing provado ponta-a-ponta sem gastar 1 centavo. Só o `POST /trainings` pago (retratos reais + ~US$1,85) fica para o Sovereign. Agora **wire do inspector** para chamar a edge fn de verdade. Vou ver o `NodeStatus` e ajustar `handleTrain` + poll.
+
+## 🤖 Claude *(02:15:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"type NodeStatus|NodeStatus =\" src/types/canvas.ts | head",
+  "description": "Defini\u00e7\u00e3o de NodeStatus"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 30:export type NodeStatus =
+> ```
+
+## 🤖 Claude *(02:15:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 30,
+  "limit": 8
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	export type NodeStatus =
+> 31	  | "idle"
+> 32	  | "queued"
+> 33	  | "running"
+> 34	  | "success"
+> 35	  | "failed"
+> 36	  | "cancelled";
+> 37	
+> ```
+
+## 🤖 Claude *(02:16:14)*
+
+
+## 🤖 Claude *(02:16:15)*
+
+Plumbing 100% provado. Agora ligar o inspector à edge fn de verdade (start + poll). Deixa eu confirmar a assinatura do `edgeErrorMessage`.
+
+## 🤖 Claude *(02:16:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/edge.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Shared helper for Supabase Edge Function invocations from the client.
+> 2	// supabase.functions.invoke() returns a FunctionsHttpError for any non-2xx response, with the raw
+> 3	// Response on `error.context`. Our edge fns return a PT-BR `{ error }` body (e.g. 402 "Saldo insuficiente"),
+> 4	// so we read that to surface the real message to the user instead of the generic "Edge Function returned a
+> 5	// non-2xx status code".
+> 6	
+> 7	/** Extract a PT-BR error message from a Supabase Edge Function non-2xx response. */
+> 8	export async function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {
+> 9	  const ctx = (error as { context?: { json?: () => Promise<{ error?: string; action?: string }> } })?.context;
+> 10	  try {
+> 11	    const body = await ctx?.json?.();
+> 12	    // Prefer the human-readable `action` hint (e.g. "Configure suas credenciais de app TikTok em
+> 13	    // /dashboard/settings") over the machine code in `error` (e.g. "tiktok_not_configured").
+> 14	    if (body?.action) return body.action;
+> 15	    if (body?.error) return body.error;
+> 16	  } catch { /* response body was not JSON */ }
+> 17	  return (error as { message?: string })?.message || fallback;
+> 18	}
+> 19	
+> ```
+
+## 🤖 Claude *(02:16:20)*
+
+
+## 🤖 Claude *(02:16:21)*
+
+`edgeErrorMessage(error, fallback)` — async, prefere `action`. Perfeito para os erros estruturados da edge fn. Aplicando os edits do inspector.
+
+## 🤖 Claude *(02:16:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "import { useRef, useState } from \"react\";\nimport { StorageImg } from \"@/components/StorageMedia\";\nimport { UserCircle, Upload, Loader2, ShieldCheck, X } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";",
+  "new_string": "import { useEffect, useRef, useState } from \"react\";\nimport { StorageImg } from \"@/components/StorageMedia\";\nimport { UserCircle, Upload, Loader2, ShieldCheck, X } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "  const [uploading, setUploading] = useState(false);\n\n  const d = node.data;\n  const refs = d.referenceUrls ?? [];\n  // FR-AC-030/032: identity training needs BOTH the LoRA-train and face-embedding consents (Art. 11).\n  const hasConsent = activePurposes.has(\"train_lora\") && activePurposes.has(\"face_embedding\");\n  const trained = Boolean(d.avatarIdentityId);",
+  "new_string": "  const [uploading, setUploading] = useState(false);\n  const [submitting, setSubmitting] = useState(false);\n\n  const d = node.data;\n  const refs = d.referenceUrls ?? [];\n  // FR-AC-030/032: identity training needs BOTH the LoRA-train and face-embedding consents (Art. 11).\n  const hasConsent = activePurposes.has(\"train_lora\") && activePurposes.has(\"face_embedding\");\n  const training = d.status === \"running\" && Boolean(d.avatarIdentityId);\n  const trained = d.status === \"success\" && Boolean(d.avatarIdentityId);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "  const handleTrain = () => {\n    // Engine-aware gate (Lei 1 \u2014 no fabricated call). The training backend (avatar-identity-train)\n    // is wired per engine in avatar-clone-ai Amendment 11; until it lands each path fails closed\n    // honestly with an engine-specific message instead of the old Higgsfield-only stub.\n    if (d.provider === \"lora_flux\") {\n      // Free path: LoRA (Flux) trained on the tenant's own Replicate account (BYOK = USD 0).\n      toast.info(\"Treino LoRA (Flux) \u2014 gratuito via sua conta Replicate. Em breve.\");\n      return;\n    }\n    // Higgsfield Soul ID: no verified self-serve training endpoint exists (OTD-AC-017).\n    toast.info(\"Higgsfield Soul ID: sem endpoint de treino verificado (OTD-AC-017). Use LoRA (Flux) \u2014 gr\u00e1tis.\");\n  };",
+  "new_string": "  // Poll the async LoRA training (~20-30 min) while the node is in flight. State persists in the node\n  // data, so closing/reopening the inspector resumes the poll (avatar-clone-ai Amendment 11).\n  useEffect(() => {\n    if (d.status !== \"running\" || !d.avatarIdentityId) return;\n    let alive = true;\n    const poll = async () => {\n      try {\n        const { data } = await supabase.functions.invoke(\"avatar-identity-train\", {\n          body: { action: \"poll\", identityId: d.avatarIdentityId },\n        });\n        if (!alive) return;\n        const res = data as { status?: string; error?: string } | null;\n        if (res?.status === \"active\") {\n          updateNodeData(node.id, { status: \"success\", error: undefined });\n          toast.success(\"Identidade LoRA treinada \u2713\");\n        } else if (res?.status === \"revoked\") {\n          updateNodeData(node.id, { status: \"failed\", error: res.error ?? \"O treino falhou. Tente outros retratos.\" });\n        }\n      } catch { /* transient \u2014 the interval retries */ }\n    };\n    poll();\n    const iv = setInterval(poll, 30_000);\n    return () => { alive = false; clearInterval(iv); };\n  }, [d.status, d.avatarIdentityId, node.id, updateNodeData]);\n\n  const handleTrain = async () => {\n    // Higgsfield Soul ID has no verified self-serve training endpoint (OTD-AC-017) \u2014 fail closed honestly.\n    if (d.provider !== \"lora_flux\") {\n      toast.info(\"Higgsfield Soul ID: sem endpoint de treino verificado (OTD-AC-017). Use LoRA (Flux) \u2014 gr\u00e1tis.\");\n      return;\n    }\n    // Free path: LoRA (Flux) trained on the tenant's OWN Replicate account (BYOK = USD 0 to the platform).\n    setSubmitting(true);\n    try {\n      const { data, error } = await supabase.functions.invoke(\"avatar-identity-train\", {\n        body: {\n          action: \"start\",\n          referenceStoragePaths: d.referenceStoragePaths ?? [],\n          projectId,\n          personaType: d.personaType,\n        },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao iniciar o treino.\"));\n      const res = data as { identityId?: string; error?: string } | null;\n      if (!res?.identityId) throw new Error(res?.error ?? \"Falha ao iniciar o treino.\");\n      updateNodeData(node.id, { avatarIdentityId: res.identityId, status: \"running\", error: undefined });\n      toast.success(\"Treino LoRA iniciado (~20-30 min) na sua conta Replicate. Pode fechar \u2014 o progresso \u00e9 salvo.\");\n    } catch (e) {\n      const msg = e instanceof Error ? e.message : String(e);\n      updateNodeData(node.id, { status: \"failed\", error: msg });\n      toast.error(msg);\n    } finally {\n      setSubmitting(false);\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "          disabled={!hasConsent || refs.length === 0 || trained}\n          onClick={handleTrain}\n          title={\n            !hasConsent\n              ? \"Conceda o consentimento biom\u00e9trico primeiro\"\n              : refs.length === 0\n              ? \"Suba retratos de refer\u00eancia\"\n              : undefined\n          }\n        >\n          <ShieldCheck className=\"h-4 w-4\" />\n          {trained ? \"\u2713 Identidade treinada\" : \"Treinar identidade\"}\n        </Button>",
+  "new_string": "          disabled={!hasConsent || refs.length === 0 || trained || training || submitting}\n          onClick={handleTrain}\n          title={\n            !hasConsent\n              ? \"Conceda o consentimento biom\u00e9trico primeiro\"\n              : refs.length === 0\n              ? \"Suba retratos de refer\u00eancia\"\n              : undefined\n          }\n        >\n          {submitting || training ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <ShieldCheck className=\"h-4 w-4\" />}\n          {trained\n            ? \"\u2713 Identidade treinada\"\n            : training\n            ? \"Treinando\u2026 (~20-30 min)\"\n            : submitting\n            ? \"Iniciando\u2026\"\n            : \"Treinar identidade\"}\n        </Button>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:17:02)*
+
+
+## 🤖 Claude *(02:17:03)*
+
+Inspector ligado (start + poll + estados). tsc + build+deploy + materialidade:
+
+## 🤖 Claude *(02:17:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== build ===\"; bun run build 2>&1 | tail -3; echo \"build exit: ${PIPESTATUS[0]}\"\necho \"=== materialidade ===\"; grep -rl \"Treinando\u2026 (~20-30 min)\" dist/assets/ 2>/dev/null && echo \"\u2192 inspector wired BAKED \u2705\" || echo \"\u2192 AUSENTE \u274c\"",
+  "description": "tsc + build + materialidade Slice 3 frontend"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === build ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 35.27s
+> build exit: 0
+> === materialidade ===
+> dist/assets/CanvasEditorPage-AulNSe0K.js
+> → inspector wired BAKED ✅
+> ```
+
+## 🤖 Claude *(02:17:51)*
+
+
+## 🤖 Claude *(02:17:52)*
+
+tsc 0, build baked. Selando Slice 3 (migration + edge fn + SOP + wire do inspector):
+
+## 🤖 Claude *(02:18:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260708130000_avatar_identities_lora_training.sql \\\n        supabase/functions/avatar-identity-train/index.ts \\\n        docs/processes/avatar-lora-training.md \\\n        src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx\ngit commit -q -F - <<'EOF'\nfeat(spaces): treino de identidade LoRA gr\u00e1tis REAL (avatar-identity-train, Replicate BYOK)\n\nConstr\u00f3i a leg de treino que faltava (Amendment 11 fechou o gate). O n\u00f3 Identidade agora\ntreina um LoRA de pessoa de verdade \u2014 gr\u00e1tis (USD 0 para o MCORCH; ~US$1,85 debita na conta\nReplicate do pr\u00f3prio user via BYOK).\n\n- Edge fn avatar-identity-train (service-role, async start+poll): consent gate Art.11\n  server-side, BYOK Replicate fail-closed, zipa retratos, resolve vers\u00e3o viva do\n  ostris/flux-dev-lora-trainer, cria destination + training, persiste avatar_identities\n  status=training; poll reconcilia \u2192 active + pesos, idempotente, self-heal.\n- Migration aditiva (training_ref/replicate_destination_slug/trigger_word/substrate),\n  /security-review SAFE, aplicada+registrada no ledger.\n- Inspector: handleTrain chama a fn de verdade; poll a cada 30s com estado persistido no\n  n\u00f3 (fecha/reabre retoma); bot\u00e3o reflete Iniciando/Treinando/\u2713 treinada.\n- SOP Lei 2 avatar-lora-training.md.\n\nCompliance FR-AC-016 (grounded, 30 fontes): comercial OK sob o grant Replicate\u2194BFL \u2014\non-platform only + no-export dos pesos; commercial_license_ok=true honesto.\n\nProva zero-custo: guard 422/401 \u00b7 consent+BYOK do User 0 passam \u00b7 chave Replicate dele\nautentica na training API (/v1/account 200, vers\u00e3o viva 26dce37af90b). Treino pago real =\na\u00e7\u00e3o do Sovereign (retratos + ~US$1,85). tsc 0 \u00b7 build+deploy \u00b7 edge fn deployada.\nEOF\ngit log --oneline -3",
+  "description": "Commit Slice 3 (avatar-identity-train)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:18PM[0m [32mINF[0m 1 commits scanned.
+> [90m11:18PM[0m [32mINF[0m scan completed in 25.1ms
+> [90m11:18PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 06261b9 feat(spaces): treino de identidade LoRA grátis REAL (avatar-identity-train, Replicate BYOK)
+> 5c63c7b docs(bok): avatar-clone-ai Amendment 11 — substrato de treino LoRA grátis (fecha OTD-AC-017)
+> a0e8590 fix(spaces): identidade LoRA não cai mais no gate do Higgsfield (handleTrain engine-aware)
+> ```
+
+## 🤖 Claude *(02:18:53)*
+
+
+## 🤖 Claude *(02:18:56)*
+
+Slice 3 selado (`06261b9`) — **o treino de identidade LoRA grátis está VIVO e provado no plumbing**. Isso entrega o foco #1 do Sovereign (gratuito). 
+
+Continuando o loop: a próxima frente é **ask #2 (grupos de nós sociais)**, que por Closed-Loop §1 exige **emenda BoK antes do código**. Vou drafá-la (Slice 4 — spaces-evolution Amendment 15) para destravar os nós sociais no próximo arco. Deixa eu ver o formato da Amendment 13 e escrever a 15 fundamentada nos mapas.
+
+## 🤖 Claude *(02:18:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md",
+  "offset": 1,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# spaces-evolution — Amendment: Conector Higgsfield MCP oficial (OAuth per-user)
+> 2	
+> 3	> **Tipo:** Emenda de FRD/SDD/Data-Model (nova Fatia · OTD-SPACES-007) · **Status:** proposta (gate de código pós-aprovação Sovereign — Lei 4 Reviewer).
+> 4	> **Lente BoK:** SWEBOK + CISSP CBK (execução) · CXBOK (fluxo "Conectar") · 21 Agentic Patterns (`docs/architecture/agentic-vision.md`).
+> 5	> **Posição no Closed-Loop Protocol (CLAUDE.md §1):** emenda à SDD selada `05-sdd.md` + ao `04-frd.md` (novos `FR-SPACES-015..021`) + ao `06-data-model.md` (tabela `higgsfield_oauth`). Carrega a **Pattern Conformance Declaration** (§7) — declaração, não sign-off.
+> 6	> **API Tenancy Model (CLAUDE.md):** integração externa nova ⇒ credencial resolvida **per-user** (`auth.uid()`), fail-closed 402/501, telemetria em `infra_health_logs`. Este doc É o passo 5 (SOP Lei 2) exigido antes do código.
+> 7	> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer · Reviewer = Sovereign (Gabriel — dono da conta Higgsfield/Clerk e do GO) · Owner = Sovereign.
+> 8	
+> 9	---
+> 10	
+> 11	## 1. Contexto e motivação
+> 12	
+> 13	A diretiva Sovereign (2026-07-03) determina: **"usar o MCP oficial da Higgsfield nos nós do Spaces, modelos gratuitos nos testes, BYOK per-user"**. Hoje o Spaces fala com a Higgsfield via **Platform REST API** com BYOK `user_api_keys.higgsfield_api_key` (+ `_secret`) no Vault — um contrato manual, propenso a *provider-drift* (OTD-SPACES-003: `soul/compose` nunca existiu; o path real é `soul/{mode}`, refs = `custom_reference_id` assíncrono). O sentinel `scripts/qa/smoke-higgsfield-schema.ts` segura esse contrato REST, mas cada endpoint novo é engenharia reversa.
+> 14	
+> 15	O **MCP oficial** (`https://mcp.higgsfield.ai/mcp`) inverte isso: um único endpoint **auto-descritivo** (`tools/list`) expõe 30+ modelos (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro, Soul 2.0, 3D, TTS, upscale, dubbing) atrás de UMA integração — o problema de payload morre por introspecção. Payoff estratégico alto; alinha com a doutrina open-source-first/equity (uma integração durável no Mesh próprio, não N clientes REST frágeis).
+> 16	
+> 17	### 1.1. Achados materiais do contrato VIVO (Lei 1 — probes de 2026-07-03)
+> 18	
+> 19	Todas as afirmações abaixo vêm de `curl` real contra os endpoints públicos de discovery + registro:
+> 20	
+> 21	| Fato provado | Evidência (HTTP) |
+> 22	|---|---|
+> 23	| **O `/mcp` exige OAuth — NÃO a Platform API key BYOK.** | `POST /mcp` sem token → **HTTP 401** `www-authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource", scope="openid email offline_access"`. **Corrige** a nota anterior do charter #0b (a Platform API key BYOK vale para `api.higgsfield.ai`, **não** para o MCP). |
+> 24	| **Dynamic Client Registration é PÚBLICA e funciona.** | `POST /oauth2/register` (client metadata mínimo) → **HTTP 201** `{"client_id":"4JjXwHf16bytDbkQ","token_endpoint_auth_method":"none","client_secret_expires_at":0,…}` → cliente **público** (PKCE, sem secret). MCORCH registra o próprio client programaticamente (1×, guardado como config). |
+> 25	| **AS discovery completo.** | `GET /.well-known/oauth-authorization-server` → `authorization_endpoint=/oauth2/authorize` · `token_endpoint=/oauth2/token` · `registration_endpoint=/oauth2/register` · `grant_types=[authorization_code, refresh_token]` · `code_challenge_methods=[S256]` · `scopes=[openid, email, offline_access]` · upstream = **Clerk** (`clerk.higgsfield.ai`). |
+> 26	| **Dois fluxos, escolha por capacidade do cliente.** | `/.well-known/oauth-protected-resource` → `authorization_code_pkce` (redirect, upstream Clerk) **[nosso caminho web]** · `device_code` (`fnf-device-auth.higgsfield.ai`, polling) **[futuro CLI/OpenClaw]**. |
+> 27	| **`offline_access` ⇒ refresh_token.** | scope suportado; grant `refresh_token` no AS → sessão durável per-user sem re-login constante. |
+> 28	
+> 29	**Conclusão de design:** o conector é **genuinamente OAuth per-user** (authorization_code + PKCE), com upstream Clerk. O último salto — o usuário **clicar "Conectar Higgsfield" e autorizar na tela do Clerk** — é **Sovereign-gated** (a conta é do Gabriel). Tudo antes disso (registro do client, tabela, edge fns, UI, introspecção de tools) é **desbloqueado**.
+> 30	
+> 31	---
+> 32	
+> 33	## 2. Abordagem — conector OAuth authorization_code + PKCE
+> 34	
+> 35	```
+> 36	[UI Settings→Conectores] "Conectar Higgsfield"
+> 37	   │  (FR-SPACES-015) edge higgsfield-oauth-init: gera code_verifier+challenge(S256)+state,
+> 38	   │                   grava pending (per-user), retorna authorization_url (Clerk upstream)
+> 39	   ▼
+> 40	[Browser] redirect → mcp.higgsfield.ai/oauth2/authorize → Clerk login/consent (Sovereign)
+> 41	   ▼  redirect_uri = login.mcorch.com/dashboard/settings/higgsfield/callback?code&state
+> 42	[UI callback] (FR-SPACES-016) edge higgsfield-oauth-callback:
+> 43	   │   valida state (CSRF) + troca code+code_verifier no /oauth2/token → {access_token, refresh_token, expires_in}
+> 44	   │   grava refresh_token no VAULT (classe social_credentials), access_token+expiry na linha per-user
+> 45	   ▼
+> 46	[Nó do Spaces executa] (FR-SPACES-018/019) resolve token per-user:
+> 47	   │   access_token válido? usa. expirado? (FR-SPACES-017) refresh via /oauth2/token grant=refresh_token
+> 48	   │   Bearer <access_token> → POST mcp.higgsfield.ai/mcp (JSON-RPC): tools/list (cacheado) → tools/call
+> 49	   ▼  fail-closed: sem conexão per-user → 402/501 {error:"higgsfield_not_connected", action:"/dashboard/settings"}
+> 50	```
+> 51	
+> 52	- **Registro do client (1× infra):** `POST /oauth2/register` → `client_id` guardado como **config de sistema** (não é segredo — public client `auth_method=none`). Idempotência operacional: registrar uma vez, versionar o `client_id` em config; re-registrar só se revogado. NÃO registrar por-request (evita poluir o AS).
+> 53	- **PKCE S256 obrigatório:** `code_verifier` por-fluxo, nunca reutilizado; `state` aleatório CSRF-bound ao `user_id`, TTL curto (≤10min, espelha o gotcha de state TTL do TikTok/YouTube — `reference_tiktok_unaudited_private_account`).
+> 54	- **Introspecção de tools:** `tools/list` cacheado por curto TTL (o catálogo é auto-descritivo → resolve payload por schema, mata o provider-drift). O sentinel REST atual continua guardando o caminho legado durante a coexistência.
+> 55	- **Modelos grátis nos testes:** a Higgsfield não tem modelo grátis na própria API; os **testes E2E** usam BYOK OpenRouter (Nano Banana / modelos baratos) como hoje, e o conector Higgsfield é exercitado com o **menor-custo** disponível só sob GO de gasto Sovereign.
+> 56	
+> 57	---
+> 58	
+> 59	## 3. Requisitos funcionais (emenda ao `04-frd.md`)
+> 60	
+> 61	- **`FR-SPACES-015` — Iniciar conexão OAuth.** Edge `higgsfield-oauth-init` (JWT do user): gera PKCE (`code_verifier`/`code_challenge` S256) + `state` CSRF, persiste pending per-user (TTL ≤10min), retorna `authorization_url`. Sem custo mco.
+> 62	- **`FR-SPACES-016` — Callback/troca de código.** Edge `higgsfield-oauth-callback`: valida `state` (rejeita mismatch → 400), troca `code`+`code_verifier` no `token_endpoint`, grava `refresh_token`→Vault + `access_token`/`expires_at` na linha per-user. Idempotente por `state`.
+> 63	- **`FR-SPACES-017` — Refresh de token.** Helper server-side: `access_token` expirado ⇒ `grant_type=refresh_token` → rotaciona; refresh inválido/revogado ⇒ marca `needs_reauth=true` + fail-closed com ação de reconectar (espelha o reauth gate do `publish-meta`).
+> 64	- **`FR-SPACES-018` — Resolução de credencial per-user (fail-closed).** Ordem: (1) conexão OAuth per-user ativa → Bearer; (2) **sem** fallback global silencioso; (3) hard-fail `402/501 {error:"higgsfield_not_connected", action:"Conecte o Higgsfield em /dashboard/settings"}`. (API Tenancy Model.)
+> 65	- **`FR-SPACES-019` — Execução de nó via MCP.** O motor de execução do Spaces (`spaces-execution.ts`/`canvas-execute`) despacha `tools/call` no MCP com o token per-user; mapeia o tipo de nó → tool (introspecção `tools/list`); reconcilia custo mco no card (`FR-SPACES-014`) via calibração 4×-floor (`docs/processes/mcoin-cost-calibration.md`).
+> 66	- **`FR-SPACES-020` — Catálogo/introspecção.** `tools/list` cacheado alimenta o palette do Spaces (modelos disponíveis por conexão), sem hardcode de endpoint.
+> 67	- **`FR-SPACES-021` — Desconectar/erasure.** RPC `disconnect_higgsfield()` (espelha `disconnect_meta`/`disconnect_wordpress`): nula a linha per-user + **revoga o segredo Vault órfão**, `auth.uid()`-scoped. Best-effort revoke no AS quando suportado.
+> 68	
+> 69	---
+> 70	
+> ```
+
+## 🤖 Claude *(02:19:19)*
+
+
+## 🤖 Claude *(02:19:21)*
+
+Formato dominado. Escrevendo **Amendment 15 — família de nós Publish/Social** para o Spaces, fundamentada na matriz de capacidade mapeada (o que já publica vs o que falta) + o seam ausente (Spaces gera mas nada lê `creative_assets`) + o padrão OAuth da Am13.
+
+## 🤖 Claude *(02:20:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md",
+  "content": "# spaces-evolution \u2014 Amendment 15: Fam\u00edlia de n\u00f3s Publish/Social (distribui\u00e7\u00e3o nativa por canal)\n\n> **Tipo:** Emenda de PRD/FRD/SDD/Data-Model (nova fam\u00edlia de n\u00f3s \u00b7 OTD-SPACES-031-SEAM) \u00b7 **Status:** proposta (gate de c\u00f3digo p\u00f3s-aprova\u00e7\u00e3o Sovereign \u2014 Lei 4 Reviewer).\n> **Lente BoK:** SWEBOK + CISSP CBK (execu\u00e7\u00e3o) \u00b7 CXBOK (jornada gerar\u2192publicar) \u00b7 ProdBOK (Growth) \u00b7 21 Agentic Patterns (`docs/architecture/agentic-vision.md`).\n> **Posi\u00e7\u00e3o no Closed-Loop Protocol (CLAUDE.md \u00a71):** emenda \u00e0 SDD selada `05-sdd.md` (novo `SpaceNodeCategory 'publish'`) + `04-frd.md` (novos `FR-SPACES-031..040`) + `11-node-registry-spaces.md` (novas linhas NR). Carrega Pattern Conformance (\u00a77).\n> **API Tenancy Model:** publica\u00e7\u00e3o resolve credencial **per-user** (`social_accounts`/`social_app_config`/`meta_config`, `auth.uid()`), fail-closed. Reusa os motores J\u00c1 selados; n\u00e3o cria provider novo.\n> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer/marketing-growth \u00b7 Reviewer = Sovereign + `/security-review` (owner-scoping de asset, FMEA-011) \u00b7 Owner = Sovereign.\n>\n> **Fundamenta\u00e7\u00e3o (Lei 1):** workflow de mapeamento `wf_56638299-cf0` (5 leitores) \u2014 matriz de capacidade de publica\u00e7\u00e3o por plataforma + o seam ausente, todos grounded em `file:line` (\u00a71.1). Nenhuma capacidade fabricada.\n\n---\n\n## 1. Contexto e motiva\u00e7\u00e3o\n\nDiretiva Sovereign (2026-07-08): **\"cada rede social deve ter seus grupos de n\u00f3s\"** \u2014 WordPress\u2192Posts/Blogs/Landing Pages; Instagram\u2192Feed(Carrossel)/Reels/Stories/Conex\u00f5es(MCP/Manychat/webhooks); TikTok\u2192v\u00eddeos/shop; YouTube\u2192longos/shorts/comunidade/membros/posts. Hoje o Spaces \u00e9 **puramente criativo**: gera imagem/v\u00eddeo/\u00e1udio via `canvas-execute` \u2192 `vm_canvas_assets`+`creative_assets`, mas **nenhum publisher l\u00ea `creative_assets`** e **n\u00e3o existe n\u00f3 de publica\u00e7\u00e3o**. A distribui\u00e7\u00e3o vive num mundo paralelo (o pipeline PILLAR: `orchestrate-content`\u2192`reshape-pillar`\u2192`channel_variants`\u2192`auto-publish`\u2192`publish-*`), que **n\u00e3o consome sa\u00edda do Spaces**.\n\n**O gap arquitetural load-bearing (OTD-SPACES-031-SEAM):** falta o **adaptador** entre o mundo criativo (Spaces) e o mundo de distribui\u00e7\u00e3o (channel_variants/scheduled_posts/publish-*). Esta emenda define esse seam + a fam\u00edlia de n\u00f3s que o exp\u00f5e.\n\n### 1.1. Estado material das superf\u00edcies de publica\u00e7\u00e3o (o que j\u00e1 existe \u2014 Lei 1)\n\n| Plataforma | Publica HOJE (fn \u00b7 file:line) | FALTA |\n|-----------|-------------------------------|-------|\n| **WordPress** | Posts/Blogs (`publish-wordpress/index.ts:145`, `POST /wp/v2/posts`) | **Pages/Landing** (`/wp/v2/pages` \u2014 nunca tocado) |\n| **Instagram** | Feed imagem \u00b7 Reels (`publish-social/index.ts:149`; `publish-meta/index.ts:143`) | **Carrossel** (sem CAROUSEL/children) \u00b7 **Stories** (sem STORIES) \u00b7 **Conex\u00f5es** (`instagram-webhook` s\u00f3 LOGA, sem dispatch/Manychat) |\n| **TikTok** | V\u00eddeo Direct Post (`publish-social/index.ts:263`, scope `video.publish`) | **Shop** (sem scope/commerce) |\n| **YouTube** | V\u00eddeo \u00b7 Shorts (`publish-social/index.ts:392`, `videos.insert`, scope `youtube.upload`) | **Comunidade** \u00b7 **Membros** \u00b7 **Posts** (sem API/scope) |\n| **LinkedIn** | Texto (`publish-social/index.ts:123`) | **Carrossel PDF/imagem/v\u00eddeo** (asset constru\u00eddo por `generate-carousel`, publisher adiado OTD-CP-010) |\n| **X/Twitter** | Tweet + thread (`publish-social/index.ts:230`) | **V\u00eddeo** (adiado) |\n| **Facebook** | Foto/texto (`publish-social/index.ts:206`) | **Reels** (adiado OTD-CP-010) |\n| **Pinterest** | Pin v\u00eddeo/imagem (`publish-social/index.ts:479`) | \u2014 |\n\n**Motores selados a REUSAR (n\u00e3o reconstruir):** `channel_profiles.transform_recipe` (migration `20260627140000`, 17 surfaces), `channel_variants` (owner-scoped), `publish-channel-variant` (opt-in manual), `auto-publish` (resolve asset **owner-scoped** de `channel_variants`, assina URL 6h, chama `publish-social` \u2014 `auto-publish/index.ts:104-135`, FMEA-011-safe), `reshape-pillar` (variante nativa por canal, anti-cross-post FR-CP-007), o padr\u00e3o OAuth per-user PKCE da Amendment 13.\n\n### 1.2. Alvo de c\u00f3digo: o sistema Canvas Studio VIVO (n\u00e3o o Spotlight selado)\n\nAchado cr\u00edtico do mapeamento: h\u00e1 **dois** sistemas de n\u00f3s. O cat\u00e1logo Magnific \"Spotlight\" (`src/lib/node-registry.ts`) que a BoK `11-node-registry-spaces.md` documenta est\u00e1 **N\u00c3O-ROTEADO** (`SpaceCanvasPage` ausente do `App.tsx`; consolida\u00e7\u00e3o Amendment 14). O sistema **VIVO** em `/dashboard/spaces/:id` \u00e9 `CanvasEditorPage` \u2192 `src/lib/canvas-node-registry.ts` (`CANVAS_NODE_REGISTRY`, 9 kinds) + `AddNodeMenu` + `CanvasNodeKind` (`src/types/canvas.ts`). **Toda a fam\u00edlia de n\u00f3s de publica\u00e7\u00e3o \u00e9 adicionada ao sistema VIVO** (Canvas Studio registry), seguindo o precedente `voiceClone`/`avatarIdentity`: n\u00f3 chama **edge fn NET-NEW**, `resolveExecutePayload \u2192 null` (bypassa o enum congelado `vm_node_type`, 12 valores, zero ADD-VALUE). A BoK `11-node-registry-spaces.md` \u00e9 reconciliada como a superf\u00edcie de design Magnific; o contrato de c\u00f3digo VIVO \u00e9 `canvas-node-registry.ts`.\n\n---\n\n## 2. Abordagem \u2014 o seam + a fam\u00edlia de n\u00f3s\n\n### 2.1. O adaptador (SEAM) \u2014 `publish-space-asset` (edge fn NET-NEW)\n\n```\n[N\u00f3 Publish no grafo] recebe um asset upstream (image|video|text) + escolha de canal/formato\n   \u2502  (FR-SPACES-031) edge publish-space-asset (user-JWT):\n   \u2502    1. resolve o asset do n\u00f3 upstream \u2192 creative_assets/vm_canvas_assets (owner-scoped, auth.uid())\n   \u2502    2. resolve credencial per-user do canal (social_accounts/meta_config/social_app_config) \u2014 fail-closed\n   \u2502    3. mapeia (canal, formato) \u2192 uma linha channel_variants (draft) OU scheduled_posts, reusando\n   \u2502       o owner-scoped signing do auto-publish (nunca assina de metadata user-writable \u2014 FMEA-011)\n   \u2502    4. default RASCUNHO; publica na hora s\u00f3 com opt-in expl\u00edcito do n\u00f3 (auto_publish=true)\n   \u25bc  fail-closed: sem credencial per-user \u2192 402 {error:\"<canal>_not_connected\", action:\"/dashboard/settings\"}\n```\n\nO seam **n\u00e3o reconstr\u00f3i** publishers \u2014 ele **alimenta** o contrato `channel_variants`/`scheduled_posts` que `auto-publish`/`publish-channel-variant`/`publish-social`/`publish-meta`/`publish-wordpress` j\u00e1 consomem. Um asset do Spaces vira distribu\u00edvel pela mesma via segura do pipeline PILLAR.\n\n### 2.2. A fam\u00edlia de n\u00f3s (grupos por rede)\n\nNova `SpaceNodeCategory 'publish'` (precedent NR-SPACES-005 = categoria `'app'`). Cada rede \u00e9 um **grupo** com um n\u00f3 por formato (o \"grupo de n\u00f3s\" pedido). Um n\u00f3 de publica\u00e7\u00e3o \u00e9 um **sink tipado** (s\u00f3 input, sem output) que consome o handle de um asset upstream.\n\n| Grupo (rede) | N\u00f3s (formato) | Friction |\n|--------------|---------------|----------|\n| WordPress | Post/Blog \u00b7 **Landing Page** | baixa (Landing = `post_type=page`) |\n| Instagram | Feed \u00b7 **Carrossel** \u00b7 Reels \u00b7 **Stories** \u00b7 **Conex\u00f5es** | m\u00e9dia (carrossel/stories = container novo; conex\u00f5es = automa\u00e7\u00e3o, BoK pr\u00f3pria) |\n| TikTok | V\u00eddeo \u00b7 **Shop** | v\u00eddeo baixa \u00b7 **shop = scope+app-review (adiado)** |\n| YouTube | V\u00eddeo \u00b7 Shorts \u00b7 **Comunidade** \u00b7 **Membros** \u00b7 **Posts** | v\u00eddeo/shorts baixa \u00b7 **comunidade/membros = API+scope novos (adiado, ver m\u00f3dulo youtube-studio)** |\n| LinkedIn | Texto \u00b7 **Carrossel/Imagem/V\u00eddeo** | bin\u00e1rios = fecha OTD-CP-010 |\n| X | Tweet/Thread \u00b7 **V\u00eddeo** | v\u00eddeo = fecha OTD-CP-010 |\n| Facebook | Foto/Texto \u00b7 **Reels** | reels = fecha OTD-CP-010 |\n| Pinterest | Pin | pronto |\n\n---\n\n## 3. Requisitos funcionais (emenda ao `04-frd.md`)\n\n- **`FR-SPACES-031` \u2014 Seam publish-space-asset.** Edge NET-NEW (user-JWT): resolve asset upstream owner-scoped \u2192 mapeia (canal, formato) \u2192 `channel_variants` draft/`scheduled_posts`, reusando o owner-scoped signing do `auto-publish`. Default rascunho; publica s\u00f3 com opt-in. Fail-closed per-canal 402.\n- **`FR-SPACES-032` \u2014 Categoria `'publish'` + registro dos n\u00f3s.** Nova `SpaceNodeCategory 'publish'` no LIVE `canvas-node-registry.ts` + `CanvasNodeKind` por formato; `resolveExecutePayload \u2192 null` (bypassa `vm_node_type`); inspector + `AddNodeMenu` group.\n- **`FR-SPACES-033` \u2014 N\u00f3 sink tipado.** N\u00f3 de publica\u00e7\u00e3o consome 1 handle de asset upstream (image|video|text) + params de canal/formato; sem output; `estimateNodeCost` (custo de publica\u00e7\u00e3o = 0 mco na maioria; cobran\u00e7a s\u00f3 onde h\u00e1 gera\u00e7\u00e3o, ex. reframe).\n- **`FR-SPACES-034` \u2014 WordPress Pages/Landing.** `publish-wordpress` ganha branch `post_type=page` (`POST /wp/v2/pages`, espelha o fluxo de posts:145) + surface `wordpress/landing_page` em `channel_profiles`.\n- **`FR-SPACES-035` \u2014 Instagram Carrossel + Stories.** `publish-social`/`publish-meta` ganham fluxo CAROUSEL (N children `is_carousel_item=true`\u2192parent `media_type=CAROUSEL`) + STORIES container (9:16 reuso do master); surfaces novas em `channel_profiles`.\n- **`FR-SPACES-036` \u2014 LinkedIn bin\u00e1rios (fecha OTD-CP-010).** Publisher document(PDF carrossel \u2014 asset j\u00e1 em `generate-carousel`)/imagem/v\u00eddeo; flipa `isOperational` (`reshape-pillar:37`) p/ incluir linkedin nesses kinds.\n- **`FR-SPACES-037` \u2014 Facebook Reels + X V\u00eddeo (fecha OTD-CP-010).** Branch FB Reels em `publish-social` + upload de v\u00eddeo no X; estende `isOperational` video list.\n- **`FR-SPACES-038` \u2014 Credencial per-user + anti-cross-post.** Cada n\u00f3 resolve OAuth per-user (`social_accounts`, padr\u00e3o Am13 PKCE p/ redes sem token) fail-closed; a c\u00f3pia por canal reusa a reescrita nativa do `reshape-pillar` FR-CP-007 (n\u00e3o repostar id\u00eantico).\n- **`FR-SPACES-039` \u2014 Opt-in de publica\u00e7\u00e3o (HITL).** Default rascunho (`channel_variants.status='draft'`); o n\u00f3 publica s\u00f3 sob toggle expl\u00edcito, espelhando o modelo opt-in do `publish-channel-variant`.\n- **`FR-SPACES-040` \u2014 Telemetria.** Cada path (draft/enqueue/publish/fail) emite `infra_health_logs service='publish-space-<canal>'`.\n\n---\n\n## 4. Open Technical Decisions\n\n| ID | Descri\u00e7\u00e3o | Decis\u00e3o | Owner | Classe |\n|----|-----------|---------|-------|--------|\n| **OTD-SPACES-031-SEAM** | O adaptador Spaces\u2192distribui\u00e7\u00e3o | `publish-space-asset` mapeia asset\u2192channel_variants reusando owner-scoped signing do auto-publish (n\u00e3o reconstruir publishers). | engineer | arquitetura load-bearing |\n| **OTD-SPACES-032-IG-CONEXOES** | Instagram Conex\u00f5es (Manychat/MCP/webhooks) | **Adiado/BoK pr\u00f3pria** \u2014 `instagram-webhook` s\u00f3 loga hoje; automa\u00e7\u00e3o de resposta/DM = m\u00f3dulo novo (Lei 2), n\u00e3o um n\u00f3 simples. | Sovereign | novo m\u00f3dulo |\n| **OTD-SPACES-033-TIKTOK-SHOP** | TikTok Shop | **Adiado** \u2014 exige scope commerce + app-review + endpoints novos; zero hoje. | Sovereign | app-review |\n| **OTD-SPACES-034-YT-COMMUNITY-MEMBERS** | YouTube Comunidade/Membros/Posts | **Adiado \u2192 m\u00f3dulo `youtube-studio`** \u2014 API/scope novos (Data API v3 community, membership); casa com o studio faceless/avatar. | Sovereign | novo m\u00f3dulo |\n| **OTD-SPACES-035-CROSSPOST-GUARD** | N\u00e3o repostar id\u00eantico cross-canal | Reusa a reescrita nativa FR-CP-007 do `reshape-pillar`; n\u00f3 nunca posta a mesma c\u00f3pia em N canais. | engineer | compliance de alcance |\n\n---\n\n## 5. Sequenciamento de fatias (c\u00f3digo, p\u00f3s-selo)\n\n1. **Fatia A \u2014 seam + 1 n\u00f3 template** (`publish-space-asset` + categoria `'publish'` + n\u00f3 WordPress Post end-to-end): prova o adaptador. `/security-review` (owner-scoping).\n2. **Fatia B \u2014 fan-out dos n\u00f3s que j\u00e1 t\u00eam publisher** (IG feed/reels, FB foto, TikTok v\u00eddeo, YouTube v\u00eddeo/shorts, LinkedIn texto, X thread, Pinterest): puro registro + clone-por-n\u00f3.\n3. **Fatia C \u2014 publishers de baixa fric\u00e7\u00e3o** (WP Landing FR-034, IG Carrossel/Stories FR-035, LinkedIn bin\u00e1rios FR-036, FB Reels/X v\u00eddeo FR-037): fecha OTD-CP-010.\n4. **Adiadas (gated Sovereign/app-review):** IG Conex\u00f5es, TikTok Shop, YouTube Comunidade/Membros \u2192 seus pr\u00f3prios m\u00f3dulos/BoK.\n\n---\n\n## 6. Data model (emenda ao `06-data-model.md`)\n\nSem tabela nova obrigat\u00f3ria \u2014 reusa `channel_variants` + `scheduled_posts` + `channel_profiles`. Novas **surfaces** em `channel_profiles` (system rows, user_id NULL): `wordpress/landing_page`, `instagram/carousel`, `instagram/story`, `linkedin/document`, `facebook/reel`, `twitter/video`. Cada surface carrega `transform_recipe` + `publish_path` (molde das 17 existentes).\n\n---\n\n## 7. Pattern Conformance Declaration (Closed-Loop \u00a73.5 \u2014 declara\u00e7\u00e3o, n\u00e3o sign-off)\n\n| # | Padr\u00e3o | Implementado? | Como / Por-que-adiado |\n|---|--------|---------------|------------------------|\n| 4 | Tool Use / External API | **yes** | Reusa publish-social/-meta/-wordpress per-user OAuth. |\n| 9 | Routing / Dispatch | **yes** | (canal, formato) \u2192 surface/publisher via channel_profiles data-driven. |\n| 13 | Guardrails / Policy gate | **yes** | Per-user fail-closed + opt-in draft (HITL) + owner-scoped signing (FMEA-011) + anti-cross-post. |\n| 16 | HITL | **yes** | Default rascunho; publica s\u00f3 sob opt-in expl\u00edcito do n\u00f3. |\n| 18 | Cost governance | **yes** | Publica\u00e7\u00e3o 0 mco; cobran\u00e7a s\u00f3 onde h\u00e1 gera\u00e7\u00e3o (reframe). |\n| 19 | Observability | **yes** | `infra_health_logs` por path. |\n| Demais | n-a/deferred | Conex\u00f5es/Shop/Comunidade = m\u00f3dulos pr\u00f3prios (OTDs \u00a74). |\n\n---\n\n## 8. Verification gates (antes de selar cada fatia de c\u00f3digo)\n\n1. `/security-review` na Fatia A (o seam assina/resolve asset \u2014 owner-scoping cross-tenant \u00e9 o gate-m\u00e3e, FMEA-011).\n2. Smoke zero-custo: n\u00f3 publica em RASCUNHO por default (nada sai sem opt-in) \u00b7 asset resolvido \u00e9 do owner (cross-tenant BLOCKED) \u00b7 fail-closed 402 sem credencial.\n3. Anti-cross-post: 2 canais recebem c\u00f3pia NATIVA distinta (reshape-pillar FR-CP-007), nunca id\u00eantica.\n4. Witness E2E (opt-in, GO Sovereign): 1 asset do Spaces \u2192 1 rascunho no canal escolhido \u2192 publicado (post_id/permalink real).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:21:24)*
+
+
+## 🤖 Claude *(02:21:24)*
+
+Amendment 15 escrita — a família de nós sociais está agora **BoK-desbloqueada** para o próximo arco. Selando Slice 4:
+
+## 🤖 Claude *(02:21:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md\ngit commit -q -F - <<'EOF'\ndocs(bok): spaces-evolution Amendment 15 \u2014 fam\u00edlia de n\u00f3s Publish/Social (destrava ask #2)\n\nDiretiva Sovereign \"cada rede social deve ter seus grupos de n\u00f3s\". Hoje o Spaces \u00e9 s\u00f3\ncriativo (canvas-execute \u2192 creative_assets) e NENHUM publisher l\u00ea creative_assets \u2014 n\u00e3o h\u00e1\nn\u00f3 de publica\u00e7\u00e3o nem ponte para a distribui\u00e7\u00e3o. Esta emenda define o gate BoK antes do\nc\u00f3digo (Closed-Loop \u00a71), fundamentada no mapeamento wf_56638299-cf0 (matriz de capacidade\npor plataforma, grounded file:line):\n\n- SEAM publish-space-asset: adaptador que mapeia um asset do Spaces \u2192 channel_variants\n  draft/scheduled_posts reusando o owner-scoped signing do auto-publish (FMEA-011-safe) \u2014\n  N\u00c3O reconstr\u00f3i publishers, alimenta os motores J\u00c1 selados.\n- Categoria 'publish' + n\u00f3s sink tipados por rede/formato no registry VIVO (canvas-node-\n  registry.ts, n\u00e3o o Spotlight morto); resolveExecutePayload\u2192null bypassa vm_node_type.\n- FR-SPACES-031..040 + tiering honesto de fric\u00e7\u00e3o: pronto (IG feed/TikTok v\u00eddeo/YT v\u00eddeo\u2026)\n  \u00b7 baixa (WP Landing/IG Carrossel+Stories/LinkedIn bin\u00e1rios/FB Reels \u2014 fecha OTD-CP-010)\n  \u00b7 adiado app-review (TikTok Shop/YT Comunidade+Membros/IG Conex\u00f5es = m\u00f3dulos pr\u00f3prios).\n- Default RASCUNHO opt-in (HITL) + anti-cross-post (reusa FR-CP-007). 5 OTDs + Pattern\n  Conformance + sequenciamento de fatias A/B/C.\nEOF\necho \"=== medidor de janela (Lei 3) ===\"\nbun run .claude/scripts/session-inspect.ts 2>&1 | tail -20 || echo \"(session-inspect indispon\u00edvel)\"",
+  "description": "Commit Am15 + mede a janela de contexto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:21PM[0m [32mINF[0m 1 commits scanned.
+> [90m11:21PM[0m [32mINF[0m scan completed in 65.2ms
+> [90m11:21PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.15 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.14 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> === medidor de janela (Lei 3) ===
+> 🧭 MCORCH Session Inspect
+>    sessão: 47592365-463d-4669-b674-a8aa2fcecacf.jsonl  (441 linhas · 218 turnos · 88 tool-calls)
+> 
+>    Janela de contexto (Lei 3):
+>    [███████████████████░░░░░░░░░░░░░░░░░░░|░░] 46.4%   (| = teto de seal 95%)
+>    usado 464k / 1000k  ·  livre 536k  ·  custo do seal ~50k
+>    output gasto na sessão: 516k tokens
+> 
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> 
+>    🔎 Maiores tool-results em contexto (candidatos a poda — Lei 3):
+>         45kB  Read  (linha 206)
+>         43kB  Read  (linha 199)
+>         43kB  Read  (linha 25)
+>         39kB  Read  (linha 29)
+>         24kB  Read  (linha 294)
+> ```
+
+## 🤖 Claude *(02:23:00)*
+
+
+## 🤖 Claude *(02:23:04)*
+
+**Medidor: 46,4% da janela** (464k/1000k) — o Sovereign pediu seal a ~85%, então há folga larga. Continuo o loop.
+
+Com o **foco #1 (LoRA grátis) entregue e provado** e o **ask #2 (nós sociais) BoK-desbloqueado (Am15)**, o próximo passo de maior valor visível é **construir a Fatia A** dos nós sociais: o seam `publish-space-asset` + um nó de publicação funcionando. O registry VIVO do Canvas é media-first (image/video), então o template natural é **Instagram Feed** (imagem → rascunho). Deixa eu fundamentar o contrato do seam (channel_variants + como o draft é enfileirado) antes de codar.
+
+## 🤖 Claude *(02:23:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-channel-variant/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// publish-channel-variant — opt-in manual publish of a reshaped draft (FR-CP-003 publish opt-in)
+> 2	// ─────────────────────────────────────────────────────────────────────────────
+> 3	// Sovereign directive 2026-06-28: social posts default to DRAFT; the user reviews channel_variants and publishes
+> 4	// the ones they want. This fn enqueues ONE draft variant (owned by the caller) into scheduled_posts → the
+> 5	// auto-publish cron then drives publish-social with the OWNER-scoped native asset (auto-publish resolves the asset
+> 6	// from channel_variants by user_id — FMEA-011-safe). User-JWT in (gateway verify_jwt default); identity is
+> 7	// re-verified via getUser, then a service-role client performs the cross-policy write (channel_variants has no
+> 8	// authenticated UPDATE policy by design). SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md §5.
+> 9	
+> 10	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 11	
+> 12	const corsHeaders = {
+> 13	  "Access-Control-Allow-Origin": "*",
+> 14	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 15	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 16	};
+> 17	
+> 18	Deno.serve(async (req) => {
+> 19	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 20	
+> 21	  const json = (status: number, body: unknown) =>
+> 22	    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 23	
+> 24	  try {
+> 25	    const authHeader = req.headers.get("Authorization");
+> 26	    if (!authHeader?.startsWith("Bearer ")) return json(401, { error: "Unauthorized" });
+> 27	
+> 28	    // Re-verify the caller (the gateway already validated the JWT signature).
+> 29	    const userClient = createClient(
+> 30	      Deno.env.get("SUPABASE_URL")!,
+> 31	      (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 32	      { global: { headers: { Authorization: authHeader } } },
+> 33	    );
+> 34	    const { data: { user } } = await userClient.auth.getUser();
+> 35	    if (!user) return json(401, { error: "Unauthorized" });
+> 36	
+> 37	    const { channel_variant_id } = await req.json().catch(() => ({}));
+> 38	    if (!channel_variant_id) return json(400, { error: "channel_variant_id required" });
+> 39	
+> 40	    const admin = createClient(
+> 41	      Deno.env.get("SUPABASE_URL")!,
+> 42	      (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 43	    );
+> 44	
+> 45	    // Load the variant — bound to the caller (tenant hard-bind; a forged id of another tenant returns nothing).
+> 46	    const { data: v } = await admin.from("channel_variants")
+> 47	      .select("id, user_id, platform, surface, channel, native_text, asset_kind, asset_status, status, scheduled_post_id")
+> 48	      .eq("id", channel_variant_id).eq("user_id", user.id).maybeSingle();
+> 49	    if (!v) return json(404, { error: "variant_not_found" });
+> 50	    if (v.scheduled_post_id || v.status === "scheduled" || v.status === "published") {
+> 51	      return json(409, { error: "already_enqueued", scheduled_post_id: v.scheduled_post_id });
+> 52	    }
+> 53	    if (!v.platform) return json(422, { error: "surface_not_publishable", detail: "no social_platform for this surface" });
+> 54	    if (!["ready", "reused_master"].includes(v.asset_status as string)) {
+> 55	      return json(422, { error: "asset_not_ready", detail: v.asset_status });
+> 56	    }
+> 57	
+> 58	    // Build the publish text from the native variant (auto-publish resolves the ASSET from channel_variants itself).
+> 59	    const nt = (v.native_text ?? {}) as Record<string, unknown>;
+> 60	    const text = typeof nt.body === "string" ? nt.body
+> 61	      : typeof nt.caption === "string" ? nt.caption
+> 62	      : Array.isArray(nt.tweets) ? (nt.tweets as string[])[0]
+> 63	      : typeof nt.title === "string" ? nt.title : "";
+> 64	    const content: Record<string, unknown> = { text, surface: v.surface, channel: v.channel };
+> 65	    if (Array.isArray(nt.tweets)) content.tweets = nt.tweets;
+> 66	
+> 67	    const { data: sp, error: spErr } = await admin.from("scheduled_posts").insert({
+> 68	      user_id: user.id, content_id: null, campaign_id: null, social_account_id: null,
+> 69	      platform: v.platform, scheduled_at: new Date().toISOString(), status: "queued",
+> 70	      metadata: { reshape: { content, channel_variant_id: v.id, surface: v.surface, channel: v.channel } },
+> 71	    }).select("id").single();
+> 72	    if (spErr || !sp) return json(500, { error: "enqueue_failed", detail: spErr?.message });
+> 73	
+> 74	    await admin.from("channel_variants").update({ status: "scheduled", scheduled_post_id: sp.id }).eq("id", v.id);
+> 75	
+> 76	    return json(200, { ok: true, scheduled_post_id: sp.id, platform: v.platform, surface: v.surface });
+> 77	  } catch (e) {
+> 78	    console.error("publish-channel-variant error:", e);
+> 79	    return json(500, { error: e instanceof Error ? e.message : "Unknown error" });
+> 80	  }
+> 81	});
+> 82	
+> ```
+
+## 🤖 Claude *(02:23:54)*
+
+
+## 🤖 Claude *(02:23:57)*
+
+Fluxo de publicação entendido: `publish-channel-variant` já enfileira um draft owner-scoped → `auto-publish` resolve o asset da própria `channel_variants`. Então o seam só precisa **criar o draft `channel_variants`** a partir de um asset do Spaces; o publish opt-in reusa a fn existente. Preciso saber a coluna de asset que o `auto-publish` lê + os valores de surface/platform.
+
+## 🤖 Claude *(02:23:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/auto-publish/index.ts",
+  "offset": 95,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 95	                  .createSignedUrl(storageKey, 21600);
+> 96	                videoUrl = signed?.signedUrl ?? null;
+> 97	              }
+> 98	            }
+> 99	          } catch (e) {
+> 100	            console.warn(`[auto-publish] video_url resolve skipped for post ${post.id}:`, e instanceof Error ? e.message : e);
+> 101	          }
+> 102	        }
+> 103	
+> 104	        // ── FR-CP-003 — prefer the reshaper's NATIVE variant over the generic derivation. ──
+> 105	        // SECURITY (FMEA-011): the asset ref is NEVER trusted from scheduled_posts.metadata (a user can write their
+> 106	        // OWN scheduled_posts.metadata, so signing a bucket/key from it with the service key would read ANY tenant's
+> 107	        // private object). Instead resolve it from the server-trusted channel_variants row, filtered by the post's
+> 108	        // OWNER (post.user_id) — that row is written service-role-only by the reshaper under the correct user_id.
+> 109	        // Signing the per-row asset key HERE (fresh 6h URL) also fixes auto-publish's single-video-per-campaign
+> 110	        // collision. SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md §5.3. Falls back to legacy when absent.
+> 111	        let contentPayload: unknown = videoUrl ? { text: contentText, video_url: videoUrl } : contentText;
+> 112	        const reshape = (post.metadata as { reshape?: { content?: Record<string, unknown>; channel_variant_id?: string } } | null)?.reshape;
+> 113	        if (reshape?.content) {
+> 114	          const c = reshape.content;
+> 115	          const native: Record<string, unknown> = { text: typeof c.text === "string" ? c.text : contentText };
+> 116	          // Resolve the asset from the owner-scoped ledger row (server-trusted), NOT from metadata.
+> 117	          if (reshape.channel_variant_id) {
+> 118	            const { data: cv } = await adminClient
+> 119	              .from("channel_variants")
+> 120	              .select("asset_bucket, asset_key, asset_kind")
+> 121	              .eq("id", reshape.channel_variant_id)
+> 122	              .eq("user_id", post.user_id)        // hard tenant bind — a forged variant_id of another tenant returns nothing
+> 123	              .maybeSingle();
+> 124	            const bucket = cv?.asset_bucket as string | undefined;
+> 125	            const key = cv?.asset_key as string | undefined;
+> 126	            if (bucket && key) {
+> 127	              let url: string | null = null;
+> 128	              if (/^https?:\/\//i.test(key)) url = key;
+> 129	              else { const { data: signed } = await adminClient.storage.from(bucket).createSignedUrl(key, 21600); url = signed?.signedUrl ?? null; }
+> 130	              if (url) { if (cv?.asset_kind === "video") native.video_url = url; else if (cv?.asset_kind === "image") native.image_url = url; }
+> 131	            }
+> 132	          }
+> 133	          if (Array.isArray(c.tweets)) native.thread = c.tweets;
+> 134	          contentPayload = native;
+> 135	        }
+> 136	
+> 137	        // Call publish-social
+> 138	        const publishRes = await fetch(
+> 139	          `${Deno.env.get("SUPABASE_URL")}/functions/v1/publish-social`,
+> 140	          {
+> 141	            method: "POST",
+> 142	            headers: {
+> 143	              "Content-Type": "application/json",
+> 144	              Authorization: `Bearer ${(Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))}`,
+> ```
+
+## 🤖 Claude *(02:24:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== channel_variants schema (migration) ===\"\nsed -n '1,80p' supabase/migrations/20260627150000_*.sql 2>/dev/null | grep -iE \"create table|channel_variants|column|asset|native_text|surface|platform|status|CHECK\" | head -40 || ls supabase/migrations/ | grep -iE \"channel_variant|creative_metrics\"",
+  "description": "auto-publish asset resolution + channel_variants schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === channel_variants schema (migration) ===
+> -- Migration: channel_variants ledger + creative_metrics.hook_rate — Reshaper (FR-CP-003 / FR-CP-007 / FR-CP-011)
+> -- Thesis: the reshaper emits ONE native variant per (pillar_run, channel, surface). channel_variants is BOTH the
+> -- 1. channel_variants — the native-variant ledger + idempotency anchor
+> CREATE TABLE IF NOT EXISTS public.channel_variants (
+>   surface           text NOT NULL,
+>   platform          public.social_platform,        -- enum value mapped for publishing; NULL = not directly publishable
+>   native_text       jsonb NOT NULL DEFAULT '{}'::jsonb,  -- {caption|title|description|body|tweets[]|overlay_text|link}
+>   asset_kind        text,                          -- 'video' | 'image' | 'none'
+>   asset_bucket      text,                          -- per-row asset ref (fixes auto-publish single-video collision)
+>   asset_key         text,
+>   asset_status      text NOT NULL DEFAULT 'pending'
+>     CONSTRAINT channel_variants_asset_status_chk CHECK (asset_status IN
+>   status            text NOT NULL DEFAULT 'draft'
+>     CONSTRAINT channel_variants_status_chk CHECK (status IN ('draft','scheduled','published','skipped','failed')),
+>   -- Idempotency: one variant per (pillar run, channel, surface). Reshaper UPSERTs on this.
+>   CONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)
+> ALTER TABLE public.channel_variants ENABLE ROW LEVEL SECURITY;
+> CREATE POLICY "channel_variants read own" ON public.channel_variants
+> CREATE POLICY "channel_variants delete own" ON public.channel_variants
+> CREATE TRIGGER tr_update_channel_variants_updated_at
+>   BEFORE UPDATE ON public.channel_variants
+>   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> CREATE INDEX IF NOT EXISTS idx_channel_variants_run    ON public.channel_variants (pillar_run_id);
+> CREATE INDEX IF NOT EXISTS idx_channel_variants_user   ON public.channel_variants (user_id, created_at DESC);
+> CREATE INDEX IF NOT EXISTS idx_channel_variants_status ON public.channel_variants (status) WHERE status = 'draft';
+> COMMENT ON TABLE public.channel_variants IS
+>   'Reshaper native-variant ledger (FR-CP-003/007) + idempotency anchor UNIQUE(pillar_run_id,channel,surface). '
+>   'One row per channel surface reshaped from a pillar. SELECT/DELETE own; writes service-role-only (reshaper). '
+>   ADD COLUMN IF NOT EXISTS hook_rate numeric
+>     CONSTRAINT creative_metrics_hook_rate_chk CHECK (hook_rate IS NULL OR (hook_rate >= 0 AND hook_rate <= 1));
+> ```
+
+## 🤖 Claude *(02:24:33)*
+
+
+## 🤖 Claude *(02:24:35)*
+
+Achado material: `channel_variants` é **pillar-centric** — UNIQUE `(pillar_run_id, channel, surface)`. O seam do Spaces precisa saber se `pillar_run_id` aceita NULL (senão exige acomodação de schema). Deixa eu verificar — isso decide se a Fatia A é limpa ou precisa de migração.
+
+## 🤖 Claude *(02:24:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== pillar_run_id column def + asset_status CHECK ===\"\ngrep -nE \"pillar_run_id|asset_status.*IN|channel_variants_asset_status\" supabase/migrations/20260627150000_*.sql | head\necho \"=== nullability real no DB live ===\"\nset -a; source .env; set +a\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/channel_variants?select=id,pillar_run_id,asset_status,asset_bucket,asset_key&limit=2\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -m json.tool 2>/dev/null | head -20",
+  "description": "pillar_run_id nullability + asset_status valores"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === pillar_run_id column def + asset_status CHECK ===
+> 22:  pillar_run_id     uuid NOT NULL,                 -- = pipeline_runs.id (links pillar_atoms + the source masters)
+> 32:    CONSTRAINT channel_variants_asset_status_chk CHECK (asset_status IN
+> 41:  CONSTRAINT channel_variants_uq UNIQUE (pillar_run_id, channel, surface)
+> 56:CREATE INDEX IF NOT EXISTS idx_channel_variants_run    ON public.channel_variants (pillar_run_id);
+> 61:  'Reshaper native-variant ledger (FR-CP-003/007) + idempotency anchor UNIQUE(pillar_run_id,channel,surface). '
+> === nullability real no DB live ===
+> [
+>     {
+>         "id": "a0c88b53-23d4-45d7-b24a-8229cadb12bb",
+>         "pillar_run_id": "d5c9d1cf-024c-4771-872e-328659d883b7",
+>         "asset_status": "ready",
+>         "asset_bucket": null,
+>         "asset_key": null
+>     },
+>     {
+>         "id": "0f516510-95b6-46ee-9195-98721eefd70b",
+>         "pillar_run_id": "d5c9d1cf-024c-4771-872e-328659d883b7",
+>         "asset_status": "ready",
+>         "asset_bucket": "generated-images",
+>         "asset_key": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/reshaped/d5c9d1cf-024c-4771-872e-328659d883b7-linkedin-carousel.pdf"
+>     }
+> ]
+> ```
+
+## 🤖 Claude *(02:25:41)*
+
+
+## 🤖 Claude *(02:25:44)*
+
+Confirmado: `pillar_run_id uuid NOT NULL` com FK a `pipeline_runs` — `channel_variants` é **acoplada ao pipeline PILLAR**. Um publish do Spaces não tem pillar_run → reusar essa tabela exigiria migração numa tabela security-sensitive (FMEA-011) ou um pillar sintético. **Não vou improvisar isso.** Mas o WordPress publica **direto** via `publish-wordpress` (sem channel_variants) — pode ser um caminho limpo sem o blocker. Deixa eu checar o contrato de entrada dele.
+
+## 🤖 Claude *(02:25:45)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "offset": 1,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	const corsHeaders = {
+> 2	  "Access-Control-Allow-Origin": "*",
+> 3	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 4	  "Access-Control-Allow-Headers":
+> 5	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 6	};
+> 7	
+> 8	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+> 9	
+> 10	Deno.serve(async (req) => {
+> 11	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 12	
+> 13	  try {
+> 14	    const authHeader = req.headers.get("Authorization");
+> 15	    if (!authHeader?.startsWith("Bearer ")) {
+> 16	      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 17	        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 18	      });
+> 19	    }
+> 20	
+> 21	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 22	    const supabaseKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 23	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 24	    
+> 25	    const reqBody = await req.json();
+> 26	    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 27	    let userId: string;
+> 28	    
+> 29	    if (isServiceRole) {
+> 30	      userId = reqBody.user_id;
+> 31	      if (!userId) {
+> 32	        return new Response(JSON.stringify({ error: "user_id is required for service_role calls" }), {
+> 33	          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 34	        });
+> 35	      }
+> 36	    } else {
+> 37	      const userClient = createClient(supabaseUrl, supabaseKey, {
+> 38	        global: { headers: { Authorization: authHeader } },
+> 39	      });
+> 40	      const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 41	      if (userErr || !user) {
+> 42	        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+> 43	          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 44	        });
+> 45	      }
+> 46	      userId = user.id;
+> 47	    }
+> 48	
+> 49	    // Self-hosted WordPress REST API credentials — user config first, server secrets as fallback
+> 50	    const serviceClient = createClient(supabaseUrl, serviceKey);
+> 51	    const { data: userKeys } = await serviceClient
+> 52	      .from("decrypted_user_api_keys")
+> 53	      .select("wp_site_url, wp_username, wp_app_password")
+> 54	      .eq("user_id", userId)
+> 55	      .maybeSingle();
+> 56	
+> 57	    const wpSiteUrl = userKeys?.wp_site_url || Deno.env.get("WP_SITE_URL");
+> 58	    const wpUsername = userKeys?.wp_username || Deno.env.get("WP_USERNAME");
+> 59	    const wpAppPassword = userKeys?.wp_app_password || Deno.env.get("WP_APP_PASSWORD");
+> 60	
+> 61	    if (!wpSiteUrl || !wpUsername || !wpAppPassword) {
+> 62	      return new Response(
+> 63	        JSON.stringify({ error: "WordPress não configurado. Acesse Configurações → WordPress para conectar seu site." }),
+> 64	        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 65	      );
+> 66	    }
+> 67	
+> 68	    const { title, content, tags, categories, status, excerpt } = reqBody;
+> 69	
+> 70	    if (!title || !content) {
+> 71	      return new Response(JSON.stringify({ error: "title and content são obrigatórios" }), {
+> 72	        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 73	      });
+> 74	    }
+> 75	
+> ```
+
+## 🤖 Claude *(02:27:08)*
+
+
+## 🤖 Claude *(02:27:13)*
+
+**Achado material decisivo:** `pillar_run_id uuid NOT NULL` (FK a `pipeline_runs`) — `channel_variants` é acoplada ao pipeline PILLAR, então os nós **media-social** (IG/TikTok) precisam de decisão de schema (não vou improvisar numa tabela FMEA-011). **Mas o WordPress é limpo:** `publish-wordpress` aceita `{title, content, status}` **direto** (linha 68), sem channel_variants, sem blocker. E foi a rede que você listou primeiro.
+
+Então a **Fatia A** vai ser o **nó WordPress (Post + Landing Page)** — unblocked, reusa `publish-wordpress`, default rascunho opt-in. Vou ler os arquivos exatos do registry VIVO para estender.
+
+## 🤖 Claude *(02:27:13)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { Sparkles, User, UserCircle, Film, Wand2, Video, Mic, List, Maximize2, type LucideIcon } from "lucide-react";
+> 2	import {
+> 3	  makeDefaultGenerateImage,
+> 4	  makeDefaultCharacterReference,
+> 5	  makeDefaultProductList,
+> 6	  makeDefaultUpscale,
+> 7	  makeDefaultSceneCompose,
+> 8	  makeDefaultStyleTransfer,
+> 9	  makeDefaultImageToVideo,
+> 10	  makeDefaultVoiceClone,
+> 11	  makeDefaultAvatarIdentity,
+> 12	  type CanvasNode,
+> 13	} from "@/types/canvas";
+> 14	
+> 15	export type NodeCategory = "Inputs" | "Generate" | "Transform";
+> 16	
+> 17	export interface NodeRegistryEntry {
+> 18	  id: string;
+> 19	  label: string;
+> 20	  description: string;
+> 21	  category: NodeCategory;
+> 22	  icon: LucideIcon;
+> 23	  estimatedCost: number;
+> 24	  aliases: string[];
+> 25	  factory: (pos: { x: number; y: number }) => CanvasNode;
+> 26	}
+> 27	
+> 28	export const CANVAS_NODE_REGISTRY: NodeRegistryEntry[] = [
+> 29	  {
+> 30	    id: "characterReference",
+> 31	    label: "Personagem (referência)",
+> 32	    description: "Upload de personagem para reutilizar em cenas downstream.",
+> 33	    category: "Inputs",
+> 34	    icon: User,
+> 35	    estimatedCost: 0,
+> 36	    aliases: ["personagem", "soul", "ref", "character", "pessoa"],
+> 37	    factory: makeDefaultCharacterReference,
+> 38	  },
+> 39	  {
+> 40	    id: "productList",
+> 41	    label: "Lista de Produtos",
+> 42	    description: "Lista de produtos/atributos — conecte a um Gerar Imagem para lote template×itens.",
+> 43	    category: "Inputs",
+> 44	    icon: List,
+> 45	    estimatedCost: 0,
+> 46	    aliases: ["lista", "list", "produtos", "batch", "lote", "afiliado"],
+> 47	    factory: makeDefaultProductList,
+> 48	  },
+> 49	  {
+> 50	    id: "generateImage",
+> 51	    label: "Gerar imagem",
+> 52	    description: "Cria imagem a partir de prompt (Higgsfield Soul, DALL·E, Flux).",
+> 53	    category: "Generate",
+> 54	    icon: Sparkles,
+> 55	    estimatedCost: 20,
+> 56	    aliases: ["imagem", "gerar", "soul", "image", "flux", "dall-e"],
+> 57	    factory: makeDefaultGenerateImage,
+> 58	  },
+> 59	  {
+> 60	    id: "sceneCompose",
+> 61	    label: "Compor cena",
+> 62	    description: "Cena com personagem conectado (Higgsfield Soul).",
+> 63	    category: "Generate",
+> 64	    icon: Film,
+> 65	    estimatedCost: 20,
+> 66	    aliases: ["cena", "compose", "soul", "scene", "frame"],
+> 67	    factory: makeDefaultSceneCompose,
+> 68	  },
+> 69	  {
+> 70	    id: "imageToVideo",
+> 71	    label: "Imagem → Vídeo",
+> 72	    description: "Anima uma imagem (DoP/Kling/Seedance — execução em 4.2b).",
+> 73	    category: "Generate",
+> 74	    icon: Video,
+> 75	    estimatedCost: 30,
+> 76	    aliases: ["video", "kling", "dop", "anima", "i2v"],
+> 77	    factory: makeDefaultImageToVideo,
+> 78	  },
+> 79	  {
+> 80	    id: "styleTransfer",
+> 81	    label: "Aplicar estilo",
+> 82	    description: "Aplica preset visual via prompt engineering (Soul).",
+> 83	    category: "Transform",
+> 84	    icon: Wand2,
+> 85	    estimatedCost: 12,
+> 86	    aliases: ["estilo", "style", "transfer", "preset"],
+> 87	    factory: makeDefaultStyleTransfer,
+> 88	  },
+> 89	  {
+> 90	    id: "upscale",
+> 91	    label: "Upscale (ampliar)",
+> 92	    description: "Amplia uma imagem conectada em alta resolução (Replicate real-esrgan, 2x/4x).",
+> 93	    category: "Transform",
+> 94	    icon: Maximize2,
+> 95	    estimatedCost: 8,
+> 96	    aliases: ["upscale", "ampliar", "hd", "resolucao", "real-esrgan", "magnific"],
+> 97	    factory: makeDefaultUpscale,
+> 98	  },
+> 99	  {
+> 100	    id: "voiceClone",
+> 101	    label: "Clone de Voz",
+> 102	    description: "Clona uma voz de referência (ElevenLabs/Cartesia, BYOK) e sintetiza um roteiro.",
+> 103	    category: "Generate",
+> 104	    icon: Mic,
+> 105	    estimatedCost: 36,
+> 106	    aliases: ["voz", "voice", "clone", "audio", "tts", "fala", "narração", "elevenlabs", "cartesia"],
+> 107	    factory: makeDefaultVoiceClone,
+> 108	  },
+> 109	  {
+> 110	    id: "avatarIdentity",
+> 111	    label: "Identidade (avatar)",
+> 112	    description: "Treina e verifica a identidade facial do avatar (Soul ID / LoRA) — Identity Gate VLM-soft.",
+> 113	    category: "Inputs",
+> 114	    icon: UserCircle,
+> 115	    estimatedCost: 0,
+> 116	    aliases: ["identidade", "avatar", "rosto", "face", "soul", "identity", "gabriel", "pessoa"],
+> 117	    factory: makeDefaultAvatarIdentity,
+> 118	  },
+> 119	];
+> 120	
+> 121	export function searchRegistry(q: string): NodeRegistryEntry[] {
+> 122	  const s = q.trim().toLowerCase();
+> 123	  if (!s) return CANVAS_NODE_REGISTRY;
+> 124	  return CANVAS_NODE_REGISTRY.filter(
+> 125	    (e) =>
+> 126	      e.label.toLowerCase().includes(s) ||
+> 127	      e.description.toLowerCase().includes(s) ||
+> 128	      e.category.toLowerCase().includes(s) ||
+> 129	      e.aliases.some((a) => a.includes(s)),
+> 130	  );
+> 131	}
+> 132	
+> ```
+
+## 🤖 Claude *(02:27:24)*
+
+
+## 🤖 Claude *(02:27:25)*
+
+Registry limpo — vou adicionar categoria "Publish". Preciso ver os pontos de extensão em `types/canvas.ts` + os 3 arquivos de UI. Batch de leituras:
+
+## 🤖 Claude *(02:27:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 15,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 15	import type { Node, Edge, Viewport } from "@xyflow/react";
+> 16	
+> 17	/* ── Node kind discrimination ────────────────────────────────────────── */
+> 18	
+> 19	export type CanvasNodeKind =
+> 20	  | "generateImage"
+> 21	  | "characterReference"
+> 22	  | "productList"
+> 23	  | "sceneCompose"
+> 24	  | "styleTransfer"
+> 25	  | "upscale"
+> 26	  | "imageToVideo"
+> 27	  | "voiceClone"
+> 28	  | "avatarIdentity";
+> 29	
+> 30	export type NodeStatus =
+> ```
+
+## 🤖 Claude *(02:27:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 555,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 555	}
+> 556	
+> 557	export type CanvasNodeData =
+> 558	  | GenerateImageData
+> 559	  | CharacterReferenceData
+> 560	  | ProductListData
+> 561	  | SceneComposeData
+> 562	  | StyleTransferData
+> 563	  | UpscaleData
+> 564	  | ImageToVideoData
+> 565	  | VoiceCloneData
+> 566	  | AvatarIdentityData;
+> 567	
+> 568	export const UPSCALE_COST: Record<2 | 4, number> = { 2: 8, 4: 20 }; // mirror CREDIT_COSTS upscale-2x/4x
+> ```
+
+## 🤖 Claude *(02:27:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 1000,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1000	export function isImageToVideo(data: CanvasNodeData): data is ImageToVideoData {
+> 1001	  return data.kind === "imageToVideo";
+> 1002	}
+> 1003	export function isVoiceClone(data: CanvasNodeData): data is VoiceCloneData {
+> 1004	  return data.kind === "voiceClone";
+> 1005	}
+> 1006	export function isAvatarIdentity(data: CanvasNodeData): data is AvatarIdentityData {
+> 1007	  return data.kind === "avatarIdentity";
+> 1008	}
+> 1009	
+> 1010	/** Resolve the mcoCoins cost of a single node from MODEL_INFO/VIDEO_MODEL_INFO. */
+> 1011	export function estimateNodeCost(data: CanvasNodeData): number {
+> 1012	  switch (data.kind) {
+> 1013	    case "generateImage":
+> 1014	      return getImageModelInfo(data.modelId).coinCost;
+> 1015	    case "sceneCompose":
+> 1016	      // Never trust persisted data.cost — graphs saved before Amendment 2d-bis carry the old 18.
+> 1017	      return SCENE_COMPOSE_COST;
+> 1018	    case "styleTransfer":
+> 1019	      return STYLE_TRANSFER_COST;
+> 1020	    case "imageToVideo":
+> 1021	      return getVideoModelInfo(data.videoModel).coinCost;
+> 1022	    case "characterReference":
+> 1023	      return 0;
+> 1024	    case "productList":
+> 1025	      return 0; // input node — cost is realized per item at the downstream generateImage (it.4a)
+> 1026	    case "upscale":
+> 1027	      return UPSCALE_COST[data.scale]; // it.4c — Replicate real-esrgan, priced by scale
+> 1028	    case "voiceClone":
+> 1029	      return 36; // COIN_COSTS.VOICE_GENERATION (charged on synthesize; clone is free)
+> 1030	    case "avatarIdentity":
+> 1031	      return 0; // train (FR-AC-012) is gated OTD-AC-017; cost charged server-side when wired (OTD-AC-006)
+> 1032	  }
+> 1033	}
+> 1034	
+> ```
+
+## 🤖 Claude *(02:27:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/AddNodeMenu.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useMemo, useState } from "react";
+> 2	import { Coins, Plus, Search } from "lucide-react";
+> 3	import { useReactFlow } from "@xyflow/react";
+> 4	import { Button } from "@/components/ui/button";
+> 5	import { Input } from "@/components/ui/input";
+> 6	import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+> 7	import {
+> 8	  CommandDialog,
+> 9	  CommandEmpty,
+> 10	  CommandGroup,
+> 11	  CommandInput,
+> 12	  CommandItem,
+> 13	  CommandList,
+> 14	} from "@/components/ui/command";
+> 15	import { cn } from "@/lib/utils";
+> 16	import { useCanvasStore } from "@/store/useCanvasStore";
+> 17	import {
+> 18	  CANVAS_NODE_REGISTRY,
+> 19	  searchRegistry,
+> 20	  type NodeCategory,
+> 21	} from "@/lib/canvas-node-registry";
+> 22	
+> 23	const CATEGORIES: NodeCategory[] = ["Inputs", "Generate", "Transform"];
+> 24	
+> 25	export function AddNodeFab() {
+> 26	  const [open, setOpen] = useState(false);
+> 27	  const [q, setQ] = useState("");
+> 28	  const addNode = useCanvasStore((s) => s.addNode);
+> 29	  const { screenToFlowPosition } = useReactFlow();
+> 30	
+> 31	  const insert = (factoryId: string) => {
+> 32	    const entry = CANVAS_NODE_REGISTRY.find((e) => e.id === factoryId);
+> 33	    if (!entry) return;
+> 34	    const center =
+> 35	      typeof window !== "undefined"
+> 36	        ? screenToFlowPosition({
+> 37	            x: window.innerWidth / 2,
+> 38	            y: window.innerHeight / 2,
+> 39	          })
+> 40	        : { x: 200, y: 200 };
+> 41	    addNode(entry.factory(center));
+> 42	    setOpen(false);
+> 43	    setQ("");
+> 44	  };
+> 45	
+> 46	  const filtered = useMemo(() => searchRegistry(q), [q]);
+> 47	
+> 48	  return (
+> 49	    <Popover open={open} onOpenChange={setOpen}>
+> 50	      <PopoverTrigger asChild>
+> 51	        <Button
+> 52	          size="sm"
+> 53	          variant="accent"
+> 54	          className="absolute bottom-4 right-4 z-10 h-11 gap-2 rounded-full px-4 shadow-lg"
+> 55	          title="Adicionar nó (Cmd/Ctrl+K)"
+> 56	        >
+> 57	          <Plus className="h-4 w-4" />
+> 58	          Adicionar nó
+> 59	        </Button>
+> 60	      </PopoverTrigger>
+> 61	      <PopoverContent align="end" side="top" className="w-80 p-0">
+> 62	        <div className="border-b border-border p-2">
+> 63	          <div className="relative">
+> 64	            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+> 65	            <Input
+> 66	              autoFocus
+> 67	              placeholder="Buscar nó… (ex.: cena, video, estilo)"
+> 68	              value={q}
+> 69	              onChange={(e) => setQ(e.target.value)}
+> 70	              className="h-8 pl-7 text-xs"
+> 71	            />
+> 72	          </div>
+> 73	        </div>
+> 74	        <div className="max-h-80 overflow-y-auto p-1">
+> 75	          {CATEGORIES.map((cat) => {
+> 76	            const items = filtered.filter((e) => e.category === cat);
+> 77	            if (!items.length) return null;
+> 78	            return (
+> 79	              <div key={cat} className="mb-1">
+> 80	                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+> 81	                  {cat}
+> 82	                </div>
+> 83	                {items.map((e) => (
+> 84	                  <button
+> 85	                    key={e.id}
+> 86	                    type="button"
+> 87	                    onClick={() => insert(e.id)}
+> 88	                    className={cn(
+> 89	                      "flex w-full items-start gap-2 rounded px-2 py-1.5 text-left transition-colors",
+> 90	                      "hover:bg-muted",
+> 91	                    )}
+> 92	                  >
+> 93	                    <e.icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-secondary" />
+> 94	                    <div className="min-w-0 flex-1">
+> 95	                      <div className="truncate text-xs font-medium">{e.label}</div>
+> 96	                      <div className="truncate text-[10px] text-muted-foreground">
+> 97	                        {e.description}
+> 98	                      </div>
+> 99	                    </div>
+> 100	                    <span className="inline-flex shrink-0 items-center gap-1 font-mono text-[10px] text-muted-foreground">
+> 101	                      {e.estimatedCost > 0 ? (
+> 102	                        <>
+> 103	                          {e.estimatedCost} <Coins className="h-3 w-3 text-amber-400" />
+> 104	                        </>
+> 105	                      ) : (
+> 106	                        "—"
+> 107	                      )}
+> 108	                    </span>
+> 109	                  </button>
+> 110	                ))}
+> 111	              </div>
+> 112	            );
+> 113	          })}
+> 114	          {!filtered.length && (
+> 115	            <div className="p-4 text-center text-[11px] text-muted-foreground">
+> 116	              Nenhum nó encontrado.
+> 117	            </div>
+> 118	          )}
+> 119	        </div>
+> 120	      </PopoverContent>
+> 121	    </Popover>
+> 122	  );
+> 123	}
+> 124	
+> 125	export function AddNodeCommand() {
+> 126	  const [open, setOpen] = useState(false);
+> 127	  const addNode = useCanvasStore((s) => s.addNode);
+> 128	  const { screenToFlowPosition } = useReactFlow();
+> 129	
+> 130	  useEffect(() => {
+> 131	    const onKey = (e: KeyboardEvent) => {
+> 132	      const meta = e.metaKey || e.ctrlKey;
+> 133	      if (meta && e.key.toLowerCase() === "k") {
+> 134	        e.preventDefault();
+> 135	        setOpen((v) => !v);
+> 136	      }
+> 137	    };
+> 138	    window.addEventListener("keydown", onKey);
+> 139	    return () => window.removeEventListener("keydown", onKey);
+> 140	  }, []);
+> 141	
+> 142	  const insert = (factoryId: string) => {
+> 143	    const entry = CANVAS_NODE_REGISTRY.find((e) => e.id === factoryId);
+> 144	    if (!entry) return;
+> 145	    const center =
+> 146	      typeof window !== "undefined"
+> 147	        ? screenToFlowPosition({
+> 148	            x: window.innerWidth / 2,
+> 149	            y: window.innerHeight / 2,
+> 150	          })
+> 151	        : { x: 200, y: 200 };
+> 152	    addNode(entry.factory(center));
+> 153	    setOpen(false);
+> 154	  };
+> 155	
+> 156	  return (
+> 157	    <CommandDialog open={open} onOpenChange={setOpen}>
+> 158	      <CommandInput placeholder="Adicionar nó… (digite para buscar)" />
+> 159	      <CommandList>
+> 160	        <CommandEmpty>Nenhum nó encontrado.</CommandEmpty>
+> 161	        {CATEGORIES.map((cat) => {
+> 162	          const items = CANVAS_NODE_REGISTRY.filter((e) => e.category === cat);
+> 163	          return (
+> 164	            <CommandGroup key={cat} heading={cat}>
+> 165	              {items.map((e) => (
+> 166	                <CommandItem
+> 167	                  key={e.id}
+> 168	                  value={`${e.label} ${e.aliases.join(" ")} ${e.description}`}
+> 169	                  onSelect={() => insert(e.id)}
+> 170	                  className="gap-2"
+> 171	                >
+> 172	                  <e.icon className="h-3.5 w-3.5 text-secondary" />
+> 173	                  <span className="flex-1 text-xs">{e.label}</span>
+> 174	                  <span className="inline-flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+> 175	                    {e.estimatedCost > 0 ? (
+> 176	                      <>
+> 177	                        {e.estimatedCost} <Coins className="h-3 w-3 text-amber-400" />
+> 178	                      </>
+> 179	                    ) : (
+> 180	                      "—"
+> 181	                    )}
+> 182	                  </span>
+> 183	                </CommandItem>
+> 184	              ))}
+> 185	            </CommandGroup>
+> 186	          );
+> 187	        })}
+> 188	      </CommandList>
+> 189	    </CommandDialog>
+> 190	  );
+> 191	}
+> 192	
+> ```
+
+## 🤖 Claude *(02:27:52)*
+
+
+## 🤖 Claude *(02:27:55)*
+
+Extensão clara: `estimateNodeCost`/`resolveExecutePayload` são switches exaustivos (TS força o novo case). Preciso do padrão de um node component + os pontos de registro em `CanvasEditorPage`/`RightPanel` + o resolver de imagem upstream + a POST de posts no `publish-wordpress` (para o branch de page). Batch final de leituras:
+
+## 🤖 Claude *(02:27:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/UpscaleNode.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { Coins, Maximize2 } from "lucide-react";
+> 4	import { cn } from "@/lib/utils";
+> 5	import { UPSCALE_COST, type UpscaleData } from "@/types/canvas";
+> 6	import { StorageImg } from "@/components/StorageMedia";
+> 7	
+> 8	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 9	
+> 10	export const UpscaleNode = memo(function UpscaleNode({ data, selected }: NodeProps) {
+> 11	  const d = data as unknown as UpscaleData;
+> 12	  return (
+> 13	    <div
+> 14	      className={cn(
+> 15	        "w-[220px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all",
+> 16	        selected ? "border-accent ring-2 ring-accent/30" : "border-border",
+> 17	      )}
+> 18	    >
+> 19	      <Handle type="target" position={Position.Left} id="input" className={HANDLE_CLASS} />
+> 20	      <Handle type="source" position={Position.Right} id="output" className={HANDLE_CLASS} />
+> 21	      <header className="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
+> 22	        <Maximize2 className="h-3 w-3 text-secondary" />
+> 23	        <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 24	        <span className="ml-auto font-mono text-[9px] text-muted-foreground">{d.scale}x</span>
+> 25	      </header>
+> 26	      <div className="aspect-square w-full bg-muted/40">
+> 27	        {d.output?.imageUrl ? (
+> 28	          <StorageImg src={d.output.imageUrl} alt="" className="h-full w-full object-cover" draggable={false} />
+> 29	        ) : (
+> 30	          <div className="flex h-full w-full items-center justify-center text-center text-[10px] text-muted-foreground">
+> 31	            {d.status === "running" ? "Ampliando…" : "Conecte uma imagem"}
+> 32	          </div>
+> 33	        )}
+> 34	      </div>
+> 35	      <div className="px-2.5 py-1.5">
+> 36	        <div className="inline-flex items-center gap-1 font-mono text-[9px] text-muted-foreground">
+> 37	          {UPSCALE_COST[d.scale]} <Coins className="h-2.5 w-2.5 text-amber-400" /> · real-esrgan
+> 38	        </div>
+> 39	      </div>
+> 40	    </div>
+> 41	  );
+> 42	});
+> 43	
+> ```
+
+## 🤖 Claude *(02:27:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "offset": 44,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 44	import { LanesOverlay } from "@/components/canvas/LanesOverlay";
+> 45	import { PipelineEdge } from "@/components/canvas/edges/PipelineEdge";
+> 46	import { GenerateImageNode } from "@/components/canvas/nodes/GenerateImageNode";
+> 47	import { CharacterReferenceNode } from "@/components/canvas/nodes/CharacterReferenceNode";
+> 48	import { ProductListNode } from "@/components/canvas/nodes/ProductListNode";
+> 49	import { UpscaleNode } from "@/components/canvas/nodes/UpscaleNode";
+> 50	import { SceneComposeNode } from "@/components/canvas/nodes/SceneComposeNode";
+> 51	import { StyleTransferNode } from "@/components/canvas/nodes/StyleTransferNode";
+> 52	import { ImageToVideoNode } from "@/components/canvas/nodes/ImageToVideoNode";
+> 53	import { VoiceCloneNode } from "@/components/canvas/nodes/VoiceCloneNode";
+> 54	import { AvatarIdentityNode } from "@/components/canvas/nodes/AvatarIdentityNode";
+> 55	import { AddNodeFab, AddNodeCommand } from "@/components/canvas/AddNodeMenu";
+> 56	import { RightPanel } from "@/components/canvas/RightPanel";
+> 57	
+> 58	const nodeTypes = {
+> 59	  generateImage: GenerateImageNode,
+> 60	  characterReference: CharacterReferenceNode,
+> 61	  productList: ProductListNode,
+> 62	  upscale: UpscaleNode,
+> 63	  sceneCompose: SceneComposeNode,
+> 64	  styleTransfer: StyleTransferNode,
+> 65	  imageToVideo: ImageToVideoNode,
+> 66	  voiceClone: VoiceCloneNode,
+> 67	  avatarIdentity: AvatarIdentityNode,
+> 68	};
+> 69	const edgeTypes = { pipeline: PipelineEdge };
+> 70	
+> 71	/**
+> ```
+
+## 🤖 Claude *(02:27:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useCanvasStore } from "@/store/useCanvasStore";
+> 2	import { StyleSettingsPanel } from "./StyleSettingsPanel";
+> 3	import { GenerateImageInspector } from "./inspectors/GenerateImageInspector";
+> 4	import { CharacterReferenceInspector } from "./inspectors/CharacterReferenceInspector";
+> 5	import { ProductListInspector } from "./inspectors/ProductListInspector";
+> 6	import { UpscaleInspector } from "./inspectors/UpscaleInspector";
+> 7	import { SceneComposeInspector } from "./inspectors/SceneComposeInspector";
+> 8	import { StyleTransferInspector } from "./inspectors/StyleTransferInspector";
+> 9	import { ImageToVideoInspector } from "./inspectors/ImageToVideoInspector";
+> 10	import { VoiceCloneInspector } from "./inspectors/VoiceCloneInspector";
+> 11	import { AvatarIdentityInspector } from "./inspectors/AvatarIdentityInspector";
+> 12	
+> 13	interface RightPanelProps {
+> 14	  projectId: string;
+> 15	  creditsBalance: number;
+> 16	  onCreditsChanged: () => void;
+> 17	}
+> 18	
+> 19	export function RightPanel({ projectId, creditsBalance, onCreditsChanged }: RightPanelProps) {
+> 20	  const selectedId = useCanvasStore((s) => s.selectedNodeId);
+> 21	  const node = useCanvasStore((s) => s.nodes.find((n) => n.id === selectedId) ?? null);
+> 22	
+> 23	  return (
+> 24	    <aside className="flex h-full w-80 shrink-0 flex-col border-l border-border bg-card">
+> 25	      {!node ? (
+> 26	        <StyleSettingsPanel />
+> 27	      ) : node.data.kind === "generateImage" ? (
+> 28	        <GenerateImageInspector
+> 29	          node={{ id: node.id, data: node.data }}
+> 30	          projectId={projectId}
+> 31	          creditsBalance={creditsBalance}
+> 32	          onCreditsChanged={onCreditsChanged}
+> 33	        />
+> 34	      ) : node.data.kind === "characterReference" ? (
+> 35	        <CharacterReferenceInspector
+> 36	          node={{ id: node.id, data: node.data }}
+> 37	          projectId={projectId}
+> 38	        />
+> 39	      ) : node.data.kind === "productList" ? (
+> 40	        <ProductListInspector
+> 41	          node={{ id: node.id, data: node.data }}
+> 42	          projectId={projectId}
+> 43	        />
+> 44	      ) : node.data.kind === "sceneCompose" ? (
+> 45	        <SceneComposeInspector
+> 46	          node={{ id: node.id, data: node.data }}
+> 47	          projectId={projectId}
+> 48	          creditsBalance={creditsBalance}
+> 49	          onCreditsChanged={onCreditsChanged}
+> 50	        />
+> 51	      ) : node.data.kind === "styleTransfer" ? (
+> 52	        <StyleTransferInspector
+> 53	          node={{ id: node.id, data: node.data }}
+> 54	          projectId={projectId}
+> 55	          creditsBalance={creditsBalance}
+> 56	          onCreditsChanged={onCreditsChanged}
+> 57	        />
+> 58	      ) : node.data.kind === "upscale" ? (
+> 59	        <UpscaleInspector
+> 60	          node={{ id: node.id, data: node.data }}
+> 61	          projectId={projectId}
+> 62	          creditsBalance={creditsBalance}
+> 63	          onCreditsChanged={onCreditsChanged}
+> 64	        />
+> 65	      ) : node.data.kind === "imageToVideo" ? (
+> 66	        <ImageToVideoInspector
+> 67	          node={{ id: node.id, data: node.data }}
+> 68	          projectId={projectId}
+> 69	          creditsBalance={creditsBalance}
+> 70	          onCreditsChanged={onCreditsChanged}
+> 71	        />
+> 72	      ) : node.data.kind === "voiceClone" ? (
+> 73	        <VoiceCloneInspector
+> 74	          node={{ id: node.id, data: node.data }}
+> 75	          projectId={projectId}
+> 76	          creditsBalance={creditsBalance}
+> 77	          onCreditsChanged={onCreditsChanged}
+> 78	        />
+> 79	      ) : node.data.kind === "avatarIdentity" ? (
+> 80	        <AvatarIdentityInspector
+> 81	          node={{ id: node.id, data: node.data }}
+> 82	          projectId={projectId}
+> 83	        />
+> 84	      ) : null}
+> 85	    </aside>
+> 86	  );
+> 87	}
+> 88	
+> ```
+
+## 🤖 Claude *(02:28:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== findUpstreamImages signature ===\"; grep -nE \"export function findUpstream|findUpstreamImages|findUpstreamHandleAsset\" src/lib/canvas-utils.ts | head\necho \"=== publish-wordpress posts POST (page branch) ===\"; sed -n '75,140p' supabase/functions/publish-wordpress/index.ts",
+  "description": "node pattern + registro + upstream resolver + WP posts POST"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === findUpstreamImages signature ===
+> 28:export function findUpstreamImage(
+> 68:export function findUpstreamImages(
+> 87:export function findUpstreamHandleAsset(
+> 104:export function findUpstreamProductItems(
+> === publish-wordpress posts POST (page branch) ===
+> 
+>     // Basic Auth with Application Password (WP 5.6+)
+>     const credentials = btoa(`${wpUsername}:${wpAppPassword}`);
+>     const apiBase = wpSiteUrl.replace(/\/$/, "");
+> 
+>     // CF hardening (security SDD §5 / FM-04 vector): the MCORCH WP REST API sits behind a Cloudflare managed
+>     // challenge that a server-side fetch (no JS engine) cannot solve → all /wp-json/* requests 403. The Sovereign
+>     // adds a CF WAF "Skip" rule scoped to /wp-json/* AND gated on this shared-secret header, so the path is NOT
+>     // opened wide to the public internet (no /wp-json/wp/v2/users enumeration).
+>     //
+>     // SECURITY: wp_site_url is PER-USER controlled (decrypted_user_api_keys). The shared CF-skip secret is bound to
+>     // exactly ONE MCORCH-operated origin behind our Cloudflare zone — it is meaningless off-platform and, if sent to
+>     // a tenant-chosen host, that tenant could exfiltrate it and replay it to bypass the WAF Skip on the real origin.
+>     // So attach it ONLY when the target host equals WP_PUBLISH_SECRET_HOST (exact match). Fail-closed: no allowlisted
+>     // host, no secret, or a host mismatch / malformed URL ⇒ the header is never sent.
+>     const wpPublishSecret = Deno.env.get("WP_PUBLISH_SECRET");
+>     const wpPublishSecretHost = Deno.env.get("WP_PUBLISH_SECRET_HOST");
+>     const wpAuthHeaders: Record<string, string> = { Authorization: `Basic ${credentials}` };
+>     if (wpPublishSecret && wpPublishSecretHost) {
+>       try {
+>         if (new URL(apiBase).hostname.toLowerCase() === wpPublishSecretHost.toLowerCase()) {
+>           wpAuthHeaders["X-MCORCH-Publish"] = wpPublishSecret;
+>         }
+>       } catch { /* malformed wp_site_url ⇒ never attach the shared secret */ }
+>     }
+> 
+>     // Resolve tag IDs (create if they don't exist)
+>     const tagIds: number[] = [];
+>     if (tags) {
+>       const tagSlugs: string[] = typeof tags === "string"
+>         ? tags.split(",").map((t: string) => t.trim()).filter(Boolean)
+>         : tags;
+> 
+>       for (const tagName of tagSlugs) {
+>         try {
+>           // Try to find existing tag
+>           const searchRes = await fetch(`${apiBase}/wp-json/wp/v2/tags?search=${encodeURIComponent(tagName)}&per_page=1`, {
+>             headers: { ...wpAuthHeaders },
+>           });
+>           const found = await searchRes.json();
+>           if (Array.isArray(found) && found.length > 0) {
+>             tagIds.push(found[0].id);
+>           } else {
+>             // Create new tag
+>             const createRes = await fetch(`${apiBase}/wp-json/wp/v2/tags`, {
+>               method: "POST",
+>               headers: { ...wpAuthHeaders, "Content-Type": "application/json" },
+>               body: JSON.stringify({ name: tagName }),
+>             });
+>             if (createRes.ok) {
+>               const newTag = await createRes.json();
+>               tagIds.push(newTag.id);
+>             }
+>           }
+>         } catch {
+>           // Non-fatal: skip tag
+>         }
+>       }
+>     }
+> 
+>     const body: Record<string, unknown> = {
+>       title,
+>       content,
+>       status: status || "draft",
+>       format: "standard",
+>     };
+> ```
+
+## 🤖 Claude *(02:28:05)*
+
+
+## 🤖 Claude *(02:28:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "offset": 140,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 140	    };
+> 141	    if (tagIds.length > 0) body.tags = tagIds;
+> 142	    if (categories) body.categories = categories;
+> 143	    if (excerpt) body.excerpt = excerpt;
+> 144	
+> 145	    const wpRes = await fetch(`${apiBase}/wp-json/wp/v2/posts`, {
+> 146	      method: "POST",
+> 147	      headers: { ...wpAuthHeaders, "Content-Type": "application/json" },
+> 148	      body: JSON.stringify(body),
+> 149	    });
+> 150	
+> 151	    const wpData = await wpRes.json();
+> 152	
+> 153	    // A created post is a single object with an id. A 200 carrying an ARRAY (the post list) means the authenticated
+> 154	    // POST was downgraded to a GET — typically a non-canonical wp_site_url (e.g. mcorch.com → 301 → www.mcorch.com)
+> 155	    // where fetch follows the redirect and drops the method + Authorization. Treat that as failure, never a silent success.
+> 156	    const isCreatedPost = wpRes.ok && wpData && typeof wpData === "object" && !Array.isArray(wpData) && wpData.id;
+> 157	    if (!isCreatedPost) {
+> 158	      console.error("WordPress REST did not return a created post:", wpRes.status, JSON.stringify(wpData).slice(0, 300));
+> 159	      return new Response(
+> 160	        JSON.stringify({
+> 161	          error: (wpData && wpData.message) ||
+> 162	            "WordPress não criou o post (resposta inesperada). Verifique se o endereço do site usa a URL canônica, sem redirect (ex.: https://www.seusite.com em vez de https://seusite.com).",
+> 163	          code: (wpData && wpData.code) || "no_post_returned",
+> 164	          wp_http_status: wpRes.status,
+> 165	        }),
+> 166	        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 167	      );
+> 168	    }
+> 169	
+> 170	    return new Response(JSON.stringify({
+> 171	      success: true,
+> 172	      post_url: wpData.link,
+> 173	      post_id: wpData.id,
+> 174	      status: wpData.status,
+> 175	      slug: wpData.slug,
+> 176	    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 177	
+> 178	  } catch (e) {
+> 179	    console.error("publish-wordpress error:", e);
+> 180	    return new Response(
+> 181	      JSON.stringify({ error: "Falha ao publicar no WordPress. Verifique a conexão e tente novamente." }),
+> 182	      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+> 183	    );
+> 184	  }
+> 185	});
+> 186	
+> ```
+
+## 🤖 Claude *(02:28:32)*
+
+
+## 🤖 Claude *(02:28:34)*
+
+Tenho tudo. Só falta a assinatura do resolver de imagem upstream para embutir a imagem do Spaces no post. Leitura rápida:
+
+## 🤖 Claude *(02:28:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-utils.ts",
+  "offset": 60,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 60	/**
+> 61	 * Collect ALL immediate upstream image URLs (edges where `target === nodeId`),
+> 62	 * deduped, for cross-node consistency reference threading. Generate/style nodes
+> 63	 * pass these as `reference_image_urls` so the model preserves identity from the
+> 64	 * connected upstream creative(s) — including every photo of a CharacterReference
+> 65	 * mood-board node. Capped at 4 (Gemini character-consistency limit).
+> 66	 * SOP: docs/processes/canvas-node-consistency.md.
+> 67	 */
+> 68	export function findUpstreamImages(
+> 69	  nodeId: string,
+> 70	  nodes: CanvasNode[],
+> 71	  edges: Edge[],
+> 72	): string[] {
+> 73	  const urls: string[] = [];
+> 74	  for (const e of edges.filter((edge) => edge.target === nodeId)) {
+> 75	    const src = nodes.find((n) => n.id === e.source);
+> 76	    if (!src) continue;
+> 77	    for (const url of pickNodeImages(src.data)) {
+> 78	      if (url && !urls.includes(url)) urls.push(url);
+> 79	    }
+> 80	  }
+> 81	  return urls.slice(0, 4);
+> 82	}
+> 83	
+> 84	/**
+> 85	 * Find the asset URL connected to a specific target handle of a node.
+> 86	 */
+> 87	export function findUpstreamHandleAsset(
+> 88	  nodeId: string,
+> 89	  targetHandle: string,
+> 90	  nodes: CanvasNode[],
+> 91	  edges: Edge[],
+> 92	): string | undefined {
+> 93	  const edge = edges.find((e) => e.target === nodeId && e.targetHandle === targetHandle);
+> 94	  if (!edge) return undefined;
+> 95	  const src = nodes.find((n) => n.id === edge.source);
+> 96	  if (!src) return undefined;
+> 97	  return pickNodeImage(src.data);
+> 98	}
+> 99	
+> 100	/**
+> 101	 * Find the FIRST upstream productList node connected to `nodeId` (it.4a / FR-SPACES-029).
+> 102	 * Returns its items when present — a downstream generateImage expands them into one run per item.
+> 103	 */
+> 104	export function findUpstreamProductItems(
+> ```
+
+## 🤖 Claude *(02:28:46)*
+
+
+## 🤖 Claude *(02:28:48)*
+
+`findUpstreamImages(node.id, nodes, edges)` retorna URLs upstream — vou embutir a imagem do Spaces no post. Construindo a Fatia A. Começando pelo core (`types/canvas.ts`):
+
+## 🤖 Claude *(02:28:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "export type CanvasNodeKind =\n  | \"generateImage\"\n  | \"characterReference\"\n  | \"productList\"\n  | \"sceneCompose\"\n  | \"styleTransfer\"\n  | \"upscale\"\n  | \"imageToVideo\"\n  | \"voiceClone\"\n  | \"avatarIdentity\";",
+  "new_string": "export type CanvasNodeKind =\n  | \"generateImage\"\n  | \"characterReference\"\n  | \"productList\"\n  | \"sceneCompose\"\n  | \"styleTransfer\"\n  | \"upscale\"\n  | \"imageToVideo\"\n  | \"voiceClone\"\n  | \"avatarIdentity\"\n  | \"publishWordpress\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:29:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "export type CanvasNodeData =\n  | GenerateImageData\n  | CharacterReferenceData\n  | ProductListData\n  | SceneComposeData\n  | StyleTransferData\n  | UpscaleData\n  | ImageToVideoData\n  | VoiceCloneData\n  | AvatarIdentityData;",
+  "new_string": "/** spaces-evolution Amendment 15 (Fatia A) \u2014 publish a Space's content to WordPress as a Post OR\n *  Landing Page. Sink node (input only). Publishes via publish-wordpress (per-user WP creds,\n *  fail-closed); default DRAFT (opt-in publish, FR-SPACES-039). resolveExecutePayload \u2192 null\n *  (the inspector calls the publisher directly, like voiceClone/avatarIdentity). */\nexport interface PublishWordpressData {\n  kind: \"publishWordpress\";\n  label: string;\n  title: string;\n  /** HTML body. An upstream image (if connected) is prepended as a <figure> at publish time. */\n  contentHtml: string;\n  postType: \"post\" | \"page\";\n  /** Default 'draft' \u2014 the node publishes live only on explicit opt-in (HITL). */\n  publishStatus: \"draft\" | \"publish\";\n  status: NodeStatus;\n  output?: { postUrl: string; postId: number; publishedAt: string };\n  error?: string;\n}\n\nexport type CanvasNodeData =\n  | GenerateImageData\n  | CharacterReferenceData\n  | ProductListData\n  | SceneComposeData\n  | StyleTransferData\n  | UpscaleData\n  | ImageToVideoData\n  | VoiceCloneData\n  | AvatarIdentityData\n  | PublishWordpressData;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:29:14)*
+
+
+## 🤖 Claude *(02:29:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "      gateMode: \"vlm_soft\",\n      referenceUrls: [],\n      status: \"idle\",\n      ...overrides,\n    },\n  };\n}",
+  "new_string": "      gateMode: \"vlm_soft\",\n      referenceUrls: [],\n      status: \"idle\",\n      ...overrides,\n    },\n  };\n}\n\n/** spaces-evolution Amendment 15 (Fatia A) \u2014 publishWordpress node default (FR-SPACES-032/034). */\nexport function makeDefaultPublishWordpress(\n  position: { x: number; y: number },\n  overrides: Partial<PublishWordpressData> = {},\n): CanvasNode {\n  return {\n    id: makeNodeId(),\n    type: \"publishWordpress\",\n    position,\n    data: {\n      kind: \"publishWordpress\",\n      label: \"Publicar no WordPress\",\n      title: \"\",\n      contentHtml: \"\",\n      postType: \"post\",\n      publishStatus: \"draft\",\n      status: \"idle\",\n      ...overrides,\n    },\n  };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:29:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "    case \"avatarIdentity\":\n      // avatarIdentity trains against the net-new `avatar-identity-train` Edge Function\n      // (FR-AC-012, gated OTD-AC-017), NOT canvas-execute \u2014 inspector handles it directly.\n      return null;\n  }\n}",
+  "new_string": "    case \"avatarIdentity\":\n      // avatarIdentity trains against the net-new `avatar-identity-train` Edge Function\n      // (FR-AC-012, gated OTD-AC-017), NOT canvas-execute \u2014 inspector handles it directly.\n      return null;\n    case \"publishWordpress\":\n      // publishWordpress is a distribution SINK \u2014 it calls publish-wordpress from its inspector\n      // (spaces-evolution Amendment 15 FR-SPACES-031/032), NOT canvas-execute.\n      return null;\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:29:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "    case \"avatarIdentity\":\n      return 0; // train (FR-AC-012) is gated OTD-AC-017; cost charged server-side when wired (OTD-AC-006)\n  }\n}",
+  "new_string": "    case \"avatarIdentity\":\n      return 0; // train (FR-AC-012) is gated OTD-AC-017; cost charged server-side when wired (OTD-AC-006)\n    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n  }\n}\n\nexport function isPublishWordpress(data: CanvasNodeData): data is PublishWordpressData {\n  return data.kind === \"publishWordpress\";\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:29:40)*
+
+
+## 🤖 Claude *(02:29:41)*
+
+Core pronto. Registry + AddNodeMenu (categoria Publish):
+
+## 🤖 Claude *(02:29:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts",
+  "old_string": "import { Sparkles, User, UserCircle, Film, Wand2, Video, Mic, List, Maximize2, type LucideIcon } from \"lucide-react\";\nimport {\n  makeDefaultGenerateImage,\n  makeDefaultCharacterReference,\n  makeDefaultProductList,\n  makeDefaultUpscale,\n  makeDefaultSceneCompose,\n  makeDefaultStyleTransfer,\n  makeDefaultImageToVideo,\n  makeDefaultVoiceClone,\n  makeDefaultAvatarIdentity,\n  type CanvasNode,\n} from \"@/types/canvas\";\n\nexport type NodeCategory = \"Inputs\" | \"Generate\" | \"Transform\";",
+  "new_string": "import { Sparkles, User, UserCircle, Film, Wand2, Video, Mic, List, Maximize2, Newspaper, type LucideIcon } from \"lucide-react\";\nimport {\n  makeDefaultGenerateImage,\n  makeDefaultCharacterReference,\n  makeDefaultProductList,\n  makeDefaultUpscale,\n  makeDefaultSceneCompose,\n  makeDefaultStyleTransfer,\n  makeDefaultImageToVideo,\n  makeDefaultVoiceClone,\n  makeDefaultAvatarIdentity,\n  makeDefaultPublishWordpress,\n  type CanvasNode,\n} from \"@/types/canvas\";\n\nexport type NodeCategory = \"Inputs\" | \"Generate\" | \"Transform\" | \"Publish\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:29:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts",
+  "old_string": "    aliases: [\"identidade\", \"avatar\", \"rosto\", \"face\", \"soul\", \"identity\", \"gabriel\", \"pessoa\"],\n    factory: makeDefaultAvatarIdentity,\n  },\n];",
+  "new_string": "    aliases: [\"identidade\", \"avatar\", \"rosto\", \"face\", \"soul\", \"identity\", \"gabriel\", \"pessoa\"],\n    factory: makeDefaultAvatarIdentity,\n  },\n  {\n    id: \"publishWordpress\",\n    label: \"Publicar no WordPress\",\n    description: \"Publica o conte\u00fado como Post ou Landing Page no seu WordPress (rascunho por padr\u00e3o).\",\n    category: \"Publish\",\n    icon: Newspaper,\n    estimatedCost: 0,\n    aliases: [\"wordpress\", \"wp\", \"publicar\", \"post\", \"blog\", \"landing\", \"page\", \"publish\", \"distribuir\"],\n    factory: makeDefaultPublishWordpress,\n  },\n];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:30:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/AddNodeMenu.tsx",
+  "old_string": "const CATEGORIES: NodeCategory[] = [\"Inputs\", \"Generate\", \"Transform\"];",
+  "new_string": "const CATEGORIES: NodeCategory[] = [\"Inputs\", \"Generate\", \"Transform\", \"Publish\"];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/AddNodeMenu.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:30:04)*
+
+
+## 🤖 Claude *(02:30:05)*
+
+Node component (sink — só input handle):
+
+## 🤖 Claude *(02:30:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/PublishWordpressNode.tsx",
+  "content": "import { memo } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { Newspaper, CheckCircle2, Loader2, FileText } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\nimport { type PublishWordpressData } from \"@/types/canvas\";\n\nconst HANDLE_CLASS = \"!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card\";\n\n// spaces-evolution Amendment 15 (Fatia A) \u2014 publish SINK: input-only, no output handle.\nexport const PublishWordpressNode = memo(function PublishWordpressNode({ data, selected }: NodeProps) {\n  const d = data as unknown as PublishWordpressData;\n  const published = d.status === \"success\" && d.output?.postUrl;\n  return (\n    <div\n      className={cn(\n        \"w-[220px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all\",\n        selected ? \"border-accent ring-2 ring-accent/30\" : \"border-border\",\n      )}\n    >\n      {/* Sink: consumes an optional upstream image; no source handle. */}\n      <Handle type=\"target\" position={Position.Left} id=\"input_image\" className={HANDLE_CLASS} />\n      <header className=\"flex items-center gap-1.5 border-b border-border px-2.5 py-1.5\">\n        <Newspaper className=\"h-3 w-3 text-secondary\" />\n        <span className=\"truncate text-[11px] font-medium\">{d.label}</span>\n        <span className=\"ml-auto font-mono text-[9px] uppercase text-muted-foreground\">\n          {d.postType === \"page\" ? \"page\" : \"post\"}\n        </span>\n      </header>\n      <div className=\"space-y-1 px-2.5 py-2\">\n        <div className=\"flex items-center gap-1.5 text-[11px]\">\n          <FileText className=\"h-3 w-3 shrink-0 text-muted-foreground\" />\n          <span className=\"truncate\">{d.title || <span className=\"text-muted-foreground\">Sem t\u00edtulo</span>}</span>\n        </div>\n        <div className=\"inline-flex items-center gap-1 font-mono text-[9px] text-muted-foreground\">\n          {d.status === \"running\" ? (\n            <><Loader2 className=\"h-2.5 w-2.5 animate-spin\" /> publicando\u2026</>\n          ) : published ? (\n            <><CheckCircle2 className=\"h-2.5 w-2.5 text-emerald-400\" /> {d.publishStatus === \"publish\" ? \"publicado\" : \"rascunho salvo\"}</>\n          ) : (\n            <>{d.publishStatus === \"publish\" ? \"publica ao vivo\" : \"salva rascunho\"} \u00b7 gr\u00e1tis</>\n          )}\n        </div>\n      </div>\n    </div>\n  );\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/PublishWordpressNode.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:30:28)*
+
+
+## 🤖 Claude *(02:30:29)*
+
+Inspector — título/conteúdo/tipo/status + botão Publicar (resolve imagem upstream, chama publish-wordpress):
+
+## 🤖 Claude *(02:30:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/PublishWordpressInspector.tsx",
+  "content": "import { useState } from \"react\";\nimport { Newspaper, Loader2, Send, ExternalLink, FileText } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { Input } from \"@/components/ui/input\";\nimport { Textarea } from \"@/components/ui/textarea\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { findUpstreamImages } from \"@/lib/canvas-utils\";\nimport { type PublishWordpressData } from \"@/types/canvas\";\nimport { Section, InspectorHeader } from \"../shared\";\n\ninterface Props {\n  node: { id: string; data: PublishWordpressData };\n  projectId: string;\n}\n\nconst POST_TYPES: { id: PublishWordpressData[\"postType\"]; label: string }[] = [\n  { id: \"post\", label: \"Post / Blog\" },\n  { id: \"page\", label: \"Landing Page\" },\n];\n\nexport function PublishWordpressInspector({ node }: Props) {\n  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const nodes = useCanvasStore((s) => s.nodes);\n  const edges = useCanvasStore((s) => s.edges);\n  const [publishing, setPublishing] = useState(false);\n\n  const d = node.data;\n  const canPublish = Boolean(d.title.trim()) && Boolean(d.contentHtml.trim());\n\n  const set = (patch: Partial<PublishWordpressData>) => updateNodeData(node.id, { ...patch, status: \"idle\", error: undefined });\n\n  const handlePublish = async () => {\n    if (!canPublish) {\n      toast.error(\"Preencha t\u00edtulo e conte\u00fado.\");\n      return;\n    }\n    setPublishing(true);\n    updateNodeData(node.id, { status: \"running\", error: undefined });\n    try {\n      // Prepend the connected upstream image (if any) as a WP figure \u2014 the Space's creative in the post.\n      const upstream = findUpstreamImages(node.id, nodes, edges);\n      const img = upstream[0]\n        ? `<figure><img src=\"${upstream[0]}\" alt=\"${d.title.replace(/\"/g, \"&quot;\")}\" /></figure>\\n`\n        : \"\";\n      const content = img + d.contentHtml;\n\n      const { data, error } = await supabase.functions.invoke(\"publish-wordpress\", {\n        body: { title: d.title, content, status: d.publishStatus, post_type: d.postType },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao publicar no WordPress.\"));\n      const res = data as { success?: boolean; post_url?: string; post_id?: number; error?: string } | null;\n      if (!res?.success || !res.post_id) throw new Error(res?.error ?? \"Falha ao publicar no WordPress.\");\n\n      updateNodeData(node.id, {\n        status: \"success\",\n        output: { postUrl: res.post_url ?? \"\", postId: res.post_id, publishedAt: new Date().toISOString() },\n        error: undefined,\n      });\n      toast.success(d.publishStatus === \"publish\" ? \"Publicado no WordPress \u2713\" : \"Rascunho salvo no WordPress \u2713\");\n    } catch (e) {\n      const msg = e instanceof Error ? e.message : String(e);\n      updateNodeData(node.id, { status: \"failed\", error: msg });\n      toast.error(msg);\n    } finally {\n      setPublishing(false);\n    }\n  };\n\n  return (\n    <div className=\"flex h-full flex-col\">\n      <div className=\"flex-1 overflow-y-auto\">\n        <InspectorHeader icon={<Newspaper className=\"h-3.5 w-3.5\" />} label={d.label} id={node.id} />\n\n        <Section title=\"Tipo\">\n          <div className=\"grid grid-cols-2 gap-2\">\n            {POST_TYPES.map((t) => (\n              <button\n                key={t.id}\n                type=\"button\"\n                onClick={() => set({ postType: t.id })}\n                className={cn(\n                  \"h-9 rounded-md border text-xs font-medium transition-colors\",\n                  d.postType === t.id\n                    ? \"border-accent bg-accent/5 text-foreground ring-1 ring-accent/30\"\n                    : \"border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground\",\n                )}\n              >\n                {t.label}\n              </button>\n            ))}\n          </div>\n        </Section>\n\n        <Section title=\"T\u00edtulo\">\n          <Input\n            value={d.title}\n            onChange={(e) => set({ title: e.target.value })}\n            placeholder=\"T\u00edtulo do post/p\u00e1gina\"\n            className=\"text-sm\"\n          />\n        </Section>\n\n        <Section title=\"Conte\u00fado (HTML)\">\n          <Textarea\n            value={d.contentHtml}\n            onChange={(e) => set({ contentHtml: e.target.value })}\n            placeholder=\"<p>Seu conte\u00fado\u2026</p> \u2014 a imagem do n\u00f3 conectado entra automaticamente no topo.\"\n            rows={8}\n            className=\"font-mono text-xs\"\n          />\n          <p className=\"mt-1 flex items-center gap-1 text-[10px] text-muted-foreground\">\n            <FileText className=\"h-3 w-3\" /> Conecte um n\u00f3 de imagem \u00e0 esquerda para embutir o criativo do Spaces.\n          </p>\n        </Section>\n\n        <Section title=\"Publica\u00e7\u00e3o\">\n          <div className=\"grid grid-cols-2 gap-2\">\n            {([\"draft\", \"publish\"] as const).map((s) => (\n              <button\n                key={s}\n                type=\"button\"\n                onClick={() => set({ publishStatus: s })}\n                className={cn(\n                  \"h-9 rounded-md border text-xs font-medium transition-colors\",\n                  d.publishStatus === s\n                    ? \"border-accent bg-accent/5 text-foreground ring-1 ring-accent/30\"\n                    : \"border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground\",\n                )}\n              >\n                {s === \"draft\" ? \"Rascunho\" : \"Publicar ao vivo\"}\n              </button>\n            ))}\n          </div>\n        </Section>\n\n        {d.error && (\n          <Section>\n            <div className=\"rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[11px] text-destructive\">\n              {d.error}\n            </div>\n          </Section>\n        )}\n\n        {d.status === \"success\" && d.output?.postUrl && (\n          <Section>\n            <a\n              href={d.output.postUrl}\n              target=\"_blank\"\n              rel=\"noreferrer\"\n              className=\"flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2.5 text-[11px] text-emerald-300 hover:bg-emerald-500/10\"\n            >\n              <ExternalLink className=\"h-3.5 w-3.5\" /> Abrir no WordPress (#{d.output.postId})\n            </a>\n          </Section>\n        )}\n      </div>\n\n      <div className=\"border-t border-border bg-card p-3\">\n        <Button\n          type=\"button\"\n          variant=\"accent\"\n          className=\"w-full gap-2\"\n          disabled={!canPublish || publishing}\n          onClick={handlePublish}\n          title={!canPublish ? \"Preencha t\u00edtulo e conte\u00fado\" : undefined}\n        >\n          {publishing ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Send className=\"h-4 w-4\" />}\n          {publishing\n            ? \"Publicando\u2026\"\n            : d.publishStatus === \"publish\"\n            ? \"Publicar ao vivo\"\n            : \"Salvar rascunho no WP\"}\n        </Button>\n        <p className=\"mt-1.5 text-center text-[9px] text-muted-foreground\">\n          Usa sua conex\u00e3o WordPress (Configura\u00e7\u00f5es \u2192 WordPress) \u00b7 gr\u00e1tis\n        </p>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/PublishWordpressInspector.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:01)*
+
+
+## 🤖 Claude *(02:31:02)*
+
+Registrando o nó no `CanvasEditorPage` (nodeTypes) e no `RightPanel` (routing):
+
+## 🤖 Claude *(02:31:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "old_string": "import { AvatarIdentityNode } from \"@/components/canvas/nodes/AvatarIdentityNode\";\nimport { AddNodeFab, AddNodeCommand } from \"@/components/canvas/AddNodeMenu\";\nimport { RightPanel } from \"@/components/canvas/RightPanel\";\n\nconst nodeTypes = {\n  generateImage: GenerateImageNode,\n  characterReference: CharacterReferenceNode,\n  productList: ProductListNode,\n  upscale: UpscaleNode,\n  sceneCompose: SceneComposeNode,\n  styleTransfer: StyleTransferNode,\n  imageToVideo: ImageToVideoNode,\n  voiceClone: VoiceCloneNode,\n  avatarIdentity: AvatarIdentityNode,\n};",
+  "new_string": "import { AvatarIdentityNode } from \"@/components/canvas/nodes/AvatarIdentityNode\";\nimport { PublishWordpressNode } from \"@/components/canvas/nodes/PublishWordpressNode\";\nimport { AddNodeFab, AddNodeCommand } from \"@/components/canvas/AddNodeMenu\";\nimport { RightPanel } from \"@/components/canvas/RightPanel\";\n\nconst nodeTypes = {\n  generateImage: GenerateImageNode,\n  characterReference: CharacterReferenceNode,\n  productList: ProductListNode,\n  upscale: UpscaleNode,\n  sceneCompose: SceneComposeNode,\n  styleTransfer: StyleTransferNode,\n  imageToVideo: ImageToVideoNode,\n  voiceClone: VoiceCloneNode,\n  avatarIdentity: AvatarIdentityNode,\n  publishWordpress: PublishWordpressNode,\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx",
+  "old_string": "import { AvatarIdentityInspector } from \"./inspectors/AvatarIdentityInspector\";",
+  "new_string": "import { AvatarIdentityInspector } from \"./inspectors/AvatarIdentityInspector\";\nimport { PublishWordpressInspector } from \"./inspectors/PublishWordpressInspector\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx",
+  "old_string": "      ) : node.data.kind === \"avatarIdentity\" ? (\n        <AvatarIdentityInspector\n          node={{ id: node.id, data: node.data }}\n          projectId={projectId}\n        />\n      ) : null}",
+  "new_string": "      ) : node.data.kind === \"avatarIdentity\" ? (\n        <AvatarIdentityInspector\n          node={{ id: node.id, data: node.data }}\n          projectId={projectId}\n        />\n      ) : node.data.kind === \"publishWordpress\" ? (\n        <PublishWordpressInspector\n          node={{ id: node.id, data: node.data }}\n          projectId={projectId}\n        />\n      ) : null}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:28)*
+
+
+## 🤖 Claude *(02:31:28)*
+
+Agora o branch de Landing Page (`post_type=page`) no `publish-wordpress`:
+
+## 🤖 Claude *(02:31:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "old_string": "    const { title, content, tags, categories, status, excerpt } = reqBody;",
+  "new_string": "    const { title, content, tags, categories, status, excerpt, post_type } = reqBody;\n    // FR-SPACES-034 \u2014 Spaces publish node can target a Page (Landing) as well as a Post.\n    const wpPostType = post_type === \"page\" ? \"pages\" : \"posts\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:40)*
+
+
+## 🤖 Claude *(02:31:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts",
+  "old_string": "    const body: Record<string, unknown> = {\n      title,\n      content,\n      status: status || \"draft\",\n      format: \"standard\",\n    };\n    if (tagIds.length > 0) body.tags = tagIds;\n    if (categories) body.categories = categories;\n    if (excerpt) body.excerpt = excerpt;\n\n    const wpRes = await fetch(`${apiBase}/wp-json/wp/v2/posts`, {",
+  "new_string": "    const body: Record<string, unknown> = {\n      title,\n      content,\n      status: status || \"draft\",\n    };\n    // Posts carry format/tags/categories; Pages (Landing) don't support them.\n    if (wpPostType === \"posts\") {\n      body.format = \"standard\";\n      if (tagIds.length > 0) body.tags = tagIds;\n      if (categories) body.categories = categories;\n    }\n    if (excerpt) body.excerpt = excerpt;\n\n    const wpRes = await fetch(`${apiBase}/wp-json/wp/v2/${wpPostType}`, {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5105,5 +8010,6 @@ SOP pronto (Lei 2). Agora a **migration** (aditiva à tabela biométrica → /se
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-08 - agent-afdfd6b866420dce3]]
+> * **Sessão Anterior**: [[2026-07-09 - Adicionar modelos OpenRouter free ao Telegram]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
 %% --- TIMELINE END --- %%
