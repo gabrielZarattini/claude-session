@@ -1,4 +1,4 @@
-# Pesquisar mercado freelance de IA e montar posicionamento como dev
+# [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev|Pesquisar mercado freelance de IA e montar posicionamento como dev]]
 **Date:** 2026-07-09 | **Session ID:** `3562232e-cb65-439c-b99c-a8f274a24b81`
 
 ---
@@ -2492,3 +2492,16 @@ No response requested.
 <status>stopped</status>
 <summary>No completion record was found for background workflow "infoprodutos-trafego-pago-2026" from the previous session. It may have been stopped (via the UI or TaskStop — these leave no transcript marker), or it may have been running when the previous Claude Code process exited. To pick up where it left off, relaunch with Workflow({scriptPath, resumeFromRunId: "wf_318e047e-47c"}) — completed agent() calls return cached.</summary>
 </task-notification>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Próxima Sessão**: [[2026-07-09 - agent-a2160e13a72b5600e]]
+%% --- TIMELINE END --- %%

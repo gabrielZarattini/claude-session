@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -4254,3 +4254,16 @@ O resultado está em `d.result`. Extraindo o MAP de lá:
 >   "No producer exists that compiles a Spaces creative into an editable HyperFrames project (index.html+compositions) under bucket video-studio-projects — 'open in /dashboard/spaces/video' on the exact creative requires building that compiler/materialization; only finished MP4 outputs exist today."
 > ]
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%

@@ -52,3 +52,10 @@ Quem executa hoje: **Engenheiro de Infra (MCORCH Agent / Sovereign)** com `sudo 
 ## Success signal
 `curl -sIL https://login.mcorch.com/go/<link_id-real>` termina em domínio Mercado Livre **E** o clique aparece em
 `affiliate_links.clicks`/`affiliate_clicks` — provando que o alias branded preserva o ledger fim-a-fim.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
