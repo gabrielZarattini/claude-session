@@ -8281,9 +8281,9 @@ Como você armou o loop pra ir até ~85%, prefiro te deixar escolher a direção
 
 ## 👤 User *(02:39:25)*
 
-Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/deepsearch-blueprint
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/[[deepsearch-blueprint|deepsearch-blueprint]]
 
-# Skill: deepsearch-blueprint — Semente de BoK com prova de pesquisa
+# Skill: [[deepsearch-blueprint|deepsearch-blueprint]] — Semente de BoK com prova de pesquisa
 
 O blueprint é a **Fonte da Verdade verificada** que alimenta o `/bok-scribe` sem improviso.
 SOP autoritativa: `docs/processes/deepsearch-blueprint.md`. Nenhum código antes da BoK (Closed-Loop).
@@ -8328,7 +8328,7 @@ não-verificáveis marcadas `⚠️`; NUNCA fabricar nome/versão/número/lei.
 - [ ] Ofereci o próximo passo `/bok-scribe <slug>` + deixei o commit para GO/handoff?
 
 
-ARGUMENTS: Módulo novo: youtube-studio — transformar o Spaces num studio de YouTube que produz vídeos faceless E com avatar AI clone (lipsync). Diretiva Sovereign 2026-07-08 ("preparar o Spaces para organizar e ser um studio para youtube faceless ou com avatar AI clone/lipsync"). Slug: youtube-studio (docs/bok/youtube-studio/00-deepsearch-blueprint.md).
+ARGUMENTS: Módulo novo: youtube-studio — transformar o Spaces num studio de YouTube que produz vídeos faceless E com avatar AI clone (lipsync). Diretiva Sovereign 2026-07-08 ("preparar o Spaces para organizar e ser um studio para youtube faceless ou com avatar AI clone/lipsync"). Slug: youtube-studio (docs/bok/youtube-studio/00-[[deepsearch-blueprint|deepsearch-blueprint]].md).
 
 Fundamentar em deepsearch (toda claim com URL — Lei 1) as frentes onde o MCORCH tem GAP, reusando o que já existe (não repesquisar o que está wired):
 
@@ -10012,3 +10012,16 @@ Memória selada. **Handoff completo.**
 ═══════════════════════════════════════════════════════════
   Entreguei o **foco #1 (LoRA grátis) provado**, o **1º nó social**, e o **blueprint do YouTube Studio** — as outras frentes estão prontas e esperando só a sua decisão. Assinado: Claude Code — Braço de Engenharia do AIOS.
 ═══════════════════════════════════════════════════════════
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Adicionar modelos OpenRouter free ao Telegram]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%
