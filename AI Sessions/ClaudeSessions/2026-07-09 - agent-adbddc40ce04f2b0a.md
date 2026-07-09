@@ -1347,3 +1347,16 @@ I have the complete, empirically-grounded picture. Here is my analysis.
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - agent-ad781f675488d5406]]
+> * **Próxima Sessão**: [[2026-07-09 - agent-ae3e41fa56c6f898f]]
+%% --- TIMELINE END --- %%

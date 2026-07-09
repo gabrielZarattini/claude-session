@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -7418,7 +7418,7 @@ Tree limpo. Fazendo as 7 edições do `canvas.ts` (union, interface, data-union,
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
   "old_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n  }\n}",
-  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n  }\n}"
+  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}"
 }
 ```
 
@@ -9935,15 +9935,590 @@ O maior desbloqueio da sessão, com o ciclo honesto completo:
 
 Quando ele subir, você monta no Spaces: **Roteiro → imagens → Criativo Cinematográfico → MP4** — a cadeia que você desenhou, ponta a ponta. Te reporto com o nó de pé + o vídeo tocando na tela (ou o próximo obstáculo honesto).
 
----
+## 👤 User *(10:46:00)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+Loop autônomo — MÓDULO Creative Studio. VITÓRIA GRANDE: o free-render rail está VIVO e PROVADO E2E — enqueue video-render (engine=hyperframes, composition template cinematic-9x16) → HTTP 202 → worker video-bridge renderiza → state=done ~60s → MP4 1080x1920 h264 6s no bucket video-studio-assets (owner-scoped). Vision ocular CONFIRMOU o template MIV correto (após restart do worker stale — lição em [[reference_hyperframes_worker_restart]]). git log --oneline -20 primeiro. PRÓXIMO: CONSTRUIR o Nó Cinematográfico cliente (cinematicVideo) — buildable-now, backend 100% provado. Espelhar publishWordpress + o padrão ScriptGenerator (que já fiz): (1) src/types/canvas.ts 6 edits — kind 'cinematicVideo' + interface CinematicVideoData{kind;label;hook;caption;cta;brand;durationSec;fps;status:NodeStatus;renderId?:string;output?:{videoUrl?:string;storageKey?:string;generatedAt:string};error?} + CanvasNodeData union + makeDefaultCinematicVideo{hook:'',caption:'',cta:'Começar agora',brand:'MCORCH',durationSec:6,fps:24} + case 'cinematicVideo':return null (resolveExecutePayload) + case return 12 (estimateNodeCost) + isCinematicVideo. (2) canvas-node-registry.ts entry (label 'Criativo Cinematográfico', categoria Generate, ícone Clapperboard, custo 12, factory). (3) CinematicVideoNode.tsx (target Handle input_image; header + status; se output.videoUrl mostrar 'vídeo pronto'). (4) CinematicVideoInspector.tsx — inputs hook/caption/cta/brand + duração; botão Renderizar → resolver imagem upstream via findUpstreamImages(node.id,nodes,edges)[0] como product_image_url → supabase.functions.invoke('video-render',{body:{engine:'hyperframes',composition:{template:'cinematic-9x16',duration_s:durationSec,fps,props:{hook,caption,cta,brand,product_image_url}}}}) → guarda data.render_id + status running → POLL: supabase.from('video_renders').select('state,storage_key').eq('id',renderId) a cada ~8s até state==='done' (ou 'failed'); no done, assinar URL do storage_key no bucket 'video-studio-assets' (supabase.storage.from('video-studio-assets').createSignedUrl(storageKey, 3600)) → updateNodeData output:{videoUrl:signedUrl,storageKey,generatedAt}; exibir <video controls src=signedUrl>. IMPORTANTE: video_renders NÃO tem coluna 'error' (colunas: state,storage_key,charged_mco,refunded_mco,composition,...); render ~60s; charged_mco 12 refund-on-fail. (5) nodeTypes CanvasEditorPage + branch RightPanel/index.tsx. tsc LIMPO. build+deploy (repo principal, gates). PROVA: strings no bundle + (opcional, 12 mco) render E2E via o nó + Vision ocular. Commits granulares sem Co-Authored-By; nunca fabricar prova (Lei 1); Vision ocular em criativo. DEPOIS: fan-out do storyboard (scenes[].imagePrompt → generateImage encadeados) fecha a cadeia. Reportar honesto.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
-> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(10:46:25)*
+
+
+## 🤖 Claude *(10:46:26)*
+
+Loop firing — construindo o Nó Cinematográfico. Oriento + as 7 edições do `canvas.ts` (mesmo padrão do Roteiro):
+
+## 🤖 Claude *(10:46:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -5",
+  "description": "Orient"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 36b256d docs(creative-studio): correcao Lei 1 — free-render rail JA esta VIVO (503 era stale)
+> 41483c4 feat(spaces): Roteiro node v2 — botao Storyboard + tabela de cenas (fia generate-script-package)
+> 508cda7 feat(spaces): generate-script-package — pacote de roteiro ESTRUTURADO (Roteiro v2 backend, OTD-CS-002)
+> 1775357 docs(creative-studio): slice 2a Roteiro v1 SHIPADO+PROVADO (0d1714a) — nó vivo em prod
+> 0d1714a feat(spaces): no Roteiro (scriptGenerator) — gera roteiro de video a partir de um tema
+> ```
+
+## 🤖 Claude *(10:46:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "  | \"publishWordpress\"\n  | \"scriptGenerator\";",
+  "new_string": "  | \"publishWordpress\"\n  | \"scriptGenerator\"\n  | \"cinematicVideo\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:46:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "    ttsPrompt?: string;\n    generatedAt: string;\n  };\n  error?: string;\n}\n\nexport type CanvasNodeData =",
+  "new_string": "    ttsPrompt?: string;\n    generatedAt: string;\n  };\n  error?: string;\n}\n\n/** spaces-evolution Amendment 17 \u2014 Criativo Cinematogr\u00e1fico: renders the cinematic-9x16 template into a\n *  9:16 MP4 via video-render (engine=hyperframes, free FFmpeg rail). ASYNC: enqueues \u2192 polls video_renders\n *  by renderId \u2192 signs the storage_key. resolveExecutePayload \u2192 null (inspector calls video-render). */\nexport interface CinematicVideoData {\n  kind: \"cinematicVideo\";\n  label: string;\n  hook: string;\n  caption: string;\n  cta: string;\n  brand: string;\n  durationSec: number;\n  fps: number;\n  status: NodeStatus;\n  renderId?: string;\n  output?: { videoUrl?: string; storageKey?: string; generatedAt: string };\n  error?: string;\n}\n\nexport type CanvasNodeData ="
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:46:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "  | ScriptGeneratorData;",
+  "new_string": "  | ScriptGeneratorData\n  | CinematicVideoData;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:46:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "      format: \"reels\",\n      duration: \"curto\",\n      status: \"idle\",\n      ...overrides,\n    },\n  };\n}\n\n/* \u2500\u2500 Canvas-execute payload helper \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */",
+  "new_string": "      format: \"reels\",\n      duration: \"curto\",\n      status: \"idle\",\n      ...overrides,\n    },\n  };\n}\n\n/** spaces-evolution Amendment 17 \u2014 Criativo Cinematogr\u00e1fico node default (FR-SPACES-043). */\nexport function makeDefaultCinematicVideo(\n  position: { x: number; y: number },\n  overrides: Partial<CinematicVideoData> = {},\n): CanvasNode {\n  return {\n    id: makeNodeId(),\n    type: \"cinematicVideo\",\n    position,\n    data: {\n      kind: \"cinematicVideo\",\n      label: \"Criativo Cinematogr\u00e1fico\",\n      hook: \"\",\n      caption: \"\",\n      cta: \"Come\u00e7ar agora\",\n      brand: \"MCORCH\",\n      durationSec: 6,\n      fps: 24,\n      status: \"idle\",\n      ...overrides,\n    },\n  };\n}\n\n/* \u2500\u2500 Canvas-execute payload helper \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:46:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "    case \"scriptGenerator\":\n      // Roteiro is a TEXT SOURCE \u2014 its inspector calls generate-video-script (per-user BYOK LLM),\n      // NOT canvas-execute (spaces-evolution Amendment 17 FR-SPACES-041/042).\n      return null;\n  }\n}",
+  "new_string": "    case \"scriptGenerator\":\n      // Roteiro is a TEXT SOURCE \u2014 its inspector calls generate-video-script (per-user BYOK LLM),\n      // NOT canvas-execute (spaces-evolution Amendment 17 FR-SPACES-041/042).\n      return null;\n    case \"cinematicVideo\":\n      // Criativo Cinematogr\u00e1fico enqueues video-render (engine=hyperframes) from its inspector and polls\n      // video_renders \u2014 NOT canvas-execute (spaces-evolution Amendment 17 FR-SPACES-043).\n      return null;\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:46:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}",
+  "new_string": "    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n    case \"cinematicVideo\":\n      return 12; // COST.hyperframes \u2014 free FFmpeg render, prepaid mco (refund-on-failure)\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:46:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "export function isScriptGenerator(data: CanvasNodeData): data is ScriptGeneratorData {\n  return data.kind === \"scriptGenerator\";\n}",
+  "new_string": "export function isScriptGenerator(data: CanvasNodeData): data is ScriptGeneratorData {\n  return data.kind === \"scriptGenerator\";\n}\nexport function isCinematicVideo(data: CanvasNodeData): data is CinematicVideoData {\n  return data.kind === \"cinematicVideo\";\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:47:06)*
+
+
+## 🤖 Claude *(10:47:07)*
+
+`canvas.ts` pronto. Registry (ícone Clapperboard + factory + entrada):
+
+## 🤖 Claude *(10:47:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts",
+  "old_string": "import { Sparkles, User, UserCircle, Film, Wand2, Video, Mic, List, Maximize2, Newspaper, ScrollText, type LucideIcon } from \"lucide-react\";",
+  "new_string": "import { Sparkles, User, UserCircle, Film, Wand2, Video, Mic, List, Maximize2, Newspaper, ScrollText, Clapperboard, type LucideIcon } from \"lucide-react\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:47:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts",
+  "old_string": "  makeDefaultScriptGenerator,\n  type CanvasNode,",
+  "new_string": "  makeDefaultScriptGenerator,\n  makeDefaultCinematicVideo,\n  type CanvasNode,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:47:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts",
+  "old_string": "    factory: makeDefaultScriptGenerator,\n  },",
+  "new_string": "    factory: makeDefaultScriptGenerator,\n  },\n  {\n    id: \"cinematicVideo\",\n    label: \"Criativo Cinematogr\u00e1fico\",\n    description: \"Renderiza um criativo 9:16 cinematogr\u00e1fico (MIV) \u2014 gr\u00e1tis via FFmpeg. Conecte uma imagem opcional.\",\n    category: \"Generate\",\n    icon: Clapperboard,\n    estimatedCost: 12,\n    aliases: [\"criativo\", \"cinematogr\u00e1fico\", \"cinematic\", \"v\u00eddeo\", \"hyperframes\", \"curta\"],\n    factory: makeDefaultCinematicVideo,\n  },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:47:57)*
+
+
+## 🤖 Claude *(10:47:59)*
+
+Registry pronto. Antes de escrever o poll do inspector, verifico se o cliente pode ler `video_renders` (RLS SELECT-own) — senão o poll do usuário seria bloqueado (Lei 1, não construir poll que a RLS barra):
+
+## 🤖 Claude *(10:48:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== RLS/policy SELECT de video_renders ===\"\ngrep -rniE \"video_renders|POLICY|SELECT|auth.uid|ENABLE ROW\" supabase/migrations/*video_render*.sql 2>/dev/null | grep -iE \"policy|select|auth.uid|enable row|user_id\" | head -20\necho \"=== (fallback) qualquer migration que crie policy em video_renders ===\"\ngrep -rln \"video_renders\" supabase/migrations/*.sql 2>/dev/null | head",
+  "description": "Check video_renders SELECT RLS for client poll"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RLS/policy SELECT de video_renders ===
+> === (fallback) qualquer migration que crie policy em video_renders ===
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql
+> supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql
+> supabase/migrations/20260625120000_creative_assets_registry.sql
+> ```
+
+## 🤖 Claude *(10:48:07)*
+
+
+## 🤖 Claude *(10:48:07)*
+
+A migration é `20260622040000_video_studio_renders_and_assets.sql`. Checando a policy SELECT lá:
+
+## 🤖 Claude *(10:48:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -niE \"POLICY|SELECT|auth.uid|user_id|ENABLE ROW|video_renders\" supabase/migrations/20260622040000_video_studio_renders_and_assets.sql 2>/dev/null | grep -iE \"policy|select|auth.uid|enable row\" | head -20",
+  "description": "video_renders SELECT policy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 15:--   SELECT = own row OR (agency) a row of an org the caller is an active member of (public.is_org_member, the
+> 16:--   anti-recursion SECURITY DEFINER helper from 20260622030000). NO INSERT/UPDATE policy for authenticated ⇒
+> 58:ALTER TABLE public.video_renders ENABLE ROW LEVEL SECURITY;
+> 60:-- SELECT: own row, OR an agency row whose org the caller actively belongs to (anti-recursion helper).
+> 61:CREATE POLICY "video_renders_select_own_or_org" ON public.video_renders
+> 62:  FOR SELECT USING (
+> 63:    auth.uid() = user_id
+> 67:-- No INSERT/UPDATE policy for authenticated ⇒ default-deny: the edge fn writes via the service key AFTER the
+> 69:CREATE POLICY "video_renders_no_client_delete" ON public.video_renders
+> 83:  'charged/refunded ledger (refunded_mco<=charged_mco, refunded_at idempotency). SELECT own-or-org-member RLS; '
+> 101:ALTER TABLE public.video_assets ENABLE ROW LEVEL SECURITY;
+> 103:-- SELECT own only (the asset row is tenant-bound via user_id; org members read assets through the render join in
+> 104:-- the app layer when agency surfaces land). No write policy ⇒ service-role writes only (same billing-integrity rule).
+> 105:CREATE POLICY "video_assets_select_own" ON public.video_assets
+> 106:  FOR SELECT USING (auth.uid() = user_id);
+> 114:  'SELECT-own RLS; service-role writes. bytes>=100KB enforced app-side before render reaches done (Lei 1).';
+> ```
+
+## 🤖 Claude *(10:48:23)*
+
+
+## 🤖 Claude *(10:48:25)*
+
+`video_renders` tem `video_renders_select_own_or_org` (SELECT `auth.uid()=user_id`) — cliente pode fazer o poll ✅. E `video-studio-assets` é owner-scoped (asset-signing SOP). Escrevendo o nó + o inspector com o poll:
+
+## 🤖 Claude *(10:48:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/CinematicVideoNode.tsx",
+  "content": "import { memo } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { Clapperboard, CheckCircle2, Loader2, Film } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\nimport { type CinematicVideoData } from \"@/types/canvas\";\n\nconst HANDLE_CLASS = \"!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card\";\n\n// spaces-evolution Amendment 17 \u2014 Criativo Cinematogr\u00e1fico: consumes an optional upstream image (hero) and\n// renders the cinematic-9x16 MIV template to a 9:16 MP4 via the free FFmpeg rail (video-render/hyperframes).\nexport const CinematicVideoNode = memo(function CinematicVideoNode({ data, selected }: NodeProps) {\n  const d = data as unknown as CinematicVideoData;\n  const done = d.status === \"success\" && Boolean(d.output?.videoUrl);\n  return (\n    <div\n      className={cn(\n        \"w-[220px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all\",\n        selected ? \"border-accent ring-2 ring-accent/30\" : \"border-border\",\n      )}\n    >\n      <Handle type=\"target\" position={Position.Left} id=\"input_image\" className={HANDLE_CLASS} />\n      <header className=\"flex items-center gap-1.5 border-b border-border px-2.5 py-1.5\">\n        <Clapperboard className=\"h-3 w-3 text-secondary\" />\n        <span className=\"truncate text-[11px] font-medium\">{d.label}</span>\n        <span className=\"ml-auto font-mono text-[9px] uppercase text-muted-foreground\">9:16 \u00b7 {d.durationSec}s</span>\n      </header>\n      <div className=\"space-y-1 px-2.5 py-2\">\n        <div className=\"flex items-center gap-1.5 text-[11px]\">\n          <Film className=\"h-3 w-3 shrink-0 text-muted-foreground\" />\n          <span className=\"truncate\">{d.hook || <span className=\"text-muted-foreground\">Sem hook</span>}</span>\n        </div>\n        <div className=\"inline-flex items-center gap-1 font-mono text-[9px] text-muted-foreground\">\n          {d.status === \"running\" ? (\n            <><Loader2 className=\"h-2.5 w-2.5 animate-spin\" /> renderizando\u2026</>\n          ) : done ? (\n            <><CheckCircle2 className=\"h-2.5 w-2.5 text-emerald-400\" /> v\u00eddeo pronto</>\n          ) : (\n            <>renderiza MP4 \u00b7 FFmpeg (12 mco)</>\n          )}\n        </div>\n      </div>\n    </div>\n  );\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/CinematicVideoNode.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:48:38)*
+
+
+## 🤖 Claude *(10:48:38)*
+
+Inspector com o poll de `video_renders` + assinatura da URL + player:
+
+## 🤖 Claude *(10:49:04)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/CinematicVideoInspector.tsx",
+  "content": "import { useState } from \"react\";\nimport { Clapperboard, Loader2, Film, Image as ImageIcon } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { Input } from \"@/components/ui/input\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { findUpstreamImages } from \"@/lib/canvas-utils\";\nimport { type CinematicVideoData } from \"@/types/canvas\";\nimport { Section, InspectorHeader } from \"../shared\";\n\ninterface Props {\n  node: { id: string; data: CinematicVideoData };\n  projectId: string;\n}\n\nconst DURATIONS = [4, 6, 8, 10];\nconst sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));\n\nexport function CinematicVideoInspector({ node }: Props) {\n  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const nodes = useCanvasStore((s) => s.nodes);\n  const edges = useCanvasStore((s) => s.edges);\n  const [rendering, setRendering] = useState(false);\n\n  const d = node.data;\n  const canRender = Boolean(d.hook.trim());\n  const upstreamImage = findUpstreamImages(node.id, nodes, edges)[0];\n\n  const set = (patch: Partial<CinematicVideoData>) => updateNodeData(node.id, { ...patch, status: \"idle\", error: undefined });\n\n  const handleRender = async () => {\n    if (!canRender) return toast.error(\"Preencha ao menos o hook.\");\n    setRendering(true);\n    updateNodeData(node.id, { status: \"running\", error: undefined });\n    try {\n      const props: Record<string, string> = { hook: d.hook, caption: d.caption, cta: d.cta, brand: d.brand };\n      if (upstreamImage) props.product_image_url = upstreamImage;\n\n      const { data, error } = await supabase.functions.invoke(\"video-render\", {\n        body: {\n          engine: \"hyperframes\",\n          composition: { template: \"cinematic-9x16\", duration_s: d.durationSec, fps: d.fps, props },\n        },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao enfileirar o render.\"));\n      const renderId = (data as { render_id?: string } | null)?.render_id;\n      if (!renderId) throw new Error(\"O motor de render n\u00e3o retornou um id.\");\n      updateNodeData(node.id, { renderId, status: \"running\", error: undefined });\n\n      // Poll video_renders (SELECT-own RLS) until terminal \u2014 render is ~60s; cap ~200s.\n      let state = \"queued\";\n      let storageKey: string | null = null;\n      for (let i = 0; i < 25; i++) {\n        await sleep(8000);\n        const { data: row } = await supabase\n          .from(\"video_renders\")\n          .select(\"state, storage_key\")\n          .eq(\"id\", renderId)\n          .maybeSingle();\n        const r = row as { state?: string; storage_key?: string } | null;\n        state = r?.state ?? state;\n        storageKey = r?.storage_key ?? storageKey;\n        if (state === \"done\" || state === \"failed\") break;\n      }\n      if (state === \"failed\") throw new Error(\"O render falhou. O cr\u00e9dito \u00e9 estornado automaticamente.\");\n      if (state !== \"done\" || !storageKey) throw new Error(\"O render est\u00e1 demorando mais que o normal \u2014 tente novamente em instantes.\");\n\n      const { data: signed } = await supabase.storage.from(\"video-studio-assets\").createSignedUrl(storageKey, 3600);\n      const videoUrl = signed?.signedUrl;\n      if (!videoUrl) throw new Error(\"N\u00e3o foi poss\u00edvel assinar a URL do v\u00eddeo.\");\n\n      updateNodeData(node.id, {\n        status: \"success\",\n        output: { videoUrl, storageKey, generatedAt: new Date().toISOString() },\n        error: undefined,\n      });\n      toast.success(\"Criativo renderizado \u2713\");\n    } catch (e) {\n      const msg = e instanceof Error ? e.message : String(e);\n      updateNodeData(node.id, { status: \"failed\", error: msg });\n      toast.error(msg);\n    } finally {\n      setRendering(false);\n    }\n  };\n\n  return (\n    <div className=\"flex h-full flex-col\">\n      <div className=\"flex-1 overflow-y-auto\">\n        <InspectorHeader icon={<Clapperboard className=\"h-3.5 w-3.5\" />} label={d.label} id={node.id} />\n\n        <Section title=\"Hook (t\u00edtulo)\">\n          <Input value={d.hook} onChange={(e) => set({ hook: e.target.value })} placeholder=\"O conte\u00fado que se move sozinho\" className=\"text-sm\" />\n        </Section>\n\n        <Section title=\"Legenda\">\n          <Input value={d.caption} onChange={(e) => set({ caption: e.target.value })} placeholder=\"Gerado, animado e publicado no autom\u00e1tico\" className=\"text-sm\" />\n        </Section>\n\n        <Section title=\"CTA\">\n          <Input value={d.cta} onChange={(e) => set({ cta: e.target.value })} placeholder=\"Come\u00e7ar agora\" className=\"text-sm\" />\n        </Section>\n\n        <Section title=\"Marca\">\n          <Input value={d.brand} onChange={(e) => set({ brand: e.target.value })} placeholder=\"MCORCH\" className=\"text-sm\" />\n        </Section>\n\n        <Section title=\"Dura\u00e7\u00e3o\">\n          <div className=\"grid grid-cols-4 gap-2\">\n            {DURATIONS.map((sec) => (\n              <button\n                key={sec}\n                type=\"button\"\n                onClick={() => set({ durationSec: sec })}\n                className={cn(\n                  \"h-9 rounded-md border text-xs font-medium transition-colors\",\n                  d.durationSec === sec\n                    ? \"border-accent bg-accent/5 text-foreground ring-1 ring-accent/30\"\n                    : \"border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground\",\n                )}\n              >\n                {sec}s\n              </button>\n            ))}\n          </div>\n          <p className=\"mt-1 flex items-center gap-1 text-[10px] text-muted-foreground\">\n            <ImageIcon className=\"h-3 w-3\" />\n            {upstreamImage ? \"Imagem conectada ser\u00e1 o hero (Ken Burns).\" : \"Sem imagem conectada \u2014 usa o emblema procedural MIV.\"}\n          </p>\n        </Section>\n\n        {d.error && (\n          <Section>\n            <div className=\"rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[11px] text-destructive\">{d.error}</div>\n          </Section>\n        )}\n\n        {d.status === \"success\" && d.output?.videoUrl && (\n          <Section title=\"Criativo\">\n            <video src={d.output.videoUrl} controls playsInline className=\"w-full rounded-md border border-border bg-black\" />\n          </Section>\n        )}\n      </div>\n\n      <div className=\"border-t border-border bg-card p-3\">\n        <Button\n          type=\"button\"\n          variant=\"accent\"\n          className=\"w-full gap-2\"\n          disabled={!canRender || rendering}\n          onClick={handleRender}\n          title={!canRender ? \"Preencha o hook\" : undefined}\n        >\n          {rendering ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Film className=\"h-4 w-4\" />}\n          {rendering ? \"Renderizando (~1 min)\u2026\" : \"Renderizar criativo 9:16\"}\n        </Button>\n        <p className=\"mt-1.5 text-center text-[9px] text-muted-foreground\">\n          Render gr\u00e1tis via FFmpeg \u00b7 12 mco (estorno se falhar)\n        </p>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/CinematicVideoInspector.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:49:16)*
+
+
+## 🤖 Claude *(10:49:17)*
+
+Registrando nos `nodeTypes` + router:
+
+## 🤖 Claude *(10:49:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "old_string": "import { ScriptGeneratorNode } from \"@/components/canvas/nodes/ScriptGeneratorNode\";\nimport { AddNodeFab, AddNodeCommand } from \"@/components/canvas/AddNodeMenu\";",
+  "new_string": "import { ScriptGeneratorNode } from \"@/components/canvas/nodes/ScriptGeneratorNode\";\nimport { CinematicVideoNode } from \"@/components/canvas/nodes/CinematicVideoNode\";\nimport { AddNodeFab, AddNodeCommand } from \"@/components/canvas/AddNodeMenu\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:49:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "old_string": "  scriptGenerator: ScriptGeneratorNode,\n};\nconst edgeTypes = { pipeline: PipelineEdge };",
+  "new_string": "  scriptGenerator: ScriptGeneratorNode,\n  cinematicVideo: CinematicVideoNode,\n};\nconst edgeTypes = { pipeline: PipelineEdge };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:49:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx",
+  "old_string": "import { ScriptGeneratorInspector } from \"./inspectors/ScriptGeneratorInspector\";",
+  "new_string": "import { ScriptGeneratorInspector } from \"./inspectors/ScriptGeneratorInspector\";\nimport { CinematicVideoInspector } from \"./inspectors/CinematicVideoInspector\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:49:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx",
+  "old_string": "      ) : node.data.kind === \"scriptGenerator\" ? (\n        <ScriptGeneratorInspector\n          node={{ id: node.id, data: node.data }}\n          projectId={projectId}\n        />\n      ) : null}",
+  "new_string": "      ) : node.data.kind === \"scriptGenerator\" ? (\n        <ScriptGeneratorInspector\n          node={{ id: node.id, data: node.data }}\n          projectId={projectId}\n        />\n      ) : node.data.kind === \"cinematicVideo\" ? (\n        <CinematicVideoInspector\n          node={{ id: node.id, data: node.data }}\n          projectId={projectId}\n        />\n      ) : null}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:49:30)*
+
+
+## 🤖 Claude *(10:49:31)*
+
+Todos os pontos ligados. `tsc`:
+
+## 🤖 Claude *(10:49:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit >/dev/null 2>&1 && echo \"tsc LIMPO \u2705\" || { echo \"tsc ERROS:\"; npx tsc --noEmit 2>&1 | grep -iE \"Cinematic|canvas.ts|error TS\" | head -15; }",
+  "description": "TypeScript check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc LIMPO ✅
+> ```
+
+## 🤖 Claude *(10:49:36)*
+
+
+## 🤖 Claude *(10:49:37)*
+
+`tsc LIMPO ✅`. Build + deploy + prova no bundle:
+
+## 🤖 Claude *(10:49:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 400 bun run build 2>&1 | tail -3\necho \"=== GATES ===\"\necho \"env baked:\"; grep -rl bcyvddsykvehvpwstlfa dist/assets/ 2>/dev/null | wc -l | xargs echo \" arquivos:\"\necho \"n\u00f3 cinematogr\u00e1fico no bundle:\"; grep -rl \"Renderizar criativo\\|Criativo Cinematogr\u00e1fico\\|cinematicVideo\" dist/assets/ 2>/dev/null | head -1 | xargs -r echo \" achado em:\" || echo \" N\u00c3O achado \u274c\"",
+  "description": "Build + deploy + verify cinematic node in bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 31.28s
+> === GATES ===
+> env baked:
+>  arquivos: 9
+> nó cinematográfico no bundle:
+>  achado em: dist/assets/CanvasEditorPage-DT7eFO0H.js
+> ```
+
+## 🤖 Claude *(10:50:32)*
+
+
+## 🤖 Claude *(10:50:33)*
+
+**Deploy provado** — `✓ built in 31.28s` · env baked (9) · **`Criativo Cinematográfico`/`cinematicVideo` no bundle** (`CanvasEditorPage-DT7eFO0H.js`) ✅. Committando:
+
+## 🤖 Claude *(10:50:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/types/canvas.ts src/lib/canvas-node-registry.ts src/components/canvas/nodes/CinematicVideoNode.tsx src/components/canvas/RightPanel/inspectors/CinematicVideoInspector.tsx src/pages/CanvasEditorPage.tsx src/components/canvas/RightPanel/index.tsx\ngit commit -q -m \"feat(spaces): no Criativo Cinematografico (cinematicVideo) \u2014 renderiza MP4 9:16 via rail gratis\n\nAmendment 17 FR-SPACES-043. Fecha o 2o no do Creative Studio (backend provado VIVO E2E). Espelha\npublishWordpress/ScriptGenerator: 7 edits canvas.ts + registry (Clapperboard, custo 12) + node\n(target input_image) + inspector (hook/caption/cta/brand/duracao -> findUpstreamImages como\nproduct_image_url -> invoke video-render engine=hyperframes template cinematic-9x16 -> poll\nvideo_renders por renderId [SELECT-own RLS] ate done -> createSignedUrl do storage_key no bucket\nvideo-studio-assets -> <video> player). tsc LIMPO. build+deploy (strings no bundle, env baked).\nvideo_renders sem coluna error; render ~60s; 12 mco refund-on-fail. Cadeia Roteiro+Cinematografico\nagora montavel no Spaces.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit the cinematic node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m7:50AM[0m [32mINF[0m 1 commits scanned.
+> [90m7:50AM[0m [32mINF[0m scan completed in 21.7ms
+> [90m7:50AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 4d8b80b81479dae9d9970e71d91da9e7bd760f53 feat(spaces): no Criativo Cinematografico (cinematicVideo) — renderiza MP4 9:16 via rail gratis
+> ```
+
+## 🤖 Claude *(10:51:02)*
+
+
+## 🤖 Claude *(10:51:03)*
+
+`4d8b80b` selado. Re-armo o loop pro fan-out (fecha a cadeia roteiro→imagens):
+
+## 🤖 Claude *(10:51:15)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Os DOIS n\u00f3s do Creative Studio (Roteiro + Cinematogr\u00e1fico) est\u00e3o VIVOS. Loop segue pro fan-out do storyboard (cria n\u00f3s de imagem por cena) que fecha a cadeia. Fallback 20min.",
+  "prompt": "Loop aut\u00f4nomo \u2014 M\u00d3DULO Creative Studio. MARCO: os DOIS n\u00f3s centrais est\u00e3o VIVOS em prod \u2014 Roteiro (scriptGenerator, v1 script + v2 storyboard estruturado) + Criativo Cinematogr\u00e1fico (cinematicVideo, renderiza MP4 9:16 via rail gr\u00e1tis provado E2E, commit 4d8b80b). git log --oneline -22 primeiro. PR\u00d3XIMO: FAN-OUT do storyboard \u2014 fechar a cadeia roteiro\u2192imagens visualmente. Quando um n\u00f3 Roteiro tem output.scenes (storyboard v2), oferecer no ScriptGeneratorInspector um bot\u00e3o 'Criar n\u00f3s de imagem' que, pra cada cena, cria um n\u00f3 generateImage (com o scenes[i].imagePrompt pr\u00e9-preenchido no campo de prompt) posicionado numa coluna \u00e0 direita do n\u00f3 Roteiro + (opcional) uma edge. RECON PRIMEIRO: ler o useCanvasStore (src/store/useCanvasStore.ts) pra achar a API real de adicionar n\u00f3 + edge (addNode/setNodes/onNodesChange? o shape do generateImage data \u2014 makeDefaultGenerateImage + qual campo \u00e9 o prompt) e como o AddNodeMenu adiciona um n\u00f3 hoje (pra espelhar). Usar makeDefaultGenerateImage do canvas.ts com overrides do prompt. Buildable-now (client puro, sem edge/migration). tsc LIMPO + build+deploy + prova (strings no bundle). Se a API do store n\u00e3o permitir add program\u00e1tico limpo, reportar honesto o gap e propor alternativa. Commits granulares sem Co-Authored-By; nunca fabricar prova (Lei 1). Isso deixa a cadeia COMPLETA no canvas: Roteiro (storyboard) \u2192 N n\u00f3s Gerar Imagem (Nano Banana) \u2192 cada imagem pode virar hero do Criativo Cinematogr\u00e1fico. Reportar honesto o estado do m\u00f3dulo."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 08:12:00 (in 1245s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(10:51:19)*
+
+
+## 🤖 Claude *(10:51:32)*
+
+## 🎬 Marco: os DOIS nós do Creative Studio estão VIVOS em produção
+
+O módulo que começou como "3 primitivos FFmpeg" agora tem sua espinha dorsal de pé:
+
+| Nó | Estado | O que faz |
+|----|--------|-----------|
+| **Roteiro** (`scriptGenerator`) | ✅ live | tema → **storyboard estruturado** (cenas · narração pt-BR · prompt de imagem inglês · TTS) **ou** roteiro corrido |
+| **Criativo Cinematográfico** (`cinematicVideo`) | ✅ live `4d8b80b` | hook/caption/cta/marca (+imagem opcional) → **renderiza MP4 9:16 MIV** pela fila grátis → toca o vídeo no inspector |
+
+**Você monta agora no Spaces** (hard-refresh): **Adicionar nó → "Criativo Cinematográfico"** → preencha os textos → **"Renderizar criativo 9:16"** → ~1 min depois o vídeo aparece tocável no painel. O backend está provado E2E (o render `33bebbce` que o Vision confirmou MIV).
+
+**Prova desta iteração:** tsc limpo · build+deploy (código no bundle servido) · rail já provado ao vivo (enqueue→worker→MP4→Vision). O nó usa exatamente o caminho que provei por curl.
+
+**Onde chega o módulo:**
+- Roteiro ✅ · Criativo Cinematográfico ✅ · rail de render grátis ✅.
+- **Próximo (loop 08:12):** o **fan-out** — botão no Roteiro que cria um nó "Gerar Imagem" por cena (com o prompt já preenchido), fechando a cadeia **Roteiro → Imagens → Criativo** visualmente no canvas.
+
+Honestidade da maratona: foi longa, mas ela pariu **software real, vivo e provado** — não slides. Os dois motores que você pediu ("faceless/avatar" + "criativos sofisticados") têm agora nós de verdade no Spaces, e a cadeia que você desenhou está a um fan-out de ficar visual ponta a ponta. O loop segue; te reporto com o fan-out (ou o obstáculo honesto).
