@@ -2991,6 +2991,29 @@ Gateway fez hot-reload sozinho, sem downtime. **Pode testar de novo no Telegram*
 
 Uma observação: mantive os nomes com apelido legível no catálogo (ex.: aparece como *"nemotron-super (free)"* no picker), mas o id pra selecionar continua o completo. Se algum dos outros modelos free ainda reverter quando você testar no chat, me avisa qual — mas pela verificação os 10 estão resolvendo certo agora.
 
+## 👤 User *(21:22:46)*
+
+precisamos fazer handoff aqui ?
+
+## 🤖 Claude *(21:22:59)*
+
+
+## 🤖 Claude *(21:23:07)*
+
+Não, não precisa. O trabalho está **fechado e verificado** — não há nada pendente pra passar adiante.
+
+Estado atual:
+- ✅ 10 modelos free adicionados nos dois lugares (habilitação + catálogo) e testados ao vivo pelo caminho do gateway/Telegram
+- ✅ Fallback confiável (`gemini-2.5-flash-lite`) restaurado
+- ✅ Config válida, hot-reload aplicado, zero downtime
+- ✅ Já registrei na **memória** (`openclaw-setup-claw-gcrux`) o essencial pra continuidade entre sessões: onde ficam config/chaves, o procedimento correto de adicionar modelo (os dois lugares), o gotcha do "não permitido para este agente", e como testar (`--gateway`, não `--local`)
+
+Ou seja, o "handoff" pra próxima sessão já está feito via memória — qualquer conversa futura tem o contexto sem depender deste histórico.
+
+A única observação de acompanhamento (não bloqueante): o snapshot `~/.openclaw/agents/main/agent/models.json` está estático no disco, mas o gateway em memória já usa o catálogo novo e o catálogo global também tem os modelos, então mesmo se o agente reiniciar continua funcionando.
+
+Se "handoff" pra você significava outra coisa — tipo um handoff dentro do próprio openclaw (aqueles nós de `handoff` do Knowledge Mesh que aparecem no briefing), ou passar isso pra outro agente/canal — me diz o que tinha em mente que eu encaminho.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
