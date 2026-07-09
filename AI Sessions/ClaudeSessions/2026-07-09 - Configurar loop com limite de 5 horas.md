@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -7418,7 +7418,7 @@ Tree limpo. Fazendo as 7 edições do `canvas.ts` (union, interface, data-union,
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
   "old_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n  }\n}",
-  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}"
+  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n  }\n}"
 }
 ```
 
@@ -8972,3 +8972,16 @@ O loop entregou o cérebro do storyboard:
 Honestidade: o backend v2 está provado mas o **nó ainda não o chama** — o loop vai fiar isso na próxima (06:48) e aí você gera o storyboard direto na tela. A cadeia que você desenhou (cenas → imagens Nano Banana → curta) fica a um passo de fan-out.
 
 Foi uma sessão-maratona longa e produtiva: dos 3 primitivos FFmpeg + template cinematográfico → 2 artifacts → BoK/agente/skills do módulo → hotfix do zip do LoRA → decisões de TTS (VoxCPM2) e identidade multi-motor → e agora **2 nós/backends do Creative Studio vivos e provados**. O loop segue; te reporto com o storyboard saindo na tela (ou o obstáculo honesto).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%

@@ -2502,6 +2502,6 @@ No response requested.
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Sessão Anterior**: [[2026-07-09 - Configurar loop com limite de 5 horas]]
 > * **Próxima Sessão**: [[2026-07-09 - agent-a098ef0e7df4f5b04]]
 %% --- TIMELINE END --- %%

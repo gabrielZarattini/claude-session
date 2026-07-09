@@ -128,3 +128,10 @@ G5 exige um token de sessão válido (não mintável sem credenciais de usuário
 ## Sibling reference
 
 - Service-role gate correto (camada 3): `supabase/functions/publish-wordpress/index.ts` (linhas ~26-47) e `supabase/functions/publish-social/index.ts` — usados por callers server-side/cron reais (auto-publish). Padrão diferente, mesma diretiva (API Tenancy).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

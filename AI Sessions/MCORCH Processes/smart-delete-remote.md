@@ -33,3 +33,10 @@ Fluxo completo confirmado quando: (1) o operador clicou remover; (2) para uma re
 - ❌ Prometer delete remoto em TikTok/IG(conexão atual)/LinkedIn-sem-verify — honestidade obrigatória (FR-SD-004).
 - ❌ Checar só HTTP status no X (sempre 200) ou esperar 404 no YT (retorna items=[]) — usar o sinal da Matriz.
 - ❌ WP `force=true` (permanente) no MVP sem confirmação reforçada — usar Trash.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
