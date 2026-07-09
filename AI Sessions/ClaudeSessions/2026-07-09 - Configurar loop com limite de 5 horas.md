@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -7418,7 +7418,7 @@ Tree limpo. Fazendo as 7 edições do `canvas.ts` (union, interface, data-union,
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
   "old_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n  }\n}",
-  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}"
+  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n  }\n}"
 }
 ```
 
@@ -9934,3 +9934,16 @@ O maior desbloqueio da sessão, com o ciclo honesto completo:
 - **Nó Cinematográfico (cliente)** → o loop constrói agora (07:46) — backend 100% provado, é só a UI (espelha o padrão do Roteiro + poll de `video_renders`).
 
 Quando ele subir, você monta no Spaces: **Roteiro → imagens → Criativo Cinematográfico → MP4** — a cadeia que você desenhou, ponta a ponta. Te reporto com o nó de pé + o vídeo tocando na tela (ou o próximo obstáculo honesto).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%

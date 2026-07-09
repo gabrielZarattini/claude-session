@@ -43,3 +43,10 @@ source_module, source_job_id, mesh_node_id, provider, model, prompt, title, tags
 ## Success signal
 Um asset gerado no Canvas Studio aparece no asset-picker do editor HyperFrames (e vice-versa), com a cadeia de
 proveniência (`parent_asset_id`) visível — o bidirecional do "poder das saídas".
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
