@@ -2990,3 +2990,16 @@ Rodei os modelos pelo **gateway** (o mesmo caminho que o Telegram usa, não um a
 Gateway fez hot-reload sozinho, sem downtime. **Pode testar de novo no Telegram** — escolhe `openrouter/nvidia/nemotron-3-super-120b-a12b:free` no `/model` e manda uma mensagem; agora vai responder em vez de reverter.
 
 Uma observação: mantive os nomes com apelido legível no catálogo (ex.: aparece como *"nemotron-super (free)"* no picker), mas o id pra selecionar continua o completo. Se algum dos outros modelos free ainda reverter quando você testar no chat, me avisa qual — mas pela verificação os 10 estão resolvendo certo agora.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - agent-afdfd6b866420dce3]]
+> * **Próxima Sessão**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
+%% --- TIMELINE END --- %%

@@ -5095,3 +5095,15 @@ SOP pronto (Lei 2). Agora a **migration** (aditiva à tabela biométrica → /se
 > ```
 > File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708130000_avatar_identities_lora_training.sql (file state is current in your context — no need to Read it back)
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - agent-afdfd6b866420dce3]]
+%% --- TIMELINE END --- %%
