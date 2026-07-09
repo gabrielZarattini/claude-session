@@ -1,5 +1,5 @@
 # Configurar API de créditos e testar MCP com TikTok
-**Date:** 2026-07-09 | **Session ID:** `5a4bad4d-6e98-4c4e-918b-ccb081f84a63`
+**Date:** 2026-07-09 | **Session ID:** `47592365-463d-4669-b674-a8aa2fcecacf`
 
 ---
 
@@ -3064,7 +3064,7 @@ Nenhuma vulnerabilidade HIGH ou MEDIUM identificada nas mudanças desta branch.
 
 **Veredito: SAFE — nenhuma correção necessária.**
 
-## 👤 User *(01:19:41)*
+## 👤 User *(01:20:02)*
 
 ótimo agora vamos com foco total em deixar o SPACES 100%, crie o loop para continuar nessa sessão até o fim dela que é quando estiver em mais ou menos 85% da janela de contexto atual. Vamos transformar o nosso spaces mais robusto criando os nós principais. 
 
@@ -3074,6 +3074,2024 @@ Ainda estão faltando nós para.:
 * Nós para redes sociais, por exemplo para cada rede social deve ter seus grupos de nós, por exemplo wordpress pode ter Posts Blogs ou Landing Pages. Já Instagram pode ter, feed > Carrosels, Rells, Stories, Conexões como outros MCPs ou algo como Manychats ou até mesmo API webhooks. Tiktok videos, shop dentre outras opções. Youtube para postar videos longos, shorts, forum da comunidade, membros esclusivos, posts etc etc.
 * Precisamos tambem preparar o Spaces para conseguir organizar e ser um studio para youtube studio faceless ou com avatar AI clone libsinc etc.
 
-## 👤 User *(01:19:47)*
+## 🤖 Claude *(01:22:23)*
 
-[Request interrupted by user]
+
+## 🤖 Claude *(01:22:33)*
+
+Entendido, Maestro. **Foco total: Spaces 100%.** Vou rearmar o loop nesta sessão (trabalho contínuo inline até ~85% da janela) e atacar as três frentes: (1) **identidade/avatar com LoRA Flux grátis** — o bug de "requer credencial Higgsfield" mesmo com LoRA selecionado, e a ambiguidade MCP-vs-API do Soul ID; (2) **grupos de nós por rede social** (WordPress: Posts/Blogs/Landing; Instagram: Feed→Carrossel/Reels/Stories/Conexões; TikTok: vídeos/shop; YouTube: longos/shorts/comunidade/membros); (3) **Spaces como studio faceless/avatar-clone (lipsync)**.
+
+**ORO desta frente:** Operator = MCORCH Master Execution Agent (loop autônomo) · Reviewer = Sovereign + `/security-review` (migrations/edge) · Owner = Sovereign (superfície criativa; **foco USD 0 via LoRA grátis**; witnesses pagos gated).
+
+**Postura BoK (Closed-Loop §1):** `spaces-evolution` está selada 9/9 e `avatar-clone-ai` 10/10. O fix do LoRA é **bug em feature documentada** (isento do gate). Os grupos de nós sociais + studio YouTube são **evolução** → provável emenda BoK antes do código. Vou confirmar isso no mapeamento.
+
+Como o Ultracode está ligado e a diretiva é ampla, começo com um **workflow de mapeamento** (Fase A — Entender) que varre as 5 frentes em paralelo e me dá a causa-raiz do LoRA + o catálogo de nós + as superfícies de publicação, para eu implementar com contexto completo.
+
+## 🤖 Claude *(01:22:33)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Spaces 100% \u2014 n\u00f3s principais",
+  "summary": "LoRA free training fix + grupos de n\u00f3s sociais + studio faceless/avatar YouTube"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Spaces 100% — nós principais". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(01:22:44)*
+
+
+## 🤖 Claude *(01:22:46)*
+
+Antes de mergulhar no Spaces, vou selar a Iteração 2 (Higgsfield testável + clareza MCP) com commit granular — está pronta e provada.
+
+## 🤖 Claude *(01:22:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/test-api-key/index.ts src/pages/SettingsPage.tsx src/components/settings/HiggsfieldConnectorCard.tsx\ngit commit -q -F - <<'EOF'\nfeat(settings): Higgsfield Platform key test\u00e1vel + clareza cr\u00e9ditos-vs-assinatura no MCP\n\nO Sovereign s\u00f3 tem cr\u00e9ditos avulsos (sem assinatura), ent\u00e3o o caminho de teste \u00e9 a\nAPI Platform BYOK \u2014 n\u00e3o o conector MCP OAuth. Duas melhorias fecham a confus\u00e3o:\n\n- Bot\u00e3o \"Testar\" na Higgsfield API Key (Platform): valida o par key+secret via a\n  mesma sonda de auth de custo-zero do sentinel (POST soul/standard {} \u2192 422 = v\u00e1lida),\n  sem enfileirar job pago. test-api-key ganha ramo higgsfield (JWT-guard, par do pr\u00f3prio\n  vault, URL fixa, retorna s\u00f3 {ok,status}). Provado: {ok:true,status:422} com a chave real.\n- Card do conector MCP agora avisa que exige assinatura Higgsfield e aponta para a chave\n  Platform (cr\u00e9ditos/pay-per-use) como o caminho de gera\u00e7\u00e3o dos n\u00f3s de v\u00eddeo/DoP.\n\nSentinel 7/7 \u00b7 tsc 0 \u00b7 deploy test-api-key \u00b7 build+deploy frontend (strings baked).\nEOF\ngit log --oneline -1",
+  "description": "Commit granular da Itera\u00e7\u00e3o 2 (Higgsfield)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:22PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:22PM[0m [32mINF[0m scan completed in 9.08ms
+> [90m10:22PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.15 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.09 seconds)
+> ✔️ gitleaks-staged (0.13 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 44e625c feat(settings): Higgsfield Platform key testável + clareza créditos-vs-assinatura no MCP
+> ```
+
+## 🤖 Claude *(01:23:00)*
+
+
+## 🤖 Claude *(01:23:02)*
+
+Iteração 2 selada — commit `44e625c` (lefthook/gitleaks limpos). Agora lanço o **workflow de mapeamento (Fase A)** — 5 leitores paralelos varrem avatar/LoRA, catálogo de nós, superfícies de publicação, faceless/avatar-studio e os contratos BoK, com síntese priorizada.
+
+## 🤖 Claude *(01:24:01)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'spaces-100-map',\n  description: 'Map avatar/LoRA training bug + Spaces node catalog + social publish surfaces + faceless studio to design robust Spaces node groups',\n  phases: [\n    { title: 'Map', detail: '5 parallel readers: avatar/LoRA \u00b7 node catalog \u00b7 social publish \u00b7 faceless studio \u00b7 BoK contracts' },\n    { title: 'Synthesize', detail: 'unified map + prioritized slice plan + LoRA root cause' },\n  ],\n}\n\nconst MAP_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['front', 'summary', 'key_files', 'findings', 'gaps_or_root_cause', 'recommended_slices'],\n  properties: {\n    front: { type: 'string' },\n    summary: { type: 'string', description: 'one-paragraph executive summary' },\n    key_files: { type: 'array', items: { type: 'string' }, description: 'file:line anchors that matter most' },\n    findings: { type: 'string', description: 'detailed markdown findings, every claim grounded in real code (file:line)' },\n    gaps_or_root_cause: { type: 'string', description: 'the bug root cause and/or the concrete missing pieces' },\n    recommended_slices: { type: 'array', items: { type: 'string' }, description: 'concrete implementation slices, ordered by value' },\n  },\n}\n\nconst READERS = [\n  {\n    label: 'avatar-lora',\n    prompt: `You are mapping the AVATAR IDENTITY TRAINING flow in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra). The Sovereign reports a BUG: clicking 'treinar' on the identity/avatar node shows the error \"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\" EVEN when the engine 'LoRA' is selected instead of 'Higgsfield'. The LoRA (free) path must NOT require a Higgsfield credential \u2014 that is the free ace the Sovereign wants to validate first.\n\nTASKS (ground EVERY claim in file:line \u2014 Lei 1, no fabrication; use Grep/Read/Glob/Bash):\n1. Grep the exact strings 'OTD-AC-017' and 'Treino de identidade requer credencial Higgsfield' and 'requer credencial Higgsfield' across src/ and supabase/functions/. Find the exact file:line where thrown/rendered and the condition that triggers it.\n2. Find the identity/avatar training UI (the engine selector: 'LoRA' vs 'Higgsfield Soul ID'). How is the selected engine stored and passed to the backend? Grep 'LoRA', 'Soul ID', 'flux', 'lora', 'avatar_identities', 'trainingEngine', 'engine'.\n3. Find the edge fn / handler that processes identity training. Show where it gates on Higgsfield credential REGARDLESS of engine (the bug). What field carries the engine choice and is it actually read before the gate?\n4. Find the LoRA Flux training path \u2014 is there a Replicate trainer (e.g. ostris/flux-dev-lora-trainer) or similar wired, or is it stubbed/absent? What would a real free LoRA training path need (trainer model, dataset upload, poll)?\n5. The 'Higgsfield Soul ID' ambiguity: is Soul ID MCP-based or Platform-API-based? Where is that decided? Note where the UI/label induces confusion.\n\nReturn via the structured schema: root cause of why LoRA still hits the Higgsfield gate, the exact fix location(s), and whether a real free LoRA training path exists or must be built.`,\n  },\n  {\n    label: 'node-catalog',\n    prompt: `You are mapping the SPACES node catalog + Spotlight architecture in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra). Spaces lives at /dashboard/spaces (hooks useSpaces/useCanvasStudio, components SpaceNodeCard + a Spotlight with ~26 node types).\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. Find the node-type catalog/registry \u2014 the list of ~26 Spotlight node types and where defined. Grep 'Spotlight', node-type constant arrays, node categories. List every node type with its label + category.\n2. How is a node type RENDERED and EXECUTED end-to-end: the ReactFlow node component(s), the canvas-execute node_type map, and the DB enum vm_node_type (list all enum values). Show the Handle ids / edge wiring convention.\n3. How would a NEW node type OR a new node GROUP/category be added \u2014 enumerate the exact files/enums/registries to touch (client node registry, Spotlight list, canvas-execute NODE_TYPE_MAP, vm_node_type enum, cost table).\n4. Is there any existing notion of node GROUPS / sub-categories / nested palettes in the Spotlight today? Or is it a flat list?\n\nReturn via the structured schema: the full node catalog, the enum values, and the precise surface to extend for new node groups (esp. social-network groups and identity/avatar nodes).`,\n  },\n  {\n    label: 'social-publish',\n    prompt: `You are mapping ALL social-publishing surfaces in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra) to design per-network node GROUPS inside Spaces (the Sovereign wants: WordPress\u2192Posts/Blogs/Landing Pages; Instagram\u2192Feed(Carrossel)/Reels/Stories/Conex\u00f5es(MCP/Manychat/webhooks); TikTok\u2192v\u00eddeos/shop; YouTube\u2192v\u00eddeos longos/shorts/comunidade/membros/posts).\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. For EACH platform, list which content types can be published TODAY and by which edge fn (with file:line): WordPress (publish-wordpress \u2014 posts vs pages?), Instagram/Facebook (publish-meta, publish-social \u2014 feed/reels/stories/carousel?), TikTok (video/shop?), YouTube (video/shorts/community?).\n2. Map the Channel Format Intelligence layer: reshape-pillar, channel_profiles (transform_recipe), channel_variants, publish-channel-variant, auto-publish. How does a pillar become a per-channel native variant, and how is it published (draft-by-default / opt-in)?\n3. Map how a SPACES node would trigger a publish today: is there a Publish node? does the canvas hand off to publish-channel-variant / auto-publish / creative_assets? What is the seam between a generated asset and a social post?\n4. Produce a per-platform capability MATRIX: content-type | can-publish-today (fn) | MISSING. Explicitly flag gaps (e.g. IG Stories, IG Carousel, YT Community, YT Members, TikTok Shop, WP Landing Pages).\n\nReturn via the structured schema: the capability matrix + the Spaces\u2192publish wiring + the concrete missing publishers.`,\n  },\n  {\n    label: 'faceless-studio',\n    prompt: `You are mapping the AVATAR-CLONE / FACELESS-VIDEO / LIPSYNC building blocks in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra) to design a 'YouTube Studio' inside Spaces \u2014 faceless OR avatar AI clone with lipsync.\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. avatar-clone-ai module: voiceClone / generate-voice (BYOK ElevenLabs/Cartesia), avatar_identities, avatar_consents, consent/erase edge fns, and ANY lipsync path (Hedra/fal/Sora/'libsinc'/'lipsync'). What is wired vs deferred (OTD-AC-015 ArcFace, OTD-AC-017)?\n2. HyperFrames video studio: render-core (Playwright+FFmpeg 9:16), video-bridge worker, video-studio editor, the deterministic faceless motor. How is a video composed + rendered + finalized?\n3. The faceless pipeline reference (.claude/context/faceless-pipeline-reference*). What is the script\u2192voice\u2192video\u2192publish chain?\n4. How do Spaces nodes chain into video today (image_to_video DoP, scene_compose, magic_prompt)? \n5. Assess what a 'YouTube Studio inside Spaces' needs end-to-end: script \u2192 voiceover \u2192 broll/avatar video \u2192 lipsync \u2192 assemble \u2192 captions \u2192 thumbnail \u2192 publish. Which blocks EXIST, which are GAPS?\n\nReturn via the structured schema: the existing faceless/avatar building blocks + the gaps to make Spaces a YouTube studio.`,\n  },\n  {\n    label: 'bok-contracts',\n    prompt: `You are reading the sealed BoK to ground the Spaces node-group evolution in the documented contract (MCORCH Closed-Loop \u00a71 requires BoK before code for new modules/features). Repo: /home/gcrUX/htdocs/constellation-orchestra.\n\nTASKS (ground every claim in doc-section / file:line; use Read/Grep/Glob):\n1. Read docs/bok/spaces-evolution/ \u2014 esp. 04-frd.md, 05-sdd.md, the Pattern Conformance section, and any amendment (list all amendment files, esp. the latest). Enumerate the FR-SPACES-* ids relevant to the node catalog. Which node families are ALREADY documented, and would social-network node groups + a YouTube studio need a NEW amendment?\n2. Read docs/bok/avatar-clone-ai/ \u2014 find OTD-AC-017 (training requires Higgsfield credential deferral), OTD-AC-015 (ArcFace), and the LoRA / free-training posture. What FR ids cover identity training? Is a free LoRA path in-scope of the sealed BoK or does the fix need an amendment?\n3. For each of the 3 asks \u2014 (a) LoRA free-training fix, (b) per-network social node groups, (c) Spaces-as-YouTube-studio \u2014 classify: documented-bug-fix (no gate) | evolution-needs-amendment | new-module-needs-BoK. Give the recommended amendment outline (which doc sections + new FR/OTD ids) for the ones that need it.\n\nReturn via the structured schema: relevant FR/OTD ids, the per-ask classification, and a concrete amendment outline.`,\n  },\n]\n\nphase('Map')\nconst maps = await parallel(READERS.map((r) => () =>\n  agent(r.prompt, { label: r.label, phase: 'Map', schema: MAP_SCHEMA })\n))\nconst valid = maps.filter(Boolean)\nlog(`Mapping done: ${valid.length}/${READERS.length} fronts returned`)\n\nphase('Synthesize')\nconst SYNTH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['unified_map', 'lora_fix', 'priority_slices', 'session_scope_note'],\n  properties: {\n    unified_map: { type: 'string', description: 'unified markdown map of current Spaces reality (nodes, avatar training, social publish, faceless studio)' },\n    lora_fix: { type: 'string', description: 'crisp summary of the LoRA free-training bug root cause + exact fix (file:line)' },\n    priority_slices: {\n      type: 'array',\n      description: 'ordered execution plan; LoRA fix FIRST',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['title', 'type', 'needs_bok_amendment', 'rationale', 'key_files'],\n        properties: {\n          title: { type: 'string' },\n          type: { type: 'string', enum: ['bugfix', 'amendment', 'feature'] },\n          needs_bok_amendment: { type: 'boolean' },\n          rationale: { type: 'string' },\n          key_files: { type: 'array', items: { type: 'string' } },\n        },\n      },\n    },\n    session_scope_note: { type: 'string', description: 'honest note on what fits one session (~85% window) vs follow-up' },\n  },\n}\n\nconst synthPrompt = `You are the MCORCH Master Execution Agent. Synthesize these ${valid.length} mapping reports into a prioritized execution plan for 'deixar o Spaces 100%'. The Sovereign's asks: (1) fix free LoRA Flux identity training (bug: hits Higgsfield gate even with LoRA selected; also clarify Soul ID MCP-vs-API), FOCUS on the free path first; (2) per-social-network node GROUPS (WordPress posts/blogs/landing; Instagram feed-carousel/reels/stories/connections; TikTok video/shop; YouTube long/shorts/community/members); (3) Spaces as a faceless/avatar-clone YouTube studio.\n\nMAPPING REPORTS (JSON):\n${JSON.stringify(valid, null, 2)}\n\nProduce via the schema:\n1. unified_map \u2014 the current Spaces reality across all fronts.\n2. lora_fix \u2014 root cause + exact fix for the free LoRA path (this ships FIRST as a documented-feature bug fix, no BoK gate).\n3. priority_slices \u2014 ordered by value/effort. Tag each type=bugfix|amendment|feature and needs_bok_amendment. Respect Closed-Loop \u00a71: social node groups + YouTube studio likely need a BoK amendment before code. Keep slices small and shippable in one Closed-Loop iteration each.\n4. session_scope_note \u2014 honestly bound what fits ~85% window this session vs follow-up.`\n\nconst synthesis = await agent(synthPrompt, { label: 'synthesize', phase: 'Synthesize', schema: SYNTH_SCHEMA, effort: 'high' })\nreturn { maps: valid, synthesis }",
+  "run_in_background": "true"
+}
+```
+
+> **Tool Result (Workflow)** - ❌ Error
+>
+> ```
+> <tool_use_error>InputValidationError: Workflow failed due to the following issue:
+> An unexpected parameter `run_in_background` was provided</tool_use_error>
+> ```
+
+## 🤖 Claude *(01:24:06)*
+
+
+## 🤖 Claude *(01:24:06)*
+
+Workflows já rodam em background por padrão. Relançando sem o parâmetro.
+
+## 🤖 Claude *(01:24:54)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'spaces-100-map',\n  description: 'Map avatar/LoRA training bug + Spaces node catalog + social publish surfaces + faceless studio to design robust Spaces node groups',\n  phases: [\n    { title: 'Map', detail: '5 parallel readers: avatar/LoRA \u00b7 node catalog \u00b7 social publish \u00b7 faceless studio \u00b7 BoK contracts' },\n    { title: 'Synthesize', detail: 'unified map + prioritized slice plan + LoRA root cause' },\n  ],\n}\n\nconst MAP_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['front', 'summary', 'key_files', 'findings', 'gaps_or_root_cause', 'recommended_slices'],\n  properties: {\n    front: { type: 'string' },\n    summary: { type: 'string', description: 'one-paragraph executive summary' },\n    key_files: { type: 'array', items: { type: 'string' }, description: 'file:line anchors that matter most' },\n    findings: { type: 'string', description: 'detailed markdown findings, every claim grounded in real code (file:line)' },\n    gaps_or_root_cause: { type: 'string', description: 'the bug root cause and/or the concrete missing pieces' },\n    recommended_slices: { type: 'array', items: { type: 'string' }, description: 'concrete implementation slices, ordered by value' },\n  },\n}\n\nconst READERS = [\n  {\n    label: 'avatar-lora',\n    prompt: `You are mapping the AVATAR IDENTITY TRAINING flow in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra). The Sovereign reports a BUG: clicking 'treinar' on the identity/avatar node shows the error \"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\" EVEN when the engine 'LoRA' is selected instead of 'Higgsfield'. The LoRA (free) path must NOT require a Higgsfield credential \u2014 that is the free ace the Sovereign wants to validate first.\n\nTASKS (ground EVERY claim in file:line \u2014 Lei 1, no fabrication; use Grep/Read/Glob/Bash):\n1. Grep the exact strings 'OTD-AC-017' and 'Treino de identidade requer credencial Higgsfield' and 'requer credencial Higgsfield' across src/ and supabase/functions/. Find the exact file:line where thrown/rendered and the condition that triggers it.\n2. Find the identity/avatar training UI (the engine selector: 'LoRA' vs 'Higgsfield Soul ID'). How is the selected engine stored and passed to the backend? Grep 'LoRA', 'Soul ID', 'flux', 'lora', 'avatar_identities', 'trainingEngine', 'engine'.\n3. Find the edge fn / handler that processes identity training. Show where it gates on Higgsfield credential REGARDLESS of engine (the bug). What field carries the engine choice and is it actually read before the gate?\n4. Find the LoRA Flux training path \u2014 is there a Replicate trainer (e.g. ostris/flux-dev-lora-trainer) or similar wired, or is it stubbed/absent? What would a real free LoRA training path need (trainer model, dataset upload, poll)?\n5. The 'Higgsfield Soul ID' ambiguity: is Soul ID MCP-based or Platform-API-based? Where is that decided? Note where the UI/label induces confusion.\n\nReturn via the structured schema: root cause of why LoRA still hits the Higgsfield gate, the exact fix location(s), and whether a real free LoRA training path exists or must be built.`,\n  },\n  {\n    label: 'node-catalog',\n    prompt: `You are mapping the SPACES node catalog + Spotlight architecture in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra). Spaces lives at /dashboard/spaces (hooks useSpaces/useCanvasStudio, components SpaceNodeCard + a Spotlight with ~26 node types).\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. Find the node-type catalog/registry \u2014 the list of ~26 Spotlight node types and where defined. Grep 'Spotlight', node-type constant arrays, node categories. List every node type with its label + category.\n2. How is a node type RENDERED and EXECUTED end-to-end: the ReactFlow node component(s), the canvas-execute node_type map, and the DB enum vm_node_type (list all enum values). Show the Handle ids / edge wiring convention.\n3. How would a NEW node type OR a new node GROUP/category be added \u2014 enumerate the exact files/enums/registries to touch (client node registry, Spotlight list, canvas-execute NODE_TYPE_MAP, vm_node_type enum, cost table).\n4. Is there any existing notion of node GROUPS / sub-categories / nested palettes in the Spotlight today? Or is it a flat list?\n\nReturn via the structured schema: the full node catalog, the enum values, and the precise surface to extend for new node groups (esp. social-network groups and identity/avatar nodes).`,\n  },\n  {\n    label: 'social-publish',\n    prompt: `You are mapping ALL social-publishing surfaces in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra) to design per-network node GROUPS inside Spaces (the Sovereign wants: WordPress\u2192Posts/Blogs/Landing Pages; Instagram\u2192Feed(Carrossel)/Reels/Stories/Conex\u00f5es(MCP/Manychat/webhooks); TikTok\u2192v\u00eddeos/shop; YouTube\u2192v\u00eddeos longos/shorts/comunidade/membros/posts).\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. For EACH platform, list which content types can be published TODAY and by which edge fn (with file:line): WordPress (publish-wordpress \u2014 posts vs pages?), Instagram/Facebook (publish-meta, publish-social \u2014 feed/reels/stories/carousel?), TikTok (video/shop?), YouTube (video/shorts/community?).\n2. Map the Channel Format Intelligence layer: reshape-pillar, channel_profiles (transform_recipe), channel_variants, publish-channel-variant, auto-publish. How does a pillar become a per-channel native variant, and how is it published (draft-by-default / opt-in)?\n3. Map how a SPACES node would trigger a publish today: is there a Publish node? does the canvas hand off to publish-channel-variant / auto-publish / creative_assets? What is the seam between a generated asset and a social post?\n4. Produce a per-platform capability MATRIX: content-type | can-publish-today (fn) | MISSING. Explicitly flag gaps (e.g. IG Stories, IG Carousel, YT Community, YT Members, TikTok Shop, WP Landing Pages).\n\nReturn via the structured schema: the capability matrix + the Spaces->publish wiring + the concrete missing publishers.`,\n  },\n  {\n    label: 'faceless-studio',\n    prompt: `You are mapping the AVATAR-CLONE / FACELESS-VIDEO / LIPSYNC building blocks in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra) to design a 'YouTube Studio' inside Spaces \u2014 faceless OR avatar AI clone with lipsync.\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. avatar-clone-ai module: voiceClone / generate-voice (BYOK ElevenLabs/Cartesia), avatar_identities, avatar_consents, consent/erase edge fns, and ANY lipsync path (Hedra/fal/Sora/'libsinc'/'lipsync'). What is wired vs deferred (OTD-AC-015 ArcFace, OTD-AC-017)?\n2. HyperFrames video studio: render-core (Playwright+FFmpeg 9:16), video-bridge worker, video-studio editor, the deterministic faceless motor. How is a video composed + rendered + finalized?\n3. The faceless pipeline reference (.claude/context/faceless-pipeline-reference*). What is the script->voice->video->publish chain?\n4. How do Spaces nodes chain into video today (image_to_video DoP, scene_compose, magic_prompt)?\n5. Assess what a 'YouTube Studio inside Spaces' needs end-to-end: script -> voiceover -> broll/avatar video -> lipsync -> assemble -> captions -> thumbnail -> publish. Which blocks EXIST, which are GAPS?\n\nReturn via the structured schema: the existing faceless/avatar building blocks + the gaps to make Spaces a YouTube studio.`,\n  },\n  {\n    label: 'bok-contracts',\n    prompt: `You are reading the sealed BoK to ground the Spaces node-group evolution in the documented contract (MCORCH Closed-Loop \u00a71 requires BoK before code for new modules/features). Repo: /home/gcrUX/htdocs/constellation-orchestra.\n\nTASKS (ground every claim in doc-section / file:line; use Read/Grep/Glob):\n1. Read docs/bok/spaces-evolution/ \u2014 esp. 04-frd.md, 05-sdd.md, the Pattern Conformance section, and any amendment (list all amendment files, esp. the latest). Enumerate the FR-SPACES-* ids relevant to the node catalog. Which node families are ALREADY documented, and would social-network node groups + a YouTube studio need a NEW amendment?\n2. Read docs/bok/avatar-clone-ai/ \u2014 find OTD-AC-017 (training requires Higgsfield credential deferral), OTD-AC-015 (ArcFace), and the LoRA / free-training posture. What FR ids cover identity training? Is a free LoRA path in-scope of the sealed BoK or does the fix need an amendment?\n3. For each of the 3 asks \u2014 (a) LoRA free-training fix, (b) per-network social node groups, (c) Spaces-as-YouTube-studio \u2014 classify: documented-bug-fix (no gate) | evolution-needs-amendment | new-module-needs-BoK. Give the recommended amendment outline (which doc sections + new FR/OTD ids) for the ones that need it.\n\nReturn via the structured schema: relevant FR/OTD ids, the per-ask classification, and a concrete amendment outline.`,\n  },\n]\n\nphase('Map')\nconst maps = await parallel(READERS.map((r) => () =>\n  agent(r.prompt, { label: r.label, phase: 'Map', schema: MAP_SCHEMA })\n))\nconst valid = maps.filter(Boolean)\nlog(`Mapping done: ${valid.length}/${READERS.length} fronts returned`)\n\nphase('Synthesize')\nconst SYNTH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['unified_map', 'lora_fix', 'priority_slices', 'session_scope_note'],\n  properties: {\n    unified_map: { type: 'string', description: 'unified markdown map of current Spaces reality (nodes, avatar training, social publish, faceless studio)' },\n    lora_fix: { type: 'string', description: 'crisp summary of the LoRA free-training bug root cause + exact fix (file:line)' },\n    priority_slices: {\n      type: 'array',\n      description: 'ordered execution plan; LoRA fix FIRST',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['title', 'type', 'needs_bok_amendment', 'rationale', 'key_files'],\n        properties: {\n          title: { type: 'string' },\n          type: { type: 'string', enum: ['bugfix', 'amendment', 'feature'] },\n          needs_bok_amendment: { type: 'boolean' },\n          rationale: { type: 'string' },\n          key_files: { type: 'array', items: { type: 'string' } },\n        },\n      },\n    },\n    session_scope_note: { type: 'string', description: 'honest note on what fits one session (~85% window) vs follow-up' },\n  },\n}\n\nconst synthPrompt = `You are the MCORCH Master Execution Agent. Synthesize these ${valid.length} mapping reports into a prioritized execution plan for 'deixar o Spaces 100%'. The Sovereign's asks: (1) fix free LoRA Flux identity training (bug: hits Higgsfield gate even with LoRA selected; also clarify Soul ID MCP-vs-API), FOCUS on the free path first; (2) per-social-network node GROUPS (WordPress posts/blogs/landing; Instagram feed-carousel/reels/stories/connections; TikTok video/shop; YouTube long/shorts/community/members); (3) Spaces as a faceless/avatar-clone YouTube studio.\n\nMAPPING REPORTS (JSON):\n${JSON.stringify(valid, null, 2)}\n\nProduce via the schema:\n1. unified_map \u2014 the current Spaces reality across all fronts.\n2. lora_fix \u2014 root cause + exact fix for the free LoRA path (this ships FIRST as a documented-feature bug fix, no BoK gate).\n3. priority_slices \u2014 ordered by value/effort. Tag each type=bugfix|amendment|feature and needs_bok_amendment. Respect Closed-Loop \u00a71: social node groups + YouTube studio likely need a BoK amendment before code. Keep slices small and shippable in one Closed-Loop iteration each.\n4. session_scope_note \u2014 honestly bound what fits ~85% window this session vs follow-up.`\n\nconst synthesis = await agent(synthPrompt, { label: 'synthesize', phase: 'Synthesize', schema: SYNTH_SCHEMA, effort: 'high' })\nreturn { maps: valid, synthesis }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w4kpmfne3
+> Summary: Map avatar/LoRA training bug + Spaces node catalog + social publish surfaces + faceless studio to design robust Spaces node groups
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/subagents/workflows/wf_56638299-cf0
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/spaces-100-map-wf_56638299-cf0.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/spaces-100-map-wf_56638299-cf0.js"} to iterate without resending the script.)
+> Run ID: wf_56638299-cf0
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/spaces-100-map-wf_56638299-cf0.js", resumeFromRunId: "wf_56638299-cf0"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:25:04)*
+
+
+## 🤖 Claude *(01:25:12)*
+
+Loop rearmado e rodando. **Workflow de mapeamento lançado** (`wf_56638299-cf0`, 5 leitores em paralelo + síntese) — vai me devolver a causa-raiz do LoRA, o catálogo completo de nós, a matriz de publicação por rede, os blocos de faceless/avatar e a classificação BoK de cada frente.
+
+Enquanto ele roda, não vou duplicar a busca (aguardo o resultado para implementar com contexto completo). Assim que concluir, sigo o plano priorizado — **LoRA grátis primeiro** (bug em feature documentada, sem gate), depois emenda BoK para os grupos de nós sociais + studio YouTube, implementando em fatias Closed-Loop até ~85% da janela.
+
+Status parcial desta sessão:
+- ✅ TikTok connect **vivo** (DB provado: `video.publish`, token válido).
+- ✅ Higgsfield Platform BYOK **provado** (sentinel 7/7 + auth 422) e agora **testável na UI** + card MCP honesto sobre assinatura — commit `44e625c`.
+- ⏳ Mapeamento Spaces em andamento → implementação em seguida.
+
+Aguardando o workflow para retomar a execução.
+
+## 👤 User *(01:39:08)*
+
+<task-notification>
+<task-id>w4kpmfne3</task-id>
+<tool-use-id>toolu_01WoKiL8rfozLQZ7vVhMfYSN</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/w4kpmfne3.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Map avatar/LoRA training bug + Spaces node catalog + social publish surfaces + faceless studio to design robust Spaces node groups" completed</summary>
+<result>{"maps":[{"front":"BUG confirmed: the \"Treinar identidade\" button ignores the selected engine entirely. handleTrain() in AvatarIdentityInspector.tsx is a hardcoded stub that always fires the Higgsfield/OTD-AC-017 toast — it never reads d.provider, so LoRA (Flux) hits the same gate. Deeper truth: there is NO training backend for EITHER engine (no avatar-identity-train edge fn exists), so \"fixing the branch\" only makes LoRA fail differently unless a real LoRA trainer is built.","summary":"The identity/avatar training node's engine selector (Higgsfield Soul ID vs LoRA Flux) correctly persists the choice into node data (`provider`), but the click handler that runs the training completely ignores it. `handleTrain` at src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113 is a hardcoded stub whose only action is `toast.info(\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\")` — there is no `if (d.provider === 'lora_flux')` branch anywhere. That single string at line 112 is the exact rendered error. It is thrown client-side (a sonner toast), NOT in any edge function. Confirmed by directory listing: `supabase/functions/` contains only `avatar-consent` and `erase-avatar-artifacts` — the planned `avatar-identity-train` edge function was never built, for either engine. `resolveExecutePayload` also returns `null` for the `avatarIdentity` kind (src/types/canvas.ts:975-978), so the graph runner dispatches nothing. The DB is ready (`avatar_identities.provider CHECK IN ('higgsfield','lora_flux')`), and the Replicate BYOK plumbing to build a real free LoRA trainer already exists in `canvas-execute`, but no LoRA training path is wired — it is fully absent and must be built.","key_files":["src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113 (handleTrain stub — the bug: hardcoded Higgsfield toast, no branch on d.provider)","src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:112 (exact rendered string)","src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:21-24 (PROVIDERS: higgsfield=\"Higgsfield Soul ID\", lora_flux=\"LoRA (Flux)\")","src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:43-47 (setProvider — persists engine into node.data.provider via updateNodeData)","src/types/canvas.ts:504-527 (AvatarIdentityData: provider: \"higgsfield\" | \"lora_flux\")","src/types/canvas.ts:800-821 (makeDefaultAvatarIdentity — DEFAULT provider is \"higgsfield\", tier 1)","src/types/canvas.ts:975-978 (resolveExecutePayload returns null for avatarIdentity — nothing dispatches to canvas-execute)","supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql:20-56 (avatar_identities table; provider CHECK IN higgsfield/lora_flux; staged-nullable identity_storage_key for status='training' row)","supabase/functions/canvas-execute/index.ts:1765-1826 (generateReplicate — existing per-user Replicate BYOK + predictions poll pattern to reuse for a LoRA trainer)","supabase/functions/canvas-execute/index.ts:164 (decrypted_user_api_keys → replicate_api_key per-user BYOK lookup)","docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md:74 (OTD-AC-017 definition + fallback = LoRA-FLUX gated FR-AC-016)","docs/bok/avatar-clone-ai/04-frd.md:75 (FR-AC-016 commercial-license gate — FLUX.1-dev non-commercial, BYOK escapes via user's own account)"],"findings":"## 1. Exact error location and trigger condition\n\nThe string `\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\"` is at **`src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:112`**, inside `handleTrain` (lines 109-113):\n\n```\nconst handleTrain = () =&gt; {\n  // OTD-AC-017: the avatar-identity-train Edge Function is GATED on a verified Higgsfield self-serve\n  // training API + the Sovereign's credential. Fail closed honestly — no fabricated call (Lei 1).\n  toast.info(\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\");\n};\n```\n\nIt is a **client-side sonner toast**, not an edge-function error. The trigger condition is: **any click** on the \"Treinar identidade\" button (bound at line 230, `onClick={handleTrain}`). There is **no `d.provider` check** — the toast fires unconditionally. The button is merely `disabled={!hasConsent || refs.length === 0 || trained}` (line 229); once those three are satisfied, every click hits the Higgsfield message regardless of engine.\n\n## 2. Engine selector — correctly stored, never read\n\nThe engine selector is the \"Provider\" section (lines 120-138), driven by `PROVIDERS` (lines 21-24): `{ id: \"higgsfield\", label: \"Higgsfield Soul ID\" }` and `{ id: \"lora_flux\", label: \"LoRA (Flux)\" }`. Selecting one calls `setProvider` (lines 43-47) → `updateNodeData(node.id, { provider, ... })`, persisting the choice into `node.data.provider` (Zustand `useCanvasStore`). The type `AvatarIdentityData.provider: \"higgsfield\" | \"lora_flux\"` is defined at **src/types/canvas.ts:511**. So the choice IS stored correctly and available as `d.provider` inside the same component — but `handleTrain` simply never reads it.\n\n## 3. The gate that fires regardless of engine — and the missing backend\n\n`handleTrain` is the gate, and it is unconditional (see #1). Critically, **there is no backend at all**:\n- `ls supabase/functions/` shows only `avatar-consent` and `erase-avatar-artifacts` for this domain. **`avatar-identity-train` does not exist.**\n- `resolveExecutePayload` in **src/types/canvas.ts:975-978** explicitly returns `null` for `case \"avatarIdentity\"` with the comment that the inspector \"handles it directly\" — so the graph runner dispatches nothing either.\n\nThe field that *should* carry the engine choice (`d.provider`) is present and correct; it is simply **not read before the gate**. This is the whole bug: a placeholder stub written during Fatia 3b that fail-closed honestly on Higgsfield (Lei 1 — no fabricated call) but was never made engine-aware.\n\n## 4. LoRA Flux training path — absent, but buildable on existing rails\n\nThere is **no** `ostris/flux-dev-lora-trainer` or any Replicate `trainings` call anywhere (grep for `flux-dev-lora-trainer|ostris|/v1/trainings|createTraining` = zero hits in src/ and supabase/functions/). The LoRA path is entirely stubbed/absent.\n\nHowever the rails to build a real, free (BYOK = USD 0 to the platform) LoRA trainer already exist:\n- **Per-user Replicate BYOK**: `canvas-execute` reads `decrypted_user_api_keys.replicate_api_key` (index.ts:164), and Settings already exposes a Replicate key field (SettingsPage.tsx:290-294).\n- **Replicate create+poll pattern**: `generateReplicate` (canvas-execute/index.ts:1765-1826) already does `POST https://api.replicate.com/v1/predictions` + poll loop — the exact shape a trainer needs.\n- **DB is ready**: `avatar_identities` (migration 20260630130000) has `provider CHECK IN ('higgsfield','lora_flux')`, and columns `identity_storage_key`, `commercial_license_ok`, `status IN ('training','active','revoked')` are intentionally staged-nullable so a `status='training'` row can be inserted before weights exist (migration lines 14-16, 26-32).\n- **Dataset already uploaded**: reference portraits are uploaded to the `canvas-assets` bucket under `${userId}/avatars/${projectId}/…` (Inspector lines 73-83), i.e. the training dataset already lives in storage.\n\nA real free LoRA path needs: (a) a net-new `avatar-identity-train` edge fn (service-role) that zips/collects the reference images, (b) calls Replicate `flux-dev-lora-trainer` (trainings endpoint with a `destination` model) using the user's own Replicate key, (c) polls to completion, (d) writes the resulting weights URL to `avatar_identities.identity_storage_key` + `provider='lora_flux'` + `status='active'`, and (e) respects the **FR-AC-016 commercial-license gate** (docs/bok/avatar-clone-ai/04-frd.md:75) — FLUX.1-dev weights are non-commercial, so `commercia
+... (truncated 83672 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/w4kpmfne3.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/subagents/workflows/wf_56638299-cf0/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/spaces-100-map-wf_56638299-cf0.js', resumeFromRunId: 'wf_56638299-cf0'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>6</agent_count><agents_done>6</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>789606</subagent_tokens><tool_uses>113</tool_uses><duration_ms>854303</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:39:20)*
+
+
+## 🤖 Claude *(01:39:21)*
+
+Workflow completo (6 agentes, 0 erros, ~790k tokens). A causa-raiz do LoRA já está clara. Vou ler o output completo para pegar a síntese priorizada e os outros 4 mapas.
+
+## 🤖 Claude *(01:39:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/w4kpmfne3.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>[Truncated: PARTIAL view — showing lines 1-93 of 406 total (45194 tokens, cap 25000). Call Read with offset=94 limit=93 for the next page, or Grep to find a specific section. Do NOT answer from this page alone if the answer may be further in the file.]</system-reminder>
+> 
+> 1	{
+> 2	  "summary": "Map avatar/LoRA training bug + Spaces node catalog + social publish surfaces + faceless studio to design robust Spaces node groups",
+> 3	  "agentCount": 6,
+> 4	  "logs": [
+> 5	    "Mapping done: 5/5 fronts returned"
+> 6	  ],
+> 7	  "result": {
+> 8	    "maps": [
+> 9	      {
+> 10	        "front": "BUG confirmed: the \"Treinar identidade\" button ignores the selected engine entirely. handleTrain() in AvatarIdentityInspector.tsx is a hardcoded stub that always fires the Higgsfield/OTD-AC-017 toast — it never reads d.provider, so LoRA (Flux) hits the same gate. Deeper truth: there is NO training backend for EITHER engine (no avatar-identity-train edge fn exists), so \"fixing the branch\" only makes LoRA fail differently unless a real LoRA trainer is built.",
+> 11	        "summary": "The identity/avatar training node's engine selector (Higgsfield Soul ID vs LoRA Flux) correctly persists the choice into node data (`provider`), but the click handler that runs the training completely ignores it. `handleTrain` at src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113 is a hardcoded stub whose only action is `toast.info(\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\")` — there is no `if (d.provider === 'lora_flux')` branch anywhere. That single string at line 112 is the exact rendered error. It is thrown client-side (a sonner toast), NOT in any edge function. Confirmed by directory listing: `supabase/functions/` contains only `avatar-consent` and `erase-avatar-artifacts` — the planned `avatar-identity-train` edge function was never built, for either engine. `resolveExecutePayload` also returns `null` for the `avatarIdentity` kind (src/types/canvas.ts:975-978), so the graph runner dispatches nothing. The DB is ready (`avatar_identities.provider CHECK IN ('higgsfield','lora_flux')`), and the Replicate BYOK plumbing to build a real free LoRA trainer already exists in `canvas-execute`, but no LoRA training path is wired — it is fully absent and must be built.",
+> 12	        "key_files": [
+> 13	          "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113 (handleTrain stub — the bug: hardcoded Higgsfield toast, no branch on d.provider)",
+> 14	          "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:112 (exact rendered string)",
+> 15	          "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:21-24 (PROVIDERS: higgsfield=\"Higgsfield Soul ID\", lora_flux=\"LoRA (Flux)\")",
+> 16	          "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:43-47 (setProvider — persists engine into node.data.provider via updateNodeData)",
+> 17	          "src/types/canvas.ts:504-527 (AvatarIdentityData: provider: \"higgsfield\" | \"lora_flux\")",
+> 18	          "src/types/canvas.ts:800-821 (makeDefaultAvatarIdentity — DEFAULT provider is \"higgsfield\", tier 1)",
+> 19	          "src/types/canvas.ts:975-978 (resolveExecutePayload returns null for avatarIdentity — nothing dispatches to canvas-execute)",
+> 20	          "supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql:20-56 (avatar_identities table; provider CHECK IN higgsfield/lora_flux; staged-nullable identity_storage_key for status='training' row)",
+> 21	          "supabase/functions/canvas-execute/index.ts:1765-1826 (generateReplicate — existing per-user Replicate BYOK + predictions poll pattern to reuse for a LoRA trainer)",
+> 22	          "supabase/functions/canvas-execute/index.ts:164 (decrypted_user_api_keys → replicate_api_key per-user BYOK lookup)",
+> 23	          "docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md:74 (OTD-AC-017 definition + fallback = LoRA-FLUX gated FR-AC-016)",
+> 24	          "docs/bok/avatar-clone-ai/04-frd.md:75 (FR-AC-016 commercial-license gate — FLUX.1-dev non-commercial, BYOK escapes via user's own account)"
+> 25	        ],
+> 26	        "findings": "## 1. Exact error location and trigger condition\n\nThe string `\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\"` is at **`src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:112`**, inside `handleTrain` (lines 109-113):\n\n```\nconst handleTrain = () => {\n  // OTD-AC-017: the avatar-identity-train Edge Function is GATED on a verified Higgsfield self-serve\n  // training API + the Sovereign's credential. Fail closed honestly — no fabricated call (Lei 1).\n  toast.info(\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\");\n};\n```\n\nIt is a **client-side sonner toast**, not an edge-function error. The trigger condition is: **any click** on the \"Treinar identidade\" button (bound at line 230, `onClick={handleTrain}`). There is **no `d.provider` check** — the toast fires unconditionally. The button is merely `disabled={!hasConsent || refs.length === 0 || trained}` (line 229); once those three are satisfied, every click hits the Higgsfield message regardless of engine.\n\n## 2. Engine selector — correctly stored, never read\n\nThe engine selector is the \"Provider\" section (lines 120-138), driven by `PROVIDERS` (lines 21-24): `{ id: \"higgsfield\", label: \"Higgsfield Soul ID\" }` and `{ id: \"lora_flux\", label: \"LoRA (Flux)\" }`. Selecting one calls `setProvider` (lines 43-47) → `updateNodeData(node.id, { provider, ... })`, persisting the choice into `node.data.provider` (Zustand `useCanvasStore`). The type `AvatarIdentityData.provider: \"higgsfield\" | \"lora_flux\"` is defined at **src/types/canvas.ts:511**. So the choice IS stored correctly and available as `d.provider` inside the same component — but `handleTrain` simply never reads it.\n\n## 3. The gate that fires regardless of engine — and the missing backend\n\n`handleTrain` is the gate, and it is unconditional (see #1). Critically, **there is no backend at all**:\n- `ls supabase/functions/` shows only `avatar-consent` and `erase-avatar-artifacts` for this domain. **`avatar-identity-train` does not exist.**\n- `resolveExecutePayload` in **src/types/canvas.ts:975-978** explicitly returns `null` for `case \"avatarIdentity\"` with the comment that the inspector \"handles it directly\" — so the graph runner dispatches nothing either.\n\nThe field that *should* carry the engine choice (`d.provider`) is present and correct; it is simply **not read before the gate**. This is the whole bug: a placeholder stub written during Fatia 3b that fail-closed honestly on Higgsfield (Lei 1 — no fabricated call) but was never made engine-aware.\n\n## 4. LoRA Flux training path — absent, but buildable on existing rails\n\nThere is **no** `ostris/flux-dev-lora-trainer` or any Replicate `trainings` call anywhere (grep for `flux-dev-lora-trainer|ostris|/v1/trainings|createTraining` = zero hits in src/ and supabase/functions/). The LoRA path is entirely stubbed/absent.\n\nHowever the rails to build a real, free (BYOK = USD 0 to the platform) LoRA trainer already exist:\n- **Per-user Replicate BYOK**: `canvas-execute` reads `decrypted_user_api_keys.replicate_api_key` (index.ts:164), and Settings already exposes a Replicate key field (SettingsPage.tsx:290-294).\n- **Replicate create+poll pattern**: `generateReplicate` (canvas-execute/index.ts:1765-1826) already does `POST https://api.replicate.com/v1/predictions` + poll loop — the exact shape a trainer needs.\n- **DB is ready**: `avatar_identities` (migration 20260630130000) has `provider CHECK IN ('higgsfield','lora_flux')`, and columns `identity_storage_key`, `commercial_license_ok`, `status IN ('training','active','revoked')` are intentionally staged-nullable so a `status='training'` row can be inserted before weights exist (migration lines 14-16, 26-32).\n- **Dataset already uploaded**: reference portraits are uploaded to the `canvas-assets` bucket under `${userId}/avatars/${projectId}/…` (Inspector lines 73-83), i.e. the training dataset already lives in storage.\n\nA real free LoRA path needs: (a) a net-new `avatar-identity-train` edge fn (service-role) that zips/collects the reference images, (b) calls Replicate `flux-dev-lora-trainer` (trainings endpoint with a `destination` model) using the user's own Replicate key, (c) polls to completion, (d) writes the resulting weights URL to `avatar_identities.identity_storage_key` + `provider='lora_flux'` + `status='active'`, and (e) respects the **FR-AC-016 commercial-license gate** (docs/bok/avatar-clone-ai/04-frd.md:75) — FLUX.1-dev weights are non-commercial, so `commercial_license_ok` is set true only because BYOK routes through the user's own account (FM-AC-001 mitigation, 00-index.md:145).\n\n## 5. \"Higgsfield Soul ID\" ambiguity — a genuine label trap\n\n`OTD-AC-017` (docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md:74) admits the `avatar-identity-train` edge fn \"assume[s] endpoint self-serve não confirmado\" — i.e. a Higgsfield *self-serve training API was never verified to exist*. This collides with the actual Higgsfield surface the repo already integrated (per the Higgsfield sentinel + oauth functions): the **Platform API** is `soul/{mode}` path-literal + `custom_reference_id` (mint `/v1/custom-references`, async) — image-conditioning references, **not** a persistent \"Soul ID training\" endpoint — and separately there is a **Higgsfield MCP OAuth connector** (`higgsfield-oauth-init`/`-callback`) which is catalog-only BYOK. So the label \"Higgsfield Soul ID\" conflates three different things (Platform custom-references, MCP OAuth, and a hypothetical unverified self-serve trainer), none of which is a confirmed one-click \"train my face\" endpoint. The UI induces confusion twice: it presents \"Higgsfield Soul ID\" as a trainable provider when no verified training endpoint exists, **and** it applies that same unverified-Higgsfield gate to the LoRA option that has nothing to do with Higgsfield.",
+> 27	        "gaps_or_root_cause": "ROOT CAUSE (why LoRA still hits the Higgsfield gate): `handleTrain` at src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113 is a hardcoded placeholder that emits the Higgsfield/OTD-AC-017 toast on every click and never branches on `d.provider`. The engine choice is correctly stored in `node.data.provider` (setProvider, lines 43-47) but is simply not consulted before the gate fires. EXACT FIX LOCATION: `handleTrain` in that file (and its button title/help text at lines 231-244). GAP (why a trivial branch is not enough): there is no training backend for EITHER engine — `avatar-identity-train` edge function does not exist (only avatar-consent + erase-avatar-artifacts are deployed), and `resolveExecutePayload` returns null for avatarIdentity (src/types/canvas.ts:975-978). A real FREE LoRA training path DOES NOT EXIST and must be built; nothing (no Replicate flux-dev-lora-trainer call, no trainings endpoint) is wired. The upside: the DB schema (avatar_identities, provider lora_flux allowed, staged-nullable weights columns), per-user Replicate BYOK, the Replicate create+poll pattern in canvas-execute, and the already-uploaded reference dataset in canvas-assets all exist, so the free LoRA path is buildable on current rails rather than from scratch.",
+> 28	        "recommended_slices": [
+> 29	          "SLICE 0 (immediate, unblocks the ace — but honest): Make handleTrain engine-aware. Branch on d.provider so the Higgsfield/OTD-AC-017 toast fires ONLY when d.provider === 'higgsfield'. For 'lora_flux', either (a) route to the new LoRA edge fn (Slice 1) or, until that lands, (b) show a distinct honest 'LoRA (Flux) treino em breve — sem custo, via sua conta Replicate' message. Also fix the button help text at lines 231-244 which never mentions the gate. This is a single-file UI patch scoped to a documented feature (BoK-exempt).",
+> 30	          "SLICE 1 (build the real free LoRA path): Create the net-new service-role edge function `avatar-identity-train`. It (1) validates both consents (train_lora + face_embedding) server-side, (2) inserts an avatar_identities row status='training', provider='lora_flux', (3) collects the reference portraits from canvas-assets (${userId}/avatars/${projectId}/…), (4) calls Replicate flux-dev-lora-trainer with the user's own replicate_api_key (decrypted_user_api_keys — free to the platform), (5) polls to completion reusing the generateReplicate create+poll pattern (canvas-execute/index.ts:1765-1826), (6) writes identity_storage_key + status='active' + commercial_license_ok=true (BYOK escape, FR-AC-016). Requires a docs/processes/ SOP first (Lei 2) and /security-review on any migration touching biometric tables (FMEA-011). Wire the Inspector to invoke it and reflect status.",
+> 31	          "SLICE 2 (resolve the Soul ID ambiguity + label trap): Decide what 'Higgsfield Soul ID' actually maps to. Either (a) keep it gated with an honest 'requires verified Higgsfield training API' message and make LoRA the recommended free default (flip makeDefaultAvatarIdentity provider default from 'higgsfield' to 'lora_flux' at src/types/canvas.ts:814 so the free ace is the out-of-box path), or (b) confirm/deny a real Higgsfield self-serve trainer against the live Platform API contract before shipping any Higgsfield training claim. Relabel to remove the 3-way conflation (Platform custom-references vs MCP OAuth catalog vs hypothetical trainer)."
+> 32	        ]
+> 33	      },
+> 34	      {
+> 35	        "front": "CRITICAL: there are TWO parallel node systems. The 26-type Spotlight catalog (`node-registry.ts` + `SpaceNodeCard` + `useSpacesStore`) is UNROUTED/dead — `SpaceCanvasPage` is not in `App.tsx`. The LIVE `/dashboard/spaces/:id` editor is `CanvasEditorPage` using a DIFFERENT 9-kind registry (`canvas-node-registry.ts` + `AddNodeMenu` + `useCanvasStore` + `types/canvas.ts`). To add social/identity node groups, extend the LIVE system, not the Spotlight.",
+> 36	        "summary": "The Spaces layer has two disjoint node registries feeding one edge function (`canvas-execute`) and one DB enum (`vm_node_type`, 12 fixed values). (1) The \"Spaces/Magnific\" catalog — `src/lib/node-registry.ts` `NODE_TYPES` (26 types across 9 categories) rendered by `SpaceNodeCard` via typed `Port[]` and searched by `src/components/spaces/Spotlight.tsx` — is a reverse-engineered design surface that is NOT routed anywhere (its page `SpaceCanvasPage.tsx` is absent from `App.tsx`; Spaces v2 \"Amendment 14\" consolidated everything onto Canvas Studio). (2) The LIVE editor at `/dashboard/spaces/:id` is `CanvasEditorPage.tsx`, which uses `src/lib/canvas-node-registry.ts` `CANVAS_NODE_REGISTRY` (9 node kinds in 3 flat categories Inputs/Generate/Transform), the `AddNodeMenu` command palette, `useCanvasStore`, and the `CanvasNodeKind` discriminated union in `src/types/canvas.ts`. Both funnel into `canvas-execute` whose `NODE_TYPE_MAP` collapses client node_types onto the 12-value `vm_node_type` enum. Node groups are a FLAT category list in both systems — no nested/sub-categories exist. The precise surface to add social-network groups and identity/avatar nodes is the LIVE Canvas Studio system (7-8 files), and precedent (voiceClone/avatarIdentity) shows new node kinds that call NET-NEW edge functions can bypass the frozen `vm_node_type` enum entirely.",
+> 37	        "key_files": [
+> 38	          "src/lib/node-registry.ts:23-57 (NODE_TYPES — the 26-type Spotlight catalog)",
+> 39	          "src/lib/node-registry.ts:60-67 (BASICS_ALIASES), :83-99 (WORKFLOW_APPS 41 + AVATAR_APPS), :106-125 (NODE_PORTS handle ids)",
+> 40	          "src/components/spaces/Spotlight.tsx:5-17,32-45 (cmdk palette; groups NODE_TYPES by category)",
+> 41	          "src/lib/spaces-schema.ts:24-27 (NODE_CATEGORIES — 8 groups), :30-33 (REFERENCE_KINDS — 9), :43-54 (IMAGE_MODELS — 38)",
+> 42	          "src/components/spaces/SpaceNodeCard.tsx:19-53 (typed left/right Handles from data.ports)",
+> 43	          "src/store/useSpacesStore.ts:85-102 (addNode → buildPorts/getNodeType)",
+> 44	          "src/lib/spaces-execution.ts:12-18 (EXECUTABLE/PASSIVE sets), :191-266 (typeId → canvas-execute node_type map)",
+> 45	          "supabase/functions/canvas-execute/index.ts:15-52 (CREDIT_COSTS server cost table), :240-259 (NODE_TYPE_MAP → vm_node_type)",
+> 46	          "supabase/migrations/20260514040000_viralmind_enums_and_niches.sql:49-57 (vm_node_type ENUM — 12 values, never ALTERed)",
+> 47	          "src/App.tsx:145-154 (routing: /dashboard/spaces → CanvasStudioPage; /spaces/:id → CanvasEditorPage; /canvas/* redirects)",
+> 48	          "src/pages/CanvasEditorPage.tsx:58-68 (nodeTypes map — 9 LIVE node components), :46-56 (imports)",
+> 49	          "src/lib/canvas-node-registry.ts:15 (NodeCategory type), :28-119 (CANVAS_NODE_REGISTRY — 9 LIVE entries)",
+> 50	          "src/components/canvas/AddNodeMenu.tsx:23 (CATEGORIES group order), :75-113 (FAB grouping), :161-187 (Cmd+K grouping)",
+> 51	          "src/types/canvas.ts:19-28 (CanvasNodeKind union), :557-566 (CanvasNodeData union), :878-980 (resolveExecutePayload — kind→node_type), :1009-1031 (estimateNodeCost)",
+> 52	          "src/components/canvas/RightPanel/index.tsx:3-11,27-80 (inspector routing by node.data.kind)",
+> 53	          "src/components/canvas/nodes/GenerateImageNode.tsx:24-25 & SceneComposeNode.tsx:21-24 (explicit string Handle ids: input_prompt/output_image, input_image_1/2/input_layout/output_scene)",
+> 54	          "src/lib/canvas-utils.ts:87-104 (findUpstreamHandleAsset — resolves upstream by targetHandle)",
+> 55	          "src/lib/port-compat.ts:16-56 (Spaces-only typed-connection rule: source.out.dataType === target.in.dataType)"
+> 56	        ],
+> 57	        "findings": "## 1. Node-type catalog / registry\n\nThere are **two** catalogs. Pin down which one you mean before editing.\n\n### A. Spaces/Magnific catalog (26 types) — `src/lib/node-registry.ts:23-57` — UNROUTED\n`NODE_TYPES: NodeTypeDef[]` (each: `id`, `labelPt`, `category`, `icon`, `inputs`, `output?`, `badge?`, `draggable?`). Rendered/searched only by `Spotlight.tsx` (which groups them by `category`, `Spotlight.tsx:12-17,32-45`). Categories come from `spaces-schema.ts:24-27` (`NODE_CATEGORIES` = 8: media, references, image, video, audio, text, utility, designer) plus `'app'`. Full list (id · labelPt · category):\n\n- `upload` · Upload · media\n- `assets` · Ativos · media\n- `find-inspiration` · Stock · media\n- `references` · Adicionar referência · references\n- `image-generator` · Gerador de imagem · image\n- `image-upscaler` · Upscaler de imagem · image\n- `editing` · Editor de imagem · image\n- `variations` · Variações · image\n- `composer` · Designer · designer (badge New)\n- `sketch` · Sketch · image\n- `image-to-svg` · Imagem para SVG · image\n- `svg-generator` · Gerador de SVG · image\n- `video-generator` · Gerador de vídeo · video\n- `speak` · Speak (lip-sync) · video\n- `video-combiner` · Combinador de vídeo · video\n- `video-upscaler` · Upscaler de vídeo · video\n- `video-frame-splitter` · Extrator de mídia · video (badge New)\n- `voice-over` · Voiceover · audio\n- `sfx-generator` · Efeitos sonoros · audio\n- `music-generator` · Gerador de música · audio\n- `text` · Texto · text\n- `prompt-generator` · Assistant · text\n- `list` · Lista · utility\n- `sticky-note` · Nota · utility\n- `stickers` · Adesivos · utility\n- `group` · Grupo · utility\n\nThat is **26** canonical types. `BASICS_ALIASES` (`node-registry.ts:60-67`) projects 6 \"Basics\" quick-access ids onto canonical ids. `WORKFLOW_APPS` (`node-registry.ts:83-95`) is a separate 41-item \"Apps\" facade list (with `AVATAR_APPS = ['Headshot generator','Character Sheet']`, `:99`) — these are NOT surfaced in the Spotlight (it iterates only `NODE_TYPES`).\n\n### B. LIVE Canvas Studio registry (9 kinds) — `src/lib/canvas-node-registry.ts:28-119`\n`CANVAS_NODE_REGISTRY: NodeRegistryEntry[]` (each: `id`, `label`, `description`, `category`, `icon`, `estimatedCost`, `aliases`, `factory`). Categories (`NodeCategory` type, `:15`): **Inputs | Generate | Transform** (flat). This is what the live editor's `AddNodeMenu` renders. List (id · label · category · est. cost):\n\n- `characterReference` · Personagem (referência) · Inputs · 0\n- `productList` · Lista de Produtos · Inputs · 0\n- `avatarIdentity` · Identidade (avatar) · Inputs · 0\n- `generateImage` · Gerar imagem · Generate · 20\n- `sceneCompose` · Compor cena · Generate · 20\n- `imageToVideo` · Imagem → Vídeo · Generate · 30\n- `voiceClone` · Clone de Voz · Generate · 36\n- `styleTransfer` · Aplicar estilo · Transform · 12\n- `upscale` · Upscale (ampliar) · Transform · 8\n\n## 2. Render + execute end-to-end (LIVE path)\n\n**Render:** `CanvasEditorPage.tsx:58-68` registers the ReactFlow `nodeTypes` map → 9 components in `src/components/canvas/nodes/*Node.tsx`. Selecting a node routes an inspector via `RightPanel/index.tsx:27-80` (`node.data.kind === \"...\"` chain → `inspectors/*Inspector.tsx`). Add-node UI is `AddNodeMenu.tsx` (FAB popover + Cmd+K `CommandDialog`), both grouping `CANVAS_NODE_REGISTRY` by `CATEGORIES` (`AddNodeMenu.tsx:23`). Insert calls `entry.factory(pos)` then `useCanvasStore.addNode(node)` (`useCanvasStore.ts:97`).\n\n**Handle ids / edge wiring (LIVE):** explicit string ids per node component — e.g. `GenerateImageNode.tsx:24-25` (`input_prompt` target, `output_image` source); `SceneComposeNode.tsx:21-24` (`input_image_1`, `input_image_2`, `input_layout` targets; `output_scene` source). Upstream inputs are resolved by matching `edge.targetHandle` in `canvas-utils.ts:87-104` (`findUpstreamHandleAsset`). The LIVE side does NOT type-check connections (store default `onConnect`/`addEdge`).\n\n**Execute:** `useCanvasPipeline.ts` topologically layers nodes (`getTopologicalLayers`), gates runnability by `data.kind`, and for each node calls `resolveExecutePayload(data, styleSettings)` (`types/canvas.ts:878-980`) → `useCanvasExecute` → POST `canvas-execute`. `resolveExecutePayload` maps each `kind` to a client `node_type` string: `generateImage→generate_image`, `sceneCompose→scene_compose`, `styleTransfer→style_transfer`, `imageToVideo→image_to_video`, `upscale→upscale`. Three kinds return `null` (no canvas-execute call): `characterReference`/`productList` (pure input sources) and `voiceClone`/`avatarIdentity` (call NET-NEW edge fns `generate-voice` / `avatar-identity-train`, `types/canvas.ts:971-978`).\n\n**canvas-execute → DB enum:** `canvas-execute/index.ts:240-259` `NODE_TYPE_MAP` collapses client node_types onto the DB enum, then inserts into `vm_canvas_executions.node_type` / `vm_canvas_assets.node_type` (both typed `vm_node_type`).\n\n### DB enum `vm_node_type` — ALL values (`migration 20260514040000_viralmind_enums_and_niches.sql:49-57`)\n`generate_image, generate_video, upscale, inpaint, outpaint, style_transfer, relight, remove_background, extend, remix, compose, export` — **12 values, and there is NO `ALTER TYPE vm_node_type ADD VALUE` anywhere in migrations** (verified). So every canvas-execute-writing node_type must map onto one of these 12.\n\n**Spaces (dead) execute path** differs: `spaces-execution.ts:191-266` maps registry ids (`image-generator`, `prompt-generator`, `video-generator`, `voice-over`, `composer`) to node_types (`generate_image`, `magic_prompt`, `image_to_video`, `voice_over`, `scene_compose`) and sends `space_id`+`node_run_id`, which flips canvas-execute into its `executeSpacesNode` ledger branch (`canvas-execute/index.ts:203-205`) writing to the `generations` table (its own `output_type`, not `vm_node_type`).\n\n## 3. Adding a NEW node type OR a new GROUP (LIVE system — the one to extend)\n\n**New node type (7 edits):**\n1. `src/types/canvas.ts` — add to `CanvasNodeKind` union (`:19-28`); define `<Name>Data` interface with `kind`; add to `CanvasNodeData` union (`:557-566`); write `makeDefault<Name>` factory; add a `case` to `resolveExecutePayload` (`:878-980`, return `null` if it uses a net-new edge fn); add a `case` to `estimateNodeCost` (`:1009-1031`); optional `is<Name>` guard.\n2. `src/lib/canvas-node-registry.ts` — add a `NodeRegistryEntry` (id, label, description, category, icon, estimatedCost, aliases, factory).\n3. `src/components/canvas/nodes/<Name>Node.tsx` — the ReactFlow node component (declare its `Handle` ids).\n4. `src/pages/CanvasEditorPage.tsx:58-68` — register in `nodeTypes`.\n5. `src/components/canvas/RightPanel/index.tsx:27-80` — add the `kind`-routing branch + an `inspectors/<Name>Inspector.tsx`.\n6. If it POSTs to canvas-execute: add its node_type to `NODE_TYPE_MAP` (`canvas-execute/index.ts:240-259`) mapping onto a valid `vm_node_type` value, and add a cost row to `CREDIT_COSTS` (`:15-52`). If a genuinely new enum value is needed, add `ALTER TYPE public.vm_node_type ADD VALUE '<x>'` in a new migration (must pass `/security-review`). **Preferred for social/identity: route to a net-new edge function and return `null` from `resolveExecutePayload` (like voiceClone/avatarIdentity) — this bypasses the enum entirely.**\n7. `src/hooks/useCanvasPipeline.ts:33-52,87-117` — add any kind-specific runnable gating / input threading.\n\n**New GROUP / category:** exactly TWO edits — (a) extend the `NodeCategory` union in `canvas-node-registry.ts:15`; (b) add the label to the `CATEGORIES` array in `AddNodeMenu.tsx:23` (drives both the FAB and Cmd+K group headings). That is the whole \"nested palette\" surface.\n\n**Cost tables (3 tiers):**\n- Server truth: `CREDIT_COSTS` (`canvas-execute/index.ts:15-52`).\n- Client display mirrors: `MODEL_INFO`/`VIDEO_MODEL_INFO`/`STYLE_TRANSFER_COST`/`SCENE_COMPOSE_COST`/`UPSCALE_COST` (`types/canvas.ts`) + the `estimatedCost` field in each `canvas-node-registry.ts` entry.\n- Dead-Spaces mirrors: `SPACES_EXECUTABLE_COSTS`/`SPACES_VIDEO_COSTS`/`SPACES_VOICE_COST`/`SPACES_COMPOSE_COST` (`spaces-execution.ts:49-104`) + `CLIENT_COST_MIRROR` (`useParamRegistry.ts:31-45`).\n\n## 4. Node groups / sub-categories today?\n\n**Flat in both systems — no nesting.** LIVE: `AddNodeMenu.tsx:23` iterates a flat `[\"Inputs\",\"Generate\",\"Transform\"]` and renders one `CommandGroup`/section per category. Spaces/dead: `Spotlight.tsx:12-17` `reduce`s `NODE_TYPES` into one bucket per `category` string (8 groups + app), rendered as flat `CommandGroup`s. There is no parent→child category tree, no collapsible sub-palette, and no group node-type that contains others (the `group` registry entry at `node-registry.ts:56` is a visual sticky-frame utility, not a palette grouping). The `'app'` category and `WORKFLOW_APPS` hint at a future \"Apps\" tab but nothing renders it.",
+> 58	        "gaps_or_root_cause": "No bug — this is an architecture-mapping task. The load-bearing gap for whoever extends Spaces: the task brief conflates two disjoint systems. The 26-type Spotlight catalog (`node-registry.ts`/`SpaceNodeCard`/`useSpacesStore`/`SpaceCanvasPage`) is DEAD CODE — `SpaceCanvasPage` is not imported/routed in `App.tsx` (verified: grep returns nothing), and `App.tsx:145-149` maps `/dashboard/spaces` and `/dashboard/spaces/:id` to `CanvasStudioPage` (project gallery) and `CanvasEditorPage` (Canvas Studio), per the \"Spaces v2 — Amendment 14\" consolidation. Editing the Spotlight/node-registry would ship nothing user-visible. The extension point for social-network groups + identity/avatar nodes is the LIVE Canvas Studio registry. Two concrete constraints to design around: (1) `vm_node_type` is a frozen 12-value enum with zero ADD-VALUE history, so any canvas-execute-writing node must map onto an existing value OR you add a migration; (2) precedent (`voiceClone`→generate-voice, `avatarIdentity`→avatar-identity-train, both `resolveExecutePayload`→null) shows identity/avatar/social nodes should call dedicated edge functions and skip the enum. There is currently NO social/publish node type or category in either system — publishing lives outside the canvas (auto-publish/publish-* edge fns), so social-network node groups are greenfield.",
+> 59	        "recommended_slices": [
+> 60	          "Slice 0 (decision, no code): confirm the target is the LIVE Canvas Studio system (canvas-node-registry.ts + AddNodeMenu + types/canvas.ts + useCanvasStore), not the unrouted Spotlight/node-registry.ts. If the 26-type Magnific catalog is genuinely wanted, that is a separate 're-route SpaceCanvasPage' effort.",
+> 61	          "Slice 1: Add a 'Social' (or 'Publish') category — extend NodeCategory union in canvas-node-registry.ts:15 and the CATEGORIES array in AddNodeMenu.tsx:23. Two-line change; renders an empty group header until nodes are added.",
+> 62	          "Slice 2: Add one social-network node kind end-to-end as the template (e.g. publishInstagram): CanvasNodeKind + <Name>Data + union + factory + resolveExecutePayload(return null, calls a net-new publish edge fn) + estimateNodeCost in types/canvas.ts; registry entry (category 'Social'); nodes/<Name>Node.tsx with input handle; nodeTypes in CanvasEditorPage.tsx:58-68; inspector + routing in RightPanel/index.tsx. Do NOT touch vm_node_type (bypass via null payload).",
+> 63	          "Slice 3: Fan out the remaining social nodes (TikTok/YouTube/X/etc.) by cloning slice 2 — pure registry+union additions, one node component + inspector each.",
+> 64	          "Slice 4: For identity/avatar nodes, reuse the existing avatarIdentity/voiceClone pattern (Inputs/Generate category, net-new edge fn, resolveExecutePayload→null, estimateNodeCost gated) rather than the frozen enum. Consider a dedicated 'Identity' category if the count grows beyond 2-3.",
+> 65	          "Slice 5 (only if a canvas-execute-writing node truly needs a new DB node_type): add ALTER TYPE public.vm_node_type ADD VALUE in a new migration, extend NODE_TYPE_MAP (canvas-execute/index.ts:240-259) and CREDIT_COSTS (:15-52); run /security-review before commit per CLAUDE.md."
+> 66	        ]
+> 67	      },
+> 68	      {
+> 69	        "front": "Social-publishing surface map for MCORCH Spaces per-network node groups: what ships today, where the seam is missing, and the concrete publishers to build.",
+> 70	        "summary": "MCORCH has three publisher entry points — publish-wordpress (posts only), publish-meta (IG image/Reels + FB text/video, BYOK Meta config), and publish-social (the omnichannel switch: LinkedIn text, IG image/Reels, FB photo/text, Twitter/X thread, TikTok video, YouTube video/Shorts, Pinterest video/image pin). The automated distribution loop is the PILLAR pipeline only: orchestrate-content → orchestrate-step (kicks reshape-pillar scope=static at line 893) → reshape-pillar interprets channel_profiles.transform_recipe into per-channel channel_variants → (auto_publish=true) enqueues scheduled_posts → auto-publish cron → publish-social/-meta. Social posts default to DRAFT; publish-channel-variant is the opt-in manual publisher. CRITICAL for the Sovereign's vision: Spaces has NO publish node and NO bridge — its node-registry.ts is creative-generation-only (image/video/audio/text/svg) and canvas-execute writes to vm_canvas_assets + creative_assets, which NO publisher ever reads. So there is zero seam today between a Spaces-generated asset and a social post. The requested node groups map to large gaps: WP Landing Pages, IG Feed Carousel, IG Stories, IG Conexões (MCP/Manychat), TikTok Shop, YouTube Community/Members are all unimplemented; LinkedIn carousel/image/video, X video, and FB Reels have assets or branches but publishers deferred (OTD-CP-010).",
+> 71	        "key_files": [
+> 72	          "supabase/functions/publish-wordpress/index.ts:145 (POST /wp-json/wp/v2/posts — posts only, status default draft line 138; NO /pages)",
+> 73	          "supabase/functions/publish-social/index.ts:123 (linkedin text UGC), :149 (instagram image/REELS via graph.instagram.com), :206 (facebook photo/text, NO video), :230 (twitter single+thread), :263 (tiktok video FILE_UPLOAD), :392 (youtube resumable videos.insert), :479 (pinterest video/image pin)",
+> 74	          "supabase/functions/publish-meta/index.ts:143 (IG image container / :152 REELS), :179 (FB feed text / :182 videos)",
+> 75	          "supabase/functions/reshape-pillar/index.ts:37 (isOperational gate — the real can-publish-today matrix), :199 (autoPublish default false = draft), :472 (channel_variants upsert)",
+> 76	          "supabase/migrations/20260627140000_channel_profiles.sql:105-245 (17 system surfaces: the transform_recipe dictionary)",
+> 77	          "supabase/migrations/20260628120000_channel_profiles_carousel.sql:12 (linkedin/carousel PDF surface)",
+> 78	          "supabase/functions/auto-publish/index.ts:104 (prefers reshape native variant), :138 (calls publish-social)",
+> 79	          "supabase/functions/publish-channel-variant/index.ts:67 (opt-in manual publish → scheduled_posts)",
+> 80	          "supabase/functions/orchestrate-step/index.ts:893 (reshape-pillar static kick — pipeline entry)",
+> 81	          "src/lib/node-registry.ts:25-56 (Spaces node catalog — NO publish/social node)",
+> 82	          "src/pages/SpaceCanvasPage.tsx:155 (runGraph → canvas-execute, creative gen only)",
+> 83	          "src/hooks/useGenerationLedger.ts:197 (invoke canvas-execute)",
+> 84	          "supabase/functions/canvas-execute/index.ts:529-569 (writes vm_canvas_assets + creative_assets — no publish handoff)",
+> 85	          "supabase/functions/instagram-webhook/index.ts:63-71 (comment/mention/DM events only LOGGED to infra_health_logs)",
+> 86	          "supabase/functions/social-auth-init/index.ts:120 (tiktok scope video.publish only — no shop), :139 (youtube scope youtube.upload only — no community/members)"
+> 87	        ],
+> 88	        "findings": "## 1. Per-platform publisher inventory (grounded)\n\n### WordPress — `publish-wordpress/index.ts`\n- **Posts / Blogs: SHIPS.** Single endpoint `POST ${apiBase}/wp-json/wp/v2/posts` (line 145), `format: \"standard\"` (line 139), `status` defaults to `draft` (line 138). Resolves tags→ids, categories, excerpt. Per-user WP creds from `decrypted_user_api_keys` with global env fallback (lines 51-59). CF-skip secret host-gated (lines 90-99).\n- **Pages / Landing Pages: MISSING.** Never touches `/wp-json/wp/v2/pages`. No `post_type` switch. Posts and Blogs are the same WP endpoint.\n\n### Instagram + Facebook — TWO publishers\nThere are two distinct Meta paths with different capabilities:\n- **`publish-meta/index.ts`** (BYOK `meta_config`, long_lived_token/pages): IG single image container (line 152-153) OR `media_type:\"REELS\"` video (line 152); FB `feed` text post OR `videos` Page-video upload (lines 182-185). Invoked directly (Marketing Hub / ecosystem), NOT by auto-publish.\n- **`publish-social/index.ts` platform `instagram`** (OAuth `social_accounts`, graph.instagram.com): image single-feed OR REELS video (lines 160-168). Resolves publish id via `/me?fields=user_id` (line 156).\n- **`publish-social` platform `facebook`**: Page `photos` (image, line 212) OR `feed` text (line 221). **FB video/Reels explicitly deferred (OTD-CP-010, comment line 207).**\n- **IG Feed Carousel (multi-image): MISSING** — no `CAROUSEL`/`is_carousel_item`/`children` container flow anywhere (grep clean).\n- **IG Stories: MISSING** — no `STORIES` media_type anywhere (grep clean).\n- **IG \"Conexões\" (MCP/Manychat/webhooks): PARTIAL/STUB** — `instagram-webhook/index.ts` verifies HMAC and receives comment/mention/DM events but only **logs them to `infra_health_logs`** (lines 63-71, \"Future: handle new media, comments, mentions\"). No dispatch, no auto-reply, no automation. Manychat appears **only** as a competitor row in `docs/bok/meta-api/01-mrd.md:48` — not implemented. No Instagram MCP automation exists.\n\n### TikTok — `publish-social/index.ts` platform `tiktok` (lines 263-390)\n- **Video (Direct Post): SHIPS.** Content Posting API FILE_UPLOAD (creator_info→init→PUT→poll), `is_aigc:true` (line 325), privacy falls back to `SELF_ONLY` pre-audit (lines 293-297). OAuth scope `video.publish,user.info.basic` (social-auth-init:120).\n- **TikTok Shop: MISSING** — no shop/commerce/product endpoints, no shop scope (grep clean). `tiktok-login-*` functions are auth/session reuse, unrelated to publishing/shop.\n\n### YouTube — `publish-social/index.ts` platform `youtube` (lines 392-477)\n- **Video / Shorts: SHIPS.** Data API v3 `videos.insert` resumable upload; \"Shorts is implicit (9:16 + ≤3min)\" (line 394). Reads back real privacyStatus (unaudited project forces private, lines 466-474). 16:9 long_video is a separate reshaper render (FR-CP-004 opt-in) published through the same `videos.insert`.\n- **Community posts: MISSING.** No `activities`/community endpoint. Scope is `youtube.upload` only (social-auth-init:139).\n- **Members: MISSING.** No membership API.\n- **Channel \"Posts\": MISSING.**\n\n### LinkedIn — `publish-social/index.ts` platform `linkedin` (lines 123-147)\n- **Text UGC post: SHIPS** (`ugcPosts`, `shareMediaCategory:\"NONE\"`). Scope `w_member_social`.\n- **Image / Video / PDF Carousel: MISSING publisher.** The reshaper *builds* the LinkedIn PDF carousel asset via `generate-carousel` (reshape-pillar:436-456; channel_profiles carousel surface migration 20260628120000), but the LinkedIn **document/image/video upload publisher is deferred (OTD-CP-010)**; `isOperational` for `none`→text lists only `[linkedin,twitter]` (reshape-pillar:47).\n\n### Twitter/X — `publish-social/index.ts` platform `twitter` (lines 230-261)\n- **Single tweet + native THREAD: SHIPS** (reply chain, lines 236-252).\n- **Video: MISSING** (deferred; no media.upload branch).\n\n### Pinterest — `publish-social/index.ts` platform `pinterest` (lines 479-616)\n- **Video pin + standard image pin: SHIP** (register→upload→poll→create, lines 522-616). Not in the Sovereign's list but present.\n\n## 2. Channel Format Intelligence layer (how a pillar becomes a native per-channel variant)\n\n- **Dictionary:** `channel_profiles` (migration 20260627140000) seeds **17 system surfaces** (user_id NULL, all-tenant) across 8 channels, each carrying `transform_recipe` (`derive_from`, `reshape` verb, `field_map` grammar), plus video/image/text spec + `publish_path`. The 9:16 master serves 7 video surfaces (the \"spine\"); divergences (16:9, image reframes) are distinct assets. +1 tenant-overridable surface pattern.\n- **Interpreter:** `reshape-pillar/index.ts` — service-role-only, user resolved from `pipeline_runs` (line 190, never body). It reads `pillar_atoms` + active `channel_profiles`, assembles a deterministic skeleton via `assembleNative`/`evalExpr` (field_map grammar, lines 60-110), then one batched LLM call rewrites each channel's copy in its **own** voice to defeat cross-post penalty (FR-CP-007, lines 328-377, fail-soft to skeleton). It reframes the master image in-process to channel geometry + JPEG (imagescript WASM, `reframeToJpeg` lines 136-148), applies char/format gates, and **upserts one `channel_variants` row per (channel, surface)** (line 472, UNIQUE `pillar_run_id,channel,surface`).\n- **Operational gate:** `isOperational(platform, assetKind, assetStatus)` (lines 37-50) is the authoritative can-publish-today matrix inside the pipeline: video→`[instagram,tiktok,youtube,pinterest]`; image→`[instagram,pinterest,facebook]`; text→`[linkedin,twitter]`. Everything else → variant produced but `asset_status` `pending_publisher|pending_render|pending_reframe|gap` (NOT enqueued).\n- **Draft-by-default / opt-in:** `autoPublish` defaults **false** (line 199). Draft mode leaves variants as `status:'draft'`. Only when the run opted in AND the surface is operational does the reshaper insert `scheduled_posts` (lines 483-505). Manual opt-in publish = `publish-channel-variant/index.ts` (enqueues ONE owner-bound draft into scheduled_posts, lines 46-74).\n- **Static vs video timing:** `orchestrate-step:893` kicks `reshape-pillar scope=static` after pillar_atoms/pillar_url exist; video surfaces are reshaped later by `video-bridge.ts` (scope=video) after the 9:16 master finalizes.\n- **Publish executor:** `auto-publish/index.ts` cron picks queued `scheduled_posts`, prefers the reshaper's native variant, resolves the asset **owner-scoped from `channel_variants`** (FMEA-011-safe, never from user-writable metadata, lines 104-135), signs a 6h URL, and calls `publish-social` (line 138).\n\n## 3. How a SPACES node triggers a publish today — IT DOESN'T\n\n- **No Publish node exists in Spaces.** `src/lib/node-registry.ts:25-56` catalog is creative-generation-only: upload/assets/references/image-generator/video-generator/voice-over/text/list/etc. Output dataTypes are `image|video|audio|text|svg`. No `publish`/`social`/`distribute`/`channel` node.\n- **Execution target is creative-only.** `SpaceCanvasPage.tsx:155` `runGraph()` → `useGenerationLedger.ts:197` → `supabase.functions.invoke('canvas-execute')`. `canvas-execute/index.ts` writes generated bytes to `vm_canvas_assets` (private `canvas-assets` bucket, lines 501-535) and dual-writes the `creative_assets` registry (lines 552-569).\n- **The seam is absent.** No publisher reads `creative_assets` (only canvas-execute, generate-image, generate-voice write it). There is no bridge from a Spaces asset → `channel_variants`/`scheduled_posts`/publish-*. The only route to distribution is the parallel PILLAR pipeline (orchestrate-content), which does NOT consume Spaces output. So a Space today can generate an image/video/audio, but nothing hands it to a social post.",
+> 89	        "gaps_or_root_cause": "ROOT ARCHITECTURAL GAP: two disconnected worlds. (A) The DISTRIBUTION world — orchestrate-content → reshape-pillar → channel_variants → auto-publish → publish-social/-meta/-wordpress — is the only thing that can put content on a network, and it is driven exclusively by pillar_atoms from a text-first pillar run. (B) The SPACES/canvas creative world — node-registry.ts + canvas-execute → vm_canvas_assets/creative_assets — produces rich media but has no publish node and no consumer of creative_assets. There is no adapter that turns a Space graph output (or a selected creative_asset) into a channel_variant or a scheduled_post. To realize the Sovereign's per-network node groups, Spaces needs (1) a Publish/Distribute node type + a bridge that maps a Space's generated asset onto the existing channel_variants/scheduled_posts contract (reusing auto-publish's owner-scoped signing), and (2) the missing per-surface PUBLISHERS themselves. Concretely missing publishers/surfaces relative to the requested groups: WordPress Pages/Landing Pages (publish-wordpress hits /posts only); Instagram Feed Carousel (no CAROUSEL/children flow); Instagram Stories (no STORIES media_type); Instagram Conexões (instagram-webhook only logs; no Manychat/MCP automation dispatch); TikTok Shop (no scope, no commerce endpoints); YouTube Community posts and Members (scope youtube.upload only, no APIs); LinkedIn carousel/image/video publisher (asset built by generate-carousel but publisher deferred OTD-CP-010); Twitter/X video (deferred); Facebook Reels (deferred OTD-CP-010 — only Page video reachable via a direct publish-meta call, never via auto-publish which uses publish-social).",
+> 90	        "recommended_slices": [
+> 91	          "SLICE 0 (unblocks everything): Spaces→publish seam. Add a `publish`/`distribute` node to src/lib/node-registry.ts (inputs image|video|text, per-network target) + a bridge edge fn that maps a Space's finished creative_assets/vm_canvas_assets row onto a channel_variants draft (or scheduled_posts) reusing auto-publish.ts owner-scoped signing (lines 104-135). This is the missing adapter between the creative world and the distribution world.",
+> 92	          "SLICE 1 — WordPress Pages/Landing Pages: add a `post_type`/target branch to publish-wordpress/index.ts to POST /wp-json/wp/v2/pages (mirror the posts flow at line 145); add a wordpress/landing_page channel_profiles surface. Low-risk, self-hosted API already reachable.",
+> 93	          "SLICE 2 — Instagram Feed Carousel: implement the CAROUSEL container flow in publish-social/-meta (create N child image containers is_carousel_item=true → parent media_type=CAROUSEL → publish). Add instagram/carousel channel_profiles surface + reshaper image-set assembly.",
+> ```
+
+## 🤖 Claude *(01:39:28)*
+
+
+## 🤖 Claude *(01:39:29)*
+
+Mapa muito rico. Vou ler o resto — faceless-studio, bok-contracts e a **síntese priorizada**.
+
+## 🤖 Claude *(01:39:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/w4kpmfne3.output",
+  "offset": 94,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 94	          "SLICE 3 — Instagram Stories: add STORIES media_type container branch (publish-social/-meta) + instagram/story channel_profiles surface (9:16 reuse of the master).",
+> 95	          "SLICE 4 — LinkedIn binary publishers (OTD-CP-010): implement LinkedIn document (PDF carousel — asset already produced by generate-carousel), image and video upload; then flip isOperational in reshape-pillar:37 to include linkedin for image/document/video.",
+> 96	          "SLICE 5 — Facebook Reels + Twitter/X video (OTD-CP-010): add FB Reels video branch to publish-social facebook (publish-meta already has Page-video), add X video upload; extend isOperational video list to include facebook/twitter.",
+> 97	          "SLICE 6 — Instagram Conexões (automation): promote instagram-webhook from log-only (lines 63-71) to a dispatch layer (auto-reply/DM routing) and add a Manychat/MCP connector — new BoK+SOP required (Lei 2; currently only an MRD competitor mention).",
+> 98	          "SLICE 7 (highest external friction, defer) — TikTok Shop and YouTube Community/Members: require new OAuth scopes (TikTok commerce, YouTube membership/community), app-review, and net-new API integrations; no code, scopes, or tables exist today. BoK gate + platform approval before code."
+> 99	        ]
+> 100	      },
+> 101	      {
+> 102	        "front": "Spaces already has the image→voice→b-roll→publish spine wired (Higgsfield DoP + BYOK voice-clone + HyperFrames deterministic render + YouTube resumable upload), but the \"avatar talking-head + lipsync\", \"multi-scene assemble/concat\", \"burned captions\" and \"thumbnail\" stages are all unbuilt — the two biggest gaps are (1) no lipsync/talking-head engine at all (Hedra/OmniHuman/Kling never coded; `speak` and `talkingHead` nodes are catalog/spec-only) and (2) no multi-scene faceless assembler (engine=`faceless` is 503-gated; only single-composition HyperFrames renders exist).",
+> 103	        "summary": "MCORCH has most of a YouTube studio already scattered across two canvas surfaces (Canvas Studio `src/types/canvas.ts` and the newer Magnific-mirror \"Spaces\" `src/lib/spaces-schema.ts` + `node-registry.ts`) plus a deterministic HyperFrames video motor and the `avatar-clone-ai` module. What is WIRED: script generation (generate-video-script, Gemini/OpenRouter BYOK), two voiceover paths (Spaces `voice-over`→Gemini TTS generic, and a fully-wired cloned-voice path `generate-voice`→ElevenLabs/Cartesia BYOK with consent + code-switch guards + refund), three video-gen paths (Higgsfield DoP image-to-video via canvas-execute, Veo/Seedance via generate-video, and deterministic 9:16/16:9 template MP4 via render-core + video-bridge worker), biometric consent/erasure (avatar-consent + erase-avatar-artifacts, LGPD), and YouTube resumable upload (publish-social + youtube.upload OAuth). What is GAP: (1) lipsync/talking-head — the `speak` lip-sync node and `talkingHead` node exist only as catalog/type definitions; no Hedra/OmniHuman/Kling edge function was ever built, and avatar-identity-train is unbuilt (OTD-AC-017) with only a VLM-soft identity gate (ArcFace deferred OTD-AC-015); (2) multi-scene assemble — engine=`faceless` returns 503 (never built; the proven n8n recipe is spec-only) and `video-combiner` is catalog-only; (3) burned captions (ASS/karaoke) — no builder; (4) thumbnail — no dedicated node; (5) neither `voiceClone`, `speak`, nor any assemble node is in the Spaces executable set (only image-generator/prompt-generator/video-generator/voice-over/composer run).",
+> 104	        "key_files": [
+> 105	          "supabase/functions/generate-voice/index.ts:1-331 (WIRED — clone+synthesize, ElevenLabs/Cartesia BYOK, consent gate line 132, code-switch guard 214-221, atomic deduct+refund 250-267)",
+> 106	          "supabase/functions/avatar-consent/index.ts:1-99 (WIRED — biometric consent ledger, LGPD Art.11, server-captured IP)",
+> 107	          "supabase/functions/erase-avatar-artifacts/index.ts:1-107 (WIRED — LGPD erasure cascade)",
+> 108	          "src/lib/avatar-identity.ts:1-30 (WIRED — VLM-soft identity gate; ArcFace deferred OTD-AC-015)",
+> 109	          "src/lib/node-registry.ts:40-48 (Spaces catalog: video-generator, speak/lip-sync, video-combiner, voice-over, sfx/music — most CATALOG-ONLY)",
+> 110	          "src/lib/spaces-execution.ts:12 (EXECUTABLE_TYPES = image-generator/prompt-generator/video-generator/voice-over/composer — speak+combiner NOT executable)",
+> 111	          "src/lib/spaces-execution.ts:187-268 (Spaces→canvas-execute payload map: video-generator→image_to_video Higgsfield, voice-over→voice_over Gemini TTS)",
+> 112	          "supabase/functions/canvas-execute/index.ts:229-243,2063-2116 (image_to_video async Higgsfield DoP submit+webhook; scene_compose; magic_prompt)",
+> 113	          "scripts/hyperframes/render-core.ts:147-205,239-304 (deterministic 9:16/16:9 template + studio-project MP4 motor)",
+> 114	          "scripts/video-bridge.ts:53-201 (worker: claim video_renders→render→upload→finalize_video_render; autopilot attach + reshape kick)",
+> 115	          "supabase/functions/video-render/index.ts:50-111 (engine gate: 'faceless' returns 503 render_engine_unavailable — NOT built; 'hyperframes' wired)",
+> 116	          "supabase/functions/generate-video-script/index.ts:93-206 (script gen, Gemini/OpenRouter BYOK, marketing-script system prompt)",
+> 117	          "supabase/functions/generate-video/index.ts:80-204 (Veo/Seedance text/image-to-video, fire-and-forget operation_id)",
+> 118	          "supabase/functions/publish-social/index.ts:411-477 (WIRED — YouTube resumable upload)",
+> 119	          "supabase/functions/social-auth-init/index.ts:139 (youtube.upload OAuth scope)",
+> 120	          "src/types/canvas.ts:470-527 (voiceClone + avatarIdentity node types; NO talkingHead node)",
+> 121	          ".claude/context/faceless-pipeline-reference-2026-06-25.md (SPEC-ONLY: 12-stage n8n faceless recipe, engine=faceless target)",
+> 122	          "docs/bok/avatar-clone-ai/05-sdd.md:70-98 (canonical avatar pipeline design — talkingHead/Hedra/OmniHuman DESIGNED, not built)",
+> 123	          "docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md:72-75 (OTD-AC-015 ArcFace + OTD-AC-017 avatar-identity-train deferred)"
+> 124	        ],
+> 125	        "findings": "## 1. avatar-clone-ai module — what is WIRED vs DEFERRED\n\n**WIRED (shipped, verified in code):**\n- **Voice clone + synthesize** — `supabase/functions/generate-voice/index.ts` is fully implemented with two actions: `clone` (ElevenLabs `/v1/voices/add` `index.ts:338`, Cartesia `/voices/clone` `:378`) and `synthesize` (ElevenLabs TTS `:359`, Cartesia `/tts/bytes` `:399`). BYOK per-user fail-closed from `decrypted_user_api_keys.elevenlabs_api_key/cartesia_api_key` (`:114`), consent gate requiring active `voice_clone` consent (`:132-138`), hard language-mismatch gate (`:215`) + soft intra-sentence code-switch guard (`:219`, mirrors `src/lib/avatar.ts`), atomic `deduct_mco_coins` VOICE_COST=36 with `refundMco` on every failure path (`:250,267,284`), asset persisted to private `video-studio-assets` bucket under `${userId}/voice/` + `register_creative_asset` (`:293`) + mesh observation node (`:178`).\n- **Voice profile RPCs** — `store_voice_profile` (`:163`), `resolve_voice_profile` owner-scoped (`:200`), reading `voice_profiles` table.\n- **Biometric consent** — `supabase/functions/avatar-consent/index.ts` grants per-purpose consent (`train_lora`/`face_embedding`/`voice_clone`) to the immutable `avatar_consents` ledger, service-role INSERT so client cannot forge IP (`:7`), idempotent (`:59`), attestation-titular gate (`:52`).\n- **LGPD erasure** — `supabase/functions/erase-avatar-artifacts/index.ts` (107 lines).\n- **VLM-soft Identity Gate** — `src/lib/avatar-identity.ts` implements FR-AC-013b as a Generator-Critic loop over a fixed 7-attribute enum schema (`IDENTITY_ATTRIBUTE_KEYS`), using Vision MCP descriptive tools (NOT ArcFace). Labeled human-review-assist.\n- **Canvas node types** — `voiceClone` (`src/types/canvas.ts:475`, routes to generate-voice) and `avatarIdentity` (`:504`, gateMode `vlm_soft` default) node kinds exist with inspectors (`src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx`).\n\n**DEFERRED / NOT BUILT:**\n- **`avatar-identity-train` edge function does NOT exist** — `ls supabase/functions/` shows only `avatar-consent` + `erase-avatar-artifacts`. The `avatarIdentity` node has no server to train against. Blocked by **OTD-AC-017** (\"TREINO-via-API Soul ID não-verificado\", `10-amendment-3b...md:74`) — SLA = before sealing the edge fn.\n- **ArcFace hard identity gate deferred — OTD-AC-015** (`:72`). Only VLM-soft ships; `avatar_identities.embedding` is default-OFF and stores a textual-VLM descriptor, not facial geometry (OTD-AC-018 `:75`).\n- **talking-head / lipsync engine — NOT BUILT AT ALL.** The SDD `05-sdd.md:87-90` designs `[talkingHead]` routing footage_real→OmniHuman 1.5, avatar_ai→Hedra/Kling via `canvas-execute(kind=talkingHead)`, but grep confirms **no `talkingHead` node kind** in `src/types/canvas.ts` and **no Hedra/OmniHuman handler** in `canvas-execute`. `hedra`/`omnihuman` appear only in BoK docs. This is the single biggest missing block.\n- avatar-reply-engine, avatar-retention-sweep, C2PA/disclosure gate, autopilot avatar junction — all SDD-designed, unbuilt.\n\n## 2. HyperFrames deterministic video motor — WIRED\n\n`scripts/hyperframes/render-core.ts` is the render CORE: Playwright Chromium headless → per-frame `applyFrame(i,N)` screenshots → FFmpeg bitexact H.264 (reproducible NFR-VS-016). Two modes: template render (`renderComposition`, `viral-short-9x16`/`viral-long-16x9` allowlist `:71`, both templates exist on disk) and studio-project render (`renderStudioProject` `:215`, native `@hyperframes/core` bundleToSingleHtml + `__player.renderSeek` deterministic seek). `scripts/video-bridge.ts` is the systemd host worker: atomic claim of `video_renders(engine='hyperframes',state='queued')` (`:54`) → render → upload to `video-studio-assets/<user_id>/<render_id>.mp4` → `finalize_video_render` (the only terminal authority, `:121`) → dual-write `register_creative_asset` (`:128`) → autopilot content_library+creative_metrics attach (`:146`) → kick `reshape-pillar scope=video` (`:177`). Composition = a `RenderSpec` (hook/caption/cta/product_image props) OR `StudioProjectSpec`. **This is a SINGLE-composition motor** — one template, one clip. There is no multi-scene loop.\n\n## 3. Faceless pipeline reference — SPEC-ONLY, native engine 503-gated\n\n`.claude/context/faceless-pipeline-reference-2026-06-25.md` documents the Sovereign's proven **n8n** 12-stage recipe (Gemini scene-script JSON → Pollinations per-scene image → VoxCPM narration → ffprobe → LTX i2v → Remotion HUD overlay → FFmpeg composite → concat → ASS karaoke captions + HUD srt → polish → Gemini vision QA → deliver). It is explicitly the SPEC the native `engine=\"faceless\"` must reproduce. **But `supabase/functions/video-render/index.ts:104-111` returns HTTP 503 `render_engine_unavailable` for `engine='faceless'`** because `VIDEO_FACELESS_WEBHOOK` is unset — the multi-scene assembler was never built (only the voice-consent gate `:81` and BYOK-Gemini gate `:89` are wired ahead of it). So the script→voice→per-scene-video→composite→captions→concat chain exists **only on paper**.\n\n## 4. How Spaces nodes chain into video TODAY\n\nTwo surfaces coexist. **Spaces** (`src/lib/spaces-schema.ts`, Magnific-mirror, single `spaceNode` type + `node-registry.ts` catalog) executes via `src/lib/spaces-execution.ts`. Only 5 node types are executable (`EXECUTABLE_TYPES` `:12`): `image-generator`→`generate_image`, `prompt-generator`→`magic_prompt`, `video-generator`→`image_to_video` (Higgsfield DoP, first-frame threaded, 5s, `:233-243`), `voice-over`→`voice_over` (Google Gemini TTS `gemini-2.5-flash-preview-tts`, generic voice `:245-252`), `composer`→`scene_compose` (OpenRouter Nano Banana multimodal `:254-265`). All route to `canvas-execute`. `image_to_video` submits async to Higgsfield with `?hf_webhook=` callback (`canvas-execute/index.ts:2063-2116`). **The catalog (`node-registry.ts:40-56`) also lists `speak` (lip-sync), `video-combiner`, `video-upscaler`, `music-generator`, `sfx-generator` — but NONE are in EXECUTABLE_TYPES, so they render in the palette but do nothing.** Separately, the older Canvas Studio surface (`src/types/canvas.ts`) has the `voiceClone` (cloned voice) and `avatarIdentity` nodes that Spaces does not yet expose.\n\n## 5. YouTube-Studio-in-Spaces end-to-end assessment (EXISTS vs GAP)\n\n| Stage | Status | Evidence |\n|---|---|---|\n| **Script** | EXISTS (generic) | `generate-video-script` marketing script (Gemini/OR BYOK); Spaces `text`+`prompt-generator`. GAP: no structured multi-scene JSON (scene/narration/image_prompt/hud) node; avatar RAG \"brain\" script (avatar-script) deferred |\n| **Voiceover** | EXISTS (2 paths) | Spaces `voice-over`→Gemini TTS (generic); cloned voice fully wired via `generate-voice` (ElevenLabs/Cartesia). GAP: `voiceClone` is Canvas-Studio-only, not a Spaces executable node |\n| **B-roll video** | EXISTS (3 paths) | Higgsfield DoP i2v (Spaces `video-generator`), Veo/Seedance (`generate-video`), deterministic template (HyperFrames). GAP: no per-scene loop that turns a script into N stitched clips inside Spaces |\n| **Avatar + lipsync** | GAP (largest) | `speak` node catalog-only; `talkingHead` node never created; no Hedra/OmniHuman/Kling edge fn; `avatar-identity-train` unbuilt (OTD-AC-017); ArcFace deferred (OTD-AC-015) |\n| **Assemble / concat** | GAP | `engine=faceless` 503-gated; `video-combiner` catalog-only; FFmpeg concat exists only for frame-encoding inside render-core, not scene-concat |\n| **Captions (burned)** | GAP | No ASS/karaoke/drawtext builder anywhere in code (reshape-pillar emits social caption TEXT, not burned subtitles) |\n| **Thumbnail** | PARTIAL GAP | `image-generator` can produce an image, but no thumbnail-specific node (title/face overlay, A/B) |\n| **Publish** | EXISTS | `publish-social/index.ts:411-477` performs YouTube resumable upload; `social-auth-init:139` grants `youtube.upload`; `auto-publish`+`channel_variants`+`reshape-pillar` handle multi-channel. GAP: no Spaces \"publish to YouTube\" node bound to the graph |",
+> 126	        "gaps_or_root_cause": "The building blocks exist but are (a) split across two canvas surfaces and (b) missing the three \"video-assembly\" stages. Concretely, to make Spaces a YouTube studio the missing pieces are: (1) **Lipsync/talking-head engine** — a `talkingHead`/`speak` executable node + a NEW edge function (or canvas-execute kind) calling Hedra/OmniHuman/Kling via per-user BYOK, plus wiring `avatar-identity-train` (OTD-AC-017) if AI-avatar (vs footage-real) identities are wanted. This is designed in `docs/bok/avatar-clone-ai/05-sdd.md` but zero code exists. (2) **Multi-scene assembler** — either build the native `engine='faceless'` worker per the n8n recipe (`.claude/context/faceless-pipeline-reference-2026-06-25.md`) or add a `video-combiner` executor that concats N clips + narration tracks via FFmpeg (the concat primitive already lives inside render-core, just not exposed for scene-stitching). (3) **Burned-caption builder** — port the ASS-karaoke/HUD-srt generator from the reference recipe (unbuilt). (4) **Thumbnail node** — a specialization of image-generator. (5) **Surface consolidation** — expose `voiceClone`, and new `speak`/`assemble`/`caption`/`thumbnail`/`publish` nodes in the Spaces `EXECUTABLE_TYPES` set (`src/lib/spaces-execution.ts:12`) + `node-registry.ts`, since today only 5 node types actually run. Root cause of the \"looks done but isn't\": the Spaces node-registry catalog advertises `speak`/`video-combiner`/etc. in the palette while `EXECUTABLE_TYPES` omits them, and `avatar-clone-ai` shipped Fatias 2/3a (voice + consent) + 3b VLM-soft gate but NOT the talking-head render leg (Fatia deferred).",
+> 127	        "recommended_slices": [
+> 128	          "Slice 1 (highest value, lowest new-tech): Faceless long-form assembler as a Spaces orchestration — chain existing executable nodes (prompt-generator→per-scene image-generator→voice-over→video-generator DoP) into an N-scene loop, then add a `video-combiner` executor (node-registry.ts:42 already catalogs it) that FFmpeg-concats the clips + narration. Reuses render-core's FFmpeg + video-bridge worker pattern; unblocks a real faceless YouTube video without any new provider. Flip the 503 in video-render/index.ts:104 only after the worker exists.",
+> 129	          "Slice 2: Burned captions — port the ASS-karaoke + HUD-srt builder from the n8n recipe (.claude/context/faceless-pipeline-reference-2026-06-25.md stages 9-10) into a deterministic caption step inside the assembler; ties word timings to the voice-over audio via ffprobe (already used in render-core.ts:122).",
+> 130	          "Slice 3: Expose the cloned-voice path in Spaces — add `voiceClone` to node-registry.ts + EXECUTABLE_TYPES (spaces-execution.ts:12) routing to the already-wired generate-voice edge fn, so YouTube narration can use the tenant's cloned voice instead of only generic Gemini TTS.",
+> 131	          "Slice 4 (biggest new build — avatar path): Wire the talking-head/lipsync engine — create the `talkingHead`/`speak` executable node + edge function calling Hedra (avatar_ai) / OmniHuman (footage_real) via per-user BYOK per docs/bok/avatar-clone-ai/05-sdd.md:87-90, with the C2PA/disclosure gate; requires closing OTD-AC-017 (avatar-identity-train) for AI-avatar identities. Footage-real re-lipsync (OmniHuman) is the cheaper first step and needs no identity training.",
+> 132	          "Slice 5: Thumbnail node — specialize image-generator with a title+hook+optional-face overlay preset and A/B output; reuses generate_image via canvas-execute.",
+> 133	          "Slice 6: Bind a Spaces `publish` node to the existing publish-social YouTube resumable upload (publish-social/index.ts:411) so the graph terminates in an actual YouTube upload, honoring the auto-publish/channel_variants opt-in draft model."
+> 134	        ]
+> 135	      },
+> 136	      {
+> 137	        "front": "Grounded in the sealed BoK: (a) free-LoRA = small avatar-clone-ai amendment closing OTD-AC-017 (NOT a plain fix — substrate is a deferred OTD + collides with FR-AC-016); (b) per-network social nodes = spaces-evolution amendment (new node family, reuses sealed publish/reshaper engines); (c) Spaces-as-YouTube-studio = new-module-needs-BoK (new YouTube Data/Analytics integration + domain + 16:9 render gap) — downgradeable to a large amendment only if scoped to a YouTube preset + publish node on Spaces.",
+> 138	        "summary": "The sealed spaces-evolution BoK documents a creative-node catalog reverse-engineered from Magnific (media/reference/image/video/audio/text/utilities/apps + 3d), enumerated as FR-SPACES-001..030 across the base suite and two amendments (13 = Higgsfield MCP OAuth FR-SPACES-015..021; 14 = Spaces v2 consolidation FR-SPACES-022..030). It has NO 'publish'/'social'/'channel'/'network' node family and NO YouTube-studio surface — PublishNode appears only as a pre-existing orchestrator node, never registered in the Spaces node registry. avatar-clone-ai documents identity training in FR-AC-012..016 with the training-via-API edge `avatar-identity-train` left UNSEALED under OTD-AC-017 (Soul-ID/LoRA-FLUX train unverified), ArcFace deferred to OTD-AC-015, and FR-AC-016 as a hard commercial-license gate that blocks the FLUX.1-dev base a naive \"free LoRA\" would use. Net: a free-LoRA path is partially in-scope (the capability is named) but its substrate is a deferred OTD, so it needs a targeted amendment; per-network social node groups need a spaces-evolution amendment (extending a sealed catalog + crossing into publishing/OAuth/tenancy) but reuse sealed engines; and a full YouTube studio is a new module requiring a BoK (new external integration + domain + the known 16:9 long-form render gap).",
+> 139	        "key_files": [
+> 140	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/04-frd.md:20-95 (FR-SPACES-001..014)",
+> 141	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/05-sdd.md:70-71 (SpaceNodeCategory enum — no publish/social), 05-sdd.md:304-334 (Pattern Conformance §11)",
+> 142	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/11-node-registry-spaces.md:24-116 (sealed node catalog, NR-SPACES-001..007)",
+> 143	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/12-node-anatomy-spaces.md:23-63 (PortDataType 6 types, real ports)",
+> 144	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md:59-67 (FR-SPACES-015..021, per-user OAuth pattern to mirror)",
+> 145	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/14-amendment-spaces-v2-consolidation.md:52-64 (FR-SPACES-022..030), :84-105 (OTD-SPACES-030 Designer bridge / social presets)",
+> 146	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/04-frd.md:71-75 (FR-AC-012..016 identity training)",
+> 147	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md:63-75 (OTD-AC-015/016/017/018), :64 (avatar-identity-train unsealed)",
+> 148	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md:256-272 (FLUX.1-dev non-commercial; free-LoRA license collision)",
+> 149	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/post-engine/11-channel-format-intelligence-blueprint.md:25-52 (youtube channel_profiles), :66-80 (16:9 long-form render GAP), :99-141 (channel_profiles + publish_path engine)",
+> 150	          "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-studio/03-prd.md:120 (PR-VS-023 reuse publish-social/publish-meta)"
+> 151	        ],
+> 152	        "findings": "## 1. spaces-evolution — documented node families & relevant FR ids\n\n**FR-SPACES id map (complete, three tranches):**\n- **FR-SPACES-001..014** — base sealed suite (`04-frd.md:20-95`, traced in `05-sdd.md`). Catalog-relevant: `FR-SPACES-004` (CRUD of nodes/edges with **typed ports** `image|text|video|audio|svg`, `04-frd.md:38-43`), `FR-SPACES-005` (topological Run), `FR-SPACES-009` (cross-space asset ref), `FR-SPACES-012` (generation cluster).\n- **FR-SPACES-015..021** — Amendment 13, Higgsfield MCP OAuth connector (`13-amendment-…:59-67`). This is the **canonical precedent** for adding a new per-user-OAuth external integration to Spaces (PKCE S256, `higgsfield_oauth` table, fail-closed 402/501, `disconnect_higgsfield()` RPC).\n- **FR-SPACES-022..030** — Amendment 14, Spaces v2 consolidation (`14-amendment-…:52-64`). Catalog-relevant: `FR-SPACES-026` (unified Spotlight registry fusing 7 Canvas kinds + v1 types), `FR-SPACES-029` (List batch node), `FR-SPACES-030` (Designer bridge with **social presets Square/4:5/9:16/16:9** — image geometry only, gated behind OTD-SPACES-030).\n\n**Node families ALREADY documented** (the sealed catalog, from `11-node-registry-spaces.md:24-116` + `12-node-anatomy-spaces.md`): `media` (Upload/Assets/Stock), `reference` (Add Reference, 9 ref types), `image` (8 nodes incl. Designer/composer), `video` (5 nodes), `audio` (3 nodes), `text` (2 nodes), `utilities` (4 nodes), and `apps` (41 Workflow Apps, `NR-SPACES-003`). The canonical type index (`SpaceNodeCategory`) is `media | text | image | video | audio | utility | designer` (`05-sdd.md:70-71`); `PortDataType = image|text|video|audio|svg|3d` (`12-node-anatomy:39,61`).\n\n**Node families NOT documented:** there is **no `publish` / `social` / `channel` / `network` node family** anywhere in the registry, and **no YouTube-studio surface**. Grep across the whole suite finds `publish` only as: (i) `PublishNode` cited as a *pre-existing orchestrator node* (`00-index.md:57`), never registered as a Spaces node type; (ii) `workflowApp.publishedAt` metadata (`05-sdd.md:133`); (iii) the Higgsfield-OAuth text. The extension model for new node types IS documented, though: `NR-SPACES-004` (typed registry keyed by canonical internal id), `NR-SPACES-005` (new `NodeCategory` = `'app'` precedent), `NR-SPACES-007` (i18n: internal-id ≠ pt-BR label).\n\n**Conclusion for Q1:** social-network node groups and a YouTube studio are both **outside the sealed node catalog** → both need a NEW amendment (or, for the full studio, a new BoK — see §3).\n\n## 2. avatar-clone-ai — identity training FRs & the free-LoRA posture\n\n**FR ids covering identity training** (`04-frd.md:67-75`, §2.3):\n- `FR-AC-012` — `avatarIdentity` Canvas node; **3-tier ladder Tier1 InstantID/IP-Adapter FaceID · Tier2 PuLID-Flux · Tier3 LoRA-per-person**; Higgsfield Soul ID (≥20 photos) as the commercial default.\n- `FR-AC-013` / `FR-AC-013b` / `FR-AC-014` — Identity Gate; the 3b amendment ships **VLM-soft** (`10-amendment-…:41-55`), with ArcFace-hard **deferred → OTD-AC-015**.\n- `FR-AC-015` — `avatar_identities` persistence (LoRA weights ref + canonical embedding, RLS own, isolated storage).\n- `FR-AC-016` — **Commercial-license gate**: hard-blocks non-commercial weights, **naming FLUX.1-dev base explicitly** (`04-frd.md:75`; blueprint `00-deepsearch-blueprint.md:256,272`).\n\n**Training substrate is UNSEALED.** The net-new edge `avatar-identity-train` (service-role) that would *train* the identity-lock is flagged **not-verified → OTD-AC-017** (`10-amendment-…:64,74`). OTD-AC-017's own fallback text reads: *\"fallback = Tier1/Tier2 (sem treino persistente) ou LoRA-FLUX (gated FR-AC-016)\"*, with **SLA = before sealing the edge `avatar-identity-train`**, owner engineer + Sovereign.\n\n**Is a free-LoRA path in-scope?** Partially. The *capability* is named (Tier3 LoRA in FR-AC-012; LoRA-FLUX fallback in OTD-AC-017). But it is **not sealed**: (i) the training substrate/provider is a deferred Open Technical Decision (OTD-AC-017, `avatar-identity-train` explicitly unsealed); (ii) a *free* LoRA on the obvious FLUX.1-dev base **collides head-on with FR-AC-016** — the blueprint (`00-deepsearch-blueprint.md:256,272`) states FLUX.1-dev is non-commercial and instructs \"prefer SaaS licensed via BYOK or genuinely Apache/MIT weights.\" So a free path is only compliant on a commercial/Apache-MIT checkpoint or a self-hosted trainer. Per CLAUDE.md §1 Step 3, a deferred-OTD ambiguity **routes to an amendment, not improvisation**.\n\n## 3. Per-ask classification\n\n**(a) LoRA free-training fix → evolution-needs-amendment (small, targeted; avatar-clone-ai).** Not a plain documented-bug-fix: the substrate is deferred (OTD-AC-017), the edge is unsealed, and FR-AC-016 must be satisfied. (Caveat: if what is actually wanted is only Tier1/Tier2 identity-lock — InstantID/IP-Adapter/PuLID, *no persistent training* — that is fully within FR-AC-012 and needs no gate. But \"LoRA training\" specifically is the OTD-AC-017 surface.)\n\n**(b) per-network social node groups → evolution-needs-amendment (spaces-evolution).** Net-new node *family* absent from the sealed 11/12 registry and the `SpaceNodeCategory` enum, and it crosses into publishing = money/OAuth/RLS/tenancy (same risk class as Amendment 13). But it is NOT a new module: the extension model is documented (`NR-SPACES-004/005`, `FR-SPACES-026` unified registry), and the publish/reshape **engines are already sealed elsewhere** — `channel_profiles` incl. a `youtube` row + `publish_path` per channel (`post-engine/11-…:102,141`), `publish-channel-variant`, `publish-social`/`publish-meta`, and the per-user-OAuth pattern proven in Amendment 13. So: reuse engines, add a node family via amendment.\n\n**(c) Spaces-as-YouTube-studio → new-module-needs-BoK.** Absent everywhere; it introduces a **new external integration** (YouTube Data API v3 + Analytics API, per-user OAuth), **new domain entities** (channels/videos/analytics/schedule), a **new revenue/monetization surface**, and it hits a **known engine GAP**: post-engine flags **16:9 YouTube long-form render as 🔴 GAP** (HyperFrames only has a 9:16 path — `post-engine/11-…:66,76`). Per Closed-Loop §1 (\"new module, complex feature, integration, or architectural change → BoK before code\"), this warrants `/deepsearch-blueprint` → `/bok-scribe` (docs/bok/youtube-studio/). Downgrade to a large spaces-evolution amendment is defensible ONLY if the Sovereign scopes it to \"a YouTube preset + a youtube-publish node on Spaces reusing the reshaper youtube profile\" — and even then the 16:9 render gap must be closed.",
+> 153	        "gaps_or_root_cause": "Root cause / gaps by ask:\n\n(a) The free-LoRA \"fix\" is blocked by two sealed-BoK realities, not a code bug: (1) OTD-AC-017 leaves the training-via-API substrate unverified and the edge `avatar-identity-train` unsealed (owner engineer+Sovereign, SLA = before sealing that edge); (2) FR-AC-016 (commercial-license gate) hard-blocks the FLUX.1-dev base that a naive \"free LoRA\" would train on (blueprint 00-deepsearch:256,272). Missing pieces: a named free-training substrate that satisfies FR-AC-016 (self-hosted LoRA trainer on Sovereign Mesh with a commercial/Apache-MIT base checkpoint, OR a licensed SaaS BYOK training endpoint), plus the compute/host decision (currently undocumented).\n\n(b) The Spaces node catalog (11/12 registry + SpaceNodeCategory enum in 05-sdd:70) is a sealed contract with no publish/social/channel category. Missing: a new SpaceNodeCategory ('publish' or 'channel'), node-registry rows per network, new FR-SPACES ids, and a tenancy/OAuth binding per network (the engines exist — channel_profiles/publish_path/publish-channel-variant/publish-social — so this is surfacing, not building).\n\n(c) There is no youtube-studio BoK at all. Missing: the entire MRD→SDD family, a YouTube Data API v3 + Analytics API per-user OAuth integration (SOP Lei 2 + API Tenancy Model), a channels/videos/analytics data model, and closure of the post-engine 16:9 YouTube long-form render GAP (HyperFrames 9:16-only, post-engine/11:66,76).",
+> 154	        "recommended_slices": [
+> 155	          "(a) avatar-clone-ai Amendment 11 — Free LoRA training substrate. New doc docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md. Touches 04-frd (annotate FR-AC-012 Tier3 + FR-AC-016), 05-sdd (engine/host decision for `avatar-identity-train`), 00-deepsearch-blueprint (identity-lock table). Resolves OTD-AC-017 by naming a FR-AC-016-compliant free substrate (self-hosted LoRA trainer on Sovereign Mesh with commercial/Apache-MIT base — FLUX.1-dev base explicitly disallowed); open a new OTD-AC-019 for training-compute/GPU host if self-hosted. Carry a mini Pattern Conformance table + verification gates (/security-review on biometric migration, commercial-license gate proof, consent wizard fail-closed FR-AC-030/031).",
+> 156	          "(b) spaces-evolution Amendment 15 — Publish/Social node family. New doc docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md. Touches 03-prd (new family), 04-frd (new FR-SPACES-031.. per-network publish nodes: youtube/tiktok/instagram/linkedin/x/pinterest/facebook, each fail-closed per-user OAuth, reshaper-integrated, cost+telemetry), 05-sdd (add SpaceNodeCategory 'publish'; publish nodes are typed sinks), 06-data-model, 11-node-registry (new NR rows). Reuse channel_profiles/publish_path (post-engine), publish-channel-variant/publish-social/publish-meta, and the Amendment-13 per-user-OAuth pattern (PKCE + disconnect RPC). New OTD for per-network OAuth Sovereign-gating + anti-cross-post guard (reuse post-engine).",
+> 157	          "(c) Preferred: new module docs/bok/youtube-studio/ via /deepsearch-blueprint (00-deepsearch-blueprint) then /bok-scribe (01-mrd..05-sdd + 09-pattern-conformance). Scope: YouTube Data API v3 + Analytics API per-user OAuth (new integration + SOP Lei 2 + API Tenancy Model), channels/videos/analytics domain, 16:9 long-form render closing the post-engine GAP, 16:9 1280×720 thumbnail engine, shorts reuse of the 9:16 master, scheduling/calendar, retention/CTR feedback loop. Fallback: a large spaces-evolution Amendment 16 ONLY if the Sovereign scopes it to a Spaces YouTube preset + youtube-publish node + 16:9 render-gap closure (still requires the YouTube OAuth integration SOP).",
+> 158	          "Sequencing: do (a) first (smallest, unblocks avatar identity for any studio), then (b) (surfaces existing publish engines as nodes, low new-engine risk), then (c) last (largest, depends on the 16:9 render gap and a new external integration). Each amendment must carry a Pattern Conformance Declaration (CLAUDE.md §1 Step 3.5) and, for money/OAuth paths (b/c), an independent /security-review before code."
+> 159	        ]
+> 160	      }
+> 161	    ],
+> 162	    "synthesis": {
+> 163	      "unified_map": "## Spaces — Unified Reality Map (2026-07-08)\n\n### 1. TWO disjoint node systems (only one is LIVE)\n- **DEAD / unrouted**: the 26-type Magnific \"Spotlight\" catalog — `src/lib/node-registry.ts` (NODE_TYPES) + `SpaceNodeCard` + `useSpacesStore` + `SpaceCanvasPage.tsx`. `SpaceCanvasPage` is NOT in `App.tsx`. Editing it ships nothing.\n- **LIVE**: `/dashboard/spaces/:id` → `CanvasEditorPage.tsx` using the 9-kind `CANVAS_NODE_REGISTRY` (`src/lib/canvas-node-registry.ts`) + `AddNodeMenu` + `useCanvasStore` + the `CanvasNodeKind` union in `src/types/canvas.ts`. **All node-group work targets THIS system.**\n- Both funnel into one edge fn `canvas-execute` whose `NODE_TYPE_MAP` collapses onto the FROZEN 12-value `vm_node_type` enum (zero `ADD VALUE` history). Precedent (`voiceClone`→generate-voice, `avatarIdentity`→avatar-identity-train) shows identity/social/publish nodes should call NET-NEW edge fns and `resolveExecutePayload`→`null`, bypassing the enum.\n- Node groups are a FLAT category list in both systems (LIVE: Inputs|Generate|Transform via `AddNodeMenu.tsx:23`). New group = 2 edits (extend `NodeCategory` union + `CATEGORIES` array). No nested/sub-palette exists.\n\n### 2. Avatar / identity training\n- **WIRED**: voice clone+synthesize (`generate-voice`, ElevenLabs/Cartesia BYOK, consent+refund), biometric consent (`avatar-consent`), LGPD erase (`erase-avatar-artifacts`), VLM-soft identity gate (`src/lib/avatar-identity.ts`). Node kinds `voiceClone` + `avatarIdentity` exist with inspectors. DB `avatar_identities` ready (provider CHECK IN higgsfield/lora_flux, staged-nullable weights cols).\n- **BROKEN**: the \"Treinar identidade\" button. `handleTrain` (AvatarIdentityInspector.tsx:109-113) is a hardcoded Higgsfield-toast stub — never branches on `d.provider`, so LoRA hits the Higgsfield gate.\n- **ABSENT**: NO training backend for EITHER engine. `avatar-identity-train` edge fn does not exist (only avatar-consent + erase-avatar-artifacts deployed). No Replicate `flux-dev-lora-trainer`/trainings call anywhere. `resolveExecutePayload`→null for avatarIdentity (canvas.ts:975-978).\n- **Soul ID ambiguity**: \"Higgsfield Soul ID\" conflates 3 unrelated things — Platform API `soul/{mode}` + `custom_reference_id` (image-conditioning, NOT persistent training), the Higgsfield **MCP OAuth** connector (catalog-only BYOK), and a hypothetical self-serve trainer that OTD-AC-017 admits was NEVER VERIFIED to exist. None is a confirmed one-click \"train my face\" endpoint.\n- **BoK posture (report 5)**: free LoRA is only *partially* in scope — capability named (FR-AC-012 Tier3, OTD-AC-017 fallback) but substrate is a DEFERRED OTD, and a naive FLUX.1-dev base collides with FR-AC-016 (commercial-license gate). Real free path = self-hosted/Apache-MIT or BYOK-routed trainer.\n\n### 3. Social publishing (distribution world — disconnected from Spaces)\n- 3 publisher entry points: `publish-wordpress` (POSTS only, no /pages), `publish-meta` (IG image/Reels + FB text/video BYOK), `publish-social` (omnichannel: LinkedIn text, IG image/Reels, FB photo/text, X thread, TikTok video, YouTube video/Shorts, Pinterest pins).\n- Automated loop = PILLAR pipeline only: `orchestrate-content`→`orchestrate-step`(:893 kicks `reshape-pillar`)→`channel_variants`→(auto_publish=true)→`scheduled_posts`→`auto-publish` cron→publishers. Default DRAFT; `publish-channel-variant` = opt-in manual.\n- **CRITICAL SEAM GAP**: Spaces has NO publish node and NO bridge. `canvas-execute` writes `vm_canvas_assets`+`creative_assets` which NO publisher ever reads. A Space can generate media but nothing hands it to a social post.\n- **Missing per requested groups**: WP Pages/Landing (posts-only); IG Feed Carousel (no CAROUSEL/children); IG Stories (no STORIES); IG Conexões (instagram-webhook only LOGS; no Manychat/MCP dispatch); TikTok Shop (no scope/commerce); YouTube Community + Members (scope youtube.upload only); LinkedIn carousel/image/video publisher (asset built by generate-carousel but publisher deferred OTD-CP-010); X video + FB Reels (deferred OTD-CP-010).\n\n### 4. Faceless / avatar YouTube studio\n- **WIRED**: script gen (`generate-video-script`), 2 voiceover paths (Gemini TTS generic + cloned `generate-voice`), 3 video-gen paths (Higgsfield DoP i2v, Veo/Seedance, deterministic HyperFrames 9:16/16:9 via render-core + video-bridge worker), YouTube resumable upload (`publish-social:411`).\n- **GAPS**: (1) lipsync/talking-head — `speak`/`talkingHead` are catalog/spec-only; no Hedra/OmniHuman/Kling edge fn; largest hole. (2) multi-scene assemble — `engine='faceless'` is 503-gated (never built); `video-combiner` catalog-only; FFmpeg concat exists only inside render-core, not exposed for scene-stitching. (3) burned captions (ASS/karaoke) — no builder. (4) thumbnail — no dedicated node. (5) surface split — `voiceClone`/`speak`/assemble NOT in Spaces `EXECUTABLE_TYPES` (only 5 node types actually run). 16:9 YouTube long-form render flagged 🔴 GAP in post-engine BoK.\n\n### Closed-Loop classification (report 5, sealed BoK)\n- (a) Free LoRA → **evolution-needs-amendment** (avatar-clone-ai, closes OTD-AC-017, satisfies FR-AC-016) — but the engine-aware BRANCH is a plain documented-feature bugfix (BoK-exempt).\n- (b) Per-network social node groups → **spaces-evolution amendment** (new node family absent from sealed 11/12 registry; crosses OAuth/money/tenancy) — reuses sealed publish/reshaper engines.\n- (c) Spaces-as-YouTube-studio → **new-module-needs-BoK** (YouTube Data API v3 + Analytics OAuth, new domain, 16:9 render gap) — downgradeable to a large amendment only if scoped to a YouTube preset + publish node.",
+> 164	      "lora_fix": "ROOT CAUSE: `handleTrain` at `src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113` is a hardcoded placeholder that fires `toast.info(\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\")` on EVERY click and never reads `d.provider`. The engine choice IS correctly persisted into `node.data.provider` by `setProvider` (lines 43-47) but is simply never consulted before the gate — so LoRA (Flux) hits the Higgsfield toast identically. Confirmed live: the stub at line 112 is the exact rendered string, thrown client-side (sonner), NOT in any edge fn.\n\nEXACT FIX (ships FIRST — single-file UI patch, documented-feature bugfix, BoK-exempt): make `handleTrain` engine-aware at AvatarIdentityInspector.tsx:109-113 — branch on `d.provider`. Fire the Higgsfield/OTD-AC-017 toast ONLY when `d.provider === 'higgsfield'`; for `'lora_flux'` show a distinct honest message (\"LoRA (Flux) — treino gratuito via sua conta Replicate, em breve\") until the real trainer lands (Slice 2). Also fix the button help/title text (lines 231-244) which never mentions the gate, and flip `makeDefaultAvatarIdentity` default provider from `'higgsfield'` to `'lora_flux'` (`src/types/canvas.ts:~814`) so the free path is out-of-box.\n\nHONEST CAVEAT (Lei 1): the branch alone does not make LoRA WORK — there is NO training backend for either engine. `avatar-identity-train` edge fn does not exist (only avatar-consent + erase-avatar-artifacts deployed) and `resolveExecutePayload` returns `null` for `avatarIdentity` (`src/types/canvas.ts:975-978`). Building the real free LoRA path (Replicate `flux-dev-lora-trainer`, BYOK = USD 0 to platform, reusing `generateReplicate` create+poll at canvas-execute/index.ts:1765-1826 + per-user `replicate_api_key`) is Slice 2 and requires an avatar-clone-ai amendment first (OTD-AC-017 unsealed + FR-AC-016 commercial-license gate — FLUX.1-dev base is non-commercial; BYOK routing through the user's own account is the compliant escape).\n\nSOUL ID CLARIFICATION: \"Higgsfield Soul ID\" in the provider selector conflates three distinct surfaces — (1) Higgsfield Platform API (`soul/{mode}` + `custom_reference_id`, image-conditioning references, NOT persistent training), (2) the Higgsfield MCP OAuth connector (catalog-only BYOK), (3) a hypothetical self-serve trainer that OTD-AC-017 admits was never verified to exist. Recommendation: keep Higgsfield gated with an honest \"requires verified training API\" message and make LoRA (Flux) the recommended FREE default; relabel to stop presenting an unconfirmed endpoint as a trainable provider.",
+> 165	      "priority_slices": [
+> 166	        {
+> 167	          "title": "Fix handleTrain: engine-aware branch + relabel + LoRA default",
+> 168	          "type": "bugfix",
+> 169	          "needs_bok_amendment": false,
+> 170	          "rationale": "Unblocks the ace TODAY. Branch handleTrain on d.provider so the Higgsfield/OTD-AC-017 toast fires only for provider==='higgsfield'; give lora_flux an honest 'free via Replicate, em breve' message; fix button help text (lines 231-244); flip makeDefaultAvatarIdentity default provider to lora_flux so the free path is out-of-box; relabel to stop the 3-way Soul ID conflation. Single-file UI patch scoped to a documented feature = BoK-exempt. Ships first per Sovereign 'FOCUS on free path first'.",
+> 171	          "key_files": [
+> 172	            "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:109-113",
+> 173	            "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:231-244",
+> 174	            "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:21-24",
+> 175	            "src/types/canvas.ts:800-821"
+> 176	          ]
+> 177	        },
+> 178	        {
+> 179	          "title": "avatar-clone-ai Amendment 11 — free LoRA training substrate (closes OTD-AC-017)",
+> 180	          "type": "amendment",
+> 181	          "needs_bok_amendment": true,
+> 182	          "rationale": "The branch does not make LoRA WORK — no trainer exists. Draft docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md that names a FR-AC-016-compliant free substrate (Replicate flux-dev-lora-trainer via per-user BYOK = USD 0 to platform; BYOK routes through the user's own account = commercial-license escape; FLUX.1-dev-as-platform-base explicitly disallowed). Resolves OTD-AC-017, annotates FR-AC-012 Tier3 + FR-AC-016, carries a Pattern Conformance table. Prereq for building the edge fn — Closed-Loop Step 3 gate.",
+> 183	          "key_files": [
+> 184	            "docs/bok/avatar-clone-ai/04-frd.md:71-75",
+> 185	            "docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md:63-75",
+> 186	            "docs/bok/avatar-clone-ai/00-deepsearch-blueprint.md:256-272",
+> 187	            "docs/bok/avatar-clone-ai/05-sdd.md:70-98"
+> 188	          ]
+> 189	        },
+> 190	        {
+> 191	          "title": "Build avatar-identity-train edge fn (free LoRA on Replicate BYOK)",
+> 192	          "type": "feature",
+> 193	          "needs_bok_amendment": false,
+> 194	          "rationale": "After Amendment 11 seals: net-new service-role edge fn — validates train_lora+face_embedding consents server-side, inserts avatar_identities status='training' provider='lora_flux', collects reference portraits from canvas-assets (userId/avatars/projectId), calls Replicate flux-dev-lora-trainer with the user's replicate_api_key, polls via the existing generateReplicate create+poll pattern, writes identity_storage_key + status='active' + commercial_license_ok=true (BYOK escape). Wire the Inspector to invoke it + reflect status. Needs a docs/processes SOP (Lei 2) + /security-review on any biometric migration (FMEA-011).",
+> 195	          "key_files": [
+> 196	            "supabase/functions/canvas-execute/index.ts:1765-1826",
+> 197	            "supabase/functions/canvas-execute/index.ts:164",
+> 198	            "supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql:20-56",
+> 199	            "src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx:73-83"
+> 200	          ]
+> 201	        },
+> 202	        {
+> 203	          "title": "spaces-evolution Amendment 15 — Publish/Social node family (BoK)",
+> 204	          "type": "amendment",
+> 205	          "needs_bok_amendment": true,
+> 206	          "rationale": "Per-network node groups are absent from the sealed 11/12 registry + SpaceNodeCategory enum and cross into OAuth/money/tenancy (same risk class as Amendment 13). Draft docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md: new 'publish'/'channel' SpaceNodeCategory, new FR-SPACES-031.. per-network nodes (wordpress/instagram/tiktok/youtube/linkedin/x/pinterest/facebook), each fail-closed per-user OAuth, reshaper-integrated, cost+telemetry. Reuses SEALED engines (channel_profiles/publish_path, publish-channel-variant, publish-social/-meta) + the Amendment-13 PKCE OAuth pattern. Closed-Loop gate before code.",
+> 207	          "key_files": [
+> 208	            "docs/bok/spaces-evolution/11-node-registry-spaces.md:24-116",
+> 209	            "docs/bok/spaces-evolution/05-sdd.md:70-71",
+> 210	            "docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md:59-67",
+> 211	            "docs/bok/spaces-evolution/14-amendment-spaces-v2-consolidation.md:52-64"
+> 212	          ]
+> 213	        },
+> ```
+
+## 🤖 Claude *(01:39:33)*
+
+
+## 🤖 Claude *(01:39:34)*
+
+Vou ler o restante da síntese (fim das slices + escopo de sessão).
+
+## 🤖 Claude *(01:39:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/w4kpmfne3.output",
+  "offset": 213,
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 213	        },
+> 214	        {
+> 215	          "title": "Spaces→publish seam + first template social node (WordPress/Instagram)",
+> 216	          "type": "feature",
+> 217	          "needs_bok_amendment": false,
+> 218	          "rationale": "After Amendment 15 seals: the missing adapter between creative and distribution worlds. Add a 'Social' category (2-line: NodeCategory union + CATEGORIES array), then one social node kind end-to-end as the template (CanvasNodeKind + Data + factory + resolveExecutePayload->null calling a net-new publish edge fn that maps a Space's finished creative_assets/vm_canvas_assets row onto a channel_variants draft / scheduled_posts, reusing auto-publish owner-scoped signing). Do NOT touch vm_node_type. Fan-out of remaining networks is pure clone-per-node.",
+> 219	          "key_files": [
+> 220	            "src/lib/canvas-node-registry.ts:15",
+> 221	            "src/components/canvas/AddNodeMenu.tsx:23",
+> 222	            "src/types/canvas.ts:878-980",
+> 223	            "supabase/functions/auto-publish/index.ts:104-135"
+> 224	          ]
+> 225	        },
+> 226	        {
+> 227	          "title": "WordPress Pages/Landing + IG Carousel + IG Stories publishers",
+> 228	          "type": "amendment",
+> 229	          "needs_bok_amendment": true,
+> 230	          "rationale": "Fills the highest-value publisher gaps from the requested groups on already-reachable APIs. WP: add post_type branch to POST /wp-json/wp/v2/pages (mirror posts flow :145). IG Carousel: N child containers is_carousel_item=true -> parent media_type=CAROUSEL. IG Stories: STORIES media_type container (9:16 reuse of master). Each needs a new channel_profiles surface + FR ids, so it rides the Amendment 15 node family (BoK). Low external friction, no new OAuth scope.",
+> 231	          "key_files": [
+> 232	            "supabase/functions/publish-wordpress/index.ts:145",
+> 233	            "supabase/functions/publish-social/index.ts:149",
+> 234	            "supabase/functions/publish-meta/index.ts:143",
+> 235	            "supabase/migrations/20260627140000_channel_profiles.sql:105-245"
+> 236	          ]
+> 237	        },
+> 238	        {
+> 239	          "title": "Faceless multi-scene assembler + burned captions (YouTube studio core)",
+> 240	          "type": "feature",
+> 241	          "needs_bok_amendment": true,
+> 242	          "rationale": "Highest-value studio build with lowest new-tech: chain existing executable nodes (prompt-generator->per-scene image-generator->voice-over->video-generator DoP) into an N-scene loop, add a video-combiner executor that FFmpeg-concats clips+narration (concat primitive already in render-core), and port the ASS-karaoke/HUD-srt caption builder from the n8n reference. Flip the video-render engine='faceless' 503 only after the worker exists. Full YouTube-studio scope (Data API v3 + Analytics OAuth, 16:9 render-gap closure, community/members) is a NEW MODULE BoK (docs/bok/youtube-studio via deepsearch-blueprint->bok-scribe) — this slice is the faceless subset that reuses sealed rails.",
+> 243	          "key_files": [
+> 244	            "supabase/functions/video-render/index.ts:50-111",
+> 245	            ".claude/context/faceless-pipeline-reference-2026-06-25.md",
+> 246	            "scripts/hyperframes/render-core.ts:147-205",
+> 247	            "scripts/video-bridge.ts:53-201"
+> 248	          ]
+> 249	        },
+> 250	        {
+> 251	          "title": "Talking-head / lipsync engine (avatar path) + Spaces voiceClone/publish exposure",
+> 252	          "type": "feature",
+> 253	          "needs_bok_amendment": true,
+> 254	          "rationale": "Largest new build, last. Create talkingHead/speak executable node + edge fn calling Hedra (avatar_ai) / OmniHuman (footage_real) via per-user BYOK per SDD 05-sdd:87-90, with C2PA/disclosure gate; footage-real re-lipsync (OmniHuman) is the cheaper first step needing no identity training. Also expose voiceClone + a YouTube publish node in the Spaces EXECUTABLE_TYPES set. Depends on OTD-AC-017 closure (Slice 2/3) for AI-avatar identities; designed in BoK but zero code — needs an avatar-clone-ai amendment for the render leg.",
+> 255	          "key_files": [
+> 256	            "docs/bok/avatar-clone-ai/05-sdd.md:70-98",
+> 257	            "src/lib/spaces-execution.ts:12",
+> 258	            "supabase/functions/canvas-execute/index.ts:229-243",
+> 259	            "supabase/functions/publish-social/index.ts:411-477"
+> 260	          ]
+> 261	        }
+> 262	      ],
+> 263	      "session_scope_note": "Realistic for ~85% of the window THIS session: Slice 1 (the handleTrain engine-aware bugfix + relabel + LoRA default flip) ships fully — single-file UI patch, buildable + material verification (build-deploy-guardian) inside a slice of the budget. On top of that, Slice 2 (draft avatar-clone-ai Amendment 11 sealing OTD-AC-017 + FR-AC-016 compliance) fits, and likely a STARTING scaffold of Slice 3 (avatar-identity-train edge fn skeleton against the Replicate create+poll pattern) — but a fully-wired, /security-review-passed, E2E-proven free LoRA trainer with its migration + SOP is honestly a follow-up session (biometric migration + security-review + live poll-to-completion proof each consume real budget under Lei 1). FOLLOW-UP (each its own Closed-Loop iteration, gated on a BoK amendment before code per Closed-Loop §1): Slice 4 (spaces-evolution Amendment 15 social node family), Slice 5 (seam + first social node), Slice 6 (WP Pages/IG Carousel/Stories publishers), Slice 7 (faceless assembler + captions), Slice 8 (talking-head/lipsync). Do NOT attempt social node groups or YouTube-studio code this session — they need their BoK amendments sealed first, and cramming them would violate both the BoK gate and the ~95%-seal discipline. Recommended this-session sequence: Slice 1 (ship) -> Slice 2 (amendment draft) -> begin Slice 3, then seal."
+> 264	    }
+> 265	  },
+> 266	  "workflowProgress": [
+> 267	    {
+> 268	      "type": "workflow_phase",
+> 269	      "index": 1,
+> 270	      "title": "Map"
+> 271	    },
+> 272	    {
+> 273	      "type": "workflow_phase",
+> 274	      "index": 2,
+> 275	      "title": "Synthesize"
+> 276	    },
+> 277	    {
+> 278	      "type": "workflow_agent",
+> 279	      "index": 1,
+> 280	      "label": "avatar-lora",
+> 281	      "phaseIndex": 1,
+> 282	      "phaseTitle": "Map",
+> 283	      "agentId": "a3a783193cba3dfd2",
+> 284	      "model": "claude-opus-4-8",
+> 285	      "state": "done",
+> 286	      "startedAt": 1783560294444,
+> 287	      "queuedAt": 1783560294379,
+> 288	      "attempt": 1,
+> 289	      "lastToolName": "StructuredOutput",
+> 290	      "lastToolSummary": "BUG confirmed: the \"Treinar identidade\" button ignores the …",
+> 291	      "promptPreview": "You are mapping the AVATAR IDENTITY TRAINING flow in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra). The Sovereign reports a BUG: clicking 'treinar' on the identity/avatar node shows the error \"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\" EVEN when the engine 'LoRA' is selected instead of 'Higgsfield'. The LoRA (free) path must NOT require a Higgsfield c…",
+> 292	      "lastProgressAt": 1783560450242,
+> 293	      "tokens": 94512,
+> 294	      "toolCalls": 15,
+> 295	      "durationMs": 155797,
+> 296	      "resultPreview": "{\"front\":\"BUG confirmed: the \\\"Treinar identidade\\\" button ignores the selected engine entirely. handleTrain() in AvatarIdentityInspector.tsx is a hardcoded stub that always fires the Higgsfield/OTD-AC-017 toast — it never reads d.provider, so LoRA (Flux) hits the same gate. Deeper truth: there is NO training backend for EITHER engine (no avatar-identity-train edge fn exists), so \\\"fixing the bran…"
+> 297	    },
+> 298	    {
+> 299	      "type": "workflow_agent",
+> 300	      "index": 2,
+> 301	      "label": "node-catalog",
+> 302	      "phaseIndex": 1,
+> 303	      "phaseTitle": "Map",
+> 304	      "agentId": "a86d7ceab85e638e2",
+> 305	      "model": "claude-opus-4-8",
+> 306	      "state": "done",
+> 307	      "startedAt": 1783560294447,
+> 308	      "queuedAt": 1783560294379,
+> 309	      "attempt": 1,
+> 310	      "lastToolName": "StructuredOutput",
+> 311	      "lastToolSummary": "CRITICAL: there are TWO parallel node systems. The 26-type …",
+> 312	      "promptPreview": "You are mapping the SPACES node catalog + Spotlight architecture in the MCORCH repo (/home/gcrUX/htdocs/constellation-orchestra). Spaces lives at /dashboard/spaces (hooks useSpaces/useCanvasStudio, components SpaceNodeCard + a Spotlight with ~26 node types).\n\nTASKS (ground every claim in file:line; use Grep/Read/Glob/Bash):\n1. Find the node-type catalog/registry — the list of ~26 Spotlight node ty…",
+> 313	      "lastProgressAt": 1783560566522,
+> 314	      "tokens": 164435,
+> 315	      "toolCalls": 26,
+> 316	      "durationMs": 272075,
+> 317	      "resultPreview": "{\"front\":\"CRITICAL: there are TWO parallel node systems. The 26-type Spotlight catalog (`node-registry.ts` + `SpaceNodeCard` + `useSpacesStore`) is UNROUTED/dead — `SpaceCanvasPage` is not in `App.tsx`. The LIVE `/dashboard/spaces/:id` editor is `CanvasEditorPage` using a DIFFERENT 9-kind registry (`canvas-node-registry.ts` + `AddNodeMenu` + `useCanvasStore` + `types/canvas.ts`). To add social/ide…"
+> 318	    },
+> 319	    {
+> 320	      "type": "workflow_agent",
+> 321	      "index": 3,
+> 322	      "label": "social-publish",
+> 323	      "phaseIndex": 1,
+> 324	      "phaseTitle": "Map",
+> 325	      "agentId": "a9dff01b28d265502",
+> 326	      "model": "claude-opus-4-8",
+> 327	      "state": "done",
+> 328	      "startedAt": 1783560450245,
+> 329	      "queuedAt": 1783560294379,
+> 330	      "attempt": 1,
+> 331	      "lastToolName": "StructuredOutput",
+> 332	      "lastToolSummary": "Social-publishing surface map for MCORCH Spaces per-network…",
+> ```
+
+## 🤖 Claude *(01:40:27)*
+
+
+## 🤖 Claude *(01:40:37)*
+
+Mapa completo digerido. A síntese é clara e **honesta (Lei 1)**:
+
+**Realidade do LoRA:** o botão "Treinar" (`AvatarIdentityInspector.tsx:109-113`) é um stub que dispara o toast Higgsfield **sem olhar `d.provider`** — por isso o LoRA cai no gate errado. Mas o mais importante: **não existe backend de treino para nenhum dos dois motores** (`avatar-identity-train` nunca foi criada). Consertar o branch é honesto mas não faz o LoRA *funcionar* — para isso preciso **construir o treinador** (Replicate `flux-dev-lora-trainer` via BYOK = USD 0), e isso exige **emenda BoK** antes (Closed-Loop §1: OTD-AC-017 + gate de licença FR-AC-016).
+
+**Classificação BoK das 3 frentes:**
+| Frente | Classe | Gate |
+|--------|--------|------|
+| LoRA grátis (bugfix + relabel) | bugfix | isento |
+| LoRA grátis **funcionando** (treinador) | feature | **emenda avatar-clone-ai** antes |
+| Grupos de nós sociais | amendment | **emenda spaces-evolution** antes |
+| Studio YouTube (faceless/avatar) | novo módulo | **BoK novo** antes |
+
+**Plano da sessão (foco no gratuito, respeitando o gate):**
+1. **Slice 1** — bugfix `handleTrain` engine-aware + relabel Soul ID + default = LoRA (ship agora, sem gate).
+2. **Slice 2** — emenda `avatar-clone-ai/11` (substrato LoRA grátis FR-AC-016-compliant, fecha OTD-AC-017).
+3. **Slice 3** — construir `avatar-identity-train` (LoRA real no Replicate BYOK) + SOP + /security-review.
+4. Se sobrar janela — emenda `spaces-evolution/15` (família de nós de publicação social) para destravar os grupos sociais no próximo arco.
+
+Começando **Slice 1**. Lendo os arquivos exatos.
+
+## 🤖 Claude *(01:40:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useRef, useState } from "react";
+> 2	import { StorageImg } from "@/components/StorageMedia";
+> 3	import { UserCircle, Upload, Loader2, ShieldCheck, X } from "lucide-react";
+> 4	import { toast } from "sonner";
+> 5	import { Button } from "@/components/ui/button";
+> 6	import { cn } from "@/lib/utils";
+> 7	import { useCanvasStore } from "@/store/useCanvasStore";
+> 8	import { supabase } from "@/integrations/supabase/client";
+> 9	import { useAvatarConsents } from "@/hooks/useAvatarConsent";
+> 10	import { ConsentWizard } from "@/components/avatar/ConsentWizard";
+> 11	import { type AvatarIdentityData } from "@/types/canvas";
+> 12	import { Section, InspectorHeader } from "../shared";
+> 13	
+> 14	interface Props {
+> 15	  node: { id: string; data: AvatarIdentityData };
+> 16	  projectId: string;
+> 17	}
+> 18	
+> 19	const MAX_IMG_MB = 15;
+> 20	const MIN_REFS_SOULID = 20;
+> 21	const PROVIDERS: { id: AvatarIdentityData["provider"]; label: string }[] = [
+> 22	  { id: "higgsfield", label: "Higgsfield Soul ID" },
+> 23	  { id: "lora_flux", label: "LoRA (Flux)" },
+> 24	];
+> 25	const TIERS: { id: AvatarIdentityData["tier"]; label: string }[] = [
+> 26	  { id: 1, label: "T1 · InstantID" },
+> 27	  { id: 2, label: "T2 · PuLID" },
+> 28	  { id: 3, label: "T3 · LoRA" },
+> 29	];
+> 30	
+> 31	export function AvatarIdentityInspector({ node, projectId }: Props) {
+> 32	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 33	  const { activePurposes } = useAvatarConsents();
+> 34	  const fileRef = useRef<HTMLInputElement | null>(null);
+> 35	  const [uploading, setUploading] = useState(false);
+> 36	
+> 37	  const d = node.data;
+> 38	  const refs = d.referenceUrls ?? [];
+> 39	  // FR-AC-030/032: identity training needs BOTH the LoRA-train and face-embedding consents (Art. 11).
+> 40	  const hasConsent = activePurposes.has("train_lora") && activePurposes.has("face_embedding");
+> 41	  const trained = Boolean(d.avatarIdentityId);
+> 42	
+> 43	  const setProvider = (provider: AvatarIdentityData["provider"]) => {
+> 44	    if (provider !== d.provider) {
+> 45	      updateNodeData(node.id, { provider, avatarIdentityId: undefined, status: "idle", error: undefined });
+> 46	    }
+> 47	  };
+> 48	  const setTier = (tier: AvatarIdentityData["tier"]) => {
+> 49	    if (tier !== d.tier) {
+> 50	      updateNodeData(node.id, { tier, avatarIdentityId: undefined, status: "idle", error: undefined });
+> 51	    }
+> 52	  };
+> 53	
+> 54	  const onFiles = async (files: FileList) => {
+> 55	    const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
+> 56	    if (images.length === 0) {
+> 57	      toast.error("Selecione arquivos de imagem.");
+> 58	      return;
+> 59	    }
+> 60	    setUploading(true);
+> 61	    try {
+> 62	      const { data: userData } = await supabase.auth.getUser();
+> 63	      const userId = userData?.user?.id;
+> 64	      if (!userId) throw new Error("Sessão expirada — faça login novamente.");
+> 65	      const newUrls: string[] = [];
+> 66	      const newPaths: string[] = [];
+> 67	      for (const file of images) {
+> 68	        if (file.size > MAX_IMG_MB * 1024 * 1024) {
+> 69	          toast.error(`"${file.name}" muito grande (máx ${MAX_IMG_MB}MB).`);
+> 70	          continue;
+> 71	        }
+> 72	        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+> 73	        const path = `${userId}/avatars/${projectId}/${node.id}-${Date.now()}-${newUrls.length}.${ext}`;
+> 74	        const { error: upErr } = await supabase.storage
+> 75	          .from("canvas-assets")
+> 76	          .upload(path, file, { contentType: file.type, upsert: true });
+> 77	        if (upErr) throw upErr;
+> 78	        const { data: signed, error: sErr } = await supabase.storage
+> 79	          .from("canvas-assets")
+> 80	          .createSignedUrl(path, 60 * 60 * 24 * 7);
+> 81	        if (sErr || !signed?.signedUrl) throw sErr ?? new Error("signed url");
+> 82	        newUrls.push(signed.signedUrl);
+> 83	        newPaths.push(path);
+> 84	      }
+> 85	      // New references invalidate any prior trained identity.
+> 86	      updateNodeData(node.id, {
+> 87	        referenceUrls: [...refs, ...newUrls],
+> 88	        referenceStoragePaths: [...(d.referenceStoragePaths ?? []), ...newPaths],
+> 89	        avatarIdentityId: undefined,
+> 90	        status: "idle",
+> 91	        error: undefined,
+> 92	      });
+> 93	      if (newUrls.length) toast.success(`${newUrls.length} retrato(s) enviado(s).`);
+> 94	    } catch (e) {
+> 95	      toast.error(e instanceof Error ? e.message : String(e));
+> 96	    } finally {
+> 97	      setUploading(false);
+> 98	    }
+> 99	  };
+> 100	
+> 101	  const removeRef = (i: number) => {
+> 102	    updateNodeData(node.id, {
+> 103	      referenceUrls: refs.filter((_, idx) => idx !== i),
+> 104	      referenceStoragePaths: (d.referenceStoragePaths ?? []).filter((_, idx) => idx !== i),
+> 105	      avatarIdentityId: undefined,
+> 106	    });
+> 107	  };
+> 108	
+> 109	  const handleTrain = () => {
+> 110	    // OTD-AC-017: the avatar-identity-train Edge Function is GATED on a verified Higgsfield self-serve
+> 111	    // training API + the Sovereign's credential. Fail closed honestly — no fabricated call (Lei 1).
+> 112	    toast.info("Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.");
+> 113	  };
+> 114	
+> 115	  return (
+> 116	    <div className="flex h-full flex-col">
+> 117	      <div className="flex-1 overflow-y-auto">
+> 118	        <InspectorHeader icon={<UserCircle className="h-3.5 w-3.5" />} label={d.label} id={node.id} />
+> 119	
+> 120	        <Section title="Provider">
+> 121	          <div className="grid grid-cols-2 gap-2">
+> 122	            {PROVIDERS.map((p) => (
+> 123	              <button
+> 124	                key={p.id}
+> 125	                type="button"
+> 126	                onClick={() => setProvider(p.id)}
+> 127	                className={cn(
+> 128	                  "h-9 rounded-md border text-xs font-medium transition-colors",
+> 129	                  d.provider === p.id
+> 130	                    ? "border-accent bg-accent/5 text-foreground ring-1 ring-accent/30"
+> 131	                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+> 132	                )}
+> 133	              >
+> 134	                {p.label}
+> 135	              </button>
+> 136	            ))}
+> 137	          </div>
+> 138	        </Section>
+> 139	
+> 140	        <Section title="Tier de identidade">
+> 141	          <div className="grid grid-cols-3 gap-2">
+> 142	            {TIERS.map((t) => (
+> 143	              <button
+> 144	                key={t.id}
+> 145	                type="button"
+> 146	                onClick={() => setTier(t.id)}
+> 147	                className={cn(
+> 148	                  "h-9 rounded-md border text-[10px] font-medium transition-colors",
+> 149	                  d.tier === t.id
+> 150	                    ? "border-accent bg-accent/5 text-foreground ring-1 ring-accent/30"
+> 151	                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+> 152	                )}
+> 153	              >
+> 154	                {t.label}
+> 155	              </button>
+> 156	            ))}
+> 157	          </div>
+> 158	        </Section>
+> 159	
+> 160	        {!hasConsent && (
+> 161	          <Section title="Consentimento (LGPD Art. 11)">
+> 162	            <ConsentWizard purposes={["train_lora", "face_embedding"]} preselect={["train_lora", "face_embedding"]} />
+> 163	          </Section>
+> 164	        )}
+> 165	
+> 166	        <Section title={`Retratos de referência (${refs.length})`}>
+> 167	          <div className="space-y-2">
+> 168	            {refs.length > 0 && (
+> 169	              <div className="grid grid-cols-4 gap-1.5">
+> 170	                {refs.map((u, i) => (
+> 171	                  <div key={i} className="group relative aspect-square overflow-hidden rounded border border-border">
+> 172	                    <StorageImg src={u} alt="" className="h-full w-full object-cover" />
+> 173	                    <button
+> 174	                      type="button"
+> 175	                      onClick={() => removeRef(i)}
+> 176	                      className="absolute right-0.5 top-0.5 rounded-full bg-background/80 p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+> 177	                      title="Remover"
+> 178	                    >
+> 179	                      <X className="h-3 w-3 text-destructive" />
+> 180	                    </button>
+> 181	                  </div>
+> 182	                ))}
+> 183	              </div>
+> 184	            )}
+> 185	            <input
+> 186	              ref={fileRef}
+> 187	              type="file"
+> 188	              accept="image/*"
+> 189	              multiple
+> 190	              hidden
+> 191	              onChange={(e) => {
+> 192	                if (e.target.files?.length) onFiles(e.target.files);
+> 193	                e.currentTarget.value = "";
+> 194	              }}
+> 195	            />
+> 196	            <Button
+> 197	              type="button"
+> 198	              variant="outline"
+> 199	              size="sm"
+> 200	              className="w-full gap-2"
+> 201	              disabled={uploading}
+> 202	              onClick={() => fileRef.current?.click()}
+> 203	            >
+> 204	              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+> 205	              {uploading ? "Enviando…" : "Adicionar retratos"}
+> 206	            </Button>
+> 207	            {refs.length > 0 && refs.length < MIN_REFS_SOULID && (
+> 208	              <p className="text-[10px] text-muted-foreground">
+> 209	                Recomendado ≥ {MIN_REFS_SOULID} retratos para Soul ID ({refs.length}/{MIN_REFS_SOULID}).
+> 210	              </p>
+> 211	            )}
+> 212	          </div>
+> 213	        </Section>
+> 214	
+> 215	        {d.error && (
+> 216	          <Section>
+> 217	            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[11px] text-destructive">
+> 218	              {d.error}
+> 219	            </div>
+> 220	          </Section>
+> 221	        )}
+> 222	      </div>
+> 223	
+> 224	      <div className="border-t border-border bg-card p-3">
+> 225	        <Button
+> 226	          type="button"
+> 227	          variant="accent"
+> 228	          className="w-full gap-2"
+> 229	          disabled={!hasConsent || refs.length === 0 || trained}
+> 230	          onClick={handleTrain}
+> 231	          title={
+> 232	            !hasConsent
+> 233	              ? "Conceda o consentimento biométrico primeiro"
+> 234	              : refs.length === 0
+> 235	              ? "Suba retratos de referência"
+> 236	              : undefined
+> 237	          }
+> 238	        >
+> 239	          <ShieldCheck className="h-4 w-4" />
+> 240	          {trained ? "✓ Identidade treinada" : "Treinar identidade"}
+> 241	        </Button>
+> 242	        <p className="mt-1.5 text-center text-[9px] text-muted-foreground">
+> 243	          Gate VLM-soft (FR-AC-013b) · treino gated OTD-AC-017
+> 244	        </p>
+> 245	      </div>
+> 246	    </div>
+> 247	  );
+> 248	}
+> 249	
+> ```
+
+## 🤖 Claude *(01:41:01)*
+
+
+## 🤖 Claude *(01:41:02)*
+
+Inspector mapeado. Vou ler o tipo `AvatarIdentityData` + `makeDefaultAvatarIdentity` + o `resolveExecutePayload` para o Slice 1 (branch honesto + relabel + default LoRA).
+
+## 🤖 Claude *(01:41:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 500,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 500	 * Holds a consented reference-portrait set + the trained identity profile. Trains against the
+> 501	 * net-new `avatar-identity-train` Edge Function (gated OTD-AC-017) — NOT canvas-execute. The
+> 502	 * Identity Gate runs the VLM-soft compare (FR-AC-013b, src/lib/avatar-identity.ts) post-generation.
+> 503	 */
+> 504	export interface AvatarIdentityData {
+> 505	  kind: "avatarIdentity";
+> 506	  label: string;
+> 507	  /** self_clone (titular cloning themselves) drives the FR-AC-032 verification + compliance template. */
+> 508	  personaType: "self_clone" | "fictional";
+> 509	  /** Identity ladder tier (1 InstantID/IP-Adapter · 2 PuLID-Flux · 3 LoRA per-person). */
+> 510	  tier: 1 | 2 | 3;
+> 511	  provider: "higgsfield" | "lora_flux";
+> 512	  /** Identity Gate mode — VLM-soft MVP default (FR-AC-013/014); arcface deferred OTD-AC-015. */
+> 513	  gateMode: "vlm_soft" | "arcface";
+> 514	  /** Uploaded reference-portrait signed URLs (≥20 recommended for Soul ID). */
+> 515	  referenceUrls: string[];
+> 516	  referenceStoragePaths?: string[];
+> 517	  /** avatar_identities row id — set after a successful train (gated OTD-AC-017). */
+> 518	  avatarIdentityId?: string;
+> 519	  status: NodeStatus;
+> 520	  output?: {
+> 521	    /** last generated frame URL that ran through the Identity Gate */
+> 522	    frameUrl?: string;
+> 523	    softMatch?: "pass" | "review" | "fail";
+> 524	    generatedAt: string;
+> 525	  };
+> 526	  error?: string;
+> 527	}
+> 528	
+> 529	/** FR-SPACES-029 (it.4a) — a list of products/atoms feeding a downstream generateImage as
+> 530	 *  template×items batch. 0-cost input node; expansion + billing happen at the generate node. */
+> 531	export interface ProductListItemData {
+> ```
+
+## 🤖 Claude *(01:41:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 798,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 798	}
+> 799	
+> 800	/** avatar-clone-ai Fatia 3b — avatarIdentity node default (FR-AC-012). */
+> 801	export function makeDefaultAvatarIdentity(
+> 802	  position: { x: number; y: number },
+> 803	  overrides: Partial<AvatarIdentityData> = {},
+> 804	): CanvasNode {
+> 805	  return {
+> 806	    id: makeNodeId(),
+> 807	    type: "avatarIdentity",
+> 808	    position,
+> 809	    data: {
+> 810	      kind: "avatarIdentity",
+> 811	      label: "Identidade (avatar)",
+> 812	      personaType: "self_clone",
+> 813	      tier: 1,
+> 814	      provider: "higgsfield",
+> 815	      gateMode: "vlm_soft",
+> 816	      referenceUrls: [],
+> 817	      status: "idle",
+> 818	      ...overrides,
+> 819	    },
+> 820	  };
+> 821	}
+> 822	
+> 823	/* ── Canvas-execute payload helper ───────────────────────────────────── */
+> 824	
+> 825	/**
+> ```
+
+## 🤖 Claude *(01:41:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 968,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 968	        prompt: "",
+> 969	        parameters: { scale: data.scale, face_enhance: data.faceEnhance },
+> 970	      };
+> 971	    case "voiceClone":
+> 972	      // voiceClone runs against the net-new `generate-voice` Edge Function (FR-AC-009),
+> 973	      // NOT canvas-execute — its inspector calls useAvatarVoice directly.
+> 974	      return null;
+> 975	    case "avatarIdentity":
+> 976	      // avatarIdentity trains against the net-new `avatar-identity-train` Edge Function
+> 977	      // (FR-AC-012, gated OTD-AC-017), NOT canvas-execute — inspector handles it directly.
+> 978	      return null;
+> 979	  }
+> 980	}
+> 981	
+> 982	/**
+> 983	 * Type-guard helpers (used by node components and inspectors to narrow
+> 984	 * the union via switch/case on `kind`).
+> 985	 */
+> ```
+
+## 🤖 Claude *(01:41:38)*
+
+
+## 🤖 Claude *(01:41:41)*
+
+Tenho tudo para o Slice 1. A tensão provider×tier (Soul ID conflaciona 3 coisas) fica para a emenda; agora faço o fix honesto e mínimo: `handleTrain` engine-aware, LoRA em 1º + "grátis", default = LoRA, e texto de ajuda honesto.
+
+## 🤖 Claude *(01:41:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "const MAX_IMG_MB = 15;\nconst MIN_REFS_SOULID = 20;\nconst PROVIDERS: { id: AvatarIdentityData[\"provider\"]; label: string }[] = [\n  { id: \"higgsfield\", label: \"Higgsfield Soul ID\" },\n  { id: \"lora_flux\", label: \"LoRA (Flux)\" },\n];",
+  "new_string": "const MAX_IMG_MB = 15;\n// Recommended reference-portrait count per engine (LoRA converges on fewer than Soul ID).\nconst MIN_REFS: Record<AvatarIdentityData[\"provider\"], number> = { lora_flux: 12, higgsfield: 20 };\n// LoRA (Flux) first = the free out-of-box default (BYOK Replicate = USD 0 to the platform).\nconst PROVIDERS: { id: AvatarIdentityData[\"provider\"]; label: string }[] = [\n  { id: \"lora_flux\", label: \"LoRA (Flux) \u00b7 gr\u00e1tis\" },\n  { id: \"higgsfield\", label: \"Higgsfield Soul ID\" },\n];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:41:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "  const handleTrain = () => {\n    // OTD-AC-017: the avatar-identity-train Edge Function is GATED on a verified Higgsfield self-serve\n    // training API + the Sovereign's credential. Fail closed honestly \u2014 no fabricated call (Lei 1).\n    toast.info(\"Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve.\");\n  };",
+  "new_string": "  const handleTrain = () => {\n    // Engine-aware gate (Lei 1 \u2014 no fabricated call). The training backend (avatar-identity-train)\n    // is wired per engine in avatar-clone-ai Amendment 11; until it lands each path fails closed\n    // honestly with an engine-specific message instead of the old Higgsfield-only stub.\n    if (d.provider === \"lora_flux\") {\n      // Free path: LoRA (Flux) trained on the tenant's own Replicate account (BYOK = USD 0).\n      toast.info(\"Treino LoRA (Flux) \u2014 gratuito via sua conta Replicate. Em breve.\");\n      return;\n    }\n    // Higgsfield Soul ID: no verified self-serve training endpoint exists (OTD-AC-017).\n    toast.info(\"Higgsfield Soul ID: sem endpoint de treino verificado (OTD-AC-017). Use LoRA (Flux) \u2014 gr\u00e1tis.\");\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:42:01)*
+
+
+## 🤖 Claude *(01:42:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "            {refs.length > 0 && refs.length < MIN_REFS_SOULID && (\n              <p className=\"text-[10px] text-muted-foreground\">\n                Recomendado \u2265 {MIN_REFS_SOULID} retratos para Soul ID ({refs.length}/{MIN_REFS_SOULID}).\n              </p>\n            )}",
+  "new_string": "            {refs.length > 0 && refs.length < MIN_REFS[d.provider] && (\n              <p className=\"text-[10px] text-muted-foreground\">\n                Recomendado \u2265 {MIN_REFS[d.provider]} retratos ({refs.length}/{MIN_REFS[d.provider]}).\n              </p>\n            )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:42:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx",
+  "old_string": "        <p className=\"mt-1.5 text-center text-[9px] text-muted-foreground\">\n          Gate VLM-soft (FR-AC-013b) \u00b7 treino gated OTD-AC-017\n        </p>",
+  "new_string": "        <p className=\"mt-1.5 text-center text-[9px] text-muted-foreground\">\n          {d.provider === \"lora_flux\"\n            ? \"LoRA (Flux) gr\u00e1tis \u00b7 BYOK Replicate \u00b7 Gate VLM-soft (FR-AC-013b)\"\n            : \"Higgsfield Soul ID gated (OTD-AC-017) \u00b7 Gate VLM-soft (FR-AC-013b)\"}\n        </p>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:42:17)*
+
+Agora o default flip para LoRA em `makeDefaultAvatarIdentity`:
+
+## 🤖 Claude *(01:42:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "      kind: \"avatarIdentity\",\n      label: \"Identidade (avatar)\",\n      personaType: \"self_clone\",\n      tier: 1,\n      provider: \"higgsfield\",\n      gateMode: \"vlm_soft\",",
+  "new_string": "      kind: \"avatarIdentity\",\n      label: \"Identidade (avatar)\",\n      personaType: \"self_clone\",\n      tier: 1,\n      // Free LoRA (Flux) via BYOK Replicate is the out-of-box default (USD 0 to the platform);\n      // Higgsfield Soul ID stays available but its training endpoint is gated (OTD-AC-017).\n      provider: \"lora_flux\",\n      gateMode: \"vlm_soft\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:42:35)*
+
+
+## 🤖 Claude *(01:42:36)*
+
+Slice 1 completo (4 edits). tsc + build+deploy + verificação material.
+
+## 🤖 Claude *(01:42:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== build ===\"; bun run build 2>&1 | tail -4; echo \"build exit: ${PIPESTATUS[0]}\"\necho \"=== materialidade: string nova no bundle ===\"\ngrep -rl \"gratuito via sua conta Replicate\" dist/assets/ 2>/dev/null && echo \"\u2192 handleTrain LoRA-aware BAKED \u2705\" || echo \"\u2192 AUSENTE \u274c\"",
+  "description": "tsc + build + materialidade Slice 1"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === build ===
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 30.02s
+> build exit: 0
+> === materialidade: string nova no bundle ===
+> dist/assets/CanvasEditorPage-B1jmAZAX.js
+> → handleTrain LoRA-aware BAKED ✅
+> ```
+
+## 🤖 Claude *(01:43:19)*
+
+
+## 🤖 Claude *(01:43:20)*
+
+Slice 1 deployado e material (string no bundle servido). Commit granular:
+
+## 🤖 Claude *(01:43:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/components/canvas/RightPanel/inspectors/AvatarIdentityInspector.tsx src/types/canvas.ts\ngit commit -q -F - <<'EOF'\nfix(spaces): identidade LoRA n\u00e3o cai mais no gate do Higgsfield (handleTrain engine-aware)\n\nO bot\u00e3o \"Treinar identidade\" disparava sempre o toast \"requer credencial Higgsfield\n(OTD-AC-017)\" ignorando o motor selecionado \u2014 LoRA (Flux), que \u00e9 o caminho GR\u00c1TIS,\nca\u00eda no gate errado. Corre\u00e7\u00f5es (bug em feature documentada, sem gate BoK):\n\n- handleTrain agora ramifica por d.provider: LoRA (Flux) mostra \"gratuito via sua conta\n  Replicate, em breve\"; Higgsfield Soul ID mostra o gate honesto (OTD-AC-017) apontando\n  o LoRA como alternativa gr\u00e1tis.\n- Motor LoRA (Flux) vira o PRIMEIRO e o default out-of-box (makeDefaultAvatarIdentity),\n  rotulado \"\u00b7 gr\u00e1tis\" \u2014 a carta na manga gratuita \u00e9 o caminho padr\u00e3o.\n- Removida a confla\u00e7\u00e3o \"Soul ID\" na dica de retratos (contagem recomendada por motor:\n  LoRA 12 \u00b7 Soul ID 20) e no rodap\u00e9 de ajuda.\n\nNota honesta (Lei 1): o branch corrige a MENSAGEM; o treino LoRA real ainda ser\u00e1\nconstru\u00eddo (avatar-identity-train no Replicate BYOK) ap\u00f3s a emenda avatar-clone-ai 11.\n\ntsc 0 \u00b7 build+deploy (string baked no bundle servido).\nEOF\ngit log --oneline -1",
+  "description": "Commit Slice 1 (LoRA engine-aware fix)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:43PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:43PM[0m [32mINF[0m scan completed in 9.68ms
+> [90m10:43PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> a0e8590 fix(spaces): identidade LoRA não cai mais no gate do Higgsfield (handleTrain engine-aware)
+> ```
+
+## 🤖 Claude *(01:44:22)*
+
+
+## 🤖 Claude *(01:44:27)*
+
+Slice 1 selado (`a0e8590`) + LIVE. Agora **Slice 2 — a emenda BoK** que destrava construir o treinador (Closed-Loop §1: OTD-AC-017 + gate de licença FR-AC-016).
+
+Antes de escrever a emenda, preciso **fundamentar o substrato real** (Lei 1 — não chutar contrato de provider externo): o modelo Replicate de treino Flux LoRA, seu contrato de API, e — crítico — a **situação de licença comercial** (FLUX.1-dev é não-comercial; FLUX.1-schnell é Apache-2.0; e há a questão do grant comercial da Replicate para Flux hospedado). Vou lançar um **workflow de pesquisa** para verificar isso com URLs antes de selar a emenda.
+
+## 🤖 Claude *(01:45:03)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'free-lora-substrate-research',\n  description: 'Verify the real Replicate Flux LoRA trainer contract + commercial-license status to ground avatar-clone-ai Amendment 11 (free LoRA identity training)',\n  phases: [\n    { title: 'Research', detail: '3 parallel web researchers: trainer contract \u00b7 licensing \u00b7 alternatives' },\n    { title: 'Synthesize', detail: 'grounded substrate recommendation with confidence + open questions' },\n  ],\n}\n\nconst RSCH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['topic', 'verified_findings', 'key_facts', 'confidence', 'open_questions', 'sources'],\n  properties: {\n    topic: { type: 'string' },\n    verified_findings: { type: 'string', description: 'detailed markdown; EVERY factual claim must cite the source URL inline (Lei 1)' },\n    key_facts: { type: 'array', items: { type: 'string' }, description: 'crisp verified facts, each with its URL' },\n    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n    open_questions: { type: 'array', items: { type: 'string' } },\n    sources: { type: 'array', items: { type: 'string' }, description: 'all URLs actually fetched' },\n  },\n}\n\nconst RESEARCHERS = [\n  {\n    label: 'trainer-contract',\n    prompt: `Research the CURRENT, real Replicate model(s) for training a FLUX LoRA (identity/person). Use WebSearch + WebFetch \u2014 ground every claim in a fetched URL (Lei 1, no fabrication).\nTASKS:\n1. Identify the canonical Replicate LoRA trainer model(s) for FLUX \u2014 e.g. 'ostris/flux-dev-lora-trainer', 'replicate/fast-flux-trainer', and any newer official one. For each: the model slug, whether it is still available/maintained, and its version.\n2. Get the EXACT training API contract for the recommended trainer: the create-training endpoint shape (POST https://api.replicate.com/v1/models/<owner>/<name>/versions/<version>/trainings OR the trainings endpoint), the REQUIRED input fields (input_images zip URL? trigger_word? steps? lora_rank? autocaption? resolution?), the required 'destination' model param, and the OUTPUT format (weights .tar/.safetensors URL, how to retrieve).\n3. Cost + time: approx USD per training run on the user's own Replicate account, and typical wall-clock (minutes).\n4. How the resulting LoRA weights are later USED for inference (a separate Replicate flux model that accepts a 'lora_weights'/'hf_lora' URL, or a created destination model you run directly).\nReturn via schema: the recommended trainer slug+version, the exact create+poll contract, output weights format, cost/time, and the inference-with-weights path.`,\n  },\n  {\n    label: 'licensing',\n    prompt: `Research the COMMERCIAL-LICENSE status of training + using a FLUX LoRA on Replicate (this is load-bearing for a compliance gate FR-AC-016 \u2014 a wrong answer is a legal error, so be precise and cite URLs; use WebSearch + WebFetch).\nTASKS:\n1. FLUX.1-dev license: is it non-commercial? Cite the Black Forest Labs FLUX.1-dev license. Do LoRA weights trained on FLUX.1-dev inherit the non-commercial restriction for the user?\n2. FLUX.1-schnell license: is it Apache-2.0 (commercially usable)? Cite. Can you train a LoRA that targets schnell, or do trainers only target dev?\n3. THE KEY QUESTION: When FLUX.1-dev is run through a HOSTED API like Replicate (BYOK, the user's own account), does Replicate grant commercial usage rights for the outputs? Find Replicate's own statement / FLUX pricing/license page / Black Forest Labs commercial-license arrangement with Replicate/fal. Is a LoRA trained AND run on Replicate's hosted flux-dev commercially usable by the user?\n4. Net verdict for FR-AC-016: can a user commercially use images generated from a FLUX LoRA they trained on their own Replicate account? Under what exact conditions (dev-via-hosted-API vs downloading weights vs schnell)?\nReturn via schema: the license facts with URLs, the hosted-API commercial-grant answer, and a crisp verdict for whether \"free LoRA via BYOK Replicate\" is commercially compliant.`,\n  },\n  {\n    label: 'alternatives',\n    prompt: `Research ALTERNATIVE free/commercial-safe LoRA (or equivalent identity-lock) training substrates, in case FLUX.1-dev has a commercial-license problem. Use WebSearch + WebFetch; cite URLs (Lei 1).\nTASKS:\n1. FLUX.1-schnell (Apache-2.0) LoRA training on Replicate \u2014 does a schnell trainer exist? Any quality/identity tradeoff vs dev?\n2. SDXL LoRA / DreamBooth training on Replicate (e.g. 'ostris/flux' vs classic SDXL DreamBooth trainers) \u2014 commercially usable? cost?\n3. Non-training identity-lock alternatives that need NO persistent weights and are commercially safe: InstantID, IP-Adapter FaceID, PuLID \u2014 are these available on Replicate/fal with commercial terms, and do they give per-person consistency without a 20-30 min training run? (This maps to the FR-AC-012 Tier1/Tier2 ladder.)\n4. For each option: commercial-license status, cost, wall-clock, and identity fidelity tradeoff.\nReturn via schema: a ranked list of commercially-safe substrates (training and no-training), each with license + cost + fidelity, so the amendment can pick a compliant default and a fallback.`,\n  },\n]\n\nphase('Research')\nconst research = await parallel(RESEARCHERS.map((r) => () =>\n  agent(r.prompt, { label: r.label, phase: 'Research', schema: RSCH_SCHEMA, agentType: 'general-purpose' })\n))\nconst valid = research.filter(Boolean)\nlog(`Research done: ${valid.length}/${RESEARCHERS.length}`)\n\nphase('Synthesize')\nconst SYNTH_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['recommended_substrate', 'fr_ac_016_verdict', 'trainer_contract', 'inference_path', 'fallback', 'open_questions', 'all_sources'],\n  properties: {\n    recommended_substrate: { type: 'string', description: 'the substrate the amendment should name as the free default, with why' },\n    fr_ac_016_verdict: { type: 'string', description: 'crisp commercial-license verdict + the exact condition that makes it compliant' },\n    trainer_contract: { type: 'string', description: 'the concrete Replicate create+poll training contract to implement (slug, version, inputs, output)' },\n    inference_path: { type: 'string', description: 'how avatar_identities weights get used later for generation' },\n    fallback: { type: 'string', description: 'the fallback substrate if the primary has a license/cost issue' },\n    open_questions: { type: 'array', items: { type: 'string' } },\n    all_sources: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst synth = await agent(\n  `Synthesize these ${valid.length} research reports into a grounded substrate decision for avatar-clone-ai Amendment 11 (free LoRA identity training). Prioritize the FR-AC-016 commercial-license correctness above all \u2014 if the license answer is ambiguous, say so and pick the safest compliant option. Reports (JSON):\\n${JSON.stringify(valid, null, 2)}\\n\\nReturn via schema a concrete, implementable recommendation: which trainer to call, the exact API contract, how weights are later used, the commercial-license verdict + condition, a fallback, and any open questions the amendment must flag as OTDs.`,\n  { label: 'synthesize', phase: 'Synthesize', schema: SYNTH_SCHEMA, effort: 'high' },\n)\nreturn { research: valid, synth }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wq7red9l2
+> Summary: Verify the real Replicate Flux LoRA trainer contract + commercial-license status to ground avatar-clone-ai Amendment 11 (free LoRA identity training)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/subagents/workflows/wf_85d1558b-7bf
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/free-lora-substrate-research-wf_85d1558b-7bf.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/free-lora-substrate-research-wf_85d1558b-7bf.js"} to iterate without resending the script.)
+> Run ID: wf_85d1558b-7bf
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/free-lora-substrate-research-wf_85d1558b-7bf.js", resumeFromRunId: "wf_85d1558b-7bf"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:45:10)*
+
+
+## 🤖 Claude *(01:45:11)*
+
+Workflow de pesquisa rodando. Enquanto isso, preparo o terreno para Slice 3 sem duplicar a pesquisa: verificar se o User 0 tem chave Replicate, ler o schema real de `avatar_identities` e o padrão `generateReplicate` (create+poll) que vou reusar.
+
+## 🤖 Claude *(01:45:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=\"$VITE_SUPABASE_URL\"; U=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\necho \"=== User 0 tem replicate_api_key? ===\"\ncurl -s \"$URL/rest/v1/decrypted_user_api_keys?user_id=eq.$U&select=replicate_api_key\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin);r=d[0] if d else {};k=r.get('replicate_api_key');print('replicate_api_key:', 'PREENCHIDA (len %d)'%len(k) if k else 'VAZIA')\" 2>/dev/null\necho \"=== avatar_identities: colunas (schema live) ===\"\ncurl -s \"$URL/rest/v1/avatar_identities?select=*&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range\ncurl -s \"$URL/rest/v1/avatar_identities?select=*&limit=0\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -m json.tool 2>/dev/null | head",
+  "description": "Replicate key do User 0 + schema avatar_identities"
+}
+```
+
+## 🤖 Claude *(01:45:19)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260630130000_avatar_clone_ai_identity_consent.sql"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === User 0 tem replicate_api_key? ===
+> replicate_api_key: PREENCHIDA (len 40)
+> === avatar_identities: colunas (schema live) ===
+> content-range: */0
+> []
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- ─────────────────────────────────────────────────────────────────────────────
+> 2	-- avatar-clone-ai · Fatia 3a — Biometric consent + identity tables + erasure (LGPD Art. 11/18)
+> 3	-- BoK SSOT: docs/bok/avatar-clone-ai/{04-frd.md FR-AC-027/028/030/031, 06-data-model.md avatar_identities/avatar_consents}
+> 4	-- SOP (Lei 2): docs/processes/avatar-biometric-retention-erasure.md
+> 5	--
+> 6	-- /security-review OBRIGATÓRIO antes do commit (FMEA-011 — biometria facial/vocal per-tenant, PII sensível).
+> 7	--
+> 8	-- Creates:
+> 9	--   1. avatar_identities  — face identity artefact (RLS own; weights/embedding; populated in Fatia 3b)
+> 10	--   2. avatar_consents    — IMMUTABLE consent ledger per finalidade (LGPD Art. 11); INSERT via service-role only
+> 11	--   3. erase_avatar_artifacts RPC — tenant-guarded cascade (identities + voice_profiles) → returns keys for the
+> 12	--      caller (edge fn / sweep) to delete Storage objects + revoke Vault secrets + dispatch 3rd-party deletes
+> 13	--
+> 14	-- Staged-nullable deviation (documented): the data model marks identity_storage_key + arcface_threshold NOT NULL,
+> 15	-- but Fatia 3b inserts a status='training' row BEFORE weights exist and BEFORE empirical FAR/FRR/EER calibration
+> 16	-- on real frames. They are NULLABLE here so the training row can exist first; 3b fills them. Honest, not invention.
+> 17	-- ─────────────────────────────────────────────────────────────────────────────
+> 18	
+> 19	-- ── 1. avatar_identities (biometric face — RLS own default-deny) ─────────────
+> 20	CREATE TABLE IF NOT EXISTS public.avatar_identities (
+> 21	  id                    uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+> 22	  user_id               uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 23	  project_id            uuid,                                              -- no FK: `projects` table does not exist
+> 24	  persona_type          text        NOT NULL CHECK (persona_type IN ('self_clone','fictional')),
+> 25	  tier                  smallint    NOT NULL CHECK (tier IN (1,2,3)),
+> 26	  identity_storage_key  text,                                             -- staged: weights ref (prefixo user_id/), set in 3b
+> 27	  provider              text        NOT NULL DEFAULT 'higgsfield' CHECK (provider IN ('higgsfield','lora_flux')),
+> 28	  arcface_threshold     numeric,                                          -- staged: empirically calibrated in 3b (NEVER hardcode)
+> 29	  verification_passed   boolean     NOT NULL DEFAULT false,               -- true só após identity-verification gate (3b)
+> 30	  commercial_license_ok boolean     NOT NULL DEFAULT false,               -- gate FM-AC-001 (bloqueia pesos non-commercial)
+> 31	  embedding             vector(768),                                      -- mesh embedding (trigger embed-mcorch-node)
+> 32	  status                text        NOT NULL DEFAULT 'training' CHECK (status IN ('training','active','revoked')),
+> 33	  last_used_at          timestamptz,                                      -- drives retention-sweep
+> 34	  created_at            timestamptz NOT NULL DEFAULT now(),
+> 35	  updated_at            timestamptz NOT NULL DEFAULT now()
+> 36	);
+> 37	
+> 38	COMMENT ON TABLE public.avatar_identities IS
+> 39	  'avatar-clone-ai Fatia 3 — per-user face identity (Soul ID/LoRA ref + canonical embedding). RLS own; DELETE only via erase_avatar_artifacts. arcface_threshold calibrated empirically in 3b (never hardcode).';
+> 40	
+> 41	CREATE INDEX IF NOT EXISTS avatar_identities_user_idx        ON public.avatar_identities (user_id);
+> 42	CREATE INDEX IF NOT EXISTS avatar_identities_status_used_idx ON public.avatar_identities (status, last_used_at);
+> 43	CREATE INDEX IF NOT EXISTS avatar_identities_embedding_hnsw  ON public.avatar_identities
+> 44	  USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+> 45	
+> 46	ALTER TABLE public.avatar_identities ENABLE ROW LEVEL SECURITY;
+> 47	
+> 48	CREATE POLICY "avatar_identities_select_own"
+> 49	  ON public.avatar_identities FOR SELECT USING (user_id = auth.uid());
+> 50	-- INSERT/UPDATE flow through service-role (avatar-identity-train, Fatia 3b) — service_role bypasses RLS.
+> 51	-- No DELETE policy (default-deny): erasure only via erase_avatar_artifacts RPC.
+> 52	
+> 53	DROP TRIGGER IF EXISTS trg_avatar_identities_updated_at ON public.avatar_identities;
+> 54	CREATE TRIGGER trg_avatar_identities_updated_at
+> 55	  BEFORE UPDATE ON public.avatar_identities
+> 56	  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 57	
+> 58	-- Mesh Connection Mandate: the avatar-identity-train edge fn (Fatia 3b) inserts an `observation` node into
+> 59	-- mcorch_nodes on first successful training (which the pg_net trg_mcorch_embed_on_insert trigger embeds).
+> 60	-- The `embedding` column + HNSW above are reserved for direct identity-similarity queries (populated in 3b);
+> 61	-- there is NO embed trigger on this domain table (embedding is a mcorch_nodes concern).
+> 62	
+> 63	-- ── 2. avatar_consents (IMMUTABLE consent ledger — LGPD Art. 11) ─────────────
+> 64	CREATE TABLE IF NOT EXISTS public.avatar_consents (
+> 65	  id                           uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+> 66	  user_id                      uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 67	  purpose                      text        NOT NULL CHECK (purpose IN ('train_lora','face_embedding','voice_clone')),
+> 68	  term_version                 text        NOT NULL,
+> 69	  consent_granted              boolean     NOT NULL,                      -- true só com checkbox específico (nunca legítimo interesse)
+> 70	  ip_address                   inet        NOT NULL,                      -- server-captured pela edge fn avatar-consent
+> 71	  attestation_titular          boolean     NOT NULL DEFAULT false,       -- atestado #1: user é o titular
+> 72	  attestation_commercial_tier  boolean     NOT NULL DEFAULT false,       -- atestado #2: tier permite uso comercial
+> 73	  revoked_at                   timestamptz,                              -- null=ativo; preenchido=fail-closed (ÚNICA coluna mutável)
+> 74	  created_at                   timestamptz NOT NULL DEFAULT now()
+> 75	);
+> 76	
+> 77	COMMENT ON TABLE public.avatar_consents IS
+> 78	  'avatar-clone-ai Fatia 3 — IMMUTABLE biometric consent ledger (LGPD Art. 11). One row per granted purpose. INSERT via service-role (avatar-consent edge fn, server-captured IP). Only revoked_at is mutable.';
+> 79	
+> 80	CREATE INDEX IF NOT EXISTS avatar_consents_user_purpose_idx ON public.avatar_consents (user_id, purpose, revoked_at);
+> 81	
+> 82	ALTER TABLE public.avatar_consents ENABLE ROW LEVEL SECURITY;
+> 83	
+> 84	CREATE POLICY "avatar_consents_select_own"
+> 85	  ON public.avatar_consents FOR SELECT USING (user_id = auth.uid());
+> 86	-- INSERT via service-role only (edge fn captures IP server-side) → no own INSERT policy (default-deny).
+> 87	CREATE POLICY "avatar_consents_revoke_own"
+> 88	  ON public.avatar_consents FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+> 89	-- No DELETE policy: consent ledger is a permanent audit record (CASCADE only on auth.users delete).
+> 90	
+> 91	-- Immutability trigger: only revoked_at may change.
+> 92	CREATE OR REPLACE FUNCTION public.enforce_avatar_consent_immutable() RETURNS trigger
+> 93	  LANGUAGE plpgsql SET search_path = '' AS $$
+> 94	BEGIN
+> 95	  IF (to_jsonb(NEW) - 'revoked_at') IS DISTINCT FROM (to_jsonb(OLD) - 'revoked_at') THEN
+> 96	    RAISE EXCEPTION 'avatar_consents é imutável (só revoked_at pode mudar)' USING errcode = '42501';
+> 97	  END IF;
+> 98	  RETURN NEW;
+> 99	END $$;
+> 100	
+> 101	DROP TRIGGER IF EXISTS trg_avatar_consent_immutable ON public.avatar_consents;
+> 102	CREATE TRIGGER trg_avatar_consent_immutable
+> 103	  BEFORE UPDATE ON public.avatar_consents
+> 104	  FOR EACH ROW EXECUTE FUNCTION public.enforce_avatar_consent_immutable();
+> 105	
+> 106	-- ── 3. erase_avatar_artifacts — tenant-guarded cascade (Art. 18) ─────────────
+> 107	-- Mirrors erase_vision_artifacts (20260615200000): SECURITY DEFINER + tenant guard on EVERY delete + returns
+> 108	-- the storage/Vault refs for the caller to remove via Storage API + Vault (storage.objects is storage-admin →
+> 109	-- SECURITY DEFINER gets 42501 on SQL delete; OTD-VM-026 lesson).
+> 110	CREATE OR REPLACE FUNCTION public.erase_avatar_artifacts(
+> 111	  p_avatar_identity_id uuid DEFAULT NULL,
+> 112	  p_voice_profile_id   uuid DEFAULT NULL
+> 113	)
+> 114	RETURNS jsonb
+> 115	LANGUAGE plpgsql
+> 116	SECURITY DEFINER
+> 117	SET search_path = ''
+> 118	AS $$
+> 119	DECLARE
+> 120	  v_user_id        uuid := auth.uid();   -- null for service_role (sweep); guard falls back to auth.role()
+> 121	  v_storage_keys   text[] := '{}';
+> 122	  v_voice_refs     text[] := '{}';
+> 123	  v_key            text;
+> 124	  v_ref            text;
+> 125	  v_identities     int := 0;
+> 126	  v_voices         int := 0;
+> 127	BEGIN
+> 128	  IF p_avatar_identity_id IS NULL AND p_voice_profile_id IS NULL THEN
+> 129	    RAISE EXCEPTION 'erase_avatar_artifacts: at least one of avatar_identity_id / voice_profile_id required' USING errcode = '22023';
+> 130	  END IF;
+> 131	
+> 132	  IF p_avatar_identity_id IS NOT NULL THEN
+> 133	    SELECT identity_storage_key INTO v_key FROM public.avatar_identities
+> 134	      WHERE id = p_avatar_identity_id AND (user_id = v_user_id OR auth.role() = 'service_role');
+> 135	    IF NOT FOUND THEN RAISE EXCEPTION 'avatar_identity_not_found' USING errcode = 'P0002'; END IF;
+> 136	    IF v_key IS NOT NULL THEN v_storage_keys := array_append(v_storage_keys, v_key); END IF;
+> 137	    DELETE FROM public.avatar_identities WHERE id = p_avatar_identity_id
+> 138	      AND (user_id = v_user_id OR auth.role() = 'service_role');   -- embedding + mesh node delete together
+> 139	    GET DIAGNOSTICS v_identities = ROW_COUNT;
+> 140	  END IF;
+> 141	
+> 142	  IF p_voice_profile_id IS NOT NULL THEN
+> 143	    SELECT voiceprint_vault_ref INTO v_ref FROM public.voice_profiles
+> 144	      WHERE id = p_voice_profile_id AND (user_id = v_user_id OR auth.role() = 'service_role');
+> 145	    IF NOT FOUND THEN RAISE EXCEPTION 'voice_profile_not_found' USING errcode = 'P0002'; END IF;
+> 146	    DELETE FROM public.voice_profiles WHERE id = p_voice_profile_id
+> 147	      AND (user_id = v_user_id OR auth.role() = 'service_role');
+> 148	    GET DIAGNOSTICS v_voices = ROW_COUNT;
+> 149	    -- Revoke the voiceprint Vault secret in-place (postgres owner holds DELETE on vault.secrets — same as
+> 150	    -- disconnect_wordpress/disconnect_meta). Zero-residue: the encrypted voiceprint blob is destroyed, not orphaned.
+> 151	    IF v_ref ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 152	      DELETE FROM vault.secrets WHERE id = v_ref::uuid;
+> 153	      v_voice_refs := array_append(v_voice_refs, v_ref);
+> 154	    END IF;
+> 155	  END IF;
+> 156	
+> 157	  RETURN jsonb_build_object(
+> 158	    'erased', true,
+> 159	    'identities', v_identities,
+> 160	    'voices', v_voices,
+> 161	    'storage_keys', to_jsonb(v_storage_keys),   -- caller deletes Storage objects via Storage API (storage-admin role)
+> 162	    'voice_vault_refs_revoked', to_jsonb(v_voice_refs)  -- voiceprint Vault secrets destroyed in-RPC (zero-residue)
+> 163	  );
+> 164	END $$;
+> 165	
+> 166	REVOKE ALL ON FUNCTION public.erase_avatar_artifacts(uuid, uuid) FROM PUBLIC, anon;
+> 167	GRANT  EXECUTE ON FUNCTION public.erase_avatar_artifacts(uuid, uuid) TO authenticated, service_role;
+> 168	
+> ```
+
+## 🤖 Claude *(01:45:44)*
+
+
+## 🤖 Claude *(01:45:48)*
+
+Prep material confirmado:
+- **User 0 tem `replicate_api_key` (40 chars)** ✅ — o caminho LoRA grátis é testável com o BYOK dele.
+- Schema `avatar_identities` já tem `identity_storage_key` (pesos), `provider`, `status`, `commercial_license_ok` (gate FM-AC-001), consents `train_lora`+`face_embedding`+`attestation_commercial_tier`. **Gap para Slice 3:** falta uma coluna para o `training_ref` do Replicate (poll async — treino Flux LoRA leva ~20-30 min, não cabe numa edge fn síncrona) → migração aditiva pequena (→ /security-review, tabela biométrica FMEA-011).
+
+Vou ler o padrão `generateReplicate` (create+poll) que vou reusar, enquanto a pesquisa roda.
+
+## 🤖 Claude *(01:45:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/canvas-execute/index.ts",
+  "offset": 1760,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1760	  if (prediction.status === "failed") throw new Error(`Replicate upscale failed: ${prediction.error}`);
+> 1761	  const output = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+> 1762	  return { url: output || "" };
+> 1763	}
+> 1764	
+> 1765	async function generateReplicate(apiKey: string, body: ExecuteRequest) {
+> 1766	  if (!apiKey) throw new Error("Replicate API key not configured");
+> 1767	
+> 1768	  const modelMap: Record<string, string> = {
+> 1769	    "flux-1.1-pro": "black-forest-labs/flux-1.1-pro",
+> 1770	    "flux-schnell": "black-forest-labs/flux-schnell",
+> 1771	    "sdxl": "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+> 1772	  };
+> 1773	
+> 1774	  const modelId = modelMap[body.model] || body.model;
+> 1775	  const input: Record<string, any> = {
+> 1776	    prompt: body.prompt,
+> 1777	    ...(body.negative_prompt ? { negative_prompt: body.negative_prompt } : {}),
+> 1778	    ...(body.parameters?.width ? { width: body.parameters.width } : {}),
+> 1779	    ...(body.parameters?.height ? { height: body.parameters.height } : {}),
+> 1780	    ...(body.parameters?.num_inference_steps ? { num_inference_steps: body.parameters.num_inference_steps } : {}),
+> 1781	    ...(body.parameters?.guidance_scale ? { guidance_scale: body.parameters.guidance_scale } : {}),
+> 1782	  };
+> 1783	
+> 1784	  // Cross-node consistency: seed (reproducibility, all models) + reference image
+> 1785	  // mapped to each model's img2img param. flux-schnell has no image input → skip.
+> 1786	  // SOP: docs/processes/canvas-node-consistency.md. Fail-open if no reference/seed.
+> 1787	  const seedVal = typeof body.seed === "number"
+> 1788	    ? body.seed
+> 1789	    : (typeof body.parameters?.seed === "number" ? body.parameters.seed : undefined);
+> 1790	  if (typeof seedVal === "number") input.seed = seedVal;
+> 1791	  const refUrl = (body.reference_image_urls ?? []).filter(Boolean)[0];
+> 1792	  if (refUrl) {
+> 1793	    if (body.model === "flux-1.1-pro") {
+> 1794	      input.image_prompt = refUrl; // FLUX 1.1 Pro: composition reference
+> 1795	    } else if (body.model === "sdxl") {
+> 1796	      input.image = refUrl; // SDXL img2img
+> 1797	      input.prompt_strength = typeof body.parameters?.prompt_strength === "number"
+> 1798	        ? body.parameters.prompt_strength
+> 1799	        : 0.75;
+> 1800	    }
+> 1801	    // flux-schnell intentionally omitted (text-to-image only).
+> 1802	  }
+> 1803	
+> 1804	  // Create prediction
+> 1805	  const createResp = await fetch("https://api.replicate.com/v1/predictions", {
+> 1806	    method: "POST",
+> 1807	    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+> 1808	    body: JSON.stringify({ model: modelId.includes(":") ? undefined : modelId, version: modelId.includes(":") ? modelId.split(":")[1] : undefined, input }),
+> 1809	  });
+> 1810	
+> 1811	  if (!createResp.ok) {
+> 1812	    const t = await createResp.text();
+> 1813	    throw new Error(`Replicate error ${createResp.status}: ${t}`);
+> 1814	  }
+> 1815	
+> 1816	  let prediction = await createResp.json();
+> 1817	
+> 1818	  // Poll for completion (max 120s)
+> 1819	  const maxWait = 120_000;
+> 1820	  const start = Date.now();
+> 1821	  while (prediction.status !== "succeeded" && prediction.status !== "failed" && Date.now() - start < maxWait) {
+> 1822	    await new Promise((r) => setTimeout(r, 2000));
+> 1823	    const pollResp = await fetch(prediction.urls.get, {
+> 1824	      headers: { Authorization: `Bearer ${apiKey}` },
+> 1825	    });
+> 1826	    prediction = await pollResp.json();
+> 1827	  }
+> 1828	
+> 1829	  if (prediction.status === "failed") {
+> 1830	    throw new Error(`Replicate failed: ${prediction.error}`);
+> 1831	  }
+> 1832	
+> 1833	  const output = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+> 1834	  return { url: output || "" };
+> ```
+
+## 🤖 Claude *(01:46:13)*
+
+
+## 🤖 Claude *(01:46:20)*
+
+Prep de Slice 3 pronto (padrão `generateReplicate` create+poll mapeado; treino usa endpoint `/trainings` async → precisarei de `action:start` + `action:poll` + coluna `training_ref`). 
+
+Aguardando o workflow de pesquisa (`wf_85d1558b-7bf`) que fundamenta o **substrato + licença FR-AC-016** com URLs — decisão crítica que não posso chutar (FLUX.1-dev não-comercial vs schnell Apache-2.0 vs grant comercial da Replicate). Assim que ele retornar, escrevo a **emenda avatar-clone-ai/11** (Slice 2) e construo o **`avatar-identity-train`** (Slice 3).
+
+Progresso da sessão:
+- ✅ Slice 1 — LoRA engine-aware fix LIVE (`a0e8590`): motor LoRA é o default grátis, mensagens honestas por motor, fim da conflação Soul ID.
+- ⏳ Slice 2/3 — aguardando fundamentação de licença/contrato do treinador.
+
+## 👤 User *(01:54:54)*
+
+<task-notification>
+<task-id>wq7red9l2</task-id>
+<tool-use-id>toolu_011HncLZFhbKC1hqxSBCL3HF</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/wq7red9l2.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Verify the real Replicate Flux LoRA trainer contract + commercial-license status to ground avatar-clone-ai Amendment 11 (free LoRA identity training)" completed</summary>
+<result>{"research":[{"topic":"Current Replicate FLUX LoRA trainer (identity/person): recommended model, exact training API contract, output weights format, cost/time, and inference-with-weights path","verified_findings":"## 1. Canonical Replicate FLUX LoRA trainers (both live &amp; maintained, July 2026)\n\nThere are two first-party trainers on Replicate. Both are actively available.\n\n**A. `ostris/flux-dev-lora-trainer` — RECOMMENDED for identity/person LoRAs.**\n- Live train page, current version prefix `26dce37a` (title: \"Train – ostris/flux-dev-lora-trainer:26dce37a\") (https://replicate.com/ostris/flux-dev-lora-trainer/train). An older pinned full-hash used in Replicate's own API tutorial is `d995297071a44dcb72244e6c19462111649ec86a9646c32df56daa7f14801944` (https://replicate.com/blog/fine-tune-flux-with-an-api).\n- It is the Cog wrapper of Ostris's `ai-toolkit`; source is open at `github.com/replicate/flux-fine-tuner` (https://github.com/replicate/flux-fine-tuner). This is the trainer Replicate documents end-to-end for API use.\n- Why recommended for a person: it exposes full control (`lora_rank`, `learning_rate`, layer-targeting, resolution buckets) AND returns a portable `lora.safetensors` you can host and reuse anywhere (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py).\n\n**B. `replicate/fast-flux-trainer` — faster/cheaper alternative.**\n- Live train page, current version prefix `e5a5bc82` (title: \"Train – replicate/fast-flux-trainer:e5a5bc82\") (https://replicate.com/replicate/fast-flux-trainer/train). Shipped 2025-05-23 as the \"faster, cheaper Flux training\" option (https://replicate.com/changelog/2025-05-23-faster-flux-trainer).\n- Slimmer input surface: `input_images`, `trigger_word`, `lora_type` (\"subject\" for a person/object vs \"style\"), `steps` (https://replicate.com/replicate/fast-flux-trainer/train). Runs on 8×H100, ~2 min, ~$1.46 (https://replicate.com/docs/get-started/fine-tune-with-flux). For a person you'd set `lora_type: \"subject\"`. Fewer knobs and less transparent weight export than ostris, which is why ostris is the primary recommendation when identity fidelity/portability matters.\n\n&gt; ⚠️ Version hashes rotate. Do not hardcode blindly — at call time GET `https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer` and read `latest_version.id`, then pin that. The short prefixes above (`26dce37a`, `e5a5bc82`) are what the live train pages show as of July 2026.\n\n## 2. Exact create + poll training contract (ostris/flux-dev-lora-trainer)\n\nAll grounded in Replicate's API tutorial (https://replicate.com/blog/fine-tune-flux-with-an-api) and the fine-tune blog (https://replicate.com/blog/fine-tune-flux).\n\n**Step 1 — Create an empty destination model** (one-time; the training writes the trained LoRA into it):\n```\nPOST https://api.replicate.com/v1/models\nAuthorization: Bearer $REPLICATE_API_TOKEN\n{ \"owner\": \"your-username\", \"name\": \"flux-your-subject\",\n  \"visibility\": \"private\", \"hardware\": \"gpu-t4\" }\n```\n(`hardware` here is nominal for the destination repo; the actual training GPU is fixed by the trainer.) (https://replicate.com/blog/fine-tune-flux)\n\n**Step 2 — Create the training** against the trainer version:\n```\nPOST https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer/versions/&lt;version&gt;/trainings\nAuthorization: Bearer $REPLICATE_API_TOKEN\n{\n  \"destination\": \"your-username/flux-your-subject\",\n  \"input\": {\n    \"input_images\": \"https://.../my-photos.zip\",   // REQUIRED: public zip URL\n    \"trigger_word\": \"TOK\",                          // REQUIRED-ish; pick a non-word, e.g. CYBRPNK3000\n    \"steps\": 1000,\n    \"lora_rank\": 16,\n    \"learning_rate\": 0.0004,\n    \"batch_size\": 1,\n    \"resolution\": \"512,768,1024\",\n    \"optimizer\": \"adamw8bit\",\n    \"autocaption\": true\n  }\n}\n```\nRequired fields are `destination` + `input.input_images`; `trigger_word` defaults to `\"TOK\"` but you should override it. (endpoint &amp; destination: https://replicate.com/blog/fine-tune-flux-with-an-api ; defaults from source: https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py)\n\n**Full input schema with defaults** (from `train.py`, https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py):\n`input_images` (Path, required) · `trigger_word` (str, \"TOK\") · `steps` (int, 1000) · `learning_rate` (float, 4e-4) · `batch_size` (int, 1) · `lora_rank` (int, 16) · `optimizer` (str, \"adamw8bit\") · `resolution` (str, \"512,768,1024\") · `autocaption` (bool, true) · `autocaption_prefix` / `autocaption_suffix` (str, None) · `caption_dropout_rate` (float, 0.05) · `cache_latents_to_disk` (bool, false) · `gradient_checkpointing` (bool, false) · `layers_to_optimize_regex` (str, None — used for selective-layer training) · `hf_repo_id` + `hf_token` (push weights straight to HF) · `wandb_*` telemetry · `skip_training_and_use_pretrained_hf_lora_url` (str, None).\n\n**Step 3 — Poll status:**\n```\nGET https://api.replicate.com/v1/trainings/{training_id}\nAuthorization: Bearer $REPLICATE_API_TOKEN\n```\nPoll until `status == \"succeeded\"` (other terminal states: `failed`, `canceled`). (https://replicate.com/blog/fine-tune-flux-with-an-api)\n\n## 3. Output weights format &amp; retrieval\n\nOn success, `training.output.weights` is a URL to a `.tar` archive (e.g. `https://replicate.delivery/.../trained_model.tar`). Inside `/tmp/trained_model.tar` are: **`lora.safetensors`** (the actual LoRA), the generated captions directory, and a README with metadata (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py ; https://replicate.com/blog/fine-tune-flux-with-an-api). The trained LoRA is ALSO written into your `destination` model as an immediately runnable (\"warm\") version.\n\n## 4. Cost + wall-clock time\n\n- **ostris/flux-dev-lora-trainer**: single Nvidia H100 at **$0.001528/sec**; ~**20–30 min** for ~1000 steps / 12–26 images → **≈ $1.85 (under $2)** (https://replicate.com/blog/fine-tune-flux ; single-H100 rate corroborated https://www.pelayoarbues.com/notes/training-a-personal-lora-on-replicate-using-flux.1-dev). Billed to the caller's own Replicate account.\n- **replicate/fast-flux-trainer**: 8×Nvidia H100 at **$0.0122/sec**; ~**2 min** for ~20 images / 1000 steps → **≈ $1.46** (https://replicate.com/docs/get-started/fine-tune-with-flux ; https://replicate.com/changelog/2025-05-23-faster-flux-trainer).\n\n## 5. Inference with the trained LoRA — two paths\n\n**Path A — Run the destination model directly (simplest).** The `destination` model is a self-contained, warm flux-dev-lora model. Just call it with a prompt containing the trigger word — no weights to pass:\n```\nPOST https://api.replicate.com/v1/models/your-username/flux-your-subject/predictions\n{ \"input\": { \"prompt\": \"a portrait photo of TOK on a space station\" } }\n```\n(https://replicate.com/blog/fine-tune-flux ; https://replicate.com/blog/fine-tune-flux-with-an-api)\n\n**Path B — Feed the portable weights into the official base model (`black-forest-labs/flux-dev-lora`).** This model \"supports fast fine-tuned lora inference\" and takes the LoRA as a dynamic input via **`lora_weights`** (a.k.a. **`hf_lora`**), plus a `lora_scale`:\n```\n{ \"prompt\": \"a portrait photo of TOK ...\",\n  \"lora_weights\": \"https://replicate.delivery/.../trained_model.tar\"   // or HF repo, or CivitAI/HTTPS .safetensors\n}\n```\n`lora_weights`/`hf_lora` accepts: a HuggingFace repo id, a CivitAI download URL, a Replicate delivery URL (the `.tar`/`.safetensors` from step 3), or any HTTPS URL to a LoRA file (https://replicate.com/docs/guides/extend/working-with-loras ; https://replicate.com/black-forest-labs/flux-dev-lora). Community multi-LoRA variants (`lucataco/flux-dev-multi-lora`) additionally expose `extra_lora` + `extra_lora_scale` (-1..2) for stacking (https://replicate.com/docs/guides/extend/working-with-loras).\n\n**Bottom line for 
+... (truncated 43543 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/wq7red9l2.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/subagents/workflows/wf_85d1558b-7bf/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/free-lora-substrate-research-wf_85d1558b-7bf.js', resumeFromRunId: 'wf_85d1558b-7bf'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>4</agent_count><agents_done>4</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>327847</subagent_tokens><tool_uses>53</tool_uses><duration_ms>590645</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:55:00)*
+
+
+## 🤖 Claude *(01:55:01)*
+
+Contrato do treinador fundamentado. Preciso do veredito de licença (FR-AC-016) + síntese. Lendo o resto.
+
+## 🤖 Claude *(01:55:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks/wq7red9l2.output",
+  "offset": 1,
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	{
+> 2	  "summary": "Verify the real Replicate Flux LoRA trainer contract + commercial-license status to ground avatar-clone-ai Amendment 11 (free LoRA identity training)",
+> 3	  "agentCount": 4,
+> 4	  "logs": [
+> 5	    "Research done: 3/3"
+> 6	  ],
+> 7	  "result": {
+> 8	    "research": [
+> 9	      {
+> 10	        "topic": "Current Replicate FLUX LoRA trainer (identity/person): recommended model, exact training API contract, output weights format, cost/time, and inference-with-weights path",
+> 11	        "verified_findings": "## 1. Canonical Replicate FLUX LoRA trainers (both live & maintained, July 2026)\n\nThere are two first-party trainers on Replicate. Both are actively available.\n\n**A. `ostris/flux-dev-lora-trainer` — RECOMMENDED for identity/person LoRAs.**\n- Live train page, current version prefix `26dce37a` (title: \"Train – ostris/flux-dev-lora-trainer:26dce37a\") (https://replicate.com/ostris/flux-dev-lora-trainer/train). An older pinned full-hash used in Replicate's own API tutorial is `d995297071a44dcb72244e6c19462111649ec86a9646c32df56daa7f14801944` (https://replicate.com/blog/fine-tune-flux-with-an-api).\n- It is the Cog wrapper of Ostris's `ai-toolkit`; source is open at `github.com/replicate/flux-fine-tuner` (https://github.com/replicate/flux-fine-tuner). This is the trainer Replicate documents end-to-end for API use.\n- Why recommended for a person: it exposes full control (`lora_rank`, `learning_rate`, layer-targeting, resolution buckets) AND returns a portable `lora.safetensors` you can host and reuse anywhere (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py).\n\n**B. `replicate/fast-flux-trainer` — faster/cheaper alternative.**\n- Live train page, current version prefix `e5a5bc82` (title: \"Train – replicate/fast-flux-trainer:e5a5bc82\") (https://replicate.com/replicate/fast-flux-trainer/train). Shipped 2025-05-23 as the \"faster, cheaper Flux training\" option (https://replicate.com/changelog/2025-05-23-faster-flux-trainer).\n- Slimmer input surface: `input_images`, `trigger_word`, `lora_type` (\"subject\" for a person/object vs \"style\"), `steps` (https://replicate.com/replicate/fast-flux-trainer/train). Runs on 8×H100, ~2 min, ~$1.46 (https://replicate.com/docs/get-started/fine-tune-with-flux). For a person you'd set `lora_type: \"subject\"`. Fewer knobs and less transparent weight export than ostris, which is why ostris is the primary recommendation when identity fidelity/portability matters.\n\n> ⚠️ Version hashes rotate. Do not hardcode blindly — at call time GET `https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer` and read `latest_version.id`, then pin that. The short prefixes above (`26dce37a`, `e5a5bc82`) are what the live train pages show as of July 2026.\n\n## 2. Exact create + poll training contract (ostris/flux-dev-lora-trainer)\n\nAll grounded in Replicate's API tutorial (https://replicate.com/blog/fine-tune-flux-with-an-api) and the fine-tune blog (https://replicate.com/blog/fine-tune-flux).\n\n**Step 1 — Create an empty destination model** (one-time; the training writes the trained LoRA into it):\n```\nPOST https://api.replicate.com/v1/models\nAuthorization: Bearer $REPLICATE_API_TOKEN\n{ \"owner\": \"your-username\", \"name\": \"flux-your-subject\",\n  \"visibility\": \"private\", \"hardware\": \"gpu-t4\" }\n```\n(`hardware` here is nominal for the destination repo; the actual training GPU is fixed by the trainer.) (https://replicate.com/blog/fine-tune-flux)\n\n**Step 2 — Create the training** against the trainer version:\n```\nPOST https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer/versions/<version>/trainings\nAuthorization: Bearer $REPLICATE_API_TOKEN\n{\n  \"destination\": \"your-username/flux-your-subject\",\n  \"input\": {\n    \"input_images\": \"https://.../my-photos.zip\",   // REQUIRED: public zip URL\n    \"trigger_word\": \"TOK\",                          // REQUIRED-ish; pick a non-word, e.g. CYBRPNK3000\n    \"steps\": 1000,\n    \"lora_rank\": 16,\n    \"learning_rate\": 0.0004,\n    \"batch_size\": 1,\n    \"resolution\": \"512,768,1024\",\n    \"optimizer\": \"adamw8bit\",\n    \"autocaption\": true\n  }\n}\n```\nRequired fields are `destination` + `input.input_images`; `trigger_word` defaults to `\"TOK\"` but you should override it. (endpoint & destination: https://replicate.com/blog/fine-tune-flux-with-an-api ; defaults from source: https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py)\n\n**Full input schema with defaults** (from `train.py`, https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py):\n`input_images` (Path, required) · `trigger_word` (str, \"TOK\") · `steps` (int, 1000) · `learning_rate` (float, 4e-4) · `batch_size` (int, 1) · `lora_rank` (int, 16) · `optimizer` (str, \"adamw8bit\") · `resolution` (str, \"512,768,1024\") · `autocaption` (bool, true) · `autocaption_prefix` / `autocaption_suffix` (str, None) · `caption_dropout_rate` (float, 0.05) · `cache_latents_to_disk` (bool, false) · `gradient_checkpointing` (bool, false) · `layers_to_optimize_regex` (str, None — used for selective-layer training) · `hf_repo_id` + `hf_token` (push weights straight to HF) · `wandb_*` telemetry · `skip_training_and_use_pretrained_hf_lora_url` (str, None).\n\n**Step 3 — Poll status:**\n```\nGET https://api.replicate.com/v1/trainings/{training_id}\nAuthorization: Bearer $REPLICATE_API_TOKEN\n```\nPoll until `status == \"succeeded\"` (other terminal states: `failed`, `canceled`). (https://replicate.com/blog/fine-tune-flux-with-an-api)\n\n## 3. Output weights format & retrieval\n\nOn success, `training.output.weights` is a URL to a `.tar` archive (e.g. `https://replicate.delivery/.../trained_model.tar`). Inside `/tmp/trained_model.tar` are: **`lora.safetensors`** (the actual LoRA), the generated captions directory, and a README with metadata (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py ; https://replicate.com/blog/fine-tune-flux-with-an-api). The trained LoRA is ALSO written into your `destination` model as an immediately runnable (\"warm\") version.\n\n## 4. Cost + wall-clock time\n\n- **ostris/flux-dev-lora-trainer**: single Nvidia H100 at **$0.001528/sec**; ~**20–30 min** for ~1000 steps / 12–26 images → **≈ $1.85 (under $2)** (https://replicate.com/blog/fine-tune-flux ; single-H100 rate corroborated https://www.pelayoarbues.com/notes/training-a-personal-lora-on-replicate-using-flux.1-dev). Billed to the caller's own Replicate account.\n- **replicate/fast-flux-trainer**: 8×Nvidia H100 at **$0.0122/sec**; ~**2 min** for ~20 images / 1000 steps → **≈ $1.46** (https://replicate.com/docs/get-started/fine-tune-with-flux ; https://replicate.com/changelog/2025-05-23-faster-flux-trainer).\n\n## 5. Inference with the trained LoRA — two paths\n\n**Path A — Run the destination model directly (simplest).** The `destination` model is a self-contained, warm flux-dev-lora model. Just call it with a prompt containing the trigger word — no weights to pass:\n```\nPOST https://api.replicate.com/v1/models/your-username/flux-your-subject/predictions\n{ \"input\": { \"prompt\": \"a portrait photo of TOK on a space station\" } }\n```\n(https://replicate.com/blog/fine-tune-flux ; https://replicate.com/blog/fine-tune-flux-with-an-api)\n\n**Path B — Feed the portable weights into the official base model (`black-forest-labs/flux-dev-lora`).** This model \"supports fast fine-tuned lora inference\" and takes the LoRA as a dynamic input via **`lora_weights`** (a.k.a. **`hf_lora`**), plus a `lora_scale`:\n```\n{ \"prompt\": \"a portrait photo of TOK ...\",\n  \"lora_weights\": \"https://replicate.delivery/.../trained_model.tar\"   // or HF repo, or CivitAI/HTTPS .safetensors\n}\n```\n`lora_weights`/`hf_lora` accepts: a HuggingFace repo id, a CivitAI download URL, a Replicate delivery URL (the `.tar`/`.safetensors` from step 3), or any HTTPS URL to a LoRA file (https://replicate.com/docs/guides/extend/working-with-loras ; https://replicate.com/black-forest-labs/flux-dev-lora). Community multi-LoRA variants (`lucataco/flux-dev-multi-lora`) additionally expose `extra_lora` + `extra_lora_scale` (-1..2) for stacking (https://replicate.com/docs/guides/extend/working-with-loras).\n\n**Bottom line for your MCORCH per-user BYOK Replicate flow:** recommend `ostris/flux-dev-lora-trainer` (pin `latest_version.id`), lora_type-equivalent knobs `lora_rank: 16–32` + a distinct `trigger_word`; create the destination model per user, poll `/v1/trainings/{id}`, store both the runnable `destination` slug and the `output.weights` `.tar` URL. Inference = call the destination model directly (Path A) or pass `output.weights` as `lora_weights` to `black-forest-labs/flux-dev-lora` (Path B).",
+> 12	        "key_facts": [
+> 13	          "Recommended trainer for identity/person: ostris/flux-dev-lora-trainer, current live version prefix 26dce37a (https://replicate.com/ostris/flux-dev-lora-trainer/train); Cog source at github.com/replicate/flux-fine-tuner (https://github.com/replicate/flux-fine-tuner). Both it and replicate/fast-flux-trainer (version e5a5bc82) are live and maintained.",
+> 14	          "Create-training endpoint: POST https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer/versions/<version>/trainings with body { destination: 'owner/name', input: { input_images: '<public zip url>', trigger_word, steps, lora_rank, ... } }, Authorization: Bearer token (https://replicate.com/blog/fine-tune-flux-with-an-api).",
+> 15	          "Required inputs: destination (an empty model you first create via POST /v1/models) + input.input_images (public zip URL); trigger_word defaults 'TOK' (override it). Full defaults from train.py: steps=1000, lora_rank=16, learning_rate=4e-4, batch_size=1, resolution='512,768,1024', optimizer='adamw8bit', autocaption=true, caption_dropout_rate=0.05 (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py).",
+> 16	          "Poll: GET https://api.replicate.com/v1/trainings/{id} until status=='succeeded' (https://replicate.com/blog/fine-tune-flux-with-an-api).",
+> 17	          "Output: training.output.weights = URL to trained_model.tar containing lora.safetensors + captions + README; the LoRA is also written as a warm runnable version into the destination model (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py).",
+> 18	          "Cost/time on caller's own account: ostris trainer ~$1.85, 20-30 min on single H100 @ $0.001528/s (https://replicate.com/blog/fine-tune-flux); fast-flux-trainer ~$1.46, ~2 min on 8xH100 @ $0.0122/s (https://replicate.com/docs/get-started/fine-tune-with-flux).",
+> 19	          "Inference Path A: run the destination model directly with a prompt containing the trigger word (no weights param) (https://replicate.com/blog/fine-tune-flux-with-an-api). Path B: pass the .tar/.safetensors URL to black-forest-labs/flux-dev-lora via input 'lora_weights' (aka 'hf_lora'), which accepts HF repo, CivitAI, Replicate delivery, or any HTTPS .safetensors URL, plus lora_scale (https://replicate.com/docs/guides/extend/working-with-loras).",
+> 20	          "Version hashes rotate: resolve latest_version.id via GET https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer at call time rather than hardcoding."
+> 21	        ],
+> 22	        "confidence": "high",
+> 23	        "open_questions": [
+> 24	          "Exact full 64-char current version hashes: live train pages show short prefixes 26dce37a (ostris) and e5a5bc82 (fast-flux) as of July 2026, but the model pages are JS-rendered so the full latest hash must be resolved at call time via GET /v1/models/{owner}/{name}.latest_version.id (Replicate model reads may require an API token).",
+> 25	          "Whether replicate/fast-flux-trainer exposes a downloadable raw lora.safetensors the same way ostris does — its train page documents input_images/trigger_word/lora_type/steps and a 'warm runnable model plus LoRA weights to download', but the precise output tar/safetensors path was not confirmed from a JS-rendered page.",
+> 26	          "Current exact per-second GPU prices can drift; the $0.001528/s (single H100, ostris) and $0.0122/s (8xH100, fast-flux) figures are from Replicate's own blog/docs but should be re-checked against replicate.com/pricing before billing users."
+> 27	        ],
+> 28	        "sources": [
+> 29	          "https://replicate.com/ostris/flux-dev-lora-trainer/train",
+> 30	          "https://replicate.com/replicate/fast-flux-trainer/train",
+> 31	          "https://replicate.com/blog/fine-tune-flux",
+> 32	          "https://replicate.com/blog/fine-tune-flux-with-an-api",
+> 33	          "https://replicate.com/docs/get-started/fine-tune-with-flux",
+> 34	          "https://replicate.com/changelog/2025-05-23-faster-flux-trainer",
+> 35	          "https://replicate.com/docs/guides/extend/working-with-loras",
+> 36	          "https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py",
+> 37	          "https://github.com/replicate/flux-fine-tuner",
+> 38	          "https://www.pelayoarbues.com/notes/training-a-personal-lora-on-replicate-using-flux.1-dev",
+> 39	          "https://replicate.com/black-forest-labs/flux-dev-lora"
+> 40	        ]
+> 41	      },
+> 42	      {
+> 43	        "topic": "Commercial-license status of training + using a FLUX LoRA on Replicate (BYOK) — FR-AC-016 compliance gate",
+> 44	        "verified_findings": "## Verdict in one line\n\n**\"Free LoRA via BYOK Replicate\" IS commercially compliant — but ONLY when the LoRA is BOTH trained AND run (image generation) on Replicate's hosted platform.** The moment weights are downloaded and inference happens off-Replicate, the FLUX.1 [dev] non-commercial license reattaches and commercial use is prohibited. The commercial right flows from *Replicate's own commercial agreement with Black Forest Labs*, not from the dev license itself. (https://replicate.com/blog/fine-tune-flux)\n\n---\n\n## 1. FLUX.1 [dev] — non-commercial, and LoRA derivatives inherit it\n\nFLUX.1 [dev] is licensed under the **FLUX.1 [dev] Non-Commercial License**. The grant is explicitly limited to non-commercial use:\n\n> \"Company grants you a non-exclusive, worldwide, non-transferable, non-sublicensable, revocable, royalty free and limited license to access, use, create Derivatives of, and Distribute the FLUX.1 [dev] Models and Derivatives **solely for your Non-Commercial Purposes**.\" (HuggingFace LICENSE.md, v1.1.1 — https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md; same on the web terms, styled v2.0 — https://bfl.ai/legal/non-commercial-license-terms)\n\n\"Commercial\" is defined to exclude anything involving \"(a) revenue-generating activity, (b) in direct interactions with or that has impact on end users, or (c) to train, fine tune, or distill other models for commercial use.\" (https://bfl.ai/legal/non-commercial-license-terms)\n\n**LoRA weights are \"Derivatives\" and inherit the restriction:**\n> \"Any restrictions set forth herein regarding the FLUX.1 [dev] Model also apply to any Derivative you create or that are created on your behalf.\" (https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md)\n\n**Critical nuance — the Output clause.** The license contains a carve-out that the *images* (Outputs) may be commercialized:\n> \"You may use Output for any purpose (including for commercial purposes), except as expressly prohibited herein\" (you may not use Output to train a competitive model). (https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md)\n\nThis creates the load-bearing tension: the *act of running the model* must be non-commercial, but the *images produced* may be used commercially. That is exactly the seam that hosted platforms exploit (see §3). Note BFL has been actively revising this text — the Kontext v1.1 license briefly deleted the \"commercial outputs\" line and BFL's Andreas Blattmann reverted it, stating \"We did not intend to alter the spirit of the license... we have reverted Sections 2.d and 4.b to be in line with the corresponding parts in the FLUX.1 [dev] Non-Commercial License.\" (https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/discussions/6) → **version drift is a real risk; a compliance gate should pin the license version.**\n\n## 2. FLUX.1 [schnell] — Apache-2.0, fully commercial; schnell-trained LoRA inherits it\n\nFLUX.1 [schnell] is released under **Apache-2.0** and \"can be used for personal, scientific, and commercial purposes\" without licensing fees. (HuggingFace model card — https://huggingface.co/black-forest-labs/FLUX.1-schnell; license file — https://github.com/black-forest-labs/flux/blob/main/model_licenses/LICENSE-FLUX1-schnell)\n\nYou *can* train a LoRA that targets schnell, and **a LoRA trained on schnell inherits schnell's Apache-2.0 license** (portable, commercial anywhere, self-hostable). By contrast a LoRA trained on dev is bound by dev's non-commercial license. However, Replicate's mainstream trainer (Ostris AI Toolkit) targets **dev**, not schnell — \"You can now fine-tune FLUX.1 [dev] with Ostris's AI Toolkit on Replicate.\" (https://replicate.com/blog/fine-tune-flux). Schnell is lower quality (weaker text rendering, detail, complex composition), which is why most trainers default to dev.\n\n**Watch out:** applying a *dev-trained* LoRA on a *schnell* base does NOT launder the license. Replicate states plainly: \"You can use your FLUX.1 [dev] LoRA with the smaller FLUX.1 [schnell] model... Note that **outputs will still be under the non-commercial license of FLUX.1 [dev]**.\" (https://replicate.com/blog/fine-tune-flux)\n\n## 3. THE KEY QUESTION — does the hosted Replicate API grant commercial rights?\n\n**Yes.** Replicate's own, explicit statement:\n\n> \"If you generate images on Replicate with FLUX.1 models and their fine-tunes, then you can use the images commercially.\" (https://replicate.com/blog/fine-tune-flux)\n\n> \"If you download the weights off Replicate and generate images on your own computer, you can't use the images commercially.\" (https://replicate.com/blog/fine-tune-flux)\n\nThe mechanism: **Replicate (like fal.ai and Together AI) holds a commercial agreement/partnership with Black Forest Labs.** BFL runs a self-serve commercial-licensing portal and platform-partner arrangements (https://bfl.ai/licensing, https://bfl.ai/legal/self-hosted-commercial-license-terms). Because the model is being *operated* under Replicate's commercial license (not under your personal non-commercial grant), and the dev license's Output clause allows commercial use of the images, the images you generate on Replicate — including from your own trained LoRA — are commercially usable. This applies to your **own (BYOK) Replicate account**, because BYOK still means inference executes on Replicate's hosted infrastructure under Replicate's BFL agreement.\n\nThe gating condition is **WHERE generation happens**, not who owns the API key. Replicate's model page and blog both reference the dev non-commercial license (linked on HuggingFace) as the *fallback* that applies to downloaded weights; the hosted-platform grant is what overrides it for on-platform generation. (https://replicate.com/black-forest-labs/flux-dev, https://replicate.com/blog/fine-tune-flux)\n\nTraining location is secondary — the operative act is image generation. Multiple sources describe the practical rule as \"both train and generate on Replicate\" to stay clean, but the blog's hard line is specifically about generation vs. local download.\n\n## 4. Net verdict for FR-AC-016 — exact conditions\n\n| Scenario | Base model | Where inference runs | Commercially usable? |\n|---|---|---|---|\n| LoRA trained on **dev**, generate on **Replicate hosted API** (incl. BYOK acct) | dev | Replicate | **YES** — via Replicate's commercial grant + dev Output clause |\n| LoRA trained on **dev**, weights **downloaded**, generate **locally / other non-licensed host** | dev | self/local | **NO** — dev non-commercial license applies |\n| dev-trained LoRA on **schnell base**, on Replicate | schnell + dev LoRA | Replicate | YES on-platform; but license-wise still dev-NC if exported |\n| LoRA trained on **schnell** | schnell | anywhere | **YES** — Apache-2.0, portable & self-hostable |\n| Direct BFL commercial license (self-hosted paid) | dev | anywhere per contract | YES — paid commercial license |\n\n**For the compliance gate, FR-AC-016 should encode:**\n1. **PASS** the \"free LoRA via BYOK Replicate\" path *only if* generation is pinned to Replicate's hosted API and the trained weights are never exported for off-platform inference. The gate must actively prevent a \"download weights → run locally/on unlicensed host\" escape, which silently becomes a license violation.\n2. If the product needs **portable/self-hostable commercial** outputs (no dependency on Replicate's platform grant), require the LoRA to be trained on **FLUX.1 [schnell] (Apache-2.0)** — accepting the quality trade-off — or purchase a **BFL self-hosted commercial license**.\n3. **Pin the FLUX.1 [dev] license version** in the gate (currently v1.1.1 on HF / v2.0 on bfl.ai web terms) and re-verify on model updates, since BFL has revised the Output clause before. FLUX.2 has its own separate licensing.",
+> 45	        "key_facts": [
+> 46	          "FLUX.1 [dev] is under the FLUX.1 [dev] Non-Commercial License; the grant is 'to access, use, create Derivatives of, and Distribute the FLUX.1 [dev] Models and Derivatives solely for your Non-Commercial Purposes' — https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md",
+> 47	          "LoRA weights are 'Derivatives' and inherit the non-commercial restriction: 'Any restrictions set forth herein regarding the FLUX.1 [dev] Model also apply to any Derivative you create or that are created on your behalf.' — https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md",
+> 48	          "The dev license contains an Output carve-out: 'You may use Output for any purpose (including for commercial purposes), except as expressly prohibited herein' (may not train a competitive model) — https://bfl.ai/legal/non-commercial-license-terms",
+> 49	          "FLUX.1 [schnell] is Apache-2.0 and usable for personal, scientific and commercial purposes; a LoRA trained on schnell inherits Apache-2.0 — https://huggingface.co/black-forest-labs/FLUX.1-schnell , https://github.com/black-forest-labs/flux/blob/main/model_licenses/LICENSE-FLUX1-schnell",
+> 50	          "Replicate: 'If you generate images on Replicate with FLUX.1 models and their fine-tunes, then you can use the images commercially.' — https://replicate.com/blog/fine-tune-flux",
+> 51	          "Replicate: 'If you download the weights off Replicate and generate images on your own computer, you can't use the images commercially.' — https://replicate.com/blog/fine-tune-flux",
+> 52	          "The commercial right comes from Replicate/fal/Together holding commercial agreements with Black Forest Labs, plus BFL's own commercial-licensing portal — https://bfl.ai/licensing , https://bfl.ai/legal/self-hosted-commercial-license-terms",
+> 53	          "Replicate's Ostris trainer fine-tunes FLUX.1 [dev] (not schnell): 'You can now fine-tune FLUX.1 [dev] with Ostris's AI Toolkit on Replicate.' — https://replicate.com/blog/fine-tune-flux",
+> 54	          "A dev-trained LoRA run on the schnell base still yields dev-non-commercial-licensed outputs: 'Note that outputs will still be under the non-commercial license of FLUX.1 [dev].' — https://replicate.com/blog/fine-tune-flux",
+> 55	          "BFL has revised the dev-family Output clause (Kontext v1.1 briefly removed 'commercial outputs', then reverted to align with the FLUX.1 [dev] license) — pin the version — https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/discussions/6",
+> 56	          "BYOK on Replicate still executes inference on Replicate's hosted infrastructure under Replicate's BFL agreement, so on-platform generation stays commercially usable — https://replicate.com/black-forest-labs/flux-dev"
+> 57	        ],
+> 58	        "confidence": "high",
+> 59	        "open_questions": [
+> 60	          "Replicate's exact contractual grant with BFL is not published verbatim — the commercial right is asserted authoritatively in Replicate's blog/model pages and corroborated by BFL's licensing pages, but the raw contract text is not public. The operational answer is high-confidence; the underlying paper is inferred.",
+> ```
+
+## 🤖 Claude *(01:55:23)*
+
+
+## 🤖 Claude *(01:55:27)*
+
+O veredito de licença é **claro e citado (alta confiança)** — decisivo para FR-AC-016:
+
+> **"If you generate images on Replicate with FLUX.1 models and their fine-tunes, then you can use the images commercially."** (Replicate tem acordo comercial com a Black Forest Labs.) **"If you download the weights off Replicate and generate on your own computer, you can't."**
+
+Ou seja: o gate FR-AC-016 é sobre **ONDE roda a inferência**, não quem tem a chave. BYOK na Replicate = hospedado = **uso comercial OK**, desde que a inferência fique na Replicate e os pesos nunca sejam exportados para rodar fora. Isso justifica `commercial_license_ok=true` honestamente. Vou ler a síntese consolidada.
+
+## 🤖 Claude *(01:55:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/tasks\npython3 -c \"\nimport json\nd=json.load(open('wq7red9l2.output'))\ns=d['result']['synth']\nfor k in ['recommended_substrate','fr_ac_016_verdict','trainer_contract','inference_path','fallback']:\n    print('=== '+k.upper()+' ===')\n    print(s.get(k,'(vazio)'))\n    print()\nprint('=== OPEN_QUESTIONS ===')\nfor q in s.get('open_questions',[]): print(' -',q)\nprint()\nprint('=== ALL_SOURCES (count %d) ==='%len(s.get('all_sources',[])))\nfor u in s.get('all_sources',[])[:20]: print(' -',u)\n\"",
+  "description": "Extrai a s\u00edntese consolidada da pesquisa"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RECOMMENDED_SUBSTRATE ===
+> FLUX.1-dev LoRA trained via `ostris/flux-dev-lora-trainer` on the USER's OWN (BYOK) Replicate account — named as the free default. Rationale: (1) it is the identity-fidelity champion of every substrate surveyed, which is the whole point of an avatar/clone product (Report 1 recommends it explicitly for person/identity; Report 3's matrix rates it "Highest fidelity"); (2) BYOK = USD 0 to MCORCH (training ~$1.85 and all inference bill to the user's Replicate account — aligns with the open-source-first/zero-external-cost doctrine); (3) it is commercially COMPLIANT under Replicate's own BFL agreement, but ONLY conditionally — see the FR-AC-016 verdict. This is a *conditionally* compliant primary, not an unconditionally clean one, so the amendment MUST hard-wire the condition into the gate and carry SDXL as the portable fallback. If the amendment's risk posture forbids depending on a platform-scoped grant at all, flip the default to the fallback (SDXL, RAIL++-M) and demote FLUX-dev to opt-in max-fidelity.
+> 
+> === FR_AC_016_VERDICT ===
+> CONDITIONAL PASS — not ambiguous operationally, but load-bearing on ONE condition. Replicate states plainly and authoritatively: "If you generate images on Replicate with FLUX.1 models and their fine-tunes, then you can use the images commercially" and "If you download the weights off Replicate and generate images on your own computer, you can't use the images commercially" (https://replicate.com/blog/fine-tune-flux). FLUX.1-dev itself is NON-commercial; a LoRA is a "Derivative" and inherits that restriction; the commercial right does NOT come from the dev license — it comes from Replicate holding a commercial agreement with Black Forest Labs, and it is scoped to inference EXECUTING on Replicate's hosted infra. BYOK does not change this: BYOK inference still runs on Replicate's hosted infrastructure, so it stays inside the grant. THE EXACT COMPLIANCE CONDITION FR-AC-016 MUST ENCODE: (a) both training AND generation happen on Replicate's hosted API (never local/self-hosted for the dev path); (b) the trained `.tar`/`lora.safetensors` weights are NEVER exported to any off-Replicate generation path — the gate must architecturally prevent the "download weights → run locally/on unlicensed host" escape, which silently becomes a license violation; (c) the FLUX.1-dev license version is PINNED (currently v1.1.1 on HuggingFace / styled v2.0 on bfl.ai web terms) and re-verified on model updates, because BFL has revised the commercial-Output clause before (Kontext v1.1 briefly deleted it, then reverted). RESIDUAL AMBIGUITY (flag, do not hide): the raw Replicate↔BFL contract is not public, so whether this is a durable contractual right or a revocable platform courtesy is inferred, not proven from primary text. Because the instruction is "if ambiguous, pick the safest compliant option," any revenue-critical or portability-requiring path should NOT rely on the dev grant — it should use the SDXL fallback (zero-ambiguity, portable, no platform lock).
+> 
+> === TRAINER_CONTRACT ===
+> TRAINER: `ostris/flux-dev-lora-trainer` (Cog wrapper of Ostris ai-toolkit; source github.com/replicate/flux-fine-tuner). Per-user BYOK Replicate token. Contract:
+> STEP 0 — Resolve version at call time (NEVER hardcode; hashes rotate): GET https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer (Authorization: Bearer <user_replicate_token>) → read `latest_version.id`, pin it for this training. Current live prefix as of 2026-07 is 26dce37a but it must be resolved live.
+> STEP 1 — Create empty destination model (one-time per user/subject): POST https://api.replicate.com/v1/models  { "owner": "<user_replicate_username>", "name": "flux-<user>-<subject>", "visibility": "private", "hardware": "gpu-t4" }.
+> STEP 2 — Create training: POST https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer/versions/<resolved_version>/trainings  body: { "destination": "<user>/flux-<user>-<subject>", "input": { "input_images": "<public zip URL of 12-26 identity photos>", "trigger_word": "<distinct non-word token, e.g. GBRLZ3000>", "steps": 1000, "lora_rank": 16 (use 24-32 for tighter identity lock), "learning_rate": 0.0004, "batch_size": 1, "resolution": "512,768,1024", "optimizer": "adamw8bit", "autocaption": true, "caption_dropout_rate": 0.05 } }. REQUIRED fields: destination + input.input_images; trigger_word defaults "TOK" — always override.
+> STEP 3 — Poll: GET https://api.replicate.com/v1/trainings/{training_id} until status == "succeeded" (terminal failure states: "failed", "canceled"). Persist an idempotency/reconcile record so a dropped poll can resume (mirror the vision_jobs finalize pattern).
+> OUTPUT: on success, training.output.weights = URL to trained_model.tar containing lora.safetensors + captions + README; the LoRA is ALSO written as a warm, immediately-runnable version into the destination model. STORE on the avatar_identities row: replicate_destination_slug (=<user>/flux-<user>-<subject>), lora_weights_url (the .tar), trigger_word, lora_scale (default 1.0), base_model="flux-dev", substrate="flux-dev-lora", license_tag="flux-dev-nc-replicate-scoped".
+> COST/TIME: ~$1.85, ~20-30 min on a single H100 @ $0.001528/sec, billed to the user's own Replicate account. Re-check replicate.com/pricing before surfacing any cost estimate to users (rates drift).
+> 
+> === INFERENCE_PATH ===
+> avatar_identities stores the training outputs and every generation reads them and dispatches to Replicate's HOSTED API (compliance-critical — never local for the dev path). Two supported paths:
+> PATH A (recommended, simplest, warm): POST https://api.replicate.com/v1/models/<replicate_destination_slug>/predictions  { "input": { "prompt": "a portrait photo of <trigger_word> ..." } } — no weights param; the trigger_word from the row is injected into the prompt.
+> PATH B (portable weights into base model): POST prediction on black-forest-labs/flux-dev-lora  { "input": { "prompt": "... <trigger_word> ...", "lora_weights": "<stored lora_weights_url .tar>", "lora_scale": <stored lora_scale> } }. `lora_weights` (aka `hf_lora`) accepts the Replicate delivery .tar/.safetensors URL, an HF repo id, a CivitAI URL, or any HTTPS .safetensors URL.
+> FR-AC-012 TIER MODEL: Tier-1 = zero-shot preview (PuLID-FLUX/InstantID, one reference image, ~15s, ~$0.02/run) — but gated as non-commercial until the InsightFace question is resolved (see OTDs). Tier-2 = this trained LoRA = canonical/persistent identity, commercial under the FR-AC-016 condition. HARD RULE the inference layer must enforce: the lora_weights_url is used ONLY as a `lora_weights` input to a Replicate-hosted prediction; it must never be handed to any off-Replicate generator, and should not be exposed to the client as a downloadable artifact — that is the technical enforcement of FR-AC-016(b).
+> 
+> === FALLBACK ===
+> SDXL LoRA/DreamBooth via `stability-ai/sdxl` — the zero-ambiguity portable-commercial fallback. Base is CreativeML Open RAIL++-M: commercial use, no revenue caps, no platform lock, runs anywhere including the Sovereign Docker mesh. ~$0.5-2/train, ~10-15 min, supports face-focused training via `use_face_detection_instead`. Accept the tradeoff: SDXL photoreal-face fidelity is rated below FLUX. Use SDXL as the default whenever the user needs portable/self-hosted commercial outputs, off-platform generation, or when the amendment's risk posture rejects dependence on Replicate's platform-scoped grant. SECONDARY fallback (higher quality, still Apache-2.0 clean): FLUX.1-schnell LoRA via ostris ai-toolkit + the Apache-2.0 FLUX.1-schnell-training-adapter — but note there is NO one-click hosted schnell trainer on Replicate (the hosted ostris trainer targets dev), so schnell requires self-hosting the ai-toolkit (config train_lora_flux_schnell_24gb.yaml) or a custom Cog before it can be the premium compliant path. Do NOT launder a dev-trained LoRA by running it on a schnell base — Replicate confirms outputs remain under the dev non-commercial license.
+> 
+> === OPEN_QUESTIONS ===
+>  - OTD-AC-016-GRANT-DURABILITY: Replicate's commercial grant for FLUX.1-dev is asserted authoritatively in its blog/model pages and corroborated by BFL's licensing portal, but the raw Replicate<->BFL contract is not public — is it a durable contractual right or a revocable platform courtesy? For revenue-critical exposure, obtain written confirmation from Replicate/BFL OR default to the SDXL (RAIL++-M) fallback. Amendment must flag this as the load-bearing legal assumption.
+>  - OTD-AC-016-NO-EXPORT-ENFORCEMENT: FR-AC-016 must architecturally prevent the 'download weights -> generate off-Replicate' escape. Specify HOW: lora_weights_url is stored server-side only, used solely as input to Replicate-hosted predictions, never exposed as a client-downloadable artifact, and the dev-substrate rows are barred from any local/self-hosted generation dispatcher.
+>  - OTD-AC-016-LICENSE-VERSION-PIN: Pin and monitor the exact FLUX.1-dev license version (v1.1.1 on HuggingFace vs styled v2.0 on bfl.ai web terms; FLUX.2 has separate licensing). BFL revised the commercial-Output clause once (Kontext v1.1 removed then reverted it) — add a drift monitor that re-verifies on model/version change.
+>  - OTD-AC-016-VERSION-HASH-ROTATION: Trainer version hashes rotate; resolve latest_version.id via GET /v1/models/ostris/flux-dev-lora-trainer at call time rather than hardcoding 26dce37a. Add a reconcile path for in-flight trainings whose poll was dropped.
+>  - OTD-AC-012-TIER1-INSIGHTFACE: PuLID-FLUX/InstantID/IP-Adapter-FaceID Tier-1 previews depend on InsightFace encoders (antelopev2/buffalo_l) whose MODELS are non-commercial by default (code is Apache-2.0/MIT, weights are not) — the restriction propagates to outputs. Before any commercial exposure of Tier-1: either purchase an InsightFace enterprise license (quote-only, contact@insightface.ai) OR verify per-endpoint that the hosted Replicate/fal endpoint ships a FaceNet backend rather than antelopev2. Arc2Face is NOT a clean escape (inherits ArcFace/InsightFace non-commercial lineage). Treat default hosted Tier-1 endpoints as non-commercial until this gate clears.
+>  - OTD-AC-016-TRAIN-LOCATION: Secondary summaries state inconsistently whether TRAINING (not just generation) must occur on Replicate; Replicate's own hard line is drawn at generation-location vs local-download. Safest encoding for the dev path is 'both train AND generate on Replicate'.
+>  - OTD-AC-COST-DRIFT: GPU per-second prices drift ($0.001528/s single-H100 ostris; SDXL train price omitted from Replicate's blog, aggregator ~$0.5-2). Re-check replicate.com/pricing and the live stability-ai/sdxl trainer page before quoting users.
+>  - OTD-AC-SCHNELL-HOSTED: Confirm whether a one-click hosted Apache-2.0 schnell trainer exists on Replicate today or whether schnell must be self-hosted via ai-toolkit before committing schnell as the premium compliant path (Replicate's own wrapper text ambiguously calls even schnell weights 'non-commercial by default', conflicting with schnell's actual Apache-2.0 status).
+> 
+> === ALL_SOURCES (count 30) ===
+>  - https://replicate.com/ostris/flux-dev-lora-trainer/train
+>  - https://replicate.com/replicate/fast-flux-trainer/train
+>  - https://replicate.com/blog/fine-tune-flux
+>  - https://replicate.com/blog/fine-tune-flux-with-an-api
+>  - https://replicate.com/docs/get-started/fine-tune-with-flux
+>  - https://replicate.com/changelog/2025-05-23-faster-flux-trainer
+>  - https://replicate.com/docs/guides/extend/working-with-loras
+>  - https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py
+>  - https://github.com/replicate/flux-fine-tuner
+>  - https://www.pelayoarbues.com/notes/training-a-personal-lora-on-replicate-using-flux.1-dev
+>  - https://replicate.com/black-forest-labs/flux-dev-lora
+>  - https://replicate.com/black-forest-labs/flux-dev
+>  - https://bfl.ai/legal/non-commercial-license-terms
+>  - https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md
+>  - https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/discussions/6
+>  - https://huggingface.co/black-forest-labs/FLUX.1-schnell
+>  - https://github.com/black-forest-labs/flux/blob/main/model_licenses/LICENSE-FLUX1-schnell
+>  - https://bfl.ai/licensing
+>  - https://bfl.ai/legal/self-hosted-commercial-license-terms
+>  - https://replicate.com/black-forest-labs/flux-schnell-lora
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(01:56:49)*
+
+
+## 🤖 Claude *(01:56:56)*
+
+Tenho fundamentação completa e citada (30 fontes) para a emenda. Decisão do substrato:
+- **Primário:** `ostris/flux-dev-lora-trainer` (FLUX.1-dev) via BYOK Replicate — fidelidade de identidade campeã, **USD 0 para o MCORCH** (~$1.85 na conta do próprio user), **comercialmente OK sob o grant Replicate↔BFL** — condicional.
+- **FR-AC-016 = APROVAÇÃO CONDICIONAL:** só se treino+inferência ficarem na Replicate hospedada e os pesos nunca forem exportados para rodar fora. Codificar isso no gate.
+- **Fallback portável zero-ambiguidade:** SDXL LoRA (RAIL++-M).
+
+Vou escrever a emenda. Deixa eu ver o formato da emenda 10 e o registro de OTD no índice para casar o estilo da casa.
+
+## 🤖 Claude *(01:56:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md",
+  "offset": 1,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# avatar-clone-ai — Amendment 3b: Identity Gate via rota VLM-soft (MVP)
+> 2	
+> 3	> **Tipo:** Emenda de FRD/SDD (Fatia 3b) · **Status:** proposta (gate de código pós-aprovação Sovereign — Lei 4 Reviewer)
+> 4	> **Lente BoK:** SWEBOK + CISSP CBK (execução) · 21 Agentic Patterns (`docs/architecture/agentic-vision.md`)
+> 5	> **Posição no Closed-Loop Protocol (CLAUDE.md §1):** emenda à SDD selada `05-sdd.md` + ao `04-frd.md` §2.3; a Pattern Conformance Declaration (`09-pattern-conformance.md`) é emendada nas linhas #4/#5/#8/#13/#18/#19 (declaração, não sign-off).
+> 6	> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer · Reviewer = Sovereign (Gabriel) · Owner = Sovereign até a North-Star de marca (OTD-AC-013).
+> 7	>
+> 8	> **Veredito de verificação adversarial (workflow `wf_188ce24c-881`, 5 agentes, 550k tokens):** `APPROVE` — zero ferramenta fabricada; os 6 checks obrigatórios passaram (consent Art.11 trava captura · fail-closed degrada a human-review nunca a auto-pass · isolamento tenant intacto · VLM-soft rotulado honestamente < ArcFace · ArcFace-hard deferido em OTD-AC-015). Esta versão **dobra as 6 issues** levantadas pelo crítico (ver §9), que eram refinamentos a especificar antes do selo de código — não rejeições da abordagem.
+> 9	
+> 10	---
+> 11	
+> 12	## 1. Contexto e motivação
+> 13	
+> 14	A **Fatia 3** do blueprint declara um nó `avatarIdentity` + um **Identity Gate** ancorado num **substrato único InsightFace/ArcFace** que conduz geração E QA num loop fechado (`00-deepsearch-blueprint.md:259`, `:264`; `04-frd.md:72`). A **Fatia 3a** (Consent + Erasure LGPD) já foi selada e entregou a *foundation* de compliance: tabelas biométricas com RLS own, consent wizard imutável de 3 checkboxes, identity-verification self-clone, e erasure Art.18 (migration `20260630130000_avatar_clone_ai_identity_consent.sql`; edge fns `avatar-consent`, `erase-avatar-artifacts`, `generate-voice` consent gate).
+> 15	
+> 16	**Achado material que motiva esta emenda (Lei 1):** o substrato ArcFace/InsightFace **não existe no código**. A varredura do Vision MCP confirma exatamente **7 tools** (`packages/vision-mcp-core/src/mcp/server.ts:340`), das quais as únicas primitivas de visão são **descritivas**: `vision_describe_image` (`server.ts:101-138`) e `vision_analyze_video` (`server.ts:141-175`). **Zero** ArcFace, embedding facial, cosine-similarity, `compare`/`face_match`/`segment`/`detect` invocáveis. As linhas `vision.ocr`/`vision.detect` em `infra/billing.ts:20-21` são **mortas** (sem tool-file, sem `server.tool()`); `vision.segment` aparece só na SOP `docs/processes/vision-mcp-cost-calibration.md` — **drift doc-vs-código**, não capacidade real.
+> 17	
+> 18	ArcFace-hard exige (a) um motor de embedding facial (InsightFace self-host ou API paga), (b) biometria facial calibração-grade do titular, (c) decisão de custo/credencial. Os três são **gated pelo Sovereign**. Para não bloquear a entrega de valor visível ao Usuário Zero (Diretiva `feedback_deliver_user_value_not_plumbing`), esta emenda habilita a Fatia 3b pela **rota VLM-soft MVP** — um Identity Gate descritivo, explicitamente rotulado **< ArcFace** e **human-review-assist**, construído **somente** com ferramentas que existem hoje, preservando **todos** os invariantes da 3a.
+> 19	
+> 20	---
+> 21	
+> 22	## 2. Abordagem VLM-soft (MVP) — visão geral
+> 23	
+> 24	O Identity Gate roda como laço **Generator-Critic** real, mas o crítico é descritivo-VLM em vez de cosine-ArcFace:
+> 25	
+> 26	1. **Referência (1× por treino):** o orquestrador descreve cada retrato de referência consentido via `vision_describe_image`, forçando no campo `question` um **schema JSON fixo de atributos** (não prosa livre — ver FR-AC-013b). Serializa a **descrição-de-referência canônica** e a cacheia.
+> 27	2. **Candidato:** descreve cada frame/clipe gerado via `vision_describe_image` (imagem-chave) ou `vision_analyze_video` (vídeo).
+> 28	3. **Compare (no orquestrador, fora do MCP):** casa atributo-a-atributo (enum-a-enum) → `soft_match ∈ {pass, review, fail}` contra um **threshold soft configurável** (não cosine numérico, não ROC) — algoritmo especificado em **FR-AC-013b**.
+> 29	4. **Decisão:** `fail` → **fail-and-regenerate** com **seed fixo + conditioning mais forte** (princípio que SOBREVIVE de `00-deepsearch-blueprint.md:264`), `regen_count++`, capped por `max_regen` (CONFIG); `review` → escala a **human-review-assist**; `pass` → segue.
+> 30	
+> 31	**Custo:** `vision_describe_image` é 2 mcoCoins/imagem na chave da plataforma, mas **grátis com BYOK openrouter** (`infra/billing.ts:45-49`). O passo de descrição roda no **orquestrador user-JWT** (não na edge service-role — ver FR-AC-013 §nota-de-credencial), então a BYOK key resolve por `auth.uid()` e o loop do Usuário Zero é **cost 0**; quando a BYOK não resolver, o custo é **2 mco/imagem real** (não se afirma cost 0 incondicional — Lei 1).
+> 32	
+> 33	**Rótulo de honestidade (inegociável):** o VLM **descreve aparência, não mede distância de embedding facial**; `confidence:high/medium/low` é auto-reportado pelo modelo (`tools/describe-image.ts:130-144`), não confiança estatística. Pega divergências grosseiras (gênero/etnia/cabelo/óculos errados) mas **falha no caso difícil** "parece a mesma pessoa, mas é outra". É **sanity-gate barato**, nunca aprovação automática de anti-impersonation (OTD-AC-016).
+> 34	
+> 35	---
+> 36	
+> 37	## 3. Emendas de FR (identidade — `04-frd.md` §2.3)
+> 38	
+> 39	> Preservam **todos** os invariantes da 3a: consent gate Art.11 (3 checkboxes), fail-closed em config/credencial ausente, isolamento de tenant (RLS own default-deny), imutabilidade do consent, erasure Art.18, identity-verification self-clone antes de persistir weights.
+> 40	
+> 41	### FR-AC-013 — Identity Gate (dual-mode: VLM-soft MVP / ArcFace-hard deferido)
+> 42	Pós-geração, **modo VLM-soft (ATIVO na 3b)**: o orquestrador (a) descreve cada retrato de referência consentido via `vision_describe_image` 1× por treino (cacheado); (b) descreve cada frame/clipe gerado; (c) compara via **FR-AC-013b** → `soft_match {pass/review/fail}` contra o threshold soft; (d) abaixo do gate → **fail-and-regenerate** seed-fixo + conditioning mais forte, capped por `max_regen` (CONFIG). Substrato = descritivo-VLM (`server.ts:101-175`), **não** InsightFace/ArcFace. Rotulado **human-review-assist < ArcFace**, nunca auto-aprovação. **Modo ArcFace-hard** = requisito-alvo, agora **deferido → OTD-AC-015**. Vision QA (`vision-qa.ts`, BYOK-free) permanece segundo crítico (FR-AC-038); re-check pós-`avatarEnhance` mantido (FM-AC-003).
+> 43	
+> 44	> **Nota de credencial (dobra issue #4 do crítico):** o passo de descrição (referência E frame) roda no **orquestrador user-JWT** (`canvas-execute`/`orchestrate-step`), **não** na edge service-role `avatar-identity-train`. Razão: `vision_describe_image` resolve a BYOK key per-user a partir do `sub` do JWT (scope `vision:read`); uma chamada service-role não tem `auth.uid()` e (a) falharia fail-closed 402 ou (b) cairia em billing de plataforma (custo ≠ 0). Se um futuro fluxo precisar descrever dentro de contexto service-role, exige token delegado service→user com `user_id` server-trusted da linha (molde `docs/processes/autopilot-cron-identity.md`) — **não** minta token user-scoped cegamente.
+> 45	
+> 46	### FR-AC-013b — Algoritmo de compare VLM-soft (NET-NEW, dobra issue #1 do crítico)
+> 47	O compare é o **maior componente NET-NEW da 3b** e é especificado aqui (não pode ficar implícito):
+> 48	- **Input:** duas descrições estruturadas cacheadas (referência canônica + frame candidato).
+> 49	- **Método:** forçar o campo `question` do `vision_describe_image` a emitir um **schema JSON fixo de atributos enum** — `{ face_shape, hair_color, hair_style, beard, glasses, skin_tone, distinctive_marks }` — **não** prosa livre. O orquestrador parseia o JSON (fail-soft: campo ausente/não-parseável conta como mismatch).
+> 50	- **Scoring:** `matching = nº de atributos enum concordantes`; `soft_match = pass` se `matching ≥ arcface_threshold` (o limiar soft expressa o **nº mínimo de atributos concordantes**), `fail` se muito abaixo, `review` na banda intermediária.
+> 51	- **Determinismo (mitiga OTD-AC-016):** rodar **N≥2 passes de describe por frame** e exigir **maioria**; se 2 passes consecutivos sobre o **mesmo frame** discordarem (pass vs fail), **rota para `review`** em vez de regenerar (evita pagar regeneração de frame que é de fato consistente — dobra issue #5).
+> 52	- **Honestidade:** continua texto→texto, não geometria facial; serve como gate de sanidade, não verificação confiável.
+> 53	
+> 54	### FR-AC-014 — Soft identity threshold (MVP) + calibração empírica deferida
+> 55	O gate é um **threshold soft configurável** persistido em `avatar_identities.arcface_threshold` (coluna reusada como container do limiar-de-decisão — OTD-AC-018), expressando o **nº mínimo de atributos enum concordantes** (FR-AC-013b), **não** cosine FAR/FRR/EER. Permanece **proibido hardcode 0.95/0.7-0.8** e o limiar continua **CONFIG, nunca constante** — e o `max_regen` também é **CONFIG** (default Sovereign-tunável), pela mesma disciplina (dobra issue #5). A calibração estatística FAR/FRR/EER (versão FORTE da OTD-AC-004) fica **deferida → OTD-AC-015**. NFR-AC-016 (≥85% 1ª geração) é reinterpretado no MVP como pass-rate do soft-gate (recalibrável), com a ressalva material de que **não é comparável** ao pass-rate ArcFace (escalas distintas).
+> 56	
+> 57	### FR-AC-015 — `avatar_identities` persistence (semântica de referência ajustada + discriminador de modo)
+> 58	A 3b **popula** `identity_storage_key` (prefixo `user_id/`), `arcface_threshold` (limiar soft), `tier`, `provider`, `commercial_license_ok`, `status` training→active, e introduz um **discriminador de modo NOT-NULL `gate_mode ∈ {'vlm_soft','arcface'}`** (dobra issue #2) para que o significado de `arcface_threshold`/`embedding` nunca seja ambíguo entre os modos. No modo VLM-soft, a coluna `embedding vector(768)` é **default-OFF** (não populada); se um futuro fluxo a popular com text-embed do descritor, é **explicitamente não geometria facial** (OTD-AC-018) e **nenhuma query semântica cross-row** pode rodar sobre ela (red-line Art.5(1)(g) — descritor-similaridade correlaciona com atributos sensíveis). O conjunto de retratos de referência consentidos é o lado-de-referência real do compare. RLS own + storage isolado + DELETE só via `erase_avatar_artifacts` **intactos** (já buildados, `…130000:46-51,106-167`).
+> 59	
+> 60	### FR-AC-016 — Commercial-license gate (reafirmado no escopo 3b)
+> 61	Continua bloqueando pesos non-commercial (FLUX.1-dev base de LoRA-FLUX, InfiniteYou etc — FM-AC-001) via `avatar_identities.commercial_license_ok` (default false, `…130000:30`); flipa true só com provider/checkpoint Apache/MIT/SaaS-BYOK licenciado. **Nota 3b:** o verificador VLM-soft (Vision MCP/Gemini/OpenRouter BYOK) **não** é bloqueado — é SaaS-BYOK do user, não peso shipado. O gate aplica-se à FONTE de geração de identidade.
+> 62	
+> 63	### FR-AC-012 — `avatarIdentity` Canvas node (reafirmado, entregável 3b)
+> 64	Nó Canvas (recipe registry: factory+handles+inspector+nodeTypes+resolveExecutePayload; ladder Tier1 InstantID/IP-Adapter FaceID · Tier2 PuLID-Flux · Tier3 LoRA; Higgsfield Soul ID ≥20 fotos default; output `input_face_identity`) construído na 3b. Edge NET-NEW `avatar-identity-train` (service-role) resolve o TREINO-via-API — ⚠️ **não-verificado → OTD-AC-017**. Sem mudança de invariante.
+> 65	
+> 66	---
+> 67	
+> 68	## 4. Open Technical Decisions novas
+> 69	
+> 70	| ID | Descrição | Decisão (MVP) | Destravador | Owner | Classe RPN/SLA |
+> 71	|----|-----------|---------------|-------------|-------|----------------|
+> 72	| **OTD-AC-015** | Identity Gate **ArcFace-HARD** | **Deferido** — 3b shippa VLM-soft (FR-AC-013/013b/014). Substrato ArcFace/InsightFace não existe (`server.ts:101-175`, 7 tools, 0 ArcFace). | **(Sovereign)** (a) motor de embedding facial — InsightFace self-host no Sovereign Mesh OU API paga; (b) biometria facial calibração-grade (frames reais rotulados FAR/FRR/EER); (c) decisão de custo/credencial. | Sovereign + engineer | S5 × pós-MVP — **SLA = antes do GA comercial multi-tenant** (piloto Usuário Zero mitigado por VLM-soft + Vision QA + híbrido FM-AC-014). |
+> 73	| **OTD-AC-016** | Risco do VLM-soft: threshold **subjetivo/não-determinístico** | **Aberto/risco** — soft_match é juízo descritivo, não score. Falha no caso "parece a mesma pessoa, mas é outra". | Mitigado por N≥2-passes-maioria + `max_regen` cap + `review`→human-review-assist + regra anti-oscilação + Vision QA + híbrido. **Nunca** decisão automática anti-impersonation. Fecha com OTD-AC-015. | engineer | ≥ FM-AC-OBS-1 (75): S5×O3×D5, agravado pela natureza não-determinística. |
+> 74	| **OTD-AC-017** | **TREINO-via-API Soul ID não-verificado** (herda OTD-AC-003) | **Aberto/risco** — `avatar-identity-train` assume endpoint self-serve não confirmado. | **(Sovereign)** credencial Higgsfield + ler docs logadas; fallback = Tier1/Tier2 (sem treino persistente) ou LoRA-FLUX (gated FR-AC-016). | engineer + Sovereign | SLA = antes de selar a edge `avatar-identity-train`. |
+> 75	| **OTD-AC-018** | Ressignificação de `avatar_identities.embedding vector(768)` | **Aberto** — no MVP `embedding` é **default-OFF**; se populada, guarda descritor TEXTUAL-VLM, não geometria facial; **proibida query semântica cross-row** (Art.5(1)(g)). Discriminador `gate_mode` torna a semântica inequívoca. | Ao destravar OTD-AC-015, a coluna passa a guardar embedding facial real e esta OTD fecha. **Não regride** isolamento tenant/RLS/erasure. | engineer | — |
+> 76	
+> 77	---
+> 78	
+> 79	## 4b. Schema delta para o código da 3b (a aplicar na migration da fatia de código)
+> 80	
+> ```
+
+## 🤖 Claude *(01:57:09)*
+
+
+## 🤖 Claude *(01:57:11)*
+
+Formato da casa entendido. Vou escrever a **Amendment 11** — grounded, fechando OTD-AC-017 com o substrato nomeado + FR-AC-016 aprovação-condicional codificada + contrato do treinador + schema delta + novas OTDs + Pattern Conformance.
+
+## 🤖 Claude *(01:58:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md",
+  "content": "# avatar-clone-ai \u2014 Amendment 11: Free LoRA identity training (Replicate BYOK) \u2014 fecha OTD-AC-017\n\n> **Tipo:** Emenda de FRD/SDD (Fatia 3b \u2014 leg de treino) \u00b7 **Status:** proposta (gate de c\u00f3digo p\u00f3s-aprova\u00e7\u00e3o Sovereign \u2014 Lei 4 Reviewer)\n> **Lente BoK:** SWEBOK + CISSP CBK (execu\u00e7\u00e3o) \u00b7 doutrina open-source-first / USD-externo-0 ([[feedback_opensource_first_zero_cost_equity]]) \u00b7 21 Agentic Patterns (`docs/architecture/agentic-vision.md`)\n> **Posi\u00e7\u00e3o no Closed-Loop Protocol (CLAUDE.md \u00a71):** emenda \u00e0 SDD selada `05-sdd.md` \u00a7identidade + ao `04-frd.md` \u00a72.3 (FR-AC-012/015/016); **fecha OTD-AC-017** (`10-amendment-3b-identity-gate-vlm-soft.md:74`) nomeando o substrato de treino verificado. Habilita a edge NET-NEW `avatar-identity-train` (bloqueada at\u00e9 aqui).\n> **ORO triplet:** Operator = MCORCH Master Execution Agent + L1 engineer \u00b7 Reviewer = Sovereign (Gabriel) + `/security-review` independente na migration biom\u00e9trica (FMEA-011) \u00b7 Owner = Sovereign (custo de treino ~US$1,85/run debita na conta **Replicate do pr\u00f3prio user** \u2014 USD 0 para o MCORCH).\n>\n> **Fundamenta\u00e7\u00e3o (workflow de pesquisa `wf_85d1558b-7bf`, 4 agentes, 30 fontes citadas):** contrato do treinador + veredito de licen\u00e7a comercial verificados contra as p\u00e1ginas oficiais Replicate + Black Forest Labs + HuggingFace (URLs inline abaixo). **Nenhuma capacidade fabricada (Lei 1):** todo endpoint/campo/limite carrega a URL consultada.\n\n---\n\n## 1. Contexto e motiva\u00e7\u00e3o\n\nA **Fatia 3b** (`10-amendment-\u2026`) shippou o n\u00f3 `avatarIdentity` + o Identity Gate VLM-soft, mas deixou a **leg de TREINO** (`avatar-identity-train`) **n\u00e3o-selada** sob **OTD-AC-017** \u2014 *\"assume endpoint self-serve n\u00e3o confirmado\"* \u2014 porque o substrato Higgsfield Soul ID **nunca foi verificado como um endpoint de treino real**. Achado material desta sess\u00e3o (Lei 1): o bot\u00e3o \"Treinar identidade\" era um stub que disparava o toast Higgsfield **sem olhar o motor**, e **n\u00e3o existe backend de treino para nenhum motor** (`avatar-identity-train` nunca foi criada; `supabase/functions/` tem s\u00f3 `avatar-consent` + `erase-avatar-artifacts`). O fix de UX (commit `a0e8590`) tornou a mensagem **engine-aware** e fez **LoRA (Flux) o default gr\u00e1tis** \u2014 mas a mensagem LoRA hoje \u00e9 honesta-\"em breve\" porque **o treinador n\u00e3o existe**.\n\n**Esta emenda nomeia o substrato de treino VERIFICADO** (a \u00fanica raz\u00e3o pela qual OTD-AC-017 estava aberta) e habilita a constru\u00e7\u00e3o da edge fn. A diretiva Sovereign \u00e9 **foco total no gratuito**: o caminho LoRA open-weights via BYOK, **USD 0 para o MCORCH** (a Higgsfield Platform API paga fica para depois).\n\n**\"Soul ID\" \u2014 desconfla\u00e7\u00e3o (achado da pesquisa):** o r\u00f3tulo \"Higgsfield Soul ID\" conflaciona **tr\u00eas** superf\u00edcies distintas, **nenhuma** um endpoint one-click \"treine meu rosto\": (1) Higgsfield Platform API `soul/{mode}` + `custom_reference_id` = *image-conditioning por refer\u00eancia*, **n\u00e3o** treino persistente; (2) conector Higgsfield **MCP OAuth** = cat\u00e1logo BYOK; (3) um treinador self-serve hipot\u00e9tico que OTD-AC-017 admite **nunca ter sido verificado**. Decis\u00e3o: manter Higgsfield gated com mensagem honesta e **promover LoRA (Flux) como o default gratuito** (j\u00e1 feito no `a0e8590`).\n\n---\n\n## 2. Decis\u00e3o de substrato (grounded)\n\n| Prioridade | Substrato | Base / Licen\u00e7a | Custo (conta do user) | Comercial? | Papel |\n|-----------|-----------|----------------|----------------------|-----------|-------|\n| **Prim\u00e1rio** | `ostris/flux-dev-lora-trainer` (Replicate) | FLUX.1-dev (Non-Commercial License) | ~US$1,85 \u00b7 ~20-30 min \u00b7 H100 \u00fanico | **Condicional** (\u00a73 FR-AC-016) | Default gr\u00e1tis; fidelidade de identidade campe\u00e3 |\n| **Fallback port\u00e1vel** | `stability-ai/sdxl` LoRA/DreamBooth | SDXL \u00b7 **CreativeML Open RAIL++-M** (comercial, sem lock) | ~US$0,5-2 \u00b7 ~10-15 min | **Sim, incondicional** | Quando exigir peso port\u00e1vel/self-host ou zero depend\u00eancia de grant de plataforma |\n| Secund\u00e1rio (adiado) | FLUX.1-schnell LoRA (ai-toolkit) | **Apache-2.0** (comercial, port\u00e1vel) | self-host (sem trainer hospedado 1-clique) | Sim | Pr\u00eamio limpo \u2014 mas exige self-host do ai-toolkit \u2192 OTD-AC-SCHNELL-HOSTED |\n\n**Racional (fontes):** o trainer oficial que a Replicate documenta ponta-a-ponta para API \u00e9 `ostris/flux-dev-lora-trainer` (Cog wrapper do ai-toolkit; fonte `github.com/replicate/flux-fine-tuner`) \u2014 https://replicate.com/blog/fine-tune-flux-with-an-api. Retorna um `lora.safetensors` port\u00e1vel **e** grava um modelo `destination` \"quente\" imediatamente execut\u00e1vel. BYOK = **USD 0 para o MCORCH** (treino + infer\u00eancia debitam na conta Replicate do pr\u00f3prio user), alinhado \u00e0 doutrina de custo-externo-0.\n\n---\n\n## 3. Emendas de FR\n\n### FR-AC-016 \u2014 Commercial-license gate \u2192 **APROVA\u00c7\u00c3O CONDICIONAL para o caminho LoRA-FLUX (Replicate hospedado)**\n\nA 3b reafirmou FR-AC-016 bloqueando pesos non-commercial (`commercial_license_ok` default false). Esta emenda **abre a via LoRA-FLUX sob UMA condi\u00e7\u00e3o load-bearing verificada**:\n\n> **Veredito (fonte prim\u00e1ria Replicate):** *\"If you generate images on Replicate with FLUX.1 models and their fine-tunes, then you can use the images commercially\"* e *\"If you download the weights off Replicate and generate images on your own computer, you can't use the images commercially.\"* \u2014 https://replicate.com/blog/fine-tune-flux\n\nMec\u00e2nica (verificada): FLUX.1-dev \u00e9 **Non-Commercial** (https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/LICENSE.md) e um LoRA \u00e9 um \"Derivative\" que **herda** a restri\u00e7\u00e3o \u2014 MAS o direito comercial **n\u00e3o vem da licen\u00e7a dev**, vem do **acordo comercial Replicate\u2194Black Forest Labs** e \u00e9 **escopado \u00e0 infer\u00eancia executando na infra hospedada da Replicate** (https://bfl.ai/licensing). BYOK n\u00e3o muda isso: a infer\u00eancia BYOK ainda roda na infra hospedada da Replicate, **dentro do grant**. A licen\u00e7a dev tem ainda a cl\u00e1usula de Output que permite uso comercial das *imagens* geradas (https://bfl.ai/legal/non-commercial-license-terms).\n\n**Condi\u00e7\u00e3o que FR-AC-016 DEVE codificar no gate (as 3 travas):**\n1. **On-platform only:** treino E gera\u00e7\u00e3o acontecem na API hospedada da Replicate \u2014 **nunca** local/self-hosted para o caminho dev.\n2. **No-export (trava arquitetural):** o `.tar`/`lora.safetensors` \u00e9 usado **exclusivamente** como input `lora_weights` de uma predi\u00e7\u00e3o Replicate-hospedada; **nunca** exposto como artefato baix\u00e1vel ao cliente, nunca entregue a um gerador off-Replicate. (OTD-AC-016-NO-EXPORT-ENFORCEMENT)\n3. **License-version pin:** fixar a vers\u00e3o da licen\u00e7a FLUX.1-dev (hoje v1.1.1 na HF / v2.0 nos termos web bfl.ai) e re-verificar em updates \u2014 a BFL j\u00e1 reverteu a cl\u00e1usula de Output uma vez (Kontext v1.1) (https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/discussions/6). (OTD-AC-016-LICENSE-VERSION-PIN)\n\nSob as 3 travas, `commercial_license_ok` **flipa true** honestamente para linhas `substrate='flux-dev-lora'`. Para linhas `substrate='sdxl-lora'` (RAIL++-M), \u00e9 **true incondicional** (port\u00e1vel). **Ambiguidade residual declarada (n\u00e3o escondida):** o contrato bruto Replicate\u2194BFL n\u00e3o \u00e9 p\u00fablico \u2014 o grant \u00e9 afirma\u00e7\u00e3o autoritativa de plataforma, n\u00e3o texto prim\u00e1rio. Exposi\u00e7\u00e3o revenue-cr\u00edtica que exija portabilidade \u2192 usar o fallback SDXL. (OTD-AC-016-GRANT-DURABILITY)\n\n### FR-AC-012 \u2014 `avatarIdentity` node \u00b7 Tier-3 LoRA-per-person = **este treinador**\n\nO ladder de identidade (Tier1 InstantID/IP-Adapter \u00b7 Tier2 PuLID-Flux \u00b7 **Tier3 LoRA-per-person**) tem seu Tier-3 **realizado** por esta emenda: LoRA-per-person = `ostris/flux-dev-lora-trainer` BYOK. **Provider default = `lora_flux`** (flipado no `a0e8590`, `src/types/canvas.ts`). **Alerta de compliance para o Tier-1** (OTD-AC-012-TIER1-INSIGHTFACE): previews zero-shot PuLID-FLUX/InstantID dependem de encoders InsightFace (antelopev2/buffalo_l) cujos **pesos s\u00e3o non-commercial por padr\u00e3o** (c\u00f3digo Apache/MIT, pesos n\u00e3o) \u2014 tratar endpoints Tier-1 hospedados como **non-commercial** at\u00e9 verificar backend por endpoint. Por isso o **Tier-3 LoRA treinado \u00e9 o caminho comercial can\u00f4nico**, n\u00e3o o Tier-1.\n\n### FR-AC-015 \u2014 persistence: schema delta (\u00a74)\n\n`avatar_identities` ganha as colunas de rastreio do treino async (\u00a74). `identity_storage_key` passa a guardar a URL do `.tar` de pesos (uso server-side only \u2014 trava #2). `status` training\u2192active na reconcilia\u00e7\u00e3o do poll.\n\n### FR-AC-030/031 \u2014 consent gate **preservado**\n\nO treino continua gated pelos **dois** consents Art.11 ativos (`train_lora` + `face_embedding`, `avatar_consents` n\u00e3o-revogados) resolvidos **server-side** na edge fn (fail-closed 403). `attestation_commercial_tier` do consent \u00e9 pr\u00e9-condi\u00e7\u00e3o para `commercial_license_ok=true`. Nenhum invariante da 3a regride (RLS own \u00b7 imutabilidade do consent \u00b7 erasure Art.18).\n\n---\n\n## 4. Schema delta (migration da fatia de c\u00f3digo \u2014 /security-review OBRIGAT\u00d3RIO, FMEA-011)\n\n`ALTER TABLE public.avatar_identities` (aditivo, nullable \u2014 n\u00e3o regride linhas 3a):\n\n| Coluna | Tipo | Prop\u00f3sito |\n|--------|------|-----------|\n| `training_ref` | `text` | id do training Replicate (`/v1/trainings/{id}`) \u2014 reconcile do poll async |\n| `replicate_destination_slug` | `text` | `owner/name` do destination model \u2014 infer\u00eancia Path A (modelo quente) |\n| `trigger_word` | `text` | token distinto do LoRA (injetado no prompt de gera\u00e7\u00e3o) |\n| `substrate` | `text` DEFAULT `'flux-dev-lora'` CHECK IN (`flux-dev-lora`,`sdxl-lora`) | qual base/licen\u00e7a \u2014 dirige a trava FR-AC-016 na infer\u00eancia |\n\n`identity_storage_key` (j\u00e1 existe, staged-nullable) = URL do `.tar` (`training.output.weights`). `commercial_license_ok` (j\u00e1 existe) = resultado do gate \u00a73.\n\n---\n\n## 5. Contrato da edge `avatar-identity-train` (NET-NEW, service-role) \u2014 grounded\n\nDuas a\u00e7\u00f5es (treino Flux LoRA leva ~20-30 min \u2192 **async obrigat\u00f3rio**, molde `finalize_vision_job`/`video-bridge`):\n\n**`action:'start'`** (user-JWT \u2192 user.id):\n1. **Consent gate:** `train_lora` + `face_embedding` ativos (n\u00e3o-revogados) \u2192 sen\u00e3o 403 `consent_required`.\n2. **BYOK:** `decrypted_user_api_keys.replicate_api_key` por user.id \u2192 sen\u00e3o 402 `replicate_not_configured` (fail-closed, API Tenancy Model).\n3. **Dataset:** baixa os retratos de refer\u00eancia (paths em `canvas-assets` `${userId}/avatars/${projectId}/`), **zipa** (jszip), sobe o zip no bucket, assina URL p\u00fablica (TTL curto). Replicate exige `input_images` = **URL p\u00fablica de zip** (https://replicate.com/blog/fine-tune-flux-with-an-api).\n4. **Resolve vers\u00e3o VIVA** (nunca hardcode \u2014 hashes rotacionam): `GET https://api.replicate.com/v1/models/ostris/flux-dev-lora-trainer` \u2192 `latest_version.id` (OTD-AC-016-VERSION-HASH-ROTATION).\n5. **Resolve username:** `GET /v1/account` \u2192 `username` (para o slug do destination).\n6. **Cria destination** (1\u00d7 por subject): `POST /v1/models { owner, name:'flux-<user>-<subject>', visibility:'private', hardware:'gpu-t4' }` (409 existente \u2192 reusa).\n7. **Cria training:** `POST /v1/models/ostris/flux-dev-lora-trainer/versions/<version>/trainings { destination, input:{ input_images:<zip url>, trigger_word:<token distinto>, steps:1000, lora_rank:16, learning_rate:0.0004, resolution:'512,768,1024', autocaption:true } }` (https://raw.githubusercontent.com/replicate/flux-fine-tuner/main/train.py).\n8. **Insere `avatar_identities`** status='training', provider='lora_flux', substrate='flux-dev-lora', `training_ref`, `replicate_destination_slug`, `trigger_word`, `commercial_license_ok=true` (gate \u00a73, on-platform).\n9. Retorna `{ identityId, trainingId, status:'training' }`.\n\n**`action:'poll'`** (user-JWT, owner-scoped, gr\u00e1tis):\n1. L\u00ea a linha (owner). `GET /v1/trainings/{training_ref}` com a key do user.\n2. `succeeded` \u2192 `identity_storage_key = output.weights`, `status='active'`, insere **observation node** na mesh (Mandate). `failed`/`canceled` \u2192 `status='revoked'` + error. Idempotente (guard `status IN ('training')`).\n3. Reconcile self-heal de poll perdido (molde `finalize_vision_job`).\n\n**Infer\u00eancia (fatia futura \u2014 o n\u00f3 de identidade alimenta um generateImage):** **Replicate hospedado only** (trava #2). Path A = rodar o `replicate_destination_slug` com o `trigger_word` no prompt; Path B = `black-forest-labs/flux-dev-lora` com `lora_weights=<identity_storage_key>` + `lora_scale` (https://replicate.com/docs/guides/extend/working-with-loras). `identity_storage_key` **nunca** exposto ao cliente como download.\n\n---\n\n## 6. Open Technical Decisions\n\n**FECHA OTD-AC-017** \u2014 o substrato de treino \u00e9 agora **verificado e nomeado**: `ostris/flux-dev-lora-trainer` (dev) BYOK Replicate, prim\u00e1rio; SDXL fallback port\u00e1vel. N\u00e3o \u00e9 mais \"endpoint n\u00e3o confirmado\".\n\n| ID | Descri\u00e7\u00e3o | Decis\u00e3o | Destravador | Owner | Classe |\n|----|-----------|---------|-------------|-------|--------|\n| **OTD-AC-016-GRANT-DURABILITY** | Grant comercial Replicate\u2194BFL \u00e9 contrato dur\u00e1vel ou cortesia revog\u00e1vel? | Aberto/risco \u2014 afirma\u00e7\u00e3o autoritativa de plataforma, contrato n\u00e3o-p\u00fablico. | Exposi\u00e7\u00e3o revenue-cr\u00edtica \u2192 confirma\u00e7\u00e3o escrita Replicate/BFL OU default SDXL (RAIL++-M). | Sovereign | legal load-bearing |\n| **OTD-AC-016-NO-EXPORT-ENFORCEMENT** | Impedir arquiteturalmente \"baixar pesos \u2192 gerar off-Replicate\" | Trava #2: `identity_storage_key` server-side only, s\u00f3 como `lora_weights` de predi\u00e7\u00e3o Replicate, nunca download client. | Implementado na edge de infer\u00eancia (fatia futura). | engineer | compliance |\n| **OTD-AC-016-LICENSE-VERSION-PIN** | Pinar vers\u00e3o da licen\u00e7a FLUX.1-dev | Fixar v1.1.1 (HF) / v2.0 (web); drift-monitor re-verifica em update (BFL j\u00e1 reverteu Kontext v1.1). | Sentinel de licen\u00e7a (futuro). | engineer | compliance |\n| **OTD-AC-016-VERSION-HASH-ROTATION** | Hash de vers\u00e3o do trainer rotaciona | Resolver `latest_version.id` em call-time (nunca hardcode 26dce37a). | Implementado no `action:start`. | engineer | robustez |\n| **OTD-AC-012-TIER1-INSIGHTFACE** | Previews Tier-1 (InstantID/PuLID) dependem de encoders InsightFace non-commercial | Tier-1 tratado **non-commercial** at\u00e9 verificar backend por endpoint; Tier-3 LoRA \u00e9 o caminho comercial. | Licen\u00e7a enterprise InsightFace OU endpoint com backend FaceNet. | Sovereign | compliance |\n| **OTD-AC-COST-DRIFT** | Pre\u00e7os GPU/seg drift | Re-checar `replicate.com/pricing` antes de exibir custo ao user. | \u2014 | engineer | \u2014 |\n| **OTD-AC-SCHNELL-HOSTED** | Schnell (Apache-2.0) n\u00e3o tem trainer 1-clique hospedado | Adiado \u2014 schnell exigiria self-host do ai-toolkit; dev+Replicate \u00e9 o caminho now. | Self-host ai-toolkit no Sovereign Mesh (GPU). | engineer | \u2014 |\n\n---\n\n## 7. Pattern Conformance Declaration (Closed-Loop \u00a73.5 \u2014 declara\u00e7\u00e3o, n\u00e3o sign-off)\n\n| # | Padr\u00e3o (agentic-vision) | Implementado? | Como / Por-que-adiado |\n|---|--------------------------|---------------|------------------------|\n| 4 | Tool Use / External API | **yes** | Replicate trainings API BYOK per-user (contrato grounded \u00a75). |\n| 8 | Reflection / Self-Verify | **yes** | Identity Gate VLM-soft p\u00f3s-gera\u00e7\u00e3o (3b, reusado) valida a identidade treinada. |\n| 11 | Long-running / Async job | **yes** | start\u2192poll reconcile (molde `finalize_vision_job`), self-heal de poll perdido. |\n| 13 | Guardrails / Policy gate | **yes** | Consent Art.11 server-side + FR-AC-016 3-travas + fail-closed 402/403. |\n| 18 | Cost/Resource governance | **yes** | BYOK = USD 0 MCORCH; custo transparente na conta do user; sem d\u00e9bito mcoCoins (gr\u00e1tis). |\n| 19 | Observability | **yes** | observation node na mesh no 1\u00ba `active` + `infra_health_logs` por path. |\n| Demais (1-3,5-7,9-10,12,14-17,20-21) | n-a | Feature de treino de artefato; sem multiagente/roteamento/etc. material neste escopo. |\n\n---\n\n## 8. Verification gates (antes de selar o c\u00f3digo)\n\n1. `/security-review` independente na migration (tabela biom\u00e9trica, FMEA-011) \u2014 **obrigat\u00f3rio**.\n2. SOP Lei 2 `docs/processes/avatar-lora-training.md` antes do c\u00f3digo da edge fn.\n3. Guards provados zero-custo: 401 sem JWT \u00b7 403 sem consent \u00b7 402 sem replicate key.\n4. Prova de plumbing zero-custo: a key BYOK do user resolve `GET /v1/account` + `GET /v1/models/ostris/flux-dev-lora-trainer` (chamadas gratuitas \u2192 autentica contra a training API).\n5. Witness de treino real (`action:start` \u2192 training id, status `starting`) = **a\u00e7\u00e3o do Sovereign** (exige retratos reais + ~US$1,85 da conta Replicate dele); o poll reconcilia a conclus\u00e3o (~20-30 min). N\u00e3o se afirma \"treino funciona\" sem esse witness (Lei 1).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:59:11)*
+
+
+## 🤖 Claude *(01:59:12)*
+
+Amendment 11 escrita. Vou marcar OTD-AC-017 como fechada na sua origem (amendment-10) apontando para a 11, e selar o Slice 2.
+
+## 🤖 Claude *(01:59:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md",
+  "old_string": "| **OTD-AC-017** | **TREINO-via-API Soul ID n\u00e3o-verificado** (herda OTD-AC-003) | **Aberto/risco** \u2014 `avatar-identity-train` assume endpoint self-serve n\u00e3o confirmado. | **(Sovereign)** credencial Higgsfield + ler docs logadas; fallback = Tier1/Tier2 (sem treino persistente) ou LoRA-FLUX (gated FR-AC-016). | engineer + Sovereign | SLA = antes de selar a edge `avatar-identity-train`. |",
+  "new_string": "| **OTD-AC-017** | **TREINO-via-API Soul ID n\u00e3o-verificado** (herda OTD-AC-003) | \u2705 **FECHADA** por `11-amendment-free-lora-training.md` \u2014 substrato verificado = `ostris/flux-dev-lora-trainer` (FLUX.1-dev) BYOK Replicate (prim\u00e1rio) + SDXL RAIL++-M (fallback port\u00e1vel); Higgsfield Soul ID desconflado e mantido gated. | ~~credencial Higgsfield~~ \u2192 resolvido por LoRA-FLUX open-weights (USD 0 MCORCH). | engineer + Sovereign | Fechada 2026-07-08. |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:59:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md docs/bok/avatar-clone-ai/10-amendment-3b-identity-gate-vlm-soft.md\ngit commit -q -F - <<'EOF'\ndocs(bok): avatar-clone-ai Amendment 11 \u2014 substrato de treino LoRA gr\u00e1tis (fecha OTD-AC-017)\n\nA leg de treino do avatarIdentity estava bloqueada por OTD-AC-017 (\"endpoint self-serve\nn\u00e3o confirmado\"). Esta emenda nomeia o substrato VERIFICADO e destrava o c\u00f3digo da edge\navatar-identity-train (Closed-Loop \u00a71). Fundamentada em pesquisa com 30 fontes citadas\n(workflow wf_85d1558b-7bf) \u2014 nenhuma capacidade fabricada (Lei 1):\n\n- Substrato prim\u00e1rio: ostris/flux-dev-lora-trainer (FLUX.1-dev) via BYOK Replicate \u2014\n  USD 0 para o MCORCH (~US$1,85 na conta do pr\u00f3prio user), fidelidade de identidade campe\u00e3.\n- Fallback port\u00e1vel zero-ambiguidade: SDXL LoRA (CreativeML Open RAIL++-M).\n- FR-AC-016 = APROVA\u00c7\u00c3O CONDICIONAL: comercial OK sob o grant Replicate\u2194BFL, com 3 travas\n  (on-platform only \u00b7 no-export dos pesos \u00b7 pin da vers\u00e3o da licen\u00e7a). commercial_license_ok\n  flipa true honestamente s\u00f3 sob essas travas.\n- Contrato do treinador grounded (resolve vers\u00e3o viva \u2192 destination \u2192 training \u2192 poll).\n- Schema delta (training_ref/destination_slug/trigger_word/substrate) + Pattern Conformance\n  + 6 novas OTDs (grant-durability, no-export, license-pin, hash-rotation, tier1-insightface,\n  cost-drift) + gates de verifica\u00e7\u00e3o.\n\nDesconfla\u00e7\u00e3o \"Soul ID\": Platform API custom-references vs MCP OAuth vs treinador hipot\u00e9tico.\nEOF\ngit log --oneline -1",
+  "description": "Commit Slice 2 (Amendment 11)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m10:59PM[0m [32mINF[0m 1 commits scanned.
+> [90m10:59PM[0m [32mINF[0m scan completed in 25.5ms
+> [90m10:59PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 5c63c7b docs(bok): avatar-clone-ai Amendment 11 — substrato de treino LoRA grátis (fecha OTD-AC-017)
+> ```
+
+## 🤖 Claude *(02:00:01)*
+
+
+## 🤖 Claude *(02:00:03)*
+
+Slice 2 selado (`5c63c7b`). Agora **Slice 3 — construir o treinador**. Ordem Closed-Loop: SOP (Lei 2) → migration → /security-review → apply → edge fn → deploy → validação zero-custo → wire inspector. Começando pelo SOP.
+
+## 🤖 Claude *(02:00:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/avatar-lora-training.md",
+  "content": "# SOP \u2014 Treino de identidade LoRA gr\u00e1tis (avatar-identity-train, Replicate BYOK)\n\n> **Lei 2 (Processo Antecipado).** BoK SSOT: `docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md` (fecha OTD-AC-017). Fundamenta\u00e7\u00e3o: workflow `wf_85d1558b-7bf` (30 fontes citadas).\n> **API Tenancy Model:** credencial Replicate resolvida per-user (`decrypted_user_api_keys.replicate_api_key`), fail-closed. Env N\u00c3O \u00e9 fallback (BYOK puro \u2014 treino debita na conta do pr\u00f3prio user, USD 0 para o MCORCH).\n\n## Operator (quem executa hoje, manualmente)\n\nO Sovereign, se fosse fazer \u00e0 m\u00e3o no dashboard da Replicate: (1) cria um modelo destino vazio; (2) zipa 12-26 retratos; (3) sobe o zip; (4) dispara `POST /trainings` contra `ostris/flux-dev-lora-trainer`; (5) espera ~20-30 min; (6) copia a URL dos pesos. A edge fn `avatar-identity-train` automatiza exatamente isso, escopado por `auth.uid()`.\n\n## Sequence (edge fn \u2014 2 a\u00e7\u00f5es, async)\n\n**`action:'start'`** \u2014 cada step com crit\u00e9rio material:\n1. **Auth** \u2014 user-JWT v\u00e1lido \u2192 `user.id`. Falha \u2192 401.\n2. **Consent gate** \u2014 `train_lora` + `face_embedding` ativos (n\u00e3o-revogados) em `avatar_consents`. Falha \u2192 403 `consent_required`.\n3. **BYOK** \u2014 `replicate_api_key` do user. Falha \u2192 402 `replicate_not_configured`.\n4. **Dataset** \u2014 baixa os retratos de `canvas-assets` (paths do corpo, escopo `${user.id}/`), zipa (jszip), sobe `avatars/train/<identityId>.zip`, assina URL (TTL 24h). Crit\u00e9rio: zip > 0 bytes + N \u2265 4 imagens.\n5. **Vers\u00e3o viva** \u2014 `GET /v1/models/ostris/flux-dev-lora-trainer` \u2192 `latest_version.id` (nunca hardcode; OTD-AC-016-VERSION-HASH-ROTATION).\n6. **Username** \u2014 `GET /v1/account` \u2192 `username`.\n7. **Destination** \u2014 `POST /v1/models {owner:username, name:'flux-<8hex>', visibility:'private', hardware:'gpu-t4'}` (409 \u2192 reusa).\n8. **Training** \u2014 `POST /v1/models/ostris/flux-dev-lora-trainer/versions/<version>/trainings {destination, input:{input_images:<zip url>, trigger_word, steps:1000, lora_rank:16, ...}}`. Crit\u00e9rio: HTTP 201 + `id`.\n9. **Persist\u00eancia** \u2014 INSERT `avatar_identities` status='training', provider='lora_flux', substrate='flux-dev-lora', `training_ref`=<training id>, `replicate_destination_slug`, `trigger_word`, `commercial_license_ok=true` (gate FR-AC-016 \u00a73 \u2014 on-platform).\n10. Retorna `{identityId, trainingId, status:'training'}`.\n\n**`action:'poll'`** \u2014 gr\u00e1tis, owner-scoped, idempotente:\n1. L\u00ea a linha (owner). `GET /v1/trainings/{training_ref}`.\n2. `succeeded` \u2192 `identity_storage_key`=`output.weights` + `status='active'` + observation node na mesh. `failed`/`canceled` \u2192 `status='revoked'` + error. Guard `status='training'` (reconcile 1\u00d7).\n\n## Verification gates (material)\n\n- 401 sem JWT \u00b7 403 sem consent \u00b7 402 sem replicate key (curl com JWT throwaway).\n- Plumbing zero-custo: `GET /v1/account` + `GET /v1/models/ostris/flux-dev-lora-trainer` com a key do user retornam 200 (autentica sem gastar).\n- Witness pago (a\u00e7\u00e3o do Sovereign): `action:start` com retratos reais \u2192 HTTP 201 + training id \u2192 `avatar_identities` row `status='training'`. `action:poll` ap\u00f3s ~20-30 min \u2192 `status='active'` + `identity_storage_key` n\u00e3o-nulo.\n\n## Recovery path\n\n- **start falhou p\u00f3s-INSERT** (training criado, linha n\u00e3o): a linha s\u00f3 existe ap\u00f3s o `POST /trainings` retornar id \u2192 sem \u00f3rf\u00e3o. Se o INSERT falhar depois do training criar, o training roda mas fica sem linha; recovery = `action:poll` n\u00e3o acha \u2192 operador re-dispara start (novo training; o antigo expira sem uso \u2014 custo perdido, logado em `infra_health_logs`).\n- **poll perdido** (edge caiu no meio): `action:poll` \u00e9 reexecut\u00e1vel (idempotente, guard `status='training'`) \u2192 reconcilia. Self-heal molde `finalize_vision_job`.\n- **training failed na Replicate**: poll seta `status='revoked'` + error surfaced no inspector; operador sobe retratos melhores e re-dispara.\n\n## Success signal\n\n`avatar_identities` row do user com `status='active'` + `identity_storage_key` (URL do `.tar`) + `commercial_license_ok=true` + observation node na mesh. Materialmente: `SELECT status, identity_storage_key FROM avatar_identities WHERE id=<id>` \u2192 `active` + URL n\u00e3o-nula.\n\n## Compliance (FR-AC-016 \u2014 3 travas)\n\n1. **On-platform only** \u2014 infer\u00eancia (fatia futura) roda S\u00d3 na Replicate hospedada; `substrate='flux-dev-lora'` nunca despacha para gerador local.\n2. **No-export** \u2014 `identity_storage_key` \u00e9 server-side only, usado s\u00f3 como `lora_weights` de predi\u00e7\u00e3o Replicate; **nunca** exposto como download ao cliente.\n3. **License-version pin** \u2014 FLUX.1-dev v1.1.1 (HF); re-verificar em updates (OTD-AC-016-LICENSE-VERSION-PIN).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/avatar-lora-training.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:00:41)*
+
+
+## 🤖 Claude *(02:00:43)*
+
+SOP pronto (Lei 2). Agora a **migration** (aditiva à tabela biométrica → /security-review obrigatório). Vou checar o último timestamp e escrever.
+
+## 🤖 Claude *(02:00:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls supabase/migrations/ | tail -4",
+  "description": "\u00daltimo timestamp de migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 20260705230000_match_memory_code_synapses.sql
+> 20260707220000_generations_project_dispatch.sql
+> 20260707230000_creative_assets_allow_spaces_source.sql
+> 20260708100000_tiktok_login_identities.sql
+> ```
+
+## 🤖 Claude *(02:00:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708130000_avatar_identities_lora_training.sql",
+  "content": "-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- avatar-clone-ai \u00b7 Amendment 11 \u2014 Free LoRA identity training (Replicate BYOK)\n-- BoK SSOT: docs/bok/avatar-clone-ai/11-amendment-free-lora-training.md (fecha OTD-AC-017)\n-- SOP (Lei 2): docs/processes/avatar-lora-training.md\n--\n-- /security-review OBRIGAT\u00d3RIO antes do commit (FMEA-011 \u2014 tabela biom\u00e9trica facial per-tenant).\n--\n-- Additive-only: adiciona as colunas de rastreio do treino LoRA async (Replicate /trainings poll).\n-- N\u00c3O regride linhas da Fatia 3a (todas nullable; substrate tem DEFAULT). RLS/erasure/immutability\n-- da 130000 permanecem intactos \u2014 esta migration s\u00f3 faz ALTER ADD COLUMN + 1 \u00edndice parcial.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\nALTER TABLE public.avatar_identities\n  ADD COLUMN IF NOT EXISTS training_ref               text,   -- id do training Replicate (/v1/trainings/{id}) \u2014 reconcile do poll\n  ADD COLUMN IF NOT EXISTS replicate_destination_slug text,   -- owner/name do destination model \u2014 infer\u00eancia Path A (modelo quente)\n  ADD COLUMN IF NOT EXISTS trigger_word               text,   -- token distinto do LoRA (injetado no prompt de gera\u00e7\u00e3o)\n  ADD COLUMN IF NOT EXISTS substrate                  text NOT NULL DEFAULT 'flux-dev-lora'\n    CHECK (substrate IN ('flux-dev-lora','sdxl-lora'));         -- base/licen\u00e7a \u2192 dirige a trava FR-AC-016 na infer\u00eancia\n\nCOMMENT ON COLUMN public.avatar_identities.training_ref IS\n  'Amendment 11 \u2014 Replicate training id (/v1/trainings/{id}); avatar-identity-train action=poll reconcilia o async (~20-30 min).';\nCOMMENT ON COLUMN public.avatar_identities.substrate IS\n  'Amendment 11 \u2014 flux-dev-lora (comercial CONDICIONAL: on-platform only + no-export, FR-AC-016 \u00a73) | sdxl-lora (RAIL++-M, comercial incondicional/port\u00e1vel).';\n\n-- \u00cdndice parcial para o reconcile do poll (s\u00f3 linhas em treino t\u00eam training_ref relevante).\nCREATE INDEX IF NOT EXISTS avatar_identities_training_ref_idx\n  ON public.avatar_identities (training_ref)\n  WHERE status = 'training' AND training_ref IS NOT NULL;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260708130000_avatar_identities_lora_training.sql (file state is current in your context — no need to Read it back)
+> ```
