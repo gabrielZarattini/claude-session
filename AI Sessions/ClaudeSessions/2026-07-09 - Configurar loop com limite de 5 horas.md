@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -7418,7 +7418,7 @@ Tree limpo. Fazendo as 7 edições do `canvas.ts` (union, interface, data-union,
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
   "old_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n  }\n}",
-  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script ([[mcoin-cost-calibration|mcoin-cost-calibration]] 4x-floor, OTD-CS-006)\n  }\n}"
+  "new_string": "    case \"publishWordpress\":\n      return 0; // distribution sink \u2014 publishing is free (reuses per-user WP creds)\n    case \"scriptGenerator\":\n      return 2; // Roteiro \u2014 LLM script (mcoin-cost-calibration 4x-floor, OTD-CS-006)\n  }\n}"
 }
 ```
 
@@ -8973,15 +8973,282 @@ Honestidade: o backend v2 está provado mas o **nó ainda não o chama** — o l
 
 Foi uma sessão-maratona longa e produtiva: dos 3 primitivos FFmpeg + template cinematográfico → 2 artifacts → BoK/agente/skills do módulo → hotfix do zip do LoRA → decisões de TTS (VoxCPM2) e identidade multi-motor → e agora **2 nós/backends do Creative Studio vivos e provados**. O loop segue; te reporto com o storyboard saindo na tela (ou o obstáculo honesto).
 
----
+## 👤 User *(09:48:00)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+Loop autônomo — MÓDULO Creative Studio. VITÓRIAS: (1) Nó Roteiro v1 LIVE (0d1714a); (2) backend generate-script-package SHIPADO+PROVADO (508cda7) — retorna {scenes:[{start,end,narration,imagePrompt}],ttsPrompt} no formato do Sovereign, /security-review SAFE, deploy 158.1kB, prova live 5 cenas tema robôs. git log --oneline -14 primeiro. PRÓXIMO: fiar o BACKEND provado no NÓ UI (client v2, buildable-now, sem /security-review novo — só chama a fn já deployada). Passos: (1) src/types/canvas.ts — mudar ScriptGeneratorData.output p/ `{ script?: string; scenes?: {start:number;end:number;narration:string;imagePrompt:string}[]; ttsPrompt?: string; generatedAt: string }` (tornar script opcional, add scenes?/ttsPrompt?). (2) ScriptGeneratorInspector.tsx — ADD 2º botão "Gerar storyboard (cenas + prompts)" que invoca supabase.functions.invoke('generate-script-package',{body:{topic,format,duration}}) → data já é JSON {scenes,ttsPrompt} (NÃO é SSE, é JSON limpo) → updateNodeData output:{scenes,ttsPrompt,generatedAt}; manter o botão v1 "Gerar roteiro" (script) que já funciona. Exibir uma Section "Storyboard" com tabela das cenas (start-end · narração · imagePrompt em fonte mono) quando output.scenes existir + botão copiar ttsPrompt. (3) ScriptGeneratorNode.tsx — done check = script||scenes?.length; badge mostra nº de cenas se houver. VERIFICAR tsc --noEmit LIMPO. DEPLOY frontend (bun run build no repo principal = nginx; gates env-baked + chunk novo). PROVA: abrir o dist/ e confirmar as strings novas no bundle (grep 'storyboard'/'Gerar storyboard'); prova live opcional já foi feita no backend. DEPOIS: slice 3 free-render rail (skill free-render-dispatch — cabear worker webhook do video-render + mode switch cinematic no video-bridge; needs /security-review; SE worker video-studio.service não configurado = gate Sovereign, reportar). Commits granulares sem Co-Authored-By; nunca fabricar prova (Lei 1); se travar em GO/gasto, reportar honesto.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
-> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(09:48:45)*
+
+
+## 🤖 Claude *(09:48:46)*
+
+Loop firing — fiando o backend no nó UI (client v2). Oriento + faço as edições de tipo/nó, depois reescrevo o inspector:
+
+## 🤖 Claude *(09:48:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -4",
+  "description": "Orient"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 508cda7 feat(spaces): generate-script-package — pacote de roteiro ESTRUTURADO (Roteiro v2 backend, OTD-CS-002)
+> 1775357 docs(creative-studio): slice 2a Roteiro v1 SHIPADO+PROVADO (0d1714a) — nó vivo em prod
+> 0d1714a feat(spaces): no Roteiro (scriptGenerator) — gera roteiro de video a partir de um tema
+> ff2d020 docs(creative-studio): correcao Lei 1 — OTD-CS-002 re-aberto + Node B bloqueado por video-render 503
+> ```
+
+## 🤖 Claude *(09:48:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "  output?: { script: string; generatedAt: string };\n  error?: string;\n}\n\nexport type CanvasNodeData =",
+  "new_string": "  output?: {\n    script?: string;\n    scenes?: { start: number; end: number; narration: string; imagePrompt: string }[];\n    ttsPrompt?: string;\n    generatedAt: string;\n  };\n  error?: string;\n}\n\nexport type CanvasNodeData ="
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:48:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/ScriptGeneratorNode.tsx",
+  "old_string": "  const done = d.status === \"success\" && Boolean(d.output?.script);",
+  "new_string": "  const done = d.status === \"success\" && Boolean(d.output?.script || d.output?.scenes?.length);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/ScriptGeneratorNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:48:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/ScriptGeneratorNode.tsx",
+  "old_string": "          ) : done ? (\n            <><CheckCircle2 className=\"h-2.5 w-2.5 text-emerald-400\" /> roteiro pronto</>\n          ) : (",
+  "new_string": "          ) : done ? (\n            <><CheckCircle2 className=\"h-2.5 w-2.5 text-emerald-400\" /> {d.output?.scenes?.length ? `${d.output.scenes.length} cenas` : \"roteiro pronto\"}</>\n          ) : ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/ScriptGeneratorNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:48:59)*
+
+
+## 🤖 Claude *(09:49:00)*
+
+Reescrevendo o inspector com o 2º botão (storyboard) + a tabela de cenas + copiar TTS:
+
+## 🤖 Claude *(09:49:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "content": "import { useState } from \"react\";\nimport { ScrollText, Loader2, Sparkles, Clapperboard, Copy, Check } from \"lucide-react\";\nimport { toast } from \"sonner\";\nimport { Button } from \"@/components/ui/button\";\nimport { Textarea } from \"@/components/ui/textarea\";\nimport { cn } from \"@/lib/utils\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { type ScriptGeneratorData } from \"@/types/canvas\";\nimport { Section, InspectorHeader } from \"../shared\";\n\ninterface Props {\n  node: { id: string; data: ScriptGeneratorData };\n  projectId: string;\n}\n\ntype Scene = { start: number; end: number; narration: string; imagePrompt: string };\n\nconst FORMATS: { id: ScriptGeneratorData[\"format\"]; label: string }[] = [\n  { id: \"reels\", label: \"Reels/Shorts\" },\n  { id: \"youtube\", label: \"YouTube\" },\n  { id: \"tutorial\", label: \"Tutorial\" },\n  { id: \"storytelling\", label: \"Narrativa\" },\n];\n\nconst DURATIONS: { id: ScriptGeneratorData[\"duration\"]; label: string }[] = [\n  { id: \"curto\", label: \"Curto\" },\n  { id: \"m\u00e9dio\", label: \"M\u00e9dio\" },\n  { id: \"longo\", label: \"Longo\" },\n];\n\n// generate-video-script streams SSE (OpenRouter) or passes a provider JSON (Gemini). Accumulate the\n// delta content when it looks like SSE; otherwise fall back to common completion shapes / raw text.\nfunction parseScriptResponse(data: unknown): string {\n  if (typeof data !== \"string\") {\n    const obj = data as {\n      script?: string;\n      choices?: { message?: { content?: string } }[];\n      candidates?: { content?: { parts?: { text?: string }[] } }[];\n    } | null;\n    return (\n      obj?.script ??\n      obj?.choices?.[0]?.message?.content ??\n      obj?.candidates?.[0]?.content?.parts?.[0]?.text ??\n      (data ? JSON.stringify(data) : \"\")\n    );\n  }\n  const raw = data;\n  if (raw.includes(\"data:\")) {\n    let out = \"\";\n    for (const line of raw.split(\"\\n\")) {\n      const t = line.trim();\n      if (!t.startsWith(\"data:\")) continue;\n      const payload = t.slice(5).trim();\n      if (!payload || payload === \"[DONE]\") continue;\n      try {\n        const j = JSON.parse(payload) as {\n          choices?: { delta?: { content?: string }; message?: { content?: string } }[];\n        };\n        const delta = j?.choices?.[0]?.delta?.content ?? j?.choices?.[0]?.message?.content ?? \"\";\n        if (delta) out += delta;\n      } catch {\n        /* non-JSON data line \u2014 ignore */\n      }\n    }\n    if (out.trim()) return out;\n  }\n  return raw;\n}\n\nexport function ScriptGeneratorInspector({ node }: Props) {\n  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const [busy, setBusy] = useState<null | \"script\" | \"storyboard\">(null);\n  const [copied, setCopied] = useState<string | null>(null);\n\n  const d = node.data;\n  const canGenerate = Boolean(d.topic.trim());\n\n  const set = (patch: Partial<ScriptGeneratorData>) =>\n    updateNodeData(node.id, { ...patch, status: \"idle\", error: undefined });\n\n  const copy = async (text: string | undefined, key: string) => {\n    if (!text) return;\n    try {\n      await navigator.clipboard.writeText(text);\n      setCopied(key);\n      setTimeout(() => setCopied(null), 1500);\n    } catch {\n      toast.error(\"N\u00e3o foi poss\u00edvel copiar.\");\n    }\n  };\n\n  // v1 \u2014 free-form SCRIPT via generate-video-script (SSE).\n  const handleGenerateScript = async () => {\n    if (!canGenerate) return toast.error(\"Descreva o tema do roteiro.\");\n    setBusy(\"script\");\n    updateNodeData(node.id, { status: \"running\", error: undefined });\n    try {\n      const { data, error } = await supabase.functions.invoke(\"generate-video-script\", {\n        body: { prompt: d.topic, format: d.format, duration: d.duration },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao gerar o roteiro.\"));\n      const script = parseScriptResponse(data).trim();\n      if (!script) throw new Error(\"O provedor n\u00e3o retornou roteiro. Verifique sua chave de IA em Configura\u00e7\u00f5es \u2192 IA.\");\n      updateNodeData(node.id, {\n        status: \"success\",\n        output: { ...d.output, script, generatedAt: new Date().toISOString() },\n        error: undefined,\n      });\n      toast.success(\"Roteiro gerado \u2713\");\n    } catch (e) {\n      const msg = e instanceof Error ? e.message : String(e);\n      updateNodeData(node.id, { status: \"failed\", error: msg });\n      toast.error(msg);\n    } finally {\n      setBusy(null);\n    }\n  };\n\n  // v2 \u2014 STRUCTURED storyboard via generate-script-package (clean JSON {scenes,ttsPrompt}).\n  const handleGenerateStoryboard = async () => {\n    if (!canGenerate) return toast.error(\"Descreva o tema do roteiro.\");\n    setBusy(\"storyboard\");\n    updateNodeData(node.id, { status: \"running\", error: undefined });\n    try {\n      const { data, error } = await supabase.functions.invoke(\"generate-script-package\", {\n        body: { topic: d.topic, format: d.format, duration: d.duration },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao gerar o storyboard.\"));\n      const pkg = data as { scenes?: Scene[]; ttsPrompt?: string } | null;\n      if (!pkg?.scenes?.length) throw new Error(\"O modelo n\u00e3o retornou um storyboard estruturado. Tente outro tema.\");\n      updateNodeData(node.id, {\n        status: \"success\",\n        output: { ...d.output, scenes: pkg.scenes, ttsPrompt: pkg.ttsPrompt ?? \"\", generatedAt: new Date().toISOString() },\n        error: undefined,\n      });\n      toast.success(`Storyboard com ${pkg.scenes.length} cenas \u2713`);\n    } catch (e) {\n      const msg = e instanceof Error ? e.message : String(e);\n      updateNodeData(node.id, { status: \"failed\", error: msg });\n      toast.error(msg);\n    } finally {\n      setBusy(null);\n    }\n  };\n\n  return (\n    <div className=\"flex h-full flex-col\">\n      <div className=\"flex-1 overflow-y-auto\">\n        <InspectorHeader icon={<ScrollText className=\"h-3.5 w-3.5\" />} label={d.label} id={node.id} />\n\n        <Section title=\"Tema / briefing\">\n          <Textarea\n            value={d.topic}\n            onChange={(e) => set({ topic: e.target.value })}\n            placeholder=\"Ex.: 2026 e a revolu\u00e7\u00e3o dos rob\u00f4s humanoides que aprendem como n\u00f3s\u2026\"\n            rows={4}\n            className=\"text-sm\"\n          />\n        </Section>\n\n        <Section title=\"Formato\">\n          <div className=\"grid grid-cols-2 gap-2\">\n            {FORMATS.map((f) => (\n              <button\n                key={f.id}\n                type=\"button\"\n                onClick={() => set({ format: f.id })}\n                className={cn(\n                  \"h-9 rounded-md border text-xs font-medium transition-colors\",\n                  d.format === f.id\n                    ? \"border-accent bg-accent/5 text-foreground ring-1 ring-accent/30\"\n                    : \"border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground\",\n                )}\n              >\n                {f.label}\n              </button>\n            ))}\n          </div>\n        </Section>\n\n        <Section title=\"Dura\u00e7\u00e3o\">\n          <div className=\"grid grid-cols-3 gap-2\">\n            {DURATIONS.map((dur) => (\n              <button\n                key={dur.id}\n                type=\"button\"\n                onClick={() => set({ duration: dur.id })}\n                className={cn(\n                  \"h-9 rounded-md border text-xs font-medium transition-colors\",\n                  d.duration === dur.id\n                    ? \"border-accent bg-accent/5 text-foreground ring-1 ring-accent/30\"\n                    : \"border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground\",\n                )}\n              >\n                {dur.label}\n              </button>\n            ))}\n          </div>\n        </Section>\n\n        {d.error && (\n          <Section>\n            <div className=\"rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[11px] text-destructive\">\n              {d.error}\n            </div>\n          </Section>\n        )}\n\n        {d.output?.scenes && d.output.scenes.length > 0 && (\n          <Section title={`Storyboard \u00b7 ${d.output.scenes.length} cenas`}>\n            <div className=\"space-y-1.5\">\n              {d.output.scenes.map((s, i) => (\n                <div key={i} className=\"rounded-md border border-border bg-muted/30 p-2\">\n                  <div className=\"mb-1 flex items-center justify-between font-mono text-[9px] uppercase tracking-wide text-accent\">\n                    <span>Cena {i + 1}</span>\n                    <span>{s.start}s\u2013{s.end}s</span>\n                  </div>\n                  <p className=\"text-[11px] leading-snug text-foreground\">{s.narration}</p>\n                  <p className=\"mt-1 font-mono text-[10px] leading-snug text-muted-foreground\">\ud83c\udfac {s.imagePrompt}</p>\n                </div>\n              ))}\n            </div>\n            {d.output.ttsPrompt && (\n              <Button\n                type=\"button\"\n                variant=\"outline\"\n                size=\"sm\"\n                className=\"mt-2 w-full gap-2\"\n                onClick={() => copy(d.output?.ttsPrompt, \"tts\")}\n              >\n                {copied === \"tts\" ? <Check className=\"h-3.5 w-3.5 text-emerald-400\" /> : <Copy className=\"h-3.5 w-3.5\" />}\n                {copied === \"tts\" ? \"Copiado\" : \"Copiar narra\u00e7\u00e3o (TTS)\"}\n              </Button>\n            )}\n          </Section>\n        )}\n\n        {d.output?.script && (\n          <Section title=\"Roteiro (texto)\">\n            <div className=\"rounded-md border border-border bg-muted/30 p-2.5\">\n              <pre className=\"max-h-72 overflow-y-auto whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-foreground\">\n                {d.output.script}\n              </pre>\n            </div>\n            <Button\n              type=\"button\"\n              variant=\"outline\"\n              size=\"sm\"\n              className=\"mt-2 w-full gap-2\"\n              onClick={() => copy(d.output?.script, \"script\")}\n            >\n              {copied === \"script\" ? <Check className=\"h-3.5 w-3.5 text-emerald-400\" /> : <Copy className=\"h-3.5 w-3.5\" />}\n              {copied === \"script\" ? \"Copiado\" : \"Copiar roteiro\"}\n            </Button>\n          </Section>\n        )}\n      </div>\n\n      <div className=\"space-y-2 border-t border-border bg-card p-3\">\n        <Button\n          type=\"button\"\n          variant=\"accent\"\n          className=\"w-full gap-2\"\n          disabled={!canGenerate || busy !== null}\n          onClick={handleGenerateStoryboard}\n          title={!canGenerate ? \"Descreva o tema\" : undefined}\n        >\n          {busy === \"storyboard\" ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Clapperboard className=\"h-4 w-4\" />}\n          {busy === \"storyboard\" ? \"Gerando storyboard\u2026\" : \"Gerar storyboard (cenas + prompts)\"}\n        </Button>\n        <Button\n          type=\"button\"\n          variant=\"outline\"\n          className=\"w-full gap-2\"\n          disabled={!canGenerate || busy !== null}\n          onClick={handleGenerateScript}\n          title={!canGenerate ? \"Descreva o tema\" : undefined}\n        >\n          {busy === \"script\" ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Sparkles className=\"h-4 w-4\" />}\n          {busy === \"script\" ? \"Gerando roteiro\u2026\" : \"Gerar roteiro (texto)\"}\n        </Button>\n        <p className=\"text-center text-[9px] text-muted-foreground\">\n          Usa sua chave de IA (Configura\u00e7\u00f5es \u2192 IA) \u00b7 ~2 mco\n        </p>\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(09:49:41)*
+
+
+## 🤖 Claude *(09:49:42)*
+
+Inspector reescrito (storyboard + roteiro texto + tabela de cenas). Verificando `tsc`:
+
+## 🤖 Claude *(09:49:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit >/dev/null 2>&1 && echo \"tsc LIMPO \u2705\" || { echo \"tsc ERROS:\"; npx tsc --noEmit 2>&1 | grep -iE \"ScriptGenerator|canvas.ts|error TS\" | head -15; }",
+  "description": "TypeScript check for v2 client"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc LIMPO ✅
+> ```
+
+## 🤖 Claude *(09:49:48)*
+
+
+## 🤖 Claude *(09:49:49)*
+
+`tsc LIMPO ✅`. Build + deploy + prova no bundle:
+
+## 🤖 Claude *(09:49:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 400 bun run build 2>&1 | tail -3\necho \"=== GATES ===\"\necho \"G1 env baked:\"; grep -rl bcyvddsykvehvpwstlfa dist/assets/ 2>/dev/null | wc -l | xargs echo \"  arquivos:\"\necho \"G2 storyboard no bundle:\"; grep -rl \"Gerar storyboard\\|generate-script-package\" dist/assets/ 2>/dev/null | head -1 | xargs -r echo \"  achado em:\" || echo \"  N\u00c3O achado \u274c\"",
+  "description": "Build + deploy + verify storyboard in bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 30.03s
+> === GATES ===
+> G1 env baked:
+>   arquivos: 9
+> G2 storyboard no bundle:
+>   achado em: dist/assets/CanvasEditorPage-oMji5tTS.js
+> ```
+
+## 🤖 Claude *(09:50:42)*
+
+
+## 🤖 Claude *(09:50:44)*
+
+**Deploy provado** — `✓ built in 30.03s` · env baked (9) · **`Gerar storyboard`/`generate-script-package` no bundle** (`CanvasEditorPage-oMji5tTS.js`, hash novo) ✅
+
+O nó Roteiro v2 está **vivo e usável**. Committando:
+
+## 🤖 Claude *(09:50:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/types/canvas.ts src/components/canvas/nodes/ScriptGeneratorNode.tsx src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx\ngit commit -q -m \"feat(spaces): Roteiro node v2 \u2014 botao Storyboard + tabela de cenas (fia generate-script-package)\n\nCompleta o slice 2b no CLIENT: ScriptGeneratorData.output aceita scenes[]+ttsPrompt (script vira\nopcional). Inspector ganha 2 botoes: 'Gerar storyboard (cenas + prompts)' -> invoke\ngenerate-script-package (JSON limpo {scenes,ttsPrompt}) exibe tabela por cena (start-end . narracao\npt-BR . imagePrompt ingles) + copiar TTS; 'Gerar roteiro (texto)' = o v1 SSE que ja funcionava. No\nmostra n de cenas. tsc LIMPO. build+deploy (strings no bundle CanvasEditorPage-oMji5tTS.js, env baked).\nRoteiro node completo v1+v2, vivo e usavel em prod.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit Roteiro node v2 client"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m6:50AM[0m [32mINF[0m 1 commits scanned.
+> [90m6:50AM[0m [32mINF[0m scan completed in 12.2ms
+> [90m6:50AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.25 seconds)
+> ✔️ e2e-output-tripwire (0.06 seconds)
+> ✔️ secret-scan (0.08 seconds)
+> ✔️ gitleaks-staged (0.24 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 41483c41e2dafe95066f4f521153ce1891b216c9 feat(spaces): Roteiro node v2 — botao Storyboard + tabela de cenas (fia generate-script-package)
+> ```
+
+## 🤖 Claude *(09:51:08)*
+
+
+## 🤖 Claude *(09:51:09)*
+
+`41483c4` selado — **o nó Roteiro está COMPLETO** (v1 + v2), vivo e usável em produção.
+
+Re-armo o loop pro próximo (free-render rail):
+
+## 🤖 Claude *(09:51:24)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "N\u00f3 Roteiro COMPLETO (v1+v2) vivo e us\u00e1vel. Loop segue pro free-render rail (destrava o n\u00f3 Cinematogr\u00e1fico do 503) \u2014 que pode ter gate de ops (worker). Fallback 20min.",
+  "prompt": "Loop aut\u00f4nomo \u2014 M\u00d3DULO Creative Studio. VIT\u00d3RIA: n\u00f3 ROTEIRO COMPLETO (v1 script SSE 0d1714a + v2 storyboard estruturado backend 508cda7 + client 41483c4) \u2014 vivo, us\u00e1vel, provado. git log --oneline -16 primeiro. PR\u00d3XIMO slice 3: FREE-RENDER RAIL (skill free-render-dispatch) \u2014 destrava o N\u00f3 Cinematogr\u00e1fico do 503 do video-render. IMPORTANTE (achado do recon): o video-render est\u00e1 em SLICE-1 e retorna 503 render_engine_unavailable porque o WORKER WEBHOOK env n\u00e3o est\u00e1 setado E o worker video-bridge (systemd video-studio.service) precisa rodar. Ent\u00e3o: (A) PRIMEIRO diagnosticar materialmente o estado do worker: `systemctl --user status video-studio.service` (ou video-bridge), checar se o env do worker webhook do video-render est\u00e1 setado (supabase secrets list | grep -i webhook/render), e se o video-bridge.ts tem o poller de engine=hyperframes rodando. (B) Se o worker/webhook N\u00c3O estiver configurado/rodando = GATE DE OPS/SOVEREIGN \u2192 N\u00c3O for\u00e7ar; reportar honesto o que falta (qual env setar, qual servi\u00e7o subir) e parar o slice ali (Lei 1: n\u00e3o fabricar um rail que n\u00e3o roda). (C) Se destrav\u00e1vel autonomamente: implementar o C\u00d3DIGO do rail \u2014 video-bridge.ts:86-91 mode switch (cinematic\u2192renderComposition template cinematic-9x16; kenburns\u2192encodeKenBurns; image_sequence\u2192encodeImageSequence) + fetchToTmp anti-SSRF (URL assinada same-owner) + piso 100KB + cleanup no finally; widen compositionValid do video-render p/ os 3 modes; reusar engine='hyperframes' charged_mco:0 (reshape-pillar:266, SEM migration). /security-review OBRIGAT\u00d3RIO antes de commit/deploy. Prova: render real via a fila + ffprobe do MP4 + Vision ocular. Se destravar, construir o N\u00f3 Cinematogr\u00e1fico cliente (cinematicVideo, espelha publishWordpress + poll video_renders). Commits granulares sem Co-Authored-By; nunca fabricar prova (Lei 1); ALTERNATIVA se o rail estiver gated: fazer o fan-out do storyboard (cada scenes[].imagePrompt vira um n\u00f3 generateImage encadeado) \u2014 client puro buildable-now que fecha a cadeia roteiro\u2192imagens. Reportar honesto sempre."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 07:12:00 (in 1235s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(09:51:30)*
+
+
+## 🤖 Claude *(09:51:44)*
+
+## ✅ Nó Roteiro — COMPLETO, vivo e usável em produção
+
+O primeiro nó cheio do Creative Studio está de pé, ponta a ponta:
+
+| Camada | Estado | Prova |
+|--------|--------|-------|
+| **v1 — Roteiro (texto)** | ✅ live | `0d1714a` · SSE parseado · roteiro pt-BR real |
+| **v2 — Storyboard estruturado (backend)** | ✅ live | `508cda7` · `/security-review` SAFE · 5 cenas provadas |
+| **v2 — Storyboard no nó (client)** | ✅ live | `41483c4` · tsc limpo · no bundle servido |
+
+**Você usa agora** (hard-refresh `Ctrl+Shift+R`): em qualquer Space → **Adicionar nó → "Roteiro"** → digite um tema → escolha formato/duração → dois botões:
+- **"Gerar storyboard (cenas + prompts)"** → tabela de cenas com `start–end · narração pt-BR · 🎬 imagePrompt inglês` + copiar narração TTS.
+- **"Gerar roteiro (texto)"** → o script corrido.
+
+Isso é **exatamente o pacote que você desenhou** (a tabela timestamped + prompts t2i + TTS), agora gerável direto na tela.
+
+## Onde chega o módulo
+
+- **Roteiro** ✅ completo. A cadeia que você imaginou (cenas → imagens → curta) tem agora sua **primeira etapa viva**.
+- **Próximo (loop 07:12):** o **free-render rail** pra destravar o Nó Cinematográfico do 503 — mas com um cuidado honesto que já embuti na missão: esse rail depende do **worker de vídeo estar configurado/rodando**; se não estiver, é **gate de ops seu** (o loop vai diagnosticar `systemctl` + o env do webhook e reportar o que falta, sem forçar um rail que não roda). Alternativa autônoma se estiver gated: o **fan-out do storyboard** (cada cena vira um nó de imagem encadeado — fecha roteiro→imagens sem depender do worker).
+
+Foi uma maratona e tanto — e ela pariu, no fim, **software que funciona**: 3 primitivos FFmpeg grátis + template cinematográfico + o hotfix do zip do LoRA + as decisões de motor (VoxCPM2/identidade multi-motor) + e o **primeiro nó completo do Creative Studio**. O loop segue; te reporto com o diagnóstico honesto do worker de vídeo (ou o fan-out, se o rail estiver gated).
