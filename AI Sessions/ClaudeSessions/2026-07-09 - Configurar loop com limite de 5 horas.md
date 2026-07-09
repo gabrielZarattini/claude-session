@@ -6171,3 +6171,954 @@ Avaliação rodando em background (`wcxwsec00`) — cruzando 3 ângulos:
 3. **Fit no MCORCH** — se melhora algo **grátis no host CPU-only agora**, ou se é neural-precisa-GPU (pós-renda), e onde encaixa (substitui o Hedra pago no avatar-clone-ai? lipsync do youtube-studio?).
 
 A pergunta-chave que vou responder com honestidade: **dá pra melhorar algo de graça HOJE, ou é ganho pós-GPU?** — a mesma distinção do "FFmpeg roda em CPU, mas neural precisa de GPU". Te reporto assim que fechar o veredito.
+
+## 👤 User *(08:02:50)*
+
+<task-notification>
+<task-id>wcxwsec00</task-id>
+<tool-use-id>toolu_017Wwg6MpFDom9ugFqNURkov</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/tasks/wcxwsec00.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Evaluate Duix-Avatar (open-source talking-head) for a free/cheap avatar engine in MCORCH: license, capabilities, hardware, fit vs the paid Hedra/fal path" completed</summary>
+<result>{"repo":{"what_it_does":"Duix.Avatar (repo duixcom/Duix-Avatar) is a fully-OFFLINE AI avatar / digital-human toolkit, NOT a real-time conversational agent. Two functions: (1) clone a person's appearance AND voice from real-person video/audio input; (2) drive that cloned avatar via TEXT or VOICE to produce lip-synced talking-head VIDEO (batch video synthesis). README §2/§7: \"fully offline video synthesis tool... clone your appearance and voice... create videos by driving virtual avatars through text and voice\" and \"realizes digital human cloning and NON-real-time video synthesis.\" It BUNDLES its own ASR (fun-asr) + TTS/voice-clone (fish-speech-ziming, container guiji2025/fish-speech-ziming) + video synthesis engine (guiji2025/duix.avatar). It does NOT bundle an LLM — there is no conversational/dialogue brain. It is NOT the SadTalker-style \"single still photo + audio -&gt; video\"; cloning is trained from a real-person VIDEO (silent video + audio split), then synthesizes new video. Real-time interactive digital human is explicitly OUT of the OSS repo — for that they redirect to the hosted duix.com / DUIX Platform cloud API.","license":"CODE: custom \"DUIX.COM COMMUNITY LICENSE AGREEMENT\" (verified from raw LICENSE bytes) — NOT MIT, NOT Apache-2.0. Llama-community-style structure: non-exclusive/worldwide/royalty-free limited grant, BUT §2 \"Additional Commercial Terms\" gates it — once your product has \"greater than 1 thousand\" (i.e. &gt;1,000) Monthly Active Users you MUST request a commercial license from DUIX.COM, \"which DUIX.COM may grant to you in its sole discretion, and you are not authorized to exercise any of the rights under this Agreement unless or until DUIX.COM otherwise expressly grants you such rights.\" Mandatory attribution: display \"Built with DUIX.COM\", retain copyright notice, disclose in ToS; §5 no trademark license + litigation-termination + broad indemnification + perpetual case-study grant to DUIX. MODEL WEIGHTS: governed by a SEPARATE document, \"Duix.Avatar model community Licensing Agreement.pdf\" (+ _zh.pdf) in the repo — a distinct custom \"model community\" license; its exact terms are a binary PDF I could not extract (UNKNOWN beyond \"custom community license\"). NOTE CONTRADICTION: the README marketing table claims free commercial use up to \"100,000 users or annual revenue exceeding 10 million USD\" — but the binding LICENSE file says the trigger is only 1,000 MAU with NO revenue clause. The enforceable LICENSE (1,000 MAU, discretionary) governs; the README's 100k/$10M is ~100x more generous than the actual license.","license_confidence":"high","hardware":"NVIDIA GPU REQUIRED — no CPU-only path (\"The three services won't start without an NVIDIA graphics card or proper drivers\"; \"All computing power for this project is local\"). Recommended: RTX 4070, Intel i5-13400F, 32GB RAM. Storage (Windows): &gt;30GB on D + &gt;100GB on C. Also verified on 30/40/50-series (tested on RTX 5090, CUDA 12.8). VRAM not stated as an explicit number (RTX 4070 = 12GB baseline). Deployed via Docker Compose. Because it is offline BATCH synthesis, \"real-time\" does not apply to the local repo — real-time streaming is only the hosted duix.com cloud service.","realtime_or_batch":"BATCH / offline only in the open-source repo (non-real-time video synthesis, submit job -&gt; poll progress). Real-time interactive talking-head is NOT self-hostable here — it is a separate paid cloud offering at duix.com / DUIX Platform.","self_hostable":true,"languages":"Multilingual but LIMITED: \"Scripts support eight languages - English, Japanese, Korean, Chinese, French, German, Arabic, and Spanish.\" Portuguese / pt-BR is NOT in the supported list — decisive gap for a pt-BR use case. (Client UI internationalization added English only.)","platforms":"Self-hosted desktop/server via Docker: Windows 10 (19042.1526+) and Ubuntu 22.04. Electron/Node.js 18 desktop app (Windows .exe / Linux .AppImage). NO web, NO Android, NO iOS, NO mobile SDK in the OSS repo. (Web chat + platform SDKs/APIs are the separate hosted DUIX Platform, not the open-source code.)","open_apis":"§4 \"Open APIs\" = local REST endpoints exposed on 127.0.0.1 after Docker starts (code in src/main/service/{model,video,voice}.js). Three surfaces: (1) MODEL TRAINING — splits input video into silent-video + audio, drops audio into D:\\duix_avatar_data\\voice\\data (agreed with fish-speech-ziming), returns reference_audio + reference_text for reuse. (2) AUDIO SYNTHESIS / voice-clone TTS — POST http://127.0.0.1:18180/v1/invoke, body: speaker(uuid), text, format=wav, topP, max_new_tokens, temperature, reference_audio, reference_text, streaming=false, etc. (3) VIDEO SYNTHESIS — POST http://127.0.0.1:8383/easy/submit, body: audio_url, video_url, code(uuid), chaofen, watermark_switch, pn; plus PROGRESS query GET http://127.0.0.1:8383/easy/query?code=${taskCode}. These are UNAUTHENTICATED localhost job APIs (no JWT/keys), meant for the local Electron app. Separately, a hosted DUIX Platform API is referenced at docs.duix.com/api-reference (that specific Introduction URL returned HTTP 404 on fetch; it is the paid cloud product, distinct from the OSS local APIs).","commercial_safe":"CONDITIONAL / risky for a paid product. Free commercial use only below the LICENSE's 1,000-MAU ceiling AND with mandatory \"Built with DUIX.COM\" attribution. Above 1,000 MAU you must obtain a commercial license granted at DUIX.COM's SOLE DISCRETION — until granted you have NO rights. That makes it NOT permissive (unlike Apache-2.0) and NOT safe to bake into a scaling paid/multi-tenant product without a signed agreement. Extra risks: (a) model-WEIGHTS terms live in a separate PDF whose exact clauses I could not read (unknown); (b) §5(c) grants DUIX a perpetual right to use your implementations as case studies; (c) mandatory branding + ToS disclosure conflicts with white-label. Also fails the pt-BR requirement (no Portuguese). Verdict: usable for a low-volume pilot with attribution, but the weights license + 1,000-MAU discretionary gate make it a poor foundation for a commercial pt-BR product without a paid DUIX license.","evidence_urls":["https://github.com/duixcom/Duix-Avatar","https://raw.githubusercontent.com/duixcom/Duix-Avatar/main/README.md","https://raw.githubusercontent.com/duixcom/Duix-Avatar/main/LICENSE","https://github.com/duixcom/Duix-Avatar/blob/main/Duix.Avatar%20model%20community%20Licensing%20Agreement.pdf","https://github.com/duixcom/Duix-Avatar/blob/main/Duix.Avatar%20model%20community%20Licensing%20Agreement_zh.pdf","https://docs.duix.com/api-reference/api/Introduction"]},"landscape":{"duix_license_note":"Duix-Avatar (formerly HeyGem, by Duix.com / GuiJi 硅基智能 \"Silicon Intelligence\") is NOT under a standard permissive license despite the \"Truly open-source\" repo tagline. The binding LICENSE file is a custom \"DUIX.COM COMMUNITY LICENSE AGREEMENT\" — a Llama-style source-available license, not Apache/MIT (raw.githubusercontent.com/duixcom/Duix-Avatar/main/LICENSE). Its actual commercial-use trigger is low: once your product exceeds \"1 thousand Monthly Active Users\" you must obtain a paid commercial license from DUIX.COM or stop using the materials. It also imposes obligations most permissive licenses do not: (1) display \"Built with DUIX.COM\" prominently on your site/UI/docs; (2) prefix any distributed derivative model name with \"DUIX.COM\"; (3) a retained copyright/attribution notice; (4) a patent/IP litigation-termination clause; (5) an indemnification clause. Discrepancy worth flagging honestly: the repo README paraphrases the terms much more leniently (free commercial use unless &gt;100,000 users OR &gt;$10M annual revenue), but the LICENSE text that legally governs says 1,000 MAU — treat the 1,000-MAU + branding terms as authoritative. Beyond the repo: Duix.com is a full commercial conversational-AI / digital-human PaaS (real-time avatars, on-device SDK \"Duix-Mobile\" with &lt;1.5s latency,
+... (truncated 14415 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/tasks/wcxwsec00.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/subagents/workflows/wf_580037ab-14c/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/bd84b916-1ec0-4ec0-96ae-fab9303b1e03/workflows/scripts/duix-avatar-eval-wf_580037ab-14c.js', resumeFromRunId: 'wf_580037ab-14c'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>3</agent_count><agents_done>3</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>252396</subagent_tokens><tool_uses>31</tool_uses><duration_ms>298591</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(08:04:05)*
+
+
+## 🤖 Claude *(08:04:24)*
+
+Fechou o veredito — e vou ser direto: **não é o ganho grátis que aparenta. Recomendo pular como fundação.** A pesquisa desmontou o "truly open-source" da tagline.
+
+## Duix-Avatar — os 3 matadores (honestidade, Lei 1)
+
+**1. Licença NÃO é comercial-safe** (o critério que decide tudo):
+- Não é MIT/Apache — é uma **"DUIX.COM COMMUNITY LICENSE"** estilo Llama, *source-available*. O gatilho comercial vinculante é **>1.000 usuários ativos mensais** → aí você **precisa de licença paga da DUIX, concedida a critério exclusivo deles** (até lá, zero direitos). Exige exibir **"Built with DUIX.COM"**, tem cláusula de indenização + término-por-litígio + uso perpétuo do seu produto como case deles.
+- O **README engana**: promete "grátis até 100k usuários / US$10M" — mas o texto da **LICENSE que vale juridicamente diz 1.000 MAU**. ~100× menos generoso.
+- Os **pesos do modelo** têm uma licença SEPARADA (um PDF "model community" cujos termos exatos nem deu pra extrair — desconhecidos). Contraste: o **VoxCPM2 que já escolhemos é Apache-2.0** de verdade.
+
+**2. Precisa de GPU NVIDIA** — "não inicia sem placa NVIDIA" (baseline RTX 4070/12GB). Nosso host é **CPU-only** → **não roda hoje**. Mesmo portão pós-GPU/pós-renda do InstantID/PuLID. Zero ganho-grátis-agora.
+
+**3. Não tem pt-BR** — suporta 8 idiomas (EN/JA/KO/ZH/FR/DE/AR/ES). **Português está fora.** Matador pro seu conteúdo.
+
+## O que ele é de verdade (pra você entender)
+Toolkit **offline/batch** que clona aparência+voz de um **vídeo** de pessoa real e gera talking-head lip-synced (empacota ASR + fish-speech TTS + síntese de vídeo num Docker). **Não é real-time** (o real-time é o produto de nuvem **pago** deles). Não é o estilo "1 foto + áudio → vídeo" (o SadTalker faz isso; o Duix precisa de um vídeo de treino).
+
+## Veredito
+**Pular como fundação.** Ele não melhora nada de graça: é GPU-gated (igual às outras opções neurais), sem pt-BR, e **piora no eixo licença** vs o que já temos na shortlist. Para talking-head self-host, **SadTalker (Apache) / MuseTalk (MIT)** — que o blueprint do youtube-studio já marcou — têm licença mais limpa **e** aceitam uma foto única; pra qualidade paga, Hedra/fal. Pra voz, **VoxCPM2 (Apache, pt-BR)** bate o fish-speech embutido (CC-BY-NC) do Duix.
+
+*Única brecha honesta:* se um dia quiser um **piloto** all-in-one offline de talking-head, **num GPU, abaixo de 1k MAU, aceitando o selo "Built with DUIX.COM"** — é um bundle conveniente. Mas não é base de produto comercial pt-BR.
+
+Registrando pra não re-avaliar:
+
+## 🤖 Claude *(08:04:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_avatar_identity_engines.md",
+  "old_string": "**How to apply:** no n\u00f3 \"Identidade (avatar)\"",
+  "new_string": "**Talking-head (avatar V\u00cdDEO \u2014 distinto de identidade-imagem) 2026-07-09:** avaliado **Duix-Avatar** (duixcom, ex-HeyGem, GuiJi \u7845\u57fa\u667a\u80fd) \u2014 **REJEITADO como funda\u00e7\u00e3o** (workflow `wf_580037ab-14c`): (1) licen\u00e7a N\u00c3O-permissiva \"DUIX.COM COMMUNITY\" estilo Llama \u2014 gatilho comercial >1.000 MAU \u2192 licen\u00e7a paga a crit\u00e9rio deles + selo \"Built with DUIX.COM\" obrigat\u00f3rio + pesos em PDF separado desconhecido (README engana dizendo 100k/US$10M; a LICENSE vinculante diz 1.000 MAU); (2) **precisa GPU NVIDIA** (n\u00e3o roda no host CPU-only); (3) **sem pt-BR** (8 idiomas, PT fora); offline/batch (real-time \u00e9 o cloud pago). Para talking-head self-host preferir **SadTalker (Apache)/MuseTalk (MIT)** \u2014 licen\u00e7a limpa + drive de 1 foto (blueprint youtube-studio); qualidade paga = Hedra/fal BYOK. Voz = VoxCPM2 (Apache) > fish-speech (CC-BY-NC) do Duix.\n\n**How to apply:** no n\u00f3 \"Identidade (avatar)\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_avatar_identity_engines.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(08:04:38)*
+
+
+## 🤖 Claude *(08:04:41)*
+
+**Sources:**
+- [duixcom/Duix-Avatar — GitHub](https://github.com/duixcom/Duix-Avatar)
+- [LICENSE (DUIX.COM COMMUNITY, 1.000 MAU) — raw](https://raw.githubusercontent.com/duixcom/Duix-Avatar/main/LICENSE)
+- [Model community licensing (PDF separado) — repo](https://github.com/duixcom/Duix-Avatar/blob/main/Duix.Avatar%20model%20community%20Licensing%20Agreement.pdf)
+
+Resumo em uma linha: **você caçou bem, mas a licença + GPU + falta de pt-BR tiram o Duix da mesa como base grátis** — o que já escolhemos (VoxCPM2 voz Apache-2.0 · char-ref identidade · FFmpeg vídeo · SadTalker/MuseTalk pra lipsync pós-GPU) continua sendo o caminho comercial-safe. Nenhuma ação sua necessária; o loop do Creative Studio segue construindo os nós. Manda o resultado do retry do treino LoRA quando rodar.
+
+## 👤 User *(08:16:34)*
+
+otimo o loop esta construindo os nós agora mesmo? onde?
+
+## 🤖 Claude *(08:17:26)*
+
+
+## 🤖 Claude *(08:17:27)*
+
+Pergunta justa — e preciso te corrigir com honestidade (Lei 1), porque meu "o loop segue construindo os nós" deu impressão errada. Deixa eu te mostrar o estado material real:
+
+## 🤖 Claude *(08:17:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== \u00faltimos commits ===\"; git log --oneline -6\necho \"=== working tree (algo em constru\u00e7\u00e3o agora?) ===\"; git status --short || echo \"(limpo)\"\necho \"=== existe c\u00f3digo de n\u00f3 novo? (scriptGenerator/cinematicVideo) ===\"; grep -rl \"scriptGenerator\\|cinematicVideo\\|CinematicVideoNode\\|ScriptGeneratorNode\" src/ 2>/dev/null | head || echo \"NENHUM \u2014 n\u00f3s ainda n\u00e3o constru\u00eddos\"",
+  "description": "Material state of the node build"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === últimos commits ===
+> f0743de fix(avatar): canvas-assets aceita application/zip — destrava witness do treino LoRA
+> 6ea3d44 docs(creative-studio): FR-SPACES-053 TTS multi-motor — VoxCPM2 default self-host fecha gap clone pt-BR
+> 0d4f868 docs(creative-studio): OTD-CS-002 resolvido — Roteiro reusa generate-video-script (passthrough BYOK), buildable-now
+> 264cd17 docs(creative-studio): Amendment 17 + agente Creative Director + 4 skills (gate Lei 2 do módulo)
+> a523d6d feat(hyperframes): template cinematic-9x16 — criativo MIV premium (motion design deterministico)
+> 8c7141d feat(hyperframes): encodeKenBurns — image-to-video 5-8s gratis (FFmpeg zoompan)
+> === working tree (algo em construção agora?) ===
+> ?? duix_readme.txt
+> === existe código de nó novo? (scriptGenerator/cinematicVideo) ===
+> ```
+
+## 🤖 Claude *(08:18:35)*
+
+
+## 🤖 Claude *(08:18:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== o que \u00e9 duix_readme.txt (olhar antes de apagar) ===\"; head -2 duix_readme.txt 2>/dev/null; wc -l duix_readme.txt 2>/dev/null\necho \"=== onde os n\u00f3s V\u00c3O morar (ainda vazios) ===\"\nls src/components/canvas/nodes/ 2>/dev/null | head -5\necho \"...\"; grep -c \"PublishWordpress\\|publishWordpress\" src/types/canvas.ts 2>/dev/null | xargs echo \"refs do padr\u00e3o publishWordpress em canvas.ts:\"",
+  "description": "Inspect stray file + confirm node locations"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o que é duix_readme.txt (olhar antes de apagar) ===
+> # 🚀🚀🚀 Duix Avatar — Truly open-source AI avatar toolkit for offline video generation and digital human cloning
+> 
+> 386 duix_readme.txt
+> === onde os nós VÃO morar (ainda vazios) ===
+> AvatarIdentityNode.tsx
+> CharacterReferenceNode.tsx
+> GenerateImageNode.tsx
+> ImageToVideoNode.tsx
+> ProductListNode.tsx
+> ...
+> refs do padrão publishWordpress em canvas.ts: 14
+> ```
+
+## 🤖 Claude *(08:18:55)*
+
+
+## 🤖 Claude *(08:18:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f duix_readme.txt && echo \"removido duix_readme.txt (cruft que um subagente do workflow salvou na raiz)\"; git status --short || echo \"working tree limpo \u2705\"",
+  "description": "Remove stray Duix readme cruft"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> removido duix_readme.txt (cruft que um subagente do workflow salvou na raiz)
+> ```
+
+## 🤖 Claude *(08:19:00)*
+
+
+## 🤖 Claude *(08:19:17)*
+
+Vou ser 100% honesto, porque minha frase "o loop segue construindo os nós" te deu uma imagem errada e o estado material contradiz ela:
+
+## A verdade (Lei 1)
+
+**Não — nada está construindo os nós neste instante. E ainda não existe código de nó nenhum.**
+
+- `grep scriptGenerator|cinematicVideo src/` → **zero**. Os nós não foram escritos.
+- Últimos commits = só **docs** (Amendment 17, agente, skills). Nenhum código de nó.
+- Working tree limpo (tinha só um `duix_readme.txt` que um subagente do workflow largou na raiz — já removi).
+
+## O que "o loop" realmente é (desfazendo o mal-entendido)
+
+O "loop" **não é um worker rodando em paralelo** enquanto a gente conversa. É um `ScheduleWakeup` = **uma continuação agendada de mim mesmo**, que dispara pra me re-invocar **quando a conversa fica ociosa**. Ele não escreve código no fundo.
+
+**Por que os nós não saíram:** toda vez que o wakeup ocioso ia disparar, você mandou uma mensagem nova (TTS, avatar, o bug do zip, o Duix) — todas ótimas e que eu priorizei. Conversa ativa **preempta** o wakeup ocioso. Então eu estive aqui te respondendo, não construindo nós. A **única vez** que um wakeup de fato disparou, aquela iteração produziu o Amendment 17 + agente + skills (`264cd17`). A iteração de **código de nó** nunca pegou um momento quieto pra rodar.
+
+## Onde eles VÃO morar (quando eu construir)
+
+- `src/types/canvas.ts` (union + `ScriptGeneratorData`/`CinematicVideoData` + factory + custo)
+- `src/lib/canvas-node-registry.ts` (entradas do menu)
+- `src/components/canvas/nodes/ScriptGeneratorNode.tsx` + `CinematicVideoNode.tsx` (ao lado de `ImageToVideoNode.tsx` etc. que já vi lá)
+- `src/components/canvas/RightPanel/inspectors/` (os 2 inspectors)
+
+Espelhando o `publishWordpress` (14 refs no `canvas.ts` pra copiar). São **buildable-now, sem gasto**.
+
+## A recomendação honesta
+
+O loop-ocioso vive sendo (com razão) interrompido pela nossa troca. Se você quer os nós de pé, o jeito **efetivo** é eu construir **agora, aqui, síncrono** — você vê os arquivos surgirem e os commits saírem, em vez de depender do wakeup ocioso.
+
+**Quer que eu vá agora e construa o Nó Roteiro (o buildable-now que dá pra provar gerando o pacote do seu roteiro dos robôs)?** Se sim, eu começo já e te mostro os arquivos + o commit. Se preferir parar aqui e retomar depois (já foi uma maratona), eu paro o wakeup agendado pra não ficar disparando à toa.
+
+## 👤 User *(08:25:01)*
+
+Pronto a coversa ficou ociosa pode continuar com o loop
+
+## 🤖 Claude *(08:25:33)*
+
+
+## 🤖 Claude *(08:25:35)*
+
+GO recebido — construindo agora, síncrono. Você vai ver os arquivos surgirem. Começo pelo **Nó Roteiro** (buildable-now, provável). Primeiro leio o padrão exato do `publishWordpress` pra espelhar (Lei 1 — casar a convenção viva):
+
+## 🤖 Claude *(08:25:36)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Build N\u00f3 Roteiro (Creative Studio)",
+  "summary": "Constru\u00e7\u00e3o s\u00edncrona do n\u00f3 scriptGenerator espelhando publishWordpress, com GO expl\u00edcito do Sovereign"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Build Nó Roteiro (Creative Studio)". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(08:25:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== publishWordpress no canvas.ts (linhas exatas) ===\"; grep -nE \"publishWordpress|PublishWordpress|makeDefaultPublishWordpress\" src/types/canvas.ts\necho \"=== arquivos de refer\u00eancia ===\"; ls src/components/canvas/nodes/PublishWordpressNode.tsx src/components/canvas/RightPanel/inspectors/PublishWordpressInspector.tsx 2>/dev/null\necho \"=== nodeTypes + router registration ===\"; grep -n \"publishWordpress\\|PublishWordpress\" src/pages/CanvasEditorPage.tsx src/components/canvas/RightPanel/index.tsx 2>/dev/null",
+  "description": "Locate publishWordpress pattern across files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publishWordpress no canvas.ts (linhas exatas) ===
+> 29:  | "publishWordpress";
+> 562:export interface PublishWordpressData {
+> 563:  kind: "publishWordpress";
+> 586:  | PublishWordpressData;
+> 845:/** spaces-evolution Amendment 15 (Fatia A) — publishWordpress node default (FR-SPACES-032/034). */
+> 846:export function makeDefaultPublishWordpress(
+> 848:  overrides: Partial<PublishWordpressData> = {},
+> 852:    type: "publishWordpress",
+> 855:      kind: "publishWordpress",
+> 1023:    case "publishWordpress":
+> 1024:      // publishWordpress is a distribution SINK — it calls publish-wordpress from its inspector
+> 1078:    case "publishWordpress":
+> 1083:export function isPublishWordpress(data: CanvasNodeData): data is PublishWordpressData {
+> 1084:  return data.kind === "publishWordpress";
+> === arquivos de referência ===
+> src/components/canvas/nodes/PublishWordpressNode.tsx
+> src/components/canvas/RightPanel/inspectors/PublishWordpressInspector.tsx
+> === nodeTypes + router registration ===
+> src/components/canvas/RightPanel/index.tsx:12:import { PublishWordpressInspector } from "./inspectors/PublishWordpressInspector";
+> src/components/canvas/RightPanel/index.tsx:85:      ) : node.data.kind === "publishWordpress" ? (
+> src/components/canvas/RightPanel/index.tsx:86:        <PublishWordpressInspector
+> src/pages/CanvasEditorPage.tsx:55:import { PublishWordpressNode } from "@/components/canvas/nodes/PublishWordpressNode";
+> src/pages/CanvasEditorPage.tsx:69:  publishWordpress: PublishWordpressNode,
+> ```
+
+## 🤖 Claude *(08:25:46)*
+
+
+## 🤖 Claude *(08:25:47)*
+
+Padrão localizado. Lendo as seções exatas do `canvas.ts` + os 2 componentes de referência + o router:
+
+## 🤖 Claude *(08:25:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 558,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 558	/** spaces-evolution Amendment 15 (Fatia A) — publish a Space's content to WordPress as a Post OR
+> 559	 *  Landing Page. Sink node (input only). Publishes via publish-wordpress (per-user WP creds,
+> 560	 *  fail-closed); default DRAFT (opt-in publish, FR-SPACES-039). resolveExecutePayload → null
+> 561	 *  (the inspector calls the publisher directly, like voiceClone/avatarIdentity). */
+> 562	export interface PublishWordpressData {
+> 563	  kind: "publishWordpress";
+> 564	  label: string;
+> 565	  title: string;
+> 566	  /** HTML body. An upstream image (if connected) is prepended as a <figure> at publish time. */
+> 567	  contentHtml: string;
+> 568	  postType: "post" | "page";
+> 569	  /** Default 'draft' — the node publishes live only on explicit opt-in (HITL). */
+> 570	  publishStatus: "draft" | "publish";
+> 571	  status: NodeStatus;
+> 572	  output?: { postUrl: string; postId: number; publishedAt: string };
+> 573	  error?: string;
+> 574	}
+> 575	
+> 576	export type CanvasNodeData =
+> 577	  | GenerateImageData
+> 578	  | CharacterReferenceData
+> 579	  | ProductListData
+> 580	  | SceneComposeData
+> 581	  | StyleTransferData
+> 582	  | UpscaleData
+> 583	  | ImageToVideoData
+> 584	  | VoiceCloneData
+> 585	  | AvatarIdentityData
+> 586	  | PublishWordpressData;
+> 587	
+> 588	export const UPSCALE_COST: Record<2 | 4, number> = { 2: 8, 4: 20 }; // mirror CREDIT_COSTS upscale-2x/4x
+> 589	
+> 590	export type CanvasNode = Node<CanvasNodeData, CanvasNodeKind>;
+> 591	export type CanvasEdge = Edge;
+> 592	
+> 593	export interface CanvasGraph {
+> 594	  nodes: CanvasNode[];
+> 595	  edges: CanvasEdge[];
+> 596	}
+> 597	
+> ```
+
+## 🤖 Claude *(08:25:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 843,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 843	}
+> 844	
+> 845	/** spaces-evolution Amendment 15 (Fatia A) — publishWordpress node default (FR-SPACES-032/034). */
+> 846	export function makeDefaultPublishWordpress(
+> 847	  position: { x: number; y: number },
+> 848	  overrides: Partial<PublishWordpressData> = {},
+> 849	): CanvasNode {
+> 850	  return {
+> 851	    id: makeNodeId(),
+> 852	    type: "publishWordpress",
+> 853	    position,
+> 854	    data: {
+> 855	      kind: "publishWordpress",
+> 856	      label: "Publicar no WordPress",
+> 857	      title: "",
+> 858	      contentHtml: "",
+> 859	      postType: "post",
+> 860	      publishStatus: "draft",
+> 861	      status: "idle",
+> 862	      ...overrides,
+> 863	    },
+> 864	  };
+> 865	}
+> 866	
+> 867	/* ── Canvas-execute payload helper ───────────────────────────────────── */
+> 868	
+> 869	/**
+> 870	 * Helper to compile prompt incorporating project level StyleSettings
+> 871	 */
+> 872	export function compileFinalPrompt(
+> ```
+
+## 🤖 Claude *(08:25:53)*
+
+
+## 🤖 Claude *(08:25:54)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 1018,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1018	      return null;
+> 1019	    case "avatarIdentity":
+> 1020	      // avatarIdentity trains against the net-new `avatar-identity-train` Edge Function
+> 1021	      // (FR-AC-012, gated OTD-AC-017), NOT canvas-execute — inspector handles it directly.
+> 1022	      return null;
+> 1023	    case "publishWordpress":
+> 1024	      // publishWordpress is a distribution SINK — it calls publish-wordpress from its inspector
+> 1025	      // (spaces-evolution Amendment 15 FR-SPACES-031/032), NOT canvas-execute.
+> 1026	      return null;
+> 1027	  }
+> 1028	}
+> 1029	
+> 1030	/**
+> 1031	 * Type-guard helpers (used by node components and inspectors to narrow
+> 1032	 * the union via switch/case on `kind`).
+> 1033	 */
+> 1034	export function isGenerateImage(data: CanvasNodeData): data is GenerateImageData {
+> 1035	  return data.kind === "generateImage";
+> 1036	}
+> 1037	export function isCharacterReference(data: CanvasNodeData): data is CharacterReferenceData {
+> 1038	  return data.kind === "characterReference";
+> 1039	}
+> 1040	export function isSceneCompose(data: CanvasNodeData): data is SceneComposeData {
+> 1041	  return data.kind === "sceneCompose";
+> 1042	}
+> 1043	export function isStyleTransfer(data: CanvasNodeData): data is StyleTransferData {
+> 1044	  return data.kind === "styleTransfer";
+> 1045	}
+> 1046	export function isImageToVideo(data: CanvasNodeData): data is ImageToVideoData {
+> 1047	  return data.kind === "imageToVideo";
+> 1048	}
+> 1049	export function isVoiceClone(data: CanvasNodeData): data is VoiceCloneData {
+> 1050	  return data.kind === "voiceClone";
+> 1051	}
+> 1052	export function isAvatarIdentity(data: CanvasNodeData): data is AvatarIdentityData {
+> 1053	  return data.kind === "avatarIdentity";
+> 1054	}
+> 1055	
+> 1056	/** Resolve the mcoCoins cost of a single node from MODEL_INFO/VIDEO_MODEL_INFO. */
+> 1057	export function estimateNodeCost(data: CanvasNodeData): number {
+> 1058	  switch (data.kind) {
+> 1059	    case "generateImage":
+> 1060	      return getImageModelInfo(data.modelId).coinCost;
+> 1061	    case "sceneCompose":
+> 1062	      // Never trust persisted data.cost — graphs saved before Amendment 2d-bis carry the old 18.
+> 1063	      return SCENE_COMPOSE_COST;
+> 1064	    case "styleTransfer":
+> 1065	      return STYLE_TRANSFER_COST;
+> 1066	    case "imageToVideo":
+> 1067	      return getVideoModelInfo(data.videoModel).coinCost;
+> 1068	    case "characterReference":
+> 1069	      return 0;
+> 1070	    case "productList":
+> 1071	      return 0; // input node — cost is realized per item at the downstream generateImage (it.4a)
+> 1072	    case "upscale":
+> 1073	      return UPSCALE_COST[data.scale]; // it.4c — Replicate real-esrgan, priced by scale
+> 1074	    case "voiceClone":
+> 1075	      return 36; // COIN_COSTS.VOICE_GENERATION (charged on synthesize; clone is free)
+> 1076	    case "avatarIdentity":
+> 1077	      return 0; // train (FR-AC-012) is gated OTD-AC-017; cost charged server-side when wired (OTD-AC-006)
+> 1078	    case "publishWordpress":
+> 1079	      return 0; // distribution sink — publishing is free (reuses per-user WP creds)
+> 1080	  }
+> 1081	}
+> 1082	
+> 1083	export function isPublishWordpress(data: CanvasNodeData): data is PublishWordpressData {
+> 1084	  return data.kind === "publishWordpress";
+> 1085	}
+> 1086	
+> ```
+
+## 🤖 Claude *(08:25:55)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/PublishWordpressNode.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { Newspaper, CheckCircle2, Loader2, FileText } from "lucide-react";
+> 4	import { cn } from "@/lib/utils";
+> 5	import { type PublishWordpressData } from "@/types/canvas";
+> 6	
+> 7	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 8	
+> 9	// spaces-evolution Amendment 15 (Fatia A) — publish SINK: input-only, no output handle.
+> 10	export const PublishWordpressNode = memo(function PublishWordpressNode({ data, selected }: NodeProps) {
+> 11	  const d = data as unknown as PublishWordpressData;
+> 12	  const published = d.status === "success" && d.output?.postUrl;
+> 13	  return (
+> 14	    <div
+> 15	      className={cn(
+> 16	        "w-[220px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all",
+> 17	        selected ? "border-accent ring-2 ring-accent/30" : "border-border",
+> 18	      )}
+> 19	    >
+> 20	      {/* Sink: consumes an optional upstream image; no source handle. */}
+> 21	      <Handle type="target" position={Position.Left} id="input_image" className={HANDLE_CLASS} />
+> 22	      <header className="flex items-center gap-1.5 border-b border-border px-2.5 py-1.5">
+> 23	        <Newspaper className="h-3 w-3 text-secondary" />
+> 24	        <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 25	        <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
+> 26	          {d.postType === "page" ? "page" : "post"}
+> 27	        </span>
+> 28	      </header>
+> 29	      <div className="space-y-1 px-2.5 py-2">
+> 30	        <div className="flex items-center gap-1.5 text-[11px]">
+> 31	          <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+> 32	          <span className="truncate">{d.title || <span className="text-muted-foreground">Sem título</span>}</span>
+> 33	        </div>
+> 34	        <div className="inline-flex items-center gap-1 font-mono text-[9px] text-muted-foreground">
+> 35	          {d.status === "running" ? (
+> 36	            <><Loader2 className="h-2.5 w-2.5 animate-spin" /> publicando…</>
+> 37	          ) : published ? (
+> 38	            <><CheckCircle2 className="h-2.5 w-2.5 text-emerald-400" /> {d.publishStatus === "publish" ? "publicado" : "rascunho salvo"}</>
+> 39	          ) : (
+> 40	            <>{d.publishStatus === "publish" ? "publica ao vivo" : "salva rascunho"} · grátis</>
+> 41	          )}
+> 42	        </div>
+> 43	      </div>
+> 44	    </div>
+> 45	  );
+> 46	});
+> 47	
+> ```
+
+## 🤖 Claude *(08:26:00)*
+
+
+## 🤖 Claude *(08:26:01)*
+
+Padrão do nó + canvas.ts claro. Lendo o inspector (padrão de invoke + updateNodeData) + o router:
+
+## 🤖 Claude *(08:26:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/PublishWordpressInspector.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from "react";
+> 2	import { Newspaper, Loader2, Send, ExternalLink, FileText } from "lucide-react";
+> 3	import { toast } from "sonner";
+> 4	import { Button } from "@/components/ui/button";
+> 5	import { Input } from "@/components/ui/input";
+> 6	import { Textarea } from "@/components/ui/textarea";
+> 7	import { cn } from "@/lib/utils";
+> 8	import { useCanvasStore } from "@/store/useCanvasStore";
+> 9	import { supabase } from "@/integrations/supabase/client";
+> 10	import { edgeErrorMessage } from "@/lib/edge";
+> 11	import { findUpstreamImages } from "@/lib/canvas-utils";
+> 12	import { type PublishWordpressData } from "@/types/canvas";
+> 13	import { Section, InspectorHeader } from "../shared";
+> 14	
+> 15	interface Props {
+> 16	  node: { id: string; data: PublishWordpressData };
+> 17	  projectId: string;
+> 18	}
+> 19	
+> 20	const POST_TYPES: { id: PublishWordpressData["postType"]; label: string }[] = [
+> 21	  { id: "post", label: "Post / Blog" },
+> 22	  { id: "page", label: "Landing Page" },
+> 23	];
+> 24	
+> 25	export function PublishWordpressInspector({ node }: Props) {
+> 26	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 27	  const nodes = useCanvasStore((s) => s.nodes);
+> 28	  const edges = useCanvasStore((s) => s.edges);
+> 29	  const [publishing, setPublishing] = useState(false);
+> 30	
+> 31	  const d = node.data;
+> 32	  const canPublish = Boolean(d.title.trim()) && Boolean(d.contentHtml.trim());
+> 33	
+> 34	  const set = (patch: Partial<PublishWordpressData>) => updateNodeData(node.id, { ...patch, status: "idle", error: undefined });
+> 35	
+> 36	  const handlePublish = async () => {
+> 37	    if (!canPublish) {
+> 38	      toast.error("Preencha título e conteúdo.");
+> 39	      return;
+> 40	    }
+> 41	    setPublishing(true);
+> 42	    updateNodeData(node.id, { status: "running", error: undefined });
+> 43	    try {
+> 44	      // Prepend the connected upstream image (if any) as a WP figure — the Space's creative in the post.
+> 45	      const upstream = findUpstreamImages(node.id, nodes, edges);
+> 46	      const img = upstream[0]
+> 47	        ? `<figure><img src="${upstream[0]}" alt="${d.title.replace(/"/g, "&quot;")}" /></figure>\n`
+> 48	        : "";
+> 49	      const content = img + d.contentHtml;
+> 50	
+> 51	      const { data, error } = await supabase.functions.invoke("publish-wordpress", {
+> 52	        body: { title: d.title, content, status: d.publishStatus, post_type: d.postType },
+> 53	      });
+> 54	      if (error) throw new Error(await edgeErrorMessage(error, "Falha ao publicar no WordPress."));
+> 55	      const res = data as { success?: boolean; post_url?: string; post_id?: number; error?: string } | null;
+> 56	      if (!res?.success || !res.post_id) throw new Error(res?.error ?? "Falha ao publicar no WordPress.");
+> 57	
+> 58	      updateNodeData(node.id, {
+> 59	        status: "success",
+> 60	        output: { postUrl: res.post_url ?? "", postId: res.post_id, publishedAt: new Date().toISOString() },
+> 61	        error: undefined,
+> 62	      });
+> 63	      toast.success(d.publishStatus === "publish" ? "Publicado no WordPress ✓" : "Rascunho salvo no WordPress ✓");
+> 64	    } catch (e) {
+> 65	      const msg = e instanceof Error ? e.message : String(e);
+> 66	      updateNodeData(node.id, { status: "failed", error: msg });
+> 67	      toast.error(msg);
+> 68	    } finally {
+> 69	      setPublishing(false);
+> 70	    }
+> 71	  };
+> 72	
+> 73	  return (
+> 74	    <div className="flex h-full flex-col">
+> 75	      <div className="flex-1 overflow-y-auto">
+> 76	        <InspectorHeader icon={<Newspaper className="h-3.5 w-3.5" />} label={d.label} id={node.id} />
+> 77	
+> 78	        <Section title="Tipo">
+> 79	          <div className="grid grid-cols-2 gap-2">
+> 80	            {POST_TYPES.map((t) => (
+> 81	              <button
+> 82	                key={t.id}
+> 83	                type="button"
+> 84	                onClick={() => set({ postType: t.id })}
+> 85	                className={cn(
+> 86	                  "h-9 rounded-md border text-xs font-medium transition-colors",
+> 87	                  d.postType === t.id
+> 88	                    ? "border-accent bg-accent/5 text-foreground ring-1 ring-accent/30"
+> 89	                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+> 90	                )}
+> 91	              >
+> 92	                {t.label}
+> 93	              </button>
+> 94	            ))}
+> 95	          </div>
+> 96	        </Section>
+> 97	
+> 98	        <Section title="Título">
+> 99	          <Input
+> 100	            value={d.title}
+> 101	            onChange={(e) => set({ title: e.target.value })}
+> 102	            placeholder="Título do post/página"
+> 103	            className="text-sm"
+> 104	          />
+> 105	        </Section>
+> 106	
+> 107	        <Section title="Conteúdo (HTML)">
+> 108	          <Textarea
+> 109	            value={d.contentHtml}
+> 110	            onChange={(e) => set({ contentHtml: e.target.value })}
+> 111	            placeholder="<p>Seu conteúdo…</p> — a imagem do nó conectado entra automaticamente no topo."
+> 112	            rows={8}
+> 113	            className="font-mono text-xs"
+> 114	          />
+> 115	          <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+> 116	            <FileText className="h-3 w-3" /> Conecte um nó de imagem à esquerda para embutir o criativo do Spaces.
+> 117	          </p>
+> 118	        </Section>
+> 119	
+> 120	        <Section title="Publicação">
+> 121	          <div className="grid grid-cols-2 gap-2">
+> 122	            {(["draft", "publish"] as const).map((s) => (
+> 123	              <button
+> 124	                key={s}
+> 125	                type="button"
+> 126	                onClick={() => set({ publishStatus: s })}
+> 127	                className={cn(
+> 128	                  "h-9 rounded-md border text-xs font-medium transition-colors",
+> 129	                  d.publishStatus === s
+> 130	                    ? "border-accent bg-accent/5 text-foreground ring-1 ring-accent/30"
+> 131	                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+> 132	                )}
+> 133	              >
+> 134	                {s === "draft" ? "Rascunho" : "Publicar ao vivo"}
+> 135	              </button>
+> 136	            ))}
+> 137	          </div>
+> 138	        </Section>
+> 139	
+> 140	        {d.error && (
+> 141	          <Section>
+> 142	            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[11px] text-destructive">
+> 143	              {d.error}
+> 144	            </div>
+> 145	          </Section>
+> 146	        )}
+> 147	
+> 148	        {d.status === "success" && d.output?.postUrl && (
+> 149	          <Section>
+> 150	            <a
+> 151	              href={d.output.postUrl}
+> 152	              target="_blank"
+> 153	              rel="noreferrer"
+> 154	              className="flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/5 p-2.5 text-[11px] text-emerald-300 hover:bg-emerald-500/10"
+> 155	            >
+> 156	              <ExternalLink className="h-3.5 w-3.5" /> Abrir no WordPress (#{d.output.postId})
+> 157	            </a>
+> 158	          </Section>
+> 159	        )}
+> 160	      </div>
+> 161	
+> 162	      <div className="border-t border-border bg-card p-3">
+> 163	        <Button
+> 164	          type="button"
+> 165	          variant="accent"
+> 166	          className="w-full gap-2"
+> 167	          disabled={!canPublish || publishing}
+> 168	          onClick={handlePublish}
+> 169	          title={!canPublish ? "Preencha título e conteúdo" : undefined}
+> 170	        >
+> 171	          {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+> 172	          {publishing
+> 173	            ? "Publicando…"
+> 174	            : d.publishStatus === "publish"
+> 175	            ? "Publicar ao vivo"
+> 176	            : "Salvar rascunho no WP"}
+> 177	        </Button>
+> 178	        <p className="mt-1.5 text-center text-[9px] text-muted-foreground">
+> 179	          Usa sua conexão WordPress (Configurações → WordPress) · grátis
+> 180	        </p>
+> 181	      </div>
+> 182	    </div>
+> 183	  );
+> 184	}
+> 185	
+> ```
+
+## 🤖 Claude *(08:26:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/index.tsx",
+  "offset": 78,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 78	          onCreditsChanged={onCreditsChanged}
+> 79	        />
+> 80	      ) : node.data.kind === "avatarIdentity" ? (
+> 81	        <AvatarIdentityInspector
+> 82	          node={{ id: node.id, data: node.data }}
+> 83	          projectId={projectId}
+> 84	        />
+> 85	      ) : node.data.kind === "publishWordpress" ? (
+> 86	        <PublishWordpressInspector
+> 87	          node={{ id: node.id, data: node.data }}
+> 88	          projectId={projectId}
+> 89	        />
+> 90	      ) : null}
+> 91	    </aside>
+> 92	  );
+> 93	}
+> 94	
+> ```
+
+## 🤖 Claude *(08:27:53)*
+
+
+## 🤖 Claude *(08:27:55)*
+
+Padrão completo na mão. Mas antes de escrever o inspector, preciso ver **como o `generate-video-script` responde** (streaming? shape do provider?) pra construir o parser certo e não chutar (Lei 1) — o OTD-CS-002 depende disso:
+
+## 🤖 Claude *(08:27:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-video-script/index.ts",
+  "offset": 150,
+  "limit": 100
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 150	    }
+> 151	
+> 152	    // --- Prompt Engineering ---
+> 153	    const formatGuide: Record<string, string> = {
+> 154	      reels: "Crie um roteiro para Reels/Shorts (vertical, 15-60s). Inclua marcações [CENA], [TEXTO EM TELA], [TRANSIÇÃO], [ÁUDIO/MÚSICA]. Foco em impacto visual rápido.",
+> 155	      youtube: "Crie um roteiro completo para vídeo YouTube. Inclua [INTRO], [HOOK], [CENA], [B-ROLL], [CTA], [OUTRO]. Sugira thumbnails e títulos SEO.",
+> 156	      tutorial: "Crie um roteiro de tutorial passo-a-passo. Inclua [INTRO], [PASSO N], [DEMONSTRAÇÃO], [DICA], [RECAP], [CTA]. Foque em clareza e didática.",
+> 157	      storytelling: "Crie um roteiro narrativo/storytelling. Inclua [ABERTURA], [CONFLITO], [DESENVOLVIMENTO], [CLÍMAX], [RESOLUÇÃO], [CTA]. Use técnicas de narrativa envolvente.",
+> 158	    };
+> 159	
+> 160	    const durationGuide: Record<string, string> = {
+> 161	      curto: "Vídeo curto (15 a 60 segundos). Seja direto e impactante.",
+> 162	      médio: "Vídeo de duração média (2 a 10 minutos). Balance profundidade e engajamento.",
+> 163	      longo: "Vídeo longo e detalhado (10 a 30 minutos). Explore o tema com profundidade.",
+> 164	    };
+> 165	
+> 166	    const systemPrompt = `Você é um roteirista profissional brasileiro especializado em produção de vídeos para marketing digital e redes sociais.
+> 167	${formatGuide[format] || formatGuide.youtube}
+> 168	${durationGuide[duration] || durationGuide.médio}
+> 169	Inclua sempre:
+> 170	- Descrição visual de cada cena
+> 171	- Texto de narração/fala
+> 172	- Sugestões de texto em tela (lower thirds, títulos)
+> 173	- Indicações de música/efeitos sonoros
+> 174	- Sugestões de cortes e transições
+> 175	Responda sempre em português brasileiro. Seja criativo e profissional.`;
+> 176	
+> 177	    // --- Build request per provider ---
+> 178	    const headers: Record<string, string> = {
+> 179	      "Content-Type": "application/json",
+> 180	    };
+> 181	
+> 182	    let body: string;
+> 183	
+> 184	    console.log(`[generate-video-script] Routing → Provider: ${selectedProvider} | Model: ${payloadModel} | User: ${userId}`);
+> 185	
+> 186	    let aiResponse: Response;
+> 187	
+> 188	    if (isGoogleGemini) {
+> 189	      body = JSON.stringify({
+> 190	        contents: [{ parts: [{ text: systemPrompt + "\n" + prompt }] }],
+> 191	      });
+> 192	      aiResponse = await fetch(aiEndpoint, {
+> 193	        method: "POST",
+> 194	        headers,
+> 195	        body,
+> 196	      });
+> 197	    } else {
+> 198	      headers["Authorization"] = `Bearer ${activeKey}`;
+> 199	      headers["HTTP-Referer"] = "https://mcorch.com";
+> 200	      headers["X-Title"] = "GCRUX Constellation";
+> 201	      body = JSON.stringify({
+> 202	        model: payloadModel,
+> 203	        messages: [
+> 204	          { role: "system", content: systemPrompt },
+> 205	          { role: "user", content: prompt },
+> 206	        ],
+> 207	        stream: true,
+> 208	      });
+> 209	
+> 210	      const groqKey = userKeys?.groq_api_key || Deno.env.get("GROQ_API_KEY");
+> 211	      const openRouterKey = userKeys?.openrouter_api_key;
+> 212	      const geminiKey = userKeys?.google_api_key;
+> 213	
+> 214	      aiResponse = await fetchLLMWithFallback(aiEndpoint, {
+> 215	        method: "POST",
+> 216	        headers,
+> 217	        body,
+> 218	      }, {
+> 219	        functionName: "generate-video-script",
+> 220	        openRouterKey: openRouterKey || undefined,
+> 221	        geminiKey: geminiKey || undefined,
+> 222	        groqKey: groqKey || undefined,
+> 223	      });
+> 224	    }
+> 225	
+> 226	    if (!aiResponse.ok) {
+> 227	      if (aiResponse.status === 429) {
+> 228	        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
+> 229	          status: 429,
+> 230	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 231	        });
+> 232	      }
+> 233	      if (aiResponse.status === 402) {
+> 234	        return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }), {
+> 235	          status: 402,
+> 236	          headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 237	        });
+> 238	      }
+> 239	      const errText = await aiResponse.text();
+> 240	      console.error("[generate-video-script] AI error:", aiResponse.status, errText);
+> 241	      return new Response(JSON.stringify({ error: `Erro no provedor ${selectedProvider}: ${aiResponse.status}` }), {
+> 242	        status: 500,
+> 243	        headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 244	      });
+> 245	    }
+> 246	
+> 247	    return new Response(aiResponse.body, {
+> 248	      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+> 249	    });
+> ```
+
+## 🤖 Claude *(08:29:10)*
+
+
+## 🤖 Claude *(08:29:15)*
+
+Achado material decisivo (Lei 1) — e preciso te corrigir: o `generate-video-script` faz **`stream: true`** (SSE, linha 207/248) e tem um **systemPrompt fixo de "roteirista"** que produz texto marcado `[CENA]/[TEXTO EM TELA]`, **não** JSON estruturado. Ou seja, meu "OTD-CS-002 resolvido, buildable-now" foi **otimista demais** — reusar a fn as-is pra sair o pacote `{scenes[],ttsPrompt}` é frágil (SSE + prompt-persona brigando com o JSON). Vou corrigir isso honestamente e construir primeiro o nó que está **genuinamente pronto**: o **Criativo Cinematográfico** (renderiza o criativo que você já aprovou, via `video-render` + template `cinematic-9x16`).
+
+Deixa eu ver o contrato do `video-render` (resposta + como o vídeo final aparece pra eu fazer o poll):
+
+## 🤖 Claude *(08:29:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== resposta do video-render (render_id/state/402/503) ===\"\ngrep -niE \"render_id|state|status|JSON.stringify|new Response|charged|402|503|composition|engine|insert.*video_renders|from\\(.video_renders\" supabase/functions/video-render/index.ts 2>/dev/null | head -30\necho \"=== colunas de video_renders (para o poll) ===\"\ngrep -rniE \"video_renders|CREATE TABLE|state|video_url|output|storage_key|error|render\" supabase/migrations/*video_render*.sql 2>/dev/null | head -30",
+  "description": "video-render response + video_renders columns for the poll"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === resposta do video-render (render_id/state/402/503) ===
+> 5:// CONTRACT (charge-at-entry + refund-on-failure): JWT verify → engine validate → voice-consent gate →
+> 7://   INSERT video_renders(queued) via service key → trigger worker → 202 {render_id}. 401/409/402/503 NEVER
+> 11://   OTD-VS-006), so the engine-availability gate returns 503 BEFORE any deduct — nobody pays for a render that
+> 12://   cannot run. Everything up to that gate is provable zero-cost (401/422/409/402/dry_run). SLICE 2 sets the
+> 24:type Engine = keyof typeof COST;
+> 27:  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 29:    new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 35:  const logHealth = (status: string, event?: string) =>
+> 36:    admin.from("infra_health_logs").insert({ service: "video-render", status, event }).then(() => {}, () => {});
+> 49:    const engine = body?.engine as Engine | undefined;
+> 50:    if (engine !== "faceless" && engine !== "hyperframes") {
+> 51:      return json({ error: "engine_invalid", detail: "engine deve ser 'faceless' ou 'hyperframes'" }, 422);
+> 60:    const composition = engine === "hyperframes" && body?.composition && typeof body.composition === "object"
+> 61:      ? body.composition : null;
+> 63:    // Guard (incident INC-20260707T0432Z-1f2942b6): a hyperframes render without a VALID composition is
+> 64:    // structurally doomed — the host worker (video-bridge.ts) throws composition_missing_or_invalid and the
+> 68:    if (engine === "hyperframes") {
+> 69:      const comp = composition as Record<string, unknown> | null;
+> 70:      const compositionValid = comp !== null &&
+> 72:      if (!compositionValid) {
+> 74:          error: "composition_required",
+> 81:    if (engine === "faceless" && !voiceConsent) {
+> 89:    if (engine === "faceless") {
+> 93:        return json({ error: "gemini_not_configured", action: "Configure sua chave Gemini/Google em /dashboard/settings para gerar vídeo." }, 402);
+> 97:    const cost = COST[engine];
+> 100:    if (dryRun) return json({ ok: true, dry_run: true, engine, cost_mco: cost });
+> 102:    // Engine-availability gate (SLICE 1): the worker webhook is unset until slice 2 wires the render engine.
+> 103:    // Returning 503 HERE — before any deduct — guarantees no tenant is charged for a render that cannot complete.
+> 104:    const workerWebhook = engine === "faceless"
+> 109:        error: "render_engine_unavailable",
+> === colunas de video_renders (para o poll) ===
+> ```
