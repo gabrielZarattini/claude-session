@@ -2203,3 +2203,877 @@ Saldo User 0: **4468 mco**. `testable={false}` no campo Higgsfield — ou seja, 
 > 116	process.exit(fail === 0 ? 0 : 1);
 > 117	
 > ```
+
+## 🤖 Claude *(01:01:34)*
+
+
+## 🤖 Claude *(01:01:36)*
+
+O sentinel é a prova perfeita de custo zero: ele autentica com a chave BYOK real (User 0) contra `platform.higgsfield.ai` — um **422 (validação) só acontece se a auth passou**; chave inválida daria 401 e derrubaria os gates. Vou rodá-lo.
+
+## 🤖 Claude *(01:01:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nbun run scripts/qa/smoke-higgsfield-schema.ts 2>&1",
+  "description": "Roda o sentinel Higgsfield (prova auth + contrato, custo zero)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ S1 soul/{mode} path enum (compose ainda não existe) — status=422 msg=Input should be 'reference', 'character' or 'standard'
+> ✅ S2 soul/reference existe + prompt obrigatório — status=422 type=missing
+> ✅ S3 aspect_ratio enum exato — Input should be '9:16', '16:9', '4:3', '3:4', '1:1', '2:3' or '3:2'
+> ✅ S4 resolution enum exato — Input should be '720p' or '1080p'
+> ✅ S5 custom_reference_id (uuid) + batch_size (1|4) reconhecidos — ref=uuid_type batch=Input should be 1 or 4
+> ✅ S6 mint exige name + input_images — status=422 name=missing input_images=missing
+> ✅ S7 input_images item = {type:image_url, image_url:url} — Input should be <InputImageType.IMAGE_URL: 'image_url'>
+> 
+> ✅ smoke-higgsfield-schema: 7 passed, 0 failed
+> ```
+
+## 🤖 Claude *(01:02:14)*
+
+
+## 🤖 Claude *(01:02:18)*
+
+**Sentinel 7/7 PASS** — prova material de custo zero: o contrato da Higgsfield Platform está íntegro **e a chave+secret BYOK do User 0 autenticam** contra `platform.higgsfield.ai` (todo 422 exige auth válida; chave errada daria 401 e derrubaria os gates). Combinado com o `canvas-execute` resolvendo o par corretamente, **o caminho Platform BYOK está provado ponta-a-ponta na camada de auth — zero créditos gastos.**
+
+Agora vou fechar o gap de UX que te confundiu. Deixa eu ver como o `KeyField` faz o "Testar" (pra decidir se dá pra tornar a chave Higgsfield testável) e os nomes das abas de Settings.
+
+## 🤖 Claude *(01:02:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== KeyField component ===\"; grep -rlE 'function KeyField|KeyField' src/ | grep -iE 'settings|KeyField' | head\necho \"=== tabs em SettingsPage ===\"; grep -nE 'TabsTrigger|value=\\\"|Chaves|Conectores|API' src/pages/SettingsPage.tsx | grep -iE 'Tabs|Chaves|Conectores|Connectors|api' | head -20\necho \"=== como test\u00e1vel funciona (test provider) ===\"; grep -rnE 'testable|test-api-key|handleTest|testKey|onTest' src/pages/SettingsPage.tsx src/components/settings/ 2>/dev/null | head -20",
+  "description": "Localiza KeyField, tabs e mecanismo de teste de chave"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === KeyField component ===
+> src/pages/SettingsPage.tsx
+> === tabs em SettingsPage ===
+> 13:import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+> 23:// ── API key tester ──────────────────────────────────────────────────────────
+> 234:          <TabsTrigger value="ai">IA (API Keys)</TabsTrigger>
+> 235:          <TabsTrigger value="wordpress">WordPress</TabsTrigger>
+> 236:          <TabsTrigger value="meta">Social</TabsTrigger>
+> 237:          <TabsTrigger value="connectors">Conectores</TabsTrigger>
+> 238:          <TabsTrigger value="lgpd">Dados &amp; LGPD</TabsTrigger>
+> 241:        <TabsContent value="ai">
+> 242:      {/* API Keys + Preferences */}
+> 247:            Soberania de IA (API Keys)
+> 262:                id="openrouter_api_key" label="OpenRouter API Key" placeholder="sk-or-v1-..."
+> 269:                id="google_api_key" label="Google API Key (Gemini)" placeholder="AIzaSy..."
+> 276:                id="groq_api_key" label="Groq API Key" placeholder="gsk_..."
+> 283:                id="openai_api_key" label="OpenAI API Key" placeholder="sk-proj-..."
+> 290:                id="replicate_api_key" label="Replicate API Key" placeholder="r8_..."
+> 297:                id="higgsfield_api_key" label="Higgsfield API Key (Platform — vídeo/DoP)" placeholder="hf-..."
+> 298:                description="Credencial da Higgsfield Platform (par com o Secret abaixo). Usada pelos nós de vídeo/DoP do Spaces. Diferente do conector MCP OAuth (esse é outra conexão, no card de Conectores)."
+> 304:                id="higgsfield_api_key_secret" label="Higgsfield API Secret (Platform)" placeholder="hf-secret-..."
+> 305:                description="Segredo da Higgsfield Platform (par com a API Key acima). Ambos são obrigatórios para os nós de vídeo/DoP."
+> 318:                id="rapidapi_key" label="RapidAPI Key (trends — fallback TikTok)" placeholder="..."
+> === como testável funciona (test provider) ===
+> src/pages/SettingsPage.tsx:27:// Server-side validation (test-api-key edge fn): the frontend only ever holds the MASKED key from
+> src/pages/SettingsPage.tsx:36:    const { data, error } = await supabase.functions.invoke("test-api-key", { body });
+> src/pages/SettingsPage.tsx:45:  id, label, placeholder, description, provider, value, onChange, testable = true,
+> src/pages/SettingsPage.tsx:48:  provider: string; value: string; onChange: (v: string) => void; testable?: boolean;
+> src/pages/SettingsPage.tsx:52:  const handleTest = useCallback(async () => {
+> src/pages/SettingsPage.tsx:80:        {testable && <Button
+> src/pages/SettingsPage.tsx:84:          onClick={handleTest}
+> src/pages/SettingsPage.tsx:299:                provider="higgsfield" testable={false}
+> src/pages/SettingsPage.tsx:306:                provider="higgsfield_secret" testable={false}
+> src/pages/SettingsPage.tsx:354:                  provider="hedra" testable={false}
+> src/pages/SettingsPage.tsx:361:                  provider="fal" testable={false}
+> src/pages/SettingsPage.tsx:368:                  provider="cartesia" testable={false}
+> ```
+
+## 🤖 Claude *(01:02:31)*
+
+
+## 🤖 Claude *(01:02:33)*
+
+Existe uma edge fn `test-api-key` que valida chaves server-side. Higgsfield está `testable={false}`. Vou ler o mecanismo de teste e a fn para decidir se torno a Higgsfield testável (a prova de auth de custo zero que o sentinel faz, mas com botão na UI).
+
+## 🤖 Claude *(01:02:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "offset": 23,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 23	// ── API key tester ──────────────────────────────────────────────────────────
+> 24	
+> 25	type KeyStatus = "idle" | "testing" | "ok" | "error";
+> 26	
+> 27	// Server-side validation (test-api-key edge fn): the frontend only ever holds the MASKED key from
+> 28	// the encrypted user_api_keys view, so a saved key can't be tested in the browser. A masked/empty
+> 29	// field tests the STORED decrypted key; a freshly-typed value is validated before save. Server-side
+> 30	// also dodges provider CORS (e.g. Replicate blocks browser requests).
+> 31	async function testApiKey(provider: string, key: string): Promise<boolean> {
+> 32	  try {
+> 33	    const trimmed = key.trim();
+> 34	    const masked = /^[••]+$/.test(trimmed);
+> 35	    const body = masked || !trimmed ? { provider } : { provider, key: trimmed };
+> 36	    const { data, error } = await supabase.functions.invoke("test-api-key", { body });
+> 37	    if (error) return false;
+> 38	    return !!(data as { ok?: boolean } | null)?.ok;
+> 39	  } catch {
+> 40	    return false;
+> 41	  }
+> 42	}
+> 43	
+> 44	function KeyField({
+> 45	  id, label, placeholder, description, provider, value, onChange, testable = true,
+> 46	}: {
+> 47	  id: string; label: string; placeholder: string; description: string;
+> 48	  provider: string; value: string; onChange: (v: string) => void; testable?: boolean;
+> 49	}) {
+> 50	  const [status, setStatus] = useState<KeyStatus>("idle");
+> 51	
+> 52	  const handleTest = useCallback(async () => {
+> 53	    if (!value.trim()) { toast.error("Insira a chave antes de testar."); return; }
+> 54	    setStatus("testing");
+> 55	    const ok = await testApiKey(provider, value);
+> 56	    setStatus(ok ? "ok" : "error");
+> 57	    if (ok) toast.success(`${label}: chave válida ✓`);
+> 58	    else toast.error(`${label}: chave inválida ou sem permissão.`);
+> 59	  }, [value, provider, label]);
+> 60	
+> 61	  return (
+> 62	    <div className="space-y-2">
+> 63	      <Label htmlFor={id} className="flex items-center gap-2">
+> 64	        <Key className="h-3 w-3 text-muted-foreground" />
+> 65	        {label}
+> 66	      </Label>
+> 67	      <div className="flex gap-2">
+> 68	        <Input
+> 69	          id={id}
+> 70	          name={id}
+> 71	          type="password"
+> 72	          autoComplete="new-password"
+> 73	          data-lpignore="true"
+> 74	          data-1p-ignore="true"
+> 75	          placeholder={placeholder}
+> 76	          value={value}
+> 77	          onChange={(e) => { onChange(e.target.value); setStatus("idle"); }}
+> 78	          className="font-mono text-sm flex-1"
+> 79	        />
+> 80	        {testable && <Button
+> 81	          type="button"
+> 82	          variant="outline"
+> 83	          size="sm"
+> 84	          onClick={handleTest}
+> 85	          disabled={status === "testing" || !value.trim()}
+> 86	          className="shrink-0 gap-1.5 text-xs"
+> 87	        >
+> 88	          {status === "testing" ? (
+> 89	            <Loader2 className="h-3 w-3 animate-spin" />
+> 90	          ) : status === "ok" ? (
+> 91	            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+> 92	          ) : status === "error" ? (
+> ```
+
+## 🤖 Claude *(01:02:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/test-api-key/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+> 2	
+> 3	// constellation/settings: server-side BYOK key validator. The frontend can only read the MASKED
+> 4	// user_api_keys view (credential_encryption migration 20260601000000), so a saved key can't be
+> 5	// tested from the browser — it never has the real value. This function resolves the REAL key
+> 6	// (a freshly-typed value from the body, else the stored key from decrypted_user_api_keys) and tests
+> 7	// it against the provider server-side (no browser CORS; covers Replicate, which blocks CORS).
+> 8	// JWT-guarded: the caller can only ever test their OWN stored keys.
+> 9	
+> 10	const corsHeaders = {
+> 11	  "Access-Control-Allow-Origin": "*",
+> 12	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 13	};
+> 14	
+> 15	const json = (body: unknown, status = 200) =>
+> 16	  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 17	
+> 18	const COLUMN: Record<string, string> = {
+> 19	  groq: "groq_api_key",
+> 20	  openrouter: "openrouter_api_key",
+> 21	  openai: "openai_api_key",
+> 22	  google: "google_api_key",
+> 23	  elevenlabs: "elevenlabs_api_key",
+> 24	  replicate: "replicate_api_key",
+> 25	};
+> 26	
+> 27	function providerRequest(provider: string, key: string): { url: string; headers: Record<string, string> } | null {
+> 28	  switch (provider) {
+> 29	    case "groq":
+> 30	      return { url: "https://api.groq.com/openai/v1/models", headers: { Authorization: `Bearer ${key}` } };
+> 31	    case "openrouter":
+> 32	      // /key validates the credential itself (/models is public and would false-positive).
+> 33	      return { url: "https://openrouter.ai/api/v1/key", headers: { Authorization: `Bearer ${key}` } };
+> 34	    case "openai":
+> 35	      return { url: "https://api.openai.com/v1/models", headers: { Authorization: `Bearer ${key}` } };
+> 36	    case "google":
+> 37	      return { url: `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`, headers: {} };
+> 38	    case "elevenlabs":
+> 39	      return { url: "https://api.elevenlabs.io/v1/user", headers: { "xi-api-key": key } };
+> 40	    case "replicate":
+> 41	      return { url: "https://api.replicate.com/v1/account", headers: { Authorization: `Token ${key}` } };
+> 42	    default:
+> 43	      return null;
+> 44	  }
+> 45	}
+> 46	
+> 47	const isMask = (v: string) => /^[••]+$/.test(v.trim());
+> 48	
+> 49	Deno.serve(async (req) => {
+> 50	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 51	  try {
+> 52	    const authHeader = req.headers.get("Authorization");
+> 53	    if (!authHeader) return json({ ok: false, error: "Unauthorized" }, 401);
+> 54	
+> 55	    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 56	    const supabaseKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 57	    const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 58	
+> 59	    const userClient = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: authHeader } } });
+> 60	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 61	    if (userErr || !user) return json({ ok: false, error: "Unauthorized" }, 401);
+> 62	
+> 63	    const { provider, key: providedKey } = await req.json().catch(() => ({}));
+> 64	    if (!provider || !COLUMN[provider]) return json({ ok: false, error: "unknown_provider" }, 400);
+> 65	
+> 66	    // A freshly-typed real value (validate before save) wins; otherwise read the stored decrypted key.
+> 67	    let key = typeof providedKey === "string" && providedKey.trim() && !isMask(providedKey) ? providedKey.trim() : "";
+> 68	    if (!key) {
+> 69	      const admin = createClient(supabaseUrl, serviceKey);
+> 70	      const { data: row } = await admin
+> 71	        .from("decrypted_user_api_keys")
+> 72	        .select(COLUMN[provider])
+> 73	        .eq("user_id", user.id)
+> 74	        .maybeSingle();
+> 75	      key = ((row?.[COLUMN[provider]] as string | null) ?? "").trim();
+> 76	    }
+> 77	    if (!key || isMask(key)) return json({ ok: false, error: "no_key_configured" });
+> 78	
+> 79	    const cfg = providerRequest(provider, key);
+> 80	    if (!cfg) return json({ ok: false, error: "unknown_provider" }, 400);
+> 81	
+> 82	    const res = await fetch(cfg.url, { headers: cfg.headers });
+> 83	    return json({ ok: res.ok, status: res.status });
+> 84	  } catch (e) {
+> 85	    return json({ ok: false, error: e instanceof Error ? e.message : "internal" });
+> 86	  }
+> 87	});
+> 88	
+> ```
+
+## 🤖 Claude *(01:03:58)*
+
+
+## 🤖 Claude *(01:04:02)*
+
+Arquitetura clara. O `test-api-key` já valida chaves server-side (JWT-guarded, lê a chave do próprio user). Vou implementar **duas melhorias** que respondem exatamente à sua dor:
+
+1. **Tornar a chave Higgsfield Platform testável** — botão "Testar" que faz a mesma sonda de auth de custo-zero do sentinel (par key+secret → 422 = válida), sem gastar crédito.
+2. **Deixar claro no card do MCP** que ele exige assinatura e apontar para a chave Platform (créditos) como o caminho de geração.
+
+Iteração 2 — implementando os 3 edits.
+
+## 🤖 Claude *(01:04:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/test-api-key/index.ts",
+  "old_string": "    const { provider, key: providedKey } = await req.json().catch(() => ({}));\n    if (!provider || !COLUMN[provider]) return json({ ok: false, error: \"unknown_provider\" }, 400);",
+  "new_string": "    const { provider, key: providedKey } = await req.json().catch(() => ({}));\n    if (!provider) return json({ ok: false, error: \"unknown_provider\" }, 400);\n\n    // \u2500\u2500 Higgsfield Platform (key+secret PAIR) \u2014 zero-cost auth probe \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // Higgsfield auth is `Key <api_key>:<api_secret>`. A POST to soul/standard with an empty body\n    // returns 422 (missing prompt) ONLY when auth passed; a bad credential returns 401/403. This is\n    // the exact zero-cost validation the smoke-higgsfield-schema sentinel uses \u2014 it never enqueues a\n    // paid job. The pair always comes from the tenant's own vault (both fields must be saved to work).\n    if (provider === \"higgsfield\") {\n      const admin = createClient(supabaseUrl, serviceKey);\n      const { data: row } = await admin\n        .from(\"decrypted_user_api_keys\")\n        .select(\"higgsfield_api_key, higgsfield_api_key_secret\")\n        .eq(\"user_id\", user.id)\n        .maybeSingle();\n      const hKey = ((row?.higgsfield_api_key as string | null) ?? \"\").trim();\n      const hSecret = ((row?.higgsfield_api_key_secret as string | null) ?? \"\").trim();\n      if (!hKey || isMask(hKey) || !hSecret || isMask(hSecret)) return json({ ok: false, error: \"no_key_configured\" });\n      const res = await fetch(\"https://platform.higgsfield.ai/higgsfield-ai/soul/standard\", {\n        method: \"POST\",\n        headers: { Authorization: `Key ${hKey}:${hSecret}`, \"Content-Type\": \"application/json\", Accept: \"application/json\" },\n        body: \"{}\",\n      });\n      // 422 = auth OK + body invalid (the expected valid-credential signal). 401/403 = bad credential.\n      const ok = res.ok || res.status === 422;\n      return json({ ok, status: res.status });\n    }\n\n    if (!COLUMN[provider]) return json({ ok: false, error: \"unknown_provider\" }, 400);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/test-api-key/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:16)*
+
+
+## 🤖 Claude *(01:04:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx",
+  "old_string": "                id=\"higgsfield_api_key\" label=\"Higgsfield API Key (Platform \u2014 v\u00eddeo/DoP)\" placeholder=\"hf-...\"\n                description=\"Credencial da Higgsfield Platform (par com o Secret abaixo). Usada pelos n\u00f3s de v\u00eddeo/DoP do Spaces. Diferente do conector MCP OAuth (esse \u00e9 outra conex\u00e3o, no card de Conectores).\"\n                provider=\"higgsfield\" testable={false}",
+  "new_string": "                id=\"higgsfield_api_key\" label=\"Higgsfield API Key (Platform \u2014 v\u00eddeo/DoP)\" placeholder=\"hf-...\"\n                description=\"Credencial da Higgsfield Platform (par com o Secret abaixo). \u00c9 esta chave \u2014 n\u00e3o o conector MCP \u2014 que alimenta os n\u00f3s de v\u00eddeo/DoP do Spaces por cr\u00e9dito (pay-per-use, sem assinatura). Salve o par e clique em Testar para validar a autentica\u00e7\u00e3o sem gastar cr\u00e9dito.\"\n                provider=\"higgsfield\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/SettingsPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:26)*
+
+
+## 🤖 Claude *(01:04:27)*
+
+Agora o card do MCP — deixar honesto que exige assinatura e apontar para a chave Platform (créditos).
+
+## 🤖 Claude *(01:04:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/settings/HiggsfieldConnectorCard.tsx",
+  "old_string": "        <CardDescription>\n          Conecte sua conta Higgsfield (via consent do Clerk) para usar 30+ modelos de gera\u00e7\u00e3o \u2014 Sora 2, Veo 3.1,\n          Kling, Nano Banana, Soul \u2014 nos n\u00f3s do Spaces com a <strong>sua</strong> credencial (BYOK per-user). O\n          cat\u00e1logo \u00e9 resolvido por introspec\u00e7\u00e3o MCP; nenhum endpoint fica hardcoded.\n        </CardDescription>\n      </CardHeader>\n      <CardContent className=\"space-y-3\">",
+  "new_string": "        <CardDescription>\n          Conecte sua conta Higgsfield (via consent do Clerk) para usar 30+ modelos de gera\u00e7\u00e3o \u2014 Sora 2, Veo 3.1,\n          Kling, Nano Banana, Soul \u2014 nos n\u00f3s do Spaces com a <strong>sua</strong> credencial (BYOK per-user). O\n          cat\u00e1logo \u00e9 resolvido por introspec\u00e7\u00e3o MCP; nenhum endpoint fica hardcoded.\n        </CardDescription>\n      </CardHeader>\n      <CardContent className=\"space-y-3\">\n        {/* Honest guidance: the MCP connector is account/OAuth-based (needs a Higgsfield plan). Credit-based\n            pay-per-use runs through the Platform API key in the API Keys tab \u2014 that's what powers video/DoP. */}\n        <div className=\"rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-muted-foreground\">\n          <strong className=\"text-foreground\">Requer uma assinatura Higgsfield.</strong> Este conector usa OAuth\n          (conta Higgsfield) e s\u00f3 funciona em planos ativos. Se voc\u00ea usa <strong>cr\u00e9ditos avulsos</strong> (pay-per-use),\n          n\u00e3o precisa dele: preencha a <strong>Higgsfield API Key (Platform)</strong> na aba{\" \"}\n          <em>IA (API Keys)</em> \u2014 \u00e9 ela que alimenta os n\u00f3s de v\u00eddeo/DoP do Spaces por cr\u00e9dito, sem assinatura.\n        </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/settings/HiggsfieldConnectorCard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:04:47)*
+
+
+## 🤖 Claude *(01:04:48)*
+
+Três edits feitos. Vou validar com tsc + deno check antes de deployar.
+
+## 🤖 Claude *(01:04:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc frontend ===\"; npx tsc --noEmit 2>&1 | tail -15; echo \"tsc exit: ${PIPESTATUS[0]}\"\necho \"=== deno check test-api-key ===\"; npx supabase --version >/dev/null 2>&1; deno check supabase/functions/test-api-key/index.ts 2>&1 | tail -15; echo \"deno exit: $?\"",
+  "description": "tsc frontend + deno check edge fn"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc frontend ===
+> tsc exit: 0
+> === deno check test-api-key ===
+> /bin/bash: line 5: deno: command not found
+> deno exit: 0
+> ```
+
+## 🤖 Claude *(01:04:57)*
+
+
+## 🤖 Claude *(01:04:58)*
+
+tsc 0. deno não está no PATH — o deploy vai validar a sintaxe (mesmo padrão do código existente). Vou deployar a edge fn `test-api-key`.
+
+## 🤖 Claude *(01:04:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy test-api-key 2>&1 | tail -20; echo \"deploy exit: ${PIPESTATUS[0]}\"",
+  "description": "Deploy da edge fn test-api-key"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Bundling Function: test-api-key
+> Deploying Function: test-api-key (script size: 104.4kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: test-api-key
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> deploy exit: 0
+> ```
+
+## 🤖 Claude *(01:05:08)*
+
+
+## 🤖 Claude *(01:05:10)*
+
+Deployado (bundle OK = sintaxe válida). Agora a **prova material**: invocar `test-api-key` com o JWT do User 0 e `provider=higgsfield` → esperado `{ ok: true, status: 422 }`. Vou gerar o JWT.
+
+## 🤖 Claude *(01:05:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nhead -30 scripts/qa/gen-user-jwt.ts 2>/dev/null",
+  "description": "Ver assinatura do gen-user-jwt"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL user access_token (JWT) for authenticated edge-fn calls in QA — without a browser or raw password.
+>  * Admin generateLink (magiclink) → verifyOtp(token_hash) → session.access_token. Per-user, reproducible.
+>  * Pattern extends gen-magiclink.ts (v6.20.4). The token is one-time and ~1h-lived; mint right before use.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-jwt.ts <email>
+>  *   → prints the access_token on stdout (nothing else), or an error on stderr + exit 1.
+>  *   e.g. TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com)
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-jwt.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> if (error || !data.properties?.hashed_token) {
+>   console.error('generateLink error:', error?.message ?? 'no hashed_token');
+>   process.exit(1);
+> }
+> const tokenHash = data.properties.hashed_token;
+> ```
+
+## 🤖 Claude *(01:05:17)*
+
+
+## 🤖 Claude *(01:05:18)*
+
+Preciso do email do User 0. Vou buscar e gerar o JWT, depois invocar a fn.
+
+## 🤖 Claude *(01:05:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=\"${VITE_SUPABASE_URL}\"\nU=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n# email do User 0 via admin auth API\ncurl -s \"$URL/auth/v1/admin/users/$U\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys;d=json.load(sys.stdin);print('email:', d.get('email'))\" 2>/dev/null",
+  "description": "Email do User 0 via admin auth API"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> email: gabrielcall@gmail.com
+> ```
+
+## 🤖 Claude *(01:05:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=\"${VITE_SUPABASE_URL}\"\nANON=\"${SB_PUBLISHABLE_KEY}\"\necho \"=== gerando JWT do User 0 ===\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null)\nif [ -z \"$TOKEN\" ]; then echo \"FALHA ao gerar JWT\"; exit 1; fi\necho \"JWT gerado (len ${#TOKEN})\"\necho \"=== invocando test-api-key provider=higgsfield (prova de auth de custo zero) ===\"\ncurl -s \"$URL/functions/v1/test-api-key\" \\\n  -H \"Authorization: Bearer $TOKEN\" \\\n  -H \"apikey: $ANON\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"provider\":\"higgsfield\"}' | python3 -m json.tool\necho \"=== controle: provider inv\u00e1lido ===\"\ncurl -s -o /dev/null -w \"http=%{http_code}\\n\" \"$URL/functions/v1/test-api-key\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"apikey: $ANON\" -H \"Content-Type: application/json\" \\\n  -d '{\"provider\":\"nonexistent\"}'",
+  "description": "Gera JWT e prova test-api-key higgsfield"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gerando JWT do User 0 ===
+> JWT gerado (len 1404)
+> === invocando test-api-key provider=higgsfield (prova de auth de custo zero) ===
+> {
+>     "ok": true,
+>     "status": 422
+> }
+> === controle: provider inválido ===
+> http=400
+> ```
+
+## 🤖 Claude *(01:05:48)*
+
+
+## 🤖 Claude *(01:05:50)*
+
+**Prova material — custo zero:** `test-api-key` com `provider=higgsfield` → `{ "ok": true, "status": 422 }`. Ou seja, a chave+secret Platform do Sovereign **autenticam** (422 = auth válida + body inválido), sem gastar 1 crédito. O botão "Testar" vai mostrar "chave válida ✓". Controle: provider inválido → 400. ✅
+
+Agora build+deploy do frontend (estou no repo principal, então `bun run build` = deploy) e `/security-review` da mudança na edge fn de credenciais.
+
+## 🤖 Claude *(01:05:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# confirma que estamos no repo principal (tem .env), n\u00e3o worktree\npwd; test -f .env && echo \".env presente (repo principal \u2014 build=deploy)\" || echo \"SEM .env \u2014 worktree?\"\necho \"=== build ===\"\nbun run build 2>&1 | tail -15; echo \"build exit: ${PIPESTATUS[0]}\"",
+  "description": "Build+deploy do frontend (repo principal)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /home/gcrUX/htdocs/constellation-orchestra
+> .env presente (repo principal — build=deploy)
+> === build ===
+> dist/assets/useNodeIntelligence-B9wAQIYl.js      99.45 kB │ gzip:  22.50 kB
+> dist/assets/proxy-C7UCRhhU.js                   125.30 kB │ gzip:  41.24 kB
+> dist/assets/ConstellationMatrix-CA98OY3r.js     136.07 kB │ gzip:  37.60 kB
+> dist/assets/index-B_8uGYMx.js                   167.01 kB │ gzip:  53.33 kB
+> dist/assets/CanvasEditorPage-CgL99mn5.js        178.41 kB │ gzip:  48.27 kB
+> dist/assets/ConstellationPage-CsP74iqM.js       186.21 kB │ gzip:  64.13 kB
+> dist/assets/CartesianChart-Cu6sXr3m.js          325.07 kB │ gzip:  96.84 kB
+> dist/assets/index-BmvIBZ_j.js                   664.60 kB │ gzip: 197.10 kB
+> dist/assets/react-three-fiber.esm-3t37l_uo.js   824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 29.02s
+> build exit: 0
+> ```
+
+## 🤖 Claude *(01:06:32)*
+
+
+## 🤖 Claude *(01:06:32)*
+
+Build OK (29s). Verificação de materialidade — confirmar que as strings novas estão no bundle servido:
+
+## 🤖 Claude *(01:06:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== strings novas no dist servido ===\"\ngrep -rl \"Requer uma assinatura Higgsfield\" dist/assets/ 2>/dev/null && echo \"\u2192 card MCP: nota de assinatura BAKED \u2705\" || echo \"\u2192 card MCP: AUSENTE \u274c\"\ngrep -rl \"clique em Testar para validar\" dist/assets/ 2>/dev/null && echo \"\u2192 Settings: descri\u00e7\u00e3o test\u00e1vel BAKED \u2705\" || echo \"\u2192 Settings: AUSENTE \u274c\"\necho \"=== env baked (Supabase) ===\"\ngrep -rl \"bcyvddsykvehvpwstlfa.supabase.co\" dist/assets/ 2>/dev/null | head -1 && echo \"\u2192 env Supabase BAKED \u2705\" || echo \"\u2192 env AUSENTE \u274c\"",
+  "description": "Materialidade: strings novas + env no bundle servido"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === strings novas no dist servido ===
+> dist/assets/SettingsPage-2Cywm8HV.js
+> → card MCP: nota de assinatura BAKED ✅
+> dist/assets/SettingsPage-2Cywm8HV.js
+> → Settings: descrição testável BAKED ✅
+> === env baked (Supabase) ===
+> dist/assets/SettingsPage-2Cywm8HV.js
+> → env Supabase BAKED ✅
+> ```
+
+## 🤖 Claude *(01:06:54)*
+
+
+## 🤖 Claude *(01:06:54)*
+
+Materialidade confirmada: nota do MCP + descrição testável + env Supabase todos no bundle servido ✅. Deploy real.
+
+Agora `/security-review` — a mudança toca uma edge fn que lê credenciais descriptografadas. É exatamente a classe onde o gate já pagou antes.
+
+## 🤖 Claude *(01:06:54)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(01:06:55)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/components/settings/HiggsfieldConnectorCard.tsx
+	modified:   src/pages/SettingsPage.tsx
+	modified:   supabase/functions/test-api-key/index.ts
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(01:07:14)*
+
+
+## 🤖 Claude *(01:07:28)*
+
+Analiso o diff (3 arquivos, inteiramente no meu contexto). O diff que o harness capturou veio vazio, mas tenho as mudanças exatas em contexto. Fazendo a análise focada nas categorias de segurança.
+
+**Análise da superfície nova:**
+
+- **`test-api-key/index.ts`** (branch higgsfield): guardado por JWT (`getUser()` fail-closed 401); lê **somente** as chaves do próprio caller (`.eq("user_id", user.id)`); URL de saída **fixa** (`platform.higgsfield.ai/higgsfield-ai/soul/standard`), sem host/protocolo controlados pelo usuário; body de saída é `"{}"` literal (nenhum input do usuário); retorna apenas `{ ok, status }` — a chave nunca é ecoada nem logada. `providedKey` é ignorado no ramo higgsfield (par vem do vault). Query Supabase parametrizada (`.select().eq()`) — sem SQLi.
+- **`SettingsPage.tsx`**: mudança de copy + flag `testable`. Sem superfície.
+- **`HiggsfieldConnectorCard.tsx`**: nota em JSX React (sem `dangerouslySetInnerHTML`). Sem superfície.
+
+# Relatório de Segurança — Higgsfield key-test + UX clarity
+
+Nenhuma vulnerabilidade HIGH ou MEDIUM identificada nas mudanças desta branch.
+
+**Categorias examinadas e resultado:**
+
+| Categoria | Veredito |
+|-----------|----------|
+| Auth bypass / privilege escalation | ✅ Seguro — `test-api-key` exige JWT válido (401 fail-closed) e escopa a leitura ao próprio `user.id`; não há caminho cross-tenant novo. |
+| SQL injection | ✅ Seguro — queries via cliente Supabase parametrizado (`.select().eq()`). |
+| SSRF | ✅ Seguro — URL de saída é literal fixa; nenhum host/protocolo/path é derivado de input do usuário. |
+| Exposição de segredo | ✅ Seguro — a chave/secret só entram no header `Authorization` da chamada legítima à Higgsfield; a resposta ao cliente é apenas `{ ok, status }`; nada é logado. |
+| Injeção no request de saída | ✅ Seguro — body é `"{}"` constante; `providedKey` é ignorado no ramo higgsfield. |
+| XSS | ✅ Seguro — componentes React/JSX sem `dangerouslySetInnerHTML` ou métodos inseguros. |
+
+**Confiança:** alta (>0.9). O ramo novo espelha exatamente o padrão já estabelecido dos demais provedores no mesmo arquivo (JWT-guard + leitura self-scoped + fetch de URL fixa + retorno booleano), sem introduzir nova superfície de ataque.
+
+**Veredito: SAFE — nenhuma correção necessária.**
+
+## 👤 User *(01:19:41)*
+
+ótimo agora vamos com foco total em deixar o SPACES 100%, crie o loop para continuar nessa sessão até o fim dela que é quando estiver em mais ou menos 85% da janela de contexto atual. Vamos transformar o nosso spaces mais robusto criando os nós principais. 
+
+Ainda estão faltando nós para.:
+
+* Identidade (avatar) (não estou conseguindo treinar com LoRA Flux que seria nossa carta na manga gratuita, quando eu clico em treinar aparece o erro "Treino de identidade requer credencial Higgsfield (OTD-AC-017). Em breve." mesmo selecionado LoRA em vez de Higgsfield. Além disso quando selecionado "Higgsfield Soul ID" precisamos definir se é MCP ou API pois como esta atualmente induz a ser API com Soul ID mas precisa ficar claro qual Higgsfields vamos usar. Foco total no gratuíto por enquanto vamos validar ele depois vamos para a API do higgsfield então foco no LoRA.
+* Nós para redes sociais, por exemplo para cada rede social deve ter seus grupos de nós, por exemplo wordpress pode ter Posts Blogs ou Landing Pages. Já Instagram pode ter, feed > Carrosels, Rells, Stories, Conexões como outros MCPs ou algo como Manychats ou até mesmo API webhooks. Tiktok videos, shop dentre outras opções. Youtube para postar videos longos, shorts, forum da comunidade, membros esclusivos, posts etc etc.
+* Precisamos tambem preparar o Spaces para conseguir organizar e ser um studio para youtube studio faceless ou com avatar AI clone libsinc etc.
+
+## 👤 User *(01:19:47)*
+
+[Request interrupted by user]
