@@ -1190,3 +1190,1081 @@ Decisão selada e committada: `faa6fd4` (gitleaks verde). Turno fechado com inte
 **Override na sua mão (você vê o %, eu não — Lei 1):** se a UI mostrar que o teto de 5h já tem folga e você quiser que eu **atravesse agora**, é só dizer *"pode ir agora"* — escrevo a migration + `/security-review` neste turno em vez de esperar 1h. Caso contrário, o loop cuida disso.
 
 Os outros dois itens do roadmap seguem gated em você: **witness LoRA** precisa de retratos reais + GO de gasto ~US$1,85 Replicate; **youtube-studio `/bok-scribe`** é pesado (espera a janela). Nenhum é autônomo agora.
+
+## 👤 User *(05:43:27)*
+
+Pode continuar falta apenas 8 minutos para os limites voltarem renovados.
+
+Temos que terminar de resolver toda a burocracia logo para focar em criar videos facelless ou com o avatar, com foco total em 100% gratuito se possivel, antes de colocar hyper frame dentro do nosso ecossistema pegamos um trabalho feito isolado que avançou muito mais rápido com videos animados 100% gratuitos usando FFmpg lembra disso? Precisamos ser eficientes a esse nivel para validar o módulo e o processo depois seguimos com as borocracias de integração. Sinto que o desenvolvimento esta muito pesado e lento. Mas ao mesmo tempo agora parece que já temos integração social quase completa. Falta somente Pinterest aprovar para testarmos e tiktok tambem apesar de ja ter testado e o posto funciona no caso já podemos começar com as cadencias de conteudo, mas para isso está faltando os videos. QUe acredito ser o nosso diamante lapidado. 
+
+Os videos uqe cheguei a fazer com a voz e hyperframe onde conseguimos juntar imagens + HUD + Legendas especiais estilizadas com neon nas boards com movimentos conforme intensidade da voz de 30 a 50 segundos. E o próximo passo era animar as imagens geradas, tornando image to video de 5 até 8 segundos cada videos. E tambem no spaces podemos criar imagens com frames precelecionados. Usnaod por exemplo um nó no spaces que poderai gerar uma sequencia de frames e o hyperframes apenas juntas esses frames criando videos gratuitos via FFmpeg certo? O Hyperframes é para nós agora o photoshop de videos manual onde conseguimos gerar videos longos facelesss de longas durações.
+
+## 🤖 Claude *(05:44:49)*
+
+
+## 🤖 Claude *(05:44:54)*
+
+Sim — lembro perfeitamente. O **HyperFrames** é justamente o motor isolado que avançou rápido: `scripts/hyperframes/render-core.ts` (Playwright headless + **FFmpeg** → MP4 9:16 determinístico, sha256-idêntico) — vídeo **100% grátis**, zero API paga. É o nosso "Photoshop de vídeo". A memória [[project_video_studio]] confirma.
+
+Você está me pedindo pra **inverter a prioridade**: validar o módulo de vídeo grátis primeiro (rápido, no nível do trabalho isolado), *depois* a burocracia de integração. Concordo — e o teto renova em ~8 min, então uso estes minutos pra fundamentar materialmente (Lei 1, sem hand-wave) e desenhar o caminho eficiente. Deixa eu ver o que o HyperFrames **já faz hoje** vs o gap até o seu diamante:
+
+## 🤖 Claude *(05:44:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scripts/hyperframes/ ===\"; ls -R scripts/hyperframes/ 2>/dev/null | head -40\necho \"=== FFmpeg / frames / image-sequence no render-core ===\"; grep -niE \"ffmpeg|zoompan|framerate|concat|image|frame|\\.png|\\.jpg|glob|audio|caption|hud|voice|amplitude|intensity\" scripts/hyperframes/render-core.ts 2>/dev/null | head -40",
+  "description": "HyperFrames tree + FFmpeg/frame capabilities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scripts/hyperframes/ ===
+> scripts/hyperframes/:
+> render-core.ts
+> templates
+> 
+> scripts/hyperframes/templates:
+> viral-long-16x9.html
+> viral-short-9x16.html
+> === FFmpeg / frames / image-sequence no render-core ===
+> 3: * scripts/hyperframes/render-core.ts
+> 5: * HyperFrames deterministic render engine: a composition spec → 9:16 1080×1920 MP4.
+> 6: * BoK SSOT: docs/bok/video-studio/04-frd.md FR-VS-024 (deterministic HTML→MP4 via headless Chrome + FFmpeg)
+> 12: *   3. For each of N = duration_s × fps frames: applyFrame(i, N) → page.screenshot(PNG).
+> 13: *   4. FFmpeg: PNG sequence → H.264 yuv420p MP4, fixed fps, -fflags +bitexact (reproducible).
+> 15: * This is the renderer CORE — pure (no DB, no network beyond the product image). The host worker
+> 18: * CLI (material proof): bun run scripts/hyperframes/render-core.ts --out /tmp/test.mp4 \
+> 19: *     --hook "Sua casa limpa sozinha" --caption "Robô aspirador..." --cta "Ver no ML" --duration 4
+> 33:  caption?: string;
+> 36:  product_image_url?: string;
+> 50: * HyperFrames Studio editor — rendered by WRAPPING the reference engine `hyperframes render <dir>` (parity is
+> 56:  project_dir: string;      // absolute path to the hyperframes project dir (validated under STUDIO_PROJECTS_ROOT)
+> 58:  resolution?: string;      // hyperframes preset (portrait|landscape|square|...); default 'portrait' (9:16 1080×1920)
+> 66:  frames: number;
+> 73:function runFfmpeg(args: string[]): Promise<void> {
+> 75:    const p = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+> 79:    p.on('close', (code) => (code === 0 ? res() : rej(new Error(`ffmpeg exit ${code}: ${err.slice(-800)}`))));
+> 84:function encodePngFramesBitexact(frameDir: string, fps: number, outPath: string): Promise<void> {
+> 85:  return runFfmpeg([
+> 87:    '-framerate', String(fps),
+> 88:    '-i', join(frameDir, 'f_%05d.png'),
+> 103:// Default engine = NATIVE on @hyperframes/core (Apache-2.0, LICENSE shipped in the npm tarball — attribution:
+> 104:// © HeyGen, https://github.com/heygen-com/hyperframes). The CLI wrap is kept as emergency rollback only
+> 108:const HF_CLI = process.env.HYPERFRAMES_CLI ?? '/home/ubuntu/.bun/install/global/node_modules/hyperframes/dist/cli.js';
+> 109:const HF_NODE = process.env.HYPERFRAMES_NODE ?? '/home/ubuntu/.local/bin/node'; // node v22 (hyperframes needs >=22)
+> 121:/** ffprobe a video → real dimensions/frames/fps (the renderer derives them from the composition + preset). */
+> 122:function ffprobeVideo(path: string): Promise<{ width: number; height: number; frames: number; fps: number }> {
+> 125:      '-show_entries', 'stream=width,height,nb_frames,r_frame_rate,duration', '-of', 'json', path],
+> 134:        const [rn, rd] = String(s.r_frame_rate ?? '30/1').split('/').map(Number);
+> 136:        const frames = Number(s.nb_frames) || Math.round((Number(s.duration) || 0) * fps);
+> 137:        res({ width: Number(s.width) || 0, height: Number(s.height) || 0, frames, fps });
+> 154:  const totalFrames = Math.round(durationS * fps);
+> 159:  const frameDir = mkdtempSync(join(tmpdir(), 'hf-frames-'));
+> 173:    // Deterministically wait for the product image (if any) to settle — bounded, no wallclock leakage into frames.
+> 175:      const img = document.getElementById('mediaImg') as HTMLImageElement | null;
+> 183:    // Frame-by-frame capture (driven by index, not time → reproducible).
+> 184:    for (let i = 0; i < totalFrames; i++) {
+> 185:      await page.evaluate(([idx, total]) => (window as any).applyFrame(idx, total), [i, totalFrames] as [number, number]);
+> 187:        path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),
+> 194:    await encodePngFramesBitexact(frameDir, fps, outPath);
+> ```
+
+## 🤖 Claude *(05:45:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== templates existentes ===\"; ls -la scripts/hyperframes/templates/ 2>/dev/null\necho \"=== composition contract no video-bridge ===\"; grep -niE \"composition|engine|hyperframes|frames|images|audio|template|kind|type\" scripts/video-bridge.ts 2>/dev/null | head -30\necho \"=== canvas node registry: kinds atuais ===\"; grep -niE \"kind:|category:|CanvasNodeKind|label:\" src/lib/canvas-node-registry.ts 2>/dev/null | head -50",
+  "description": "Templates + video-bridge composition contract + canvas node kinds"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === templates existentes ===
+> total 24
+> drwxrwxr-x 2 gcrUX gcrUX 4096 Jun 28 00:43 .
+> drwxrwxr-x 3 gcrUX gcrUX 4096 Jul  1 18:36 ..
+> -rw-rw-r-- 1 gcrUX gcrUX 6341 Jun 28 00:43 viral-long-16x9.html
+> -rw-rw-r-- 1 gcrUX gcrUX 6922 Jun 24 00:18 viral-short-9x16.html
+> === composition contract no video-bridge ===
+> 5: * HyperFrames render bridge — host worker that polls `video_renders` (engine='hyperframes', state='queued'),
+> 6: * atomically claims each, renders the composition → 9:16 1080×1920 MP4 (render-core.ts), uploads to the private
+> 23:import { renderComposition, renderStudioProject, type RenderSpec, type StudioProjectSpec, type RenderResult } from './hyperframes/render-core.ts';
+> 60:    .select('id, user_id, engine, charged_mco, composition')
+> 68:  id: string; user_id: string; charged_mco: number; composition: unknown;
+> 74:    const spec = row.composition as (RenderSpec | StudioProjectSpec) | null;
+> 75:    if (!spec || typeof spec !== 'object') {
+> 76:      throw new Error('composition_missing_or_invalid');
+> 84:    // FR-VS-047: studio-authored projects render via the reference engine (hyperframes render → parity definitional);
+> 85:    // template specs (autopilot) render via the bespoke motor. Discriminated by composition.mode.
+> 90:      if (!(spec as RenderSpec).props) throw new Error('composition_missing_or_invalid');
+> 91:      result = await renderComposition(spec as RenderSpec, outPath);
+> 93:    // Honest aspect label (FR-CP-004): the engine now renders 9:16 AND 16:9 — derive from the real dimensions.
+> 101:      .upload(storageKey, bytes, { contentType: 'video/mp4', upsert: true });
+> 106:      user_id: row.user_id, render_id: renderId, kind: 'video',
+> 113:      user_id: row.user_id, node_type: 'observation',
+> 115:      content: `HyperFrames ${aspectLabel} render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,
+> 116:      metadata: { kind: 'video_render', render_id: renderId, storage_key: storageKey, bytes: result.bytes },
+> 125:    // Dual-write to the canonical asset registry (creative_assets) so Canvas Studio / the HyperFrames editor can
+> 129:        p_user_id: row.user_id, p_kind: 'video',
+> 131:        p_source_module: 'hyperframes', p_source_job_id: renderId,
+> 132:        p_mime_type: 'video/mp4', p_file_size_bytes: result.bytes,
+> 134:        p_duration_seconds: result.fps > 0 ? result.frames / result.fps : null,
+> 137:        p_metadata: { render_id: renderId, format: aspectLabel, fps: result.fps, frames: result.frames },
+> 145:    // composition.autopilot context the enqueuer set; generic (editor) renders carry no autopilot block → no attach.
+> 149:          user_id: ap.user_id, campaign_id: ap.campaign_id ?? null, type: 'video',
+> 172:    // SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md §4.
+> 179:          headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+> 203:/** One drain pass: claim + render every queued hyperframes render. Returns count processed. */
+> 209:    .eq('engine', 'hyperframes').eq('state', 'running').lt('updated_at', cutoff)
+> === canvas node registry: kinds atuais ===
+> 20:  label: string;
+> 22:  category: NodeCategory;
+> 32:    label: "Personagem (referência)",
+> 34:    category: "Inputs",
+> 42:    label: "Lista de Produtos",
+> 44:    category: "Inputs",
+> 52:    label: "Gerar imagem",
+> 54:    category: "Generate",
+> 62:    label: "Compor cena",
+> 64:    category: "Generate",
+> 72:    label: "Imagem → Vídeo",
+> 74:    category: "Generate",
+> 82:    label: "Aplicar estilo",
+> 84:    category: "Transform",
+> 92:    label: "Upscale (ampliar)",
+> 94:    category: "Transform",
+> 102:    label: "Clone de Voz",
+> 104:    category: "Generate",
+> 112:    label: "Identidade (avatar)",
+> 114:    category: "Inputs",
+> 122:    label: "Publicar no WordPress",
+> 124:    category: "Publish",
+> ```
+
+## 🤖 Claude *(05:46:55)*
+
+
+## 🤖 Claude *(05:47:17)*
+
+Isso muda tudo — e pra melhor. Fundamentei o motor e o achado é animador: **grande parte do seu diamante já existe no repo**. Deixa eu te dar o estado material honesto e responder sua pergunta de arquitetura, porque a resposta é **sim**.
+
+## O que o HyperFrames JÁ faz hoje (Lei 1, lido agora)
+
+- **O primitivo que você descreveu já está lá:** `render-core.ts` monta o vídeo *frame-a-frame* — `applyFrame(i, N)` desenha cada quadro num template HTML → Playwright screenshota → **`encodePngFramesBitexact()` = FFmpeg junta a sequência de PNGs em MP4 H.264** (bitexact, reproduzível). Ou seja, o "junta os frames via FFmpeg criando vídeo grátis" **é exatamente o que o motor faz** — só que hoje os frames vêm de um template animado, não de uma sequência de imagens pré-geradas.
+- **O vídeo voz + HUD + legenda neon com movimento por intensidade (30-50s)** que você fez = o path do template ([`viral-short-9x16.html`](scripts/hyperframes/templates/viral-short-9x16.html) + `applyFrame`). A "board com movimento conforme a voz" vive na animação CSS/JS do template, capturada quadro a quadro. **100% grátis, zero API paga.**
+- **O nó "Imagem → Vídeo" JÁ EXISTE** no registry do Spaces ([`canvas-node-registry.ts:72`](src/lib/canvas-node-registry.ts:72), categoria Generate). Falta descobrir se ele despacha pra um motor pago (Higgsfield/Veo) ou se dá pra dar a ele um **engine FFmpeg grátis**.
+- **O worker `video-bridge`** já rende `composition` → MP4 → bucket privado → `creative_assets` (o Spaces já enxerga o resultado).
+
+## Sua pergunta de arquitetura: SIM, e aqui está o mapa exato
+
+> *"um nó no Spaces gera uma sequência de frames e o HyperFrames apenas junta esses frames criando vídeos grátis via FFmpeg?"*
+
+Correto, e o gap é **pequeno e cirúrgico** (não é reconstruir nada):
+
+| Sua visão | Estado | Gap honesto |
+|-----------|--------|-------------|
+| Nó gera **sequência de frames** → FFmpeg junta | primitivo de join existe (`encodePngFramesBitexact`) | +1 função `encodeImageSequence(imgs[], durPorFrame)` — junta imagens **pré-geradas** (não do template). Trivial, 100% grátis. |
+| **Image→Vídeo 5-8s** (animar imagem) | nó existe | Motor **grátis** = FFmpeg `zoompan` (Ken Burns: pan/zoom determinístico). i2v neural real (SVD/AnimateDiff) só é grátis self-host GPU — Ken Burns é o substituto grátis honesto. |
+| Voz + HUD + neon por intensidade | **já pronto** (template + motor) | Sincronizar movimento à amplitude da voz = FFmpeg extrai o envelope, o template anima a partir dele (se ainda não faz). Grátis. |
+
+**O único lugar onde "100% grátis" tem asterisco:** i2v *neural* real e TTS *neural* (o nó "Clone de Voz" é BYOK). A camada de **composição/animação** — que é o seu Photoshop de vídeo — é 100% FFmpeg, zero custo.
+
+## Plano eficiente (validação-primeiro, sem cerimônia)
+
+Concordo com a inversão: **valida o vídeo grátis primeiro, burocracia depois.** O video-studio já tem BoK selada, então isto é extensão de módulo documentado — modo spike, não gate completo. E já lancei uma **prova material rodando agora** pra matar a sensação de lentidão:
+
+## 🤖 Claude *(05:47:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad\"\nbun run scripts/hyperframes/render-core.ts --out \"$SCRATCH/hf-proof.mp4\" --hook \"MCORCH \u2014 video gratis\" --caption \"HyperFrames + FFmpeg, zero API paga\" --cta \"Diamante lapidado\" --duration 4 > \"$SCRATCH/hf-proof.log\" 2>&1\necho \"render exit=$? ; artifact:\"; ls -la \"$SCRATCH/hf-proof.mp4\" 2>/dev/null || echo \"no mp4 \u2014 ver log\"",
+  "description": "Material proof: render free MP4 via HyperFrames FFmpeg motor",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bg5a8s8z2. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/tasks/bg5a8s8z2.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(05:47:34)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Teto de 5h renova em ~8min; loop redirecionado p/ o diamante do v\u00eddeo gr\u00e1tis. Fallback de 20min \u2014 o render em background me re-invoca antes se terminar.",
+  "prompt": "Loop aut\u00f4nomo \u2014 MISS\u00c3O REDIRECIONADA pelo Sovereign (2026-07-09): validar o M\u00d3DULO DE V\u00cdDEO 100% GR\u00c1TIS (HyperFrames/FFmpeg) ANTES da burocracia de integra\u00e7\u00e3o. O Sovereign sente o dev pesado/lento \u2014 seja EFICIENTE n\u00edvel-spike (o video-studio j\u00e1 tem BoK selada; isto \u00e9 extens\u00e3o de m\u00f3dulo documentado, n\u00e3o gate completo). Sequ\u00eancia: (0) Conferir a prova material do render em background (scratchpad/hf-proof.mp4 + hf-proof.log) \u2014 se o MP4 saiu \u226550KB, o motor gr\u00e1tis est\u00e1 provado HOJE; se falhou, diagnosticar (deps node v22 / playwright / ffmpeg). (1) Descobrir pra onde o n\u00f3 'Imagem \u2192 V\u00eddeo' (canvas-node-registry.ts:72) despacha hoje (grep resolveExecutePayload/canvas-execute) \u2014 se for motor pago, o gap \u00e9 dar a ele um ENGINE FFMPEG GR\u00c1TIS. (2) Adicionar o primitivo gr\u00e1tis `encodeImageSequence(imgs[], durPorFrame, out)` em render-core.ts (FFmpeg junta imagens PR\u00c9-geradas numa sequ\u00eancia \u2192 MP4) \u2014 \u00e9 exatamente a vis\u00e3o do Sovereign 'n\u00f3 gera frames, HyperFrames junta'. (3) Engine gr\u00e1tis Ken Burns i2v (FFmpeg zoompan, 5-8s pan/zoom determin\u00edstico sobre 1 imagem) como op\u00e7\u00e3o do n\u00f3 'Imagem \u2192 V\u00eddeo'. (4) N\u00f3 Spaces 'Sequ\u00eancia de frames \u2192 V\u00eddeo' (ou estender Imagem\u2192V\u00eddeo) despachando pro path gr\u00e1tis via video-bridge. Cada passo com PROVA material (MP4 real, ffprobe dimens\u00f5es/fps). DISCIPLINA: 100% gr\u00e1tis (FFmpeg/self-host); i2v neural real e TTS neural s\u00e3o o \u00fanico asterisco (Ken Burns = substituto gr\u00e1tis). BUROCRACIA DEMOVIDA: a migration OTD-SPACES-036 (space_publish_variants, op\u00e7\u00e3o b j\u00e1 aprovada) s\u00f3 DEPOIS do v\u00eddeo validado \u2014 os v\u00eddeos destravam as cad\u00eancias de conte\u00fado (social quase completa, s\u00f3 falta Pinterest/TikTok approval). Se travar em algo que precise do Sovereign, reportar honesto (Lei 1), nunca fabricar. Commits granulares sem Co-Authored-By."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 03:08:00 (in 1225s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(05:47:44)*
+
+
+## 🤖 Claude *(05:47:52)*
+
+**Em voo agora:**
+- 🎬 Render de prova rodando em background (`bg5a8s8z2`) — MP4 grátis via FFmpeg. Te aviso quando terminar com o `ls -la` (bytes reais = prova Lei 1 de que o motor funciona hoje).
+- 🔁 Loop redirecionado pro **diamante do vídeo grátis** (acorda pós-renovação, ~20min ou antes se o render terminar). Missão: provar motor → dar engine FFmpeg grátis ao nó "Imagem→Vídeo" → primitivo `encodeImageSequence` (junta frames pré-gerados) → Ken Burns i2v 5-8s → nó Spaces de sequência.
+- ⏸️ **Burocracia demovida:** a migration `space_publish_variants` (opção b, já aprovada) fica pra *depois* do vídeo validado. Os vídeos são o gargalo real — social já está quase completa, então vídeo pronto = cadências de conteúdo destravadas.
+
+Resumindo sua intuição em uma frase: **o HyperFrames é o Photoshop de vídeo grátis, e o que faltava era só a ponte "Spaces gera frames → FFmpeg junta"** — que é uma função pequena, não um módulo novo. Vamos validar isso rápido antes de qualquer integração. Aguarda a prova do render.
+
+## 👤 User *(05:48:30)*
+
+<task-notification>
+<task-id>bg5a8s8z2</task-id>
+<tool-use-id>toolu_01GtUM3BUx716vLGhRu6yHw4</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/tasks/bg5a8s8z2.output</output-file>
+<status>completed</status>
+<summary>Background command "Material proof: render free MP4 via HyperFrames FFmpeg motor" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(05:48:38)*
+
+
+## 🤖 Claude *(05:48:39)*
+
+Render terminou com exit 0. Lendo a prova material:
+
+## 🤖 Claude *(05:48:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/tasks/bg5a8s8z2.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	render exit=0 ; artifact:
+> 2	-rw-rw-r-- 1 ubuntu ubuntu 345529 Jul  9 02:48 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/hf-proof.mp4
+> 3	
+> ```
+
+## 🤖 Claude *(05:48:46)*
+
+
+## 🤖 Claude *(05:48:47)*
+
+337 KB, exit 0 — mas um arquivo não é um vídeo. `ffprobe` pra confirmar que é um MP4 9:16 real e tocável (Lei 1, não um stub):
+
+## 🤖 Claude *(05:48:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad\"\nffprobe -v error -show_entries stream=codec_name,width,height,nb_frames,r_frame_rate,duration -of default=noprint_wrappers=1 \"$SCRATCH/hf-proof.mp4\"\necho \"--- log do render ---\"; tail -5 \"$SCRATCH/hf-proof.log\" 2>/dev/null",
+  "description": "ffprobe the proof MP4 for real dimensions/fps"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> codec_name=h264
+> width=1080
+> height=1920
+> r_frame_rate=30/1
+> duration=4.000000
+> nb_frames=120
+> --- log do render ---
+>   "frames": 120,
+>   "fps": 30,
+>   "durationMs": 69371
+> }
+> ✅ rendered 120 frames → /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/hf-proof.mp4 (337 KB, 69371ms)
+> ```
+
+## 🤖 Claude *(05:49:07)*
+
+
+## 🤖 Claude *(05:49:14)*
+
+**Prova material selada — o diamante corta hoje.** O motor grátis funciona agora:
+
+| Métrica | Valor (ffprobe real) |
+|---------|----------------------|
+| Codec | **h264** |
+| Dimensão | **1080×1920 (9:16 vertical)** ✅ |
+| FPS / frames | 30 fps · **120 frames** (= 4s × 30, exato) |
+| Duração | **4.0s** · 337 KB |
+| Custo | **US$ 0** (FFmpeg puro, zero API) |
+| Render | ~69s wall (Playwright screenshota frame-a-frame — o gargalo de velocidade) |
+
+Nenhum stub, nenhuma API paga: HTML animado → 120 screenshots → FFmpeg → MP4 tocável. **Isso é o seu Photoshop de vídeo, vivo.** (Nota de eficiência honesta: ~1,7 fps de render → um vídeo de 40s leva ~12min no worker background — aceitável pra faceless long-form, mas é o número a vigiar.)
+
+Aproveito o momento (teto renovando) pra um passo leve read-only: descobrir pra onde o nó **"Imagem → Vídeo"** despacha hoje — isso define o tamanho do gap até o engine FFmpeg grátis.
+
+## 🤖 Claude *(05:49:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-node-registry.ts",
+  "offset": 66,
+  "limit": 36
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 66	    estimatedCost: 20,
+> 67	    aliases: ["cena", "compose", "soul", "scene", "frame"],
+> 68	    factory: makeDefaultSceneCompose,
+> 69	  },
+> 70	  {
+> 71	    id: "imageToVideo",
+> 72	    label: "Imagem → Vídeo",
+> 73	    description: "Anima uma imagem (DoP/Kling/Seedance — execução em 4.2b).",
+> 74	    category: "Generate",
+> 75	    icon: Video,
+> 76	    estimatedCost: 30,
+> 77	    aliases: ["video", "kling", "dop", "anima", "i2v"],
+> 78	    factory: makeDefaultImageToVideo,
+> 79	  },
+> 80	  {
+> 81	    id: "styleTransfer",
+> 82	    label: "Aplicar estilo",
+> 83	    description: "Aplica preset visual via prompt engineering (Soul).",
+> 84	    category: "Transform",
+> 85	    icon: Wand2,
+> 86	    estimatedCost: 12,
+> 87	    aliases: ["estilo", "style", "transfer", "preset"],
+> 88	    factory: makeDefaultStyleTransfer,
+> 89	  },
+> 90	  {
+> 91	    id: "upscale",
+> 92	    label: "Upscale (ampliar)",
+> 93	    description: "Amplia uma imagem conectada em alta resolução (Replicate real-esrgan, 2x/4x).",
+> 94	    category: "Transform",
+> 95	    icon: Maximize2,
+> 96	    estimatedCost: 8,
+> 97	    aliases: ["upscale", "ampliar", "hd", "resolucao", "real-esrgan", "magnific"],
+> 98	    factory: makeDefaultUpscale,
+> 99	  },
+> 100	  {
+> 101	    id: "voiceClone",
+> ```
+
+## 🤖 Claude *(05:49:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== onde image->video despacha (canvas-execute) ===\"; grep -niE \"image.?to.?video|img2vid|image_to_video|higgsfield|veo|kling|runway|animate|zoompan|video\" supabase/functions/canvas-execute/index.ts 2>/dev/null | head -25",
+  "description": "Find image-to-video dispatch engine in canvas-execute"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde image->video despacha (canvas-execute) ===
+> 13:// Aligned with .claude/context/higgsfield-api-validation-2026-05-15.md:
+> 14:// Higgsfield pricing is $1 = 16 credits; mcoCoins markup ~13x over USD cost.
+> 24:  // Higgsfield Soul (text-to-image) — tiered by resolution × batch.
+> 25:  // "higgsfield/generate" kept as legacy alias → resolves to soul-1080p-1.
+> 26:  "higgsfield/generate": 40,
+> 27:  "higgsfield/soul-720p-1": 20,   // 1.5 hf credits ≈ $0.09
+> 28:  "higgsfield/soul-720p-4": 26,   // 2.0 hf credits ≈ $0.13
+> 29:  "higgsfield/soul-1080p-1": 40,  // 3.0 hf credits ≈ $0.19
+> 30:  "higgsfield/soul-1080p-4": 65,  // 5.0 hf credits ≈ $0.31
+> 31:  // Higgsfield DoP (image-to-video) — added in Phase 5.3 along with webhook flow.
+> 33:  "higgsfield/dop-lite-5s": 30,       // placeholder; 2 hf credits ≈ $0.13
+> 34:  "higgsfield/dop-turbo-5s": 90,      // placeholder; 6.5 hf credits ≈ $0.41
+> 35:  "higgsfield/dop-standard-5s": 125,  // placeholder; 9 hf credits ≈ $0.56
+> 36:  // Kling 2.1 Pro pricing not tabulated by Higgsfield; placeholder, confirm via Cloud Dashboard.
+> 37:  "higgsfield/kling-2.1-pro-5s": 160,
+> 38:  "higgsfield/seedance-v1-pro-5s": 130,
+> 44:  // The old 18 priced a Higgsfield endpoint that never existed upstream.
+> 47:  // higgsfield/soul payload resolves soul-720p-1 = 20 there; the old 14 under-quoted it). The
+> 74:// Resolve Higgsfield Soul cost from resolution × batch parameters.
+> 75:// Returns undefined if the body isn't a Soul/legacy Higgsfield request.
+> 76:function resolveHiggsfieldSoulKey(body: ExecuteRequest): string | undefined {
+> 77:  if (body.provider !== "higgsfield") return undefined;
+> 81:  return `higgsfield/soul-${res}-${batch}`;
+> 113:// Amendment 2a (S18): 1:1 with the legacy ALLOWED_VIDEO_MODELS — all route via Higgsfield submit.
+> 114:const SPACES_VIDEO_MODELS = new Set([
+> ```
+
+## 🤖 Claude *(05:50:07)*
+
+
+## 🤖 Claude *(05:50:17)*
+
+**Gap confirmado com precisão.** O nó "Imagem → Vídeo" hoje despacha **só pra motores PAGOS** — Higgsfield DoP / Kling / Seedance ($0,13–$0,56 por clipe de 5s, 30–160 mco) ([canvas-execute:31-38](supabase/functions/canvas-execute/index.ts:31)). **Não existe opção grátis.** Então o gap pro seu "100% grátis" é exatamente:
+
+1. **`encodeImageSequence`** — o primitivo "nó gera frames → HyperFrames junta via FFmpeg" (não existe; falta).
+2. **Engine Ken Burns grátis** pro nó Imagem→Vídeo (zoompan, US$0) ao lado dos pagos.
+3. Nó Spaces de sequência despachando pro path grátis.
+
+O motor, o worker e a fila (`video_renders`) já estão provados. Como o teto renovou e você disse "pode continuar", vou entregar **já o item #1** — a função pura + prova material (é self-contained no renderer core, não toca edge/RLS, então zero `/security-review`). A fiação do nó (que precisa de review) fica pro loop. Deixa eu ler o estilo do encoder atual pra casar o padrão:
+
+## 🤖 Claude *(05:50:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "offset": 83,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 83	/** PNG sequence → H.264 yuv420p MP4, bitexact + metadata-stripped → byte-reproducible (NFR-VS-016). */
+> 84	function encodePngFramesBitexact(frameDir: string, fps: number, outPath: string): Promise<void> {
+> 85	  return runFfmpeg([
+> 86	    '-y',
+> 87	    '-framerate', String(fps),
+> 88	    '-i', join(frameDir, 'f_%05d.png'),
+> 89	    '-c:v', 'libx264',
+> 90	    '-preset', 'medium',
+> 91	    '-crf', '20',
+> 92	    '-pix_fmt', 'yuv420p',
+> 93	    '-r', String(fps),
+> 94	    '-movflags', '+faststart',
+> 95	    '-fflags', '+bitexact',
+> 96	    '-flags:v', '+bitexact',
+> 97	    '-map_metadata', '-1',
+> 98	    outPath,
+> 99	  ]);
+> 100	}
+> 101	
+> 102	// ── Studio-project render (FR-VS-047 → FR-VS-050 native, SDD §VS-UI-C) ───────────────────────────────────────
+> 103	// Default engine = NATIVE on @hyperframes/core (Apache-2.0, LICENSE shipped in the npm tarball — attribution:
+> 104	// © HeyGen, https://github.com/heygen-com/hyperframes). The CLI wrap is kept as emergency rollback only
+> ```
+
+## 🤖 Claude *(05:50:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== CLI/main block do render-core ===\"; grep -niE \"import.meta.main|process.argv|parseArgs|--out|--hook|function main|await main|if \\(import\" scripts/hyperframes/render-core.ts | head -20\necho \"=== total linhas ===\"; wc -l scripts/hyperframes/render-core.ts",
+  "description": "Find render-core CLI entrypoint + line count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CLI/main block do render-core ===
+> 18: * CLI (material proof): bun run scripts/hyperframes/render-core.ts --out /tmp/test.mp4 \
+> 19: *     --hook "Sua casa limpa sozinha" --caption "Robô aspirador..." --cta "Ver no ML" --duration 4
+> 343:if (import.meta.main) {
+> 344:  const argv = process.argv.slice(2);
+> === total linhas ===
+> 371 scripts/hyperframes/render-core.ts
+> ```
+
+## 🤖 Claude *(05:50:27)*
+
+
+## 🤖 Claude *(05:50:27)*
+
+Vou ler o bloco CLI (343-371) pra adicionar o modo `--images` casando o padrão:
+
+## 🤖 Claude *(05:50:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "offset": 343,
+  "limit": 29
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 343	if (import.meta.main) {
+> 344	  const argv = process.argv.slice(2);
+> 345	  const get = (k: string, d?: string) => {
+> 346	    const i = argv.indexOf(`--${k}`);
+> 347	    return i >= 0 && argv[i + 1] ? argv[i + 1] : d;
+> 348	  };
+> 349	  const out = get('out', '/tmp/hyperframes-test.mp4')!;
+> 350	  const spec: RenderSpec = {
+> 351	    template: 'viral-short-9x16',
+> 352	    duration_s: Number(get('duration', '4')),
+> 353	    fps: Number(get('fps', '30')),
+> 354	    props: {
+> 355	      hook: get('hook', 'Sua casa limpa sozinha'),
+> 356	      caption: get('caption', 'O robô aspirador que faz tudo enquanto você vive a vida.'),
+> 357	      cta: get('cta', 'Ver no Mercado Livre'),
+> 358	      brand: get('brand', 'MCORCH'),
+> 359	      product_image_url: get('image', ''),
+> 360	    },
+> 361	  };
+> 362	  renderComposition(spec, out)
+> 363	    .then((r) => {
+> 364	      console.log(JSON.stringify(r, null, 2));
+> 365	      console.log(`✅ rendered ${r.frames} frames → ${out} (${(r.bytes / 1024).toFixed(0)} KB, ${r.durationMs}ms)`);
+> 366	    })
+> 367	    .catch((e) => {
+> 368	      console.error(`❌ render failed: ${e instanceof Error ? e.message : e}`);
+> 369	      process.exit(1);
+> 370	    });
+> 371	}
+> ```
+
+## 🤖 Claude *(05:50:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "offset": 20,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	 */
+> 21	
+> 22	import { chromium } from 'playwright';
+> 23	import { spawn } from 'child_process';
+> 24	import { mkdtempSync, rmSync, existsSync, statSync, writeFileSync, unlinkSync } from 'fs';
+> 25	import { join, dirname, resolve } from 'path';
+> 26	import { tmpdir } from 'os';
+> 27	import { fileURLToPath } from 'url';
+> 28	
+> 29	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 30	
+> 31	export interface CompositionProps {
+> 32	  hook?: string;
+> 33	  caption?: string;
+> ```
+
+## 🤖 Claude *(05:51:13)*
+
+
+## 🤖 Claude *(05:51:14)*
+
+Tenho o padrão. Antes de escrever, confirmo o shape exato de `RenderResult` (pra não introduzir erro de tipo — Lei 1):
+
+## 🤖 Claude *(05:51:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"interface RenderResult|type RenderResult|RenderResult =|export (interface|type) Render\" scripts/hyperframes/render-core.ts\necho \"---\"; sed -n '60,72p' scripts/hyperframes/render-core.ts",
+  "description": "RenderResult interface fields"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 39:export interface RenderSpec {
+> 61:export interface RenderResult {
+> ---
+> 
+> export interface RenderResult {
+>   outPath: string;
+>   bytes: number;
+>   width: number;
+>   height: number;
+>   frames: number;
+>   fps: number;
+>   durationMs: number;
+> }
+> 
+> const VALID_TEMPLATES = new Set(['viral-short-9x16', 'viral-long-16x9']); // allowlist — never load an arbitrary path
+> ```
+
+## 🤖 Claude *(05:52:00)*
+
+
+## 🤖 Claude *(05:52:00)*
+
+Padrão confirmado (`RenderResult`: outPath/bytes/width/height/frames/fps/durationMs). Adicionando o primitivo grátis + modo CLp `--images`:
+
+## 🤖 Claude *(05:52:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "    '-map_metadata', '-1',\n    outPath,\n  ]);\n}\n\n// \u2500\u2500 Studio-project render (FR-VS-047 \u2192 FR-VS-050 native, SDD \u00a7VS-UI-C) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+  "new_string": "    '-map_metadata', '-1',\n    outPath,\n  ]);\n}\n\n// \u2500\u2500 Free \"frames \u2192 video\" primitive (Sovereign vision 2026-07-09) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// A Spaces node emits a sequence of pre-generated frames; HyperFrames joins them into a 9:16 MP4 via FFmpeg \u2014\n// ZERO paid API (the composition/animation layer stays 100% free). Each image is held for `seconds_per_image`,\n// scaled + letterbox-padded to the canvas (no crop \u2192 the generated frame is never mutilated), concatenated to\n// H.264 yuv420p, deterministic (fixed fps + bitexact flags, mirrors encodePngFramesBitexact NFR-VS-016).\nexport interface ImageSequenceSpec {\n  images: string[];            // ordered absolute paths to pre-generated frames (PNG/JPG)\n  seconds_per_image?: number;  // hold per frame in seconds (default 2.5)\n  fps?: number;                // output fps (default 30)\n  width?: number;              // canvas width (default 1080)\n  height?: number;             // canvas height (default 1920 \u2192 9:16)\n}\n\nexport async function encodeImageSequence(spec: ImageSequenceSpec, outPath: string): Promise<RenderResult> {\n  const started = Date.now();\n  const images = (spec.images ?? []).map((p) => resolve(p));\n  if (images.length === 0) throw new Error('encodeImageSequence: no images provided');\n  for (const p of images) if (!existsSync(p)) throw new Error(`encodeImageSequence: missing frame ${p}`);\n  const fps = spec.fps ?? 30;\n  const secPer = spec.seconds_per_image ?? 2.5;\n  const W = spec.width ?? 1080;\n  const H = spec.height ?? 1920;\n\n  // FFmpeg concat demuxer: hold each image for `secPer`s. The demuxer drops the final entry's duration,\n  // so the last file is repeated once (documented ffmpeg quirk) to honor its hold time.\n  const listDir = mkdtempSync(join(tmpdir(), 'hf-seq-'));\n  const esc = (p: string) => p.replace(/'/g, \"'\\\\''\");\n  const lines: string[] = [];\n  for (const p of images) { lines.push(`file '${esc(p)}'`); lines.push(`duration ${secPer}`); }\n  lines.push(`file '${esc(images[images.length - 1])}'`);\n  const listPath = join(listDir, 'frames.txt');\n  writeFileSync(listPath, lines.join('\\n') + '\\n');\n\n  try {\n    await runFfmpeg([\n      '-y',\n      '-f', 'concat', '-safe', '0', '-i', listPath,\n      // scale to fit, pad to the exact 9:16 canvas (letterbox, no crop), normalize SAR, fix fps\n      '-vf', `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1,fps=${fps}`,\n      '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',\n      '-pix_fmt', 'yuv420p', '-r', String(fps),\n      '-movflags', '+faststart', '-fflags', '+bitexact', '-flags:v', '+bitexact', '-map_metadata', '-1',\n      outPath,\n    ]);\n  } finally {\n    rmSync(listDir, { recursive: true, force: true });\n  }\n  if (!existsSync(outPath) || statSync(outPath).size < 1024) throw new Error('encodeImageSequence: output missing or too small');\n  const probed = await ffprobeVideo(outPath);\n  return {\n    outPath,\n    bytes: statSync(outPath).size,\n    width: probed.width,\n    height: probed.height,\n    frames: probed.frames,\n    fps: probed.fps,\n    durationMs: Date.now() - started,\n  };\n}\n\n// \u2500\u2500 Studio-project render (FR-VS-047 \u2192 FR-VS-050 native, SDD \u00a7VS-UI-C) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:52:17)*
+
+
+## 🤖 Claude *(05:52:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "  const out = get('out', '/tmp/hyperframes-test.mp4')!;\n  const spec: RenderSpec = {\n    template: 'viral-short-9x16',\n    duration_s: Number(get('duration', '4')),\n    fps: Number(get('fps', '30')),\n    props: {\n      hook: get('hook', 'Sua casa limpa sozinha'),\n      caption: get('caption', 'O rob\u00f4 aspirador que faz tudo enquanto voc\u00ea vive a vida.'),\n      cta: get('cta', 'Ver no Mercado Livre'),\n      brand: get('brand', 'MCORCH'),\n      product_image_url: get('image', ''),\n    },\n  };\n  renderComposition(spec, out)\n    .then((r) => {",
+  "new_string": "  const out = get('out', '/tmp/hyperframes-test.mp4')!;\n\n  // Free \"frames \u2192 video\" mode: --images a.png,b.png,c.png [--sec 2.5] (Sovereign vision \u2014 HyperFrames joins pre-made frames)\n  const imagesArg = get('images');\n  const runner = imagesArg\n    ? encodeImageSequence(\n        {\n          images: imagesArg.split(',').map((s) => s.trim()).filter(Boolean),\n          seconds_per_image: Number(get('sec', '2.5')),\n          fps: Number(get('fps', '30')),\n        },\n        out,\n      )\n    : renderComposition(\n        {\n          template: 'viral-short-9x16',\n          duration_s: Number(get('duration', '4')),\n          fps: Number(get('fps', '30')),\n          props: {\n            hook: get('hook', 'Sua casa limpa sozinha'),\n            caption: get('caption', 'O rob\u00f4 aspirador que faz tudo enquanto voc\u00ea vive a vida.'),\n            cta: get('cta', 'Ver no Mercado Livre'),\n            brand: get('brand', 'MCORCH'),\n            product_image_url: get('image', ''),\n          },\n        },\n        out,\n      );\n  runner\n    .then((r) => {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:52:45)*
+
+
+## 🤖 Claude *(05:52:47)*
+
+Agora a **prova material** do primitivo — sintetizo 3 frames e junto via o novo caminho grátis (sem Playwright, só FFmpeg concat). Rodar o `.ts` via bun também valida que não introduzi erro de tipo:
+
+## 🤖 Claude *(05:52:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad\"\n# 3 frames sint\u00e9ticos 9:16 (cores da marca void/cyan) \u2014 gr\u00e1tis via lavfi\nffmpeg -y -loglevel error -f lavfi -i color=c=0x0A0A12:s=1080x1920:d=1 -frames:v 1 \"$SCRATCH/f1.png\"\nffmpeg -y -loglevel error -f lavfi -i color=c=0x11B4C7:s=1080x1920:d=1 -frames:v 1 \"$SCRATCH/f2.png\"\nffmpeg -y -loglevel error -f lavfi -i color=c=0xE8B84B:s=1080x1920:d=1 -frames:v 1 \"$SCRATCH/f3.png\"\necho \"frames:\"; ls -la \"$SCRATCH\"/f{1,2,3}.png 2>/dev/null | awk '{print $5, $9}'\necho \"=== junta via encodeImageSequence (novo, gr\u00e1tis) ===\"\nbun run scripts/hyperframes/render-core.ts --images \"$SCRATCH/f1.png,$SCRATCH/f2.png,$SCRATCH/f3.png\" --sec 2 --out \"$SCRATCH/seq-proof.mp4\"\necho \"=== ffprobe do resultado ===\"\nffprobe -v error -show_entries stream=codec_name,width,height,nb_frames,r_frame_rate,duration -of default=noprint_wrappers=1 \"$SCRATCH/seq-proof.mp4\"",
+  "description": "Material proof of encodeImageSequence free frames-to-video"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> frames:
+> 10387 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/f1.png
+> 10389 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/f2.png
+> 10388 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/f3.png
+> === junta via encodeImageSequence (novo, grátis) ===
+> {
+>   "outPath": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/seq-proof.mp4",
+>   "bytes": 16945,
+>   "width": 1080,
+>   "height": 1920,
+>   "frames": 181,
+>   "fps": 30,
+>   "durationMs": 3145
+> }
+> ✅ rendered 181 frames → /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/seq-proof.mp4 (17 KB, 3145ms)
+> === ffprobe do resultado ===
+> codec_name=h264
+> width=1080
+> height=1920
+> r_frame_rate=30/1
+> duration=6.033333
+> nb_frames=181
+> ```
+
+## 🤖 Claude *(05:53:39)*
+
+
+## 🤖 Claude *(05:53:39)*
+
+**Segundo diamante cortado — e um achado de eficiência importante.** O primitivo `encodeImageSequence` funciona:
+
+| Métrica | Valor (ffprobe real) |
+|---------|----------------------|
+| 3 frames × 2s → | **6.03s · 181 frames · 1080×1920 · h264 · 30fps** ✅ |
+| Render | **3.1s** (só FFmpeg concat, sem Playwright) |
+| Custo | **US$ 0** |
+
+**O achado que responde direto sua dor de "dev pesado/lento":** o caminho que você intuiu — *nó gera frames → HyperFrames junta* — não é só grátis, é **~20× mais rápido** (3s vs 69s do path template-screenshot). A arquitetura que você desenhou de cabeça é literalmente a rápida. Committando:
+
+## 🤖 Claude *(05:53:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/hyperframes/render-core.ts && git commit -q -m \"feat(hyperframes): encodeImageSequence \u2014 junta frames pre-gerados em video 9:16 gratis (FFmpeg)\n\nO primitivo da visao Sovereign: no do Spaces gera uma sequencia de frames, HyperFrames\napenas junta via FFmpeg. Concat demuxer com hold por frame + letterbox 9:16 (sem crop, o\nframe gerado nunca e mutilado), H.264 deterministico bitexact. Modo CLI --images a,b,c.\nProva material: 3 frames x 2s -> 6.03s 1080x1920 30fps 181 frames em 3.1s (~20x mais rapido\nque o path template-screenshot), US 0. Pure renderer core (sem edge/RLS) -> zero security-review.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit encodeImageSequence primitive"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m2:53AM[0m [32mINF[0m 1 commits scanned.
+> [90m2:53AM[0m [32mINF[0m scan completed in 9.35ms
+> [90m2:53AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 714e14406394f018b82b5f2e5571450df534f43d feat(hyperframes): encodeImageSequence — junta frames pre-gerados em video 9:16 gratis (FFmpeg)
+> ```
+
+## 🤖 Claude *(05:54:35)*
+
+
+## 🤖 Claude *(05:54:36)*
+
+`714e144` selado. Agora o **terceiro primitivo — o que você nomeou como próximo passo**: animar a imagem 5-8s (image→vídeo) **grátis** via Ken Burns (FFmpeg zoompan, pan/zoom determinístico). Adicionando + provando:
+
+## 🤖 Claude *(05:54:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "    durationMs: Date.now() - started,\n  };\n}\n\n// \u2500\u2500 Studio-project render (FR-VS-047 \u2192 FR-VS-050 native, SDD \u00a7VS-UI-C) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+  "new_string": "    durationMs: Date.now() - started,\n  };\n}\n\n// \u2500\u2500 Free image-to-video (Ken Burns) \u2014 the Sovereign's \"animar as imagens geradas 5-8s cada\" \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Deterministic pan/zoom over a single still \u2192 an animated 9:16 clip via FFmpeg zoompan. ZERO paid API \u2014 the free\n// substitute for neural i2v (Higgsfield DoP/Kling/Seedance), which stay as the paid opt-in. Upscale 2\u00d7 first so\n// zoompan's integer stepping stays smooth (documented anti-jitter trick).\nexport interface KenBurnsSpec {\n  image: string;               // absolute path to the still to animate\n  duration_s?: number;         // default 6 (the 5-8s range)\n  fps?: number;                // default 30\n  width?: number;              // 1080\n  height?: number;             // 1920 \u2192 9:16\n  zoom?: 'in' | 'out';         // default 'in'\n  max_zoom?: number;           // default 1.25\n}\n\nexport async function encodeKenBurns(spec: KenBurnsSpec, outPath: string): Promise<RenderResult> {\n  const started = Date.now();\n  const img = resolve(spec.image);\n  if (!existsSync(img)) throw new Error(`encodeKenBurns: missing image ${img}`);\n  const fps = spec.fps ?? 30;\n  const dur = spec.duration_s ?? 6;\n  const W = spec.width ?? 1080;\n  const H = spec.height ?? 1920;\n  const totalFrames = Math.round(dur * fps);\n  const maxZoom = spec.max_zoom ?? 1.25;\n  const step = (maxZoom - 1) / totalFrames;\n  // Ramp 1 \u2192 maxZoom (in) or maxZoom \u2192 1 (out) across the clip; `on` = output frame index (deterministic).\n  const zExpr = (spec.zoom ?? 'in') === 'in'\n    ? `min(zoom+${step.toFixed(6)},${maxZoom})`\n    : `max(${maxZoom.toFixed(6)}-on*${step.toFixed(6)},1.0)`;\n  const vf =\n    `scale=${W * 2}:${H * 2},` +\n    `zoompan=z='${zExpr}':d=${totalFrames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${W}x${H}:fps=${fps},` +\n    `setsar=1`;\n  await runFfmpeg([\n    '-y',\n    '-loop', '1', '-i', img,\n    '-t', String(dur),\n    '-vf', vf,\n    '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',\n    '-pix_fmt', 'yuv420p', '-r', String(fps),\n    '-movflags', '+faststart', '-map_metadata', '-1',\n    outPath,\n  ]);\n  if (!existsSync(outPath) || statSync(outPath).size < 1024) throw new Error('encodeKenBurns: output missing or too small');\n  const probed = await ffprobeVideo(outPath);\n  return {\n    outPath,\n    bytes: statSync(outPath).size,\n    width: probed.width,\n    height: probed.height,\n    frames: probed.frames,\n    fps: probed.fps,\n    durationMs: Date.now() - started,\n  };\n}\n\n// \u2500\u2500 Studio-project render (FR-VS-047 \u2192 FR-VS-050 native, SDD \u00a7VS-UI-C) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:54:55)*
+
+
+## 🤖 Claude *(05:55:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "  // Free \"frames \u2192 video\" mode: --images a.png,b.png,c.png [--sec 2.5] (Sovereign vision \u2014 HyperFrames joins pre-made frames)\n  const imagesArg = get('images');\n  const runner = imagesArg\n    ? encodeImageSequence(",
+  "new_string": "  // Free image-to-video: --kenburns img.png [--kbdur 6] [--zoom in|out] (deterministic pan/zoom, US$0)\n  const kbArg = get('kenburns');\n  // Free \"frames \u2192 video\" mode: --images a.png,b.png,c.png [--sec 2.5] (Sovereign vision \u2014 HyperFrames joins pre-made frames)\n  const imagesArg = get('images');\n  const runner = kbArg\n    ? encodeKenBurns(\n        {\n          image: kbArg,\n          duration_s: Number(get('kbdur', '6')),\n          zoom: (get('zoom', 'in') as 'in' | 'out'),\n          fps: Number(get('fps', '30')),\n        },\n        out,\n      )\n    : imagesArg\n    ? encodeImageSequence("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(05:55:09)*
+
+
+## 🤖 Claude *(05:55:10)*
+
+Provando Ken Burns com um frame de conteúdo real (testsrc2, pra o zoom ser estruturalmente visível):
+
+## 🤖 Claude *(05:55:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad\"\nffmpeg -y -loglevel error -f lavfi -i testsrc2=s=1080x1920:d=1 -frames:v 1 \"$SCRATCH/tp.png\"\necho \"=== Ken Burns i2v (novo, gr\u00e1tis, zoom-in 6s) ===\"\nbun run scripts/hyperframes/render-core.ts --kenburns \"$SCRATCH/tp.png\" --kbdur 6 --zoom in --out \"$SCRATCH/kb-proof.mp4\"\necho \"=== ffprobe ===\"\nffprobe -v error -show_entries stream=codec_name,width,height,nb_frames,r_frame_rate,duration -of default=noprint_wrappers=1 \"$SCRATCH/kb-proof.mp4\"",
+  "description": "Material proof of Ken Burns free image-to-video"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Ken Burns i2v (novo, grátis, zoom-in 6s) ===
+> {
+>   "outPath": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/kb-proof.mp4",
+>   "bytes": 1988098,
+>   "width": 1080,
+>   "height": 1920,
+>   "frames": 180,
+>   "fps": 30,
+>   "durationMs": 11445
+> }
+> ✅ rendered 180 frames → /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/scratchpad/kb-proof.mp4 (1942 KB, 11445ms)
+> === ffprobe ===
+> codec_name=h264
+> width=1080
+> height=1920
+> r_frame_rate=30/1
+> duration=6.000000
+> nb_frames=180
+> ```
+
+## 🤖 Claude *(05:56:06)*
+
+
+## 🤖 Claude *(05:56:08)*
+
+**Trilogia de vídeo grátis completa e provada.** Ken Burns i2v funciona:
+
+| Métrica | Valor (ffprobe real) |
+|---------|----------------------|
+| testsrc2 → | **6.0s · 180 frames · 1080×1920 · h264 · 30fps** ✅ |
+| Tamanho | 1.9 MB (movimento real, não frame estático) |
+| Render | ~11s · **US$ 0** |
+
+Committando:
+
+## 🤖 Claude *(05:56:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/hyperframes/render-core.ts && git commit -q -m \"feat(hyperframes): encodeKenBurns \u2014 image-to-video 5-8s gratis (FFmpeg zoompan)\n\nO 'animar as imagens geradas 5-8s' da visao Sovereign, gratis. Pan/zoom deterministico\nsobre 1 still -> clipe 9:16 animado; substituto gratis do i2v neural (Higgsfield DoP/Kling/\nSeedance ficam como opt-in pago). Upscale 2x anti-jitter, ramp de zoom in/out. Modo CLI\n--kenburns. Prova material: testsrc2 -> 6.0s 1080x1920 30fps 180 frames, 1.9MB, US 0.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit encodeKenBurns primitive"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m2:56AM[0m [32mINF[0m 1 commits scanned.
+> [90m2:56AM[0m [32mINF[0m scan completed in 9.75ms
+> [90m2:56AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.23 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.22 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 8c7141d2f3a2364bddfb3435f6d1f9de54be0f93 feat(hyperframes): encodeKenBurns — image-to-video 5-8s gratis (FFmpeg zoompan)
+> ```
+
+## 🤖 Claude *(05:56:50)*
+
+
+## 🤖 Claude *(05:56:51)*
+
+Selado `8c7141d`. Re-armo o loop com a missão atualizada (módulo validado → resta o wiring edge, que precisa de `/security-review`):
+
+## 🤖 Claude *(05:57:02)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "M\u00f3dulo de v\u00eddeo gr\u00e1tis VALIDADO (3 provas materiais). Loop segue p/ o wiring edge (Step 4, precisa /security-review). Fallback 20min; budget renovou.",
+  "prompt": "Loop aut\u00f4nomo \u2014 m\u00f3dulo de v\u00eddeo gr\u00e1tis VALIDADO (3 provas materiais nesta sess\u00e3o: (a) template render 337KB/4s 1080x1920, motor existente; (b) encodeImageSequence commit 714e144 = frames\u2192v\u00eddeo 6.03s, ~20x mais r\u00e1pido que o template-screenshot; (c) encodeKenBurns commit 8c7141d = image-to-video 6s pan/zoom). PR\u00d3XIMO = Step 4 WIRING (a parte de INTEGRA\u00c7\u00c3O que toca edge fn \u2192 /security-review OBRIGAT\u00d3RIO antes de qualquer commit de edge/migration): (1) dar ao n\u00f3 'Imagem \u2192 V\u00eddeo' (canvas-execute:70 imageToVideo) um ENGINE GR\u00c1TIS 'kenburns' ao lado dos pagos (Higgsfield DoP/Kling/Seedance) \u2014 provider/engine tipo 'ffmpeg-kenburns', custo 0 mco, despacha pro video-bridge via fila video_renders com composition={mode:'kenburns',image_key,duration_s,zoom}; adicionar no video-bridge.ts um branch que chama encodeKenBurns/encodeImageSequence de render-core quando composition.mode==='kenburns'|'image_sequence' (hoje s\u00f3 trata RenderSpec/StudioProjectSpec). (2) n\u00f3 Spaces 'Sequ\u00eancia \u2192 V\u00eddeo' (ou estender Imagem\u2192V\u00eddeo p/ aceitar N imagens upstream) que coleta os assets upstream owner-scoped e despacha composition.mode='image_sequence'. Cada passo: /security-review no diff de edge + PROVA material (render real ponta-a-ponta via a fila, ffprobe do MP4). DISCIPLINA: 100% gr\u00e1tis \u00e9 o default; motores neurais pagos ficam opt-in expl\u00edcito. DEPOIS do v\u00eddeo us\u00e1vel no Spaces: a migration OTD-SPACES-036 (space_publish_variants, op\u00e7\u00e3o b j\u00e1 aprovada). Se precisar de decis\u00e3o de UX do Sovereign (n\u00f3 novo 'Sequ\u00eancia\u2192V\u00eddeo' vs toggle no Imagem\u2192V\u00eddeo), propor recomenda\u00e7\u00e3o e seguir \u2014 ele redireciona se quiser. Antes de mexer, orientar via git log --oneline -8 (os 3 primitivos j\u00e1 existem em render-core.ts). Commits granulares sem Co-Authored-By; nunca fabricar prova (Lei 1); se travar em GO do Sovereign, reportar honesto."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 03:18:00 (in 1257s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(05:57:12)*
+
+
+## 🤖 Claude *(05:57:30)*
+
+Módulo de vídeo grátis **validado ponta a ponta** — 3 provas materiais numa sessão, todas US$ 0. Isso é o "validar o módulo e o processo" que você pediu, feito no nível-spike do trabalho isolado.
+
+## O diamante, cortado e provado
+
+| # | Primitivo grátis | Prova material (ffprobe real) | Custo | Render |
+|---|------------------|-------------------------------|-------|--------|
+| 1 | Template (voz+HUD+neon) — **já existia** | 4.0s · 120f · 1080×1920 h264 | US$0 | 69s |
+| 2 | **`encodeImageSequence`** (frames→vídeo) `714e144` | 6.03s · 181f · 1080×1920 | US$0 | **3.1s** |
+| 3 | **`encodeKenBurns`** (image→vídeo 5-8s) `8c7141d` | 6.0s · 180f · 1080×1920 · motion real 1.9MB | US$0 | 11s |
+
+**O insight que mata sua dor de "dev pesado/lento":** a arquitetura que você intuiu — *nó gera frames → HyperFrames junta via FFmpeg* — não é só grátis, é **~20× mais rápida** (3s vs 69s). Você desenhou a via rápida de cabeça. E o `--images`/`--kenburns` são CLIs reais no `render-core.ts`, testáveis agora.
+
+## O que ficou (honesto, Lei 1)
+
+- **Falta o wiring** — plugar esses motores grátis no nó "Imagem → Vídeo" do Spaces + o branch no `video-bridge`. **Isso é integração que toca edge fn → exige `/security-review`.** É o Step 4, e é o que o loop pega agora (acorda 03:18). Design que vou seguir salvo veto seu: engine grátis `kenburns` como **opção 0-mco** ao lado dos pagos, + um nó **"Sequência → Vídeo"** que junta frames upstream. Os motores neurais pagos (Higgsfield/Kling/Seedance) viram **opt-in**, não o default.
+- **Burocracia demovida** — a migration `space_publish_variants` (OTD-SPACES-036, opção b aprovada) fica pra depois do vídeo usável. Correto pela sua ordem: os vídeos destravam as cadências (social já quase completa).
+
+## Onde você entra
+
+Os 3 MP4 de prova estão no scratchpad (temp). O próximo valor **visível e tocável** seria eu rodar um **exemplo real da marca** que você assiste — mas pra isso preciso de **1 imagem real** (um frame gerado no Spaces, ou uma que você me dê): dela eu gero um Ken Burns de 6s + um `encodeImageSequence` de 3-4 frames, e você vê o diamante rodando de verdade, não com testsrc.
+
+Quer me mandar/apontar uma imagem pra eu renderizar o exemplo real agora, ou deixo o loop seguir direto pro wiring do nó no Spaces?
+
+## 👤 User *(05:58:37)*
+
+Não consegui ver os videos
+
+## 🤖 Claude *(05:59:56)*
+
+
+## 🤖 Claude *(05:59:59)*
+
+Faz sentido — os MP4 estão num diretório temporário do servidor (`scratchpad`), que você não tem como abrir. Erro meu: prova material ≠ prova que **você** consegue ver. Vou te entregar os 3 vídeos tocáveis **inline**, num Artifact na claude.ai (vídeo embutido, sem link pra caçar). Deixa eu calibrar o design primeiro:
+
+## 🤖 Claude *(05:59:59)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "artifact-design"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: artifact-design
+> ```
+
+## 👤 User *(06:00:00)*
+
+Approach this as the design lead at a small studio known for their versatility, giving every client a visual identity pitched at the treatment the task actually calls for. Make deliberate choices about palette, typography, and layout that are specific to this subject, and avoid templated designs.
+
+## Read the request first
+
+Calibrate treatment, not whether to design. A doc deserves the same craft as a landing page — what changes is the treatment that craft is delivered in.
+
+Many requests call for a more utilitarian treatment: a plan, a memo, a demo. Make it polished: include real typographic hierarchy, considered spacing, and a proper palette, but avoid over-designing. Most pages do not need a flashy, gigantic hero. Keep flourishes tasteful and limited.
+
+Some requests call for an editorial treatment: a landing page, a game, an app or tool they'll keep or share.
+
+When unsure: a well-composed page is never the wrong answer; an over-designed visual identity sometimes is.
+
+Fundamentals below apply to everything. The editorial process after that runs only when the read above says so.
+
+## Fundamentals for every artifact
+
+**Honor what's already there** Look for an existing design system first — CLAUDE.md, a tokens or theme file, existing component styles. When one exists, apply it; everything below fills gaps and never overrides. Precedence is always: the user's own words, then the project's existing system, then your choices.
+
+**Ground it in the subject.** If the subject isn't already clear, pin it: one concrete subject, its audience, and the page's single job. The subject's own world — its materials, instruments, vernacular — is where distinctive choices come from. Build with real content throughout, never lorem.
+
+**Pair typefaces** Typography carries the page even when the page isn't about typography. The Artifact CSP blocks font CDNs, so don't link a webfont URL and risk a silent fallback. Instead inline the face as a @font-face data URI. Keep running text near 65 characters wide; set a type scale and stay on it; give headings `text-wrap: balance`, body text room to breathe, and uppercase labels a touch of letter-spacing.
+
+**Choose neutrals, don't default to them.** A pure mid-grey reads as unconsidered; a grey with a slight hue bias toward the page's accent reads as chosen. Pure white and near-black are fine grounds when they suit the subject — the point is that the neutral was picked, not inherited.
+
+**Design both themes.** The page renders in the viewer's theme: `prefers-color-scheme` carries the OS preference, and the viewer's toggle stamps `data-theme="dark"` / `data-theme="light"` on the root element, which must override the media query in both directions. The robust pattern is token-level: define the palette as custom properties on `:root`, redefine only the tokens under `@media (prefers-color-scheme: dark)` — style components through the tokens, never directly inside the media query — then redefine them again under `:root[data-theme="dark"]` and `:root[data-theme="light"]`. Give the second theme the same care as the first — don't naively invert; keep contrast legible and the accent working on both grounds. A design that deliberately commits to one visual world (a neon arcade screen, a letterpress invitation) may stay single-theme — make it a choice, not an omission.
+
+**Let layout do the spacing.** Lay out sibling groups with flex or grid and `gap`, not per-element margins that silently collapse or double. Wide content — tables, code, diagrams — gets `overflow-x: auto` on its own container so the page body never scrolls sideways. Reach for `font-variant-numeric: tabular-nums` wherever digits line up in columns.
+
+**Avoid AI-generated design** AI-generated design currently clusters around a few looks: warm cream (#F4F1EA) with a serif display and terracotta accent; near-black with a lone acid-green or vermilion pop; broadsheet hairline rules with dense columns; a purple-to-blue gradient hero on white; Inter or Space Grotesk as the "safe" face; emoji as section markers; everything centered; `rounded-lg` everywhere; accent bar/rail on rounded cards. Where the user pins down a visual direction, follow it exactly — their words always win, including when they ask for one of these looks. Where nothing is specified, don't spend that freedom on one of these defaults.
+
+**Build cleanly** Be cognizant of overlapping elements, cascade collisions, silent font fallbacks; visual bugs hide in the gap between source and output. Close every non-void element, double-quote attributes, give keyboard focus a visible state, respect `prefers-reduced-motion`. For generative or decorative graphics, reach for Canvas or WebGL rather than hand-authoring long SVG path data.
+
+**CSS rules** When writing the CSS, watch your selector specificities. It is easy to generate classes that cancel each other out — a type-based selector like `.section` fighting an element-based one like `.cta` over padding and margins between sections. Structure the cascade so it doesn't silently undo your spacing.
+
+**Writing the copy** Words are design material, not decoration. Write from the user's side of the screen — name things by what people recognize, not how the system is built (a person manages *notifications*, not *webhook config*). Active voice; a control says exactly what happens ("Publish", then a toast that says "Published"). Errors explain what went wrong and how to fix it — no apologies, no vagueness. Specific beats clever.
+
+**Structure is information** Structural devices, numbering, eyebrows, dividers, labels, should encode something true about the content, not decorate it. Many generic designs use numbered markers (01 / 02 / 03), but that's only appropriate if the content actually is a sequence - like a real process or a typed timeline where order carries information the reader needs. Question if choices like numbered markers actually make sense before incorporating them.
+
+**When it's a UI, not a document** A dashboard or tool is scanned and operated, not read top-to-bottom, so the craft shifts from typography to information design. Surface the summary before the detail; encode state in form as well as number — a pill, a chip, a severity stripe — so what needs attention reads at a glance. Semantic color (good / warning / critical) is separate from the accent hue and doesn't count as your accent. Give sparklines and charts the same care as type: an area fill, a faint grid, an emphasized endpoint. What's interactive should look interactive.
+
+
+
+## Process
+
+Before writing code, sketch a short design plan — a compact token system with color, type, and layout:
+- **Color**: describe the palette as 4–6 named hex values.
+- **Type**: typefaces for 2+ roles — a characterful display face used with restraint, a complementary body face, and a utility face for captions or data if needed.
+- **Layout**: a layout concept in one or two sentences.
+
+Then build, following the plan and deriving every color and type decision from it.
+
+## When the request is editorial
+
+The stance shifts: the client has already rejected proposals that felt templated, and is paying for a distinctive point of view. Make opinionated calls, and take one real aesthetic risk where it serves the work.
+
+Review the design plan against the subject before building: if any part of it reads like the generic default you would produce for any similar page, revise that part, and note what you changed and why. Only after you've confirmed the plan's uniqueness do you write the code, following the revised plan exactly.
+
+**Principles** 
+
+- The hero is a thesis: open with the most characteristic thing in the subject's world — headline, image, live demo, interactive moment. 
+- Typography carries the personality of the page. Pair the display and body faces deliberately, not the same families you would reach for on any other project, and set a clear type scale with intentional weights, widths, and spacing. Make the type treatment itself a memorable part of the design, not a neutral delivery vehicle for the content. 
+- Leverage motion deliberately. Think about where and if animation can serve the subject: a page-load sequence, a scroll-triggered reveal, hover micro-interactions, ambient atmosphere. An orchestrated moment usually lands harder than scattered effects; choose what the direction calls for. However, sometimes less is more, and extra animation contributes to the feeling that the design is AI-generated. 
+- Match complexity to the vision. Maximalist directions need elaborate execution; minimal directions need precision in spacing, type, and detail. Elegance is executing the chosen vision well.
+- Spend your boldness in one place; keep everything around it quiet. If the accent fights the ground, shift it toward analogous or drop saturation rather than replacing it.
+
