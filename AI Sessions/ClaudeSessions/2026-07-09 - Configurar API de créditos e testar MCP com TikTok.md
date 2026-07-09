@@ -8001,15 +8001,471 @@ Agora o branch de Landing Page (`post_type=page`) no `publish-wordpress`:
 > The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-wordpress/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
 
----
+## 🤖 Claude *(02:31:50)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Adicionar modelos OpenRouter free ao Telegram]]
-> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(02:31:51)*
+
+Fatia A completa (8 arquivos). tsc + deploy `publish-wordpress` + build:
+
+## 🤖 Claude *(02:31:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -12; echo \"tsc exit: ${PIPESTATUS[0]}\"",
+  "description": "tsc check da Fatia A"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> ```
+
+## 🤖 Claude *(02:31:58)*
+
+
+## 🤖 Claude *(02:31:59)*
+
+tsc 0 (Textarea existe, switches exaustivos satisfeitos). Deploy `publish-wordpress` + build+deploy frontend:
+
+## 🤖 Claude *(02:32:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== deploy publish-wordpress ===\"\nnpx supabase functions deploy publish-wordpress 2>&1 | tail -4; echo \"deploy exit: ${PIPESTATUS[0]}\"\necho \"=== build ===\"\nbun run build 2>&1 | tail -3; echo \"build exit: ${PIPESTATUS[0]}\"\necho \"=== materialidade ===\"\ngrep -rl \"Publicar no WordPress\" dist/assets/ 2>/dev/null && echo \"\u2192 n\u00f3 WordPress BAKED \u2705\" || echo \"\u2192 AUSENTE \u274c\"",
+  "description": "Deploy WP fn + build + materialidade"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy publish-wordpress ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: publish-wordpress
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> deploy exit: 0
+> === build ===
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 28.82s
+> build exit: 0
+> === materialidade ===
+> dist/assets/BlogEditorPage-Cdloliim.js
+> dist/assets/CanvasEditorPage-Bci4kbM8.js
+> → nó WordPress BAKED ✅
+> ```
+
+## 🤖 Claude *(02:33:08)*
+
+
+## 🤖 Claude *(02:33:10)*
+
+Deploy OK, build baked. Prova zero-impacto (não crio conteúdo no WP de produção do Sovereign sem GO — ação outward-facing): guard de campos obrigatórios reachable.
+
+## 🤖 Claude *(02:33:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=\"$VITE_SUPABASE_URL\"; ANON=\"$SB_PUBLISHABLE_KEY\"\nTOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com 2>/dev/null)\necho \"=== publish-wordpress reachable + guard de campos (page branch deployado) ===\"\ncurl -s \"$URL/functions/v1/publish-wordpress\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"apikey: $ANON\" -H \"Content-Type: application/json\" \\\n  -d '{\"post_type\":\"page\",\"title\":\"\",\"content\":\"\"}' -w \"\\nHTTP %{http_code}\\n\"",
+  "description": "publish-wordpress reachable + guard (page branch)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publish-wordpress reachable + guard de campos (page branch deployado) ===
+> {"error":"title and content são obrigatórios"}
+> HTTP 400
+> ```
+
+## 🤖 Claude *(02:33:24)*
+
+
+## 🤖 Claude *(02:33:25)*
+
+Guard reachable (400) — a fn + branch de page estão deployados. Witness de criação real de página = ação do Sovereign (conteúdo no WP de produção dele). Selando **Fatia A**:
+
+## 🤖 Claude *(02:33:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/types/canvas.ts src/lib/canvas-node-registry.ts src/components/canvas/AddNodeMenu.tsx \\\n        src/components/canvas/nodes/PublishWordpressNode.tsx \\\n        src/components/canvas/RightPanel/index.tsx \\\n        src/components/canvas/RightPanel/inspectors/PublishWordpressInspector.tsx \\\n        src/pages/CanvasEditorPage.tsx \\\n        supabase/functions/publish-wordpress/index.ts\ngit commit -q -F - <<'EOF'\nfeat(spaces): n\u00f3 \"Publicar no WordPress\" \u2014 1\u00ba grupo de n\u00f3s sociais (Am15 Fatia A)\n\nPrimeiro n\u00f3 de publica\u00e7\u00e3o do Spaces: categoria \"Publish\" no registry VIVO (canvas-node-\nregistry) + n\u00f3 sink que publica o conte\u00fado do Space como Post OU Landing Page no WordPress\ndo usu\u00e1rio. Escolhi WordPress como Fatia A porque publish-wordpress aceita {title,content,\nstatus} DIRETO \u2014 sem o acoplamento pillar_run_id NOT NULL que trava o caminho media-social\nvia channel_variants (achado material desta sess\u00e3o; capturado como OTD em Am15).\n\n- CanvasNodeKind publishWordpress + PublishWordpressData + factory + resolveExecutePayload\u2192null\n  (sink, n\u00e3o passa por canvas-execute) + estimateNodeCost 0 + guard.\n- N\u00f3 (s\u00f3 input handle, embute imagem upstream do Spaces como <figure>) + inspector\n  (t\u00edtulo/conte\u00fado HTML/tipo Post|Landing/status Rascunho|Publicar + bot\u00e3o + link do post).\n- publish-wordpress ganha post_type=page (FR-SPACES-034 \u2192 POST /wp/v2/pages); Post e Landing\n  Page cobertos (2 dos 3 subtipos WP que o Sovereign listou).\n- Default RASCUNHO opt-in (HITL, FR-SPACES-039); publish ao vivo s\u00f3 sob toggle expl\u00edcito.\n\ntsc 0 \u00b7 deploy publish-wordpress \u00b7 build+deploy (n\u00f3 baked). Guard reachable (400 campos\nobrigat\u00f3rios). Witness de p\u00e1gina real = a\u00e7\u00e3o do Sovereign (conte\u00fado no WP de produ\u00e7\u00e3o).\nEOF\ngit log --oneline -1",
+  "description": "Commit Fatia A (n\u00f3 WordPress)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:33PM[0m [32mINF[0m 1 commits scanned.
+> [90m11:33PM[0m [32mINF[0m scan completed in 10.1ms
+> [90m11:33PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.12 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 07689e2 feat(spaces): nó "Publicar no WordPress" — 1º grupo de nós sociais (Am15 Fatia A)
+> ```
+
+## 🤖 Claude *(02:33:42)*
+
+
+## 🤖 Claude *(02:33:44)*
+
+Fatia A selada (`07689e2`). Preciso registrar em Am15 o **achado material do blocker** (channel_variants pillar-acoplada) que mencionei no commit — para o próximo arco começar informado. Adicionando a OTD:
+
+## 🤖 Claude *(02:33:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md",
+  "old_string": "| **OTD-SPACES-035-CROSSPOST-GUARD** | N\u00e3o repostar id\u00eantico cross-canal | Reusa a reescrita nativa FR-CP-007 do `reshape-pillar`; n\u00f3 nunca posta a mesma c\u00f3pia em N canais. | engineer | compliance de alcance |",
+  "new_string": "| **OTD-SPACES-035-CROSSPOST-GUARD** | N\u00e3o repostar id\u00eantico cross-canal | Reusa a reescrita nativa FR-CP-007 do `reshape-pillar`; n\u00f3 nunca posta a mesma c\u00f3pia em N canais. | engineer | compliance de alcance |\n| **OTD-SPACES-036-CV-PILLAR-COUPLING** | `channel_variants.pillar_run_id` \u00e9 **NOT NULL** (FK a `pipeline_runs`) \u2014 os n\u00f3s **media-social** (IG/TikTok/YouTube) N\u00c3O podem inserir um variant sem um pillar_run. | **Aberto \u2014 bloqueia a Fatia B media-social.** Achado material 2026-07-08 (`git show 07689e2`). Op\u00e7\u00f5es: (a) migration tornando `pillar_run_id` nullable + relaxar a UNIQUE p/ origem Spaces (toca tabela FMEA-011 \u2014 /security-review); (b) tabela dedicada `space_publish_variants` espelhando o padr\u00e3o owner-scoped de asset + estender `auto-publish` p/ resolv\u00ea-la; (c) pillar sint\u00e9tico por publish. **Decis\u00e3o pendente Sovereign/design** \u2014 N\u00c3O improvisar. WordPress (Fatia A) escapou por publicar direto (`publish-wordpress`, sem channel_variants). | engineer + Sovereign | arquitetura load-bearing (FMEA-011) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:34:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md\ngit commit -q -m \"docs(bok): Am15 OTD-SPACES-036 \u2014 channel_variants pillar-coupling bloqueia media-social (achado da Fatia A)\" 2>&1 | grep -v \"^\u2503\\|^\u2591\\|^ *\u25cb\\|^ *\u2502\\|gitleaks\\|lefthook\\|summary:\\|\u2714\ufe0f\\|\u2500\u2500\u2500\u2500\\|INF\\|scan\\|^\\[\" | tail -2\necho \"=== medidor de janela ===\"\nbun run .claude/scripts/session-inspect.ts 2>&1 | grep -E \"Janela de contexto|\u2588|usado|Veredito\" | head -6",
+  "description": "Commit OTD + mede janela"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> 
+> === medidor de janela ===
+>    Janela de contexto (Lei 3):
+>    [██████████████████████░░░░░░░░░░░░░░░░|░░] 53.8%   (| = teto de seal 95%)
+>    usado 538k / 1000k  ·  livre 462k  ·  custo do seal ~50k
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> ```
+
+## 🤖 Claude *(02:37:45)*
+
+
+## 🤖 Claude *(02:37:57)*
+
+**Janela: 53,8%** — folga larga até seu alvo de 85%. Mas cheguei a um ponto de decisão honesto: os próximos itens grandes esbarram em coisas que são genuinamente suas (ou precisam de um witness só você produz). Deixa eu te dar o mapa antes de gastar o resto da sessão na direção errada.
+
+**Entregue e provado nesta sessão (6 commits, tudo material):**
+- ✅ **TikTok connect vivo** (DB: `video.publish`, token válido).
+- ✅ **Higgsfield Platform testável** (botão "Testar" custo-zero) + card MCP honesto sobre assinatura.
+- ✅ **LoRA grátis (foco #1) — treino REAL wired + provado**: `handleTrain` engine-aware + default LoRA · Amendment 11 (substrato grounded, 30 fontes, fecha OTD-AC-017) · edge fn `avatar-identity-train` (Replicate BYOK, USD 0, deployada) · migration aplicada · **plumbing 100% provado zero-custo** (guards + a chave Replicate do User 0 autentica, versão viva `26dce37af90b`).
+- ✅ **1º nó social — "Publicar no WordPress"** (Post + Landing Page) + Amendment 15 (família de nós sociais).
+
+**Onde parei (blockers reais, não improviso):**
+- **Nós media-social (IG/TikTok/YT):** `channel_variants.pillar_run_id` é NOT NULL (acoplada ao pipeline PILLAR) → precisa de uma **decisão de schema sua** (OTD-SPACES-036) antes de eu tocar essa tabela FMEA-011.
+- **Completar o LoRA (gerar com a identidade):** buildável, mas só **validável depois que você treinar um LoRA real** (~30 min na sua conta Replicate) — não quero shipar código no caminho crítico de geração sem witness (Lei 1).
+- **YouTube Studio:** é módulo novo → BoK antes do código.
+
+Como você armou o loop pra ir até ~85%, prefiro te deixar escolher a direção do resto:
+
+## 🤖 Claude *(02:38:04)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como direciono o resto da sess\u00e3o (rumo ao Spaces 100%)?",
+      "header": "Pr\u00f3ximo passo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "YouTube Studio \u2014 BoK do m\u00f3dulo",
+          "description": "Deepsearch + blueprint do studio faceless/avatar (roteiro\u2192voz\u2192b-roll\u2192lipsync\u2192montagem multi-cena\u2192legendas\u2192thumb\u2192publish), grounded nos blocos que j\u00e1 existem. Aut\u00f4nomo, sem gasto, sem witness pendente. \u00c9 o ask #3 e \u00e9 o caminho que consigo levar sozinho at\u00e9 ~85%."
+        },
+        {
+          "label": "N\u00f3s media-social (decidir OTD-036)",
+          "description": "Voc\u00ea escolhe: (a) migra\u00e7\u00e3o tornando channel_variants.pillar_run_id nullable p/ origem Spaces, OU (b) tabela dedicada space_publish_variants + estender auto-publish. A\u00ed fa\u00e7o o fan-out dos n\u00f3s Instagram/TikTok/YouTube (Fatia B)."
+        },
+        {
+          "label": "Completar o LoRA (gerar com a identidade)",
+          "description": "Wire o generateImage p/ usar o LoRA treinado (Replicate flux-dev-lora on-platform, gr\u00e1tis via seu BYOK). C\u00f3digo sai pronto, mas o witness E2E exige voc\u00ea treinar um LoRA real primeiro (~30 min, ~US$1,85 na sua conta Replicate)."
+        },
+        {
+          "label": "Selar a sess\u00e3o aqui",
+          "description": "Fecho com /handoff o que j\u00e1 est\u00e1 provado (LoRA gr\u00e1tis + n\u00f3 WordPress + 2 emendas BoK) e retomamos no pr\u00f3ximo arco com sua decis\u00e3o de schema."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como direciono o resto da sessão (rumo ao Spaces 100%)?"="YouTube Studio — BoK do módulo". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(02:39:06)*
+
+
+## 🤖 Claude *(02:39:08)*
+
+Ótimo — **YouTube Studio BoK** é o caminho autônomo e desbloqueado. Vou acionar o `/deepsearch-blueprint` para o módulo `youtube-studio`, fundamentado nos blocos que já existem (mapeados no `wf_56638299-cf0`) + suas diretivas (persona Gabriel AI, faceless nativo, avatar-clone lipsync).
+
+## 🤖 Claude *(02:39:25)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "deepsearch-blueprint",
+  "args": "M\u00f3dulo novo: youtube-studio \u2014 transformar o Spaces num studio de YouTube que produz v\u00eddeos faceless E com avatar AI clone (lipsync). Diretiva Sovereign 2026-07-08 (\"preparar o Spaces para organizar e ser um studio para youtube faceless ou com avatar AI clone/lipsync\"). Slug: youtube-studio (docs/bok/youtube-studio/00-deepsearch-blueprint.md).\n\nFundamentar em deepsearch (toda claim com URL \u2014 Lei 1) as frentes onde o MCORCH tem GAP, reusando o que j\u00e1 existe (n\u00e3o repesquisar o que est\u00e1 wired):\n\nJ\u00c1 EXISTE no MCORCH (reusar, n\u00e3o repesquisar \u2014 grounded em wf_56638299-cf0): gera\u00e7\u00e3o de roteiro (generate-video-script Gemini/OpenRouter BYOK); 2 caminhos de voz (voice-over Gemini TTS gen\u00e9rico + generate-voice clonado ElevenLabs/Cartesia BYOK, com consent LGPD); 3 caminhos de v\u00eddeo (Higgsfield DoP i2v, Veo/Seedance, motor determin\u00edstico HyperFrames render-core Playwright+FFmpeg 9:16/16:9 via video-bridge worker); upload YouTube resumable (publish-social videos.insert, scope youtube.upload); avatar identidade LoRA (avatar-identity-train rec\u00e9m-constru\u00eddo nesta sess\u00e3o). O engine 'faceless' do video-render est\u00e1 503-gated (nunca constru\u00eddo; a receita n8n de 12 est\u00e1gios \u00e9 spec-only em .claude/context/faceless-pipeline-reference-2026-06-25.md).\n\nGAPS a fundamentar com pesquisa externa: (1) montador multi-cena faceless nativo \u2014 melhor arquitetura para encadear N cenas (imagem\u2192i2v\u2192narra\u00e7\u00e3o) + concat FFmpeg + overlay; (2) motor de lipsync/talking-head \u2014 providers (Hedra, OmniHuman, Kling, Sora, fal) com contratos/custos/LICEN\u00c7AS comerciais (cr\u00edtico: replicar o rigor de licen\u00e7a que fizemos no LoRA); (3) YouTube Data API v3 \u2014 specs/scopes para Shorts, Community posts, Members/membership, al\u00e9m do upload que j\u00e1 temos; (4) legendas queimadas (ASS/karaoke) determin\u00edsticas; (5) thumbnail 16:9 (t\u00edtulo+face+A/B); (6) o gap de render 16:9 long-form (HyperFrames \u00e9 9:16-only hoje).\n\nEscopo do produto: brand-first (persona Gabriel AI/CCIO evangeliza), USD-externo-0 por padr\u00e3o (open-source/BYOK; providers pagos s\u00f3 sob GO), faceless E avatar-clone como dois modos do mesmo studio. Beachhead: o pr\u00f3prio Usu\u00e1rio Zero produzindo o canal do Gabriel AI. Reportar em PT-BR executivo; pensar em ingl\u00eas."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: deepsearch-blueprint
+> ```
+
+## 👤 User *(02:39:25)*
+
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/deepsearch-blueprint
+
+# Skill: deepsearch-blueprint — Semente de BoK com prova de pesquisa
+
+O blueprint é a **Fonte da Verdade verificada** que alimenta o `/bok-scribe` sem improviso.
+SOP autoritativa: `docs/processes/deepsearch-blueprint.md`. Nenhum código antes da BoK (Closed-Loop).
+
+## Estrutura do workflow (provada 2×)
+
+```
+pipeline(frentes 4-6)            → pesquisa web com regras duras de materialidade
+  └─ verify adversarial/frente   → refutar top claims com fontes INDEPENDENTES
+parallel: repo-mapping read-only → runtime/auth/billing/mesh + assets a reusar (path:line)
+barreira → completeness critic   → critical_gaps ≤6 com suggested_search
+gap-fill ≤4                      → gaps não preenchidos VIRAM OTDs (nunca silêncio)
+síntese                          → doc completo PT-BR, 10 seções (ver SOP)
+main loop                        → Write docs/bok/<slug>/00-deepsearch-blueprint.md
+```
+
+Regras de materialidade nos prompts (verbatim do SOP): toda claim com URL consultada;
+sem fonte → `could_not_verify`; claims refutadas NÃO aparecem como fato (versão corrigida);
+não-verificáveis marcadas `⚠️`; NUNCA fabricar nome/versão/número/lei.
+
+## Emendas (v0.x+1)
+
+1. **Backup primeiro:** `cp <doc> /tmp/blueprint-vX-backup.md && md5sum` (doc ainda não commitado!).
+2. Pesquisa só das frentes novas (+verify) → merge agent lê o doc atual e devolve o
+   **documento COMPLETO como superset** (IDs OTD/FM estáveis; renames intencionais declarados).
+3. **Gate de superset mecânico antes de gravar:** headers antigos todos presentes ·
+   0 OTD/FM perdidos · 0 URLs perdidas · bytes crescem. Só então sobrescrever.
+
+## Recovery (genérico para QUALQUER workflow)
+
+- Session-limit matou agentes → `Workflow({scriptPath, resumeFromRunId})`: cache do journal
+  re-entrega os completos, só os mortos re-rodam. NUNCA recomece do zero.
+- Agente morreu no meio de edição de arquivo → `diff` vs backup; edição parcial (ex.: só bump
+  de header) → restaurar backup limpo ANTES do resume.
+- Resultado do workflow vem em `/tmp/.../tasks/<id>.output` (JSON `{result:{markdown,...}}`)
+  — extrair com python, checar `&gt;/&lt;/&amp;` == 0 (escape é da notificação, não do arquivo).
+
+## Self-check antes de reportar SUCCESS (Lei 1)
+- [ ] `ls -la` + `wc -l` + `md5sum` do arquivo citados literais?
+- [ ] 0 claims refutadas no doc final; gaps não preenchidos estão na seção OTDs?
+- [ ] (Emenda) gate de superset rodou e passou com números?
+- [ ] Ofereci o próximo passo `/bok-scribe <slug>` + deixei o commit para GO/handoff?
+
+
+ARGUMENTS: Módulo novo: youtube-studio — transformar o Spaces num studio de YouTube que produz vídeos faceless E com avatar AI clone (lipsync). Diretiva Sovereign 2026-07-08 ("preparar o Spaces para organizar e ser um studio para youtube faceless ou com avatar AI clone/lipsync"). Slug: youtube-studio (docs/bok/youtube-studio/00-deepsearch-blueprint.md).
+
+Fundamentar em deepsearch (toda claim com URL — Lei 1) as frentes onde o MCORCH tem GAP, reusando o que já existe (não repesquisar o que está wired):
+
+JÁ EXISTE no MCORCH (reusar, não repesquisar — grounded em wf_56638299-cf0): geração de roteiro (generate-video-script Gemini/OpenRouter BYOK); 2 caminhos de voz (voice-over Gemini TTS genérico + generate-voice clonado ElevenLabs/Cartesia BYOK, com consent LGPD); 3 caminhos de vídeo (Higgsfield DoP i2v, Veo/Seedance, motor determinístico HyperFrames render-core Playwright+FFmpeg 9:16/16:9 via video-bridge worker); upload YouTube resumable (publish-social videos.insert, scope youtube.upload); avatar identidade LoRA (avatar-identity-train recém-construído nesta sessão). O engine 'faceless' do video-render está 503-gated (nunca construído; a receita n8n de 12 estágios é spec-only em .claude/context/faceless-pipeline-reference-2026-06-25.md).
+
+GAPS a fundamentar com pesquisa externa: (1) montador multi-cena faceless nativo — melhor arquitetura para encadear N cenas (imagem→i2v→narração) + concat FFmpeg + overlay; (2) motor de lipsync/talking-head — providers (Hedra, OmniHuman, Kling, Sora, fal) com contratos/custos/LICENÇAS comerciais (crítico: replicar o rigor de licença que fizemos no LoRA); (3) YouTube Data API v3 — specs/scopes para Shorts, Community posts, Members/membership, além do upload que já temos; (4) legendas queimadas (ASS/karaoke) determinísticas; (5) thumbnail 16:9 (título+face+A/B); (6) o gap de render 16:9 long-form (HyperFrames é 9:16-only hoje).
+
+Escopo do produto: brand-first (persona Gabriel AI/CCIO evangeliza), USD-externo-0 por padrão (open-source/BYOK; providers pagos só sob GO), faceless E avatar-clone como dois modos do mesmo studio. Beachhead: o próprio Usuário Zero produzindo o canal do Gabriel AI. Reportar em PT-BR executivo; pensar em inglês.
+
+## 🤖 Claude *(02:39:41)*
+
+
+## 🤖 Claude *(02:39:42)*
+
+O skill carregou — vou construir o workflow deepsearch conforme o SOP (frentes + verify adversarial → repo-mapping → completeness critic → gap-fill → síntese). Primeiro, a estrutura das 10 seções do doc:
+
+## 🤖 Claude *(02:39:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== estrutura das 10 se\u00e7\u00f5es do blueprint (SOP) ===\"\ngrep -nE \"^\\s*[0-9]+\\.|se\u00e7\u00e3o|Se\u00e7\u00e3o|## |### |OTD|FM-|pilar|Pilar\" docs/processes/deepsearch-blueprint.md | grep -iE \"se\u00e7|pilar|otd|blueprint|## \" | head -40\necho \"---\"\necho \"=== exemplo real: headers do blueprint vision-mcp ===\"\ngrep -nE \"^#{1,3} \" docs/bok/vision-mcp/00-deepsearch-blueprint.md 2>/dev/null | head -30",
+  "description": "Estrutura das se\u00e7\u00f5es do blueprint (SOP + precedente)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === estrutura das 10 seções do blueprint (SOP) ===
+> 15:## Operator
+> 22:## Sequence
+> 37:   - **Gap-fill** (≤4 em paralelo) → gaps não preenchidos viram OTDs, nunca silêncio.
+> 39:     (Sumário honesto · Pilares com veredictos · Arquitetura unificadora · Catálogo de
+> 41:     OTDs · Fatiamento MVP com gates Lei 1 · Apontadores para o BoK).
+> 48:## Verification gates (cada step)
+> 55:| G4 superset (emendas) | script python: headers v_old ⊆ v_new (renames intencionais à parte) · 0 OTD/FM IDs perdidos · 0 URLs perdidas · bytes crescem | tudo zero-perda |
+> 56:| G5 gaps honestos | grep dos `critical_gaps` não preenchidos | todos presentes na seção OTDs |
+> 58:## Recovery path
+> 71:## Success signal
+> ---
+> === exemplo real: headers do blueprint vision-mcp ===
+> 1:# 🧠 MCORCH Vision MCP — Percepção de Essência Humana
+> 15:## 1. Sumário Executivo
+> 17:### O que é
+> 23:### Por que agora
+> 29:### O diferencial — sendo honesto sobre o que a recon do sandcastles.ai estabeleceu
+> 53:## 2. Os 4 Pilares
+> 57:### Pilar I — Computer Vision (CV)
+> 79:### Pilar II — Análise de Movimento (Motion)
+> 92:### Pilar III — Sensores & Computação Neuromórfica (Neuromorphic)
+> 108:### Pilar IV — Visão Periférica / Foveada (Peripheral/Foveated)
+> 119:### Pilar V — Computação Cognitiva
+> 142:## 3. Arquitetura "Essência Humana"
+> 144:### O design unificador: percepção em dois níveis
+> 186:### Como o deepsearch fundamentado alimenta a Knowledge Mesh
+> 190:### O dois-níveis é o órgão de percepção de uma arquitetura cognitiva (CoALA)
+> 212:## 4. Catálogo de Referências Consolidadas
+> 293:## 4-A. Tecnologia Assistiva — vertical de aplicação e evidência de demanda
+> 297:### Evidência de demanda (com números fonteados)
+> 305:### Ângulo regulatório (a outra metade da demanda — compulsão legal)
+> 311:### Quais tools MCP servem o vertical (mapeamento 1:1 a produtos provados)
+> 322:### Dever de cuidado — descrição errada = dano real (sourced)
+> 328:## 5. Arquitetura MCORCH-nativa
+> 332:### 5.1 Runtime recomendado — Container no Sovereign Mesh
+> 343:### 5.2 Auth — API Tenancy per-user (fail-closed)
+> 352:### 5.3 Billing — mcoCoins atômico (modelo 4×-floor)
+> 361:### 5.4 Mesh Connection Mandate
+> 365:### 5.5 Exposição externa — Streamable HTTP + OAuth 2.1
+> 376:## 6. Superfície MCP proposta
+> 380:### Tools (model-controlled — front-door para ecossistemas externos)
+> 401:### Resources (application-driven — progressive enhancement p/ hosts completos)
+> ```
+
+## 🤖 Claude *(02:40:27)*
+
+
+## 🤖 Claude *(02:40:27)*
+
+Estrutura das 10 seções confirmada (precedente vision-mcp). Vou construir o **workflow deepsearch** completo conforme o SOP: 6 frentes de gap (research + verify adversarial) → repo-mapping → completeness critic → gap-fill → síntese do doc PT-BR.
+
+## 🤖 Claude *(02:41:44)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'youtube-studio-blueprint',\n  description: 'Deepsearch-grounded blueprint seed for the youtube-studio module (faceless + avatar-clone YouTube studio inside Spaces)',\n  phases: [\n    { title: 'Research', detail: '6 gap fronts: assembler \u00b7 lipsync-license \u00b7 YT-API \u00b7 captions \u00b7 thumbnail \u00b7 16:9-render \u2014 each web-researched then adversarially verified' },\n    { title: 'Map', detail: 'read-only repo mapping of reusable assets (path:line)' },\n    { title: 'Critic', detail: 'completeness critic \u2192 critical gaps' },\n    { title: 'GapFill', detail: 'fill top gaps; unfilled \u2192 OTDs' },\n    { title: 'Synthesis', detail: 'full PT-BR blueprint (10 sections)' },\n  ],\n}\n\nconst RESEARCH_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['front', 'verified_findings', 'key_facts', 'commercial_license_notes', 'could_not_verify', 'sources'],\n  properties: {\n    front: { type: 'string' },\n    verified_findings: { type: 'string', description: 'detailed markdown; EVERY factual claim cites its source URL inline (Lei 1). No source \u2192 say could_not_verify.' },\n    key_facts: { type: 'array', items: { type: 'string' }, description: 'crisp facts, each ending with its URL' },\n    commercial_license_notes: { type: 'string', description: 'commercial-use/license status of each provider/tool named, with URL (mirror the LoRA rigor)' },\n    could_not_verify: { type: 'array', items: { type: 'string' } },\n    sources: { type: 'array', items: { type: 'string' } },\n  },\n}\nconst VERIFY_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['front', 'refuted_or_corrected', 'corrected_findings', 'additional_sources'],\n  properties: {\n    front: { type: 'string' },\n    refuted_or_corrected: { type: 'array', items: { type: 'string' }, description: 'claims from the research that independent sources refute or correct (empty if all held)' },\n    corrected_findings: { type: 'string', description: 'the corrected/verified findings markdown (refuted claims removed or fixed), URLs inline' },\n    additional_sources: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst FRONTS = [\n  { key: 'assembler', prompt: `Research the best ARCHITECTURE to build a NATIVE faceless multi-scene video assembler (script \u2192 N scenes each [image \u2192 image-to-video \u2192 narration] \u2192 concat + overlay \u2192 final MP4). The MCORCH already has: per-scene image gen, Higgsfield DoP image-to-video, voice (Gemini TTS + cloned ElevenLabs/Cartesia), and a deterministic HyperFrames render-core (Playwright+FFmpeg). GAP = the multi-scene stitching/assembly layer. Research (URL-grounded, Lei 1): (1) FFmpeg concat/xfade patterns for stitching N clips + N narration tracks deterministically (concat demuxer vs filter_complex; audio sync). (2) Open-source programmatic-video frameworks \u2014 Remotion, Revideo, Editly, ffmpeg-python \u2014 their model, license, and fit for a server-side worker. (3) The proven pattern of faceless-channel pipelines (scene-script JSON \u2192 per-scene asset \u2192 narration \u2192 composite \u2192 concat \u2192 captions). Return the recommended assembler architecture + FFmpeg command shapes + framework license notes.` },\n  { key: 'lipsync-license', prompt: `Research LIPSYNC / TALKING-HEAD providers to drive an AI avatar clone (a still portrait OR a base video \u2192 the person speaking the narration). CRITICAL: replicate the commercial-LICENSE rigor we applied to FLUX LoRA \u2014 for EACH provider state the exact commercial-use terms with a URL. Cover: Hedra (Character-3), ByteDance OmniHuman-1, Kling (lip-sync), OpenAI Sora, fal.ai lipsync models, sync.so (Sync Labs), and the open-source LivePortrait / SadTalker / MuseTalk / Wav2Lip. For each: the API contract shape (input image/video + audio \u2192 video), approx cost, wall-clock, hosted-vs-self-host, and \u2014 most important \u2014 COMMERCIAL LICENSE (can outputs be used commercially? open weights license? hosted-API commercial grant like Replicate/BFL?). Return a ranked matrix: provider \u00b7 fidelity \u00b7 cost \u00b7 license verdict \u00b7 self-hostable. Flag any where commercial use is unclear as could_not_verify.` },\n  { key: 'yt-api', prompt: `Research YouTube Data API v3 beyond simple video upload (MCORCH already does videos.insert with scope youtube.upload). GAP fronts (URL-grounded, Lei 1): (1) Shorts \u2014 is a Short just a <=3min 9:16 videos.insert, or is there a distinct API/flag? (2) Community posts \u2014 is there an official API to create channel Community posts (text/image/poll)? What scope? Is it generally available or restricted/allowlisted? (3) Channel Memberships / Members \u2014 the YouTube Member/membership APIs (members.list, membershipsLevels.list): what scopes (youtube.channel-memberships.creator), and can you POST members-only content via API? (4) Playlists/thumbnails (thumbnails.set) scope. (5) Quota costs of each + the OAuth verification / audit requirements for these sensitive scopes. Return per-endpoint: exists? scope? quota? GA vs restricted? Cite the official Google developers docs URLs.` },\n  { key: 'captions', prompt: `Research building DETERMINISTIC burned-in captions (open captions) for faceless/avatar videos \u2014 the ASS/karaoke word-by-word highlight style popular on Shorts/TikTok. URL-grounded (Lei 1): (1) word-level timestamps \u2014 Whisper / faster-whisper / WhisperX for forced alignment from the narration audio (models, license, accuracy). (2) The ASS (Advanced SubStation Alpha) subtitle format for karaoke highlight (\\\\k tags), and how to burn it with FFmpeg (subtitles/ass filter). (3) Alternatives: ffmpeg drawtext, libass styling. (4) Any open-source caption-generator that produces the animated word-pop style deterministically. Return the recommended pipeline (audio \u2192 word timings \u2192 ASS \u2192 FFmpeg burn) + tool licenses + command shapes.` },\n  { key: 'thumbnail', prompt: `Research generating high-CTR YouTube THUMBNAILS (16:9, 1280x720) programmatically. URL-grounded (Lei 1): (1) YouTube thumbnail spec (dimensions, size limit, safe zones). (2) Composition patterns that drive CTR (large face/expression, bold short text, contrast) \u2014 cite creator/analytics sources. (3) Programmatic generation: compositing a generated/portrait image + title text overlay (Sharp, node-canvas, Playwright-render, or an image model with text). (4) A/B thumbnail testing \u2014 does YouTube offer native thumbnail A/B testing (Test & Compare) via API or only in Studio? Return the thumbnail spec + a programmatic composition approach + the A/B-testing reality (API vs manual).` },\n  { key: 'render-16x9', prompt: `The MCORCH HyperFrames render motor (Playwright+FFmpeg, render-core.ts) currently ships a 9:16 vertical template and a 16:9 template but the post-engine BoK flags 16:9 LONG-FORM render as a GAP. Research (URL-grounded, Lei 1) how to render deterministic 16:9 1920x1080 LONG-FORM video (minutes, many scenes) reliably: (1) HTML/CSS/GSAP \u2192 per-frame Playwright screenshot \u2192 FFmpeg is deterministic but SLOW for long-form \u2014 what are the scaling limits and alternatives (Remotion's parallel frame rendering, headless-gl, WebCodecs)? (2) For a faceless multi-scene long-form, is per-frame browser render even the right approach vs FFmpeg-compositing pre-rendered scene clips (the assembler in front 'assembler')? (3) Best practice for long-form deterministic render on a single worker (memory, time, chunking). Return the recommended 16:9 long-form render strategy + why per-scene-clip-concat likely beats per-frame-browser for long-form.` },\n]\n\nphase('Research')\nconst researched = await pipeline(\n  FRONTS,\n  (f) => agent(f.prompt, { label: `research:${f.key}`, phase: 'Research', schema: RESEARCH_SCHEMA, agentType: 'general-purpose' }).then((r) => ({ key: f.key, r })),\n  (prev) => prev && prev.r\n    ? agent(`Adversarially VERIFY this research on \"${prev.key}\". Find claims that INDEPENDENT sources refute or correct (different URLs than cited). Be especially strict on commercial-license claims and API-existence claims (a wrong license or a non-existent endpoint is a real error). Return the corrected findings; remove/fix any refuted claim (Lei 1 \u2014 refuted claims must NOT survive as fact).\\n\\nRESEARCH:\\n${JSON.stringify(prev.r).slice(0, 12000)}`,\n        { label: `verify:${prev.key}`, phase: 'Research', schema: VERIFY_SCHEMA, agentType: 'general-purpose' }).then((v) => ({ key: prev.key, research: prev.r, verify: v }))\n    : null,\n)\nconst fronts = researched.filter(Boolean)\nlog(`Research+verify done: ${fronts.length}/${FRONTS.length} fronts`)\n\nphase('Map')\nconst MAP_SCHEMA = { type: 'object', additionalProperties: false, required: ['reusable_assets', 'runtime_auth_billing', 'notes'], properties: {\n  reusable_assets: { type: 'array', items: { type: 'string' }, description: 'existing MCORCH assets to reuse for the studio, each with path:line' },\n  runtime_auth_billing: { type: 'string', description: 'how runtime/auth(per-user BYOK)/billing(mcoCoins 4x-floor)/mesh apply to this module, grounded in path:line' },\n  notes: { type: 'string' },\n} }\nconst repoMap = await agent(\n  `Read-only repo mapping for the youtube-studio module (/home/gcrUX/htdocs/constellation-orchestra). Confirm with path:line the EXISTING assets to reuse (do NOT re-research these \u2014 they are wired): generate-video-script; voice-over (Gemini TTS) + generate-voice (cloned ElevenLabs/Cartesia); Higgsfield DoP image_to_video in canvas-execute; generate-video (Veo/Seedance); HyperFrames render-core.ts + video-bridge.ts + video-render (engine 'faceless' 503-gated); publish-social YouTube resumable upload + social-auth-init youtube.upload scope; avatar-identity-train (this session); the faceless-pipeline-reference-2026-06-25.md spec. Also state how the MCORCH runtime/auth (API Tenancy per-user BYOK)/billing (mcoCoins 4x-floor, docs/processes/mcoin-cost-calibration.md)/Mesh Connection Mandate apply. Ground every claim in path:line (Lei 1). Use Grep/Read/Glob.`,\n  { label: 'repo-map', phase: 'Map', schema: MAP_SCHEMA, agentType: 'general-purpose' },\n)\n\nphase('Critic')\nconst CRITIC_SCHEMA = { type: 'object', additionalProperties: false, required: ['critical_gaps'], properties: {\n  critical_gaps: { type: 'array', maxItems: 6, items: { type: 'object', additionalProperties: false, required: ['gap', 'why', 'suggested_search'], properties: {\n    gap: { type: 'string' }, why: { type: 'string' }, suggested_search: { type: 'string' },\n  } } },\n} }\nconst critic = await agent(\n  `You are the completeness critic for the youtube-studio blueprint. Given the verified research fronts + repo map, list up to 6 CRITICAL gaps that a BoK author would still be missing (a modality not researched, a license unverified, an architecture decision unsupported, a cost/quota unknown). For each: the gap, why it's load-bearing, and a suggested_search to fill it. Research+map:\\n${JSON.stringify({ fronts: fronts.map((f) => ({ key: f.key, verify: f.verify })), repoMap }).slice(0, 20000)}`,\n  { label: 'critic', phase: 'Critic', schema: CRITIC_SCHEMA, agentType: 'general-purpose' },\n)\n\nphase('GapFill')\nconst gapFills = (await parallel((critic.critical_gaps || []).slice(0, 4).map((g) => () =>\n  agent(`Fill this blueprint gap with URL-grounded research (Lei 1). If you cannot verify it, say so explicitly (it becomes an OTD, never silence). GAP: ${g.gap}\\nWHY: ${g.why}\\nSEARCH: ${g.suggested_search}`,\n    { label: `gapfill:${(g.gap || '').slice(0, 20)}`, phase: 'GapFill', schema: RESEARCH_SCHEMA, agentType: 'general-purpose' }),\n))).filter(Boolean)\n\nphase('Synthesis')\nconst SYNTH_SCHEMA = { type: 'object', additionalProperties: false, required: ['markdown'], properties: {\n  markdown: { type: 'string', description: 'the COMPLETE PT-BR blueprint doc, ready to write to docs/bok/youtube-studio/00-deepsearch-blueprint.md' },\n} }\nconst synth = await agent(\n  `You are the MCORCH Master Execution Agent authoring the deepsearch blueprint SEED for the youtube-studio module. Write the COMPLETE document in PT-BR (executive register), following the MCORCH blueprint structure (10 sections): (1) Sum\u00e1rio Executivo honesto [O que \u00e9 / Por que agora / Diferencial \u2014 brand-first persona Gabriel AI/CCIO, faceless E avatar-clone como 2 modos]; (2) Os Pilares com VEREDICTOS [assembler multi-cena \u00b7 lipsync/talking-head \u00b7 YouTube API v3 avan\u00e7ada \u00b7 legendas queimadas \u00b7 thumbnail \u00b7 render 16:9 long-form] \u2014 cada pilar cita URLs; (3) Arquitetura unificadora do studio (o grafo Spaces \u2192 studio: roteiro\u2192cenas\u2192voz\u2192[faceless OU avatar-lipsync]\u2192montagem\u2192legendas\u2192thumb\u2192publish); (4) Cat\u00e1logo de Refer\u00eancias Consolidadas (todas as URLs verificadas, agrupadas); (5) Arquitetura MCORCH-nativa (runtime/worker \u00b7 auth per-user BYOK fail-closed \u00b7 billing mcoCoins 4\u00d7-floor \u00b7 Mesh Mandate \u00b7 reuso dos assets mapeados path:line); (6) Superf\u00edcie proposta (n\u00f3s novos do Spaces + edge fns + o engine 'faceless' a destravar); (7) OTDs (TODA licen\u00e7a comercial n\u00e3o-confirmada e todo gap n\u00e3o preenchido vira OTD com destravador+owner \u2014 NUNCA sil\u00eancio; espelhe o rigor de licen\u00e7a do LoRA); (8) FMEA inicial (riscos: licen\u00e7a comercial de lipsync, quota/audit YouTube p/ scopes sens\u00edveis, custo de render long-form, deepfake/consent); (9) Fatiamento MVP com gates Lei 1 (Fatia 1 faceless assembler reusando o que existe \u2192 Fatia 2 legendas \u2192 Fatia 3 avatar-lipsync \u2192 Fatia 4 thumbnail \u2192 Fatia 5 YT-API avan\u00e7ada); (10) Apontadores para o BoK (/bok-scribe youtube-studio). RULES: nenhuma claim refutada sobrevive; claims sem fonte = could_not_verify expl\u00edcito; toda licen\u00e7a comercial citada com URL. Brand-first, USD-externo-0 por padr\u00e3o (providers pagos gated no GO Sovereign).\\n\\nVERIFIED FRONTS:\\n${JSON.stringify(fronts.map((f) => ({ key: f.key, verify: f.verify, license: f.research?.commercial_license_notes, sources: f.research?.sources }))).slice(0, 45000)}\\n\\nREPO MAP:\\n${JSON.stringify(repoMap).slice(0, 8000)}\\n\\nGAP FILLS:\\n${JSON.stringify(gapFills).slice(0, 12000)}`,\n  { label: 'synthesis', phase: 'Synthesis', schema: SYNTH_SCHEMA, effort: 'high', agentType: 'general-purpose' },\n)\nreturn { markdown: synth.markdown, fronts, repoMap, critic, gapFills }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wwmts2y5j
+> Summary: Deepsearch-grounded blueprint seed for the youtube-studio module (faceless + avatar-clone YouTube studio inside Spaces)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/subagents/workflows/wf_baad6dbe-9e5
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/youtube-studio-blueprint-wf_baad6dbe-9e5.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/youtube-studio-blueprint-wf_baad6dbe-9e5.js"} to iterate without resending the script.)
+> Run ID: wf_baad6dbe-9e5
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/47592365-463d-4669-b674-a8aa2fcecacf/workflows/scripts/youtube-studio-blueprint-wf_baad6dbe-9e5.js", resumeFromRunId: "wf_baad6dbe-9e5"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(02:41:54)*
+
+
+## 🤖 Claude *(02:41:56)*
+
+Workflow do blueprint YouTube Studio lançado (`wf_baad6dbe-9e5`) — deepsearch de 6 frentes + verify adversarial + repo-map + critic + gap-fill + síntese. Roda em subagentes (não consome a janela principal). Vou preparar o diretório e aguardar o resultado para gravar o `00-deepsearch-blueprint.md`.
+
+## 🤖 Claude *(02:41:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nmkdir -p docs/bok/youtube-studio && echo \"dir pronto: docs/bok/youtube-studio/\"",
+  "description": "Prepara diret\u00f3rio do BoK youtube-studio"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dir pronto: docs/bok/youtube-studio/
+> ```
+
+## 🤖 Claude *(02:42:06)*
+
+Diretório pronto. Aguardando o deepsearch concluir para gravar o blueprint — quando ele retornar, aplico o self-check do SOP (0 claims refutadas sobreviventes, gaps não preenchidos viram OTDs, licenças com URL) e gravo com prova material (`ls`+`wc`+`md5sum`).
+
+Status do loop até aqui (janela ~54%, rumo aos seus 85%):
+- ✅ **Foco #1 — LoRA grátis**: treino real wired + provado (plumbing zero-custo), Amendment 11, edge fn deployada.
+- ✅ **1º nó social**: "Publicar no WordPress" (Post + Landing Page) + Amendment 15.
+- ⏳ **Ask #3 — YouTube Studio**: deepsearch em andamento → blueprint fundamentado.
+
+Continuo assim que o workflow notificar.
