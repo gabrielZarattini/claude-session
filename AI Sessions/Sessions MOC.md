@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2019
-> * **Sessões do Claude**: 1973
+> * **Total de Sessões Registradas**: 2020
+> * **Sessões do Claude**: 1974
 > * **Sessões do Gemini**: 46
 
 ---
@@ -72,6 +72,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]` - *2026-07-09*
 *   `[[2026-07-08 - agent-afdfd6b866420dce3]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-afb798f9019a787ca]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-af1c215428f40bb75]]` - *2026-07-08*
@@ -83,8 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-08 - agent-adb4c131d515cd1fb]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-ad3285847f0e86721]]` - *2026-07-08*
 *   `[[2026-07-08 - agent-acb338ca499e0c7d2]]` - *2026-07-08*
-*   `[[2026-07-08 - agent-ac941ae9600af3850]]` - *2026-07-08*
-*   *... e mais 1964 sessões nessa categoria.*
+*   *... e mais 1965 sessões nessa categoria.*
 
 ---
 
@@ -1740,6 +1740,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-afdfd6b866420dce3]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-afb798f9019a787ca]]` (ClaudeSessions)
 *   `[[2026-07-08 - agent-af1c215428f40bb75]]` (ClaudeSessions)

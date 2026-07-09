@@ -552,7 +552,7 @@ O caminho de maior valor imediato é o **#1 (witness real do LoRA)** — é a ú
 
 ## 👤 User *(05:00:52)*
 
-otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E [[2026-07-05 - Continue com os próximos passos|continue com os próximos passos]]
+otimo arme o loop mas dessa vez de olho no limite de 5 horas que ja esa em 91%. E continue com os próximos passos
 
 ## 🤖 Claude *(05:03:15)*
 
@@ -4255,15 +4255,1733 @@ O resultado está em `d.result`. Extraindo o MAP de lá:
 > ]
 > ```
 
----
+## 🤖 Claude *(07:00:59)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - Configurar API de créditos e testar MCP com TikTok]]
-> * **Próxima Sessão**: [[2026-07-09 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(07:01:02)*
+
+Mapa completíssimo e fundamentado. Ele confirma o gate **Lei 2 / Master Protocol**: 2 nós novos + backend + rail de render grátis + coluna `asset_role` = "módulo novo" → **Amendment BoK ANTES do código de nó**. Sigo a ordem do loop: (a) Amendment, (b) agente Creative Director + skills. Escrevendo o Amendment 17 (codifica o mapa + Pattern Conformance + OTDs + slices):
+
+## 🤖 Claude *(07:02:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md",
+  "content": "# spaces-evolution \u2014 Amendment 17: Creative Studio (n\u00f3s Roteiro + Criativo Cinematogr\u00e1fico + agente Creative Director)\n\n> **Tipo:** Emenda de PRD/FRD/SDD/Data-Model \u2014 nova fam\u00edlia de n\u00f3s `creative` (Roteiro + Criativo Cinematogr\u00e1fico) + agente especialista `creative-director` + **free-render rail** (video_renders a US$0) + agrupamento de assets por `asset_role`. \u00b7 **Status:** proposta \u2014 resolve o gate Closed-Loop \u00a73.5 deste m\u00f3dulo (Lei 2). C\u00f3digo de n\u00f3 cliente \u00e9 buildable p\u00f3s-selo; os slices que tocam edge/migration/SSRF ridem `/security-review` (e a migration `asset_role` + o schema de identidade do open-in-video pedem GO Sovereign).\n> **Lente BoK:** SWEBOK + CISSP CBK (execu\u00e7\u00e3o, SSRF/path-injection) \u00b7 CXBOK + ProdBOK-UX (jornada roteiro\u2192curta) \u00b7 DMBOK (asset_role) \u00b7 21 Agentic Patterns (`docs/architecture/agentic-vision.md`).\n> **Posi\u00e7\u00e3o no Closed-Loop:** emenda \u00e0 SDD `05-sdd.md` (2 novos `CanvasNodeKind`: `scriptGenerator`, `cinematicVideo`) + `04-frd.md` (`FR-SPACES-041..053`) + `06-data-model.md` (coluna `creative_assets.asset_role`) + `11-node-registry-spaces.md`. Carrega Pattern Conformance (\u00a77).\n> **API Tenancy Model:** o LLM do n\u00f3 Roteiro resolve credencial **per-user** (`user_api_keys.openrouter_api_key` / `google_api_key` \u2014 **n\u00e3o** `gemini_api_key`, que n\u00e3o existe), fail-closed 402. O render gr\u00e1tis \u00e9 service-role `charged_mco:0` (sem AI leg paga). Imagens per-user BYOK (Gemini Nano Banana; ver decis\u00e3o de custo abaixo).\n> **ORO triplet:** Operator = MCORCH Master Execution Agent + L2 `creative-director` \u00b7 Reviewer = Sovereign + `/security-review` (SSRF do `fetchToTmp`, owner-scoping de asset, migration `asset_role`, ownership do open-in-video) \u00b7 Owner = Sovereign.\n> **Fundamenta\u00e7\u00e3o (Lei 1):** recon workflow `wf_cdf0e1a0-4ca` (6 leitores + s\u00edntese), todo grounded em `file:line`. PoC provada: commits `714e144` (`encodeImageSequence`), `8c7141d` (`encodeKenBurns`), `a523d6d` (template `cinematic-9x16` + Vision ocular).\n\n---\n\n## 1. Contexto e motiva\u00e7\u00e3o\n\nA PoC de v\u00eddeo gr\u00e1tis est\u00e1 **provada e materializada**: tr\u00eas primitivos FFmpeg (`encodeImageSequence`, `encodeKenBurns`, `renderComposition`) + o template cinematogr\u00e1fico `cinematic-9x16.html` (MIV, tipografia cin\u00e9tica, HUD neon, emblema procedural, Ken Burns; Vision ocular aprovado). Mas ela vive na **CLI** \u2014 n\u00e3o h\u00e1 n\u00f3 no Spaces que a dispare, nem um agente que a dirija.\n\nDiretiva Sovereign (2026-07-09): **graduar a PoC em MVP dentro do Spaces** \u2014 (1) n\u00f3 \"Criativo Cinematogr\u00e1fico\"; (2) n\u00f3 \"Roteiro\" (pacote narra\u00e7\u00e3o+prompts+TTS, formato exato dado pelo Sovereign); (3) agente especialista `creative-director` com skills; (4) frames intermedi\u00e1rios **agrupados dentro do n\u00f3** (s\u00f3 o v\u00eddeo FINAL em `/dashboard/spaces/assets`); (5) o n\u00f3 abre o projeto em `/dashboard/spaces/video`.\n\n**A jornada-alvo (E2E):** `[Roteiro]` gera cenas + prompts \u2192 fan-out para `[Gerar imagem]` (Nano Banana) por cena \u2192 `[Criativo Cinematogr\u00e1fico]` monta o curta 9:16 no rail gr\u00e1tis \u2192 narra\u00e7\u00e3o TTS (Piper/Kokoro, gr\u00e1tis) alimenta o `energy[]` do template \u2192 v\u00eddeo final em `/assets`, edit\u00e1vel em `/spaces/video`. Alvo de conte\u00fado real: o document\u00e1rio dos rob\u00f4s (script colado pelo Sovereign) \u2014 gated em ~US$0,43 de imagens (Gemini direto, ver decis\u00e3o de custo) + TTS gr\u00e1tis.\n\n---\n\n## 2. Arquitetura (o mapa, grounded)\n\n### 2.1. N\u00f3 A \u2014 \"Roteiro\" (`scriptGenerator`) \u2014 text source, inspector-driven\n\n7 edi\u00e7\u00f5es espelhando `publishWordpress` (o template mais limpo de n\u00f3 inspector-driven, `resolveExecutePayload \u2192 null`):\n`canvas.ts:19-29` (union) \u00b7 `:373-574` (`interface ScriptGeneratorData`) \u00b7 `:576-586` (data union) \u00b7 `:846-865` (`makeDefaultScriptGenerator`) \u00b7 `:933-1027` (`case \"scriptGenerator\": return null`) \u00b7 `:1057-1081` (`estimateNodeCost \u2192 2`) \u00b7 `canvas-node-registry.ts:29-130` (1 `NodeRegistryEntry`, categoria `Generate`, \u00edcone `ScrollText`). Component `ScriptGeneratorNode.tsx` (Handle source `output_script`, target opcional `input_context` de `productList`; `<Handle>` INLINE, **n\u00e3o** tocar `canvas-handles.ts` stale) registrado em `nodeTypes` (`CanvasEditorPage.tsx:59-70`, module-scope). Inspector `ScriptGeneratorInspector.tsx` + branch em `RightPanel/index.tsx:28-90`.\n\nCampo `topic` (**n\u00e3o** `prompt`) \u2192 auto-exclu\u00eddo do filtro Run-All. **Output = contrato verbatim do Sovereign:** `{ scenes: {start,end,narration,imagePrompt}[]; ttsPrompt; generatedAt }` \u2014 a tabela de narra\u00e7\u00e3o timestamped + os prompts text-to-image (ingl\u00eas cinematogr\u00e1fico) por cena + o prompt TTS integral. `output_script` fan-out: `scenes[].imagePrompt` \u2192 n\u00f3s `generateImage`; `ttsPrompt` \u2192 `voiceClone`.\n\n**Backend (OTD-CS-002):** dois seams candidatos \u2014 (A) reusar `generate-video-script` (JWKS-ES256) **se** j\u00e1 emitir `{scenes[],ttsPrompt}` (schema N\u00c3O verificado no recon); (B) adicionar `node_type \"script_package\"` ao `canvas-execute` (RAIL 1, clone do bra\u00e7o `magic_prompt` LLM, per-user BYOK fail-closed). (B) \u00e9 o caminho ledger-first limpo mas \u00e9 feature nova.\n\n### 2.2. N\u00f3 B \u2014 \"Criativo Cinematogr\u00e1fico\" (`cinematicVideo`) \u2014 video node, async\n\nMesmas 7 edi\u00e7\u00f5es. `interface CinematicVideoData { kind; label; hook; caption; cta; brand; durationSec; fps; status; renderId?; output?:{videoUrl?;storagePath?;generatedAt}; error? }`. `estimateNodeCost \u2192 12` (`COST.hyperframes`, `video-render/index.ts:23`). Component `CinematicVideoNode.tsx` (target `input_image`). O `product_image_url` \u00e9 **threadado em run-time** do edge de imagem upstream via `findUpstreamImage` (`canvas-utils.ts`) \u2014 **n\u00e3o** guardado em `node.data`. Inspector invoca `video-render` com `{engine:\"hyperframes\", composition:{template:\"cinematic-9x16\", duration_s, fps, props:{hook,caption,cta,brand,product_image_url}}}`.\n\n**`cinematic-9x16.html` VERIFICADO** existe (13129 bytes) e est\u00e1 em `VALID_TEMPLATES` (`render-core.ts:71`) \u2192 **renderiza HOJE via `renderComposition`, zero mudan\u00e7a de worker/template.** Contrato de props `window.applyProps` (`cinematic-9x16.html:114`): `brand,cta,caption,hook`(\\n),`product_image_url`(https/data),`energy[]` opcional.\n\n**Gap de reconcilia\u00e7\u00e3o async (OTD-CS-007, needs-ui):** `video-render` cobra 12 mco na entrada (refund-on-failure) e retorna `{render_id, state:\"queued\"}` 202; o worker `video-bridge.ts` faz o poll. Hoje **nada reconcilia `video_renders` num n\u00f3 de canvas** (`useCanvasJobsRealtime` s\u00f3 observa `vm_canvas_executions`). O inspector precisa fazer poll de `video_renders` por `renderId` (ou nova subscription realtime) e virar status/output em `done`/`failed`; em `runSingleNode` tratar como `isVideo` (sem sucesso s\u00edncrono).\n\n### 2.3. Free-render rail \u2014 mode switch no `video-bridge` (US$0)\n\nO trabalho gr\u00e1tis (`cinematic`/`kenburns`/`image_sequence`) mora no **RAIL 2** (fila `video_renders`), **n\u00e3o** no corpo s\u00edncrono do `canvas-execute` (rails disjuntos). Seam \u00fanico: `video-bridge.ts:86-91` (hoje if/else de 2 vias) \u2192 **mode switch**, roteando ANTES do `throw '!spec.props'` (kenburns/image_sequence n\u00e3o t\u00eam props). Todas as fns de render devolvem o mesmo `RenderResult` (`render-core.ts:61-69`) \u2192 tudo ap\u00f3s `:93` (upload bucket privado, mesh node, `finalize_video_render`, `register_creative_asset`, autopilot attach) \u00e9 mode-agnostic; o `catch` j\u00e1 entrega refund-on-failure \u2192 os branches novos herdam de gra\u00e7a (desde que d\u00eaem `throw`).\n\n**Enqueue a 0 mco:** REUSAR `engine='hyperframes'` + `charged_mco:0` (precedente `reshape-pillar/index.ts:266` \u2014 INSERT service-role direto, **sem migration**). N\u00c3O criar enum novo `hyperframes_free` (for\u00e7aria ALTER do CHECK + widen dos 2 filtros do poller). `charged_mco:0` torna o refund do `finalize_video_render` um no-op seguro.\n\n**Guardas obrigat\u00f3rias (OTD-CS-004, /security-review):** (a) helper `fetchToTmp(url,dest)` \u2014 os encoders (`render-core.ts:179/119`) exigem paths LOCAIS absolutos e nunca baixam; coletar temps e limpar no `finally` (`:198-200`) sen\u00e3o vaza um frame-set/render; (b) **SSRF/path-injection**: `fetchToTmp` baixa URL arbitr\u00e1ria de coluna jsonb com service-role \u2192 **constranger a URLs assinadas do MESMO projeto/owner** (n\u00e3o URL livre); (c) piso material de 100KB (`result.bytes>=100*1024`) no branch kenburns/image_sequence (os encoders s\u00f3 gateiam 1024 bytes \u2192 MP4 degenerado finalizaria como creative_asset \"real\", viola Lei 1); (d) widen `compositionValid` (`video-render/index.ts:70-71`) p/ admitir os 3 modes com o campo requerido, sen\u00e3o 422 antes do deduct.\n\n### 2.4. Agrupamento de assets \u2014 `asset_role` (Op\u00e7\u00e3o B recomendada)\n\nO grid `/assets` = `select * from creative_assets order by created_at desc limit 300` (`useCreativeAssets.ts:13-29`), flat. **N\u00e3o existe conceito de final-vs-intermedi\u00e1rio hoje** (grep de migrations por `is_final`/`group_id`/`frame_index` = ZERO). `parent_asset_id` \u00e9 self-FK single-parent (variation-of) \u2014 shape ERRADO p/ 1-final\u2192180-frames. **Chave de grupo j\u00e1 existe e \u00e9 populada:** `creative_assets.source_job_id` (todos os frames de um run compartilham 1 `source_job_id`).\n\n**Modelo recomendado \u2014 Op\u00e7\u00e3o B (OTD-CS-003):** `ALTER creative_assets ADD COLUMN asset_role text NOT NULL DEFAULT 'final' CHECK (asset_role IN ('final','frame','intermediate'))` + \u00edndice parcial `(user_id, created_at DESC) WHERE asset_role='final'` + `p_asset_role` no `register_creative_asset` (re-create exact-signature, precedente `20260707230000`). Produtor carimba `frame` + `metadata:{frame_index:N}` nas 180 linhas e `final` na \u00fanica. Grid: `useCreativeAssets` adiciona `.eq('asset_role','final')` **server-side** (obrigat\u00f3rio por causa do `limit(300)`). Expans\u00e3o in-node: hook irm\u00e3o `useNodeFrames(source_job_id)` \u2192 `WHERE source_job_id=$1 AND asset_role='frame' ORDER BY (metadata->>'frame_index')::int`, thumbnails via URL **assinada** owner-scoped (buckets privados; `is_public` historicamente mente). Frames ficam **100% fora do /assets**, s\u00f3 no card in-node que expande 1-a-1. **Carimbo + filtro do grid T\u00caM que shippar juntos** sen\u00e3o o n\u00f3 polui o grid no 1\u00ba run. (Op\u00e7\u00e3o C = tabela `asset_frames` separada, melhor s\u00f3 se frames forem scratch descart\u00e1vel \u2014 a decis\u00e3o B-vs-C \u00e9 do Sovereign; recomenda\u00e7\u00e3o = B, pois os frames s\u00e3o criativos individualmente vis\u00edveis.)\n\n### 2.5. Open-in-`/spaces/video` \u2014 deep-link por hash\n\nSeam = o **hash da URL do iframe** lido client-side pela SPA `@hyperframes/studio` (N\u00c3O query string, N\u00c3O route param MCORCH). `spaces/video` (`App.tsx:147`) \u2192 `VideoStudioEditorPage.tsx:17-18` (iframe param-less p/ `https://video.mcorch.com`) \u2192 nginx SSO-gate \u2192 host Fase B `:3210`. Formato emp\u00edrico (grep do dist): `https://video.mcorch.com/#project/<encodeURIComponent(projectId)>` (path-style ap\u00f3s o hash).\n\n**STEP 1 (buildable-now):** tornar `VideoStudioEditorPage` param-aware \u2014 ler `?project=<id>` e setar `src=\u2026/#project/<id>`. Hash \u00e9 client-only, n\u00e3o passa pelo nginx/SSO \u2192 sem mudan\u00e7a de vhost.\n\n**STEP 2 (OTD-CS-005 \u2014 CORE BLOCKER):** `<id>` tem que ser um **projeto Studio** = slug de DIR sob `STUDIO_PROJECTS_ROOT` com `index.html`, no bucket `video-studio-projects`. Criativos do Spaces s\u00e3o espa\u00e7o de identidade DISJUNTO (`vm_canvas_projects` UUID + assets em `canvas-assets`). **Nenhum produtor hoje compila um criativo do Spaces num projeto HyperFrames edit\u00e1vel** (autopilot/video-bridge s\u00f3 escrevem MP4 FINAL em `video-studio-assets/<user>/<renderId>.mp4` \u2014 outputs, n\u00e3o projetos). Precisa: (a) um compilador on-open que constr\u00f3i `index.html`+compositions e sobe pra `video-studio-projects/projects/<slug>/`; OU (b) estender `resolveProject` p/ aceitar id Supabase-native e materializar no open. **STEP 3:** ownership check per-user antes de multi-tenant (OTD-VA-011/OTD-VS-019).\n\n---\n\n## 3. Requisitos funcionais (emenda ao `04-frd.md`)\n\n- **`FR-SPACES-041`** \u2014 N\u00f3 `scriptGenerator`: campo `topic`/`durationSec`/`language`; output `{scenes[],ttsPrompt}` no formato verbatim do Sovereign; `resolveExecutePayload\u2192null`; custo 2 mco.\n- **`FR-SPACES-042`** \u2014 Backend do Roteiro: LLM per-user BYOK fail-closed 402 (OpenRouter/Gemini) produz o pacote; seam A (reusar `generate-video-script`) ou B (`script_package` node_type) \u2014 OTD-CS-002.\n- **`FR-SPACES-043`** \u2014 N\u00f3 `cinematicVideo`: props `hook/caption/cta/brand/durationSec/fps`; invoca `video-render` engine `hyperframes` template `cinematic-9x16`; `product_image_url` via `findUpstreamImage` em run-time; custo 12 mco.\n- **`FR-SPACES-044`** \u2014 Reconcilia\u00e7\u00e3o async: poll de `video_renders` por `renderId` \u2192 status/output do n\u00f3 (sem sucesso s\u00edncrono).\n- **`FR-SPACES-045`** \u2014 Free-render rail: mode switch no `video-bridge` (`cinematic`/`kenburns`/`image_sequence`) reusando `engine='hyperframes'` `charged_mco:0`; refund-on-throw herdado.\n- **`FR-SPACES-046`** \u2014 Guardas do rail: `fetchToTmp` constrito a URL assinada same-owner (anti-SSRF); piso 100KB; cleanup no finally; `compositionValid` widened.\n- **`FR-SPACES-047`** \u2014 `asset_role` (`final`/`frame`/`intermediate`) + \u00edndice parcial + `p_asset_role` no `register_creative_asset`; carimbo no produtor por `source_job_id`.\n- **`FR-SPACES-048`** \u2014 `/assets` finals-only: `useCreativeAssets` `.eq('asset_role','final')` server-side.\n- **`FR-SPACES-049`** \u2014 Expans\u00e3o in-node: `useNodeFrames(source_job_id)` \u2192 frames ordenados por `frame_index`, thumbnails via URL assinada owner-scoped; card \u00fanico que expande 1-a-1.\n- **`FR-SPACES-050`** \u2014 Open-in-video STEP 1: `VideoStudioEditorPage` param-aware `?project=<id>` \u2192 iframe `#project/<id>`.\n- **`FR-SPACES-051`** \u2014 Open-in-video STEP 2: compilador Spaces-creative \u2192 projeto HyperFrames edit\u00e1vel (`video-studio-projects`) + ownership check (OTD-CS-005).\n- **`FR-SPACES-052`** \u2014 Agente `creative-director` (L2 sob `artisan`) dirige o pipeline com as 4 skills (\u00a7 agente); prop\u00f5e (nunca auto-executa) legs pagas; nunca self-bill dos encoders gr\u00e1tis.\n- **`FR-SPACES-053`** \u2014 \u00c1udio gr\u00e1tis: narra\u00e7\u00e3o via Piper/Kokoro (comercial-safe, self-host) \u2192 envelope de amplitude \u2192 `energy[]` do template (voice-reactive). Pago (ElevenLabs/Cartesia/Gemini-TTS-pago) = p\u00f3s-renda ([[feedback_paid_byok_post_revenue]]).\n\n---\n\n## 4. Open Technical Decisions\n\n| ID | Descri\u00e7\u00e3o | Decis\u00e3o / Recomenda\u00e7\u00e3o | Owner | Classe |\n|----|-----------|------------------------|-------|--------|\n| **OTD-CS-001** | Gate BoK/Lei 2 do m\u00f3dulo | \u2705 **Resolvido por esta Amendment** \u2014 os 2 n\u00f3s + rail gr\u00e1tis + `asset_role` ridem a BoK `spaces-evolution` (n\u00e3o exigem su\u00edte nova). | Sovereign | governan\u00e7a |\n| **OTD-CS-002** | Backend do Roteiro | **Verificar `generate-video-script` output**; se emitir `{scenes[],ttsPrompt}` \u2192 reusar (A); sen\u00e3o \u2192 `script_package` node_type ledger-first (B). Recomenda\u00e7\u00e3o: B se houver mismatch. | engineer | feature/SOP |\n| **OTD-CS-003** | Modelo de agrupamento de frames | **Recomendo Op\u00e7\u00e3o B** (`asset_role` column) \u2014 frames s\u00e3o criativos individualmente vis\u00edveis. C (tabela separada) s\u00f3 se scratch. Decis\u00e3o de schema = Sovereign. | engineer + Sovereign | data model |\n| **OTD-CS-004** | SSRF do `fetchToTmp` | Constranger a **URL assinada do mesmo owner/projeto**; piso 100KB; cleanup finally. `/security-review` obrigat\u00f3rio. | engineer | seguran\u00e7a (gate-m\u00e3e) |\n| **OTD-CS-005** | Open-in-video: compilador de projeto | **CORE BLOCKER** \u2014 nenhum produtor compila criativo Spaces\u2192projeto HyperFrames edit\u00e1vel. Construir compilador on-open OU estender `resolveProject`; ownership check. | engineer + Sovereign | arquitetura |\n| **OTD-CS-006** | Custo mco | Roteiro 2 mco; render gr\u00e1tis 0 mco (`prepaid`); calibrar via `mcoin-cost-calibration.md` 4\u00d7-floor; espelhar nos 3 lugares (drift silencioso). | engineer | economia |\n| **OTD-CS-007** | Reconcilia\u00e7\u00e3o async video_renders\u2192n\u00f3 | Poll por `renderId` OU subscription realtime nova; tratar como `isVideo`. | engineer | UI |\n\n---\n\n## 5. Data model (emenda ao `06-data-model.md`)\n\n`creative_assets` ganha `asset_role text NOT NULL DEFAULT 'final' CHECK (asset_role IN ('final','frame','intermediate'))` + \u00edndice parcial `WHERE asset_role='final'`. `register_creative_asset` re-create exact-signature com `p_asset_role` default `'final'` (n\u00e3o quebra callers). Chave de grupo = `source_job_id` (j\u00e1 existe). Sem tabela nova na Op\u00e7\u00e3o B. (Free-render rail: **sem migration** \u2014 reusa `video_renders` engine `hyperframes` `charged_mco:0`.)\n\n---\n\n## 6. Sequenciamento de slices (do recon map)\n\n| # | Slice | Status | Nota |\n|---|-------|--------|------|\n| 1 | N\u00f3 Roteiro \u2014 types+registry+component+inspector (cliente) | **buildable-now** | Espelha publishWordpress; sem migration (graph jsonb). |\n| 2 | N\u00f3 Roteiro backend (script package) | needs-/security-review | Verificar `generate-video-script`; se mismatch, `script_package` + SOP. |\n| 3 | N\u00f3 Criativo Cinematogr\u00e1fico \u2014 cliente + inspector | **buildable-now** | Template j\u00e1 existe e renderiza hoje; inspector chama `video-render`. |\n| 4 | Reconcilia\u00e7\u00e3o async no n\u00f3 | needs-ui | Poll `video_renders` por `renderId`. |\n| 5 | Free-render rail \u2014 mode switch `video-bridge` | needs-/security-review | +`fetchToTmp` anti-SSRF +100KB +cleanup. Sem migration. |\n| 6 | Enqueuer gr\u00e1tis + widen `compositionValid` | needs-/security-review | INSERT 0-mco com URL assinada; TTL > backlog. |\n| 7 | `/assets` finals-only + agrupamento in-node | needs-/security-review | Migration `asset_role` (Op\u00e7\u00e3o B) + filtro grid + `useNodeFrames`. Shippar carimbo+filtro juntos. |\n| 8 | Open-in-video STEP 1 (iframe param-aware) | **buildable-now** | `?project=<id>`\u2192`#project/<id>`. |\n| 9 | Open-in-video STEP 2 (compilador de projeto) | needs-/security-review | CORE BLOCKER; ownership check. |\n| 10 | Agente `creative-director` + 4 skills | **buildable-now** | `.claude/agents/` + `.claude/skills/` (esta sess\u00e3o). |\n\n---\n\n## 7. Pattern Conformance Declaration (Closed-Loop \u00a73.5 \u2014 declara\u00e7\u00e3o, n\u00e3o sign-off)\n\n| # | Padr\u00e3o | Implementado? | Como / Por-que-adiado |\n|---|--------|---------------|------------------------|\n| 3 | Planning / Decomposition | **yes** | Roteiro decomp\u00f5e tema \u2192 cenas timestamped \u2192 prompts por cena. |\n| 4 | Tool Use / External API | **yes** | LLM (roteiro) + Nano Banana (imagem) + FFmpeg (render gr\u00e1tis) + TTS (Piper). |\n| 6 | Multi-agent orchestration | **yes** | Agente `creative-director` L2 dirige o grafo de n\u00f3s. |\n| 9 | Routing / Dispatch | **yes** | `video-bridge` mode switch (cinematic/kenburns/image_sequence). |\n| 13 | Guardrails / Policy gate | **yes** | Anti-SSRF `fetchToTmp` same-owner + piso 100KB + BYOK fail-closed + owner-scoped signing. |\n| 16 | HITL | **yes** | N\u00f3s inspector-driven; render sob a\u00e7\u00e3o expl\u00edcita; legs pagas propostas (n\u00e3o auto). |\n| 18 | Cost governance | **yes** | Render gr\u00e1tis 0 mco; Roteiro 2 mco; imagem medida (direct-Google); pago = p\u00f3s-renda. |\n| 19 | Observability | **yes** | Mesh node + `infra_health_logs` por path (herdado do video-bridge). |\n| Demais | n-a/deferred | Voice-clone pt-BR comercial = gap (p\u00f3s-renda); multi-tenant open-in-video = OTD-VS-019. |\n\n---\n\n## 8. Verification gates\n\n1. `/security-review` nos slices 5/6/7/9 (SSRF `fetchToTmp`, migration `asset_role`, ownership do open-in-video \u2014 a classe FMEA-011/SSRF \u00e9 o gate-m\u00e3e).\n2. Smoke zero-custo: Roteiro gera pacote no formato do Sovereign (LLM free/BYOK); render gr\u00e1tis produz MP4 \u2265100KB via a fila (ffprobe); frames carimbados `frame` **n\u00e3o** aparecem no `/assets` (cross-check); `fetchToTmp` recusa URL de outro owner.\n3. **Vision ocular** obrigat\u00f3rio em todo criativo final (Lei 1 \u2014 n\u00e3o declarar pronto sem olhar).\n4. Witness E2E (GO Sovereign): tema \u2192 Roteiro \u2192 N imagens (Nano Banana, ~US$0,43) \u2192 curta cinematogr\u00e1fico 9:16 \u2192 edit\u00e1vel em `/spaces/video`. O document\u00e1rio dos rob\u00f4s \u00e9 o alvo.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:03:06)*
+
+
+## 🤖 Claude *(07:03:07)*
+
+Amendment 17 selado. Agora o agente. Deixa eu conferir o shape real de um agent md pra casar a convenção (Lei 1):
+
+## 🤖 Claude *(07:03:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/build-deploy-guardian.md",
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: build-deploy-guardian
+> 3	description: Executa e VERIFICA materialmente deploys do MCORCH (frontend nginx, edge functions Supabase, migrations) sem o falso-sucesso de worktree. Use quando precisar deployar/publicar/shipar com prova de que o artefato servido realmente mudou. Recusa-se a reportar SUCCESS sem os gates de materialidade verdes (Lei 1).
+> 4	tools: Bash, Read, Grep, Glob
+> 5	---
+> 6	
+> 7	# Build & Deploy Guardian — Subagent
+> 8	
+> 9	Você é o **Build & Deploy Guardian** do MCORCH. Sua única missão: levar uma mudança ao ar
+> 10	(produção `login.mcorch.com` / Supabase) e **provar materialmente** que ela está servida.
+> 11	Você opera sob a Lei 1 (Materialidade): "deployed" = o artefato SERVIDO mudou, nunca "rodei o build".
+> 12	
+> 13	SOP autoritativa: `docs/processes/build-deploy-materiality.md`. Skill irmã: `build-deploy-guardian`.
+> 14	
+> 15	## Constantes
+> 16	- nginx serve: `/home/gcrUX/htdocs/constellation-orchestra/dist` (repo PRINCIPAL).
+> 17	- Worktrees: `/home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/<slug>/` (NÃO servidos).
+> 18	- Supabase project ref: `bcyvddsykvehvpwstlfa`. `.env` (com `VITE_*`) só existe no repo principal.
+> 19	
+> 20	## Protocolo (sempre nesta ordem)
+> 21	
+> 22	1. **Classifique a surface:** frontend (`src/`), edge (`supabase/functions/`), DB (`supabase/migrations/`).
+> 23	   Mudou mais de uma? Deploya cada uma e verifica cada uma.
+> 24	2. **Onde estou?** `pwd` + `git -C <main> branch`. Se estou num worktree, NUNCA assuma que `bun run build` deploya.
+> 25	3. **Execute o caminho correto:**
+> 26	   - **Frontend (worktree):** `cp <main>/.env <wt>/.env` → `cd <wt> && bun run build` → `rsync -a <wt>/dist/ <main>/dist/`. Registre o débito de merge-para-main.
+> 27	   - **Frontend (no main):** `bun run build` direto.
+> 28	   - **Edge:** `npx supabase functions deploy <fn> [--no-verify-jwt] --project-ref bcyvddsykvehvpwstlfa`. Preserve flags existentes (ex.: `process-affiliate-link` é `--no-verify-jwt`).
+> 29	   - **DB:** exija `/security-review` antes; depois `npx supabase db push`.
+> 30	4. **GATES (todos verdes ou NÃO é deploy):**
+> 31	   - G1: `grep -rl bcyvddsykvehvpwstlfa <main>/dist/assets/ | wc -l` > 0 (env baked).
+> 32	   - G2: o entry `index-*.js` servido referencia o chunk novo (hash mudou).
+> 33	   - G3 (best-effort): `curl -s http://localhost/ -H "Host: login.mcorch.com"` serve o entry novo.
+> 34	   - Edge: output `script size: NkB` + `Deployed Functions on project bcyvddsykvehvpwstlfa`.
+> 35	5. **Cloudflare:** sempre instrua hard-refresh `Ctrl+Shift+R` (origin atualizado ≠ browser vê).
+> 36	6. **(Opcional) Validação visual** como Usuário Zero: mint sessão magiclink (admin.generateLink +
+> 37	   verifyOtp) → injeta `sb-bcyvddsykvehvpwstlfa-auth-token` no localStorage via `agent-browser eval`
+> 38	   → `open` a rota → `screenshot`. Limpe tokens efêmeros depois.
+> 39	
+> 40	## Regras de recusa (Lei 1)
+> ```
+
+## 🤖 Claude *(07:03:29)*
+
+
+## 🤖 Claude *(07:03:29)*
+
+Convenção clara. Autorando o agente `creative-director` (L2 sob artisan):
+
+## 🤖 Claude *(07:04:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/creative-director.md",
+  "content": "---\nname: creative-director\ndescription: Diretor Criativo t\u00e9cnico do MCORCH \u2014 dirige o pipeline Creative Studio do Spaces (roteiro \u2192 prompts \u2192 imagem \u2192 Ken Burns/sequ\u00eancia \u2192 template cinematogr\u00e1fico \u2192 \u00e1udio \u2192 MP4 9:16 final) 100% no rail FFmpeg gr\u00e1tis (US$0). Use para montar/operar os n\u00f3s Roteiro e Criativo Cinematogr\u00e1fico, encadear cenas\u2192imagens\u2192curta, agrupar frames intermedi\u00e1rios in-node, e provar criativos com Vision ocular. Recusa c\u00f3digo de n\u00f3 sem a Amendment BoK selada (Lei 2) e nunca reporta criativo pronto sem olhar o v\u00eddeo (Lei 1).\ntools: Bash, Read, Write, Edit, Grep, Glob\n---\n\n# Creative Director \u2014 Subagent (L2 sob `artisan`)\n\nVoc\u00ea \u00e9 o **Creative Director** do MCORCH: L2 Specialist sob o Head `artisan` (lente CXBOK/ProdBOK-UX), com **Decision Scope NARROW** ao grafo de n\u00f3s do **Creative Studio** dentro do Spaces. Sua miss\u00e3o: transformar um tema em um **curta cinematogr\u00e1fico 9:16** de n\u00edvel motion-design, **inteiramente no rail FFmpeg gr\u00e1tis** (US$0), e deix\u00e1-lo edit\u00e1vel no `/dashboard/spaces/video`.\n\n**SSOT:** `docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md` (Amendment 17). Voc\u00ea N\u00c3O inventa al\u00e9m dela \u2014 ambiguidade volta pra emenda/`/bok-scribe`, n\u00e3o pra improviso (Master Protocol \u00a71).\n\n## O pipeline que voc\u00ea dirige\n\n```\n[Roteiro] tema \u2192 { scenes[] (start/end/narration/imagePrompt), ttsPrompt }   (formato verbatim do Sovereign)\n   \u2502  output_script fan-out:\n   \u251c\u2500 scenes[].imagePrompt \u2500\u2500\u2192 [Gerar imagem] (Nano Banana / Gemini DIRETO \u2014 mais barato que OpenRouter)\n   \u2502                              \u2502 (imagem por cena, ~US$0,039 cada)\n   \u2502                              \u25bc\n   \u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2192 [Criativo Cinematogr\u00e1fico] template cinematic-9x16 (renderComposition)\n   \u2502                              \u2502  Ken Burns no hero + tipografia cin\u00e9tica + HUD neon + emblema\n   \u2514\u2500 ttsPrompt \u2500\u2500\u2192 [narra\u00e7\u00e3o] Piper/Kokoro (gr\u00e1tis, comercial-safe) \u2192 envelope amplitude \u2192 energy[] (voice-reactive)\n                                  \u25bc\n                       MP4 9:16 FINAL (s\u00f3 ele em /assets) \u00b7 frames intermedi\u00e1rios AGRUPADOS in-node \u00b7 edit\u00e1vel em /spaces/video\n```\n\n## Motores e seus contratos (grounded)\n\n- **Render gr\u00e1tis (RAIL 2, `video_renders`):** `engine='hyperframes'` `charged_mco:0` (precedente `reshape-pillar:266`, SEM migration). Mode switch em `video-bridge.ts:86-91`: `cinematic` \u2192 `renderComposition` (template `cinematic-9x16`, j\u00e1 em `VALID_TEMPLATES`); `kenburns` \u2192 `encodeKenBurns`; `image_sequence` \u2192 `encodeImageSequence` (`render-core.ts`). Os 3 devolvem o mesmo `RenderResult` \u2192 upload/finalize/refund j\u00e1 s\u00e3o mode-agnostic.\n- **Template `cinematic-9x16.html`:** props `window.applyProps` = `brand,cta,caption,hook`(\\n),`product_image_url`(https/data),`energy[]` opcional. Determin\u00edstico (NFR-VS-016).\n- **Imagem:** Gemini Nano Banana (`gemini-2.5-flash-image`). Preferir **Gemini DIRETO** (sem margem OpenRouter). Per-user BYOK fail-closed 402.\n- **\u00c1udio:** narra\u00e7\u00e3o Piper/Kokoro (MIT/Apache, pt-BR, self-host, US$0). Voice-clone pt-BR comercial = gap \u2192 p\u00f3s-renda.\n\n## Protocolo (sempre nesta ordem)\n\n1. **Gate Lei 2:** antes de qualquer c\u00f3digo de n\u00f3 novo, confirme que a Amendment 17 est\u00e1 no repo. Sem ela \u2192 Refusal Mode (draftar/atualizar a emenda primeiro).\n2. **Oriente material:** `git log --oneline -12`. Os 3 primitivos + o template j\u00e1 existem em `scripts/hyperframes/`.\n3. **Construa por slice** (Amendment 17 \u00a76), respeitando o status: `buildable-now` primeiro; `needs-security-review` s\u00f3 depois de `/security-review`; `needs-ui` com prova de reconcilia\u00e7\u00e3o real.\n4. **Rail gr\u00e1tis primeiro:** todo motor default \u00e9 US$0 (FFmpeg/Piper). Leg pago (imagem paga, voz premium) voc\u00ea **prop\u00f5e com custo**, nunca ativa em sil\u00eancio ([[feedback_paid_byok_post_revenue]]).\n5. **Prova material (Lei 1) por render:** `ffprobe` do MP4 (dimens\u00f5es/fps/frames) + **Vision ocular** de \u22651 frame (extrair PNG e OLHAR) antes de dizer \"pronto\". MP4 < 100KB = suspeito (piso material).\n6. **Assets:** carimbe frames intermedi\u00e1rios `asset_role='frame'` + `frame_index` por `source_job_id`; s\u00f3 o final \u00e9 `asset_role='final'` (aparece no `/assets`). Nunca polua o grid.\n\n## Regras de recusa (Leis de Sobreviv\u00eancia)\n\n- **Lei 1:** nunca reporte criativo pronto sem `ffprobe` + Vision ocular no turno. \"Renderizou\" \u2260 \"ficou bom\". Sem olho, \u00e9 \"c\u00e9rebro sem m\u00e3os\".\n- **Lei 2:** nenhum n\u00f3/edge/migration novo sem a Amendment 17 (ou emenda equivalente) selada. SOP em `docs/processes/` antes de automa\u00e7\u00e3o nova.\n- **Seguran\u00e7a:** o `fetchToTmp` do rail gr\u00e1tis s\u00f3 baixa **URL assinada do mesmo owner** (anti-SSRF, OTD-CS-004). Migration `asset_role` e o compilador de open-in-video ridem `/security-review` + GO Sovereign.\n- **Custo:** rail gr\u00e1tis \u00e9 o default; pago \u00e9 proposta gated. Imagem: me\u00e7a direct-Google vs OpenRouter no 1\u00ba batch, trave o mais barato.\n\n## Skills\n\n- `creative-studio-pipeline` \u2014 orquestra roteiro\u2192imagens\u2192curta (estende `canvas-studio-cinematic`).\n- `free-render-dispatch` \u2014 enfileira cinematic/kenburns/image_sequence a 0 mco com guardas anti-SSRF + piso 100KB.\n- `asset-frame-grouping` \u2014 carimba `asset_role`/`frame_index` por `source_job_id`; grid finals-only; expander in-node.\n- `open-in-video-deeplink` \u2014 compila criativo\u2192projeto HyperFrames e deep-linka `#project/<slug>` com ownership check.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/agents/creative-director.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:04:19)*
+
+
+## 🤖 Claude *(07:04:20)*
+
+Agora as 4 skills do agente (SOPs Lei 2 dos slices de código), em paralelo:
+
+## 🤖 Claude *(07:04:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/creative-studio-pipeline/SKILL.md",
+  "content": "---\nname: creative-studio-pipeline\ndescription: Orquestra o pipeline Creative Studio do Spaces \u2014 tema \u2192 Roteiro (cenas+prompts+TTS) \u2192 imagens por cena (Nano Banana) \u2192 curta cinematogr\u00e1fico 9:16 (template cinematic-9x16 no rail gr\u00e1tis) \u2192 \u00e1udio Piper \u2192 edit\u00e1vel em /spaces/video. Use ao montar/operar os n\u00f3s Roteiro (scriptGenerator) e Criativo Cinematogr\u00e1fico (cinematicVideo), encadear cenas\u2192imagens\u2192curta, ou produzir um criativo E2E. SSOT: Amendment 17.\n---\n\n# Creative Studio Pipeline\n\nOrquestra\u00e7\u00e3o do grafo criativo. SSOT: `docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md`. Motor provado: `scripts/hyperframes/` (commits 714e144/8c7141d/a523d6d).\n\n## Quando dispara\nDiretiva de \"criar um curta/criativo\", montar os n\u00f3s Roteiro/Criativo Cinematogr\u00e1fico, ou encadear roteiro\u2192imagens\u2192v\u00eddeo no Spaces.\n\n## N\u00f3s (contrato)\n- **Roteiro (`scriptGenerator`)** \u2014 text source. Output verbatim do Sovereign: `{ scenes:[{start,end,narration,imagePrompt}], ttsPrompt, generatedAt }`. Handle source `output_script`. Backend LLM per-user BYOK fail-closed (OTD-CS-002: verificar `generate-video-script`; sen\u00e3o `script_package`).\n- **Criativo Cinematogr\u00e1fico (`cinematicVideo`)** \u2014 invoca `video-render` `{engine:\"hyperframes\", composition:{template:\"cinematic-9x16\", duration_s, fps, props:{hook,caption,cta,brand,product_image_url}}}`. `product_image_url` via `findUpstreamImage` (`canvas-utils.ts`) em run-time. Async: poll `video_renders` por `renderId` (OTD-CS-007).\n\n## Fan-out (a jornada)\n`scenes[].imagePrompt` \u2192 n\u00f3s `generateImage` (Gemini DIRETO, ver [[reference_image_gen_provider_cost]]) \u2192 cada imagem vira `product_image_url`/hero do `cinematicVideo` (ou frame de `image_sequence`). `ttsPrompt` \u2192 narra\u00e7\u00e3o Piper/Kokoro (gr\u00e1tis) \u2192 envelope amplitude \u2192 `energy[]` (voice-reactive).\n\n## Gates (Lei 1)\n1. `ffprobe` do MP4 (1080\u00d71920, fps, frames) por render.\n2. **Vision ocular** de \u22651 frame extra\u00eddo (olhar de verdade) antes de \"pronto\".\n3. Frames intermedi\u00e1rios \u2192 `asset_frame_grouping` (nunca no `/assets`).\n4. Custo: rail gr\u00e1tis default; imagem paga medida e proposta, nunca silenciosa ([[feedback_paid_byok_post_revenue]]).\n\n## Alvo E2E\nDocument\u00e1rio dos rob\u00f4s (script do Sovereign): 11 cenas \u2192 11 imagens (~US$0,43) \u2192 curta 9:16 \u2192 `/spaces/video`. Witness gated em GO Sovereign.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/creative-studio-pipeline/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:04:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/free-render-dispatch/SKILL.md",
+  "content": "---\nname: free-render-dispatch\ndescription: Enfileira renders de v\u00eddeo GR\u00c1TIS (cinematic / kenburns / image_sequence) no rail video_renders a charged_mco:0 via engine=hyperframes, com o mode switch no video-bridge e as guardas anti-SSRF + piso 100KB + cleanup. Use ao adicionar/mexer no branch de render gr\u00e1tis do video-bridge ou no enqueuer do video-render. /security-review OBRIGAT\u00d3RIO. SSOT: Amendment 17 \u00a72.3.\n---\n\n# Free-Render Dispatch (rail FFmpeg US$0)\n\nSSOT: `docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md` \u00a72.3 + OTD-CS-004. Precedente 0-mco: `reshape-pillar/index.ts:266`.\n\n## Quando dispara\nAdicionar/alterar o render gr\u00e1tis: mode switch no `video-bridge`, o enqueuer 0-mco, ou o `compositionValid` do `video-render`.\n\n## Regra de ouro\nN\u00c3O criar enum `hyperframes_free` (for\u00e7a ALTER do CHECK + widen dos 2 filtros do poller). **Reusar `engine='hyperframes'` + `charged_mco:0`** \u2192 `finalize_video_render` refund vira no-op seguro, SEM migration.\n\n## Mode switch (`video-bridge.ts:86-91`)\nRotear ANTES do `throw '!spec.props'` (kenburns/image_sequence n\u00e3o t\u00eam props):\n- `studio-project` \u2192 `renderStudioProject` (inalterado)\n- `cinematic` \u2192 `renderComposition({...spec, template: spec.template ?? 'cinematic-9x16'})` (carrega `product_image_url` como URL dentro do Chromium, sem pre-download)\n- `kenburns` \u2192 `fetchToTmp(spec.image)` \u2192 `encodeKenBurns({...spec, image: localPath})`\n- `image_sequence` \u2192 `fetchToTmp` cada `spec.images[]` \u2192 `encodeImageSequence({...spec, images: localPaths})`\n- default \u2192 legado `if(!props) throw; renderComposition`\n\n## Guardas (Lei 1 + seguran\u00e7a \u2014 /security-review)\n1. **Anti-SSRF (gate-m\u00e3e):** `fetchToTmp` baixa URL arbitr\u00e1ria de jsonb com service-role \u2192 **constranger a URL assinada do MESMO owner/projeto**; sanitizar path (FFmpeg concat list \u00e9 inject\u00e1vel).\n2. **Piso material 100KB:** `result.bytes >= 100*1024` no branch kenburns/image_sequence (encoders s\u00f3 gateiam 1024 \u2192 MP4 degenerado finalizaria como asset real).\n3. **Cleanup:** coletar temps do `fetchToTmp` e `rm` no `finally` existente (`:198-200`) junto com `outPath`.\n4. **`compositionValid`** (`video-render:70-71`) widened p/ admitir os 3 modes com o campo requerido presente.\n5. Determinismo: `encodeKenBurns` omite bitexact \u2014 adicionar flags se NFR-VS-016 precisar valer.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/free-render-dispatch/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:05:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/asset-frame-grouping/SKILL.md",
+  "content": "---\nname: asset-frame-grouping\ndescription: Agrupa frames intermedi\u00e1rios DENTRO do n\u00f3 (card \u00fanico que expande 1-a-1) mantendo s\u00f3 o v\u00eddeo FINAL em /dashboard/spaces/assets. Carimba creative_assets.asset_role (final/frame/intermediate) por source_job_id + \u00edndice parcial + register_creative_asset re-create; grid finals-only server-side; useNodeFrames para a expans\u00e3o in-node. Use ao implementar o modelo de agrupamento de assets. Migration \u2192 /security-review + GO Sovereign. SSOT: Amendment 17 \u00a72.4.\n---\n\n# Asset Frame Grouping (Op\u00e7\u00e3o B)\n\nSSOT: `docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md` \u00a72.4 + OTD-CS-003. Hoje N\u00c3O existe conceito final-vs-frame (grep migrations por is_final/group_id = 0).\n\n## Quando dispara\nImplementar o \"frames agrupados in-node, s\u00f3 final no /assets\", ou mexer no grid `useCreativeAssets` / no `register_creative_asset`.\n\n## Chave de grupo\n`creative_assets.source_job_id` (J\u00c1 populado \u2014 todos os frames de um run compartilham 1). N\u00c3O overload `parent_asset_id` (\u00e9 self-FK single-parent = variation-of, shape errado).\n\n## Modelo (Op\u00e7\u00e3o B \u2014 recomendado)\n1. Migration: `ALTER creative_assets ADD COLUMN asset_role text NOT NULL DEFAULT 'final' CHECK (asset_role IN ('final','frame','intermediate'))` + \u00edndice parcial `(user_id, created_at DESC) WHERE asset_role='final'`.\n2. `register_creative_asset` re-create **exact-signature** com `p_asset_role` default `'final'` (precedente `20260707230000`; n\u00e3o quebrar callers/overload).\n3. Produtor carimba: 180 frames = `frame` + `metadata:{frame_index:N}` `p_is_public:false`; o final = `final`. Nos 2 call sites (`canvas-execute:555-567` e `:1569-1581`).\n4. Grid finals-only: `useCreativeAssets` adiciona `.eq('asset_role','final')` **server-side** (obrigat\u00f3rio \u2014 o `limit(300)` faria 180 frames afogarem os finais).\n5. Expans\u00e3o in-node: `useNodeFrames(source_job_id)` \u2192 `WHERE source_job_id=$1 AND asset_role='frame' ORDER BY (metadata->>'frame_index')::int`; thumbnails via **URL assinada owner-scoped** (`resolveAssetUrl`/`signStorageRef` \u2014 buckets privados, `is_public` mente).\n\n## Gate cr\u00edtico\n**Carimbo + filtro do grid T\u00caM que shippar juntos** \u2014 sen\u00e3o o 1\u00ba run do n\u00f3 polui o `/assets`. Migration \u2192 `/security-review`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/asset-frame-grouping/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:05:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/open-in-video-deeplink/SKILL.md",
+  "content": "---\nname: open-in-video-deeplink\ndescription: Abre um criativo do Spaces direto no editor /dashboard/spaces/video via deep-link por hash (#project/<slug>) \u2014 inclui o compilador que transforma um criativo Spaces num projeto HyperFrames edit\u00e1vel e o ownership check per-user. Use ao implementar o bot\u00e3o \"abrir no editor de v\u00eddeo\" / o param-aware iframe / o bridge de identidade Spaces\u2192Studio. STEP 2 \u00e9 o CORE BLOCKER. SSOT: Amendment 17 \u00a72.5.\n---\n\n# Open-in-Video Deep-Link\n\nSSOT: `docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md` \u00a72.5 + OTD-CS-005.\n\n## Quando dispara\nImplementar \"abrir o projeto em /spaces/video\", o iframe param-aware, ou o bridge de identidade Spaces\u2192Studio.\n\n## Seam (grounded)\nDeep-link = **hash do iframe** lido pela SPA `@hyperframes/studio` (N\u00c3O query, N\u00c3O route param). Formato emp\u00edrico (grep do dist): `https://video.mcorch.com/#project/<encodeURIComponent(projectId)>` (path-style ap\u00f3s `#`). `#project=<id>`/`?project=<id>` est\u00e3o ERRADOS.\n\n## STEP 1 \u2014 buildable-now (frontend-only)\n`VideoStudioEditorPage.tsx:17-18`: ler `useSearchParams().get('project')` de `/dashboard/spaces/video?project=<id>` e setar `iframe src = https://video.mcorch.com/#project/${encodeURIComponent(id)}`. O hash \u00e9 client-only, n\u00e3o passa pelo nginx/SSO \u2192 SEM mudan\u00e7a de vhost. Parent\u2192iframe \u00e9 one-way (cross-origin bloqueia ler o hash de volta).\n\n## STEP 2 \u2014 CORE BLOCKER (/security-review)\n`<id>` tem que ser um **projeto Studio** = slug de DIR (`^[a-zA-Z0-9_-]+$`) sob `STUDIO_PROJECTS_ROOT`, no bucket `video-studio-projects`, com `index.html`. Criativos do Spaces s\u00e3o identidade DISJUNTA (`vm_canvas_projects` UUID + `canvas-assets`). **Nenhum produtor compila Spaces\u2192projeto HyperFrames edit\u00e1vel hoje** (s\u00f3 existem MP4 FINAIS em `video-studio-assets`). Escolher: (a) compilador on-open que monta `index.html`+compositions e sobe pra `video-studio-projects/projects/<slug>/` (\u2192 `materializeProject` hidrata); OU (b) estender `resolveProject` p/ aceitar id Supabase-native. **3 buckets distintos:** projeto=`video-studio-projects`; output=`video-studio-assets`; assets Spaces=`canvas-assets`.\n\n## STEP 3 \u2014 antes de multi-tenant\n`resolveProject`/`materializeProject` confiam no id SEM ownership check (single-tenant User Zero, OTD-VA-011/OTD-VS-019). Qualquer id client-supplied que dirige materializa\u00e7\u00e3o de path precisa de **ownership check** (id pertence ao user SSO-autenticado) antes do User 1.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/open-in-video-deeplink/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:05:30)*
+
+
+## 🤖 Claude *(07:05:31)*
+
+4 skills + agente + amendment prontos. Committando o gate Lei 2 + o especialista (docs/agent/skills — sem código, sem /security-review):
+
+## 🤖 Claude *(07:05:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md .claude/agents/creative-director.md .claude/skills/creative-studio-pipeline/ .claude/skills/free-render-dispatch/ .claude/skills/asset-frame-grouping/ .claude/skills/open-in-video-deeplink/\ngit commit -q -m \"docs(creative-studio): Amendment 17 + agente Creative Director + 4 skills (gate Lei 2 do m\u00f3dulo)\n\nGradua a PoC de video gratis em MVP dentro do Spaces. Amendment 17 codifica o mapa do recon\n(wf_cdf0e1a0-4ca): nos Roteiro (scriptGenerator) + Criativo Cinematografico (cinematicVideo),\nfree-render rail (video_renders engine=hyperframes charged_mco:0, SEM migration), agrupamento\nasset_role (Opcao B, source_job_id), open-in-video por hash #project/<slug>, FR-SPACES-041..053,\nOTD-CS-001..007, Pattern Conformance, 10 slices sequenciados. Agente creative-director (L2 sob\nartisan) + skills creative-studio-pipeline/free-render-dispatch/asset-frame-grouping/\nopen-in-video-deeplink (SOPs Lei 2 dos slices). Fecha o gate Closed-Loop 3.5; codigo de no\nbuildable pos-selo, slices edge/migration ridem /security-review.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit Amendment 17 + Creative Director agent + skills"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:05AM[0m [32mINF[0m 1 commits scanned.
+> [90m4:05AM[0m [32mINF[0m scan completed in 37.5ms
+> [90m4:05AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 264cd1725a09da4c19bd88696a5365958f4a87bd docs(creative-studio): Amendment 17 + agente Creative Director + 4 skills (gate Lei 2 do módulo)
+> ```
+
+## 🤖 Claude *(07:05:57)*
+
+
+## 🤖 Claude *(07:05:58)*
+
+`264cd17` selado — gate Lei 2 fechado + especialista criado. Antes de re-armar, resolvo um unknown barato que destrava o próximo slice (OTD-CS-002: o `generate-video-script` já emite `{scenes[],ttsPrompt}` ou preciso de fn nova?):
+
+## 🤖 Claude *(07:06:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== output shape do generate-video-script ===\"; grep -niE \"scenes|ttsPrompt|tts_prompt|timestamp|narration|imagePrompt|image_prompt|return new Response|JSON.stringify|\\.json\\(|shots|segments\" supabase/functions/generate-video-script/index.ts 2>/dev/null | head -30\necho \"=== assinatura/entrada ===\"; grep -niE \"req.json|body|topic|prompt|duration|const \\{|interface|type \" supabase/functions/generate-video-script/index.ts 2>/dev/null | head -15",
+  "description": "Resolve OTD-CS-002: generate-video-script output schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === output shape do generate-video-script ===
+> 39:  if (req.method === "OPTIONS") return new Response('ok', { headers: corsHeaders });
+> 46:      return new Response(JSON.stringify({ error: "Não autorizado — token ausente" }), {
+> 73:      return new Response(JSON.stringify({ error: "Não autorizado — token inválido" }), {
+> 85:      return new Response(JSON.stringify({ error: "Usuário não encontrado" }), {
+> 93:    const { prompt, format, duration, provider, model } = await req.json();
+> 95:      return new Response(JSON.stringify({ error: "Prompt é obrigatório" }), {
+> 116:        return new Response(JSON.stringify({ error: "Configure sua chave do Google Gemini em Configurações" }), {
+> 127:        return new Response(JSON.stringify({ error: "Configure sua chave do OpenRouter em Configurações" }), {
+> 146:      return new Response(JSON.stringify({ error: "Nenhuma chave de API configurada para o provedor selecionado. Acesse Configurações." }), {
+> 189:      body = JSON.stringify({
+> 201:      body = JSON.stringify({
+> 228:        return new Response(JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns segundos." }), {
+> 234:        return new Response(JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos no workspace." }), {
+> 241:      return new Response(JSON.stringify({ error: `Erro no provedor ${selectedProvider}: ${aiResponse.status}` }), {
+> 247:    return new Response(aiResponse.body, {
+> 252:    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), {
+> === assinatura/entrada ===
+> 31:    const { payload } = await jwtVerify(token, SUPABASE_JWKS);
+> 61:    const { data: { user }, error: authError } = await supabase.auth.getUser();
+> 81:    const { data: adminUser, error: adminError } = await adminClient.auth.admin.getUserById(userId);
+> 93:    const { prompt, format, duration, provider, model } = await req.json();
+> 94:    if (!prompt) {
+> 95:      return new Response(JSON.stringify({ error: "Prompt é obrigatório" }), {
+> 102:    const { data: userKeys } = await adminClient.from("decrypted_user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> 152:    // --- Prompt Engineering ---
+> 160:    const durationGuide: Record<string, string> = {
+> 166:    const systemPrompt = `Você é um roteirista profissional brasileiro especializado em produção de vídeos para marketing digital e redes sociais.
+> 168:${durationGuide[duration] || durationGuide.médio}
+> 182:    let body: string;
+> 189:      body = JSON.stringify({
+> 190:        contents: [{ parts: [{ text: systemPrompt + "\n" + prompt }] }],
+> 195:        body,
+> ```
+
+## 🤖 Claude *(07:06:29)*
+
+
+## 🤖 Claude *(07:06:31)*
+
+OTD-CS-002 **resolvido materialmente**: `generate-video-script` é um **passthrough de LLM per-user BYOK** (streama o texto, `:247`) — não estrutura nada. Ou seja, o contrato `{scenes[],ttsPrompt}` vem do **prompt** que o inspector manda + parse JSON no cliente → **reusa a fn as-is, buildable-now, sem /security-review**. Isso promove o Nó Roteiro inteiro pra buildable-now. Atualizando a Amendment:
+
+## 🤖 Claude *(07:06:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md",
+  "old_string": "| **OTD-CS-002** | Backend do Roteiro | **Verificar `generate-video-script` output**; se emitir `{scenes[],ttsPrompt}` \u2192 reusar (A); sen\u00e3o \u2192 `script_package` node_type ledger-first (B). Recomenda\u00e7\u00e3o: B se houver mismatch. | engineer | feature/SOP |",
+  "new_string": "| **OTD-CS-002** | Backend do Roteiro | \u2705 **Resolvido 2026-07-09** (`generate-video-script:93,247`): a fn \u00e9 **passthrough de LLM per-user BYOK** (recebe `{prompt,format,duration,provider,model}`, streama o texto \u2014 N\u00c3O estrutura). Logo o contrato `{scenes[],ttsPrompt}` vem do **PROMPT** que o inspector envia + **parse JSON client-side** \u2192 **reusa a fn as-is, BUILDABLE-NOW, sem /security-review**. Fallback `script_package` node_type s\u00f3 se o parse for inst\u00e1vel. | engineer | resolvido |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:06:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md",
+  "old_string": "| 2 | N\u00f3 Roteiro backend (script package) | needs-/security-review | Verificar `generate-video-script`; se mismatch, `script_package` + SOP. |",
+  "new_string": "| 2 | N\u00f3 Roteiro backend | **buildable-now** | OTD-CS-002 resolvido: reusa `generate-video-script` (passthrough BYOK) com prompt estruturado + parse JSON client-side. Sem edge nova, sem /security-review. |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:06:50)*
+
+
+## 🤖 Claude *(07:06:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md && git commit -q -m \"docs(creative-studio): OTD-CS-002 resolvido \u2014 Roteiro reusa generate-video-script (passthrough BYOK), buildable-now\n\ngenerate-video-script (:93,247) e passthrough de LLM per-user BYOK que streama texto, nao\nestrutura. O contrato {scenes[],ttsPrompt} vem do prompt do inspector + parse JSON client-side\n-> reusa a fn as-is, sem edge nova, sem /security-review. No Roteiro promovido a buildable-now.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit OTD-CS-002 resolution"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:06AM[0m [32mINF[0m 1 commits scanned.
+> [90m4:06AM[0m [32mINF[0m scan completed in 7.46ms
+> [90m4:06AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.24 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.17 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 0d4f8684fa7831a8b61f8faa8c99d991533ad5a2 docs(creative-studio): OTD-CS-002 resolvido — Roteiro reusa generate-video-script (passthrough BYOK), buildable-now
+> ```
+
+## 🤖 Claude *(07:07:03)*
+
+
+## 🤖 Claude *(07:07:04)*
+
+Gate Lei 2 fechado, especialista criado, e um unknown resolvido (Nó Roteiro agora buildable-now). Re-armo o loop pros slices de código:
+
+## 🤖 Claude *(07:07:25)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "reason": "Gate Lei 2 (Amendment 17) + agente + skills selados. Loop segue pros slices de c\u00f3digo buildable-now (n\u00f3s Roteiro+Cinematogr\u00e1fico cliente). Fallback 30min.",
+  "prompt": "Loop aut\u00f4nomo \u2014 M\u00d3DULO \"Creative Studio\". Gate Lei 2 FECHADO: Amendment 17 (docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md, commit 264cd17) + agente .claude/agents/creative-director.md + 4 skills. OTD-CS-002 RESOLVIDO (commit 0d4f868): N\u00f3 Roteiro reusa generate-video-script (passthrough LLM per-user BYOK que streama texto \u2014 o contrato {scenes[],ttsPrompt} vem do PROMPT + parse JSON client-side; sem edge nova, sem /security-review). Orientar via git log --oneline -14 primeiro. AGORA construir os slices na ordem (Amendment 17 \u00a76), buildable-now primeiro: (SLICE 1) N\u00f3 Roteiro (scriptGenerator) cliente \u2014 7 edits em src/types/canvas.ts (union :19-29, interface ScriptGeneratorData :373-574, data union :576-586, makeDefaultScriptGenerator :846-865, case return null :933-1027, estimateNodeCost return 2 :1057-1081) + 1 NodeRegistryEntry em canvas-node-registry.ts (categoria Generate, \u00edcone ScrollText) + ScriptGeneratorNode.tsx (Handle source output_script INLINE) + nodeTypes em CanvasEditorPage.tsx:59-70 + ScriptGeneratorInspector.tsx (espelha PublishWordpressInspector; invoke generate-video-script com prompt que EXIGE o JSON {scenes[{start,end,narration,imagePrompt}],ttsPrompt} no formato verbatim do Sovereign; acumula o stream e JSON.parse defensivo, strip de fences) + branch em RightPanel/index.tsx. (SLICE 3) N\u00f3 Criativo Cinematogr\u00e1fico (cinematicVideo) cliente \u2014 mesmas 7 edits + CinematicVideoNode.tsx (target input_image) + CinematicVideoInspector.tsx (invoke video-render engine hyperframes template cinematic-9x16; product_image_url via findUpstreamImage; poll video_renders por renderId \u2014 reconcilia\u00e7\u00e3o async OTD-CS-007). PROVAR: gerar o pacote do roteiro dos rob\u00f4s (tema do Sovereign) via o inspector/edge e mostrar {scenes[],ttsPrompt} real (usar OpenRouter free text model se poss\u00edvel p/ 0 custo, ou BYOK). DEPOIS os slices needs-/security-review: free-render rail (skill free-render-dispatch \u2014 mode switch video-bridge + fetchToTmp anti-SSRF same-owner + piso 100KB + cleanup), asset_role migration (skill asset-frame-grouping, Op\u00e7\u00e3o B, /security-review + GO Sovereign na coluna), open-in-video (skill open-in-video-deeplink, STEP 1 param-aware buildable-now, STEP 2 compilador \u00e9 CORE BLOCKER). DISCIPLINA: buildable-now sem /security-review; edge/migration com /security-review ANTES do commit; Vision ocular em todo criativo (extrair frame e OLHAR); rail gr\u00e1tis default, pago = p\u00f3s-renda ([[feedback_paid_byok_post_revenue]]); TTS = Piper/Kokoro ([[reference_tts_free_options]]); imagem = Gemini direto ([[reference_image_gen_provider_cost]]); nunca fabricar prova (Lei 1); commits granulares sem Co-Authored-By. Alvo E2E = document\u00e1rio dos rob\u00f4s (11 imagens ~US$0,43, GO Sovereign no gasto)."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 04:38:00 (in 1834s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(07:07:33)*
+
+
+## 🤖 Claude *(07:07:52)*
+
+## Iteração do loop — módulo Creative Studio: gate Lei 2 fechado
+
+O recon (`wf_cdf0e1a0-4ca`) voltou com um mapa cirúrgico e eu já converti em fundação selada:
+
+| Entrega | Commit |
+|---------|--------|
+| **Amendment 17** — o módulo mapeado: 2 nós + free-render rail + `asset_role` + open-in-video + `FR-SPACES-041..053` + `OTD-CS-001..007` + Pattern Conformance + 10 slices | `264cd17` |
+| **Agente `creative-director`** (L2 sob artisan) + **4 skills** (pipeline · free-render-dispatch · asset-frame-grouping · open-in-video-deeplink) | `264cd17` |
+| **OTD-CS-002 resolvido** → Nó Roteiro vira buildable-now (reusa `generate-video-script`, sem edge nova) | `0d4f868` |
+
+**Achados honestos do mapa (Lei 1):**
+- ✅ **O render grátis não precisa de migration** — reusa `engine='hyperframes' charged_mco:0` (precedente `reshape-pillar`). Só um mode switch no `video-bridge` + guardas anti-SSRF.
+- ✅ **O template já renderiza hoje** — `cinematic-9x16` está em `VALID_TEMPLATES`; o Nó Cinematográfico é só o cliente + inspector chamando o `video-render`.
+- ⚠️ **CORE BLOCKER honesto (OTD-CS-005):** "abrir no `/spaces/video`" tem um degrau real — hoje nenhum produtor compila um criativo do Spaces num *projeto HyperFrames editável*; só existem MP4 finais. O deep-link (`#project/<slug>`) é trivial, mas o compilador de projeto é trabalho de verdade. Documentei e sequenciei — não escondi.
+- 📌 **Agrupamento de assets:** recomendei a **Opção B** (`asset_role` por `source_job_id`) — mas a migration da coluna é decisão de schema sua, como foi a OTD-SPACES-036. Vou trazer pra GO quando chegar no slice 7.
+
+**Próximo (loop, 04:38):** construir os nós cliente (Roteiro + Cinematográfico, ambos buildable-now, espelham `publishWordpress`) e **provar gerando o pacote do seu roteiro dos robôs** de verdade. Depois os slices com `/security-review` (rail grátis, `asset_role`, open-in-video).
+
+Está tudo governado pela Amendment 17 e pelas suas diretrizes (rail grátis default, pago pós-renda, TTS Piper, imagem Gemini direto). O loop segue; te reporto quando os nós estiverem de pé com prova.
+
+## 👤 User *(07:07:54)*
+
+O Gemini TTS pode ser optin como uma das formas e motores mas estavamos usando o https://openbmb-voxcpm-demo.hf.space/ mas podemos talvez hospedar isso tambem ou encontrar algo opensource que podemos pegar para fazer parte nativo do nosso ecossistema.:
+
+
+unslothai/unsloth
+Unsloth Studio is a web UI for training and running open models like Gemma 4, Qwen3.6, DeepSeek, gpt-oss locally.
+agent
+text-to-speech
+ui
+reinforcement-learning
+self-hosted
+Python
+·
+67.9k
+·
+Updated 4 minutes ago
+
+CorentinJ/Real-Time-Voice-Cloning
+Clone a voice in 5 seconds to generate arbitrary speech in real-time
+python
+deep-learning
+tensorflow
+pytorch
+tts
+Python
+·
+60k
+·
+Updated on 9 de mar.
+
+RVC-Boss/GPT-SoVITS
+1 min voice data can also be used to train a good TTS model! (few shot voice cloning)
+text-to-speech
+tts
+voice-cloning
+vits
+voice-clone
+Python
+·
+59.6k
+·
+Updated 18 days ago
+
+mudler/LocalAI
+LocalAI is the open-source AI engine. Run any model - LLMs, vision, voice, image, video - on any hardware. No GPU required.
+api
+ai
+mcp
+decentralized
+text-generation
+Go
+·
+47.4k
+·
+Updated 2 minutes ago
+
+coqui-ai/TTS
+🐸💬 - a deep learning toolkit for Text-to-Speech, battle-tested in research and production
+python
+text-to-speech
+deep-learning
+speech
+pytorch
+Python
+·
+45.7k
+·
+Updated on 16 de ago. de 2024
+
+2noise/ChatTTS
+A generative speech model for daily dialogue.
+python
+chat
+agent
+text-to-speech
+torch
+Python
+·
+39.6k
+·
+Updated on 10 de abr.
+
+babysor/MockingBird
+🚀Clone a voice in 5 seconds to generate arbitrary speech in real-time
+text-to-speech
+ai
+deep-learning
+speech
+pytorch
+Python
+·
+36.9k
+·
+Updated on 3 de mar.
+
+myshell-ai/OpenVoice
+Instant voice cloning by MIT and MyShell. Audio foundation model.
+text-to-speech
+tts
+voice-clone
+zero-shot-tts
+Python
+·
+36.9k
+·
+Updated on 19 de abr. de 2025
+
+OpenBMB/VoxCPM
+VoxCPM2: Tokenizer-Free TTS for Multilingual Speech Generation, Creative Voice Design, and True-to-Life Cloning
+audio
+multilingual
+python
+text-to-speech
+speech
+Python
+·
+32.9k
+·
+Updated 21 hours ago
+
+## 🤖 Claude *(07:08:49)*
+
+
+## 🤖 Claude *(07:08:52)*
+
+Isso ataca exatamente o gap que eu tinha flagado (clone de voz pt-BR **comercial-safe** era o buraco). A arquitetura certa é **multi-motor**: um self-host nativo como default + Gemini TTS como opt-in + Piper/Kokoro pra narração. O fator decisivo é **licença** (produto pago exige comercial-safe) + pt-BR + self-hostável. Deixa eu verificar as licenças dos candidatos que você listou — VoxCPM primeiro (você já usa):
+
+## 🤖 Claude *(07:08:53)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "OpenBMB VoxCPM license Apache commercial use voice cloning Portuguese self-host"
+}
+```
+
+## 🤖 Claude *(07:08:54)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "GPT-SoVITS license commercial use vs OpenVoice V2 MIT license Portuguese voice cloning"
+}
+```
+
+## 🤖 Claude *(07:08:55)*
+
+
+🛠️ **Tool Call**: `WebSearch`
+```json
+{
+  "query": "ChatTTS OpenVoice V2 XTTS license non-commercial commercial 2026 self-host TTS Portuguese Brazilian"
+}
+```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "OpenBMB VoxCPM license Apache commercial use voice cloning Portuguese self-host"
+> 
+> Links: [{"title":"GitHub - OpenBMB/VoxCPM: VoxCPM2: Tokenizer-Free TTS for Multilingual Speech Generation, Creative Voice Design, and True-to-Life Cloning · GitHub","url":"https://github.com/OpenBMB/VoxCPM"},{"title":"openbmb/VoxCPM2 · Hugging Face","url":"https://huggingface.co/openbmb/VoxCPM2"},{"title":"VoxCPM: Tokenizer-Free TTS & Zero-Shot Voice Cloning","url":"https://voxcpm.net/"},{"title":"openbmb/VoxCPM-0.5B · Hugging Face","url":"https://huggingface.co/openbmb/VoxCPM-0.5B"},{"title":"Commercial use clarification - training data license for VoxCPM2 · Issue #238 · OpenBMB/VoxCPM","url":"https://github.com/OpenBMB/VoxCPM/issues/238"},{"title":"README.md · openbmb/VoxCPM2 at main","url":"https://huggingface.co/openbmb/VoxCPM2/blob/main/README.md"},{"title":"VoxCPM2 — Free Tokenizer-Free TTS, Voice Cloning & Design","url":"https://voxcpm.app/"},{"title":"README.md · michael-chan-000/VoxCPM2 at main","url":"https://huggingface.co/michael-chan-000/VoxCPM2/blob/main/README.md"},{"title":"openbmb/VoxCPM1.5 · Hugging Face","url":"https://huggingface.co/openbmb/VoxCPM1.5"},{"title":"GitHub - Saganaki22/ComfyUI-VoxCPM2: VoxCPM2 TTS for ComfyUI. 30 languages, voice design, controllable cloning, 48kHz audio, and LoRA training · GitHub","url":"https://github.com/Saganaki22/ComfyUI-VoxCPM2"}]
+> 
+> Based on the search results, here's what I found about OpenBMB VoxCPM regarding license, commercial use, voice cloning, and Portuguese support:
+> 
+> ## License and Commercial Use
+> 
+> VoxCPM2 weights and code are released under the Apache-2.0 license, free for commercial use. You can get the source code from the GitHub repository, download pre-trained models from HuggingFace, and deploy according to the quick start guide.
+> 
+> ## Voice Cloning
+> 
+> VoxCPM2 features controllable cloning that allows you to clone any voice from a short reference clip, with optional style guidance to steer emotion, pace, and expression while preserving the original timbre.
+> 
+> ## Portuguese Support
+> 
+> VoxCPM2 supports 30 languages including Portuguese, making it capable of generating Portuguese speech.
+> 
+> ## Self-Hosting
+> 
+> VoxCPM2 supports batch and streaming inference with mature tooling for production deployment, and is built around an OpenBMB speech model with open model licensing and self-hosting options.
+> 
+> The model is fully open-source and suitable for self-hosted deployments with commercial use rights under the Apache-2.0 license.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "GPT-SoVITS license commercial use vs OpenVoice V2 MIT license Portuguese voice cloning"
+> 
+> Links: [{"title":"GPT-SoVITS – AI Voice Cloning & Text-to-Speech Tool","url":"https://gpt-sovits.org/"},{"title":"GPT-SoVITS/LICENSE at main · RVC-Boss/GPT-SoVITS","url":"https://github.com/RVC-Boss/GPT-SoVITS/blob/main/LICENSE"},{"title":"GPT-SoVITS download | SourceForge.net","url":"https://sourceforge.net/projects/gpt-sovits.mirror/"},{"title":"GPT-SoVITS-WebUI","url":"https://codesandbox.io/p/github/Pkok1024/GPT-SoVITS"},{"title":"gpt.rs/LICENSE at main · mranv/gpt. ...","url":"https://github.com/mranv/gpt.rs/blob/main/LICENSE"},{"title":"GitHub - RVC-Boss/GPT-SoVITS: 1 min voice data can also be used to train a good TTS model! (few shot voice cloning) · GitHub","url":"https://github.com/RVC-Boss/GPT-SoVITS"},{"title":"GPT-SoVITS for local inference on Intel or Apple Silicon Mac | by CloseX | Medium","url":"https://closex.medium.com/gpt-sovits-for-local-inference-on-intel-or-apple-silicon-mac-bc4c949dab55"},{"title":"fishaudio/openaudio-s1-mini · OPENaudio released under Creative Commons Attribution Non Commercial Share Alike 4.0?","url":"https://huggingface.co/fishaudio/openaudio-s1-mini/discussions/7"},{"title":"lj1995/GPT-SoVITS · Hugging Face","url":"https://huggingface.co/lj1995/GPT-SoVITS"}]
+> 
+> Links: [{"title":"GitHub - myshell-ai/OpenVoice: Instant voice cloning by MIT and MyShell. Audio foundation model. · GitHub","url":"https://github.com/myshell-ai/OpenVoice"},{"title":"myshell-ai/OpenVoiceV2 · Hugging Face","url":"https://huggingface.co/myshell-ai/OpenVoiceV2"},{"title":"OpenVoice V2: Free Instant Voice Cloning (Open Source) | FreeAPIHub","url":"https://freeapihub.com/ai-models/openvoice"},{"title":"OpenVoice v2 Guide 2026: Voice Cloning with Emotion Control | Local AI Master","url":"https://localaimaster.com/blog/openvoice-v2-guide"},{"title":"orionai/openvoice-v2 · Hugging Face","url":"https://huggingface.co/orionai/openvoice-v2"},{"title":"GitHub - Render-AI-Team/OpenVoice-v2: Instant voice cloning by MyShell. · GitHub","url":"https://github.com/Render-AI-Team/OpenVoice-v2"},{"title":"OpenVoice AI Review: Brutal Truth About Free Voice Cloning 2026","url":"https://qcall.ai/openvoice-ai-review"},{"title":"GitHub - metienne-GR/openvoice: Instant voice cloning by MIT and MyShell. Audio foundation model. · GitHub","url":"https://github.com/metienne-GR/openvoice"},{"title":"OpenVoice download | SourceForge.net","url":"https://sourceforge.net/projects/openvoice.mirror/"},{"title":"GitHub - digvijay59/openvoice: opnevoice v2 voice cloner","url":"https://github.com/digvijay59/openvoice"}]
+> 
+> Based on the search results, here's a comparison of the licensing and commercial use implications for these two voice cloning projects:
+> 
+> ## GPT-SoVITS License for Commercial Use
+> 
+> GPT-SoVITS is fully open-source under MIT license, which is permissive for commercial use. However, commercial use may depend on the specific license terms of the project and any models you use with it. This means while the code is MIT-licensed, the specific pre-trained models you integrate may have different licensing restrictions.
+> 
+> ## OpenVoice V2 MIT License & Portuguese Support
+> 
+> Starting from April 2024, both V2 and V1 are released under MIT License. Free for commercial use. For commercial deployment without licensing risk, OpenVoice v2 is the cleanest choice.
+> 
+> However, regarding Portuguese specifically: English, Spanish, French, Chinese, Japanese and Korean are natively supported in OpenVoice V2. Portuguese is **not** listed among the natively supported languages in OpenVoice V2, though neither of the language of the generated speech nor the language of the reference speech needs to be presented in the massive-speaker multi-lingual training dataset, meaning zero-shot cross-lingual cloning might work for Portuguese in practice.
+> 
+> ## Key Licensing Difference
+> 
+> Both projects use MIT licenses, but OpenVoice V2 explicitly clarifies "free for commercial use" starting from April 2024, while GPT-SoVITS leaves commercial use contingent on the specific models deployed with it.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+> **Tool Result (WebSearch)** - ✅ Success
+>
+> ```
+> Web search results for query: "ChatTTS OpenVoice V2 XTTS license non-commercial commercial 2026 self-host TTS Portuguese Brazilian"
+> 
+> Links: [{"title":"Is XTTS v2 / Coqui TTS Free for Commercial Use? (2026) | Local AI Master","url":"https://localaimaster.com/blog/xtts-coqui-commercial-license"},{"title":"Local TTS & Voice Cloning Licenses 2026: Which Engines Allow Commercial Use (Piper, XTTS v2, F5-TTS, Coqui)","url":"https://www.promptquorum.com/power-local-llm/local-tts-voice-cloning-piper-coqui-xtts"},{"title":"TTS Licensing Matrix 2026: Commercial Rights for 15 Providers","url":"https://freetts.org/tts-licensing-commercial-use-matrix"},{"title":"The Best Open-Source Text-to-Speech Models in 2026","url":"https://www.bentoml.com/blog/exploring-the-world-of-open-source-text-to-speech-models"},{"title":"Self-Host AI Voice Cloning on GPU Cloud: XTTS-2, F5-TTS, and OpenVoice V2 Production Deployment Guide (2026) | Spheron Blog","url":"https://www.spheron.network/blog/self-host-voice-cloning-gpu-cloud-xtts-f5-tts-openvoice-v2/"},{"title":"Best Open-Weight Text-to-Speech Models 2026 | Presenc AI","url":"https://presenc.ai/research/best-open-weight-text-to-speech-models-2026"},{"title":"Text To Speech Open Source: 21 Best Projects 2026 Guide","url":"https://qcall.ai/text-to-speech-open-source"},{"title":"Best Open Source Text-to-Speech Software Compared - Smallest.ai","url":"https://smallest.ai/blog/open-source-tts-alternatives-compared"},{"title":"GitHub - 2noise/ChatTTS: A generative speech model for daily dialogue. · GitHub","url":"https://github.com/2noise/ChatTTS"}]
+> 
+> Based on the search results, here's what I found regarding the licensing and features of ChatTTS, OpenVoice V2, XTTS, and self-hosting capabilities:
+> 
+> ## License Summary (2026)
+> 
+> **XTTS v2:**
+> - Non-commercial only under the Coqui Public Model License
+> - Coqui Inc shut down in January 2024, so there is currently no one to sell an XTTS v2 commercial license
+> 
+> **OpenVoice V2:**
+> - MIT licensed, which permits commercial use
+> - OpenVoice v2 from MyShell remains the dominant open-weight voice cloning solution for multilingual deployments, with strong support across English, Chinese, Japanese, Korean, Spanish, French
+> 
+> **ChatTTS:**
+> - The released model is for academic purposes only
+> - Trained on approximately 100,000 hours of Chinese and English data, ChatTTS is capable of producing natural and high-quality speech in both languages
+> 
+> ## Self-Hosting & Brazilian Portuguese Support
+> 
+> Regarding Brazilian Portuguese specifically, the search results don't contain explicit information about ChatTTS, OpenVoice V2, or XTTS supporting Brazilian Portuguese. The results mention that:
+> 
+> - ChatTTS currently supports only English and Chinese, which may restrict its use for applications in other languages
+> - XTTS-2 supports 17 languages, but Brazilian Portuguese is not specifically confirmed
+> - OpenVoice v2 has strong support across English, Chinese, Japanese, Korean, Spanish, French (no mention of Portuguese variants)
+> 
+> All three models support self-hosting, but for Brazilian Portuguese support specifically, you would need to verify the language models' current capabilities directly with their documentation or repositories.
+> 
+> 
+> REMINDER: You MUST include the sources above in your response to the user using markdown hyperlinks.
+> ```
+
+## 🤖 Claude *(07:09:54)*
+
+
+## 🤖 Claude *(07:09:55)*
+
+Resultado **decisivo** — e fecha o gap que eu tinha flagado. Deixa eu checar se o host tem GPU (informa a viabilidade do self-host):
+
+## 🤖 Claude *(07:09:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== GPU ===\"; nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null || echo \"sem NVIDIA GPU (nvidia-smi ausente/erro)\"\necho \"=== CPU/RAM ===\"; nproc | xargs echo \"cores:\"; free -h 2>/dev/null | awk '/Mem:/{print \"RAM total:\", $2, \"| livre:\", $7}'",
+  "description": "Check host GPU + CPU/RAM for TTS self-host feasibility"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GPU ===
+> sem NVIDIA GPU (nvidia-smi ausente/erro)
+> === CPU/RAM ===
+> cores: 4
+> RAM total: 23Gi | livre: 14Gi
+> ```
+
+## 🤖 Claude *(07:10:30)*
+
+
+## 🤖 Claude *(07:10:43)*
+
+Host é **CPU-only** (4 cores, 23GB RAM, sem GPU) — fato material importante pra recomendação. Aqui está o veredito:
+
+## 🏆 A escolha é clara: **VoxCPM2** (que você já usava)
+
+Verifiquei as licenças — e o VoxCPM2 acerta **todos** os critérios que faltavam:
+
+| Critério | VoxCPM2 (OpenBMB) |
+|----------|-------------------|
+| **Licença** | **Apache-2.0 — pesos E código, livre pra uso comercial** ✅ (raríssimo em modelo de clone) |
+| **pt-BR** | **Sim — 30 idiomas incl. Português** ✅ |
+| **Clonagem** | **Sim** — clone de referência curta + "creative voice design" + LoRA ✅ |
+| **Self-host** | Sim — batch + streaming, 0.5B, tooling de produção ✅ |
+| **Já validado por você** | Sim (o HF demo) ✅ |
+
+**Isso fecha o gap** que eu tinha marcado: clone de voz pt-BR **comercial-safe** não existia entre os que eu tinha achado — o VoxCPM2 resolve.
+
+**Ranking dos outros (pra opt-in / fallback):**
+- **OpenVoice V2** (MIT, comercial) — bom cloner, mas **pt-BR não é nativo** (EN/ES/FR/ZH/JP/KR; cross-lingual "talvez"). Backup.
+- **GPT-SoVITS** (MIT no código, mas modelos com termos próprios) — few-shot 1min; mais setup.
+- **LocalAI** (MIT) — **é a camada de serving** (API OpenAI-compatible `/v1/audio/speech`, roda sem GPU). Hospedar o VoxCPM atrás dele = microserviço nativo limpo.
+- **unsloth** — framework de **fine-tune/LoRA** (treinar a SUA voz com fidelidade maior).
+- ❌ **XTTS/Coqui** (non-commercial, Coqui fechou), **ChatTTS** (academic-only, EN/ZH) — descartados.
+
+**Caveat honesto (Lei 1):** sem GPU, o VoxCPM roda **lento no CPU** — ótimo pro nosso caso (narração **pré-renderizada/batch** dos vídeos), não pra tempo-real. O **Piper** continua como fallback CPU rápido. Escala/tempo-real = GPU pós-renda.
+
+Registrando a decisão (gap fechado):
+
+## 🤖 Claude *(07:10:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tts_free_options.md",
+  "old_string": "**Open-source comercial-safe (default pr\u00e9-renda):**\n- **Piper** \u2014 MIT, CPU, pt-BR, baixa lat\u00eancia, 20+ idiomas. **Sem clonagem** (vozes fixas). Melhor p/ narra\u00e7\u00e3o.\n- **Kokoro-82M** \u2014 Apache 2.0, pt-BR CONFIRMADO, CPU/2-3GB. **Sem clonagem** (voicepacks fixos).\n- **Chatterbox** (Resemble AI) \u2014 MIT, 0.5B, **faz clonagem** natural, mas **pt-BR N\u00c3O confirmado**.",
+  "new_string": "**Open-source comercial-safe (default pr\u00e9-renda):**\n- **VoxCPM2** (OpenBMB) \u2b50 \u2014 **Apache-2.0 (pesos E c\u00f3digo, comercial-safe)**, **30 idiomas incl. pt-BR**, **FAZ clonagem** (ref curta + creative voice design + LoRA), self-host batch/streaming, 0.5B. **O \u00fanico cloner pt-BR comercial-safe** \u2192 fecha o gap. Sovereign j\u00e1 usava (HF demo `openbmb-voxcpm-demo.hf.space`). Servir atr\u00e1s do **LocalAI** (MIT, API OpenAI-compatible `/v1/audio/speech`, sem GPU) = microservi\u00e7o nativo. Caveat: 1 issue GH #238 questiona a licen\u00e7a dos DADOS de treino (o release do modelo \u00e9 Apache-2.0; risco te\u00f3rico). **Caveat host: CPU-only (4c/23GB) \u2192 lento; ok p/ narra\u00e7\u00e3o batch/pr\u00e9-render, n\u00e3o tempo-real; GPU = p\u00f3s-renda p/ escala.**\n- **Piper** \u2014 MIT, CPU, pt-BR, baixa lat\u00eancia. **Sem clonagem** (vozes fixas). Fallback CPU r\u00e1pido p/ narra\u00e7\u00e3o.\n- **Kokoro-82M** \u2014 Apache 2.0, pt-BR CONFIRMADO, CPU. **Sem clonagem**.\n- **OpenVoice V2** (MyShell) \u2014 MIT comercial, cloner, mas **pt-BR n\u00e3o-nativo** (EN/ES/FR/ZH/JP/KR; cross-lingual talvez). Backup do VoxCPM.\n- **GPT-SoVITS** \u2014 MIT no c\u00f3digo, modelos com termos pr\u00f3prios; few-shot 1min. **Chatterbox** \u2014 MIT, clona, pt-BR n\u00e3o confirmado.\n- \u274c **XTTS/Coqui** (CPML non-commercial, Coqui fechou jan/2024), **ChatTTS** (academic-only EN/ZH), **F5-TTS/Fish** (CC-BY-NC) \u2014 n\u00e3o comerciais."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tts_free_options.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:11:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tts_free_options.md",
+  "old_string": "**Decis\u00e3o p/ o m\u00f3dulo Creative Studio:** narra\u00e7\u00e3o = **Piper/Kokoro** (gr\u00e1tis, comercial, self-host \u2192 microservi\u00e7o; alimenta o `energy[]` voice-reactive do template cinematic-9x16). Gemini TTS = take pontual free-tier/UI. **Clonar a voz do Sovereign em pt-BR comercial-safe \u00e9 GAP** \u2192 p\u00f3s-renda (ElevenLabs/Cartesia BYOK que ele j\u00e1 tem) ou aguardar cloner MIT pt-BR. Ver [[project_video_studio]] \u00b7 [[project_avatar_clone_ai]] \u00b7 [[project_creative_ecosystem_program]].",
+  "new_string": "**Decis\u00e3o p/ o m\u00f3dulo Creative Studio (2026-07-09, Sovereign listou os candidatos):** TTS **multi-motor** (Gemini opt-in, como pediu). Default nativo self-host = **VoxCPM2** (Apache-2.0, pt-BR, clone) atr\u00e1s do **LocalAI** \u2192 fecha o gap de clone pt-BR comercial-safe. **Piper** = fallback CPU r\u00e1pido p/ narra\u00e7\u00e3o simples. **Gemini TTS** = opt-in (BYOK, free-tier/UI gr\u00e1tis; pago p\u00f3s-renda). ElevenLabs/Cartesia = opt-in premium p\u00f3s-renda. Narra\u00e7\u00e3o alimenta o `energy[]` voice-reactive do template cinematic-9x16. Host CPU-only \u2192 VoxCPM em batch/pr\u00e9-render (n\u00e3o tempo-real); GPU p\u00f3s-renda. Ver [[project_video_studio]] \u00b7 [[project_avatar_clone_ai]] (clone da voz do Sovereign = VoxCPM2 zero-shot + LoRA unsloth) \u00b7 [[project_creative_ecosystem_program]] \u00b7 [[feedback_paid_byok_post_revenue]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tts_free_options.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:11:19)*
+
+
+## 🤖 Claude *(07:11:19)*
+
+Atualizando o índice de memória + o FR de áudio da Amendment 17:
+
+## 🤖 Claude *(07:11:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [TTS \u2014 Gemini gr\u00e1tis s\u00f3 via UI; narra\u00e7\u00e3o gr\u00e1tis = Piper/Kokoro; clone pt-BR comercial \u00e9 gap](reference_tts_free_options.md) \u2014 2026-07-09: Gemini TTS free s\u00f3 UI/AI-Studio + free-tier rate-limited (~US$0,03/8min pago); Piper (MIT)/Kokoro (Apache) pt-BR CPU sem clonagem; XTTS/F5-TTS non-commercial; Chatterbox MIT clona mas pt-BR n\u00e3o confirmado.",
+  "new_string": "- [TTS multi-motor \u2014 VoxCPM2 (Apache-2.0, pt-BR, clone) fecha o gap; Gemini opt-in; Piper narra\u00e7\u00e3o](reference_tts_free_options.md) \u2014 2026-07-09: default nativo self-host = **VoxCPM2** atr\u00e1s do LocalAI (\u00fanico cloner pt-BR comercial-safe, Sovereign j\u00e1 usava); Piper fallback CPU; Gemini TTS opt-in (free UI/tier, pago p\u00f3s-renda); host CPU-only \u2192 VoxCPM batch/pr\u00e9-render, GPU p\u00f3s-renda; XTTS/ChatTTS/F5 non-commercial descartados."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:11:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md",
+  "old_string": "- **`FR-SPACES-053`** \u2014 \u00c1udio gr\u00e1tis: narra\u00e7\u00e3o via Piper/Kokoro (comercial-safe, self-host) \u2192 envelope de amplitude \u2192 `energy[]` do template (voice-reactive). Pago (ElevenLabs/Cartesia/Gemini-TTS-pago) = p\u00f3s-renda ([[feedback_paid_byok_post_revenue]]).",
+  "new_string": "- **`FR-SPACES-053`** \u2014 \u00c1udio (TTS **multi-motor**, abstra\u00e7\u00e3o per-user): default nativo self-host = **VoxCPM2** (Apache-2.0, pt-BR, clone; servido atr\u00e1s do **LocalAI** API OpenAI-compatible) \u2192 envelope de amplitude \u2192 `energy[]` do template (voice-reactive). **Piper** = fallback CPU r\u00e1pido (narra\u00e7\u00e3o simples). **Gemini TTS** = opt-in (BYOK). ElevenLabs/Cartesia = opt-in premium. Pago = p\u00f3s-renda ([[feedback_paid_byok_post_revenue]]); host CPU-only \u2192 VoxCPM em batch/pr\u00e9-render (GPU p\u00f3s-renda p/ escala). SOP de hosting (Lei 2) antes de deployar o motor VoxCPM/LocalAI."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:11:33)*
+
+
+## 🤖 Claude *(07:11:33)*
+
+Committando o FR-SPACES-053 multi-motor:
+
+## 🤖 Claude *(07:11:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md && git commit -q -m \"docs(creative-studio): FR-SPACES-053 TTS multi-motor \u2014 VoxCPM2 default self-host fecha gap clone pt-BR\n\nSovereign listou candidatos open-source. VoxCPM2 (OpenBMB) e Apache-2.0 (pesos+codigo, comercial),\n30 idiomas incl pt-BR, faz clonagem, self-host \u2014 o unico cloner pt-BR comercial-safe. Servido atras\ndo LocalAI (API OpenAI-compatible, sem GPU). Piper = fallback CPU; Gemini TTS = opt-in (como pedido);\nElevenLabs/Cartesia opt-in premium pos-renda. Host CPU-only -> VoxCPM batch/pre-render; GPU pos-renda.\nXTTS/ChatTTS/F5 descartados (non-commercial). SOP de hosting antes de deployar.\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit FR-SPACES-053 multi-engine TTS decision"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:11AM[0m [32mINF[0m 1 commits scanned.
+> [90m4:11AM[0m [32mINF[0m scan completed in 14.6ms
+> [90m4:11AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 6ea3d44d42d52c3ff6fc41ce2b6e38653db940bd docs(creative-studio): FR-SPACES-053 TTS multi-motor — VoxCPM2 default self-host fecha gap clone pt-BR
+> ```
+
+## 🤖 Claude *(07:11:53)*
+
+
+## 🤖 Claude *(07:12:07)*
+
+Decisão selada (`6ea3d44`) + memorizada. Fechando.
+
+## Resumo
+
+**TTS agora é multi-motor** (Gemini opt-in, como você pediu), com o gap de clone pt-BR comercial **fechado**:
+
+| Papel | Motor |
+|-------|-------|
+| **Default nativo (clone + narração pt-BR)** | **VoxCPM2** self-host atrás do **LocalAI** — Apache-2.0, comercial ✅ |
+| Fallback CPU rápido (narração) | Piper (MIT) |
+| Opt-in | Gemini TTS (BYOK) · ElevenLabs/Cartesia (premium, pós-renda) |
+| Treinar a SUA voz com fidelidade | VoxCPM2 zero-shot + LoRA via unsloth |
+
+**Onde entra:** o VoxCPM/LocalAI é a slice de **áudio** do Creative Studio (FR-SPACES-053) — vem depois dos nós cliente que o loop está construindo (04:38). Como toca infra (systemd + download de modelo), vai levar uma SOP Lei 2 de hosting antes de deployar. **Nada precisa de você agora** — no MVP pré-render o VoxCPM roda em batch no CPU; se quiser escala/tempo-real depois, aí sim uma GPU (pós-renda).
+
+**Bônus:** isso também serve o módulo [[project_avatar_clone_ai]] — a clonagem da sua voz que estava gated em BYOK pago (Cartesia/ElevenLabs) agora tem um caminho **grátis, comercial e self-host**.
+
+**Sources:**
+- [OpenBMB/VoxCPM (Apache-2.0, 30 idiomas, cloning) — GitHub](https://github.com/OpenBMB/VoxCPM)
+- [openbmb/VoxCPM2 — Hugging Face](https://huggingface.co/openbmb/VoxCPM2)
+- [VoxCPM commercial-use / training-data license — Issue #238](https://github.com/OpenBMB/VoxCPM/issues/238)
+- [OpenVoice V2 (MIT, commercial) — GitHub](https://github.com/myshell-ai/OpenVoice)
+- [XTTS v2 / Coqui é comercial? (não) — Local AI Master](https://localaimaster.com/blog/xtts-coqui-commercial-license)
+- [Self-host voice cloning (XTTS/F5/OpenVoice) — Spheron](https://www.spheron.network/blog/self-host-voice-cloning-gpu-cloud-xtts-f5-tts-openvoice-v2/)
+
+O loop segue construindo os nós do Creative Studio; te reporto quando estiverem de pé com prova (incluindo o pacote do seu roteiro dos robôs gerado de verdade).
+
+## 👤 User *(07:17:03)*
+
+Request URL
+https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/avatar-identity-train
+Request Method
+POST
+Status Code
+500 Internal Server Error
+Remote Address
+104.18.38.10:443
+Referrer Policy
+strict-origin-when-cross-origin
+access-control-allow-headers
+authorization, x-client-info, apikey, content-type
+access-control-allow-origin
+*
+alt-svc
+h3=":443"; ma=86400
+cf-cache-status
+DYNAMIC
+cf-ray
+a1858a869b8e82df-GIG
+content-encoding
+gzip
+content-length
+103
+content-type
+application/json
+date
+Thu, 09 Jul 2026 07:16:08 GMT
+endpoint-load-metrics
+application_utilization:5,named_metrics.queue_depth:5
+priority
+u=1,i
+sb-error-code
+EDGE_FUNCTION_ERROR
+sb-gateway-version
+1
+sb-project-ref
+bcyvddsykvehvpwstlfa
+sb-request-id
+019f45bb-d02a-7fc1-9cc4-0656387c33b5
+server
+cloudflare
+server-timing
+cfExtPri
+set-cookie
+__cf_bm=sT15DL.DJL3AQyIioq_6QowO7CFGczD9rOv_sQOloiM-1783581364.2594178-1.0.1.1-eUFczBUvpdRpH6yeBiropDEUSuh7hGCbcqtQVe5TM_3xWqZG2yvWyRijMhYVi6W.Cq4F7QM1VWFKOFNsReeXy4PAnYl4IrtYorFX_kRtlBKhBxnqYU49aR46uMZ7thPG; HttpOnly; SameSite=None; Secure; Path=/; Domain=supabase.co; Expires=Thu, 09 Jul 2026 07:46:08 GMT
+strict-transport-security
+max-age=31536000; includeSubDomains; preload
+vary
+Accept-Encoding
+x-deno-execution-id
+197f4bca-50da-40c2-a9df-bddacf2b8fe1
+x-sb-edge-region
+sa-east-1
+x-served-by
+supabase-edge-runtime
+:authority
+bcyvddsykvehvpwstlfa.supabase.co
+:method
+POST
+:path
+/functions/v1/avatar-identity-train
+:scheme
+https
+accept
+*/*
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+en-GB,en-US;q=0.9,en;q=0.8,pt;q=0.7
+apikey
+sb_publishable_FkEPbhQ-GbhWGDScraWpzA_hHgawOTW
+authorization
+Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImQwNzNhM2RiLWE4ZjMtNGU2OC04ZWM1LTZmNmI0N2QxNDQ1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2JjeXZkZHN5a3ZlaHZwd3N0bGZhLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJhZGEzOWZhZS02N2UxLTRlNTMtYWYxYy01YTE4ZTFjMTA4ZTgiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzgzNTg0OTAxLCJpYXQiOjE3ODM1ODEzMDEsImVtYWlsIjoiZ2FicmllbGNhbGxAZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJnb29nbGUiLCJwcm92aWRlcnMiOlsiZ29vZ2xlIl0sInJvbGUiOiJhZG1pbiJ9LCJ1c2VyX21ldGFkYXRhIjp7ImF2YXRhcl91cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMcXVZaC1yTjV2ODRoYUlaUDRaTW9ucUdHN0lkNTBLOHdCZXd3TWJiTks0ZHNURmRHdz1zOTYtYyIsImVtYWlsIjoiZ2FicmllbGNhbGxAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IkdhYnJpZWwgQ2FsZGVpcmEiLCJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJuYW1lIjoiR2FicmllbCBDYWxkZWlyYSIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0xxdVloLXJONXY4NGhhSVpQNFpNb25xR0c3SWQ1MEs4d0Jld3dNYmJOSzRkc1RGZEd3PXM5Ni1jIiwicHJvdmlkZXJfaWQiOiIxMDMyODkwOTY4NTE5NzExNzg0NzUiLCJzdWIiOiIxMDMyODkwOTY4NTE5NzExNzg0NzUifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJvYXV0aCIsInRpbWVzdGFtcCI6MTc4MzU1Mjc5N31dLCJzZXNzaW9uX2lkIjoiMTRiYWFhMTgtOGY3Yi00ZGFhLTliMzUtMDAxNzk1ODI3OWFiIiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.kAgRXO_v-xM6HTu6RbM8fVgMnO8s_pFBv6U3uFk9k8c_DxdpNGvpkULaqDog63rwNFP09zthI9FwIRzEZ5tqSw
+cache-control
+no-cache
+content-length
+3263
+content-type
+application/json
+origin
+https://login.mcorch.com
+pragma
+no-cache
+priority
+u=1, i
+referer
+https://login.mcorch.com/
+sec-ch-ua
+"Google Chrome";v="149", "Chromium";v="149", "Not)A;Brand";v="24"
+sec-ch-ua-mobile
+?0
+sec-ch-ua-platform
+"Windows"
+sec-fetch-dest
+empty
+sec-fetch-mode
+cors
+sec-fetch-site
+cross-site
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36
+x-client-info
+supabase-js-web/2.101.1
+
+{
+    "error": "zip_upload_failed",
+    "detail": "mime type application/zip is not supported"
+}
+
+Quando tentei treinar com as fotos que ja subi no nó.: Identidade (avatar)
+n_qca6z67z
+
+
+no https://login.mcorch.com/dashboard/spaces/b57a59f7-ab67-4590-b984-9c1a19c8a164
+
+## 🤖 Claude *(07:17:29)*
+
+
+## 🤖 Claude *(07:17:32)*
+
+Bug de produção real — e importante: é o **witness do treino LoRA** que estava pendente (você subiu fotos de verdade e tentou treinar). O erro é claro: **`mime type application/zip is not supported`** — o bucket de Storage pra onde o zip dos retratos é subido tem um allowlist de MIME que não inclui `application/zip`. Isso é bug-fix de feature documentada (avatar-clone-ai tem BoK selada) → posso corrigir direto. Diagnosticando o edge fn:
+
+## 🤖 Claude *(07:17:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== zip upload / bucket / content-type em avatar-identity-train ===\"\ngrep -niE \"zip|upload|\\.from\\(|createSignedUrl|getPublicUrl|contentType|content-type|application/zip|bucket|storage\" supabase/functions/avatar-identity-train/index.ts 2>/dev/null | head -40\necho \"=== tamanho ===\"; wc -l supabase/functions/avatar-identity-train/index.ts",
+  "description": "Locate zip upload + bucket + content-type in avatar-identity-train"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === zip upload / bucket / content-type em avatar-identity-train ===
+> 2:import JSZip from "https://esm.sh/jszip@3.10.1";
+> 16:  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 19:  new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
+> 23:const MAX_ZIP_BYTES = 80 * 1024 * 1024; // edge-fn memory guard (portraits are small; caps a runaway set)
+> 46:      .from("decrypted_user_api_keys").select("replicate_api_key").eq("user_id", user.id).maybeSingle();
+> 51:        headers: { Authorization: `Bearer ${replicateKey}`, "Content-Type": "application/json", ...(init?.headers ?? {}) },
+> 57:        .from("avatar_identities").select("*").eq("id", body.identityId).eq("user_id", user.id).maybeSingle();
+> 66:        await admin.from("avatar_identities")
+> 67:          .update({ identity_storage_key: weights, status: "active" })
+> 70:        admin.from("mcorch_nodes").insert({
+> 78:        await admin.from("avatar_identities")
+> 88:      .from("avatar_consents").select("purpose").eq("user_id", user.id).is("revoked_at", null)
+> 101:    const paths: string[] = Array.isArray(body.referenceStoragePaths)
+> 102:      ? body.referenceStoragePaths.filter((p: unknown) => typeof p === "string" && (p as string).startsWith(`${user.id}/`))
+> 108:    // 4. Zip the dataset (Replicate input_images requires a public zip URL).
+> 109:    const zip = new JSZip();
+> 113:      const { data: blob, error } = await admin.storage.from("canvas-assets").download(paths[i]);
+> 117:      if (total > MAX_ZIP_BYTES) return json({ error: "dataset_too_large", action: "Reduza o número/tamanho dos retratos." }, 422);
+> 119:      zip.file(base, buf);
+> 125:    const zipPath = `${user.id}/avatars/train/${identityId}.zip`;
+> 126:    const zipBytes = await zip.generateAsync({ type: "uint8array" });
+> 127:    const upRes = await admin.storage.from("canvas-assets").upload(zipPath, zipBytes, { contentType: "application/zip", upsert: true });
+> 128:    if (upRes.error) return json({ error: "zip_upload_failed", detail: upRes.error.message }, 500);
+> 129:    const { data: signed } = await admin.storage.from("canvas-assets").createSignedUrl(zipPath, 60 * 60 * 24);
+> 130:    const zipUrl = signed?.signedUrl;
+> 131:    if (!zipUrl) return json({ error: "zip_sign_failed" }, 500);
+> 164:          input_images: zipUrl,
+> 178:    const { error: insErr } = await admin.from("avatar_identities").insert({
+> 194:    admin.from("infra_health_logs").insert({ service: "avatar-identity-train", status: "healthy" }).then(() => {}, () => {});
+> === tamanho ===
+> 199 supabase/functions/avatar-identity-train/index.ts
+> ```
+
+## 🤖 Claude *(07:17:53)*
+
+
+## 🤖 Claude *(07:17:55)*
+
+Bug localizado: [avatar-identity-train:127](supabase/functions/avatar-identity-train/index.ts:127) sobe o zip pro bucket **`canvas-assets`** com `contentType: "application/zip"`, e esse bucket tem allowlist de MIME que só aceita imagem/vídeo. Confirmando a config real do bucket (Lei 1):
+
+## 🤖 Claude *(07:17:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== migrations que configuram allowed_mime_types do canvas-assets ===\"\ngrep -rniE \"canvas-assets|allowed_mime_types|application/zip\" supabase/migrations/*.sql 2>/dev/null | grep -iE \"canvas-assets|zip|mime\" | head -25",
+  "description": "Find canvas-assets bucket allowed_mime_types config"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === migrations que configuram allowed_mime_types do canvas-assets ===
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:1:-- Phase 4.2c Round 3 — canvas-assets storage RLS REPAIR
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:34:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:44:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:52:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:61:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:72:  USING (bucket_id = 'canvas-assets');
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:28:  storage_bucket TEXT NOT NULL DEFAULT 'canvas-assets',
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:134:INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:135:VALUES ('canvas-assets','canvas-assets',TRUE,52428800,
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:140:  FOR INSERT TO authenticated WITH CHECK (bucket_id='canvas-assets' AND (storage.foldername(name))[1]=auth.uid()::TEXT);
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:142:  FOR SELECT TO public USING (bucket_id='canvas-assets');
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:144:  FOR DELETE TO authenticated USING (bucket_id='canvas-assets' AND (storage.foldername(name))[1]=auth.uid()::TEXT);
+> supabase/migrations/20260518012541_canvas_assets_update_policy.sql:1:-- Phase 4.2c hotfix — canvas-assets UPDATE policy
+> supabase/migrations/20260518012541_canvas_assets_update_policy.sql:15:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518012541_canvas_assets_update_policy.sql:19:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql:38:  -- for 0 rows. Per the project's storage pattern (generated-videos/canvas-assets delete via the Storage API,
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:6:-- PROBLEM (proven live, Law 1): canvas-assets / generated-images / video-studio-assets are PRIVATE buckets.
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:9:--   owner-scoped SELECT policy on canvas-assets (`canvas_assets_select`, 20260702230000) matches
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:29:--    prefixed canvas-assets objects — reopening the exact cross-tenant read hole 20260702230000 closed.
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:58:--    spaces.id was inert; now the canvas-assets policy trusts it as an ownership proxy (space_id-prefixed voice/
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:83:-- ── canvas-assets: owner routes for project/space-prefixed + registered objects ─────────────────────────
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:91:    bucket_id = 'canvas-assets' AND (
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:93:              WHERE ca.storage_bucket = 'canvas-assets'
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:136:--    84 rows (83 canvas-assets + 1 generated-images) were minted is_public=true into PRIVATE buckets by a
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:142:  AND storage_bucket IN ('canvas-assets','generated-images','video-studio-assets','video-studio-projects','vision-artifacts');
+> ```
+
+## 🤖 Claude *(07:18:27)*
+
+
+## 🤖 Claude *(07:18:28)*
+
+Bucket criado em `20260514040200:134-135` com `allowed_mime_types` restrito. Lendo o array exato pra corrigir com precisão:
+
+## 🤖 Claude *(07:18:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260514040200_viralmind_canvas_studio.sql",
+  "offset": 133,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 133	-- Storage bucket
+> 134	INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+> 135	VALUES ('canvas-assets','canvas-assets',TRUE,52428800,
+> 136	  ARRAY['image/png','image/jpeg','image/webp','image/gif','video/mp4','video/webm','audio/mpeg','audio/wav']
+> 137	) ON CONFLICT (id) DO NOTHING;
+> 138	
+> 139	CREATE POLICY "Users upload own canvas assets" ON storage.objects
+> 140	  FOR INSERT TO authenticated WITH CHECK (bucket_id='canvas-assets' AND (storage.foldername(name))[1]=auth.uid()::TEXT);
+> 141	CREATE POLICY "Public read canvas assets" ON storage.objects
+> 142	  FOR SELECT TO public USING (bucket_id='canvas-assets');
+> 143	CREATE POLICY "Users delete own canvas assets" ON storage.objects
+> 144	  FOR DELETE TO authenticated USING (bucket_id='canvas-assets' AND (storage.foldername(name))[1]=auth.uid()::TEXT);
+> ```
+
+## 🤖 Claude *(07:19:52)*
+
+
+## 🤖 Claude *(07:19:57)*
+
+Causa-raiz **confirmada** (Lei 1): o bucket `canvas-assets` foi criado ([20260514040200:136](supabase/migrations/20260514040200_viralmind_canvas_studio.sql:136)) com `allowed_mime_types` só de imagem/vídeo/áudio — **sem `application/zip`**. O edge fn sobe o zip do dataset LoRA com `contentType: "application/zip"` → o bucket rejeita → 500 antes de qualquer chamada ao Replicate (sem cobrança). Bônus: o bucket cap 50MB < o guard de 80MB do fn (mismatch latente).
+
+Escrevendo a migration (hotfix vira migration na mesma sessão — SOP drift):
+
+## 🤖 Claude *(07:20:08)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260709073000_canvas_assets_allow_zip.sql",
+  "content": "-- Migration: allow application/zip on canvas-assets (avatar-identity-train LoRA zip upload fix)\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- ROOT CAUSE (Law 1, proven live 2026-07-09 07:16 UTC): avatar-identity-train/index.ts:127 uploads the\n-- LoRA training dataset zip to bucket 'canvas-assets' with contentType 'application/zip', but the bucket's\n-- allowed_mime_types (set at creation, 20260514040200:136 = image/*+video/*+audio/* ONLY) rejects it \u2192\n-- Storage 400 \"mime type application/zip is not supported\" \u2192 the fn returns 500 zip_upload_failed BEFORE\n-- any Replicate call (no charge). Prod repro: POST .../avatar-identity-train (user ada39fae, node n_qca6z67z,\n-- space b57a59f7-ab67-4590-b984-9c1a19c8a164) \u2192 500 {\"error\":\"zip_upload_failed\",\n-- \"detail\":\"mime type application/zip is not supported\"}.\n--\n-- SECONDARY latent bug fixed here too: the bucket file_size_limit was 50MB (52428800) but the fn's own guard\n-- MAX_ZIP_BYTES is 80MB (avatar-identity-train:23) \u2014 a 50\u201380MB portrait set would pass the fn guard then 400\n-- on the bucket size cap. Raise to 100MB so the fn guard stays authoritative.\n--\n-- FIX: append application/zip (+ x-zip-compressed for browser variance) to the allowlist and bump\n-- file_size_limit to 100MB. The zip lives OWNER-SCOPED at <user_id>/avatars/train/<identityId>.zip and is\n-- served to Replicate via a 24h SIGNED URL (fn:129). This migration ONLY widens the MIME allowlist + size\n-- cap on ONE bucket \u2014 NO RLS/policy/grant change, NO cross-tenant surface (FMEA-011 out of scope). Idempotent\n-- (guarded on membership).\n--\n-- Follow-up (deferred, not this hotfix): a dedicated PRIVATE 'avatar-training' bucket would separate transient\n-- training data from user creative assets \u2014 cleaner, but adds a bucket + RLS + an edge-fn change. Tracked as a\n-- Creative Studio / avatar-clone-ai improvement, not a blocker.\n\nUPDATE storage.buckets\nSET\n  allowed_mime_types = allowed_mime_types || ARRAY['application/zip', 'application/x-zip-compressed']::text[],\n  file_size_limit    = GREATEST(COALESCE(file_size_limit, 0), 104857600)  -- 100MB >= fn MAX_ZIP_BYTES (80MB)\nWHERE id = 'canvas-assets'\n  AND NOT ('application/zip' = ANY(allowed_mime_types));\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260709073000_canvas_assets_allow_zip.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(07:20:17)*
+
+
+## 🤖 Claude *(07:20:18)*
+
+Migration escrita. Rodando `/security-review` (obrigatório em toda migration — regra CLAUDE.md, sem exceções):
+
+## 🤖 Claude *(07:20:18)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(07:20:18)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 8 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	supabase/migrations/20260709073000_canvas_assets_allow_zip.sql
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+FILES MODIFIED:
+
+```
+.claude/agents/creative-director.md
+.claude/skills/asset-frame-grouping/SKILL.md
+.claude/skills/creative-studio-pipeline/SKILL.md
+.claude/skills/free-render-dispatch/SKILL.md
+.claude/skills/open-in-video-deeplink/SKILL.md
+docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md
+docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md
+docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md
+scripts/hyperframes/render-core.ts
+scripts/hyperframes/templates/cinematic-9x16.html
+```
+
+COMMITS:
+
+```
+commit 6ea3d44d42d52c3ff6fc41ce2b6e38653db940bd
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 04:11:38 2026 -0300
+
+    docs(creative-studio): FR-SPACES-053 TTS multi-motor — VoxCPM2 default self-host fecha gap clone pt-BR
+    
+    Sovereign listou candidatos open-source. VoxCPM2 (OpenBMB) e Apache-2.0 (pesos+codigo, comercial),
+    30 idiomas incl pt-BR, faz clonagem, self-host — o unico cloner pt-BR comercial-safe. Servido atras
+    do LocalAI (API OpenAI-compatible, sem GPU). Piper = fallback CPU; Gemini TTS = opt-in (como pedido);
+    ElevenLabs/Cartesia opt-in premium pos-renda. Host CPU-only -> VoxCPM batch/pre-render; GPU pos-renda.
+    XTTS/ChatTTS/F5 descartados (non-commercial). SOP de hosting antes de deployar.
+
+commit 0d4f8684fa7831a8b61f8faa8c99d991533ad5a2
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 04:06:53 2026 -0300
+
+    docs(creative-studio): OTD-CS-002 resolvido — Roteiro reusa generate-video-script (passthrough BYOK), buildable-now
+    
+    generate-video-script (:93,247) e passthrough de LLM per-user BYOK que streama texto, nao
+    estrutura. O contrato {scenes[],ttsPrompt} vem do prompt do inspector + parse JSON client-side
+    -> reusa a fn as-is, sem edge nova, sem /security-review. No Roteiro promovido a buildable-now.
+
+commit 264cd1725a09da4c19bd88696a5365958f4a87bd
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 04:05:38 2026 -0300
+
+    docs(creative-studio): Amendment 17 + agente Creative Director + 4 skills (gate Lei 2 do módulo)
+    
+    Gradua a PoC de video gratis em MVP dentro do Spaces. Amendment 17 codifica o mapa do recon
+    (wf_cdf0e1a0-4ca): nos Roteiro (scriptGenerator) + Criativo Cinematografico (cinematicVideo),
+    free-render rail (video_renders engine=hyperframes charged_mco:0, SEM migration), agrupamento
+    asset_role (Opcao B, source_job_id), open-in-video por hash #project/<slug>, FR-SPACES-041..053,
+    OTD-CS-001..007, Pattern Conformance, 10 slices sequenciados. Agente creative-director (L2 sob
+    artisan) + skills creative-studio-pipeline/free-render-dispatch/asset-frame-grouping/
+    open-in-video-deeplink (SOPs Lei 2 dos slices). Fecha o gate Closed-Loop 3.5; codigo de no
+    buildable pos-selo, slices edge/migration ridem /security-review.
+
+commit a523d6dfcdd70364dbcd2633114647df33be9b72
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 03:13:38 2026 -0300
+
+    feat(hyperframes): template cinematic-9x16 — criativo MIV premium (motion design deterministico)
+    
+    Primeiro criativo 'final' combinando os motores num template unico: tipografia cinetica
+    com stagger por palavra (blur->sharp), constellation/nebula canvas, HUD neon (brackets +
+    timecode + frame counter), emblema procedural (dispensa imagem de produto), scanline + glare
+    sweep, Ken Burns no hero. MIV puro (void/cyan/gold), 100% deterministico (sem wallclock/
+    random/fonte externa, byte-reproduzivel NFR-VS-016). Prop opcional energy[] deixa o glow
+    voice-reactive quando houver envelope de audio. Registrado na allowlist + CLI --template.
+    Prova material + Vision ocular (3 frames): 6.0s 1080x1920 30fps 180f, 1.14MB, US 0.
+
+commit 8c7141d2f3a2364bddfb3435f6d1f9de54be0f93
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 02:56:11 2026 -0300
+
+    feat(hyperframes): encodeKenBurns — image-to-video 5-8s gratis (FFmpeg zoompan)
+    
+    O 'animar as imagens geradas 5-8s' da visao Sovereign, gratis. Pan/zoom deterministico
+    sobre 1 still -> clipe 9:16 animado; substituto gratis do i2v neural (Higgsfield DoP/Kling/
+    Seedance ficam como opt-in pago). Upscale 2x anti-jitter, ramp de zoom in/out. Modo CLI
+    --kenburns. Prova material: testsrc2 -> 6.0s 1080x1920 30fps 180 frames, 1.9MB, US 0.
+
+commit 714e14406394f018b82b5f2e5571450df534f43d
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 02:53:43 2026 -0300
+
+    feat(hyperframes): encodeImageSequence — junta frames pre-gerados em video 9:16 gratis (FFmpeg)
+    
+    O primitivo da visao Sovereign: no do Spaces gera uma sequencia de frames, HyperFrames
+    apenas junta via FFmpeg. Concat demuxer com hold por frame + letterbox 9:16 (sem crop, o
+    frame gerado nunca e mutilado), H.264 deterministico bitexact. Modo CLI --images a,b,c.
+    Prova material: 3 frames x 2s -> 6.03s 1080x1920 30fps 181 frames em 3.1s (~20x mais rapido
+    que o path template-screenshot), US 0. Pure renderer core (sem edge/RLS) -> zero security-review.
+
+commit faa6fd4d65b1e475248f3865463856c610a20fad
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 02:13:31 2026 -0300
+
+    docs(bok): OTD-SPACES-036 DECIDIDO — GO Sovereign na opção (b) space_publish_variants
+    
+    Sovereign escolheu a tabela dedicada. Marca o ADR e a linha OTD da Amendment 15 como
+    resolvidos; codigo (migration + /security-review + branch auto-publish) fica como 1o item
+    do proximo arco, gated na recuperacao da janela de 5h. Destrava a Fatia B media-social.
+
+commit 18669c4729c76895adcc1e1b3e79207ea07d7348
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Thu Jul 9 02:07:04 2026 -0300
+
+    docs(bok): OTD-SPACES-036 decision record — recomenda tabela dedicada space_publish_variants
+    
+    Destrava a decisão de schema que bloqueia a Fatia B media-social (IG/TikTok/YouTube).
+    Analisa as 3 opções contra 4 invariantes (money-path intacto, FMEA-011 owner-scoping,
+    idempotencia, verdade financeira limpa). Recomenda (b) tabela dedicada: protege
+    channel_variants/reshaper, espelha o padrao owner-scoped selado, nao polui pipeline_runs.
+    Rejeita (c) pillar sintetico (corrompe o collective_efficiency_ledger). Aguarda escolha
+    Sovereign; migration real + /security-review sao o 1o item do proximo arco.
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (74.1KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c97cc06a-f6ad-41b8-8082-ff819bf5029e/tool-results/bxx8no734.txt
+
+Preview (first 2KB):
+diff --git a/.claude/agents/creative-director.md b/.claude/agents/creative-director.md
+new file mode 100644
+index 0000000..718669f
+--- /dev/null
++++ b/.claude/agents/creative-director.md
+@@ -0,0 +1,56 @@
++---
++name: creative-director
++description: Diretor Criativo técnico do MCORCH — dirige o pipeline Creative Studio do Spaces (roteiro → prompts → imagem → Ken Burns/sequência → template cinematográfico → áudio → MP4 9:16 final) 100% no rail FFmpeg grátis (US$0). Use para montar/operar os nós Roteiro e Criativo Cinematográfico, encadear cenas→imagens→curta, agrupar frames intermediários in-node, e provar criativos com Vision ocular. Recusa código de nó sem a Amendment BoK selada (Lei 2) e nunca reporta criativo pronto sem olhar o vídeo (Lei 1).
++tools: Bash, Read, Write, Edit, Grep, Glob
++---
++
++# Creative Director — Subagent (L2 sob `artisan`)
++
++Você é o **Creative Director** do MCORCH: L2 Specialist sob o Head `artisan` (lente CXBOK/ProdBOK-UX), com **Decision Scope NARROW** ao grafo de nós do **Creative Studio** dentro do Spaces. Sua missão: transformar um tema em um **curta cinematográfico 9:16** de nível motion-design, **inteiramente no rail FFmpeg grátis** (US$0), e deixá-lo editável no `/dashboard/spaces/video`.
++
++**SSOT:** `docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md` (Amendment 17). Você NÃO inventa além dela — ambiguidade volta pra emenda/`/bok-scribe`, não pra improviso (Master Protocol §1).
++
++## O pipeline que você dirige
++
++```
++[Roteiro] tema → { scenes[] (start/end/narration/imagePrompt), ttsPrompt }   (formato verbatim do Sovereign)
++   │  output_script fan-out:
++   ├─ scenes[].imagePrompt ──→ [Gerar imagem] (Nano Banana / Gemini DIRETO — mais barato que OpenRouter)
++   │                              │ (imagem por cena, ~US$0,039 cada)
++   │                              ▼
++   ├──────────────────────────→ [Criativo Cinematográfico] template cinematic-9x16 (renderComposition)
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(07:21:16)*
+
+
+## 🤖 Claude *(07:21:26)*
+
+# Security Review — `20260709073000_canvas_assets_allow_zip.sql`
+
+**No HIGH or MEDIUM confidence vulnerabilities found.**
+
+Analysis of the sole security-relevant change on this branch (the untracked migration; the other modified files are documentation, Markdown skills/agent, a deterministic HTML template using `textContent` only, and pure renderer-core FFmpeg helpers driven by trusted CLI args — no new untrusted-input surface):
+
+The migration executes a single static `UPDATE storage.buckets` that (a) appends `application/zip`/`application/x-zip-compressed` to `canvas-assets.allowed_mime_types` and (b) raises `file_size_limit` to 100 MB. Assessment:
+
+* **No injection surface** — the statement is static SQL with no interpolated user input.
+* **No authorization change** — RLS/policies/grants are untouched. The bucket's owner-scoped INSERT policy (`(storage.foldername(name))[1] = auth.uid()`, migration `20260514040200:140`) and the owner-scoped SELECT routes (`20260703030000`) remain the sole access gate. A user can still only write under their own `auth.uid()/` prefix.
+* **No new code-execution path** — the uploaded zip is never extracted on MCORCH infrastructure; it is served to Replicate via a 24 h signed URL (`avatar-identity-train:129`) and decompressed there. No zip-slip / decompression-bomb exposure on our side (and DOS/resource exhaustion is out of scope per the review exclusions).
+* **`file_size_limit` increase** — a resource/DOS consideration, explicitly excluded.
+
+The zip-upload path (`avatar-identity-train:127`) already restricts `referenceStoragePaths` to the caller's own prefix (`.startsWith(\`${user.id}/\`)`, line 102) before download, so the widened MIME allowlist does not open a cross-tenant read/write path.
+
+**Verdict: SAFE to apply.** No findings at confidence ≥ 8.
+
+Review passou — SAFE. Aplicando a migration na produção:
+
+## 🤖 Claude *(07:21:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 120 npx supabase db push --linked 2>&1 | tail -25 || echo \"EXIT=$? (timeout/erro \u2014 pode precisar de senha/link)\"",
+  "description": "Apply the canvas-assets zip migration to prod"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260709073000_canvas_assets_allow_zip.sql
+> 
+>  [Y/n] 
+> Applying migration 20260709073000_canvas_assets_allow_zip.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(07:22:13)*
+
+
+## 🤖 Claude *(07:22:15)*
+
+Migration **aplicada** — `Applying migration 20260709073000... Finished supabase db push.` Agora verifico materialmente (Lei 1): a config do bucket + um upload de zip real via service-role, **sem** disparar o treino pago:
+
+## 🤖 Claude *(07:22:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nKEY=$(sed -nE 's/^SB_SECRET_KEY=[\"'\"'\"']?([^\"'\"'\"']+).*/\\1/p' .env | head -1)\n[ -z \"$KEY\" ] && KEY=$(sed -nE 's/^SUPABASE_SERVICE_ROLE_KEY=[\"'\"'\"']?([^\"'\"'\"']+).*/\\1/p' .env | head -1)\n[ -z \"$KEY\" ] && { echo \"sem chave em .env\"; grep -oE '^(SB_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET)[A-Z_]*=' .env; exit 1; }\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\necho \"=== config VIVA do bucket canvas-assets ===\"\ncurl -s \"$URL/storage/v1/bucket/canvas-assets\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\"\necho; echo \"=== teste: upload de zip via service-role (o passo que dava 500) ===\"\nprintf 'PK\\003\\004selftest' > /tmp/mimetest.zip\ncurl -s -o /dev/null -w \"upload HTTP %{http_code}\\n\" -X POST \"$URL/storage/v1/object/canvas-assets/mime-selftest/test.zip\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\" -H \"Content-Type: application/zip\" --data-binary @/tmp/mimetest.zip\ncurl -s -o /dev/null -w \"cleanup delete HTTP %{http_code}\\n\" -X DELETE \"$URL/storage/v1/object/canvas-assets/mime-selftest/test.zip\" -H \"Authorization: Bearer $KEY\" -H \"apikey: $KEY\"\nrm -f /tmp/mimetest.zip",
+  "description": "Verify bucket config + zip upload works post-fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === config VIVA do bucket canvas-assets ===
+> {"id":"canvas-assets","name":"canvas-assets","owner":"","public":false,"file_size_limit":104857600,"allowed_mime_types":["image/png","image/jpeg","image/webp","image/gif","video/mp4","video/webm","audio/mpeg","audio/wav","application/zip","application/x-zip-compressed"],"created_at":"2026-05-14T04:14:05.926Z","updated_at":"2026-05-14T04:14:05.926Z"}
+> === teste: upload de zip via service-role (o passo que dava 500) ===
+> upload HTTP 200
+> cleanup delete HTTP 200
+> ```
+
+## 🤖 Claude *(07:22:45)*
+
+
+## 🤖 Claude *(07:22:48)*
+
+**Fix verificado ao vivo** (Lei 1):
+- Config do bucket agora: `file_size_limit: 104857600` (100MB) + `allowed_mime_types` inclui **`application/zip`** ✅ (e `public:false` — owner-scoped intacto, sem regressão de segurança).
+- **Upload de zip via service-role: HTTP 200** — exatamente o passo que dava 500 agora passa, sem gastar 1 centavo do treino.
+
+Committando (review SAFE + aplicada + verificada):
+
+## 🤖 Claude *(07:22:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260709073000_canvas_assets_allow_zip.sql && git commit -q -m \"fix(avatar): canvas-assets aceita application/zip \u2014 destrava witness do treino LoRA\n\nProd repro (user ada39fae, no n_qca6z67z, space b57a59f7): POST avatar-identity-train -> 500\nzip_upload_failed 'mime type application/zip is not supported'. Causa: bucket canvas-assets criado\n(20260514040200:136) com allowed_mime_types so image/video/audio; o fn sobe o zip do dataset LoRA\ncomo application/zip (:127). Fix: append application/zip+x-zip-compressed + file_size_limit 50->100MB\n(>= o guard MAX_ZIP_BYTES 80MB do fn). Sem RLS/policy change, owner-scoping intacto (public:false).\n/security-review SAFE. Aplicada (db push) + verificada VIVA: bucket config mostra application/zip +\nupload de zip service-role HTTP 200. Hotfix->migration mesma sessao (SOP drift).\" && git log -1 --format=\"%H %s\"",
+  "description": "Commit the canvas-assets zip fix migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:22AM[0m [32mINF[0m 1 commits scanned.
+> [90m4:22AM[0m [32mINF[0m scan completed in 7.13ms
+> [90m4:22AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> f0743deb26baa697cc43b7313c450b1cc88e21a1 fix(avatar): canvas-assets aceita application/zip — destrava witness do treino LoRA
+> ```
+
+## 🤖 Claude *(07:23:11)*
+
+
+## 🤖 Claude *(07:23:24)*
+
+Consertado, aplicado e provado — de ponta a ponta:
+
+## 🔧 Bug resolvido: `avatar-identity-train` 500 → treino LoRA destravado
+
+**Causa-raiz (Lei 1):** o bucket `canvas-assets` foi criado só aceitando imagem/vídeo/áudio; o edge fn sobe o **zip do dataset LoRA** com `application/zip` → o bucket rejeitava → 500 *antes* de qualquer chamada ao Replicate (por isso não te custou nada).
+
+**Fix (migration `f0743de`, aplicada em prod):**
+- `canvas-assets` agora aceita `application/zip` (+ variante) — **verificado ao vivo**: upload de zip via service-role = **HTTP 200** (era o passo que dava 500).
+- Bônus: subi o limite do bucket 50MB→100MB (o fn permitia 80MB — havia um mismatch que te morderia com muitos retratos).
+- Segurança: `/security-review` **SAFE** · sem mudança de RLS/policy · bucket segue `public:false` owner-scoped.
+
+**Não é edge nova** — é só a config do bucket. O fn já deployado passa a funcionar. **Pode tentar de novo** o treino no mesmo nó (`n_qca6z67z`, [space b57a59f7](https://login.mcorch.com/dashboard/spaces/b57a59f7-ab67-4590-b984-9c1a19c8a164)).
+
+⚠️ **Honestidade sobre o retry:** agora ele **passa do zip e entra no treino REAL do Replicate** — ou seja, vai **debitar ~US$1,85 da sua conta Replicate** e rodar assíncrono (uns minutos, com poll). Eu não disparei isso (é seu o gasto/GO). Se aparecer outro erro *depois* do zip, me manda que eu sigo o fio — mas o plumbing já estava provado até ali, então deve concluir e virar sua 1ª **identidade LoRA treinada de verdade** (o witness que faltava).
+
+O loop do Creative Studio segue armado em paralelo; este foi um hotfix de produção que entrou na frente. Manda o resultado do retry.
