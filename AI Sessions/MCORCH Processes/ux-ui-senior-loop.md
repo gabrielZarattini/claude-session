@@ -351,3 +351,10 @@ Conformance Declaration antes do código.
 ---
 
 **"MATE A POESIA. ENTREGUE ENGENHARIA."**
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

@@ -106,3 +106,10 @@ ORDER BY ABS(p.mco_balance - COALESCE(SUM(t.amount), 0)) DESC;
 - `supabase/.temp/pooler-url` (connection string fallback)
 - `.env` (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 - `supabase/functions/aios-sql-bridge/whitelist.ts` (tabelas suportadas pelo bridge equivalente)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

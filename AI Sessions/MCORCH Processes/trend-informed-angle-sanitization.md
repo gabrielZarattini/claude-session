@@ -132,3 +132,10 @@ Tuning harness + corpus: `/tmp/sentinel-ptbr-test.ts` + adversarial workflow `wf
 - ❌ Afrouxar o whitelist de charset "porque rejeitou um trend bom" — fail-closed skip é gracioso (cai no angle plano).
 - ❌ Quotar o trend no topic (`"${raw}"`) — convida breakout. Use framing inerte sem aspas.
 - ❌ Rodar o gate DEPOIS do `begin_autopilot_cycle`/fan-out — tem que ser antes do prompt, no `autopilot-run`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

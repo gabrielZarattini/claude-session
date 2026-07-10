@@ -133,3 +133,10 @@ A diretiva Sovereign 2026-06-26 ("todo print de inspeção passa pelo olho criat
 5. **Mudança de segurança:** a cópia pública do print em `dist/canvas_e2e_latest.png` (servida pelo nginx em URL pública — print de dashboard LOGADO) foi **removida**; a visualização usa o signed URL impresso no output (TTL 1h). Reverter é trivial se o Sovereign preferir a cópia pública.
 
 **✅ e2e-user-zero (mesmo dia):** gate fiado no `runner.ts` pós-classifier — `lib/vision-gate.ts` julga até 3 screenshots do flow (bucket privado→signed URL→vision-qa); REPROVADO vira **Finding P1/ux** (flipa o exit NO-GO existente). Fail-closed sem PAT (exit 2 infra) + `--no-vision`. Provado LIVE: canvas real→APROVADO · PNG branco 1920×1080→REPROVADO→P1 (fecha a heurística deferida (c) do classifier).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

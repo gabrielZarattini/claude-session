@@ -142,3 +142,10 @@ A síntese e a clonagem de voz para os avatares talking-head (programa "Gabriel 
 - **Meta pattern:** `docs/processes/meta-credential-resolution.md` (OAuth per-user + reauth gate).
 - **DB schema:** `supabase/migrations/20260630000000_user_api_keys_avatar_byok.sql` (`elevenlabs_api_key` pré-existente · `cartesia_api_key` nova; ambas cifradas) + `20260630120000_avatar_clone_ai_voice_profiles.sql` (`voice_profiles` + `creative_assets.source_module += 'avatar-studio'`).
 - **Sealed contract:** `docs/bok/avatar-clone-ai/{04-frd,05-sdd,06-data-model}.md` (FR-AC-008/009/010/011 · NFR-AC-002/017/019/020).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
