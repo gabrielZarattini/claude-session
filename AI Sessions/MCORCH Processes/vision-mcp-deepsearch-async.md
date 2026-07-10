@@ -127,10 +127,3 @@ Prova material: `scripts/qa/smoke-deepsearch-run.ts` (usuário throwaway, **cont
 `state ∈ {done,partial}` com `result.references[]` reais de fontes web fundamentadas, e o saldo `mco_balance`
 do tenant reflete exatamente `retida` (cobrança proporcional ao entregue). Smoke `smoke-deepsearch-run.ts`
 fecha verde contra o container `mcorch_vision_mcp` servido.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
