@@ -88,10 +88,3 @@ aparecem visualmente distintas das 7 arestas reais.
 - ❌ RPC `SECURITY DEFINER` que aceite `user_id`/partição do caller (aqui os filtros system-shared são
   HARDCODED — o DEFINER só existe p/ garantir o plano HNSW, nunca p/ ampliar escopo).
 - ❌ Contador único somando reais + semânticas (esconde a distinção honesta).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
