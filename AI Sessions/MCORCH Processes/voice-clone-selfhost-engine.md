@@ -87,12 +87,22 @@ no volumedetect, e RTF ≤ 10 registrado. Para o fluxo de produto completo: linh
 processada → WAV no bucket privado → signed URL tocável no nó Clone de Voz → registro
 em `creative_assets` — mesmo contrato do rail `video-bridge`.
 
-## Integração de produto (próxima fatia — gates próprios)
+## Integração de produto — ✅ VIVA (2026-07-10, GO Sovereign pós-veredito auditivo)
 
-- Fila + worker `voice-bridge` (molde `scripts/video-bridge.ts`): claim atômico →
-  CLI qwen_tts → upload bucket privado → finalize RPC → poll do nó.
-- `generate-voice` ganha provider `qwen3-local` custo **0 mco** (por enquanto — decisão
-  Sovereign "tudo grátis"; recalibrar via `mcoin-cost-calibration.md` quando monetizar).
-- Migration: alargar CHECK `provider` em `voice_profiles` + guard do RPC
-  `store_voice_profile` (**/security-review obrigatório**, FMEA-011).
-- O gate BYOK fail-closed ganha bypass EXPLÍCITO só para engines keyless locais.
+- **Fila:** reusa `video_renders` (RLS/finalize/reaper selados) com `engine='qwen3-voice'`,
+  `charged_mco=0` sempre. Migration `20260709234000` (CHECKs + guard do RPC; owner-prefix
+  do voice_id local) — **/security-review NO FINDINGS** · aplicada + provada (counts 1/1/1/0
+  + ledger; apply em CHUNKS via `scripts/qa/apply-voice-qwen3-local-migration.sh`).
+  **⚠️ Anticorpo:** o WAF do Management API desafia payloads grandes com `DO $$` e devolve
+  HTML (não JSON-error) — gate de apply DEVE validar o corpo da resposta + prova material.
+- **Worker:** `scripts/voice-bridge.ts` (systemd `--user voice-bridge.service`, molde
+  video-bridge) — clone → x-vector `.bin` 8KB owner-prefixed no bucket → `store_voice_profile`;
+  synth → `--load-voice` → WAV → `register_creative_asset` + `video_assets` → finalize.
+- **Edge `generate-voice`:** provider `qwen3-local` keyless (bypass EXPLÍCITO só do gate
+  BYOK; consent Art. 11 + language + code-switch + sentinel INTACTOS) → 202 `render_id`.
+- **Client:** nó Clone de Voz com motor "MCORCH · grátis" default (pt-BR), poll assíncrono
+  `useVoiceRenderPoll` até terminal, custo dinâmico 0/36.
+- **Prova:** smoke **8/8** `scripts/qa/smoke-voice-qwen3-local.ts` (consent 403 · owner-prefix
+  422 · clone→profile · synth→WAV 259KB · saldo intacto · cross-tenant 404; throwaways limpos).
+  RODAR antes de qualquer mudança no rail de voz.
+- Monetizar depois = recalibrar via `mcoin-cost-calibration.md` (OTD-VOICE-002).

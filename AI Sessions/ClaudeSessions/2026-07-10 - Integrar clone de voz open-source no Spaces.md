@@ -6039,3 +6039,16 @@ Your final reply must contain the markdown report and nothing else.
 ### Observação abaixo do threshold (defense-in-depth, não explorável)
 
 O worker usa `c.sample_bucket ?? 'canvas-assets'` sem re-validar contra a allowlist que o edge impõe. Não explorável (composition é service-role-write-only e `generate-voice` é o único produtor de linhas `qwen3-voice`), mas recomenda-se re-afirmar `SAMPLE_BUCKETS.includes(bucket)` no worker para igualar a postura de tripla checagem do owner-prefix.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-09 - eb61c3bb-6060-4462-9486-085ad5b66177]]
+> * **Próxima Sessão**: [[2026-07-10 - agent-a0bd309a8ab35ee17]]
+%% --- TIMELINE END --- %%
