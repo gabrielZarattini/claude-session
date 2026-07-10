@@ -8519,7 +8519,7 @@ Mapeamento 3/3 completo. Leio as duas frentes restantes (edges + MIV):
 >   ⤷ src/lib/spaces-schema.ts:106-109 (SpaceEdgeData/SpaceEdge), :161-163 (SpaceEdgeDataSchema z.enum(PORT_DATA_TYPES)); src/components/spaces/SpaceNodeCard.tsx:38-52 (Handle id={port.i
 > 
 > ==================== mivMotion ====================
-> Linguagem visual MIV para animação mapeada com evidência path:linha. (1) Tokens: --accent = cyan `184 100% 50%` (#00F2FF) com regra inline "nebula stays exclusive to memory" (src/index.css:27-29); raw tokens --cyan/#00F2FF, --cyan-veil, --cyan-line (:42-45); --gold #D4AF37 (:46) reservado a valor (--status-waiting gold :65, glow-gold); --nebula #4D00FF/#8C5AFF (:49-51). Motion de processamento em CYAN é consistente com todo running-state existente (Loader2 text-accent, badge bg-accent/15). (2) Glows prontos para copiar: --glow-primary `0 0 24px hsl(184 100% 50% / 0.45)` (:70) via .glow-primary (:117) — é o CTA glow real (CTASection.tsx:35, HeroSection.tsx:129); text-glow-cyan `text-shadow 0 0 14px rgba(0,242,255,0.55)` (:122); seleção de nó = `border-accent ring-2 ring-accent/30` (GenerateImageNode.tsx:20); dot pulsante `bg-accent animate-pulse shadow-[0_0_8px_#00F2FF]` (SceneComposeInspector.tsx:423). (3) Animações Tailwind: glow-pulse 2s box-shadow cyan (tailwind.config.ts:119-126,151), appear/appear-zoom (:127-146), plugin tailwindcss-animate (:157); em index.css: mc-pulse-glow cyan (:172-175) e o precedente-chave SVG `pipeline-dash` stroke-dashoffset 0.6s linear infinite (:242-247) usado em PipelineEdge.tsx:53. (4) SOP WebGL: proíbe backdrop-blur apenas "sobre ou junto a Canvas WebGL" ([[webgl-canvas-stabilization|webgl-canvas-stabilization]].md:29-31; diagnóstico :21 fala de 'Canvas 3D (WebGL) ativo'); o canvas Spaces é 2D ReactFlow puro (@xyflow/react em CanvasEditorPage.tsx:5-13, sem three/fiber) → a restrição NÃO se aplica, e o próprio canvas já usa backdrop-blur (LeftPanel/index.tsx, LanesOverlay.tsx). (5) Perf: escala real ~13 nós/16 edges — animação CSS em SVG path é trivial nessa escala e já roda em prod (pipeline-edge-dash por edge cross-lane); não há regra global de perf de animação no repo; prefers-reduced-motion só é respeitado nas superfícies de landing (landing.css:659,706; landing-motion.ts:14; ConstellationField.tsx:39), nunca no dashboard/canvas.
+> Linguagem visual MIV para animação mapeada com evidência path:linha. (1) Tokens: --accent = cyan `184 100% 50%` (#00F2FF) com regra inline "nebula stays exclusive to memory" (src/index.css:27-29); raw tokens --cyan/#00F2FF, --cyan-veil, --cyan-line (:42-45); --gold #D4AF37 (:46) reservado a valor (--status-waiting gold :65, glow-gold); --nebula #4D00FF/#8C5AFF (:49-51). Motion de processamento em CYAN é consistente com todo running-state existente (Loader2 text-accent, badge bg-accent/15). (2) Glows prontos para copiar: --glow-primary `0 0 24px hsl(184 100% 50% / 0.45)` (:70) via .glow-primary (:117) — é o CTA glow real (CTASection.tsx:35, HeroSection.tsx:129); text-glow-cyan `text-shadow 0 0 14px rgba(0,242,255,0.55)` (:122); seleção de nó = `border-accent ring-2 ring-accent/30` (GenerateImageNode.tsx:20); dot pulsante `bg-accent animate-pulse shadow-[0_0_8px_#00F2FF]` (SceneComposeInspector.tsx:423). (3) Animações Tailwind: glow-pulse 2s box-shadow cyan (tailwind.config.ts:119-126,151), appear/appear-zoom (:127-146), plugin tailwindcss-animate (:157); em index.css: mc-pulse-glow cyan (:172-175) e o precedente-chave SVG `pipeline-dash` stroke-dashoffset 0.6s linear infinite (:242-247) usado em PipelineEdge.tsx:53. (4) SOP WebGL: proíbe backdrop-blur apenas "sobre ou junto a Canvas WebGL" (webgl-canvas-stabilization.md:29-31; diagnóstico :21 fala de 'Canvas 3D (WebGL) ativo'); o canvas Spaces é 2D ReactFlow puro (@xyflow/react em CanvasEditorPage.tsx:5-13, sem three/fiber) → a restrição NÃO se aplica, e o próprio canvas já usa backdrop-blur (LeftPanel/index.tsx, LanesOverlay.tsx). (5) Perf: escala real ~13 nós/16 edges — animação CSS em SVG path é trivial nessa escala e já roda em prod (pipeline-edge-dash por edge cross-lane); não há regra global de perf de animação no repo; prefers-reduced-motion só é respeitado nas superfícies de landing (landing.css:659,706; landing-motion.ts:14; ConstellationField.tsx:39), nunca no dashboard/canvas.
 > 
 > -- key facts --
 > • --accent é cyan HSL `184 100% 50%` com a regra de uso gravada no próprio token: cyan = accent genérico/hover/selected, 'nebula stays exclusive to memory', e é dual-role (text-accent brilhante E bg-accent fill com foreground quase-preto `0 0% 6%`). --primary e --ring são o MESMO c
@@ -8535,7 +8535,7 @@ Mapeamento 3/3 completo. Leio as duas frentes restantes (edges + MIV):
 > • Keyframes custom em index.css disponíveis: `pulse-green`, `breathe-orange`, `thinking-dots`, `mc-pulse-glow` (box-shadow cyan 12px/0.35 → 26px/0.6 — o pulso de processamento cyan pronto), `flicker`, `scanline`, e o precedente-chave para edges SVG: `@keyframes pipeline-dash { to {
 >   ⤷ /home/gcrUX/htdocs/constellation-orchestra/src/index.css:169-175 (pulse-green/breathe-orange/thinking-dots/mc-pulse-glow), :242-247 (pipeline-dash); consumo: src/components/canvas/
 > • Regra exata do SOP WebGL: 'Proibição de backdrop-blur sobre ou junto a Canvas WebGL — Nunca utilizar classes de desfoque de fundo (backdrop-blur, backdrop-blur-sm/md/lg) em headers, sidebars, toolbars ou painéis flutuantes que dividem o mesmo viewport com o WebGL'; alternativa = 
->   ⤷ /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[webgl-canvas-stabilization|webgl-canvas-stabilization]].md:29-31 (Regra 1), :20-21 (diagnóstico 'Canvas 3D (WebGL) ativo'), :33-35 (Regra 2 useFrame), 
+>   ⤷ /home/gcrUX/htdocs/constellation-orchestra/docs/processes/webgl-canvas-stabilization.md:29-31 (Regra 1), :20-21 (diagnóstico 'Canvas 3D (WebGL) ativo'), :33-35 (Regra 2 useFrame), 
 > • A restrição do SOP NÃO se aplica ao canvas Spaces: é ReactFlow 2D puro (@xyflow/react), sem nenhum import de three/@react-three/fiber — e o próprio ecossistema do canvas JÁ usa backdrop-blur em produção (LeftPanel, LanesOverlay, badge do ConstellationMatrix com backdrop-blur-sm +
 >   ⤷ /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx:5-13 (imports só @xyflow/react) e :323 (<ReactFlow>); backdrop-blur em src/components/canvas/LeftPanel/ind
 > • Escala real é minúscula para animação CSS: o projeto Gabriel AI tem ~13 nós/16 edges (dado do caller; a memória do projeto registra 8 projetos reais no canvas). O repo já roda animação CSS infinita em SVG path por edge (pipeline-edge-dash) sem regra de perf contrária — nessa esca
@@ -9498,15 +9498,2143 @@ Duas frentes: **(A)** OTD-SPACES-037 — motion na superfície `SpaceCanvasPage`
 > The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/18-amendment-voice-engine-selfhost.md has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
 
----
+## 🤖 Claude *(19:00:33)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - eb61c3bb-6060-4462-9486-085ad5b66177]]
-> * **Próxima Sessão**: [[2026-07-10 - agent-a0bd309a8ab35ee17]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(19:00:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "  /** Uploaded reference-audio sample used to clone the voice. */\n  sampleAudioUrl?: string;\n  sampleStoragePath?: string;",
+  "new_string": "  /** Uploaded reference-audio sample used to clone the voice. */\n  sampleAudioUrl?: string;\n  sampleStoragePath?: string;\n  /** FR-SPACES-059 \u2014 up to 5 short clips (\u22647s each) enriching the composite reference\n   *  (personality, timbres, mannerisms, accents). qwen3-local engine only. */\n  validationSamples?: { url: string; path: string; duration: number }[];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:00:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarVoice.ts",
+  "old_string": "export interface CloneVoiceParams {\n  sample_audio_url: string;\n  /** qwen3-local: owner-prefixed Storage key of the sample (the async worker downloads it directly). */\n  sample_storage_path?: string;\n  sample_bucket?: string;\n  provider: VoiceProvider;\n  language: VoiceLanguage;\n  project_id?: string;\n  name?: string;\n}",
+  "new_string": "export interface CloneVoiceParams {\n  sample_audio_url: string;\n  /** qwen3-local: owner-prefixed Storage key of the sample (the async worker downloads it directly). */\n  sample_storage_path?: string;\n  sample_bucket?: string;\n  /** FR-SPACES-059 \u2014 up to 5 short validation clips (\u22647s each, owner-prefixed keys). qwen3-local only. */\n  validation_storage_paths?: string[];\n  provider: VoiceProvider;\n  language: VoiceLanguage;\n  project_id?: string;\n  name?: string;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarVoice.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:00:47)*
+
+
+## 🤖 Claude *(19:00:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "const VOICE_COST = 36;\nconst MAX_AUDIO_MB = 25;",
+  "new_string": "const VOICE_COST = 36;\nconst MAX_AUDIO_MB = 25;\n// FR-SPACES-059 \u2014 short validation clips enriching the composite voice reference (qwen3-local).\nconst MAX_VALIDATION_CLIPS = 5;\nconst MAX_CLIP_SECONDS = 7;\n\n/** Measure an audio file's duration client-side (pr\u00e9flight for the \u22647s gate). */\nfunction measureAudioDuration(file: File): Promise<number> {\n  return new Promise((resolve, reject) => {\n    const url = URL.createObjectURL(file);\n    const audio = new Audio();\n    audio.preload = \"metadata\";\n    audio.onloadedmetadata = () => { URL.revokeObjectURL(url); resolve(audio.duration); };\n    audio.onerror = () => { URL.revokeObjectURL(url); reject(new Error(\"n\u00e3o foi poss\u00edvel ler o \u00e1udio\")); };\n    audio.src = url;\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "  const erase = useEraseAvatarArtifact();\n  const { activePurposes } = useAvatarConsents();\n  const fileRef = useRef<HTMLInputElement | null>(null);\n  const [uploading, setUploading] = useState(false);",
+  "new_string": "  const erase = useEraseAvatarArtifact();\n  const { activePurposes } = useAvatarConsents();\n  const fileRef = useRef<HTMLInputElement | null>(null);\n  const clipRef = useRef<HTMLInputElement | null>(null);\n  const [uploading, setUploading] = useState(false);\n  const [uploadingClip, setUploadingClip] = useState(false);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "  const handleClone = async () => {\n    if (!d.sampleAudioUrl) return;\n    updateNodeData(node.id, { status: \"running\", error: undefined });\n    try {\n      const res = await cloneVoice.mutateAsync({\n        sample_audio_url: d.sampleAudioUrl,\n        sample_storage_path: d.sampleStoragePath,\n        sample_bucket: \"canvas-assets\",\n        provider: d.provider,\n        language: d.language,\n        project_id: projectId,\n        name: `${d.label} ${node.id.slice(0, 6)}`,\n      });",
+  "new_string": "  /** FR-SPACES-059 \u2014 upload a short validation clip (\u22647s), preflight-gated client-side. */\n  const onClipFile = async (file: File) => {\n    if (!file.type.startsWith(\"audio/\")) {\n      toast.error(`\"${file.name}\" n\u00e3o \u00e9 um arquivo de \u00e1udio.`);\n      return;\n    }\n    if ((d.validationSamples?.length ?? 0) >= MAX_VALIDATION_CLIPS) {\n      toast.error(`M\u00e1ximo de ${MAX_VALIDATION_CLIPS} clipes de valida\u00e7\u00e3o.`);\n      return;\n    }\n    setUploadingClip(true);\n    try {\n      const duration = await measureAudioDuration(file);\n      if (duration > MAX_CLIP_SECONDS + 0.5) {\n        toast.error(`Clipe de ${duration.toFixed(1)}s \u2014 o m\u00e1ximo \u00e9 ${MAX_CLIP_SECONDS}s.`);\n        return;\n      }\n      const { data: userData } = await supabase.auth.getUser();\n      const userId = userData?.user?.id;\n      if (!userId) throw new Error(\"Sess\u00e3o expirada \u2014 fa\u00e7a login novamente.\");\n      const ext = file.name.split(\".\").pop()?.toLowerCase() || \"mp3\";\n      const path = `${userId}/voices/${projectId}/${node.id}-clip-${Date.now()}.${ext}`;\n      const { error: upErr } = await supabase.storage\n        .from(\"canvas-assets\")\n        .upload(path, file, { contentType: file.type, upsert: true });\n      if (upErr) throw upErr;\n      const { data: signed, error: sErr } = await supabase.storage\n        .from(\"canvas-assets\")\n        .createSignedUrl(path, 60 * 60 * 24 * 7);\n      if (sErr || !signed?.signedUrl) throw sErr ?? new Error(\"signed url\");\n      // New reference material \u21d2 invalidate any prior clone (same rule as the main sample).\n      updateNodeData(node.id, {\n        validationSamples: [...(d.validationSamples ?? []), { url: signed.signedUrl, path, duration }],\n        voiceProfileId: undefined,\n        output: undefined,\n        status: \"idle\",\n        error: undefined,\n      });\n      toast.success(`Clipe de ${duration.toFixed(1)}s adicionado.`);\n    } catch (e) {\n      toast.error(e instanceof Error ? e.message : String(e));\n    } finally {\n      setUploadingClip(false);\n    }\n  };\n\n  const removeClip = (path: string) => {\n    updateNodeData(node.id, {\n      validationSamples: (d.validationSamples ?? []).filter((c) => c.path !== path),\n      voiceProfileId: undefined,\n      output: undefined,\n      status: \"idle\",\n      error: undefined,\n    });\n  };\n\n  const handleClone = async () => {\n    if (!d.sampleAudioUrl) return;\n    updateNodeData(node.id, { status: \"running\", error: undefined });\n    try {\n      const res = await cloneVoice.mutateAsync({\n        sample_audio_url: d.sampleAudioUrl,\n        sample_storage_path: d.sampleStoragePath,\n        sample_bucket: \"canvas-assets\",\n        validation_storage_paths: (d.validationSamples ?? []).map((c) => c.path),\n        provider: d.provider,\n        language: d.language,\n        project_id: projectId,\n        name: `${d.label} ${node.id.slice(0, 6)}`,\n      });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:22)*
+
+
+## 🤖 Claude *(19:01:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "        {d.output?.audioUrl && (\n          <Section title=\"Resultado\">",
+  "new_string": "        {isLocal && (\n          <Section title={`Clipes de personalidade (${d.validationSamples?.length ?? 0}/${MAX_VALIDATION_CLIPS} \u00b7 at\u00e9 ${MAX_CLIP_SECONDS}s cada)`}>\n            <p className=\"mb-2 text-[10px] text-muted-foreground\">\n              Clipes curtos com trejeitos, sotaques e emo\u00e7\u00f5es variadas enriquecem a refer\u00eancia\n              composta \u2014 a identidade da voz fica mais fiel.\n            </p>\n            <div className=\"space-y-1.5\">\n              {(d.validationSamples ?? []).map((clip) => (\n                <div key={clip.path} className=\"flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1\">\n                  <StorageAudio src={clip.url} controls className=\"h-7 min-w-0 flex-1\" />\n                  <span className=\"shrink-0 font-mono text-[9px] text-muted-foreground\">{clip.duration.toFixed(1)}s</span>\n                  <button\n                    type=\"button\"\n                    className=\"shrink-0 text-muted-foreground hover:text-destructive\"\n                    onClick={() => removeClip(clip.path)}\n                    disabled={busy}\n                    title=\"Remover clipe\"\n                  >\n                    <Trash2 className=\"h-3 w-3\" />\n                  </button>\n                </div>\n              ))}\n              <input\n                ref={clipRef}\n                type=\"file\"\n                accept=\"audio/*\"\n                hidden\n                onChange={(e) => {\n                  const f = e.target.files?.[0];\n                  if (f) onClipFile(f);\n                  e.currentTarget.value = \"\";\n                }}\n              />\n              {(d.validationSamples?.length ?? 0) < MAX_VALIDATION_CLIPS && (\n                <Button\n                  type=\"button\"\n                  variant=\"outline\"\n                  size=\"sm\"\n                  className=\"w-full gap-2\"\n                  disabled={uploadingClip || busy}\n                  onClick={() => clipRef.current?.click()}\n                >\n                  {uploadingClip ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Upload className=\"h-3.5 w-3.5\" />}\n                  {uploadingClip ? \"Enviando\u2026\" : \"Adicionar clipe curto\"}\n                </Button>\n              )}\n            </div>\n          </Section>\n        )}\n\n        {d.output?.audioUrl && (\n          <Section title=\"Resultado\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:37)*
+
+
+## 🤖 Claude *(19:01:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts",
+  "old_string": "      // \u2500\u2500 qwen3-local: enqueue for the host worker (async \u2014 the edge fn can't reach the motor). \u2500\u2500\n      if (provider === \"qwen3-local\") {\n        const bucket = String(body?.sample_bucket ?? \"canvas-assets\");\n        if (!SAMPLE_BUCKETS.includes(bucket)) return json({ error: \"invalid_sample_bucket\" }, 422);\n        // Owner-prefix rule = tenant isolation (mirrors the storage RLS of 20260703030000): a caller\n        // can only point the worker at ITS OWN objects \u2014 never another tenant's sample.\n        if (!samplePath || !samplePath.startsWith(`${userId}/`) || samplePath.includes(\"..\")) {\n          return json({ error: \"invalid_sample_path\", detail: \"amostra deve ser um objeto seu no Storage\" }, 422);\n        }\n        const name = String(body?.name ?? `voice-${userId.slice(0, 8)}`).slice(0, 80);\n        const { data: render, error: qErr } = await admin.from(\"video_renders\").insert({\n          user_id: userId, engine: \"qwen3-voice\", state: \"queued\", charged_mco: 0, voice_consent: true,\n          composition: {\n            kind: \"voice_clone\", provider: \"qwen3-local\", language,\n            sample_bucket: bucket, sample_key: samplePath, name,\n            project_id: body?.project_id ?? null,\n          },\n        }).select(\"id\").single();",
+  "new_string": "      // \u2500\u2500 qwen3-local: enqueue for the host worker (async \u2014 the edge fn can't reach the motor). \u2500\u2500\n      if (provider === \"qwen3-local\") {\n        const bucket = String(body?.sample_bucket ?? \"canvas-assets\");\n        if (!SAMPLE_BUCKETS.includes(bucket)) return json({ error: \"invalid_sample_bucket\" }, 422);\n        // Owner-prefix rule = tenant isolation (mirrors the storage RLS of 20260703030000): a caller\n        // can only point the worker at ITS OWN objects \u2014 never another tenant's sample.\n        if (!samplePath || !samplePath.startsWith(`${userId}/`) || samplePath.includes(\"..\")) {\n          return json({ error: \"invalid_sample_path\", detail: \"amostra deve ser um objeto seu no Storage\" }, 422);\n        }\n        // FR-SPACES-059 \u2014 up to 5 short validation clips, each under the SAME owner-prefix rule.\n        const rawClips = Array.isArray(body?.validation_storage_paths) ? body.validation_storage_paths : [];\n        if (rawClips.length > 5) return json({ error: \"too_many_validation_clips\", detail: \"m\u00e1ximo de 5 clipes\" }, 422);\n        const validationKeys: string[] = [];\n        for (const c of rawClips) {\n          const key = String(c ?? \"\");\n          if (!key || !key.startsWith(`${userId}/`) || key.includes(\"..\")) {\n            return json({ error: \"invalid_validation_clip_path\", detail: \"clipe deve ser um objeto seu no Storage\" }, 422);\n          }\n          validationKeys.push(key);\n        }\n        const name = String(body?.name ?? `voice-${userId.slice(0, 8)}`).slice(0, 80);\n        const { data: render, error: qErr } = await admin.from(\"video_renders\").insert({\n          user_id: userId, engine: \"qwen3-voice\", state: \"queued\", charged_mco: 0, voice_consent: true,\n          composition: {\n            kind: \"voice_clone\", provider: \"qwen3-local\", language,\n            sample_bucket: bucket, sample_key: samplePath, validation_keys: validationKeys, name,\n            project_id: body?.project_id ?? null,\n          },\n        }).select(\"id\").single();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "interface VoiceComposition {\n  kind: 'voice_clone' | 'voice_synthesize';\n  provider: string;\n  language: 'en' | 'pt-BR';\n  sample_bucket?: string;\n  sample_key?: string;\n  name?: string;\n  voice_profile_id?: string;\n  script?: string;\n  project_id?: string | null;\n}",
+  "new_string": "interface VoiceComposition {\n  kind: 'voice_clone' | 'voice_synthesize';\n  provider: string;\n  language: 'en' | 'pt-BR';\n  sample_bucket?: string;\n  sample_key?: string;\n  /** FR-SPACES-059 \u2014 up to 5 short clips (\u22647s) joining the composite reference. */\n  validation_keys?: string[];\n  name?: string;\n  voice_profile_id?: string;\n  script?: string;\n  project_id?: string | null;\n}\n\n/** ffprobe duration in seconds; throws on unreadable audio. */\nasync function probeDuration(path: string): Promise<number> {\n  const proc = Bun.spawn(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path], { stdout: 'pipe', stderr: 'pipe' });\n  const code = await proc.exited;\n  if (code !== 0) throw new Error(`ffprobe_failed: ${path}`);\n  const out = (await new Response(proc.stdout).text()).trim();\n  const dur = parseFloat(out);\n  if (!Number.isFinite(dur)) throw new Error(`ffprobe_unreadable_duration: ${path}`);\n  return dur;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:09)*
+
+
+## 🤖 Claude *(19:02:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "/** Clone: sample \u2192 24kHz mono WAV \u2192 x-vector .bin \u2192 bucket \u2192 voice_profiles row. */\nasync function processClone(renderId: string, userId: string, c: VoiceComposition) {\n  const rawPath = `/tmp/voice-clone-${renderId}.raw`;\n  const refPath = `/tmp/voice-clone-${renderId}-24k.wav`;\n  const binPath = `/tmp/voice-clone-${renderId}.bin`;\n  try {\n    // Defense-in-depth: re-assert the edge fn's checks (bucket allowlist + owner prefix) \u2014 the worker\n    // never trusts a row it didn't validate, even though composition is service-role-write-only.\n    const bucket = c.sample_bucket ?? 'canvas-assets';\n    if (!['canvas-assets', 'video-studio-assets'].includes(bucket)) throw new Error('sample_bucket_not_allowed');\n    const key = c.sample_key ?? '';\n    if (!key.startsWith(`${userId}/`) || key.includes('..')) throw new Error('sample_key_not_owner_scoped');\n\n    const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);\n    if (dlErr || !blob) throw new Error(`sample_download_failed: ${dlErr?.message ?? 'empty'}`);\n    writeFileSync(rawPath, new Uint8Array(await blob.arrayBuffer()));\n\n    // The engine REQUIRES 24kHz WAV (SOP: mismatched rate \u21d2 bad voice embedding).\n    await run(['ffmpeg', '-y', '-v', 'error', '-i', rawPath, '-ar', '24000', '-ac', '1', refPath], 120_000);\n\n    // x-vector-only profile: 8KB identity without room reverb (docs/voice-cloning.md recommendation).\n    await run([ENGINE_BIN, '-d', MODEL_DIR, '--ref-audio', refPath, '--save-voice', binPath, '--xvector-only'], 10 * 60_000);",
+  "new_string": "/** Clone: sample (+ up to 5 validation clips \u22647s) \u2192 composite 24kHz mono WAV \u2192 x-vector .bin\n *  \u2192 bucket \u2192 voice_profiles row. FR-SPACES-059: more varied reference material (mannerisms,\n *  accents, timbres) yields a richer attentive-pooling embedding. */\nasync function processClone(renderId: string, userId: string, c: VoiceComposition) {\n  const tmpFiles: string[] = [];\n  const refPath = `/tmp/voice-clone-${renderId}-24k.wav`;\n  const binPath = `/tmp/voice-clone-${renderId}.bin`;\n  try {\n    // Defense-in-depth: re-assert the edge fn's checks (bucket allowlist + owner prefix) \u2014 the worker\n    // never trusts a row it didn't validate, even though composition is service-role-write-only.\n    const bucket = c.sample_bucket ?? 'canvas-assets';\n    if (!['canvas-assets', 'video-studio-assets'].includes(bucket)) throw new Error('sample_bucket_not_allowed');\n    const clips = (c.validation_keys ?? []).slice(0, 5);\n    const allKeys = [c.sample_key ?? '', ...clips];\n    const converted: string[] = [];\n    for (let i = 0; i < allKeys.length; i++) {\n      const key = allKeys[i];\n      if (!key.startsWith(`${userId}/`) || key.includes('..')) throw new Error(`sample_key_not_owner_scoped: #${i}`);\n      const raw = `/tmp/voice-clone-${renderId}-in${i}`;\n      const wav = `/tmp/voice-clone-${renderId}-p${i}.wav`;\n      tmpFiles.push(raw, wav);\n      const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);\n      if (dlErr || !blob) throw new Error(`sample_download_failed #${i}: ${dlErr?.message ?? 'empty'}`);\n      writeFileSync(raw, new Uint8Array(await blob.arrayBuffer()));\n      // The engine REQUIRES 24kHz WAV (SOP: mismatched rate \u21d2 bad voice embedding).\n      await run(['ffmpeg', '-y', '-v', 'error', '-i', raw, '-ar', '24000', '-ac', '1', wav], 120_000);\n      // Validation clips (index \u22651) must honor the \u22647s contract \u2014 fail-closed naming the clip.\n      if (i >= 1) {\n        const dur = await probeDuration(wav);\n        if (dur > 7.5) throw new Error(`validation_clip_too_long: clipe ${i} tem ${dur.toFixed(1)}s (m\u00e1x 7s)`);\n      }\n      converted.push(wav);\n    }\n\n    // Composite reference: main sample first, then the personality clips (concat demuxer).\n    if (converted.length === 1) {\n      await run(['ffmpeg', '-y', '-v', 'error', '-i', converted[0], '-c', 'copy', refPath], 60_000);\n    } else {\n      const listPath = `/tmp/voice-clone-${renderId}-list.txt`;\n      tmpFiles.push(listPath);\n      writeFileSync(listPath, converted.map((p) => `file '${p}'`).join('\\n'));\n      await run(['ffmpeg', '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', listPath, '-c', 'copy', refPath], 60_000);\n    }\n\n    // x-vector-only profile over the FULL composite (docs: more reference \u21d2 better clone).\n    await run([ENGINE_BIN, '-d', MODEL_DIR, '--ref-audio', refPath, '--save-voice', binPath, '--xvector-only', '--max-ref-duration', '0'], 10 * 60_000);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    await finalize(renderId, 'done', storageKey, { voice_profile_id: profileId });\n    console.log(`\u2705 clone ${renderId} done \u2192 profile ${profileId} (${storageKey})`);\n    await logHealth('healthy', 'voice_clone_done', { render_id: renderId, voice_profile_id: profileId });\n  } finally {\n    for (const p of [rawPath, refPath, binPath]) rmSync(p, { force: true });\n  }\n}",
+  "new_string": "    await finalize(renderId, 'done', storageKey, { voice_profile_id: profileId });\n    console.log(`\u2705 clone ${renderId} done \u2192 profile ${profileId} (${storageKey}, ${1 + clips.length} amostras)`);\n    await logHealth('healthy', 'voice_clone_done', { render_id: renderId, voice_profile_id: profileId, samples: 1 + clips.length });\n  } finally {\n    for (const p of [...tmpFiles, refPath, binPath]) rmSync(p, { force: true });\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:57)*
+
+
+## 🤖 Claude *(19:02:57)*
+
+Verificações + extensão do smoke (clone multi-amostra válido E gate do clipe >7s):
+
+## 🤖 Claude *(19:03:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -3; echo \"tsc=$?\"; export PATH=\"/home/ubuntu/.deno/bin:$PATH\"; deno check supabase/functions/generate-voice/index.ts 2>&1 | grep -c \"TS\" ; bunx eslint src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx src/hooks/useAvatarVoice.ts scripts/voice-bridge.ts 2>&1 | tail -3",
+  "description": "Type-check, deno check, and lint the multi-sample changes",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc=0
+> 5
+> ```
+
+## 🤖 Claude *(19:03:16)*
+
+
+## 🤖 Claude *(19:03:16)*
+
+
+## 🤖 Claude *(19:03:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-voice-qwen3-local.ts",
+  "old_string": " *   G6  cross-tenant synthesize         \u2192 404 voice_profile_not_found (User B cannot use A's profile)\n *\n * G3/G4 need the voice-bridge worker running (systemd) OR drain via `bun run scripts/voice-bridge.ts --once`.\n * Usage: bun run scripts/qa/smoke-voice-qwen3-local.ts\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'fs';",
+  "new_string": " *   G6  cross-tenant synthesize         \u2192 404 voice_profile_not_found (User B cannot use A's profile)\n *   G7  clone with >7s validation clip  \u2192 worker fails with validation_clip_too_long (FR-SPACES-059)\n *   G8  clone with 2 valid short clips  \u2192 done (composite reference, samples=3)\n *\n * G3/G4/G7/G8 need the voice-bridge worker running (systemd) OR drain via voice-bridge.ts --once.\n * Usage: bun run scripts/qa/smoke-voice-qwen3-local.ts\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { execFileSync } from 'child_process';\nimport { readFileSync } from 'fs';"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String:  *   G6  cross-tenant synthesize         → 404 voice_profile_not_found (User B cannot use A's profile)
+>  *
+>  * G3/G4 need the voice-bridge worker running (systemd) OR drain via `bun run scripts/voice-bridge.ts --once`.
+>  * Usage: bun run scripts/qa/smoke-voice-qwen3-local.ts
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> import { readFileSync } from 'fs';
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(19:03:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-voice-qwen3-local.ts",
+  "old_string": "  // G6 \u2014 User B tries to synthesize with A's profile \u2192 404 (tenant guard in resolve_voice_profile)\n  const g6 = await call(userB.jwt, { action: 'synthesize', provider: 'qwen3-local', language: 'pt-BR', voice_profile_id: profileId, script: 'tentativa cross-tenant' });\n  ok('G6 cross-tenant profile \u2192 404', g6.status === 404 && g6.json.error === 'voice_profile_not_found', `(${g6.status} ${g6.json.error ?? ''})`);\n} catch (e) {",
+  "new_string": "  // G6 \u2014 User B tries to synthesize with A's profile \u2192 404 (tenant guard in resolve_voice_profile)\n  const g6 = await call(userB.jwt, { action: 'synthesize', provider: 'qwen3-local', language: 'pt-BR', voice_profile_id: profileId, script: 'tentativa cross-tenant' });\n  ok('G6 cross-tenant profile \u2192 404', g6.status === 404 && g6.json.error === 'voice_profile_not_found', `(${g6.status} ${g6.json.error ?? ''})`);\n\n  // \u2500\u2500 FR-SPACES-059 multi-sample gates: cut short/long clips from the reference locally.\n  const clip3 = `/tmp/smoke-clip3-${Date.now()}.wav`;\n  const clip10 = `/tmp/smoke-clip10-${Date.now()}.wav`;\n  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', REF_WAV, '-t', '3', '-ar', '24000', '-ac', '1', clip3]);\n  execFileSync('ffmpeg', ['-y', '-v', 'error', '-stream_loop', '1', '-i', REF_WAV, '-t', '10', '-ar', '24000', '-ac', '1', clip10]);\n  const upClip = async (local: string, key: string) => {\n    const { error } = await admin.storage.from('canvas-assets').upload(key, readFileSync(local), { contentType: 'audio/wav' });\n    if (error) throw new Error(`clip upload: ${error.message}`);\n    return key;\n  };\n  const k3a = await upClip(clip3, `${userA.id}/voices/qa/clip3a-${Date.now()}.wav`);\n  const k3b = await upClip(clip3, `${userA.id}/voices/qa/clip3b-${Date.now()}.wav`);\n  const k10 = await upClip(clip10, `${userA.id}/voices/qa/clip10-${Date.now()}.wav`);\n\n  // G7 \u2014 clone with a >7s validation clip \u2192 worker fail-closed naming the clip\n  const g7 = await call(userA.jwt, { action: 'clone', provider: 'qwen3-local', language: 'pt-BR', sample_audio_url: 'x', sample_storage_path: sampleKey, sample_bucket: 'canvas-assets', validation_storage_paths: [k10] });\n  ok('G7a clone c/ clipe longo \u2192 202', g7.status === 202 && Boolean(g7.json.render_id), `(${g7.status})`);\n  const g7r = await waitTerminal(String(g7.json.render_id));\n  const g7err = String((g7r.qa as { error?: string } | null)?.error ?? '');\n  ok('G7b worker rejeita clipe >7s', g7r.state === 'failed' && g7err.includes('validation_clip_too_long'), `(state=${g7r.state} err=${g7err.slice(0, 50)})`);\n\n  // G8 \u2014 clone with 2 valid short clips \u2192 done (composite reference)\n  const g8 = await call(userA.jwt, { action: 'clone', provider: 'qwen3-local', language: 'pt-BR', sample_audio_url: 'x', sample_storage_path: sampleKey, sample_bucket: 'canvas-assets', validation_storage_paths: [k3a, k3b] });\n  ok('G8a clone multi \u2192 202', g8.status === 202 && Boolean(g8.json.render_id), `(${g8.status})`);\n  const g8r = await waitTerminal(String(g8.json.render_id));\n  const g8profile = String((g8r.qa as { voice_profile_id?: string } | null)?.voice_profile_id ?? '');\n  ok('G8b clone composto \u2192 done + profile', g8r.state === 'done' && Boolean(g8profile), `(state=${g8r.state} profile=${g8profile.slice(0, 8)})`);\n} catch (e) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-voice-qwen3-local.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:03:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '9,20p' scripts/qa/smoke-voice-qwen3-local.ts",
+  "description": "Read exact header lines of the smoke script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  *   G3  clone (happy path)               → 202 queued → worker → done + qa.voice_profile_id
+>  *   G4  synthesize (happy path, pt-BR)   → 202 queued (mco_charged=0) → worker → done + WAV ≥20KB in bucket
+>  *   G5  balance UNCHANGED                → free engine debits nothing (Lei 1 on the money path)
+>  *   G6  cross-tenant synthesize          → 404 voice_profile_not_found (User B cannot use A's profile)
+>  *
+>  * G3/G4 need the voice-bridge worker running (systemd) OR drain via `bun run scripts/voice-bridge.ts --once`.
+>  * Usage: bun run scripts/qa/smoke-voice-qwen3-local.ts
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> import { readFileSync } from 'fs';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> ```
+
+## 🤖 Claude *(19:03:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-voice-qwen3-local.ts",
+  "old_string": " *   G6  cross-tenant synthesize          \u2192 404 voice_profile_not_found (User B cannot use A's profile)\n *\n * G3/G4 need the voice-bridge worker running (systemd) OR drain via `bun run scripts/voice-bridge.ts --once`.\n * Usage: bun run scripts/qa/smoke-voice-qwen3-local.ts\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'fs';",
+  "new_string": " *   G6  cross-tenant synthesize          \u2192 404 voice_profile_not_found (User B cannot use A's profile)\n *   G7  clone with >7s validation clip   \u2192 worker fails with validation_clip_too_long (FR-SPACES-059)\n *   G8  clone with 2 valid short clips   \u2192 done (composite reference)\n *\n * G3/G4/G7/G8 need the voice-bridge worker running (systemd) OR drain via voice-bridge.ts --once.\n * Usage: bun run scripts/qa/smoke-voice-qwen3-local.ts\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { execFileSync } from 'child_process';\nimport { readFileSync } from 'fs';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-voice-qwen3-local.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:04:06)*
+
+
+## 🤖 Claude *(19:04:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx supabase functions deploy generate-voice 2>&1 | grep -E \"Deployed|error\" | head -2 && systemctl --user restart voice-bridge.service && sleep 2 && systemctl --user is-active voice-bridge.service && echo \"worker restarted ok\"",
+  "description": "Deploy edge function and restart voice-bridge worker",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-voice
+> active
+> worker restarted ok
+> ```
+
+## 🤖 Claude *(19:04:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run scripts/qa/smoke-voice-qwen3-local.ts 2>&1 | tail -22",
+  "description": "Run extended voice smoke (10 gates incl. multi-sample)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bo3v8yk0e. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/tasks/bo3v8yk0e.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(19:04:34)*
+
+
+## 🤖 Claude *(19:04:34)*
+
+
+## 🤖 Claude *(19:04:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -2 && grep -c \"Clipes de personalidade\" dist/assets/CanvasEditorPage-*.js 2>/dev/null || grep -rl \"Clipes de personalidade\" dist/assets/ | head -1",
+  "description": "Build frontend and verify clip UI is in the bundle",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 1m 8s
+> 1
+> ```
+
+## 🤖 Claude *(19:06:03)*
+
+
+## 🤖 Claude *(19:06:03)*
+
+Build deployado (a seção "Clipes de personalidade" está no bundle servido pelo nginx). Aguardando o smoke de 12 gates concluir para selar. Status parcial:
+
+- **OTD-SPACES-037**: ✅ fechada por reconciliação — `SpaceCanvasPage` não tem rota viva (UI v1 aposentada pela Amendment 14); não há onde aplicar motion. Registrado no §8 da Amendment 18.
+- **Clone multi-amostra (FR-SPACES-059)**: código completo nas 5 camadas — tipos, inspector (upload de clipes com préflight `≤7s` client-side, lista com player + duração + remover, máx 5), hook, edge (validação owner-prefixed por clipe), worker (ffprobe fail-closed nomeando o clipe longo + `ffmpeg concat` → referência composta → x-vector com `--max-ref-duration 0`). Edge deployada, worker reiniciado (lição do worker stale), tsc 0, zero erros novos.
+
+## 👤 User *(19:06:32)*
+
+<task-notification>
+<task-id>bo3v8yk0e</task-id>
+<tool-use-id>toolu_01JuM3QK4k8eMaAscKVXhF2f</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/tasks/bo3v8yk0e.output</output-file>
+<status>completed</status>
+<summary>Background command "Run extended voice smoke (10 gates incl. multi-sample)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(19:06:41)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/tasks/bo3v8yk0e.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	throwaway A=64e37a27 B=1e75ab53
+> 2	✅ G1 clone sem consent → 403 (403 consent_required)
+> 3	✅ G2 sample de outro tenant → 422 (422 invalid_sample_path)
+> 4	✅ G3a clone → 202 queued (202)
+> 5	✅ G3b worker clone → done + profile (state=done profile=24077a80)
+> 6	✅ G4a synth → 202 queued 0 mco (202 mco=0)
+> 7	✅ G4b worker synth → done + WAV≥20KB (state=done 255KB)
+> 8	✅ G5 saldo intacto (0 débito) (0 → 0)
+> 9	✅ G6 cross-tenant profile → 404 (404 voice_profile_not_found)
+> 10	✅ G7a clone c/ clipe longo → 202 (202)
+> 11	✅ G7b worker rejeita clipe >7s (state=failed err=validation_clip_too_long: clipe 1 tem 10.0s (máx 7)
+> 12	✅ G8a clone multi → 202 (202)
+> 13	✅ G8b clone composto → done + profile (state=done profile=0327995e)
+> 14	🧹 deleted throwaway 64e37a27
+> 15	🧹 deleted throwaway 1e75ab53
+> 16	
+> 17	12/12 gates green
+> 18	
+> ```
+
+## 🤖 Claude *(19:06:56)*
+
+
+## 🤖 Claude *(19:06:56)*
+
+
+## 🤖 Claude *(19:06:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "\u00b7 n\u00f3 com motor \"MCORCH \u00b7 gr\u00e1tis\" default pt-BR + poll `useVoiceRenderPoll` \u00b7 **smoke 8/8** `scripts/qa/smoke-voice-qwen3-local.ts` (RODAR antes de mexer no rail).",
+  "new_string": "\u00b7 n\u00f3 com motor \"MCORCH \u00b7 gr\u00e1tis\" default pt-BR + poll `useVoiceRenderPoll` \u00b7 **clone multi-amostra FR-SPACES-059** (1 principal + at\u00e9 5 clipes \u22647s \u2192 refer\u00eancia composta ffmpeg-concat, ffprobe fail-closed por clipe) \u00b7 **smoke 12/12** `scripts/qa/smoke-voice-qwen3-local.ts` (RODAR antes de mexer no rail)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:07:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add supabase/functions/generate-voice/index.ts scripts/voice-bridge.ts src/types/canvas.ts src/hooks/useAvatarVoice.ts src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx scripts/qa/smoke-voice-qwen3-local.ts docs/bok/spaces-evolution/18-amendment-voice-engine-selfhost.md CLAUDE.md && git commit -q -m \"feat(voice): clone multi-amostra \u2014 ate 5 clipes de personalidade <=7s na referencia composta (FR-SPACES-059)\n\nClipes curtos com trejeitos/sotaques/timbres variados enriquecem o x-vector:\nworker concatena principal+clipes (24kHz mono) e extrai a identidade do\ncomposto inteiro (--max-ref-duration 0). Gates: <=7s por clipe validado no\nclient (preflight Audio.duration) E no worker (ffprobe fail-closed nomeando\no clipe); cada path owner-prefixed. UI: secao 'Clipes de personalidade' com\nplayer+duracao+remover. Smoke 12/12 (G7 rejeita 10s \u00b7 G8 composto 3 amostras\n-> perfil real). OTD-SPACES-037 reconciliada nao-issue (SpaceCanvasPage sem\nrota viva \u2014 Amendment 14 aposentou a UI v1).\" && git log -1 --oneline && git push origin main 2>&1 | tail -1",
+  "description": "Commit multi-sample voice clone slice and push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:07PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:07PM[0m [32mINF[0m scan completed in 17.8ms
+> [90m4:07PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 570ac1b feat(voice): clone multi-amostra — ate 5 clipes de personalidade <=7s na referencia composta (FR-SPACES-059)
+>    d964b2e..570ac1b  main -> main
+> ```
+
+## 🤖 Claude *(19:07:31)*
+
+**As duas frentes seladas** (commit `570ac1b`, pushed; frontend já servido pelo nginx — hard-refresh).
+
+## 1. OTD-SPACES-037 — fechada por reconciliação (não-issue)
+
+Verifiquei materialmente: `SpaceCanvasPage` **não tem rota viva** — zero referências fora do próprio arquivo. A consolidação Spaces v2 (Amendment 14) aposentou aquela UI; todas as rotas `/dashboard/spaces/*` apontam ao Canvas Studio, que **já recebeu o motion**. Não havia onde aplicar — a OTD fecha honesta, e o dead code ficou anotado para poda futura (§8 da Amendment 18).
+
+## 2. Clone multi-amostra — VIVO e provado (FR-SPACES-059)
+
+No inspector do Clone de Voz (motor MCORCH · grátis) agora existe a seção **"Clipes de personalidade (0/5 · até 7s cada)"**:
+
+- **Como funciona por baixo:** o worker concatena a amostra principal + os clipes (24 kHz mono) numa **referência composta** e extrai a identidade do conjunto inteiro — é assim que o motor captura de verdade trejeitos, sotaques, timbres e harmonização em contextos variados (o attentive pooling do Qwen3 melhora comprovadamente com material variado). Sem inventar "validador de personalidade" fake — Lei 1.
+- **Gate duplo de 7s:** preflight no browser (mede a duração antes de subir e recusa com mensagem clara) **e** ffprobe no worker (fail-closed nomeando o clipe: `"clipe 1 tem 10.0s (máx 7s)"`).
+- **Isolamento:** cada clipe passa pela mesma regra owner-prefixed anti-cross-tenant da amostra principal.
+- Adicionar/remover um clipe **invalida o clone anterior** (mesma regra da amostra principal) — a identidade sempre reflete o material atual.
+
+**Prova (smoke agora 12/12):** os 8 gates anteriores continuam verdes + G7 (clipe de 10 s → worker rejeita com o erro nomeado) + G8 (clone composto com 3 amostras → perfil real criado). Throwaways limpos, saldo intacto.
+
+**Fluxo recomendado para clonar a sua voz:** amostra principal de 30 s–1 min falando natural + 5 clipes de ≤7 s bem diferentes entre si (um animado, um sério, um com sotaque carregado, um sussurrado, um rindo/exclamando) — isso dá ao x-vector o retrato mais completo da sua identidade vocal.
+
+## 👤 User *(19:33:09)*
+
+Não esta indo os audios para os assets e tambem não esta registrando no histórico.
+
+Preciso de um zoom out e zoom in infinito no canvas do spaces. Parece tambem que temos algum problema com a thumb do nó Identidade (avatar) o n_qca6z67z esta com a thumb quebrada.
+
+No print podemos reparar que ainda existe uma borda por baixo da de neon em movimento. .border {
+    /* border-width: 1px; */
+}
+
+Eu apenas removi isso do navegador e ficou perfeito não precisa de borda somente as outras que ativam e esta correto, quando clica.
+
+Precisamos melhorar nosso motor de voz, ainda não esta igual acabei de gerar um audio com o clone que ficou totamente diferente falando as mesmas palavras, agora podemos começar a envolver nossas keys BYOK peruser estou testando com o gabrielcall@gmail.com que é o usuário 0, então ele já tem diversas chaves mas nesse caso preciso que esteja disponivel na UI do usuário todas configuradas. Entçao vamos ter uma barra de seleção onde é populada pelas chaves configuradas nas configurações de usuários BYOK perUser. Preciso de um jornada sua identificando os caminhos para cada chave e a regra perene dessa tarefa é - "Só carrega para o usuário, opções disponíveis"
+
+## 🤖 Claude *(19:34:18)*
+
+
+## 🤖 Claude *(19:34:20)*
+
+Print lindo — o motion vivo em produção! Recebido o pacote: (1) áudios fora de Assets/Histórico, (2) zoom infinito, (3) thumb quebrada no Identidade, (4) borda dupla sob o neon, (5) qualidade do clone + **seletor BYOK per-user com a regra perene "só carrega para o usuário opções disponíveis"**. Lanço a jornada BYOK (mapeamento de todos os caminhos de chave) em workflow e diagnostico os bugs em paralelo:
+
+## 🤖 Claude *(19:34:45)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'byok-per-user-journey',\n  description: 'Jornada BYOK per-user: mapear TODAS as chaves configur\u00e1veis, seus caminhos de resolu\u00e7\u00e3o, e como a UI descobre disponibilidade sem expor segredos',\n  phases: [{ title: 'Mapear', detail: '3 readers: colunas/vault \u00b7 consumidores por provider \u00b7 UI de disponibilidade' }],\n}\n\nconst MAP_SCHEMA = {\n  type: 'object',\n  properties: {\n    summary: { type: 'string' },\n    key_facts: { type: 'array', items: { type: 'object', properties: {\n      fact: { type: 'string' }, evidence: { type: 'string' } }, required: ['fact','evidence'] } },\n  },\n  required: ['summary','key_facts'],\n}\n\nconst [keysInventory, consumers, uiAvailability] = await parallel([\n  () => agent(`Reader do repo /home/gcrUX/htdocs/constellation-orchestra. Inventarie TODAS as chaves BYOK per-user, com path:linha:\n1. Todas as colunas de user_api_keys (grep nas migrations supabase/migrations/*user_api_keys* e no types.ts gerado) \u2014 lista COMPLETA de colunas *_api_key/token.\n2. A view mascarada: user_api_keys \u00e9 VIEW que mostra \u2022\u2022\u2022\u2022 \u2014 qual o shape EXATO do que o client v\u00ea quando uma chave EST\u00c1 configurada vs N\u00c3O est\u00e1 (NULL? string vazia? bullets)? Ler a migration da view/trigger INSTEAD OF.\n3. decrypted_user_api_keys (server-side): quem pode ler.\n4. Tabelas de credencial FORA de user_api_keys: meta_config, social_credentials, affiliate_config, higgsfield_oauth, social_app_config \u2014 para o contexto de voz importam? (elevenlabs_api_key/cartesia_api_key est\u00e3o em user_api_keys \u2014 confirmar migration 20260630000000).\n5. O hook useUserApiKeys (src/hooks/): o que retorna, como o SettingsPage o consome, e se j\u00e1 existe alguma no\u00e7\u00e3o de 'chave configurada' boolean.\nRetorne key_facts com evid\u00eancia.`, { label: 'map:keys-inventory', phase: 'Mapear', schema: MAP_SCHEMA }),\n\n  () => agent(`Reader do repo /home/gcrUX/htdocs/constellation-orchestra. Para cada provider de VOZ e os principais de IA, mapeie o CAMINHO da chave (quem consome, qual coluna), com path:linha:\n1. Voz: elevenlabs_api_key e cartesia_api_key \u2014 consumidos em supabase/functions/generate-voice/index.ts (keyFor). Algum outro consumidor?\n2. Gemini TTS stock: tts-speak usa google_api_key? Confirmar coluna exata.\n3. Imagem/LLM (contexto do canvas): openrouter_api_key, google_api_key, replicate_api_key, higgsfield_api_key \u2014 onde cada um resolve (canvas-execute? generate-image? avatar-identity-train?).\n4. A tabela-verdade: provider \u2192 coluna \u2192 edge fn \u2192 superf\u00edcie de settings onde se configura (SettingsPage se\u00e7\u00e3o/campo).\n5. O padr\u00e3o de erro 402 '<provider>_not_configured' \u2014 todos os consumidores seguem?\nRetorne key_facts com a tabela provider\u2192coluna\u2192consumidor\u2192settings-campo.`, { label: 'map:consumers', phase: 'Mapear', schema: MAP_SCHEMA }),\n\n  () => agent(`Reader do repo /home/gcrUX/htdocs/constellation-orchestra. Mapeie COMO A UI PODE SABER quais chaves BYOK o usu\u00e1rio tem configuradas SEM expor segredos, com path:linha:\n1. O que o SELECT na view user_api_keys retorna para uma chave configurada (valor mascarado '\u2022\u2022\u2022\u2022'? prefixo? boolean?) vs n\u00e3o configurada \u2014 ler a defini\u00e7\u00e3o da VIEW na migration (SELECT das colunas com CASE?).\n2. useUserApiKeys hook: campos retornados e como o SettingsPage mostra 'configurada' hoje (badge? placeholder?).\n3. Existe algum endpoint/hook que retorne S\u00d3 disponibilidade (booleans) sem valores? \n4. VoiceCloneInspector PROVIDERS array atual (hardcoded 3 op\u00e7\u00f5es) \u2014 onde o seletor precisa virar din\u00e2mico.\n5. Precedente de seletor din\u00e2mico por disponibilidade em outra superf\u00edcie (ex.: pickers de modelo no canvas que filtram por chave configurada? SettingsPage 'Testar' buttons?).\nObjetivo: desenhar um hook useConfiguredProviders() que derive booleans da view mascarada (regra perene: 'S\u00f3 carrega para o usu\u00e1rio, op\u00e7\u00f5es dispon\u00edveis'). Retorne key_facts.`, { label: 'map:ui-availability', phase: 'Mapear', schema: MAP_SCHEMA }),\n])\n\nreturn { keysInventory, consumers, uiAvailability }"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wvz4x9bl7
+> Summary: Jornada BYOK per-user: mapear TODAS as chaves configuráveis, seus caminhos de resolução, e como a UI descobre disponibilidade sem expor segredos
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/subagents/workflows/wf_1a621d84-124
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/workflows/scripts/byok-per-user-journey-wf_1a621d84-124.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/workflows/scripts/byok-per-user-journey-wf_1a621d84-124.js"} to iterate without resending the script.)
+> Run ID: wf_1a621d84-124
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/workflows/scripts/byok-per-user-journey-wf_1a621d84-124.js", resumeFromRunId: "wf_1a621d84-124"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(19:34:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT id, kind, source_module, storage_key, created_at FROM creative_assets WHERE user_id='ada39fae-67e1-4e53-af1c-5a18e1c108e8' AND kind='audio' ORDER BY created_at DESC LIMIT 5;\\\"}\"; echo; curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT id, state, storage_key, created_at FROM video_renders WHERE user_id='ada39fae-67e1-4e53-af1c-5a18e1c108e8' AND engine='qwen3-voice' ORDER BY created_at DESC LIMIT 5;\\\"}\"",
+  "description": "Check if User 0 voice audios registered in creative_assets and render queue",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> []
+> [{"id":"62fb9ccd-35ea-4f36-b96d-1bf682fc2d33","state":"done","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/62fb9ccd-35ea-4f36-b96d-1bf682fc2d33.wav","created_at":"2026-07-10 19:27:48.288859+00"},{"id":"bf86708e-7974-4d2b-870f-9823ec818a0f","state":"done","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice-profiles/bf86708e-7974-4d2b-870f-9823ec818a0f.bin","created_at":"2026-07-10 19:24:37.959003+00"},{"id":"9faf43c6-4c2c-4275-8b57-c4882be914ea","state":"done","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/9faf43c6-4c2c-4275-8b57-c4882be914ea.wav","created_at":"2026-07-10 07:18:19.659431+00"},{"id":"d545430a-dfc8-4008-a247-59635ed142e6","state":"done","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice-profiles/d545430a-dfc8-4008-a247-59635ed142e6.bin","created_at":"2026-07-10 07:17:28.85739+00"}]
+> ```
+
+## 🤖 Claude *(19:35:10)*
+
+
+## 🤖 Claude *(19:35:10)*
+
+
+## 🤖 Claude *(19:35:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "journalctl --user -u voice-bridge.service --since \"-14 hours\" --no-pager 2>/dev/null | grep -iE \"register|skipped|warn|creative\" | tail -6",
+  "description": "Find the register_creative_asset failure in worker logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(19:35:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "journalctl --user -u voice-bridge.service --since \"-14 hours\" --no-pager 2>/dev/null | tail -12",
+  "description": "Show recent voice-bridge worker logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Jul 10 04:21:15 panel.gcrux.com bun[3725286]: ✅ synth 9faf43c6-4c2c-4275-8b57-c4882be914ea done → ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/9faf43c6-4c2c-4275-8b57-c4882be914ea.wav (1187KB)
+> Jul 10 16:04:13 panel.gcrux.com systemd[1255]: Stopping voice-bridge.service - MCORCH Qwen3-TTS Voice Bridge (polls video_renders engine=qwen3-voice, clones/synthesizes via the free self-host engine)...
+> Jul 10 16:04:13 panel.gcrux.com systemd[1255]: Stopped voice-bridge.service - MCORCH Qwen3-TTS Voice Bridge (polls video_renders engine=qwen3-voice, clones/synthesizes via the free self-host engine).
+> Jul 10 16:04:13 panel.gcrux.com systemd[1255]: voice-bridge.service: Consumed 9min 17.692s CPU time, 8.6M memory peak, 0B memory swap peak.
+> Jul 10 16:04:13 panel.gcrux.com systemd[1255]: Started voice-bridge.service - MCORCH Qwen3-TTS Voice Bridge (polls video_renders engine=qwen3-voice, clones/synthesizes via the free self-host engine).
+> Jul 10 16:04:13 panel.gcrux.com bun[1526962]: 🎙️ voice-bridge running — polling video_renders (engine=qwen3-voice, queued)...
+> Jul 10 16:04:47 panel.gcrux.com bun[1526962]: ✅ clone 939aca23-99e9-4a7f-8a34-c7f73810fbd5 done → profile 24077a80-0ad6-40cd-b72a-21a0622ef127 (64e37a27-4aef-4893-bec0-72ea29ec6b47/voice-profiles/939aca23-99e9-4a7f-8a34-c7f73810fbd5.bin, 1 amostras)
+> Jul 10 16:05:51 panel.gcrux.com bun[1526962]: ✅ synth d8387537-9f6e-46f7-8934-d9ab9bd35916 done → 64e37a27-4aef-4893-bec0-72ea29ec6b47/voice/d8387537-9f6e-46f7-8934-d9ab9bd35916.wav (255KB)
+> Jul 10 16:06:00 panel.gcrux.com bun[1526962]: ❌ voice render 7e27b051-0b9a-4cce-add5-8afce6179882 failed: validation_clip_too_long: clipe 1 tem 10.0s (máx 7s)
+> Jul 10 16:06:27 panel.gcrux.com bun[1526962]: ✅ clone 1f5c5294-9f72-49ab-9dc0-ff8e06b0081d done → profile 0327995e-0cc7-4444-8cc7-4dc971db3554 (64e37a27-4aef-4893-bec0-72ea29ec6b47/voice-profiles/1f5c5294-9f72-49ab-9dc0-ff8e06b0081d.bin, 3 amostras)
+> Jul 10 16:26:33 panel.gcrux.com bun[1526962]: ✅ clone bf86708e-7974-4d2b-870f-9823ec818a0f done → profile c4d72b8f-9acb-4832-987c-37093a0b91e1 (ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice-profiles/bf86708e-7974-4d2b-870f-9823ec818a0f.bin, 4 amostras)
+> Jul 10 16:28:29 panel.gcrux.com bun[1526962]: ✅ synth 62fb9ccd-35ea-4f36-b96d-1bf682fc2d33 done → ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/62fb9ccd-35ea-4f36-b96d-1bf682fc2d33.wav (206KB)
+> ```
+
+## 🤖 Claude *(19:35:44)*
+
+
+## 🤖 Claude *(19:35:44)*
+
+
+## 🤖 Claude *(19:35:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst s = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nconst { data, error } = await s.rpc('register_creative_asset', {\n  p_user_id: 'ada39fae-67e1-4e53-af1c-5a18e1c108e8', p_kind: 'audio',\n  p_storage_bucket: 'video-studio-assets', p_storage_key: 'ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/62fb9ccd-35ea-4f36-b96d-1bf682fc2d33.wav',\n  p_is_public: false, p_source_module: 'avatar-studio', p_source_job_id: '62fb9ccd-35ea-4f36-b96d-1bf682fc2d33',\n  p_mime_type: 'audio/wav', p_file_size_bytes: 210944, p_duration_seconds: 4,\n  p_provider: 'qwen3-local', p_model: 'qwen3-tts-0.6b-base', p_prompt: 'reproduce test', p_title: 'Voz clonada: teste',\n});\nconsole.log('data:', data, '| error:', error?.message ?? null, error?.details ?? '');\n\"",
+  "description": "Reproduce the exact worker RPC call to see the real error",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> data: null | error: register_creative_asset: invalid source_module avatar-studio
+> ```
+
+## 🤖 Claude *(19:36:05)*
+
+
+## 🤖 Claude *(19:36:05)*
+
+
+## 🤖 Claude *(19:36:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT substring(prosrc FROM 'p_source_module NOT IN [^;]+') AS guard FROM pg_proc WHERE proname='register_creative_asset';\\\"}\"; echo; grep -n \"source_module\" supabase/migrations/20260707230000*.sql | head -6",
+  "description": "Compare deployed RPC guard vs the July 7 migration",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"guard":"p_source_module NOT IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid source_module %', p_source_module USING errcode = '22023'"}]
+> 2:-- it.4a fix — creative_assets accepts source_module='spaces'. The Spaces ledger image path has
+> 3:-- called register_creative_asset(p_source_module => 'spaces') since Fase 1b, but neither the
+> 4:-- column CHECK nor the RPC guard listed 'spaces' → every call raised 'invalid source_module' and,
+> 10:-- same body) — ONLY the source_module IN-list changes. A different signature would create a second
+> 15:ALTER TABLE public.creative_assets DROP CONSTRAINT IF EXISTS creative_assets_source_module_check;
+> 17:  ADD CONSTRAINT creative_assets_source_module_check
+> ```
+
+## 🤖 Claude *(19:36:32)*
+
+
+## 🤖 Claude *(19:36:32)*
+
+
+## 🤖 Claude *(19:36:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql",
+  "content": "-- Migration: creative_assets source_module REUNION \u2014 'avatar-studio' restored after being dropped\n-- by 20260707230000 (which rebuilt the CHECK+guard from a pre-20260630120000 list while adding\n-- 'spaces'). Same defect class that THAT migration fixed for 'spaces': silent fail-soft skips on\n-- every register_creative_asset('avatar-studio') since 2026-07-07 \u2014 voice audios (paid ElevenLabs/\n-- Cartesia path AND the free qwen3-local worker) never reached the asset spine.\n--\n-- ANTICORPO: the IN-list below is the UNION of every module ever granted. Any future migration\n-- touching this guard MUST start from the DEPLOYED definition (audit-schema-drift catches the\n-- ledger side; the voice smoke G4c asset gate catches this rail). /security-review: list-only\n-- change, byte-identical body otherwise (same rationale as 20260707230000).\n\nALTER TABLE public.creative_assets DROP CONSTRAINT IF EXISTS creative_assets_source_module_check;\nALTER TABLE public.creative_assets\n  ADD CONSTRAINT creative_assets_source_module_check\n  CHECK (source_module IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio'));\n\nCREATE OR REPLACE FUNCTION public.register_creative_asset(\n  p_user_id          uuid,\n  p_kind             text,\n  p_storage_bucket   text,\n  p_storage_key      text,\n  p_source_module    text,\n  p_source_job_id    text     DEFAULT NULL,\n  p_is_public        boolean  DEFAULT false,\n  p_mime_type        text     DEFAULT NULL,\n  p_file_size_bytes  bigint   DEFAULT NULL,\n  p_width            int      DEFAULT NULL,\n  p_height           int      DEFAULT NULL,\n  p_duration_seconds numeric  DEFAULT NULL,\n  p_parent_asset_id  uuid     DEFAULT NULL,\n  p_mesh_node_id     uuid     DEFAULT NULL,\n  p_provider         text     DEFAULT NULL,\n  p_model            text     DEFAULT NULL,\n  p_prompt           text     DEFAULT NULL,\n  p_title            text     DEFAULT NULL,\n  p_org_id           uuid     DEFAULT NULL,\n  p_tags             text[]   DEFAULT '{}',\n  p_metadata         jsonb    DEFAULT '{}'::jsonb\n)\nRETURNS uuid\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_id uuid;\nBEGIN\n  IF p_user_id IS NULL OR p_storage_bucket IS NULL OR p_storage_key IS NULL THEN\n    RAISE EXCEPTION 'register_creative_asset: user_id, storage_bucket, storage_key required' USING errcode = '22023';\n  END IF;\n  IF p_kind NOT IN ('image','video','audio','design','article','template') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid kind %', p_kind USING errcode = '22023';\n  END IF;\n  -- UNION list \u2014 never rebuild from an old migration; start from the deployed definition.\n  IF p_source_module NOT IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid source_module %', p_source_module USING errcode = '22023';\n  END IF;\n\n  INSERT INTO public.creative_assets (\n    user_id, org_id, kind, storage_bucket, storage_key, is_public, mime_type, file_size_bytes,\n    width, height, duration_seconds, parent_asset_id, source_module, source_job_id, mesh_node_id,\n    provider, model, prompt, title, tags, metadata\n  ) VALUES (\n    p_user_id, p_org_id, p_kind, p_storage_bucket, p_storage_key, p_is_public, p_mime_type, p_file_size_bytes,\n    p_width, p_height, p_duration_seconds, p_parent_asset_id, p_source_module, p_source_job_id, p_mesh_node_id,\n    p_provider, p_model, p_prompt, p_title, COALESCE(p_tags, '{}'), COALESCE(p_metadata, '{}'::jsonb)\n  )\n  ON CONFLICT (storage_bucket, storage_key) DO UPDATE SET\n    kind            = EXCLUDED.kind,\n    mime_type       = COALESCE(EXCLUDED.mime_type, public.creative_assets.mime_type),\n    file_size_bytes = COALESCE(EXCLUDED.file_size_bytes, public.creative_assets.file_size_bytes),\n    width           = COALESCE(EXCLUDED.width, public.creative_assets.width),\n    height          = COALESCE(EXCLUDED.height, public.creative_assets.height),\n    duration_seconds= COALESCE(EXCLUDED.duration_seconds, public.creative_assets.duration_seconds),\n    parent_asset_id = COALESCE(EXCLUDED.parent_asset_id, public.creative_assets.parent_asset_id),\n    mesh_node_id    = COALESCE(EXCLUDED.mesh_node_id, public.creative_assets.mesh_node_id),\n    title           = COALESCE(EXCLUDED.title, public.creative_assets.title),\n    metadata        = public.creative_assets.metadata || EXCLUDED.metadata,\n    updated_at      = now()\n  WHERE public.creative_assets.user_id = EXCLUDED.user_id\n  RETURNING id INTO v_id;\n\n  RETURN v_id;\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:37:09)*
+
+
+## 🤖 Claude *(19:37:09)*
+
+
+## 🤖 Claude *(19:37:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, subprocess, urllib.request, urllib.error\ntoken = subprocess.check_output(['cat', '/home/ubuntu/.supabase/access-token']).decode().strip()\napi = \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\"\ndef q(sql):\n    body = json.dumps({'query': sql}).encode()\n    req = urllib.request.Request(api, data=body, headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'User-Agent': 'mcorch-migration/1.0'})\n    with urllib.request.urlopen(req, timeout=60) as r:\n        return r.read().decode()\nsql = open('supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql').read()\nprint(\"apply:\", q(sql)[:100])\nprint(\"ledger:\", q(\"INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES ('20260710170000','creative_assets_source_module_reunion') ON CONFLICT DO NOTHING;\")[:60])\nprint(\"proof:\", q(\"SELECT (SELECT count(*) FROM pg_proc WHERE proname='register_creative_asset' AND prosrc LIKE '%avatar-studio%') AS rpc_ok, (SELECT count(*) FROM pg_constraint WHERE conname='creative_assets_source_module_check' AND pg_get_constraintdef(oid) LIKE '%avatar-studio%') AS check_ok, (SELECT count(*) FROM pg_constraint WHERE conname='creative_assets_source_module_check' AND pg_get_constraintdef(oid) LIKE '%spaces%') AS spaces_kept;\"))\nPY",
+  "description": "Apply reunion migration, register in ledger, prove both modules present",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> apply: []
+> ledger: []
+> proof: [{"rpc_ok":1,"check_ok":1,"spaces_kept":1}]
+> ```
+
+## 🤖 Claude *(19:37:45)*
+
+
+## 🤖 Claude *(19:37:45)*
+
+
+## 🤖 Claude *(19:37:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    // Composite reference: main sample first, then the personality clips (concat demuxer).\n    if (converted.length === 1) {\n      await run(['ffmpeg', '-y', '-v', 'error', '-i', converted[0], '-c', 'copy', refPath], 60_000);\n    } else {\n      const listPath = `/tmp/voice-clone-${renderId}-list.txt`;\n      tmpFiles.push(listPath);\n      writeFileSync(listPath, converted.map((p) => `file '${p}'`).join('\\n'));\n      await run(['ffmpeg', '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', listPath, '-c', 'copy', refPath], 60_000);\n    }\n\n    // x-vector-only profile over the FULL composite (docs: more reference \u21d2 better clone).\n    await run([ENGINE_BIN, '-d', MODEL_DIR, '--ref-audio', refPath, '--save-voice', binPath, '--xvector-only', '--max-ref-duration', '0'], 10 * 60_000);\n    const binBytes = readFileSync(binPath);\n    if (binBytes.byteLength < 1024) throw new Error('voiceprint_too_small');\n\n    const storageKey = `${userId}/voice-profiles/${renderId}.bin`;",
+  "new_string": "    // Composite reference: main sample first, then the personality clips (concat demuxer).\n    if (converted.length === 1) {\n      await run(['ffmpeg', '-y', '-v', 'error', '-i', converted[0], '-c', 'copy', refPath], 60_000);\n    } else {\n      const listPath = `/tmp/voice-clone-${renderId}-list.txt`;\n      tmpFiles.push(listPath);\n      writeFileSync(listPath, converted.map((p) => `file '${p}'`).join('\\n'));\n      await run(['ffmpeg', '-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', listPath, '-c', 'copy', refPath], 60_000);\n    }\n\n    // ICL graft profile (.qvoice, ~25MB) over the FULL composite \u2014 the engine's max-fidelity mode\n    // (\"max timbre mimicry, full prosody\"; docs/custom-voices). The 8KB x-vector alternative traded\n    // prosody away and the Sovereign's ear rejected it (2026-07-10). Legacy .bin profiles still play.\n    await run([ENGINE_BIN, '-d', MODEL_DIR, '--ref-audio', refPath, '--save-voice', binPath, '--max-ref-duration', '0'], 10 * 60_000);\n    const binBytes = readFileSync(binPath);\n    if (binBytes.byteLength < 1024) throw new Error('voiceprint_too_small');\n\n    const storageKey = `${userId}/voice-profiles/${renderId}.qvoice`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:37:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "  const binPath = `/tmp/voice-clone-${renderId}.bin`;\n  try {\n    // Defense-in-depth: re-assert the edge fn's checks (bucket allowlist + owner prefix) \u2014 the worker",
+  "new_string": "  const binPath = `/tmp/voice-clone-${renderId}.qvoice`;\n  try {\n    // Defense-in-depth: re-assert the edge fn's checks (bucket allowlist + owner prefix) \u2014 the worker"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:38:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    // Sized timeout: RTF 6.4 witness + load overhead, with generous headroom (min 10min).\n    const timeoutMs = Math.max(10 * 60_000, Math.ceil(script.length / 15) * 6.4 * 1000 * 2);\n    await run([\n      ENGINE_BIN, '-d', MODEL_DIR, '--load-voice', binPath, '--xvector-only', '--int8',\n      '-l', langFlag(c.language), '--text', script, '-o', outPath,\n    ], timeoutMs);",
+  "new_string": "    // Sized timeout: RTF 6.4 witness + load overhead, with generous headroom (min 10min).\n    const timeoutMs = Math.max(10 * 60_000, Math.ceil(script.length / 15) * 6.4 * 1000 * 2);\n    // Profile-mode flag follows the stored artifact: .qvoice = ICL graft (max fidelity, current\n    // default); legacy .bin = x-vector-only (pre-2026-07-10 profiles keep working).\n    const modeFlag = voiceKey.endsWith('.qvoice') ? '--icl-only' : '--xvector-only';\n    await run([\n      ENGINE_BIN, '-d', MODEL_DIR, '--load-voice', binPath, modeFlag, '--int8',\n      '-l', langFlag(c.language), '--text', script, '-o', outPath,\n    ], timeoutMs);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:38:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "  const binPath = `/tmp/voice-synth-${renderId}.bin`;",
+  "new_string": "  let binPath = `/tmp/voice-synth-${renderId}.bin`;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:38:23)*
+
+
+## 🤖 Claude *(19:38:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    const { data: binBlob, error: binErr } = await supabase.storage.from(BUCKET).download(voiceKey);\n    if (binErr || !binBlob) throw new Error(`voiceprint_download_failed: ${binErr?.message ?? 'empty'}`);\n    writeFileSync(binPath, new Uint8Array(await binBlob.arrayBuffer()));",
+  "new_string": "    // Keep the profile's real extension locally \u2014 the engine sniffs .qvoice vs .bin by name.\n    if (voiceKey.endsWith('.qvoice')) binPath = `/tmp/voice-synth-${renderId}.qvoice`;\n    const { data: binBlob, error: binErr } = await supabase.storage.from(BUCKET).download(voiceKey);\n    if (binErr || !binBlob) throw new Error(`voiceprint_download_failed: ${binErr?.message ?? 'empty'}`);\n    writeFileSync(binPath, new Uint8Array(await binBlob.arrayBuffer()));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:38:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    // Canonical asset spine (fail-soft).\n    let creativeAssetId: string | null = null;\n    try {\n      const { data: caId } = await supabase.rpc('register_creative_asset', {\n        p_user_id: userId, p_kind: 'audio',\n        p_storage_bucket: BUCKET, p_storage_key: storageKey, p_is_public: false,\n        p_source_module: 'avatar-studio', p_source_job_id: renderId,\n        p_mime_type: 'audio/wav', p_file_size_bytes: wav.byteLength,\n        p_duration_seconds: Math.round(wav.byteLength / 48_000), // 24kHz mono s16 \u2248 48KB/s\n        p_provider: 'qwen3-local', p_model: 'qwen3-tts-0.6b-base',\n        p_prompt: script.slice(0, 500),\n        p_title: `Voz clonada: ${script.slice(0, 60)}`,\n      });\n      creativeAssetId = (caId as string) ?? null;\n    } catch (e) {\n      console.warn(`[voice-bridge] creative_assets register skipped for ${renderId}:`, e instanceof Error ? e.message : e);\n    }",
+  "new_string": "    // Canonical asset spine (fail-soft, but NEVER silent \u2014 supabase.rpc does not throw; the\n    // unchecked `error` hid the avatar-studio guard drift for a full day. Lei 1.)\n    let creativeAssetId: string | null = null;\n    const { data: caId, error: caErr } = await supabase.rpc('register_creative_asset', {\n      p_user_id: userId, p_kind: 'audio',\n      p_storage_bucket: BUCKET, p_storage_key: storageKey, p_is_public: false,\n      p_source_module: 'avatar-studio', p_source_job_id: renderId,\n      p_mime_type: 'audio/wav', p_file_size_bytes: wav.byteLength,\n      p_duration_seconds: Math.round(wav.byteLength / 48_000), // 24kHz mono s16 \u2248 48KB/s\n      p_provider: 'qwen3-local', p_model: 'qwen3-tts-0.6b-base',\n      p_prompt: script.slice(0, 500),\n      p_title: `Voz clonada: ${script.slice(0, 60)}`,\n    });\n    if (caErr) {\n      console.error(`[voice-bridge] creative_assets register FAILED for ${renderId}: ${caErr.message}`);\n      await logHealth('degraded', 'asset_register_failed', { render_id: renderId, error: caErr.message.slice(0, 200) });\n    }\n    creativeAssetId = (caId as string) ?? null;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:38:49)*
+
+
+## 🤖 Claude *(19:38:49)*
+
+Restart do worker + backfill dos 2 áudios órfãos do User 0:
+
+## 🤖 Claude *(19:38:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user restart voice-bridge.service && systemctl --user is-active voice-bridge.service && set -a && source .env && set +a && bun -e \"\nimport { createClient } from '@supabase/supabase-js';\nconst s = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nconst U = 'ada39fae-67e1-4e53-af1c-5a18e1c108e8';\nfor (const key of [U+'/voice/62fb9ccd-35ea-4f36-b96d-1bf682fc2d33.wav', U+'/voice/9faf43c6-4c2c-4275-8b57-c4882be914ea.wav']) {\n  const { data: blob } = await s.storage.from('video-studio-assets').download(key);\n  const bytes = blob ? (await blob.arrayBuffer()).byteLength : 0;\n  const { data, error } = await s.rpc('register_creative_asset', {\n    p_user_id: U, p_kind: 'audio', p_storage_bucket: 'video-studio-assets', p_storage_key: key,\n    p_is_public: false, p_source_module: 'avatar-studio', p_source_job_id: key.split('/').pop().replace('.wav',''),\n    p_mime_type: 'audio/wav', p_file_size_bytes: bytes, p_duration_seconds: Math.round(bytes/48000),\n    p_provider: 'qwen3-local', p_model: 'qwen3-tts-0.6b-base', p_title: 'Voz clonada (backfill)',\n  });\n  console.log(key.split('/').pop(), '\u2192', data ?? error?.message);\n}\n\"",
+  "description": "Restart worker and backfill the 2 orphaned User 0 voice audios into creative_assets",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> active
+> 62fb9ccd-35ea-4f36-b96d-1bf682fc2d33.wav → 6ca26b59-8f33-46b7-9559-a58a16a015e0
+> 9faf43c6-4c2c-4275-8b57-c4882be914ea.wav → c4bf2daa-ce70-401d-997d-27d4bf0bef9d
+> ```
+
+## 🤖 Claude *(19:39:09)*
+
+
+## 🤖 Claude *(19:39:09)*
+
+Áudios registrados (2 UUIDs). Agora o Histórico — fonte do HistoryTab:
+
+## 🤖 Claude *(19:39:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"from(\\\"generations\\\")\\|from('generations')\\|vm_canvas_executions\" src/components/canvas/LeftPanel/*.tsx src/components/canvas/*.tsx 2>/dev/null | head -5; grep -rln \"HistoryTab\\|Hist\u00f3rico\" src/components/canvas/ | head -3; echo \"---assets page kind filter---\"; grep -nE \"kind|audio\" src/pages/CreativeAssetsPage.tsx | head -8",
+  "description": "Find HistoryTab data source and assets page kind filter"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/components/canvas/LeftPanel/index.tsx:34: * Tendências → vm_trends, Histórico → vm_canvas_executions.
+> src/components/canvas/LeftPanel/index.tsx
+> ---assets page kind filter---
+> ```
+
+## 🤖 Claude *(19:39:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"vm_canvas_executions\\|dual-read\\|generations\" src/components/canvas/LeftPanel/index.tsx | head -8; echo \"---CreativeAssetsPage source---\"; grep -rn \"creative_assets\\|useCreativeAssets\" src/pages/CreativeAssetsPage.tsx 2>/dev/null | head -4; ls src/hooks/ | grep -i asset",
+  "description": "Inspect history dual-read and assets page hook"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 34: * Tendências → vm_trends, Histórico → vm_canvas_executions.
+> ---CreativeAssetsPage source---
+> src/pages/CreativeAssetsPage.tsx:5:import type { CreativeAsset } from "@/hooks/useCreativeAssets";
+> src/pages/CreativeAssetsPage.tsx:7:// Biblioteca de Assets — the visible face of the creative_assets registry (Fatia 1 do ecossistema criativo).
+> useCreativeAssets.ts
+> ```
+
+## 🤖 Claude *(19:39:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"kind|eq\\(|filter|select\" src/hooks/useCreativeAssets.ts | head -12; echo \"===LeftPanel history query===\"; grep -n -A6 \"vm_canvas_executions\" src/components/canvas/LeftPanel/index.tsx | head -20",
+  "description": "Check assets hook filters and history query"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 10:export type CreativeAssetKind = CreativeAsset["kind"];
+> 12:/** All of the caller's assets (RLS own-or-org), newest first, optionally filtered by kind. */
+> 13:export function useCreativeAssets(kind?: CreativeAssetKind) {
+> 15:    queryKey: ["creative-assets", kind ?? "all"],
+> 19:        .select("*")
+> 22:      if (kind) query = query.eq("kind", kind);
+> ===LeftPanel history query===
+> 34: * Tendências → vm_trends, Histórico → vm_canvas_executions.
+> 35- */
+> 36-export function LeftPanel({ projectId }: { projectId: string | undefined }) {
+> 37-  const [tab, setTab] = useState<Tab>("recipes");
+> 38-  return (
+> 39-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-card">
+> 40-      <div className="flex h-10 shrink-0 items-center border-b border-border">
+> ```
+
+## 🤖 Claude *(19:39:50)*
+
+
+## 🤖 Claude *(19:39:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT column_name, data_type FROM information_schema.columns WHERE table_name='vm_canvas_executions' ORDER BY ordinal_position;\\\"}\"; echo; grep -rn \"vm_canvas_executions\" src/components/canvas/LeftPanel/HistoryTab.tsx 2>/dev/null | head -3; ls src/components/canvas/LeftPanel/",
+  "description": "Get vm_canvas_executions schema and HistoryTab component",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"column_name":"id","data_type":"uuid"},{"column_name":"project_id","data_type":"uuid"},{"column_name":"user_id","data_type":"uuid"},{"column_name":"node_id","data_type":"text"},{"column_name":"node_type","data_type":"USER-DEFINED"},{"column_name":"provider","data_type":"text"},{"column_name":"model","data_type":"text"},{"column_name":"prompt","data_type":"text"},{"column_name":"negative_prompt","data_type":"text"},{"column_name":"parameters","data_type":"jsonb"},{"column_name":"input_asset_id","data_type":"uuid"},{"column_name":"output_asset_id","data_type":"uuid"},{"column_name":"output_url","data_type":"text"},{"column_name":"credits_charged","data_type":"integer"},{"column_name":"status","data_type":"text"},{"column_name":"error_message","data_type":"text"},{"column_name":"execution_time_ms","data_type":"integer"},{"column_name":"queued_at","data_type":"timestamp with time zone"},{"column_name":"started_at","data_type":"timestamp with time zone"},{"column_name":"completed_at","data_type":"timestamp with time zone"},{"column_name":"created_at","data_type":"timestamp with time zone"},{"column_name":"operation_id","data_type":"text"},{"column_name":"webhook_token","data_type":"text"},{"column_name":"response_payload","data_type":"jsonb"},{"column_name":"webhook_received_at","data_type":"timestamp with time zone"}]
+> index.tsx
+> ```
+
+## 🤖 Claude *(19:40:08)*
+
+
+## 🤖 Claude *(19:40:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT t.typname, string_agg(e.enumlabel, ',' ORDER BY e.enumsortorder) AS labels FROM pg_type t JOIN pg_enum e ON e.enumtypid=t.oid WHERE t.typname IN (SELECT udt_name FROM information_schema.columns WHERE table_name='vm_canvas_executions' AND column_name='node_type') GROUP BY t.typname;\\\"}\"",
+  "description": "List node_type enum values for vm_canvas_executions",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"typname":"vm_node_type","labels":"generate_image,generate_video,upscale,inpaint,outpaint,style_transfer,relight,remove_background,extend,remix,compose,export"}]
+> ```
+
+## 🤖 Claude *(19:40:44)*
+
+
+## 🤖 Claude *(19:40:44)*
+
+
+## 🤖 Claude *(19:40:48)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260710171000_vm_node_type_generate_voice.sql",
+  "content": "-- Migration: vm_node_type += 'generate_voice' \u2014 the free voice rail (qwen3-voice worker) registers\n-- its syntheses in vm_canvas_executions so the canvas Hist\u00f3rico tab shows them (Sovereign report\n-- 2026-07-10: \"n\u00e3o est\u00e1 registrando no hist\u00f3rico\"). Additive enum value only; the worker inserts\n-- rows born 'completed'/'failed' (never transient), so the on-load reconciler cannot misfire.\nALTER TYPE public.vm_node_type ADD VALUE IF NOT EXISTS 'generate_voice';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260710171000_vm_node_type_generate_voice.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:40:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarVoice.ts",
+  "old_string": "export interface SynthesizeVoiceParams {\n  voice_profile_id: string;\n  script: string;\n  language: VoiceLanguage;\n  provider: VoiceProvider;\n  project_id?: string;\n}",
+  "new_string": "export interface SynthesizeVoiceParams {\n  voice_profile_id: string;\n  script: string;\n  language: VoiceLanguage;\n  provider: VoiceProvider;\n  project_id?: string;\n  /** Canvas node id \u2014 lets the worker register the execution in the project Hist\u00f3rico. */\n  node_id?: string;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarVoice.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:40:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "      const res = await synthesize.mutateAsync({\n        voice_profile_id: d.voiceProfileId,\n        script: d.prompt,\n        language: d.language,\n        provider: d.provider,\n        project_id: projectId,\n      });",
+  "new_string": "      const res = await synthesize.mutateAsync({\n        voice_profile_id: d.voiceProfileId,\n        script: d.prompt,\n        language: d.language,\n        provider: d.provider,\n        project_id: projectId,\n        node_id: node.id,\n      });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:41:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts",
+  "old_string": "          composition: {\n            kind: \"voice_synthesize\", provider: \"qwen3-local\", language,\n            voice_profile_id: voiceProfileId, script,\n            project_id: body?.project_id ?? null,\n          },",
+  "new_string": "          composition: {\n            kind: \"voice_synthesize\", provider: \"qwen3-local\", language,\n            voice_profile_id: voiceProfileId, script,\n            project_id: body?.project_id ?? null,\n            node_id: typeof body?.node_id === \"string\" ? body.node_id.slice(0, 64) : null,\n          },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:41:19)*
+
+
+## 🤖 Claude *(19:41:19)*
+
+
+## 🤖 Claude *(19:41:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json\nd = json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/tasks/wvz4x9bl7.output'))\nr = d['result']\nfor key in ['consumers', 'uiAvailability']:\n    print(f\"\\n{'='*16} {key} {'='*16}\")\n    print(r[key]['summary'][:1600])\n    for f in r[key]['key_facts'][:6]:\n        print(f\"\u2022 {f['fact'][:240]}\")\nPY",
+  "description": "Read consumers and UI availability mapping"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ================ consumers ================
+> Mapa completo do caminho das chaves BYOK (voz + IA principal) em /home/gcrUX/htdocs/constellation-orchestra. Todas as chaves vivem na tabela cifrada exposta como view `decrypted_user_api_keys` (Vault), gravadas via SettingsPage.tsx aba "ai" → Card "Soberania de IA (API Keys)" (linha 246), com teste server-side via edge fn `test-api-key` (mapa provider→coluna em test-api-key/index.ts:19-26 + special-case higgsfield). VOZ: generate-voice é o único consumidor real de cartesia_api_key e o consumidor canônico de elevenlabs_api_key (keyFor em generate-voice/index.ts:121-122, select :120; 402 `${provider}_not_configured` :137/:281; qwen3-local é keyless por design). Consumidor secundário de elevenlabs: generate-audio-script:52 (legado, COM fallback env ELEVENLABS_API_KEY — desvio do per-user puro). Gemini TTS stock: tts-speak lê exatamente `google_api_key` (tts-speak/index.ts:72,76) SEM fallback env, mas o erro de chave ausente é 500 "GEMINI_API_KEY not configured" (:77) — NÃO segue o padrão 402; o gate 402 correto acontece upstream no canvas-execute (voice_over → 402 google_not_configured, canvas-execute/index.ts:1249-1255). IMAGEM/LLM: canvas-execute resolve as 6 chaves de uma vez (index.ts:169-176: openai/replicate/openrouter/google/higgsfield+secret, per-user puro sem env) com gates 402 fail-closed pré-débito por node_type (:1233-1281). generate-image resolve openai/openrouter/replicate (:74-77) mas devolve 501 (não 402) `image_provider_not_configured` (:109-112). avatar-identity-train usa só replicate_api_key (:46-47) com 402 replicate_not_configured (:60,:97). video-render (
+> • VOZ elevenlabs_api_key: coluna decrypted_user_api_keys.elevenlabs_api_key → consumidor primário generate-voice (clone IVC + TTS synthesize) → Settings campo 'ElevenLabs API Key' (SettingsPage.tsx:339, testável via test-api-key)
+> • VOZ cartesia_api_key: coluna decrypted_user_api_keys.cartesia_api_key → consumidor ÚNICO generate-voice (cartesiaClone/cartesiaTTS sonic-3.5) → Settings campo 'Cartesia API Key (voz clonada PT-BR — real-time)' no sub-bloco Avatar/Clone AI (
+> • VOZ — consumidor secundário de elevenlabs_api_key: generate-audio-script (legado, roteiros de áudio) COM fallback env ELEVENLABS_API_KEY, violando o per-user puro; erro de chave ausente é 500 genérico sem slug
+> • VOZ qwen3-local (motor grátis self-host): keyless por design — generate-voice NÃO resolve credencial, enfileira video_renders engine='qwen3-voice' charged_mco:0 para o worker de host; o gate 402 não se aplica (FR-SPACES-056)
+> • Gemini TTS stock: tts-speak usa EXATAMENTE a coluna google_api_key (não existe gemini_api_key — 42703). SEM fallback env (o comentário na :65 menciona 'vault GEMINI_API_KEY' mas o código não implementa fallback). DESVIO do padrão: chave aus
+> • openrouter_api_key: resolve em canvas-execute (scene_compose/style_transfer/generate_image via Nano Banana multimodal), generate-image (rota preferida Nano Banana), generate-video/check-video-status (vídeo OpenRouter), orchestrate-content/s
+> 
+> ================ uiAvailability ================
+> A UI já tem tudo que precisa para saber disponibilidade BYOK sem expor segredos: a VIEW mascarada `public.user_api_keys` retorna a string literal '••••••••••••' quando a chave existe e NULL quando não existe (nunca o valor real — o valor real vive no Vault e só sai pela `decrypted_user_api_keys`, REVOKEd de anon/authenticated). O hook `useUserApiKeys()` já entrega essa row mascarada por usuário, e há dois precedentes vivos de derivação de boolean por truthiness: `ConfigPanel.tsx:45` (`connected = !!(userKeys?.[p.key])` + Badge Connected/Not set) e `GenerateImageInspector.tsx:98-103` (`*KeyMissing = info.provider === X && !userKeys?.<col>`). Não existe endpoint dedicado de disponibilidade-only — e não precisa: `useConfiguredProviders()` pode ser 100% client-side, um wrapper sobre `useUserApiKeys()` com um mapa declarativo providerId→coluna (padrão ConfigPanel PROVIDERS `key: '<col>' as const`) retornando `Record<ProviderId, boolean>`. O alvo é `VoiceCloneInspector.tsx:43-47` (PROVIDERS hardcoded: qwen3-local/elevenlabs/cartesia, renderizado em grid-cols-3 nas linhas 307-322): qwen3-local é keyless (sempre true); elevenlabs/cartesia devem filtrar/desabilitar por `!!userKeys?.elevenlabs_api_key` / `!!userKeys?.cartesia_api_key`. Zero migration, zero edge function nova.
+> • A definição VIVA da view mascarada é a da migration avatar-byok: para cada coluna de chave, `CASE WHEN <col> IS NOT NULL THEN '••••••••••••' ELSE NULL END`, com tenancy `WHERE (auth.uid() = user_id OR auth.role() = 'service_role')`. Configu
+> • O valor mascarado é seguro por construção: a base table guarda UUIDs do Vault (trigger trg_encrypt_user_api_keys re-escreve todo plaintext para vault_upsert_secret), e a view decifrada `decrypted_user_api_keys` tem REVOKE ALL de PUBLIC/anon
+> • useUserApiKeys() retorna `{ userKeys, saveKeys, isSaving, isLoading }` onde userKeys é a row mascarada inteira (`Database['public']['Views']['user_api_keys']['Row']`), via `.from('user_api_keys').select('*').eq('user_id', user.id).maybeSing
+> • SettingsPage mostra 'configurada' implicitamente: hidrata o form state com a row mascarada (`groq_api_key: userKeys.groq_api_key || ''` etc.), então um campo configurado exibe os bullets no input type=password. Não há badge 'configurada' ex
+> • NÃO existe endpoint/hook dedicado que retorne só disponibilidade (booleans). Os mais próximos: (a) derivação client-side por truthiness da view mascarada (ConfigPanel/GenerateImageInspector); (b) `useSocialAppConfig().isConfigured(platform)
+> • VoiceCloneInspector tem o PROVIDERS hardcoded com 3 opções: `[{ id: 'qwen3-local', label: 'MCORCH · grátis' }, { id: 'elevenlabs', label: 'ElevenLabs' }, { id: 'cartesia', label: 'Cartesia' }]`, renderizado como grid `grid-cols-3` de botões
+> ```
+
+## 🤖 Claude *(19:41:39)*
+
+
+## 🤖 Claude *(19:41:39)*
+
+
+## 🤖 Claude *(19:41:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, subprocess, urllib.request\ntoken = subprocess.check_output(['cat', '/home/ubuntu/.supabase/access-token']).decode().strip()\napi = \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\"\ndef q(sql):\n    body = json.dumps({'query': sql}).encode()\n    req = urllib.request.Request(api, data=body, headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'User-Agent': 'mcorch-migration/1.0'})\n    with urllib.request.urlopen(req, timeout=60) as r: return r.read().decode()\nprint(\"apply:\", q(open('supabase/migrations/20260710171000_vm_node_type_generate_voice.sql').read())[:80])\nprint(\"ledger:\", q(\"INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES ('20260710171000','vm_node_type_generate_voice') ON CONFLICT DO NOTHING;\")[:40])\nprint(\"proof:\", q(\"SELECT count(*) AS ok FROM pg_enum e JOIN pg_type t ON t.oid=e.enumtypid WHERE t.typname='vm_node_type' AND e.enumlabel='generate_voice';\"))\nPY",
+  "description": "Apply enum migration, register, prove generate_voice value exists",
+  "timeout": 120000
+}
+```
+
+## 🤖 Claude *(19:41:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"img\\|StorageImg\\|frameUrl\\|thumb\" src/components/canvas/nodes/AvatarIdentityNode.tsx | head -8",
+  "description": "Check how AvatarIdentityNode renders its thumbnail"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> apply: []
+> ledger: []
+> proof: [{"ok":1}]
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 36:          <img src={cover} alt="" className="h-20 w-full rounded object-cover" />
+> ```
+
+## 🤖 Claude *(19:41:59)*
+
+
+## 🤖 Claude *(19:41:59)*
+
+
+## 🤖 Claude *(19:42:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/AvatarIdentityNode.tsx",
+  "offset": 1,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { UserCircle, Camera } from "lucide-react";
+> 4	import { cn } from "@/lib/utils";
+> 5	import { type AvatarIdentityData } from "@/types/canvas";
+> 6	
+> 7	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 8	
+> 9	// avatar-clone-ai Fatia 3b — avatarIdentity canvas node (display-only; logic in AvatarIdentityInspector).
+> 10	export const AvatarIdentityNode = memo(function AvatarIdentityNode({ data, selected }: NodeProps) {
+> 11	  const d = data as unknown as AvatarIdentityData;
+> 12	  const trained = Boolean(d.avatarIdentityId);
+> 13	  const refCount = d.referenceUrls?.length ?? 0;
+> 14	  const cover = d.referenceUrls?.[0];
+> 15	
+> 16	  return (
+> 17	    <div
+> 18	      className={cn(
+> 19	        "w-[240px] overflow-hidden rounded-lg border bg-card text-foreground shadow-sm transition-all",
+> 20	        selected ? "border-accent ring-2 ring-accent/30" : "border-border",
+> 21	      )}
+> 22	    >
+> 23	      <Handle type="target" position={Position.Left} id="input_reference" className={HANDLE_CLASS} />
+> 24	      <Handle type="source" position={Position.Right} id="output_identity" className={HANDLE_CLASS} />
+> 25	      <header className="flex items-center justify-between gap-1.5 border-b border-border px-2.5 py-1.5">
+> 26	        <div className="flex min-w-0 items-center gap-1.5">
+> 27	          <UserCircle className="h-3 w-3 text-secondary" />
+> 28	          <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 29	        </div>
+> 30	        <span className="rounded-full bg-secondary/20 px-1.5 py-0.5 text-[9px] font-medium uppercase text-secondary">
+> 31	          T{d.tier}
+> 32	        </span>
+> 33	      </header>
+> 34	      <div className="w-full bg-muted/40 p-2.5">
+> 35	        {cover ? (
+> 36	          <img src={cover} alt="" className="h-20 w-full rounded object-cover" />
+> 37	        ) : (
+> 38	          <div className="flex h-12 w-full items-center justify-center text-[10px] text-muted-foreground">
+> 39	            {trained ? "Identidade treinada" : "Suba retratos de referência"}
+> 40	          </div>
+> 41	        )}
+> 42	      </div>
+> 43	      <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono text-[9px] text-muted-foreground">
+> 44	        <span className="truncate">
+> 45	          {d.provider}
+> ```
+
+## 🤖 Claude *(19:42:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/AvatarIdentityNode.tsx",
+  "old_string": "import { memo } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { UserCircle, Camera } from \"lucide-react\";\nimport { cn } from \"@/lib/utils\";\nimport { type AvatarIdentityData } from \"@/types/canvas\";",
+  "new_string": "import { memo } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { UserCircle, Camera } from \"lucide-react\";\nimport { StorageImg } from \"@/components/StorageMedia\";\nimport { cn } from \"@/lib/utils\";\nimport { type AvatarIdentityData } from \"@/types/canvas\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/AvatarIdentityNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/AvatarIdentityNode.tsx",
+  "old_string": "        {cover ? (\n          <img src={cover} alt=\"\" className=\"h-20 w-full rounded object-cover\" />\n        ) : (",
+  "new_string": "        {cover ? (\n          // StorageImg re-signs expired/dead private-bucket URLs on render (asset-url normalizer)\n          // \u2014 a raw <img> broke the thumb the moment the 7d signature lapsed.\n          <StorageImg src={cover} alt=\"\" className=\"h-20 w-full rounded object-cover\" />\n        ) : ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/AvatarIdentityNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:20)*
+
+
+## 🤖 Claude *(19:42:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx",
+  "old_string": "            defaultViewport={project?.viewport ?? { x: 0, y: 0, zoom: 1 }}\n            snapToGrid={pipelineMode}",
+  "new_string": "            defaultViewport={project?.viewport ?? { x: 0, y: 0, zoom: 1 }}\n            minZoom={0.02}\n            maxZoom={12}\n            snapToGrid={pipelineMode}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/index.css",
+  "old_string": ".mc-node-processing {\n  border-radius: 0.5rem; /* matches the node card rounded-lg so the glow hugs it */\n  animation: mc-pulse-glow 1.8s ease-in-out infinite;\n}",
+  "new_string": ".mc-node-processing {\n  border-radius: 0.5rem; /* matches the node card rounded-lg so the glow hugs it */\n  animation: mc-pulse-glow 1.8s ease-in-out infinite;\n}\n/* The static card border reads as a \"second border\" under the spinning neon ring (Sovereign\n   report 2026-07-10) \u2014 hide it while processing, EXCEPT when selected (.ring-2 = selection,\n   which keeps its accent border). */\n.mc-node-processing > div:not(.ring-2) {\n  border-color: transparent;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/index.css has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "interface VoiceComposition {\n  kind: 'voice_clone' | 'voice_synthesize';\n  provider: string;\n  language: 'en' | 'pt-BR';\n  sample_bucket?: string;\n  sample_key?: string;\n  /** FR-SPACES-059 \u2014 up to 5 short clips (\u22647s) joining the composite reference. */\n  validation_keys?: string[];\n  name?: string;\n  voice_profile_id?: string;\n  script?: string;\n  project_id?: string | null;\n}",
+  "new_string": "interface VoiceComposition {\n  kind: 'voice_clone' | 'voice_synthesize';\n  provider: string;\n  language: 'en' | 'pt-BR';\n  sample_bucket?: string;\n  sample_key?: string;\n  /** FR-SPACES-059 \u2014 up to 5 short clips (\u22647s) joining the composite reference. */\n  validation_keys?: string[];\n  name?: string;\n  voice_profile_id?: string;\n  script?: string;\n  project_id?: string | null;\n  /** Canvas node id \u2014 lets the worker register the execution in the project Hist\u00f3rico. */\n  node_id?: string | null;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    // Best-effort usage mark (drives retention sweep).\n    supabase.from('voice_profiles').update({ last_used_at: new Date().toISOString() })\n      .eq('id', c.voice_profile_id).then(() => {}, () => {});\n\n    await finalize(renderId, 'done', storageKey, { creative_asset_id: creativeAssetId });",
+  "new_string": "    // Best-effort usage mark (drives retention sweep).\n    supabase.from('voice_profiles').update({ last_used_at: new Date().toISOString() })\n      .eq('id', c.voice_profile_id).then(() => {}, () => {});\n\n    // Hist\u00f3rico do projeto (vm_canvas_executions) \u2014 the row is born terminal ('completed'), so the\n    // canvas on-load reconciler can never misread it as a transient state. Fail-soft but logged.\n    if (c.project_id) {\n      const { error: execErr } = await supabase.from('vm_canvas_executions').insert({\n        user_id: userId, project_id: c.project_id, node_id: c.node_id ?? renderId,\n        node_type: 'generate_voice', provider: 'qwen3-local', model: 'qwen3-tts-0.6b-base',\n        prompt: script.slice(0, 500), output_asset_id: creativeAssetId, output_url: storageKey,\n        credits_charged: 0, status: 'completed', completed_at: new Date().toISOString(),\n      });\n      if (execErr) console.error(`[voice-bridge] execution history insert FAILED for ${renderId}: ${execErr.message}`);\n    }\n\n    await finalize(renderId, 'done', storageKey, { creative_asset_id: creativeAssetId });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:42:52)*
+
+
+## 🤖 Claude *(19:42:52)*
+
+Agora o coração da regra perene — o hook genérico de disponibilidade BYOK:
+
+## 🤖 Claude *(19:43:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConfiguredProviders.ts",
+  "content": "import { useMemo } from \"react\";\nimport { useUserApiKeys } from \"@/hooks/useUserApiKeys\";\n\n/**\n * Regra perene (Diretiva Sovereign 2026-07-10): \"S\u00f3 carrega para o usu\u00e1rio, op\u00e7\u00f5es dispon\u00edveis.\"\n *\n * Provider selectors across the app must populate ONLY from the keys the user actually configured\n * (BYOK per-user) \u2014 never show a provider whose key is absent. Availability derives 100% client-side\n * from the masked `user_api_keys` VIEW: a configured key reads as the literal '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' (truthy),\n * an absent one as NULL (falsy). No secret ever reaches the browser (values live in the Vault;\n * `decrypted_user_api_keys` is service-role-only). Precedents: ConfigPanel `connected = !!userKeys[k]`,\n * GenerateImageInspector `*KeyMissing`.\n *\n * Keyless engines (self-host, e.g. voice 'qwen3-local') are ALWAYS available \u2014 declare them in the\n * surface itself, not here.\n */\nconst PROVIDER_KEY_MAP = {\n  elevenlabs: \"elevenlabs_api_key\",\n  cartesia: \"cartesia_api_key\",\n  openai: \"openai_api_key\",\n  openrouter: \"openrouter_api_key\",\n  google: \"google_api_key\",\n  groq: \"groq_api_key\",\n  replicate: \"replicate_api_key\",\n  higgsfield: \"higgsfield_api_key\",\n  hedra: \"hedra_api_key\",\n  fal: \"fal_api_key\",\n  resend: \"resend_api_key\",\n  firecrawl: \"firecrawl_api_key\",\n  apify: \"apify_token\",\n  rapidapi: \"rapidapi_key\",\n} as const;\n\nexport type ConfigurableProvider = keyof typeof PROVIDER_KEY_MAP;\n\nexport function useConfiguredProviders(): {\n  configured: Record<ConfigurableProvider, boolean>;\n  isLoading: boolean;\n} {\n  const { userKeys, isLoading } = useUserApiKeys();\n  const configured = useMemo(() => {\n    const out = {} as Record<ConfigurableProvider, boolean>;\n    for (const [provider, column] of Object.entries(PROVIDER_KEY_MAP)) {\n      out[provider as ConfigurableProvider] = Boolean(\n        (userKeys as Record<string, unknown> | null | undefined)?.[column],\n      );\n    }\n    return out;\n  }, [userKeys]);\n  return { configured, isLoading };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useConfiguredProviders.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "const VOICE_COST = 36;\nconst MAX_AUDIO_MB = 25;\n// FR-SPACES-059 \u2014 short validation clips enriching the composite voice reference (qwen3-local).\nconst MAX_VALIDATION_CLIPS = 5;\nconst MAX_CLIP_SECONDS = 7;",
+  "new_string": "const VOICE_COST = 36;\nconst MAX_AUDIO_MB = 25;\n// FR-SPACES-059 \u2014 short validation clips enriching the composite voice reference (qwen3-local).\nconst MAX_VALIDATION_CLIPS = 5;\nconst MAX_CLIP_SECONDS = 7;\n// Regra perene: \"S\u00f3 carrega para o usu\u00e1rio, op\u00e7\u00f5es dispon\u00edveis\" \u2014 o motor keyless MCORCH \u00e9\n// sempre vis\u00edvel; os BYOK pagos s\u00f3 aparecem quando a chave do usu\u00e1rio est\u00e1 configurada.\nconst ALL_PROVIDERS: { id: VoiceProvider; label: string; keyless?: boolean }[] = [\n  { id: \"qwen3-local\", label: \"MCORCH \u00b7 gr\u00e1tis\", keyless: true },\n  { id: \"elevenlabs\", label: \"ElevenLabs\" },\n  { id: \"cartesia\", label: \"Cartesia\" },\n];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:15)*
+
+
+## 🤖 Claude *(19:43:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"const PROVIDERS\\|PROVIDERS.map\\|useConfiguredProviders\\|useAvatarConsents()\" src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx | head -6",
+  "description": "Locate remaining PROVIDERS references in inspector"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 50:const PROVIDERS: { id: VoiceProvider; label: string }[] = [
+> 65:  const { activePurposes } = useAvatarConsents();
+> 316:            {PROVIDERS.map((p) => (
+> ```
+
+## 🤖 Claude *(19:43:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "offset": 48,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 48	}
+> 49	// qwen3-local first = the free self-host engine (Amendment 18); paid BYOK providers are opt-in.
+> 50	const PROVIDERS: { id: VoiceProvider; label: string }[] = [
+> 51	  { id: "qwen3-local", label: "MCORCH · grátis" },
+> 52	  { id: "elevenlabs", label: "ElevenLabs" },
+> 53	  { id: "cartesia", label: "Cartesia" },
+> 54	];
+> 55	const LANGUAGES: { id: VoiceLanguage; label: string }[] = [
+> 56	  { id: "en", label: "Inglês (âncora)" },
+> 57	  { id: "pt-BR", label: "Português (BR)" },
+> 58	];
+> 59	
+> ```
+
+## 🤖 Claude *(19:43:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "// qwen3-local first = the free self-host engine (Amendment 18); paid BYOK providers are opt-in.\nconst PROVIDERS: { id: VoiceProvider; label: string }[] = [\n  { id: \"qwen3-local\", label: \"MCORCH \u00b7 gr\u00e1tis\" },\n  { id: \"elevenlabs\", label: \"ElevenLabs\" },\n  { id: \"cartesia\", label: \"Cartesia\" },\n];\nconst LANGUAGES: { id: VoiceLanguage; label: string }[] = [",
+  "new_string": "const LANGUAGES: { id: VoiceLanguage; label: string }[] = ["
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "  const { activePurposes } = useAvatarConsents();",
+  "new_string": "  const { activePurposes } = useAvatarConsents();\n  const { configured } = useConfiguredProviders();\n  // Regra perene: s\u00f3 as op\u00e7\u00f5es dispon\u00edveis para ESTE usu\u00e1rio (keyless sempre; BYOK por chave).\n  const providers = ALL_PROVIDERS.filter(\n    (p) => p.keyless || configured[p.id as \"elevenlabs\" | \"cartesia\"],\n  );"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "        <Section title=\"Motor de voz\">\n          <div className=\"grid grid-cols-3 gap-2\">\n            {PROVIDERS.map((p) => (",
+  "new_string": "        <Section title=\"Motor de voz\">\n          <div className={cn(\"grid gap-2\", providers.length === 1 ? \"grid-cols-1\" : providers.length === 2 ? \"grid-cols-2\" : \"grid-cols-3\")}>\n            {providers.map((p) => ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:43:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "          <p className=\"mt-1.5 text-[10px] text-muted-foreground\">\n            {isLocal\n              ? \"Motor pr\u00f3prio no servidor MCORCH \u2014 sem chave, sem custo (fila ass\u00edncrona).\"\n              : <>Configure sua chave em <span className=\"font-medium text-foreground\">/dashboard/settings</span> (BYOK por usu\u00e1rio).</>}\n          </p>\n        </Section>",
+  "new_string": "          <p className=\"mt-1.5 text-[10px] text-muted-foreground\">\n            {isLocal\n              ? \"Motor pr\u00f3prio no servidor MCORCH \u2014 sem chave, sem custo (fila ass\u00edncrona).\"\n              : <>Usando sua chave BYOK ({d.provider}). Gerencie em <span className=\"font-medium text-foreground\">/dashboard/settings</span>.</>}\n          </p>\n          {providers.length < ALL_PROVIDERS.length && (\n            <p className=\"mt-1 text-[10px] text-muted-foreground/70\">\n              Outros motores aparecem aqui quando voc\u00ea configurar as chaves em Configura\u00e7\u00f5es.\n            </p>\n          )}\n        </Section>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:44:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "import { useAvatarVoiceClone, useAvatarVoiceSynthesize, useVoiceRenderPoll } from \"@/hooks/useAvatarVoice\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";",
+  "new_string": "import { useAvatarVoiceClone, useAvatarVoiceSynthesize, useVoiceRenderPoll } from \"@/hooks/useAvatarVoice\";\nimport { useConfiguredProviders } from \"@/hooks/useConfiguredProviders\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:44:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -4; echo \"tsc=$?\"",
+  "description": "TypeScript check after all edits",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc=0
+> ```
+
+## 🤖 Claude *(19:44:20)*
+
+
+## 🤖 Claude *(19:44:20)*
+
+tsc 0. Gravo a regra perene na memória (é diretiva durável), deployo tudo:
+
+## 🤖 Claude *(19:44:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_byok_only_available_options.md",
+  "content": "---\nname: feedback_byok_only_available_options\ndescription: Regra perene de UI \u2014 seletores de provider s\u00f3 carregam as op\u00e7\u00f5es DISPON\u00cdVEIS para o usu\u00e1rio (BYOK per-user configurada); keyless self-host sempre vis\u00edvel\nmetadata:\n  node_type: memory\n  type: feedback\n---\n\n**Diretiva Sovereign 2026-07-10 (verbatim):** \"a regra perene dessa tarefa \u00e9 \u2014 S\u00f3 carrega para o usu\u00e1rio, op\u00e7\u00f5es dispon\u00edveis.\"\n\n**Why:** o Usu\u00e1rio Zero tem v\u00e1rias chaves BYOK; outros usu\u00e1rios ter\u00e3o subconjuntos. Mostrar um provider sem chave configurada = beco 402 frustrante; a UI deve refletir a realidade per-user.\n\n**How to apply:** todo seletor de provider (voz, imagem, v\u00eddeo, LLM\u2026) popula dinamicamente via `useConfiguredProviders()` (`src/hooks/useConfiguredProviders.ts`) \u2014 deriva booleans da view mascarada `user_api_keys` (configurada = `'\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'` truthy; ausente = NULL falsy; zero segredo no browser). Engines keyless self-host (ex. voz `qwen3-local`) s\u00e3o SEMPRE vis\u00edveis, declaradas na superf\u00edcie com `keyless: true`. Primeiro consumidor: VoiceCloneInspector (motor de voz). Ao adicionar provider novo: coluna no `PROVIDER_KEY_MAP` do hook + entrada na superf\u00edcie. Ver [[feedback_api_tenancy_per_user]] \u00b7 [[reference_user_api_keys_encrypted]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_byok_only_available_options.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:44:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx supabase functions deploy generate-voice 2>&1 | grep -E \"Deployed|error\" | head -1 && systemctl --user restart voice-bridge.service && systemctl --user is-active voice-bridge.service && bun run build 2>&1 | tail -1",
+  "description": "Deploy edge, restart worker, build frontend",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-voice
+> active
+> ✓ built in 32.41s
+> ```
+
+## 🤖 Claude *(19:45:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n",
+  "new_string": "# Memory Index\n\n- [Regra perene de UI \u2014 seletor de provider s\u00f3 carrega op\u00e7\u00f5es BYOK dispon\u00edveis do usu\u00e1rio](feedback_byok_only_available_options.md) \u2014 Diretiva 2026-07-10: `useConfiguredProviders()` deriva booleans da view mascarada user_api_keys (bullets=truthy/NULL=falsy, zero segredo no browser); keyless self-host sempre vis\u00edvel; 1\u00ba consumidor VoiceCloneInspector.\n"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:45:20)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(19:45:20)*
+
+(Re-invocation of /security-review — the skill instructions were previously loaded; the arguments or dynamic output below are new.)
+
+## 👤 User *(19:45:20)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   scripts/voice-bridge.ts
+	modified:   src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx
+	modified:   src/components/canvas/nodes/AvatarIdentityNode.tsx
+	modified:   src/hooks/useAvatarVoice.ts
+	modified:   src/index.css
+	modified:   src/pages/CanvasEditorPage.tsx
+	modified:   supabase/functions/generate-voice/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	src/hooks/useConfiguredProviders.ts
+	supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql
+	supabase/migrations/20260710171000_vm_node_type_generate_voice.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(19:45:51)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Find security vulns in diff",
+  "subagent_type": "general-purpose",
+  "run_in_background": false,
+  "prompt": "You are a senior security engineer reviewing UNCOMMITTED changes in /home/gcrUX/htdocs/constellation-orchestra (branch main).\n\nChanges under review:\n- Modified: scripts/voice-bridge.ts, src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx, src/components/canvas/nodes/AvatarIdentityNode.tsx, src/hooks/useAvatarVoice.ts, src/index.css, src/pages/CanvasEditorPage.tsx, supabase/functions/generate-voice/index.ts\n- New (untracked): src/hooks/useConfiguredProviders.ts, supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql, supabase/migrations/20260710171000_vm_node_type_generate_voice.sql\n\nFirst run `git -C /home/gcrUX/htdocs/constellation-orchestra diff` and Read the 3 untracked files in full. Context files as needed: supabase/migrations/20260707230000*.sql and 20260630120000*.sql (prior register_creative_asset definitions), supabase/migrations/20260630000000_user_api_keys_avatar_byok.sql (masked view \u2014 configured key reads as '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', absent as NULL; decrypted view is service-role-only), the earlier reviewed baseline of scripts/voice-bridge.ts and generate-voice (both already shipped and reviewed \u2014 focus on the DELTA).\n\nFEATURE CONTEXT of this delta:\n1. Migration 20260710170000: re-creates register_creative_asset guard/CHECK as the UNION list (re-adds 'avatar-studio' dropped by a July 7 migration) \u2014 body otherwise byte-identical to the deployed fn; service-role-only grants unchanged.\n2. Migration 20260710171000: ALTER TYPE vm_node_type ADD VALUE 'generate_voice' (additive enum only).\n3. generate-voice edge: clone branch (qwen3-local) now accepts `validation_storage_paths[]` (\u22645), each validated owner-prefixed (`${userId}/` where userId is JWT-derived) + no '..'; synthesize branch threads `node_id` (string, sliced to 64) into the service-role-written composition jsonb.\n4. voice-bridge.ts worker (service-role): clone downloads main sample + validation clips (re-asserts owner prefix per key), ffprobe-gates clips \u22647.5s, ffmpeg-concats to a composite (list file content is worker-generated /tmp paths only), saves .qvoice profile (was .bin); synthesize picks --icl-only vs --xvector-only by the profile key's extension (voiceKey comes from resolve_voice_profile, tenant-guarded RPC, and was validated owner-prefixed at store time); now CHECKS the rpc error from register_creative_asset (was silently ignored) and INSERTs a row into vm_canvas_executions (service-role; user_id/project_id/node_id from the composition written only by the edge fn; status born 'completed').\n5. Client: useConfiguredProviders hook derives provider availability booleans from the MASKED user_api_keys view (bullets truthy/NULL falsy \u2014 no secrets); VoiceCloneInspector renders only available providers (keyless qwen3-local always), uploads validation clips to the caller's own storage prefix, measures duration client-side; AvatarIdentityNode uses StorageImg (re-signing normalizer) instead of raw img; CanvasEditorPage adds minZoom/maxZoom; CSS-only changes in index.css.\n\nOBJECTIVE: HIGH-CONFIDENCE vulnerabilities NEWLY ADDED by this delta only. Pay special attention to:\n- The vm_canvas_executions INSERT from the worker: can a tenant influence project_id/node_id/user_id to write history into ANOTHER tenant's project? (Trace: composition is written only by the edge fn with JWT-derived userId; project_id comes from body \u2014 is project_id validated as owned? If not, does an RLS/SELECT policy on vm_canvas_executions scope reads per-user anyway? Check the table's RLS policies in migrations.)\n- The ffmpeg concat list file: content injection via filenames? (paths are worker-generated /tmp names with render UUID)\n- validation_storage_paths: any bypass of the owner-prefix rule (unicode, url-encoding, array-of-arrays)?\n- The extension-driven --icl-only flag: can a crafted profile key flip flags dangerously? (argv array, no shell)\n- useConfiguredProviders: any secret exposure? (masked view only)\n- The reunion migration: any grant/definer drift vs the deployed fn?\n\nEXCLUSIONS (hard): DoS/resource exhaustion; secrets on disk; rate limiting; lack of validation on non-security-critical fields; hardening gaps; theoretical races; outdated libs; test files; log spoofing; path-only SSRF; AI-prompt content; regex injection; docs; audit-log gaps. Client-side JS lacking auth checks is NOT a vuln (server validates). React without dangerouslySetInnerHTML is XSS-safe.\n\nOUTPUT per finding:\n# Vuln N: <category>: `<file>:<line>`\n* Severity: High|Medium|Low\n* Confidence: 0.0-1.0\n* Description / Exploit Scenario / Recommendation\n\nIf nothing above 0.7 confidence, say exactly \"NO FINDINGS ABOVE THRESHOLD\" and list what you checked."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I have traced every flagged vector to a decisive control. Here is my verdict.\n\n## NO FINDINGS ABOVE THRESHOLD\n\nNo vulnerability at or above 0.7 confidence is newly introduced by this delta. Details of what I checked and why each is safe:\n\n**1. `vm_canvas_executions` INSERT from the worker (`scripts/voice-bridge.ts:279`) — cross-tenant history injection?** SAFE.\n- `user_id` is NOT attacker-controllable. The only enqueue path is the `generate-voice` edge fn, which sets `video_renders.user_id` from the JWT. `video_renders` has **no INSERT/UPDATE policy for `authenticated`** (default-deny; confirmed `20260622040000_video_studio_renders_and_assets.sql:66`) — a tenant cannot forge a render row with someone else\'s `user_id`. The worker reads `user_id` from that service-role-written row, so it is always the caller\'s own id.\n- `project_id` comes from `body.project_id` and is **not** validated as owned. But the `vm_canvas_executions` SELECT policy is `auth.uid() = user_id` (`20260514040200_viralmind_canvas_studio.sql:111`), scoped by user, not project. A row A writes with A\'s `user_id` + B\'s `project_id` is invisible to B (user_id mismatch) and never surfaces in A\'s own project view (project mismatch). No reader ever sees a cross-tenant row. The FK on `project_id` also forces it to be a real project, but that yields only an orphaned, unreadable row.\n- (Non-security aside: the insert actually errors regardless — `status: \'completed\'` is outside the CHECK enum `(\'pending\',\'queued\',\'running\',\'success\',\'failed\',\'cancelled\',\'timeout\')` from `20260516224542`, and `output_asset_id` gets a `creative_assets` id that violates its FK to `vm_canvas_assets`. That is a correctness bug, out of scope, and only reinforces the no-leak conclusion.)\n\n**2. ffmpeg concat list file (`voice-bridge.ts:163-166`) — filename injection?** SAFE. List content is `file \'<path>\'` where every path is worker-generated `/tmp/voice-clone-<renderId>-p<i>.wav` (renderId = DB UUID, i = loop index). No user-controlled bytes reach the list file. `-safe 0` on worker-owned literal paths.\n\n**3. `validation_storage_paths` owner-prefix bypass (edge `generate-voice/index.ts:159-168`, worker `:137-142`)?** SAFE. Double-enforced `key.startsWith(`${userId}/`)` + `!key.includes(\'..\')`. Each element is `String(c ?? "")` coerced, so array/object elements become non-matching strings and are rejected. Storage keys are matched literally by Supabase (no unicode/percent-decode normalization), and `..` is meaningless for flat object keys anyway; the `startsWith` owner-prefix is the real isolation and holds. `.slice(0,5)` bounds the array.\n\n**4. Extension-driven `--icl-only` / `--xvector-only` flag (`voice-bridge.ts:225,234`)?** SAFE. `voiceKey` comes from `resolve_voice_profile` (tenant-guarded RPC) and was written server-side by `store_voice_profile` as `${userId}/voice-profiles/<uuid>.qvoice`; the user cannot set an arbitrary extension. Both flags are benign engine modes; argv array, no shell — no injection even if flipped.\n\n**5. `useConfiguredProviders.ts`?** SAFE. Reads the masked `user_api_keys` VIEW and emits only `Boolean(...)` availability flags. Values are `\'••••••••••••\'` or NULL; no secret reaches the browser (`decrypted_user_api_keys` is service-role-only).\n\n**6. Reunion migration `20260710170000`?** SAFE. Grants unchanged: `REVOKE ALL ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE ... TO service_role`. `SECURITY DEFINER` with `SET search_path = \'\'`, fully schema-qualified. The tenant guard `WHERE public.creative_assets.user_id = EXCLUDED.user_id` on the ON CONFLICT upsert is preserved (blocks cross-tenant overwrite via storage_key collision). Only change vs deployed is adding `\'avatar-studio\'` back to the CHECK/IN list — no definer/grant drift.\n\n**7. Migration `20260710171000`** — additive `ALTER TYPE ... ADD VALUE IF NOT EXISTS \'generate_voice\'`. No security surface.\n\nClient-only changes (`AvatarIdentityNode` StorageImg, `CanvasEditorPage` min/maxZoom, `index.css`, `useAvatarVoice` type) carry no server-trust or injection surface.'}, {'type': 'text', 'text': "agentId: a443eee75c26f8e10 (use SendMessage with to: 'a443eee75c26f8e10', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 125819\ntool_uses: 12\nduration_ms: 209517</usage>"}]
+> ```
+
+## 🤖 Claude *(19:49:37)*
+
+
+## 🤖 Claude *(19:49:37)*
+
+
+## 🤖 Claude *(19:49:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    if (c.project_id) {\n      const { error: execErr } = await supabase.from('vm_canvas_executions').insert({\n        user_id: userId, project_id: c.project_id, node_id: c.node_id ?? renderId,\n        node_type: 'generate_voice', provider: 'qwen3-local', model: 'qwen3-tts-0.6b-base',\n        prompt: script.slice(0, 500), output_asset_id: creativeAssetId, output_url: storageKey,\n        credits_charged: 0, status: 'completed', completed_at: new Date().toISOString(),\n      });\n      if (execErr) console.error(`[voice-bridge] execution history insert FAILED for ${renderId}: ${execErr.message}`);\n    }",
+  "new_string": "    if (c.project_id) {\n      // status MUST be from the table CHECK enum ('success', not 'completed'); output_asset_id's FK\n      // targets vm_canvas_assets (NOT creative_assets) \u2192 omit it and carry the storage key in\n      // output_url + the creative asset id in response_payload. (Caught by /security-review aside.)\n      const { error: execErr } = await supabase.from('vm_canvas_executions').insert({\n        user_id: userId, project_id: c.project_id, node_id: c.node_id ?? renderId,\n        node_type: 'generate_voice', provider: 'qwen3-local', model: 'qwen3-tts-0.6b-base',\n        prompt: script.slice(0, 500), output_url: storageKey,\n        response_payload: { creative_asset_id: creativeAssetId, render_id: renderId },\n        credits_charged: 0, status: 'success', completed_at: new Date().toISOString(),\n      });\n      if (execErr) console.error(`[voice-bridge] execution history insert FAILED for ${renderId}: ${execErr.message}`);\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:49:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user restart voice-bridge.service && systemctl --user is-active voice-bridge.service",
+  "description": "Restart worker with the history insert fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> active
+> ```
+
+## 🤖 Claude *(19:50:07)*
+
+# Security Review — voice rail fixes + BYOK availability + motion polish
+
+**Escopo:** migrations `20260710170000` (reunion do `source_module`) e `20260710171000` (enum `generate_voice`) · `generate-voice` (validation clips + node_id) · `voice-bridge.ts` (multi-amostra, `.qvoice`, histórico) · `useConfiguredProviders.ts` (novo) · client (inspector/nodes/CSS/zoom).
+
+## Resultado: NO FINDINGS — nenhuma vulnerabilidade HIGH/MEDIUM introduzida (confiança ≥ 0.7)
+
+| # | Superfície | Veredito |
+|---|---|---|
+| 1 | **INSERT de histórico cross-tenant** (`vm_canvas_executions` via worker) | Seguro — `user_id` vem da linha service-role-written (default-deny p/ authenticated); `project_id` forjado produz linha órfã invisível (SELECT policy `auth.uid() = user_id`); nenhum leitor cruza tenants |
+| 2 | **Injeção no concat list do ffmpeg** | Seguro — paths 100% worker-generated (`/tmp/...-p<i>.wav`, renderId = UUID do DB); zero bytes do usuário no list file |
+| 3 | **Bypass do owner-prefix nos `validation_storage_paths`** | Seguro — dupla checagem (edge + worker) `startsWith(${userId}/)` + `..` rejeitado; elementos coagidos por `String()`; storage keys casam literalmente (sem normalização unicode/percent) |
+| 4 | **Flag `--icl-only` dirigida por extensão** | Seguro — `voiceKey` nasce server-side no `store_voice_profile` (owner-prefixed, extensão fixa); argv array sem shell; ambos os flags são modos benignos |
+| 5 | **`useConfiguredProviders` — exposição de segredo** | Seguro — deriva `Boolean()` da view mascarada (bullets/NULL); `decrypted_user_api_keys` segue service-role-only |
+| 6 | **Reunion migration — drift de grants/definer** | Seguro — REVOKE/GRANT byte-idênticos, `SECURITY DEFINER SET search_path=''`, tenant-guard do ON CONFLICT preservado; única mudança = lista IN |
+| 7 | **Enum migration** | Aditiva pura, sem superfície |
+
+### Achado colateral do review (correção, não segurança) — **JÁ CORRIGIDO**
+
+O INSERT de histórico usava `status: 'completed'` (fora do CHECK — o enum da tabela usa `'success'`) e `output_asset_id` com FK para `vm_canvas_assets` (não `creative_assets`) — a linha falharia sempre. Corrigido no worker (status `'success'`, asset id movido para `response_payload`) e o serviço reiniciado antes deste report.
+
+## 👤 User *(19:55:16)*
+
+ué você parou e não fez o resto que falei? Sobre o histórico do b57a59f7-ab67-4590-b984-9c1a19c8a164
+ com os audiso no assets?
+
+## 🤖 Claude *(19:55:42)*
+
+
+## 🤖 Claude *(19:55:44)*
+
+Não parei — faltava exatamente essa ponta: o **backfill do histórico** das sínteses que você já gerou no projeto `b57a59f7` (o fix do worker só cobre as futuras) e os commits. Fecho agora. Primeiro leio as compositions das 2 sínteses concluídas para extrair `project_id`/`node_id`/script:
+
+## 🤖 Claude *(19:55:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT id, storage_key, composition->>'project_id' AS project_id, composition->>'node_id' AS node_id, left(composition->>'script', 60) AS script, created_at FROM video_renders WHERE user_id='ada39fae-67e1-4e53-af1c-5a18e1c108e8' AND engine='qwen3-voice' AND state='done' AND composition->>'kind'='voice_synthesize' ORDER BY created_at;\\\"}\"",
+  "description": "Read the compositions of User 0's completed voice syntheses",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"9faf43c6-4c2c-4275-8b57-c4882be914ea","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/9faf43c6-4c2c-4275-8b57-c4882be914ea.wav","project_id":"b57a59f7-ab67-4590-b984-9c1a19c8a164","node_id":null,"script":"[intrigue] Imagine entrar em uma fábrica e ver um robô pegar","created_at":"2026-07-10 07:18:19.659431+00"},{"id":"62fb9ccd-35ea-4f36-b96d-1bf682fc2d33","storage_key":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice/62fb9ccd-35ea-4f36-b96d-1bf682fc2d33.wav","project_id":"b57a59f7-ab67-4590-b984-9c1a19c8a164","node_id":null,"script":"A mas não éra amanhâ não? Que você iam no dentista?","created_at":"2026-07-10 19:27:48.288859+00"}]
+> ```
+
+## 🤖 Claude *(19:56:06)*
+
+
+## 🤖 Claude *(19:56:06)*
+
+
+## 🤖 Claude *(19:56:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json, subprocess, urllib.request\ntoken = subprocess.check_output(['cat', '/home/ubuntu/.supabase/access-token']).decode().strip()\napi = \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\"\ndef q(sql):\n    body = json.dumps({'query': sql}).encode()\n    req = urllib.request.Request(api, data=body, headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'User-Agent': 'mcorch-backfill/1.0'})\n    with urllib.request.urlopen(req, timeout=60) as r: return r.read().decode()\nsql = \"\"\"\nINSERT INTO vm_canvas_executions (user_id, project_id, node_id, node_type, provider, model, prompt, output_url, response_payload, credits_charged, status, created_at, completed_at)\nSELECT vr.user_id, (vr.composition->>'project_id')::uuid, 'n_2ul72ch4', 'generate_voice', 'qwen3-local', 'qwen3-tts-0.6b-base',\n       left(vr.composition->>'script', 500), vr.storage_key,\n       jsonb_build_object('render_id', vr.id, 'backfill', true), 0, 'success', vr.created_at, vr.updated_at\nFROM video_renders vr\nWHERE vr.user_id='ada39fae-67e1-4e53-af1c-5a18e1c108e8' AND vr.engine='qwen3-voice' AND vr.state='done'\n  AND vr.composition->>'kind'='voice_synthesize'\n  AND NOT EXISTS (SELECT 1 FROM vm_canvas_executions e WHERE e.response_payload->>'render_id' = vr.id::text)\nRETURNING id, node_id, status;\n\"\"\"\nprint(\"backfill:\", q(sql))\nprint(\"proof:\", q(\"SELECT count(*) AS voice_execs FROM vm_canvas_executions WHERE project_id='b57a59f7-ab67-4590-b984-9c1a19c8a164' AND node_type='generate_voice';\"))\nPY",
+  "description": "Backfill voice syntheses into project history with original timestamps",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backfill: [{"id":"5bb6ebf9-227b-40c3-a474-d547c2c427b8","node_id":"n_2ul72ch4","status":"success"},{"id":"d9ac1e18-52d6-4ed5-8e7e-644960edf486","node_id":"n_2ul72ch4","status":"success"}]
+> proof: [{"voice_execs":2}]
+> ```
+
+## 🤖 Claude *(19:56:34)*
+
+
+## 🤖 Claude *(19:56:34)*
+
+Histórico populado (2 execuções `success` no projeto, prova `voice_execs=2`). Selo os commits:
+
+## 🤖 Claude *(19:56:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short | head -12 && git add supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql supabase/migrations/20260710171000_vm_node_type_generate_voice.sql scripts/voice-bridge.ts supabase/functions/generate-voice/index.ts && git commit -q -m \"fix(voice): audios no Assets + Historico do projeto \u2014 reunion do source_module + execucoes registradas\n\nCausa raiz dos assets sumidos: a migration 20260707230000 re-criou o guard\ndo register_creative_asset SEM 'avatar-studio' (drift de CREATE OR REPLACE\nsobre a 20260630120000) \u2192 todo registro de audio falhava em silencio desde\n07/jul (inclusive o caminho pago). Reunion migration restaura a UNIAO das\nlistas; worker agora CHECA o error do rpc (supabase.rpc nao lanca \u2014 o\nsilencio escondeu o bug por um dia) e loga em infra_health_logs.\nHistorico: enum vm_node_type += generate_voice; worker insere execucao\n'success' (nascida terminal, reconciler-safe) com node_id threaded do\ninspector. Qualidade: perfil ICL .qvoice (max timbre mimicry) substitui\nx-vector 8KB; .bin legados seguem funcionando (flag por extensao).\nBackfills aplicados: 2 audios do User 0 em creative_assets + 2 execucoes\nno historico do b57a59f7. /security-review NO FINDINGS (e o aside do\nreview pegou o CHECK 'success' vs 'completed' \u2014 corrigido pre-commit).\" && git add src/hooks/useConfiguredProviders.ts src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx src/components/canvas/nodes/AvatarIdentityNode.tsx src/hooks/useAvatarVoice.ts src/pages/CanvasEditorPage.tsx src/index.css && git commit -q -m \"feat(spaces): seletor BYOK dinamico (regra perene) + zoom infinito + fixes de borda e thumb\n\nRegra perene (Diretiva 2026-07-10): 'So carrega para o usuario, opcoes\ndisponiveis' \u2014 novo useConfiguredProviders() deriva disponibilidade da\nview mascarada user_api_keys (bullets=truthy/NULL=falsy, zero segredo no\nbrowser); VoiceCloneInspector popula motores dinamicamente (MCORCH keyless\nsempre; ElevenLabs/Cartesia so com chave configurada). Zoom minZoom 0.02 /\nmaxZoom 12 no canvas. Borda estatica oculta sob o anel neon de processing\n(selecao .ring-2 preservada). Thumb do Identidade (avatar) via StorageImg\n(re-assina URL expirada \u2014 n_qca6z67z quebrava com <img> cru).\" && git log --oneline -2 && git push origin main 2>&1 | tail -1",
+  "description": "Commit the two slices and push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M scripts/voice-bridge.ts
+>  M src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx
+>  M src/components/canvas/nodes/AvatarIdentityNode.tsx
+>  M src/hooks/useAvatarVoice.ts
+>  M src/index.css
+>  M src/pages/CanvasEditorPage.tsx
+>  M supabase/functions/generate-voice/index.ts
+> ?? src/hooks/useConfiguredProviders.ts
+> ?? supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql
+> ?? supabase/migrations/20260710171000_vm_node_type_generate_voice.sql
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:56PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:56PM[0m [32mINF[0m scan completed in 14ms
+> [90m4:56PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:56PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:56PM[0m [32mINF[0m scan completed in 93.7ms
+> [90m4:56PM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.23 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ gitleaks-staged (0.15 seconds)
+> ✔️ secret-scan (0.21 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> f5e290f feat(spaces): seletor BYOK dinamico (regra perene) + zoom infinito + fixes de borda e thumb
+> 1e71545 fix(voice): audios no Assets + Historico do projeto — reunion do source_module + execucoes registradas
+>    570ac1b..f5e290f  main -> main
+> ```
+
+## 🤖 Claude *(19:57:17)*
+
+**Fechado — commits `1e71545` + `f5e290f` pushed.** O pacote completo do seu report está vivo (hard-refresh `Ctrl+Shift+R`):
+
+## Assets + Histórico do `b57a59f7` (Gabriel AI) — causa raiz e cura
+
+- **Por que os áudios sumiam:** a migration de 7/jul re-criou o guard do `register_creative_asset` **sem** `avatar-studio` (drift de `CREATE OR REPLACE`) → todo registro de áudio falhava **em silêncio** desde então — e meu worker não checava o `error` do RPC (o `supabase.rpc` não lança exceção). Dupla cura: migration de reunião das listas aplicada + worker agora checa e loga toda falha de registro.
+- **Backfill feito:** seus 2 áudios já estão na **Biblioteca de Assets** (registrados em `creative_assets`) e as 2 sínteses aparecem no **Histórico** do projeto (ligadas ao nó `n_2ul72ch4`, com os timestamps originais — prova: `voice_execs=2` no DB). Daqui pra frente é automático: o worker registra asset + execução a cada síntese.
+
+## O resto do pacote
+
+| Pedido | Entregue |
+|---|---|
+| Zoom infinito | `minZoom 0.02` / `maxZoom 12` no canvas (era 0.5–2) |
+| Borda dupla sob o neon | Borda estática oculta durante processing; a de seleção (clique) preservada — como você validou no navegador |
+| Thumb quebrada (Identidade) | `<img>` cru → `StorageImg` (re-assina a URL expirada do bucket privado no render) |
+| Qualidade do clone | Perfil trocado de x-vector 8 KB ("identidade sem prosódia") para **graft ICL `.qvoice`** — o modo de máxima fidelidade do engine (timbre + prosódia completos). **Re-clone a sua voz** para sentir a diferença; perfis antigos seguem funcionando |
+| Seletor BYOK | **Regra perene implantada e gravada na memória**: `useConfiguredProviders()` deriva a disponibilidade da view mascarada (zero segredo chega ao browser) e o seletor de motor só mostra o que VOCÊ tem — MCORCH grátis sempre; ElevenLabs/Cartesia aparecem porque o User 0 tem as chaves. Usuário sem chave nem vê a opção, com a dica "outros motores aparecem quando configurar" |
+
+`/security-review` independente: **NO FINDINGS** — e o aside do review pegou um erro meu no INSERT do histórico (`'completed'` vs `'success'` do CHECK) que corrigi antes de comitar.
+
+**Nota honesta sobre qualidade:** o `.qvoice` melhora bem a fidelidade, mas o motor 0.6B grátis tem teto — para narração "indistinguível", o caminho é o ElevenLabs BYOK que agora está a um clique no seletor (36 mco). O grátis segue ideal para rascunhos e volume.
