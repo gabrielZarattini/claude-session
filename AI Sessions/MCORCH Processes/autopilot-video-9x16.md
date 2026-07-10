@@ -163,3 +163,10 @@ Esta SOP é a **camada de vídeo** sobre a base financeira de `autopilot-cron-id
 - ❌ Decidir `videoDue` para o custo mas usar `video_enabled` cru no fan-out (ou vice-versa) → débito-sem-valor / valor-sem-débito.
 - ❌ Deixar o vídeo abortar o ciclo por estourar o cap em vez de graceful-degrade → perde a distribuição de texto recorrente.
 - ❌ Ligar vídeo recorrente sem cap/frequência conscientes → gasto autônomo descontrolado (o default OFF + `video_every_n_cycles` são o kill-switch).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
