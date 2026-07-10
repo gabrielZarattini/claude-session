@@ -280,10 +280,3 @@ operação real de imagem→imagem. upscale-2x=8 / upscale-4x=20 já em CREDIT_C
 **Verification gates:** unit do custo por scale · tsc 0 · **witness pago** (imagem real → upscale 2x, saldo −8 exato,
 asset registrado) · browser render + Vision. **Recovery:** run ledger independente (refund automático em falha).
 **Success signal:** conectar Gerar Imagem → Upscale → imagem em alta no `creative_assets`, cobrança exata por scale.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

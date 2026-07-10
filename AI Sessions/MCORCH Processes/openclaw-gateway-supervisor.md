@@ -116,10 +116,3 @@ done
 
 - **OTD-OCGW-001** — OpenClaw `memory-core` falha embeddings com `403 text-embedding-3-small project access revoked` (OpenAI key do OpenClaw, não a do mcorch que usa OpenRouter). `memory_search` degradado nas execuções de cron. SLA: próxima sessão OpenClaw dedicada.
 - **OTD-OCGW-002** — build artifacts duplicados/hasheados em `dist/` (`task-registry.maintenance` 2 hashes, `status.summary` 2 hashes) sugerem build incremental sujo. Rebuild limpo (`bun run build` em `~/openclaw`) recomendado quando houver upgrade.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

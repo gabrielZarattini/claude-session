@@ -38,10 +38,3 @@ A página/hook lista **só** produtos `is_active=true` **E** `price IS NOT NULL`
 
 ---
 _Ref: actor `karamelo~mercadolivre-scraper-brasil-portugues` · `scripts/enrich-affiliate-products.ts` · OTD-ML-001 · seal v6.20.x_
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
