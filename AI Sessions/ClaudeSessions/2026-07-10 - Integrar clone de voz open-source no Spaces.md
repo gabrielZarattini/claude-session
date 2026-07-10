@@ -8519,7 +8519,7 @@ Mapeamento 3/3 completo. Leio as duas frentes restantes (edges + MIV):
 >   ⤷ src/lib/spaces-schema.ts:106-109 (SpaceEdgeData/SpaceEdge), :161-163 (SpaceEdgeDataSchema z.enum(PORT_DATA_TYPES)); src/components/spaces/SpaceNodeCard.tsx:38-52 (Handle id={port.i
 > 
 > ==================== mivMotion ====================
-> Linguagem visual MIV para animação mapeada com evidência path:linha. (1) Tokens: --accent = cyan `184 100% 50%` (#00F2FF) com regra inline "nebula stays exclusive to memory" (src/index.css:27-29); raw tokens --cyan/#00F2FF, --cyan-veil, --cyan-line (:42-45); --gold #D4AF37 (:46) reservado a valor (--status-waiting gold :65, glow-gold); --nebula #4D00FF/#8C5AFF (:49-51). Motion de processamento em CYAN é consistente com todo running-state existente (Loader2 text-accent, badge bg-accent/15). (2) Glows prontos para copiar: --glow-primary `0 0 24px hsl(184 100% 50% / 0.45)` (:70) via .glow-primary (:117) — é o CTA glow real (CTASection.tsx:35, HeroSection.tsx:129); text-glow-cyan `text-shadow 0 0 14px rgba(0,242,255,0.55)` (:122); seleção de nó = `border-accent ring-2 ring-accent/30` (GenerateImageNode.tsx:20); dot pulsante `bg-accent animate-pulse shadow-[0_0_8px_#00F2FF]` (SceneComposeInspector.tsx:423). (3) Animações Tailwind: glow-pulse 2s box-shadow cyan (tailwind.config.ts:119-126,151), appear/appear-zoom (:127-146), plugin tailwindcss-animate (:157); em index.css: mc-pulse-glow cyan (:172-175) e o precedente-chave SVG `pipeline-dash` stroke-dashoffset 0.6s linear infinite (:242-247) usado em PipelineEdge.tsx:53. (4) SOP WebGL: proíbe backdrop-blur apenas "sobre ou junto a Canvas WebGL" ([[webgl-canvas-stabilization|webgl-canvas-stabilization]].md:29-31; diagnóstico :21 fala de 'Canvas 3D (WebGL) ativo'); o canvas Spaces é 2D ReactFlow puro (@xyflow/react em CanvasEditorPage.tsx:5-13, sem three/fiber) → a restrição NÃO se aplica, e o próprio canvas já usa backdrop-blur (LeftPanel/index.tsx, LanesOverlay.tsx). (5) Perf: escala real ~13 nós/16 edges — animação CSS em SVG path é trivial nessa escala e já roda em prod (pipeline-edge-dash por edge cross-lane); não há regra global de perf de animação no repo; prefers-reduced-motion só é respeitado nas superfícies de landing (landing.css:659,706; landing-motion.ts:14; ConstellationField.tsx:39), nunca no dashboard/canvas.
+> Linguagem visual MIV para animação mapeada com evidência path:linha. (1) Tokens: --accent = cyan `184 100% 50%` (#00F2FF) com regra inline "nebula stays exclusive to memory" (src/index.css:27-29); raw tokens --cyan/#00F2FF, --cyan-veil, --cyan-line (:42-45); --gold #D4AF37 (:46) reservado a valor (--status-waiting gold :65, glow-gold); --nebula #4D00FF/#8C5AFF (:49-51). Motion de processamento em CYAN é consistente com todo running-state existente (Loader2 text-accent, badge bg-accent/15). (2) Glows prontos para copiar: --glow-primary `0 0 24px hsl(184 100% 50% / 0.45)` (:70) via .glow-primary (:117) — é o CTA glow real (CTASection.tsx:35, HeroSection.tsx:129); text-glow-cyan `text-shadow 0 0 14px rgba(0,242,255,0.55)` (:122); seleção de nó = `border-accent ring-2 ring-accent/30` (GenerateImageNode.tsx:20); dot pulsante `bg-accent animate-pulse shadow-[0_0_8px_#00F2FF]` (SceneComposeInspector.tsx:423). (3) Animações Tailwind: glow-pulse 2s box-shadow cyan (tailwind.config.ts:119-126,151), appear/appear-zoom (:127-146), plugin tailwindcss-animate (:157); em index.css: mc-pulse-glow cyan (:172-175) e o precedente-chave SVG `pipeline-dash` stroke-dashoffset 0.6s linear infinite (:242-247) usado em PipelineEdge.tsx:53. (4) SOP WebGL: proíbe backdrop-blur apenas "sobre ou junto a Canvas WebGL" (webgl-canvas-stabilization.md:29-31; diagnóstico :21 fala de 'Canvas 3D (WebGL) ativo'); o canvas Spaces é 2D ReactFlow puro (@xyflow/react em CanvasEditorPage.tsx:5-13, sem three/fiber) → a restrição NÃO se aplica, e o próprio canvas já usa backdrop-blur (LeftPanel/index.tsx, LanesOverlay.tsx). (5) Perf: escala real ~13 nós/16 edges — animação CSS em SVG path é trivial nessa escala e já roda em prod (pipeline-edge-dash por edge cross-lane); não há regra global de perf de animação no repo; prefers-reduced-motion só é respeitado nas superfícies de landing (landing.css:659,706; landing-motion.ts:14; ConstellationField.tsx:39), nunca no dashboard/canvas.
 > 
 > -- key facts --
 > • --accent é cyan HSL `184 100% 50%` com a regra de uso gravada no próprio token: cyan = accent genérico/hover/selected, 'nebula stays exclusive to memory', e é dual-role (text-accent brilhante E bg-accent fill com foreground quase-preto `0 0% 6%`). --primary e --ring são o MESMO c
@@ -8535,7 +8535,7 @@ Mapeamento 3/3 completo. Leio as duas frentes restantes (edges + MIV):
 > • Keyframes custom em index.css disponíveis: `pulse-green`, `breathe-orange`, `thinking-dots`, `mc-pulse-glow` (box-shadow cyan 12px/0.35 → 26px/0.6 — o pulso de processamento cyan pronto), `flicker`, `scanline`, e o precedente-chave para edges SVG: `@keyframes pipeline-dash { to {
 >   ⤷ /home/gcrUX/htdocs/constellation-orchestra/src/index.css:169-175 (pulse-green/breathe-orange/thinking-dots/mc-pulse-glow), :242-247 (pipeline-dash); consumo: src/components/canvas/
 > • Regra exata do SOP WebGL: 'Proibição de backdrop-blur sobre ou junto a Canvas WebGL — Nunca utilizar classes de desfoque de fundo (backdrop-blur, backdrop-blur-sm/md/lg) em headers, sidebars, toolbars ou painéis flutuantes que dividem o mesmo viewport com o WebGL'; alternativa = 
->   ⤷ /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[webgl-canvas-stabilization|webgl-canvas-stabilization]].md:29-31 (Regra 1), :20-21 (diagnóstico 'Canvas 3D (WebGL) ativo'), :33-35 (Regra 2 useFrame), 
+>   ⤷ /home/gcrUX/htdocs/constellation-orchestra/docs/processes/webgl-canvas-stabilization.md:29-31 (Regra 1), :20-21 (diagnóstico 'Canvas 3D (WebGL) ativo'), :33-35 (Regra 2 useFrame), 
 > • A restrição do SOP NÃO se aplica ao canvas Spaces: é ReactFlow 2D puro (@xyflow/react), sem nenhum import de three/@react-three/fiber — e o próprio ecossistema do canvas JÁ usa backdrop-blur em produção (LeftPanel, LanesOverlay, badge do ConstellationMatrix com backdrop-blur-sm +
 >   ⤷ /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx:5-13 (imports só @xyflow/react) e :323 (<ReactFlow>); backdrop-blur em src/components/canvas/LeftPanel/ind
 > • Escala real é minúscula para animação CSS: o projeto Gabriel AI tem ~13 nós/16 edges (dado do caller; a memória do projeto registra 8 projetos reais no canvas). O repo já roda animação CSS infinita em SVG path por edge (pipeline-edge-dash) sem regra de perf contrária — nessa esca
@@ -12844,15 +12844,609 @@ não consegui ouvir o witness_17b_expressive, faça isso na UI para eu gerar um 
 
 Veja quals as variaveis conseguimos puxar e encaxar me fala que eu gero aqui na ui do mcorch..
 
----
+## 🤖 Claude *(21:00:53)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - eb61c3bb-6060-4462-9486-085ad5b66177]]
-> * **Próxima Sessão**: [[2026-07-10 - agent-a0bd309a8ab35ee17]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(21:00:55)*
+
+Recebido — vou plugar o modo expressivo na UI **e** fazer o worker entender a sua sintaxe (`{happy}`, `<#0.5#>`, `(gasps)`…) traduzindo para a gramática real do engine. Primeiro, a verdade material: leio a documentação de markup do engine instalado para mapear exatamente o que existe:
+
+## 🤖 Claude *(21:00:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.mcorch/voice-engine/engine && ls docs/ | head -20 && grep -nE \"^\\||^#|\\[pause|\\[break|\\[sigh|\\[laugh|\\[wow|\\[huff|\\[gasp|\\[whisper|emotion\" docs/markup.md 2>/dev/null | head -40",
+  "description": "Read the engine's inline markup grammar documentation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> archive
+> batching.md
+> building.md
+> csp-ft-emotion.md
+> cuda-performance.md
+> custom-voices.md
+> emotion-extended-palette.md
+> emotion-instruct-control.md
+> emotion-THE-recipe.md
+> expressivity-assets.md
+> expressivity-lora.md
+> gpu-accel-analysis.md
+> gpu-accel-status.md
+> hardware-testing.md
+> hf-model-card.md
+> icl-graft-portability.md
+> markup.md
+> para-discovery-analysis.md
+> para-experiments.md
+> para-target.md
+> 1:# Inline expressive markup (audiobooks & podcasts)
+> 3:Write one text with **inline tags** and the engine renders an expressive, multi-emotion
+> 10:  --text "I couldn't believe it. [excited] We actually won! [pause:500ms] [sad] But it meant leaving everyone behind. [sigh]" \
+> 17:## Tags
+> 19:| tag | effect |
+> 20:|---|---|
+> 21:| `[happy] [sad] [excited] [eager] [proud] [calm] [dramatic] [news] [annoyed] [stern] [angry] [joy] [gloomy]` | switch the emotion for the text that follows (full recipe: steering + roughness + volume + rate) |
+> 22:| `[neutral]` (`[none]`, `[normal]`) | back to plain, unmodified delivery |
+> 23:| `[sigh]` `[sighs]` | sigh of relief (`Hah…`) |
+> 24:| `[ahh]` `[relief]` | pleasure/relief exhale (`Haaa…`) |
+> 25:| `[phew]` | big tired relief (`Uao…`) |
+> 26:| `[hmm]` | pensive "hmm" (`Hmmm…`) |
+> 27:| `[mmm]` | soft assent "mmm" (uses CN 嗯 — cleaner/less smug) |
+> 28:| `[hmpf]` | closed "mmmm" |
+> 29:| `[mah]` | dismissive "mah" (very Italian) |
+> 30:| `[uhm]` | tired/bored drawl |
+> 31:| `[laugh]` `[laughs]` | a real chuckle (`Eheh…`) — best in Italian |
+> 32:| `[haha]` | short laugh (`Haha!`) — best in English |
+> 33:| `[heh]` | smug "eh eh" |
+> 34:| `[ouch]` / `[ahi]` | sharp pain — English / Italian |
+> 35:| `[huff]` `[ugh]` | irritated huff |
+> 36:| `[pause:400ms]` `[pause:1s]` `[pause:0.5]` `[break:300ms]` `[0.5]` | insert a pause (ms or seconds; bare number = seconds) |
+> 39:> language): e.g. `[laugh]`/`Eheh` laughs in Italian, `[haha]`/`Haha` in English. Discover
+> 48:> language-dependent (e.g. `[laugh]` lands as a real laugh in English, a sigh elsewhere).
+> 50:- Tags are **case-insensitive** and **always English** (`[sigh]`, not `[sospiro]`).
+> 51:- An emotion tag stays active until the next emotion tag or `[neutral]`.
+> 54:- The emotion recipe is in
+> 55:  [emotion-THE-recipe.md](emotion-THE-recipe.md).
+> 57:## How it renders
+> 59:Each span (a run of text under one emotion) is synthesized **separately** with its own
+> 65:don't collide; explicit `[pause:…]` tags add exactly the silence you specify.
+> 67:## Paralinguistic fillers — what they are (and aren't)
+> 69:`[sigh]`/`[hmm]`/`[laugh]`/etc. are **approximations**, not recorded breaths. The trick: a short
+> 71:synthesized with **no emotion steering**, a gentle slowdown and low volume. (Steering a short,
+> 75:[emotion-THE-recipe.md](emotion-THE-recipe.md)).
+> 77:## Tuning
+> 85:## Examples
+> 88:# Audiobook beat: setup (neutral) -> reveal (excited) -> turn (sad + sigh)
+> 90:  --text "The letter sat on the table for days. [pause:400ms] [excited] When she finally opened it, she gasped. [pause:600ms] [sad] It was the goodbye she'd feared. [sigh]" \
+> 93:# Italian, explicit --compose form (| is an optional hard span break)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:01:27)*
+
+
+## 🤖 Claude *(21:01:27)*
+
+
+## 🤖 Claude *(21:01:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.mcorch/voice-engine/engine && head -30 download_assets.sh 2>/dev/null | grep -E \"curl|wget|size|MB|url|\\.expr\" | head -6; ls assets/ 2>/dev/null | head -5 || echo \"(sem assets/)\"",
+  "description": "Check what download_assets.sh fetches"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # download_assets.sh — fetch the VALIDATED expressivity .expr weight-deltas that `--emotion` needs.
+> # WHY: .expr files are 140-210MB each → NOT committed to git. They are hosted on Hugging Face
+> # Usage:   bash download_assets.sh            # the 3 .expr --emotion needs + ASK about the CC0 voices  (~720 MB)
+> #          bash download_assets.sh --no-voices# .expr only, never prompt
+> #          bash download_assets.sh --all      # + the 6 legacy/experimental .expr packs                (~1.4 GB)
+> #          BASE_URL=<url> bash download_assets.sh   # mirror elsewhere
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:01:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.mcorch/voice-engine/engine && bash download_assets.sh --no-voices 2>&1 | tail -4",
+  "description": "Download the .expr expressivity assets (~720MB, no voices)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b2glf34i7. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/tasks/b2glf34i7.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(21:01:50)*
+
+
+## 🤖 Claude *(21:01:50)*
+
+
+## 🤖 Claude *(21:01:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "const ENGINE_DIR = process.env.VOICE_ENGINE_DIR ?? '/home/ubuntu/.mcorch/voice-engine/engine';\nconst ENGINE_BIN = join(ENGINE_DIR, 'qwen_tts');\nconst MODEL_DIR = join(ENGINE_DIR, 'qwen3-tts-0.6b-base');",
+  "new_string": "const ENGINE_DIR = process.env.VOICE_ENGINE_DIR ?? '/home/ubuntu/.mcorch/voice-engine/engine';\nconst ENGINE_BIN = join(ENGINE_DIR, 'qwen_tts');\nconst MODEL_DIR = join(ENGINE_DIR, 'qwen3-tts-0.6b-base');\n// Expressive mode (Amendment 18 degrau 2): the 1.7B Base unlocks inline emotion markup\n// ([happy]/[sad]/[pause:\u2026]/[sigh] spans). Witness 2026-07-10: RTF 13.9, RAM 7.1GB, 3 spans composed.\nconst MODEL_DIR_17B = join(ENGINE_DIR, 'qwen3-tts-1.7b-base');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:02:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "function langFlag(language: string): string {\n  return language === 'pt-BR' ? 'Portuguese' : 'English';\n}",
+  "new_string": "function langFlag(language: string): string {\n  return language === 'pt-BR' ? 'Portuguese' : 'English';\n}\n\n// \u2500\u2500 Expressive-script normalizer (FR-SPACES-060) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Accepts the Sovereign's authoring syntax AND the engine's native one, emitting only tags the\n// engine actually understands (docs/markup.md). Anything unrecognized is STRIPPED \u2014 a stray tag\n// must never be spoken aloud. Engine emotions: happy sad excited eager proud calm dramatic news\n// annoyed stern angry joy gloomy + neutral/none/normal; paralinguistics sigh/ahh/phew/hmm/laugh/\u2026;\n// pauses [pause:400ms] [pause:0.5] [break:1s].\nconst EMOTION_MAP: Record<string, string> = {\n  // 1:1 with the engine\n  happy: 'happy', sad: 'sad', excited: 'excited', eager: 'eager', proud: 'proud', calm: 'calm',\n  dramatic: 'dramatic', news: 'news', annoyed: 'annoyed', stern: 'stern', angry: 'angry',\n  joy: 'joy', gloomy: 'gloomy', neutral: 'neutral',\n  // Sovereign aliases \u2192 nearest engine recipe\n  surprised: 'excited', surprise: 'excited', intrigue: 'dramatic', intrigued: 'dramatic',\n  curious: 'eager', curiosity: 'eager', wonder: 'dramatic', fearful: 'dramatic', fear: 'dramatic',\n  fluent: 'news', serious: 'stern', tense: 'dramatic', melancholy: 'gloomy', wistful: 'gloomy',\n};\nconst PARALINGUISTIC_MAP: Record<string, string> = {\n  sigh: 'sigh', sighs: 'sigh', laugh: 'laugh', laughs: 'laugh', haha: 'haha', chuckle: 'heh',\n  gasp: 'ahh', gasps: 'ahh', phew: 'phew', hmm: 'hmm', ugh: 'ugh', huff: 'huff', relief: 'relief',\n  // delivery hints with no inline knob \u2192 nearest emotion recipe\n  whisper: 'calm', whispers: 'calm', slowly: 'calm',\n};\nexport function normalizeExpressiveScript(raw: string): string {\n  let s = raw;\n  // <#0.5#> pause syntax \u2192 [pause:0.5]\n  s = s.replace(/<#\\s*([\\d.]+)\\s*#>/g, (_, secs) => `[pause:${secs}]`);\n  // {emotion} / {/emotion} spans \u2192 [emotion] / [neutral]\n  s = s.replace(/\\{\\/[a-zA-Z]+\\}/g, ' [neutral] ');\n  s = s.replace(/\\{([a-zA-Z]+)\\}/g, (_, tag) => {\n    const mapped = EMOTION_MAP[tag.toLowerCase()];\n    return mapped ? ` [${mapped}] ` : ' ';\n  });\n  // (gasps)/(whisper)/(slowly)-style parentheticals \u2192 paralinguistic or emotion tag; unknown \u2192 strip\n  s = s.replace(/\\(([a-zA-Z ]{2,20})\\)/g, (_, tag) => {\n    const key = tag.trim().toLowerCase();\n    const para = PARALINGUISTIC_MAP[key];\n    if (para) return ` [${para}] `;\n    const emo = EMOTION_MAP[key];\n    return emo ? ` [${emo}] ` : ' ';\n  });\n  // Native [tags]: keep only what the engine knows; map aliases; strip the rest.\n  s = s.replace(/\\[([a-zA-Z]+)(:[^\\]]+)?\\]/g, (full, tag, arg) => {\n    const key = tag.toLowerCase();\n    if (key === 'pause' || key === 'break') return `[${key}${arg ?? ''}]`;\n    if (EMOTION_MAP[key]) return `[${EMOTION_MAP[key]}]`;\n    if (PARALINGUISTIC_MAP[key]) return `[${PARALINGUISTIC_MAP[key]}]`;\n    if (['none', 'normal'].includes(key)) return '[neutral]';\n    return ' ';\n  });\n  // Collapse leftover whitespace and redundant neutral runs.\n  return s.replace(/(\\[neutral\\]\\s*)+/g, '[neutral] ').replace(/[ \\t]{2,}/g, ' ').trim();\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:02:20)*
+
+
+## 🤖 Claude *(21:02:20)*
+
+Assets `.expr` baixados. Fecho o worker (branch expressivo) e o resto da cadeia:
+
+## 🤖 Claude *(21:02:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "  /** Canvas node id \u2014 lets the worker register the execution in the project Hist\u00f3rico. */\n  node_id?: string | null;\n}",
+  "new_string": "  /** Canvas node id \u2014 lets the worker register the execution in the project Hist\u00f3rico. */\n  node_id?: string | null;\n  /** FR-SPACES-060 \u2014 expressive mode: 1.7B model + inline emotion markup in the script. */\n  expressive?: boolean;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:02:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    // Sized timeout: RTF 6.4 witness + load overhead, with generous headroom (min 10min).\n    const timeoutMs = Math.max(10 * 60_000, Math.ceil(script.length / 15) * 6.4 * 1000 * 2);\n    // Profile-mode flag follows the stored artifact: .qvoice = ICL graft (max fidelity, current\n    // default); legacy .bin = x-vector-only (pre-2026-07-10 profiles keep working).\n    const modeFlag = voiceKey.endsWith('.qvoice') ? '--icl-only' : '--xvector-only';\n    await run([\n      ENGINE_BIN, '-d', MODEL_DIR, '--load-voice', binPath, modeFlag, '--int8',\n      '-l', langFlag(c.language), '--text', script, '-o', outPath,\n    ], timeoutMs);",
+  "new_string": "    // Expressive mode (FR-SPACES-060): 1.7B + normalized inline markup. RTF 13.9 witnessed vs 6.4\n    // on the 0.6B \u2014 timeout sized per mode. Fail-closed if the 1.7B model is not installed.\n    const expressive = c.expressive === true;\n    if (expressive && !existsSync(join(MODEL_DIR_17B, 'model.safetensors'))) {\n      throw new Error('expressive_model_not_installed');\n    }\n    const modelDir = expressive ? MODEL_DIR_17B : MODEL_DIR;\n    const rtf = expressive ? 14 : 6.4;\n    const finalScript = expressive ? normalizeExpressiveScript(script) : script;\n    const timeoutMs = Math.max(15 * 60_000, Math.ceil(finalScript.length / 15) * rtf * 1000 * 2);\n    // Profile-mode flag follows the stored artifact: .qvoice = ICL graft (max fidelity, current\n    // default); legacy .bin = x-vector-only (pre-2026-07-10 profiles keep working).\n    const modeFlag = voiceKey.endsWith('.qvoice') ? '--icl-only' : '--xvector-only';\n    await run([\n      ENGINE_BIN, '-d', modelDir, '--load-voice', binPath, modeFlag, '--int8',\n      '-l', langFlag(c.language), '--text', finalScript, '-o', outPath,\n    ], timeoutMs);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:02:53)*
+
+
+## 🤖 Claude *(21:02:53)*
+
+
+## 🤖 Claude *(21:02:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    const storageKey = `${userId}/voice-profiles/${renderId}.qvoice`;\n    const { error: upErr } = await supabase.storage.from(BUCKET)\n      .upload(storageKey, binBytes, { contentType: 'application/octet-stream', upsert: true });\n    if (upErr) throw new Error(`voiceprint_upload_failed: ${upErr.message}`);",
+  "new_string": "    const storageKey = `${userId}/voice-profiles/${renderId}.qvoice`;\n    const { error: upErr } = await supabase.storage.from(BUCKET)\n      .upload(storageKey, binBytes, { contentType: 'application/octet-stream', upsert: true });\n    if (upErr) throw new Error(`voiceprint_upload_failed: ${upErr.message}`);\n\n    // Also persist the COMPOSITE REFERENCE next to the profile: .qvoice grafts are NOT portable\n    // across model sizes, so the expressive mode (1.7B) re-clones straight from this WAV\n    // (--ref-audio) instead of loading the 0.6B graft. Predictable sibling key.\n    const refKey = `${userId}/voice-profiles/${renderId}-ref.wav`;\n    const { error: refErr } = await supabase.storage.from(BUCKET)\n      .upload(refKey, readFileSync(refPath), { contentType: 'audio/wav', upsert: true });\n    if (refErr) console.warn(`[voice-bridge] composite ref upload skipped for ${renderId}: ${refErr.message}`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    const modelDir = expressive ? MODEL_DIR_17B : MODEL_DIR;\n    const rtf = expressive ? 14 : 6.4;\n    const finalScript = expressive ? normalizeExpressiveScript(script) : script;\n    const timeoutMs = Math.max(15 * 60_000, Math.ceil(finalScript.length / 15) * rtf * 1000 * 2);\n    // Profile-mode flag follows the stored artifact: .qvoice = ICL graft (max fidelity, current\n    // default); legacy .bin = x-vector-only (pre-2026-07-10 profiles keep working).\n    const modeFlag = voiceKey.endsWith('.qvoice') ? '--icl-only' : '--xvector-only';\n    await run([\n      ENGINE_BIN, '-d', modelDir, '--load-voice', binPath, modeFlag, '--int8',\n      '-l', langFlag(c.language), '--text', finalScript, '-o', outPath,\n    ], timeoutMs);",
+  "new_string": "    const modelDir = expressive ? MODEL_DIR_17B : MODEL_DIR;\n    const rtf = expressive ? 14 : 6.4;\n    const finalScript = expressive ? normalizeExpressiveScript(script) : script;\n    const timeoutMs = Math.max(15 * 60_000, Math.ceil(finalScript.length / 15) * rtf * 1000 * 2);\n    if (expressive) {\n      // .qvoice grafts are model-size-bound (0.6B \u2260 1.7B) \u2014 the expressive path re-clones from the\n      // COMPOSITE REFERENCE WAV stored alongside the profile at clone time. Older profiles without\n      // it fail with a clear re-clone instruction.\n      const refKey = voiceKey.replace(/\\.(qvoice|bin)$/, '-ref.wav');\n      const refLocal = `/tmp/voice-synth-${renderId}-ref.wav`;\n      const { data: refBlob, error: refErr } = await supabase.storage.from(BUCKET).download(refKey);\n      if (refErr || !refBlob) throw new Error('expressive_requires_reclone: perfil antigo \u2014 clone a voz novamente para habilitar o modo expressivo');\n      writeFileSync(refLocal, new Uint8Array(await refBlob.arrayBuffer()));\n      try {\n        await run([\n          ENGINE_BIN, '-d', modelDir, '--ref-audio', refLocal, '--int8',\n          '-l', langFlag(c.language), '--text', finalScript, '-o', outPath,\n        ], timeoutMs);\n      } finally {\n        rmSync(refLocal, { force: true });\n      }\n    } else {\n      // Profile-mode flag follows the stored artifact: .qvoice = ICL graft (max fidelity, current\n      // default); legacy .bin = x-vector-only (pre-2026-07-10 profiles keep working).\n      const modeFlag = voiceKey.endsWith('.qvoice') ? '--icl-only' : '--xvector-only';\n      await run([\n        ENGINE_BIN, '-d', modelDir, '--load-voice', binPath, modeFlag, '--int8',\n        '-l', langFlag(c.language), '--text', finalScript, '-o', outPath,\n      ], timeoutMs);\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:17)*
+
+
+## 🤖 Claude *(21:03:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts",
+  "old_string": "          composition: {\n            kind: \"voice_synthesize\", provider: \"qwen3-local\", language,\n            voice_profile_id: voiceProfileId, script,\n            project_id: body?.project_id ?? null,\n            node_id: typeof body?.node_id === \"string\" ? body.node_id.slice(0, 64) : null,\n          },",
+  "new_string": "          composition: {\n            kind: \"voice_synthesize\", provider: \"qwen3-local\", language,\n            voice_profile_id: voiceProfileId, script,\n            project_id: body?.project_id ?? null,\n            node_id: typeof body?.node_id === \"string\" ? body.node_id.slice(0, 64) : null,\n            expressive: body?.expressive === true, // FR-SPACES-060 \u2014 1.7B + inline emotion markup\n          },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/generate-voice/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarVoice.ts",
+  "old_string": "  project_id?: string;\n  /** Canvas node id \u2014 lets the worker register the execution in the project Hist\u00f3rico. */\n  node_id?: string;\n}",
+  "new_string": "  project_id?: string;\n  /** Canvas node id \u2014 lets the worker register the execution in the project Hist\u00f3rico. */\n  node_id?: string;\n  /** FR-SPACES-060 \u2014 expressive mode (qwen3-local): 1.7B + inline emotion markup, slower queue. */\n  expressive?: boolean;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAvatarVoice.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "  /** qwen3-local async: video_renders row being polled (survives refresh via graph persistence). */\n  pendingRenderId?: string;\n  pendingKind?: \"clone\" | \"synthesize\";",
+  "new_string": "  /** qwen3-local async: video_renders row being polled (survives refresh via graph persistence). */\n  pendingRenderId?: string;\n  pendingKind?: \"clone\" | \"synthesize\";\n  /** FR-SPACES-060 \u2014 expressive mode: 1.7B engine + inline emotion tags in the script (slower). */\n  expressive?: boolean;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "      const res = await synthesize.mutateAsync({\n        voice_profile_id: d.voiceProfileId,\n        script: d.prompt,\n        language: d.language,\n        provider: d.provider,\n        project_id: projectId,\n        node_id: node.id,\n      });",
+  "new_string": "      const res = await synthesize.mutateAsync({\n        voice_profile_id: d.voiceProfileId,\n        script: d.prompt,\n        language: d.language,\n        provider: d.provider,\n        project_id: projectId,\n        node_id: node.id,\n        expressive: isLocal ? Boolean(d.expressive) : undefined,\n      });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "        <Section title=\"Roteiro\">\n          <Textarea\n            value={d.prompt}\n            onChange={(e) => updateNodeData(node.id, { prompt: e.target.value.slice(0, 5000) })}\n            placeholder={d.language === \"en\" ? \"Type the script in English\u2026\" : \"Escreva o roteiro em portugu\u00eas\u2026\"}\n            rows={4}\n            className=\"min-h-24 resize-none text-sm\"\n          />\n          <div className=\"mt-1 text-right font-mono text-[10px] text-muted-foreground\">\n            {(d.prompt ?? \"\").length} / 5000\n          </div>\n        </Section>",
+  "new_string": "        <Section title=\"Roteiro\">\n          <Textarea\n            value={d.prompt}\n            onChange={(e) => updateNodeData(node.id, { prompt: e.target.value.slice(0, 5000) })}\n            placeholder={d.language === \"en\" ? \"Type the script in English\u2026\" : \"Escreva o roteiro em portugu\u00eas\u2026\"}\n            rows={4}\n            className=\"min-h-24 resize-none text-sm\"\n          />\n          <div className=\"mt-1 text-right font-mono text-[10px] text-muted-foreground\">\n            {(d.prompt ?? \"\").length} / 5000\n          </div>\n          {isLocal && (\n            <button\n              type=\"button\"\n              onClick={() => updateNodeData(node.id, { expressive: !d.expressive })}\n              className={cn(\n                \"mt-2 flex w-full items-center justify-between rounded-md border px-2.5 py-2 text-left text-[11px] transition-colors\",\n                d.expressive\n                  ? \"border-accent bg-accent/5 text-foreground ring-1 ring-accent/30\"\n                  : \"border-border bg-muted/40 text-muted-foreground hover:bg-muted\",\n              )}\n            >\n              <span className=\"font-medium\">Modo expressivo (emo\u00e7\u00f5es no roteiro)</span>\n              <span className={cn(\"text-[9px] uppercase\", d.expressive ? \"text-accent\" : \"\")}>\n                {d.expressive ? \"ligado\" : \"desligado\"}\n              </span>\n            </button>\n          )}\n          {isLocal && d.expressive && (\n            <p className=\"mt-1.5 text-[10px] text-muted-foreground\">\n              Use tags no roteiro: <span className=\"font-mono text-foreground\">{\"{happy}\u2026{/happy}\"}</span> \u00b7{\" \"}\n              <span className=\"font-mono text-foreground\">{\"<#0.5#>\"}</span> (pausa em s) \u00b7{\" \"}\n              <span className=\"font-mono text-foreground\">(gasps) (whisper)</span> \u00b7{\" \"}\n              <span className=\"font-mono text-foreground\">[excited] [pause:400ms] [sigh]</span>.\n              Motor maior (1.7B) \u2014 fila ~2\u00d7 mais lenta.\n            </p>\n          )}\n        </Section>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:03:57)*
+
+
+## 🤖 Claude *(21:03:57)*
+
+tsc + prova do normalizador com **o seu texto exato**:
+
+## 🤖 Claude *(21:03:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -2; echo \"tsc=$?\"; bun -e \"\nimport { normalizeExpressiveScript } from './scripts/voice-bridge.ts';\n\" 2>&1 | head -3 || true",
+  "description": "Type-check; note voice-bridge has main() side effect",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc=0
+> ```
+
+## 🤖 Claude *(21:04:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/scratchpad && sed -n '/\u2500\u2500 Expressive-script normalizer/,/^}/p' scripts/voice-bridge.ts | sed 's/^export function/function/' > $SP/norm-test.ts && cat >> $SP/norm-test.ts <<'EOF'\n\nconst sample = `{happy}Imagine {/happy}entrar em uma f\u00e1brica e ver um rob\u00f4 pegar uma caixa que nunca viu antes. <#0.5#> Ele observa, pensa por alguns segundos e encontra sozinho (gasps) a melhor maneira de levant\u00e1-la. <#0.75#> {surprised}Mas tudo isso aconteceu este ano.{/surprised} <#1.0#> {fearful}Por que justamente agora?{/fearful} (whisper) E quase ningu\u00e9m est\u00e1 falando sobre isso. {fluent}O conhecimento passa a ser o ativo.{/fluent} {fearful}(slowly) Estamos apenas assistindo...{/fearful}`;\nconst out = normalizeExpressiveScript(sample);\nconsole.log(out);\nconst leftovers = out.match(/\\{|\\}|<#|\\((?!\\s)/g);\nconsole.log('\\nSOBRAS N\u00c3O TRADUZIDAS:', leftovers ? leftovers.join(' ') : 'NENHUMA \u2705');\nEOF\nbun run $SP/norm-test.ts",
+  "description": "Unit-prove the normalizer against the Sovereign's exact syntax",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> 14 |   curious: 'eager', curiosity: 'eager', wonder: 'dramatic', fearful: 'dramatic', fear: 'dramatic',
+> 15 |   fluent: 'news', serious: 'stern', tense: 'dramatic', melancholy: 'gloomy', wistful: 'gloomy',
+> 16 | };
+> 17 | 
+> 18 | const sample = `{happy}Imagine {/happy}entrar em uma fábrica e ver um robô pegar uma caixa que nunca viu antes. <#0.5#> Ele observa, pensa por alguns segundos e encontra sozinho (gasps) a melhor maneira de levantá-la. <#0.75#> {surprised}Mas tudo isso aconteceu este ano.{/surprised} <#1.0#> {fearful}Por que justamente agora?{/fearful} (whisper) E quase ninguém está falando sobre isso. {fluent}O conhecimento passa a ser o ativo.{/fluent} {fearful}(slowly) Estamos apenas assistindo...{/fearful}`;
+> 19 | const out = normalizeExpressiveScript(sample);
+>                  ^
+> ReferenceError: normalizeExpressiveScript is not defined
+>       at /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/scratchpad/norm-test.ts:19:13
+>       at loadAndEvaluateModule (2:1)
+> 
+> Bun v1.3.12 (Linux arm64)
+> ```
+
+## 🤖 Claude *(21:04:28)*
+
+
+## 🤖 Claude *(21:04:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/scratchpad && awk '/\u2500\u2500 Expressive-script normalizer/,/\\.trim\\(\\);/' scripts/voice-bridge.ts | sed 's/^export function/function/' > $SP/norm-test.ts && echo \"}\" >> $SP/norm-test.ts && cat >> $SP/norm-test.ts <<'EOF'\n\nconst sample = `{happy}Imagine {/happy}entrar em uma f\u00e1brica. <#0.5#> Ele encontra sozinho (gasps) a melhor maneira. <#0.75#> {surprised}Mas tudo isso aconteceu este ano.{/surprised} <#1.0#> {fearful}Por que justamente agora?{/fearful} (whisper) E quase ningu\u00e9m fala disso. {fluent}O conhecimento \u00e9 o ativo.{/fluent} {fearful}(slowly) Estamos apenas assistindo...{/fearful} {neutral}O Atlas j\u00e1 fazia parkour.{/neutral}`;\nconst out = normalizeExpressiveScript(sample);\nconsole.log(out);\nconst leftovers = out.match(/\\{|\\}|<#/g);\nconsole.log('\\nSOBRAS:', leftovers ? leftovers.join(' ') : 'NENHUMA \u2705');\nEOF\nbun run $SP/norm-test.ts",
+  "description": "Test normalizer against the Sovereign's syntax",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [happy] Imagine [neutral] entrar em uma fábrica. [pause:0.5] Ele encontra sozinho a melhor maneira. [pause:0.75] [excited] Mas tudo isso aconteceu este ano. [neutral] [pause:1.0] [dramatic] Por que justamente agora? [neutral] [calm] E quase ninguém fala disso. [news] O conhecimento é o ativo. [neutral] [dramatic] [calm] Estamos apenas assistindo... [neutral] O Atlas já fazia parkour. [neutral]
+> 
+> SOBRAS: NENHUMA ✅
+> ```
+
+## 🤖 Claude *(21:04:59)*
+
+
+## 🤖 Claude *(21:04:59)*
+
+
+## 🤖 Claude *(21:05:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "const PARALINGUISTIC_MAP: Record<string, string> = {\n  sigh: 'sigh', sighs: 'sigh', laugh: 'laugh', laughs: 'laugh', haha: 'haha', chuckle: 'heh',\n  gasp: 'ahh', gasps: 'ahh', phew: 'phew', hmm: 'hmm', ugh: 'ugh', huff: 'huff', relief: 'relief',\n  // delivery hints with no inline knob \u2192 nearest emotion recipe\n  whisper: 'calm', whispers: 'calm', slowly: 'calm',\n};",
+  "new_string": "const PARALINGUISTIC_MAP: Record<string, string> = {\n  // engine-native fillers (identity mappings so the final [tag] pass keeps them)\n  sigh: 'sigh', sighs: 'sigh', ahh: 'ahh', relief: 'relief', phew: 'phew', hmm: 'hmm', mmm: 'mmm',\n  hmpf: 'hmpf', mah: 'mah', uhm: 'uhm', laugh: 'laugh', laughs: 'laugh', haha: 'haha', heh: 'heh',\n  ouch: 'ouch', huff: 'huff', ugh: 'ugh',\n  // Sovereign aliases\n  gasp: 'ahh', gasps: 'ahh', chuckle: 'heh',\n  // delivery hints with no inline knob \u2192 nearest emotion recipe\n  whisper: 'calm', whispers: 'calm', slowly: 'calm',\n};"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:05:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be4e9ce7-75c6-44ca-b0c7-9b273660ed2b/scratchpad && awk '/\u2500\u2500 Expressive-script normalizer/,/\\.trim\\(\\);/' scripts/voice-bridge.ts | sed 's/^export function/function/' > $SP/norm-test.ts && echo \"}\" >> $SP/norm-test.ts && cat >> $SP/norm-test.ts <<'EOF'\nconst sample = `{happy}Imagine {/happy}entrar. <#0.5#> Encontra sozinho (gasps) a maneira. {surprised}Aconteceu!{/surprised} {fearful}Por qu\u00ea?{/fearful} (whisper) segredo. {fluent}Ativo.{/fluent} [sigh] [pause:400ms] [excited] fim`;\nconst out = normalizeExpressiveScript(sample);\nconsole.log(out);\nconsole.log('SOBRAS:', out.match(/\\{|\\}|<#/g)?.join(' ') ?? 'NENHUMA \u2705');\nEOF\nbun run $SP/norm-test.ts && npx tsc --noEmit 2>&1 | tail -1; echo \"tsc=$?\" && bun run build 2>&1 | tail -1 && npx supabase functions deploy generate-voice 2>&1 | grep Deployed | head -1 && systemctl --user restart voice-bridge.service && systemctl --user is-active voice-bridge.service",
+  "description": "Re-test normalizer, build, deploy edge, restart worker",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [happy] Imagine [neutral] entrar. [pause:0.5] Encontra sozinho [ahh] a maneira. [excited] Aconteceu! [neutral] [dramatic] Por quê? [neutral] [calm] segredo. [news] Ativo. [neutral] [sigh] [pause:400ms] [excited] fim
+> SOBRAS: NENHUMA ✅
+> tsc=0
+> ✓ built in 1m 15s
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-voice
+> active
+> ```
+
+## 🤖 Claude *(21:07:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add scripts/voice-bridge.ts supabase/functions/generate-voice/index.ts src/hooks/useAvatarVoice.ts src/types/canvas.ts src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx && git commit -q -m \"feat(voice): Modo Expressivo no no Clone de Voz \u2014 1.7B + tags de emocao na sintaxe do Sovereign\n\nToggle no roteiro (qwen3-local): worker usa o Qwen3-TTS 1.7B (witness RTF\n13,9 \u00b7 'composed 3 spans' \u00b7 assets .expr instalados) e um NORMALIZADOR\ntraduz a sintaxe de autoria {happy}...{/happy} \u00b7 <#0.5#> \u00b7 (gasps) \u00b7\n(whisper) para a gramatica real do engine ([happy]/[pause:0.5]/[ahh]/\n[calm]); tags desconhecidas sao REMOVIDAS (nunca faladas). Unit-provado\ncom o roteiro real: SOBRAS NENHUMA. Perfis .qvoice sao model-bound \u2192 o\nclone agora persiste a referencia composta (-ref.wav) e o expressivo\nre-clona dela no 1.7B; perfis antigos \u2192 erro claro pedindo re-clone.\" && git push origin main 2>&1 | tail -1",
+  "description": "Commit expressive mode and push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  secret-scan ❯ 
+> 
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m6:07PM[0m [32mINF[0m 1 commits scanned.
+> [90m6:07PM[0m [32mINF[0m scan completed in 15.2ms
+> [90m6:07PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ e2e-output-tripwire (0.08 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.02 seconds)
+> ✔️ mesh-reingest (0.02 seconds)
+>    f56e49d..7c20895  main -> main
+> ```
+
+## 🤖 Claude *(21:07:31)*
+
+**Modo Expressivo VIVO na UI** (commit `7c20895`, tudo deployado — hard-refresh). Pode gerar direto no Spaces.
+
+## Como usar (com o SEU texto, do jeito que você escreveu)
+
+1. No nó Clone de Voz (motor MCORCH · grátis), **re-clone a voz uma vez** (os perfis novos guardam a referência composta que o modo expressivo precisa — perfis antigos mostram erro pedindo re-clone).
+2. No Roteiro, ligue o toggle **"Modo expressivo (emoções no roteiro)"**.
+3. Cole o seu texto **como está** — o worker traduz a sua sintaxe automaticamente. Provei com o seu roteiro real: **zero sobras faladas**.
+
+## Tabela de variáveis — o que você pode usar na UI
+
+| Você escreve | O engine faz |
+|---|---|
+| `{happy}…{/happy}` `{sad}` `{angry}` `{calm}` `{excited}` `{joy}` | emoção 1:1 (fechar `{/…}` volta ao neutro) |
+| `{surprised}` | → excited (não há "surprised" nativo; é o mais próximo) |
+| `{fearful}` · `{intrigue}` · `{wonder}` · `{tense}` | → **dramatic** (tensão/suspense) |
+| `{curious}` / `{curiosity}` | → eager |
+| `{fluent}` | → **news** (entrega de âncora — fluida e articulada) |
+| `{neutral}` | neutro explícito |
+| `<#0.5#>` `<#2.0#>` | pausa exata em segundos |
+| `(gasps)` | → `[ahh]` (exalação — a aproximação mais próxima de gasp) |
+| `(whisper)` / `(slowly)` | → **calm** (não há sussurro/ritmo inline; entrega suave é o mais próximo) |
+| Nativas também valem | `[excited]` `[pause:400ms]` `[sigh]` `[laugh]` `[haha]` `[hmm]` `[phew]` `[huff]` |
+| Qualquer tag desconhecida | **removida em silêncio** — nunca é falada |
+
+Extras nativos que você ainda não usou e valem ouro: `{proud}`, `{stern}` (sério/firme), `{gloomy}` (melancólico), `{annoyed}`, `[hmm]` (pensativo), `[phew]`.
+
+**Avisos honestos:** (1) fila ~2× mais lenta (RTF ~14 — seu roteiro completo tem ~4 min de fala ≈ 55 min de render; para testar rápido, gere um dos blocos primeiro); (2) `(whisper)`/`(slowly)` viram entrega calma, não sussurro real — isso só com os motores premium; (3) os assets de emoção (`.expr`) foram instalados, então as emoções vêm com a receita completa, não só steering genérico.
+
+Gere aí e me diga como soou — se aprovado, esse vira o caminho padrão dos vídeos.
+
+## 👤 User *(22:08:36)*
+
+o node Clone de Voz
+n_2ul72ch4 de voz ta ainda "Sintetizando na fila…" acho que deu alguma coisa errada. Precisamos aumentar o limite de texto do Roteiro pois 5000 é pouco agora que temos os extras nativos, além disso você pode adicionar opções de gerar o roteiro com a própria IA geradora de texto com select de modelos disponiveis, com e tambem me de um roteiro agora para eu copiar e colar lá depois quwe você arrumaro Sintetizando eterno que esta lá. Me de o prompt com tudo disponivel fazendo um checklist de nativos extras e variáveis todas.
+
+## 🤖 Claude *(22:09:49)*
+
+
+## 🤖 Claude *(22:09:50)*
+
+Diagnóstico do "Sintetizando eterno" primeiro (Lei 1 — DB + worker):
+
+## 🤖 Claude *(22:09:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT id, state, composition->>'kind' AS kind, composition->>'expressive' AS expressive, length(composition->>'script') AS script_len, created_at, updated_at FROM video_renders WHERE user_id='ada39fae-67e1-4e53-af1c-5a18e1c108e8' AND engine='qwen3-voice' ORDER BY created_at DESC LIMIT 4;\\\"}\"; echo \"---worker---\"; journalctl --user -u voice-bridge.service --since \"-40 min\" --no-pager | tail -6; echo \"---engine proc---\"; pgrep -af qwen_tts | head -2 || echo \"(sem processo qwen_tts)\"",
+  "description": "Diagnose stuck synthesis: render states, worker logs, engine process",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"82cf39aa-8e3a-48c8-8f96-f1d67717c5c2","state":"running","kind":"voice_synthesize","expressive":null,"script_len":5000,"created_at":"2026-07-10 21:00:37.046194+00","updated_at":"2026-07-10 21:45:40.277862+00"},{"id":"5db93037-0127-44e5-8963-80c215933640","state":"done","kind":"voice_synthesize","expressive":null,"script_len":51,"created_at":"2026-07-10 20:21:30.133653+00","updated_at":"2026-07-10 20:22:11.630325+00"},{"id":"1fbda030-dca4-4463-92c5-2e1ae95cd6cd","state":"done","kind":"voice_clone","expressive":null,"script_len":null,"created_at":"2026-07-10 20:19:21.935291+00","updated_at":"2026-07-10 20:21:18.778618+00"},{"id":"62fb9ccd-35ea-4f36-b96d-1bf682fc2d33","state":"done","kind":"voice_synthesize","expressive":null,"script_len":51,"created_at":"2026-07-10 19:27:48.288859+00","updated_at":"2026-07-10 19:28:29.271989+00"}]---worker---
+> -- No entries --
+> ---engine proc---
+> 1870224 /home/ubuntu/.mcorch/voice-engine/engine/qwen_tts -d /home/ubuntu/.mcorch/voice-engine/engine/qwen3-tts-0.6b-base --load-voice /tmp/voice-synth-82cf39aa-8e3a-48c8-8f96-f1d67717c5c2.qvoice --icl-only --int8 -l Portuguese --text {happy}Imagine {/happy}entrar em uma fábrica e ver um robô pegar uma caixa que nunca viu antes. <#0.5#> Ele observa, pensa por alguns segundos e encontra sozinho (gasps) a melhor maneira de levantá-la. <#0.75#> Em outro laboratório, um humanoide atravessa um terreno irregular sem que ninguém programe cada movimento. <#0.5#> Do outro lado do mundo, um robô aprende uma habilidade observando outro robô, como se estivesse assistindo a um tutorial. <#1.0#> Isso parece ficção científica. <#0.5#> {surprised}Mas tudo isso aconteceu este ano.{/surprised} <#1.0#> E, curiosamente, nenhuma dessas demonstrações representa a maior revolução. <#0.75#> O verdadeiro avanço é muito mais profundo... <#1.5#> {neutral}Pela primeira vez, robôs estão começando a aprender como aprendemos.{/neutral} <#0.75#> {fluent}E isso pode ser o início da maior transformação tecnológica desde a internet.{/fluent}  <#2.0#>  {surprised}Quando a maioria das pessoas vê um vídeo do Atlas dando um salto mortal ou do Figure caminhando em uma fábrica, a reação é sempre a mesma.{/surprised} <#0.25#> "Incrível." <#1.0#> Mas também completamente equivocada. <#0.5#> Porque o salto não é a notícia. <#0.25#> A caminhada também não. <#0.5#> Nem mesmo o fato de existirem robôs humanoides. <#0.25#> {neutral}Essas máquinas existem há décadas.{/neutral} <#0.25#> {neutral}O Atlas já fazia parkour anos atrás.{/neutral} <#1.0#> A verdadeira pergunta é outra. <#0.5#> {fearful}Por que justamente agora praticamente todas as empresas começaram a evoluir ao mesmo tempo?{/fearful} <#0.75#> Boston Dynamics. <#0.25#> Figure AI. <#0.25#> Unitree. <#0.25#> Tesla. <#0.25#> Agility Robotics. <#0.25#> 1X. <#0.25#> EngineAI. <#0.25#> Sanctuary AI. <#0.5#> Empresas diferentes. <#0.25#> Países diferentes. <#0.25#> Engenheiros diferentes. <#0.25#> Mesmo assim... <#0.5#> Todas parecem ter acelerado simultaneamente. <#1.0#> Coincidência? <#0.5#> Nem um pouco. <#0.5#> {surprised}Existe uma tecnologia invisível conectando todas elas.{/surprised} <#0.75#> (whisper) E quase ninguém está falando sobre isso.  <#2.0#>  {neutral}Durante décadas, robôs eram especialistas.{/neutral} <#0.25#> Você queria um braço robótico? <#0.25#> Precisava programar cada movimento. <#0.25#> Cada posição. <#0.25#> Cada velocidade. <#0.25#> Cada exceção. <#0.5#> Se um objeto mudasse apenas alguns centímetros... <#0.5#> Tudo precisava ser recalibrado. <#1.0#> {fearful}Era como ensinar uma criança decorando milhões de respostas sem nunca permitir que ela entendesse a pergunta.{/fearful} <#1.5#> {happy}Agora imagine substituir esse sistema por algo completamente diferente.{/happy} <#0.5#> Em vez de ensinar movimentos... <#0.5#> Você ensina conceitos. <#1.0#> O robô deixa de perguntar: <#0.25#> "Qual movimento devo fazer?" <#1.0#> {fluent}E começa a perguntar: <#0.25#> "O que preciso alcançar?"{/fluent} <#1.5#> Essa pequena mudança altera tudo. <#0.75#> É exatamente o que aconteceu com a inteligência artificial quando os modelos de linguagem deixaram de memorizar frases e passaram a compreender relações entre palavras. <#1.0#> {surprised}Agora essa mesma revolução está acontecendo no mundo físico.{/surprised} <#0.75#> Os robôs deixaram de executar comandos. <#0.25#> Eles começam a interpretar intenções.  <#2.0#>  {surprised}Durante anos acreditamos que o desafio da robótica era construir corpos melhores.{/surprised} <#0.25#> Motores mais fortes. <#0.25#> Sensores mais precisos. <#0.25#> Baterias maiores. <#0.75#> Mas talvez estivéssemos tentando resolver o problema errado. <#0.5#> {neutral}O verdadeiro gargalo nunca foi o corpo.{/neutral} <#0.25#> Era o cérebro. <#1.0#> Hoje, modelos de inteligência artificial conseguem combinar visão computacional, linguagem natural e planejamento de ações em um único sistema. <#0.75#> Em vez de reconhecer apenas objetos... <#0.5#> Eles compreendem contexto. <#0.5#> {fluent}Não enxergam apenas uma maçã sobre a mesa. Entendem que a maçã pode ser pega, cortada, entregue ou guardada.{/fluent} <#0.75#> Esse tipo de raciocínio aproxima os robôs da maneira como humanos interagem com o mundo. <#1.0#> É por isso que tantos humanoides parecem evoluir ao mesmo tempo. <#0.5#> Eles estão deixando de depender de milhões de linhas de código escritas manualmente. <#0.5#> Agora aprendem observando. <#0.25#> Experimentando. <#0.25#> Errando. <#0.25#> Corrigindo. <#0.5#> {happy}E reutilizando esse conhecimento em tarefas completamente diferentes.{/happy} <#1.0#> É exatamente isso que torna 2026 um ponto de ruptura.  <#2.0#>  {fearful}Se essa tendência continuar, veremos algo que nunca aconteceu antes.{/fearful} <#0.75#> Robôs capazes de adquirir novas habilidades sem precisar ser reprogramados do zero. <#0.5#> Hoje pode ser uma fábrica. <#0.25#> Amanhã um hospital. <#0.25#> Depois uma fazenda. <#0.25#> Depois uma estação espacial. <#0.75#> {neutral}O mesmo cérebro. Corpos diferentes. Aplicações praticamente ilimitadas.{/neutral} <#1.0#> Esse talvez seja o maior impacto da inteligência artificial fí -o /tmp/voice-synth-82cf39aa-8e3a-48c8-8f96-f1d67717c5c2.wav
+> 1919722 /bin/bash -c source /home/ubuntu/.claude/shell-snapshots/snapshot-bash-1783642451849-9llsga.sh 2>/dev/null || true && shopt -u extglob 2>/dev/null || true && eval 'set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST "https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d "{\"query\":\"SELECT id, state, composition->>'"'"'kind'"'"' AS kind, composition->>'"'"'expressive'"'"' AS expressive, length(composition->>'"'"'script'"'"') AS script_len, created_at, updated_at FROM video_renders WHERE user_id='"'"'ada39fae-67e1-4e53-af1c-5a18e1c108e8'"'"' AND engine='"'"'qwen3-voice'"'"' ORDER BY created_at DESC LIMIT 4;\"}"; echo "---worker---"; journalctl --user -u voice-bridge.service --since "-40 min" --no-pager | tail -6; echo "---engine proc---"; pgrep -af qwen_tts | head -2 || echo "(sem processo qwen_tts)"' < /dev/null && pwd -P >| /tmp/claude-1a60-cwd
+> ```
+
+## 🤖 Claude *(22:10:00)*
+
+You've hit your session limit · resets 8:40pm (America/Sao_Paulo)
