@@ -11638,3 +11638,325 @@ Histórico populado (2 execuções `success` no projeto, prova `voice_execs=2`).
 `/security-review` independente: **NO FINDINGS** — e o aside do review pegou um erro meu no INSERT do histórico (`'completed'` vs `'success'` do CHECK) que corrigi antes de comitar.
 
 **Nota honesta sobre qualidade:** o `.qvoice` melhora bem a fidelidade, mas o motor 0.6B grátis tem teto — para narração "indistinguível", o caminho é o ElevenLabs BYOK que agora está a um clique no seletor (36 mco). O grátis segue ideal para rascunhos e volume.
+
+## 👤 User *(20:12:30)*
+
+O botão de clonar voz - 0 mco esta em cima dos Clipes de personalidade (3/5 · até 7s cada)
+Clipes curtos com trejeitos, sotaques e emoções variadas enriquecem a referência composta — a identidade da voz fica mais fiel.
+
+Eles devem ser usados no processo de clonagem. Além disso temos o qwen agora e talvez podemos usar tambem os outros concorrentes dele no mesmo seguimento.: F5-TTS, Fish Speech V1.5
+
+## 🤖 Claude *(20:13:10)*
+
+
+## 🤖 Claude *(20:13:15)*
+
+Dois pontos — um fix de UI e um veredito de licença que preciso te dar com honestidade (Lei 1):
+
+**Sobre F5-TTS e Fish Speech V1.5:** tecnicamente são excelentes cloners, mas a pesquisa verificada de ontem (fontes primárias) descartou ambos por **licença dos pesos non-commercial**: F5-TTS = código MIT mas pesos **CC-BY-NC**; Fish Speech V1.5 = **CC-BY-NC-SA**. O MCORCH é produto comercial (mcoCoins, planos) — embarcá-los violaria a licença. Os concorrentes do mesmo segmento que **são** comercial-safe: **Chatterbox Multilingual** (MIT, pack pt-BR dedicado, clone zero-shot) e **VoxCPM2** (Apache-2.0) — ambos pesados demais para o host 4-core sem GPU, então entram na escada como **pós-GPU/pós-renda** (a arquitetura multi-motor da Amendment 18 já aceita engines novos com pouco código). Registro isso na emenda.
+
+Agora o fix da UI — os clipes **já entram** na clonagem (o botão envia amostra + clipes juntos), mas a ordem visual esconde isso: o botão "Clonar" está acima dos clipes. Reordeno — amostra → clipes → **botão Clonar mostrando a contagem de amostras**:
+
+## 🤖 Claude *(20:13:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "offset": 352,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 352	                  "h-9 rounded-md border text-xs font-medium transition-colors",
+> 353	                  d.language === l.id
+> 354	                    ? "border-accent bg-accent/5 text-foreground ring-1 ring-accent/30"
+> 355	                    : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+> 356	                )}
+> 357	              >
+> 358	                {l.label}
+> 359	              </button>
+> 360	            ))}
+> 361	          </div>
+> 362	        </Section>
+> 363	
+> 364	        {!hasVoiceConsent && (
+> 365	          <Section title="Consentimento">
+> 366	            <ConsentWizard purposes={["voice_clone"]} preselect={["voice_clone"]} />
+> 367	          </Section>
+> 368	        )}
+> 369	
+> 370	        <Section title="Amostra de voz">
+> 371	          <div className="space-y-2">
+> 372	            {d.sampleAudioUrl ? (
+> 373	              <StorageAudio src={d.sampleAudioUrl} controls className="w-full" />
+> 374	            ) : (
+> 375	              <div className="flex h-12 w-full items-center justify-center rounded-md border border-dashed border-border bg-muted/40 text-[11px] text-muted-foreground">
+> 376	                Sem amostra ainda
+> 377	              </div>
+> 378	            )}
+> 379	            <input
+> 380	              ref={fileRef}
+> 381	              type="file"
+> 382	              accept="audio/*"
+> 383	              hidden
+> 384	              onChange={(e) => {
+> 385	                const f = e.target.files?.[0];
+> 386	                if (f) onFile(f);
+> 387	                e.currentTarget.value = "";
+> 388	              }}
+> 389	            />
+> 390	            <Button
+> 391	              type="button"
+> 392	              variant="outline"
+> 393	              size="sm"
+> 394	              className="w-full gap-2"
+> 395	              disabled={uploading || busy}
+> 396	              onClick={() => fileRef.current?.click()}
+> 397	            >
+> 398	              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+> 399	              {uploading ? "Enviando…" : d.sampleAudioUrl ? "Trocar amostra" : "Enviar amostra"}
+> 400	            </Button>
+> 401	            <Button
+> 402	              type="button"
+> 403	              variant={cloned ? "outline" : "accent"}
+> 404	              size="sm"
+> 405	              className="w-full gap-2"
+> 406	              disabled={!d.sampleAudioUrl || busy || cloned || !hasVoiceConsent}
+> 407	              onClick={handleClone}
+> 408	              title={!hasVoiceConsent ? "Conceda o consentimento biométrico primeiro" : undefined}
+> 409	            >
+> 410	              {cloneVoice.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : cloned ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+> 411	              {cloned ? "Voz clonada" : "Clonar voz · 0 mco"}
+> 412	            </Button>
+> 413	            {cloned && (
+> 414	              <Button
+> 415	                type="button"
+> 416	                variant="ghost"
+> 417	                size="sm"
+> 418	                className="w-full gap-2 text-destructive hover:text-destructive"
+> 419	                disabled={erase.isPending || busy}
+> 420	                onClick={handleErase}
+> 421	                title="Apaga o voiceprint clonado (LGPD Art. 18)"
+> ```
+
+## 🤖 Claude *(20:13:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "offset": 421,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 421	                title="Apaga o voiceprint clonado (LGPD Art. 18)"
+> 422	              >
+> 423	                {erase.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+> 424	                Apagar dados de voz
+> 425	              </Button>
+> 426	            )}
+> 427	          </div>
+> 428	        </Section>
+> 429	
+> 430	        {isLocal && (
+> 431	          <Section title={`Clipes de personalidade (${d.validationSamples?.length ?? 0}/${MAX_VALIDATION_CLIPS} · até ${MAX_CLIP_SECONDS}s cada)`}>
+> 432	            <p className="mb-2 text-[10px] text-muted-foreground">
+> 433	              Clipes curtos com trejeitos, sotaques e emoções variadas enriquecem a referência
+> 434	              composta — a identidade da voz fica mais fiel.
+> 435	            </p>
+> 436	            <div className="space-y-1.5">
+> 437	              {(d.validationSamples ?? []).map((clip) => (
+> 438	                <div key={clip.path} className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1">
+> ```
+
+## 🤖 Claude *(20:13:36)*
+
+
+## 🤖 Claude *(20:13:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "            <Button\n              type=\"button\"\n              variant={cloned ? \"outline\" : \"accent\"}\n              size=\"sm\"\n              className=\"w-full gap-2\"\n              disabled={!d.sampleAudioUrl || busy || cloned || !hasVoiceConsent}\n              onClick={handleClone}\n              title={!hasVoiceConsent ? \"Conceda o consentimento biom\u00e9trico primeiro\" : undefined}\n            >\n              {cloneVoice.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : cloned ? <CheckCircle2 className=\"h-3.5 w-3.5\" /> : <Mic className=\"h-3.5 w-3.5\" />}\n              {cloned ? \"Voz clonada\" : \"Clonar voz \u00b7 0 mco\"}\n            </Button>\n            {cloned && (\n              <Button\n                type=\"button\"\n                variant=\"ghost\"\n                size=\"sm\"\n                className=\"w-full gap-2 text-destructive hover:text-destructive\"\n                disabled={erase.isPending || busy}\n                onClick={handleErase}\n                title=\"Apaga o voiceprint clonado (LGPD Art. 18)\"\n              >\n                {erase.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Trash2 className=\"h-3.5 w-3.5\" />}\n                Apagar dados de voz\n              </Button>\n            )}\n          </div>\n        </Section>",
+  "new_string": "          </div>\n        </Section>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:13:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"Adicionar clipe curto\" src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx && sed -n '/Adicionar clipe curto/,/^        )}/p' src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx | tail -8",
+  "description": "Find the end of the clips section to insert the clone section after"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 447:                  {uploadingClip ? "Enviando…" : "Adicionar clipe curto"}
+>                   {uploadingClip ? "Enviando…" : "Adicionar clipe curto"}
+>                 </Button>
+>               )}
+>             </div>
+>           </Section>
+>         )}
+> ```
+
+## 🤖 Claude *(20:14:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "                  {uploadingClip ? \"Enviando\u2026\" : \"Adicionar clipe curto\"}\n                </Button>\n              )}\n            </div>\n          </Section>\n        )}",
+  "new_string": "                  {uploadingClip ? \"Enviando\u2026\" : \"Adicionar clipe curto\"}\n                </Button>\n              )}\n            </div>\n          </Section>\n        )}\n\n        <Section title=\"Clonagem\">\n          <div className=\"space-y-2\">\n            {isLocal && (\n              <p className=\"text-[10px] text-muted-foreground\">\n                A clonagem usa a amostra principal <span className=\"font-medium text-foreground\">+ os clipes de\n                personalidade</span> como refer\u00eancia composta.\n              </p>\n            )}\n            <Button\n              type=\"button\"\n              variant={cloned ? \"outline\" : \"accent\"}\n              size=\"sm\"\n              className=\"w-full gap-2\"\n              disabled={!d.sampleAudioUrl || busy || cloned || !hasVoiceConsent}\n              onClick={handleClone}\n              title={!hasVoiceConsent ? \"Conceda o consentimento biom\u00e9trico primeiro\" : undefined}\n            >\n              {cloneVoice.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : cloned ? <CheckCircle2 className=\"h-3.5 w-3.5\" /> : <Mic className=\"h-3.5 w-3.5\" />}\n              {cloned\n                ? \"Voz clonada\"\n                : isLocal\n                ? `Clonar voz \u00b7 ${1 + (d.validationSamples?.length ?? 0)} amostra${(d.validationSamples?.length ?? 0) > 0 ? \"s\" : \"\"} \u00b7 0 mco`\n                : \"Clonar voz \u00b7 0 mco\"}\n            </Button>\n            {cloned && (\n              <Button\n                type=\"button\"\n                variant=\"ghost\"\n                size=\"sm\"\n                className=\"w-full gap-2 text-destructive hover:text-destructive\"\n                disabled={erase.isPending || busy}\n                onClick={handleErase}\n                title=\"Apaga o voiceprint clonado (LGPD Art. 18)\"\n              >\n                {erase.isPending ? <Loader2 className=\"h-3.5 w-3.5 animate-spin\" /> : <Trash2 className=\"h-3.5 w-3.5\" />}\n                Apagar dados de voz\n              </Button>\n            )}\n          </div>\n        </Section>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:14:24)*
+
+
+## 🤖 Claude *(20:14:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/18-amendment-voice-engine-selfhost.md",
+  "old_string": "| Cloner p\u00f3s-GPU | VoxCPM2 (2B) e/ou Chatterbox Multilingual | re-avaliar com GPU (p\u00f3s-renda) |",
+  "new_string": "| Cloner p\u00f3s-GPU | VoxCPM2 (2B) e/ou Chatterbox Multilingual | re-avaliar com GPU (p\u00f3s-renda) |\n\n**Rejeitados por licen\u00e7a (decis\u00e3o 2026-07-10, pedido Sovereign F5/Fish):** F5-TTS (pesos\nCC-BY-NC) e Fish Speech V1.5 (CC-BY-NC-SA) s\u00e3o cloners fortes mas **non-commercial nos\npesos** \u2014 ineleg\u00edveis para o produto (mcoCoins/planos = uso comercial). S\u00f3 reconsiderar se\no upstream relicenciar. Os equivalentes comercial-safe do segmento s\u00e3o exatamente os da\nlinha p\u00f3s-GPU acima (Chatterbox MIT \u00b7 VoxCPM2 Apache)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/spaces-evolution/18-amendment-voice-engine-selfhost.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:14:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -3; echo \"tsc=$?\"; bun run build 2>&1 | tail -1",
+  "description": "Type-check and build with the reordered inspector",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc=0
+> ✓ built in 32.71s
+> ```
+
+## 🤖 Claude *(20:15:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx docs/bok/spaces-evolution/18-amendment-voice-engine-selfhost.md && git commit -q -m \"fix(spaces): ordem da clonagem no inspector \u2014 amostra -> clipes -> botao Clonar com contagem\n\nO botao 'Clonar voz' ficava ACIMA dos clipes de personalidade, sugerindo\nque eles nao entravam na clonagem (entravam \u2014 o payload sempre enviou\namostra+clipes juntos). Nova secao 'Clonagem' apos os clipes, com o botao\nmostrando a contagem real ('Clonar voz \u00b7 4 amostras \u00b7 0 mco') e a nota de\nreferencia composta. Amendment 18: F5-TTS e Fish Speech V1.5 REJEITADOS\npor licenca (pesos CC-BY-NC/-SA, non-commercial \u2014 produto e comercial);\nequivalentes comercial-safe = Chatterbox MIT / VoxCPM2 Apache (pos-GPU).\" && git log -1 --oneline && git push origin main 2>&1 | tail -1",
+  "description": "Commit inspector reorder and license decision, push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:15PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:15PM[0m [32mINF[0m scan completed in 8.29ms
+> [90m5:15PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.04 seconds)
+> ✔️ secret-scan (0.06 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> e3e76be fix(spaces): ordem da clonagem no inspector — amostra -> clipes -> botao Clonar com contagem
+>    f5e290f..e3e76be  main -> main
+> ```
+
+## 🤖 Claude *(20:15:44)*
+
+**Feito** (commit `e3e76be`, pushed, frontend servido — hard-refresh).
+
+## Ordem da clonagem corrigida
+
+O fluxo agora lê na sequência real do processo:
+1. **Amostra de voz** (principal, longa)
+2. **Clipes de personalidade** (até 5 × 7s)
+3. **Clonagem** — seção nova com a nota "usa a amostra principal **+ os clipes** como referência composta" e o botão mostrando a contagem viva: **"Clonar voz · 4 amostras · 0 mco"** (com seus 3 clipes + principal)
+
+Importante: os clipes **sempre entraram** na clonagem por baixo (o payload envia tudo junto desde o início) — o problema era só a ordem visual sugerir o contrário. Como você já tinha 3 clipes subidos, basta **re-clonar** para a referência composta valer (e agora com o perfil `.qvoice` de máxima fidelidade do fix anterior).
+
+## F5-TTS e Fish Speech V1.5 — bloqueados por licença (veredito honesto)
+
+Ambos são cloners de primeira linha, mas os **pesos são non-commercial**: F5-TTS = CC-BY-NC (o código é MIT, os pesos não); Fish Speech V1.5 = CC-BY-NC-SA. O MCORCH cobra mcoCoins/planos = uso comercial — embarcá-los seria violação de licença com risco jurídico real. Decisão selada na Amendment 18 para não reabrirmos sem fato novo (ex.: relicenciamento do upstream).
+
+**Os concorrentes do mesmo segmento que PODEMOS usar:**
+
+| Motor | Licença | Status na escada |
+|---|---|---|
+| Qwen3-TTS 0.6B | Apache-2.0 ✓ | **vivo hoje** (CPU) |
+| **Chatterbox Multilingual** | MIT ✓ (pack pt-BR dedicado, clone zero-shot) | pós-GPU — 500M, GPU-first |
+| **VoxCPM2** | Apache-2.0 ✓ | pós-GPU — 2B |
+
+A arquitetura multi-motor já está pronta para recebê-los: quando houver GPU (pós-renda, conforme sua doutrina), plugar Chatterbox/VoxCPM2 é adicionar um branch no worker — o rail (fila, consent, perfis, histórico, assets) é o mesmo. Até lá, a escada de qualidade é: **MCORCH grátis** para volume/rascunho → **ElevenLabs/Cartesia BYOK** (já no seu seletor) para o áudio final indistinguível.
