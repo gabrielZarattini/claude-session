@@ -8519,7 +8519,7 @@ Mapeamento 3/3 completo. Leio as duas frentes restantes (edges + MIV):
 >   ⤷ src/lib/spaces-schema.ts:106-109 (SpaceEdgeData/SpaceEdge), :161-163 (SpaceEdgeDataSchema z.enum(PORT_DATA_TYPES)); src/components/spaces/SpaceNodeCard.tsx:38-52 (Handle id={port.i
 > 
 > ==================== mivMotion ====================
-> Linguagem visual MIV para animação mapeada com evidência path:linha. (1) Tokens: --accent = cyan `184 100% 50%` (#00F2FF) com regra inline "nebula stays exclusive to memory" (src/index.css:27-29); raw tokens --cyan/#00F2FF, --cyan-veil, --cyan-line (:42-45); --gold #D4AF37 (:46) reservado a valor (--status-waiting gold :65, glow-gold); --nebula #4D00FF/#8C5AFF (:49-51). Motion de processamento em CYAN é consistente com todo running-state existente (Loader2 text-accent, badge bg-accent/15). (2) Glows prontos para copiar: --glow-primary `0 0 24px hsl(184 100% 50% / 0.45)` (:70) via .glow-primary (:117) — é o CTA glow real (CTASection.tsx:35, HeroSection.tsx:129); text-glow-cyan `text-shadow 0 0 14px rgba(0,242,255,0.55)` (:122); seleção de nó = `border-accent ring-2 ring-accent/30` (GenerateImageNode.tsx:20); dot pulsante `bg-accent animate-pulse shadow-[0_0_8px_#00F2FF]` (SceneComposeInspector.tsx:423). (3) Animações Tailwind: glow-pulse 2s box-shadow cyan (tailwind.config.ts:119-126,151), appear/appear-zoom (:127-146), plugin tailwindcss-animate (:157); em index.css: mc-pulse-glow cyan (:172-175) e o precedente-chave SVG `pipeline-dash` stroke-dashoffset 0.6s linear infinite (:242-247) usado em PipelineEdge.tsx:53. (4) SOP WebGL: proíbe backdrop-blur apenas "sobre ou junto a Canvas WebGL" ([[webgl-canvas-stabilization|webgl-canvas-stabilization]].md:29-31; diagnóstico :21 fala de 'Canvas 3D (WebGL) ativo'); o canvas Spaces é 2D ReactFlow puro (@xyflow/react em CanvasEditorPage.tsx:5-13, sem three/fiber) → a restrição NÃO se aplica, e o próprio canvas já usa backdrop-blur (LeftPanel/index.tsx, LanesOverlay.tsx). (5) Perf: escala real ~13 nós/16 edges — animação CSS em SVG path é trivial nessa escala e já roda em prod (pipeline-edge-dash por edge cross-lane); não há regra global de perf de animação no repo; prefers-reduced-motion só é respeitado nas superfícies de landing (landing.css:659,706; landing-motion.ts:14; ConstellationField.tsx:39), nunca no dashboard/canvas.
+> Linguagem visual MIV para animação mapeada com evidência path:linha. (1) Tokens: --accent = cyan `184 100% 50%` (#00F2FF) com regra inline "nebula stays exclusive to memory" (src/index.css:27-29); raw tokens --cyan/#00F2FF, --cyan-veil, --cyan-line (:42-45); --gold #D4AF37 (:46) reservado a valor (--status-waiting gold :65, glow-gold); --nebula #4D00FF/#8C5AFF (:49-51). Motion de processamento em CYAN é consistente com todo running-state existente (Loader2 text-accent, badge bg-accent/15). (2) Glows prontos para copiar: --glow-primary `0 0 24px hsl(184 100% 50% / 0.45)` (:70) via .glow-primary (:117) — é o CTA glow real (CTASection.tsx:35, HeroSection.tsx:129); text-glow-cyan `text-shadow 0 0 14px rgba(0,242,255,0.55)` (:122); seleção de nó = `border-accent ring-2 ring-accent/30` (GenerateImageNode.tsx:20); dot pulsante `bg-accent animate-pulse shadow-[0_0_8px_#00F2FF]` (SceneComposeInspector.tsx:423). (3) Animações Tailwind: glow-pulse 2s box-shadow cyan (tailwind.config.ts:119-126,151), appear/appear-zoom (:127-146), plugin tailwindcss-animate (:157); em index.css: mc-pulse-glow cyan (:172-175) e o precedente-chave SVG `pipeline-dash` stroke-dashoffset 0.6s linear infinite (:242-247) usado em PipelineEdge.tsx:53. (4) SOP WebGL: proíbe backdrop-blur apenas "sobre ou junto a Canvas WebGL" (webgl-canvas-stabilization.md:29-31; diagnóstico :21 fala de 'Canvas 3D (WebGL) ativo'); o canvas Spaces é 2D ReactFlow puro (@xyflow/react em CanvasEditorPage.tsx:5-13, sem three/fiber) → a restrição NÃO se aplica, e o próprio canvas já usa backdrop-blur (LeftPanel/index.tsx, LanesOverlay.tsx). (5) Perf: escala real ~13 nós/16 edges — animação CSS em SVG path é trivial nessa escala e já roda em prod (pipeline-edge-dash por edge cross-lane); não há regra global de perf de animação no repo; prefers-reduced-motion só é respeitado nas superfícies de landing (landing.css:659,706; landing-motion.ts:14; ConstellationField.tsx:39), nunca no dashboard/canvas.
 > 
 > -- key facts --
 > • --accent é cyan HSL `184 100% 50%` com a regra de uso gravada no próprio token: cyan = accent genérico/hover/selected, 'nebula stays exclusive to memory', e é dual-role (text-accent brilhante E bg-accent fill com foreground quase-preto `0 0% 6%`). --primary e --ring são o MESMO c
@@ -8535,7 +8535,7 @@ Mapeamento 3/3 completo. Leio as duas frentes restantes (edges + MIV):
 > • Keyframes custom em index.css disponíveis: `pulse-green`, `breathe-orange`, `thinking-dots`, `mc-pulse-glow` (box-shadow cyan 12px/0.35 → 26px/0.6 — o pulso de processamento cyan pronto), `flicker`, `scanline`, e o precedente-chave para edges SVG: `@keyframes pipeline-dash { to {
 >   ⤷ /home/gcrUX/htdocs/constellation-orchestra/src/index.css:169-175 (pulse-green/breathe-orange/thinking-dots/mc-pulse-glow), :242-247 (pipeline-dash); consumo: src/components/canvas/
 > • Regra exata do SOP WebGL: 'Proibição de backdrop-blur sobre ou junto a Canvas WebGL — Nunca utilizar classes de desfoque de fundo (backdrop-blur, backdrop-blur-sm/md/lg) em headers, sidebars, toolbars ou painéis flutuantes que dividem o mesmo viewport com o WebGL'; alternativa = 
->   ⤷ /home/gcrUX/htdocs/constellation-orchestra/docs/processes/[[webgl-canvas-stabilization|webgl-canvas-stabilization]].md:29-31 (Regra 1), :20-21 (diagnóstico 'Canvas 3D (WebGL) ativo'), :33-35 (Regra 2 useFrame), 
+>   ⤷ /home/gcrUX/htdocs/constellation-orchestra/docs/processes/webgl-canvas-stabilization.md:29-31 (Regra 1), :20-21 (diagnóstico 'Canvas 3D (WebGL) ativo'), :33-35 (Regra 2 useFrame), 
 > • A restrição do SOP NÃO se aplica ao canvas Spaces: é ReactFlow 2D puro (@xyflow/react), sem nenhum import de three/@react-three/fiber — e o próprio ecossistema do canvas JÁ usa backdrop-blur em produção (LeftPanel, LanesOverlay, badge do ConstellationMatrix com backdrop-blur-sm +
 >   ⤷ /home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx:5-13 (imports só @xyflow/react) e :323 (<ReactFlow>); backdrop-blur em src/components/canvas/LeftPanel/ind
 > • Escala real é minúscula para animação CSS: o projeto Gabriel AI tem ~13 nós/16 edges (dado do caller; a memória do projeto registra 8 projetos reais no canvas). O repo já roda animação CSS infinita em SVG path por edge (pipeline-edge-dash) sem regra de perf contrária — nessa esca
@@ -13451,15 +13451,676 @@ Diagnóstico do "Sintetizando eterno" primeiro (Lei 1 — DB + worker):
 
 You've hit your session limit · resets 8:40pm (America/Sao_Paulo)
 
----
+## 👤 User *(23:02:20)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
+Continue from where you left off.
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-09 - eb61c3bb-6060-4462-9486-085ad5b66177]]
-> * **Próxima Sessão**: [[2026-07-10 - agent-a0bd309a8ab35ee17]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(23:02:20)*
+
+No response requested.
+
+## 👤 User *(23:40:41)*
+
+continue
+
+## 🤖 Claude *(23:42:02)*
+
+
+## 🤖 Claude *(23:42:07)*
+
+Diagnóstico fechado — três achados materiais:
+
+1. **O job está vivo e rodando** (processo `qwen_tts` PID 1870224), mas foi disparado **antes do deploy do modo expressivo** (`expressive=null`): está no 0.6B com as tags **cruas no texto** — o áudio sairia com "{happy}" e "<#0.5#>" falados. Lixo garantido de ~35 min de CPU.
+2. **Seu roteiro foi TRUNCADO em 5000 chars exatos** (`script_len=5000`) — o limite do textarea cortou o final.
+3. **Bug real do reaper**: o watchdog de 45 min devolveu o job para a fila enquanto ele ainda rodava (updated_at 21:45 = re-claim) — jobs longos precisam de heartbeat.
+
+Corrijo tudo: mato o job-lixo, aplico heartbeat + strip de tags no modo normal, subo o limite para 20k:
+
+## 🤖 Claude *(23:42:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "kill 1870224 2>/dev/null && echo \"processo morto\"; sleep 3; set -a && source .env && set +a && TOKEN=$(cat ~/.supabase/access-token) && curl -s -X POST \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d \"{\\\"query\\\":\\\"SELECT state FROM video_renders WHERE id='82cf39aa-8e3a-48c8-8f96-f1d67717c5c2';\\\"}\"",
+  "description": "Kill the garbage job (raw tags on 0.6B) and check render state",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"state":"failed"}]
+> ```
+
+## 🤖 Claude *(23:42:29)*
+
+
+## 🤖 Claude *(23:42:29)*
+
+
+## 🤖 Claude *(23:42:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "/** Process one claimed row. Never throws \u2014 failure finalizes 'failed' (refund 0: nothing was charged). */\nasync function processRender(row: { id: string; user_id: string; composition: unknown }) {\n  try {",
+  "new_string": "/** Process one claimed row. Never throws \u2014 failure finalizes 'failed' (refund 0: nothing was charged). */\nasync function processRender(row: { id: string; user_id: string; composition: unknown }) {\n  // Heartbeat: long renders (5000-char scripts \u2248 35-75 min) outlive the 45-min reaper window \u2014\n  // touch updated_at every 4 min so a LIVE job is never reaped back to 'queued' (bug witnessed\n  // 2026-07-10: render 82cf39aa was re-claimed mid-render). Dead workers stop heartbeating \u21d2\n  // the reaper still recovers genuinely orphaned rows.\n  const heartbeat = setInterval(() => {\n    supabase.from('video_renders')\n      .update({ updated_at: new Date().toISOString() })\n      .eq('id', row.id).eq('state', 'running')\n      .then(() => {}, () => {});\n  }, 4 * 60_000);\n  try {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"logHealth('error', 'voice_render_failed'\" scripts/voice-bridge.ts && sed -n '/logHealth..error., .voice_render_failed/,/^}/p' scripts/voice-bridge.ts | head -6",
+  "description": "Find processRender catch/end to close the heartbeat interval"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 422:    await logHealth('error', 'voice_render_failed', { render_id: row.id, error: msg.slice(0, 300) });
+>     await logHealth('error', 'voice_render_failed', { render_id: row.id, error: msg.slice(0, 300) });
+>   }
+> }
+> ```
+
+## 🤖 Claude *(23:42:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    await logHealth('error', 'voice_render_failed', { render_id: row.id, error: msg.slice(0, 300) });\n  }\n}",
+  "new_string": "    await logHealth('error', 'voice_render_failed', { render_id: row.id, error: msg.slice(0, 300) });\n  } finally {\n    clearInterval(heartbeat);\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:42:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts",
+  "old_string": "    const modelDir = expressive ? MODEL_DIR_17B : MODEL_DIR;\n    const rtf = expressive ? 14 : 6.4;\n    const finalScript = expressive ? normalizeExpressiveScript(script) : script;",
+  "new_string": "    const modelDir = expressive ? MODEL_DIR_17B : MODEL_DIR;\n    const rtf = expressive ? 14 : 6.4;\n    // Expressive \u2192 full markup translation for the 1.7B compose engine. Normal (0.6B) \u2192 the same\n    // normalization THEN strip every remaining [tag]: the small model has no emotion recipe, and a\n    // raw \"{happy}\" / \"<#0.5#>\" must never be SPOKEN (witnessed 2026-07-10 on render 82cf39aa).\n    const finalScript = expressive\n      ? normalizeExpressiveScript(script)\n      : normalizeExpressiveScript(script).replace(/\\[[^\\]]*\\]/g, ' ').replace(/[ \\t]{2,}/g, ' ').trim();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/voice-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:43:03)*
+
+
+## 🤖 Claude *(23:43:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"body\\?|model|provider|prompt|topic|scenes|OPENROUTER|google|decrypted\" supabase/functions/generate-video-script/index.ts | head -18",
+  "description": "Check generate-video-script edge contract for reuse"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 93:    const { prompt, format, duration, provider, model } = await req.json();
+> 94:    if (!prompt) {
+> 102:    const { data: userKeys } = await adminClient.from("decrypted_user_api_keys").select("*").eq("user_id", userId).maybeSingle();
+> 105:    const selectedProvider = provider || userKeys?.pref_video_provider || "gemini";
+> 106:    const selectedModel = model || "veo-2.0-generate-001";
+> 114:      const googleKey = userKeys?.google_api_key || Deno.env.get("GOOGLE_API_KEY");
+> 115:      if (!googleKey) {
+> 121:      activeKey = googleKey;
+> 122:      aiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${googleKey}`;
+> 177:    // --- Build request per provider ---
+> 190:        contents: [{ parts: [{ text: systemPrompt + "\n" + prompt }] }],
+> 202:        model: payloadModel,
+> 205:          { role: "user", content: prompt },
+> 212:      const geminiKey = userKeys?.google_api_key;
+> ```
+
+## 🤖 Claude *(23:43:24)*
+
+
+## 🤖 Claude *(23:43:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"generate-video-script\" src/ --include=\"*.ts\" --include=\"*.tsx\" | head -4; grep -nE \"SSE|stream|invoke|fetch\" src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx | head -8",
+  "description": "Find how the client calls generate-video-script (SSE parsing)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/pages/VideoEditorPage.tsx:69: *  A video model sent to generate-video-script hits a text endpoint → 400. */
+> src/pages/VideoEditorPage.tsx:381:        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-video-script`,
+> src/pages/ContentLibraryPage.tsx:141: *  Sending a video model (Veo/Seedance) to generate-video-script hits a text
+> src/pages/ContentLibraryPage.tsx:525:      await streamFromEdge("generate-video-script", {
+> 33:// generate-video-script streams SSE (OpenRouter) or passes a provider JSON (Gemini). Accumulate the
+> 34:// delta content when it looks like SSE; otherwise fall back to common completion shapes / raw text.
+> 96:  // v1 — free-form SCRIPT via generate-video-script (SSE).
+> 102:      const { data, error } = await supabase.functions.invoke("generate-video-script", {
+> 129:      const { data, error } = await supabase.functions.invoke("generate-script-package", {
+> ```
+
+## 🤖 Claude *(23:43:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "offset": 30,
+  "limit": 95
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	  { id: "longo", label: "Longo" },
+> 31	];
+> 32	
+> 33	// generate-video-script streams SSE (OpenRouter) or passes a provider JSON (Gemini). Accumulate the
+> 34	// delta content when it looks like SSE; otherwise fall back to common completion shapes / raw text.
+> 35	function parseScriptResponse(data: unknown): string {
+> 36	  if (typeof data !== "string") {
+> 37	    const obj = data as {
+> 38	      script?: string;
+> 39	      choices?: { message?: { content?: string } }[];
+> 40	      candidates?: { content?: { parts?: { text?: string }[] } }[];
+> 41	    } | null;
+> 42	    return (
+> 43	      obj?.script ??
+> 44	      obj?.choices?.[0]?.message?.content ??
+> 45	      obj?.candidates?.[0]?.content?.parts?.[0]?.text ??
+> 46	      (data ? JSON.stringify(data) : "")
+> 47	    );
+> 48	  }
+> 49	  const raw = data;
+> 50	  if (raw.includes("data:")) {
+> 51	    let out = "";
+> 52	    for (const line of raw.split("\n")) {
+> 53	      const t = line.trim();
+> 54	      if (!t.startsWith("data:")) continue;
+> 55	      const payload = t.slice(5).trim();
+> 56	      if (!payload || payload === "[DONE]") continue;
+> 57	      try {
+> 58	        const j = JSON.parse(payload) as {
+> 59	          choices?: { delta?: { content?: string }; message?: { content?: string } }[];
+> 60	        };
+> 61	        const delta = j?.choices?.[0]?.delta?.content ?? j?.choices?.[0]?.message?.content ?? "";
+> 62	        if (delta) out += delta;
+> 63	      } catch {
+> 64	        /* non-JSON data line — ignore */
+> 65	      }
+> 66	    }
+> 67	    if (out.trim()) return out;
+> 68	  }
+> 69	  return raw;
+> 70	}
+> 71	
+> 72	export function ScriptGeneratorInspector({ node }: Props) {
+> 73	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 74	  const addNode = useCanvasStore((s) => s.addNode);
+> 75	  const nodes = useCanvasStore((s) => s.nodes);
+> 76	  const [busy, setBusy] = useState<null | "script" | "storyboard">(null);
+> 77	  const [copied, setCopied] = useState<string | null>(null);
+> 78	
+> 79	  const d = node.data;
+> 80	  const canGenerate = Boolean(d.topic.trim());
+> 81	
+> 82	  const set = (patch: Partial<ScriptGeneratorData>) =>
+> 83	    updateNodeData(node.id, { ...patch, status: "idle", error: undefined });
+> 84	
+> 85	  const copy = async (text: string | undefined, key: string) => {
+> 86	    if (!text) return;
+> 87	    try {
+> 88	      await navigator.clipboard.writeText(text);
+> 89	      setCopied(key);
+> 90	      setTimeout(() => setCopied(null), 1500);
+> 91	    } catch {
+> 92	      toast.error("Não foi possível copiar.");
+> 93	    }
+> 94	  };
+> 95	
+> 96	  // v1 — free-form SCRIPT via generate-video-script (SSE).
+> 97	  const handleGenerateScript = async () => {
+> 98	    if (!canGenerate) return toast.error("Descreva o tema do roteiro.");
+> 99	    setBusy("script");
+> 100	    updateNodeData(node.id, { status: "running", error: undefined });
+> 101	    try {
+> 102	      const { data, error } = await supabase.functions.invoke("generate-video-script", {
+> 103	        body: { prompt: d.topic, format: d.format, duration: d.duration },
+> 104	      });
+> 105	      if (error) throw new Error(await edgeErrorMessage(error, "Falha ao gerar o roteiro."));
+> 106	      const script = parseScriptResponse(data).trim();
+> 107	      if (!script) throw new Error("O provedor não retornou roteiro. Verifique sua chave de IA em Configurações → IA.");
+> 108	      updateNodeData(node.id, {
+> 109	        status: "success",
+> 110	        output: { ...d.output, script, generatedAt: new Date().toISOString() },
+> 111	        error: undefined,
+> 112	      });
+> 113	      toast.success("Roteiro gerado ✓");
+> 114	    } catch (e) {
+> 115	      const msg = e instanceof Error ? e.message : String(e);
+> 116	      updateNodeData(node.id, { status: "failed", error: msg });
+> 117	      toast.error(msg);
+> 118	    } finally {
+> 119	      setBusy(null);
+> 120	    }
+> 121	  };
+> 122	
+> 123	  // v2 — STRUCTURED storyboard via generate-script-package (clean JSON {scenes,ttsPrompt}).
+> 124	  const handleGenerateStoryboard = async () => {
+> ```
+
+## 🤖 Claude *(23:43:51)*
+
+
+## 🤖 Claude *(23:43:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"selectedProvider ===|case \\\"\" supabase/functions/generate-video-script/index.ts | head -8",
+  "description": "List providers supported by generate-video-script"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 113:    if (selectedProvider === "gemini") {
+> 124:    } else if (selectedProvider === "openrouter") {
+> ```
+
+## 🤖 Claude *(23:44:10)*
+
+
+## 🤖 Claude *(23:44:10)*
+
+
+## 🤖 Claude *(23:44:16)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/script-response.ts",
+  "content": "// Shared parser for generate-video-script responses (SSE from OpenRouter / provider JSON from\n// Gemini). Extracted from ScriptGeneratorInspector so the VoiceClone AI-script flow reuses it.\nexport function parseScriptResponse(data: unknown): string {\n  if (typeof data !== \"string\") {\n    const obj = data as {\n      script?: string;\n      choices?: { message?: { content?: string } }[];\n      candidates?: { content?: { parts?: { text?: string }[] } }[];\n    } | null;\n    return (\n      obj?.script ??\n      obj?.choices?.[0]?.message?.content ??\n      obj?.candidates?.[0]?.content?.parts?.[0]?.text ??\n      (data ? JSON.stringify(data) : \"\")\n    );\n  }\n  const raw = data;\n  if (raw.includes(\"data:\")) {\n    let out = \"\";\n    for (const line of raw.split(\"\\n\")) {\n      const t = line.trim();\n      if (!t.startsWith(\"data:\")) continue;\n      const payload = t.slice(5).trim();\n      if (!payload || payload === \"[DONE]\") continue;\n      try {\n        const j = JSON.parse(payload) as {\n          choices?: { delta?: { content?: string }; message?: { content?: string } }[];\n        };\n        const delta = j?.choices?.[0]?.delta?.content ?? j?.choices?.[0]?.message?.content ?? \"\";\n        if (delta) out += delta;\n      } catch {\n        /* non-JSON data line \u2014 ignore */\n      }\n    }\n    if (out.trim()) return out;\n  }\n  return raw;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/script-response.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/expressive-prompt.ts",
+  "content": "// FR-SPACES-060 \u2014 prompt template for AI-written EXPRESSIVE voice scripts. The tag checklist\n// mirrors the voice-bridge normalizer (EMOTION_MAP/PARALINGUISTIC_MAP) \u2014 keep them in sync.\nexport const EXPRESSIVE_TAGS_CHECKLIST = `EMO\u00c7\u00d5ES (abra {tag} e feche {/tag}; fechar volta ao neutro):\n{happy} {joy} {sad} {gloomy} {angry} {annoyed} {stern} {calm} {excited} {eager} {proud} {dramatic} {news} {neutral}\nAliases aceitos: {surprised}\u2192excited \u00b7 {fearful}/{intrigue}/{wonder}/{tense}\u2192dramatic \u00b7 {curious}\u2192eager \u00b7 {fluent}\u2192news \u00b7 {serious}\u2192stern \u00b7 {melancholy}\u2192gloomy\n\nPAUSAS: <#0.25#> <#0.5#> <#0.75#> <#1.0#> <#1.5#> <#2.0#> (segundos exatos)\n\nPARALINGU\u00cdSTICOS (entre frases): (gasps) (whisper) (slowly) [sigh] [laugh] [haha] [hmm] [phew] [huff] [ahh]`;\n\nexport function buildExpressiveScriptPrompt(topic: string): string {\n  return `Voc\u00ea \u00e9 um roteirista s\u00eanior de narra\u00e7\u00e3o para v\u00eddeos em portugu\u00eas do Brasil.\nEscreva um roteiro de narra\u00e7\u00e3o ENVOLVENTE sobre o tema abaixo, marcado com tags de emo\u00e7\u00e3o\npara um motor de TTS expressivo. Regras OBRIGAT\u00d3RIAS:\n\n1. Use APENAS as tags deste checklist (qualquer outra ser\u00e1 descartada):\n${EXPRESSIVE_TAGS_CHECKLIST}\n\n2. Estrutura: gancho forte nos primeiros 3 segundos \u2192 desenvolvimento em blocos curtos \u2192\n   virada/revela\u00e7\u00e3o \u2192 fecho com pergunta ou frase de impacto.\n3. Frases CURTAS (fala, n\u00e3o texto). Varie o ritmo com pausas <#\u2026#> entre ideias.\n4. Troque de emo\u00e7\u00e3o a cada mudan\u00e7a de tom da hist\u00f3ria (2 a 5 trocas por bloco).\n5. M\u00e1ximo ~18000 caracteres. Responda S\u00d3 com o roteiro marcado \u2014 sem t\u00edtulos, sem explica\u00e7\u00f5es.\n\nTEMA: ${topic}`;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/expressive-prompt.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "// generate-video-script streams SSE (OpenRouter) or passes a provider JSON (Gemini). Accumulate the\n// delta content when it looks like SSE; otherwise fall back to common completion shapes / raw text.\nfunction parseScriptResponse(data: unknown): string {\n  if (typeof data !== \"string\") {\n    const obj = data as {\n      script?: string;\n      choices?: { message?: { content?: string } }[];\n      candidates?: { content?: { parts?: { text?: string }[] } }[];\n    } | null;\n    return (\n      obj?.script ??\n      obj?.choices?.[0]?.message?.content ??\n      obj?.candidates?.[0]?.content?.parts?.[0]?.text ??\n      (data ? JSON.stringify(data) : \"\")\n    );\n  }\n  const raw = data;\n  if (raw.includes(\"data:\")) {\n    let out = \"\";\n    for (const line of raw.split(\"\\n\")) {\n      const t = line.trim();\n      if (!t.startsWith(\"data:\")) continue;\n      const payload = t.slice(5).trim();\n      if (!payload || payload === \"[DONE]\") continue;\n      try {\n        const j = JSON.parse(payload) as {\n          choices?: { delta?: { content?: string }; message?: { content?: string } }[];\n        };\n        const delta = j?.choices?.[0]?.delta?.content ?? j?.choices?.[0]?.message?.content ?? \"\";\n        if (delta) out += delta;\n      } catch {\n        /* non-JSON data line \u2014 ignore */\n      }\n    }\n    if (out.trim()) return out;\n  }\n  return raw;\n}",
+  "new_string": "// generate-video-script response parsing moved to the shared lib (reused by VoiceCloneInspector).\nimport { parseScriptResponse } from \"@/lib/script-response\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:51)*
+
+
+## 🤖 Claude *(23:44:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '1,20p' src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "description": "Check import placement in ScriptGeneratorInspector"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> import { useState } from "react";
+> import { ScrollText, Loader2, Sparkles, Clapperboard, Copy, Check, Images } from "lucide-react";
+> import { toast } from "sonner";
+> import { Button } from "@/components/ui/button";
+> import { Textarea } from "@/components/ui/textarea";
+> import { cn } from "@/lib/utils";
+> import { useCanvasStore } from "@/store/useCanvasStore";
+> import { supabase } from "@/integrations/supabase/client";
+> import { edgeErrorMessage } from "@/lib/edge";
+> import { type ScriptGeneratorData, makeDefaultGenerateImage } from "@/types/canvas";
+> import { Section, InspectorHeader } from "../shared";
+> 
+> interface Props {
+>   node: { id: string; data: ScriptGeneratorData };
+>   projectId: string;
+> }
+> 
+> type Scene = { start: number; end: number; narration: string; imagePrompt: string };
+> 
+> const FORMATS: { id: ScriptGeneratorData["format"]; label: string }[] = [
+> ```
+
+## 🤖 Claude *(23:45:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "import { edgeErrorMessage } from \"@/lib/edge\";\nimport { type ScriptGeneratorData, makeDefaultGenerateImage } from \"@/types/canvas\";\nimport { Section, InspectorHeader } from \"../shared\";",
+  "new_string": "import { edgeErrorMessage } from \"@/lib/edge\";\nimport { parseScriptResponse } from \"@/lib/script-response\";\nimport { type ScriptGeneratorData, makeDefaultGenerateImage } from \"@/types/canvas\";\nimport { Section, InspectorHeader } from \"../shared\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx",
+  "old_string": "// generate-video-script response parsing moved to the shared lib (reused by VoiceCloneInspector).\nimport { parseScriptResponse } from \"@/lib/script-response\";",
+  "new_string": "// generate-video-script response parsing lives in @/lib/script-response (shared with VoiceClone)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:12)*
+
+
+## 🤖 Claude *(23:45:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "const VOICE_COST = 36;\nconst MAX_AUDIO_MB = 25;",
+  "new_string": "const VOICE_COST = 36;\nconst MAX_AUDIO_MB = 25;\n// 5000 truncated real scripts once the expressive tags landed (witnessed: a 5000-char cut mid-word).\nconst MAX_SCRIPT_CHARS = 20000;\n// AI script models \u2014 populated by the perennial rule (\"s\u00f3 carrega op\u00e7\u00f5es dispon\u00edveis\"): each entry\n// only renders when the user's BYOK key for its provider exists. generate-video-script accepts\n// provider gemini|openrouter.\nconst SCRIPT_MODELS: { provider: \"openrouter\" | \"google\"; edgeProvider: string; model: string; label: string }[] = [\n  { provider: \"openrouter\", edgeProvider: \"openrouter\", model: \"nvidia/nemotron-3-ultra-550b-a55b:free\", label: \"Nemotron 550B \u00b7 free\" },\n  { provider: \"openrouter\", edgeProvider: \"openrouter\", model: \"google/gemini-2.5-pro\", label: \"Gemini 2.5 Pro\" },\n  { provider: \"openrouter\", edgeProvider: \"openrouter\", model: \"anthropic/claude-sonnet-4.5\", label: \"Claude Sonnet 4.5\" },\n  { provider: \"google\", edgeProvider: \"gemini\", model: \"gemini-2.5-flash\", label: \"Gemini 2.5 Flash \u00b7 direto\" },\n];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "  const fileRef = useRef<HTMLInputElement | null>(null);\n  const clipRef = useRef<HTMLInputElement | null>(null);\n  const [uploading, setUploading] = useState(false);\n  const [uploadingClip, setUploadingClip] = useState(false);",
+  "new_string": "  const fileRef = useRef<HTMLInputElement | null>(null);\n  const clipRef = useRef<HTMLInputElement | null>(null);\n  const [uploading, setUploading] = useState(false);\n  const [uploadingClip, setUploadingClip] = useState(false);\n  const [scriptTopic, setScriptTopic] = useState(\"\");\n  const [scriptModel, setScriptModel] = useState(0);\n  const [writingScript, setWritingScript] = useState(false);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "  const { configured } = useConfiguredProviders();\n  // Regra perene: s\u00f3 as op\u00e7\u00f5es dispon\u00edveis para ESTE usu\u00e1rio (keyless sempre; BYOK por chave).\n  const providers = ALL_PROVIDERS.filter(\n    (p) => p.keyless || configured[p.id as \"elevenlabs\" | \"cartesia\"],\n  );",
+  "new_string": "  const { configured } = useConfiguredProviders();\n  // Regra perene: s\u00f3 as op\u00e7\u00f5es dispon\u00edveis para ESTE usu\u00e1rio (keyless sempre; BYOK por chave).\n  const providers = ALL_PROVIDERS.filter(\n    (p) => p.keyless || configured[p.id as \"elevenlabs\" | \"cartesia\"],\n  );\n  const scriptModels = SCRIPT_MODELS.filter((m) => configured[m.provider]);\n\n  // FR-SPACES-060 \u2014 AI-written expressive script straight into the node's roteiro.\n  const handleWriteScript = async () => {\n    const model = scriptModels[Math.min(scriptModel, scriptModels.length - 1)];\n    if (!model || !scriptTopic.trim()) return;\n    setWritingScript(true);\n    try {\n      const { data, error } = await supabase.functions.invoke(\"generate-video-script\", {\n        body: {\n          prompt: buildExpressiveScriptPrompt(scriptTopic.trim()),\n          provider: model.edgeProvider,\n          model: model.model,\n        },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao gerar o roteiro.\"));\n      const script = parseScriptResponse(data).trim();\n      if (!script) throw new Error(\"O modelo n\u00e3o retornou roteiro. Verifique a chave em Configura\u00e7\u00f5es \u2192 IA.\");\n      updateNodeData(node.id, { prompt: script.slice(0, MAX_SCRIPT_CHARS), expressive: true });\n      toast.success(\"Roteiro expressivo gerado \u2014 revise e sintetize.\");\n    } catch (e) {\n      toast.error(e instanceof Error ? e.message : String(e));\n    } finally {\n      setWritingScript(false);\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "        <Section title=\"Roteiro\">\n          <Textarea\n            value={d.prompt}\n            onChange={(e) => updateNodeData(node.id, { prompt: e.target.value.slice(0, 5000) })}\n            placeholder={d.language === \"en\" ? \"Type the script in English\u2026\" : \"Escreva o roteiro em portugu\u00eas\u2026\"}\n            rows={4}\n            className=\"min-h-24 resize-none text-sm\"\n          />\n          <div className=\"mt-1 text-right font-mono text-[10px] text-muted-foreground\">\n            {(d.prompt ?? \"\").length} / 5000\n          </div>",
+  "new_string": "        <Section title=\"Roteiro\">\n          {scriptModels.length > 0 && (\n            <div className=\"mb-2 space-y-1.5 rounded-md border border-border bg-muted/30 p-2\">\n              <p className=\"text-[10px] font-medium text-muted-foreground\">Gerar roteiro com IA (tags expressivas inclu\u00eddas)</p>\n              <input\n                type=\"text\"\n                value={scriptTopic}\n                onChange={(e) => setScriptTopic(e.target.value.slice(0, 300))}\n                placeholder=\"Tema \u2014 ex.: a revolu\u00e7\u00e3o dos rob\u00f4s humanoides em 2026\"\n                className=\"h-8 w-full rounded-md border border-border bg-background px-2 text-xs outline-none focus:border-accent\"\n              />\n              <div className=\"flex gap-1.5\">\n                <select\n                  value={scriptModel}\n                  onChange={(e) => setScriptModel(Number(e.target.value))}\n                  className=\"h-8 min-w-0 flex-1 rounded-md border border-border bg-background px-1.5 text-[11px] outline-none focus:border-accent\"\n                >\n                  {scriptModels.map((m, i) => (\n                    <option key={m.model} value={i}>{m.label}</option>\n                  ))}\n                </select>\n                <Button\n                  type=\"button\"\n                  variant=\"outline\"\n                  size=\"sm\"\n                  className=\"h-8 shrink-0 gap-1.5\"\n                  disabled={!scriptTopic.trim() || writingScript || busy}\n                  onClick={handleWriteScript}\n                >\n                  {writingScript ? <Loader2 className=\"h-3 w-3 animate-spin\" /> : <Sparkles className=\"h-3 w-3\" />}\n                  {writingScript ? \"Escrevendo\u2026\" : \"Gerar\"}\n                </Button>\n              </div>\n            </div>\n          )}\n          <Textarea\n            value={d.prompt}\n            onChange={(e) => updateNodeData(node.id, { prompt: e.target.value.slice(0, MAX_SCRIPT_CHARS) })}\n            placeholder={d.language === \"en\" ? \"Type the script in English\u2026\" : \"Escreva o roteiro em portugu\u00eas\u2026\"}\n            rows={4}\n            className=\"min-h-24 resize-none text-sm\"\n          />\n          <div className=\"mt-1 text-right font-mono text-[10px] text-muted-foreground\">\n            {(d.prompt ?? \"\").length} / {MAX_SCRIPT_CHARS}\n          </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx",
+  "old_string": "import { useConfiguredProviders } from \"@/hooks/useConfiguredProviders\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";",
+  "new_string": "import { useConfiguredProviders } from \"@/hooks/useConfiguredProviders\";\nimport { useAvatarConsents } from \"@/hooks/useAvatarConsent\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { parseScriptResponse } from \"@/lib/script-response\";\nimport { buildExpressiveScriptPrompt } from \"@/lib/expressive-prompt\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:46:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -3; echo \"tsc=$?\"; bun run build 2>&1 | tail -1 && systemctl --user restart voice-bridge.service && systemctl --user is-active voice-bridge.service",
+  "description": "Type-check, build, restart worker with all fixes",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc=0
+> ✓ built in 32.73s
+> active
+> ```
+
+## 🤖 Claude *(23:46:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add scripts/voice-bridge.ts src/lib/script-response.ts src/lib/expressive-prompt.ts src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx src/components/canvas/RightPanel/inspectors/ScriptGeneratorInspector.tsx && git commit -q -m \"fix+feat(voice): heartbeat anti-reaper + strip de tags no 0.6B + roteiro 20k + IA escreve o roteiro expressivo\n\nBugs (witnessed no render 82cf39aa): (1) job de 5000 chars vivia alem dos\n45min do reaper e era re-claimado no meio \u2014 heartbeat de 4min no worker\nmantem updated_at fresco (worker morto para de bater = reaper ainda\nrecupera orfaos); (2) sintese NAO-expressiva falava as tags cruas \u2014 o 0.6B\nagora normaliza E remove todo [tag] (texto limpo sempre); (3) limite do\nroteiro 5000\u219220000 (o roteirao real foi truncado no meio).\nFeature FR-SPACES-060b: 'Gerar roteiro com IA' no no \u2014 tema + select de\nmodelo populado pela regra perene (Nemotron free/Gemini Pro/Claude via\nopenrouter \u00b7 Gemini Flash direto, so com a chave configurada), prompt\ncom o checklist completo de tags, resultado ja ligado no modo expressivo.\nparseScriptResponse extraido para lib compartilhada (DRY).\" && git push origin main 2>&1 | tail -1",
+  "description": "Commit heartbeat, tag-strip, 20k limit, and AI script feature"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:46PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:46PM[0m [32mINF[0m scan completed in 11.6ms
+> [90m8:46PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+>    7c20895..aa4041f  main -> main
+> ```
+
+## 🤖 Claude *(23:47:32)*
+
+
+## 🤖 Claude *(23:47:32)*
+
+**Tudo consertado e shipado** (commit `aa4041f`, worker reiniciado, frontend no ar — hard-refresh).
+
+## O que tinha acontecido com o "Sintetizando eterno"
+
+Três coisas ao mesmo tempo (diagnóstico material): (1) sua síntese foi disparada **antes** do modo expressivo existir → foi para o motor 0.6B **com as tags cruas no texto** — o áudio ia sair falando "{happy}" literalmente; (2) seu roteiro foi **truncado em 5000 chars exatos** pelo limite antigo; (3) descobri um bug real: o watchdog de 45 min **devolvia jobs longos vivos para a fila** no meio do render. Matei o job-lixo (o nó vai mostrar "failed" — ignore) e corrigi as três causas: **heartbeat** no worker (job vivo nunca mais é reapeado), **strip automático de tags** no modo normal (nunca mais fala tag), e **limite de 20.000 chars** no Roteiro.
+
+## Novidade: a IA escreve o roteiro expressivo pra você
+
+No Roteiro do nó agora tem **"Gerar roteiro com IA"**: campo de tema + select de modelo (regra perene — só aparecem os que suas chaves permitem: **Nemotron 550B free**, Gemini 2.5 Pro e Claude Sonnet 4.5 via OpenRouter, Gemini Flash direto). O prompt embutido já ensina o checklist inteiro de tags e o resultado cai no Roteiro com o Modo expressivo ligado.
+
+## Para gerar AGORA (passo a passo)
+
+1. **Re-clone a voz** (1 clique — os perfis novos guardam a referência composta que o 1.7B precisa).
+2. Ligue **Modo expressivo** e cole o roteiro-demo abaixo (exercita TODAS as variáveis, ~40 s de áudio ≈ 10 min de fila):
+
+```
+{dramatic}Este é um teste completo do motor de voz da Constelação.{/dramatic} <#0.75#>
+{happy}Quando a notícia é boa, a voz sorri junto!{/happy} [haha] <#0.5#>
+{sad}Quando é triste... ela sente o peso.{/sad} [sigh] <#0.75#>
+{surprised}E quando algo inacreditável acontece?{/surprised} (gasps) <#0.5#>
+{fearful}A tensão toma conta de cada palavra.{/fearful} <#1.0#>
+{stern}Mas há momentos que exigem firmeza absoluta.{/stern} <#0.5#>
+{proud}E outros em que o orgulho fala mais alto.{/proud} <#0.75#>
+{gloomy}Alguns finais são melancólicos...{/gloomy} [hmm] <#0.5#>
+{eager}Outros despertam pura curiosidade!{/eager} <#0.5#>
+(whisper) E alguns segredos pedem uma voz calma. <#1.0#>
+{news}No fim, a entrega fluente de âncora amarra tudo com clareza.{/news} <#0.75#>
+{calm}Teste concluído.{/calm} [phew] {happy}A Constelação tem voz própria.{/happy}
+```
+
+3. Depois cole o seu roteirão dos robôs **inteiro** (agora cabe — 20k). Dica: no seu texto, troque `{fluent}` só onde quiser tom de âncora; nos trechos de mistério, `{dramatic}` rende mais que `{fearful}`.
+
+## Checklist completo (o prompt que a IA usa — cole em qualquer LLM se quiser gerar fora)
+
+```
+EMOÇÕES (abra {tag} e feche {/tag}; fechar volta ao neutro):
+{happy} {joy} {sad} {gloomy} {angry} {annoyed} {stern} {calm} {excited} {eager} {proud} {dramatic} {news} {neutral}
+Aliases: {surprised}→excited · {fearful}/{intrigue}/{wonder}/{tense}→dramatic · {curious}→eager · {fluent}→news · {serious}→stern · {melancholy}→gloomy
+
+PAUSAS: <#0.25#> <#0.5#> <#0.75#> <#1.0#> <#1.5#> <#2.0#> (segundos exatos)
+
+PARALINGUÍSTICOS: (gasps) (whisper) (slowly) [sigh] [laugh] [haha] [hmm] [phew] [huff] [ahh]
+
+REGRAS: frases curtas de fala · pausa entre ideias · 2-5 trocas de emoção por bloco · qualquer tag fora da lista é descartada
+```
