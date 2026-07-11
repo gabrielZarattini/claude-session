@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2085
-> * **Sessões do Claude**: 2038
+> * **Total de Sessões Registradas**: 2090
+> * **Sessões do Claude**: 2043
 > * **Sessões do Gemini**: 47
 
 ---
@@ -72,6 +72,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-10 - ca0f88ae-6d23-4190-a3ba-ae93b6be73da]]` - *2026-07-10*
 *   `[[2026-07-10 - be4e9ce7-75c6-44ca-b0c7-9b273660ed2b]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-af924405f4d8a3b58]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-ad8d40d7a485e7f9d]]` - *2026-07-10*
@@ -83,8 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-10 - agent-a8767bd1848b7fa27]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-a82422f837990decb]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-a7d42f03f2ff01241]]` - *2026-07-10*
-*   `[[2026-07-10 - agent-a78984f9ac57f313d]]` - *2026-07-10*
-*   *... e mais 2030 sessões nessa categoria.*
+*   *... e mais 2035 sessões nessa categoria.*
 
 ---
 
@@ -1740,6 +1740,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-10 - ca0f88ae-6d23-4190-a3ba-ae93b6be73da]]` (ClaudeSessions)
 *   `[[2026-07-10 - be4e9ce7-75c6-44ca-b0c7-9b273660ed2b]]` (ClaudeSessions)
 *   `[[2026-07-10 - agent-af924405f4d8a3b58]]` (ClaudeSessions)
 *   `[[2026-07-10 - agent-ad8d40d7a485e7f9d]]` (ClaudeSessions)
@@ -1762,6 +1763,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-10 - agent-a0bd309a8ab35ee17]]` (ClaudeSessions)
 *   `[[2026-07-10 - Preciso de ajuda pois não lembro...]]` (GeminiSessions)
 *   `[[2026-07-10 - Integrar clone de voz open-source no Spaces]]` (ClaudeSessions)
+*   `[[2026-07-10 - 7e58018d-72c8-4e1c-8e20-f33f06007f95]]` (ClaudeSessions)
+*   `[[2026-07-10 - 799b02ef-c5f9-4dae-a120-6689da622e2b]]` (ClaudeSessions)
+*   `[[2026-07-10 - 4a9f0e8e-edc1-4e2c-b86e-d0fc6c21d28c]]` (ClaudeSessions)
+*   `[[2026-07-10 - 45623866-803c-4cb0-9919-f1910e38a7d0]]` (ClaudeSessions)
 *   `[[2026-07-09 - eb61c3bb-6060-4462-9486-085ad5b66177]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-aff1bf92e5626e7ce]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-af63390a0b82ab836]]` (ClaudeSessions)
