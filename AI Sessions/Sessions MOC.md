@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2093
-> * **Sessões do Claude**: 2046
+> * **Total de Sessões Registradas**: 2096
+> * **Sessões do Claude**: 2049
 > * **Sessões do Gemini**: 47
 
 ---
@@ -72,7 +72,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-11 - agent-abd19fd36ed5914b1]]` - *2026-07-11*
+*   `[[2026-07-11 - agent-a1e92e85dd0cbda13]]` - *2026-07-11*
 *   `[[2026-07-11 - Integrar clone de voz open-source no Spaces]]` - *2026-07-11*
+*   `[[2026-07-11 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` - *2026-07-11*
 *   `[[2026-07-11 - 91d87f77-1778-48ba-b48b-b099f0846823]]` - *2026-07-11*
 *   `[[2026-07-11 - 7e58018d-72c8-4e1c-8e20-f33f06007f95]]` - *2026-07-11*
 *   `[[2026-07-10 - ca0f88ae-6d23-4190-a3ba-ae93b6be73da]]` - *2026-07-10*
@@ -81,10 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-10 - agent-ad8d40d7a485e7f9d]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-ab37cac393b278f05]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-ab090040082e0c8ed]]` - *2026-07-10*
-*   `[[2026-07-10 - agent-a99b0e9d9d7895b97]]` - *2026-07-10*
-*   `[[2026-07-10 - agent-a969fcd77ee224515]]` - *2026-07-10*
-*   `[[2026-07-10 - agent-a8dce56ff4370ebeb]]` - *2026-07-10*
-*   *... e mais 2038 sessões nessa categoria.*
+*   *... e mais 2041 sessões nessa categoria.*
 
 ---
 
@@ -1740,7 +1740,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-11 - agent-abd19fd36ed5914b1]]` (ClaudeSessions)
+*   `[[2026-07-11 - agent-a1e92e85dd0cbda13]]` (ClaudeSessions)
 *   `[[2026-07-11 - Integrar clone de voz open-source no Spaces]]` (ClaudeSessions)
+*   `[[2026-07-11 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` (ClaudeSessions)
 *   `[[2026-07-11 - 91d87f77-1778-48ba-b48b-b099f0846823]]` (ClaudeSessions)
 *   `[[2026-07-11 - 7e58018d-72c8-4e1c-8e20-f33f06007f95]]` (ClaudeSessions)
 *   `[[2026-07-10 - ca0f88ae-6d23-4190-a3ba-ae93b6be73da]]` (ClaudeSessions)

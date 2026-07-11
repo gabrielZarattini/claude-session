@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 74
-> * **Total de Sessões**: 2088
+> * **Total de Sessões**: 2091
 
 ---
 
@@ -97,7 +97,10 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-11 - agent-abd19fd36ed5914b1]]` (ClaudeSessions) - *2026-07-11*
+*   `[[2026-07-11 - agent-a1e92e85dd0cbda13]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-11 - Integrar clone de voz open-source no Spaces]]` (ClaudeSessions) - *2026-07-11*
+*   `[[2026-07-11 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-11 - 91d87f77-1778-48ba-b48b-b099f0846823]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-11 - 7e58018d-72c8-4e1c-8e20-f33f06007f95]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-10 - ca0f88ae-6d23-4190-a3ba-ae93b6be73da]]` (ClaudeSessions) - *2026-07-10*

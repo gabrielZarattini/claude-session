@@ -15312,5 +15312,6 @@ Nó `8c1f0e7b` embedded (768d) · malha **9094**. **Fase 4 — README:**
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-11 - 91d87f77-1778-48ba-b48b-b099f0846823]]
+> * **Sessão Anterior**: [[2026-07-11 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]
+> * **Próxima Sessão**: [[2026-07-11 - agent-a1e92e85dd0cbda13]]
 %% --- TIMELINE END --- %%
