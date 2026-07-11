@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 74
-> * **Total de Sessões**: 2091
+> * **Total de Processos**: 75
+> * **Total de Sessões**: 2092
 
 ---
 
@@ -68,6 +68,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[revenue-opportunity-pauta]]` - *Processo*
 *   `[[schema-drift-audit]]` - *Processo*
 *   `[[smart-delete-remote]]` - *Processo*
+*   `[[space-publish-variants]]` - *Processo*
 *   `[[spaces-canvas-persistence]]` - *Processo*
 *   `[[spaces-graph-execution]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
@@ -97,6 +98,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-11 - agent-af402a2055190b920]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-11 - agent-abd19fd36ed5914b1]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-11 - agent-a1e92e85dd0cbda13]]` (ClaudeSessions) - *2026-07-11*
 *   `[[2026-07-11 - Integrar clone de voz open-source no Spaces]]` (ClaudeSessions) - *2026-07-11*
