@@ -350,3 +350,15 @@ I'm trying to remember the exact command to access "claude" through the OpenRout
 > {"File":"/home/ubuntu/.bash_history","LineNumber":1961,"LineContent":"claude --resume"}
 > (...14 more results not shown)
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - handson]]
+%% --- TIMELINE END --- %%

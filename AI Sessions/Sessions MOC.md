@@ -14,9 +14,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2084
+> * **Total de Sessões Registradas**: 2085
 > * **Sessões do Claude**: 2038
-> * **Sessões do Gemini**: 46
+> * **Sessões do Gemini**: 47
 
 ---
 
@@ -84,7 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-10 - agent-a82422f837990decb]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-a7d42f03f2ff01241]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-a78984f9ac57f313d]]` - *2026-07-10*
-*   *... e mais 2029 sessões nessa categoria.*
+*   *... e mais 2030 sessões nessa categoria.*
 
 ---
 
@@ -1760,6 +1760,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-10 - agent-a1c51029caeb40b1d]]` (ClaudeSessions)
 *   `[[2026-07-10 - agent-a13ad63497c9404a2]]` (ClaudeSessions)
 *   `[[2026-07-10 - agent-a0bd309a8ab35ee17]]` (ClaudeSessions)
+*   `[[2026-07-10 - Preciso de ajuda pois não lembro...]]` (GeminiSessions)
 *   `[[2026-07-10 - Integrar clone de voz open-source no Spaces]]` (ClaudeSessions)
 *   `[[2026-07-09 - eb61c3bb-6060-4462-9486-085ad5b66177]]` (ClaudeSessions)
 *   `[[2026-07-09 - agent-aff1bf92e5626e7ce]]` (ClaudeSessions)
