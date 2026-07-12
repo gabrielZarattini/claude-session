@@ -1,4 +1,4 @@
-# Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036
+# [[2026-07-12 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036|Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]
 **Date:** 2026-07-11 | **Session ID:** `91d87f77-1778-48ba-b48b-b099f0846823`
 
 ---

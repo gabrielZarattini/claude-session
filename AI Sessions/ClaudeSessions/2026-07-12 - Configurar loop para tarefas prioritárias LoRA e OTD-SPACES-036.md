@@ -6896,3 +6896,1464 @@ Verificação rica — e confirma o aviso do Sovereign de que o repo andou. Acha
 > supabase/functions/publish-social/index.ts:388:      // audited (SELF_ONLY) — that's expected and NOT a failure.
 > supabase/functions/publish-social/index.ts:429:              containsSyntheticMedia: true, // AIGC disclosure is mandatory for AI-generated content (compliance).
 > ```
+
+## 🤖 Claude *(04:30:41)*
+
+
+## 🤖 Claude *(04:30:46)*
+
+Todos confirmados, com o repo tendo andado (como avisado): **P2b** o segmenter é **FR-CP-012** (não OTD-CP-011) — "1 longa→N shorts (Hormozi)", marcado *slice posterior*, e a SDD diz explicitamente **"N/A hoje: não há vídeo-fonte LONGO... Aplicável quando entrar INPUT de vídeo longo"** — ou seja, o step 1 dele DESTRAVA exatamente isso; **P4** video-bridge é o molde exato (claim atômico + reaper + finalize + dual-write); **P5** render-core faz HTML→PNG (screenshot) e aceita `images[]` pré-gerados (reusável p/ carrossel); **P8** disclosure hard-coded (is_aigc/containsSyntheticMedia + SELF_ONLY). Batch 3 final: captions do reshaper, engine CHECK do `video_renders`, e se `generate-carousel` já existe.
+
+## 🤖 Claude *(04:30:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550 POINTER 9: reshape-pillar native caption por canal (field_map/native_text) \u2550\u2550\u2550\"\ngrep -n \"native_text\\|field_map\\|caption\\|channel_profiles\\|transform_recipe\" supabase/functions/reshape-pillar/index.ts | head -12\necho \"\"\necho \"\u2550\u2550\u2550 video_renders engine CHECK (posso adicionar engine novo p/ segmenter?) \u2550\u2550\u2550\"\ngrep -rn \"engine.*CHECK\\|engine.*IN\\|video_renders_engine\" supabase/migrations/*.sql 2>/dev/null | tail -6\necho \"\"\necho \"\u2550\u2550\u2550 generate-carousel fn (FR-CP-009 PDF) j\u00e1 existe? \u2550\u2550\u2550\"\nls -la supabase/functions/generate-carousel/ 2>/dev/null && grep -n \"pdf\\|PDF\\|slides\\|1080\\|1350\" supabase/functions/generate-carousel/index.ts 2>/dev/null | head -6 || echo \"generate-carousel N\u00c3O existe como fn pr\u00f3pria\"\necho \"\"\necho \"\u2550\u2550\u2550 finalize_video_render assinatura (terminal authority) \u2550\u2550\u2550\"\ngrep -rn \"finalize_video_render\" supabase/migrations/*.sql | grep -i \"function\\|create or replace\" | head -3\necho \"\"\necho \"\u2550\u2550\u2550 video_renders colunas (composition, charged_mco, engine, state) \u2550\u2550\u2550\"\ngrep -rn \"composition\\|charged_mco\\|CREATE TABLE.*video_renders\\|state text\\|engine text\" supabase/migrations/20260624120000*.sql 2>/dev/null | head -12",
+  "description": "Verifica\u00e7\u00e3o batch 3: captions, engine CHECK, carousel fn, finalize"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ POINTER 9: reshape-pillar native caption por canal (field_map/native_text) ═══
+> 4:// channel_profiles.transform_recipe + pillar_atoms and emit ONE NATIVE variant per (channel, surface). ZERO
+> 5:// per-channel branch: the recipe is interpreted (field_map grammar §3 + reshape-verb dispatch §3.1). The 9:16
+> 26:// channel_profiles.channel (spec naming) → public.social_platform enum (publish/queue naming). Gap #3.
+> 59:// ── field_map grammar (§3): evaluate 'atoms.<token>' expressions joined by '+'. ──────────────────────────────
+> 82:// Assemble the deterministic native skeleton from transform_recipe.field_map. Voicing (LLM) refines it after.
+> 84:  const fm = (recipe?.field_map ?? {}) as Record<string, string>;
+> 122:  clampField("caption", lim("caption_max"));
+> 123:  clampField("body", lim("body_max") ?? lim("caption_max"));
+> 215:    const { data: profiles } = await admin.from("channel_profiles")
+> 216:      .select("channel, surface, priority, video, image, text, publish_path, voice_prompt_seed, transform_recipe")
+> 259:            caption: clip(atomArray(atoms.key_points).slice(0, 2).join(". "), 160),
+> 299:      const isVideo = VIDEO_DERIVE.has(String((p.transform_recipe as { derive_from?: string })?.derive_from ?? ""));
+> 
+> ═══ video_renders engine CHECK (posso adicionar engine novo p/ segmenter?) ═══
+> supabase/migrations/20260603260000_marketing_hub_aeo_audits.sql:17:  engine         text NOT NULL DEFAULT 'degraded' CHECK (engine IN ('chatgpt','perplexity','google_ai','gemini','degraded')),
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql:36:  engine        text        NOT NULL CHECK (engine IN ('faceless','hyperframes')),
+> supabase/migrations/20260709234000_voice_qwen3_local_engine.sql:11:--   1. video_renders.engine CHECK += 'qwen3-voice'  (host worker voice-bridge.ts claims these)
+> supabase/migrations/20260709234000_voice_qwen3_local_engine.sql:34:  ADD CONSTRAINT video_renders_engine_check
+> supabase/migrations/20260709234000_voice_qwen3_local_engine.sql:35:  CHECK (engine IN ('faceless','hyperframes','qwen3-voice'));
+> supabase/migrations/20260709234000_voice_qwen3_local_engine.sql:37:COMMENT ON CONSTRAINT video_renders_engine_check ON public.video_renders IS
+> 
+> ═══ generate-carousel fn (FR-CP-009 PDF) já existe? ═══
+> total 16
+> drwxrwxr-x  2 gcrUX gcrUX 4096 Jun 28 01:01 .
+> drwxrwxr-x 90 gcrUX gcrUX 4096 Jul 10 23:15 ..
+> -rw-rw-r--  1 gcrUX gcrUX 5196 Jun 28 01:01 index.ts
+> 1:// generate-carousel — atoms → multi-page PDF carousel (FR-CP-009)
+> 3:// BoK SSOT: docs/bok/post-engine/12-amendment-channel-format-intelligence.md FR-CP-009 (PDF carousel = LinkedIn's
+> 4:// highest-engagement format). Pure-JS pdf-lib (no WASM) → deterministic-ish multi-page PDF from pillar_atoms:
+> 5:// slide 1 hook, slides per key_point, optional stat, final CTA + pillar_url. Brand footer + page numbers.
+> 10:import { PDFDocument, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
+> 18:const W = 1080, H = 1350; // 4:5 carousel pages
+> 
+> ═══ finalize_video_render assinatura (terminal authority) ═══
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql:124:CREATE OR REPLACE FUNCTION public.finalize_video_render(
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql:169:REVOKE ALL ON FUNCTION public.finalize_video_render(uuid, text, text, jsonb, uuid, int) FROM PUBLIC, anon, authenticated;
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql:170:GRANT EXECUTE ON FUNCTION public.finalize_video_render(uuid, text, text, jsonb, uuid, int) TO service_role;
+> 
+> ═══ video_renders colunas (composition, charged_mco, engine, state) ═══
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:1:-- Migration: video-studio Fatia VS-2 — render composition spec + private asset bucket.
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:7:--   • video_renders.composition jsonb — the render spec the host worker (video-bridge.ts) consumes:
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:20:  ADD COLUMN IF NOT EXISTS composition jsonb;
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:22:COMMENT ON COLUMN public.video_renders.composition IS
+> ```
+
+## 🤖 Claude *(04:31:52)*
+
+
+## 🤖 Claude *(04:31:58)*
+
+Verificação MCORCH **completa** — todos os 10 pointers confirmados (com o repo tendo andado, como avisado):
+- **FR-CP-012** (não "OTD-CP-011") é o segmenter deferido, e a SDD literalmente diz *"N/A hoje: não há vídeo-fonte LONGO... aplicável quando entrar INPUT de vídeo longo"* → **o step 1 dele é o gatilho exato** que destrava FR-CP-012.
+- **OTD-CP-009 está FECHADA** (reframe de **imagem**); reframe de **vídeo** é gap não-coberto.
+- **youtube Pilar I = MONTAGEM** (concat N→1); **segmentação (1→N) é o inverso**, gap distinto.
+- `video_renders.engine` CHECK é extensível (molde `qwen3-voice`); `generate-carousel` existe mas é **PDF/LinkedIn** (IG carousel = image-children é gap).
+
+Falta o mapa do repo GabrielAI (subagente rodando) + verificar o contrato novo-pra-nós da IG CAROUSEL API. Deixa eu carregar WebFetch e verificar isso.
+
+## 🤖 Claude *(04:31:58)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:WebFetch,WebSearch",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'WebFetch'}, {'type': 'tool_reference', 'tool_name': 'WebSearch'}]
+> ```
+
+## 🤖 Claude *(04:32:08)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://developers.facebook.com/docs/instagram-platform/content-publishing",
+  "prompt": "Extract the exact API contract for publishing a CAROUSEL post to Instagram via the Graph API. Specifically: (1) how to create each child image/video container (endpoint, params like image_url/video_url/is_carousel_item/media_type); (2) how to create the parent carousel container (media_type=CAROUSEL, children param); (3) the media_publish step; (4) max number of children; (5) any REELS vs image carousel differences. Report the exact endpoints and required parameters."
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # Instagram Carousel Publishing API Contract
+> 
+> ## 1. Create Child Container (Image/Video)
+> 
+> **Endpoint:** `POST /<IG_ID>/media`
+> 
+> **Required Parameters:**
+> - `access_token` – User's access token
+> - `image_url` OR `video_url` – Public server URL to media
+> - `is_carousel_item=true` – Identifies as carousel component
+> - `media_type` – `VIDEO` for videos (not `CAROUSEL`)
+> 
+> **Optional:** `caption`, `alt_text` (images only)
+> 
+> ---
+> 
+> ## 2. Create Parent Carousel Container
+> 
+> **Endpoint:** `POST /<IG_ID>/media`
+> 
+> **Required Parameters:**
+> - `media_type=CAROUSEL` – Designates carousel post
+> - `children` – "A comma separated list of up to 10 container IDs" to include
+> - `caption` – Post caption
+> 
+> **Host URLs:** `graph.instagram.com` (Instagram Login) or `graph.facebook.com` (Facebook Login)
+> 
+> ---
+> 
+> ## 3. Publish Container
+> 
+> **Endpoint:** `POST /<IG_ID>/media_publish`
+> 
+> **Required Parameter:**
+> - `creation_id` – Parent carousel container ID
+> 
+> **Response:** Returns published media ID
+> 
+> ---
+> 
+> ## 4. Maximum Children
+> 
+> "Carousels are limited to 10 images, videos, or a mix of the two."
+> 
+> ---
+> 
+> ## 5. Reels vs Image Carousel
+> 
+> Reels require `media_type=REELS` with `video_url`. Standard image carousels use individual `image_url` containers. Reels cannot be combined with images in carousel posts—the carousel approach applies only to static images or standard videos.
+> ```
+
+## 🤖 Claude *(04:33:06)*
+
+
+## 🤖 Claude *(04:33:09)*
+
+IG CAROUSEL API confirmada (Meta docs): child `POST /<IG_ID>/media` com `image_url`+`is_carousel_item=true` → parent `media_type=CAROUSEL`+`children` (≤10) → `media_publish creation_id`. Grounding do step 3 fechado, e casa com o branch IG existente (graph.instagram.com).
+
+Enquanto o mapa do repo GabrielAI chega, vou preparar a migration do step 1 (independente do repo — adição de `source_module='external'` espelhando a reunion `20260710170000`). Deixa eu ler a reunion inteira para espelhar o RPC exatamente.
+
+## 🤖 Claude *(04:33:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: creative_assets source_module REUNION — 'avatar-studio' restored after being dropped
+> 2	-- by 20260707230000 (which rebuilt the CHECK+guard from a pre-20260630120000 list while adding
+> 3	-- 'spaces'). Same defect class that THAT migration fixed for 'spaces': silent fail-soft skips on
+> 4	-- every register_creative_asset('avatar-studio') since 2026-07-07 — voice audios (paid ElevenLabs/
+> 5	-- Cartesia path AND the free qwen3-local worker) never reached the asset spine.
+> 6	--
+> 7	-- ANTICORPO: the IN-list below is the UNION of every module ever granted. Any future migration
+> 8	-- touching this guard MUST start from the DEPLOYED definition (audit-schema-drift catches the
+> 9	-- ledger side; the voice smoke G4c asset gate catches this rail). /security-review: list-only
+> 10	-- change, byte-identical body otherwise (same rationale as 20260707230000).
+> 11	
+> 12	ALTER TABLE public.creative_assets DROP CONSTRAINT IF EXISTS creative_assets_source_module_check;
+> 13	ALTER TABLE public.creative_assets
+> 14	  ADD CONSTRAINT creative_assets_source_module_check
+> 15	  CHECK (source_module IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio'));
+> 16	
+> 17	CREATE OR REPLACE FUNCTION public.register_creative_asset(
+> 18	  p_user_id          uuid,
+> 19	  p_kind             text,
+> 20	  p_storage_bucket   text,
+> 21	  p_storage_key      text,
+> 22	  p_source_module    text,
+> 23	  p_source_job_id    text     DEFAULT NULL,
+> 24	  p_is_public        boolean  DEFAULT false,
+> 25	  p_mime_type        text     DEFAULT NULL,
+> 26	  p_file_size_bytes  bigint   DEFAULT NULL,
+> 27	  p_width            int      DEFAULT NULL,
+> 28	  p_height           int      DEFAULT NULL,
+> 29	  p_duration_seconds numeric  DEFAULT NULL,
+> 30	  p_parent_asset_id  uuid     DEFAULT NULL,
+> 31	  p_mesh_node_id     uuid     DEFAULT NULL,
+> 32	  p_provider         text     DEFAULT NULL,
+> 33	  p_model            text     DEFAULT NULL,
+> 34	  p_prompt           text     DEFAULT NULL,
+> 35	  p_title            text     DEFAULT NULL,
+> 36	  p_org_id           uuid     DEFAULT NULL,
+> 37	  p_tags             text[]   DEFAULT '{}',
+> 38	  p_metadata         jsonb    DEFAULT '{}'::jsonb
+> 39	)
+> 40	RETURNS uuid
+> 41	LANGUAGE plpgsql
+> 42	SECURITY DEFINER
+> 43	SET search_path = ''
+> 44	AS $$
+> 45	DECLARE
+> 46	  v_id uuid;
+> 47	BEGIN
+> 48	  IF p_user_id IS NULL OR p_storage_bucket IS NULL OR p_storage_key IS NULL THEN
+> 49	    RAISE EXCEPTION 'register_creative_asset: user_id, storage_bucket, storage_key required' USING errcode = '22023';
+> 50	  END IF;
+> 51	  IF p_kind NOT IN ('image','video','audio','design','article','template') THEN
+> 52	    RAISE EXCEPTION 'register_creative_asset: invalid kind %', p_kind USING errcode = '22023';
+> 53	  END IF;
+> 54	  -- UNION list — never rebuild from an old migration; start from the deployed definition.
+> 55	  IF p_source_module NOT IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio') THEN
+> 56	    RAISE EXCEPTION 'register_creative_asset: invalid source_module %', p_source_module USING errcode = '22023';
+> 57	  END IF;
+> 58	
+> 59	  INSERT INTO public.creative_assets (
+> 60	    user_id, org_id, kind, storage_bucket, storage_key, is_public, mime_type, file_size_bytes,
+> 61	    width, height, duration_seconds, parent_asset_id, source_module, source_job_id, mesh_node_id,
+> 62	    provider, model, prompt, title, tags, metadata
+> 63	  ) VALUES (
+> 64	    p_user_id, p_org_id, p_kind, p_storage_bucket, p_storage_key, p_is_public, p_mime_type, p_file_size_bytes,
+> 65	    p_width, p_height, p_duration_seconds, p_parent_asset_id, p_source_module, p_source_job_id, p_mesh_node_id,
+> 66	    p_provider, p_model, p_prompt, p_title, COALESCE(p_tags, '{}'), COALESCE(p_metadata, '{}'::jsonb)
+> 67	  )
+> 68	  ON CONFLICT (storage_bucket, storage_key) DO UPDATE SET
+> 69	    kind            = EXCLUDED.kind,
+> 70	    mime_type       = COALESCE(EXCLUDED.mime_type, public.creative_assets.mime_type),
+> 71	    file_size_bytes = COALESCE(EXCLUDED.file_size_bytes, public.creative_assets.file_size_bytes),
+> 72	    width           = COALESCE(EXCLUDED.width, public.creative_assets.width),
+> 73	    height          = COALESCE(EXCLUDED.height, public.creative_assets.height),
+> 74	    duration_seconds= COALESCE(EXCLUDED.duration_seconds, public.creative_assets.duration_seconds),
+> 75	    parent_asset_id = COALESCE(EXCLUDED.parent_asset_id, public.creative_assets.parent_asset_id),
+> 76	    mesh_node_id    = COALESCE(EXCLUDED.mesh_node_id, public.creative_assets.mesh_node_id),
+> 77	    title           = COALESCE(EXCLUDED.title, public.creative_assets.title),
+> 78	    metadata        = public.creative_assets.metadata || EXCLUDED.metadata,
+> 79	    updated_at      = now()
+> 80	  WHERE public.creative_assets.user_id = EXCLUDED.user_id
+> 81	  RETURNING id INTO v_id;
+> 82	
+> 83	  RETURN v_id;
+> 84	END;
+> 85	$$;
+> 86	
+> 87	REVOKE ALL ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) FROM PUBLIC, anon, authenticated;
+> 88	GRANT EXECUTE ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) TO service_role;
+> 89	
+> ```
+
+## 🤖 Claude *(04:34:49)*
+
+
+## 🤖 Claude *(04:34:58)*
+
+O mapa do repo GabrielAI é ouro e materialmente fundamentado — e revela uma nuance decisiva que reformula meu entendimento (Lei 1):
+
+**O pipeline validado do GabrielAI é o INVERSO desta diretiva.** Ele faz N takes de 8s (Veo) → **1 master longo** (montagem). Esta diretiva faz **1 master longo → N shorts** (repurpose). Então o repo NÃO é molde do segmenter — mas é: (1) a **prova** de que a arquitetura "trocar Premiere por FFmpeg via contrato" funciona (o próprio README diz "o MCORCH assume a geração respeitando o mesmo contrato"); (2) a **fonte dos masters** (os 4 episódios 16:9 = o INPUT do repurpose); (3) o **schema de metadados** (`episodios/epNN.json`: `atos[]`=capítulos, `creditos.blocos[]`=fontes, teaser, tags) que a minha porta de ingest deve espelhar; (4) a filosofia **cut-spec data-driven** (cortes de MEDIÇÕES, nunca do texto) + o gate **"olhe o render"** (= Vision QA). E confirma que **atomizador 1→N + reframe 9:16 + queima de legenda + distribuição** são exatamente o gap ("não há nada pronto para copiar").
+
+Verificação 100% completa. Vou autorar o blueprint (step 0, Closed-Loop) grounded em tudo isso.
+
+## 🤖 Claude *(04:35:00)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "8",
+  "status": "completed",
+  "description": "10/10 pointers verificados com file:line + mapa do repo GabrielAI (ref da5b53b). Corre\u00e7\u00f5es ao snapshot: segmenter=FR-CP-012 (n\u00e3o OTD-CP-011); OTD-CP-009 FECHADA (imagem); youtube Pilar I=montagem(concat), segmenta\u00e7\u00e3o \u00e9 o inverso; carousel existente=PDF/LinkedIn (IG=gap). IG CAROUSEL API confirmada (Meta docs). GabrielAI=INVERSO (N takes\u21921 master); \u00e9 fonte do master + schema de metadados + filosofia data-driven, n\u00e3o molde do segmenter."
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #8 description, status
+> ```
+
+## 🤖 Claude *(04:35:00)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(04:35:08)*
+
+
+## 🤖 Claude *(04:35:08)*
+
+Agora autoro o blueprint fundamentado.
+
+## 🤖 Claude *(04:36:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/00-deepsearch-blueprint.md",
+  "content": "# video-repurpose \u2014 Deepsearch Blueprint (semente de BoK)\n\n> **Tipo:** Blueprint-semente fundamentado (deepsearch) \u2014 o motor que FALTA: o MCORCH **distribui** mas n\u00e3o **produz cortes**. Constr\u00f3i a metade que falta reusando a metade que j\u00e1 existe.\n> **Status:** \u2705 Blueprint autorado 2026-07-12 (Closed-Loop Step 0). Abre o BoK gate para a **Fatia 1 (ingest)**. FRD/SDD por-fatia antes das fatias pesadas (worker/carrossel).\n> **Diretiva Sovereign 2026-07-12:** motor de REPURPOSE de v\u00eddeo externo \u2014 1 document\u00e1rio longo (16:9, ~7-8 min, \"Gabriel AI\") + metadados estruturados + SRT \u2192 N Shorts 9:16 (reenquadrados, legenda queimada) + carross\u00e9is IG + post WordPress, **escoando pelos trilhos que j\u00e1 existem**.\n> **ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = `/security-review` por seam + Sovereign \u00b7 Owner = Sovereign (alcance p\u00fablico depende de auditoria de app \u2014 a\u00e7\u00e3o dele, n\u00e3o c\u00f3digo).\n> **Refer\u00eancia externa (o \"mapa dos n\u00f3s\"):** repo p\u00fablico `gabrielZarattini/GabrielAI` (ref `da5b53b`) \u2014 pipeline H\u00cdBRIDO VALIDADO (4 epis\u00f3dios 6+ min: N takes Veo 8s \u2192 1 master via ponte Premiere). **Fundamental:** esse pipeline \u00e9 o **INVERSO** deste (montagem N\u21921); ele \u00e9 a **FONTE do master**, o **schema de metadados** e a **filosofia data-driven**, n\u00e3o o molde do segmenter.\n\n---\n\n## 1. Tese (uma frase)\n\nO MCORCH j\u00e1 tem a **sa\u00edda** (publish-social/publish-wordpress/reshape-pillar/channel_profiles/scheduled_posts+auto-publish + o sink `publish-space-asset`\u2192`space_publish_variants`) e o **motor de render determin\u00edstico** (HyperFrames `render-core.ts` + o worker `video-bridge.ts` sobre a fila `video_renders`); falta a **entrada e a transforma\u00e7\u00e3o de v\u00eddeo** \u2014 ingerir um MP4 externo, cort\u00e1-lo em N shorts, reenquadrar 16:9\u21929:16, queimar legenda, e extrair carross\u00e9is \u2014 e **fiar** o resultado nos trilhos existentes.\n\n## 2. Fundamenta\u00e7\u00e3o material (Lei 1 \u2014 cada pointer verificado neste turno)\n\n| Claim (snapshot Sovereign) | Realidade verificada (file:line) |\n|---|---|\n| creative_assets rejeita origem externa (CHECK sem 'external') | \u2705 `supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql:15,55` \u2014 `source_module IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio')` \u2014 **sem 'external'**. `kind` inclui `'video'` (`20260625120000:24`). |\n| channel-format \"1 longo\u2192N shorts\" (dito OTD-CP-011, deferred) | \u2705 \u00e9 **FR-CP-012** (`12-amendment-channel-format-intelligence.md:83`) \"Auto-segmenta\u00e7\u00e3o 1 fonte longa \u2192 N shorts (Hormozi), owner HyperFrames, worker=segmenter, *slice posterior*\". SDD `13-sdd-reshaper-atomizer.md:196`: **\"N/A hoje: n\u00e3o h\u00e1 v\u00eddeo-fonte LONGO no pipeline para segmentar (geramos clipes curtos). Aplic\u00e1vel quando entrar INPUT de v\u00eddeo longo.\"** \u21d2 **este motor \u00c9 o gatilho que destrava FR-CP-012.** |\n| reframe de v\u00eddeo (OTD-CP-009 cobre s\u00f3 imagem) | \u2705 nuance: **OTD-CP-009 est\u00e1 FECHADA** (`13-\u2026:190`) \u2014 reframe de **imagem** in-process (imagescript WASM). Reframe de **v\u00eddeo** \u00e9 gap **n\u00e3o coberto** por nenhuma OTD. |\n| youtube-studio \u00a7Pilar I (falta camada FFmpeg de montagem/segmenta\u00e7\u00e3o) | \u2705 `youtube-studio/00-\u2026:53-59` \u2014 Pilar I = **assembler multi-cena (concat N\u21921)**, \"a cola que falta\". \u26a0\ufe0f **Pilar I \u00e9 MONTAGEM; a SEGMENTA\u00c7\u00c3O (1\u2192N) deste motor \u00e9 o inverso \u2014 gap distinto** (embora reuse o mesmo worker-shape FFmpeg). O render 16:9 j\u00e1 existe (`render-core.ts:71` template `viral-long-16x9`). |\n| video-bridge.ts pattern (poll\u2192claim\u2192heartbeat\u2192render\u2192finalize\u2192dual-write) | \u2705 `scripts/video-bridge.ts:5-6,53-60,121,128,205` \u2014 fila `video_renders` engine='hyperframes', claim at\u00f4mico queued\u2192running + reaper `RUNNING_TIMEOUT_MS`, `finalize_video_render` (\u00fanica autoridade terminal), `register_creative_asset` dual-write. **Molde exato do worker de segmenta\u00e7\u00e3o.** |\n| render-core.ts HTML\u2192PNG | \u2705 `scripts/hyperframes/render-core.ts:10-13` \u2014 Playwright headless \u2192 `page.screenshot(PNG)` por frame \u2192 FFmpeg PNG\u2192MP4 bitexact. Aceita `images[]` pr\u00e9-gerados (`:108`). **Reus\u00e1vel para slides de carrossel.** |\n| publish-social IG s\u00f3 Reels | \u2705 `supabase/functions/publish-social/index.ts:167` \u2014 `media_type: \"REELS\"` apenas; **sem CAROUSEL**. |\n| channel_profiles surface carousel | \u2705 existe mas **s\u00f3 LinkedIn/PDF** (`20260628120000_channel_profiles_carousel.sql:12-18`) e o coment\u00e1rio `:7` diz explicitamente **\"IG/TikTok photo-carousel are image-set variants for a later slice.\"** `generate-carousel` (fn) existe mas emite **PDF** (pdf-lib, 1080\u00d71350, LinkedIn). |\n| disclosure sint\u00e9tica hard-coded | \u2705 `publish-social/index.ts:325` `is_aigc: true` (TikTok), `:429` `containsSyntheticMedia: true` (YouTube), `:297` TikTok `SELF_ONLY` for\u00e7ado pr\u00e9-audit. **Preservar.** |\n| sink que consome os clipes | \u2705 `space_publish_variants` + `publish-space-asset` (landados 2026-07-12) \u2014 `asset_kind` video/image, resolve owner-scoped de `creative_assets`. **Os clipes/carross\u00e9is registrados como creative_assets j\u00e1 s\u00e3o public\u00e1veis por ele.** |\n| IG CAROUSEL API contract | \u2705 Meta docs (developers.facebook.com/docs/instagram-platform/content-publishing): child `POST /<IG_ID>/media` `image_url`+`is_carousel_item=true` \u2192 parent `media_type=CAROUSEL`+`children` (CSV \u226410) \u2192 `POST /<IG_ID>/media_publish` `creation_id`. Host `graph.instagram.com` (= o branch IG atual). |\n\n**Li\u00e7\u00e3o-\u00e2ncora do GabrielAI (BoK \u00a74, verbatim):** *\"O DOM \u00e9 CEGO para o que a transi\u00e7\u00e3o DESENHA\"* \u2014 o Premiere reporta \"aplicada, ok\" e o render mostra banner de erro. No FFmpeg/HyperFrames o pixel \u00e9 controlado direto (o \"DOM cego\" some), **mas o gate \"olhe o render\" (Vision QA) \u00e9 obrigat\u00f3rio** em cada clipe/carrossel. Lei 1 aplicada a m\u00eddia.\n\n## 3. Os 5 Pilares (mapeiam os passos 1-5 da diretiva)\n\n### Pilar I \u2014 INGEST de ativo externo (porta de 1\u00aa classe) \u00b7 Fatia 1\n**Gap:** `creative_assets` rejeita origem externa. **Decis\u00e3o de schema (\u00a75):** adicionar `source_module='external'` (aditivo, espelha a reunion `20260710170000`) \u2014 **n\u00e3o** tabela dedicada, porque o spine `creative_assets` \u00e9 lido por TODOS os consumidores (sink, workers, biblioteca); fragmentar em tabela nova quebraria a interop. O master externo vira `creative_assets` `kind='video'`, `source_module='external'`, `provider='upload'|'youtube'`, com os **metadados estruturados** (schema espelhando `episodios/epNN.json`: `titulo/subtitulo/atos[]=cap\u00edtulos/creditos.blocos[]=fontes/teaser/tags`) + a **ref do SRT** (pt-BR/en) no `metadata` jsonb.\n- **DEFAULT:** upload do MP4 (client\u2192bucket privado\u2192seam `ingest-external-asset` registra owner-scoped). Melhor qualidade, funciona.\n- **FALLBACK:** link YouTube (recompress\u00e3o = perda dupla; conveni\u00eancia). \u26a0\ufe0f **OTD-VR-001:** download server-side do YouTube \u00e9 **bloqueado por IP de datacenter** ([[reference_youtube_datacenter_workarounds]]) \u2014 a fatia registra o intent mas o download real fica gated (host worker / a\u00e7\u00e3o Sovereign). N\u00e3o-preferido por design.\n\n### Pilar II \u2014 Worker de SEGMENTA\u00c7\u00c3O / REFRAME / CAPTION \u00b7 Fatia 2 (destrava FR-CP-012)\nEspelha `video-bridge.ts` (poll `video_renders` + claim at\u00f4mico + heartbeat + `finalize_video_render` + dual-write `register_creative_asset`), **engine novo** `video_renders.engine += 'repurpose'` (aditivo, molde `qwen3-voice` `20260709234000:34`). Rail **gr\u00e1tis** (FFmpeg, `charged_mco=0`). O `composition` jsonb carrega a **cut-spec data-driven** (lista `{in, out, reframe, caption_source}` por clipe \u2014 **n\u00e3o cravada**, filosofia `mapa_transicoes.py` do GabrielAI: cortes de dado, n\u00e3o de texto). Opera\u00e7\u00f5es FFmpeg (can\u00f4nicas, cf. `ffmpeg.org/ffmpeg-filters.html` j\u00e1 citado no youtube-studio blueprint):\n- **corte** 1 longo \u2192 N: `-ss <in> -to <out>` por clipe (stream-accurate);\n- **reframe 16:9\u21929:16 subject-safe:** `crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920` (center default; **OTD-VR-002:** crop din\u00e2mico subject-aware = fatia posterior, MVP=center-safe);\n- **queima de legenda:** `subtitles=<srt>` (filtro `subtitles`, do SRT ingerido ou texto por clipe) \u2014 \u2260 GabrielAI (que envia SRT como faixa no MASTER; aqui os SHORTS queimam, contexto social distinto);\n- **sa\u00edda:** clipes MP4 9:16 registrados `creative_assets` `kind='video'` `source_module='external'` (derivado, `parent_asset_id`=master) \u2192 **o sink `publish-space-asset` j\u00e1 sabe consumir**.\n\n### Pilar III \u2014 CARROSSEL de Instagram \u00b7 Fatia 3\nExtrai key-frames do master (`ffmpeg -ss <t> -frames:v 1`) em timestamps (dos `atos[]`/cap\u00edtulos), comp\u00f5e slides via **`render-core.ts`** (HTML\u2192PNG existente, aceita `images[]`): quadro + cita\u00e7\u00e3o/legenda, **1080\u00d71350** (4:5). Estende a branch IG do `publish-social` para **`media_type=CAROUSEL`** (children `image_url`+`is_carousel_item=true`, \u226410 \u2192 parent \u2192 `media_publish`). Reusa a superf\u00edcie `carousel` do `channel_profiles` (hoje LinkedIn/PDF; **OTD-VR-003:** adicionar surface IG-carousel image-set, que o pr\u00f3prio migration `20260628120000:7` j\u00e1 marcou \"later slice\").\n\n### Pilar IV \u2014 MAPEADOR de metadados \u00b7 Fatia 4\nL\u00ea os metadados estruturados do epis\u00f3dio (schema `episodios/epNN.json`) e emite: (a) a **legenda nativa por plataforma** e (b) o **corpo HTML do WordPress** (v\u00eddeo embedado + **fontes creditadas** de `creditos.blocos[]` \u2014 n\u00e3o perder cap\u00edtulos/fontes). **OTD-VR-004:** o `reshape-pillar` \u00e9 pillar-coupled (`pillar_run_id`+`pillar_atoms`); o mapeador reusa a **gram\u00e1tica `field_map` / voicing** do `channel_profiles.transform_recipe` mas alimentada pelo metadado do epis\u00f3dio (n\u00e3o por um pillar_run) \u2014 a decis\u00e3o exata (adaptar reshape-pillar vs. mapper leve dedicado) \u00e9 FRD da Fatia 4.\n\n### Pilar V \u2014 FIAR na distribui\u00e7\u00e3o existente \u00b7 Fatia 5\nClipes/carross\u00e9is/post escoam por: **`publish-space-asset`\u2192`space_publish_variants`\u2192`auto-publish`\u2192`publish-social`** (TikTok/YT/IG) + **`publish-wordpress`**. Disclosure sint\u00e9tica (is_aigc/containsSyntheticMedia) **hard-coded preservada**. **Gate externo honesto (n\u00e3o c\u00f3digo):** alcance p\u00fablico depende de auditoria de app \u2014 TikTok for\u00e7a `SELF_ONLY`, YouTube pode for\u00e7ar privado pr\u00e9-audit (`publish-social:290-297,388`). A\u00e7\u00e3o do Sovereign.\n\n## 4. FR / OTD / FM (semente \u2014 refinar por FRD de fatia)\n\n| FR | Descri\u00e7\u00e3o | Fatia |\n|---|---|---|\n| FR-VR-001 | Ingest de MP4 externo owner-scoped (`source_module='external'`) + metadados + SRT | 1 |\n| FR-VR-002 | Fallback link YouTube (best-effort, gated datacenter-IP) | 1 |\n| FR-VR-003 | Worker de segmenta\u00e7\u00e3o data-driven (cut-spec `{in,out}` \u2192 N clipes) \u2014 destrava FR-CP-012 | 2 |\n| FR-VR-004 | Reframe 16:9\u21929:16 (+ op\u00e7\u00e3o 1:1) center-safe | 2 |\n| FR-VR-005 | Queima de legenda (SRT/texto por clipe) nos shorts | 2 |\n| FR-VR-006 | Key-frames \u2192 slides carrossel via render-core (1080\u00d71350) | 3 |\n| FR-VR-007 | Branch IG `media_type=CAROUSEL` no publish-social | 3 |\n| FR-VR-008 | Mapeador metadado\u2192legenda nativa + corpo HTML WordPress (fontes preservadas) | 4 |\n| FR-VR-009 | Fiar em publish-space-asset/publish-wordpress (reuso puro) | 5 |\n\n| OTD | D\u00e9bito |\n|---|---|\n| OTD-VR-001 | YouTube download bloqueado por IP datacenter \u2014 fallback gated |\n| OTD-VR-002 | Reframe subject-aware (crop din\u00e2mico) diferido; MVP center-safe |\n| OTD-VR-003 | Surface IG-carousel image-set no channel_profiles (o migration j\u00e1 previu \"later\") |\n| OTD-VR-004 | Mapeador: adaptar reshape-pillar vs mapper dedicado (decis\u00e3o FRD Fatia 4) |\n| OTD-VR-005 | Cut-spec: fonte do `{in,out}` (cap\u00edtulos/atos \u2192 manual \u2192 Hormozi hook-detector futuro) |\n\n| FM (FMEA) | Vetor | Mitiga\u00e7\u00e3o |\n|---|---|---|\n| FM-VR-01 | Ingest de asset alheio (cross-tenant) | seam owner-scoped (key-prefix `${uid}/` OU resolve por user_id), register service-role-only |\n| FM-VR-02 | Worker assina bucket de outro tenant | claim por `user_id` da linha `video_renders` (server-trusted), como video-bridge |\n| FM-VR-03 | Carrossel publica asset alheio | mesmo hard-bind `.eq user_id=post.user_id` do sink (FMEA-011) |\n| FM-VR-04 | Master externo enorme estoura mem\u00f3ria/custo | piso/teto de tamanho + timeout no worker (n\u00e3o no edge) |\n| FM-VR-05 | Publicar sem disclosure sint\u00e9tica | is_aigc/containsSyntheticMedia hard-coded (n\u00e3o remov\u00edvel) |\n\n## 5. Decis\u00e3o de schema do Pilar I (com prova \u2014 a \u00fanica decis\u00e3o da Fatia 1)\n\n**`source_module='external'` aditivo** (n\u00e3o tabela dedicada). Prova/raz\u00e3o: `creative_assets` \u00e9 o spine can\u00f4nico lido por sink+workers+biblioteca (`UNIQUE(bucket,key)`, RLS own-or-org, `register_creative_asset` service-role-only). Adicionar 'external' ao CHECK+RPC \u00e9 o padr\u00e3o **j\u00e1 usado 2\u00d7** (spaces `20260707230000`, avatar-studio `20260710170000`) e mant\u00e9m a interop. Tabela dedicada fragmentaria o spine (todo consumidor teria que ler 2 fontes). Metadados ricos \u2192 `metadata` jsonb (sem tabela nova na Fatia 1); a fila do worker (Fatia 2) reusa `video_renders.composition` + engine 'repurpose'. **Money-path (`channel_variants`/reshaper/`pipeline_runs`) intocado.**\n\n## 6. Reuse map \u2014 N\u00c3O reconstruir (diretiva expl\u00edcita)\n\nReusar sem tocar: `publish-social`, `publish-wordpress`, `reshape-pillar`, `channel_profiles`, `render-core.ts`, `video-bridge.ts` (molde), `finalize_video_render`, `register_creative_asset`, `space_publish_variants`+`publish-space-asset` (o sink), `scheduled_posts`+`auto-publish`. **N\u00e3o** escoar por viral-autopilot (product-centric ML, caminho errado p/ document\u00e1rio). **N\u00e3o** ingerir via browser (arquivo/API oficial).\n\n## 7. Pattern Conformance Declaration (21 padr\u00f5es \u00b7 `docs/architecture/agentic-vision.md`)\n\n| Pattern | Impl? | Como / porqu\u00ea-deferido |\n|---|---|---|\n| 1 Prompt Chaining | yes | ingest\u2192segment\u2192reframe\u2192caption\u2192carousel\u2192publish \u00e9 uma cadeia de est\u00e1gios |\n| 2 Routing | yes | cut-spec dirige N clipes; channel_profiles roteia por canal/superf\u00edcie |\n| 3 Parallelization | yes | N clipes / N slides renderizam em paralelo (fila video_renders) |\n| 4 Reflection | yes | gate Vision QA (\"olhe o render\") por clipe/carrossel \u2014 herdado do GabrielAI |\n| 5 Tool Use | yes | FFmpeg/Playwright/IG API/WordPress REST |\n| 6 Planning | yes | cut-spec data-driven = o plano de cortes |\n| 7 Multi-Agent | n-a | worker single-tenant Usu\u00e1rio Zero (multi-tenant = hardening posterior) |\n| 8 Memory | deferred | provenance via `parent_asset_id` (master\u2192clipes) cobre linhagem; mesh node OTD |\n| 9 Learning/Adaptation | deferred | hook-detector Hormozi (OTD-VR-005) aprenderia melhores cortes \u2014 fatia futura |\n| 10 Goal Setting | yes | objetivo por epis\u00f3dio nos metadados (atos/teaser) |\n| 11 Exception/Recovery | yes | worker fail\u2192finalize(failed)+refund (charged 0); reaper de dead-worker |\n| 12 HITL | yes | rascunho default no sink (opt-in publish), gate Sovereign de alcance |\n| 13 Guardrails | yes | owner-scoping (FM-VR-01..03), disclosure sint\u00e9tica, piso/teto de tamanho |\n| 14 Prioritization | yes | channel_profiles.priority j\u00e1 ordena canais |\n| 15 Resource-Aware | yes | rail gr\u00e1tis (charged 0); teto de tamanho/timeout |\n| 16 Reasoning (CoT) | n-a | pipeline determin\u00edstico, n\u00e3o racioc\u00ednio LLM no core |\n| 17 Eval/Monitoring | yes | Vision QA gate + infra_health_logs telemetry |\n| 18 Orchestration | yes | fila video_renders + auto-publish cron |\n| 19 Knowledge Retrieval | yes | metadados/fontes creditadas preservados no mapeador |\n| 20 Inter-Agent Comm | n-a | sem m\u00faltiplos agentes no runtime |\n| 21 Self-Improvement | deferred | m\u00e9tricas de creative \u2192 melhores cut-specs (junto do padr\u00e3o 9) |\n\n## 8. Ordem de fatias & gates (parar no gate natural, molde space_publish_variants)\n\n1. **Fatia 1 \u2014 Ingest:** SOP Lei 2 + migration `source_module='external'` + seam `ingest-external-asset` + /security-review \u2192 **PARA no apply-gate** (comando pronto). \u2190 **1\u00ba GATE (este arco).**\n2. **Fatia 2 \u2014 Worker segment/reframe/caption:** FRD/SDD de fatia + engine 'repurpose' + worker + smoke + **1 clipe 9:16 renderizado e INSPECIONADO** (Vision QA).\n3. **Fatia 3 \u2014 Carrossel IG:** slides via render-core + branch CAROUSEL + **1 carrossel VISTO**.\n4. **Fatia 4 \u2014 Mapeador:** legenda nativa + corpo WP com fontes.\n5. **Fatia 5 \u2014 Fiar:** E2E ingest\u2192short\u2192publicado (gated no alcance externo = Sovereign).\n\n**Cross-links:** [[project_lora_witness_and_otd_spaces_036]] (o sink) \u00b7 post-engine FR-CP-012 (destravado) \u00b7 youtube-studio Pilar I (irm\u00e3o de montagem) \u00b7 OTD-CP-009 (reframe de imagem, fechado; v\u00eddeo \u00e9 este motor).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/00-deepsearch-blueprint.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:37:40)*
+
+
+## 🤖 Claude *(04:37:42)*
+
+Blueprint autorado (Closed-Loop Step 0). Agora o passo 1 (porta de ingest), mirando o gate do `space_publish_variants`: SOP (Lei 2) → migration `source_module='external'` → seam `ingest-external-asset` → /security-review → PARAR no apply-gate. Primeiro o SOP.
+
+## 🤖 Claude *(04:37:42)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "9",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #9 status
+> ```
+
+## 🤖 Claude *(04:37:43)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 status
+> ```
+
+## 🤖 Claude *(04:38:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/external-video-ingest.md",
+  "content": "# SOP \u2014 Ingest de v\u00eddeo externo (porta de 1\u00aa classe) (Lei 2)\n\n> **Feature:** Pilar I / Fatia 1 do motor `video-repurpose` \u2014 ingerir um master MP4 externo (document\u00e1rio 16:9) + metadados estruturados + SRT como um `creative_assets` owner-scoped, para o worker de segmenta\u00e7\u00e3o (Fatia 2) cort\u00e1-lo em N shorts.\n> **BoK SSOT:** `docs/bok/video-repurpose/00-deepsearch-blueprint.md` \u00a7Pilar I + \u00a75 (decis\u00e3o de schema).\n> **Decis\u00e3o de schema (provada \u00a75):** `source_module='external'` aditivo em `creative_assets` (n\u00e3o tabela dedicada \u2014 o spine \u00e9 lido por todos os consumidores). Money-path intocado.\n\n## ORO triplet\n- **Operator:** MCORCH Master Execution Agent (constr\u00f3i/prova) \u2014 na opera\u00e7\u00e3o, o Usu\u00e1rio Zero pela UI.\n- **Reviewer:** `/security-review` no seam + na migration (cross-tenant \u00e9 o gate-m\u00e3e) + Sovereign.\n- **Owner:** Sovereign \u2014 nenhuma cobran\u00e7a mcoCoins (ingest \u00e9 gr\u00e1tis).\n\n## Operator \u2014 manual equivalente\nHoje, para reaproveitar um document\u00e1rio, o operador baixaria o MP4, abriria um editor e cortaria \u00e0 m\u00e3o. Este SOP d\u00e1 a **porta de entrada** in-system (o resto \u2014 cortar/reenquadrar/legendar \u2014 s\u00e3o as fatias seguintes).\n\n## Sequence \u2014 ordem (cada passo com crit\u00e9rio material)\n| # | Passo | Executor | Sucesso material |\n|---|-------|----------|------------------|\n| 1 | Client sobe o MP4 do master para `canvas-assets` sob `${uid}/external/<id>/master.mp4` (bucket privado owner-scoped j\u00e1 selado, migration `20260703030000`). | Client (Storage) | objeto existe sob o prefixo do dono. |\n| 2 | Client invoca `ingest-external-asset` (user-JWT) com `{ storage_key, provider:'upload', title, mime_type, duration_seconds?, width?, height?, srt_pt?, srt_en?, episode:{titulo,subtitulo,atos[],creditos,teaser,tags} }`. | Client | HTTP 200 `{ ok, asset_id }`. |\n| 3 | `ingest-external-asset` re-verifica o caller (`getUser`), valida `storage_key` come\u00e7a com `${user.id}/` (owner-scoped \u2014 nunca confia em path cross-tenant), e registra via `register_creative_asset(source_module='external', kind='video', ...)` com os metadados + SRT inline no `metadata` jsonb. | Edge (service-role) | linha `creative_assets` do dono com `source_module='external'`, `metadata.episode` + `metadata.srt`. |\n| 4 | (Fallback) `provider:'youtube'` \u2192 **gated** (OTD-VR-001: download server-side bloqueado por IP de datacenter). Retorna 501 estruturado orientando upload do MP4. | Edge | 501 `youtube_ingest_gated`. |\n\n## Verification gates\n- **G1 owner-scoping (FM-VR-01):** `storage_key` que n\u00e3o come\u00e7a com `${user.id}/` \u2192 400 (nunca registra asset de outro prefixo). O asset registrado \u00e9 sempre do caller (`register_creative_asset` seta `user_id=caller`).\n- **G2 source_module='external' aceito:** `register_creative_asset('external')` insere (n\u00e3o mais `22023 invalid source_module`).\n- **G3 default-deny:** INSERT direto autenticado em `creative_assets` continua negado (RLS j\u00e1 selada); escritor = a RPC service-role.\n- **G4 metadados preservados:** `metadata.episode.atos`/`creditos.blocos`/`teaser`/`tags` + `metadata.srt.{pt,en}` presentes na linha (para o mapeador da Fatia 4 n\u00e3o perder cap\u00edtulos/fontes).\n- **G5 money-path intocado:** `channel_variants`/reshaper inalterados; `smoke-reshape-pillar` 17/17 verde.\n\n## Recovery path\n- **Passo 2 (400 owner-scope):** o client subiu num prefixo errado \u2014 re-upload sob `${uid}/external/`.\n- **Passo 3 (register falha):** a migration n\u00e3o foi aplicada (`22023 invalid source_module 'external'`) \u2192 aplicar `20260712xxxxxx_creative_assets_external_source.sql` (apply-gate Sovereign).\n- **Fallback YouTube:** enquanto OTD-VR-001 aberta, o caminho \u00e9 upload do MP4 (preferido de qualquer modo por qualidade).\n\n## Success signal\n`creative_assets` do dono com `source_module='external'`, `kind='video'`, apontando o MP4 no bucket privado, `metadata` carregando epis\u00f3dio+SRT \u2014 pronto para o worker de segmenta\u00e7\u00e3o (Fatia 2) enfileirar em `video_renders` (engine 'repurpose').\n\n## Notas de design\n- **SRT inline no metadata jsonb** (n\u00e3o como storage object): SRT \u00e9 texto pequeno (~10-30KB/epis\u00f3dio) e `canvas-assets` restringe MIME a image/video/audio (rejeitaria `.srt`). Inline evita bucket extra + o objeto \u00f3rf\u00e3o.\n- **Bucket = `canvas-assets`** (reuso do bucket privado owner-scoped j\u00e1 selado) sob prefixo `${uid}/external/`. Sem migration de storage nova na Fatia 1.\n- **YouTube fallback gated (OTD-VR-001):** `reference_youtube_datacenter_workarounds` \u2014 datacenter bloqueado; download real = host worker / a\u00e7\u00e3o Sovereign, fatia posterior.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/external-video-ingest.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:38:17)*
+
+
+## 🤖 Claude *(04:38:18)*
+
+Agora a migration `source_module='external'` (espelha a reunion `20260710170000`, adicionando 'external' à UNION-list do CHECK e do RPC).
+
+## 🤖 Claude *(04:38:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260712120000_creative_assets_external_source.sql",
+  "content": "-- Migration: creative_assets source_module += 'external' \u2014 first-class ingest of externally-produced video\n-- (video-repurpose Pilar I / Fatia 1). BoK SSOT: docs/bok/video-repurpose/00-deepsearch-blueprint.md \u00a7Pilar I + \u00a75.\n-- SOP (Lei 2): docs/processes/external-video-ingest.md.\n--\n-- WHY 'external' (not a dedicated table): creative_assets is the canonical spine read by the sink\n-- (publish-space-asset), the workers (video-bridge and the future 'repurpose' worker) and the library.\n-- A master MP4 ingested from outside (a documentary) becomes a creative_assets row like any other producer's\n-- output; the segmentation worker (Fatia 2) reads it and derives N 9:16 clips (parent_asset_id = master).\n--\n-- ANTICORPO (2026-07-10 reunion): the IN-list is the UNION of every module ever granted \u2014 never rebuild from an\n-- old migration; start from the DEPLOYED definition. This adds exactly ONE value ('external') to that union.\n-- /security-review: list-only change, register_creative_asset body byte-identical otherwise. Money-path untouched.\n\nALTER TABLE public.creative_assets DROP CONSTRAINT IF EXISTS creative_assets_source_module_check;\nALTER TABLE public.creative_assets\n  ADD CONSTRAINT creative_assets_source_module_check\n  CHECK (source_module IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio','external'));\n\nCREATE OR REPLACE FUNCTION public.register_creative_asset(\n  p_user_id          uuid,\n  p_kind             text,\n  p_storage_bucket   text,\n  p_storage_key      text,\n  p_source_module    text,\n  p_source_job_id    text     DEFAULT NULL,\n  p_is_public        boolean  DEFAULT false,\n  p_mime_type        text     DEFAULT NULL,\n  p_file_size_bytes  bigint   DEFAULT NULL,\n  p_width            int      DEFAULT NULL,\n  p_height           int      DEFAULT NULL,\n  p_duration_seconds numeric  DEFAULT NULL,\n  p_parent_asset_id  uuid     DEFAULT NULL,\n  p_mesh_node_id     uuid     DEFAULT NULL,\n  p_provider         text     DEFAULT NULL,\n  p_model            text     DEFAULT NULL,\n  p_prompt           text     DEFAULT NULL,\n  p_title            text     DEFAULT NULL,\n  p_org_id           uuid     DEFAULT NULL,\n  p_tags             text[]   DEFAULT '{}',\n  p_metadata         jsonb    DEFAULT '{}'::jsonb\n)\nRETURNS uuid\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_id uuid;\nBEGIN\n  IF p_user_id IS NULL OR p_storage_bucket IS NULL OR p_storage_key IS NULL THEN\n    RAISE EXCEPTION 'register_creative_asset: user_id, storage_bucket, storage_key required' USING errcode = '22023';\n  END IF;\n  IF p_kind NOT IN ('image','video','audio','design','article','template') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid kind %', p_kind USING errcode = '22023';\n  END IF;\n  -- UNION list \u2014 never rebuild from an old migration; start from the deployed definition. (+ 'external')\n  IF p_source_module NOT IN ('canvas-studio','hyperframes','open-design','content-pipeline','generate-image','faceless','spaces','avatar-studio','external') THEN\n    RAISE EXCEPTION 'register_creative_asset: invalid source_module %', p_source_module USING errcode = '22023';\n  END IF;\n\n  INSERT INTO public.creative_assets (\n    user_id, org_id, kind, storage_bucket, storage_key, is_public, mime_type, file_size_bytes,\n    width, height, duration_seconds, parent_asset_id, source_module, source_job_id, mesh_node_id,\n    provider, model, prompt, title, tags, metadata\n  ) VALUES (\n    p_user_id, p_org_id, p_kind, p_storage_bucket, p_storage_key, p_is_public, p_mime_type, p_file_size_bytes,\n    p_width, p_height, p_duration_seconds, p_parent_asset_id, p_source_module, p_source_job_id, p_mesh_node_id,\n    p_provider, p_model, p_prompt, p_title, COALESCE(p_tags, '{}'), COALESCE(p_metadata, '{}'::jsonb)\n  )\n  ON CONFLICT (storage_bucket, storage_key) DO UPDATE SET\n    kind            = EXCLUDED.kind,\n    mime_type       = COALESCE(EXCLUDED.mime_type, public.creative_assets.mime_type),\n    file_size_bytes = COALESCE(EXCLUDED.file_size_bytes, public.creative_assets.file_size_bytes),\n    width           = COALESCE(EXCLUDED.width, public.creative_assets.width),\n    height          = COALESCE(EXCLUDED.height, public.creative_assets.height),\n    duration_seconds= COALESCE(EXCLUDED.duration_seconds, public.creative_assets.duration_seconds),\n    parent_asset_id = COALESCE(EXCLUDED.parent_asset_id, public.creative_assets.parent_asset_id),\n    mesh_node_id    = COALESCE(EXCLUDED.mesh_node_id, public.creative_assets.mesh_node_id),\n    title           = COALESCE(EXCLUDED.title, public.creative_assets.title),\n    metadata        = public.creative_assets.metadata || EXCLUDED.metadata,\n    updated_at      = now()\n  WHERE public.creative_assets.user_id = EXCLUDED.user_id\n  RETURNING id INTO v_id;\n\n  RETURN v_id;\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) FROM PUBLIC, anon, authenticated;\nGRANT EXECUTE ON FUNCTION public.register_creative_asset(uuid, text, text, text, text, text, boolean, text, bigint, int, int, numeric, uuid, uuid, text, text, text, text, uuid, text[], jsonb) TO service_role;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260712120000_creative_assets_external_source.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:38:51)*
+
+
+## 🤖 Claude *(04:38:52)*
+
+Agora o seam `ingest-external-asset` (user-JWT → getUser → valida prefixo owner-scoped → registra `source_module='external'`; YouTube gated OTD-VR-001).
+
+## 🤖 Claude *(04:39:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts",
+  "content": "// ingest-external-asset \u2014 first-class ingest of an externally-produced master video (video-repurpose Pilar I).\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// A documentary MP4 (16:9, ~7-8 min) produced OUTSIDE MCORCH (e.g. the GabrielAI Veo+assembly pipeline) enters the\n// creative_assets spine as source_module='external', kind='video', carrying its structured episode metadata\n// (chapters/sources/teaser/tags \u2014 schema mirrors episodios/epNN.json) + SRT (pt-BR/en) inline. The segmentation\n// worker (Fatia 2) then reads it and derives N 9:16 shorts (parent_asset_id = this master).\n//\n// SECURITY: user-JWT in \u2192 getUser \u2192 the client-supplied storage_key MUST start with `${user.id}/` (owner-scoped,\n// never trust a cross-tenant path \u2014 same guard as avatar-identity-train). register_creative_asset (service-role)\n// sets user_id = the caller. No paid provider, no money-path. SSOT: docs/processes/external-video-ingest.md.\n\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\nconst MAX_META_BYTES = 256 * 1024;   // episode metadata jsonb guard\nconst MAX_SRT_BYTES = 512 * 1024;    // one SRT track (generous; a 10-min episode SRT is ~10-30KB)\n\nfunction sizedString(v: unknown, max: number): string | undefined {\n  return typeof v === \"string\" && new Blob([v]).size <= max ? v : undefined;\n}\nfunction sizedObject(v: unknown, max: number): Record<string, unknown> | undefined {\n  if (!v || typeof v !== \"object\" || Array.isArray(v)) return undefined;\n  try { return new Blob([JSON.stringify(v)]).size <= max ? v as Record<string, unknown> : undefined; }\n  catch { return undefined; }\n}\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const json = (status: number, body: unknown) =>\n    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\n  try {\n    const authHeader = req.headers.get(\"Authorization\");\n    if (!authHeader?.startsWith(\"Bearer \")) return json(401, { error: \"Unauthorized\" });\n\n    const userClient = createClient(\n      Deno.env.get(\"SUPABASE_URL\")!,\n      (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!,\n      { global: { headers: { Authorization: authHeader } } },\n    );\n    const { data: { user } } = await userClient.auth.getUser();\n    if (!user) return json(401, { error: \"Unauthorized\" });\n\n    const body = await req.json().catch(() => ({}));\n    const provider = body.provider === \"youtube\" ? \"youtube\" : \"upload\";\n\n    // \u2500\u2500 FALLBACK: YouTube link \u2014 gated (OTD-VR-001: server-side download blocked by datacenter IP). \u2500\u2500\n    if (provider === \"youtube\") {\n      return json(501, {\n        error: \"youtube_ingest_gated\",\n        action: \"O download server-side do YouTube \u00e9 bloqueado por IP de datacenter (OTD-VR-001). \" +\n          \"Fa\u00e7a upload do arquivo MP4 do master (default, melhor qualidade).\",\n      });\n    }\n\n    // \u2500\u2500 DEFAULT: registered upload. The client already uploaded the MP4 to canvas-assets under its own prefix. \u2500\u2500\n    const storageBucket = typeof body.storage_bucket === \"string\" && body.storage_bucket ? body.storage_bucket : \"canvas-assets\";\n    const storageKey = typeof body.storage_key === \"string\" ? body.storage_key : \"\";\n    if (!storageKey || !storageKey.startsWith(`${user.id}/`)) {\n      return json(400, { error: \"invalid_storage_key\", action: \"storage_key deve come\u00e7ar com o seu prefixo de usu\u00e1rio.\" });\n    }\n\n    const title = sizedString(body.title, 500) ?? \"Master externo\";\n    const mimeType = sizedString(body.mime_type, 100) ?? \"video/mp4\";\n    const durationSeconds = typeof body.duration_seconds === \"number\" && body.duration_seconds >= 0 ? body.duration_seconds : null;\n    const width = Number.isInteger(body.width) ? body.width : null;\n    const height = Number.isInteger(body.height) ? body.height : null;\n\n    // Structured episode metadata (chapters/sources/teaser/tags) + SRT inline. Preserved for the Fatia 4 mapper.\n    const episode = sizedObject(body.episode, MAX_META_BYTES) ?? {};\n    const srt: Record<string, string> = {};\n    const srtPt = sizedString(body.srt_pt, MAX_SRT_BYTES); if (srtPt) srt.pt = srtPt;\n    const srtEn = sizedString(body.srt_en, MAX_SRT_BYTES); if (srtEn) srt.en = srtEn;\n\n    const admin = createClient(\n      Deno.env.get(\"SUPABASE_URL\")!,\n      (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n    );\n\n    const { data: assetId, error: regErr } = await admin.rpc(\"register_creative_asset\", {\n      p_user_id: user.id,\n      p_kind: \"video\",\n      p_storage_bucket: storageBucket,\n      p_storage_key: storageKey,\n      p_source_module: \"external\",\n      p_provider: \"upload\",\n      p_mime_type: mimeType,\n      p_duration_seconds: durationSeconds,\n      p_width: width,\n      p_height: height,\n      p_title: title,\n      p_metadata: { provider: \"upload\", ingested_at: new Date().toISOString(), episode, srt },\n    });\n    // supabase.rpc does NOT throw on SQL error \u2014 check the error explicitly (anticorpo 2026-07-10).\n    if (regErr || !assetId) return json(500, { error: \"register_failed\", detail: regErr?.message });\n\n    admin.from(\"infra_health_logs\").insert({ service: \"ingest-external-asset\", status: \"healthy\" }).then(() => {}, () => {});\n\n    return json(200, { ok: true, asset_id: assetId, source_module: \"external\", kind: \"video\" });\n  } catch (e) {\n    console.error(\"ingest-external-asset error:\", e);\n    return json(500, { error: e instanceof Error ? e.message : \"Unknown error\" });\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:39:22)*
+
+
+## 🤖 Claude *(04:39:23)*
+
+Fatia 1 escrita (SOP + migration + seam). Deixa eu deno-checar o seam e rodar o `/security-review` no diff da Fatia 1 (migration + edge fn).
+
+## 🤖 Claude *(04:39:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\necho \"=== deno check ingest-external-asset ===\"\ndeno check supabase/functions/ingest-external-asset/index.ts 2>&1 | tail -8\necho \"exit=$?\"\necho \"\"\necho \"=== git status (diff da Fatia 1 + blueprint) ===\"\ngit status --short",
+  "description": "deno check do seam + git status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deno check ingest-external-asset ===
+> [0m[32mCheck[0m supabase/functions/ingest-external-asset/index.ts
+> exit=0
+> 
+> === git status (diff da Fatia 1 + blueprint) ===
+> ?? docs/bok/video-repurpose/
+> ?? docs/processes/external-video-ingest.md
+> ?? supabase/functions/ingest-external-asset/
+> ?? supabase/migrations/20260712120000_creative_assets_external_source.sql
+> ```
+
+## 🤖 Claude *(04:39:53)*
+
+
+## 🤖 Claude *(04:39:55)*
+
+deno check exit 0. Agora o `/security-review` obrigatório no diff da Fatia 1 (migration + seam).
+
+## 🤖 Claude *(04:40:15)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Security review Fatia 1 ingest",
+  "subagent_type": "general-purpose",
+  "prompt": "Voc\u00ea \u00e9 engenheiro de seguran\u00e7a s\u00eanior revisando as mudan\u00e7as N\u00c3O-COMMITADAS da Fatia 1 do motor video-repurpose no MCORCH (/home/gcrUX/htdocs/constellation-orchestra). Analise S\u00d3 as implica\u00e7\u00f5es de seguran\u00e7a que ESTA mudan\u00e7a introduz. Leia:\n\n1. `supabase/migrations/20260712120000_creative_assets_external_source.sql` (adiciona 'external' ao CHECK + RPC register_creative_asset)\n2. `supabase/functions/ingest-external-asset/index.ts` (seam NOVO)\n\nCONTEXTO / modelo de seguran\u00e7a a comparar:\n- Espelha o padr\u00e3o selado da reunion `supabase/migrations/20260710170000_creative_assets_source_module_reunion.sql` (que foi /security-review \"list-only change\"). A migration da Fatia 1 adiciona EXATAMENTE um valor ('external') \u00e0 UNION-list do CHECK e do RPC; corpo do RPC byte-id\u00eantico fora disso. Confirme que \u00e9 s\u00f3 isso (diff contra a reunion).\n- `register_creative_asset` \u00e9 SECURITY DEFINER service-role-only (REVOKE de PUBLIC/anon/authenticated), com guard `ON CONFLICT ... WHERE user_id = EXCLUDED.user_id` (anti cross-tenant row hijack). Leia `20260625120000_creative_assets_registry.sql` como refer\u00eancia.\n- O seam `ingest-external-asset`: user-JWT \u2192 getUser \u2192 valida `storage_key` come\u00e7a com `${user.id}/` (owner-scoped, molde de `supabase/functions/avatar-identity-train/index.ts:100-106`) \u2192 chama register_creative_asset (service-role) com user_id=caller.\n- creative_assets RLS: SELECT own-or-org, DELETE own, SEM INSERT/UPDATE (escritor \u00fanico = a RPC).\n\nEscrutine especificamente (com file:line + confian\u00e7a 1-10):\n- Pode um caller registrar um creative_asset apontando pro objeto de storage de OUTRO tenant? Trace o guard de prefixo `${user.id}/`. H\u00e1 bypass (path traversal `..`, chave forjada, prefixo que colida cross-tenant)?\n- Pode o `p_source_module='external'` (ou o metadata/SRT jsonb user-supplied) abrir algum vetor (injection no jsonb, XSS armazenado que dispare AGORA nesta fatia)?\n- A RPC pode ser chamada por authenticated direto (grant vazado)? Confirme o REVOKE/GRANT.\n- Algum caminho onde o service-role assina/l\u00ea objeto de outro tenant a partir de dado client-controlado?\n- O 501 do fallback YouTube vaza algo? A valida\u00e7\u00e3o de tamanho (MAX_META/MAX_SRT) tem furo de bypass explor\u00e1vel (n\u00e3o DoS \u2014 DoS est\u00e1 EXCLU\u00cdDO)?\n\nEXCLUS\u00d5ES (n\u00e3o reporte): DoS/exhaustion, rate limiting, secrets-on-disk, memory safety, libs desatualizadas, log spoofing, SSRF s\u00f3-path, findings em markdown/docs, falta de hardening, race the\u00f3rica, authz client-side, self-XSS no pr\u00f3prio conte\u00fado/site do usu\u00e1rio sem cruzamento de tenant.\n\nReporte em markdown: cada finding com file:line, Severity (HIGH/MEDIUM), categoria, cen\u00e1rio de explora\u00e7\u00e3o concreto, fix, e confian\u00e7a 1-10. Reporte S\u00d3 confian\u00e7a \u22657. Se N\u00c3O houver vuln real \u22657, diga explicitamente \"NO FINDINGS\". N\u00e3o edite nada."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: a8899e2e683ee0930 (internal ID - do not mention to user. Use SendMessage with to: 'a8899e2e683ee0930', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/tasks/a8899e2e683ee0930.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(04:40:28)*
+
+
+## 🤖 Claude *(04:40:29)*
+
+Security-review rodando. Enquanto isso, preparo o script de apply (comando pronto pro Sovereign rodar no gate) + um smoke ready-to-run pós-apply, espelhando o padrão do `space_publish_variants`.
+
+## 🤖 Claude *(04:40:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/apply-creative-assets-external-migration.sh",
+  "content": "#!/usr/bin/env bash\n# apply-creative-assets-external-migration.sh \u2014 applies 20260712120000_creative_assets_external_source.sql\n# via the Supabase Management API + registers it in the schema_migrations ledger. video-repurpose Pilar I / Fatia 1.\n# SOP: docs/processes/external-video-ingest.md \u00b7 BoK: docs/bok/video-repurpose/00-deepsearch-blueprint.md.\n# Anticorpo: no DO $$; list-only CHECK + RPC re-create. Single query is fine; still verify material proof (Lei 1).\nset -euo pipefail\ncd \"$(dirname \"$0\")/../..\"\nAPI=\"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\"\nTOKEN=$(cat /home/ubuntu/.supabase/access-token)\n\necho \"[1/3] applying migration DDL...\"\npython3 - <<'PY'\nimport json, urllib.request, urllib.error\nsql = open('supabase/migrations/20260712120000_creative_assets_external_source.sql').read()\ntoken = open('/home/ubuntu/.supabase/access-token').read().strip()\napi = \"https://api.supabase.com/v1/projects/bcyvddsykvehvpwstlfa/database/query\"\nreq = urllib.request.Request(api, data=json.dumps({'query': sql}).encode(),\n    headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json', 'User-Agent': 'mcorch-migration/1.0'})\ntry:\n    with urllib.request.urlopen(req, timeout=90) as r:\n        print(f\"HTTP {r.status} \u2192 {r.read().decode()[:200]}\")\nexcept urllib.error.HTTPError as e:\n    print(f\"\u274c HTTP {e.code} \u2192 {e.read().decode()[:400]}\"); raise SystemExit(1)\nPY\n\necho \"[2/3] registering in schema_migrations ledger...\"\ncurl -s -X POST \"$API\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\":\\\"INSERT INTO supabase_migrations.schema_migrations (version, name) VALUES ('20260712120000', 'creative_assets_external_source') ON CONFLICT DO NOTHING;\\\"}\"\necho\n\necho \"[3/3] material proof (Lei 1): CHECK += 'external' + RPC guard 'external' + ledger...\"\ncurl -s -X POST \"$API\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"query\\\":\\\"SELECT (SELECT count(*) FROM pg_constraint WHERE conname='creative_assets_source_module_check' AND pg_get_constraintdef(oid) LIKE '%external%') AS chk_external, (SELECT count(*) FROM pg_proc WHERE proname='register_creative_asset' AND prosrc LIKE '%external%') AS rpc_external, (SELECT count(*) FROM information_schema.routine_privileges WHERE routine_name='register_creative_asset' AND grantee IN ('anon','authenticated')) AS client_grants, (SELECT count(*) FROM supabase_migrations.schema_migrations WHERE version='20260712120000') AS ledger;\\\"}\"\necho\necho \"\u2705 expected: chk_external=1, rpc_external=1, client_grants=0, ledger=1\"\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/apply-creative-assets-external-migration.sh (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:40:49)*
+
+
+## 🤖 Claude *(04:40:50)*
+
+Agora um smoke conciso (ready-to-run pós-apply) para a porta de ingest.
+
+## 🤖 Claude *(04:41:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-external-ingest.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Smoke test \u2014 ingest-external-asset owner-scoping + source_module='external' (video-repurpose Fatia 1). ZERO-COST.\n *\n * Porta de 1\u00aa classe para ingerir um master MP4 externo como creative_assets (source_module='external'), owner-scoped.\n * BoK: docs/bok/video-repurpose/00-deepsearch-blueprint.md \u00b7 SOP: docs/processes/external-video-ingest.md.\n *\n * HERM\u00c9TICO: minta OWNER (A) + ATTACKER (B) throwaway. N\u00e3o sobe MP4 real (o seam s\u00f3 registra a REF; n\u00e3o valida bytes),\n * ent\u00e3o \u00e9 100% zero-custo \u2014 testa o CONTRATO de seguran\u00e7a, n\u00e3o o objeto.\n *\n * Gates:\n *   G1 owner-scope     \u2014 A ingere sob `${A}/external/...` \u2192 200 + creative_assets source_module='external' de A\n *   G2 cross-prefix    \u2014 A passa storage_key sob o prefixo de B \u2192 400 invalid_storage_key (nunca registra)\n *   G3 metadata        \u2014 episode + srt preservados no metadata jsonb (mapeador Fatia 4 n\u00e3o perde cap\u00edtulos/fontes)\n *   G4 youtube-gated   \u2014 provider='youtube' \u2192 501 youtube_ingest_gated (OTD-VR-001)\n *   G5 cross-select    \u2014 B n\u00e3o v\u00ea o asset de A (RLS creative_assets)\n *\n * Limpa (assets + os 2 usu\u00e1rios \u2192 CASCADE). Usage: bun run scripts/qa/smoke-external-ingest.ts\n */\nimport { createClient, type SupabaseClient } from '@supabase/supabase-js';\nimport { createThrowawayUser, deleteThrowawayUser } from './lib/qa-throwaway';\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nif (!URL || !SVC || !ANON) { console.error('Missing env (need SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)'); process.exit(1); }\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nlet pass = true;\nfunction check(label: string, ok: boolean, detail = '') { console.log(`${ok ? '\u2705' : '\u274c'} ${label}${detail ? `  \u2192 ${detail}` : ''}`); if (!ok) pass = false; }\n\nasync function tokenFor(email: string, password: string): Promise<string> {\n  const c = createClient(URL, ANON, { auth: { persistSession: false } });\n  const { data, error } = await c.auth.signInWithPassword({ email, password });\n  if (error || !data?.session) throw new Error(`signIn(${email}): ${error?.message ?? 'no session'}`);\n  return data.session.access_token;\n}\nasync function clientFor(email: string, password: string): Promise<SupabaseClient> {\n  const c = createClient(URL, ANON, { auth: { persistSession: false } });\n  const { error } = await c.auth.signInWithPassword({ email, password });\n  if (error) throw new Error(`signIn(${email}): ${error.message}`);\n  return c;\n}\nasync function callSeam(token: string, body: unknown): Promise<{ status: number; json: any }> {\n  const r = await fetch(`${URL}/functions/v1/ingest-external-asset`, {\n    method: 'POST',\n    headers: { Authorization: `Bearer ${token}`, apikey: ANON, 'Content-Type': 'application/json' },\n    body: JSON.stringify(body),\n  });\n  return { status: r.status, json: await r.json().catch(() => ({})) };\n}\n\nlet aUid: string | null = null, bUid: string | null = null;\ntry {\n  const A = await createThrowawayUser(admin, 'smoke-ext-a'); aUid = A.uid;\n  const B = await createThrowawayUser(admin, 'smoke-ext-b'); bUid = B.uid;\n  const aTok = await tokenFor(A.email, A.password);\n  const bClient = await clientFor(B.email, B.password);\n  const key = `${A.uid}/external/${crypto.randomUUID().slice(0, 8)}/master.mp4`;\n  const episode = { titulo: 'Ep Smoke', atos: [{ t: 0, nome: 'Abertura' }], creditos: { blocos: [{ nome: 'Fonte X' }] }, teaser: 'pr\u00f3ximo', tags: ['doc'] };\n\n  // \u2500\u2500 G1 \u2014 owner-scope ingest \u2192 200 + external asset \u2500\u2500\n  const g1 = await callSeam(aTok, { storage_key: key, provider: 'upload', title: 'Master Smoke', duration_seconds: 460, width: 1920, height: 1080, srt_pt: '1\\n00:00:00,000 --> 00:00:02,000\\nol\u00e1\\n', episode });\n  const assetId = g1.json?.asset_id as string;\n  const { data: row } = assetId ? await admin.from('creative_assets').select('user_id, source_module, kind, storage_key, metadata').eq('id', assetId).maybeSingle() : { data: null };\n  check('G1 owner-scope ingest \u2192 external asset', g1.status === 200 && g1.json?.ok === true && row?.user_id === A.uid && row?.source_module === 'external' && row?.kind === 'video', `status=${g1.status} sm=${row?.source_module}`);\n\n  // \u2500\u2500 G2 \u2014 cross-prefix key \u2192 400 \u2500\u2500\n  const g2 = await callSeam(aTok, { storage_key: `${B.uid}/external/x/master.mp4`, provider: 'upload', title: 'evil', episode });\n  check('G2 cross-prefix storage_key \u2192 400', g2.status === 400 && g2.json?.error === 'invalid_storage_key', `status=${g2.status}`);\n\n  // \u2500\u2500 G3 \u2014 metadata preserved (episode + srt) \u2500\u2500\n  const meta = (row?.metadata as any) ?? {};\n  check('G3 metadata preserved (episode.atos + creditos.blocos + srt.pt)', meta?.episode?.atos?.length === 1 && meta?.episode?.creditos?.blocos?.length === 1 && typeof meta?.srt?.pt === 'string', JSON.stringify(meta?.episode?.titulo ?? '') );\n\n  // \u2500\u2500 G4 \u2014 youtube gated \u2500\u2500\n  const g4 = await callSeam(aTok, { provider: 'youtube', youtube_url: 'https://youtu.be/xyz', title: 'yt' });\n  check('G4 youtube fallback \u2192 501 gated (OTD-VR-001)', g4.status === 501 && g4.json?.error === 'youtube_ingest_gated', `status=${g4.status}`);\n\n  // \u2500\u2500 G5 \u2014 cross-tenant SELECT = 0 \u2500\u2500\n  const { data: bSees } = assetId ? await bClient.from('creative_assets').select('id').eq('id', assetId) : { data: [] };\n  check('G5 cross-tenant SELECT = 0', Array.isArray(bSees) && bSees.length === 0, `B sees ${bSees?.length}`);\n\n  console.log(`\\n${pass ? '\u2705 SMOKE PASS' : '\u274c SMOKE FAIL'} \u2014 external ingest owner-scoped`);\n} catch (e) {\n  console.error('smoke error:', e instanceof Error ? e.message : e);\n  pass = false;\n} finally {\n  await deleteThrowawayUser(admin, aUid);\n  await deleteThrowawayUser(admin, bUid);\n}\nprocess.exit(pass ? 0 : 1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-external-ingest.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:41:48)*
+
+
+## 🤖 Claude *(04:42:03)*
+
+Fatia 1 do gate está construída — falta só o veredito do `/security-review` (rodando) antes de commitar e apresentar o comando de apply. Deixa eu aguardar o review; ele me re-invoca ao concluir.
+
+Enquanto isso, o **1º gate está essencialmente montado**:
+
+**✅ Verificação material (Lei 1)** — 10/10 pointers confirmados com file:line + mapa do repo GabrielAI. Correções honestas ao seu snapshot (o repo andou):
+- O segmenter "1 longo→N shorts" é **FR-CP-012** (não OTD-CP-011), e a SDD já diz literalmente *"aplicável quando entrar INPUT de vídeo longo"* → **sua diretiva é o gatilho exato** que o destrava.
+- **OTD-CP-009 está FECHADA** (reframe de **imagem**); reframe de **vídeo** é gap não-coberto.
+- youtube-studio Pilar I é **montagem** (concat N→1); a **segmentação (1→N) é o inverso** — reusa o worker-shape, mas é capacidade distinta.
+- O carrossel que existe é **PDF/LinkedIn**; **IG carousel (image-children) é gap** — e a Meta API confirma o contrato (`media_type=CAROUSEL` + children ≤10).
+- **Descoberta-chave do GabrielAI:** o pipeline validado é o **INVERSO** disto (N takes Veo→1 master). Ele é a **fonte do master**, o **schema de metadados** (`episodios/epNN.json`) e a **filosofia data-driven** — não o molde do segmenter (que "não há nada pronto pra copiar", confirmado pelo próprio roadmap dele).
+
+**✅ Step 0 — Blueprint BoK** `docs/bok/video-repurpose/00-deepsearch-blueprint.md`: 5 Pilares (mapeiam seus passos 1-5), FR-VR-001..009, OTD-VR-001..005, FMEA FM-VR-01..05, Pattern Conformance dos 21 padrões, reuse-map ("não reconstruir"), gates externos honestos (TikTok SELF_ONLY / YouTube privado = ação sua).
+
+**✅ Step 1 — Porta de ingest** (mirando o gate do `space_publish_variants`): SOP Lei 2 + migration `source_module='external'` (aditivo, espelha a reunion, money-path intocado) + seam `ingest-external-asset` (owner-scoped, upload default + **YouTube gated OTD-VR-001** por IP de datacenter — honesto) + smoke 5 gates + **script de apply pronto**. `deno check` 0.
+
+Assim que o review voltar, commito e te entrego o gate com o comando de apply.
+
+## 👤 User *(04:42:26)*
+
+<task-notification>
+<task-id>a8899e2e683ee0930</task-id>
+<tool-use-id>toolu_01U3Q99MTNXPEBSDe6yrDTvm</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/tasks/a8899e2e683ee0930.output</output-file>
+<status>completed</status>
+<summary>Agent "Security review Fatia 1 ingest" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I've traced every scrutiny point. Let me confirm the diff result: the RPC body is byte-identical to the sealed reunion except the single added `'external'` token and one comment line — confirming the "list-only change" claim.
+
+## Security Review — Fatia 1 video-repurpose (`ingest-external-asset` + `20260712120000`)
+
+**NO FINDINGS** (no real vulnerability at confidence ≥7).
+
+### Verification of the "list-only" premise
+Diff of `20260712120000` RPC body (lines 19-90) against the sealed reunion `20260710170000` (lines 17-88), after injecting `'external'` into the reunion's IN-list, is empty except for one comment line. The `CHECK` constraint and the `p_source_module` guard each gain exactly one UNION member (`'external'`); INSERT column list, `ON CONFLICT ... WHERE user_id = EXCLUDED.user_id` anti-hijack guard, `SECURITY DEFINER`, `SET search_path = ''`, and the `REVOKE ... FROM PUBLIC, anon, authenticated` / `GRANT ... TO service_role` are byte-identical. Money-path untouched. Confirmed list-only. (confidence 10)
+
+### Point-by-point trace
+
+**Cross-tenant object registration via the `${user.id}/` guard** (`ingest-external-asset/index.ts:65`) — Closed. `user` comes from `getUser()` (server-verified JWT, `:47-48`), and `storageKey` must `startsWith(\`${user.id}/\`)`. UUIDs are fixed-length (36 chars), so no user's UUID prefix is ever a prefix of another's path → no prefix collision. A forged `..` key (`${attacker.id}/../{victim}/x.mp4`) still literally starts with the attacker's own UUID, so it passes, but the row is stored with `user_id = attacker` and a literal (non-normalized) key; Supabase/S3 treats keys as opaque strings (no filesystem `..` collapse), so it does not alias the victim's real object. And this seam never reads/signs the object — the service-role `admin` client is used only for the RPC insert and a static `infra_health_logs` write (`:86-103`). No cross-tenant read materializes in Fatia 1. (confidence 9)
+
+**Row-hijack via UNIQUE (bucket,key)** — Doubly closed: an attacker can never produce a `(bucket,key)` colliding with a victim's row (victim's key carries the victim's UUID prefix), and even if they could, `ON CONFLICT ... WHERE public.creative_assets.user_id = EXCLUDED.user_id` (`:82`) suppresses the UPDATE, `v_id` returns NULL, and the edge returns 500 (`:101`). (confidence 9)
+
+**jsonb / SRT injection &amp; stored XSS firing now** — `p_metadata` is passed as a JS object through `supabase.rpc` (parameterized jsonb; `metadata || EXCLUDED.metadata` is jsonb concat — no SQL injection). Size-gated `episode`/`srt` land in `metadata` on a row that is owner-only: `p_org_id` is never passed (defaults NULL), so `creative_assets` SELECT (own-or-org) resolves to own-only — no cross-tenant reader. No HTML sink is added in this fatia. Excluded self-XSS aside, no live vector. (confidence 9)
+
+**Direct `authenticated` RPC call** — `REVOKE ALL ... FROM PUBLIC, anon, authenticated` + `GRANT EXECUTE ... TO service_role` (`:89-90`). A user JWT cannot invoke the RPC directly; the only path forces `p_user_id = user.id` from the verified token — `user_id` is unforgeable. (confidence 10)
+
+**501 YouTube fallback leak** (`:54-60`) — Returns only a static PT-BR message + `OTD-VR-001` marker. No secrets/internal state. (confidence 10)
+
+**MAX_META / MAX_SRT bypass (non-DoS)** — `sizedString`/`sizedObject` measure exact UTF-8 bytes via `Blob`; oversized input is dropped to the `?? {}` / skipped default, never stored oversized. No integrity bypass. (confidence 9)
+
+### Forward-looking note (below threshold — NOT a Fatia-1 vuln, do not gate on this)
+`storage_bucket` is client-controlled and **not** validated (`:63` accepts any string, guard only checks `storage_key` prefix). Harmless now because the key is still pinned to the caller's own UUID namespace and nothing in this fatia reads the object. But the Fatia 2 segmentation worker (service-role) will `download`/sign `(storage_bucket, storage_key)` from this row. Before that worker ships, confirm it (a) constrains `storage_bucket` to an allowlist and (b) re-validates the `${user.id}/` prefix / rejects `..` at read time rather than trusting the stored row — otherwise the deferred path-traversal/bucket-pivot becomes a live cross-tenant read there. This is a Fatia-2 review item, surfaced here only because you asked me to trace the prefix guard end-to-end.</result>
+<usage><subagent_tokens>91857</subagent_tokens><tool_uses>6</tool_uses><duration_ms>128019</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(04:42:47)*
+
+
+## 🤖 Claude *(04:42:53)*
+
+**`/security-review`: NO FINDINGS** — traçou cada vetor (registro cross-tenant, row-hijack, injection jsonb/SRT, RPC direto, leak do 501, bypass de size) e confirmou que a migration é byte-idêntica à reunion exceto o `'external'` adicionado. Money-path intocado.
+
+E o reviewer deixou uma **nota forward-looking valiosa** (abaixo do threshold, não é vuln da Fatia 1, mas é ouro para a Fatia 2): `storage_bucket` é client-controlled e não validado aqui — inofensivo agora (a key fica presa ao UUID do caller e nada lê o objeto nesta fatia), mas o worker da Fatia 2 vai `download`/assinar `(bucket, key)`, então ele DEVE allowlist o bucket + re-validar o prefixo `${user.id}/` no read-time.
+
+Vou **vacinar** já (Obstáculo→Síntese): adiciono o allowlist de bucket no seam agora (defense-in-depth, fecha na fonte) + registro o requisito de re-validação da Fatia 2 no blueprint.
+
+## 🤖 Claude *(04:42:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts",
+  "old_string": "const MAX_META_BYTES = 256 * 1024;   // episode metadata jsonb guard\nconst MAX_SRT_BYTES = 512 * 1024;    // one SRT track (generous; a 10-min episode SRT is ~10-30KB)",
+  "new_string": "const MAX_META_BYTES = 256 * 1024;   // episode metadata jsonb guard\nconst MAX_SRT_BYTES = 512 * 1024;    // one SRT track (generous; a 10-min episode SRT is ~10-30KB)\n// Allowlist the bucket at INGEST (defense-in-depth): the Fatia-2 worker will download/sign (bucket,key) from this\n// row, so never let a client-supplied bucket land in it. Both are private owner-scoped buckets. (security-review\n// forward-note 2026-07-12 \u2192 OTD-VR-006: the worker MUST ALSO re-validate the `${user.id}/` prefix at read time.)\nconst ALLOWED_BUCKETS = new Set([\"canvas-assets\", \"video-studio-assets\"]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:43:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts",
+  "old_string": "    const storageBucket = typeof body.storage_bucket === \"string\" && body.storage_bucket ? body.storage_bucket : \"canvas-assets\";\n    const storageKey = typeof body.storage_key === \"string\" ? body.storage_key : \"\";\n    if (!storageKey || !storageKey.startsWith(`${user.id}/`)) {\n      return json(400, { error: \"invalid_storage_key\", action: \"storage_key deve come\u00e7ar com o seu prefixo de usu\u00e1rio.\" });\n    }",
+  "new_string": "    const storageBucket = typeof body.storage_bucket === \"string\" && body.storage_bucket ? body.storage_bucket : \"canvas-assets\";\n    if (!ALLOWED_BUCKETS.has(storageBucket)) {\n      return json(400, { error: \"invalid_bucket\", action: \"Bucket n\u00e3o permitido para ingest.\" });\n    }\n    const storageKey = typeof body.storage_key === \"string\" ? body.storage_key : \"\";\n    // Owner-scoped + reject any path-traversal token (the stored ref must be an inert, own-namespace key).\n    if (!storageKey || !storageKey.startsWith(`${user.id}/`) || storageKey.includes(\"..\")) {\n      return json(400, { error: \"invalid_storage_key\", action: \"storage_key deve come\u00e7ar com o seu prefixo de usu\u00e1rio.\" });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:43:14)*
+
+
+## 🤖 Claude *(04:43:14)*
+
+Agora registro o requisito da Fatia 2 no blueprint (OTD-VR-006 + reforço no FM-VR-02).
+
+## 🤖 Claude *(04:43:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/00-deepsearch-blueprint.md",
+  "old_string": "| OTD-VR-005 | Cut-spec: fonte do `{in,out}` (cap\u00edtulos/atos \u2192 manual \u2192 Hormozi hook-detector futuro) |",
+  "new_string": "| OTD-VR-005 | Cut-spec: fonte do `{in,out}` (cap\u00edtulos/atos \u2192 manual \u2192 Hormozi hook-detector futuro) |\n| OTD-VR-006 | **Fatia 2 read-time guard (do /security-review da Fatia 1):** o worker de segmenta\u00e7\u00e3o (service-role) far\u00e1 `download`/sign de `(storage_bucket, storage_key)` da linha `creative_assets` \u2014 DEVE (a) allowlist `storage_bucket` e (b) re-validar o prefixo `${user.id}/` + rejeitar `..` no READ, n\u00e3o confiar na linha armazenada. A Fatia 1 j\u00e1 allowlista o bucket + rejeita `..` no INGEST (defense-in-depth na fonte), mas o worker n\u00e3o pode assumir isso. |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/00-deepsearch-blueprint.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:43:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/00-deepsearch-blueprint.md",
+  "old_string": "| FM-VR-02 | Worker assina bucket de outro tenant | claim por `user_id` da linha `video_renders` (server-trusted), como video-bridge |",
+  "new_string": "| FM-VR-02 | Worker assina bucket/objeto de outro tenant | claim por `user_id` da linha `video_renders` (server-trusted), como video-bridge; **+ re-validar `(bucket allowlist, key prefix ${uid}/, no `..`)` no READ (OTD-VR-006)** \u2014 n\u00e3o confiar na linha armazenada |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/00-deepsearch-blueprint.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:43:33)*
+
+
+## 🤖 Claude *(04:43:34)*
+
+deno check pós-hardening + commit do gate da Fatia 1.
+
+## 🤖 Claude *(04:43:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.deno/bin:$PATH\"\ndeno check supabase/functions/ingest-external-asset/index.ts 2>&1 | tail -4\necho \"deno exit=$?\"",
+  "description": "deno check p\u00f3s-hardening"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [0m[32mCheck[0m supabase/functions/ingest-external-asset/index.ts
+> deno exit=0
+> ```
+
+## 🤖 Claude *(04:43:45)*
+
+
+## 🤖 Claude *(04:43:46)*
+
+deno check exit 0. Commito o gate da Fatia 1 (blueprint + código do ingest), granular, no estilo do projeto.
+
+## 🤖 Claude *(04:43:48)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "completed",
+  "description": "Fatia 1 code-complete: migration source_module='external' + seam ingest-external-asset (owner-scoped + bucket allowlist + no-`..`) + SOP + apply script + smoke 5 gates. /security-review NO FINDINGS + forward-note virou OTD-VR-006 (guard de read-time da Fatia 2). deno check 0. APPLY gated no Sovereign."
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 description, status
+> ```
+
+## 🤖 Claude *(04:44:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/video-repurpose/\ngit commit -q -F - <<'MSG'\ndocs(bok): blueprint do motor de repurpose de v\u00eddeo (video-repurpose)\n\nSemente de BoK (Closed-Loop step 0) para a metade que falta: o MCORCH distribui\nmas n\u00e3o PRODUZ cortes. Constr\u00f3i o ingest + segmenta\u00e7\u00e3o/reframe/caption + carrossel IG\n+ mapeador de metadados, reusando os trilhos de distribui\u00e7\u00e3o que j\u00e1 existem.\n\nFundamentado (Lei 1) em 10 pointers verificados file:line + no mapa do pipeline\nvalidado do repo GabrielAI (que \u00e9 o INVERSO \u2014 N takes\u21921 master; \u00e9 a fonte do master,\no schema de metadados e a filosofia data-driven, n\u00e3o o molde do segmenter).\n\nCorre\u00e7\u00f5es ao snapshot: o segmenter \u00e9 FR-CP-012 (a SDD j\u00e1 o gateia em \"quando entrar\nINPUT de v\u00eddeo longo\" \u2014 esta capacidade \u00e9 o gatilho); OTD-CP-009 est\u00e1 FECHADA (reframe\nde imagem, v\u00eddeo \u00e9 gap); youtube Pilar I \u00e9 montagem (concat), segmenta\u00e7\u00e3o \u00e9 o inverso;\ncarrossel existente \u00e9 PDF/LinkedIn (IG image-children \u00e9 gap, contrato Meta confirmado).\n\n5 Pilares \u00b7 FR-VR-001..009 \u00b7 OTD-VR-001..006 \u00b7 FMEA FM-VR-01..05 \u00b7 Pattern Conformance\ndos 21 padr\u00f5es \u00b7 reuse-map \u00b7 gates externos honestos (TikTok SELF_ONLY / YouTube privado).\nMSG\ngit add docs/processes/external-video-ingest.md \\\n  supabase/migrations/20260712120000_creative_assets_external_source.sql \\\n  supabase/functions/ingest-external-asset/index.ts \\\n  scripts/qa/apply-creative-assets-external-migration.sh \\\n  scripts/qa/smoke-external-ingest.ts\ngit commit -q -F - <<'MSG'\nfeat(video-repurpose): Fatia 1 \u2014 porta de ingest de v\u00eddeo externo (source_module='external')\n\nPrimeira fatia do motor de repurpose: ingerir um master MP4 externo (document\u00e1rio 16:9 +\nmetadados estruturados + SRT) como creative_assets owner-scoped, para o worker de\nsegmenta\u00e7\u00e3o (Fatia 2) cort\u00e1-lo em N shorts.\n\n- Migration aditiva: source_module += 'external' no CHECK + register_creative_asset\n  (espelha a reunion 20260710170000; corpo byte-id\u00eantico exceto o valor novo). O spine\n  creative_assets \u00e9 reusado por todos os consumidores \u2014 sem tabela dedicada. Money-path intocado.\n- Seam ingest-external-asset: user-JWT \u2192 getUser \u2192 valida storage_key sob ${uid}/ +\n  bucket allowlist + rejeita `..` \u2192 register service-role. Metadados do epis\u00f3dio + SRT\n  inline no metadata jsonb (mapeador da Fatia 4 n\u00e3o perde cap\u00edtulos/fontes). Upload default;\n  fallback YouTube gated (OTD-VR-001 \u2014 download server-side bloqueado por IP de datacenter).\n- SOP Lei 2 + smoke de 5 gates (owner-scope, cross-prefix, metadata, youtube-gated, cross-select).\n\n/security-review NO FINDINGS (list-only migration + seam owner-scoped). deno check 0.\nA forward-note do review virou OTD-VR-006 (guard de read-time do worker da Fatia 2).\nApply/deploy gated no Sovereign.\nMSG\ngit log --oneline -4",
+  "description": "Commit blueprint + Fatia 1 ingest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:44AM[0m [32mINF[0m 1 commits scanned.
+> [90m1:44AM[0m [32mINF[0m scan completed in 37.1ms
+> [90m1:44AM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.03 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> ✔️ secret-scan (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:44AM[0m [32mINF[0m 1 commits scanned.
+> [90m1:44AM[0m [32mINF[0m scan completed in 150ms
+> [90m1:44AM[0m [32mINF[0m no leaks found
+> 
+> ┃  secret-scan ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.91 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ gitleaks-staged (0.74 seconds)
+> ✔️ secret-scan (0.88 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.36 seconds)
+> ✔️ mesh-reingest (0.36 seconds)
+> 0e4393c feat(video-repurpose): Fatia 1 — porta de ingest de vídeo externo (source_module='external')
+> f703cc8 docs(bok): blueprint do motor de repurpose de vídeo (video-repurpose)
+> c4fab9b feat(spaces): nó "Publicar em Rede Social" — publica criativo do Spaces em IG/TikTok/YouTube
+> ac5ca86 feat(spaces): OTD-SPACES-036 — leg media-social do Spaces destravada (space_publish_variants)
+> ```
+
+## 🤖 Claude *(04:44:19)*
+
+
+## 🤖 Claude *(04:44:20)*
+
+Ambos commits landaram (`f703cc8` blueprint + `0e4393c` Fatia 1), hooks limpos. Deixa eu gravar a memória durável do motor + reportar o 1º gate.
+
+## 🤖 Claude *(04:44:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_repurpose_engine.md",
+  "content": "---\nname: project_video_repurpose_engine\ndescription: Motor de repurpose de v\u00eddeo (1 master externo \u2192 N shorts 9:16 + carrossel IG + WP), reusando distribui\u00e7\u00e3o. Blueprint + Fatia 1 ingest apply-gated 2026-07-12.\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-07-12: o MCORCH **distribui** mas n\u00e3o **produz cortes**. Construir a metade que falta (ingest MP4 externo + segmenta\u00e7\u00e3o/reframe/caption FFmpeg + carrossel IG + mapeador de metadados) reusando a distribui\u00e7\u00e3o existente. BoK: `docs/bok/video-repurpose/00-deepsearch-blueprint.md`.\n\n**Achado material decisivo (Lei 1, o repo andou vs. o snapshot dele):**\n- O pipeline validado do repo **`gabrielZarattini/GabrielAI`** (4 epis\u00f3dios, ponte Premiere no Windows) \u00e9 o **INVERSO** disto: N takes Veo 8s \u2192 **1 master** (montagem). Ele \u00e9 a **fonte do master** (o input 16:9), o **schema de metadados** (`episodios/epNN.json`: atos=cap\u00edtulos, creditos.blocos=fontes, teaser, tags) e a **filosofia cut-spec data-driven** (cortes de MEDI\u00c7\u00d5ES, nunca do texto) + o gate **\"olhe o render\"** (=Vision QA). N\u00c3O \u00e9 molde do segmenter (o pr\u00f3prio roadmap dele defere shorts 9:16).\n- O segmenter \"1 longo\u2192N shorts\" \u00e9 **FR-CP-012** (n\u00e3o \"OTD-CP-011\"); a SDD post-engine j\u00e1 o gateia em *\"aplic\u00e1vel quando entrar INPUT de v\u00eddeo longo\"* \u2192 **esta capacidade \u00e9 o gatilho que o destrava**.\n- **OTD-CP-009 FECHADA** (reframe de imagem); reframe de **v\u00eddeo** \u00e9 gap. youtube-studio **Pilar I = montagem** (concat N\u21921); segmenta\u00e7\u00e3o (1\u2192N) \u00e9 o inverso (reusa o worker-shape). Carrossel existente = **PDF/LinkedIn** (`generate-carousel`); **IG carousel (image-children \u226410) \u00e9 gap** \u2014 contrato Meta confirmado (`media_type=CAROUSEL`+children\u2192media_publish).\n\n**Reuse-map (N\u00c3O reconstruir):** publish-social, publish-wordpress, reshape-pillar, channel_profiles, render-core.ts (HTML\u2192PNG, aceita images[]), video-bridge.ts (molde do worker: claim at\u00f4mico+reaper+finalize+dual-write), finalize_video_render, register_creative_asset, o sink [[project_lora_witness_and_otd_spaces_036]] (space_publish_variants/publish-space-asset), scheduled_posts/auto-publish. Disclosure sint\u00e9tica hard-coded (is_aigc/containsSyntheticMedia) preservada. N\u00c3O escoar por viral-autopilot (ML product-centric).\n\n**Fatia 1 (ingest) code-complete + /security-review NO FINDINGS, APPLY GATED** (commits `f703cc8`+`0e4393c`): migration `source_module='external'` (aditivo, espelha reunion, money-path intocado) + seam `ingest-external-asset` (owner-scoped `${uid}/` + bucket allowlist + rejeita `..`; upload default, **YouTube gated OTD-VR-001** por IP datacenter) + SOP + smoke 5 gates. **Unblock:** `! bash scripts/qa/apply-creative-assets-external-migration.sh` \u2192 `npx supabase functions deploy ingest-external-asset` \u2192 `bun run scripts/qa/smoke-external-ingest.ts`.\n\n**Pr\u00f3ximas fatias (gates naturais):** 2=worker segment/reframe/caption (engine `video_renders`+='repurpose', **OTD-VR-006: re-validar bucket/prefixo no READ**, 1 clipe 9:16 INSPECIONADO) \u00b7 3=carrossel IG (render-core slides + branch CAROUSEL, 1 carrossel VISTO) \u00b7 4=mapeador metadado\u2192legenda+HTML WP \u00b7 5=fiar na distribui\u00e7\u00e3o. Gate externo (alcance) = auditoria de app (TikTok SELF_ONLY/YouTube privado) = a\u00e7\u00e3o Sovereign.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_repurpose_engine.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:44:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [Loop 2026-07-12 \u2014 witness LoRA bloqueado em cr\u00e9dito Replicate; OTD-SPACES-036 apply-gated](project_lora_witness_and_otd_spaces_036.md)",
+  "new_string": "# Memory Index\n\n- [Motor de repurpose de v\u00eddeo \u2014 1 master externo\u2192N shorts+carrossel IG+WP, reusando distribui\u00e7\u00e3o](project_video_repurpose_engine.md) \u2014 2026-07-12: MCORCH distribui mas n\u00e3o corta. Blueprint `docs/bok/video-repurpose/` + Fatia 1 ingest (`source_module='external'`) code-complete + /security-review NO FINDINGS, apply-gated (`! bash scripts/qa/apply-creative-assets-external-migration.sh`). GabrielAI repo \u00e9 o INVERSO (N takes\u21921 master); segmenter=FR-CP-012 destravado; IG carousel/video-reframe=gaps. N\u00c3O reconstruir os trilhos existentes.\n- [Loop 2026-07-12 \u2014 witness LoRA bloqueado em cr\u00e9dito Replicate; OTD-SPACES-036 apply-gated](project_lora_witness_and_otd_spaces_036.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:44:56)*
+
+
+## 🤖 Claude *(04:45:24)*
+
+Gate montado, commitado e provado até o limite autônomo. **PARO no apply-gate**, como você mandou ("Construa, revise, prove e PARE no gate com o comando de apply pronto").
+
+---
+
+## 1º GATE — Motor de repurpose de vídeo (passos 0 e 1)
+
+### Verificação material (Lei 1) — cada pointer seu, com correções honestas (o repo andou)
+
+| Seu pointer | Realidade verificada |
+|---|---|
+| "1 longo→N shorts, OTD-CP-011 deferred" | É **FR-CP-012** (id atualizado). A SDD já diz literal *"N/A hoje: não há vídeo-fonte LONGO... **aplicável quando entrar INPUT de vídeo longo**"* → **sua diretiva é o gatilho exato** que destrava FR-CP-012. |
+| "reframe de vídeo (OTD-CP-009 só imagem)" | **OTD-CP-009 está FECHADA** (reframe de **imagem** in-process). Reframe de **vídeo** = gap não-coberto. Seu ponto está certo, mas via um gap novo, não a OTD-009. |
+| "youtube-studio Pilar I falta camada FFmpeg" | ✅ mas Pilar I é **montagem** (concat N→1); a **segmentação (1→N) é o inverso** — reusa o worker-shape, é capacidade distinta. |
+| creative_assets sem 'external' · publish-social IG só Reels · disclosure hard-coded · video-bridge/render-core patterns | ✅ **todos confirmados** file:line. |
+| carrossel | Existe `generate-carousel` mas é **PDF/LinkedIn**; **IG carousel (image-children) é gap** — contrato Meta confirmado (`media_type=CAROUSEL`+children ≤10→media_publish). |
+
+**Descoberta-chave (o "mapa" que você apontou):** estudei o repo `gabrielZarattini/GabrielAI`. Ele é o **INVERSO** desta diretiva — N takes Veo 8s → **1 master** (ponte Premiere). Logo ele é a **fonte do master** (o input 16:9), o **schema de metadados** (`episodios/epNN.json`: atos=capítulos, creditos.blocos=fontes) e a **filosofia cut-spec data-driven** — mas **não** o molde do segmenter (o próprio roadmap dele defere shorts 9:16). O README dele já prevê a troca: *"quando o MCORCH assumir a geração, basta respeitar o mesmo contrato"*.
+
+### Step 0 — Blueprint BoK (Closed-Loop) ✅ `f703cc8`
+[`docs/bok/video-repurpose/00-deepsearch-blueprint.md`](docs/bok/video-repurpose/00-deepsearch-blueprint.md) — 5 Pilares (mapeiam seus passos 1-5), FR-VR-001..009, OTD-VR-001..006, FMEA FM-VR-01..05, Pattern Conformance dos 21 padrões, reuse-map ("não reconstruir"), gates externos honestos.
+
+### Step 1 — Porta de ingest ✅ `0e4393c` (code-complete, /security-review **NO FINDINGS**)
+- **Migration** `source_module='external'` — aditiva, espelha a reunion byte-a-byte exceto o valor novo. **Money-path intocado.** (decisão de schema provada: reuso do spine `creative_assets`, não tabela dedicada — todo consumidor já o lê).
+- **Seam** `ingest-external-asset` — owner-scoped (`${uid}/` + bucket allowlist + rejeita `..`), metadados+SRT inline (mapeador da Fatia 4 não perde capítulos/fontes). Upload default; **YouTube gated (OTD-VR-001**: download server-side bloqueado por IP de datacenter — honesto, "não preferido" de qualquer modo).
+- **SOP** Lei 2 + **smoke** 5 gates + `deno check` 0.
+- **Vacina (Obstáculo→Síntese):** o /security-review deixou uma nota forward-looking (o worker da Fatia 2 vai assinar `(bucket,key)` da linha) → já registrada como **OTD-VR-006** + hardening no ingest.
+
+### ⏸️ PARADO NO GATE — comando de apply pronto pra você rodar
+```bash
+! bash scripts/qa/apply-creative-assets-external-migration.sh
+npx supabase functions deploy ingest-external-asset
+bun run scripts/qa/smoke-external-ingest.ts   # 5 gates zero-custo
+```
+
+### Próximos gates (paro em cada um)
+- **Fatia 2** — worker segment/reframe/caption (engine `video_renders`+='repurpose', molde video-bridge; **OTD-VR-006** read-time guard; **1 clipe 9:16 renderizado e INSPECIONADO** por Vision QA).
+- **Fatia 3** — carrossel IG (slides via render-core + branch `CAROUSEL`; **1 carrossel VISTO**).
+- **Fatia 4** — mapeador metadado→legenda nativa + corpo HTML WP (fontes preservadas).
+- **Fatia 5** — fiar em `publish-space-asset`/`publish-wordpress` (E2E; alcance público gated na sua auditoria de app — TikTok SELF_ONLY / YouTube privado).
+
+Quando você aplicar a migration da Fatia 1 (ou me der GO), eu sigo para a Fatia 2.
+
+## 👤 User *(04:54:30)*
+
+<!-- attach: Terminal 1 | tab:0 -->
+> ubuntu@panel:/home/gcrUX/htdocs/constellation-orchestra$ ! bash scripts/qa/apply-creative-assets-external-migration.sh
+> npx supabase functions deploy ingest-external-asset
+> bun run scripts/qa/smoke-external-ingest.ts
+> [1/3] applying migration DDL...
+> HTTP 201 → []
+> [2/3] registering in schema_migrations ledger...
+> []
+> [3/3] material proof (Lei 1): CHECK += 'external' + RPC guard 'external' + ledger...
+> [{"chk_external":1,"rpc_external":1,"client_grants":0,"ledger":1}]
+> ✅ expected: chk_external=1, rpc_external=1, client_grants=0, ledger=1
+> Bundling Function: ingest-external-asset
+> Deploying Function: ingest-external-asset (script size: 61.37kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: ingest-external-asset
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ✅ G1 owner-scope ingest → external asset  → status=2200 sm=external
+> ✅ G2 cross-prefix storage_key → 400  → status=400
+> ✅ G3 metadata preserved (episode.atos + creditos.bloocos + srt.pt)  → "Ep Smoke"
+> ✅ G4 youtube fallback → 501 gated (OTD-VR-001)  → sttatus=501
+> ✅ G5 cross-tenant SELECT = 0  → B sees 0
+> 
+> ✅ SMOKE PASS — external ingest owner-scoped
+
+## 🤖 Claude *(04:55:44)*
+
+
+## 🤖 Claude *(04:55:49)*
+
+**Fatia 1 LIVE e provada E2E** — obrigado por rodar. Prova material recebida:
+- Migration aplicada: `{"chk_external":1,"rpc_external":1,"client_grants":0,"ledger":1}` ✓
+- `ingest-external-asset` deployado (61.37kB) ✓
+- **Smoke 5/5 PASS**: owner-scope→external asset · cross-prefix→400 · metadata preservado · YouTube→501 gated · cross-tenant SELECT=0 ✓
+
+Isso é o GO para a **Fatia 2** (o coração: worker de segmentação/reframe/caption). Vou construí-la mirando o gate natural — e a prova material que importa (**1 clipe 9:16 renderizado e INSPECIONADO**) eu consigo witnessar **offline** (master 16:9 sintético → clipe real), sem depender do apply da fila. Deixa eu marcar o progresso e ler os moldes exatos (video-bridge worker + o spawn FFmpeg do render-core).
+
+## 🤖 Claude *(04:55:51)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "10",
+  "status": "completed",
+  "description": "FATIA 1 LIVE E PROVADA (Sovereign aplicou 2026-07-12): migration aplicada (chk_external=1/rpc_external=1/client_grants=0/ledger=1) + ingest-external-asset deployado + smoke 5/5 PASS."
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #10 description
+> ```
+
+## 🤖 Claude *(04:55:54)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "V3 (Fatia 2): worker segmenta\u00e7\u00e3o/reframe/caption FFmpeg + witness offline 1 clipe 9:16",
+  "description": "segment-core FFmpeg (source 16:9 + cut-spec \u2192 N clipes 9:16 reframe+caption queimada) witness\u00e1vel offline (master sint\u00e9tico\u2192clipe\u2192Vision QA) + migration engine='repurpose' + worker video-repurpose-bridge (molde video-bridge, OTD-VR-006 read-time guard) + enqueue seam + /security-review. PARAR no apply-gate.",
+  "activeForm": "Construindo worker de segmenta\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #11 created successfully: V3 (Fatia 2): worker segmentação/reframe/caption FFmpeg + witness offline 1 clipe 9:16
+> ```
+
+## 🤖 Claude *(04:55:56)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Fatia 2 \u2014 worker de segmenta\u00e7\u00e3o FFmpeg",
+  "summary": "Cora\u00e7\u00e3o do motor de repurpose: 1 master 16:9 \u2192 N shorts 9:16 (reframe center-safe + legenda queimada) via FFmpeg. Witness offline com master sint\u00e9tico. Molde: video-bridge.ts."
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Fatia 2 — worker de segmentação FFmpeg". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(04:55:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-bridge.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/video-bridge.ts
+> 4	 *
+> 5	 * HyperFrames render bridge — host worker that polls `video_renders` (engine='hyperframes', state='queued'),
+> 6	 * atomically claims each, renders the composition → 9:16 1080×1920 MP4 (render-core.ts), uploads to the private
+> 7	 * bucket `video-studio-assets`, and closes the render via `finalize_video_render` (the ONLY terminal authority).
+> 8	 *
+> 9	 * BoK SSOT: docs/bok/video-studio/04-frd.md FR-VS-024/026 + 05-sdd.md §2.3 (drift reconciliation 2026-06-24).
+> 10	 * SOP (Lei 2): docs/processes/autopilot-video-9x16.md (gate OTD-VA-009).
+> 11	 * Pattern: mirrors scripts/design-bridge.ts (poll + atomic claim) — the proven host↔cloud bridge (Edge fns can't
+> 12	 *          reach a host daemon, OTD-VS-... ; the worker pulls). Tenancy: single-tenant Usuário Zero (OTD-VA-011);
+> 13	 *          multi-tenant sandbox hardening (FR-VS-025 ephemeral container) is deferred to User 1.
+> 14	 *
+> 15	 * Supervisor: systemd --user video-bridge.service (Restart=always). Secrets load from ../.env (NOT in the unit).
+> 16	 * Usage: bun run scripts/video-bridge.ts   (or `--once` to drain queued renders and exit — used by the smoke).
+> 17	 */
+> 18	
+> 19	import { createClient } from '@supabase/supabase-js';
+> 20	import { existsSync, readFileSync, rmSync } from 'fs';
+> 21	import { join, dirname } from 'path';
+> 22	import { fileURLToPath } from 'url';
+> 23	import { renderComposition, renderStudioProject, type RenderSpec, type StudioProjectSpec, type RenderResult } from './hyperframes/render-core.ts';
+> 24	
+> 25	// ── Env (same loader as design-bridge.ts — no secrets in the systemd unit) ──
+> 26	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 27	const envPath = join(__dirname, '../.env');
+> 28	if (existsSync(envPath)) {
+> 29	  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+> 30	    const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
+> 31	    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+> 32	  }
+> 33	}
+> 34	
+> 35	const SUPABASE_URL = process.env.SUPABASE_URL;
+> 36	const SERVICE_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 37	if (!SUPABASE_URL || !SERVICE_KEY) {
+> 38	  console.error('❌ Missing SUPABASE_URL or SB_SECRET_KEY in .env');
+> 39	  process.exit(1);
+> 40	}
+> 41	const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+> 42	
+> 43	const BUCKET = 'video-studio-assets';
+> 44	const POLL_MS = 4000;
+> 45	const RUNNING_TIMEOUT_MS = 10 * 60 * 1000; // re-claim a render stuck in 'running' beyond this (dead worker)
+> 46	
+> 47	function logHealth(status: string, event: string, metadata?: Record<string, unknown>) {
+> 48	  return supabase.from('infra_health_logs')
+> 49	    .insert({ service: 'video-bridge', status, event, metadata: metadata ?? null })
+> 50	    .then(() => {}, () => {});
+> 51	}
+> 52	
+> 53	/** Atomic claim: queued→running for exactly one worker. Returns the claimed row or null. */
+> 54	async function claim(renderId: string) {
+> 55	  const { data, error } = await supabase
+> 56	    .from('video_renders')
+> 57	    .update({ state: 'running', updated_at: new Date().toISOString() })
+> 58	    .eq('id', renderId)
+> 59	    .eq('state', 'queued')
+> 60	    .select('id, user_id, engine, charged_mco, composition')
+> 61	    .maybeSingle();
+> 62	  if (error || !data) return null;
+> 63	  return data;
+> 64	}
+> 65	
+> 66	/** Render one claimed row end to end. Never throws — translates failure to finalize(failed, refund). */
+> 67	async function processRender(row: {
+> 68	  id: string; user_id: string; charged_mco: number; composition: unknown;
+> 69	}) {
+> 70	  const renderId = row.id;
+> 71	  const charged = row.charged_mco ?? 0;
+> 72	  let outPath: string | null = null;
+> 73	  try {
+> 74	    const spec = row.composition as (RenderSpec | StudioProjectSpec) | null;
+> 75	    if (!spec || typeof spec !== 'object') {
+> 76	      throw new Error('composition_missing_or_invalid');
+> 77	    }
+> 78	    // Autopilot context — declared UP-FRONT (used by both register_creative_asset below and the FR-VA-025 attach).
+> 79	    // Previously declared after the register call → a use-before-declaration TDZ-threw into the fail-soft catch,
+> 80	    // silently skipping every video creative_assets registration. Editor (studio-project) renders carry no autopilot.
+> 81	    const ap = (spec as { autopilot?: { user_id?: string; campaign_id?: string | null; product_id?: string | null; cycle_id?: string | null; title?: string } }).autopilot;
+> 82	
+> 83	    outPath = `/tmp/video-render-${renderId}.mp4`;
+> 84	    // FR-VS-047: studio-authored projects render via the reference engine (hyperframes render → parity definitional);
+> 85	    // template specs (autopilot) render via the bespoke motor. Discriminated by composition.mode.
+> 86	    let result: RenderResult;
+> 87	    if ((spec as StudioProjectSpec).mode === 'studio-project') {
+> 88	      result = await renderStudioProject(spec as StudioProjectSpec, outPath);
+> 89	    } else {
+> 90	      if (!(spec as RenderSpec).props) throw new Error('composition_missing_or_invalid');
+> 91	      result = await renderComposition(spec as RenderSpec, outPath);
+> 92	    }
+> 93	    // Honest aspect label (FR-CP-004): the engine now renders 9:16 AND 16:9 — derive from the real dimensions.
+> 94	    const aspectLabel = result.width >= result.height ? '16:9' : '9:16';
+> 95	
+> 96	    // Upload to the private bucket under <user_id>/<render_id>.mp4 (path scopes tenant isolation).
+> 97	    const storageKey = `${row.user_id}/${renderId}.mp4`;
+> 98	    const bytes = readFileSync(outPath);
+> 99	    const { error: upErr } = await supabase.storage
+> 100	      .from(BUCKET)
+> 101	      .upload(storageKey, bytes, { contentType: 'video/mp4', upsert: true });
+> 102	    if (upErr) throw new Error(`upload_failed: ${upErr.message}`);
+> 103	
+> 104	    // Material manifest (the erasure unit, FR-VS-030).
+> 105	    await supabase.from('video_assets').insert({
+> 106	      user_id: row.user_id, render_id: renderId, kind: 'video',
+> 107	      storage_key: storageKey, bytes: result.bytes,
+> 108	    }).then(() => {}, () => {});
+> 109	
+> 110	    // Mesh observation (FR-VS-026) — best-effort; the embed trigger fires on insert.
+> 111	    let nodeId: string | null = null;
+> 112	    const { data: node } = await supabase.from('mcorch_nodes').insert({
+> 113	      user_id: row.user_id, node_type: 'observation',
+> 114	      name: `video-render:${renderId}`,
+> 115	      content: `HyperFrames ${aspectLabel} render ${result.width}x${result.height} ${result.frames}f @${result.fps}fps (${(result.bytes / 1024).toFixed(0)}KB)`,
+> 116	      metadata: { kind: 'video_render', render_id: renderId, storage_key: storageKey, bytes: result.bytes },
+> 117	    }).select('id').maybeSingle();
+> 118	    nodeId = node?.id ?? null;
+> 119	
+> 120	    // Terminal: done, refund 0 (prepaid path — the cycle already paid; the motor never self-bills here).
+> 121	    const { data: fin } = await supabase.rpc('finalize_video_render', {
+> 122	      p_render_id: renderId, p_state: 'done', p_storage_key: storageKey, p_qa: null, p_node_id: nodeId, p_refund: 0,
+> 123	    });
+> 124	
+> 125	    // Dual-write to the canonical asset registry (creative_assets) so Canvas Studio / the HyperFrames editor can
+> 126	    // reuse this render bidirectionally (the "power of the outputs" spine). Fail-soft — never break the render.
+> 127	    try {
+> 128	      await supabase.rpc('register_creative_asset', {
+> 129	        p_user_id: row.user_id, p_kind: 'video',
+> 130	        p_storage_bucket: BUCKET, p_storage_key: storageKey, p_is_public: false,
+> 131	        p_source_module: 'hyperframes', p_source_job_id: renderId,
+> 132	        p_mime_type: 'video/mp4', p_file_size_bytes: result.bytes,
+> 133	        p_width: result.width, p_height: result.height,
+> 134	        p_duration_seconds: result.fps > 0 ? result.frames / result.fps : null,
+> 135	        p_mesh_node_id: nodeId,
+> 136	        p_title: ap?.title ? `Vídeo ${aspectLabel}: ${ap.title}` : `Vídeo ${aspectLabel} ${renderId}`,
+> 137	        p_metadata: { render_id: renderId, format: aspectLabel, fps: result.fps, frames: result.frames },
+> 138	      });
+> 139	    } catch (e) {
+> 140	      console.warn(`[video-bridge] creative_assets register skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 141	    }
+> 142	
+> 143	    // FR-VA-025 — autopilot reconciliation (the async asset arrives AFTER the cycle finalized): attach the 9:16
+> 144	    // asset to the content library + a creative_metrics row keyed by the new content_variant_id. Gated on the
+> 145	    // composition.autopilot context the enqueuer set; generic (editor) renders carry no autopilot block → no attach.
+> 146	    if (ap?.user_id) {
+> 147	      try {
+> 148	        const { data: clib } = await supabase.from('content_library').insert({
+> 149	          user_id: ap.user_id, campaign_id: ap.campaign_id ?? null, type: 'video',
+> 150	          title: `Vídeo 9:16: ${ap.title ?? renderId}`, media_url: storageKey, status: 'approved',
+> 151	          metadata: { source: 'autopilot_video', render_id: renderId, product_id: ap.product_id ?? null, cycle_id: ap.cycle_id ?? null, storage_bucket: BUCKET, format: '9:16' },
+> 152	        }).select('id').maybeSingle();
+> 153	        if (clib?.id) {
+> 154	          // source MUST be one of the CHECK values ('affiliate_click'|'organic'|'postback') — the 9:16 video is an
+> 155	          // organic creative (mirrors the article baseline). platform null = not yet bound to a vertical network
+> 156	          // (PR-VA-021 deferred). UNIQUE(content_variant_id, source) is safe — the video's content_variant_id is new.
+> 157	          await supabase.from('creative_metrics').insert({
+> 158	            user_id: ap.user_id, cycle_id: ap.cycle_id ?? null, content_variant_id: clib.id,
+> 159	            product_id: ap.product_id ?? null, platform: null, source: 'organic',
+> 160	            impressions: 0, engagements: 0, affiliate_clicks: 0, revenue_cents: 0,
+> 161	          }).then(() => {}, (e: unknown) => console.warn('[video-bridge] creative_metrics skipped:', e instanceof Error ? e.message : e));
+> 162	        }
+> 163	        console.log(`   ↳ autopilot attach: content_library video ${clib?.id ?? '(none)'}`);
+> 164	      } catch (e) {
+> 165	        console.warn(`[video-bridge] autopilot attach skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 166	      }
+> 167	    }
+> 168	
+> 169	    // ── FR-CP-003 — kick the reshaper for VIDEO surfaces now that the 9:16 master is finalized (out-of-band).
+> 170	    // The reshaper reexports THIS master into per-channel native variants (the 7-channel spine, anti cross-post).
+> 171	    // Idempotent (channel_variants UNIQUE) + fail-soft — a reshape hiccup never breaks the render.
+> 172	    // SSOT: docs/bok/post-engine/13-sdd-reshaper-atomizer.md §4.
+> 173	    const pillarRunId = (spec as { pillar_run_id?: string; autopilot?: { pillar_run_id?: string } }).pillar_run_id
+> 174	      ?? (spec as { autopilot?: { pillar_run_id?: string } }).autopilot?.pillar_run_id ?? null;
+> 175	    if (pillarRunId) {
+> 176	      try {
+> 177	        await fetch(`${SUPABASE_URL}/functions/v1/reshape-pillar`, {
+> 178	          method: 'POST',
+> 179	          headers: { Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' },
+> 180	          body: JSON.stringify({ pillar_run_id: pillarRunId, scope: 'video' }),
+> 181	        });
+> 182	        console.log(`   ↳ reshape kicked (video) for pillar_run ${pillarRunId}`);
+> 183	      } catch (e) {
+> 184	        console.warn(`[video-bridge] reshape kick skipped for ${renderId}:`, e instanceof Error ? e.message : e);
+> 185	      }
+> 186	    }
+> 187	
+> 188	    console.log(`✅ render ${renderId} done → ${storageKey} (${(result.bytes / 1024).toFixed(0)}KB, ${result.durationMs}ms)`, fin);
+> 189	    await logHealth('healthy', 'render_done', { render_id: renderId, bytes: result.bytes });
+> 190	  } catch (e) {
+> 191	    const msg = e instanceof Error ? e.message : String(e);
+> 192	    console.error(`❌ render ${renderId} failed: ${msg}`);
+> 193	    // Refund the charge (failed render delivered no value). finalize is idempotent (guard state IN queued/running).
+> 194	    await supabase.rpc('finalize_video_render', {
+> 195	      p_render_id: renderId, p_state: 'failed', p_storage_key: null, p_qa: null, p_node_id: null, p_refund: charged,
+> 196	    }).then(() => {}, () => {});
+> 197	    await logHealth('error', 'render_failed', { render_id: renderId, error: msg });
+> 198	  } finally {
+> 199	    if (outPath) rmSync(outPath, { force: true });
+> 200	  }
+> 201	}
+> 202	
+> 203	/** One drain pass: claim + render every queued hyperframes render. Returns count processed. */
+> 204	async function drainOnce(): Promise<number> {
+> 205	  // Reap renders stuck in 'running' past the timeout (dead worker) → back to queued for re-claim.
+> 206	  const cutoff = new Date(Date.now() - RUNNING_TIMEOUT_MS).toISOString();
+> 207	  await supabase.from('video_renders')
+> 208	    .update({ state: 'queued' })
+> 209	    .eq('engine', 'hyperframes').eq('state', 'running').lt('updated_at', cutoff)
+> 210	    .then(() => {}, () => {});
+> 211	
+> 212	  const { data: queued, error } = await supabase
+> 213	    .from('video_renders')
+> 214	    .select('id')
+> 215	    .eq('engine', 'hyperframes').eq('state', 'queued')
+> 216	    .order('created_at', { ascending: true })
+> 217	    .limit(10);
+> 218	  if (error || !queued?.length) return 0;
+> 219	
+> 220	  let n = 0;
+> 221	  for (const q of queued) {
+> 222	    const row = await claim(q.id);
+> 223	    if (!row) continue; // already claimed by another worker
+> 224	    await processRender(row as any);
+> 225	    n++;
+> 226	  }
+> 227	  return n;
+> 228	}
+> 229	
+> 230	async function main() {
+> 231	  const once = process.argv.includes('--once');
+> 232	  if (once) {
+> 233	    const n = await drainOnce();
+> 234	    console.log(`drained ${n} render(s)`);
+> 235	    process.exit(0);
+> 236	  }
+> 237	  console.log('🎬 video-bridge running — polling video_renders (engine=hyperframes, queued)...');
+> 238	  await logHealth('healthy', 'worker_started');
+> 239	  // eslint-disable-next-line no-constant-condition
+> 240	  while (true) {
+> 241	    try {
+> 242	      await drainOnce();
+> 243	    } catch (e) {
+> 244	      console.error('poll cycle error:', e);
+> 245	      await logHealth('degraded', 'poll_error', { error: e instanceof Error ? e.message : String(e) });
+> 246	    }
+> 247	    await new Promise((r) => setTimeout(r, POLL_MS));
+> 248	  }
+> 249	}
+> 250	
+> 251	main();
+> 252	
+> ```
+
+## 🤖 Claude *(04:56:30)*
+
+
+## 🤖 Claude *(04:56:33)*
+
+Tenho o molde exato do worker. O ponto crítico do segment-core é a queima de legenda: o repo GabrielAI notou que *"o ffmpeg da máquina não tem drawtext/freetype"* — então preciso verificar materialmente as capacidades do FFmpeg do host antes de escrever o worker (Lei 1). Deixa eu checar filtros + gerar um master 16:9 sintético + fazer **1 clipe real** (trim+reframe+caption) e inspecioná-lo — travando o comando FFmpeg antes de codar o worker.
+
+## 🤖 Claude *(04:56:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/scratchpad\"\nmkdir -p \"$SCRATCH/repurpose\"\necho \"=== FFmpeg caption filters dispon\u00edveis ===\"\nffmpeg -hide_banner -filters 2>/dev/null | grep -iE \"drawtext|subtitles|overlay|crop|scale\" | head\necho \"\"\necho \"=== fontes dispon\u00edveis (fontconfig) ===\"\nfc-list 2>/dev/null | head -3 || echo \"sem fc-list\"\nls /usr/share/fonts/**/*.ttf 2>/dev/null | head -3 || find /usr/share/fonts -name \"*.ttf\" 2>/dev/null | head -3\necho \"\"\necho \"=== libx264 presente? ===\"\nffmpeg -hide_banner -encoders 2>/dev/null | grep -iE \"libx264|aac\" | head",
+  "description": "Verificar capacidades FFmpeg do host (drawtext/subtitles/x264/fonts)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FFmpeg caption filters disponíveis ===
+>  TS. asisdr            AA->A      Measure Audio Scale-Invariant Signal-to-Distortion Ratio.
+>  ... alphaextract      V->V       Extract an alpha channel as a grayscale image component.
+>  ... ass               V->V       Render ASS subtitles onto input video using the libass library.
+>  TSC colorize          V->V       Overlay a solid color on the video stream.
+>  ..C crop              V->V       Crop the input video.
+>  T.C cropdetect        V->V       Auto-detect crop size.
+>  T.C drawtext          V->V       Draw text on top of video frames using libfreetype library.
+>  .S. epx               V->V       Scale the input using EPX algorithm.
+>  ... extractplanes     V->N       Extract planes as grayscale frames.
+>  .S. hqx               V->V       Scale the input by 2, 3 or 4 using the hq*x magnification algorithm.
+> 
+> === fontes disponíveis (fontconfig) ===
+> /usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf: DejaVu Serif:style=Bold
+> /usr/share/fonts/opentype/urw-base35/URWBookman-LightItalic.otf: URW Bookman:style=Light Italic
+> /usr/share/fonts/opentype/urw-base35/URWBookman-Light.otf: URW Bookman:style=Light
+> 
+> === libx264 presente? ===
+>  V....D libx264              libx264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (codec h264)
+>  V....D libx264rgb           libx264 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 RGB (codec h264)
+>  A....D aac                  AAC (Advanced Audio Coding)
+> ```
+
+## 🤖 Claude *(04:57:06)*
+
+
+## 🤖 Claude *(04:57:09)*
+
+FFmpeg do host é **completo** (ao contrário da máquina Windows do GabrielAI): `drawtext`+freetype ✓, `subtitles`/`ass` (libass) ✓, `crop`/`scale` ✓, `libx264`/`aac` ✓, fontes DejaVu ✓. Posso queimar legenda de verdade. Deixa eu witnessar o core: master 16:9 sintético com elementos ESQ/CENTRO/DIR → 1 clipe (trim + crop-9:16-center + legenda) → extrair frame → inspecionar (o center-crop deve manter CENTRO e cortar ESQ/DIR).
+
+## 🤖 Claude *(04:57:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/scratchpad/repurpose\"\nFONT=\"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf\"\n\necho \"=== [1] gerar master 16:9 sint\u00e9tico (20s, ESQ|CENTRO|DIR) ===\"\nffmpeg -y -hide_banner -loglevel error -f lavfi -i \"testsrc2=size=1920x1080:duration=20:rate=30\" \\\n  -vf \"drawtext=text='CENTRO':fontfile=$FONT:fontsize=140:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=16:x=(w-tw)/2:y=(h-th)/2,drawtext=text='ESQ':fontfile=$FONT:fontsize=90:fontcolor=yellow:x=60:y=(h-th)/2,drawtext=text='DIR':fontfile=$FONT:fontsize=90:fontcolor=cyan:x=w-tw-60:y=(h-th)/2\" \\\n  -c:v libx264 -pix_fmt yuv420p -t 20 \"$SCRATCH/master16x9.mp4\"\necho \"master: $(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,duration -of csv=p=0 \"$SCRATCH/master16x9.mp4\" 2>/dev/null)\"\n\necho \"=== [2] 1 clipe: trim [5s,+6s] + crop 16:9\u21929:16 center (608x1080@656) + scale 1080x1920 + legenda queimada ===\"\nffmpeg -y -hide_banner -loglevel error -ss 5 -i \"$SCRATCH/master16x9.mp4\" -t 6 \\\n  -vf \"crop=608:1080:656:0,scale=1080:1920,setsar=1,drawtext=text='Este e um short 9\\:16 legendado':fontfile=$FONT:fontsize=46:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=14:x=(w-tw)/2:y=h-th-160\" \\\n  -c:v libx264 -pix_fmt yuv420p -an \"$SCRATCH/clip_9x16.mp4\"\necho \"clipe: $(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,duration,nb_frames -of csv=p=0 \"$SCRATCH/clip_9x16.mp4\" 2>/dev/null) ($(stat -c%s \"$SCRATCH/clip_9x16.mp4\") bytes)\"\n\necho \"=== [3] extrair frame do meio p/ inspe\u00e7\u00e3o ===\"\nffmpeg -y -hide_banner -loglevel error -ss 3 -i \"$SCRATCH/clip_9x16.mp4\" -frames:v 1 -vf \"scale=540:960\" \"$SCRATCH/clip_frame.jpg\"\necho \"frame: $(file -b \"$SCRATCH/clip_frame.jpg\" | cut -c1-50) ($(stat -c%s \"$SCRATCH/clip_frame.jpg\") bytes)\"",
+  "description": "Witness offline do segment-core: master sint\u00e9tico \u2192 clipe 9:16 \u2192 frame"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === [1] gerar master 16:9 sintético (20s, ESQ|CENTRO|DIR) ===
+> master: 1920,1080,20.000000
+> === [2] 1 clipe: trim [5s,+6s] + crop 16:9→9:16 center (608x1080@656) + scale 1080x1920 + legenda queimada ===
+> clipe: 1080,1920,6.000000,180 (1806961 bytes)
+> === [3] extrair frame do meio p/ inspeção ===
+> frame: JPEG image data, JFIF standard 1.02, aspect ratio, (27474 bytes)
+> ```
+
+## 🤖 Claude *(04:58:13)*
+
+
+## 🤖 Claude *(04:58:14)*
+
+Clipe produzido: **1080×1920 (9:16), 6.0s, 180 frames**. Agora a inspeção ocular (Vision QA / Lei 1) — deve mostrar CENTRO + legenda queimada, e ESQ/DIR cortados.
+
+## 🤖 Claude *(04:58:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/scratchpad/repurpose/clip_frame.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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/M02g8pTV70UrbeqLviZfu3W9NvwF947t1vTb8BfeRgztrdNdegpwsS0vim3GOV0pSaZyOVpy5tJPdG5274m13brem34C+8d263pt+AvvPGlo5W94WLFRbxqktUJYeU0+hma3luq5OslGkp/QjCOcYjHLzyyaWS8sjBxcvKjhLTp04nNT4mL7t1vTb8BfeO7db02/AX3kfu2rlibt3IuElti9pmIbor5w1qxLG3i4p+82mWllKbbSoptbbR2DU+Jsd263pt+AvvHdut6bfgL7zA9Rd63qdEuszp0NYlnowzJR3XXTk4KxPMVl5wks87eAspTeyinuidu+Jud263pt+AvvMDvbetVfobtubhplpziCT4STJna3G50Erso3VUcdNvMcPjw4Y5Vzlbb2sXaexchdg4S9F4e3DkVTK5SNHNZaflqL8ynKLS2PVhuZ4crp7iudbGtk67M7nt74q5q831NmKnNReHNt4jHPItreOJYFLS9nt836mhs0cqe5ZUtN6Lab0y0OS9J5w2uElxR9nnn6kJNa6j0q8mnhFPiU7SihdbGtmWlu2q+m3aK3bd29bnOOmHytG2SzyY4nnCmVithZrlOzGNyKvr5cIPDeMauONm0yPFVe1k8L2vjY5pXAxutjWy9u5W4arc9XV0li4+pheUblydxS1wjnVp14xx5V7Cmd30c941dmmg8Suyxn91bZS9iTZahnqk1J66kdO3VgNKMfrY1svKss7g3NL6K933q65CKd65hy05WfSllJNrjiKSSKdr5Uk6q5KjhOFh6XCE/jR9Fak8uXys44vgcp52tU2Sqpcjb2/jc7pRj9bGtkj3DYtVO9aW1egrluc2pRlsfoSfEyfaajs0u9p2Ka0oR0WtNuCfxpR5FxeWz34yrr0eZO+nVtwOaVwITrY1slvza3z1fWfQ7mMZxmGvwNWr2YyRWFm7cuq1G3OVxy0q2ovXq/d07cnpZupLZWbtttIWXA/GtjWyU3ezu97OjVR3fTeI6dMuOM4emT0+3BgL9JUU17qLtqcLvD+m16XpbOCzt5As3UlsrN7pDSuBq62NbJd82t89X1n0O5jGcZhr8DVq9mMkbsUlRU3uotWpzu+l/TS9L0dvB42coWbqO9qzdtvW2DSuBq62NbJTa7O73vOajR3fQeJatMOOM4WqSUvZkjcrF6F52JW5q6paOr0vX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IOAAAAAAHYoANACUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAh3aTvRU+r8ZEmJDu0neip9X4yJIO5vqeR+Zo/ERaqcyW5nNYAN3yOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHYoANACUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAh3aTvRU+r8ZEmJDu0neip9X4yJIO5vqeR+ao/ERaqcyW5nNYAN3yOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHYoANACUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAh3aTvRU+r8ZEmJDu0neip9X4yJIO5vqeR+ao/ERaqcyW5nNYAN3yOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHYoANACUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhvaTvRU+r8ZEmRDe0neip9X4yJIO5vqmR+Zo/ERaqcyW5nNgAN3yOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//Z', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(04:58:55)*
+
+
+## 🤖 Claude *(04:58:59)*
+
+**Vision QA — CORE PROVADO MATERIALMENTE (Lei 1):** o frame mostra exatamente o esperado — **9:16 portrait**, **CENTRO preservado**, **ESQ (amarelo) e DIR (ciano) cortados** pelo center-crop, e a **legenda queimada** na base. O comando FFmpeg de segmentação/reframe/caption está travado e funciona.
+
+Agora modularizo isso no `segment-core` + worker (molde video-bridge). Deixa eu escrever o segment-core com o comando provado (crop source-agnóstico + caption via textfile p/ escaping robusto).
+
+## 🤖 Claude *(04:59:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * scripts/video-repurpose/segment-core.ts\n *\n * The FFmpeg core of the video-repurpose engine (Fatia 2): a long 16:9 master + a data-driven cut-spec \u2192\n * N vertical shorts (9:16 or 1:1), reframed subject-safe (center-crop) with an optional burned caption.\n *\n * BoK SSOT: docs/bok/video-repurpose/00-deepsearch-blueprint.md \u00a7Pilar II (FR-VR-003/004/005).\n * PROVEN offline 2026-07-12 (Vision QA): a synthetic 16:9 master with ESQ|CENTRO|DIR labels \u2192 the 9:16 center-crop\n * kept CENTRO, dropped the side labels, and burned the caption at the base. Deterministic FFmpeg \u2014 no LLM in the core.\n *\n * Reframe is source-agnostic (expression crop): for a target aspect ar, keep the largest centered rect of that aspect.\n * Caption is written to a per-clip textfile \u2192 drawtext `textfile=` (avoids the `:'%\\` escaping trap of inline text).\n * Cut is re-encoded (`-ss <in> -i -t <dur>`) \u2192 frame-accurate (the reframe re-encodes anyway).\n */\n\nimport { spawn } from 'node:child_process';\nimport { writeFileSync, mkdirSync, statSync, existsSync } from 'node:fs';\nimport { join } from 'node:path';\n\nconst FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';\n\nexport type Reframe = '9:16' | '1:1';\nexport interface ClipSpec {\n  in_sec: number;\n  out_sec: number;\n  caption?: string;          // burned bottom-center caption (drawtext textfile); omit for none\n  reframe?: Reframe;         // default '9:16'\n}\nexport interface SegmentSpec {\n  sourcePath: string;        // local path to the master MP4\n  clips: ClipSpec[];\n  outDir: string;\n  fps?: number;              // default 30 (CFR)\n}\nexport interface ClipResult {\n  index: number; path: string; width: number; height: number; durationSec: number; bytes: number;\n}\n\nconst TARGET: Record<Reframe, { w: number; h: number; ar: number }> = {\n  '9:16': { w: 1080, h: 1920, ar: 9 / 16 },\n  '1:1': { w: 1080, h: 1080, ar: 1 },\n};\n\nfunction run(cmd: string, args: string[]): Promise<void> {\n  return new Promise((resolve, reject) => {\n    const p = spawn(cmd, args, { stdio: ['ignore', 'ignore', 'pipe'] });\n    let err = '';\n    p.stderr.on('data', (d) => { err += d.toString(); });\n    p.on('error', reject);\n    p.on('close', (code) => code === 0 ? resolve() : reject(new Error(`${cmd} exit ${code}: ${err.slice(-500)}`)));\n  });\n}\n\n/** Source-agnostic center-crop to `ar`, then scale to (W,H). Keeps the largest centered rect of the target aspect. */\nfunction reframeChain(ar: number, W: number, H: number): string {\n  // crop w = min(iw, ih*ar); h = min(ih, iw/ar); centered. Expressions are evaluated by FFmpeg per input dims.\n  const cw = `min(iw\\\\,ih*${ar})`;\n  const ch = `min(ih\\\\,iw/${ar})`;\n  return `crop=${cw}:${ch}:(iw-ow)/2:(ih-oh)/2,scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1`;\n}\n\n/** Cut + reframe + optional caption for ONE clip. Returns the output path. */\nasync function renderClip(spec: SegmentSpec, clip: ClipSpec, index: number): Promise<ClipResult> {\n  const target = TARGET[clip.reframe ?? '9:16'];\n  const fps = spec.fps ?? 30;\n  const dur = Math.max(0.1, clip.out_sec - clip.in_sec);\n  const outPath = join(spec.outDir, `clip_${String(index).padStart(3, '0')}.mp4`);\n\n  let vf = reframeChain(target.ar, target.w, target.h);\n  if (clip.caption && clip.caption.trim()) {\n    // textfile avoids inline-escaping; drawtext reads UTF-8. Bottom-center with a translucent box.\n    const capPath = join(spec.outDir, `cap_${index}.txt`);\n    writeFileSync(capPath, clip.caption.trim());\n    const fontsize = Math.round(target.w * 0.045);\n    vf += `,drawtext=textfile='${capPath}':fontfile=${FONT}:fontsize=${fontsize}:fontcolor=white:` +\n      `box=1:boxcolor=black@0.55:boxborderw=14:x=(w-tw)/2:y=h-th-${Math.round(target.h * 0.08)}`;\n  }\n\n  await run('ffmpeg', [\n    '-y', '-hide_banner', '-loglevel', 'error',\n    '-ss', String(clip.in_sec), '-i', spec.sourcePath, '-t', String(dur),\n    '-vf', vf, '-r', String(fps),\n    '-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p',\n    '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',\n    outPath,\n  ]);\n\n  const bytes = statSync(outPath).size;\n  return { index, path: outPath, width: target.w, height: target.h, durationSec: dur, bytes };\n}\n\n/** Segment a master into N clips per the cut-spec. Serial (deterministic, memory-safe for a long master). */\nexport async function segmentVideo(spec: SegmentSpec): Promise<ClipResult[]> {\n  if (!existsSync(spec.sourcePath)) throw new Error(`source_not_found: ${spec.sourcePath}`);\n  if (!Array.isArray(spec.clips) || spec.clips.length === 0) throw new Error('cut_spec_empty');\n  mkdirSync(spec.outDir, { recursive: true });\n  const out: ClipResult[] = [];\n  for (let i = 0; i < spec.clips.length; i++) {\n    const c = spec.clips[i];\n    if (!(c.out_sec > c.in_sec) || c.in_sec < 0) throw new Error(`clip_${i}_invalid_range`);\n    out.push(await renderClip(spec, c, i));\n  }\n  return out;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:59:32)*
+
+
+## 🤖 Claude *(04:59:33)*
+
+Agora witnesso o **módulo** `segment-core` (não só o comando cru): rodo `segmentVideo` contra o master sintético → 2 clipes → verifico dimensões/duração + inspeciono 1 frame.
+
+## 🤖 Claude *(04:59:34)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "11",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #11 status
+> ```
+
+## 🤖 Claude *(04:59:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/scratchpad/repurpose\"\ncat > \"$SCRATCH/witness.ts\" <<'TS'\nimport { segmentVideo } from '/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts';\nconst SCRATCH = process.env.SC!;\nconst clips = await segmentVideo({\n  sourcePath: `${SCRATCH}/master16x9.mp4`,\n  outDir: `${SCRATCH}/out`,\n  fps: 30,\n  clips: [\n    { in_sec: 2, out_sec: 7, caption: 'Corte 1 \u2014 abertura', reframe: '9:16' },\n    { in_sec: 10, out_sec: 14, caption: 'Corte 2 \u2014 meio', reframe: '1:1' },\n  ],\n});\nfor (const c of clips) console.log(`clip ${c.index}: ${c.width}x${c.height} ${c.durationSec}s ${(c.bytes/1024).toFixed(0)}KB \u2192 ${c.path}`);\nTS\nSC=\"$SCRATCH\" bun run \"$SCRATCH/witness.ts\" 2>&1 | tail -8\necho \"=== ffprobe dos 2 clipes ===\"\nfor f in \"$SCRATCH\"/out/clip_*.mp4; do\n  echo \"$(basename $f): $(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames -of csv=p=0 \"$f\" 2>/dev/null) | audio=$(ffprobe -v error -select_streams a -show_entries stream=codec_name -of csv=p=0 \"$f\" 2>/dev/null)\"\ndone\necho \"=== frame do clip 1:1 (index 1) p/ inspe\u00e7\u00e3o ===\"\nffmpeg -y -hide_banner -loglevel error -ss 1 -i \"$SCRATCH/out/clip_001.mp4\" -frames:v 1 -vf \"scale=480:480\" \"$SCRATCH/clip1_frame.jpg\"\necho \"$(stat -c%s \"$SCRATCH/clip1_frame.jpg\") bytes\"",
+  "description": "Witness do m\u00f3dulo segment-core: 2 clipes (9:16 + 1:1)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> clip 0: 1080x1920 5s 1462KB → /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/scratchpad/repurpose/out/clip_000.mp4
+> clip 1: 1080x1080 4s 2034KB → /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/91d87f77-1778-48ba-b48b-b099f0846823/scratchpad/repurpose/out/clip_001.mp4
+> === ffprobe dos 2 clipes ===
+> clip_000.mp4: 1080,1920,150 | audio=
+> clip_001.mp4: 1080,1080,120 | audio=
+> === frame do clip 1:1 (index 1) p/ inspeção ===
+> 19366 bytes
+> ```
