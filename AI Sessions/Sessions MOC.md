@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2097
-> * **Sessões do Claude**: 2050
+> * **Total de Sessões Registradas**: 2099
+> * **Sessões do Claude**: 2052
 > * **Sessões do Gemini**: 47
 
 ---
@@ -72,6 +72,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-12 - agent-ace8010ef94059fae]]` - *2026-07-12*
+*   `[[2026-07-12 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` - *2026-07-12*
 *   `[[2026-07-11 - agent-af402a2055190b920]]` - *2026-07-11*
 *   `[[2026-07-11 - agent-abd19fd36ed5914b1]]` - *2026-07-11*
 *   `[[2026-07-11 - agent-a1e92e85dd0cbda13]]` - *2026-07-11*
@@ -82,9 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-10 - ca0f88ae-6d23-4190-a3ba-ae93b6be73da]]` - *2026-07-10*
 *   `[[2026-07-10 - be4e9ce7-75c6-44ca-b0c7-9b273660ed2b]]` - *2026-07-10*
 *   `[[2026-07-10 - agent-af924405f4d8a3b58]]` - *2026-07-10*
-*   `[[2026-07-10 - agent-ad8d40d7a485e7f9d]]` - *2026-07-10*
-*   `[[2026-07-10 - agent-ab37cac393b278f05]]` - *2026-07-10*
-*   *... e mais 2042 sessões nessa categoria.*
+*   *... e mais 2044 sessões nessa categoria.*
 
 ---
 
@@ -1740,6 +1740,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-12 - agent-ace8010ef94059fae]]` (ClaudeSessions)
+*   `[[2026-07-12 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` (ClaudeSessions)
 *   `[[2026-07-11 - agent-af402a2055190b920]]` (ClaudeSessions)
 *   `[[2026-07-11 - agent-abd19fd36ed5914b1]]` (ClaudeSessions)
 *   `[[2026-07-11 - agent-a1e92e85dd0cbda13]]` (ClaudeSessions)
