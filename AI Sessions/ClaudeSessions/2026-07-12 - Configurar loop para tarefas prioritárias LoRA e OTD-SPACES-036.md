@@ -9401,5 +9401,5 @@ Deixa eu marcar o progresso e travar o comando FFmpeg do slide (mesma abordagem 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-11 - agent-af402a2055190b920]]
-> * **Próxima Sessão**: [[2026-07-12 - agent-a8899e2e683ee0930]]
+> * **Próxima Sessão**: [[2026-07-12 - agent-a85379cdc9cb18ac5]]
 %% --- TIMELINE END --- %%
