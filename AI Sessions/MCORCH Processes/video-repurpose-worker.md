@@ -36,6 +36,9 @@ Hoje o operador abriria um editor, cortaria N trechos, reenquadraria cada um p/ 
 ## Success signal
 `video_renders` do dono `state='done'` + N `creative_assets` kind='video' `parent_asset_id`=master sob `${uid}/repurpose/` — prontos p/ o sink social.
 
+## Modo carrossel (Fatia 3 — Pilar III)
+O MESMO worker/fila (`engine='repurpose'`) atende `composition.mode='carousel'`: extrai key-frames do master (nos `t_sec` dos slides, ex. capítulos/`atos`), compõe slides 1080×1350 (4:5) via `carousel-core.ts` (key-frame center-crop + legenda wrapped + handle), e registra cada um como `creative_assets` **kind='image'** (`parent`=master). Enqueue via `video-repurpose-run` com `slides:[{t_sec,caption?}]` (≤10, IG max) + `handle?`. Publicação: `publish-space-carousel` resolve os slides owner-scoped → assina → `publish-social` branch **media_type=CAROUSEL** (N children `is_carousel_item` → parent → `media_publish`, contrato Meta). **Alcance real gated na auditoria de app IG (ação Sovereign).** Legenda: wrap conservador (OTD-VR-007 — curtas saem limpas; typografia pixel-perfect via render-core = refinamento). **PROVADO E2E na produção 2026-07-12** (master → 3 slides 1080×1350 registrados + Vision QA no slide real).
+
 ## Notas de design
 - **Reframe source-agnóstico** (crop por expressão: maior retângulo centrado do aspect-alvo). Center-safe MVP; **OTD-VR-002** crop subject-aware diferido.
 - **Caption = texto por clipe** (drawtext textfile). Burn de SRT com offset ao timeline do clipe = refinamento (OTD).
