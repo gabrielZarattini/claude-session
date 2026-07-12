@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 76
-> * **Total de Sessões**: 2095
+> * **Total de Processos**: 77
+> * **Total de Sessões**: 2096
 
 ---
 
@@ -80,6 +80,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[trend-informed-angle-sanitization]]` - *Processo*
 *   `[[trends-credential-resolution]]` - *Processo*
 *   `[[ux-ui-senior-loop]]` - *Processo*
+*   `[[video-repurpose-worker]]` - *Processo*
 *   `[[video-studio-editor-deploy-and-provision]]` - *Processo*
 *   `[[video-studio-host-fase-b]]` - *Processo*
 *   `[[viral-autopilot-product-aware-monetization]]` - *Processo*
@@ -99,6 +100,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-12 - agent-adde2873140a2372f]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-ace8010ef94059fae]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-a8899e2e683ee0930]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` (ClaudeSessions) - *2026-07-12*
