@@ -1,5 +1,5 @@
 # Build API dashboard with video metrics and CRUD operations
-**Date:** 2026-07-13 | **Session ID:** `c9063773-845f-4128-8e7c-c0ef853384ff`
+**Date:** 2026-07-13 | **Session ID:** `9956e776-db1f-47bd-9485-412802efe469`
 
 ---
 
@@ -251,18 +251,6 @@ Executando o ritual /handson. Rodando o pre-flight em paralelo e lendo os arquiv
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> mcorch_vision_mcp: Up 13 days (healthy)
-> mcorch_claude_mem: Up 3 weeks (healthy)
-> mcorch_chroma: Up 3 weeks (healthy)
-> ---
-> mega-brain-dashboard: Up 3 weeks
-> mega-brain-webhook: Up 3 weeks (healthy)
-> mega-brain-daemon: Up 3 weeks (healthy)
-> ```
-
-> **Tool Result (Bash)** - ✅ Success
->
-> ```
 > {"nanosecond heartbeat":1783890344226202895}
 > ```
 
@@ -410,6 +398,18 @@ Executando o ritual /handson. Rodando o pre-flight em paralelo e lendo os arquiv
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md"
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 13 days (healthy)
+> mcorch_claude_mem: Up 3 weeks (healthy)
+> mcorch_chroma: Up 3 weeks (healthy)
+> ---
+> mega-brain-dashboard: Up 3 weeks
+> mega-brain-webhook: Up 3 weeks (healthy)
+> mega-brain-daemon: Up 3 weeks (healthy)
+> ```
 
 > **Tool Result (Read)** - ✅ Success
 >
@@ -1304,17 +1304,6 @@ Contrato confirmado. Deixa eu fechar o reconhecimento: estrutura do blueprint j�
 }
 ```
 
-## 🤖 Claude *(23:03:39)*
-
-
-🛠️ **Tool Call**: `Bash`
-```json
-{
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== social_accounts schema/RLS ===\"; grep -rln \"social_accounts\" supabase/migrations/ | head; echo \"---- def ----\"; grep -rnA30 \"create table.*social_accounts|CREATE TABLE.*social_accounts\" supabase/migrations/*.sql 2>/dev/null | head -60",
-  "description": "social_accounts table definition"
-}
-```
-
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
@@ -1368,6 +1357,17 @@ Contrato confirmado. Deixa eu fechar o reconhecimento: estrutura do blueprint j�
 {
   "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== any existing youtube DATA/ANALYTICS read (not upload)? ===\"; grep -rnE \"youtube/v3/(search|playlistItems|playlists|comment|captions|thumbnails)|youtubeanalytics|yt-analytics|reports\\?ids=channel\" supabase/functions/ src/ 2>/dev/null | head; echo \"(empty = none exists \u2014 panel is greenfield read side)\"; echo; echo \"=== youtube-studio in App.tsx routes? ===\"; grep -niE \"youtube\" src/App.tsx 2>/dev/null | head",
   "description": "Check for existing youtube data-read code and routes"
+}
+```
+
+## 🤖 Claude *(23:03:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== social_accounts schema/RLS ===\"; grep -rln \"social_accounts\" supabase/migrations/ | head; echo \"---- def ----\"; grep -rnA30 \"create table.*social_accounts|CREATE TABLE.*social_accounts\" supabase/migrations/*.sql 2>/dev/null | head -60",
+  "description": "social_accounts table definition"
 }
 ```
 
@@ -5038,10 +5038,1238 @@ Sua intuição está **certa** — e a parte de "cache + fatias" é exatamente a
 
 **Recomendo tentar o (A)** — é sua ideia, é a melhor UX, e em 1 minuto a gente *sabe* se o host baixa do YouTube (encerra a premissa por evidência). O (B) fica como rede de segurança garantida. Posso instalar e testar o `yt-dlp`?
 
-## 👤 User *(01:56:39)*
+## 👤 User *(01:57:29)*
 
-ok tente A se não vou ter que fazer o download e criar uma pasta para cada usuário dentro do host storage. Como por enquanto só tenho o usuário 0 essa função deve ser e a parecer somente para admin.
+ok tente A se não vou ter que fazer o upload via UI com e criar uma pasta para cada usuário dentro do host storage. Como por enquanto só tenho o usuário 0 essa função deve ser e a parecer somente para admin.
 
-## 👤 User *(01:57:00)*
+## 🤖 Claude *(01:58:30)*
 
-[Request interrupted by user]
+
+## 🤖 Claude *(01:58:32)*
+
+Autorizado — testando A (yt-dlp) com evidência, e já anoto o requisito admin-only. Instalando o yt-dlp (do PyPI, que você autorizou) + sondando se o host baixa do YouTube, e em paralelo levantando o padrão de gating admin do app:
+
+## 🤖 Claude *(01:58:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c9063773-845f-4128-8e7c-c0ef853384ff/scratchpad; export HOME=/home/ubuntu; echo \"=== install yt-dlp (PyPI, user-authorized) ===\"; if command -v yt-dlp >/dev/null; then YTDLP=yt-dlp; echo \"already present\"; else python3 -m pip install --user --quiet yt-dlp 2>&1 | tail -3 || python3 -m pip install --user --break-system-packages --quiet yt-dlp 2>&1 | tail -3; YTDLP=\"$HOME/.local/bin/yt-dlp\"; fi; \"$YTDLP\" --version 2>&1 | head -1 || echo \"NOT RUNNABLE\"; echo; echo \"=== PROBE 1: list formats (datacenter bot-challenge test) ===\"; URL=\"https://www.youtube.com/watch?v=aqz-KE-bpKQ\"; \"$YTDLP\" --no-warnings -F \"$URL\" 2>&1 | tail -12; echo; echo \"=== PROBE 2: download a 3s SECTION (proves --download-sections works) ===\"; \"$YTDLP\" --no-warnings --download-sections \"*0-3\" -f \"worst\" -o \"$SCRATCH/yttest.%(ext)s\" \"$URL\" 2>&1 | tail -8; ls -la \"$SCRATCH\"/yttest.* 2>/dev/null || echo \"(no output file)\"",
+  "description": "Install yt-dlp + probe YouTube download from host",
+  "timeout": 180000
+}
+```
+
+## 🤖 Claude *(01:58:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== admin gating pattern in frontend ===\"; grep -rnE \"has_role|useAdmin|isAdmin|app_role|useUserRole|'admin'\" src/hooks/ src/components/dashboard/DashboardSidebar.tsx 2>/dev/null | head -20; echo; echo \"=== how AdminPage route is guarded in App.tsx ===\"; grep -nE \"admin|Admin|RequireAdmin|role\" src/App.tsx | head",
+  "description": "Find admin gating pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === install yt-dlp (PyPI, user-authorized) ===
+> 
+> note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+> hint: See PEP 668 for the detailed specification.
+> /bin/bash: line 1: /home/ubuntu/.local/bin/yt-dlp: No such file or directory
+> 
+> === PROBE 1: list formats (datacenter bot-challenge test) ===
+> /bin/bash: line 1: /home/ubuntu/.local/bin/yt-dlp: No such file or directory
+> 
+> === PROBE 2: download a 3s SECTION (proves --download-sections works) ===
+> /bin/bash: line 1: /home/ubuntu/.local/bin/yt-dlp: No such file or directory
+> (no output file)
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === admin gating pattern in frontend ===
+> src/hooks/useAdminData.ts:9:  const { data: isAdmin = false, isLoading } = useQuery({
+> src/hooks/useAdminData.ts:16:        .eq('role', 'admin')
+> src/hooks/useAdminData.ts:27:  // query reports isLoading=false — which would let AdminPage's `if (!isAdmin)` guard
+> src/hooks/useAdminData.ts:29:  return { isAdmin, loading: authLoading || isLoading };
+> src/hooks/useAdminData.ts:41:export function useAdminData(enabled = true): AdminData {
+> src/components/dashboard/DashboardSidebar.tsx:41:import { useIsAdmin } from '@/hooks/useAdminData';
+> src/components/dashboard/DashboardSidebar.tsx:164:  const { isAdmin } = useIsAdmin();
+> src/components/dashboard/DashboardSidebar.tsx:219:                {isAdmin && (
+> src/components/dashboard/DashboardSidebar.tsx:434:            {isAdmin && (
+> src/hooks/useAdminUserActions.ts:5:  | { action: 'set_role'; target_user_id: string; payload: { role: 'admin' | 'editor' | 'viewer' } }
+> src/hooks/useAdminUserActions.ts:16:export function useAdminUserActions() {
+> 
+> === how AdminPage route is guarded in App.tsx ===
+> 37:const AdminPage = lazy(() => import("./pages/AdminPage.tsx"));
+> 135:                <Route path="admin" element={<AdminPage />} />
+> ```
+
+## 🤖 Claude *(01:59:14)*
+
+
+## 🤖 Claude *(01:59:16)*
+
+O `pip --user` bateu no PEP 668 e o fallback não pegou. Refazendo o install explícito + a sonda, e lendo o bloco admin do sidebar (o padrão `useIsAdmin` já existe):
+
+## 🤖 Claude *(01:59:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c9063773-845f-4128-8e7c-c0ef853384ff/scratchpad; export HOME=/home/ubuntu; echo \"=== install yt-dlp (PyPI, --break-system-packages --user) ===\"; python3 -m pip install --user --break-system-packages --quiet yt-dlp 2>&1 | tail -4; YTDLP=\"$HOME/.local/bin/yt-dlp\"; \"$YTDLP\" --version 2>&1 | head -1 || { echo \"trying python -m yt_dlp\"; python3 -m yt_dlp --version 2>&1 | head -1 && YTDLP=\"python3 -m yt_dlp\"; }; echo \"YTDLP=$YTDLP\"; echo; echo \"=== PROBE 1: formats (bot-challenge test) ===\"; URL=\"https://www.youtube.com/watch?v=aqz-KE-bpKQ\"; $YTDLP --no-warnings -F \"$URL\" 2>&1 | tail -12; echo; echo \"=== PROBE 2: 3s section download ===\"; $YTDLP --no-warnings --download-sections \"*0-3\" -f \"worst\" -o \"$SCRATCH/yttest.%(ext)s\" \"$URL\" 2>&1 | tail -8; ls -la \"$SCRATCH\"/yttest.* 2>/dev/null || echo \"(no output file)\"",
+  "description": "Install yt-dlp explicitly + probe YouTube",
+  "timeout": 180000
+}
+```
+
+## 🤖 Claude *(01:59:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 210,
+  "limit": 28
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === install yt-dlp (PyPI, --break-system-packages --user) ===
+> 2026.07.04
+> YTDLP=/home/ubuntu/.local/bin/yt-dlp
+> 
+> === PROBE 1: formats (bot-challenge test) ===
+> [youtube] Extracting URL: https://www.youtube.com/watch?v=aqz-KE-bpKQ
+> [youtube] aqz-KE-bpKQ: Downloading webpage
+> [youtube] aqz-KE-bpKQ: Downloading android vr player API JSON
+> ERROR: [youtube] aqz-KE-bpKQ: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+> 
+> === PROBE 2: 3s section download ===
+> [youtube] Extracting URL: https://www.youtube.com/watch?v=aqz-KE-bpKQ
+> [youtube] aqz-KE-bpKQ: Downloading webpage
+> [youtube] aqz-KE-bpKQ: Downloading android vr player API JSON
+> ERROR: [youtube] aqz-KE-bpKQ: Sign in to confirm you’re not a bot. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies
+> (no output file)
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 210	                        end={item.url === '/dashboard'}
+> 211	                        className="hover:bg-muted/50"
+> 212	                        activeClassName="bg-primary/10 text-primary font-medium"
+> 213	                      >
+> 214	                        <item.icon className="h-4 w-4 shrink-0" />
+> 215	                      </NavLink>
+> 216	                    </SidebarMenuButton>
+> 217	                  </SidebarMenuItem>
+> 218	                ))}
+> 219	                {isAdmin && (
+> 220	                  <SidebarMenuItem>
+> 221	                    <SidebarMenuButton asChild tooltip="Administração">
+> 222	                      <NavLink to="/dashboard/admin" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+> 223	                        <Shield className="h-4 w-4 shrink-0" />
+> 224	                      </NavLink>
+> 225	                    </SidebarMenuButton>
+> 226	                  </SidebarMenuItem>
+> 227	                )}
+> 228	              </SidebarMenu>
+> 229	            </SidebarGroupContent>
+> 230	          </SidebarGroup>
+> 231	        ) : (
+> 232	          <>
+> 233	            <SidebarGroup>
+> 234	              <SidebarGroupLabel>Principal</SidebarGroupLabel>
+> 235	              <SidebarGroupContent>
+> 236	                <SidebarMenu>
+> 237	                  {/* Visão Geral */}
+> ```
+
+## 🤖 Claude *(02:02:42)*
+
+
+## 🤖 Claude *(02:03:00)*
+
+Resultado material — **conclusivo (Lei 1):** instalei o yt-dlp (2026.07.04) e sondei do host. Veredito:
+
+```
+ERROR: [youtube] Sign in to confirm you're not a bot.
+       Use --cookies-from-browser or --cookies for authentication.
+```
+
+**A premissa estava certa: o IP de datacenter é barrado pelo YouTube.** Anônimo, do host, **não baixa** — nem lista formatos, nem seção. Agora é fato provado, não suposição. O `--download-sections` (baixar "já em fatias") funcionaria tecnicamente, mas o YouTube te barra antes.
+
+**A única forma de fazer o link funcionar** é passar **os seus cookies do YouTube** pro yt-dlp. **Não recomendo**, e sou honesto do porquê:
+1. **Segurança:** isso coloca a **sessão viva da sua conta Google** num arquivo no servidor. Se o host for comprometido um dia, sua conta Google/YouTube vai junto. Risco real e desproporcional.
+2. **Fragilidade:** cookies expiram → vira tarefa recorrente de re-exportar.
+3. Zona cinza de ToS (mesmo sendo seu vídeo).
+
+Muito risco para uma conveniência marginal. **Descarto os cookies.**
+
+## Recomendação: seu plano B, feito certo (US$ 0, admin-only)
+
+O caminho robusto é o que você já tinha previsto — e a boa notícia: **só o master é grande; os cortes cabem folgado nos 50 MB.** Então o plano free do Supabase **nunca vira gargalo** aqui.
+
+```
+Você (notebook) → baixa o EP01 do YouTube Studio (⋮ → Download, oficial, seu conteúdo)
+   → sobe via CloudPanel para  repurpose-inbox/<seu-uid>/   (pasta por usuário)
+Worker (já roda no host, lê local — confirmei: ubuntu no grupo gcrUX + sudo)
+   → corta + legenda  → sobe só os cortes pequenos (<50 MB) pro Supabase → distribuição
+```
+
+O que eu construo ao confirmar:
+- **Fonte local no worker** (`source='local'` → lê o arquivo do host, pula o download do Supabase, valida contenção na pasta do usuário — sem path traversal).
+- **UI Repurpose vira admin-only** (`useIsAdmin`, que já existe no app) — "ser e aparecer só para admin", como você pediu. Em vez de upload no navegador, ela aponta pro arquivo que você subiu no CloudPanel.
+- **Pasta inbox por usuário** com as permissões certas (gcrUX escreve via CloudPanel, worker ubuntu lê via grupo).
+
+**Confirma que seguimos assim** (host-local via CloudPanel + admin-only, cookies descartados)? Se sim, eu monto a inbox, adapto o worker/UI e a gente **corta o EP01 de verdade** — e aí ligo a cadência (TikTok privado até a auditoria + manual nas outras redes).
+
+## 👤 User *(02:06:09)*
+
+ótimo mas vou subir o arquivo no cloudpanel via UI no mcorch com o usuário gabrielcall@gmail.com que é o admin. Sim continue para fazermos a cadencia
+
+## 🤖 Claude *(02:08:21)*
+
+
+## 🤖 Claude *(02:08:23)*
+
+Confirmado — sigo com host-local + admin-only (`gabrielcall@gmail.com` como admin). Antes de mexer no worker que está rodando, preciso ver exatamente como ele passa a fonte pro FFmpeg, pra ramificar pro caminho local sem quebrar o download do Supabase:
+
+## 🤖 Claude *(02:08:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/video-repurpose-bridge.ts
+> 4	 *
+> 5	 * video-repurpose worker (Fatia 2) — host worker that polls `video_renders` (engine='repurpose', state='queued'),
+> 6	 * atomically claims each, downloads the source master, cuts N vertical shorts (segment-core.ts: 16:9→9:16/1:1
+> 7	 * reframe + burned caption), uploads each to the private bucket, registers each as a creative_asset (parent = the
+> 8	 * master, so the sink publish-space-asset can publish them), and finalizes via finalize_video_render.
+> 9	 *
+> 10	 * BoK SSOT: docs/bok/video-repurpose/00-deepsearch-blueprint.md §Pilar II + §8. Pattern: mirrors scripts/video-bridge.ts.
+> 11	 * SECURITY (OTD-VR-006): the source (bucket,key) from the composition is RE-VALIDATED at read time (allowlist +
+> 12	 * `${user_id}/` prefix + no `..`) — never trust the stored row. charged_mco is 0 (free FFmpeg rail).
+> 13	 *
+> 14	 * Supervisor: systemd --user video-repurpose-bridge.service (ação Sovereign). Usage: bun run scripts/video-repurpose-bridge.ts [--once]
+> 15	 */
+> 16	
+> 17	import { createClient } from '@supabase/supabase-js';
+> 18	import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync } from 'fs';
+> 19	import { join, dirname } from 'path';
+> 20	import { fileURLToPath } from 'url';
+> 21	import { segmentVideo, type ClipSpec } from './video-repurpose/segment-core.ts';
+> 22	import { buildCarousel, type SlideSpec } from './video-repurpose/carousel-core.ts';
+> 23	
+> 24	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 25	const envPath = join(__dirname, '../.env');
+> 26	if (existsSync(envPath)) {
+> 27	  for (const line of readFileSync(envPath, 'utf-8').split('\n')) {
+> 28	    const m = line.match(/^([^#=\s][^=]*)=(.*)$/);
+> 29	    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
+> 30	  }
+> 31	}
+> 32	const SUPABASE_URL = process.env.SUPABASE_URL;
+> 33	const SERVICE_KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 34	if (!SUPABASE_URL || !SERVICE_KEY) { console.error('❌ Missing SUPABASE_URL or SB_SECRET_KEY in .env'); process.exit(1); }
+> 35	const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+> 36	
+> 37	const OUT_BUCKET = 'video-studio-assets';
+> 38	const ALLOWED_SRC_BUCKETS = new Set(['canvas-assets', 'video-studio-assets']);
+> 39	const POLL_MS = 4000;
+> 40	const RUNNING_TIMEOUT_MS = 15 * 60 * 1000; // repurpose can be long (N re-encodes) — generous dead-worker reaper
+> 41	
+> 42	function logHealth(status: string, event: string, metadata?: Record<string, unknown>) {
+> 43	  return supabase.from('infra_health_logs').insert({ service: 'video-repurpose-bridge', status, event, metadata: metadata ?? null }).then(() => {}, () => {});
+> 44	}
+> 45	
+> 46	async function claim(renderId: string) {
+> 47	  const { data } = await supabase.from('video_renders')
+> 48	    .update({ state: 'running', updated_at: new Date().toISOString() })
+> 49	    .eq('id', renderId).eq('state', 'queued')
+> 50	    .select('id, user_id, charged_mco, composition').maybeSingle();
+> 51	  return data ?? null;
+> 52	}
+> 53	
+> 54	interface Composition { mode?: string; source?: { bucket?: string; key?: string }; source_asset_id?: string; clips?: ClipSpec[]; slides?: SlideSpec[]; handle?: string; fps?: number }
+> 55	type ManifestItem = { index: number; storage_key: string; width: number; height: number; bytes: number; kind: 'video' | 'image' };
+> 56	
+> 57	async function processRepurpose(row: { id: string; user_id: string; charged_mco: number; composition: unknown }) {
+> 58	  const renderId = row.id;
+> 59	  const charged = row.charged_mco ?? 0;
+> 60	  const workDir = `/tmp/repurpose-${renderId}`;
+> 61	  const srcPath = `${workDir}/source.mp4`;
+> 62	  try {
+> 63	    const comp = row.composition as Composition | null;
+> 64	    const mode = comp?.mode === 'carousel' ? 'carousel' : 'repurpose';
+> 65	    if (!comp || !comp.source?.bucket || !comp.source?.key) throw new Error('composition_missing_or_invalid');
+> 66	    if (mode === 'repurpose' && (!Array.isArray(comp.clips) || comp.clips.length === 0)) throw new Error('cut_spec_empty');
+> 67	    if (mode === 'carousel' && (!Array.isArray(comp.slides) || comp.slides.length === 0)) throw new Error('slide_spec_empty');
+> 68	    // OTD-VR-006 — re-validate the source ref at READ time; never trust the stored composition row.
+> 69	    const bucket = comp.source.bucket, key = comp.source.key;
+> 70	    if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {
+> 71	      throw new Error('source_ref_rejected');
+> 72	    }
+> 73	
+> 74	    mkdirSync(join(workDir, 'out'), { recursive: true });
+> 75	    const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);
+> 76	    if (dlErr || !blob) throw new Error(`source_download_failed: ${dlErr?.message ?? 'no blob'}`);
+> 77	    writeFileSync(srcPath, new Uint8Array(await blob.arrayBuffer()));
+> 78	
+> 79	    const manifest: ManifestItem[] = [];
+> 80	    if (mode === 'carousel') {
+> 81	      // Pilar III — key-frames → 4:5 slides (still images), registered as IMAGE assets (a set = one carousel post).
+> 82	      const slides = await buildCarousel({ sourcePath: srcPath, outDir: join(workDir, 'out'), slides: comp.slides!, handle: comp.handle });
+> 83	      for (const s of slides) {
+> 84	        const slideKey = `${row.user_id}/repurpose/${renderId}/slide_${String(s.index).padStart(3, '0')}.jpg`;
+> 85	        const { error: upErr } = await supabase.storage.from(OUT_BUCKET).upload(slideKey, readFileSync(s.path), { contentType: 'image/jpeg', upsert: true });
+> 86	        if (upErr) throw new Error(`slide_upload_failed[${s.index}]: ${upErr.message}`);
+> 87	        await supabase.rpc('register_creative_asset', {
+> 88	          p_user_id: row.user_id, p_kind: 'image',
+> 89	          p_storage_bucket: OUT_BUCKET, p_storage_key: slideKey, p_is_public: false,
+> 90	          p_source_module: 'hyperframes', p_source_job_id: renderId, p_parent_asset_id: comp.source_asset_id ?? null,
+> 91	          p_mime_type: 'image/jpeg', p_file_size_bytes: s.bytes, p_width: s.width, p_height: s.height,
+> 92	          p_title: `Carrossel slide #${s.index + 1}`,
+> 93	          p_metadata: { carousel: true, source_asset_id: comp.source_asset_id ?? null, slide_index: s.index, render_id: renderId },
+> 94	        }).then((r) => { if (r.error) console.warn(`[carousel] register slide ${s.index} skipped:`, r.error.message); }, () => {});
+> 95	        manifest.push({ index: s.index, storage_key: slideKey, width: s.width, height: s.height, bytes: s.bytes, kind: 'image' });
+> 96	      }
+> 97	    } else {
+> 98	      // Pilar II — trim/reframe/caption → N vertical shorts, registered as VIDEO assets.
+> 99	      const clips = await segmentVideo({ sourcePath: srcPath, outDir: join(workDir, 'out'), fps: comp.fps ?? 30, clips: comp.clips! });
+> 100	      for (const c of clips) {
+> 101	        const clipKey = `${row.user_id}/repurpose/${renderId}/clip_${String(c.index).padStart(3, '0')}.mp4`;
+> 102	        const { error: upErr } = await supabase.storage.from(OUT_BUCKET).upload(clipKey, readFileSync(c.path), { contentType: 'video/mp4', upsert: true });
+> 103	        if (upErr) throw new Error(`clip_upload_failed[${c.index}]: ${upErr.message}`);
+> 104	        await supabase.rpc('register_creative_asset', {
+> 105	          p_user_id: row.user_id, p_kind: 'video',
+> 106	          p_storage_bucket: OUT_BUCKET, p_storage_key: clipKey, p_is_public: false,
+> 107	          p_source_module: 'hyperframes', p_source_job_id: renderId, p_parent_asset_id: comp.source_asset_id ?? null,
+> 108	          p_mime_type: 'video/mp4', p_file_size_bytes: c.bytes, p_width: c.width, p_height: c.height, p_duration_seconds: c.durationSec,
+> 109	          p_title: `Short ${c.width}x${c.height} #${c.index + 1}`,
+> 110	          p_metadata: { repurpose: true, source_asset_id: comp.source_asset_id ?? null, clip_index: c.index, render_id: renderId },
+> 111	        }).then((r) => { if (r.error) console.warn(`[repurpose] register clip ${c.index} skipped:`, r.error.message); }, () => {});
+> 112	        manifest.push({ index: c.index, storage_key: clipKey, width: c.width, height: c.height, bytes: c.bytes, kind: 'video' });
+> 113	      }
+> 114	    }
+> 115	
+> 116	    let nodeId: string | null = null;
+> 117	    const { data: node } = await supabase.from('mcorch_nodes').insert({
+> 118	      user_id: row.user_id, node_type: 'observation', name: `video-repurpose:${renderId}`,
+> 119	      content: `Repurpose (${mode}) ${manifest.length} asset(s) from master ${comp.source_asset_id ?? '(?)'}.`,
+> 120	      metadata: { kind: 'video_repurpose', mode, render_id: renderId, items: manifest },
+> 121	    }).select('id').maybeSingle();
+> 122	    nodeId = node?.id ?? null;
+> 123	
+> 124	    const { data: fin } = await supabase.rpc('finalize_video_render', {
+> 125	      p_render_id: renderId, p_state: 'done', p_storage_key: manifest[0]?.storage_key ?? null,
+> 126	      p_qa: { clips: manifest }, p_node_id: nodeId, p_refund: 0,
+> 127	    });
+> 128	    console.log(`✅ repurpose ${renderId} → ${manifest.length} clip(s)`, fin);
+> 129	    await logHealth('healthy', 'repurpose_done', { render_id: renderId, clips: manifest.length });
+> 130	  } catch (e) {
+> 131	    const msg = e instanceof Error ? e.message : String(e);
+> 132	    console.error(`❌ repurpose ${renderId} failed: ${msg}`);
+> 133	    await supabase.rpc('finalize_video_render', { p_render_id: renderId, p_state: 'failed', p_storage_key: null, p_qa: null, p_node_id: null, p_refund: charged }).then(() => {}, () => {});
+> 134	    await logHealth('error', 'repurpose_failed', { render_id: renderId, error: msg });
+> 135	  } finally {
+> 136	    rmSync(workDir, { recursive: true, force: true });
+> 137	  }
+> 138	}
+> 139	
+> 140	async function drainOnce(): Promise<number> {
+> 141	  const cutoff = new Date(Date.now() - RUNNING_TIMEOUT_MS).toISOString();
+> 142	  await supabase.from('video_renders').update({ state: 'queued' })
+> 143	    .eq('engine', 'repurpose').eq('state', 'running').lt('updated_at', cutoff).then(() => {}, () => {});
+> 144	
+> 145	  const { data: queued } = await supabase.from('video_renders')
+> 146	    .select('id').eq('engine', 'repurpose').eq('state', 'queued').order('created_at', { ascending: true }).limit(5);
+> 147	  if (!queued?.length) return 0;
+> 148	  let n = 0;
+> 149	  for (const q of queued) {
+> 150	    const row = await claim(q.id);
+> 151	    if (!row) continue;
+> 152	    await processRepurpose(row as any);
+> 153	    n++;
+> 154	  }
+> 155	  return n;
+> 156	}
+> 157	
+> 158	async function main() {
+> 159	  if (process.argv.includes('--once')) {
+> 160	    const n = await drainOnce();
+> 161	    console.log(`drained ${n} repurpose render(s)`);
+> 162	    process.exit(0);
+> 163	  }
+> 164	  console.log('🎬 video-repurpose-bridge running — polling video_renders (engine=repurpose, queued)...');
+> 165	  await logHealth('healthy', 'worker_started');
+> 166	  // eslint-disable-next-line no-constant-condition
+> 167	  while (true) {
+> 168	    try { await drainOnce(); } catch (e) {
+> 169	      console.error('poll cycle error:', e);
+> 170	      await logHealth('degraded', 'poll_error', { error: e instanceof Error ? e.message : String(e) });
+> 171	    }
+> 172	    await new Promise((r) => setTimeout(r, POLL_MS));
+> 173	  }
+> 174	}
+> 175	
+> 176	main();
+> 177	
+> ```
+
+## 🤖 Claude *(02:10:20)*
+
+
+## 🤖 Claude *(02:10:22)*
+
+Agora entendi o worker: ele grava a fonte em `srcPath` e o segment/carousel leem daí. Para local, basta **apontar o `srcPath` pro arquivo do host** (pular o download). Mudança mínima e segura. Vou montar a inbox + ver o padrão exato de admin, depois codar backend + UI:
+
+## 🤖 Claude *(02:10:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAdminData.ts",
+  "offset": 1,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { useAuth } from '@/hooks/useAuth';
+> 4	
+> 5	// #002 fix: single TanStack Query shared across all callers — role doesn't change mid-session
+> 6	export function useIsAdmin() {
+> 7	  const { user, loading: authLoading } = useAuth();
+> 8	
+> 9	  const { data: isAdmin = false, isLoading } = useQuery({
+> 10	    queryKey: ['user-role-admin', user?.id],
+> 11	    queryFn: async () => {
+> 12	      const { data } = await supabase
+> 13	        .from('user_roles')
+> 14	        .select('role')
+> 15	        .eq('user_id', user!.id)
+> 16	        .eq('role', 'admin')
+> 17	        .maybeSingle();
+> 18	      return Boolean(data);
+> 19	    },
+> 20	    enabled: Boolean(user),
+> 21	    staleTime: Infinity,
+> 22	    gcTime: Infinity,
+> 23	  });
+> 24	
+> 25	  // useAuth resolves asynchronously and is per-hook-instance, so `user` is null on the
+> 26	  // first render here. While user is null the role query is disabled, and a disabled
+> 27	  // query reports isLoading=false — which would let AdminPage's `if (!isAdmin)` guard
+> 28	  // redirect before the check ever runs. Stay "loading" until auth has resolved.
+> 29	  return { isAdmin, loading: authLoading || isLoading };
+> 30	}
+> 31	
+> 32	interface AdminData {
+> ```
+
+## 🤖 Claude *(02:10:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== create per-user inbox base (setgid so CloudPanel-gcrUX writes, worker-ubuntu reads via group) ===\"; sudo mkdir -p repurpose-inbox && sudo chown gcrUX:gcrUX repurpose-inbox && sudo chmod 2775 repurpose-inbox && ls -ld repurpose-inbox; echo; echo \"=== gitignore it (not web-served; nginx serves dist/) ===\"; grep -qxF 'repurpose-inbox/' .gitignore || printf '\\n# host inbox for external video masters (video-repurpose) \u2014 never committed\\nrepurpose-inbox/\\n' | sudo tee -a .gitignore >/dev/null; tail -3 .gitignore; echo; echo \"=== resolve User 0 (admin) uid from the connected YouTube account, to pre-create his folder ===\"; source .env 2>/dev/null; UID0=$(curl -s \"${SUPABASE_URL}/rest/v1/social_accounts?platform=eq.youtube&select=user_id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1); echo \"User0 uid=$UID0\"; if [ -n \"$UID0\" ]; then sudo -u gcrUX mkdir -p \"repurpose-inbox/$UID0\" && sudo chmod 2775 \"repurpose-inbox/$UID0\" && ls -ld \"repurpose-inbox/$UID0\"; fi",
+  "description": "Create inbox base + gitignore + pre-create admin uid folder"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === create per-user inbox base (setgid so CloudPanel-gcrUX writes, worker-ubuntu reads via group) ===
+> drwxrwsr-x 2 gcrUX gcrUX 4096 Jul 12 23:10 repurpose-inbox
+> 
+> === gitignore it (not web-served; nginx serves dist/) ===
+> 
+> # host inbox for external video masters (video-repurpose) — never committed
+> repurpose-inbox/
+> 
+> === resolve User 0 (admin) uid from the connected YouTube account, to pre-create his folder ===
+> User0 uid=ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> drwxrwsr-x 2 gcrUX gcrUX 4096 Jul 12 23:10 repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> ```
+
+## 🤖 Claude *(02:11:54)*
+
+
+## 🤖 Claude *(02:11:56)*
+
+Inbox pronta (`repurpose-inbox/` setgid + pasta do admin `ada39fae-…` pré-criada) e gitignored. `useIsAdmin` consulta `user_roles`. Agora o worker (fonte local + guarda de contenção):
+
+## 🤖 Claude *(02:11:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "old_string": "import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync } from 'fs';\nimport { join, dirname } from 'path';",
+  "new_string": "import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync, realpathSync } from 'fs';\nimport { join, dirname, resolve } from 'path';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "old_string": "const OUT_BUCKET = 'video-studio-assets';\nconst ALLOWED_SRC_BUCKETS = new Set(['canvas-assets', 'video-studio-assets']);",
+  "new_string": "const OUT_BUCKET = 'video-studio-assets';\nconst ALLOWED_SRC_BUCKETS = new Set(['canvas-assets', 'video-studio-assets']);\n// Host inbox for large external masters. The free-plan Supabase caps uploads at 50MB \u2192 a full documentary can't\n// go to Storage, so the master lives on host disk (uploaded via CloudPanel to repurpose-inbox/<uid>/) and the\n// worker reads it locally. Only the small cortes (<50MB) go to Supabase. resolve() = canonical absolute base.\nconst INBOX_BASE = resolve(__dirname, '../repurpose-inbox');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "old_string": "    // OTD-VR-006 \u2014 re-validate the source ref at READ time; never trust the stored composition row.\n    const bucket = comp.source.bucket, key = comp.source.key;\n    if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {\n      throw new Error('source_ref_rejected');\n    }\n\n    mkdirSync(join(workDir, 'out'), { recursive: true });\n    const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);\n    if (dlErr || !blob) throw new Error(`source_download_failed: ${dlErr?.message ?? 'no blob'}`);\n    writeFileSync(srcPath, new Uint8Array(await blob.arrayBuffer()));",
+  "new_string": "    // OTD-VR-006 \u2014 re-validate the source ref at READ time; never trust the stored composition row.\n    const bucket = comp.source.bucket, key = comp.source.key;\n    mkdirSync(join(workDir, 'out'), { recursive: true });\n    let inputPath: string;\n    if (bucket === 'local') {\n      // Host-local master (CloudPanel upload \u2192 repurpose-inbox/<uid>/). Read from disk; no Supabase download.\n      // Containment: key must be `${uid}/\u2026`, no `..`, and the RESOLVED real path must stay strictly under\n      // INBOX_BASE (defends against symlink/traversal escaping the per-user inbox).\n      if (!key.startsWith(`${row.user_id}/`) || key.includes('..')) throw new Error('source_ref_rejected');\n      const candidate = join(INBOX_BASE, key);\n      const real = existsSync(candidate) ? realpathSync(candidate) : '';\n      if (!real || !real.startsWith(INBOX_BASE + '/')) throw new Error('local_source_not_found');\n      inputPath = real;\n    } else {\n      if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {\n        throw new Error('source_ref_rejected');\n      }\n      const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);\n      if (dlErr || !blob) throw new Error(`source_download_failed: ${dlErr?.message ?? 'no blob'}`);\n      writeFileSync(srcPath, new Uint8Array(await blob.arrayBuffer()));\n      inputPath = srcPath;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "old_string": "      const slides = await buildCarousel({ sourcePath: srcPath, outDir: join(workDir, 'out'), slides: comp.slides!, handle: comp.handle });",
+  "new_string": "      const slides = await buildCarousel({ sourcePath: inputPath, outDir: join(workDir, 'out'), slides: comp.slides!, handle: comp.handle });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "old_string": "      const clips = await segmentVideo({ sourcePath: srcPath, outDir: join(workDir, 'out'), fps: comp.fps ?? 30, clips: comp.clips! });",
+  "new_string": "      const clips = await segmentVideo({ sourcePath: inputPath, outDir: join(workDir, 'out'), fps: comp.fps ?? 30, clips: comp.clips! });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:32)*
+
+
+## 🤖 Claude *(02:12:33)*
+
+Edge fns — fonte `local` admin-only (guarda o `user_roles`, o worker revalida a contenção):
+
+## 🤖 Claude *(02:12:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts",
+  "old_string": "    const storageBucket = typeof body.storage_bucket === \"string\" && body.storage_bucket ? body.storage_bucket : \"canvas-assets\";\n    if (!ALLOWED_BUCKETS.has(storageBucket)) {\n      return json(400, { error: \"invalid_bucket\", action: \"Bucket n\u00e3o permitido para ingest.\" });\n    }",
+  "new_string": "    const storageBucket = typeof body.storage_bucket === \"string\" && body.storage_bucket ? body.storage_bucket : \"canvas-assets\";\n    if (storageBucket === \"local\") {\n      // Host-local master (uploaded via CloudPanel) \u2014 the host-FS-source capability is ADMIN-ONLY (Sovereign\n      // directive 2026-07-12). Free-plan Supabase caps uploads at 50MB, so a full documentary lives on host disk;\n      // the worker reads repurpose-inbox/<uid>/<key> with a real-path containment guard.\n      const svc = createClient(\n        Deno.env.get(\"SUPABASE_URL\")!,\n        (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n      );\n      const { data: adminRow } = await svc.from(\"user_roles\").select(\"role\").eq(\"user_id\", user.id).eq(\"role\", \"admin\").maybeSingle();\n      if (!adminRow) return json(403, { error: \"admin_only\", action: \"Ingest\u00e3o de arquivo do host \u00e9 restrita a administradores.\" });\n    } else if (!ALLOWED_BUCKETS.has(storageBucket)) {\n      return json(400, { error: \"invalid_bucket\", action: \"Bucket n\u00e3o permitido para ingest.\" });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:12:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-repurpose-run/index.ts",
+  "old_string": "    const bucket = asset.storage_bucket as string, key = asset.storage_key as string;\n    if (!ALLOWED_BUCKETS.has(bucket) || !key.startsWith(`${user.id}/`) || key.includes(\"..\")) {\n      return json(400, { error: \"source_ref_invalid\" });   // defense-in-depth; the worker re-checks (OTD-VR-006)\n    }",
+  "new_string": "    const bucket = asset.storage_bucket as string, key = asset.storage_key as string;\n    if (bucket === \"local\") {\n      // Host-local master \u2192 ADMIN-ONLY (Sovereign directive 2026-07-12). The worker reads it from\n      // repurpose-inbox/<uid>/ with a real-path containment guard; free-plan Supabase can't hold the master.\n      const { data: adminRow } = await admin.from(\"user_roles\").select(\"role\").eq(\"user_id\", user.id).eq(\"role\", \"admin\").maybeSingle();\n      if (!adminRow) return json(403, { error: \"admin_only\", action: \"Repurpose de arquivo do host \u00e9 restrito a administradores.\" });\n    } else if (!ALLOWED_BUCKETS.has(bucket)) {\n      return json(400, { error: \"source_ref_invalid\" });   // defense-in-depth; the worker re-checks (OTD-VR-006)\n    }\n    if (!key.startsWith(`${user.id}/`) || key.includes(\"..\")) {\n      return json(400, { error: \"source_ref_invalid\" });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-repurpose-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:13:29)*
+
+
+## 🤖 Claude *(02:13:30)*
+
+Backend local pronto. Agora reescrevo a página (admin-gate + modo "arquivo no host") e leio os loops de render do sidebar pra esconder o item de não-admin:
+
+## 🤖 Claude *(02:14:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "content": "import { useState } from 'react';\nimport {\n  Film,\n  Plus,\n  Trash2,\n  Loader2,\n  CheckCircle2,\n  AlertTriangle,\n  Scissors,\n  Images,\n  PlayCircle,\n} from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';\nimport { Input } from '@/components/ui/input';\nimport { Badge } from '@/components/ui/badge';\nimport { toast } from 'sonner';\nimport { useAuth } from '@/hooks/useAuth';\nimport { useIsAdmin } from '@/hooks/useAdminData';\nimport {\n  useIngestMaster,\n  useLaunchRepurpose,\n  useRenderStatus,\n  useRepurposeResults,\n  type ClipSpecInput,\n  type SlideSpecInput,\n} from '@/hooks/useVideoRepurpose';\n\nconst STATE_LABEL: Record<string, string> = {\n  queued: 'Na fila',\n  running: 'Processando',\n  done: 'Conclu\u00eddo',\n  failed: 'Falhou',\n  error: 'Erro',\n};\n\nexport default function VideoRepurposePage() {\n  const { user } = useAuth();\n  const { isAdmin, loading: adminLoading } = useIsAdmin();\n\n  const [hostFilename, setHostFilename] = useState('');\n  const [registered, setRegistered] = useState(false);\n  const [title, setTitle] = useState('');\n  const [srtPt, setSrtPt] = useState('');\n  const [mode, setMode] = useState<'repurpose' | 'carousel'>('repurpose');\n  const [clips, setClips] = useState<ClipSpecInput[]>([{ in_sec: 0, out_sec: 20, reframe: '9:16', caption: '' }]);\n  const [slides, setSlides] = useState<SlideSpecInput[]>([{ t_sec: 0, caption: '' }]);\n  const [handle, setHandle] = useState('');\n  const [jsonText, setJsonText] = useState('');\n  const [assetId, setAssetId] = useState<string | null>(null);\n  const [renderId, setRenderId] = useState<string | null>(null);\n\n  const ingest = useIngestMaster();\n  const launch = useLaunchRepurpose();\n  const render = useRenderStatus(renderId);\n  const results = useRepurposeResults(assetId && renderId ? assetId : null);\n\n  const renderState = (render.data as { state?: string } | undefined)?.state;\n\n  const applyJson = () => {\n    try {\n      const parsed = JSON.parse(jsonText);\n      const arr = Array.isArray(parsed) ? parsed : parsed.clips ?? parsed.slides;\n      if (!Array.isArray(arr)) throw new Error('JSON deve ser uma lista de cortes ou slides.');\n      if (arr.length && 't_sec' in arr[0]) {\n        setMode('carousel');\n        setSlides(arr.map((s: SlideSpecInput) => ({ t_sec: Number(s.t_sec) || 0, caption: s.caption ?? '' })));\n      } else {\n        setMode('repurpose');\n        setClips(\n          arr.map((c: ClipSpecInput) => ({\n            in_sec: Number(c.in_sec) || 0,\n            out_sec: Number(c.out_sec) || 0,\n            reframe: c.reframe === '1:1' ? '1:1' : '9:16',\n            caption: c.caption ?? '',\n          })),\n        );\n      }\n      toast.success('Spec carregada do JSON.');\n    } catch (e) {\n      toast.error(`JSON inv\u00e1lido: ${(e as Error).message}`);\n    }\n  };\n\n  const doLaunch = async () => {\n    if (!user || !hostFilename.trim()) return;\n    try {\n      let aid = assetId;\n      if (!aid) {\n        const ing = await ingest.mutateAsync({\n          storage_bucket: 'local',\n          storage_key: `${user.id}/${hostFilename.trim()}`,\n          title: title || hostFilename.trim(),\n          mime_type: 'video/mp4',\n          srt_pt: srtPt || undefined,\n        });\n        aid = ing.asset_id;\n        setAssetId(aid);\n        setRegistered(true);\n      }\n      const run = await launch.mutateAsync(\n        mode === 'carousel'\n          ? { source_asset_id: aid, mode, slides, handle: handle || undefined }\n          : { source_asset_id: aid, mode, clips, fps: 30 },\n      );\n      setRenderId(run.render_id);\n      toast.success(`Enfileirado: ${run.count} ${mode === 'carousel' ? 'slides' : 'cortes'}.`);\n    } catch (e) {\n      toast.error((e as Error).message);\n    }\n  };\n\n  const canLaunch =\n    !!hostFilename.trim() &&\n    (mode === 'carousel' ? slides.length > 0 : clips.length > 0) &&\n    !launch.isPending &&\n    !ingest.isPending;\n\n  // \u2500\u2500 Admin gate (Sovereign directive: \"ser e aparecer somente para admin\") \u2500\u2500\n  if (adminLoading) {\n    return <div className=\"p-6 text-sm text-muted-foreground\">Carregando\u2026</div>;\n  }\n  if (!isAdmin) {\n    return (\n      <div className=\"mx-auto max-w-4xl p-6\">\n        <Card className=\"border-amber-500/30 bg-amber-500/5\">\n          <CardContent className=\"py-10 text-center text-sm text-amber-300\">\n            Esta fun\u00e7\u00e3o (Repurpose de V\u00eddeo) \u00e9 restrita a administradores.\n          </CardContent>\n        </Card>\n      </div>\n    );\n  }\n\n  const inboxPath = `repurpose-inbox/${user?.id ?? '<seu-id>'}/`;\n\n  return (\n    <div className=\"mx-auto max-w-4xl space-y-6 p-6\">\n      <div className=\"flex items-center gap-3\">\n        <div className=\"flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400\">\n          <Scissors className=\"h-6 w-6\" />\n        </div>\n        <div>\n          <h1 className=\"text-xl font-semibold\">Repurpose de V\u00eddeo</h1>\n          <p className=\"text-sm text-muted-foreground\">\n            1 master 16:9 \u2192 N shorts verticais legendados + carrossel. Rail FFmpeg gr\u00e1tis (US$ 0).\n          </p>\n        </div>\n      </div>\n\n      {/* Step 1 \u2014 Host file (CloudPanel) */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <Film className=\"h-4 w-4 text-cyan-400\" /> 1. Arquivo do master (no host)\n          </CardTitle>\n          <CardDescription>\n            O plano free do Supabase limita upload a 50 MB, ent\u00e3o o master vai pro disco do host, n\u00e3o pro Supabase.\n            Suba o MP4 pelo <strong>CloudPanel</strong> (site <code>constellation-orchestra</code>) para a pasta abaixo,\n            depois informe o nome do arquivo.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-3\">\n          <div className=\"rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground\">\n            {inboxPath}\n          </div>\n          <div className=\"space-y-1\">\n            <label className=\"text-xs text-muted-foreground\">Nome do arquivo enviado (ex.: <code>ep01-master.mp4</code>)</label>\n            <Input\n              value={hostFilename}\n              onChange={(e) => setHostFilename(e.target.value)}\n              placeholder=\"ep01-master.mp4\"\n              className=\"max-w-md font-mono\"\n              disabled={registered}\n            />\n          </div>\n          <p className=\"text-xs text-muted-foreground\">\n            S\u00f3 os cortes gerados (pequenos, &lt;50 MB) sobem pro Supabase \u2014 o master fica s\u00f3 no host.\n          </p>\n        </CardContent>\n      </Card>\n\n      {/* Step 2 \u2014 Metadata + cuts */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <Film className=\"h-4 w-4 text-cyan-400\" /> 2. Metadados & cortes\n          </CardTitle>\n          <CardDescription>\n            T\u00edtulo e (opcional) legenda SRT em pt-BR. Defina os cortes por tempo (segundos) \u2014 ou cole o JSON pronto.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-4\">\n          <div className=\"grid gap-3 sm:grid-cols-2\">\n            <div className=\"space-y-1\">\n              <label className=\"text-xs text-muted-foreground\">T\u00edtulo do epis\u00f3dio</label>\n              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder=\"EP01 \u2014 \u2026\" />\n            </div>\n            <div className=\"space-y-1\">\n              <label className=\"text-xs text-muted-foreground\">@handle (carrossel IG, opcional)</label>\n              <Input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder=\"@theneurallink\" />\n            </div>\n          </div>\n\n          <div className=\"space-y-1\">\n            <label className=\"text-xs text-muted-foreground\">Legenda SRT pt-BR (opcional)</label>\n            <textarea\n              value={srtPt}\n              onChange={(e) => setSrtPt(e.target.value)}\n              rows={2}\n              placeholder=\"1&#10;00:00:00,000 --> 00:00:03,000&#10;\u2026\"\n              className=\"w-full rounded-md border border-input bg-background px-3 py-2 text-sm\"\n            />\n          </div>\n\n          <div className=\"flex gap-2\">\n            <Button type=\"button\" variant={mode === 'repurpose' ? 'default' : 'outline'} size=\"sm\" onClick={() => setMode('repurpose')} className=\"gap-2\">\n              <Scissors className=\"h-4 w-4\" /> Shorts 9:16\n            </Button>\n            <Button type=\"button\" variant={mode === 'carousel' ? 'default' : 'outline'} size=\"sm\" onClick={() => setMode('carousel')} className=\"gap-2\">\n              <Images className=\"h-4 w-4\" /> Carrossel IG\n            </Button>\n          </div>\n\n          <div className=\"space-y-1\">\n            <label className=\"text-xs text-muted-foreground\">\n              Colar spec (JSON) \u2014 lista de {`{in_sec,out_sec,reframe,caption}`} ou {`{t_sec,caption}`}\n            </label>\n            <div className=\"flex gap-2\">\n              <textarea\n                value={jsonText}\n                onChange={(e) => setJsonText(e.target.value)}\n                rows={2}\n                placeholder='[{\"in_sec\":95,\"out_sec\":116,\"reframe\":\"9:16\",\"caption\":\"O salto n\u00e3o \u00e9 a not\u00edcia.\"}]'\n                className=\"w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs\"\n              />\n              <Button type=\"button\" variant=\"outline\" size=\"sm\" onClick={applyJson} disabled={!jsonText.trim()}>\n                Aplicar\n              </Button>\n            </div>\n          </div>\n\n          {mode === 'repurpose' ? (\n            <div className=\"space-y-2\">\n              {clips.map((c, i) => (\n                <div key={i} className=\"flex flex-wrap items-center gap-2\">\n                  <Input type=\"number\" value={c.in_sec} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, in_sec: Number(e.target.value) } : x)))} className=\"w-24\" placeholder=\"in (s)\" />\n                  <Input type=\"number\" value={c.out_sec} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, out_sec: Number(e.target.value) } : x)))} className=\"w-24\" placeholder=\"out (s)\" />\n                  <select value={c.reframe} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, reframe: e.target.value as '9:16' | '1:1' } : x)))} className=\"h-9 rounded-md border border-input bg-background px-2 text-sm\">\n                    <option value=\"9:16\">9:16</option>\n                    <option value=\"1:1\">1:1</option>\n                  </select>\n                  <Input value={c.caption} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)))} className=\"min-w-[160px] flex-1\" placeholder=\"Legenda (hook)\" />\n                  <Button type=\"button\" variant=\"ghost\" size=\"icon\" onClick={() => setClips((p) => p.filter((_, j) => j !== i))}>\n                    <Trash2 className=\"h-4 w-4 text-muted-foreground\" />\n                  </Button>\n                </div>\n              ))}\n              <Button type=\"button\" variant=\"outline\" size=\"sm\" onClick={() => setClips((p) => [...p, { in_sec: 0, out_sec: 20, reframe: '9:16', caption: '' }])} className=\"gap-2\">\n                <Plus className=\"h-4 w-4\" /> Adicionar corte\n              </Button>\n            </div>\n          ) : (\n            <div className=\"space-y-2\">\n              {slides.map((s, i) => (\n                <div key={i} className=\"flex flex-wrap items-center gap-2\">\n                  <Input type=\"number\" value={s.t_sec} onChange={(e) => setSlides((p) => p.map((x, j) => (j === i ? { ...x, t_sec: Number(e.target.value) } : x)))} className=\"w-28\" placeholder=\"tempo (s)\" />\n                  <Input value={s.caption} onChange={(e) => setSlides((p) => p.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)))} className=\"min-w-[160px] flex-1\" placeholder=\"Legenda do slide\" />\n                  <Button type=\"button\" variant=\"ghost\" size=\"icon\" onClick={() => setSlides((p) => p.filter((_, j) => j !== i))}>\n                    <Trash2 className=\"h-4 w-4 text-muted-foreground\" />\n                  </Button>\n                </div>\n              ))}\n              <Button type=\"button\" variant=\"outline\" size=\"sm\" onClick={() => setSlides((p) => [...p, { t_sec: 0, caption: '' }])} className=\"gap-2\">\n                <Plus className=\"h-4 w-4\" /> Adicionar slide\n              </Button>\n            </div>\n          )}\n        </CardContent>\n      </Card>\n\n      {/* Step 3 \u2014 Launch + status */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <PlayCircle className=\"h-4 w-4 text-cyan-400\" /> 3. Gerar\n          </CardTitle>\n          <CardDescription>\n            O worker (FFmpeg, gr\u00e1tis) l\u00ea o master do host, corta e legenda em segundo plano.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-3\">\n          <Button onClick={doLaunch} disabled={!canLaunch} className=\"gap-2\">\n            {launch.isPending || ingest.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Scissors className=\"h-4 w-4\" />}\n            Registrar & gerar {mode === 'carousel' ? 'carrossel' : 'cortes'}\n          </Button>\n\n          {renderId && (\n            <div className=\"flex items-center gap-2 text-sm\">\n              <span className=\"text-muted-foreground\">Status:</span>\n              <Badge variant=\"outline\" className={renderState === 'done' ? 'border-emerald-500/40 text-emerald-300' : 'border-cyan-500/40 text-cyan-300'}>\n                {['done', 'failed', 'error'].includes(renderState ?? '') ? null : <Loader2 className=\"mr-1 h-3 w-3 animate-spin\" />}\n                {STATE_LABEL[renderState ?? ''] ?? 'Aguardando\u2026'}\n              </Badge>\n            </div>\n          )}\n\n          {renderState === 'done' && (\n            <div className=\"flex items-center gap-2 text-sm text-emerald-400\">\n              <CheckCircle2 className=\"h-4 w-4\" />\n              {results.data?.length ?? 0} {mode === 'carousel' ? 'slides' : 'cortes'} gerados \u2014{' '}\n              <a href=\"/dashboard/spaces/assets\" className=\"underline hover:text-emerald-300\">ver na Biblioteca</a>\n            </div>\n          )}\n          {(renderState === 'failed' || renderState === 'error') && (\n            <div className=\"flex items-center gap-2 text-sm text-amber-400\">\n              <AlertTriangle className=\"h-4 w-4\" /> O worker falhou. Confira se o arquivo existe na pasta do host e o nome est\u00e1 correto.\n            </div>\n          )}\n        </CardContent>\n      </Card>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:14:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 55,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 55	  useSidebar,
+> 56	} from '@/components/ui/sidebar';
+> 57	import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+> 58	import { Button } from '@/components/ui/button';
+> 59	
+> 60	interface NavLeaf {
+> 61	  title: string;
+> 62	  url: string;
+> 63	  icon: LucideIcon;
+> 64	}
+> 65	
+> 66	interface NavCategoryDef {
+> 67	  title: string;
+> 68	  icon: LucideIcon;
+> 69	  items: NavLeaf[];
+> 70	}
+> 71	
+> 72	// Grouped navigation — collapsible categories keep the rail short (no scrollbar).
+> ```
+
+## 🤖 Claude *(02:14:36)*
+
+
+## 🤖 Claude *(02:14:36)*
+
+Página reescrita (host-file + admin-gate). Para esconder o item de não-admin, preciso ver onde `categories` é renderizado:
+
+## 🤖 Claude *(02:14:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== where categories is consumed in render ===\"; grep -nE \"categories\\.map|categories\\)|\\{categories|category\\.items\\.map|const categories|visibleCategories\" src/components/dashboard/DashboardSidebar.tsx",
+  "description": "Find categories render usage in sidebar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === where categories is consumed in render ===
+> 73:const categories: NavCategoryDef[] = [
+> 137:            {category.items.map((it) => (
+> 405:                  {categories.map((cat) => (
+> ```
+
+## 🤖 Claude *(02:14:58)*
+
+
+## 🤖 Claude *(02:15:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== all .items.map sites ===\"; grep -nE \"\\.items\\.map|\\.items\\.filter\" src/components/dashboard/DashboardSidebar.tsx; echo; echo \"=== outer maps feeding 'category'/'cat' ===\"; grep -nE \"categories\\.map\\(\\(cat|categories\\.map\\(\\(category|\\.map\\(\\(category|\\.map\\(\\(cat\" src/components/dashboard/DashboardSidebar.tsx",
+  "description": "Locate both items.map render sites"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === all .items.map sites ===
+> 137:            {category.items.map((it) => (
+> 
+> === outer maps feeding 'category'/'cat' ===
+> 405:                  {categories.map((cat) => (
+> ```
+
+## 🤖 Claude *(02:15:25)*
+
+
+## 🤖 Claude *(02:15:26)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 125,
+  "limit": 22
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 125	  return (
+> 126	    <Collapsible defaultOpen={active} className="group/collapsible">
+> 127	      <SidebarMenuItem>
+> 128	        <CollapsibleTrigger asChild>
+> 129	          <SidebarMenuButton className="hover:bg-muted/50">
+> 130	            <category.icon className="mr-2 h-4 w-4 shrink-0" />
+> 131	            <span>{category.title}</span>
+> 132	            <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+> 133	          </SidebarMenuButton>
+> 134	        </CollapsibleTrigger>
+> 135	        <CollapsibleContent>
+> 136	          <SidebarMenuSub>
+> 137	            {category.items.map((it) => (
+> 138	              <SidebarMenuSubItem key={it.url}>
+> 139	                <SidebarMenuSubButton asChild>
+> 140	                  <NavLink
+> 141	                    to={it.url}
+> 142	                    className="hover:bg-muted/50"
+> 143	                    activeClassName="text-primary font-medium"
+> 144	                  >
+> 145	                    <it.icon className="mr-2 h-3.5 w-3.5 shrink-0" />
+> 146	                    <span>{it.title}</span>
+> ```
+
+## 🤖 Claude *(02:15:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 400,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 400	                      </CollapsibleContent>
+> 401	                    </SidebarMenuItem>
+> 402	                  </Collapsible>
+> 403	
+> 404	                  {/* Grouped categories */}
+> 405	                  {categories.map((cat) => (
+> 406	                    <NavCategory key={cat.title} category={cat} />
+> 407	                  ))}
+> 408	                </SidebarMenu>
+> 409	              </SidebarGroupContent>
+> 410	            </SidebarGroup>
+> 411	
+> 412	            <SidebarGroup>
+> 413	              <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+> 414	              <SidebarGroupContent>
+> 415	                <SidebarMenu>
+> 416	                  {systemItems.map((item) => (
+> 417	                    <SidebarMenuItem key={item.url}>
+> 418	                      <SidebarMenuButton asChild>
+> 419	                        <NavLink
+> 420	                          to={item.url}
+> 421	                          className="hover:bg-muted/50"
+> 422	                          activeClassName="bg-primary/10 text-primary font-medium"
+> 423	                        >
+> 424	                          <item.icon className="mr-2 h-4 w-4 shrink-0" />
+> 425	                          <span>{item.title}</span>
+> 426	                        </NavLink>
+> 427	                      </SidebarMenuButton>
+> 428	                    </SidebarMenuItem>
+> 429	                  ))}
+> 430	                </SidebarMenu>
+> 431	              </SidebarGroupContent>
+> ```
+
+## 🤖 Claude *(02:15:45)*
+
+
+## 🤖 Claude *(02:15:46)*
+
+`NavCategory` renderiza os itens no único ponto (linha 137). Vou ler o topo dele pra injetar o filtro admin:
+
+## 🤖 Claude *(02:15:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "offset": 116,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 116	  { title: 'Configurações', url: '/dashboard/settings', icon: Settings },
+> 117	];
+> 118	
+> 119	/** Collapsible category whose trigger is a toggle (not a destination). */
+> 120	function NavCategory({ category }: { category: NavCategoryDef }) {
+> 121	  const location = useLocation();
+> 122	  const active = category.items.some(
+> 123	    (it) => location.pathname === it.url || location.pathname.startsWith(it.url + '/'),
+> 124	  );
+> 125	  return (
+> ```
+
+## 🤖 Claude *(02:16:03)*
+
+
+## 🤖 Claude *(02:16:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "interface NavLeaf {\n  title: string;\n  url: string;\n  icon: LucideIcon;\n}",
+  "new_string": "interface NavLeaf {\n  title: string;\n  url: string;\n  icon: LucideIcon;\n  adminOnly?: boolean;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "      { title: 'Repurpose de V\u00eddeo', url: '/dashboard/repurpose', icon: Scissors },",
+  "new_string": "      { title: 'Repurpose de V\u00eddeo', url: '/dashboard/repurpose', icon: Scissors, adminOnly: true },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "function NavCategory({ category }: { category: NavCategoryDef }) {\n  const location = useLocation();\n  const active = category.items.some(",
+  "new_string": "function NavCategory({ category }: { category: NavCategoryDef }) {\n  const location = useLocation();\n  const { isAdmin } = useIsAdmin();\n  const visibleItems = category.items.filter((it) => !it.adminOnly || isAdmin);\n  const active = category.items.some("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "            {category.items.map((it) => (",
+  "new_string": "            {visibleItems.map((it) => ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:16:23)*
+
+
+## 🤖 Claude *(02:16:25)*
+
+Todo o código está feito (worker fonte-local + edge fns admin-only + hook + página host-file + nav escondida). Reiniciando o worker (pega a mudança), deployando as edge fns e checando tipos:
+
+## 🤖 Claude *(02:16:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; echo \"=== restart worker (picks up local-source code) ===\"; systemctl --user restart video-repurpose-bridge.service 2>&1; sleep 2; systemctl --user is-active video-repurpose-bridge.service; systemctl --user status video-repurpose-bridge.service --no-pager 2>&1 | grep -E \"Active:|running \u2014\" | head -3; echo; echo \"=== deploy edge fns ===\"; cd /home/gcrUX/htdocs/constellation-orchestra; npx supabase functions deploy ingest-external-asset 2>&1 | grep -iE \"Deployed|error\" | head -2; npx supabase functions deploy video-repurpose-run 2>&1 | grep -iE \"Deployed|error\" | head -2; echo; echo \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -12; echo \"EXIT_TSC=$?\"",
+  "description": "Restart worker + deploy edge fns + tsc",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === restart worker (picks up local-source code) ===
+> active
+>      Active: active (running) since Sun 2026-07-12 23:16:30 -03; 2s ago
+> Jul 12 23:16:30 panel.gcrux.com bun[81227]: 🎬 video-repurpose-bridge running — polling video_renders (engine=repurpose, queued)...
+> 
+> === deploy edge fns ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: ingest-external-asset
+> Deployed Functions on project bcyvddsykvehvpwstlfa: video-repurpose-run
+> 
+> === tsc ===
+> EXIT_TSC=0
+> ```
+
+## 🤖 Claude *(02:16:54)*
+
+
+## 🤖 Claude *(02:16:55)*
+
+Worker reiniciado com o código novo (active, running) · edge fns deployadas · tsc EXIT 0. Gate de segurança (nova capacidade de ler arquivo do host) + build/deploy do frontend, em paralelo:
+
+## 🤖 Claude *(02:17:13)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security review host-local source",
+  "run_in_background": false,
+  "prompt": "Focused security review of a NEW capability just added: a video-repurpose worker can now read a MASTER video from the HOST filesystem (not just Supabase Storage), because the free-plan Supabase caps uploads at 50MB. Flag only HIGH-confidence, concretely exploitable vulns newly introduced. Read the actual files.\n\nCHANGED FILES:\n1. `scripts/video-repurpose-bridge.ts` \u2014 the host worker. New branch when `comp.source.bucket === 'local'`: it resolves `join(INBOX_BASE, key)` where `INBOX_BASE = resolve(__dirname, '../repurpose-inbox')`, then `realpathSync(candidate)` and requires the real path to `startsWith(INBOX_BASE + '/')`; also requires `key.startsWith(`${row.user_id}/`)` and `!key.includes('..')`. If valid, it passes that local path to ffmpeg (segmentVideo/buildCarousel). The `key` originates from a `creative_assets` row.\n2. `supabase/functions/ingest-external-asset/index.ts` \u2014 when `storage_bucket === 'local'`, it now requires the caller to be an admin (queries `user_roles` role='admin' via service-role) before registering; the existing check enforces `storage_key.startsWith(`${user.id}/`)` and `!includes('..')`.\n3. `supabase/functions/video-repurpose-run/index.ts` \u2014 when the resolved source asset's `storage_bucket === 'local'`, it requires the caller to be admin (user_roles) before enqueuing; then enforces `key.startsWith(`${user.id}/`)` and `!includes('..')`.\n\nTHE CORE QUESTION: can any actor cause the worker to read a host file OUTSIDE the per-user inbox `repurpose-inbox/<uid>/` \u2014 i.e., path traversal / symlink escape / absolute-path injection to read arbitrary host files (e.g., /home/gcrUX/.../.env, /etc/passwd) and exfiltrate them as \"cortes\" uploaded to Supabase? Trace the `key` from client input \u2192 creative_assets row \u2192 worker. Consider:\n- Does `key.includes('..')` + `key.startsWith(`${uid}/`)` + the `realpathSync(...).startsWith(INBOX_BASE + '/')` containment fully prevent escape? Consider symlinks placed in the inbox, absolute paths, and `..` variants.\n- Are the admin gates (user_roles lookup) on BOTH ingest (register) and run (enqueue) correct, so a non-admin cannot register or trigger a local source?\n- `INBOX_BASE` uses `resolve()` \u2014 is the `startsWith(INBOX_BASE + '/')` prefix check robust (e.g., against a sibling dir `repurpose-inbox-evil/`)? Note the `+ '/'`.\n- Is there any way the client controls `${row.user_id}` (it comes from the video_renders row / JWT user, not the body)?\n\nAlso confirm the admin-gate table/column is correct: `useIsAdmin` (src/hooks/useAdminData.ts) queries `user_roles` where `role='admin'` \u2014 the edge fns must match that.\n\nEXCLUSIONS: DoS/rate-limit; secrets-on-disk (except if this bug lets a user READ a secret file via traversal \u2014 THAT is in scope as a data-exposure/exfiltration finding); theoretical races; path-only SSRF; regex injection; markdown/docs; env vars trusted; UUIDs unguessable.\n\nOutput per candidate: file+line, severity, category, concrete exploit path, fix, confidence 1-10. Only report \u22657. If nothing exploitable, say so explicitly."
+}
+```
+
+## 🤖 Claude *(02:17:21)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "build-deploy-guardian",
+  "description": "Build + deploy frontend",
+  "run_in_background": false,
+  "prompt": "Build e deploy do FRONTEND a partir do REPO PRINCIPAL `/home/gcrUX/htdocs/constellation-orchestra` (repo principal, tem `.env`, nginx serve o `dist/` dele \u2192 `bun run build` = deploy; N\u00c3O \u00e9 worktree).\n\nMudan\u00e7as a publicar: a p\u00e1gina **Repurpose de V\u00eddeo** (`src/pages/VideoRepurposePage.tsx`) foi reescrita para modo \"arquivo no host\" + admin-gate (`useIsAdmin`); o item de nav agora \u00e9 admin-only (filtro `adminOnly` no `DashboardSidebar`); hook `src/hooks/useVideoRepurpose.ts`. `npx tsc --noEmit` j\u00e1 passou (EXIT 0).\n\nExecute:\n1. `cd /home/gcrUX/htdocs/constellation-orchestra && bun run build`.\n2. Verifique MATERIALMENTE (Lei 1):\n   - G0 build: linha literal `\u2713 built in \u2026` (se falhar por \u00edcone lucide inexistente, reporte o erro literal, n\u00e3o conserte).\n   - G1 env baked: `grep -rl bcyvddsykvehvpwstlfa dist/assets/` \u22651 arquivo.\n   - G2 chunk novo: a p\u00e1gina foi reescrita \u2192 o chunk `VideoRepurposePage-*.js` deve ter um HASH NOVO (diferente do build anterior `VideoRepurposePage-CK6xEhwG.js`) E conter uma string nova da vers\u00e3o host-file, ex.: `grep -rlE \"Arquivo do master|repurpose-inbox|restrita a administradores\" dist/assets/`.\n3. Reporte: linha de sucesso do vite, `ls -la dist/index.html` (timestamp novo), o nome do chunk VideoRepurposePage novo, e a prova do grep. Se algum gate falhar \u2192 FAIL com output."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'DEPLOYED — todos os gates verdes com prova material literal.\n\n## Build & Deploy Guardian — Frontend (repo principal)\n\n| Item | Valor |\n|------|-------|\n| Surface | frontend (`src/`) |\n| Caminho usado | `bun run build` direto no repo principal (`/home/gcrUX/htdocs/constellation-orchestra`) → `dist/` servido por nginx |\n| Onde estou | main repo, branch `main`, `.env` presente (NÃO é worktree) |\n| Débito de merge-para-main | **Nenhum** (build no próprio main; sem worktree envolvido) |\n\n### Gates (valores reais, output literal)\n\n- **G0 build** — `✓ built in 31.96s` (EXIT 0; nenhum erro de ícone lucide)\n- **G1 env baked** — `grep -rl bcyvddsykvehvpwstlfa dist/assets/` → **9 arquivos** (inclui `index-M6dl9iar.js`, `SettingsPage-wsxriHqA.js`, etc.). ≥1 ✓\n- **G2 chunk novo** — hash MUDOU:\n  - Antes: `VideoRepurposePage-CK6xEhwG.js` (12340 bytes, Jul 12 22:11) → **removido** (`ls` retorna `No such file or directory`)\n  - Depois: `dist/assets/VideoRepurposePage-BVxfMzoN.js` (11594 bytes, Jul 12 23:18)\n  - Entry `index-M6dl9iar.js` **referencia** o hash novo `VideoRepurposePage-BVxfMzoN`\n  - Strings da versão host-file presentes no chunk novo: `"Arquivo do master"` 1×, `"repurpose-inbox"` 1×, `"restrita a administradores"` 1×\n- **G3 (best-effort)** — `curl -s http://localhost/ -H "Host: login.mcorch.com"` serve o entry `index-M6dl9iar.js` (o mesmo que referencia o chunk novo) ✓\n\n### Prova de recência\n`ls -la dist/index.html` → `-rw-rw-r-- 1 ubuntu ubuntu 2213 Jul 12 23:18 dist/index.html` (timestamp novo, minuto do build)\n\n### Hard-refresh (Cloudflare)\nCloudflare pode cachear o entry. Instrua o Sovereign a fazer **`Ctrl+Shift+R`** (hard-refresh) em `login.mcorch.com` para o browser buscar `index-M6dl9iar.js`. Origin atualizado ≠ browser vê.\n\nArquivos servidos relevantes (paths absolutos):\n- `/home/gcrUX/htdocs/constellation-orchestra/dist/assets/VideoRepurposePage-BVxfMzoN.js` (chunk novo)\n- `/home/gcrUX/htdocs/constellation-orchestra/dist/assets/index-M6dl9iar.js` (entry que referencia o chunk)\n- `/home/gcrUX/htdocs/constellation-orchestra/dist/index.html` (23:18)\n\nNota: a mudança de nav admin-only vive no bundle do entry/sidebar (`DashboardSidebar` com filtro `adminOnly`), que também rehashou nesta build (`index-M6dl9iar.js`). O gate-alvo (VideoRepurposePage host-file + admin-gate) está provado no chunk `BVxfMzoN`.'}, {'type': 'text', 'text': "agentId: a51604a5bb904a978 (use SendMessage with to: 'a51604a5bb904a978', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 50383\ntool_uses: 4\nduration_ms: 80038</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I now have the complete picture. Let me confirm the two critical facts that close the threat model, then report.\n\nBoth write-target tables are **default-deny for client writes**:\n- `video_renders` (migration `20260622040000`, lines 67-70): "No INSERT/UPDATE policy for authenticated ⇒ default-deny" — only service-role writes.\n- `creative_assets` (migration `20260625120000`, line 60): SELECT-own + DELETE-own only; "No INSERT/UPDATE policy ⇒ default-deny."\n- `register_creative_asset` and `finalize_video_render` are both `REVOKE ... FROM PUBLIC, anon, authenticated; GRANT ... TO service_role`.\n\nThe only `engine=\'repurpose\'` inserter is `video-repurpose-run` (admin-gated for `local`); the only `bucket=\'local\'` registrar is `ingest-external-asset` (admin-gated).\n\n## Verdict: No exploitable vulnerability (nothing ≥7). The containment is correctly built.\n\nI traced `key` from client → `creative_assets` row → worker and stress-tested every escape vector in the core question. All are closed.\n\n### Per sub-question\n\n**1. Does `!key.includes(\'..\')` + `key.startsWith(`${uid}/`)` + `realpathSync(...).startsWith(INBOX_BASE + \'/\')` fully prevent escape?** Yes.\n- **Traversal:** `key.includes(\'..\')` (substring, raw FS string — not URL-decoded) blocks every `../`, `....//`, etc.\n- **Absolute-path injection:** `key` must start with `${row.user_id}/` (a UUID), so it can\'t be `/etc/...`. Even if it could, `join(INBOX_BASE, key)` treats the second arg as relative — `join(\'/base\', \'/etc/passwd\') → \'/base/etc/passwd\'` — so an absolute key is neutralized.\n- **Symlink escape (the real defense):** `realpathSync` canonicalizes ALL symlinks (including intermediate components like a symlinked `<uid>` dir), and `real.startsWith(INBOX_BASE + \'/\')` then rejects any canonical path landing outside the inbox root. A symlink `repurpose-inbox/<uid>/x → /etc/passwd` resolves to `/etc/passwd`, fails the prefix check → `local_source_not_found`. Correctly blocks reading `/etc/passwd`, `../.env`, etc.\n\n**2. `INBOX_BASE + \'/\'` prefix robustness (sibling-dir bypass):** Correct. `resolve()` yields a canonical no-trailing-slash base; the explicit `+ \'/\'` means a sibling like `.../repurpose-inbox-evil/x` does NOT match `.../repurpose-inbox/`. This is the classic `startsWith` pitfall and it was handled right.\n\n**3. Admin gates on BOTH ingest and enqueue — correct and table/column matches `useIsAdmin`.** Both `ingest-external-asset:103` and `video-repurpose-run:105` query `user_roles` `.eq(\'role\',\'admin\')` via a **service-role** client (so RLS can\'t hide the row) with `.maybeSingle()` → non-admin yields `null` → `403`. This is byte-identical to `useIsAdmin` (`src/hooks/useAdminData.ts:12-17`). A non-admin cannot register a `local` asset nor enqueue a `local` source.\n\n**4. Can the client control `${row.user_id}`?** No. In the worker, `row.user_id` comes from `claim()`\'s `SELECT ... user_id FROM video_renders` — a service-role-written column set to the JWT `user.id` at enqueue. Clients cannot INSERT `video_renders` directly (default-deny RLS), so there is no path to forge `user_id` or inject a `repurpose`/`local` row bypassing the edge fn.\n\n### Why a non-admin cannot reach the local branch at all\nThe worker claims any `engine=\'repurpose\'` queued row, but **such a row can only be created by the service-role via `video-repurpose-run`**, which admin-gates `bucket===\'local\'`. Direct client inserts into `video_renders` and `creative_assets` are both RLS default-deny, and the two SECURITY DEFINER RPCs are service-role-only. So the `bucket===\'local\'` file-read branch is unreachable by non-admins at two independent chokepoints, reinforced by RLS.\n\n### Residual (not a finding; documented for completeness)\nThe realpath guard blocks escape *outside* `INBOX_BASE`, but a symlink `repurpose-inbox/<uidA>/link → repurpose-inbox/<uidB>/secret.mp4` would pass containment (still under `INBOX_BASE`), reading another user\'s inbox file. This is **not exploitable**: (a) only an admin can reach the local branch, (b) placing the symlink requires host write access to the inbox (CloudPanel/Sovereign), and (c) it stays within `repurpose-inbox/`, never touching arbitrary host files like `.env`/`/etc/passwd` — which is the actual core question, and that is fully blocked. Admin-with-host-access reading inbox contents is not a privilege escalation.\n\n**Files reviewed:** `/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts` (lines 76-84 = the guard), `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts` (95-112), `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-repurpose-run/index.ts` (95-116), `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260622040000_video_studio_renders_and_assets.sql` (RLS), `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260625120000_creative_assets_registry.sql` (RLS), `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260712120000_creative_assets_external_source.sql` (register RPC grants).'}, {'type': 'text', 'text': "agentId: aabb9a4133e4a401d (use SendMessage with to: 'aabb9a4133e4a401d', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 112504\ntool_uses: 12\nduration_ms: 156109</usage>"}]
+> ```
+
+## 🤖 Claude *(02:21:13)*
+
+
+## 🤖 Claude *(02:21:18)*
+
+Ambos os gates verdes — e o de segurança foi rigoroso: **containment do host-file à prova de traversal/symlink** (realpath + `startsWith(INBOX_BASE+'/')` + `..` + prefixo `${uid}/`), **admin-gate correto nos dois chokepoints** (ingest + run, batendo com `useIsAdmin`), tabelas de escrita RLS default-deny. **Sem findings.** Frontend deployado (chunk `VideoRepurposePage-BVxfMzoN` com o modo host-file).
+
+Antes de você gastar tempo subindo o EP01, vou **provar a esteira local E2E (Lei 1)** com um MP4 de teste — se um corte real sair, é só arrastar o master de verdade:
+
+## 🤖 Claude *(02:21:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9956e776-db1f-47bd-9485-412802efe469/scratchpad/smoke-local-repurpose.ts",
+  "content": "// E2E smoke: prove the host-local repurpose path works (worker reads master from disk \u2192 cuts \u2192 uploads clip).\n// Reads the repo .env for SUPABASE_URL/SB_SECRET_KEY. The running video-repurpose-bridge.service will claim it.\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'fs';\n\nconst envTxt = readFileSync('/home/gcrUX/htdocs/constellation-orchestra/.env', 'utf-8');\nfor (const line of envTxt.split('\\n')) {\n  const m = line.match(/^([^#=\\s][^=]*)=(.*)$/);\n  if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, '');\n}\nconst URL = process.env.SUPABASE_URL!;\nconst KEY = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY!;\nconst sb = createClient(URL, KEY, { auth: { persistSession: false } });\n\nconst UID = 'ada39fae-67e1-4e53-af1c-5a18e1c108e8';\n\nconst { data: ins, error: insErr } = await sb.from('video_renders').insert({\n  user_id: UID, engine: 'repurpose', charged_mco: 0, state: 'queued',\n  composition: {\n    mode: 'repurpose',\n    source: { bucket: 'local', key: `${UID}/smoketest.mp4` },\n    source_asset_id: null,\n    fps: 30,\n    clips: [{ in_sec: 0, out_sec: 3, reframe: '9:16', caption: 'smoke' }],\n  },\n}).select('id').single();\nif (insErr) { console.error('INSERT FAILED:', insErr.message); process.exit(1); }\nconst renderId = ins!.id;\nconsole.log('enqueued render', renderId);\n\nlet state = 'queued';\nfor (let i = 0; i < 20; i++) {\n  await new Promise((r) => setTimeout(r, 3000));\n  const { data } = await sb.from('video_renders').select('state').eq('id', renderId).maybeSingle();\n  state = (data as { state?: string } | null)?.state ?? state;\n  process.stdout.write(`[${i}] state=${state} `);\n  if (['done', 'failed', 'error'].includes(state)) break;\n}\nconsole.log('\\nfinal state =', state);\n\nconst { data: clips } = await sb.from('creative_assets')\n  .select('id, kind, storage_bucket, storage_key, width, height, duration_seconds')\n  .eq('source_job_id', renderId);\nconsole.log('produced clips =', JSON.stringify(clips, null, 2));\n\n// verify the clip is actually in storage (signed URL HEAD)\nif (clips?.length) {\n  const c = clips[0];\n  const { data: signed } = await sb.storage.from(c.storage_bucket).createSignedUrl(c.storage_key, 60);\n  if (signed?.signedUrl) {\n    const res = await fetch(signed.signedUrl, { method: 'HEAD' });\n    console.log('clip storage HEAD:', res.status, 'bytes=', res.headers.get('content-length'));\n  }\n}\n\n// cleanup the render row + clips (keep the smoke hermetic)\nif (clips?.length) for (const c of clips) await sb.storage.from(c.storage_bucket).remove([c.storage_key]).then(() => {}, () => {});\nawait sb.from('creative_assets').delete().eq('source_job_id', renderId).then(() => {}, () => {});\nawait sb.from('video_renders').delete().eq('id', renderId).then(() => {}, () => {});\nconsole.log(state === 'done' && clips?.length ? '\u2705 SMOKE PASS \u2014 local master \u2192 clip produced' : '\u274c SMOKE FAIL');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9956e776-db1f-47bd-9485-412802efe469/scratchpad/smoke-local-repurpose.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:21:50)*
+
+
+## 🤖 Claude *(02:21:51)*
+
+MP4 de teste na inbox + rodando a prova E2E (o worker rodando vai processar):
+
+## 🤖 Claude *(02:21:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; INBOX=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8; echo \"=== create 15s test master in inbox ===\"; ffmpeg -y -f lavfi -i \"testsrc=size=1280x720:rate=30:duration=15\" -f lavfi -i \"anullsrc=channel_layout=stereo:sample_rate=44100\" -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest -t 15 \"$INBOX/smoketest.mp4\" 2>&1 | tail -2; ls -la \"$INBOX/smoketest.mp4\"; echo; echo \"=== run E2E smoke (enqueue local \u2192 worker cuts \u2192 verify clip) ===\"; cd /home/gcrUX/htdocs/constellation-orchestra; bun /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9956e776-db1f-47bd-9485-412802efe469/scratchpad/smoke-local-repurpose.ts 2>&1 | tail -30",
+  "description": "Create test master + run E2E local repurpose smoke",
+  "timeout": 150000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === create 15s test master in inbox ===
+> [libx264 @ 0xacbf72ecf790] kb/s:110.59
+> [aac @ 0xacbf72ed2010] Qavg: 65536.000
+> -rw-rw-r-- 1 ubuntu gcrUX 229693 Jul 12 23:22 /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/smoketest.mp4
+> 
+> === run E2E smoke (enqueue local → worker cuts → verify clip) ===
+> enqueued render b5aba839-22e6-4ab6-8fc6-ca006ddf1635
+> [0] state=running [1] state=done 
+> final state = done
+> produced clips = [
+>   {
+>     "id": "b69a0991-f468-4ed7-86aa-0c8856e8e05b",
+>     "kind": "video",
+>     "storage_bucket": "video-studio-assets",
+>     "storage_key": "ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/b5aba839-22e6-4ab6-8fc6-ca006ddf1635/clip_000.mp4",
+>     "width": 1080,
+>     "height": 1920,
+>     "duration_seconds": 3
+>   }
+> ]
+> clip storage HEAD: 200 bytes= 83684
+> ✅ SMOKE PASS — local master → clip produced
+> ```
+
+## 🤖 Claude *(02:22:50)*
+
+
+## 🤖 Claude *(02:22:54)*
+
+**E2E PROVADO (Lei 1) — a esteira host-local funciona:**
+
+```
+master de teste (229KB no host) → worker leu do disco → cortou → reframe 9:16
+→ clip 1080×1920, 3s → subiu pro Supabase (video-studio-assets)
+→ HEAD 200, 83.684 bytes  →  ✅ SMOKE PASS
+```
+
+O bloqueio dos 50 MB está **resolvido de verdade**: o master fica no host, os cortes (pequenos) vão pro Supabase. Limpando o arquivo de teste e registrando o aprendizado:
+
+## 🤖 Claude *(02:22:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "rm -f /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/smoketest.mp4 && echo \"smoketest.mp4 removido\"; ls -la /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ 2>/dev/null",
+  "description": "Clean up smoke test master from inbox"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> smoketest.mp4 removido
+> total 8
+> drwxrwsr-x 2 gcrUX gcrUX 4096 Jul 12 23:22 .
+> drwxrwsr-x 3 gcrUX gcrUX 4096 Jul 12 23:10 ..
+> ```
+
+## 🤖 Claude *(02:22:57)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_repurpose_engine.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_video_repurpose_engine
+> 3	description: "Motor de repurpose de vídeo (1 master externo → N shorts 9:16 + carrossel IG + WP), reusando distribuição. Blueprint + Fatia 1 ingest apply-gated 2026-07-12."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 91d87f77-1778-48ba-b48b-b099f0846823
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-07-12: o MCORCH **distribui** mas não **produz cortes**. Construir a metade que falta (ingest MP4 externo + segmentação/reframe/caption FFmpeg + carrossel IG + mapeador de metadados) reusando a distribuição existente. BoK: `docs/bok/video-repurpose/00-deepsearch-blueprint.md`.
+> 11	
+> 12	**Achado material decisivo (Lei 1, o repo andou vs. o snapshot dele):**
+> 13	- O pipeline validado do repo **`gabrielZarattini/GabrielAI`** (4 episódios, ponte Premiere no Windows) é o **INVERSO** disto: N takes Veo 8s → **1 master** (montagem). Ele é a **fonte do master** (o input 16:9), o **schema de metadados** (`episodios/epNN.json`: atos=capítulos, creditos.blocos=fontes, teaser, tags) e a **filosofia cut-spec data-driven** (cortes de MEDIÇÕES, nunca do texto) + o gate **"olhe o render"** (=Vision QA). NÃO é molde do segmenter (o próprio roadmap dele defere shorts 9:16).
+> 14	- O segmenter "1 longo→N shorts" é **FR-CP-012** (não "OTD-CP-011"); a SDD post-engine já o gateia em *"aplicável quando entrar INPUT de vídeo longo"* → **esta capacidade é o gatilho que o destrava**.
+> 15	- **OTD-CP-009 FECHADA** (reframe de imagem); reframe de **vídeo** é gap. youtube-studio **Pilar I = montagem** (concat N→1); segmentação (1→N) é o inverso (reusa o worker-shape). Carrossel existente = **PDF/LinkedIn** (`generate-carousel`); **IG carousel (image-children ≤10) é gap** — contrato Meta confirmado (`media_type=CAROUSEL`+children→media_publish).
+> 16	
+> 17	**Reuse-map (NÃO reconstruir):** publish-social, publish-wordpress, reshape-pillar, channel_profiles, render-core.ts (HTML→PNG, aceita images[]), video-bridge.ts (molde do worker: claim atômico+reaper+finalize+dual-write), finalize_video_render, register_creative_asset, o sink [[project_lora_witness_and_otd_spaces_036]] (space_publish_variants/publish-space-asset), scheduled_posts/auto-publish. Disclosure sintética hard-coded (is_aigc/containsSyntheticMedia) preservada. NÃO escoar por viral-autopilot (ML product-centric).
+> 18	
+> 19	**Fatia 1 (ingest) code-complete + /security-review NO FINDINGS, APPLY GATED** (commits `f703cc8`+`0e4393c`): migration `source_module='external'` (aditivo, espelha reunion, money-path intocado) + seam `ingest-external-asset` (owner-scoped `${uid}/` + bucket allowlist + rejeita `..`; upload default, **YouTube gated OTD-VR-001** por IP datacenter) + SOP + smoke 5 gates. **Unblock:** `! bash scripts/qa/apply-creative-assets-external-migration.sh` → `npx supabase functions deploy ingest-external-asset` → `bun run scripts/qa/smoke-external-ingest.ts`.
+> 20	
+> 21	**Fatias 1+2 LIVE E PROVADAS E2E NA PRODUÇÃO (2026-07-12, Sovereign aplicou ambas).** Rail inteiro witnessado zero-custo com User 0: master 16:9 sintético → `ingest-external-asset` (asset external) → `video-repurpose-run` (enqueue) → worker `--once` → **3 clipes reais** (2×1080×1920 + 1×1080×1080, parent=master, em video-studio-assets) → render `done` charged 0/refund 0. **Vision QA no clipe REAL de produção:** 9:16, CENTRO preservado, ESQ/DIR cortados, **timestamp 00:00:04.000 prova o trim frame-accurate** (in_sec=2), legenda "Corte 1 — Abertura" queimada. Dados de teste sintéticos limpos após. O motor CORTA VÍDEO de verdade, ponta a ponta.
+> 22	
+> 23	**Fatia 2 (worker segment/reframe/caption) code-complete + /security-review NO FINDINGS** (commit `439d064`): `segment-core.ts` (FFmpeg trim+reframe 16:9→9:16/1:1 center-safe+caption drawtext-textfile) **WITNESSADO offline por Vision QA** (master sintético→clipe 9:16 manteve centro/cortou laterais + clipe 1:1, 150f/120f exatos) + worker `video-repurpose-bridge.ts` (molde video-bridge + **OTD-VR-006 re-valida bucket/prefixo/`..` no READ** = controle decisivo) + enqueue `video-repurpose-run` (owner-scoped) + migration `engine='repurpose'` (CHECK-list-only) + SOP + smoke 5 gates. Clipes registrados `source_module='hyperframes'` parent=master (publicáveis pelo sink). **Unblock:** `! bash scripts/qa/apply-video-renders-repurpose-migration.sh` → `npx supabase functions deploy video-repurpose-run` → systemd `video-repurpose-bridge.service` (ação Sovereign, molde video-bridge) OU `bun run scripts/video-repurpose-bridge.ts --once` p/ drenar + `bun run scripts/qa/smoke-video-repurpose.ts`.
+> 24	
+> 25	**Fatia 3 (carrossel IG) code-complete + /security-review NO FINDINGS, PROVADA E2E na produção** (commit `831f5cc`): reusa a MESMA fila/worker (engine='repurpose', **mode='carousel'** — sem migration nova). `carousel-core.ts` (FFmpeg key-frame→slide 1080×1350 4:5 + legenda WRAPPED drawtext-textfile + handle; **OTD-VR-007** typografia pixel-perfect via render-core = refinamento, legendas curtas limpas) + worker branch + enqueue `slides[{t_sec,caption}]`≤10 + branch **media_type=CAROUSEL** no `publish-social` (contrato Meta) + seam `publish-space-carousel` (resolve slides owner-scoped→assina→publica). Witness E2E: master→3 slides 1080×1350 image creative_assets + Vision QA no slide real. **Deploy gated:** `npx supabase functions deploy video-repurpose-run publish-social publish-space-carousel`. **Publish real gated na auditoria de app IG** (ação Sovereign).
+> 26	
+> 27	**Próximas fatias:** 4=mapeador metadado→legenda nativa por canal+HTML WP (fontes creditadas) · 5=fiar na distribuição E2E. Gate externo (alcance) = auditoria de app IG/TikTok/YouTube = ação Sovereign. **EP01 já postado no YouTube; objetivo agora = fatiar+carrossel+divulgar (cortes 9:16 + carrossel IG PRONTOS).**
+> 28	
+> ```
+
+## 🤖 Claude *(02:23:17)*
+
+
+## 🤖 Claude *(02:23:18)*
+
+A esteira está completa e provada. Registrando a arquitetura host-local durável na memória e depois te passo o passo-a-passo do EP01:
+
+## 🤖 Claude *(02:23:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_repurpose_engine.md",
+  "old_string": "**Pr\u00f3ximas fatias:** 4=mapeador metadado\u2192legenda nativa por canal+HTML WP (fontes creditadas) \u00b7 5=fiar na distribui\u00e7\u00e3o E2E. Gate externo (alcance) = auditoria de app IG/TikTok/YouTube = a\u00e7\u00e3o Sovereign. **EP01 j\u00e1 postado no YouTube; objetivo agora = fatiar+carrossel+divulgar (cortes 9:16 + carrossel IG PRONTOS).**",
+  "new_string": "**Pr\u00f3ximas fatias:** 4=mapeador metadado\u2192legenda nativa por canal+HTML WP (fontes creditadas) \u00b7 5=fiar na distribui\u00e7\u00e3o E2E. Gate externo (alcance) = auditoria de app IG/TikTok/YouTube = a\u00e7\u00e3o Sovereign. **EP01 j\u00e1 postado no YouTube; objetivo agora = fatiar+carrossel+divulgar (cortes 9:16 + carrossel IG PRONTOS).**\n\n**Front-door host-local + admin-only (2026-07-12, sess\u00e3o de UI \u2014 DEPLOYADO + PROVADO E2E):** Supabase \u00e9 plano **FREE \u2192 cap FIXO de 50 MB n\u00e3o-configur\u00e1vel** (todos os buckets; `canvas-assets` mostra 100MB mas o teto global do plano ignora) \u2192 master de document\u00e1rio N\u00c3O cabe no Storage. **yt-dlp do host CONFIRMADO bloqueado** (probe real: `ERROR: Sign in to confirm you're not a bot` \u2014 IP datacenter Oracle; s\u00f3 funciona com cookies do browser, **descartado** por p\u00f4r a sess\u00e3o Google viva no servidor + expiram). **Solu\u00e7\u00e3o (US$0): master no disco do HOST via CloudPanel; worker [que j\u00e1 roda no host] l\u00ea LOCAL; s\u00f3 os cortes pequenos [<50MB] v\u00e3o pro Supabase.** Implementado + provado: inbox `repurpose-inbox/<uid>/` (repo-root, gitignored, setgid 2775 gcrUX:gcrUX \u2014 worker=ubuntu l\u00ea via grupo gcrUX+sudo; admin uid `ada39fae-67e1-4e53-af1c-5a18e1c108e8` pr\u00e9-criado) \u00b7 worker branch `source.bucket==='local'` (realpathSync + `startsWith(INBOX_BASE+'/')` + `..` + `${uid}/` \u2014 /security-review NO FINDINGS: traversal/symlink/absolute bloqueados) \u00b7 `ingest-external-asset` +action `sign_upload` (signed URL Supabase p/ <50MB) +provider `local` **ADMIN-ONLY** (`user_roles`) \u00b7 `video-repurpose-run` bucket `local` **ADMIN-ONLY** \u00b7 p\u00e1gina `/dashboard/repurpose` (`VideoRepurposePage`, admin-gated `useIsAdmin`, modo host-file: informa o NOME do arquivo) +nav `adminOnly` filtro em `NavCategory` +hook `useVideoRepurpose` +painel YouTube `/dashboard/youtube` (`youtube-data` read + escopo alinhado aos 3 que o Sovereign registrou; analytics adiado at\u00e9 habilitar YouTube Analytics API). systemd `video-repurpose-bridge.service` ATIVO. **SMOKE E2E PASS:** master local 229KB \u2192 clip REAL 1080\u00d71920 3s em video-studio-assets, HEAD 200. **Anticorpo:** [[reference_lucide_brand_icons_removed]] (\u00edcone `Youtube` n\u00e3o existe no lucide 1.11 \u2192 tsc passa, build quebra; build-deploy-guardian pegou). **Pr\u00f3ximo:** Sovereign sobe EP01 via CloudPanel na pasta dele \u2192 informa o nome na p\u00e1gina \u2192 gera cortes \u2192 cad\u00eancia TikTok (privada at\u00e9 auditoria). Admin MCORCH = gabrielcall@gmail.com."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_repurpose_engine.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:23:50)*
+
+
+## 🤖 Claude *(02:24:03)*
+
+Tudo pronto e **provado** — o motor de repurpose agora produz cortes de verdade a partir de um master no host, contornando o teto de 50 MB do plano free, US$ 0.
+
+## O que está no ar (admin-only, só você)
+
+| Peça | Estado |
+|------|--------|
+| Página `/dashboard/repurpose` | ✅ LIVE — admin-only (some do nav p/ não-admin; guarda no backend) |
+| Worker lê master do disco do host | ✅ ativo + **/security-review sem findings** (traversal/symlink/absolute bloqueados) |
+| Sua pasta no host | ✅ pré-criada: `repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/` |
+| Painel YouTube `/dashboard/youtube` | ✅ LIVE (à espera do re-consent p/ ler seus vídeos) |
+| **Prova E2E** | ✅ master local → **clip real 1080×1920** no Supabase, HEAD 200 |
+
+## Passo a passo do EP01 (você)
+
+1. **`Ctrl+Shift+R`** em `login.mcorch.com`.
+2. Tenha o MP4 do EP01 no notebook (se não tiver: YouTube Studio → o vídeo → **⋮ → Fazer download**).
+3. **CloudPanel** → site `constellation-orchestra` → **File Manager** → navegue até:
+   `repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/` → **upload** do EP01 (ex.: `ep01-master.mp4`).
+4. **MCORCH → Conteúdo & Campanhas → Repurpose de Vídeo:**
+   - informe o **nome do arquivo** (`ep01-master.mp4`);
+   - **cole o JSON dos cortes** (os timestamps que você já tem) no campo "Colar spec (JSON)" → Aplicar;
+   - **Shorts 9:16** (ou **Carrossel IG**) → **Registrar & gerar**.
+5. Os cortes aparecem na **Biblioteca** (`/dashboard/spaces/assets`).
+
+> Os timestamps do outro modelo eram **estimativas** — confira a fala de abertura de cada corte e ajuste. Formato: `[{ "in_sec":95, "out_sec":116, "reframe":"9:16", "caption":"O salto não é a notícia." }]`.
+
+## Depois: a cadência
+
+Assim que os cortes do EP01 existirem, eu fio a **cadência do TikTok** (sai **privada** até sua auditoria de rebranding aprovar) + o caminho manual pras outras redes.
+
+Se preferir, **me avise quando subir o arquivo** (e me passe os timestamps que você quer) que **eu disparo a geração e a cadência pra você** — você só confere o resultado. Quer assim, ou prefere clicar você mesmo?
