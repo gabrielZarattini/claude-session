@@ -56,3 +56,10 @@ O Sovereign no host (usuário `ubuntu` para systemd `--user`; root/sudo para o n
 Um upload real (admin, via UI `/dashboard/repurpose`) grava `repurpose-inbox/<uid>/<file>.mp4` no disco (`ls -la` com size ≈ o master) **e** o `ingest-external-asset provider=local` registra o `creative_assets bucket=local`, consumível pelo `video-repurpose-run`. Prova no seal 2026-07-13: EP01 1,3 GB → 5 shorts.
 
 **Cross-links:** [[project_video_repurpose_engine]] · `docs/bok/video-repurpose/00-deepsearch-blueprint.md` (OTD-VR-001 yt-dlp datacenter-block) · `docs/processes/build-deploy-materiality.md`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
