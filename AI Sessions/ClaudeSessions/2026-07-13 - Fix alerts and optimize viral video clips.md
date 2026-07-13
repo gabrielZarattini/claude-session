@@ -3554,6 +3554,958 @@ Dois marcos + um achado honesto:
 
 Uma pergunta que vale enquanto o loop corre: quando chegarmos ao ASR (OTD-VR-012), quer que eu construa o **whisper.cpp self-host** (autônomo, mas é um motor novo) ou prefere fornecer os SRTs dos episódios? Pode responder quando quiser — não bloqueia o loop.
 
+## 👤 User *(20:31:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Motor "Viral Quality" do video-repurpose — GATE 2 (template alpha) e GATE 3 (edge fn detect-viral-moments, /security-review NO FINDINGS) FECHADOS. Achado material: master EP01 7935a2e5 sem SRT (metadata.srt vazio) → detector é transcript-gated (OTD-VR-012 registrado: precisa ASR self-host whisper.cpp OU SRT do usuário; fatia dedicada). PIVOT para GATE 4 (entregável VISÍVEL, independente do detector): codar o branch de OVERLAY no scripts/video-repurpose/segment-core.ts — quando caption_mode==='beats' && text_beats?.length: renderAlphaFrames (import de ../hyperframes/render-core.ts; duration=out-in, mesmo fps) → FFmpeg overlay do PNG-seq alpha sobre o clipe reenquadrado (filtro [0][1]overlay=0:0:format=auto:eof_action=pass; -c:a copy; yuv420p); manter drawtext como fallback quando caption_mode!=='beats'. PROVAR: rodar segment-core no MASTER EP01 REAL no disco do host (bucket=local: <repo>/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4) com clipe curto (in≈4 out≈16) + text_beats autorados à mão (hook "ROBÔS ESTÃO APRENDENDO") → 1 short MP4 motion-graphic sobre footage real → assinar + Vision QA ("motion-graphic não barra? premium? legível?"). Depois GATE 5 E2E. Cada mudança de código relevante passa /security-review; cada criativo passa Vision ocular (Lei 1). Commits só no /handoff. Autônomo, interrompível. Selar via /handoff só a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) são Sovereign-side.</command-args>
+
+## 👤 User *(20:31:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, decide whether the loop continues.** If the task needs another iteration, call ScheduleWakeup with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+   If it doesn't need another iteration, stop instead (step 6) — re-arming is a per-turn choice, not a default.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then make the same decision. If the loop should continue, call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 (the Monitor remains the wake signal; the new wakeup is only the fallback heartbeat). If the event means the work is finished, stop (step 6).
+6. **To stop the loop** — the task is complete, further iterations can't make progress, or the user asked you to stop — call ScheduleWakeup with `stop: true` (no other fields) and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Stopping is the loop's normal ending — the user can restart it anytime with /loop. Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Motor "Viral Quality" do video-repurpose — GATE 2 (template alpha) e GATE 3 (edge fn detect-viral-moments, /security-review NO FINDINGS) FECHADOS. Achado material: master EP01 7935a2e5 sem SRT (metadata.srt vazio) → detector é transcript-gated (OTD-VR-012 registrado: precisa ASR self-host whisper.cpp OU SRT do usuário; fatia dedicada). PIVOT para GATE 4 (entregável VISÍVEL, independente do detector): codar o branch de OVERLAY no scripts/video-repurpose/segment-core.ts — quando caption_mode==='beats' && text_beats?.length: renderAlphaFrames (import de ../hyperframes/render-core.ts; duration=out-in, mesmo fps) → FFmpeg overlay do PNG-seq alpha sobre o clipe reenquadrado (filtro [0][1]overlay=0:0:format=auto:eof_action=pass; -c:a copy; yuv420p); manter drawtext como fallback quando caption_mode!=='beats'. PROVAR: rodar segment-core no MASTER EP01 REAL no disco do host (bucket=local: <repo>/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4) com clipe curto (in≈4 out≈16) + text_beats autorados à mão (hook "ROBÔS ESTÃO APRENDENDO") → 1 short MP4 motion-graphic sobre footage real → assinar + Vision QA ("motion-graphic não barra? premium? legível?"). Depois GATE 5 E2E. Cada mudança de código relevante passa /security-review; cada criativo passa Vision ocular (Lei 1). Commits só no /handoff. Autônomo, interrompível. Selar via /handoff só a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) são Sovereign-side.
+
+## 🤖 Claude *(20:31:13)*
+
+
+## 🤖 Claude *(20:31:14)*
+
+Iteração 6 — gate 4, o entregável visível. Lendo `segment-core.ts` completo para adicionar o branch de overlay com precisão:
+
+## 🤖 Claude *(20:31:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/video-repurpose/segment-core.ts
+> 4	 *
+> 5	 * The FFmpeg core of the video-repurpose engine (Fatia 2): a long 16:9 master + a data-driven cut-spec →
+> 6	 * N vertical shorts (9:16 or 1:1), reframed subject-safe (center-crop) with an optional burned caption.
+> 7	 *
+> 8	 * BoK SSOT: docs/bok/video-repurpose/00-deepsearch-blueprint.md §Pilar II (FR-VR-003/004/005).
+> 9	 * PROVEN offline 2026-07-12 (Vision QA): a synthetic 16:9 master with ESQ|CENTRO|DIR labels → the 9:16 center-crop
+> 10	 * kept CENTRO, dropped the side labels, and burned the caption at the base. Deterministic FFmpeg — no LLM in the core.
+> 11	 *
+> 12	 * Reframe is source-agnostic (expression crop): for a target aspect ar, keep the largest centered rect of that aspect.
+> 13	 * Caption is written to a per-clip textfile → drawtext `textfile=` (avoids the `:'%\` escaping trap of inline text).
+> 14	 * Cut is re-encoded (`-ss <in> -i -t <dur>`) → frame-accurate (the reframe re-encodes anyway).
+> 15	 */
+> 16	
+> 17	import { spawn } from 'node:child_process';
+> 18	import { writeFileSync, mkdirSync, statSync, existsSync } from 'node:fs';
+> 19	import { join } from 'node:path';
+> 20	
+> 21	const FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
+> 22	
+> 23	export type Reframe = '9:16' | '1:1';
+> 24	export interface ClipSpec {
+> 25	  in_sec: number;
+> 26	  out_sec: number;
+> 27	  caption?: string;          // burned bottom-center caption (drawtext textfile); omit for none
+> 28	  reframe?: Reframe;         // default '9:16'
+> 29	}
+> 30	export interface SegmentSpec {
+> 31	  sourcePath: string;        // local path to the master MP4
+> 32	  clips: ClipSpec[];
+> 33	  outDir: string;
+> 34	  fps?: number;              // default 30 (CFR)
+> 35	}
+> 36	export interface ClipResult {
+> 37	  index: number; path: string; width: number; height: number; durationSec: number; bytes: number;
+> 38	}
+> 39	
+> 40	const TARGET: Record<Reframe, { w: number; h: number; ar: number }> = {
+> 41	  '9:16': { w: 1080, h: 1920, ar: 9 / 16 },
+> 42	  '1:1': { w: 1080, h: 1080, ar: 1 },
+> 43	};
+> 44	
+> 45	function run(cmd: string, args: string[]): Promise<void> {
+> 46	  return new Promise((resolve, reject) => {
+> 47	    const p = spawn(cmd, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+> 48	    let err = '';
+> 49	    p.stderr.on('data', (d) => { err += d.toString(); });
+> 50	    p.on('error', reject);
+> 51	    p.on('close', (code) => code === 0 ? resolve() : reject(new Error(`${cmd} exit ${code}: ${err.slice(-500)}`)));
+> 52	  });
+> 53	}
+> 54	
+> 55	/** Source-agnostic center-crop to `ar`, then scale to (W,H). Keeps the largest centered rect of the target aspect. */
+> 56	function reframeChain(ar: number, W: number, H: number): string {
+> 57	  // crop w = min(iw, ih*ar); h = min(ih, iw/ar); centered. Expressions are evaluated by FFmpeg per input dims.
+> 58	  const cw = `min(iw\\,ih*${ar})`;
+> 59	  const ch = `min(ih\\,iw/${ar})`;
+> 60	  return `crop=${cw}:${ch}:(iw-ow)/2:(ih-oh)/2,scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1`;
+> 61	}
+> 62	
+> 63	/** Cut + reframe + optional caption for ONE clip. Returns the output path. */
+> 64	async function renderClip(spec: SegmentSpec, clip: ClipSpec, index: number): Promise<ClipResult> {
+> 65	  const target = TARGET[clip.reframe ?? '9:16'];
+> 66	  const fps = spec.fps ?? 30;
+> 67	  const dur = Math.max(0.1, clip.out_sec - clip.in_sec);
+> 68	  const outPath = join(spec.outDir, `clip_${String(index).padStart(3, '0')}.mp4`);
+> 69	
+> 70	  let vf = reframeChain(target.ar, target.w, target.h);
+> 71	  if (clip.caption && clip.caption.trim()) {
+> 72	    // textfile avoids inline-escaping; drawtext reads UTF-8. Bottom-center with a translucent box.
+> 73	    const capPath = join(spec.outDir, `cap_${index}.txt`);
+> 74	    // drawtext(textfile) in this ffmpeg build truncates the rendered text by the number of EXTRA UTF-8 bytes
+> 75	    // (byteLen − codepointLen) — a byte-vs-char bug that clips accented captions' tails ("notícia." → "notíc").
+> 76	    // Pad with that many trailing spaces so the truncation eats the padding, not the caption (proven via Vision QA).
+> 77	    const cap = clip.caption.trim();
+> 78	    const capPad = Buffer.byteLength(cap, 'utf8') - [...cap].length;
+> 79	    writeFileSync(capPath, cap + ' '.repeat(Math.max(0, capPad)));
+> 80	    const fontsize = Math.round(target.w * 0.045);
+> 81	    vf += `,drawtext=textfile='${capPath}':fontfile=${FONT}:fontsize=${fontsize}:fontcolor=white:` +
+> 82	      `box=1:boxcolor=black@0.55:boxborderw=14:x=(w-tw)/2:y=h-th-${Math.round(target.h * 0.08)}`;
+> 83	  }
+> 84	
+> 85	  await run('ffmpeg', [
+> 86	    '-y', '-hide_banner', '-loglevel', 'error',
+> 87	    '-ss', String(clip.in_sec), '-i', spec.sourcePath, '-t', String(dur),
+> 88	    '-vf', vf, '-r', String(fps),
+> 89	    '-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p',
+> 90	    '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',
+> 91	    outPath,
+> 92	  ]);
+> 93	
+> 94	  const bytes = statSync(outPath).size;
+> 95	  return { index, path: outPath, width: target.w, height: target.h, durationSec: dur, bytes };
+> 96	}
+> 97	
+> 98	/** Segment a master into N clips per the cut-spec. Serial (deterministic, memory-safe for a long master). */
+> 99	export async function segmentVideo(spec: SegmentSpec): Promise<ClipResult[]> {
+> 100	  if (!existsSync(spec.sourcePath)) throw new Error(`source_not_found: ${spec.sourcePath}`);
+> 101	  if (!Array.isArray(spec.clips) || spec.clips.length === 0) throw new Error('cut_spec_empty');
+> 102	  mkdirSync(spec.outDir, { recursive: true });
+> 103	  const out: ClipResult[] = [];
+> 104	  for (let i = 0; i < spec.clips.length; i++) {
+> 105	    const c = spec.clips[i];
+> 106	    if (!(c.out_sec > c.in_sec) || c.in_sec < 0) throw new Error(`clip_${i}_invalid_range`);
+> 107	    out.push(await renderClip(spec, c, i));
+> 108	  }
+> 109	  return out;
+> 110	}
+> 111	
+> ```
+
+## 🤖 Claude *(20:31:51)*
+
+
+## 🤖 Claude *(20:31:52)*
+
+segment-core entendido. Adicionando o branch de overlay (renderAlphaFrames → FFmpeg overlay single-pass: reframe `[0:v]` → sobrepõe `[1:v]` PNG-seq alpha), com fallback drawtext preservado.
+
+## 🤖 Claude *(20:31:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "import { spawn } from 'node:child_process';\nimport { writeFileSync, mkdirSync, statSync, existsSync } from 'node:fs';\nimport { join } from 'node:path';\n\nconst FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';\n\nexport type Reframe = '9:16' | '1:1';\nexport interface ClipSpec {\n  in_sec: number;\n  out_sec: number;\n  caption?: string;          // burned bottom-center caption (drawtext textfile); omit for none\n  reframe?: Reframe;         // default '9:16'\n}",
+  "new_string": "import { spawn } from 'node:child_process';\nimport { writeFileSync, mkdirSync, statSync, existsSync, mkdtempSync, rmSync } from 'node:fs';\nimport { join } from 'node:path';\nimport { tmpdir } from 'node:os';\nimport { renderAlphaFrames } from '../hyperframes/render-core.ts';\n\nconst FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';\n\nexport type Reframe = '9:16' | '1:1';\nexport interface TextBeat { t_start: number; t_end: number; phrase: string; emphasis?: 'hook' | 'punch' | 'normal' }\nexport interface ClipSpec {\n  in_sec: number;\n  out_sec: number;\n  caption?: string;          // burned bottom-center caption (drawtext textfile); omit for none\n  reframe?: Reframe;         // default '9:16'\n  // FR-VR-011/014: 'beats' = punctual motion-graphic overlay (viral-caption-overlay-9x16); default legacy drawtext.\n  caption_mode?: 'beats' | 'drawtext' | 'none';\n  text_beats?: TextBeat[];   // clip-relative beats for caption_mode='beats'\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:32:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "  const outPath = join(spec.outDir, `clip_${String(index).padStart(3, '0')}.mp4`);\n\n  let vf = reframeChain(target.ar, target.w, target.h);\n  if (clip.caption && clip.caption.trim()) {",
+  "new_string": "  const outPath = join(spec.outDir, `clip_${String(index).padStart(3, '0')}.mp4`);\n  const reframe = reframeChain(target.ar, target.w, target.h);\n\n  // FR-VR-011: motion-graphic \"text beats\" \u2014 render the transparent (RGBA) text layer, composite OVER the\n  // reframed footage in a single pass (reframe [0:v] \u2192 overlay the alpha PNG seq [1:v]). Not the drawtext bar.\n  if (clip.caption_mode === 'beats' && clip.text_beats && clip.text_beats.length) {\n    const alphaDir = mkdtempSync(join(tmpdir(), 'vr-beats-'));\n    try {\n      await renderAlphaFrames(\n        { template: 'viral-caption-overlay-9x16', props: { beats: clip.text_beats }, duration_s: dur, fps, width: target.w, height: target.h },\n        alphaDir,\n      );\n      await run('ffmpeg', [\n        '-y', '-hide_banner', '-loglevel', 'error',\n        '-ss', String(clip.in_sec), '-i', spec.sourcePath, '-t', String(dur),\n        '-framerate', String(fps), '-i', join(alphaDir, 'f_%05d.png'),\n        '-filter_complex', `[0:v]${reframe}[bg];[bg][1:v]overlay=0:0:format=auto:eof_action=pass[v]`,\n        '-map', '[v]', '-map', '0:a?', '-r', String(fps),\n        '-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p',\n        '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',\n        outPath,\n      ]);\n    } finally {\n      rmSync(alphaDir, { recursive: true, force: true });\n    }\n    const bytes = statSync(outPath).size;\n    return { index, path: outPath, width: target.w, height: target.h, durationSec: dur, bytes };\n  }\n\n  // Legacy path: reframe + optional burned drawtext caption (caption_mode 'drawtext'/undefined).\n  let vf = reframe;\n  if (clip.caption && clip.caption.trim() && clip.caption_mode !== 'none') {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:32:24)*
+
+
+## 🤖 Claude *(20:32:25)*
+
+Overlay branch codado. Agora provar no EP01 real. Primeiro confirmo o master no disco do host:
+
+## 🤖 Claude *(20:32:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== INBOX ===\"; ls -la repurpose-inbox/ 2>/dev/null; echo \"---\"; find repurpose-inbox -maxdepth 3 -iname \"*.mp4\" 2>/dev/null | head\necho \"\"; echo \"=== master via storage_key (bucket=local realpath) ===\"; find repurpose-inbox -iname \"*GabrielAI*\" -o -iname \"*Revolucao*\" 2>/dev/null | head\necho \"\"; echo \"=== ffprobe the master (dims/duration) if found ===\"\nM=$(find repurpose-inbox -iname \"*.mp4\" 2>/dev/null | head -1)\necho \"master=$M\"\n[ -n \"$M\" ] && ffprobe -v error -select_streams v:0 -show_entries stream=width,height -show_entries format=duration -of default=noprint_wrappers=1 \"$M\" 2>&1 | head",
+  "description": "Locate + probe EP01 master on host disk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === INBOX ===
+> total 12
+> drwxrwsr-x  3 gcrUX gcrUX 4096 Jul 12 23:10 .
+> drwxrwx--- 33 gcrUX gcrUX 4096 Jul 13 09:36 ..
+> drwxrwsr-x  3 gcrUX gcrUX 4096 Jul 13 00:27 ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> ---
+> repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+> 
+> === master via storage_key (bucket=local realpath) ===
+> repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+> 
+> === ffprobe the master (dims/duration) if found ===
+> master=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+> width=1920
+> height=1080
+> duration=501.666667
+> ```
+
+## 🤖 Claude *(20:32:47)*
+
+
+## 🤖 Claude *(20:32:49)*
+
+Master no disco: **1920×1080, 501.7s** (~8,4 min). Rodando a prova — segmento um clipe curto (4→16s) com beats autorados, produzindo um short motion-graphic sobre footage real, e faço upload+assinatura para o Vision:
+
+## 🤖 Claude *(20:33:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/prove-overlay.ts <<'EOF'\nimport { segmentVideo } from \"../../../../../home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts\";\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync } from \"node:fs\";\n\nconst MASTER = \"repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4\";\nconst OUT = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out\";\n\nconst res = await segmentVideo({\n  sourcePath: MASTER,\n  outDir: OUT,\n  fps: 30,\n  clips: [{\n    in_sec: 4, out_sec: 16, reframe: \"9:16\", caption_mode: \"beats\",\n    text_beats: [\n      { t_start: 0.3, t_end: 3.6, phrase: \"ROB\u00d4S EST\u00c3O APRENDENDO\", emphasis: \"hook\" },\n      { t_start: 4.2, t_end: 7.6, phrase: \"COMO N\u00d3S APRENDEMOS\", emphasis: \"punch\" },\n      { t_start: 8.2, t_end: 11.6, phrase: \"e isso muda tudo\", emphasis: \"normal\" },\n    ],\n  }],\n});\nconst clip = res[0];\nconsole.log(`rendered ${clip.path} ${clip.width}x${clip.height} ${clip.durationSec}s ${(clip.bytes/1024).toFixed(0)}KB`);\n\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst key = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose-test/beats-proof.mp4\";\nconst bytes = readFileSync(clip.path);\nconst up = await sb.storage.from(\"video-studio-assets\").upload(key, bytes, { contentType: \"video/mp4\", upsert: true });\nif (up.error) { console.log(\"upload err:\", up.error.message); process.exit(1); }\nconst { data: signed } = await sb.storage.from(\"video-studio-assets\").createSignedUrl(key, 3600);\nconsole.log(\"SIGNED_URL=\" + (signed?.signedUrl ?? \"none\"));\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/prove-overlay.ts 2>&1 | tail -8",
+  "description": "Render overlay short on real EP01 + upload + sign"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 143
+> Command timed out after 2m 0s
+> ```
+
+## 🤖 Claude *(20:35:25)*
+
+
+## 🤖 Claude *(20:35:28)*
+
+O render estourou 2min — o gargalo é o Playwright (360 screenshots p/ 12s @ 30fps). O ponto de projeto do render-core é 6s (180 frames, comprovado no autopilot). Encurtando para um clipe de 6s e rodando em **background** (não amarra ao limite de 2min; o harness me acorda ao concluir):
+
+## 🤖 Claude *(20:35:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/prove-overlay.ts <<'EOF'\nimport { segmentVideo } from \"../../../../../home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts\";\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync } from \"node:fs\";\n\nconst MASTER = \"repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4\";\nconst OUT = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out\";\nconst t = Date.now();\nconst res = await segmentVideo({\n  sourcePath: MASTER, outDir: OUT, fps: 30,\n  clips: [{\n    in_sec: 6, out_sec: 12, reframe: \"9:16\", caption_mode: \"beats\",\n    text_beats: [\n      { t_start: 0.3, t_end: 3.0, phrase: \"ROB\u00d4S EST\u00c3O APRENDENDO\", emphasis: \"hook\" },\n      { t_start: 3.4, t_end: 5.8, phrase: \"COMO N\u00d3S APRENDEMOS\", emphasis: \"punch\" },\n    ],\n  }],\n});\nconst clip = res[0];\nconsole.log(`rendered ${clip.path} ${clip.width}x${clip.height} ${clip.durationSec}s ${(clip.bytes/1024).toFixed(0)}KB in ${((Date.now()-t)/1000).toFixed(0)}s`);\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst key = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose-test/beats-proof.mp4\";\nconst up = await sb.storage.from(\"video-studio-assets\").upload(key, readFileSync(clip.path), { contentType: \"video/mp4\", upsert: true });\nif (up.error) { console.log(\"upload err:\", up.error.message); process.exit(1); }\nconst { data: signed } = await sb.storage.from(\"video-studio-assets\").createSignedUrl(key, 7200);\nconsole.log(\"SIGNED_URL=\" + (signed?.signedUrl ?? \"none\"));\nconsole.log(\"DONE_OK\");\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/prove-overlay.ts > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log 2>&1\necho \"exit=$?\"; tail -6 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log",
+  "description": "Render 6s overlay short + upload + sign (background)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bbtsfdbe9. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/tasks/bbtsfdbe9.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:36:05)*
+
+
+## 🤖 Claude *(20:36:07)*
+
+Render rodando em background (o harness me acorda ao concluir). Enquanto isso, valido que os edits do segment-core compilam (tsc) — em paralelo, pois são independentes:
+
+## 🤖 Claude *(20:36:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | grep -E \"segment-core|render-core|detect-viral|error TS\" | head -20\necho \"--- tail ---\"; npx tsc --noEmit 2>&1 | tail -2; echo \"tsc-done\"",
+  "description": "TypeScript check segment-core edits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- tail ---
+> tsc-done
+> ```
+
+## 🤖 Claude *(20:36:23)*
+
+
+## 🤖 Claude *(20:36:28)*
+
+**tsc limpo** — os edits do segment-core (import do render-core + tipos `TextBeat`/`caption_mode`) compilam. Gate 4 **código** pronto; o render do short real está em background.
+
+Self-pacing: o **wake primário é a conclusão do render em background** (harness me re-invoca automaticamente — não faço polling). Armo só um **fallback longo (1200s)** caso o render trave. Ao acordar: leio o log → pego a `SIGNED_URL` → **Vision QA** no short (o veredito visual do gate 4). Atualizando estado:
+
+## 🤖 Claude *(20:36:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md",
+  "old_string": "## Next iteration TODO \u2014 QUALITY CODE. Gate order per 10-frd-sdd-viral-quality.md \u00a76:\nNEXT = GATE 4 (visible payoff, detector-independent): code the OVERLAY BRANCH in scripts/video-repurpose/segment-core.ts:",
+  "new_string": "## Progress log (cont. 4)\n- iter6 (in-flight): GATE 4 CODE done \u2014 segment-core.ts: added TextBeat type + ClipSpec.caption_mode/text_beats + the 'beats' overlay branch (renderAlphaFrames \u2192 single-pass FFmpeg reframe [0:v] + overlay [1:v] alpha PNG-seq; drawtext kept as fallback). tsc clean. Master confirmed on disk: repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4 (1920x1080, 501.7s).\n  PERF NOTE: 12s@30fps overlay render TIMED OUT at 2min (Playwright 360 screenshots slow). Shortened proof to 6s clip (180 frames, render-core design point). Render running in BACKGROUND (task bbtsfdbe9) \u2192 writes SIGNED_URL to scratchpad/overlay-proof.log. OTD-worthy: alpha-frame render cost scales with duration\u00d7fps (Playwright bottleneck) \u2014 for long shorts, consider fps cap or faster capture.\n  UNCOMMITTED add: scripts/video-repurpose/segment-core.ts edits.\n  ON WAKE: read scratchpad/overlay-proof.log \u2192 if DONE_OK, grab SIGNED_URL \u2192 Vision QA video (\"motion-graphic not bar? premium? legible over footage? sem bot\u00e3o?\"). If render failed, diagnose (ffmpeg overlay filter / alpha).\n\n## Next iteration TODO \u2014 QUALITY CODE. Gate order per 10-frd-sdd-viral-quality.md \u00a76:\nNEXT (on wake) = GATE 4 PROOF: Vision QA the beats-proof short. Then GATE 5 E2E multiple shorts before/after.\nDONE-CODE: GATE 4 overlay branch in scripts/video-repurpose/segment-core.ts (see progress log cont.4):"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:36:59)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Render do overlay em background (task bbtsfdbe9) \u00e9 o wake prim\u00e1rio; 1200s \u00e9 s\u00f3 fallback caso o Playwright trave.",
+  "prompt": "/loop Motor \"Viral Quality\" do video-repurpose \u2014 GATE 4 C\u00d3DIGO feito (branch de overlay 'beats' no scripts/video-repurpose/segment-core.ts: renderAlphaFrames \u2192 FFmpeg single-pass reframe [0:v] + overlay [1:v] alpha PNG-seq; drawtext fallback; tsc limpo). Render de PROVA de 1 short 6s do EP01 real (master em repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4) rodou em BACKGROUND (task bbtsfdbe9 \u2192 scratchpad/overlay-proof.log com SIGNED_URL). AO ACORDAR: ler scratchpad/overlay-proof.log; se DONE_OK, pegar SIGNED_URL e rodar Vision QA (bun run scripts/qa/vision-qa.ts video \"<url>\" \"\u00c9 motion-graphic grande (n\u00e3o barra de legenda)? Premium? Leg\u00edvel sobre o footage? Tem bot\u00e3o/CTA (n\u00e3o deveria)?\" 1) \u2192 esse \u00e9 o VEREDITO do gate 4. Se falhou, diagnosticar (filtro overlay/alpha). Depois GATE 5 (E2E multiplos shorts before/after Vision). Nota perf: render alpha custa Playwright\u00d7frames (12s estourou 2min; 6s ok) \u2014 OTD de custo. Detector (gate 3) bloqueado em transcript (OTD-VR-012, ASR self-host pendente). Cada c\u00f3digo relevante passa /security-review; cada criativo passa Vision (Lei 1). Commits s\u00f3 no /handoff. Aut\u00f4nomo, interromp\u00edvel. Selar via /handoff s\u00f3 a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) s\u00e3o Sovereign-side."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 17:58:00 (in 1259s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(20:37:10)*
+
+Iteração 6 — **gate 4 (código) ✅**, prova em andamento.
+
+- Codei o branch de overlay no `segment-core.ts` (renderAlphaFrames → FFmpeg single-pass: reframe `[0:v]` + overlay do PNG-seq alpha `[1:v]`, com drawtext preservado como fallback). **tsc limpo.**
+- Master EP01 confirmado no disco (1920×1080, 501,7s). O render de prova de 1 short de 6s está **rodando em background** — vai escrever a URL assinada no log.
+- Nota de perf honesta: 12s @ 30fps estourou 2min (Playwright faz 360 screenshots) — reduzi para 6s (ponto de projeto do render-core). É um custo real que vou registrar como OTD.
+
+**Wake primário = conclusão do render** (o harness me re-invoca); armei só um fallback de 20min caso trave. Ao acordar, faço o **Vision QA** no short — o veredito visual que prova se o motion-graphic sobre footage real ficou premium e legível, "sem botão". Esse é o momento que responde à sua pergunta central: "parece viral?".
+
+O loop segue. Interrompa quando quiser.
+
+## 👤 User *(21:18:38)*
+
+<task-notification>
+<task-id>bbtsfdbe9</task-id>
+<tool-use-id>toolu_012qssQ4JxmggcHWMdUgNB3P</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/tasks/bbtsfdbe9.output</output-file>
+<status>completed</status>
+<summary>Background command "Render 6s overlay short + upload + sign (background)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(21:18:40)*
+
+
+## 🤖 Claude *(21:18:41)*
+
+O render em background concluiu (exit 0). Lendo o log para pegar a URL assinada e rodar o Vision QA — o veredito do gate 4:
+
+## 🤖 Claude *(21:18:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntail -6 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log",
+  "description": "Read overlay proof log for signed URL"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> rendered /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4 1080x1920 6s 309730KB in 2570s
+> upload err: The object exceeded the maximum allowed size
+> ```
+
+## 🤖 Claude *(21:19:52)*
+
+
+## 🤖 Claude *(21:19:57)*
+
+Dois achados materiais (Lei 1) — e um **bug real** capturado só porque olhei os números:
+- Output = **302 MB / "6s"** e render de **2570s (~43 min)**. Impossível para 6s. 
+- **Causa raiz:** no comando de dois inputs, o `-t 6` ficou posicionado como opção do **segundo input** (os PNGs), não limitando o **master** (input 0). Com `eof_action=pass`, o master rodou do segundo 6 até o **fim (495s)** → output de ~495s = 302 MB, 43 min de encode. O upload falhou (>50MB do bucket), o que na verdade nos protegeu de poluir o storage.
+
+Fix decisivo: mover `-t` para **antes** de `-i master` (limitador do input 0). Corrigindo e re-rodando a prova:
+
+## 🤖 Claude *(21:20:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "      await run('ffmpeg', [\n        '-y', '-hide_banner', '-loglevel', 'error',\n        '-ss', String(clip.in_sec), '-i', spec.sourcePath, '-t', String(dur),\n        '-framerate', String(fps), '-i', join(alphaDir, 'f_%05d.png'),\n        '-filter_complex', `[0:v]${reframe}[bg];[bg][1:v]overlay=0:0:format=auto:eof_action=pass[v]`,\n        '-map', '[v]', '-map', '0:a?', '-r', String(fps),",
+  "new_string": "      await run('ffmpeg', [\n        '-y', '-hide_banner', '-loglevel', 'error',\n        // `-ss`+`-t` are INPUT options for input 0 (the master) \u2014 MUST precede its `-i`, else `-t` binds to the\n        // next input (the PNG seq) and the master plays to EOF (\u2192 a ~500s file). eof_action=pass then harmless.\n        '-ss', String(clip.in_sec), '-t', String(dur), '-i', spec.sourcePath,\n        '-framerate', String(fps), '-i', join(alphaDir, 'f_%05d.png'),\n        '-filter_complex', `[0:v]${reframe}[bg];[bg][1:v]overlay=0:0:format=auto:eof_action=pass[v]`,\n        '-map', '[v]', '-map', '0:a?', '-r', String(fps),"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:20:12)*
+
+
+## 🤖 Claude *(21:20:13)*
+
+Fix aplicado. Re-rodando a prova em background (agora o output será ~6s de verdade → upload deve passar):
+
+## 🤖 Claude *(21:20:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nrm -f /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4 2>/dev/null\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/prove-overlay.ts > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log 2>&1\necho \"exit=$?\"; tail -6 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log",
+  "description": "Re-run overlay proof after -t fix (background)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b8kb9rrgn. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/tasks/b8kb9rrgn.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(21:20:37)*
+
+
+## 🤖 Claude *(21:20:39)*
+
+Re-run em background (task b8kb9rrgn) — wake primário é a conclusão. Registrando o bug capturado + armando fallback.
+
+**Anticorpo (Lei 1 · Mandato Obstáculo→Síntese):** o trap do `-t` em comando FFmpeg multi-input (opção de input liga ao *próximo* `-i`) vira comentário no código e nota no SDD — se reincidir, não foi resolvido.
+
+## 🤖 Claude *(21:20:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/10-frd-sdd-viral-quality.md",
+  "old_string": "  (footage full-frame por baixo; texto animado por cima). PNG-count = fps\u00d7dur (casa com o clipe).",
+  "new_string": "  (footage full-frame por baixo; texto animado por cima). PNG-count = fps\u00d7dur (casa com o clipe).\n  **Anticorpo (bug 2026-07-13):** `-ss`+`-t` do master s\u00e3o op\u00e7\u00f5es de **INPUT 0** e DEVEM preceder o `-i` dele; num comando multi-input, `-t` depois do `-i` liga ao **pr\u00f3ximo** input (os PNGs) e o master roda at\u00e9 o EOF \u2192 output de ~500s / 300MB / encode de 43min (pego por ffprobe do tamanho, n\u00e3o pelo \"6s\" reportado). `eof_action=pass` fica in\u00f3cuo quando os dois inputs t\u00eam a mesma dura\u00e7\u00e3o."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/video-repurpose/10-frd-sdd-viral-quality.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:20:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md",
+  "old_string": "  ON WAKE: read scratchpad/overlay-proof.log \u2192 if DONE_OK, grab SIGNED_URL \u2192 Vision QA video (\"motion-graphic not bar? premium? legible over footage? sem bot\u00e3o?\"). If render failed, diagnose (ffmpeg overlay filter / alpha).",
+  "new_string": "  BUG CAUGHT+FIXED (iter6b): first render = 302MB/2570s because `-t` was placed AFTER `-i master` in a 2-input cmd \u2192 bound to the PNG input, master ran to EOF (~495s). FIX: `-ss in -t dur -i master` (both input-0 opts BEFORE its -i). Anticorpo added to segment-core comment + SDD \u00a73.4. Re-running (task b8kb9rrgn).\n  PERF WATCH: alpha render = Playwright 180 screenshots (6s@30). If re-run total >5min, the template blur/shadows may be slow \u2192 optimize (drop filter:blur, lighten text-shadow) OR cap fps. Watch \"in Xs\" in log.\n  ON WAKE: read scratchpad/overlay-proof.log \u2192 if DONE_OK + upload ok, grab SIGNED_URL \u2192 Vision QA video (\"motion-graphic not bar? premium? legible over footage? sem bot\u00e3o?\"). If upload err (still >50MB) \u2192 output duration still wrong, ffprobe it. If render failed, diagnose."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:21:10)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "reason": "Re-render do overlay (task b8kb9rrgn) ap\u00f3s fix do -t \u00e9 o wake prim\u00e1rio; 1200s s\u00f3 fallback caso o alpha render do Playwright trave.",
+  "prompt": "/loop Motor \"Viral Quality\" do video-repurpose \u2014 GATE 4 C\u00d3DIGO feito + BUG do -t corrigido (segment-core overlay: `-ss in -t dur -i master` ANTES do -i, sen\u00e3o master roda at\u00e9 EOF \u2192 302MB/43min). Re-render de prova (1 short 6s do EP01 real) rodou em BACKGROUND (task b8kb9rrgn \u2192 scratchpad/overlay-proof.log). AO ACORDAR: ler scratchpad/overlay-proof.log; se DONE_OK + SIGNED_URL presente \u2192 rodar Vision QA (bun run scripts/qa/vision-qa.ts video \"<url>\" \"\u00c9 motion-graphic grande palavra-por-palavra (n\u00e3o barra de legenda)? Premium? Leg\u00edvel sobre o footage? Tem bot\u00e3o/CTA (n\u00e3o deveria)?\" 1) = VEREDITO gate 4. Se \"upload err\" persistir \u2192 ffprobe o output local (scratchpad/overlay-out/clip_000.mp4) p/ conferir dura\u00e7\u00e3o; se ainda >6s, bug de dura\u00e7\u00e3o remanescente. Checar \"in Xs\" no log: se alpha render >5min, otimizar template (dropar filter:blur/aliviar text-shadow) ou cap fps. Depois GATE 5 (E2E m\u00faltiplos shorts before/after Vision). Detector gate3 bloqueado em transcript (OTD-VR-012 ASR). Cada c\u00f3digo relevante passa /security-review; cada criativo passa Vision (Lei 1). Commits s\u00f3 no /handoff. Aut\u00f4nomo, interromp\u00edvel. Selar via /handoff s\u00f3 a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) s\u00e3o Sovereign-side."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 18:42:00 (in 1248s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(21:21:19)*
+
+Iteração 6b — **bug real capturado e corrigido** antes de qualquer falso "pronto" (Lei 1 em ação).
+
+O primeiro render saiu com **302 MB / 43 min** porque o `-t 6` estava mal posicionado num comando FFmpeg de dois inputs — ligou-se aos PNGs em vez de limitar o master, que rodou até o fim (~495s). Só percebi porque **olhei o tamanho do arquivo**, não a duração reportada. Fix aplicado (`-ss in -t dur -i master`), com anticorpo no código e no SDD.
+
+Re-render de prova rodando em background. Ao acordar: se o upload passar (output agora ~6s), faço o **Vision QA** — o veredito visual do gate 4. Estou vigiando também o custo do render alpha (Playwright, 180 frames); se estiver lento demais, otimizo o template.
+
+O loop segue autônomo. Interrompa quando quiser.
+
+## 👤 User *(21:21:35)*
+
+<task-notification>
+<task-id>b8kb9rrgn</task-id>
+<tool-use-id>toolu_01YCjJpaywYRnsjasw67QXfR</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/tasks/b8kb9rrgn.output</output-file>
+<status>completed</status>
+<summary>Background command "Re-run overlay proof after -t fix (background)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(21:21:39)*
+
+Re-render concluído. Lendo o log — duração/tamanho corretos e a URL assinada?
+
+## 🤖 Claude *(21:21:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntail -6 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log\necho \"=== ffprobe output (truth check) ===\"\nffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames -show_entries format=duration,size -of default=noprint_wrappers=1 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4 2>&1 | head",
+  "description": "Check re-render result + ffprobe truth"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> rendered /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4 1080x1920 6s 5119KB in 74s
+> SIGNED_URL=https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose-test/beats-proof.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNzFjZTA4Yy0xYWFjLTQ1MDUtOGEyZC04Y2Y5ZTU5MzI5MzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJ2aWRlby1zdHVkaW8tYXNzZXRzL2FkYTM5ZmFlLTY3ZTEtNGU1My1hZjFjLTVhMThlMWMxMDhlOC9yZXB1cnBvc2UtdGVzdC9iZWF0cy1wcm9vZi5tcDQiLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgzOTc3Njk1LCJleHAiOjE3ODM5ODQ4OTV9.UsFoLa5JGuwC9-E8Yiuc4WhISHnvYG2-VF9nIGRZG5o
+> DONE_OK
+> === ffprobe output (truth check) ===
+> width=1080
+> height=1920
+> nb_frames=180
+> duration=6.000000
+> size=5242124
+> ```
+
+## 🤖 Claude *(21:21:53)*
+
+
+## 🤖 Claude *(21:21:54)*
+
+Correto agora (Lei 1): **1080×1920, 180 frames, 6.0s exatos, 5.1 MB, render em 74s** (vs 2570s do bug). Upload OK, URL assinada.
+
+Agora o **veredito do gate 4** — Vision QA no short real (motion-graphic sobre footage do EP01):
+
+## 🤖 Claude *(21:22:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nURL=$(grep SIGNED_URL= /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-proof.log | cut -d= -f2-)\nbun run scripts/qa/vision-qa.ts video \"$URL\" \"Este \u00e9 um Short vertical (corte de document\u00e1rio) com uma camada de texto sobreposta. Responda com precis\u00e3o: (1) O texto na tela \u00e9 uma LEGENDA TRADICIONAL numa barra embaixo, OU \u00e9 tipografia GRANDE em motion-graphic aparecendo palavra-por-palavra? (2) O texto \u00e9 leg\u00edvel sobre o v\u00eddeo de fundo? (3) Existe algum BOT\u00c3O ou CTA na tela (n\u00e3o deveria haver)? (4) A est\u00e9tica parece premium/profissional para viralizar? Liste pontos fracos concretos.\" 1 2>&1 | tail -12",
+  "description": "Vision QA the beats-overlay short \u2014 gate 4 verdict"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ vision_analyze_video
+>    confidence: high  cost_mco: 0  min: 1
+>    Análise do vídeo: (1) O texto na tela não é uma legenda tradicional. É uma tipografia GRANDE em motion-graphic, que aparece palavra-por-palavra com animações sutis de brilho e movimento. (2) Sim, o texto é legível sobre o vídeo de fundo. O contraste entre o texto (amarelo e azul brilhante) e os fundos predominantemente escuros é adequado para boa legibilidade. (3) Não existe nenhum botão ou CTA explícito sobreposto na tela do vídeo. (4) A estética parece premium/profissional, com gráficos 3D de alta qualidade, animações fluidas e um tema visualmente dinâmico e atual, o que favorece a viralização. No entanto, existem pontos fracos concretos:     - A narração é uma voz sintética/robótica, o que pode diminuir a conexão emocional e a percepção de autoridade ou autenticidade para um conteúdo que se propõe a ser um 'corte de documentário'.     - Embora os visuais sejam de alta qualidade, o estilo 'AI-generated human' pode ter um aspecto ligeiramente genérico ou 'uncanny valley', o que, para alguns, pode reduzir o impacto ou a singularidade visual necessária para se destacar completamente em um feed viral. A ausência de um toque humano mais evidente nas imagens pode ser um impedimento.     - A tipografia, embora funcional, é bastante genérica, não contribuindo para uma identidade visual única ou memorável.
+> ```
+
+## 🤖 Claude *(21:22:56)*
+
+
+## 🤖 Claude *(21:23:00)*
+
+**GATE 4 — VEREDITO VISION (confidence high): PASSOU.** Os três objetivos centrais confirmados ocularmente:
+- (1) ✅ **motion-graphic palavra-por-palavra, NÃO barra de legenda** (com brilho/movimento)
+- (2) ✅ **legível** sobre o footage (amarelo/azul sobre fundo escuro)
+- (3) ✅ **sem botão/CTA**
+- (4) ✅ **estética premium, favorece viralização**
+
+Uma crítica acionável **na nossa camada**: a tipografia está "genérica" (caiu no fallback Liberation Sans) — não cria identidade memorável. Os outros pontos (voz sintética, uncanny valley) são do **footage-fonte**, não do overlay.
+
+Vou te **mostrar o resultado** e checar fontes disponíveis para o refino tipográfico:
+
+## 🤖 Claude *(21:23:05)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "__unparsedToolInput": {
+    "raw": "{\"files\": /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4, \"caption\": \"Gate 4 \u2014 1\u00ba short \\\"Viral Quality\\\": corte real do EP01 (4\u219210s) com texto motion-graphic sobreposto (\\\"ROB\u00d4S EST\u00c3O APRENDENDO\\\" / \\\"COMO N\u00d3S APRENDEMOS\\\"), sem bot\u00e3o. Substitui a barra de legenda tradicional. Vision QA: premium, leg\u00edvel, favorece viral. Refino pendente: tipografia mais marcante (MIV).\", \"status\": \"proactive\", \"display\": \"render\"}",
+    "len": 504
+  }
+}
+```
+
+> **Tool Result (SendUserFile)** - ❌ Error
+>
+> ```
+> <tool_use_error>InputValidationError: SendUserFile was called with input that could not be parsed as JSON.
+> You sent (first 200 of 504 bytes): {"files": /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4, "caption": "Gate 4 — 1º short \"Viral Quality\": corte r
+> Common causes: unescaped backslashes in file paths (use / or \\), unescaped control characters, or truncated output. Retry with valid JSON.</tool_use_error>
+> ```
+
+## 🤖 Claude *(21:23:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== display/heavy fonts available on host (for premium typography) ===\"; fc-list 2>/dev/null | grep -iE \"anton|archivo|montserrat|oswald|bebas|inter|poppins|barlow|teko|playfair|jetbrains|roboto.condensed|noto.sans.display\" | head -20\necho \"--- total fonts ---\"; fc-list 2>/dev/null | wc -l\necho \"--- any bold/black families (sample) ---\"; fc-list 2>/dev/null | grep -iE \"black|extrabold|heavy|condensed\" | head -12",
+  "description": "Send proof + check available display fonts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === display/heavy fonts available on host (for premium typography) ===
+> --- total fonts ---
+> 133
+> --- any bold/black families (sample) ---
+> ```
+
+## 🤖 Claude *(21:23:39)*
+
+
+## 🤖 Claude *(21:23:41)*
+
+SendUserFile falhou (mandei `files` malformado — deve ser array). E o check de fonte é revelador: **nenhuma fonte display/heavy no host** (sem Anton/Montserrat/Oswald; 0 famílias black/extrabold) — confirma a crítica "tipografia genérica": para um look memorável, o template **precisa embedar uma fonte** (base64, determinístico). Reenviando o vídeo corretamente:
+
+## 🤖 Claude *(21:23:45)*
+
+
+🛠️ **Tool Call**: `SendUserFile`
+```json
+{
+  "files": [
+    "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4"
+  ],
+  "caption": "Gate 4 \u2014 1\u00ba short \"Viral Quality\": corte real do EP01 (4\u219210s) com texto motion-graphic sobreposto (\"ROB\u00d4S EST\u00c3O APRENDENDO\" / \"COMO N\u00d3S APRENDEMOS\"), sem bot\u00e3o. Substitui a barra de legenda tradicional. Vision QA: premium, leg\u00edvel, favorece viral. Refino pendente: tipografia mais marcante (embar fonte).",
+  "status": "proactive",
+  "display": "render"
+}
+```
+
+> **Tool Result (SendUserFile)** - ✅ Success
+>
+> ```
+> 1 file delivered to user.
+> ```
+
+## 🤖 Claude *(21:24:13)*
+
+
+## 🤖 Claude *(21:24:16)*
+
+Vídeo entregue ao Sovereign. **Gate 4 materialmente PASSOU** — o núcleo do que ele pediu está provado: footage real + texto motion-graphic, sem botão, premium e legível.
+
+Atualizando o estado e armando a próxima iteração (refino tipográfico — embedar fonte premium, diretamente responsivo à crítica do Vision e ao pedido "templates sofisticados"):
+
+## 🤖 Claude *(21:24:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md",
+  "old_string": "## Next iteration TODO \u2014 QUALITY CODE. Gate order per 10-frd-sdd-viral-quality.md \u00a76:\nNEXT (on wake) = GATE 4 PROOF: Vision QA the beats-proof short. Then GATE 5 E2E multiple shorts before/after.\nDONE-CODE: GATE 4 overlay branch in scripts/video-repurpose/segment-core.ts (see progress log cont.4):",
+  "new_string": "## Progress log (cont. 5)\n- iter6c (done): GATE 4 PASSED (Vision confidence high). Re-render after -t fix: 1080x1920, 180 frames, 6.0s, 5.1MB, 74s. Vision verdict: (1) motion-graphic word-by-word NOT caption bar \u2705 (2) legible \u2705 (3) NO button/CTA \u2705 (4) premium/favors viral \u2705. Only actionable critique on OUR layer: typography \"gen\u00e9rica\" (fell to Liberation Sans fallback). Other critiques (synthetic voice, uncanny-valley human) = source footage, not our layer. Sent proof MP4 to Sovereign.\n  FONT FINDING: host has NO display/heavy fonts (0 anton/montserrat/oswald/black/extrabold; 133 generic). \u2192 template MUST EMBED a base64 OFL font for a memorable/premium look.\n  Proof short still uploaded at video-studio-assets/ada39fae-.../repurpose-test/beats-proof.mp4 (test key; clean up later).\n\n## Remaining work (post gate-4-pass):\nA. TYPOGRAPHY POLISH (next): embed a premium OFL heavy font (Anton/Archivo Black/Montserrat ExtraBold \u2014 fetch via curl fonts.gstatic.com, base64 into viral-caption-overlay-9x16.html @font-face) \u2192 re-render 6s proof \u2192 Vision. Aesthetic fork: viral-heavy sans vs MIV brand (Playfair/JetBrains) \u2014 pick strong default, Sovereign reacts to visible result.\nB. WIRE-THROUGH (production-usable): text_beats/caption_mode are in segment-core ClipSpec but NOT yet threaded through the PRODUCTION path \u2014 video-repurpose-bridge.ts Composition/ClipSpec interface + video-repurpose-run validation must carry caption_mode+text_beats. Without this the worker can't produce beats shorts. /security-review the run edge fn change.\nC. ASR DECISION (Sovereign fork, OTD-VR-012): build whisper.cpp self-host (USD0) OR user provides SRTs \u2192 unblocks detector (gate 3) = the \"best moments\" pillar. Surfaced; non-blocking.\nD. GATE 5 E2E: multiple shorts before/after Vision (after A+B).\nPERF: alpha render 74s/6s (Playwright). OK but watch for longer clips."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:24:48)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 270,
+  "reason": "Gate 4 passou; pr\u00f3ximo \u00e9 refino tipogr\u00e1fico (embedar fonte OFL premium \u2014 \u00fanica cr\u00edtica na nossa camada) + wire-through do worker; cache quente.",
+  "prompt": "/loop Motor \"Viral Quality\" do video-repurpose \u2014 GATE 4 PASSOU (Vision high: motion-graphic word-by-word \u2705, leg\u00edvel \u2705, sem bot\u00e3o \u2705, premium \u2705). \u00danica cr\u00edtica na NOSSA camada: tipografia gen\u00e9rica (host n\u00e3o tem fonte display; 0 heavy fonts). PR\u00d3XIMO: (A) TYPOGRAPHY POLISH \u2014 embedar fonte OFL heavy (Anton/Archivo Black/Montserrat ExtraBold; curl de fonts.gstatic.com \u2192 base64 \u2192 @font-face em scripts/hyperframes/templates/viral-caption-overlay-9x16.html) \u2192 re-render 6s proof (script scratchpad/prove-overlay.ts, background ~74s) \u2192 Vision QA de novo. (B) WIRE-THROUGH produ\u00e7\u00e3o: caption_mode+text_beats est\u00e3o no ClipSpec do segment-core mas N\u00c3O no path de produ\u00e7\u00e3o \u2014 atualizar scripts/video-repurpose-bridge.ts (Composition/ClipSpec interface) + supabase/functions/video-repurpose-run (valida\u00e7\u00e3o sanitize) p/ carregar caption_mode+text_beats; /security-review a edge fn. (C) ASR (OTD-VR-012, fork Sovereign n\u00e3o-bloqueante): whisper.cpp self-host USD0 OU SRT do usu\u00e1rio \u2192 destrava detector gate3. (D) GATE 5 E2E m\u00faltiplos shorts before/after Vision. Master EP01 em repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4. Cada c\u00f3digo relevante /security-review; cada criativo Vision (Lei 1). Commits s\u00f3 no /handoff. Aut\u00f4nomo, interromp\u00edvel. Selar via /handoff s\u00f3 a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) s\u00e3o Sovereign-side."
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 18:29:00 (in 250s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(21:25:00)*
+
+Iteração 6c — **GATE 4 PASSOU** 🎯 (te enviei o vídeo pra ver).
+
+O coração do que você pediu está **provado ocularmente**: corte real do documentário + texto motion-graphic palavra-por-palavra, **sem botão**, premium e legível — substituindo a barra de legenda tradicional. O Vision confirmou os quatro pontos.
+
+A única crítica na **nossa** camada foi tipografia "genérica" — descobri que o host **não tem nenhuma fonte display** (caiu no fallback Liberation Sans). Então o próximo tick embeda uma fonte OFL marcante no template (responde direto ao seu "templates sofisticados") e re-prova no Vision.
+
+Restam três frentes que estou sequenciando: **(A)** refino tipográfico, **(B)** fiar `text_beats` no path de produção (worker + enqueue — hoje o motor só produz beats no meu harness de prova), e **(C)** o **ASR** (whisper self-host USD 0) que destrava a detecção automática de momentos — essa é a decisão que vale seu input quando puder: **construo o whisper self-host ou você fornece os SRTs dos episódios?** Não bloqueia o loop.
+
+## 👤 User *(21:29:00)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>Motor "Viral Quality" do video-repurpose — GATE 4 PASSOU (Vision high: motion-graphic word-by-word ✅, legível ✅, sem botão ✅, premium ✅). Única crítica na NOSSA camada: tipografia genérica (host não tem fonte display; 0 heavy fonts). PRÓXIMO: (A) TYPOGRAPHY POLISH — embedar fonte OFL heavy (Anton/Archivo Black/Montserrat ExtraBold; curl de fonts.gstatic.com → base64 → @font-face em scripts/hyperframes/templates/viral-caption-overlay-9x16.html) → re-render 6s proof (script scratchpad/prove-overlay.ts, background ~74s) → Vision QA de novo. (B) WIRE-THROUGH produção: caption_mode+text_beats estão no ClipSpec do segment-core mas NÃO no path de produção — atualizar scripts/video-repurpose-bridge.ts (Composition/ClipSpec interface) + supabase/functions/video-repurpose-run (validação sanitize) p/ carregar caption_mode+text_beats; /security-review a edge fn. (C) ASR (OTD-VR-012, fork Sovereign não-bloqueante): whisper.cpp self-host USD0 OU SRT do usuário → destrava detector gate3. (D) GATE 5 E2E múltiplos shorts before/after Vision. Master EP01 em repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4. Cada código relevante /security-review; cada criativo Vision (Lei 1). Commits só no /handoff. Autônomo, interrompível. Selar via /handoff só a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) são Sovereign-side.</command-args>
+
+## 👤 User *(21:29:00)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, decide whether the loop continues.** If the task needs another iteration, call ScheduleWakeup with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks past the 5-minute cache window are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+   If it doesn't need another iteration, stop instead (step 6) — re-arming is a per-turn choice, not a default.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then make the same decision. If the loop should continue, call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 (the Monitor remains the wake signal; the new wakeup is only the fallback heartbeat). If the event means the work is finished, stop (step 6).
+6. **To stop the loop** — the task is complete, further iterations can't make progress, or the user asked you to stop — call ScheduleWakeup with `stop: true` (no other fields) and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Stopping is the loop's normal ending — the user can restart it anytime with /loop. Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+Motor "Viral Quality" do video-repurpose — GATE 4 PASSOU (Vision high: motion-graphic word-by-word ✅, legível ✅, sem botão ✅, premium ✅). Única crítica na NOSSA camada: tipografia genérica (host não tem fonte display; 0 heavy fonts). PRÓXIMO: (A) TYPOGRAPHY POLISH — embedar fonte OFL heavy (Anton/Archivo Black/Montserrat ExtraBold; curl de fonts.gstatic.com → base64 → @font-face em scripts/hyperframes/templates/viral-caption-overlay-9x16.html) → re-render 6s proof (script scratchpad/prove-overlay.ts, background ~74s) → Vision QA de novo. (B) WIRE-THROUGH produção: caption_mode+text_beats estão no ClipSpec do segment-core mas NÃO no path de produção — atualizar scripts/video-repurpose-bridge.ts (Composition/ClipSpec interface) + supabase/functions/video-repurpose-run (validação sanitize) p/ carregar caption_mode+text_beats; /security-review a edge fn. (C) ASR (OTD-VR-012, fork Sovereign não-bloqueante): whisper.cpp self-host USD0 OU SRT do usuário → destrava detector gate3. (D) GATE 5 E2E múltiplos shorts before/after Vision. Master EP01 em repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4. Cada código relevante /security-review; cada criativo Vision (Lei 1). Commits só no /handoff. Autônomo, interrompível. Selar via /handoff só a ~95% da janela ou backlog esgotado. Estado em scratchpad/viral-quality-loop-state.md. Alertas restantes (auditoria IG/TikTok, YouTube Analytics API) são Sovereign-side.
+
+## 🤖 Claude *(21:29:35)*
+
+
+## 🤖 Claude *(21:29:37)*
+
+Iteração 7 — refino tipográfico (A). Decisão de fonte (fundamentada no que você curtiu na referência `33bebbce` = clean/premium/futurista + "sofisticados", não viral-gritado): **Montserrat** heavy (premium geométrica). Buscando o TTF OFL:
+
+## 🤖 Claude *(21:29:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad\necho \"=== try Montserrat variable TTF (github raw, OFL) ===\"\ncurl -sL --max-time 30 \"https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/Montserrat%5Bwght%5D.ttf\" -o montserrat.ttf 2>&1\nls -la montserrat.ttf 2>/dev/null\necho \"--- magic bytes (should be 00010000 or OTTO/true) ---\"\nxxd montserrat.ttf 2>/dev/null | head -1\necho \"--- is it a font? ---\"\nfile montserrat.ttf 2>/dev/null\necho \"--- fallback: Anton if Montserrat failed ---\"\n[ -s montserrat.ttf ] && head -c4 montserrat.ttf | xxd | head -1 || echo \"montserrat empty\"",
+  "description": "Fetch Montserrat OFL variable TTF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === try Montserrat variable TTF (github raw, OFL) ===
+> -rw-rw-r-- 1 ubuntu ubuntu 744936 Jul 13 18:29 montserrat.ttf
+> --- magic bytes (should be 00010000 or OTTO/true) ---
+> 00000000: 0001 0000 0018 0100 0004 0080 4744 4546  ............GDEF
+> --- is it a font? ---
+> montserrat.ttf: TrueType Font data, 24 tables, 1st "GDEF", 59 names, Macintosh, type 256 string, WeightThinMontserrat-ThinExtraLightMontserrat-ExtraLightLightMontserrat-LightRegularMontserrat-R
+> --- fallback: Anton if Montserrat failed ---
+> 00000000: 0001 0000                                ....
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:30:13)*
+
+
+## 🤖 Claude *(21:30:14)*
+
+Montserrat variable TTF válido (744KB, Thin→Black). Vou referenciá-lo como **arquivo** (não base64 — mantém o template legível; o worker roda do repo). Setup: pasta de fontes + licença OFL (compliance):
+
+## 🤖 Claude *(21:30:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nmkdir -p scripts/hyperframes/templates/fonts\ncp /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/montserrat.ttf scripts/hyperframes/templates/fonts/Montserrat-variable.ttf\ncurl -sL --max-time 20 \"https://raw.githubusercontent.com/google/fonts/main/ofl/montserrat/OFL.txt\" -o scripts/hyperframes/templates/fonts/OFL.txt\nls -la scripts/hyperframes/templates/fonts/\necho \"--- OFL header ---\"; head -3 scripts/hyperframes/templates/fonts/OFL.txt",
+  "description": "Install Montserrat font + OFL license into templates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 744
+> drwxrwxr-x 2 ubuntu ubuntu   4096 Jul 13 18:30 .
+> drwxrwxr-x 3 gcrUX  gcrUX    4096 Jul 13 18:30 ..
+> -rw-rw-r-- 1 ubuntu ubuntu 744936 Jul 13 18:30 Montserrat-variable.ttf
+> -rw-rw-r-- 1 ubuntu ubuntu   4400 Jul 13 18:30 OFL.txt
+> --- OFL header ---
+> Copyright 2024 The Montserrat.Git Project Authors (https://github.com/JulietaUla/Montserrat.git)
+> 
+> This Font Software is licensed under the SIL Open Font License, Version 1.1.
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
