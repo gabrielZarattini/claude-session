@@ -1,4 +1,4 @@
-# Build API dashboard with video metrics and CRUD operations
+# [[2026-07-12 - Build API dashboard with video metrics and CRUD operations|Build API dashboard with video metrics and CRUD operations]]
 **Date:** 2026-07-13 | **Session ID:** `9956e776-db1f-47bd-9485-412802efe469`
 
 ---
@@ -8478,3 +8478,16 @@ Fechou o ciclo completo — e o detector honesto (Vision QA) fez o trabalho dele
 Os **5 shorts do EP01 estão prontos**. Dê uma olhada neles na Biblioteca (agora com legenda completa). Quando disser "vai", eu **ligo a cadência do TikTok** — sai **privada até a auditoria do rebranding aprovar** — e monto o caminho manual pras outras redes (LinkedIn/IG). 
 
 Quer que eu já comece a fiar a cadência, ou prefere revisar os 5 cortes primeiro?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-12 - c9063773-845f-4128-8e7c-c0ef853384ff]]
+> * **Próxima Sessão**: [[2026-07-13 - agent-a4db4681abaf71231]]
+%% --- TIMELINE END --- %%
