@@ -1,4 +1,4 @@
-# Build API dashboard with video metrics and CRUD operations
+# [[2026-07-12 - Build API dashboard with video metrics and CRUD operations|Build API dashboard with video metrics and CRUD operations]]
 **Date:** 2026-07-13 | **Session ID:** `9956e776-db1f-47bd-9485-412802efe469`
 
 ---
@@ -8928,3 +8928,15 @@ Print seal summary in **Portuguese (Brasil)**:
 - Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
 - git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
 
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-12 - c9063773-845f-4128-8e7c-c0ef853384ff]]
+> * **Próxima Sessão**: [[2026-07-13 - agent-a4db4681abaf71231]]
+%% --- TIMELINE END --- %%
