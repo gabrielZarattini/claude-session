@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 77
-> * **Total de Sessões**: 2110
+> * **Total de Processos**: 78
+> * **Total de Sessões**: 2112
 
 ---
 
@@ -95,6 +95,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[wordpress-cf-per-user-publish]]` - *Processo*
 *   `[[wordpress-cf-publish-unblock]]` - *Processo*
 *   `[[youtube-publish-credential-resolution]]` - *Processo*
+*   `[[youtube-studio-panel]]` - *Processo*
 
 ---
 
@@ -104,6 +105,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-12 - agent-af841a0271440dd87]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-adf6a617a44e3bd61]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-adde2873140a2372f]]` (ClaudeSessions) - *2026-07-12*
+*   `[[2026-07-12 - agent-add714bc0fce26d18]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-adaa962cd9326369f]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-ad8add69ce01fe28f]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-ace8010ef94059fae]]` (ClaudeSessions) - *2026-07-12*
@@ -114,6 +116,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-12 - agent-a6292769b92ce6b7c]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-a530f386e803e7822]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-a41f6ec74f576b6f0]]` (ClaudeSessions) - *2026-07-12*
+*   `[[2026-07-12 - agent-a20e8187caa88089f]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-a108e34c6e4657463]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-a0456d3223540b817]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]` (ClaudeSessions) - *2026-07-12*

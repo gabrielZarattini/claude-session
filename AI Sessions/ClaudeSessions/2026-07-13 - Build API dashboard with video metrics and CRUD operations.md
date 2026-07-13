@@ -1,4 +1,4 @@
-# Build API dashboard with video metrics and CRUD operations
+# [[2026-07-12 - Build API dashboard with video metrics and CRUD operations|Build API dashboard with video metrics and CRUD operations]]
 **Date:** 2026-07-13 | **Session ID:** `c9063773-845f-4128-8e7c-c0ef853384ff`
 
 ---
@@ -4022,3 +4022,16 @@ Quer que eu já deixe o worker instalado como serviço enquanto você localiza o
 ## 👤 User *(00:59:39)*
 
 Esta no meu notebook ainda já temos uma interface para fazer o passo a passo? Posso subir ele no mcorch por uma interface, tudo que você puder antecipar para me ajudar nesse caso por exemplo depende de mim subir o vip que subi no youtube mas ja temos a UI você só me mandaria por exemplo o passo a passo ou eu subo em um projeto novo no spaces? me diz qual seria o melhor caminho?
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-12 - c9063773-845f-4128-8e7c-c0ef853384ff]]
+> * **Próxima Sessão**: [[2026-07-13 - agent-ac74bcce18c115070]]
+%% --- TIMELINE END --- %%
