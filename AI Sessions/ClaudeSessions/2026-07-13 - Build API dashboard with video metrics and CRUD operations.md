@@ -1,4 +1,4 @@
-# [[2026-07-12 - Build API dashboard with video metrics and CRUD operations|Build API dashboard with video metrics and CRUD operations]]
+# Build API dashboard with video metrics and CRUD operations
 **Date:** 2026-07-13 | **Session ID:** `c9063773-845f-4128-8e7c-c0ef853384ff`
 
 ---
@@ -4023,15 +4023,1025 @@ Quer que eu já deixe o worker instalado como serviço enquanto você localiza o
 
 Esta no meu notebook ainda já temos uma interface para fazer o passo a passo? Posso subir ele no mcorch por uma interface, tudo que você puder antecipar para me ajudar nesse caso por exemplo depende de mim subir o vip que subi no youtube mas ja temos a UI você só me mandaria por exemplo o passo a passo ou eu subo em um projeto novo no spaces? me diz qual seria o melhor caminho?
 
----
+## 🤖 Claude *(01:00:10)*
 
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
 
-%% --- TIMELINE START --- %%
-> [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-12 - c9063773-845f-4128-8e7c-c0ef853384ff]]
-> * **Próxima Sessão**: [[2026-07-13 - agent-ac74bcce18c115070]]
-%% --- TIMELINE END --- %%
+## 🤖 Claude *(01:00:12)*
+
+Boa pergunta — e a resposta certa depende de o que já existe de UI. Deixa eu verificar materialmente (Lei 1): se há interface de ingest, e qual é o contrato exato de upload do `ingest-external-asset` (arquivo grande = precisa de estratégia certa de upload).
+
+## 🤖 Claude *(01:00:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== UI calling ingest-external-asset / repurpose? ===\"; grep -rnE \"ingest-external-asset|video-repurpose|repurpose\" src/ 2>/dev/null | head -20 || echo \"(nenhuma UI chama \u2014 backend-only)\"; echo; echo \"=== ingest fn size + bucket refs ===\"; wc -l supabase/functions/ingest-external-asset/index.ts; grep -nE \"bucket|storage|upload|signed|from\\(|\\.upload\\(|source_module|episode|srt|provider|youtube|content-length|maxSize|body\" supabase/functions/ingest-external-asset/index.ts | head -40",
+  "description": "Check for ingest UI + read ingest contract"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === UI calling ingest-external-asset / repurpose? ===
+> src/styles/mcorch/minimal.css:7:/* Section eyebrow (repurposed .num): a quiet mono label, not a giant index */
+> 
+> === ingest fn size + bucket refs ===
+> 118 supabase/functions/ingest-external-asset/index.ts
+> 4:// creative_assets spine as source_module='external', kind='video', carrying its structured episode metadata
+> 8:// SECURITY: user-JWT in → getUser → the client-supplied storage_key MUST start with `${user.id}/` (owner-scoped,
+> 10:// sets user_id = the caller. No paid provider, no money-path. SSOT: docs/processes/external-video-ingest.md.
+> 20:const MAX_META_BYTES = 256 * 1024;   // episode metadata jsonb guard
+> 21:const MAX_SRT_BYTES = 512 * 1024;    // one SRT track (generous; a 10-min episode SRT is ~10-30KB)
+> 22:// Allowlist the bucket at INGEST (defense-in-depth): the Fatia-2 worker will download/sign (bucket,key) from this
+> 23:// row, so never let a client-supplied bucket land in it. Both are private owner-scoped buckets. (security-review
+> 39:  const json = (status: number, body: unknown) =>
+> 40:    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 54:    const body = await req.json().catch(() => ({}));
+> 55:    const provider = body.provider === "youtube" ? "youtube" : "upload";
+> 58:    if (provider === "youtube") {
+> 60:        error: "youtube_ingest_gated",
+> 62:          "Faça upload do arquivo MP4 do master (default, melhor qualidade).",
+> 66:    // ── DEFAULT: registered upload. The client already uploaded the MP4 to canvas-assets under its own prefix. ──
+> 67:    const storageBucket = typeof body.storage_bucket === "string" && body.storage_bucket ? body.storage_bucket : "canvas-assets";
+> 68:    if (!ALLOWED_BUCKETS.has(storageBucket)) {
+> 69:      return json(400, { error: "invalid_bucket", action: "Bucket não permitido para ingest." });
+> 71:    const storageKey = typeof body.storage_key === "string" ? body.storage_key : "";
+> 73:    if (!storageKey || !storageKey.startsWith(`${user.id}/`) || storageKey.includes("..")) {
+> 74:      return json(400, { error: "invalid_storage_key", action: "storage_key deve começar com o seu prefixo de usuário." });
+> 77:    const title = sizedString(body.title, 500) ?? "Master externo";
+> 78:    const mimeType = sizedString(body.mime_type, 100) ?? "video/mp4";
+> 79:    const durationSeconds = typeof body.duration_seconds === "number" && body.duration_seconds >= 0 ? body.duration_seconds : null;
+> 80:    const width = Number.isInteger(body.width) ? body.width : null;
+> 81:    const height = Number.isInteger(body.height) ? body.height : null;
+> 83:    // Structured episode metadata (chapters/sources/teaser/tags) + SRT inline. Preserved for the Fatia 4 mapper.
+> 84:    const episode = sizedObject(body.episode, MAX_META_BYTES) ?? {};
+> 85:    const srt: Record<string, string> = {};
+> 86:    const srtPt = sizedString(body.srt_pt, MAX_SRT_BYTES); if (srtPt) srt.pt = srtPt;
+> 87:    const srtEn = sizedString(body.srt_en, MAX_SRT_BYTES); if (srtEn) srt.en = srtEn;
+> 97:      p_storage_bucket: storageBucket,
+> 98:      p_storage_key: storageKey,
+> 99:      p_source_module: "external",
+> 100:      p_provider: "upload",
+> 106:      p_metadata: { provider: "upload", ingested_at: new Date().toISOString(), episode, srt },
+> 111:    admin.from("infra_health_logs").insert({ service: "ingest-external-asset", status: "healthy" }).then(() => {}, () => {});
+> 113:    return json(200, { ok: true, asset_id: assetId, source_module: "external", kind: "video" });
+> ```
+
+## 🤖 Claude *(01:01:42)*
+
+
+## 🤖 Claude *(01:01:45)*
+
+Contrato do ingest lido: o cliente **primeiro faz upload do MP4** para o bucket `canvas-assets` sob `${uid}/`, depois chama `ingest-external-asset` com o `storage_key` + metadados do episódio → registra como `creative_asset`. E o grep confirma: **não existe UI** para isso (é backend-only — só um comentário de CSS menciona "repurpose"). Deixa eu checar o limite do bucket e a policy de upload pra recomendar o caminho certo de upload de arquivo grande:
+
+## 🤖 Claude *(01:01:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== canvas-assets bucket creation + size limit ===\"; grep -rnE \"canvas-assets\" supabase/migrations/*.sql | grep -iE \"insert into storage.buckets|file_size_limit|create bucket|'canvas-assets'\" | head; echo; echo \"=== canvas-assets storage.objects INSERT policy (client upload allowed?) ===\"; grep -rlE \"canvas-assets\" supabase/migrations/*.sql | head; echo \"--- policy bodies (INSERT/owner) ---\"; grep -rnA4 -iE \"policy.*canvas.*insert|insert.*canvas|for insert\" supabase/migrations/20260703030000*.sql 2>/dev/null | head -40",
+  "description": "Check canvas-assets bucket limit + upload policy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === canvas-assets bucket creation + size limit ===
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:28:  storage_bucket TEXT NOT NULL DEFAULT 'canvas-assets',
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:135:VALUES ('canvas-assets','canvas-assets',TRUE,52428800,
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:140:  FOR INSERT TO authenticated WITH CHECK (bucket_id='canvas-assets' AND (storage.foldername(name))[1]=auth.uid()::TEXT);
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:142:  FOR SELECT TO public USING (bucket_id='canvas-assets');
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:144:  FOR DELETE TO authenticated USING (bucket_id='canvas-assets' AND (storage.foldername(name))[1]=auth.uid()::TEXT);
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:34:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:44:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:52:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:61:    bucket_id = 'canvas-assets'
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:72:  USING (bucket_id = 'canvas-assets');
+> 
+> === canvas-assets storage.objects INSERT policy (client upload allowed?) ===
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql
+> supabase/migrations/20260518012541_canvas_assets_update_policy.sql
+> supabase/migrations/20260615200000_vision_mcp_erase_rpc.sql
+> supabase/migrations/20260625120000_creative_assets_registry.sql
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql
+> supabase/migrations/20260702230000_spaces_storage_enumeration_hardening.sql
+> supabase/migrations/20260709073000_canvas_assets_allow_zip.sql
+> --- policy bodies (INSERT/owner) ---
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql:54:  BEFORE INSERT OR UPDATE ON public.vm_canvas_projects
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql-55-  FOR EACH ROW EXECUTE FUNCTION public.vm_canvas_projects_force_server_id();
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql-56-
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql-57--- ── HARDENING (twin gap): spaces_force_server_id (20260702230000) is BEFORE INSERT only. Before this migration
+> supabase/migrations/20260703030000_asset_owner_signing_and_ispublic_repair.sql-58---    spaces.id was inert; now the canvas-assets policy trusts it as an ownership proxy (space_id-prefixed voice/
+> ```
+
+## 🤖 Claude *(01:03:00)*
+
+
+## 🤖 Claude *(01:03:02)*
+
+Achado material decisivo (Lei 1): o bucket `canvas-assets` tem **`file_size_limit = 52428800` = 50 MB**. Um master de documentário quase certamente passa disso — então nem o upload ingênuo funcionaria. Deixa eu ver os limites de todos os buckets e o allowlist do ingest, pra recomendar o caminho certo sem chutar:
+
+## 🤖 Claude *(01:03:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== all bucket size limits (storage.buckets inserts) ===\"; grep -rnE \"storage.buckets\" supabase/migrations/*.sql | grep -iE \"values|insert\" ; echo \"--- explicit VALUES rows with limits ---\"; grep -rhnE \"VALUES ?\\('?[a-z-]+\" supabase/migrations/*.sql | grep -iE \"true|false\" | grep -E \"[0-9]{6,}\" | head -30; echo; echo \"=== ingest ALLOWED_BUCKETS ===\"; grep -nA3 \"ALLOWED_BUCKETS\" supabase/functions/ingest-external-asset/index.ts | head; echo; echo \"=== worker: what bucket does it read masters from + what does it need running ===\"; grep -nE \"bucket|video_renders|engine|repurpose|download|createSignedUrl|from\\(\" scripts/video-repurpose-bridge.ts | head -25",
+  "description": "Bucket limits, ingest allowlist, worker contract"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === all bucket size limits (storage.buckets inserts) ===
+> supabase/migrations/20260422000000_create_video_storage_bucket.sql:2:INSERT INTO storage.buckets (id, name, public)
+> supabase/migrations/20260412144855_49ababf1-1b73-46c5-bcb5-00894dad5c1d.sql:2:INSERT INTO storage.buckets (id, name, public)
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:134:INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+> supabase/migrations/20260518020030_canvas_assets_rls_repair.sql:6:--       INSERT INTO storage.buckets succeeded; CREATE POLICY statements skipped
+> supabase/migrations/20260615190000_vision_mcp_artifacts.sql:40:INSERT INTO storage.buckets (id, name, public) VALUES ('vision-artifacts', 'vision-artifacts', false)
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:31:INSERT INTO storage.buckets (id, name, public)
+> supabase/migrations/20260701120000_video_studio_projects_bucket.sql:10:INSERT INTO storage.buckets (id, name, public)
+> --- explicit VALUES rows with limits ---
+> 135:VALUES ('canvas-assets','canvas-assets',TRUE,52428800,
+> 
+> === ingest ALLOWED_BUCKETS ===
+> 25:const ALLOWED_BUCKETS = new Set(["canvas-assets", "video-studio-assets"]);
+> 26-
+> 27-function sizedString(v: unknown, max: number): string | undefined {
+> 28-  return typeof v === "string" && new Blob([v]).size <= max ? v : undefined;
+> --
+> 68:    if (!ALLOWED_BUCKETS.has(storageBucket)) {
+> 69-      return json(400, { error: "invalid_bucket", action: "Bucket não permitido para ingest." });
+> 70-    }
+> 71-    const storageKey = typeof body.storage_key === "string" ? body.storage_key : "";
+> 
+> === worker: what bucket does it read masters from + what does it need running ===
+> 3: * scripts/video-repurpose-bridge.ts
+> 5: * video-repurpose worker (Fatia 2) — host worker that polls `video_renders` (engine='repurpose', state='queued'),
+> 6: * atomically claims each, downloads the source master, cuts N vertical shorts (segment-core.ts: 16:9→9:16/1:1
+> 7: * reframe + burned caption), uploads each to the private bucket, registers each as a creative_asset (parent = the
+> 10: * BoK SSOT: docs/bok/video-repurpose/00-deepsearch-blueprint.md §Pilar II + §8. Pattern: mirrors scripts/video-bridge.ts.
+> 11: * SECURITY (OTD-VR-006): the source (bucket,key) from the composition is RE-VALIDATED at read time (allowlist +
+> 14: * Supervisor: systemd --user video-repurpose-bridge.service (ação Sovereign). Usage: bun run scripts/video-repurpose-bridge.ts [--once]
+> 21:import { segmentVideo, type ClipSpec } from './video-repurpose/segment-core.ts';
+> 22:import { buildCarousel, type SlideSpec } from './video-repurpose/carousel-core.ts';
+> 40:const RUNNING_TIMEOUT_MS = 15 * 60 * 1000; // repurpose can be long (N re-encodes) — generous dead-worker reaper
+> 43:  return supabase.from('infra_health_logs').insert({ service: 'video-repurpose-bridge', status, event, metadata: metadata ?? null }).then(() => {}, () => {});
+> 47:  const { data } = await supabase.from('video_renders')
+> 54:interface Composition { mode?: string; source?: { bucket?: string; key?: string }; source_asset_id?: string; clips?: ClipSpec[]; slides?: SlideSpec[]; handle?: string; fps?: number }
+> 60:  const workDir = `/tmp/repurpose-${renderId}`;
+> 64:    const mode = comp?.mode === 'carousel' ? 'carousel' : 'repurpose';
+> 65:    if (!comp || !comp.source?.bucket || !comp.source?.key) throw new Error('composition_missing_or_invalid');
+> 66:    if (mode === 'repurpose' && (!Array.isArray(comp.clips) || comp.clips.length === 0)) throw new Error('cut_spec_empty');
+> 69:    const bucket = comp.source.bucket, key = comp.source.key;
+> 70:    if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {
+> 75:    const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);
+> 76:    if (dlErr || !blob) throw new Error(`source_download_failed: ${dlErr?.message ?? 'no blob'}`);
+> 84:        const slideKey = `${row.user_id}/repurpose/${renderId}/slide_${String(s.index).padStart(3, '0')}.jpg`;
+> 85:        const { error: upErr } = await supabase.storage.from(OUT_BUCKET).upload(slideKey, readFileSync(s.path), { contentType: 'image/jpeg', upsert: true });
+> 89:          p_storage_bucket: OUT_BUCKET, p_storage_key: slideKey, p_is_public: false,
+> 101:        const clipKey = `${row.user_id}/repurpose/${renderId}/clip_${String(c.index).padStart(3, '0')}.mp4`;
+> ```
+
+## 🤖 Claude *(01:03:36)*
+
+
+## 🤖 Claude *(01:03:38)*
+
+Peça-chave: **`video-studio-assets` já está no allowlist do ingest** e é bucket de vídeo (grava MP4s do studio). Se ele aceitar upload do cliente e estiver no allowlist do worker, evito migration. Confirmando o allowlist do worker + a RLS/limite desse bucket:
+
+## 🤖 Claude *(01:03:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== worker src/out buckets + engine ===\"; grep -nE \"ALLOWED_SRC_BUCKETS|OUT_BUCKET|engine|ENGINE\" scripts/video-repurpose-bridge.ts | head; echo; echo \"=== video-studio-assets bucket def + limit + RLS ===\"; sed -n '25,80p' supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql",
+  "description": "Worker allowlist + video-studio-assets bucket policy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === worker src/out buckets + engine ===
+> 5: * video-repurpose worker (Fatia 2) — host worker that polls `video_renders` (engine='repurpose', state='queued'),
+> 37:const OUT_BUCKET = 'video-studio-assets';
+> 38:const ALLOWED_SRC_BUCKETS = new Set(['canvas-assets', 'video-studio-assets']);
+> 70:    if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {
+> 85:        const { error: upErr } = await supabase.storage.from(OUT_BUCKET).upload(slideKey, readFileSync(s.path), { contentType: 'image/jpeg', upsert: true });
+> 89:          p_storage_bucket: OUT_BUCKET, p_storage_key: slideKey, p_is_public: false,
+> 102:        const { error: upErr } = await supabase.storage.from(OUT_BUCKET).upload(clipKey, readFileSync(c.path), { contentType: 'video/mp4', upsert: true });
+> 106:          p_storage_bucket: OUT_BUCKET, p_storage_key: clipKey, p_is_public: false,
+> 143:    .eq('engine', 'repurpose').eq('state', 'running').lt('updated_at', cutoff).then(() => {}, () => {});
+> 146:    .select('id').eq('engine', 'repurpose').eq('state', 'queued').order('created_at', { ascending: true }).limit(5);
+> 
+> === video-studio-assets bucket def + limit + RLS ===
+>   'textContent (XSS-safe). NULL = faceless/legacy. FR-VS-024 deterministic HTML→MP4.';
+> 
+> -- 2. Private asset bucket (mirrors vision-artifacts / generated-videos). Default-deny inherited from the
+> --    project-wide bucket-scoped storage.objects RLS — no explicit policy needed (and the migration role does
+> --    not own storage.objects → a CREATE POLICY here would 42501). Worker writes via service key; client reads
+> --    via short signed URLs minted server-side.
+> INSERT INTO storage.buckets (id, name, public)
+>   VALUES ('video-studio-assets', 'video-studio-assets', false)
+>   ON CONFLICT (id) DO NOTHING;
+> ```
+
+## 🤖 Claude *(01:05:01)*
+
+
+## 🤖 Claude *(01:05:07)*
+
+Agora o quadro fechou (Lei 1) e é decisivo:
+
+- **`canvas-assets`** → cliente PODE fazer upload, mas tem **cap de 50 MB** (pequeno demais pro master).
+- **`video-studio-assets`** → **sem cap** e já no allowlist do ingest **e** do worker, mas **default-deny: não tem policy de INSERT pro cliente** (só o worker service-role grava; cliente lê por signed URL).
+
+Ou seja: nenhum dos dois é upload-direto-do-cliente para arquivo grande. **Não há UI, e o Spaces não serve** (source_module errado + sem metadados de episódio + não dispara o repurpose + herdaria o cap). O caminho certo é **upload via signed URL** (o servidor cunha a URL → o navegador envia o master direto pro bucket de vídeo, sem cap, sem precisar de policy de cliente). Deixa eu ler o contrato do enfileirador e o shape dos cortes pra construir a UI certinha:
+
+## 🤖 Claude *(01:05:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-repurpose-run/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// video-repurpose-run — enqueue a segmentation job (video-repurpose Fatia 2, FR-VR-003).
+> 2	// ─────────────────────────────────────────────────────────────────────────────
+> 3	// A source master (creative_assets kind='video', typically source_module='external') + a data-driven cut-spec →
+> 4	// a video_renders row (engine='repurpose', charged_mco=0 — FFmpeg rail is free). The host worker
+> 5	// (scripts/video-repurpose-bridge.ts) claims it, cuts N vertical shorts, registers each as a creative_asset
+> 6	// (parent_asset_id = the master) and finalizes. Async: returns render_id; the client polls video_renders (RLS own).
+> 7	//
+> 8	// SECURITY: user-JWT → getUser → the source asset is resolved OWNER-SCOPED (.eq id .eq user_id); its bucket/key are
+> 9	// re-validated (allowlist + `${uid}/` prefix + no `..`) BEFORE landing in the composition (defense-in-depth at
+> 10	// enqueue; the worker re-validates AGAIN at read time — OTD-VR-006). SSOT: docs/bok/video-repurpose/00-*.md.
+> 11	
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	
+> 14	const corsHeaders = {
+> 15	  "Access-Control-Allow-Origin": "*",
+> 16	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 17	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 18	};
+> 19	
+> 20	const ALLOWED_BUCKETS = new Set(["canvas-assets", "video-studio-assets"]);
+> 21	const MAX_CLIPS = 50;
+> 22	const MAX_SLIDES = 10;   // IG carousel max
+> 23	const REFRAMES = new Set(["9:16", "1:1"]);
+> 24	
+> 25	interface ClipIn { in_sec: number; out_sec: number; caption?: string; reframe?: string }
+> 26	interface SlideIn { t_sec: number; caption?: string }
+> 27	
+> 28	function sanitizeClips(raw: unknown): { clips: ClipIn[]; error?: string } {
+> 29	  if (!Array.isArray(raw) || raw.length === 0) return { clips: [], error: "cut_spec_empty" };
+> 30	  if (raw.length > MAX_CLIPS) return { clips: [], error: "too_many_clips" };
+> 31	  const clips: ClipIn[] = [];
+> 32	  for (const c of raw) {
+> 33	    const inS = Number((c as ClipIn)?.in_sec), outS = Number((c as ClipIn)?.out_sec);
+> 34	    if (!Number.isFinite(inS) || !Number.isFinite(outS) || inS < 0 || outS <= inS) return { clips: [], error: "clip_range_invalid" };
+> 35	    const caption = typeof (c as ClipIn).caption === "string" ? (c as ClipIn).caption!.slice(0, 300) : undefined;
+> 36	    const reframe = REFRAMES.has(String((c as ClipIn).reframe)) ? (c as ClipIn).reframe : "9:16";
+> 37	    clips.push({ in_sec: inS, out_sec: outS, caption, reframe });
+> 38	  }
+> 39	  return { clips };
+> 40	}
+> 41	
+> 42	function sanitizeSlides(raw: unknown): { slides: SlideIn[]; error?: string } {
+> 43	  if (!Array.isArray(raw) || raw.length === 0) return { slides: [], error: "slide_spec_empty" };
+> 44	  if (raw.length > MAX_SLIDES) return { slides: [], error: "too_many_slides" };
+> 45	  const slides: SlideIn[] = [];
+> 46	  for (const s of raw) {
+> 47	    const t = Number((s as SlideIn)?.t_sec);
+> 48	    if (!Number.isFinite(t) || t < 0) return { slides: [], error: "slide_time_invalid" };
+> 49	    const caption = typeof (s as SlideIn).caption === "string" ? (s as SlideIn).caption!.slice(0, 300) : undefined;
+> 50	    slides.push({ t_sec: t, caption });
+> 51	  }
+> 52	  return { slides };
+> 53	}
+> 54	
+> 55	Deno.serve(async (req) => {
+> 56	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 57	  const json = (status: number, body: unknown) =>
+> 58	    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 59	
+> 60	  try {
+> 61	    const authHeader = req.headers.get("Authorization");
+> 62	    if (!authHeader?.startsWith("Bearer ")) return json(401, { error: "Unauthorized" });
+> 63	
+> 64	    const userClient = createClient(
+> 65	      Deno.env.get("SUPABASE_URL")!,
+> 66	      (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 67	      { global: { headers: { Authorization: authHeader } } },
+> 68	    );
+> 69	    const { data: { user } } = await userClient.auth.getUser();
+> 70	    if (!user) return json(401, { error: "Unauthorized" });
+> 71	
+> 72	    const body = await req.json().catch(() => ({}));
+> 73	    const sourceAssetId = typeof body.source_asset_id === "string" ? body.source_asset_id : "";
+> 74	    if (!sourceAssetId) return json(400, { error: "source_asset_id_required" });
+> 75	    const mode = body.mode === "carousel" || Array.isArray(body.slides) ? "carousel" : "repurpose";
+> 76	
+> 77	    let clips: ClipIn[] = [], slides: SlideIn[] = [];
+> 78	    if (mode === "carousel") {
+> 79	      const r = sanitizeSlides(body.slides);
+> 80	      if (r.error) return json(422, { error: r.error, action: "Cada slide precisa de t_sec ≥ 0 (≤10 slides)." });
+> 81	      slides = r.slides;
+> 82	    } else {
+> 83	      const r = sanitizeClips(body.clips);
+> 84	      if (r.error) return json(422, { error: r.error, action: "Cada corte precisa de in_sec < out_sec (≤50 cortes)." });
+> 85	      clips = r.clips;
+> 86	    }
+> 87	    const fps = Number.isFinite(body.fps) && body.fps >= 1 && body.fps <= 60 ? Math.round(body.fps) : 30;
+> 88	    const handle = typeof body.handle === "string" ? body.handle.slice(0, 40) : undefined;
+> 89	
+> 90	    const admin = createClient(
+> 91	      Deno.env.get("SUPABASE_URL")!,
+> 92	      (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 93	    );
+> 94	
+> 95	    // Resolve the source OWNER-SCOPED (server-trusted bucket/key; the .eq user_id is the tenant gate).
+> 96	    const { data: asset } = await admin.from("creative_assets")
+> 97	      .select("id, user_id, kind, storage_bucket, storage_key")
+> 98	      .eq("id", sourceAssetId).eq("user_id", user.id).maybeSingle();
+> 99	    if (!asset) return json(404, { error: "source_not_found", action: "O vídeo-fonte não existe ou não é seu." });
+> 100	    if (asset.kind !== "video") return json(422, { error: "source_not_video" });
+> 101	    const bucket = asset.storage_bucket as string, key = asset.storage_key as string;
+> 102	    if (!ALLOWED_BUCKETS.has(bucket) || !key.startsWith(`${user.id}/`) || key.includes("..")) {
+> 103	      return json(400, { error: "source_ref_invalid" });   // defense-in-depth; the worker re-checks (OTD-VR-006)
+> 104	    }
+> 105	
+> 106	    const composition = mode === "carousel"
+> 107	      ? { mode, source: { bucket, key }, source_asset_id: asset.id, slides, handle }
+> 108	      : { mode, source: { bucket, key }, source_asset_id: asset.id, clips, fps };
+> 109	
+> 110	    const { data: render, error: insErr } = await admin.from("video_renders").insert({
+> 111	      user_id: user.id, engine: "repurpose", charged_mco: 0, composition,
+> 112	    }).select("id").single();
+> 113	    if (insErr || !render) return json(500, { error: "enqueue_failed", detail: insErr?.message });
+> 114	
+> 115	    return json(202, {
+> 116	      ok: true, render_id: render.id, mode,
+> 117	      count: mode === "carousel" ? slides.length : clips.length,
+> 118	      transport: `poll://${render.id}`,
+> 119	    });
+> 120	  } catch (e) {
+> 121	    console.error("video-repurpose-run error:", e);
+> 122	    return json(500, { error: e instanceof Error ? e.message : "Unknown error" });
+> 123	  }
+> 124	});
+> 125	
+> ```
+
+## 🤖 Claude *(01:05:43)*
+
+
+## 🤖 Claude *(01:05:46)*
+
+Contrato completo mapeado. `video-repurpose-run` aceita `{ source_asset_id, mode, clips[], slides[], fps, handle }` e ambos os buckets de destino estão nos allowlists. O plano é claro. Vou construir a **front-door dedicada** — é a resposta certa à sua pergunta. Deixa eu ler o topo do ingest pra encaixar a ação de signed-upload:
+
+## 🤖 Claude *(01:05:47)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts",
+  "offset": 1,
+  "limit": 57
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// ingest-external-asset — first-class ingest of an externally-produced master video (video-repurpose Pilar I).
+> 2	// ─────────────────────────────────────────────────────────────────────────────
+> 3	// A documentary MP4 (16:9, ~7-8 min) produced OUTSIDE MCORCH (e.g. the GabrielAI Veo+assembly pipeline) enters the
+> 4	// creative_assets spine as source_module='external', kind='video', carrying its structured episode metadata
+> 5	// (chapters/sources/teaser/tags — schema mirrors episodios/epNN.json) + SRT (pt-BR/en) inline. The segmentation
+> 6	// worker (Fatia 2) then reads it and derives N 9:16 shorts (parent_asset_id = this master).
+> 7	//
+> 8	// SECURITY: user-JWT in → getUser → the client-supplied storage_key MUST start with `${user.id}/` (owner-scoped,
+> 9	// never trust a cross-tenant path — same guard as avatar-identity-train). register_creative_asset (service-role)
+> 10	// sets user_id = the caller. No paid provider, no money-path. SSOT: docs/processes/external-video-ingest.md.
+> 11	
+> 12	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 13	
+> 14	const corsHeaders = {
+> 15	  "Access-Control-Allow-Origin": "*",
+> 16	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 17	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+> 18	};
+> 19	
+> 20	const MAX_META_BYTES = 256 * 1024;   // episode metadata jsonb guard
+> 21	const MAX_SRT_BYTES = 512 * 1024;    // one SRT track (generous; a 10-min episode SRT is ~10-30KB)
+> 22	// Allowlist the bucket at INGEST (defense-in-depth): the Fatia-2 worker will download/sign (bucket,key) from this
+> 23	// row, so never let a client-supplied bucket land in it. Both are private owner-scoped buckets. (security-review
+> 24	// forward-note 2026-07-12 → OTD-VR-006: the worker MUST ALSO re-validate the `${user.id}/` prefix at read time.)
+> 25	const ALLOWED_BUCKETS = new Set(["canvas-assets", "video-studio-assets"]);
+> 26	
+> 27	function sizedString(v: unknown, max: number): string | undefined {
+> 28	  return typeof v === "string" && new Blob([v]).size <= max ? v : undefined;
+> 29	}
+> 30	function sizedObject(v: unknown, max: number): Record<string, unknown> | undefined {
+> 31	  if (!v || typeof v !== "object" || Array.isArray(v)) return undefined;
+> 32	  try { return new Blob([JSON.stringify(v)]).size <= max ? v as Record<string, unknown> : undefined; }
+> 33	  catch { return undefined; }
+> 34	}
+> 35	
+> 36	Deno.serve(async (req) => {
+> 37	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 38	
+> 39	  const json = (status: number, body: unknown) =>
+> 40	    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 41	
+> 42	  try {
+> 43	    const authHeader = req.headers.get("Authorization");
+> 44	    if (!authHeader?.startsWith("Bearer ")) return json(401, { error: "Unauthorized" });
+> 45	
+> 46	    const userClient = createClient(
+> 47	      Deno.env.get("SUPABASE_URL")!,
+> 48	      (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!,
+> 49	      { global: { headers: { Authorization: authHeader } } },
+> 50	    );
+> 51	    const { data: { user } } = await userClient.auth.getUser();
+> 52	    if (!user) return json(401, { error: "Unauthorized" });
+> 53	
+> 54	    const body = await req.json().catch(() => ({}));
+> 55	    const provider = body.provider === "youtube" ? "youtube" : "upload";
+> 56	
+> 57	    // ── FALLBACK: YouTube link — gated (OTD-VR-001: server-side download blocked by datacenter IP). ──
+> ```
+
+## 🤖 Claude *(01:06:47)*
+
+
+## 🤖 Claude *(01:06:49)*
+
+Contrato do enfileirador confirmado. Vou construir a **front-door "Repurpose de Vídeo"**: upload do master via signed URL (sem cap, direto ao bucket de vídeo) → metadados → cortes → launch, e instalar o worker como serviço. Começando pela ação de upload no edge fn + o molde do serviço do worker:
+
+## 🤖 Claude *(01:06:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts",
+  "old_string": "    const body = await req.json().catch(() => ({}));\n    const provider = body.provider === \"youtube\" ? \"youtube\" : \"upload\";",
+  "new_string": "    const body = await req.json().catch(() => ({}));\n\n    // \u2500\u2500 ACTION: sign_upload \u2014 mint a one-time signed upload URL so the browser can PUT a LARGE master\n    // directly to the private video bucket. This bypasses the missing client INSERT policy on\n    // video-studio-assets (default-deny; only service-role writes) \u2014 the signed URL authorizes ONLY this\n    // exact owner-scoped key. The client uploadToSignedUrl()s, then calls this fn again to register (below).\n    // Key is server-forced to `${user.id}/...` so a client can never target a cross-tenant path.\n    if (body.action === \"sign_upload\") {\n      const rawName = typeof body.filename === \"string\" ? body.filename : \"master.mp4\";\n      const safe = (rawName.replace(/[^a-zA-Z0-9._-]/g, \"_\") || \"master.mp4\").slice(-120);\n      const key = `${user.id}/repurpose-masters/${Date.now()}-${safe}`;\n      const admin = createClient(\n        Deno.env.get(\"SUPABASE_URL\")!,\n        (Deno.env.get(\"SB_SECRET_KEY\") ?? Deno.env.get(\"SUPABASE_SERVICE_ROLE_KEY\"))!,\n      );\n      const { data: signed, error: signErr } = await admin.storage\n        .from(\"video-studio-assets\")\n        .createSignedUploadUrl(key);\n      if (signErr || !signed) return json(500, { error: \"sign_failed\", detail: signErr?.message });\n      return json(200, {\n        ok: true,\n        bucket: \"video-studio-assets\",\n        storage_key: key,\n        token: signed.token,\n        signed_url: signed.signedUrl,\n      });\n    }\n\n    const provider = body.provider === \"youtube\" ? \"youtube\" : \"upload\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/ingest-external-asset/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:06:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== video-bridge.service (template to mirror) ===\"; cat ~/.config/systemd/user/video-bridge.service; echo; echo \"=== video_renders columns the client can select (RLS own) ===\"; grep -rnE \"create table.*video_renders|state|charged_mco|composition|error\" supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql 2>/dev/null | head; grep -rlE \"video_renders\" supabase/migrations/*.sql | head",
+  "description": "Read worker service template + video_renders schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video-bridge.service (template to mirror) ===
+> [Unit]
+> Description=MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg)
+> After=network-online.target
+> Wants=network-online.target
+> StartLimitBurst=5
+> StartLimitIntervalSec=60
+> 
+> [Service]
+> WorkingDirectory=/home/gcrUX/htdocs/constellation-orchestra
+> ExecStart=/home/ubuntu/.bun/bin/bun run scripts/video-bridge.ts
+> Restart=always
+> RestartSec=5
+> TimeoutStopSec=20
+> KillMode=control-group
+> # video-bridge.ts loads SUPABASE_URL/SB_SECRET_KEY from ../.env itself — no secrets in the unit (parity design-bridge).
+> Environment=HOME=/home/ubuntu
+> Environment=TMPDIR=/tmp
+> Environment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+> Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+> 
+> [Install]
+> WantedBy=default.target
+> 
+> === video_renders columns the client can select (RLS own) ===
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:1:-- Migration: video-studio Fatia VS-2 — render composition spec + private asset bucket.
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:7:--   • video_renders.composition jsonb — the render spec the host worker (video-bridge.ts) consumes:
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:20:  ADD COLUMN IF NOT EXISTS composition jsonb;
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql:22:COMMENT ON COLUMN public.video_renders.composition IS
+> supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql
+> supabase/migrations/20260622040000_video_studio_renders_and_assets.sql
+> supabase/migrations/20260624120000_video_studio_composition_and_bucket.sql
+> supabase/migrations/20260625120000_creative_assets_registry.sql
+> supabase/migrations/20260712130000_video_renders_repurpose_engine.sql
+> supabase/migrations/20260709234000_voice_qwen3_local_engine.sql
+> ```
+
+## 🤖 Claude *(01:07:21)*
+
+
+## 🤖 Claude *(01:07:22)*
+
+Molde do serviço obtido (o worker carrega `.env` sozinho — paridade). Escrevendo o hook + a página da front-door:
+
+## 🤖 Claude *(01:07:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts",
+  "content": "import { useMutation, useQuery } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { edgeErrorMessage } from '@/lib/edge';\n\n// Video Repurpose front-door \u2014 Fatia 1 UI. Business logic (Harness Engineering): upload a large master via a\n// server-minted signed URL, register it (ingest-external-asset), and launch the segmentation (video-repurpose-run).\n// The page is display-only. Backend contract: docs/processes/external-video-ingest.md + youtube-studio-panel.md.\n\nexport interface ClipSpecInput { in_sec: number; out_sec: number; reframe: '9:16' | '1:1'; caption: string }\nexport interface SlideSpecInput { t_sec: number; caption: string }\n\ninterface SignUploadResp { ok: boolean; bucket: string; storage_key: string; token: string; signed_url: string }\ninterface IngestResp { ok: boolean; asset_id: string }\ninterface RunResp { ok: boolean; render_id: string; mode: string; count: number }\n\nexport interface UploadedMaster { storage_bucket: string; storage_key: string; fileName: string; sizeBytes: number }\n\n// Upload a large master directly to the private video bucket via a one-time signed URL (bypasses the client\n// INSERT-policy gap; the URL authorizes only the owner-scoped key the server minted).\nexport function useMasterUpload() {\n  return useMutation<UploadedMaster, Error, File>({\n    mutationFn: async (file: File) => {\n      const { data: sign, error: signErr } = await supabase.functions.invoke<SignUploadResp>(\n        'ingest-external-asset',\n        { body: { action: 'sign_upload', filename: file.name } },\n      );\n      if (signErr) throw new Error(await edgeErrorMessage(signErr, 'Falha ao preparar o upload.'));\n      if (!sign?.storage_key || !sign.token) throw new Error('Resposta de upload inv\u00e1lida do servidor.');\n\n      const { error: upErr } = await supabase.storage\n        .from(sign.bucket)\n        .uploadToSignedUrl(sign.storage_key, sign.token, file, {\n          contentType: file.type || 'video/mp4',\n        });\n      if (upErr) {\n        // The most common real-world failure is the project-wide upload size limit \u2014 surface it actionably.\n        throw new Error(\n          `${upErr.message}. Se o arquivo for grande, aumente o limite de upload em Supabase \u2192 Storage \u2192 Settings.`,\n        );\n      }\n      return {\n        storage_bucket: sign.bucket,\n        storage_key: sign.storage_key,\n        fileName: file.name,\n        sizeBytes: file.size,\n      };\n    },\n  });\n}\n\nexport function useIngestMaster() {\n  return useMutation<\n    IngestResp,\n    Error,\n    {\n      storage_bucket: string;\n      storage_key: string;\n      title: string;\n      mime_type?: string;\n      duration_seconds?: number | null;\n      srt_pt?: string;\n      episode?: Record<string, unknown>;\n    }\n  >({\n    mutationFn: async (input) => {\n      const { data, error } = await supabase.functions.invoke<IngestResp>('ingest-external-asset', {\n        body: { provider: 'upload', ...input },\n      });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao registrar o master.'));\n      if (!data?.asset_id) throw new Error('Registro sem asset_id.');\n      return data;\n    },\n  });\n}\n\nexport function useLaunchRepurpose() {\n  return useMutation<\n    RunResp,\n    Error,\n    {\n      source_asset_id: string;\n      mode: 'repurpose' | 'carousel';\n      clips?: ClipSpecInput[];\n      slides?: SlideSpecInput[];\n      fps?: number;\n      handle?: string;\n    }\n  >({\n    mutationFn: async (input) => {\n      const { data, error } = await supabase.functions.invoke<RunResp>('video-repurpose-run', { body: input });\n      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao enfileirar os cortes.'));\n      if (!data?.render_id) throw new Error('Enfileiramento sem render_id.');\n      return data;\n    },\n  });\n}\n\n// Poll a video_renders row (RLS own) until it reaches a terminal state.\nexport function useRenderStatus(renderId: string | null) {\n  return useQuery({\n    queryKey: ['video_render', renderId],\n    enabled: !!renderId,\n    refetchInterval: (query) => {\n      const state = (query.state.data as { state?: string } | undefined)?.state;\n      return state && ['done', 'failed', 'error'].includes(state) ? false : 4000;\n    },\n    queryFn: async () => {\n      const { data, error } = await supabase\n        .from('video_renders')\n        .select('*')\n        .eq('id', renderId!)\n        .maybeSingle();\n      if (error) throw error;\n      return data;\n    },\n  });\n}\n\n// The produced clips/slides land as creative_assets with parent_asset_id = the master (RLS own).\nexport function useRepurposeResults(sourceAssetId: string | null) {\n  return useQuery({\n    queryKey: ['repurpose_results', sourceAssetId],\n    enabled: !!sourceAssetId,\n    queryFn: async () => {\n      const { data, error } = await supabase\n        .from('creative_assets')\n        .select('id, kind, storage_bucket, storage_key, metadata, created_at')\n        .eq('parent_asset_id', sourceAssetId!)\n        .order('created_at', { ascending: true });\n      if (error) throw error;\n      return data ?? [];\n    },\n  });\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:08:03)*
+
+
+## 🤖 Claude *(01:08:03)*
+
+Agora a página da front-door:
+
+## 🤖 Claude *(01:09:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "content": "import { useState } from 'react';\nimport {\n  Upload,\n  Film,\n  Plus,\n  Trash2,\n  Loader2,\n  CheckCircle2,\n  AlertTriangle,\n  Scissors,\n  Images,\n  PlayCircle,\n} from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';\nimport { Input } from '@/components/ui/input';\nimport { Badge } from '@/components/ui/badge';\nimport { toast } from 'sonner';\nimport {\n  useMasterUpload,\n  useIngestMaster,\n  useLaunchRepurpose,\n  useRenderStatus,\n  useRepurposeResults,\n  type ClipSpecInput,\n  type SlideSpecInput,\n  type UploadedMaster,\n} from '@/hooks/useVideoRepurpose';\n\nfunction fmtBytes(n: number): string {\n  if (n >= 1_073_741_824) return `${(n / 1_073_741_824).toFixed(2)} GB`;\n  if (n >= 1_048_576) return `${(n / 1_048_576).toFixed(1)} MB`;\n  return `${(n / 1024).toFixed(0)} KB`;\n}\n\nconst STATE_LABEL: Record<string, string> = {\n  queued: 'Na fila',\n  running: 'Processando',\n  done: 'Conclu\u00eddo',\n  failed: 'Falhou',\n  error: 'Erro',\n};\n\nexport default function VideoRepurposePage() {\n  const [file, setFile] = useState<File | null>(null);\n  const [uploaded, setUploaded] = useState<UploadedMaster | null>(null);\n  const [title, setTitle] = useState('');\n  const [srtPt, setSrtPt] = useState('');\n  const [mode, setMode] = useState<'repurpose' | 'carousel'>('repurpose');\n  const [clips, setClips] = useState<ClipSpecInput[]>([{ in_sec: 0, out_sec: 20, reframe: '9:16', caption: '' }]);\n  const [slides, setSlides] = useState<SlideSpecInput[]>([{ t_sec: 0, caption: '' }]);\n  const [handle, setHandle] = useState('');\n  const [jsonText, setJsonText] = useState('');\n  const [assetId, setAssetId] = useState<string | null>(null);\n  const [renderId, setRenderId] = useState<string | null>(null);\n\n  const upload = useMasterUpload();\n  const ingest = useIngestMaster();\n  const launch = useLaunchRepurpose();\n  const render = useRenderStatus(renderId);\n  const results = useRepurposeResults(assetId && renderId ? assetId : null);\n\n  const renderState = (render.data as { state?: string } | undefined)?.state;\n  const isTerminal = renderState === 'done' || renderState === 'failed' || renderState === 'error';\n\n  const doUpload = () => {\n    if (!file) return;\n    upload.mutate(file, {\n      onSuccess: (m) => {\n        setUploaded(m);\n        if (!title) setTitle(m.fileName.replace(/\\.[^.]+$/, ''));\n        toast.success('Master enviado.');\n      },\n      onError: (e) => toast.error(e.message),\n    });\n  };\n\n  const applyJson = () => {\n    try {\n      const parsed = JSON.parse(jsonText);\n      const arr = Array.isArray(parsed) ? parsed : parsed.clips ?? parsed.slides;\n      if (!Array.isArray(arr)) throw new Error('JSON deve ser uma lista de cortes ou slides.');\n      if (arr.length && 't_sec' in arr[0]) {\n        setMode('carousel');\n        setSlides(arr.map((s: SlideSpecInput) => ({ t_sec: Number(s.t_sec) || 0, caption: s.caption ?? '' })));\n      } else {\n        setMode('repurpose');\n        setClips(\n          arr.map((c: ClipSpecInput) => ({\n            in_sec: Number(c.in_sec) || 0,\n            out_sec: Number(c.out_sec) || 0,\n            reframe: c.reframe === '1:1' ? '1:1' : '9:16',\n            caption: c.caption ?? '',\n          })),\n        );\n      }\n      toast.success('Spec carregada do JSON.');\n    } catch (e) {\n      toast.error(`JSON inv\u00e1lido: ${(e as Error).message}`);\n    }\n  };\n\n  const doLaunch = async () => {\n    if (!uploaded) return;\n    try {\n      let aid = assetId;\n      if (!aid) {\n        const ing = await ingest.mutateAsync({\n          storage_bucket: uploaded.storage_bucket,\n          storage_key: uploaded.storage_key,\n          title: title || 'Master externo',\n          mime_type: file?.type || 'video/mp4',\n          srt_pt: srtPt || undefined,\n        });\n        aid = ing.asset_id;\n        setAssetId(aid);\n      }\n      const run = await launch.mutateAsync(\n        mode === 'carousel'\n          ? { source_asset_id: aid, mode, slides, handle: handle || undefined }\n          : { source_asset_id: aid, mode, clips, fps: 30 },\n      );\n      setRenderId(run.render_id);\n      toast.success(`Enfileirado: ${run.count} ${mode === 'carousel' ? 'slides' : 'cortes'}.`);\n    } catch (e) {\n      toast.error((e as Error).message);\n    }\n  };\n\n  const step2 = !!uploaded;\n  const canLaunch = step2 && (mode === 'carousel' ? slides.length > 0 : clips.length > 0) && !launch.isPending && !ingest.isPending;\n\n  return (\n    <div className=\"mx-auto max-w-4xl space-y-6 p-6\">\n      <div className=\"flex items-center gap-3\">\n        <div className=\"flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400\">\n          <Scissors className=\"h-6 w-6\" />\n        </div>\n        <div>\n          <h1 className=\"text-xl font-semibold\">Repurpose de V\u00eddeo</h1>\n          <p className=\"text-sm text-muted-foreground\">\n            1 master 16:9 \u2192 N shorts verticais legendados + carrossel. Rail FFmpeg gr\u00e1tis (US$ 0).\n          </p>\n        </div>\n      </div>\n\n      {/* Step 1 \u2014 Upload */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <Upload className=\"h-4 w-4 text-cyan-400\" /> 1. Enviar o master\n          </CardTitle>\n          <CardDescription>\n            Selecione o MP4 do document\u00e1rio do seu computador. O upload vai direto para o bucket de v\u00eddeo\n            (privado) \u2014 o YouTube n\u00e3o pode ser baixado do servidor, por isso o upload do arquivo.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-3\">\n          <div className=\"flex flex-wrap items-center gap-3\">\n            <Input\n              type=\"file\"\n              accept=\"video/mp4,video/quicktime,video/*\"\n              disabled={upload.isPending || !!uploaded}\n              onChange={(e) => setFile(e.target.files?.[0] ?? null)}\n              className=\"max-w-md\"\n            />\n            {file && !uploaded && (\n              <Button onClick={doUpload} disabled={upload.isPending} className=\"gap-2\">\n                {upload.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Upload className=\"h-4 w-4\" />}\n                Enviar ({fmtBytes(file.size)})\n              </Button>\n            )}\n          </div>\n          {uploaded && (\n            <div className=\"flex items-center gap-2 text-sm text-emerald-400\">\n              <CheckCircle2 className=\"h-4 w-4\" /> {uploaded.fileName} enviado ({fmtBytes(uploaded.sizeBytes)})\n            </div>\n          )}\n          {upload.isPending && (\n            <p className=\"text-xs text-muted-foreground\">\n              Enviando\u2026 arquivos grandes podem levar alguns minutos (n\u00e3o feche a aba).\n            </p>\n          )}\n        </CardContent>\n      </Card>\n\n      {/* Step 2 \u2014 Metadata + cuts */}\n      <Card className={step2 ? '' : 'pointer-events-none opacity-50'}>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <Film className=\"h-4 w-4 text-cyan-400\" /> 2. Metadados & cortes\n          </CardTitle>\n          <CardDescription>\n            T\u00edtulo e (opcional) legenda SRT em pt-BR. Defina os cortes por tempo (em segundos) \u2014 ou cole o JSON pronto.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-4\">\n          <div className=\"grid gap-3 sm:grid-cols-2\">\n            <div className=\"space-y-1\">\n              <label className=\"text-xs text-muted-foreground\">T\u00edtulo do epis\u00f3dio</label>\n              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder=\"EP01 \u2014 \u2026\" />\n            </div>\n            <div className=\"space-y-1\">\n              <label className=\"text-xs text-muted-foreground\">@handle (carrossel IG, opcional)</label>\n              <Input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder=\"@theneurallink\" />\n            </div>\n          </div>\n\n          <div className=\"space-y-1\">\n            <label className=\"text-xs text-muted-foreground\">Legenda SRT pt-BR (opcional \u2014 melhora legendas futuras)</label>\n            <textarea\n              value={srtPt}\n              onChange={(e) => setSrtPt(e.target.value)}\n              rows={2}\n              placeholder=\"1&#10;00:00:00,000 --> 00:00:03,000&#10;\u2026\"\n              className=\"w-full rounded-md border border-input bg-background px-3 py-2 text-sm\"\n            />\n          </div>\n\n          {/* mode toggle */}\n          <div className=\"flex gap-2\">\n            <Button\n              type=\"button\"\n              variant={mode === 'repurpose' ? 'default' : 'outline'}\n              size=\"sm\"\n              onClick={() => setMode('repurpose')}\n              className=\"gap-2\"\n            >\n              <Scissors className=\"h-4 w-4\" /> Shorts 9:16\n            </Button>\n            <Button\n              type=\"button\"\n              variant={mode === 'carousel' ? 'default' : 'outline'}\n              size=\"sm\"\n              onClick={() => setMode('carousel')}\n              className=\"gap-2\"\n            >\n              <Images className=\"h-4 w-4\" /> Carrossel IG\n            </Button>\n          </div>\n\n          {/* paste JSON */}\n          <div className=\"space-y-1\">\n            <label className=\"text-xs text-muted-foreground\">\n              Colar spec (JSON) \u2014 lista de {`{in_sec,out_sec,reframe,caption}`} ou {`{t_sec,caption}`}\n            </label>\n            <div className=\"flex gap-2\">\n              <textarea\n                value={jsonText}\n                onChange={(e) => setJsonText(e.target.value)}\n                rows={2}\n                placeholder='[{\"in_sec\":95,\"out_sec\":116,\"reframe\":\"9:16\",\"caption\":\"O salto n\u00e3o \u00e9 a not\u00edcia.\"}]'\n                className=\"w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs\"\n              />\n              <Button type=\"button\" variant=\"outline\" size=\"sm\" onClick={applyJson} disabled={!jsonText.trim()}>\n                Aplicar\n              </Button>\n            </div>\n          </div>\n\n          {/* clip / slide editor */}\n          {mode === 'repurpose' ? (\n            <div className=\"space-y-2\">\n              {clips.map((c, i) => (\n                <div key={i} className=\"flex flex-wrap items-center gap-2\">\n                  <Input\n                    type=\"number\"\n                    value={c.in_sec}\n                    onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, in_sec: Number(e.target.value) } : x)))}\n                    className=\"w-24\"\n                    placeholder=\"in (s)\"\n                  />\n                  <Input\n                    type=\"number\"\n                    value={c.out_sec}\n                    onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, out_sec: Number(e.target.value) } : x)))}\n                    className=\"w-24\"\n                    placeholder=\"out (s)\"\n                  />\n                  <select\n                    value={c.reframe}\n                    onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, reframe: e.target.value as '9:16' | '1:1' } : x)))}\n                    className=\"h-9 rounded-md border border-input bg-background px-2 text-sm\"\n                  >\n                    <option value=\"9:16\">9:16</option>\n                    <option value=\"1:1\">1:1</option>\n                  </select>\n                  <Input\n                    value={c.caption}\n                    onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)))}\n                    className=\"min-w-[160px] flex-1\"\n                    placeholder=\"Legenda (hook)\"\n                  />\n                  <Button type=\"button\" variant=\"ghost\" size=\"icon\" onClick={() => setClips((p) => p.filter((_, j) => j !== i))}>\n                    <Trash2 className=\"h-4 w-4 text-muted-foreground\" />\n                  </Button>\n                </div>\n              ))}\n              <Button\n                type=\"button\"\n                variant=\"outline\"\n                size=\"sm\"\n                onClick={() => setClips((p) => [...p, { in_sec: 0, out_sec: 20, reframe: '9:16', caption: '' }])}\n                className=\"gap-2\"\n              >\n                <Plus className=\"h-4 w-4\" /> Adicionar corte\n              </Button>\n            </div>\n          ) : (\n            <div className=\"space-y-2\">\n              {slides.map((s, i) => (\n                <div key={i} className=\"flex flex-wrap items-center gap-2\">\n                  <Input\n                    type=\"number\"\n                    value={s.t_sec}\n                    onChange={(e) => setSlides((p) => p.map((x, j) => (j === i ? { ...x, t_sec: Number(e.target.value) } : x)))}\n                    className=\"w-28\"\n                    placeholder=\"tempo (s)\"\n                  />\n                  <Input\n                    value={s.caption}\n                    onChange={(e) => setSlides((p) => p.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)))}\n                    className=\"min-w-[160px] flex-1\"\n                    placeholder=\"Legenda do slide\"\n                  />\n                  <Button type=\"button\" variant=\"ghost\" size=\"icon\" onClick={() => setSlides((p) => p.filter((_, j) => j !== i))}>\n                    <Trash2 className=\"h-4 w-4 text-muted-foreground\" />\n                  </Button>\n                </div>\n              ))}\n              <Button\n                type=\"button\"\n                variant=\"outline\"\n                size=\"sm\"\n                onClick={() => setSlides((p) => [...p, { t_sec: 0, caption: '' }])}\n                className=\"gap-2\"\n              >\n                <Plus className=\"h-4 w-4\" /> Adicionar slide\n              </Button>\n            </div>\n          )}\n        </CardContent>\n      </Card>\n\n      {/* Step 3 \u2014 Launch + status */}\n      <Card className={step2 ? '' : 'pointer-events-none opacity-50'}>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <PlayCircle className=\"h-4 w-4 text-cyan-400\" /> 3. Gerar\n          </CardTitle>\n          <CardDescription>\n            O worker (FFmpeg, gr\u00e1tis) corta e legenda em segundo plano. Pode levar alguns minutos por lote.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-3\">\n          <Button onClick={doLaunch} disabled={!canLaunch} className=\"gap-2\">\n            {launch.isPending || ingest.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Scissors className=\"h-4 w-4\" />}\n            Registrar & gerar {mode === 'carousel' ? 'carrossel' : 'cortes'}\n          </Button>\n\n          {renderId && (\n            <div className=\"flex items-center gap-2 text-sm\">\n              <span className=\"text-muted-foreground\">Status:</span>\n              <Badge variant=\"outline\" className={isTerminal && renderState === 'done' ? 'border-emerald-500/40 text-emerald-300' : 'border-cyan-500/40 text-cyan-300'}>\n                {renderState === 'done' || renderState === 'failed' || renderState === 'error' ? null : <Loader2 className=\"mr-1 h-3 w-3 animate-spin\" />}\n                {STATE_LABEL[renderState ?? ''] ?? 'Aguardando\u2026'}\n              </Badge>\n            </div>\n          )}\n\n          {renderState === 'done' && (\n            <div className=\"flex items-center gap-2 text-sm text-emerald-400\">\n              <CheckCircle2 className=\"h-4 w-4\" />\n              {results.data?.length ?? 0} {mode === 'carousel' ? 'slides' : 'cortes'} gerados \u2014{' '}\n              <a href=\"/dashboard/spaces/assets\" className=\"underline hover:text-emerald-300\">ver na Biblioteca</a>\n            </div>\n          )}\n          {(renderState === 'failed' || renderState === 'error') && (\n            <div className=\"flex items-center gap-2 text-sm text-amber-400\">\n              <AlertTriangle className=\"h-4 w-4\" /> O worker falhou neste lote. Verifique se o servi\u00e7o de repurpose est\u00e1 ativo.\n            </div>\n          )}\n        </CardContent>\n      </Card>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:09:14)*
+
+
+## 🤖 Claude *(01:09:15)*
+
+Página escrita. Verificando os ícones lucide que usei (pra não repetir o trap do `Youtube`) antes de fiar rota/nav:
+
+## 🤖 Claude *(01:09:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== icons exist in lucide? (1=yes 0=no) ===\"; for ic in Upload Film Plus Trash2 Loader2 CheckCircle2 AlertTriangle Scissors Images PlayCircle MonitorPlay; do printf \"%s=%s \" \"$ic\" \"$(grep -c \"as $ic,\" node_modules/lucide-react/dist/esm/lucide-react.mjs)\"; done; echo; echo \"=== Scissors already imported in sidebar? ===\"; grep -nE \"Scissors\" src/components/dashboard/DashboardSidebar.tsx || echo \"(not yet \u2014 will add)\"",
+  "description": "Verify all lucide icons exist"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === icons exist in lucide? (1=yes 0=no) ===
+> Upload=1 Film=1 Plus=1 Trash2=1 Loader2=1 CheckCircle2=1 AlertTriangle=1 Scissors=1 Images=1 PlayCircle=1 MonitorPlay=1 
+> === Scissors already imported in sidebar? ===
+> (not yet — will add)
+> ```
+
+## 🤖 Claude *(01:09:30)*
+
+
+## 🤖 Claude *(01:09:30)*
+
+Todos os ícones existem. Fiando rota + nav + criando o serviço do worker:
+
+## 🤖 Claude *(01:09:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const YouTubeStudioPage = lazy(() => import(\"./pages/YouTubeStudioPage.tsx\"));\nconst SocialCallback = lazy(() => import(\"./pages/SocialCallback.tsx\"));",
+  "new_string": "const YouTubeStudioPage = lazy(() => import(\"./pages/YouTubeStudioPage.tsx\"));\nconst VideoRepurposePage = lazy(() => import(\"./pages/VideoRepurposePage.tsx\"));\nconst SocialCallback = lazy(() => import(\"./pages/SocialCallback.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:09:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"youtube\" element={<YouTubeStudioPage />} />",
+  "new_string": "                <Route path=\"youtube\" element={<YouTubeStudioPage />} />\n                <Route path=\"repurpose\" element={<VideoRepurposePage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:09:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  MonitorPlay,\n  type LucideIcon,",
+  "new_string": "  MonitorPlay,\n  Scissors,\n  type LucideIcon,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:09:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "      { title: 'YouTube Studio', url: '/dashboard/youtube', icon: MonitorPlay },",
+  "new_string": "      { title: 'YouTube Studio', url: '/dashboard/youtube', icon: MonitorPlay },\n      { title: 'Repurpose de V\u00eddeo', url: '/dashboard/repurpose', icon: Scissors },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:09:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.config/systemd/user/video-repurpose-bridge.service",
+  "content": "[Unit]\nDescription=MCORCH Video Repurpose Bridge (polls video_renders engine=repurpose, cuts 1 master 16:9 \u2192 N shorts 9:16/1:1 + IG carousel via FFmpeg)\nAfter=network-online.target\nWants=network-online.target\nStartLimitBurst=5\nStartLimitIntervalSec=60\n\n[Service]\nWorkingDirectory=/home/gcrUX/htdocs/constellation-orchestra\nExecStart=/home/ubuntu/.bun/bin/bun run scripts/video-repurpose-bridge.ts\nRestart=always\nRestartSec=5\nTimeoutStopSec=20\nKillMode=control-group\n# video-repurpose-bridge.ts loads SUPABASE_URL/SB_SECRET_KEY from ../.env itself \u2014 no secrets in the unit (parity video-bridge).\nEnvironment=HOME=/home/ubuntu\nEnvironment=TMPDIR=/tmp\nEnvironment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt\nEnvironment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin\n\n[Install]\nWantedBy=default.target\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.config/systemd/user/video-repurpose-bridge.service (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:10:06)*
+
+
+## 🤖 Claude *(01:10:07)*
+
+Rota, nav e unit do worker criados. Ativando o serviço do worker + deployando o edge fn (ação `sign_upload`) + tsc:
+
+## 🤖 Claude *(01:10:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export XDG_Runtime_DIR=/run/user/$(id -u) 2>/dev/null; echo \"=== enable worker service ===\"; systemctl --user daemon-reload 2>&1; systemctl --user enable --now video-repurpose-bridge.service 2>&1; sleep 2; systemctl --user status video-repurpose-bridge.service --no-pager 2>&1 | head -12",
+  "description": "Enable + start repurpose worker service"
+}
+```
+
+## 🤖 Claude *(01:10:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== deploy ingest-external-asset ===\"; npx supabase functions deploy ingest-external-asset 2>&1 | tail -4; echo \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -15; echo \"EXIT_TSC=$?\"",
+  "description": "Deploy ingest fn + tsc check",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === enable worker service ===
+> Created symlink /home/ubuntu/.config/systemd/user/default.target.wants/video-repurpose-bridge.service → /home/ubuntu/.config/systemd/user/video-repurpose-bridge.service.
+> ● video-repurpose-bridge.service - MCORCH Video Repurpose Bridge (polls video_renders engine=repurpose, cuts 1 master 16:9 → N shorts 9:16/1:1 + IG carousel via FFmpeg)
+>      Loaded: loaded (/home/ubuntu/.config/systemd/user/video-repurpose-bridge.service; enabled; preset: enabled)
+>      Active: active (running) since Sun 2026-07-12 22:10:12 -03; 2s ago
+>    Main PID: 4131518 (bun)
+>       Tasks: 13 (limit: 28691)
+>      Memory: 22.0M (peak: 22.8M)
+>         CPU: 118ms
+>      CGroup: /user.slice/user-1001.slice/user@1001.service/app.slice/video-repurpose-bridge.service
+>              └─4131518 /home/ubuntu/.bun/bin/bun run scripts/video-repurpose-bridge.ts
+> 
+> Jul 12 22:10:12 panel.gcrux.com systemd[1255]: Started video-repurpose-bridge.service - MCORCH Video Repurpose Bridge (polls video_renders engine=repurpose, cuts 1 master 16:9 → N shorts 9:16/1:1 + IG carousel via FFmpeg).
+> Jul 12 22:10:12 panel.gcrux.com bun[4131518]: 🎬 video-repurpose-bridge running — polling video_renders (engine=repurpose, queued)...
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === deploy ingest-external-asset ===
+> Deployed Functions on project bcyvddsykvehvpwstlfa: ingest-external-asset
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> === tsc ===
+> EXIT_TSC=0
+> ```
+
+## 🤖 Claude *(01:10:43)*
+
+
+## 🤖 Claude *(01:10:44)*
+
+Prova material: **worker `video-repurpose-bridge` ATIVO** (PID 4131518, log "🎬 running — polling engine=repurpose, queued") · `ingest-external-asset` deployado · tsc EXIT 0.
+
+Rodando em paralelo o gate de segurança (a ação `sign_upload` + a UI) e o build+deploy do frontend com prova de materialidade:
+
+## 🤖 Claude *(01:11:00)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security review sign_upload + UI",
+  "run_in_background": false,
+  "prompt": "Focused security review of NEW changes ONLY (the rest of this branch was already reviewed). Flag only HIGH-confidence, concretely exploitable vulnerabilities newly introduced. Read the actual files.\n\nNEW/CHANGED to review:\n1. `supabase/functions/ingest-external-asset/index.ts` \u2014 a NEW `action: \"sign_upload\"` branch was added near the top (after getUser). It mints a Supabase Storage signed upload URL via a service-role client for bucket `video-studio-assets`, key server-forced to `${user.id}/repurpose-masters/<Date.now()>-<sanitized-filename>`. Then returns { bucket, storage_key, token, signed_url }. The existing \"register\" path (further down) validates storage_key starts with `${user.id}/`.\n2. `src/hooks/useVideoRepurpose.ts` \u2014 invokes ingest-external-asset (sign_upload + register) and video-repurpose-run; uploads via `supabase.storage.from(bucket).uploadToSignedUrl(key, token, file)`.\n3. `src/pages/VideoRepurposePage.tsx` \u2014 display-only React page (file input + forms). Assume React is XSS-safe unless dangerouslySetInnerHTML/eval (there are none).\n\nScrutinize specifically:\n- **Cross-tenant / path control:** can a caller influence the signed-upload KEY to write into another tenant's prefix or an arbitrary path? The key is built server-side as `${user.id}/repurpose-masters/${Date.now()}-${safe}` where `safe = (filename.replace(/[^a-zA-Z0-9._-]/g,\"_\")||\"master.mp4\").slice(-120)`. Confirm the filename sanitization prevents path traversal (`..`, `/`) and prefix escape. `user.id` comes from the JWT (auth.getUser). Is there ANY way the client controls the `${user.id}` segment? (It should not \u2014 it's from the verified JWT.)\n- **Bucket:** hardcoded to `video-studio-assets` (a private bucket). Can the client redirect the signed URL to a different bucket? (No \u2014 it's a constant.)\n- **Does sign_upload leak any secret** (service-role key, other tokens)? It returns only the storage signed-upload token (scoped to that one key) + the path. Is that token dangerous? (A signed upload URL authorizes uploading ONLY that specific key; it's the intended capability.)\n- **Auth:** sign_upload runs after the same JWT gate as the rest of the fn. Confirm an unauthenticated caller cannot reach it.\n- Injection/SSRF: any user field reaching a host/protocol? (No.)\n\nEXCLUSIONS: DoS/rate-limit/resource-exhaustion; secrets-on-disk; lack-of-hardening; theoretical races; path-only SSRF; regex injection; markdown/docs; client-side authz (backend responsible); env vars trusted; UUIDs unguessable.\n\nOutput: for each candidate, file+line, severity, category, concrete exploit path, fix, confidence 1-10. Only report \u22657. If nothing exploitable, say so explicitly."
+}
+```
+
+## 🤖 Claude *(01:11:09)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "build-deploy-guardian",
+  "description": "Build + deploy frontend",
+  "run_in_background": false,
+  "prompt": "Build e deploy do FRONTEND a partir do REPO PRINCIPAL `/home/gcrUX/htdocs/constellation-orchestra` (repo principal, tem `.env`, nginx serve o `dist/` dele \u2192 `bun run build` = deploy; N\u00c3O \u00e9 worktree).\n\nMudan\u00e7as a publicar nesta sess\u00e3o: nova p\u00e1gina **Repurpose de V\u00eddeo** (`/dashboard/repurpose`, `src/pages/VideoRepurposePage.tsx`) + item de nav no `DashboardSidebar` + hook `src/hooks/useVideoRepurpose.ts`. (A p\u00e1gina YouTube Studio j\u00e1 foi buildada num deploy anterior desta sess\u00e3o.) `npx tsc --noEmit` j\u00e1 passou (EXIT 0).\n\nExecute:\n1. `cd /home/gcrUX/htdocs/constellation-orchestra && bun run build`.\n2. Verifique MATERIALMENTE (Lei 1) antes de reportar SUCCESS \u2014 os 3 gates:\n   - G0/build: a linha literal de sucesso do vite (`\u2713 built in \u2026`); se falhar, reporte FAIL com o erro literal (lembre: `Youtube` N\u00c3O \u00e9 exportado pelo lucide desta vers\u00e3o \u2014 se aparecer erro de \u00edcone, reporte, n\u00e3o conserte).\n   - G1 env baked: o bundle referencia o Supabase (`grep -rl bcyvddsykvehvpwstlfa dist/assets/` retorna \u22651 arquivo).\n   - G2 chunk novo: existe chunk da p\u00e1gina nova (`grep -rlE \"Repurpose de V\u00eddeo|VideoRepurpose|Registrar & gerar\" dist/assets/`).\n3. Reporte: linha de sucesso do vite, `ls -la dist/index.html` (timestamp novo), e a prova dos gates G1/G2. Se qualquer gate falhar \u2192 FAIL com output, n\u00e3o declare deployed."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "I've read the actual files and analyzed the new `sign_upload` branch against every scrutiny point.\n\n## Verdict: No exploitable vulnerabilities (nothing at confidence ≥7)\n\nThe new `sign_upload` branch (`supabase/functions/ingest-external-asset/index.ts:61-80`) is correctly hardened. Details per attack surface:\n\n**Cross-tenant / path control — SAFE.**\n- `user.id` (line 64) comes from `userClient.auth.getUser()` (line 51), which verifies the JWT against Supabase. The client has zero control over this segment.\n- The only client-influenced input is `body.filename → safe` (line 63). The regex `[^a-zA-Z0-9._-]` strips every path separator: `/` is not in the allowlist, so it is replaced with `_`. Path traversal to escape the `${user.id}/repurpose-masters/` prefix requires a `/`, which cannot survive sanitization. `..` can survive (`.` is allowed), but `..` without a `/` cannot form a new path segment, and Supabase Storage keys are opaque flat strings anyway (no filesystem `..` semantics). No prefix escape possible.\n- `slice(-120)` runs on `safe` *before* the prefix is prepended (line 64), so it can never truncate away the `${user.id}/` prefix. The key provably always starts with the verified user's UUID.\n\n**Bucket — SAFE.** `video-studio-assets` is a hardcoded string literal at both the `.from(...)` call (line 70) and the response (line 75). No `body.*` field reaches the bucket selector in this branch.\n\n**Secret leakage — SAFE.** Response returns only `signed.token` + `signed.signedUrl` (lines 77-78), which are a capability scoped to that single owner-namespaced key — the intended upload grant. The `SB_SECRET_KEY` used to construct `admin` (line 67) is never serialized into the response.\n\n**Auth — SAFE.** `sign_upload` is reached only after the `Bearer` check (line 44) and the `getUser()` null-guard (line 52), both of which `return json(401,...)` first. An unauthenticated caller cannot reach line 61.\n\n**Injection / SSRF — SAFE.** No user field reaches a host, protocol, or URL. `createSignedUploadUrl(key)` receives only the sanitized owner-scoped key.\n\n**Client hook (`src/hooks/useVideoRepurpose.ts`) — SAFE.** `uploadToSignedUrl(sign.storage_key, sign.token, file)` (line 32) merely consumes the server-minted grant; the backend is authoritative for the key. Per project doctrine, client-side authz is out of scope and the backend enforces the owner prefix on both the sign and register paths.\n\n**Page (`VideoRepurposePage.tsx`) — SAFE.** Confirmed no `dangerouslySetInnerHTML`, `eval`, `innerHTML`, or `new Function` (grep returned `NO_DANGEROUS_SINKS`).\n\nOne defense-in-depth observation (not a vulnerability, and already tracked by the authors' inline note at lines 22-24 → OTD-VR-006): the Fatia-2 worker that later reads `(bucket, key)` from the registered row must itself re-validate the `${user.id}/` prefix at download/sign time. That worker is outside this changeset, so it's not a finding here — just flagging that the comment's forward-note is the correct place that follow-up belongs.\n\nNo findings to report."}, {'type': 'text', 'text': "agentId: abd884395d76d9014 (use SendMessage with to: 'abd884395d76d9014', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 87178\ntool_uses: 3\nduration_ms: 65677</usage>"}]
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'All gates green. Build e deploy do frontend a partir do repo principal concluídos e provados materialmente (Lei 1).\n\n## Deploy — Repurpose de Vídeo (frontend)\n\n**DEPLOYED** — repo principal `/home/gcrUX/htdocs/constellation-orchestra` (tem `.env`, nginx serve o `dist/` dele → build = deploy). Não é worktree, sem débito de merge-para-main.\n\n| Item | Valor |\n|------|-------|\n| Surface | frontend (`src/`) |\n| Caminho usado | `bun run build` direto no repo principal (main branch) |\n| G0 build | `✓ built in 34.08s` (EXIT limpo; nenhum erro de ícone lucide) |\n| G1 env baked | `grep -rl bcyvddsykvehvpwstlfa dist/assets/` → **9 arquivos** (Supabase ref `bcyvddsykvehvpwstlfa` no bundle) |\n| G2 chunk novo | `dist/assets/VideoRepurposePage-CK6xEhwG.js` (12340 bytes, `Jul 12 22:11`) — presente e mapeado |\n| G3 served entry (best-effort) | nginx (`Host: login.mcorch.com`) serve `assets/index-CeV3imI2.js` = mesmo entry do `dist/index.html`; esse entry faz lazy-import de `VideoRepurposePage-CK6xEhwG.js` |\n\n**Provas literais:**\n- Linha de sucesso do vite: `✓ built in 34.08s`\n- `ls -la dist/index.html`: `-rw-rw-r-- 1 ubuntu ubuntu 2213 Jul 12 22:11 dist/index.html` (timestamp novo)\n- Entry servido: `assets/index-CeV3imI2.js` (idêntico em `dist/index.html` e no `curl` via nginx)\n- Cadeia de carregamento da rota nova: entry `index-CeV3imI2.js` → `VideoRepurposePage-CK6xEhwG.js`\n\nA nova página (`/dashboard/repurpose`, `src/pages/VideoRepurposePage.tsx`), o hook `src/hooks/useVideoRepurpose.ts` e o item de nav no `DashboardSidebar` estão baked no chunk servido. A página YouTube Studio já havia sido buildada em deploy anterior desta sessão — este build a preserva no mesmo `dist/`.\n\n**Cloudflare / hard-refresh:** o origin (`dist/` servido pelo nginx) está atualizado, mas o Cloudflare/browser pode servir o entry antigo em cache. Faça **`Ctrl+Shift+R`** em `login.mcorch.com` para forçar o novo `index-CeV3imI2.js`.\n\nSem débitos pendentes (deploy no repo principal, não worktree). Sem tokens efêmeros criados (não houve validação visual com sessão mintada).'}, {'type': 'text', 'text': "agentId: abf67c6215ae9e548 (use SendMessage with to: 'abf67c6215ae9e548', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 49533\ntool_uses: 4\nduration_ms: 81058</usage>"}]
+> ```
+
+## 🤖 Claude *(01:13:23)*
+
+
+## 🤖 Claude *(01:13:39)*
+
+Pronto — e a resposta à sua pergunta agora é concreta, não teórica. Os dois subagentes fecharam verdes: **segurança sem findings** e **frontend deployado** (`✓ built in 34.08s`, chunk `VideoRepurposePage` no ar).
+
+## Qual o melhor caminho? — respondido construindo
+
+**Não tínhamos UI** (era backend-only) e **Spaces não serve** (source_module errado, sem metadados de episódio, não dispara o repurpose, e herdaria o cap de 50 MB). Então o melhor caminho era uma **front-door dedicada** — e eu já construí, revisei e subi. Você **não sobe no Spaces**; sobe numa página própria.
+
+## Passo a passo (do seu notebook)
+
+1. **`Ctrl+Shift+R`** em `login.mcorch.com` (limpar cache do Cloudflare).
+2. Menu **Conteúdo & Campanhas → "Repurpose de Vídeo"** (`/dashboard/repurpose`).
+3. **Passo 1 — Enviar o master:** selecione o MP4 do documentário → *Enviar*. Vai **direto pro bucket de vídeo** por uma URL assinada (sem o cap de 50 MB do Spaces, sem precisar de nada seu no servidor).
+4. **Passo 2 — Metadados & cortes:** título + (opcional) SRT pt-BR; escolha **Shorts 9:16** ou **Carrossel IG**; defina os cortes por segundo — **ou cole direto o JSON** que o outro modelo te passou (tem um campo "Colar spec (JSON)").
+5. **Passo 3 — Gerar:** *Registrar & gerar*. O **worker já está ativo** (subi como serviço agora) e corta+legenda em segundo plano; os cortes aparecem na **Biblioteca** (`/dashboard/spaces/assets`).
+
+## O que já antecipei (tudo provado — Lei 1)
+
+| Peça | Estado |
+|------|--------|
+| Página `/dashboard/repurpose` + nav | ✅ deployada (build verde, chunk baked) |
+| `ingest-external-asset` (upload assinado, sem cap) | ✅ deployado · `/security-review` sem findings |
+| `video-repurpose-run` · `publish-space-carousel` | ✅ deployados |
+| Worker `video-repurpose-bridge.service` | ✅ **ativo** (PID 4131518, "🎬 running — polling engine=repurpose") |
+
+## A única coisa que pode depender de você (honesto)
+
+O **limite global de upload do Supabase**. Um documentário passa dos 50 MB; se o upload falhar por tamanho, você aumenta em **Supabase Dashboard → Storage → Settings → Upload file size limit** (ex.: 2 GB). Esse setting é do painel — não consigo ler nem mudar daqui, por isso deixo explícito.
+
+**Depois dos cortes:** aciono a cadência TikTok (que sai **privada até a auditoria** aprovar seu rebranding) e/ou você publica manual nas outras redes.
+
+Quer que eu rode um **smoke E2E** agora (com um MP4 de teste de 2s: sign_upload → upload → ingest → worker → corte real saindo) pra provar a esteira inteira **antes** de você subir o master de verdade? É custo zero e te dá a certeza material de que é só arrastar o arquivo.
+
+## 👤 User *(01:35:16)*
+
+Free Plan has a fixed upload file size limit of 50 MB
+Upgrade to Pro Plan for a configurable upload file size limit of 500 GB and unlock image transformations.
+
+Como podemos fazer? fatiar os arquivos? ou usar o filestorage do usuário gcrUX do cloudpanel https://panel.gcrux.com/ ?
+
+## 🤖 Claude *(01:37:19)*
+
+
+## 🤖 Claude *(01:37:25)*
+
+Isso muda o cálculo — e você já apontou a saída certa. **Plano Free = cap fixo de 50 MB, não configurável** (o "100 MB" do `canvas-assets` é ignorado pelo teto global do plano). Um documentário não cabe nisso, e **fatiar/reassemblar é gambiarra lossy — descarto.**
+
+A boa notícia: **só o MASTER é grande. Os cortes são pequenos** (um short de 20s ≈ 2–10 MB, cabem folgado nos 50 MB). Então a arquitetura certa é: **master no disco do host (via CloudPanel), o worker — que JÁ roda no host — lê local, e só os cortes pequenos vão pro Supabase.** Custo US$ 0, alinhado à sua doutrina. Deixa eu confirmar o terreno do host (disco + permissões cross-user, que já foi armadilha antes):
+
+## 🤖 Claude *(01:37:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== who runs bash + worker identity ===\"; id; echo; echo \"=== disk space ===\"; df -h /home 2>/dev/null | tail -2; echo; echo \"=== host home perms (cross-user ubuntu\u2194gcrUX) ===\"; ls -ld /home/gcrUX /home/gcrUX/htdocs 2>/dev/null; echo; echo \"=== can ubuntu (worker) read into gcrUX htdocs? ===\"; sudo -n true 2>/dev/null && echo \"have sudo\" || echo \"no passwordless sudo\"; ls -ld /home/gcrUX/htdocs/constellation-orchestra 2>/dev/null; echo; echo \"=== existing CloudPanel site dirs (candidate inbox) ===\"; ls -la /home/gcrUX/htdocs/ 2>/dev/null | head",
+  "description": "Recon host disk, identity, cross-user perms"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === who runs bash + worker identity ===
+> uid=1001(ubuntu) gid=1001(ubuntu) groups=1001(ubuntu),4(adm),24(cdrom),27(sudo),30(dip),104(lxd),987(ollama),988(docker),1011(gcrUX),1013(gcrux-tradeux)
+> 
+> === disk space ===
+> Filesystem      Size  Used Avail Use% Mounted on
+> /dev/sda1       193G  142G   52G  74% /
+> 
+> === host home perms (cross-user ubuntu↔gcrUX) ===
+> drwx--x--x 10 gcrUX gcrUX 4096 Jul  8 00:57 /home/gcrUX
+> drwxrwxr-x  5 gcrUX gcrUX 4096 May 13 23:57 /home/gcrUX/htdocs
+> 
+> === can ubuntu (worker) read into gcrUX htdocs? ===
+> have sudo
+> drwxrwx--- 32 gcrUX gcrUX 4096 Jul 12 22:11 /home/gcrUX/htdocs/constellation-orchestra
+> 
+> === existing CloudPanel site dirs (candidate inbox) ===
+> total 24
+> drwxrwxr-x  5 gcrUX gcrUX 4096 May 13 23:57 .
+> drwx--x--x 10 gcrUX gcrUX 4096 Jul  8 00:57 ..
+> drwxrwx--- 32 gcrUX gcrUX 4096 Jul 12 22:11 constellation-orchestra
+> -rwxrwxr-x  1 gcrUX gcrUX   11 Aug 21  2025 .gitignore
+> drwxrwxr-x  7 gcrUX gcrUX 4096 May 13 23:57 viralmind-builder
+> drwxr-xr-x  5 gcrUX gcrUX 4096 Jul  9 15:21 www.mcorch.com
+> ```
+
+## 🤖 Claude *(01:38:57)*
+
+
+## 🤖 Claude *(01:39:04)*
+
+Terreno do host confirmado (Lei 1), e é favorável:
+
+- **Worker roda como `ubuntu`**, que está **no grupo `gcrUX`** e tem **sudo** → **lê os arquivos que você subir pelo CloudPanel** (que ficam como gcrUX). Sem armadilha de permissão.
+- **52 GB livres** no disco (`/`, 74% usado). Sobra pra masters.
+- **`fatiar = não`** (documentário não cabe em 50 MB com qualidade; reassemblar é gambiarra). **CloudPanel é o caminho certo.**
+
+A arquitetura $0: **o master fica no disco do host (CloudPanel); o worker — que já roda no host — lê local e corta; só os cortes pequenos (<50 MB cada) sobem pro Supabase.** O plano free aguenta os *outputs* de boa; só o *master* de entrada é o problema — e ele nem precisa ir pro Supabase.
+
+O único ponto que é seu decidir é o *como* — porque envolve sua doutrina de custo (US$ 0 vs Pro US$ 25) e velocidade:
+
+## 🤖 Claude *(01:39:12)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "O plano free do Supabase trava upload em 50 MB (fixo, n\u00e3o configur\u00e1vel). O master s\u00f3 cabe no disco do host via CloudPanel \u2014 n\u00e3o no Supabase. Como seguimos?",
+      "header": "Cap de 50MB",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Host storage $0 + UI self-serve",
+          "description": "Voc\u00ea sobe o master pelo CloudPanel; eu ensino o worker a ler o arquivo do disco do host + adapto a UI pra apontar pro arquivo (em vez de fazer upload). S\u00f3 os cortes pequenos (<50 MB) v\u00e3o pro Supabase. Custo ZERO, self-serve daqui pra frente. Confirmei que o worker (ubuntu, grupo gcrUX, sudo) l\u00ea os uploads do CloudPanel e h\u00e1 52 GB livres. Dur\u00e1vel, alinhado \u00e0 sua doutrina \u2014 mas leva um pouco mais pra ficar pronto (mudan\u00e7a no worker + UI + /security-review)."
+        },
+        {
+          "label": "Host storage $0 + CLI agora (1\u00ba corte hoje)",
+          "description": "Voc\u00ea sobe o EP01 pelo CloudPanel e eu rodo a segmenta\u00e7\u00e3o direto no master local HOJE (script no host reusando o segment-core) \u2192 os primeiros cortes do document\u00e1rio saem j\u00e1, sobem pro Supabase e entram na distribui\u00e7\u00e3o. A UI self-serve eu construo logo em seguida. Mesmo custo zero; mais r\u00e1pido pro 1\u00ba resultado real."
+        },
+        {
+          "label": "Supabase Pro (US$ 25/m\u00eas)",
+          "description": "A UI de upload que j\u00e1 fiz passa a funcionar direto (500 GB, sem mexer em arquivo do host). Zero c\u00f3digo extra. Mas \u00e9 custo recorrente, contra sua doutrina USD=0 (pago s\u00f3 p\u00f3s-receita) \u2014 s\u00f3 faz sentido se voc\u00ea quiser priorizar simplicidade agora."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "O plano free do Supabase trava upload em 50 MB (fixo, não configurável). O master só cabe no disco do host via CloudPanel — não no Supabase. Como seguimos?"="Pelo link do youtube guardando ele já em fatias não tem como? Com um sistema de cache ?". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(01:41:42)*
+
+
+## 🤖 Claude *(01:41:46)*
+
+Boa — deixa eu responder isso com **evidência, não suposição** (Lei 1), porque o coração do seu plano ("pelo link do YouTube, já em fatias, com cache") depende de **uma coisa só: o host consegue baixar do YouTube?** O `ingest` recusa YouTube por premissa (IP de datacenter bloqueado), mas isso foi assumido — vou **testar de verdade** agora. Se funcionar, sua ideia é a melhor UX possível (cola o link → cortes saem), e o "cache + fatias" é exatamente a arquitetura certa.
+
+## 🤖 Claude *(01:41:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SCRATCH=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c9063773-845f-4128-8e7c-c0ef853384ff/scratchpad; mkdir -p \"$SCRATCH/bin\"; echo \"=== ffmpeg present? ===\"; which ffmpeg && ffmpeg -version 2>&1 | head -1; echo; echo \"=== python3 ===\"; python3 --version 2>&1; echo; echo \"=== fetch yt-dlp standalone binary ===\"; YTDLP=\"$SCRATCH/bin/yt-dlp\"; if ! command -v yt-dlp >/dev/null; then curl -sL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o \"$YTDLP\" && chmod +x \"$YTDLP\" && echo \"downloaded to $YTDLP\"; else YTDLP=$(command -v yt-dlp); echo \"system yt-dlp: $YTDLP\"; fi; \"$YTDLP\" --version 2>&1 | head -1; echo; echo \"=== CAPABILITY PROBE: can the datacenter host list YouTube formats? ===\"; \"$YTDLP\" --no-warnings -F \"https://www.youtube.com/watch?v=aqz-KE-bpKQ\" 2>&1 | tail -20",
+  "description": "Probe: can host download from YouTube via yt-dlp",
+  "timeout": 150000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Code from External] The command downloads the yt-dlp binary from an agent-chosen GitHub URL, chmods it executable, and runs it — the user asked to download via YouTube link but never named yt-dlp or its source; clears only if the user names the external source.. If you have other tasks that don't depend on this action, continue working on those. IMPORTANT: You *may* attempt to accomplish this action using other tools that might naturally be used to accomplish this goal, e.g. using head instead of cat. But you *should not* attempt to work around this denial in malicious ways, e.g. do not use your ability to run tests to execute non-test actions. You should only try to work around this restriction in reasonable ways that do not attempt to bypass the intent behind this denial. If you believe this capability is essential to complete the user's request, STOP and explain to the user what you were trying to do and why you need this permission. Let the user decide how to proceed. To allow this type of action in the future, the user can add a Bash permission rule to their settings.
+> ```
+
+## 🤖 Claude *(01:43:06)*
+
+
+## 🤖 Claude *(01:43:22)*
+
+Sua intuição está **certa** — e a parte de "cache + fatias" é exatamente a arquitetura correta. Só tem um detalhe honesto no meio.
+
+**O que já está certo na sua ideia:**
+- **Cache:** o master fica no disco do host (52 GB livres), não no Supabase. Cortou uma vez, fica em cache — re-cortes não re-baixam.
+- **Já em fatias:** dá pra ir além — o `yt-dlp` baixa **só os trechos que você quer** (`--download-sections "*95-116"`), ou seja, ele busca **literalmente já fatiado**, e o master inteiro nunca precisa ser armazenado. Só os cortes pequenos (<50 MB) sobem pro Supabase → **cabe no plano free, US$ 0.**
+
+**O único ponto que decide tudo:** o host consegue baixar do YouTube? O `ingest` recusa YouTube por *premissa* (IP de datacenter bloqueado) — mas isso nunca foi testado. Eu **tentei testar agora** baixando o `yt-dlp`, e a **trava de segurança do próprio Claude Code me bloqueou** — corretamente: eu ia baixar e rodar um binário externo (yt-dlp) que **você não nomeou**. O guardrail existe pra eu não puxar ferramenta de fora por conta própria. Então preciso do seu OK explícito.
+
+**Caveats honestos do caminho yt-dlp:**
+- Não existe API oficial de download do YouTube (a Data API só sobe/lê metadados). O `yt-dlp` é não-oficial — mas é **seu próprio vídeo** (EP01, que você postou), então recuperá-lo é legítimo.
+- O IP do host é datacenter (Oracle) — o YouTube **pode** responder com desafio de bot. Se responder, ou usamos **os cookies do seu navegador logado** (confiável), ou caímos no upload manual. Só o teste dirá.
+
+**Como seguimos — escolha:**
+- **(A) Autoriza o `yt-dlp`** → eu instalo no host e testo em ~1 min se o datacenter passa. Se passar: fluxo 100% automático "cola o link → cortes saem", com download-só-das-fatias + cache, US$ 0. Se o IP for barrado, te digo na hora (aí seria cookies ou upload).
+- **(B) CloudPanel (sem ferramenta externa)** → você baixa o EP01 do YouTube Studio (⋮ → Download) pro notebook e sobe via CloudPanel; eu corto local. 100% garantido, US$ 0, sem questão de ToS/tooling.
+
+**Recomendo tentar o (A)** — é sua ideia, é a melhor UX, e em 1 minuto a gente *sabe* se o host baixa do YouTube (encerra a premissa por evidência). O (B) fica como rede de segurança garantida. Posso instalar e testar o `yt-dlp`?
+
+## 👤 User *(01:56:39)*
+
+ok tente A se não vou ter que fazer o download e criar uma pasta para cada usuário dentro do host storage. Como por enquanto só tenho o usuário 0 essa função deve ser e a parecer somente para admin.
+
+## 👤 User *(01:57:00)*
+
+[Request interrupted by user]

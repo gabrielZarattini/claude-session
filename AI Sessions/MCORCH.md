@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 78
-> * **Total de Sessões**: 2112
+> * **Total de Sessões**: 2114
 
 ---
 
@@ -101,6 +101,8 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-13 - agent-ac74bcce18c115070]]` (ClaudeSessions) - *2026-07-13*
+*   `[[2026-07-13 - Build API dashboard with video metrics and CRUD operations]]` (ClaudeSessions) - *2026-07-13*
 *   `[[2026-07-12 - c9063773-845f-4128-8e7c-c0ef853384ff]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-af841a0271440dd87]]` (ClaudeSessions) - *2026-07-12*
 *   `[[2026-07-12 - agent-adf6a617a44e3bd61]]` (ClaudeSessions) - *2026-07-12*

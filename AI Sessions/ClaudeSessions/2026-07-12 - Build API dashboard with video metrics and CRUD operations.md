@@ -1,4 +1,4 @@
-# Build API dashboard with video metrics and CRUD operations
+# [[2026-07-13 - Build API dashboard with video metrics and CRUD operations|Build API dashboard with video metrics and CRUD operations]]
 **Date:** 2026-07-12 | **Session ID:** `c9063773-845f-4128-8e7c-c0ef853384ff`
 
 ---
