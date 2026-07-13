@@ -1778,3 +1778,16 @@ No ≥8-confidence vulnerability was newly introduced by the three in-scope file
 **Verified-correct security properties:** (1) every resource owner-scoped by `auth.uid()`/JWT `user.id`; (2) on-screen text is `textContent`-only (XSS-safe); (3) template path is allowlisted (no traversal); (4) refund-on-fail is atomic, single, and server-trusted (no mint/double-refund).
 
 Note: the un-cleaned `frameDir` in `renderAlphaFrames` (caller-owned cleanup by design) and `product_image_url`/token-bounding concerns are resource-exhaustion/SSRF-path items explicitly out of scope.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-13 - agent-abd884395d76d9014]]
+> * **Próxima Sessão**: [[2026-07-13 - agent-abf67c6215ae9e548]]
+%% --- TIMELINE END --- %%
