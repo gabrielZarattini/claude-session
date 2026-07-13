@@ -6273,3 +6273,763 @@ Tudo pronto e **provado** — o motor de repurpose agora produz cortes de verdad
 Assim que os cortes do EP01 existirem, eu fio a **cadência do TikTok** (sai **privada** até sua auditoria de rebranding aprovar) + o caminho manual pras outras redes.
 
 Se preferir, **me avise quando subir o arquivo** (e me passe os timestamps que você quer) que **eu disparo a geração e a cadência pra você** — você só confere o resultado. Quer assim, ou prefere clicar você mesmo?
+
+## 👤 User *(02:31:18)*
+
+Estou em https://login.mcorch.com/dashboard/repurpose e não tem um upload input de video tem um unpit text para colocar o nome do arquivo mas eu quero subir via upload da UI algo como drag and dop yout file here
+
+## 🤖 Claude *(02:32:44)*
+
+
+## 🤖 Claude *(02:32:48)*
+
+Entendi — você quer o **drag-and-drop de verdade dentro do MCORCH**, não digitar o nome depois de subir por fora. Faz total sentido pra um produto.
+
+A verdade técnica honesta: mandar um arquivo **grande** do navegador direto pro disco do host exige um **endpoint de upload no host** (o Supabase capa em 50 MB no free, então não dá pra passar por ele). É uma peça de infra nova — nginx + um receptor que faz streaming pro disco. Deixa eu ver o setup do nginx pra montar isso do jeito certo (sem quebrar o CloudPanel):
+
+## 🤖 Claude *(02:32:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== find login.mcorch.com vhost ===\"; sudo grep -rl \"login.mcorch.com\" /etc/nginx/ 2>/dev/null | head; echo; echo \"=== CloudPanel nginx vhost location ===\"; ls -la /etc/nginx/sites-enabled/ 2>/dev/null | grep -iE \"login|constellation|mcorch\" ; sudo find /etc/nginx /home/clp 2>/dev/null -name \"*.conf\" | xargs grep -l \"login.mcorch.com\" 2>/dev/null | head; echo; echo \"=== free loopback ports (existing host services) ===\"; ss -tlnp 2>/dev/null | grep -E \"127.0.0.1:(32|321|33|34)\" | head; echo \"candidates: 3211, 3220, 3400\"; echo; echo \"=== can I nginx -t? ===\"; sudo nginx -t 2>&1 | tail -2",
+  "description": "Recon nginx vhost + free port for upload endpoint"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === find login.mcorch.com vhost ===
+> /etc/nginx/sites-enabled/www.mcorch.com.conf.bak-20260608
+> /etc/nginx/sites-enabled/www.mcorch.com.conf
+> /etc/nginx/sites-enabled/mcp.mcorch.com.conf
+> /etc/nginx/sites-enabled/design.mcorch.com.conf
+> 
+> === CloudPanel nginx vhost location ===
+> 
+> === free loopback ports (existing host services) ===
+> LISTEN 0      512        127.0.0.1:3210       0.0.0.0:*    users:(("bun",pid=4052531,fd=12))            
+> LISTEN 0      4096       127.0.0.1:3200       0.0.0.0:*                                                 
+> candidates: 3211, 3220, 3400
+> 
+> === can I nginx -t? ===
+> nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+> nginx: configuration file /etc/nginx/nginx.conf test is successful
+> ```
+
+## 🤖 Claude *(02:33:10)*
+
+
+## 🤖 Claude *(02:33:11)*
+
+nginx editável (sites-enabled, `nginx -t` OK) · porta 3220 livre. login.mcorch.com está no `www.mcorch.com.conf`. Deixa eu ver o server block dele pra injetar a location de upload no lugar certo:
+
+## 🤖 Claude *(02:33:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== server blocks + roots in www.mcorch.com.conf ===\"; sudo grep -nE \"server_name|server \\{|root |location |client_max_body_size|listen \" /etc/nginx/sites-enabled/www.mcorch.com.conf | head -50",
+  "description": "Map login vhost server blocks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === server blocks + roots in www.mcorch.com.conf ===
+> 2:server {
+> 3:  listen 80;
+> 4:  listen [::]:80;
+> 5:  listen 443 quic;
+> 6:  listen 443 ssl;
+> 7:  listen [::]:443 quic;
+> 8:  listen [::]:443 ssl;
+> 13:  server_name mcorch.com;
+> 18:server {
+> 19:  listen 80;
+> 20:  listen [::]:80;
+> 21:  listen 443 quic;
+> 22:  listen 443 ssl;
+> 23:  listen [::]:443 quic;
+> 24:  listen [::]:443 ssl;
+> 29:  server_name login.mcorch.com;
+> 31:  root /home/gcrUX/htdocs/constellation-orchestra/dist;
+> 37:  location / {
+> 41:  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+> 46:  location /ollama-api/ {
+> 62:server {
+> 63:  listen 80;
+> 64:  listen [::]:80;
+> 65:  listen 443 quic;
+> 66:  listen 443 ssl;
+> 67:  listen [::]:443 quic;
+> 68:  listen [::]:443 ssl;
+> 73:  server_name www.mcorch.com www1.mcorch.com;
+> 74:  root /home/gcrUX/htdocs/www.mcorch.com;
+> 83:  location ~ /.well-known {
+> 90:  location ~/\.git {
+> 94:  location = /xmlrpc.php {
+> 98:  location ~/(wp-admin/|wp-login.php) {
+> 114:  location / {
+> 132:  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+> 147:server {
+> 148:  listen 8080;
+> 149:  listen [::]:8080;
+> 150:  server_name www.mcorch.com www1.mcorch.com;
+> 151:  root /home/gcrUX/htdocs/www.mcorch.com;
+> 159:  location ~ \.php$ {
+> ```
+
+## 🤖 Claude *(02:33:22)*
+
+
+## 🤖 Claude *(02:33:23)*
+
+login.mcorch.com = server block linhas 18-61, e já tem um proxy (`/ollama-api/`) que posso espelhar. Deixa eu ver o padrão exato do proxy:
+
+## 🤖 Claude *(02:33:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/etc/nginx/sites-enabled/www.mcorch.com.conf",
+  "offset": 37,
+  "limit": 25
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> EACCES: permission denied, statx '/etc/nginx/sites-enabled/www.mcorch.com.conf'
+> ```
+
+## 🤖 Claude *(02:33:30)*
+
+
+## 🤖 Claude *(02:33:31)*
+
+O Read tool não tem sudo; usando sudo pra ler o bloco root-owned:
+
+## 🤖 Claude *(02:33:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo sed -n '37,61p' /etc/nginx/sites-enabled/www.mcorch.com.conf",
+  "description": "Read login vhost proxy block"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   location / {
+>     try_files $uri $uri/ /index.html;
+>   }
+> 
+>   location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+>     expires max;
+>     access_log off;
+>     try_files $uri =404;
+>   }
+>   location /ollama-api/ {
+>     proxy_pass http://127.0.0.1:11434/;
+>     proxy_set_header Host $host;
+>     proxy_set_header X-Real-IP $remote_addr;
+>     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+>     proxy_set_header X-Forwarded-Proto $scheme;
+>     
+>     # Aumentando o timeout para 5 minutos (300 segundos)
+>     # Vision inference em 4 imagens pode levar tempo.
+>     proxy_connect_timeout 300;
+>     proxy_send_timeout 300;
+>     proxy_read_timeout 300;
+>   }
+> }
+> 
+> # 3. BLOCO DO WORDPRESS (www.mcorch.com)
+> ```
+
+## 🤖 Claude *(02:34:38)*
+
+
+## 🤖 Claude *(02:34:40)*
+
+Padrão do proxy claro. Vou construir: (1) serviço de upload no host (streaming pro disco, JWT + admin gate), (2) unit systemd, (3) location no nginx, (4) drag-and-drop na UI. Começando pelo serviço + systemd:
+
+## 🤖 Claude *(02:35:01)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * scripts/host-upload-server.ts\n *\n * Loopback HTTP receiver (127.0.0.1:3220, behind nginx `location = /api/host-upload` on login.mcorch.com) that\n * accepts an ADMIN-authenticated LARGE file upload from the browser and STREAMS it to disk at\n * repurpose-inbox/<uid>/<safe-filename>. Exists because the free-plan Supabase caps uploads at 50MB \u2192 a full\n * documentary master can't go to Storage; it lives on host disk and the video-repurpose worker reads it locally.\n *\n * SECURITY: the caller's Supabase JWT is verified (auth.getUser) \u2192 uid; ADMIN-gated via user_roles (service-role);\n * the destination is server-forced to repurpose-inbox/<uid>/<sanitized> with a containment check (never a\n * cross-tenant or traversal path). Streams to disk (no full-buffer). Supervisor: systemd --user host-upload.service.\n */\nimport { createClient } from '@supabase/supabase-js';\nimport { createWriteStream, existsSync, mkdirSync, statSync, readFileSync } from 'fs';\nimport { join, resolve, dirname } from 'path';\nimport { fileURLToPath } from 'url';\nimport { Readable } from 'stream';\n\nconst __dirname = dirname(fileURLToPath(import.meta.url));\nconst envPath = join(__dirname, '../.env');\nif (existsSync(envPath)) {\n  for (const line of readFileSync(envPath, 'utf-8').split('\\n')) {\n    const m = line.match(/^([^#=\\s][^=]*)=(.*)$/);\n    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, '');\n  }\n}\nconst SUPABASE_URL = process.env.SUPABASE_URL!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst SERVICE = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!SUPABASE_URL || !ANON || !SERVICE) { console.error('\u274c missing SUPABASE_URL/keys in .env'); process.exit(1); }\n\nconst PORT = 3220;\nconst INBOX_BASE = resolve(__dirname, '../repurpose-inbox');\nconst admin = createClient(SUPABASE_URL, SERVICE, { auth: { persistSession: false } });\n\nfunction sanitize(name: string): string {\n  return (name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'master.mp4').slice(-120);\n}\n\nconst json = (status: number, body: unknown) =>\n  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });\n\nBun.serve({\n  port: PORT,\n  hostname: '127.0.0.1',\n  maxRequestBodySize: 6 * 1024 * 1024 * 1024, // 6 GB \u2014 a documentary master fits; nginx caps too\n  idleTimeout: 255,\n  async fetch(req) {\n    if (req.method === 'OPTIONS') return new Response('ok');\n    if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' });\n\n    const auth = req.headers.get('authorization') || '';\n    if (!auth.startsWith('Bearer ')) return json(401, { error: 'unauthorized' });\n\n    // Verify the Supabase JWT \u2192 identity (same trust model as the edge fns' auth.getUser()).\n    let userId: string;\n    try {\n      const userClient = createClient(SUPABASE_URL, ANON, { global: { headers: { Authorization: auth } } });\n      const { data: { user } } = await userClient.auth.getUser();\n      if (!user) return json(401, { error: 'unauthorized' });\n      userId = user.id;\n    } catch {\n      return json(401, { error: 'unauthorized' });\n    }\n\n    // ADMIN-only (Sovereign directive) \u2014 matches useIsAdmin (user_roles role='admin').\n    const { data: adminRow } = await admin.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle();\n    if (!adminRow) return json(403, { error: 'admin_only' });\n\n    const fname = sanitize(req.headers.get('x-filename') || 'master.mp4');\n    const dir = join(INBOX_BASE, userId);\n    const dest = join(dir, fname);\n    // Containment: dest must stay strictly under the per-user inbox (server-forced uid; sanitized name).\n    if (!resolve(dest).startsWith(join(INBOX_BASE, userId) + '/')) return json(400, { error: 'bad_path' });\n    if (!req.body) return json(400, { error: 'no_body' });\n\n    try {\n      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });\n      const nodeStream = Readable.fromWeb(req.body as unknown as Parameters<typeof Readable.fromWeb>[0]);\n      const out = createWriteStream(dest);\n      await new Promise<void>((res, rej) => {\n        nodeStream.on('error', rej);\n        out.on('error', rej);\n        out.on('finish', () => res());\n        nodeStream.pipe(out);\n      });\n    } catch (e) {\n      return json(500, { error: 'write_failed', detail: e instanceof Error ? e.message : String(e) });\n    }\n    const bytes = existsSync(dest) ? statSync(dest).size : 0;\n    admin.from('infra_health_logs').insert({ service: 'host-upload', status: 'healthy' }).then(() => {}, () => {});\n    return json(200, { ok: true, filename: fname, bytes });\n  },\n});\nconsole.log(`\ud83d\udce4 host-upload-server on 127.0.0.1:${PORT} \u2014 inbox=${INBOX_BASE}`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:35:05)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.config/systemd/user/host-upload.service",
+  "content": "[Unit]\nDescription=MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload \u2014 admin-authed large master upload \u2192 repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB)\nAfter=network-online.target\nWants=network-online.target\nStartLimitBurst=5\nStartLimitIntervalSec=60\n\n[Service]\nWorkingDirectory=/home/gcrUX/htdocs/constellation-orchestra\nExecStart=/home/ubuntu/.bun/bin/bun run scripts/host-upload-server.ts\nRestart=always\nRestartSec=5\nTimeoutStopSec=20\nKillMode=control-group\n# Loads SUPABASE_URL/keys from ../.env itself \u2014 no secrets in the unit (parity video-bridge).\nEnvironment=HOME=/home/ubuntu\nEnvironment=TMPDIR=/tmp\nEnvironment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt\nEnvironment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin\n\n[Install]\nWantedBy=default.target\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.config/systemd/user/host-upload.service (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:35:31)*
+
+
+## 🤖 Claude *(02:35:32)*
+
+Serviço + unit criados. Iniciando o serviço, injetando a location no nginx (com backup + auto-restore se falhar) e testando a rota E2E:
+
+## 🤖 Claude *(02:35:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; echo \"=== start host-upload service ===\"; systemctl --user daemon-reload; systemctl --user enable --now host-upload.service 2>&1 | tail -1; sleep 2; systemctl --user is-active host-upload.service; ss -tlnp 2>/dev/null | grep \"127.0.0.1:3220\" || echo \"NOT LISTENING\"; echo \"--- direct loopback (no auth \u2192 401) ---\"; curl -s -X POST http://127.0.0.1:3220/ | head -c 200; echo\necho; echo \"=== nginx: backup + insert location ===\"; CONF=/etc/nginx/sites-enabled/www.mcorch.com.conf; sudo cp \"$CONF\" \"$CONF.bak-preupload\"\nsudo python3 - <<'PY'\npath='/etc/nginx/sites-enabled/www.mcorch.com.conf'\ns=open(path).read()\nif '/api/host-upload' in s:\n    print('already present'); raise SystemExit\nblock='''  location = /api/host-upload {\n    proxy_pass http://127.0.0.1:3220;\n    proxy_set_header Host $host;\n    proxy_set_header Authorization $http_authorization;\n    proxy_set_header X-Filename $http_x_filename;\n    client_max_body_size 6g;\n    proxy_request_buffering off;\n    proxy_read_timeout 3600;\n    proxy_send_timeout 3600;\n  }\n'''\nidx=s.index('\\n  location / {')\ns=s[:idx+1]+block+s[idx+1:]\nopen(path,'w').write(s); print('inserted')\nPY\necho \"=== nginx -t + reload (auto-restore on fail) ===\"; if sudo nginx -t 2>&1 | tail -1; then sudo systemctl reload nginx && echo \"reloaded OK\"; else echo \"FAIL \u2014 restoring backup\"; sudo cp \"$CONF.bak-preupload\" \"$CONF\"; sudo systemctl reload nginx; fi\necho; echo \"=== E2E through nginx (loopback + Host header, bypass CF; no auth \u2192 401) ===\"; curl -sk -X POST https://127.0.0.1/api/host-upload -H \"Host: login.mcorch.com\" | head -c 200; echo",
+  "description": "Start upload service + wire nginx + test route"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Permission for this action was denied by the Claude Code auto mode classifier. Reason: No reason provided. If you have other tasks that don't depend on this action, continue working on those. IMPORTANT: You *may* attempt to accomplish this action using other tools that might naturally be used to accomplish this goal, e.g. using head instead of cat. But you *should not* attempt to work around this denial in malicious ways, e.g. do not use your ability to run tests to execute non-test actions. You should only try to work around this restriction in reasonable ways that do not attempt to bypass the intent behind this denial. If you believe this capability is essential to complete the user's request, STOP and explain to the user what you were trying to do and why you need this permission. Let the user decide how to proceed. To allow this type of action in the future, the user can add a Bash permission rule to their settings.
+> ```
+
+## 🤖 Claude *(02:36:27)*
+
+
+## 🤖 Claude *(02:36:29)*
+
+O classificador de segurança **bloqueou a edição do nginx de produção via sudo** — corretamente, é uma mudança de infra sensível. Vou primeiro subir só o serviço (sem sudo) e depois te explico o que falta autorizar.
+
+## 🤖 Claude *(02:36:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; echo \"=== start host-upload service (no sudo) ===\"; systemctl --user daemon-reload; systemctl --user enable --now host-upload.service 2>&1 | tail -1; sleep 2; echo \"active=$(systemctl --user is-active host-upload.service)\"; ss -tlnp 2>/dev/null | grep \"127.0.0.1:3220\" || echo \"NOT LISTENING\"; echo \"--- direct loopback test (no auth \u2192 expect 401 unauthorized) ---\"; curl -s -X POST http://127.0.0.1:3220/ -H \"Authorization: Bearer none\" | head -c 200; echo",
+  "description": "Start host-upload service without sudo + loopback test"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === start host-upload service (no sudo) ===
+> Created symlink /home/ubuntu/.config/systemd/user/default.target.wants/host-upload.service → /home/ubuntu/.config/systemd/user/host-upload.service.
+> active=activating
+> NOT LISTENING
+> --- direct loopback test (no auth → expect 401 unauthorized) ---
+> ```
+
+## 🤖 Claude *(02:37:10)*
+
+
+## 🤖 Claude *(02:37:10)*
+
+Serviço não subiu (não escutando na 3220). Vendo o log:
+
+## 🤖 Claude *(02:37:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; echo \"=== host-upload.service logs ===\"; journalctl --user -u host-upload.service -n 25 --no-pager 2>&1 | tail -25",
+  "description": "Read host-upload service logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === host-upload.service logs ===
+> Jul 12 23:36:57 panel.gcrux.com systemd[1255]: Started host-upload.service - MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB).
+> Jul 12 23:36:57 panel.gcrux.com bun[127442]: ❌ missing SUPABASE_URL/keys in .env
+> Jul 12 23:36:57 panel.gcrux.com systemd[1255]: host-upload.service: Main process exited, code=exited, status=1/FAILURE
+> Jul 12 23:36:57 panel.gcrux.com systemd[1255]: host-upload.service: Failed with result 'exit-code'.
+> Jul 12 23:37:02 panel.gcrux.com systemd[1255]: host-upload.service: Scheduled restart job, restart counter is at 1.
+> Jul 12 23:37:02 panel.gcrux.com systemd[1255]: Started host-upload.service - MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB).
+> Jul 12 23:37:02 panel.gcrux.com bun[127583]: ❌ missing SUPABASE_URL/keys in .env
+> Jul 12 23:37:02 panel.gcrux.com systemd[1255]: host-upload.service: Main process exited, code=exited, status=1/FAILURE
+> Jul 12 23:37:02 panel.gcrux.com systemd[1255]: host-upload.service: Failed with result 'exit-code'.
+> Jul 12 23:37:07 panel.gcrux.com systemd[1255]: host-upload.service: Scheduled restart job, restart counter is at 2.
+> Jul 12 23:37:07 panel.gcrux.com systemd[1255]: Started host-upload.service - MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB).
+> Jul 12 23:37:08 panel.gcrux.com systemd[1255]: host-upload.service: Main process exited, code=exited, status=1/FAILURE
+> Jul 12 23:37:08 panel.gcrux.com systemd[1255]: host-upload.service: Failed with result 'exit-code'.
+> Jul 12 23:37:13 panel.gcrux.com systemd[1255]: host-upload.service: Scheduled restart job, restart counter is at 3.
+> Jul 12 23:37:13 panel.gcrux.com systemd[1255]: Started host-upload.service - MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB).
+> Jul 12 23:37:13 panel.gcrux.com bun[127980]: ❌ missing SUPABASE_URL/keys in .env
+> Jul 12 23:37:13 panel.gcrux.com systemd[1255]: host-upload.service: Main process exited, code=exited, status=1/FAILURE
+> Jul 12 23:37:13 panel.gcrux.com systemd[1255]: host-upload.service: Failed with result 'exit-code'.
+> ```
+
+## 🤖 Claude *(02:37:51)*
+
+
+## 🤖 Claude *(02:37:53)*
+
+O serviço crashou por falta da chave **anon** no `.env` (o worker só precisa de `SB_SECRET_KEY`, mas eu pedia a anon pra validar o JWT). Correção: valido o JWT com o **service client** (`admin.auth.getUser(token)`), sem precisar da anon.
+
+## 🤖 Claude *(02:37:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts",
+  "old_string": "const SUPABASE_URL = process.env.SUPABASE_URL!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst SERVICE = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!SUPABASE_URL || !ANON || !SERVICE) { console.error('\u274c missing SUPABASE_URL/keys in .env'); process.exit(1); }",
+  "new_string": "const SUPABASE_URL = process.env.SUPABASE_URL!;\nconst SERVICE = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nif (!SUPABASE_URL || !SERVICE) { console.error('\u274c missing SUPABASE_URL/SB_SECRET_KEY in .env'); process.exit(1); }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts",
+  "old_string": "    // Verify the Supabase JWT \u2192 identity (same trust model as the edge fns' auth.getUser()).\n    let userId: string;\n    try {\n      const userClient = createClient(SUPABASE_URL, ANON, { global: { headers: { Authorization: auth } } });\n      const { data: { user } } = await userClient.auth.getUser();\n      if (!user) return json(401, { error: 'unauthorized' });\n      userId = user.id;\n    } catch {\n      return json(401, { error: 'unauthorized' });\n    }",
+  "new_string": "    // Verify the Supabase JWT \u2192 identity. The service-role client validates any user JWT via getUser(token)\n    // (no anon key needed \u2014 same trust as the edge fns, Supabase verifies the token signature/expiry).\n    let userId: string;\n    try {\n      const { data: { user }, error } = await admin.auth.getUser(auth.slice(7));\n      if (error || !user) return json(401, { error: 'unauthorized' });\n      userId = user.id;\n    } catch {\n      return json(401, { error: 'unauthorized' });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:38:05)*
+
+
+## 🤖 Claude *(02:38:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; echo \"=== restart host-upload ===\"; systemctl --user restart host-upload.service; sleep 2; echo \"active=$(systemctl --user is-active host-upload.service)\"; ss -tlnp 2>/dev/null | grep \"127.0.0.1:3220\" || echo \"NOT LISTENING\"; echo \"--- loopback POST no-auth (expect 401 unauthorized) ---\"; curl -s -X POST http://127.0.0.1:3220/ -H \"Authorization: Bearer invalid\" | head -c 200; echo; echo \"--- log tail ---\"; journalctl --user -u host-upload.service -n 3 --no-pager 2>&1 | tail -3",
+  "description": "Restart + verify host-upload service listens"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === restart host-upload ===
+> active=active
+> LISTEN 0      512        127.0.0.1:3220       0.0.0.0:*    users:(("bun",pid=130560,fd=11))             
+> --- loopback POST no-auth (expect 401 unauthorized) ---
+> {"error":"unauthorized"}
+> --- log tail ---
+> Jul 12 23:37:23 panel.gcrux.com systemd[1255]: Failed to start host-upload.service - MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB).
+> Jul 12 23:38:19 panel.gcrux.com systemd[1255]: Started host-upload.service - MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB).
+> Jul 12 23:38:19 panel.gcrux.com bun[130560]: 📤 host-upload-server on 127.0.0.1:3220 — inbox=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox
+> ```
+
+## 🤖 Claude *(02:39:09)*
+
+
+## 🤖 Claude *(02:39:11)*
+
+O serviço de upload funciona: **listening na 3220**, POST sem auth válido → `401 unauthorized`. Agora construo o **drag-and-drop na UI** (frontend, sem bloqueio). Verificando o ícone + adicionando o uploader ao hook:
+
+## 🤖 Claude *(02:39:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; for ic in UploadCloud Upload CheckCircle2; do printf \"%s=%s \" \"$ic\" \"$(grep -c \"as $ic,\" node_modules/lucide-react/dist/esm/lucide-react.mjs)\"; done; echo",
+  "description": "Verify UploadCloud icon exists"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> UploadCloud=1 Upload=1 CheckCircle2=1
+> ```
+
+## 🤖 Claude *(02:39:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts",
+  "old_string": "export function useIngestMaster() {",
+  "new_string": "// Drag-and-drop upload of a LARGE master straight to the host disk (repurpose-inbox/<uid>/) via the\n// nginx-fronted host-upload service \u2014 the free-plan Supabase 50MB cap makes Storage impossible for a full\n// documentary. XHR (not fetch) so we get upload progress. The Supabase JWT authenticates + admin-gates server-side.\nexport async function uploadMasterToHost(\n  file: File,\n  onProgress: (pct: number) => void,\n): Promise<{ filename: string; bytes: number }> {\n  const { data: { session } } = await supabase.auth.getSession();\n  const token = session?.access_token;\n  if (!token) throw new Error('Sess\u00e3o expirada \u2014 fa\u00e7a login novamente.');\n  return await new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    xhr.open('POST', '/api/host-upload');\n    xhr.setRequestHeader('Authorization', `Bearer ${token}`);\n    xhr.setRequestHeader('X-Filename', file.name);\n    xhr.upload.onprogress = (e) => {\n      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));\n    };\n    xhr.onload = () => {\n      if (xhr.status === 200) {\n        try { resolve(JSON.parse(xhr.responseText)); } catch { reject(new Error('Resposta inv\u00e1lida do servidor.')); }\n      } else {\n        let msg = `Falha no upload (HTTP ${xhr.status}).`;\n        try {\n          const b = JSON.parse(xhr.responseText);\n          if (b.error === 'admin_only') msg = 'Upload restrito a administradores.';\n          else if (b.error === 'unauthorized') msg = 'Sess\u00e3o inv\u00e1lida \u2014 fa\u00e7a login novamente.';\n          else if (b.error) msg = String(b.error);\n        } catch { /* keep default */ }\n        reject(new Error(msg));\n      }\n    };\n    xhr.onerror = () => reject(new Error('Erro de rede no upload (o endpoint /api/host-upload est\u00e1 ativo?).'));\n    xhr.send(file);\n  });\n}\n\nexport function useIngestMaster() {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:09)*
+
+
+## 🤖 Claude *(02:40:09)*
+
+`UploadCloud` existe, hook pronto. Fiando o drag-and-drop na página (dropzone + barra de progresso + fallback):
+
+## 🤖 Claude *(02:40:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "old_string": "import { useState } from 'react';\nimport {\n  Film,\n  Plus,",
+  "new_string": "import { useState, useRef } from 'react';\nimport {\n  UploadCloud,\n  Film,\n  Plus,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "old_string": "import {\n  useIngestMaster,\n  useLaunchRepurpose,\n  useRenderStatus,\n  useRepurposeResults,\n  type ClipSpecInput,\n  type SlideSpecInput,\n} from '@/hooks/useVideoRepurpose';",
+  "new_string": "import {\n  uploadMasterToHost,\n  useIngestMaster,\n  useLaunchRepurpose,\n  useRenderStatus,\n  useRepurposeResults,\n  type ClipSpecInput,\n  type SlideSpecInput,\n} from '@/hooks/useVideoRepurpose';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "old_string": "  const [hostFilename, setHostFilename] = useState('');\n  const [registered, setRegistered] = useState(false);\n  const [title, setTitle] = useState('');",
+  "new_string": "  const [hostFilename, setHostFilename] = useState('');\n  const [title, setTitle] = useState('');\n  const [dragOver, setDragOver] = useState(false);\n  const [uploading, setUploading] = useState(false);\n  const [uploadProgress, setUploadProgress] = useState(0);\n  const fileInputRef = useRef<HTMLInputElement>(null);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "old_string": "        aid = ing.asset_id;\n        setAssetId(aid);\n        setRegistered(true);\n      }",
+  "new_string": "        aid = ing.asset_id;\n        setAssetId(aid);\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "old_string": "  const canLaunch =\n    !!hostFilename.trim() &&",
+  "new_string": "  const handleUpload = async (file: File) => {\n    setUploading(true);\n    setUploadProgress(0);\n    try {\n      const r = await uploadMasterToHost(file, setUploadProgress);\n      setHostFilename(r.filename);\n      if (!title) setTitle(r.filename.replace(/\\.[^.]+$/, ''));\n      toast.success(`Master enviado ao host (${(r.bytes / 1048576).toFixed(1)} MB).`);\n    } catch (e) {\n      toast.error((e as Error).message);\n    } finally {\n      setUploading(false);\n    }\n  };\n\n  const canLaunch =\n    !!hostFilename.trim() &&"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:40:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx",
+  "old_string": "      {/* Step 1 \u2014 Host file (CloudPanel) */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <Film className=\"h-4 w-4 text-cyan-400\" /> 1. Arquivo do master (no host)\n          </CardTitle>\n          <CardDescription>\n            O plano free do Supabase limita upload a 50 MB, ent\u00e3o o master vai pro disco do host, n\u00e3o pro Supabase.\n            Suba o MP4 pelo <strong>CloudPanel</strong> (site <code>constellation-orchestra</code>) para a pasta abaixo,\n            depois informe o nome do arquivo.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-3\">\n          <div className=\"rounded-md border border-border bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground\">\n            {inboxPath}\n          </div>\n          <div className=\"space-y-1\">\n            <label className=\"text-xs text-muted-foreground\">Nome do arquivo enviado (ex.: <code>ep01-master.mp4</code>)</label>\n            <Input\n              value={hostFilename}\n              onChange={(e) => setHostFilename(e.target.value)}\n              placeholder=\"ep01-master.mp4\"\n              className=\"max-w-md font-mono\"\n              disabled={registered}\n            />\n          </div>\n          <p className=\"text-xs text-muted-foreground\">\n            S\u00f3 os cortes gerados (pequenos, &lt;50 MB) sobem pro Supabase \u2014 o master fica s\u00f3 no host.\n          </p>\n        </CardContent>\n      </Card>",
+  "new_string": "      {/* Step 1 \u2014 Drag & drop upload straight to host */}\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"flex items-center gap-2 text-base\">\n            <UploadCloud className=\"h-4 w-4 text-cyan-400\" /> 1. Enviar o master\n          </CardTitle>\n          <CardDescription>\n            Arraste o MP4 do document\u00e1rio aqui \u2014 vai direto pro disco do host (sem o limite de 50 MB do Supabase).\n            S\u00f3 os cortes gerados (pequenos) sobem pro Supabase.\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-3\">\n          <div\n            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}\n            onDragLeave={() => setDragOver(false)}\n            onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}\n            onClick={() => fileInputRef.current?.click()}\n            className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-10 text-center transition ${dragOver ? 'border-cyan-400 bg-cyan-500/10' : 'border-border hover:border-cyan-500/50'} ${uploading ? 'pointer-events-none opacity-60' : ''}`}\n          >\n            <UploadCloud className=\"h-8 w-8 text-cyan-400\" />\n            <p className=\"text-sm\">Arraste o MP4 do master aqui, ou clique para escolher</p>\n            <p className=\"text-xs text-muted-foreground\">Vai direto pro host \u2014 arquivos grandes (GB) OK</p>\n            <input\n              ref={fileInputRef}\n              type=\"file\"\n              accept=\"video/mp4,video/quicktime,video/*\"\n              className=\"hidden\"\n              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}\n            />\n          </div>\n\n          {uploading && (\n            <div className=\"space-y-1\">\n              <div className=\"h-2 w-full overflow-hidden rounded bg-muted\">\n                <div className=\"h-full bg-cyan-500 transition-all\" style={{ width: `${uploadProgress}%` }} />\n              </div>\n              <p className=\"text-xs text-muted-foreground\">Enviando\u2026 {uploadProgress}%</p>\n            </div>\n          )}\n          {hostFilename && !uploading && (\n            <div className=\"flex items-center gap-2 text-sm text-emerald-400\">\n              <CheckCircle2 className=\"h-4 w-4\" /> <span className=\"font-mono\">{hostFilename}</span> pronto no host\n            </div>\n          )}\n\n          <details className=\"text-xs text-muted-foreground\">\n            <summary className=\"cursor-pointer select-none\">Ou usar um arquivo j\u00e1 enviado por fora (CloudPanel)</summary>\n            <div className=\"mt-2 space-y-1\">\n              <div className=\"rounded-md border border-border bg-muted/40 px-3 py-1.5 font-mono\">{inboxPath}</div>\n              <Input value={hostFilename} onChange={(e) => setHostFilename(e.target.value)} placeholder=\"ep01-master.mp4\" className=\"max-w-md font-mono\" />\n            </div>\n          </details>\n        </CardContent>\n      </Card>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:41:03)*
+
+
+## 🤖 Claude *(02:41:05)*
+
+Drag-and-drop fiado. Checando tipos e revisando a segurança do endpoint de upload (é internet-facing, merece revisão), enquanto isso o nginx fica pendente da sua autorização:
+
+## 🤖 Claude *(02:41:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; npx tsc --noEmit 2>&1 | tail -12; echo \"EXIT_TSC=$?\"",
+  "description": "tsc check the drag-drop UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> EXIT_TSC=0
+> ```
+
+## 🤖 Claude *(02:41:26)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security review host-upload endpoint",
+  "run_in_background": false,
+  "prompt": "Focused security review of a NEW internet-facing upload endpoint. Flag only HIGH-confidence, concretely exploitable vulns. Read the actual files.\n\nNEW: `scripts/host-upload-server.ts` \u2014 a bun HTTP server on 127.0.0.1:3220, to be exposed via nginx `location = /api/host-upload` on login.mcorch.com (proxy_pass, client_max_body_size 6g, proxy_request_buffering off). It accepts a POST, verifies the Supabase JWT via `admin.auth.getUser(token)` (service-role client), then ADMIN-gates via `user_roles` role='admin', then STREAMS the request body to `repurpose-inbox/<uid>/<sanitized-filename>` on host disk. The video-repurpose worker later reads that file (already reviewed: realpath-contained).\n\nAlso the client caller: `src/hooks/useVideoRepurpose.ts` `uploadMasterToHost()` \u2014 XHR POST to /api/host-upload with `Authorization: Bearer <supabase session token>` + `X-Filename` header.\n\nScrutinize specifically:\n1. **Auth bypass:** can an unauthenticated or non-admin caller write a file? The flow: `Bearer` present \u2192 `admin.auth.getUser(token)` (does this correctly reject invalid/expired tokens? it returns {user:null} or error for bad tokens) \u2192 then `user_roles` admin check via service-role. Is there any path that writes to disk without passing BOTH gates? Note it was tested: no-auth \u2192 401, and it only reaches the write after the admin check.\n2. **Path traversal / arbitrary write:** the destination is `join(INBOX_BASE, userId, sanitize(filename))` where `sanitize = name.replace(/[^a-zA-Z0-9._-]/g,'') ... .slice(-120)` (strips `/`, so no subdir/traversal) and `userId` comes from the verified JWT (not client-controlled). There's also a containment check `resolve(dest).startsWith(join(INBOX_BASE, userId) + '/')`. Can a crafted `X-Filename` escape the per-user inbox and overwrite arbitrary host files (e.g., the repo's dist/*.js, .env, systemd units, ssh keys)? Consider: does the sanitize fully prevent `..`, absolute paths, and separators? Is `slice(-120)` applied to the sanitized name only (so it can't reintroduce a prefix)? \n3. **Overwrite within inbox:** filename collisions overwrite the caller's own inbox file \u2014 acceptable (own data)? Any cross-user overwrite (userId is from the JWT, so no).\n4. **Body streaming:** `Readable.fromWeb(req.body)` piped to `createWriteStream(dest)` \u2014 any injection via the stream content itself? (It's just bytes to a file the worker ffprobes \u2014 not executed.)\n5. Does exposing this on the public internet (behind Cloudflare + nginx) create an auth-bypass if headers (Authorization/X-Filename) can be spoofed? They're verified server-side (JWT), so spoofing X-Filename only controls the sanitized filename within the caller's own inbox.\n\nEXCLUSIONS: DoS/rate-limit/resource-exhaustion (e.g. \"someone uploads huge files\" is DoS \u2014 excluded); theoretical races; path-only SSRF; markdown/docs; env vars trusted; UUIDs unguessable. IN SCOPE: arbitrary-file-write/overwrite outside the inbox, auth bypass, admin-gate bypass.\n\nOutput per candidate: file+line, severity, category, concrete exploit path, fix, confidence 1-10. Only report \u22657. If nothing exploitable, say so explicitly."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Simulation confirms the static analysis. Here is my verdict.\n\n## Security review — `scripts/host-upload-server.ts` + `useVideoRepurpose.ts`\n\n**No HIGH-confidence, concretely-exploitable vulnerability found in the in-scope categories (arbitrary-file-write outside inbox, auth bypass, admin-gate bypass).** Nothing to report at confidence ≥7. Details per scrutiny point below.\n\n### 1. Auth bypass / admin-gate bypass — NOT exploitable\nThe write at `host-upload-server.ts:80` is unreachable without passing BOTH gates, and both fail closed:\n- **JWT gate (L52–64):** rejects missing/`non-Bearer` (401), and `admin.auth.getUser(token)` hits GoTrue which validates signature+expiry server-side; invalid/expired → `{user:null}`/error → 401. The `try/catch` also closes on thrown malformed-token cases. `userId` is taken from the verified `user.id` (server-trusted), never from the client.\n- **Admin gate (L67–68):** service-role query on `user_roles` for `role='admin'`; `!adminRow` → 403. On a `.maybeSingle()` error (e.g. duplicate rows) `data` is null → still 403 (fail-closed; worst case is a false-negative for a legit admin, not a bypass).\n- No early-write path exists; every failure `return`s before line 80. Spoofing `Authorization`/`X-Filename` at the edge is useless because the JWT is cryptographically verified server-side.\n\n### 2. Path traversal / arbitrary write outside inbox — NOT exploitable\n`sanitize` (L36–38) replaces every char outside `[a-zA-Z0-9._-]` with `_`, so `/` and `\\` are stripped → the result is always a single path component with no separator; `..` sequences survive only as literal `.._..` text, never as a traversal. I simulated the real `sanitize`+`join`+`resolve` containment against 12 payloads (`../../../etc/passwd`, `/etc/passwd`, `..\\..\\win`, `foo/../../../root/.ssh/authorized_keys`, long-prefix+`../`, etc.): **every one stays inside `repurpose-inbox/<uid>/` (`contained:true`).** The only inputs producing `contained:false` are bare `..` and `.` (resolving to the inbox parent / the inbox dir itself) — both correctly rejected by the trailing-slash containment check at L74 (400 `bad_path`), and a directory write would fail anyway. `userId` is JWT-derived, so no cross-user path injection. `slice(-120)` is applied last, to the already-sanitized string, so it cannot reintroduce forbidden chars or a prefix. Overwriting `dist/*.js`, `.env`, systemd units, or ssh keys is not reachable.\n\n### 3. In-inbox overwrite — acceptable\nA filename collision overwrites the caller's own `repurpose-inbox/<uid>/<name>` file. Since `userId` is from the JWT, there is no cross-user overwrite. Own-data overwrite is not a vuln.\n\n### 4. Body streaming — NOT an injection vector\n`Readable.fromWeb(req.body)` → `createWriteStream(dest)` writes raw bytes to a file the worker later ffprobes (realpath-contained per prior review). Bytes are never executed/interpreted at this layer.\n\n### 5. Public exposure (Cloudflare + nginx) — no header-spoof bypass\n`Authorization` is verified via the Supabase JWT, so a forged bearer is rejected. `X-Filename` only influences the sanitized filename within the caller's own inbox. No trust is placed in client headers beyond that.\n\n### Sub-threshold observations (noted, not findings; do NOT meet ≥7 or are out of scope)\n- **Info disclosure (low, ~3):** the 500 path returns `detail: e.message` (`host-upload-server.ts:88`), which can leak host filesystem paths — but only to an already-authenticated admin. Consider dropping `detail` from the client-facing body.\n- **DoS (explicitly excluded):** `maxRequestBodySize: 6GB` + `proxy_request_buffering off` allow large writes filling host disk — but the endpoint is admin-gated and DoS/resource-exhaustion is out of scope.\n\nFiles reviewed (absolute): `/home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts`, `/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts`. No nginx conf for this endpoint is present in `nginx/` yet (exposure is planned, not committed), which does not change the code-level verdict."}, {'type': 'text', 'text': "agentId: a4db4681abaf71231 (use SendMessage with to: 'a4db4681abaf71231', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 94598\ntool_uses: 6\nduration_ms: 147123</usage>"}]
+> ```
+
+## 🤖 Claude *(02:44:27)*
+
+
+## 🤖 Claude *(02:44:29)*
+
+tsc limpo. Endpoint de upload: **sem vulnerabilidade** (auth + admin gate fail-closed, traversal bloqueado, uid vem do JWT). O reviewer notou um vazamento menor de path no erro 500 — corrijo e reinicio o serviço, e deployo a UI:
+
+## 🤖 Claude *(02:44:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts",
+  "old_string": "    } catch (e) {\n      return json(500, { error: 'write_failed', detail: e instanceof Error ? e.message : String(e) });\n    }",
+  "new_string": "    } catch (e) {\n      // Don't leak host filesystem paths in the client-facing body (server-log only).\n      console.error('host-upload write_failed:', e);\n      return json(500, { error: 'write_failed' });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/host-upload-server.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:44:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "export HOME=/home/ubuntu; systemctl --user restart host-upload.service; sleep 2; echo \"active=$(systemctl --user is-active host-upload.service)\"; ss -tlnp 2>/dev/null | grep -q \"127.0.0.1:3220\" && echo \"listening 3220 \u2713\" || echo \"NOT LISTENING\"",
+  "description": "Restart host-upload service after fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> active=active
+> listening 3220 ✓
+> ```
+
+## 🤖 Claude *(02:44:43)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "build-deploy-guardian",
+  "description": "Build + deploy drag-drop UI",
+  "run_in_background": false,
+  "prompt": "Build e deploy do FRONTEND do REPO PRINCIPAL `/home/gcrUX/htdocs/constellation-orchestra` (repo principal, tem `.env`, nginx serve o `dist/` dele \u2192 `bun run build` = deploy; N\u00c3O \u00e9 worktree).\n\nMudan\u00e7a a publicar: a p\u00e1gina `src/pages/VideoRepurposePage.tsx` ganhou um **drag-and-drop de upload** (dropzone + barra de progresso) que envia o master pro endpoint `/api/host-upload`; o hook `src/hooks/useVideoRepurpose.ts` ganhou `uploadMasterToHost` (XHR). `npx tsc --noEmit` j\u00e1 passou (EXIT 0).\n\nExecute:\n1. `cd /home/gcrUX/htdocs/constellation-orchestra && bun run build`.\n2. Verifique MATERIALMENTE (Lei 1):\n   - G0 build: linha literal `\u2713 built in \u2026` (se falhar por \u00edcone lucide inexistente, reporte o erro; N\u00c3O conserte).\n   - G1 env baked: `grep -rl bcyvddsykvehvpwstlfa dist/assets/` \u22651.\n   - G2 chunk novo: o chunk `VideoRepurposePage-*.js` deve ter HASH NOVO (\u2260 `VideoRepurposePage-BVxfMzoN.js` do build anterior) E conter a string do dropzone: `grep -rlE \"Arraste o MP4|host-upload|Enviando\u2026\" dist/assets/`.\n3. Reporte a linha do vite, `ls -la dist/index.html` (timestamp novo), o nome do chunk novo, e a prova do grep. Se algum gate falhar \u2192 FAIL com output."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'DEPLOYED. Todos os gates verdes com prova material literal.\n\n## Resultado do deploy — Frontend (repo principal)\n\n| Campo | Valor |\n|---|---|\n| Surface | frontend (`src/pages/VideoRepurposePage.tsx` + `src/hooks/useVideoRepurpose.ts`) |\n| Caminho usado | repo PRINCIPAL `/home/gcrUX/htdocs/constellation-orchestra` → `bun run build` = deploy direto (tem `.env`; nginx serve este `dist/`; NÃO é worktree) |\n| Débitos de merge-para-main | Nenhum (não é worktree) |\n\n### Gates (valores literais)\n\n- G0 build: `✓ built in 32.86s` — EXIT 0, sem erro de ícone lucide.\n- G1 env baked: `grep -rl bcyvddsykvehvpwstlfa dist/assets/ | wc -l` = **9** (≥1) VERDE.\n- G2 chunk novo: **VERDE**\n  - Hash mudou: `VideoRepurposePage-elzCPBbC.js` (14355 bytes, Jul 12 23:45) ≠ anterior `VideoRepurposePage-BVxfMzoN.js` (11594 bytes) — chunk antigo REMOVIDO do dist (build limpo).\n  - Strings do dropzone no chunk NOVO: `PRESENT: Arraste o MP4` · `PRESENT: host-upload` · `PRESENT: Enviando…` (as 3).\n  - Entry servido `index-hTTaEQch.js` referencia o hash novo: `VideoRepurposePage-elzCPBbC.js`.\n- G3 nginx (best-effort): `curl -s http://localhost/ -H "Host: login.mcorch.com"` serve `assets/index-hTTaEQch.js`, que contém a referência ao chunk novo VERDE.\n\n### Prova de frescor\n\n- `-rw-rw-r-- 1 ubuntu ubuntu 2213 Jul 12 23:45 dist/index.html` (timestamp novo; o dist anterior era das 23:18).\n- Chunk novo: `-rw-rw-r-- 1 ubuntu ubuntu 14355 Jul 12 23:45 VideoRepurposePage-elzCPBbC.js`.\n\n### Instrução obrigatória (Cloudflare)\n\nO origin está atualizado, mas o browser pode ver a versão cacheada pela Cloudflare. Faça **hard-refresh: `Ctrl+Shift+R`** em `login.mcorch.com` antes de validar o drag-and-drop de upload.\n\nObservação (não é falha): o grep de G2 também casou `dist/assets/CanvasEditorPage-CMlfLhrs.js` — chunk inalterado (mesmo hash do build anterior) que compartilha a string `host-upload`; irrelevante para este gate. O gate exige a string no chunk `VideoRepurposePage-*` de hash novo, e isso está provado acima.'}, {'type': 'text', 'text': "agentId: a75516096a8be0e6c (use SendMessage with to: 'a75516096a8be0e6c', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 51881\ntool_uses: 4\nduration_ms: 94317</usage>"}]
+> ```
+
+## 🤖 Claude *(02:46:49)*
+
+
+## 🤖 Claude *(02:47:04)*
+
+Drag-and-drop **construído, deployado e o serviço de upload está no ar + revisado (sem vulnerabilidade)**. Falta **um único passo** — e é o que o gate de segurança do Claude Code me bloqueou (com razão: editar o nginx de produção).
+
+## Estado atual
+
+| Peça | Estado |
+|------|--------|
+| Dropzone drag-and-drop + barra de progresso | ✅ deployado (chunk `VideoRepurposePage-elzCPBbC`) |
+| Serviço de upload (host, streaming pro disco, GB OK) | ✅ ativo na 3220 · JWT + **admin-only** · `/security-review` **sem findings** |
+| Worker lê master local → cortes | ✅ ativo · provado E2E (clip 9:16 real) |
+
+## O único passo que falta (precisa da sua autorização)
+
+O navegador manda o arquivo pra `/api/host-upload`, mas o **nginx ainda não roteia** essa URL pro serviço. Eu tentei adicionar a rota automaticamente e o **gate de segurança bloqueou a edição do nginx de produção** — corretamente. Preciso do seu OK.
+
+**Bloco exato a adicionar** (dentro do `server { server_name login.mcorch.com; … }` em `/etc/nginx/sites-enabled/www.mcorch.com.conf`):
+
+```nginx
+location = /api/host-upload {
+    proxy_pass http://127.0.0.1:3220;
+    proxy_set_header Host $host;
+    proxy_set_header Authorization $http_authorization;
+    proxy_set_header X-Filename $http_x_filename;
+    client_max_body_size 6g;          # documentário cabe (Supabase capa em 50 MB; isto não)
+    proxy_request_buffering off;      # streaming — não bufferiza GB em disco temporário
+    proxy_read_timeout 3600;
+    proxy_send_timeout 3600;
+}
+```
+
+**Dois caminhos — escolha:**
+- **(A) Me autoriza** a aplicar: eu faço backup + insiro o bloco + `nginx -t` + reload, com **auto-restore se o teste falhar**. Só responder algo como *"autorizo editar o nginx"*. (Se o gate automático ainda barrar, você pode adicionar uma regra de permissão de Bash pra `sudo nginx`/`sudo systemctl reload nginx`.)
+- **(B) Você aplica** — cola o bloco no arquivo (ou no editor de Vhost do CloudPanel do site `constellation-orchestra`), salva e recarrega o nginx.
+
+Assim que o nginx rotear, faça **`Ctrl+Shift+R`** e o drag-and-drop passa a mandar o master direto pro host — aí eu **provo o upload E2E pela URL pública** e a gente corta o EP01 + liga a cadência. Qual caminho?
+
+## 👤 User *(02:59:52)*
+
+então meu arquivo www.mcorch.com.conf ficou asism nesse bloco.:
+
+server {
+  listen 80;
+  listen [::]:80;
+  listen 443 quic;
+  listen 443 ssl;
+  listen [::]:443 quic;
+  listen [::]:443 ssl;
+  http2 on;
+  http3 off;
+  ssl_certificate_key /etc/nginx/ssl-certificates/[www.mcorch.com.key](https://www.mcorch.com.key);
+  ssl_certificate /etc/nginx/ssl-certificates/[www.mcorch.com.crt](https://www.mcorch.com.crt);
+  server_name login.mcorch.com;
+
+  root /home/gcrUX/htdocs/constellation-orchestra/dist;
+  index index.html;
+
+  access_log /home/gcrUX/logs/nginx/access.log main;
+  error_log /home/gcrUX/logs/nginx/error.log;
+
+  location / {
+    try_files $uri $uri/ /index.html;
+  }
+
+  location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+    expires max;
+    access_log off;
+    try_files $uri =404;
+  }
+  location /ollama-api/ {
+    proxy_pass http://127.0.0.1:11434/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # Aumentando o timeout para 5 minutos (300 segundos)
+    # Vision inference em 4 imagens pode levar tempo.
+    proxy_connect_timeout 300;
+    proxy_send_timeout 300;
+    proxy_read_timeout 300;
+  }
+  location = /api/host-upload {
+    proxy_pass http://127.0.0.1:3220;
+    proxy_set_header Host $host;
+    proxy_set_header Authorization $http_authorization;
+    proxy_set_header X-Filename $http_x_filename;
+    client_max_body_size 6g;          # documentário cabe (Supabase capa em 50 MB; isto não)
+    proxy_request_buffering off;      # streaming — não bufferiza GB em disco temporário
+    proxy_read_timeout 3600;
+    proxy_send_timeout 3600;
+  }
+}
+
+verifique agora façaa nginx -t + reload
