@@ -3715,3 +3715,310 @@ Edge fns deployadas com prova material (`social-auth-init` 66.2kB · `youtube-da
   "prompt": "Build e deploy do FRONTEND a partir do REPO PRINCIPAL `/home/gcrUX/htdocs/constellation-orchestra` (este \u00e9 o repo principal, tem `.env`, e o nginx serve o `dist/` dele \u2014 portanto `bun run build` = deploy; N\u00c3O \u00e9 worktree).\n\nMudan\u00e7a desta sess\u00e3o a publicar: nova p\u00e1gina **YouTube Studio** em `/dashboard/youtube` (`src/pages/YouTubeStudioPage.tsx`) + item de nav no `DashboardSidebar` + hook `src/hooks/useYouTubeStudio.ts`. `npx tsc --noEmit` j\u00e1 passou (EXIT 0).\n\nExecute:\n1. `cd /home/gcrUX/htdocs/constellation-orchestra && bun run build` (produ\u00e7\u00e3o).\n2. Verifique MATERIALMENTE (Lei 1) antes de reportar SUCCESS:\n   - o build terminou sem erro (linha literal de sucesso do vite);\n   - o `.env` foi baked (o bundle referencia a URL do Supabase \u2014 ex.: grep por `bcyvddsykvehvpwstlfa` ou pela `VITE_SUPABASE_URL` nos assets de `dist/assets/`);\n   - existe chunk novo com a p\u00e1gina YouTube (grep por `YouTubeStudio` OU por string PT-BR \u00fanica da p\u00e1gina como \"YouTube Studio\" / \"Ativar m\u00e9tricas\" nos assets buildados de `dist/`).\n3. Reporte: a linha de sucesso do vite, o timestamp/tamanho do `dist/index.html` (`ls -la`), e a prova de que o chunk novo + env est\u00e3o no `dist/` servido. Se qualquer gate falhar, reporte FAIL com o output \u2014 n\u00e3o declare deployed sem os 3 gates verdes."
 }
 ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Diagnosis complete. Reporting materially.\n\n## DEPLOY BLOQUEADO — FAIL no Gate G0 (build success)\n\nO `bun run build` **falhou**. Nenhum `dist/` novo foi emitido, portanto os gates de materialidade G1/G2/G3 sequer podem ser avaliados. **NÃO é deploy.** O `dist/` servido pelo nginx continua o build antigo, intacto.\n\n| Item | Valor material |\n|------|----------------|\n| Surface | frontend (`src/`) |\n| Repo | principal `/home/gcrUX/htdocs/constellation-orchestra` · branch `main` · `.env` presente (2595 bytes) |\n| Caminho usado | `bun run build` (frontend-no-main) |\n| **G0 build** | 🔴 **RED** — `x Build failed in 19.69s` |\n| G1 env baked | ⚪ N/A — sem `dist/` novo |\n| G2 chunk novo (YouTube) | ⚪ N/A — sem `dist/` novo |\n| G3 curl entry | ⚪ N/A — nada servido de novo |\n| `dist/index.html` servido | inalterado: `-rw-rw-r-- 2213 bytes Jul 10 20:46` (entry antigo `index-3j4aFuwu.js`, Jul 10 20:46) |\n\n### Output literal do vite (prova, Lei 1)\n```\n✓ 5030 modules transformed.\nx Build failed in 19.69s\nerror during build:\nsrc/components/dashboard/DashboardSidebar.tsx (33:2): "Youtube" is not exported by\n"node_modules/lucide-react/dist/esm/lucide-react.mjs", imported by\n"src/components/dashboard/DashboardSidebar.tsx".\nerror: script "build" exited with code 1\n```\n\n### Causa-raiz (por que `tsc` passou mas o build quebra)\n`lucide-react@1.11.0` (versão instalada — confirmada via `package.json`) **não exporta nenhum ícone `Youtube`**. Prova: `grep -icE "youtube" node_modules/lucide-react/dist/esm/lucide-react.mjs` → **`0`**. Esta versão removeu os brand icons. O `npx tsc --noEmit` passou porque a resolução de tipos foi permissiva, mas o rollup faz o export-tracing real e não encontra o símbolo. **`tsc EXIT 0` não é garantia de build** — só o output do vite é (Lei 1).\n\nO erro é exclusivamente `Youtube`; os demais imports do sidebar (`Images`, `MessageSquare`, etc.) resolvem via aliases bare que existem nessa versão.\n\n### Fix acionável (grounded — aliases confirmados presentes no bundle)\nTrocar `Youtube` por um ícone existente em `src/components/dashboard/DashboardSidebar.tsx` — **duas ocorrências**:\n- linha 33: `Youtube,` no import de `\'lucide-react\'`\n- linha 80: `icon: Youtube` no item `{ title: \'YouTube Studio\', url: \'/dashboard/youtube\', ... }`\n\nSubstitutos verificados como exportados nesta versão (`as <Nome>,` presente no `.mjs`): **`MonitorPlay`** (monitor com play — semântica mais próxima de YouTube), `Video`, `Tv`, `Film`, `PlayCircle`. Recomendo `MonitorPlay`.\n\n### Próximo passo\nAplicar a troca do ícone (decisão de source do dev/parent), depois reenviar para deploy. Assim que o `bun run build` fechar com a linha `✓ built in …`, eu executo os 3 gates (G1 env baked `grep bcyvddsykvehvpwstlfa dist/assets/`, G2 chunk `YouTubeStudio`/`YouTube Studio`, G3 curl entry) e a instrução de hard-refresh `Ctrl+Shift+R`.\n\nDébito de merge-para-main: nenhum (estamos no repo principal em `main`). Nenhuma instrução de hard-refresh se aplica — **nada foi servido de novo**.\n\nArquivo a corrigir: `/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx` (linhas 33 e 80).'}, {'type': 'text', 'text': "agentId: ac74bcce18c115070 (use SendMessage with to: 'ac74bcce18c115070', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 55442\ntool_uses: 8\nduration_ms: 151301</usage>"}]
+> ```
+
+## 🤖 Claude *(00:32:44)*
+
+
+## 🤖 Claude *(00:32:47)*
+
+O guardião pegou um erro real que introduzi (Lei 1 funcionando): **`lucide-react@1.11.0` não exporta `Youtube`** (brand icons removidos nessa versão) — o `tsc` passou (resolução permissiva) mas o rollup quebra. E eu usei `Youtube` em **dois** arquivos (sidebar + página). Vou confirmar o substituto e trocar nos dois.
+
+## 🤖 Claude *(00:32:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== Youtube exported? ===\"; grep -icE \"as Youtube,\" node_modules/lucide-react/dist/esm/lucide-react.mjs; echo \"=== MonitorPlay exported? ===\"; grep -icE \"as MonitorPlay,\" node_modules/lucide-react/dist/esm/lucide-react.mjs; echo \"=== PlayCircle exported? ===\"; grep -icE \"as PlayCircle,\" node_modules/lucide-react/dist/esm/lucide-react.mjs; echo \"=== identifier Youtube usages in my files ===\"; grep -rnE \"Youtube\" src/pages/YouTubeStudioPage.tsx src/components/dashboard/DashboardSidebar.tsx | grep -vE '\"|YouTube ' | head",
+  "description": "Confirm icon exports + locate identifier usages"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Youtube exported? ===
+> 0
+> === MonitorPlay exported? ===
+> 1
+> === PlayCircle exported? ===
+> 1
+> === identifier Youtube usages in my files ===
+> src/pages/YouTubeStudioPage.tsx:3:  Youtube,
+> src/components/dashboard/DashboardSidebar.tsx:33:  Youtube,
+> ```
+
+## 🤖 Claude *(00:33:01)*
+
+
+## 🤖 Claude *(00:33:01)*
+
+Confirmado: `Youtube` não existe (0), `MonitorPlay` existe (1). Trocando nos dois arquivos e rebuildando:
+
+## 🤖 Claude *(00:33:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  MessageSquare,\n  Youtube,\n  type LucideIcon,",
+  "new_string": "  MessageSquare,\n  MonitorPlay,\n  type LucideIcon,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "      { title: 'YouTube Studio', url: '/dashboard/youtube', icon: Youtube },",
+  "new_string": "      { title: 'YouTube Studio', url: '/dashboard/youtube', icon: MonitorPlay },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "import {\n  Youtube,\n  RefreshCw,",
+  "new_string": "import {\n  MonitorPlay,\n  RefreshCw,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "<Youtube ",
+  "new_string": "<MonitorPlay"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:23)*
+
+
+## 🤖 Claude *(00:33:23)*
+
+Preciso corrigir: meu `replace_all` tirou o espaço (`<Youtube ` → `<MonitorPlay`), gerando `<MonitorPlayclassName`. Conferindo e consertando:
+
+## 🤖 Claude *(00:33:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== broken tokens? ===\"; grep -nE \"MonitorPlayclassName|MonitorPlay className|<MonitorPlay\" src/pages/YouTubeStudioPage.tsx",
+  "description": "Check for broken MonitorPlay JSX"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === broken tokens? ===
+> 246:          <MonitorPlayclassName="h-6 w-6" />
+> 292:              <MonitorPlayclassName="h-4 w-4" /> Conectar YouTube
+> 352:              <MonitorPlayclassName="h-4 w-4 text-cyan-400" />
+> ```
+
+## 🤖 Claude *(00:33:25)*
+
+
+## 🤖 Claude *(00:33:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": true,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "<MonitorPlayclassName=",
+  "new_string": "<MonitorPlay className="
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated. All occurrences were successfully replaced. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:33:33)*
+
+
+## 🤖 Claude *(00:33:34)*
+
+Corrigido. Rebuild + gates de materialidade (Lei 1):
+
+## 🤖 Claude *(00:33:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra; echo \"=== build ===\"; bun run build 2>&1 | tail -8; echo \"EXIT_BUILD=${PIPESTATUS[0]}\"; echo; echo \"=== G1 env baked (Supabase project ref in bundle) ===\"; grep -rl \"bcyvddsykvehvpwstlfa\" dist/assets/ 2>/dev/null | head -2 && echo \"OK env baked\" || echo \"FAIL env\"; echo; echo \"=== G2 new chunk with YouTube Studio page string ===\"; grep -rlE \"Ativar m\u00e9tricas|YouTube Studio\" dist/assets/ 2>/dev/null | head -3 && echo \"OK chunk present\" || echo \"FAIL chunk\"; echo; echo \"=== G3 dist/index.html served ===\"; ls -la dist/index.html",
+  "description": "Build frontend + verify materiality gates",
+  "timeout": 240000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === build ===
+> dist/assets/index-DFNOSnQm.js                   665.47 kB │ gzip: 197.37 kB
+> dist/assets/react-three-fiber.esm-DwUNKRM7.js   824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 33.05s
+> EXIT_BUILD=0
+> 
+> === G1 env baked (Supabase project ref in bundle) ===
+> dist/assets/CalendarPage-FDOqEyU8.js
+> dist/assets/SettingsPage-Dm91swW2.js
+> OK env baked
+> 
+> === G2 new chunk with YouTube Studio page string ===
+> dist/assets/index-DFNOSnQm.js
+> dist/assets/YouTubeStudioPage-BRzn-W6J.js
+> OK chunk present
+> 
+> === G3 dist/index.html served ===
+> -rw-rw-r-- 1 ubuntu ubuntu 2213 Jul 12 21:34 dist/index.html
+> ```
+
+## 🤖 Claude *(00:35:33)*
+
+
+## 🤖 Claude *(00:35:35)*
+
+Frontend **deployado com prova material** (Lei 1): `✓ built in 33.05s` · env baked (`bcyvddsykvehvpwstlfa` no bundle) · chunk novo `YouTubeStudioPage-BRzn-W6J.js` · `dist/index.html` reescrito 21:34. O painel está **LIVE** em `/dashboard/youtube`.
+
+Registrando o anticorpo do trap do ícone (Obstacle→Synthesis) antes de seguir:
+
+## 🤖 Claude *(00:35:42)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_lucide_brand_icons_removed.md",
+  "content": "---\nname: reference_lucide_brand_icons_removed\ndescription: lucide-react 1.11 removeu brand icons (Youtube etc.) \u2014 tsc passa mas vite build quebra; verificar export antes de usar\nmetadata:\n  type: reference\n---\n\n`lucide-react@1.11.0` (instalado no repo) **removeu os brand icons** \u2014 `Youtube` (e provavelmente outros logos de marca) **N\u00c3O s\u00e3o exportados**. Usar um \u00edcone inexistente **passa no `npx tsc --noEmit`** (resolu\u00e7\u00e3o de tipos permissiva) mas **quebra o `bun run build`** no export-tracing do rollup: `\"Youtube\" is not exported by lucide-react`.\n\nAntes de usar um \u00edcone lucide novo, confirme o export:\n`grep -c \"as <NomeDoIcone>,\" node_modules/lucide-react/dist/esm/lucide-react.mjs` (1 = existe \u00b7 0 = n\u00e3o).\n\nSubstitutos gen\u00e9ricos confirmados presentes: `MonitorPlay` (usei este para \"YouTube\"), `Video`, `Tv`, `Film`, `PlayCircle`, `Images`, `MessageSquare`.\n\n**Li\u00e7\u00e3o-m\u00e3e:** `tsc EXIT 0` N\u00c3O garante build \u2014 s\u00f3 o output do vite (`\u2713 built in \u2026`) garante (Lei 1). O `build-deploy-guardian` pegou isto num deploy real (2026-07-12). Ver [[reference_deploy_frontend]] \u00b7 [[feedback_browser_verify_deliverables]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_lucide_brand_icons_removed.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:35:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Deploy Frontend](reference_deploy_frontend.md) \u2014 nginx serve dist/ direto; `bun run build` = deploy completo para login.mcorch.com.",
+  "new_string": "- [Deploy Frontend](reference_deploy_frontend.md) \u2014 nginx serve dist/ direto; `bun run build` = deploy completo para login.mcorch.com.\n- [lucide-react 1.11 removeu brand icons (Youtube etc.)](reference_lucide_brand_icons_removed.md) \u2014 tsc passa, vite build quebra; `grep \"as <Icon>,\" node_modules/lucide-react/dist/esm/lucide-react.mjs` antes de usar."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:36:12)*
+
+
+## 🤖 Claude *(00:36:38)*
+
+Tudo do painel está no ar. Segue o balanço honesto e o pivô.
+
+## 1. Painel YouTube — construído, revisado e LIVE ✅
+
+- **`/dashboard/youtube`** no ar (nav em "Conteúdo & Campanhas"). Edge fns deployadas: `youtube-data` (leitura), `social-auth-init` (escopos alinhados aos 3 que você registrou), `publish-space-carousel`.
+- **Mapa completo da API** (o que você pediu — "todas as opções mapeadas"): `docs/bok/youtube-studio/11-api-surface-map.md` + `youtube-api-registry.json` — **13 recursos · 175 propriedades · 52 métricas · 32 dimensões · 33 ações** por tier de risco, verificados contra as docs oficiais. `/security-review`: **sem findings**.
+- **Honestidade material (Lei 1):** eu tinha introduzido um build-breaker — o ícone `Youtube` foi removido do `lucide-react` desta versão; **o `tsc` passou mas o `bun run build` quebrou**. O `build-deploy-guardian` pegou; troquei por `MonitorPlay` e o build fechou (`✓ built in 33.05s`, chunk `YouTubeStudioPage` + env baked no `dist/` servido). Virou memória-anticorpo.
+
+**Como você dogfooda essa semana, sem esperar a verificação Google:** em modo "Testing", **adicione-se como Test user** → em `/dashboard/social`, **reconecte o YouTube** (passa pela tela "app não verificado" — normal p/ seu canal) → o painel lista seus vídeos. **Métricas ficam adiadas** até você habilitar a **YouTube Analytics API** no projeto (é por isso que os escopos de analytics não apareciam no seu seletor) e reconectar — o painel já degrada elegante (mostra os vídeos, com um card "Ativar métricas").
+
+## 2. Pivô — cortes do EP01 → cadência TikTok
+
+Estado material do motor de repurpose (verifiquei agora):
+
+| Peça | Estado |
+|------|--------|
+| `ingest-external-asset` · `video-repurpose-run` | ✅ deployadas |
+| `publish-social` (branches REELS/CAROUSEL) · `publish-space-carousel` | ✅ deployadas |
+| Worker `scripts/video-repurpose-bridge.ts` + `segment-core`/`carousel-core` | ✅ existe, provado E2E — **mas não é serviço persistente** (roda sob demanda) |
+| Master do EP01 ingerido | ❌ ainda não |
+
+**O bloqueador é um só: o MP4 do master do EP01.** O `ingest-external-asset` **recusa baixar do YouTube por construção** (501 — IP de datacenter é bloqueado). Ou seja: precisa do arquivo. Assim que eu tiver o master, o fluxo é: ingest → `video-repurpose-run` com a spec de cortes → subo o worker (instalo como `video-repurpose-bridge.service`, igual aos outros bridges) → **N shorts 9:16 legendados** + carrossel → cadência.
+
+**Realidade honesta do TikTok:** seu app está em **re-review** (a mudança de ícone/nome "MCORCH — A agência autônoma" é justamente pra isso). Enquanto não aprova, **o TikTok publica os posts como PRIVADOS** (modo unaudited). Então dá pra **provar a cadência E2E agora com posts privados** (máquina toda funcionando, você revisa antes de tornar público) ou **segurar o TikTok** até a auditoria e publicar manualmente nas redes que já funcionam.
+
+## 3. O que eu preciso de você
+
+**Onde está o master do EP01?** Me diga qual caminho:
+- **(a)** o MP4 já está neste host (saída do repo GabrielAI / pasta `episodios`) → me passe o caminho e eu ingiro direto;
+- **(b)** você faz upload do MP4 (eu te digo o endpoint/como);
+- **(c)** o master ainda não foi exportado → geramos pelo GabrielAI primeiro.
+
+Assim que me apontar isso, eu produzo os cortes (você confirma/ajusta os timestamps — os que o outro modelo te passou eram estimativas) e ligo a cadência. **Recomendo** provar a cadência do TikTok **em privado** já, em paralelo à auditoria — zero risco, e no dia que o TikTok aprovar é só virar a chave pra público.
+
+Quer que eu já deixe o worker instalado como serviço enquanto você localiza o master?
+
+## 👤 User *(00:59:39)*
+
+Esta no meu notebook ainda já temos uma interface para fazer o passo a passo? Posso subir ele no mcorch por uma interface, tudo que você puder antecipar para me ajudar nesse caso por exemplo depende de mim subir o vip que subi no youtube mas ja temos a UI você só me mandaria por exemplo o passo a passo ou eu subo em um projeto novo no spaces? me diz qual seria o melhor caminho?

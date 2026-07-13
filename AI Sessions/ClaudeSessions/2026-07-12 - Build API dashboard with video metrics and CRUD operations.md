@@ -3475,3 +3475,16 @@ Points affirmatively cleared:
 - **Frontend:** display-only; no `dangerouslySetInnerHTML`/`eval`; `href` values carry a hardcoded `https://youtube.com/` prefix (scheme cannot be coerced).
 
 The changes faithfully mirror the repo's per-user credential-resolution and server-side-token model.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-11 - agent-af402a2055190b920]]
+> * **Próxima Sessão**: [[2026-07-12 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]
+%% --- TIMELINE END --- %%
