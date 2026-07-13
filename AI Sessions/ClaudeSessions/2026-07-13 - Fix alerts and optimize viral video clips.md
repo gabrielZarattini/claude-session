@@ -5910,6 +5910,164 @@ São ~11 arquivos **prontos mas não commitados** (rastreados no scratch). Nada 
 - **"pode deployar"** → deployo as edge fns (com verificação material).
 - **"sela"** → rodo o `/handoff` e commito tudo com o self-audit das Survival Laws.
 
+## 👤 User *(22:48:40)*
+
+Esse o delay footage real o vídeo que você me enviou, está nos assets? Olhei e n tem nada novo quero que exclua tudo e os rastros dos cortes que fizemos antes e deixe os novos para eu verificar tb
+
+## 🤖 Claude *(22:50:12)*
+
+
+## 🤖 Claude *(22:50:17)*
+
+Entendi, Maestro — e já sei **por que você não vê nada novo**: eu subi o vídeo de prova para uma chave de **teste** (`repurpose-test/beats-proof.mp4`) e **não registrei como `creative_asset`**. A biblioteca lê `creative_assets`, então o arquivo existe no storage mas não aparece na UI. Falha minha.
+
+Plano: **(1)** registrar o short novo (motion-graphic) como asset pra você verificar na biblioteca; **(2)** deletar os 5 cortes antigos (legenda tradicional, sessão passada) + rastros + lixo de teste; **(3)** manter o master (é a fonte de 1,3 GB — não é "corte"; confirmo com você).
+
+Primeiro, mostro exatamente o que existe hoje (Lei 1 — olhar o alvo antes de deletar):
+
+## 🤖 Claude *(22:50:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/inventory.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst UID = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst MASTER = \"7935a2e5-c769-4191-b6a3-e9dcd2ef5132\";\n\n// Master\nconst { data: m } = await sb.from(\"creative_assets\").select(\"id,kind,source_module,storage_bucket,storage_key,created_at\").eq(\"id\", MASTER).maybeSingle();\nconsole.log(\"MASTER:\", m ? `${m.id} ${m.source_module} ${m.storage_bucket}/${m.storage_key}` : \"GONE\");\n\n// Old cuts = children of master\nconst { data: kids } = await sb.from(\"creative_assets\").select(\"id,kind,source_module,storage_bucket,storage_key,created_at,metadata\").eq(\"parent_asset_id\", MASTER).order(\"created_at\");\nconsole.log(`\\nOLD CUTS (children of master) \u2014 ${kids?.length ?? 0}:`);\nfor (const c of kids ?? []) console.log(`  ${c.id}  ${c.storage_bucket}/${c.storage_key}  (${c.created_at.slice(0,19)})`);\n\n// Any asset pointing at the test key (beats-proof) \u2014 likely NONE (not registered)\nconst { data: tp } = await sb.from(\"creative_assets\").select(\"id,storage_key\").ilike(\"storage_key\", \"%repurpose-test%\");\nconsole.log(`\\nBEATS-PROOF registered as asset? ${tp?.length ? tp.map(x=>x.id).join(\",\") : \"NO (storage only, not in library)\"}`);\n\n// Storage objects under repurpose-test/ and the old cut folder\nconst { data: testObjs } = await sb.storage.from(\"video-studio-assets\").list(`${UID}/repurpose-test`);\nconsole.log(`\\nSTORAGE repurpose-test/: ${(testObjs??[]).map(o=>o.name).join(\", \") || \"(empty)\"}`);\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/inventory.ts 2>&1 | head -25",
+  "description": "Inventory old cuts + master + test artifacts before deletion"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> MASTER: 7935a2e5-c769-4191-b6a3-e9dcd2ef5132 external local/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+> 
+> OLD CUTS (children of master) — 5:
+>   13fa318f-aa39-46f1-b704-cfca61e1e195  video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/d67ae059-c733-4856-a06f-6ebba876672b/clip_000.mp4  (2026-07-13T03:54:50)
+>   91489913-a143-4826-a8d7-07003ea8afb2  video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/d67ae059-c733-4856-a06f-6ebba876672b/clip_001.mp4  (2026-07-13T03:54:51)
+>   3cfa577c-e007-42b2-a93c-473b6b8ab2d9  video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/d67ae059-c733-4856-a06f-6ebba876672b/clip_002.mp4  (2026-07-13T03:54:52)
+>   a2092706-5fd4-4ea5-934a-8caeb97f6e96  video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/d67ae059-c733-4856-a06f-6ebba876672b/clip_003.mp4  (2026-07-13T03:54:52)
+>   7daa243f-f06e-416a-83cd-4b520acbe992  video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/d67ae059-c733-4856-a06f-6ebba876672b/clip_004.mp4  (2026-07-13T03:54:53)
+> 
+> BEATS-PROOF registered as asset? NO (storage only, not in library)
+> 
+> STORAGE repurpose-test/: beats-proof.mp4
+> ```
+
+## 🤖 Claude *(22:51:18)*
+
+
+## 🤖 Claude *(22:51:22)*
+
+Inventário confirmado (Lei 1):
+- **Master** `7935a2e5` (EP01, bucket local) — **mantenho** (é a fonte, não um corte).
+- **5 cortes antigos** (legenda tradicional, sessão passada, 03:54): `13fa318f`, `91489913`, `3cfa577c`, `a2092706`, `7daa243f` → deletar (rows + storage).
+- **beats-proof.mp4** no storage mas **não registrado** → por isso some da UI.
+
+Executando: registro o short novo numa chave limpa, deleto os 5 antigos + rastros + a chave de teste, mantenho o master. Tudo com prova material:
+
+## 🤖 Claude *(22:51:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/cleanup-and-register.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, statSync } from \"node:fs\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst UID = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst MASTER = \"7935a2e5-c769-4191-b6a3-e9dcd2ef5132\";\nconst LOCAL = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/overlay-out/clip_000.mp4\";\nconst OLD_CUTS = [\"13fa318f-aa39-46f1-b704-cfca61e1e195\",\"91489913-a143-4826-a8d7-07003ea8afb2\",\"3cfa577c-e007-42b2-a93c-473b6b8ab2d9\",\"a2092706-5fd4-4ea5-934a-8caeb97f6e96\",\"7daa243f-f06e-416a-83cd-4b520acbe992\"];\nconst OLD_KEYS = [0,1,2,3,4].map(n=>`${UID}/repurpose/d67ae059-c733-4856-a06f-6ebba876672b/clip_00${n}.mp4`);\n\n// \u2500\u2500 STEP 1: register the NEW motion-graphic short at a clean key \u2500\u2500\nconst NEW_KEY = `${UID}/repurpose/viral-quality/short-motion-graphic.mp4`;\nconst bytes = readFileSync(LOCAL);\nconst up = await sb.storage.from(\"video-studio-assets\").upload(NEW_KEY, bytes, { contentType: \"video/mp4\", upsert: true });\nconsole.log(\"1) upload new:\", up.error ? \"ERR \"+up.error.message : \"ok \"+(statSync(LOCAL).size/1024).toFixed(0)+\"KB\");\nconst reg = await sb.rpc(\"register_creative_asset\", {\n  p_user_id: UID, p_kind: \"video\", p_storage_bucket: \"video-studio-assets\", p_storage_key: NEW_KEY, p_is_public: false,\n  p_source_module: \"hyperframes\", p_source_job_id: null, p_parent_asset_id: MASTER, p_mime_type: \"video/mp4\",\n  p_file_size_bytes: statSync(LOCAL).size, p_width: 1080, p_height: 1920, p_duration_seconds: 6,\n  p_title: \"Viral Quality \u2014 pr\u00e9via de estilo (motion-graphic, sem barra)\",\n  p_metadata: { repurpose: true, viral_quality: true, style_preview: true, source_asset_id: MASTER, note: \"texto placeholder; short real com footage+SRT casado\" },\n});\nconsole.log(\"   register:\", reg.error ? \"ERR \"+reg.error.message : \"ok id=\"+JSON.stringify(reg.data));\n\n// \u2500\u2500 STEP 2: delete the 5 OLD cuts (rows) \u2500\u2500\nconst del = await sb.from(\"creative_assets\").delete().in(\"id\", OLD_CUTS).select(\"id\");\nconsole.log(\"2) delete old rows:\", del.error ? \"ERR \"+del.error.message : `deleted ${del.data?.length ?? 0}: ${(del.data??[]).map((r:any)=>r.id.slice(0,8)).join(\",\")}`);\n\n// \u2500\u2500 STEP 3: delete old-cut storage objects + the test key \u2500\u2500\nconst rm = await sb.storage.from(\"video-studio-assets\").remove([...OLD_KEYS, `${UID}/repurpose-test/beats-proof.mp4`]);\nconsole.log(\"3) delete storage:\", rm.error ? \"ERR \"+rm.error.message : `removed ${rm.data?.length ?? 0} objects`);\n\n// \u2500\u2500 STEP 4: VERIFY final state \u2500\u2500\nconst { data: kids } = await sb.from(\"creative_assets\").select(\"id,storage_key,metadata\").eq(\"parent_asset_id\", MASTER).order(\"created_at\");\nconsole.log(`\\n4) VERIFY \u2014 children of master now: ${kids?.length ?? 0}`);\nfor (const c of kids ?? []) console.log(`   ${c.id}  ${c.storage_key}`);\nconst { data: leftover } = await sb.from(\"creative_assets\").select(\"id\").in(\"id\", OLD_CUTS);\nconsole.log(`   old cuts remaining: ${leftover?.length ?? 0} (expect 0)`);\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/cleanup-and-register.ts 2>&1 | head -25",
+  "description": "Register new short + delete old cuts + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1) upload new: ok 5107KB
+>    register: ok id="4297ee72-b0dd-4812-a415-2c0c68613e39"
+> 2) delete old rows: deleted 5: 91489913,7daa243f,3cfa577c,13fa318f,a2092706
+> 3) delete storage: removed 6 objects
+> 
+> 4) VERIFY — children of master now: 1
+>    4297ee72-b0dd-4812-a415-2c0c68613e39  ada39fae-67e1-4e53-af1c-5a18e1c108e8/repurpose/viral-quality/short-motion-graphic.mp4
+>    old cuts remaining: 0 (expect 0)
+> ```
+
+## 🤖 Claude *(22:52:36)*
+
+
+## 🤖 Claude *(22:52:40)*
+
+Limpeza executada com prova material:
+- ✅ **Short novo registrado** → asset `4297ee72` em `…/repurpose/viral-quality/short-motion-graphic.mp4` (agora **na biblioteca**).
+- ✅ **5 cortes antigos deletados** (rows) + **6 objetos de storage removidos** (5 clips + a chave de teste). Verificado: **0 antigos restantes**.
+- ✅ **Master mantido** (a fonte EP01).
+
+Antes de te mandar verificar, uma checagem crítica (Lei 1): a grid da biblioteca mostra só `asset_role='final'` — preciso garantir que o novo asset tenha esse carimbo, senão você olha e de novo "não tem nada":
+
+## 🤖 Claude *(22:52:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/check-role.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst NEW = \"4297ee72-b0dd-4812-a415-2c0c68613e39\";\nconst { data, error } = await sb.from(\"creative_assets\").select(\"id,asset_role,is_public,kind,source_module,title\").eq(\"id\", NEW).maybeSingle();\nif (error) { console.log(\"err\", error.message); process.exit(1); }\nconsole.log(\"new asset:\", JSON.stringify(data));\nif (data && data.asset_role !== \"final\") {\n  const up = await sb.from(\"creative_assets\").update({ asset_role: \"final\" }).eq(\"id\", NEW).select(\"asset_role\").maybeSingle();\n  console.log(\"\u2192 stamped asset_role=final:\", up.error ? \"ERR \"+up.error.message : JSON.stringify(up.data));\n} else {\n  console.log(\"\u2192 asset_role already:\", data?.asset_role);\n}\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/check-role.ts 2>&1 | head",
+  "description": "Check + stamp asset_role=final so it shows in library"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> err column creative_assets.asset_role does not exist
+> ```
+
+## 🤖 Claude *(22:53:09)*
+
+
+## 🤖 Claude *(22:53:11)*
+
+`asset_role` **não existe** como coluna — então a grid **não filtra por isso** (aquela era uma feature planejada, não aplicada). O novo asset é um `creative_asset` normal, mesma forma dos 5 que você viu antes → **vai aparecer** na biblioteca após refresh. Sem carimbo necessário.
+
+Registrando a limpeza no estado e te devolvendo:
+
+## 🤖 Claude *(22:53:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md",
+  "old_string": "## UNCOMMITTED FILES (for /handoff when Sovereign GOs):",
+  "new_string": "## ASSET CLEANUP (Sovereign request 2026-07-13, done materially):\n- Registered NEW motion-graphic short \u2192 creative_asset 4297ee72-b0dd-4812-a415-2c0c68613e39 at video-studio-assets/ada39fae-.../repurpose/viral-quality/short-motion-graphic.mp4 (1080x1920, 6s, 5.1MB, parent=master, source_module=hyperframes, title \"Viral Quality \u2014 pr\u00e9via de estilo\", metadata.style_preview=true placeholder text). Shows in library on refresh.\n- Deleted 5 OLD cuts (traditional-caption, prior session): rows 13fa318f/91489913/3cfa577c/a2092706/7daa243f + 6 storage objects (5 clips + test key beats-proof.mp4). Verified: 0 old remaining, master's children now = 1 (the new short).\n- KEPT master 7935a2e5 (EP01 source, bucket local) \u2014 not a \"corte\". Offered to delete if Sovereign wants.\n- NOTE: asset_role column does NOT exist (planned feature not applied) \u2192 library grid not filtering by it.\n\n## UNCOMMITTED FILES (for /handoff when Sovereign GOs):"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:53:33)*
+
+Feito, Maestro. Prova material de tudo:
+
+## ✅ Limpeza + registro (verificado no banco)
+
+| Ação | Resultado |
+|---|---|
+| **Short novo registrado** | asset `4297ee72` — agora **na biblioteca** (era isso que faltava: eu tinha subido numa chave de teste sem registrar) |
+| **5 cortes antigos deletados** | rows `13fa318f · 91489913 · 3cfa577c · a2092706 · 7daa243f` + **6 objetos de storage** (5 clips + a chave de teste) |
+| **Verificação** | filhos do master agora = **1** (só o novo); antigos restantes = **0** |
+| **Master EP01** | **mantido** (é a fonte, não um corte) |
+
+**Onde verificar:** dá um **hard-refresh (Ctrl+Shift+R)** na biblioteca de assets (`/dashboard/spaces/assets` — o mesmo lugar onde apareciam os 5 antigos). O novo aparece como *"Viral Quality — prévia de estilo (motion-graphic, sem barra)"*.
+
+## ⚠️ Duas honestidades (Lei 1)
+
+1. **Esse short novo é uma prévia de ESTILO** — o texto ("ROBÔS ESTÃO APRENDENDO") é placeholder que eu autorei, porque o EP01 não tem SRT. O que ele prova é o **visual** (motion-graphic Montserrat sobre footage real, sem botão) — que é o que você queria ver. O short **de conteúdo real** (texto que casa com a fala, escolhido pelo detector) sai quando tivermos **footage + SRT do mesmo episódio**.
+2. **Ainda preciso do footage de um ep02/03/04** — você subiu os SRTs desses, mas o footage no disco é o EP01. Com o par casado eu fecho o primeiro short viral verdadeiro ponta-a-ponta.
+
+Quer que eu **delete o master também** (pra zerar de vez) ou mantenho? E quando puder, sobe o **MP4 de um ep02/03/04** que eu monto o real na hora.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

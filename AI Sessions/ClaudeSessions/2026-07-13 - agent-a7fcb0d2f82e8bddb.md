@@ -1357,3 +1357,16 @@ No ≥8-confidence vulnerability in the new `text_beats`/`caption_mode` surface.
 - In the `beats` branch, the FFmpeg argv (`-ss`, `-t`, `-i` sourcePath, PNG pattern `f_%05d.png`, `-filter_complex` reframe+overlay) contains **no** clip/phrase-derived value — `phrase` flows only into the PNG frames via `renderAlphaFrames`. `spawn('ffmpeg', args)` runs with **no shell** (no `shell:true`). `alphaDir` is `mkdtempSync`, `outPath`/`sourcePath` are server-generated. The legacy `drawtext` path writes caption to a server-named file (`cap_${index}.txt`) and references it via `textfile='${capPath}'` — caption **content** stays in the file, never in the filter string or a path.
 
 No command injection, no path traversal (the `local` inbox path is realpath-contained + admin-gated), no cross-tenant access (all output keys/`register_creative_asset` are `row.user_id`-bound), no billing bypass (free rail). Files reviewed: `supabase/functions/video-repurpose-run/index.ts`, `scripts/video-repurpose-bridge.ts`, `scripts/video-repurpose/segment-core.ts`, `scripts/hyperframes/render-core.ts`, `scripts/hyperframes/templates/viral-caption-overlay-9x16.html`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-13 - agent-a75516096a8be0e6c]]
+> * **Próxima Sessão**: [[2026-07-13 - agent-aa022bf46b6f1905f]]
+%% --- TIMELINE END --- %%
