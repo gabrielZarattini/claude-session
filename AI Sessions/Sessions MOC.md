@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2134
-> * **Sessões do Claude**: 2087
+> * **Total de Sessões Registradas**: 2141
+> * **Sessões do Claude**: 2094
 > * **Sessões do Gemini**: 47
 
 ---
@@ -72,19 +72,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-14 - agent-ac471142e96a3b2df]]` - *2026-07-14*
+*   `[[2026-07-14 - agent-ab91db126cc7266f6]]` - *2026-07-14*
+*   `[[2026-07-14 - agent-ab06741d5bc28e55d]]` - *2026-07-14*
+*   `[[2026-07-14 - agent-a90a22787dc50c7a8]]` - *2026-07-14*
+*   `[[2026-07-14 - agent-a8ceedf9e7b984e62]]` - *2026-07-14*
+*   `[[2026-07-14 - agent-a4a226b3757511ff7]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-a37008b3137da02ce]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-a1611d83feed849e4]]` - *2026-07-14*
 *   `[[2026-07-14 - Fix alerts and optimize viral video clips]]` - *2026-07-14*
+*   `[[2026-07-14 - Autorizar cadência de conteúdo e refatorar UI assets]]` - *2026-07-14*
 *   `[[2026-07-13 - fca7f00a-1b8c-4cf0-8a86-eea82481bf47]]` - *2026-07-13*
 *   `[[2026-07-13 - agent-ac74bcce18c115070]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-abf67c6215ae9e548]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-abedc0af54ee1d79b]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-abd884395d76d9014]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-aabb9a4133e4a401d]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-aa022bf46b6f1905f]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-a7fcb0d2f82e8bddb]]` - *2026-07-13*
-*   `[[2026-07-13 - agent-a75516096a8be0e6c]]` - *2026-07-13*
-*   *... e mais 2079 sessões nessa categoria.*
+*   *... e mais 2086 sessões nessa categoria.*
 
 ---
 
@@ -1740,9 +1740,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-14 - agent-ac471142e96a3b2df]]` (ClaudeSessions)
+*   `[[2026-07-14 - agent-ab91db126cc7266f6]]` (ClaudeSessions)
+*   `[[2026-07-14 - agent-ab06741d5bc28e55d]]` (ClaudeSessions)
+*   `[[2026-07-14 - agent-a90a22787dc50c7a8]]` (ClaudeSessions)
+*   `[[2026-07-14 - agent-a8ceedf9e7b984e62]]` (ClaudeSessions)
+*   `[[2026-07-14 - agent-a4a226b3757511ff7]]` (ClaudeSessions)
 *   `[[2026-07-14 - agent-a37008b3137da02ce]]` (ClaudeSessions)
 *   `[[2026-07-14 - agent-a1611d83feed849e4]]` (ClaudeSessions)
 *   `[[2026-07-14 - Fix alerts and optimize viral video clips]]` (ClaudeSessions)
+*   `[[2026-07-14 - Autorizar cadência de conteúdo e refatorar UI assets]]` (ClaudeSessions)
 *   `[[2026-07-13 - fca7f00a-1b8c-4cf0-8a86-eea82481bf47]]` (ClaudeSessions)
 *   `[[2026-07-13 - agent-ac74bcce18c115070]]` (ClaudeSessions)
 *   `[[2026-07-13 - agent-abf67c6215ae9e548]]` (ClaudeSessions)

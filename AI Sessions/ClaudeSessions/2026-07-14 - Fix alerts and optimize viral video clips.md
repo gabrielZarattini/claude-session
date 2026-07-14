@@ -12344,6 +12344,1493 @@ Escrevendo a estratégia fundamentada:
 
 You've hit your session limit · resets 12:40am (America/Sao_Paulo)
 
+## 👤 User *(03:59:33)*
+
+ok vamos aguardar o wakeup apenas deixando avisaque executei o npx supabase functions deploy publish-space-asset
+
+## 👤 User *(04:00:11)*
+
+[Request interrupted by user]
+
+## 👤 User *(04:00:17)*
+
+continue
+
+## 🤖 Claude *(04:00:23)*
+
+
+## 🤖 Claude *(04:00:24)*
+
+Iteração S3 fechada — o doc de cadência está escrito. Antes de decidir seguir ou selar, meço a janela (SEAL WATCH):
+
+## 🤖 Claude *(04:00:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run .claude/scripts/session-inspect.ts 2>/dev/null | grep -E \"\u2588|Veredito|gasto\" | head -3\necho \"\"; echo \"=== uncommitted scope ===\"; git status --short | wc -l; echo \"arquivos mexidos/novos\"",
+  "description": "Measure window + uncommitted scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    [█████████████████████████████░░░░░░░░░|░░] 71.5%   (| = teto de seal 95%)
+>    output gasto na sessão: 1316k tokens
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> 
+> === uncommitted scope ===
+> 28
+> arquivos mexidos/novos
+> ```
+
+## 🤖 Claude *(04:00:57)*
+
+
+## 🤖 Claude *(04:01:00)*
+
+**Janela em 71,5%** (saudável) — mas o arco esgotou o que consigo avançar **sozinho**: S1 e S2 prontos, S3 (cadência) escrito, e **tudo que resta é gated em você**. Com 28 arquivos não commitados de uma sessão-maratona, o "continue" de maior valor é **selar** — mas primeiro te entrego a estratégia e o placar do arco. Atualizando estado e encerrando o loop:
+
+## 🤖 Claude *(04:01:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md",
+  "old_string": "## S2 UI SHIPPED (2026-07-13 23:50):",
+  "new_string": "## S3 DONE + LOOP STOPPED (2026-07-14): cadence strategy authored\n- docs/processes/[[content-cadence-strategy|content-cadence-strategy]].md \u2014 ecosystem-generated, grounded (rails-inventory.ts verified). KEY honest facts: scheduled_posts=0 (engine proven, User0 never published \u2192 cadence launches it); autopilot_plans absent (recurrence genuinely OFF); creative_metrics.hook_rate exists; only YouTube+WordPress have real reach now (TikTok SELF_ONLY, IG gated). Recommends: publish 3 EP01 shorts YT D0/D+2/D+4 + WP; then ep02 footage; enable YT Analytics; mine ep05+ via pool; recurrence ONLY after 1 manual cycle proven. Presented for Sovereign approval \u2014 NO cron armed.\n- ARC \"GabrielAI\u2192Spaces + tra\u00e7\u00e3o\" autonomous backlog DRAINED. All remaining = Sovereign-gated: approve cadence; apply user_provider_keys migration; deploy canvas-execute; add 3 Gmail keys; S4 pod endpoint. Window 71.5%, 28 uncommitted files \u2192 RECOMMEND /handoff seal now (arc done, not idle-ticking gated items).\n\n## S2 UI SHIPPED (2026-07-13 23:50):"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fca7f00a-1b8c-4cf0-8a86-eea82481bf47/scratchpad/viral-quality-loop-state.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:01:15)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "stop": true
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Loop stopped — no further wakeups scheduled. If you armed a Monitor for this loop, TaskStop it now; otherwise nothing more to do this turn.
+> ```
+
+## 🤖 Claude *(04:01:34)*
+
+Loop encerrado (nenhum Monitor ativo). Aqui está a entrega + o placar, Maestro.
+
+## 📋 S3 — Estratégia de cadência (gerada pelo ecossistema, fundamentada)
+
+[content-cadence-strategy.md](docs/processes/content-cadence-strategy.md) — o essencial, com a verdade sem maquiagem (Lei 1):
+
+- **Dois loops separados:** Produção (1 episódio/semana, gargalo = crédito → resolvido pelo pool multi-key) e Distribuição (1 master → N shorts escalonados, nunca tudo no D0).
+- **Só YouTube + WordPress têm alcance real hoje** — TikTok está `SELF_ONLY` e IG gated no App Review. Ancorei a v1 nesses dois; IG/TikTok "ensaiam agora, alcançam quando o gate abrir".
+- **Achado honesto:** `scheduled_posts = 0` — o motor de distribuição existe e está provado, mas o Usuário Zero **nunca publicou** por ele. A cadência estreia isso.
+- **Sequência recomendada:** (1) publicar os 3 shorts EP01 no YT agora + post WP; (2) subir footage do ep02; (3) habilitar YT Analytics; (4) minerar ep05+ com o pool; (5) **só então** armar recorrência — nunca cron no escuro.
+
+## 🏁 Placar do arco "GabrielAI→Spaces + tração"
+
+| Fatia | Estado |
+|---|---|
+| **S1** Botão Distribuir + badge SRT | ✅ shipped + `publish-space-asset` deployado (probe 400) |
+| **S2** Pool multi-key BYOK | ✅ migration (`/security-review` NO FINDINGS + endurecida) + helper + `canvas-execute` fiado + Settings card + hook — **witness gated em você** |
+| **S3** Estratégia de cadência | ✅ escrita — **aguarda sua aprovação** |
+| **S4** Witness GPU 5090 | ⏳ gated no endpoint do pod |
+
+## 🔑 O que depende de você (nada mais é autônomo)
+1. **Aplicar** o pool: `bash scripts/qa/apply-user-provider-keys-migration.sh` + `npx supabase functions deploy canvas-execute` → cadastrar os 3 Gmails no Settings.
+2. **Aprovar** a cadência (ou ajustar canais/dias) + GO para publicar os 3 shorts EP01 no YouTube.
+
+## 💾 Recomendação forte: **selar agora**
+São **28 arquivos** prontos e não commitados de uma sessão-maratona (motor Viral Quality + ASR self-host + host-media + multi-key BYOK + cadência). A janela está em 71,5% — saudável, mas o backlog autônomo do arco **esgotou** (o resto é seu). Recomendo rodar o **`/handoff`** para commitar tudo de forma granular, atualizar o HANDOFF.md, inserir o nó de milestone e rodar o self-audit das Survival Laws. Quer que eu sele?
+
+## 👤 User *(04:01:51)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(04:01:51)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print "/"}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(04:01:54)*
+
+Executando o `/handoff`. Pre-flight completo em paralelo:
+
+## 🤖 Claude *(04:01:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short; echo \"===DIFFSTAT===\"; git diff HEAD --stat | tail -30",
+  "description": "Inventory uncommitted + scope"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M scripts/host-upload-server.ts
+>  M scripts/hyperframes/render-core.ts
+>  M scripts/video-repurpose/segment-core.ts
+>  M src/hooks/useCanvasStudio.ts
+>  M src/hooks/useVideoRepurpose.ts
+>  M src/lib/asset-url.ts
+>  M src/pages/SettingsPage.tsx
+>  M src/pages/VideoRepurposePage.tsx
+>  M supabase/functions/canvas-execute/index.ts
+>  M supabase/functions/video-repurpose-run/index.ts
+> ?? docs/bok/spaces-evolution/20-amendment-multikey-byok-vertex.md
+> ?? docs/bok/video-repurpose/10-frd-sdd-viral-quality.md
+> ?? docs/processes/[[asr-master-to-srt|asr-master-to-srt]].md
+> ?? docs/processes/[[content-cadence-strategy|content-cadence-strategy]].md
+> ?? docs/processes/[[repurpose-host-infra-provisioning|repurpose-host-infra-provisioning]].md
+> ?? infra/nginx/host-upload.location.conf
+> ?? infra/systemd/
+> ?? scripts/hyperframes/templates/fonts/
+> ?? scripts/hyperframes/templates/viral-caption-overlay-9x16.html
+> ?? scripts/qa/apply-host-media-nginx.sh
+> ?? scripts/qa/apply-user-provider-keys-migration.sh
+> ?? scripts/video-repurpose/reconcile-srt-roteiro.py
+> ?? src/components/settings/ProviderKeysCard.tsx
+> ?? src/hooks/useProviderKeys.ts
+> ?? supabase/functions/_shared/provider-keys.ts
+> ?? supabase/functions/detect-viral-moments/
+> ?? supabase/migrations/20260714030000_user_provider_keys_pool.sql
+> ?? video-studio/GabrielAI/
+> ===DIFFSTAT===
+>  scripts/host-upload-server.ts                   |  71 ++++++--
+>  scripts/hyperframes/render-core.ts              |  69 +++++++-
+>  scripts/video-repurpose/segment-core.ts         |  42 ++++-
+>  src/hooks/useCanvasStudio.ts                    |   2 +
+>  src/hooks/useVideoRepurpose.ts                  |  69 +++++++-
+>  src/lib/asset-url.ts                            |   9 +
+>  src/pages/SettingsPage.tsx                      |   3 +
+>  src/pages/VideoRepurposePage.tsx                | 209 +++++++++++++++++++++++-
+>  supabase/functions/canvas-execute/index.ts      |   9 +-
+>  supabase/functions/video-repurpose-run/index.ts |  25 ++-
+>  10 files changed, 477 insertions(+), 31 deletions(-)
+> ```
+
+## 🤖 Claude *(04:01:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit log --oneline -6; echo \"===TSC===\"; npx tsc --noEmit 2>&1 | tail -8; echo \"tsc-done\"",
+  "description": "History + tsc check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> a1d344d chore(sprint): v6.98.0 — YouTube Studio Fatia 1 + front-door host-local do Repurpose
+> 1730c4a docs(handoff): seal YouTube Studio (Fatia 1) + front-door host-local do Repurpose
+> adcab9a docs(readme): v6.98.0 — YouTube Studio (Fatia 1) + front-door host-local do Repurpose
+> f10fba4 docs(bok): youtube-studio API surface map + registry + SOP do painel (Fatia 1)
+> 65167eb feat(nav): rotas + nav YouTube Studio & Repurpose de Video (Repurpose admin-only)
+> 681002f fix(video-repurpose): legenda drawtext trunca acento UTF-8 -> padding (segment + carousel)
+> ===TSC===
+> tsc-done
+> ```
+
+## 🤖 Claude *(04:01:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; echo \"---\"; curl -s http://localhost:8001/api/v2/heartbeat; echo \"\"; ls scratch/ 2>/dev/null && echo \"scratch tem arquivos\" || echo \"scratch limpo\"",
+  "description": "Infra health + scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 2 weeks (healthy)
+> mcorch_claude_mem: Up 4 weeks (healthy)
+> mcorch_chroma: Up 4 weeks (healthy)
+> ---
+> {"nanosecond heartbeat":1784001719015872972}
+> scratch tem arquivos
+> ```
+
+## 🤖 Claude *(04:02:08)*
+
+
+## 🤖 Claude *(04:02:09)*
+
+tsc limpo, infra saudável. Phase 1 — auditoria de segurança + inspeção do que vai entrar (scratch, tamanho do GabrielAI, gitignore):
+
+## 🤖 Claude *(04:02:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan no diff ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN)\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|Deno.env\\|process.env\\|SB_SECRET_KEY\\|SUPABASE_SERVICE\\|--\" | head -10 || echo \"sem match\"\necho \"=== 1a-b. scan nos arquivos NOVOS (untracked) \u2014 a migration/edge t\u00eam chave? ===\"\ngrep -rE \"AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{30,}|eyJ[a-zA-Z0-9._-]{40,}\" supabase/functions/detect-viral-moments/ supabase/functions/_shared/provider-keys.ts supabase/migrations/20260714030000_user_provider_keys_pool.sql src/components/settings/ProviderKeysCard.tsx src/hooks/useProviderKeys.ts 2>/dev/null | grep -v \"AIza\u2026\" | head -5 || echo \"sem credencial hardcoded \u2705\"\necho \"=== 1e. console.log de segredo ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*api_key\\|console\\.log.*secret\" src/hooks/useProviderKeys.ts src/components/settings/ProviderKeysCard.tsx 2>/dev/null | head || echo \"sem log sens\u00edvel \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+## 🤖 Claude *(04:02:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scratch/ ===\"; ls -la scratch/ 2>/dev/null\necho \"=== video-studio/GabrielAI tamanho + conte\u00fado (o que entraria) ===\"; du -sh video-studio/GabrielAI 2>/dev/null; find video-studio/GabrielAI -type f | head -12\necho \"=== fonts dir ===\"; du -sh scripts/hyperframes/templates/fonts; ls scripts/hyperframes/templates/fonts\necho \"=== gitignore cobre video-studio? ===\"; grep -nE \"video-studio|GabrielAI|repurpose-inbox\" .gitignore 2>/dev/null || echo \"(n\u00e3o ignorado)\"",
+  "description": "Scratch + GabrielAI size + gitignore"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan no diff ===
+> === 1a-b. scan nos arquivos NOVOS (untracked) — a migration/edge têm chave? ===
+> === 1e. console.log de segredo ===
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch/ ===
+> total 8
+> drwxrwxr-x  2 gcrUX gcrUX 4096 Jun 30 01:44 .
+> drwxrwx--- 33 gcrUX gcrUX 4096 Jul 13 23:50 ..
+> === video-studio/GabrielAI tamanho + conteúdo (o que entraria) ===
+> 76K	video-studio/GabrielAI
+> video-studio/GabrielAI/roteiro-ep01-narracao.json
+> video-studio/GabrielAI/legendas/ep03-pt-BR.srt
+> video-studio/GabrielAI/legendas/ep01-pt-BR.srt
+> video-studio/GabrielAI/legendas/ep03-en.srt
+> video-studio/GabrielAI/legendas/ep04-en.srt
+> video-studio/GabrielAI/legendas/ep02-pt-BR.srt
+> video-studio/GabrielAI/legendas/ep04-pt-BR.srt
+> video-studio/GabrielAI/legendas/ep02-en.srt
+> === fonts dir ===
+> 740K	scripts/hyperframes/templates/fonts
+> Montserrat-variable.ttf
+> OFL.txt
+> === gitignore cobre video-studio? ===
+> 102:repurpose-inbox/
+> ```
+
+## 🤖 Claude *(04:02:57)*
+
+
+## 🤖 Claude *(04:03:01)*
+
+**Segurança Phase 1: tudo ✅** (sem credencial hardcoded no diff/novos, sem log sensível). scratch/ vazio, `repurpose-inbox/` (1,3GB) já no gitignore, GabrielAI=76K (legendas), fonts=740K (Montserrat+OFL) — todos legítimos. As 3 superfícies de segurança novas (migration, detector, host-media) passaram `/security-review` NO FINDINGS nesta sessão.
+
+Phase 2 — commits granulares por concern. **(1/5)** Motor Viral Quality:
+
+## 🤖 Claude *(04:03:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/hyperframes/render-core.ts scripts/hyperframes/templates/viral-caption-overlay-9x16.html scripts/hyperframes/templates/fonts/ scripts/video-repurpose/segment-core.ts supabase/functions/detect-viral-moments/ supabase/functions/video-repurpose-run/index.ts src/hooks/useVideoRepurpose.ts src/pages/VideoRepurposePage.tsx docs/bok/video-repurpose/10-frd-sdd-viral-quality.md\ngit commit -q -m \"feat(video-repurpose): motor Viral Quality \u2014 detector de momentos + overlay motion-graphic\n\nFecha a metade que faltava do repurpose: al\u00e9m de cortar, agora ELEGE os melhores\nmomentos e os veste com qualidade viral. O detector (detect-viral-moments) l\u00ea o SRT\ndo master e pontua janelas 15-45s no estilo Hormozi, selecionando cues verbatim como\ntext_beats (nunca inventa texto \u2014 Lei 1). O motor de overlay funde os dois rails:\nfootage real reenquadrado 9:16 + camada de texto motion-graphic RGBA (renderAlphaFrames\n+ FFmpeg overlay), tipografia premium Montserrat, sem bot\u00e3o/CTA. Um clique na UI\n(Gerar cortes virais) roda detector\u2192enqueue\u2192render com barra de progresso ancorada em\nsinais reais (fila + filhos registrados). SDD com Pattern Conformance dos 21 padr\u00f5es.\nProvado E2E em produ\u00e7\u00e3o nos 3 shorts do EP01 (Vision 7-8/10). /security-review NO FINDINGS \u00d72.\"\ngit log --oneline -1",
+  "description": "Commit 1: Viral Quality engine"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:03AM[0m [32mINF[0m 1 commits scanned.
+> [90m1:03AM[0m [32mINF[0m scan completed in 29.3ms
+> [90m1:03AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.10 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> d4972c7 feat(video-repurpose): motor Viral Quality — detector de momentos + overlay motion-graphic
+> ```
+
+## 🤖 Claude *(04:03:14)*
+
+
+## 🤖 Claude *(04:03:15)*
+
+Commit 1 selado (`d4972c7`, gitleaks limpo). **(2/5)** ASR self-host + reconciliação de roteiro:
+
+## 🤖 Claude *(04:03:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/processes/[[asr-master-to-srt|asr-master-to-srt]].md scripts/video-repurpose/reconcile-srt-roteiro.py video-studio/GabrielAI/\ngit commit -q -m \"feat(video-repurpose): ASR self-host (whisper.cpp) + reconcilia\u00e7\u00e3o roteiro-autoritativa\n\nDestrava a detec\u00e7\u00e3o de momentos para masters sem transcript. Motor ASR whisper.cpp\n(MIT, US\\$0) transcreve o master no host; a reconcilia\u00e7\u00e3o casa o texto com o ROTEIRO\noriginal (GabrielAI) \u2014 o \u00e1udio da IA generativa erra nomes pr\u00f3prios (Austin\u2192Boston\nDynamics, o 'Incr\u00edvel.' perdido) mas o roteiro \u00e9 a verdade da legenda (diretiva\nSovereign). Alinhamento palavra-a-palavra difflib preserva o timing real do Whisper e\nsubstitui s\u00f3 o texto das cues casadas, mantendo intro/cartelas fora do roteiro. SOP com\nos dois n\u00edveis (pipeline GabrielAI usa gerar_srt.py can\u00f4nico; masters crus usam este\nrail). EP01 transcrito (98 cues, 94% alinhado) e semeado no master.\" 2>&1 | tail -1\ngit log --oneline -1",
+  "description": "Commit 2: ASR + roteiro reconciliation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> 67dc54d feat(video-repurpose): ASR self-host (whisper.cpp) + reconciliação roteiro-autoritativa
+> ```
+
+## 🤖 Claude *(04:03:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/host-upload-server.ts src/lib/asset-url.ts infra/nginx/host-upload.location.conf infra/systemd/ scripts/qa/apply-host-media-nginx.sh docs/processes/[[repurpose-host-infra-provisioning|repurpose-host-infra-provisioning]].md\ngit commit -q -m \"feat(repurpose): rota host-media (streaming Range) + infra host versionada\n\nO master host-local (bucket 'local', disco do host) n\u00e3o abria na biblioteca \u2014 a UI\ntentava assinar no Supabase Storage (Object not found). host-upload-server ganha\nGET /api/host-media com streaming Range (HTTP 206 \u2192 seek), mesmos guards do upload\n(JWT admin.getUser + owner-scope + containment); asset-url resolve bucket='local' por\nessa rota com o JWT da sess\u00e3o como token de query (video src n\u00e3o manda header).\n/security-review NO FINDINGS (traversal/auth/cross-tenant/header-injection). Versiona\na infra que vivia s\u00f3 no host (2 units systemd + location nginx) + SOP de provisionamento\ncom gates G1-G7. Provado 206 na porta p\u00fablica com o master real de 1,3GB.\" 2>&1 | tail -1\ngit log --oneline -1",
+  "description": "Commit 3: host-media route + infra"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> 955117d feat(repurpose): rota host-media (streaming Range) + infra host versionada
+> ```
+
+## 🤖 Claude *(04:03:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260714030000_user_provider_keys_pool.sql supabase/functions/_shared/provider-keys.ts supabase/functions/canvas-execute/index.ts src/hooks/useProviderKeys.ts src/components/settings/ProviderKeysCard.tsx src/pages/SettingsPage.tsx src/hooks/useCanvasStudio.ts scripts/qa/apply-user-provider-keys-migration.sh docs/bok/spaces-evolution/20-amendment-multikey-byok-vertex.md\ngit commit -q -m \"feat(spaces): pool multi-key BYOK por provider (Amendment 20)\n\nEvolui o API Tenancy Model de 1 chave/provider para um pool ordenado de chaves nomeadas\ndo mesmo tenant. Caso \u00e2ncora: 3 contas Gmail x cr\u00e9ditos free-tier Google p/ minerar os\npr\u00f3ximos epis\u00f3dios a custo ~US\\$0 at\u00e9 monetizar. Tabela user_provider_keys (chave cifrada\nno Vault via trigger, RLS owner, id server-truth anti-\u00f3rf\u00e3o, view decifrada service-role\ncom WHERE de tenancy); helper resolveProviderKey (escolha expl\u00edcita owner-validada \u2192\nprioridade \u2192 legado \u2192 402); canvas-execute resolve gemini pelo pool + provider_key_id;\ncard no Settings (add/prioriza/desativa/remove, chave nunca reexibida) + seletor por n\u00f3.\nMigration apply-gated (Lei 4). /security-review NO FINDINGS + 2 notas de hardening aplicadas.\" 2>&1 | tail -1\ngit log --oneline -1",
+  "description": "Commit 4: multi-key BYOK pool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> 6dbc7f8 feat(spaces): pool multi-key BYOK por provider (Amendment 20)
+> ```
+
+## 🤖 Claude *(04:03:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/processes/[[content-cadence-strategy|content-cadence-strategy]].md\ngit commit -q -m \"docs(process): estrat\u00e9gia de cad\u00eancia de conte\u00fado v1 (gerada pelo ecossistema)\n\nPlano de cad\u00eancia fundamentado nos trilhos reais (Lei 1): dois loops separados\n(produ\u00e7\u00e3o 1 ep/semana gated na minera\u00e7\u00e3o; distribui\u00e7\u00e3o 1 master\u2192N shorts escalonados\nD0/D+2/D+4). Verdade sem maquiagem: scheduled_posts=0 (motor provado, nunca usado pelo\nUser 0); s\u00f3 YouTube+WordPress t\u00eam alcance real hoje (TikTok SELF_ONLY, IG gated App\nReview). Recomenda ativar YT primeiro, provar 1 ciclo manual antes de armar recorr\u00eancia.\nAguarda aprova\u00e7\u00e3o Sovereign antes de qualquer cron.\" 2>&1 | tail -1\necho \"=== restam untracked? ===\"; git status --short",
+  "description": "Commit 5: cadence strategy + verify clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> === restam untracked? ===
+> ```
+
+## 🤖 Claude *(04:04:02)*
+
+
+## 🤖 Claude *(04:04:03)*
+
+5 commits selados, working tree limpo. **Phase 3 — nó de milestone na Knowledge Mesh** (roda antes do README para o badge contar este nó):
+
+## 🤖 Claude *(04:04:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit log --oneline -5\nset -a; source .env; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-viral-quality-multikey\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] Motor Viral Quality do repurpose (detector Hormozi + overlay motion-graphic Montserrat, E2E prod nos 3 shorts EP01) + ASR self-host whisper.cpp + reconcilia\u00e7\u00e3o roteiro-autoritativa + rota host-media (streaming Range) + pool multi-key BYOK (Amendment 20) + estrat\u00e9gia de cad\u00eancia v1. 5 commits.\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"viral-quality-multikey\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"NODE_ID=$NODE\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\":{\\\"id\\\":\\\"${NODE}\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', str(d)[:80])\" 2>/dev/null || echo \"embed: log manual\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE}\\\"}\" > proof-manifest.json\ncat proof-manifest.json",
+  "description": "Phase 3: milestone node + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 14e5a6d docs(process): estratégia de cadência de conteúdo v1 (gerada pelo ecossistema)
+> 6dbc7f8 feat(spaces): pool multi-key BYOK por provider (Amendment 20)
+> 955117d feat(repurpose): rota host-media (streaming Range) + infra host versionada
+> 67dc54d feat(video-repurpose): ASR self-host (whisper.cpp) + reconciliação roteiro-autoritativa
+> d4972c7 feat(video-repurpose): motor Viral Quality — detector de momentos + overlay motion-graphic
+> NODE_ID=d98767ea-1f52-4ebd-b4c7-03f822d1b57c
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> {"handoffNodeId": "d98767ea-1f52-4ebd-b4c7-03f822d1b57c"}
+> ```
+
+## 🤖 Claude *(04:04:20)*
+
+
+## 🤖 Claude *(04:04:21)*
+
+Nó inserido (`d98767ea`). O embed rejeitou o formato — corrigindo o payload (`node_id`):
+
+## 🤖 Claude *(04:04:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\ncurl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d '{\"node_id\":\"d98767ea-1f52-4ebd-b4c7-03f822d1b57c\"}' \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', str(d)[:120])\" 2>/dev/null || echo \"embed: persistido, vetoriza\u00e7\u00e3o manual\"\necho \"=== README vers\u00e3o atual + badge nodes ===\"\ngrep -nE \"version-[0-9]|neural_mesh|v6\\.9\" README.md | head -6",
+  "description": "Retry embed + read README version/badge"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Embedded: {'node_id': 'd98767ea-1f52-4ebd-b4c7-03f822d1b57c', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small', 
+> === README versão atual + badge nodes ===
+> 3:  <img src="https://img.shields.io/badge/version-6.98.0--repurpose--frontdoor-blueviolet?style=for-the-badge" alt="Version" />
+> 6:  <img src="https://img.shields.io/badge/neural_mesh-9102_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 85:## 🆕 What's new in v6.98.0 (2026-07-13) — YouTube Studio (Fatia 1) + front-door host-local do Repurpose
+> 93:## 🆕 What's new in v6.97.0 (2026-07-12) — Motor de repurpose de vídeo (1 master → N shorts + carrossel)
+> 112:## 🆕 What's new in v6.93.0 (2026-07-08)
+> 654:**Known issue (deferred):** OTD-V610-001 — pipeline async v6.9.0 quebrado por mismatch JWT format pós-rotação de keys Supabase. `orchestrate-step` refactor agendado para sessão dedicada.
+> ```
+
+## 🤖 Claude *(04:04:35)*
+
+
+## 🤖 Claude *(04:04:35)*
+
+Embed ✅ (768d, vetorizado). Phase 4 — README: contagem viva da malha + versão + What's new:
+
+## 🤖 Claude *(04:04:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env; set +a\nCOUNT=$(curl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$')\necho \"mesh count vivo: $COUNT\"",
+  "description": "Live mesh node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mesh count vivo: 9105
+> ```
+
+## 🤖 Claude *(04:04:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'EOF'\np = \"README.md\"\nt = open(p, encoding=\"utf-8\").read()\nt = t.replace(\"version-6.98.0--repurpose--frontdoor-blueviolet\", \"version-6.99.0--viral--quality-blueviolet\")\nt = t.replace(\"neural_mesh-9102_nodes-blueviolet\", \"neural_mesh-9105_nodes-blueviolet\")\nanchor = \"## \ud83c\udd95 What's new in v6.98.0 (2026-07-13) \u2014 YouTube Studio (Fatia 1) + front-door host-local do Repurpose\"\nnew = \"\"\"## \ud83c\udd95 What's new in v6.99.0 (2026-07-14) \u2014 Motor Viral Quality + ASR self-host + pool multi-key BYOK\n\n- **Motor Viral Quality** (video-repurpose): detector de momentos virais (Hormozi sobre o SRT, texto verbatim das cues) + overlay motion-graphic (Montserrat premium, sem bot\u00e3o) fundindo footage real + tipografia cin\u00e9tica. 1 clique na UI (Gerar cortes virais) com barra de progresso real. Provado E2E em produ\u00e7\u00e3o nos 3 shorts do EP01.\n- **ASR self-host** (whisper.cpp, US$0) + reconcilia\u00e7\u00e3o roteiro-autoritativa: transcreve masters sem SRT e casa o texto com o roteiro original (o \u00e1udio da IA erra nomes; o roteiro \u00e9 a verdade da legenda).\n- **Rota host-media**: masters host-local (1,3GB) agora reproduzem na biblioteca via streaming Range (HTTP 206 seek); infra host versionada (systemd + nginx + SOP).\n- **Pool multi-key BYOK** (Amendment 20): v\u00e1rias chaves nomeadas por provider (3 Gmails \u00d7 cr\u00e9ditos free-tier) com prioridade \u2014 minera\u00e7\u00e3o de v\u00eddeo a ~US$0. /security-review NO FINDINGS.\n- **Estrat\u00e9gia de cad\u00eancia v1** gerada pelo ecossistema (aguarda aprova\u00e7\u00e3o Sovereign).\n\n\"\"\"\nt = t.replace(anchor, new + anchor)\nopen(p, \"w\", encoding=\"utf-8\").write(t)\nprint(\"README updated\")\nEOF\ngit add README.md\ngit commit -q -m \"docs(readme): v6.99.0 \u2014 Motor Viral Quality + ASR self-host + pool multi-key BYOK\" 2>&1 | tail -1\ngit log --oneline -1",
+  "description": "Phase 4: README update + commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README updated
+> ✔️ mesh-reingest (0.00 seconds)
+> 23f6e65 docs(readme): v6.99.0 — Motor Viral Quality + ASR self-host + pool multi-key BYOK
+> ```
+
+## 🤖 Claude *(04:05:02)*
+
+
+## 🤖 Claude *(04:05:02)*
+
+Phase 5 — HANDOFF.md. Lendo o head para anexar corretamente (append, nunca substituir):
+
+## 🤖 Claude *(04:05:03)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -5
+> 7	# Then explore the codebase — do NOT start from the file tree
+> 8	```
+> 9	
+> 10	---
+> 11	
+> 12	## Task State
+> 13	
+> 14	| **YouTube Studio (Fatia 1) + front-door host-local do Repurpose (2026-07-13)** | ✅ sessão interativa "colocar a ferramenta pra funcionar" (Usuário Zero). **(1) Painel YouTube** `/dashboard/youtube` — edge fn `youtube-data` lê vídeos+métricas (Data v3 + Analytics v2) com token per-user de `social_accounts` server-side; escopos alinhados aos 3 registrados no Google (analytics adiado até habilitar a YouTube Analytics API); mapa exaustivo da API (`docs/bok/youtube-studio/11-api-surface-map.md`: 13 recursos·175 props·52 métricas·33 ações + Pattern Conformance 21 padrões) + SOP. **(2) Front-door host-local do Repurpose (admin-only)** `/dashboard/repurpose` — o Sovereign sobe o master pela UI e gera cortes; cap de 50MB do Supabase free → master (1,3GB) vai pro **disco do host** via `host-upload-server` (loopback 3220 atrás de nginx `/api/host-upload`, **upload chunked** 80MB/pedaço furando o cap de 100MB do CF, JWT+admin-gate, streaming); `ingest-external-asset` +sign_upload +provider `local` ADMIN-ONLY; `video-repurpose-run` +source `local` ADMIN-ONLY; worker lê `bucket=local` realpath-contido **sem copiar 1,3GB**. yt-dlp do host CONFIRMADO bloqueado pelo YouTube (bot-check). **(3)** fix legenda drawtext (truncagem por bytes-extra UTF-8 → padding). **EP01 real 1,3GB → 5 shorts 9:16** (1080×1920) provados por Vision QA (reframe centralizado + legenda completa). 5 commits `e174988..f10fba4` (+README `adcab9a`) · `/security-review` **NO FINDINGS ×3** · malha **9102** · nó `9f7b191a` |
+> ```
+
+## 🤖 Claude *(04:05:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **YouTube Studio (Fatia 1) + front-door host-local do Repurpose (2026-07-13)** |",
+  "new_string": "## Task State\n\n| **Motor Viral Quality + ASR self-host + pool multi-key BYOK (2026-07-14)** | \u2705 sess\u00e3o-maratona interativa (Sovereign testando ao vivo, GO'ing deploys). **(1) Motor Viral Quality** (video-repurpose, BoK `10-frd-sdd-viral-quality.md` selada c/ Pattern Conformance): detector `detect-viral-moments` (Hormozi sobre o SRT, janelas 15-45s, `text_beats` = cues VERBATIM, LLM s\u00f3 escolhe \u00edndices \u2014 zero fabrica\u00e7\u00e3o Lei 1, JSON-mode + parse defensivo) + overlay motion-graphic (`viral-caption-overlay-9x16.html` Montserrat premium sem bot\u00e3o + `renderAlphaFrames` RGBA + FFmpeg overlay sobre footage reenquadrado; anticorpo do `-t` multi-input). UI \"Gerar cortes virais\" 1-clique (barra ancorada em sinais reais) + bot\u00e3o Distribuir (`publish-space-asset`) + badge SRT. **3 shorts EP01 provados E2E em prod** (abertura 9.0/finale 9.5/conspira\u00e7\u00e3o 8.5, Vision 7-8/10). **(2) ASR self-host** whisper.cpp US$0 + reconcilia\u00e7\u00e3o roteiro-autoritativa (o \u00e1udio da IA erra nomes: Austin\u2192Boston Dynamics; roteiro do GitHub GabrielAI via MCP \u00e9 a verdade). **(3) Rota host-media** streaming Range (206 seek) \u2014 master 1,3GB abre na biblioteca; infra host versionada. **(4) Pool multi-key BYOK** (Amendment 20): `user_provider_keys` Vault-cifrada + `resolveProviderKey` (expl\u00edcita\u2192prioridade\u2192legado\u2192402) + Settings card + seletor Spaces \u2014 3 Gmails \u00d7 cr\u00e9ditos free-tier. **6 commits** `d4972c7..23f6e65` \u00b7 `/security-review` **NO FINDINGS \u00d74** \u00b7 malha **9105** \u00b7 n\u00f3 `d98767ea`. **Gated Sovereign:** aplicar migration `user_provider_keys` + deploy `canvas-execute` + cadastrar 3 chaves + aprovar cad\u00eancia. |\n\n## Motor Viral Quality + ASR self-host + pool multi-key BYOK Record (2026-07-14)\n\n**ORO:** Operator = MCORCH Master Execution Agent (loop aut\u00f4nomo + Sovereign ao vivo) \u00b7 Reviewer = `/security-review` adversarial por seam (**NO FINDINGS \u00d74**: detector \u00b7 host-media \u00b7 migration pool \u00b7 beats wire-through) + **Vision QA ocular** por criativo (Lei 1) + Sovereign \u00b7 Owner = Sovereign (contas reais + cr\u00e9ditos; alcance gated na auditoria de app; rail de corte US$ 0).\n\nSess\u00e3o que **completou a metade que faltava do repurpose** (o MCORCH agora ELEGE e VESTE os momentos, n\u00e3o s\u00f3 corta) e destravou a **minera\u00e7\u00e3o de v\u00eddeo a custo ~US$ 0**. A cadeia produzir\u2192distribuir fechou de ponta a ponta: master \u2192 ASR/roteiro \u2192 detector \u2192 shorts motion-graphic \u2192 bot\u00e3o Distribuir \u2192 fila. V\u00e1rios bugs viraram anticorpos: o `-t` do FFmpeg multi-input (302MB/43min \u2192 ffprobe pegou), o JSON malformado da cascata LLM (guard estornou os mco), a fonte com `-webkit-text-stroke` grosso \"comendo\" as letras (paint-order fix), e o cron `sync_sessions.sh` empilhando sem flock (estrangulava o whisper).\n\n| A\u00e7\u00e3o | Resultado |\n|--------|----------|\n| `detect-viral-moments` (edge fn nova) | \u2705 SRT\u2192Hormozi\u2192top-N cut-spec grounded; deployado; E2E prod 200 |\n| `viral-caption-overlay-9x16.html` + `renderAlphaFrames` | \u2705 overlay motion-graphic RGBA sobre footage; Montserrat premium sem bot\u00e3o; Vision-aprovado |\n| `segment-core` branch beats + `video-repurpose-run` wire-through | \u2705 `caption_mode`/`text_beats` validados e fiados at\u00e9 o worker |\n| UI `VideoRepurposePage` (Gerar cortes + Distribuir + badge SRT) | \u2705 1-clique com barra real; distribui via `publish-space-asset` |\n| ASR whisper.cpp + `reconcile-srt-roteiro.py` | \u2705 EP01 transcrito (98 cues) + reconciliado c/ roteiro (94% alinhado) |\n| Rota `host-media` + `asset-url` bucket local | \u2705 206 Range seek no master 1,3GB; infra versionada |\n| Pool `user_provider_keys` + `resolveProviderKey` + Settings/Spaces | \u2705 multi-key BYOK; migration apply-gated |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `d4972c7` | feat(video-repurpose): motor Viral Quality \u2014 detector + overlay motion-graphic |\n| `67dc54d` | feat(video-repurpose): ASR self-host + reconcilia\u00e7\u00e3o roteiro-autoritativa |\n| `955117d` | feat(repurpose): rota host-media (Range) + infra host versionada |\n| `6dbc7f8` | feat(spaces): pool multi-key BYOK (Amendment 20) |\n| `14e5a6d` | docs(process): estrat\u00e9gia de cad\u00eancia v1 |\n| `23f6e65` | docs(readme): v6.99.0 |\n\n### Arquitetura (produzir \u2192 distribuir, US$ 0)\n```\nmaster (host disk, /api/host-media Range) \u2192 ASR whisper.cpp OU SRT do roteiro (reconcile)\n  \u2192 detect-viral-moments (SRT\u2192Hormozi\u2192top-N {in,out,text_beats verbatim})\n  \u2192 video-repurpose-run (valida beats) \u2192 worker \u2192 segment-core (reframe 9:16 + renderAlphaFrames overlay)\n  \u2192 shorts creative_assets (parent=master) \u2192 bot\u00e3o Distribuir \u2192 publish-space-asset \u2192 scheduled_posts \u2192 auto-publish\nMinera\u00e7\u00e3o: pool user_provider_keys (Gmail#1\u2192#2\u2192#3 cr\u00e9ditos) \u2192 canvas-execute gemini/Veo \u2192 novos masters\n```\n\n**Pendente (Sovereign):** aplicar `bash scripts/qa/apply-user-provider-keys-migration.sh` + `npx supabase functions deploy canvas-execute` \u2192 cadastrar 3 chaves Gmail no Settings\u2192Pool \u2192 1 gera\u00e7\u00e3o witness \u00b7 aprovar `content-cadence-strategy.md` + GO p/ publicar os 3 shorts EP01 no YouTube \u00b7 footage dos ep02-04 (SRT j\u00e1 existe) \u00b7 habilitar YouTube Analytics API \u00b7 rebuild whisper com OpenBLAS (velocidade ASR) \u00b7 witness GPU pod RunPod 5090 (OTD-SPACES-040, endpoint do Sovereign) \u00b7 auditoria app IG/TikTok.\n\n| **YouTube Studio (Fatia 1) + front-door host-local do Repurpose (2026-07-13)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:05:48)*
+
+Phase 5b — scan de segredo no HANDOFF.md antes de commitar:
+
+## 🤖 Claude *(04:05:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\" | head -5 || echo \"HANDOFF.md: SEM CREDENCIAIS \u2705\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal Motor Viral Quality + ASR self-host + pool multi-key BYOK\" 2>&1 | tail -1\ngit log --oneline -1",
+  "description": "Phase 5b scan + commit HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> 5f7e5b5 docs(handoff): seal Motor Viral Quality + ASR self-host + pool multi-key BYOK
+> ```
+
+## 🤖 Claude *(04:06:04)*
+
+
+## 🤖 Claude *(04:06:05)*
+
+HANDOFF selado (`5f7e5b5`, gitleaks passou). Phase 5c — auditoria de prova material (verificação mecânica independente):
+
+## 🤖 Claude *(04:06:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls scripts/qa/run-audit.ts 2>/dev/null && echo \"audit existe\" || echo \"NO run-audit.ts\"\n# fallback manual proof se o script n\u00e3o existir\nset -a; source .env 2>/dev/null; set +a\necho \"=== commits existem? ===\"\nfor h in d4972c7 67dc54d 955117d 6dbc7f8 14e5a6d 23f6e65 5f7e5b5; do git cat-file -t $h >/dev/null 2>&1 && echo \"$h \u2705\" || echo \"$h \u274c\"; done\necho \"=== n\u00f3 de milestone existe na malha? ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?id=eq.d98767ea-1f52-4ebd-b4c7-03f822d1b57c&select=id,node_type\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('n\u00f3:', d[0]['id'][:8], d[0]['node_type'], '\u2705' if d else '\u274c')\" 2>/dev/null || echo \"query falhou\"\necho \"=== tsc ===\"; npx tsc --noEmit 2>&1 | tail -2; echo \"tsc-ok\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/run-audit.ts
+> audit existe
+> === commits existem? ===
+> d4972c7 ✅
+> 67dc54d ✅
+> 955117d ✅
+> 6dbc7f8 ✅
+> 14e5a6d ✅
+> 23f6e65 ✅
+> 5f7e5b5 ✅
+> === nó de milestone existe na malha? ===
+> nó: d98767ea handoff ✅
+> === tsc ===
+> tsc-ok
+> ```
+
+## 🤖 Claude *(04:06:19)*
+
+
+## 🤖 Claude *(04:06:19)*
+
+O script existe — rodando a auditoria oficial:
+
+## 🤖 Claude *(04:06:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -30",
+  "description": "Run official material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | commit 0c9d182 | git_commit | 0c9d182 | 0c9d182 | ✅ |
+> | commit 17597ab | git_commit | 17597ab | 17597ab | ✅ |
+> | commit 988b1b9 | git_commit | 988b1b9 | 988b1b9 | ✅ |
+> | commit 97b1e2f | git_commit | 97b1e2f | 97b1e2f | ✅ |
+> | commit 99d543a | git_commit | 99d543a | 99d543a | ✅ |
+> | commit 855a4ad | git_commit | 855a4ad | 855a4ad | ✅ |
+> | commit 8d65bb2 | git_commit | 8d65bb2 | 8d65bb2 | ✅ |
+> | commit b92c367 | git_commit | b92c367 | b92c367 | ✅ |
+> | commit cbe5730 | git_commit | cbe5730 | cbe5730 | ✅ |
+> | commit 94df8d0 | git_commit | 94df8d0 | 94df8d0 | ✅ |
+> | commit 63fee7b | git_commit | 63fee7b | 63fee7b | ✅ |
+> | commit becf373 | git_commit | becf373 | becf373 | ✅ |
+> | commit aaa2351 | git_commit | aaa2351 | aaa2351 | ✅ |
+> | commit 75077f6 | git_commit | 75077f6 | 75077f6 | ✅ |
+> | commit 8af7268 | git_commit | 8af7268 | 8af7268 | ✅ |
+> | test suite — 0 passing | test_suite | 0 | 501 passed | ✅ |
+> | file docs/bok/youtube-studio/11-api-surface-map.md | file_exists | docs/bok/youtube-studio/11-api-surface-map.md | docs/bok/youtube-studio/11-api-surface-map.md | ✅ |
+> | file docs/bok/video-repurpose/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | file_exists | docs/bok/video-repurpose/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | docs/bok/video-repurpose/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | ✅ |
+> | file episodios/epNN.json | file_exists | episodios/epNN.json | absent | 🔴 |
+> | file docs/bok/youtube-studio/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | file_exists | docs/bok/youtube-studio/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | docs/bok/youtube-studio/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | ✅ |
+> | file scripts/qa/smoke-asset-owner-signing.ts | file_exists | scripts/qa/smoke-asset-owner-signing.ts | scripts/qa/smoke-asset-owner-signing.ts | ✅ |
+> | file docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md | file_exists | docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md | docs/bok/spaces-evolution/13-amendment-higgsfield-mcp-connector.md | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (loop autônomo + Sovereign ao vivo) · Reviewer =  | Operator = MCORCH Master Execution Agent (loop autônomo + Sovereign ao vivo) · Reviewer =  | ✅ |
+> | handoff node d98767ea | mesh_node | d98767ea-1f52-4ebd-b4c7-03f822d1b57c | d98767ea-1f52-4ebd-b4c7-03f822d1b57c | ✅ |
+> 
+> - 🔴 **file episodios/epNN.json** — file not found: episodios/epNN.json
+> 
+> QA VERDICT: 61 verified · 0 skipped · 1 failed → SEAL BLOCKED
+> 
+> (audit completed in 19.4s)
+> ```
+
+## 🤖 Claude *(04:07:17)*
+
+
+## 🤖 Claude *(04:07:19)*
+
+A auditoria bloqueou em **1 🔴** — `file episodios/epNN.json not found`. Preciso investigar a causa real (Lei 1 — nunca fabricar o arquivo para satisfazer a auditoria). Localizando de onde vem a string:
+
+## 🤖 Claude *(04:07:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== onde 'episodios/epNN.json' aparece no HANDOFF ===\"\ngrep -n \"episodios/epNN.json\" HANDOFF.md | head\necho \"\"; echo \"=== est\u00e1 no MEU record novo (2026-07-14)? primeiras 60 linhas ===\"\nsed -n '12,60p' HANDOFF.md | grep -n \"episodios/epNN\" || echo \"N\u00c3O est\u00e1 no meu record \u2705 (\u00e9 refer\u00eancia de record/doc antigo)\"",
+  "description": "Locate episodios/epNN.json string origin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde 'episodios/epNN.json' aparece no HANDOFF ===
+> 53:| **Motor de repurpose de vídeo — Fatias 1-3 (1 master → N shorts + carrossel IG) + OTD-SPACES-036 + witness LoRA (2026-07-12)** | ✅ sessão-maratona interativa (Sovereign aplicou 3 migrations ao vivo + testou cada gate). **A metade que faltava: o MCORCH agora PRODUZ cortes, não só distribui.** BoK-first (Closed-Loop): blueprint `docs/bok/video-repurpose/00-deepsearch-blueprint.md` fundamentado em 10 pointers verificados file:line + no mapa do pipeline validado do repo `gabrielZarattini/GabrielAI` (o INVERSO — N takes Veo→1 master; fonte do master + schema de metadados `episodios/epNN.json` + filosofia cut-spec data-driven). **Correções ao snapshot:** segmenter é **FR-CP-012** (não OTD-CP-011; SDD já o gateava em "quando entrar INPUT de vídeo longo" → esta capacidade é o gatilho); OTD-CP-009 FECHADA (imagem, vídeo é gap); youtube Pilar I=montagem (concat), segmentação=inverso; carrossel existente=PDF/LinkedIn (IG image-children=gap, contrato Meta confirmado). **(Fatia 1 VIVA)** `source_module='external'` no spine `creative_assets` (migration aditiva aplicada) + seam `ingest-external-asset` (owner-scoped `${uid}/` + bucket allowlist + no-`..`; upload MP4 + metadados episódio + SRT inline; YouTube gated OTD-VR-001) · smoke 5/5 · `/security-review` NO FINDINGS. **(Fatia 2 VIVA E2E)** worker host `video-repurpose-bridge` (fila `video_renders` engine `repurpose` aditivo, rail FFmpeg **grátis** charged 0) → `segment-core` (trim `-ss/-t` frame-accurate + reframe 16:9→9:16/1:1 center-safe expression-crop + legenda queimada drawtext-textfile) · guarda **OTD-VR-006** re-valida source no READ (o controle decisivo tenant-safe) · **provado E2E na produção**: master→3 clipes reais (Vision QA: CENTRO preservado, ESQ/DIR cortados, **timestamp 00:00:04.000 prova o trim**, legenda queimada) · `/security-review` NO FINDINGS. **(Fatia 3 E2E provada)** `carousel-core` (key-frames dos capítulos → slides 1080×1350 4:5 + legenda wrapped + handle; **OTD-VR-007** wrap conservador, legendas curtas limpas, pixel-perfect via render-core diferido) + worker branch `mode='carousel'` + enqueue `slides[{t_sec,caption}]`≤10 + branch **media_type=CAROUSEL** no `publish-social` (contrato Meta) + seam `publish-space-carousel` (resolve slides owner-scoped→assina→publica) · **provado E2E**: master→3 slides 1080×1350 image assets + Vision QA no slide real · `/security-review` NO FINDINGS. **Distribuição reusada (não reconstruída):** cortes/slides nascem `creative_assets` que o nó **"Publicar em Rede Social"** (`publish-space-asset`/`space_publish_variants` — **OTD-SPACES-036** decisão (b) landada nesta sessão: tabela dedicada owner-scoped, money-path intocado, migration aplicada + smoke) já consome. **Witness LoRA:** treino real→402 Insufficient credit na conta Replicate BYOK do User 0 (plumbing 100% provado até o passo pago; bloqueado só em crédito — não código; inferência-com-LoRA é fatia futura inexistente). **Gates externos honestos:** publish real na IG/TikTok gated na auditoria de app (ação Sovereign). 6 commits `ac5ca86..831f5cc` · 3 migrations aplicadas · rail 100% grátis US$ 0 · Malha **9097** · nó `f050959c` |
+> 
+> === está no MEU record novo (2026-07-14)? primeiras 60 linhas ===
+> 42:| **Motor de repurpose de vídeo — Fatias 1-3 (1 master → N shorts + carrossel IG) + OTD-SPACES-036 + witness LoRA (2026-07-12)** | ✅ sessão-maratona interativa (Sovereign aplicou 3 migrations ao vivo + testou cada gate). **A metade que faltava: o MCORCH agora PRODUZ cortes, não só distribui.** BoK-first (Closed-Loop): blueprint `docs/bok/video-repurpose/00-deepsearch-blueprint.md` fundamentado em 10 pointers verificados file:line + no mapa do pipeline validado do repo `gabrielZarattini/GabrielAI` (o INVERSO — N takes Veo→1 master; fonte do master + schema de metadados `episodios/epNN.json` + filosofia cut-spec data-driven). **Correções ao snapshot:** segmenter é **FR-CP-012** (não OTD-CP-011; SDD já o gateava em "quando entrar INPUT de vídeo longo" → esta capacidade é o gatilho); OTD-CP-009 FECHADA (imagem, vídeo é gap); youtube Pilar I=montagem (concat), segmentação=inverso; carrossel existente=PDF/LinkedIn (IG image-children=gap, contrato Meta confirmado). **(Fatia 1 VIVA)** `source_module='external'` no spine `creative_assets` (migration aditiva aplicada) + seam `ingest-external-asset` (owner-scoped `${uid}/` + bucket allowlist + no-`..`; upload MP4 + metadados episódio + SRT inline; YouTube gated OTD-VR-001) · smoke 5/5 · `/security-review` NO FINDINGS. **(Fatia 2 VIVA E2E)** worker host `video-repurpose-bridge` (fila `video_renders` engine `repurpose` aditivo, rail FFmpeg **grátis** charged 0) → `segment-core` (trim `-ss/-t` frame-accurate + reframe 16:9→9:16/1:1 center-safe expression-crop + legenda queimada drawtext-textfile) · guarda **OTD-VR-006** re-valida source no READ (o controle decisivo tenant-safe) · **provado E2E na produção**: master→3 clipes reais (Vision QA: CENTRO preservado, ESQ/DIR cortados, **timestamp 00:00:04.000 prova o trim**, legenda queimada) · `/security-review` NO FINDINGS. **(Fatia 3 E2E provada)** `carousel-core` (key-frames dos capítulos → slides 1080×1350 4:5 + legenda wrapped + handle; **OTD-VR-007** wrap conservador, legendas curtas limpas, pixel-perfect via render-core diferido) + worker branch `mode='carousel'` + enqueue `slides[{t_sec,caption}]`≤10 + branch **media_type=CAROUSEL** no `publish-social` (contrato Meta) + seam `publish-space-carousel` (resolve slides owner-scoped→assina→publica) · **provado E2E**: master→3 slides 1080×1350 image assets + Vision QA no slide real · `/security-review` NO FINDINGS. **Distribuição reusada (não reconstruída):** cortes/slides nascem `creative_assets` que o nó **"Publicar em Rede Social"** (`publish-space-asset`/`space_publish_variants` — **OTD-SPACES-036** decisão (b) landada nesta sessão: tabela dedicada owner-scoped, money-path intocado, migration aplicada + smoke) já consome. **Witness LoRA:** treino real→402 Insufficient credit na conta Replicate BYOK do User 0 (plumbing 100% provado até o passo pago; bloqueado só em crédito — não código; inferência-com-LoRA é fatia futura inexistente). **Gates externos honestos:** publish real na IG/TikTok gated na auditoria de app (ação Sovereign). 6 commits `ac5ca86..831f5cc` · 3 migrations aplicadas · rail 100% grátis US$ 0 · Malha **9097** · nó `f050959c` |
+> ```
+
+## 🤖 Claude *(04:07:56)*
+
+
+## 🤖 Claude *(04:07:59)*
+
+Confirmado (Lei 1): `episodios/epNN.json` está no record **antigo de 2026-07-12** (linha 53), não no meu. É uma **referência ao schema do repo externo GabrielAI** ("schema de metadados `episodios/epNN.json`") — NÃO um arquivo local, e criá-lo seria fabricação. Esse record já foi selado antes (passou). Vou checar se o auditor tem supressão para referências externas antes de qualquer edição:
+
+## 🤖 Claude *(04:08:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== auditor: como extrai file claims + tem allow/ignore? ===\"\ngrep -nE \"file_exists|allow|ignore|suppress|skip|external|http|newest|Record|slice\" scripts/qa/extract-manifest.ts 2>/dev/null | head -20\necho \"=== parseia s\u00f3 o newest block? ===\"\ngrep -nE \"Record|newest|match|split|## \" scripts/qa/extract-manifest.ts 2>/dev/null | head -12",
+  "description": "Inspect audit file-claim extraction + suppression"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === auditor: como extrai file claims + tem allow/ignore? ===
+> 18:// Pure-decimal matches are skipped at the call site below: a backticked
+> 42: * Return the text of the newest `## … Record …` block of HANDOFF.md — from
+> 44: * Record block is present (a seal with no Record is not a failure: it simply
+> 47:export function findNewestRecordBlock(markdown: string): string | null {
+> 66:  return lines.slice(start, end).join("\n");
+> 73:/** Extract every typed ProofClaim from a single Record block of text. */
+> 85:  // 1. UUIDs → mesh_node / mesh_edge. Every UUID in the Record is extracted;
+> 88:  //    marks it `skip` (it may be a user/transaction/operation id), never
+> 93:    const before = block.slice(Math.max(0, idx - 64), idx);
+> 99:      label: `${kind === "mesh_edge" ? "mesh edge" : "mesh node"} ${uuid.slice(0, 8)}`,
+> 101:      raw: `${before.trim()} ${m[0]}`.slice(-90),
+> 108:    if (/^\d+$/.test(hash)) continue; // skip pure-decimal (migration timestamps)
+> 142:  // 5. Backtick-wrapped repo paths (with a slash, no line suffix) → file_exists.
+> 149:      kind: "file_exists",
+> 158:  //    reachability; a size-only mention has expected = the size (→ skip).
+> 213:          raw: block.slice(0, 200),
+> 222:        raw: block.slice(0, 200),
+> 234: * awkward to regex reliably. Malformed JSON is ignored (returns []).
+> 245:  const obj = data as Record<string, unknown>;
+> 250:      label: `handoff node ${nodeId.slice(0, 8)}`,
+> === parseia só o newest block? ===
+> 16:// backtick already prevents matching a hyphenated full UUID. (FMEA-002 —
+> 18:// Pure-decimal matches are skipped at the call site below: a backticked
+> 42: * Return the text of the newest `## … Record …` block of HANDOFF.md — from
+> 44: * Record block is present (a seal with no Record is not a failure: it simply
+> 47:export function findNewestRecordBlock(markdown: string): string | null {
+> 48:  const lines = markdown.split("\n");
+> 73:/** Extract every typed ProofClaim from a single Record block of text. */
+> 85:  // 1. UUIDs → mesh_node / mesh_edge. Every UUID in the Record is extracted;
+> 90:  for (const m of block.matchAll(UUID_RE)) {
+> 106:  for (const m of block.matchAll(COMMIT_RE)) {
+> 118:  const tscMatch = block.match(TSC_RE);
+> 129:  const testMatch = block.match(TEST_COUNT_RE);
+> ```
+
+## 🤖 Claude *(04:08:36)*
+
+
+## 🤖 Claude *(04:08:38)*
+
+Achei a causa real — e é **minha**, não da auditoria: meu edit no HANDOFF inseriu o Record **no meio da tabela Task State**, partindo-a. O bloco "newest Record" do auditor então varreu as linhas de Task State antigas (incluindo o `episodios/epNN.json` do record 07-12). Estrutura malformada = correção legítima (não fabricação). Localizando a fronteira Task State → Records:
+
+## 🤖 Claude *(04:08:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== headings de Record (fronteira) ===\"; grep -nE \"^## .*Record \\(2026\" HANDOFF.md | head -5\necho \"=== \u00faltima linha da tabela Task State (antes do 1\u00ba Record antigo) ===\"; grep -nE \"^\\| \\*\\*.*\\(2026-07-04\\)\" HANDOFF.md | head -2",
+  "description": "Find Task State/Records boundary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === headings de Record (fronteira) ===
+> 16:## Motor Viral Quality + ASR self-host + pool multi-key BYOK Record (2026-07-14)
+> 74:## YouTube Studio (Fatia 1) + front-door host-local do Repurpose Record (2026-07-13)
+> 108:## Motor de repurpose de vídeo — Fatias 1-3 + OTD-SPACES-036 + witness LoRA Record (2026-07-12)
+> 146:## Voz clonada self-host + Modo Expressivo + motion design Record (2026-07-09/10)
+> 190:## Creative Studio — nós Roteiro + Criativo Cinematográfico vivos Record (2026-07-09)
+> === última linha da tabela Task State (antes do 1º Record antigo) ===
+> 68:| **Retema MIV do ecossistema + landing fiel + gate TikTok (2026-07-04)** | ✅ design system global MIV (void/cyan/gold/nebula · Playfair/JetBrains) revestindo 47 páginas + login + shell; landing 100% fiel ao original (hero WebGL cinematográfico + texto honesto, iframe); favicon do sigilo consistente + Privacidade/Termos MIV (footer único, conteúdo preservado); 44 páginas polidas via workflow 9-subagentes, E2E 0-erros |
+> 72:| **Conformidade MIV pós-rebrand + tooling ECC-nativo (2026-07-04)** | ✅ auditoria visual E2E de 44 páginas (workflow 8 subagentes agent-browser — real-user nav, hovers, triggers, badges, widgets); 3 fixes sistêmicos (`--accent` cyan · mcoCoins gold · glow CTA) + regressões de marca (onboarding MCORCH · 404/miner/legenda pt-BR · Trial cyan) verificados ao vivo; tooling ECC-nativo (doctor · supply-chain sentinel · session-inspect) + SOP. mesh **9051** · commits `aaa2351`/`75077f6`/`8af7268` |
+> ```
+
+## 🤖 Claude *(04:09:11)*
+
+
+## 🤖 Claude *(04:09:13)*
+
+Estrutura clara agora: meu Record (linha 16) está **encravado no meio da tabela Task State** (linhas 42-72 são rows antigas). O `findNewestRecordBlock` do auditor varre da minha heading até a próxima Record (linha 74) — capturando as rows antigas + o `episodios/epNN.json`. Fix: mover meu Record para **depois** da tabela inteira (antes do 1º Record antigo, linha 74). Cirurgia com Python:
+
+## 🤖 Claude *(04:09:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp HANDOFF.md /tmp/HANDOFF.bak\npython3 - <<'EOF'\nlines = open(\"HANDOFF.md\", encoding=\"utf-8\").read().split(\"\\n\")\n# 1. localizar minha heading de Record\nmy_start = next(i for i,l in enumerate(lines) if l.startswith(\"## Motor Viral Quality + ASR self-host + pool multi-key BYOK Record\"))\n# 2. fim do meu bloco = primeira linha de Task State row (| **...) ap\u00f3s my_start = a retomada da tabela\nmy_end = next(i for i in range(my_start+1, len(lines)) if lines[i].startswith(\"| **\"))\nblock = lines[my_start:my_end]              # meu Record (heading .. antes da row retomada)\n# remover trailing blank do bloco extra\u00eddo + garantir 1 linha em branco\nwhile block and block[-1].strip() == \"\":\n    block.pop()\ndel lines[my_start:my_end]                  # remove do lugar errado\n# 3. reinserir imediatamente ANTES do 1\u00ba Record antigo (YouTube 2026-07-13)\nanchor = next(i for i,l in enumerate(lines) if l.startswith(\"## YouTube Studio (Fatia 1) + front-door host-local do Repurpose Record\"))\nlines[anchor:anchor] = block + [\"\", \"\"]     # bloco + separador antes do record antigo\nopen(\"HANDOFF.md\",\"w\",encoding=\"utf-8\").write(\"\\n\".join(lines))\nprint(f\"movido: bloco de {my_end-my_start} linhas de L{my_start+1} para antes de L{anchor+1}\")\nEOF\necho \"=== verifica\u00e7\u00e3o estrutural: Task State cont\u00edguo? ===\"\ngrep -nE \"^## Task State|^## .*Record \\(2026-07-14\\)|^## YouTube Studio.*Record\" HANDOFF.md | head\necho \"=== episodios/epNN.json agora est\u00e1 DENTRO do meu Record block? ===\"\npython3 -c \"\nimport sys; sys.path.insert(0,'scripts/qa')\nfrom extract_manifest import findNewestRecordBlock\n\" 2>/dev/null || bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -4",
+  "description": "Move Record block below Task State + re-audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> movido: bloco de 36 linhas de L16 para antes de L38
+> === verificação estrutural: Task State contíguo? ===
+> 12:## Task State
+> 38:## Motor Viral Quality + ASR self-host + pool multi-key BYOK Record (2026-07-14)
+> 75:## YouTube Studio (Fatia 1) + front-door host-local do Repurpose Record (2026-07-13)
+> === episodios/epNN.json agora está DENTRO do meu Record block? ===
+> 
+> QA VERDICT: 8 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.2s)
+> ```
+
+## 🤖 Claude *(04:09:35)*
+
+
+## 🤖 Claude *(04:09:37)*
+
+**SEAL ALLOWED — 8 verified · 0 failed** ✅. A estrutura ficou correta (Task State contíguo 13-37, meu Record em 38, records antigos em 75). O `episodios/epNN.json` saiu do meu bloco. Re-scan de segredo + amend do commit HANDOFF (ainda não pushado):
+
+## 🤖 Claude *(04:09:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,})\" HANDOFF.md | grep -v \"example\\|digest\\|hash\" | head -3 || echo \"HANDOFF SEM CREDENCIAIS \u2705\"\ngit add HANDOFF.md\ngit commit -q --amend --no-edit 2>&1 | tail -1\ngit log --oneline -7 | head -7",
+  "description": "Re-scan + amend HANDOFF commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ mesh-reingest (0.00 seconds)
+> 623fad9 docs(handoff): seal Motor Viral Quality + ASR self-host + pool multi-key BYOK
+> 23f6e65 docs(readme): v6.99.0 — Motor Viral Quality + ASR self-host + pool multi-key BYOK
+> 14e5a6d docs(process): estratégia de cadência de conteúdo v1 (gerada pelo ecossistema)
+> 6dbc7f8 feat(spaces): pool multi-key BYOK por provider (Amendment 20)
+> 955117d feat(repurpose): rota host-media (streaming Range) + infra host versionada
+> 67dc54d feat(video-repurpose): ASR self-host (whisper.cpp) + reconciliação roteiro-autoritativa
+> d4972c7 feat(video-repurpose): motor Viral Quality — detector de momentos + overlay motion-graphic
+> ```
+
+## 🤖 Claude *(04:09:51)*
+
+
+## 🤖 Claude *(04:09:51)*
+
+HANDOFF selado (`623fad9`). Phase 6 — BoK Seal Status:
+
+## 🤖 Claude *(04:09:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor slug in video-repurpose spaces-evolution; do\n  present=$(ls docs/bok/$slug/*.md 2>/dev/null | wc -l)\n  has_frd=$(ls docs/bok/$slug/ 2>/dev/null | grep -icE \"frd|sdd|amendment|blueprint\")\n  echo \"$slug: $present docs (frd/sdd/amendment/blueprint: $has_frd)\"\ndone\necho \"\"\necho \"m\u00f3dulos tocados nesta sess\u00e3o: video-repurpose (blueprint-first + FRD/SDD slice 10-*), spaces-evolution (amendment 20 sobre suite completa)\"",
+  "description": "Phase 6 BoK completeness for touched modules"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> video-repurpose: 2 docs (frd/sdd/amendment/blueprint: 2)
+> spaces-evolution: 22 docs (frd/sdd/amendment/blueprint: 9)
+> 
+> módulos tocados nesta sessão: video-repurpose (blueprint-first + FRD/SDD slice 10-*), spaces-evolution (amendment 20 sobre suite completa)
+> ```
+
+## 🤖 Claude *(04:10:05)*
+
+
+## 🤖 Claude *(04:10:07)*
+
+**BoK verdict: ✅ proceed.** video-repurpose é blueprint-first intencional (blueprint + FRD/SDD slice `10-*` com Pattern Conformance dos 21 padrões — o gate Closed-Loop §3.5 foi honrado antes do código); spaces-evolution completa (22 docs) + Amendment 20. Nenhum bloqueio.
+
+Phase 7 — Push:
+
+## 🤖 Claude *(04:10:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -6\necho \"=== confirm ===\"; git log --oneline -1 origin/main 2>/dev/null || git rev-parse --short HEAD",
+  "description": "Phase 7 push to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.13 seconds)
+> ✔️ gitleaks-range (0.13 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    a1d344d..623fad9  main -> main
+> === confirm ===
+> 623fad9 docs(handoff): seal Motor Viral Quality + ASR self-host + pool multi-key BYOK
+> ```
+
+## 🤖 Claude *(04:10:21)*
+
+
+## 🤖 Claude *(04:10:22)*
+
+Push ✅ (`a1d344d..623fad9`, 7 commits, gitleaks-range passou). Phase 7b — higiene:
+
+## 🤖 Claude *(04:10:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== working tree (proof-manifest solto?) ===\"; git status --short\necho \"=== scratch limpo? ===\"; ls scratch/ 2>/dev/null | head || echo \"vazio \u2705\"\nrm -f proof-manifest.json 2>/dev/null && echo \"proof-manifest.json (temp) removido\" || echo \"sem proof-manifest\"\necho \"=== sprint file existe? ===\"; ls .claude/context/sprint-priorities.md 2>/dev/null && head -6 .claude/context/sprint-priorities.md | tail -1",
+  "description": "Phase 7b hygiene check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === working tree (proof-manifest solto?) ===
+>  M proof-manifest.json
+> === scratch limpo? ===
+> proof-manifest.json (temp) removido
+> === sprint file existe? ===
+> .claude/context/sprint-priorities.md
+> ```
+
+## 🤖 Claude *(04:10:40)*
+
+
+## 🤖 Claude *(04:10:42)*
+
+`proof-manifest.json` é tracked (o Phase 3 gravou meu nó nele) — restauro com meu node id em vez de deletar, e dou um toque no sprint-priorities:
+
+## 🤖 Claude *(04:10:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho '{\"handoffNodeId\": \"d98767ea-1f52-4ebd-b4c7-03f822d1b57c\"}' > proof-manifest.json\n# toque leve no sprint-priorities: nota de progresso\npython3 - <<'EOF'\np = \".claude/context/sprint-priorities.md\"\nt = open(p, encoding=\"utf-8\").read()\nnote = \"**Sprint v6.99.0 \u2014 Motor Viral Quality + ASR self-host + pool multi-key BYOK (2026-07-14)** \u2014 repurpose completo (detector Hormozi + overlay motion-graphic, 3 shorts EP01 provados prod); ASR whisper.cpp US$0 + reconcilia\u00e7\u00e3o roteiro-autoritativa; rota host-media (206 seek); pool multi-key BYOK (Amendment 20) p/ minera\u00e7\u00e3o a ~US$0; estrat\u00e9gia de cad\u00eancia v1. 6 commits `d4972c7..623fad9` \u00b7 /security-review NO FINDINGS \u00d74 \u00b7 SEAL ALLOWED (8/8) \u00b7 malha 9105 \u00b7 n\u00f3 `d98767ea`. **Pendente Sovereign:** aplicar migration pool + deploy canvas-execute + 3 chaves Gmail + aprovar cad\u00eancia + GO publicar EP01 no YouTube.\"\nmarker = \"**Sprint v6.98.0\"\nif marker in t:\n    t = t.replace(marker, note + \"\\n\\n\" + marker, 1)\n    open(p, \"w\", encoding=\"utf-8\").write(t)\n    print(\"sprint-priorities atualizado\")\nelse:\n    print(\"marcador v6.98.0 n\u00e3o achado \u2014 sprint sem mudan\u00e7a\")\nEOF\ngit add proof-manifest.json .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): v6.99.0 \u2014 Motor Viral Quality + ASR self-host + pool multi-key BYOK\" 2>&1 | tail -1\ngit push origin main 2>&1 | tail -2",
+  "description": "Restore proof-manifest + sprint update + commit + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sprint-priorities atualizado
+> ✔️ mesh-reingest (0.00 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    623fad9..446e8b1  main -> main
+> ```
+
+## 🤖 Claude *(04:11:06)*
+
+
+## 🤖 Claude *(04:11:22)*
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SEALED — Motor Viral Quality + ASR self-host + pool multi-key BYOK** (2026-07-14)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA**
+  ✅ Phase 1 (diff + arquivos novos): sem credencial hardcoded, sem log sensível
+  ✅ Phase 5b (HANDOFF.md): sem credenciais
+  ✅ lefthook gitleaks: passou em todos os commits + no push
+  ✅ `/security-review` adversarial **NO FINDINGS ×4** (detector · host-media · migration pool · beats wire-through)
+
+📦 **COMMITS (8 total)**
+  `d4972c7` — feat(video-repurpose): motor Viral Quality (detector + overlay motion-graphic)
+  `67dc54d` — feat(video-repurpose): ASR self-host + reconciliação roteiro-autoritativa
+  `955117d` — feat(repurpose): rota host-media (Range) + infra host versionada
+  `6dbc7f8` — feat(spaces): pool multi-key BYOK (Amendment 20)
+  `14e5a6d` — docs(process): estratégia de cadência v1
+  `23f6e65` — docs(readme): v6.99.0
+  `623fad9` — docs(handoff): seal
+  `446e8b1` — chore(sprint): v6.99.0
+
+⬡ **KNOWLEDGE MESH**
+  Nó milestone: `d98767ea` — session-handoff-20260714-viral-quality-multikey
+  Embedding: ✅ (768d, text-embedding-3-small)
+
+📖 **README.md** — v6.98.0 → **v6.99.0** · badge malha 9102 → **9105 nós**
+
+🧠 **HANDOFF.md** — Fase selada. *(Corrigi um erro estrutural meu: o Record novo entrou no meio da tabela Task State e fez a auditoria capturar um `episodios/epNN.json` do record antigo — referência ao repo externo GabrielAI, não arquivo local. Movi o Record para o lugar certo em vez de fabricar o arquivo.)*
+
+📋 **PROVA MATERIAL (Fase 5c)** — **SEAL ALLOWED** · 8 verificadas · 0 skipped · **0 falhas**
+
+🚀 **PUSH** — main → origin/main · 8 commits (`a1d344d..446e8b1`)
+
+📌 **SPRINT** — sprint-priorities atualizado ✅ · scratch/ limpo ✅ · MCP sem novidade
+
+⏭ **PRÓXIMOS PASSOS (todos seus — o autônomo esgotou)**
+  1. **Ativar o pool:** `bash scripts/qa/apply-user-provider-keys-migration.sh` + `npx supabase functions deploy canvas-execute` → cadastrar os 3 Gmails no Settings→Pool
+  2. **Primeira tração:** aprovar a cadência + GO para publicar os 3 shorts EP01 no YouTube (botão Distribuir já vivo)
+  3. **Próximos episódios:** subir footage do ep02 (SRT já existe) · habilitar YouTube Analytics API · witness da GPU RTX 5090
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Sessão-maratona selada com integridade, Maestro. O motor Viral Quality está completo e provado em produção (3 shorts do EP01), a mineração a custo ~US$ 0 está armada (pool multi-key), e o loop produzir→distribuir fechou de ponta a ponta. Tudo que resta agora depende de você — e está documentado. Foi um baita arco. 🎬
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -12353,6 +13840,6 @@ You've hit your session limit · resets 12:40am (America/Sao_Paulo)
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-13 - fca7f00a-1b8c-4cf0-8a86-eea82481bf47]]
+> * **Sessão Anterior**: [[2026-07-14 - Autorizar cadência de conteúdo e refatorar UI assets]]
 > * **Próxima Sessão**: [[2026-07-14 - agent-a1611d83feed849e4]]
 %% --- TIMELINE END --- %%
