@@ -58,10 +58,3 @@ Resultado esperado: válido `HTTP 200`; v1 adulterado `HTTP 401`; sem assinatura
 
 - **OTD-ML-MP-PER-USER** — migrar `MP_WEBHOOK_SECRET` global → `mercado_pago_config` per-user (`auth.uid()`, RESTRICTIVE no-delete) antes de Usuário 1 (API Tenancy Model). Bypass global autorizado para o piloto Usuário Zero.
 - E2E do caminho resolvido (link real + assinatura real do MP) pendente — validar quando o piloto enviar o primeiro postback verdadeiro.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

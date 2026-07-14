@@ -46,10 +46,3 @@ O Sovereign, se fosse fazer à mão no dashboard da Replicate: (1) cria um model
 1. **On-platform only** — inferência (fatia futura) roda SÓ na Replicate hospedada; `substrate='flux-dev-lora'` nunca despacha para gerador local.
 2. **No-export** — `identity_storage_key` é server-side only, usado só como `lora_weights` de predição Replicate; **nunca** exposto como download ao cliente.
 3. **License-version pin** — FLUX.1-dev v1.1.1 (HF); re-verificar em updates (OTD-AC-016-LICENSE-VERSION-PIN).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

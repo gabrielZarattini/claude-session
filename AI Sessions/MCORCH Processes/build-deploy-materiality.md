@@ -85,10 +85,3 @@ G1–G4 verdes + Reviewer confirma visualmente pós hard-refresh. Edge: `supabas
 ## Connection to Survival Laws
 Lei 1: o artefato SERVIDO é a prova, não o comando que rodou. Lei 2: esta SOP existe porque o erro
 aconteceu — todo obstáculo novo vira processo (ver CLAUDE.md "Obstacle → Synthesis").
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
