@@ -75,3 +75,10 @@ HTTP 402 Payment Required
 - `src/components/dashboard/DashboardLayout.tsx` (toast + amber pill)
 - `.claude/context/survival-audit-v1.md` §2 Pillar 3 (motivação)
 - `.claude/context/survival-audit-v2.md` (re-audit pós-implementação)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

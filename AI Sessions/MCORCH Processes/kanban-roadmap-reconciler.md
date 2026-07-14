@@ -49,3 +49,10 @@ o card sobe pra Concluído sozinho), **e** todo card que o Sovereign arrastou/cr
 - Migration: `20260630010000_kanban_task_source_external_key.sql` (`source` + `external_key` + index parcial).
 - Cron (crontab `ubuntu`, instalado 2026-06-30): `*/15 * * * * cd /home/gcrUX/htdocs/constellation-orchestra && set -a && . ./.env && set +a && /home/ubuntu/.bun/bin/bun run scripts/reconcile-kanban-roadmap.ts >> /home/ubuntu/.mcorch/logs/kanban-reconcile.log 2>&1`. ⚠️ O `cd` no início é OBRIGATÓRIO (sem ele o `. ./.env` roda no `$HOME` e o `SB_SECRET_KEY` não carrega — bug pego na instalação).
 - Single-tenant Usuário Zero (`USER_ID` fixo). Multi-tenant = evolução futura (iterar sobre boards por user).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

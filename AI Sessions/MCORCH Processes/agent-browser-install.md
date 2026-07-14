@@ -166,3 +166,10 @@ agent-browser skills get dogfood --full
 
 **SOP authored 2026-05-25 by MCORCH Master Execution Agent under Sovereign directive.**
 Material proofs of the first install verification are pinned in the v6.8.4 `/handoff` seal (when sealed).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

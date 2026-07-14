@@ -44,3 +44,10 @@ O MESMO worker/fila (`engine='repurpose'`) atende `composition.mode='carousel'`:
 - **Caption = texto por clipe** (drawtext textfile). Burn de SRT com offset ao timeline do clipe = refinamento (OTD).
 - **Clipes registrados `source_module='hyperframes'`** (família de vídeo FFmpeg-renderizado; evita migration de source_module) + `parent_asset_id`=master + `metadata.repurpose` p/ lineage.
 - **systemd:** `video-repurpose-bridge.service` (ação Sovereign, molde `video-bridge.service`); secrets do `../.env` (nunca na unit).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

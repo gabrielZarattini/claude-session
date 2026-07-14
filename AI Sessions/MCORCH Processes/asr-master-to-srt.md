@@ -48,9 +48,26 @@ O agente (ou o Sovereign) no host, usuário `ubuntu`.
 ## Success signal
 `video-studio/GabrielAI/legendas/<ep>-pt-BR.srt` presente + `metadata.srt.pt` do master populado + detector retornando cortes reais do episódio.
 
+## Camada 2 — Reconciliação roteiro-autoritativa (Diretiva Sovereign 2026-07-13)
+
+**Doutrina:** "sempre temos o roteiro original… o áudio pode realmente ser gerado errado — é um gargalo da IA generativa de vídeo. Para a legenda manteremos o original." O Whisper dá o **timing real** do master final; o **roteiro dá o texto**. A reconciliação casa os dois:
+
+1. Obter a narração do episódio do repo `gabrielZarattini/GabrielAI` (privado — acesso via **GitHub MCP** `get_file_contents` em `roteiro/epNN-*.md`; clone https falha sem credencial no host). Extrair as falas (`Brazilian Portuguese: '…'`) na ordem das cenas → JSON lista de strings (ex.: `video-studio/GabrielAI/roteiro-ep01-narracao.json`).
+2. Rodar `python3 scripts/video-repurpose/reconcile-srt-roteiro.py <legendas/epNN-pt-BR.srt> <narracao.json>` — alinha palavra-a-palavra (difflib normalizado, molde do `gerar_srt.py` do próprio repo GabrielAI, invertido), **substitui o texto das cues casadas pelo roteiro** e **preserva as cues sem roteiro** (intro/cartelas adicionadas na edição).
+3. Re-semear `metadata.srt.pt` do master.
+
+**Prova EP01 (2026-07-13):** 707/752 palavras alinhadas (94%); ~30 cues reescritas (recuperou o `"Incrível."` que o áudio/Whisper perdeu; `Austin→Boston Dynamics`; pontuação canônica); intro "2026 não trouxe carros voadores…" (fora do roteiro — cartela de edição) preservada do Whisper. Episódios do pipeline GabrielAI COM `timings.json`: preferir o `gerar_srt.py` canônico do próprio repo; esta reconciliação cobre os que não têm (ep01) e masters externos.
+
 ## Automação prevista (fatias seguintes — só depois desta SOP, Lei 2)
 1. **UI (admin front-door `/dashboard/repurpose`)**: campo de upload de SRT junto do master (grava em `metadata.srt`) + botão **"Gerar legendas"** quando não houver SRT.
 2. **Rail assíncrono**: fila `video_renders` engine `asr` (molde `qwen3-voice`/`repurpose`) — worker host roda whisper.cpp e semeia `metadata.srt`; edge fn `generate-subtitles` enfileira (JWT, owner-scoped, admin p/ bucket local). `/security-review` obrigatório.
 3. EN opcional (`-l en` ou tradução) — fatia posterior.
 
 **Cross-links:** `docs/bok/video-repurpose/10-frd-sdd-viral-quality.md` (OTD-VR-012) · [[project_video_repurpose_engine]] · `docs/processes/voice-clone-selfhost-engine.md` (irmão de engine self-host).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

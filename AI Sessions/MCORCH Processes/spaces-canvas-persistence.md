@@ -46,3 +46,10 @@
 
 Sovereign cria um Space, monta um grafo tipado via Spotlight, recarrega a página e o grafo está lá —
 com a linha correspondente em `spaces` (UUID citável) e Vision-QA APROVADO no print 1920×1080.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

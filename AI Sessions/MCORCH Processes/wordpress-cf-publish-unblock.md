@@ -96,3 +96,10 @@ curl -sS -D - -o /dev/null -H "X-MCORCH-Publish: <o-hex-do-step-1>" \
 - Edge function: `supabase/functions/publish-wordpress/index.ts` (gate de host, deployado 2026-06-22 script 106.3kB)
 - FMEA security FM-04/FM-08 (credencial/identidade), `docs/bok/security/04-fmea-security.md`
 - Memória relacionada: flywheel de conteúdo (`project_orchestrate_pipeline_repair`) — o #3 wp_site_url não-www já estava resolvido; o CF challenge é o blocker remanescente.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

@@ -74,3 +74,10 @@ A conta TikTok-sandbox clica "Entrar com TikTok" em `/auth?devLogin`, consente n
 - BoK: `docs/bok/tiktok-login/` (FR-TL / OTD-TL / FM-TL / DD-TL).
 - Mapa material: `.claude/context/tiktok-login-map-2026-07-08.md`.
 - Reuso: `supabase/functions/_shared/oauth-state.ts`, `src/lib/sso-cookie.ts`, `src/hooks/useAuth.ts`, `scripts/qa/gen-user-jwt.ts` (padrão generateLink→verifyOtp), precedente `social-auth-init`/`-callback`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
