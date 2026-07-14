@@ -179,6 +179,6 @@ Caso clássico (d): `catch (err: any)` usando `err.message`. Troco para `catch (
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-14 - agent-aa8ad5ff2d50707f0]]
-> * **Próxima Sessão**: [[2026-07-14 - agent-aad2e490d2ad71ade]]
+> * **Sessão Anterior**: [[2026-07-14 - agent-aa8bbd7f6390b46b6]]
+> * **Próxima Sessão**: [[2026-07-14 - agent-aace8eaa9ee7f7550]]
 %% --- TIMELINE END --- %%

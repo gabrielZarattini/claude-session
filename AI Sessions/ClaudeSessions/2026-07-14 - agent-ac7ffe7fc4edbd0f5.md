@@ -1130,6 +1130,6 @@ Caption flows as `content.text` → `JSON.stringify` body field `caption` of the
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-14 - agent-ac50f43f42fe5ba68]]
-> * **Próxima Sessão**: [[2026-07-14 - agent-aced9141b04153230]]
+> * **Sessão Anterior**: [[2026-07-14 - agent-ac795b092dbbe91fd]]
+> * **Próxima Sessão**: [[2026-07-14 - agent-ac929af684e41c7a7]]
 %% --- TIMELINE END --- %%
