@@ -52,6 +52,16 @@ O Sovereign no host (usuário `ubuntu` para systemd `--user`; root/sudo para o n
 - **G4 = 502**: o server loopback caiu → G1/G2 primeiro. **G4 = 404**: o `location` não está no server block → passo 2. **G4 = 403 do Cloudflare** (não do server): challenge de IP datacenter → mesmo playbook `docs/processes/wordpress-cf-publish-unblock.md` (Security Level / WAF Skip).
 - **Upload trava em chunk grande**: confirmar `proxy_request_buffering off` + `client_max_body_size 100m` no bloco vivo (sem isso, nginx bufferiza e estoura). CF corta >100MB/request → o cliente DEVE fatiar <100MB (já fatia ~80MB).
 
+## Rota de mídia `/api/host-media` (2026-07-13 — master reproduzível na biblioteca)
+
+**Por quê:** o master host-local é `creative_assets` `storage_bucket='local'` — a biblioteca tentava assinar no Supabase Storage → `Object not found` → player quebrado ("o arquivo corrompeu" — não corrompeu; faltava rota de reprodução).
+
+**Desenho:** `host-upload-server` ganhou `GET /api/host-media?key=<uid>/<file>` — mesmos guards do upload (JWT `admin.getUser` + admin-gate `user_roles` + owner-scope `key.startsWith(uid/)` + containment em `INBOX_BASE` + `..` banido) + **streaming com Range** (HTTP 206 → seek). `<video src>` não envia headers → JWT curto da sessão vai como `?token=` (same-origin TLS, admin-only; o `useDisplayUrl` re-resolve antes de expirar; token em access-log do próprio host = aceito e documentado). Cliente: `src/lib/asset-url.ts` branch `bucket==='local'`. `/security-review` **NO FINDINGS** (traversal/auth/cross-tenant/header-injection verificados).
+
+**Apply (ação Sovereign):** `sudo bash scripts/qa/apply-host-media-nginx.sh` (idempotente: backup → insere a location após o bloco host-upload → `nginx -t` → reload).
+
+**Gates:** G6 local `curl -H 'Range: bytes=0-1023' 'http://127.0.0.1:3220/api/host-media?key=<uid>/<file>&token=<jwt>'` → `206` + `Content-Range` correto (provado 2026-07-13 com o EP01 de 1.336.271.927 bytes; seek em 600MB ok; cross-tenant → 400; sem token → 401; não-admin → 403). G7 público (pós-apply): mesmo curl via `https://login.mcorch.com` → 206; biblioteca reproduz o master.
+
 ## Success signal (materialmente observável)
 Um upload real (admin, via UI `/dashboard/repurpose`) grava `repurpose-inbox/<uid>/<file>.mp4` no disco (`ls -la` com size ≈ o master) **e** o `ingest-external-asset provider=local` registra o `creative_assets bucket=local`, consumível pelo `video-repurpose-run`. Prova no seal 2026-07-13: EP01 1,3 GB → 5 shorts.
 
