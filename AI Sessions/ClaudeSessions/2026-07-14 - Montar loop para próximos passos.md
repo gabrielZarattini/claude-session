@@ -9572,6 +9572,3103 @@ E como devo gravar para enviar.: Vídeo de demonstração: como o escopo será u
 Link para o YouTube
 Envie um vídeo do YouTube demonstrando como você usará os dados desses escopos no aplicativo. O vídeo precisa incluir todos os clientes OAuth que você atribuiu a este projeto.
 
+## 🤖 Claude *(17:30:09)*
+
+
+## 🤖 Claude *(17:30:11)*
+
+Antes de redigir a justificativa, preciso ancorar no que o app **realmente faz** com cada escopo — uma justificativa que descreva funções inexistentes é reprovada pelo Google (o vídeo tem que bater com o texto) e viola a Lei 1. Deixa eu inspecionar a integração YouTube real.
+
+## 🤖 Claude *(17:30:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== escopos YouTube no OAuth init ===\"; grep -n \"youtube\" supabase/functions/social-auth-init/index.ts\necho \"=== edge fns youtube ===\"; ls supabase/functions/ | grep -iE \"youtube|yt\"\necho \"=== chamadas de API YouTube (googleapis) no c\u00f3digo ===\"; grep -rln \"googleapis.com/youtube\\|youtube/v3\\|youtubeAnalytics\\|youtube.googleapis\" supabase/functions/ src/ 2>/dev/null",
+  "description": "Find YouTube scopes + edge fns + API calls"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === escopos YouTube no OAuth init ===
+> 125:    } else if (platform === "youtube") {
+> 133:        creds = await resolveSocialAppCreds(serviceClient, userId, "youtube");
+> 143:      // (Sovereign 2026-07-12): readonly (read channel/videos — Fatia 1) + youtube (manage: covers upload +
+> 144:      // metadata/playlist writes, superseding youtube.upload for publish-social continuity) + force-ssl
+> 148:      // them back here once that API is enabled + the scopes are registered (see youtube-studio-panel.md).
+> 150:        "https://www.googleapis.com/auth/youtube.readonly",
+> 151:        "https://www.googleapis.com/auth/youtube",
+> 152:        "https://www.googleapis.com/auth/youtube.force-ssl",
+> === edge fns youtube ===
+> youtube-data
+> === chamadas de API YouTube (googleapis) no código ===
+> supabase/functions/social-auth-callback/index.ts
+> supabase/functions/publish-social/index.ts
+> supabase/functions/youtube-data/index.ts
+> supabase/functions/check-post-existence/index.ts
+> ```
+
+## 🤖 Claude *(17:30:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== youtube-data: quais recursos/m\u00e9tricas l\u00ea ===\"; grep -nE \"youtube/v3|youtubeAnalytics|/v2/reports|part=|metrics=|dimensions=|fields\" supabase/functions/youtube-data/index.ts | head -30",
+  "description": "youtube-data API surface"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === youtube-data: quais recursos/métricas lê ===
+> 3:// Data API v3 (https://www.googleapis.com/youtube/v3) + Analytics API v2
+> 19:const YT_DATA = "https://www.googleapis.com/youtube/v3";
+> 167:        `${YT_DATA}/channels?part=snippet,statistics,contentDetails,status,brandingSettings&mine=true`,
+> 176:      const r = await gfetch(`${YT_DATA}/videoCategories?part=snippet&regionCode=${encodeURIComponent(region)}`);
+> 186:        const ch = await gfetch(`${YT_DATA}/channels?part=contentDetails&mine=true`);
+> 193:        `${YT_DATA}/playlistItems?part=contentDetails&playlistId=${encodeURIComponent(uploads)}` +
+> 203:          `${YT_DATA}/videos?part=snippet,contentDetails,status,statistics&id=${ids.join(",")}&maxResults=50`,
+> ```
+
+## 🤖 Claude *(17:30:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== youtube-data: analytics + demais recursos ===\"; grep -nE \"YT_ANALYTICS|reports\\?|ids=channel|metrics|action ===|case \" supabase/functions/youtube-data/index.ts | head -40",
+  "description": "youtube-data analytics + actions"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === youtube-data: analytics + demais recursos ===
+> 9:// Actions: channel_summary | list_videos | video_metrics | video_categories
+> 20:const YT_ANALYTICS = "https://youtubeanalytics.googleapis.com/v2";
+> 132:    // Fail-closed scope gate (G2): read actions need youtube.readonly; metrics need yt-analytics.readonly.
+> 136:    if (action === "channel_summary" || action === "list_videos" || action === "video_categories") {
+> 139:    if (action === "video_metrics" && !scopes.includes(SCOPE_ANALYTICS)) {
+> 165:    if (action === "channel_summary") {
+> 174:    if (action === "video_categories") {
+> 181:    if (action === "list_videos") {
+> 212:    if (action === "video_metrics") {
+> 215:      const metrics =
+> 216:        typeof body.metrics === "string" && body.metrics.trim()
+> 217:          ? body.metrics
+> 219:      const params = new URLSearchParams({ ids: "channel==MINE", startDate, endDate, metrics });
+> 224:      const r = await gfetch(`${YT_ANALYTICS}/reports?${params.toString()}`);
+> ```
+
+## 🤖 Claude *(17:30:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== publish-social YouTube (upload de v\u00eddeo) ===\"; sed -n '/platform === \"youtube\"/,/^    } else if/p' supabase/functions/publish-social/index.ts | grep -nE \"videos\\?|upload|part=|snippet|status|privacyStatus|resumable|insert\" | head -20\necho \"=== check-post-existence YouTube (smart-delete/verifica\u00e7\u00e3o) ===\"; grep -nE \"youtube|videos\\?|delete|force-ssl\" supabase/functions/check-post-existence/index.ts | head -12\necho \"=== default metrics do video_metrics ===\"; grep -n \"estimatedRevenue\\|estimatedMinutesWatched\\|views\\|likes\\|comments\\|monetary\\|DEFAULT_METRICS\\|const metrics\" supabase/functions/youtube-data/index.ts | head",
+  "description": "YouTube upload + delete + default metrics"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === publish-social YouTube (upload de vídeo) ===
+> 2:      // YouTube Data API v3 videos.insert — resumable upload (no remote ingest → fetch the signed bytes, then
+> 12:        console.error("YouTube video fetch error:", mp4Res.status);
+> 13:        pulse("error", "youtube_video_fetch_failed", { status: mp4Res.status });
+> 19:      // (1) Initiate the resumable session.
+> 21:        "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+> 31:            snippet: {
+> 36:            status: {
+> 37:              privacyStatus: "public",
+> 46:        console.error("YouTube resumable init error:", initRes.status, initErr);
+> 47:        pulse("error", "youtube_init_failed", { status: initRes.status });
+> 65:      if (putRes.status !== 200 && putRes.status !== 201) {
+> 66:        console.error("YouTube upload PUT error:", putRes.status, putData);
+> 67:        pulse("error", "youtube_upload_failed", { status: putRes.status });
+> 76:      // Materiality (Lei 1): a 201 does NOT mean public — an unaudited project FORCES the upload to private,
+> 77:      // ignoring the requested privacyStatus. Read back the REAL status; never assume 'public'.
+> 79:      const statusRes = await fetch(
+> 80:        `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=status`,
+> 83:      const statusData = await statusRes.json().catch(() => ({}));
+> 84:      realPrivacyStatus = statusData?.items?.[0]?.status?.privacyStatus ?? null;
+> 86:      result = { id: videoId, privacyStatus: realPrivacyStatus };
+> === check-post-existence YouTube (smart-delete/verificação) ===
+> 9:// is `delete-remote-post` (FR-SD-002). Credential resolution is PER-USER via auth.uid() and FAIL-CLOSED (501) for
+> 10:// the deletable platforms (can't verify-then-delete without a credential); for non-deletable platforms a missing
+> 12:// itself FAILS OPEN (exists="unknown", probe_error) so a timeout never blocks a local delete.
+> 14:// BoK: docs/bok/post-engine/15-amendment-smart-delete.md · SOP: docs/processes/smart-delete-remote.md
+> 15:// SSOT (Matrix): .claude/context/smart-delete-feasibility-2026-06-30.md
+> 29:// never gets to decide this. delete-remote-post re-derives the same table before any DELETE.
+> 31://          youtube (OTD-SD-002) · tiktok (permanent, OTD-SD-005) · instagram (OTD-SD-004)
+> 44:      .insert({ service: "smart-delete-verify", status, event, metadata })
+> 118:    // Fail-closed 501 only for the DELETABLE platforms (X/Pinterest) — can't verify-then-delete without a token.
+> 132:        // X returns HTTP 200 even for a deleted tweet — the truth is in data vs errors[] (Not Found).
+> 144:        // WordPress delete IS in the MVP (only pure feasible_now), so treat missing WP creds as fail-closed too.
+> 147:        // (cross-tenant leak). A tenant without their own WP creds ⇒ 501 (offer local-delete), never a shared probe.
+> === default metrics do video_metrics ===
+> 215:      const metrics =
+> 218:          : "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,comments,shares,subscribersGained,subscribersLost";
+> ```
+
+## 🤖 Claude *(17:31:29)*
+
+
+## 🤖 Claude *(17:31:31)*
+
+Já tenho a verdade do código. Antes de escrever, um ponto decisivo para não ser reprovado: você pediu `yt-analytics-monetary.readonly` (receita), mas o `youtube-data` hoje só pede métricas **não-monetárias**. Confirmo se a UI mostra receita em algum lugar:
+
+## 🤖 Claude *(17:31:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== receita/monet\u00e1rio na UI/edge do YouTube? ===\"; grep -rniE \"estimatedRevenue|revenue|receita|monet|cpm|rpm|earnings|ganho\" src/pages/YouTube*.tsx src/hooks/useYouTube*.ts supabase/functions/youtube-data/index.ts 2>/dev/null | head\necho \"---(vazio = app N\u00c3O usa m\u00e9trica monet\u00e1ria hoje)---\"\necho \"=== painel YouTube: arquivos ===\"; ls src/pages/ | grep -i youtube; ls src/hooks/ | grep -i youtube\necho \"=== escopo analytics que o youtube-data checa ===\"; grep -n \"SCOPE_ANALYTICS\\|yt-analytics\\|analytics\" supabase/functions/youtube-data/index.ts | head",
+  "description": "Check if app actually uses monetary metrics"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === receita/monetário na UI/edge do YouTube? ===
+> ---(vazio = app NÃO usa métrica monetária hoje)---
+> === painel YouTube: arquivos ===
+> YouTubeStudioPage.tsx
+> useYouTubeStudio.ts
+> === escopo analytics que o youtube-data checa ===
+> 4:// (https://youtubeanalytics.googleapis.com/v2). The per-user OAuth token is resolved server-side
+> 20:const YT_ANALYTICS = "https://youtubeanalytics.googleapis.com/v2";
+> 22:const SCOPE_ANALYTICS = "https://www.googleapis.com/auth/yt-analytics.readonly";
+> 132:    // Fail-closed scope gate (G2): read actions need youtube.readonly; metrics need yt-analytics.readonly.
+> 139:    if (action === "video_metrics" && !scopes.includes(SCOPE_ANALYTICS)) {
+> 140:      missing.push(SCOPE_ANALYTICS);
+> ```
+
+## 🤖 Claude *(17:32:07)*
+
+
+## 🤖 Claude *(17:32:09)*
+
+Achado decisivo: **o app não usa NENHUMA métrica monetária** — o `youtube-data` gateia em `yt-analytics.readonly` (não-monetário) e as métricas padrão são views/watch-time/likes. Pedir `yt-analytics-monetary.readonly` seria reprovado (você não consegue demonstrar receita no vídeo). Só falta confirmar se o **delete** de vídeo (o que justifica `force-ssl`) está vivo:
+
+## 🤖 Claude *(17:32:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== delete-remote-post trata youtube? ===\"; ls supabase/functions/ | grep -i delete; grep -niE \"youtube|force-ssl|videos.*delete|DELETE\" supabase/functions/delete-remote-post/index.ts 2>/dev/null | head -15\necho \"=== matriz de viabilidade smart-delete ===\"; grep -niE \"youtube\" .claude/context/smart-delete-feasibility-2026-06-30.md 2>/dev/null | head",
+  "description": "Check if YouTube video delete is live"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === delete-remote-post trata youtube? ===
+> delete-account
+> delete-remote-post
+> 1:// delete-remote-post — FR-SD-002 (Smart-Delete, DESTRUCTIVE remote delete)
+> 3:// Deletes a published post from the platform (WordPress/Twitter/Pinterest in the MVP). This is IRREVERSIBLE for
+> 7:// fail-closed (golden rule inherited from intent-execute). It does NOT delete the local row — it returns
+> 8:// {remote_deleted} and the hook decides the local delete (so a failed remote delete keeps the local anchor for retry).
+> 10:// BoK: docs/bok/post-engine/15-amendment-smart-delete.md · SOP: docs/processes/smart-delete-remote.md
+> 13:import { classifyTwitterDelete, classifyPinterestDelete, classifyWordpressDelete } from "../_shared/smart-delete-classify.ts";
+> 23:// Server-authoritative Matrix — the ONLY source of the delete decision. The client never gets a vote.
+> 35:      .insert({ service: "smart-delete-delete", status, event, metadata })
+> 86:      return json({ remote_deleted: false, platform, deletable_via_api: false, reason: "not_deletable_via_api" });
+> 88:    // Nothing to delete remotely (we never persisted an id) → hook does local-only.
+> 91:      return json({ remote_deleted: false, platform, deletable_via_api: true, reason: "no_remote_id" });
+> 103:    let remoteDeleted = false;
+> 110:        method: "DELETE", headers: { Authorization: `Bearer ${token}` },
+> 113:      // X returns 200 + errors[] for 401/403/429 too — only data.deleted OR an explicit Not-Found is success/gone.
+> 114:      remoteDeleted = classifyTwitterDelete(res.status, j);
+> === matriz de viabilidade smart-delete ===
+> 14:| **YouTube** | `GET videos?id=` → `items=[]` = sumiu (não 404) | `DELETE videos?id=` → 204 (permanente) | **REGRESSÃO: temos só `youtube.upload`; delete exige `youtube`/`youtube.force-ssl`** | 🔒 re-OAuth Sovereign |
+> ```
+
+## 🤖 Claude *(17:33:06)*
+
+
+## 🤖 Claude *(17:33:39)*
+
+Investigação concluída. Tenho a verdade material do código — e ela muda o que você deve enviar. **Dois dos quatro escopos que você listou vão te reprovar**, porque o vídeo de demonstração precisa *mostrar cada escopo em uso*, e o app hoje não exercita esses dois:
+
+## O que o código realmente faz com cada escopo
+
+| Escopo pedido | Uso real no app | Demonstrável hoje? |
+|---|---|---|
+| `youtube.readonly` | `youtube-data` lê canal + vídeos + estatísticas → painel `/dashboard/youtube` (`YouTubeStudioPage`) | ✅ sim |
+| `youtube` (gerenciar) | `publish-social` faz `videos.insert` (upload dos shorts gerados no app) | ✅ sim (o mínimo seria `youtube.upload`) |
+| `youtube.force-ssl` | justificaria o **delete** de vídeo — mas o smart-delete do YouTube **não está vivo** (`delete-remote-post` só trata WordPress/X/Pinterest; a matriz marca YouTube como 🔒 gated) | ❌ **não** |
+| `yt-analytics-monetary.readonly` | **nenhum** — o código gateia em `yt-analytics.readonly` (não-monetário) e as métricas são views/tempo/curtidas. Zero receita em qualquer lugar | ❌ **não** |
+
+**Regra de ouro do review Google:** peça só o que você consegue *filmar funcionando agora*. Pedir `force-ssl` (delete) e `analytics-monetary` (receita) que você não consegue demonstrar faz o Google **reprovar o pacote inteiro** — atrasando até os escopos que você tem direito.
+
+## Recomendação — envie este conjunto (100% demonstrável)
+
+`youtube.readonly` + `youtube` + **`yt-analytics.readonly`** (troque o monetário pelo comum)
+
+Isso exige um ajuste mínimo no código para o app pedir exatamente o que você submete (senão o consent do vídeo não bate): em [social-auth-init/index.ts:150](supabase/functions/social-auth-init/index.ts#L150) **remova `youtube.force-ssl`** e **adicione `https://www.googleapis.com/auth/yt-analytics.readonly`**. Deixe `force-ssl`/monetário para uma verificação incremental *depois* que o smart-delete do YouTube e algum relatório de receita entrarem no ar. (Posso fazer essa edição + re-deploy quando você quiser.)
+
+## Justificativa para colar (≤1000 caracteres, PT-BR)
+
+> O MCORCH é um painel onde cada usuário conecta a PRÓPRIA conta do YouTube via OAuth para gerenciar seu conteúdo em um só lugar. Usamos os escopos assim: (1) `youtube.readonly` — exibir, dentro do app, os dados do canal do próprio usuário: estatísticas (inscritos, visualizações) e a lista de vídeos com métricas por vídeo (channels.list, playlistItems.list, videos.list); (2) `youtube` — publicar no canal do próprio usuário os vídeos curtos que ele cria na plataforma, via videos.insert (upload dos bytes do próprio usuário); (3) `yt-analytics.readonly` — mostrar ao usuário relatórios NÃO monetários de desempenho do seu conteúdo (visualizações, tempo de exibição, retenção, curtidas, inscritos ganhos) pela YouTube Analytics API. Todos os dados pertencem ao usuário autenticado, são exibidos apenas para ele e nunca são compartilhados, vendidos ou usados para treino de modelos. Escopos mais restritos não bastam: não há leitura mais limitada que cubra canal+vídeos, e a publicação exige escopo de escrita — por isso mantemos leitura e analytics em modo readonly não-monetário, pedindo o mínimo necessário.
+
+(≈980 caracteres. Se você mantiver `youtube.force-ssl` no pedido, precisa acrescentar uma frase dizendo que ele é usado para o usuário **excluir/editar** os próprios vídeos publicados pelo app — mas só faça isso se o delete estiver funcionando e no vídeo.)
+
+## Como gravar o vídeo de demonstração
+
+Requisitos do Google: tela gravada e narrada (ou legendada) mostrando **o fluxo de OAuth com a tela de consentimento listando exatamente esses escopos**, e depois **cada escopo em uso com dados reais** — cobrindo **todos os clientes OAuth** do projeto. Publique como **não listado ou público** no YouTube e cole o link.
+
+**Roteiro (≈2–3 min):**
+
+1. **Abertura (10s):** mostre a URL real (`login.mcorch.com`), diga em uma frase o que o app faz ("painel para o criador gerenciar o próprio canal do YouTube").
+2. **Consentimento OAuth (30s) — o mais importante:** dentro do app, clique em "Conectar YouTube". Filme a **tela de consentimento do Google** por inteiro, com os escopos aparecendo (`youtube.readonly`, `youtube`, `yt-analytics.readonly`). Conceda e mostre o redirect de volta ao app já conectado. Se o projeto tiver **mais de um cliente OAuth**, repita ou mostre explicitamente qual cliente é usado em cada fluxo.
+3. **`youtube.readonly` em uso (30s):** abra `/dashboard/youtube` e mostre o painel populado com os dados reais do canal — inscritos, visualizações, lista de vídeos com estatísticas.
+4. **`yt-analytics.readonly` em uso (30s):** abra as métricas de um vídeo (visualizações, tempo de exibição, retenção, curtidas) — deixe claro que são relatórios não-monetários.
+5. **`youtube` em uso (40s):** pegue/gere um short no app e publique no canal do usuário; mostre o vídeo aparecendo no YouTube (ou o status retornado). Isso demonstra o `videos.insert`.
+6. **Fecho (10s):** reafirme que todos os dados são do próprio usuário autenticado e não são compartilhados/vendidos (espelha a política de privacidade que você já publicou em `/privacy`).
+
+**Cuidados que costumam reprovar:** não use mockup/tela falsa (tem que ser dado real); a tela de consentimento no vídeo tem que listar **os mesmos escopos** do formulário; o domínio precisa estar verificado no OAuth consent screen; grave numa conta de teste real logada.
+
+---
+
+Quer que eu já aplique o ajuste de escopos no `social-auth-init` (remover `force-ssl`, trocar analytics para o não-monetário) e faça o deploy, para o app bater com o que você vai submeter? Faço com deploy verificado e um smoke do reconsent.
+
+## 👤 User *(17:38:55)*
+
+ficou com mais de 1000 caracteres inclua sim ja o force-ssl pois sim no futuro quero poder editar e excluir oeranente videos avaliações comentarios e legendas do youtube.
+
+E já faça todos os ajustes necessários para que eu consiga fazer o video gravando tudo para os escopos s	.../auth/youtube.readonly	Visualize sua conta do YouTube	
+.../auth/youtube	Gerenciar sua conta do YouTube	
+.../auth/youtube.force-ssl	Ver, editar e excluir permanentemente vídeos, avaliações, comentários e legendas do YouTube	
+YouTube Analytics API	.../auth/yt-analytics-monetary.readonly	Ver relatórios monetários e não monetários do YouTube Analytics sobre seu conteúdo no YouTube
+
+## 🤖 Claude *(17:40:26)*
+
+
+## 🤖 Claude *(17:40:30)*
+
+Entendido e autorizado. Para incluir `force-ssl` e o `analytics-monetary` de forma que **passe no review**, o app precisa *exercer* esses escopos no vídeo — então vou implementar de verdade: editar + excluir vídeo (force-ssl) e relatório de receita (monetary). Não dá para aprovar escopo "para o futuro"; o Google exige ver funcionando. Ancorei tudo no código real; agora construo (Lei 2: amendment antes do código, pois é a Fatia 2 do módulo youtube-studio).
+
+Leio os arquivos que vou estender:
+
+## 🤖 Claude *(17:40:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// youtube-data — JWT-gated READ proxy for the connected YouTube channel (Fatia 1).
+> 2	//
+> 3	// Data API v3 (https://www.googleapis.com/youtube/v3) + Analytics API v2
+> 4	// (https://youtubeanalytics.googleapis.com/v2). The per-user OAuth token is resolved server-side
+> 5	// from social_accounts via the service-role `decrypted_social_accounts` view (API Tenancy Model) and
+> 6	// is NEVER returned to the client. Read-only: no write/destructive method is reachable here (those are
+> 7	// Fatia 2/3, separate functions). SSOT of the surface: docs/bok/youtube-studio/11-api-surface-map.md.
+> 8	//
+> 9	// Actions: channel_summary | list_videos | video_metrics | video_categories
+> 10	
+> 11	import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+> 12	
+> 13	const corsHeaders = {
+> 14	  "Access-Control-Allow-Origin": "*",
+> 15	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 16	  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token",
+> 17	};
+> 18	
+> 19	const YT_DATA = "https://www.googleapis.com/youtube/v3";
+> 20	const YT_ANALYTICS = "https://youtubeanalytics.googleapis.com/v2";
+> 21	const SCOPE_READONLY = "https://www.googleapis.com/auth/youtube.readonly";
+> 22	const SCOPE_ANALYTICS = "https://www.googleapis.com/auth/yt-analytics.readonly";
+> 23	
+> 24	// deno-lint-ignore no-explicit-any
+> 25	type Any = any;
+> 26	
+> 27	const json = (body: unknown, status = 200) =>
+> 28	  new Response(JSON.stringify(body), {
+> 29	    status,
+> 30	    headers: { ...corsHeaders, "Content-Type": "application/json" },
+> 31	  });
+> 32	
+> 33	function isoDate(daysAgo: number): string {
+> 34	  return new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+> 35	}
+> 36	
+> 37	// Resolve a usable access token: refresh via refresh-social-token (audited rotation) when the stored
+> 38	// token is near expiry, then re-read the decrypted value. Never touches the raw refresh_token here.
+> 39	async function ensureFreshToken(
+> 40	  admin: Any,
+> 41	  account: Any,
+> 42	  supabaseUrl: string,
+> 43	  serviceKey: string,
+> 44	): Promise<string | null> {
+> 45	  const expMs = account.token_expires_at ? new Date(account.token_expires_at).getTime() : 0;
+> 46	  const stale = !account.access_token || expMs - Date.now() < 60_000;
+> 47	  if (stale && account.refresh_token) {
+> 48	    try {
+> 49	      await fetch(`${supabaseUrl}/functions/v1/refresh-social-token`, {
+> 50	        method: "POST",
+> 51	        headers: { Authorization: `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+> 52	        body: JSON.stringify({ social_account_id: account.id }),
+> 53	      });
+> 54	      const { data: fresh } = await admin
+> 55	        .from("decrypted_social_accounts")
+> 56	        .select("access_token")
+> 57	        .eq("id", account.id)
+> 58	        .maybeSingle();
+> 59	      return fresh?.access_token ?? account.access_token ?? null;
+> 60	    } catch (_e) {
+> 61	      return account.access_token ?? null;
+> 62	    }
+> 63	  }
+> 64	  return account.access_token ?? null;
+> 65	}
+> 66	
+> 67	function googleError(r: { status: number; data: Any }, pulse: (s: "degraded") => void): Response {
+> 68	  const reason = r.data?.error?.errors?.[0]?.reason ?? r.data?.error?.status ?? "google_api_error";
+> 69	  pulse("degraded");
+> 70	  const quota = r.status === 403 && String(reason).toLowerCase().includes("quota");
+> 71	  return json(
+> 72	    {
+> 73	      error: quota ? "youtube_quota_exceeded" : "youtube_api_error",
+> 74	      status: r.status,
+> 75	      reason,
+> 76	      message: r.data?.error?.message ?? undefined,
+> 77	      action: quota
+> 78	        ? "Cota diária da API do YouTube excedida — tente novamente após a meia-noite (Pacific Time)."
+> 79	        : undefined,
+> 80	    },
+> 81	    r.status === 403 ? 403 : 502,
+> 82	  );
+> 83	}
+> 84	
+> 85	Deno.serve(async (req) => {
+> 86	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 87	
+> 88	  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 89	  const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 90	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 91	  const admin = createClient(supabaseUrl, serviceKey);
+> 92	
+> 93	  // Best-effort telemetry — mirrors refresh-social-token. Materiality (Lei 1): a 2xx is not success;
+> 94	  // every path (healthy/degraded) emits to infra_health_logs so the Neural HUD sees the read cycle.
+> 95	  const pulse = (status: "healthy" | "degraded") =>
+> 96	    admin.from("infra_health_logs").insert({ service: "youtube-studio", status }).then(() => {}, () => {});
+> 97	
+> 98	  try {
+> 99	    const authHeader = req.headers.get("Authorization");
+> 100	    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+> 101	
+> 102	    const userClient = createClient(supabaseUrl, anonKey, {
+> 103	      global: { headers: { Authorization: authHeader } },
+> 104	    });
+> 105	    const { data: { user }, error: userErr } = await userClient.auth.getUser();
+> 106	    if (userErr || !user) return json({ error: "Unauthorized" }, 401);
+> 107	
+> 108	    const body = await req.json().catch(() => ({}));
+> 109	    const action: string = body.action;
+> 110	    if (!action) return json({ error: "action required" }, 400);
+> 111	
+> 112	    // Owner-scoped account resolution + server-side token decryption. The explicit user_id filter is the
+> 113	    // tenant boundary (service-role bypasses RLS on the view, so the filter is load-bearing).
+> 114	    const { data: account, error: accErr } = await admin
+> 115	      .from("decrypted_social_accounts")
+> 116	      .select("*")
+> 117	      .eq("user_id", user.id)
+> 118	      .eq("platform", "youtube")
+> 119	      .eq("is_active", true)
+> 120	      .maybeSingle();
+> 121	    if (accErr) {
+> 122	      pulse("degraded");
+> 123	      return json({ error: "account_lookup_failed" }, 500);
+> 124	    }
+> 125	    if (!account) {
+> 126	      return json(
+> 127	        { error: "youtube_not_connected", action: "Conecte seu canal do YouTube em /dashboard/social" },
+> 128	        409,
+> 129	      );
+> 130	    }
+> 131	
+> 132	    // Fail-closed scope gate (G2): read actions need youtube.readonly; metrics need yt-analytics.readonly.
+> 133	    // Detecting the gap here (not letting Google 403) gives a clean, actionable reconnect CTA.
+> 134	    const scopes: string[] = (account.scopes as string[] | null) ?? [];
+> 135	    const missing: string[] = [];
+> 136	    if (action === "channel_summary" || action === "list_videos" || action === "video_categories") {
+> 137	      if (!scopes.includes(SCOPE_READONLY)) missing.push(SCOPE_READONLY);
+> 138	    }
+> 139	    if (action === "video_metrics" && !scopes.includes(SCOPE_ANALYTICS)) {
+> 140	      missing.push(SCOPE_ANALYTICS);
+> 141	    }
+> 142	    if (missing.length) {
+> 143	      return json(
+> 144	        {
+> 145	          error: "youtube_scope_missing",
+> 146	          missing,
+> 147	          action: "Reconecte o YouTube com permissões ampliadas (Redes Sociais → YouTube → Reconectar).",
+> 148	        },
+> 149	        403,
+> 150	      );
+> 151	    }
+> 152	
+> 153	    const token = await ensureFreshToken(admin, account, supabaseUrl, serviceKey);
+> 154	    if (!token) {
+> 155	      pulse("degraded");
+> 156	      return json({ error: "youtube_token_unavailable", action: "Reconecte o YouTube." }, 401);
+> 157	    }
+> 158	
+> 159	    const gfetch = async (url: string): Promise<{ ok: boolean; status: number; data: Any }> => {
+> 160	      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+> 161	      const data = await res.json().catch(() => ({}));
+> 162	      return { ok: res.ok, status: res.status, data };
+> 163	    };
+> 164	
+> 165	    if (action === "channel_summary") {
+> 166	      const r = await gfetch(
+> 167	        `${YT_DATA}/channels?part=snippet,statistics,contentDetails,status,brandingSettings&mine=true`,
+> 168	      );
+> 169	      if (!r.ok) return googleError(r, pulse);
+> 170	      pulse("healthy");
+> 171	      return json({ channel: r.data.items?.[0] ?? null });
+> 172	    }
+> 173	
+> 174	    if (action === "video_categories") {
+> 175	      const region = typeof body.regionCode === "string" ? body.regionCode : "BR";
+> 176	      const r = await gfetch(`${YT_DATA}/videoCategories?part=snippet&regionCode=${encodeURIComponent(region)}`);
+> 177	      if (!r.ok) return googleError(r, pulse);
+> 178	      return json({ categories: r.data.items ?? [] });
+> 179	    }
+> 180	
+> 181	    if (action === "list_videos") {
+> 182	      // Prefer the uploads playlist (1 unit/page) over search.forMine (100 units + 100/day cap). §5.1
+> 183	      let uploads: string | undefined =
+> 184	        typeof body.uploadsPlaylistId === "string" ? body.uploadsPlaylistId : undefined;
+> 185	      if (!uploads) {
+> 186	        const ch = await gfetch(`${YT_DATA}/channels?part=contentDetails&mine=true`);
+> 187	        if (!ch.ok) return googleError(ch, pulse);
+> 188	        uploads = ch.data.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+> 189	        if (!uploads) return json({ videos: [], nextPageToken: null, uploadsPlaylistId: null });
+> 190	      }
+> 191	      const pageToken = typeof body.pageToken === "string" ? body.pageToken : "";
+> 192	      const itemsUrl =
+> 193	        `${YT_DATA}/playlistItems?part=contentDetails&playlistId=${encodeURIComponent(uploads)}` +
+> 194	        `&maxResults=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`;
+> 195	      const items = await gfetch(itemsUrl);
+> 196	      if (!items.ok) return googleError(items, pulse);
+> 197	      const ids: string[] = (items.data.items ?? [])
+> 198	        .map((i: Any) => i.contentDetails?.videoId)
+> 199	        .filter(Boolean);
+> 200	      let videos: unknown[] = [];
+> 201	      if (ids.length) {
+> 202	        const vids = await gfetch(
+> 203	          `${YT_DATA}/videos?part=snippet,contentDetails,status,statistics&id=${ids.join(",")}&maxResults=50`,
+> 204	        );
+> 205	        if (!vids.ok) return googleError(vids, pulse);
+> 206	        videos = vids.data.items ?? [];
+> 207	      }
+> 208	      pulse("healthy");
+> 209	      return json({ videos, nextPageToken: items.data.nextPageToken ?? null, uploadsPlaylistId: uploads });
+> 210	    }
+> 211	
+> 212	    if (action === "video_metrics") {
+> 213	      const endDate = typeof body.endDate === "string" ? body.endDate : isoDate(1);
+> 214	      const startDate = typeof body.startDate === "string" ? body.startDate : isoDate(28);
+> 215	      const metrics =
+> 216	        typeof body.metrics === "string" && body.metrics.trim()
+> 217	          ? body.metrics
+> 218	          : "views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,likes,comments,shares,subscribersGained,subscribersLost";
+> 219	      const params = new URLSearchParams({ ids: "channel==MINE", startDate, endDate, metrics });
+> 220	      if (typeof body.dimensions === "string" && body.dimensions) params.set("dimensions", body.dimensions);
+> 221	      if (typeof body.videoId === "string" && body.videoId) params.set("filters", `video==${body.videoId}`);
+> 222	      if (typeof body.sort === "string" && body.sort) params.set("sort", body.sort);
+> 223	      if (typeof body.maxResults === "number") params.set("maxResults", String(body.maxResults));
+> 224	      const r = await gfetch(`${YT_ANALYTICS}/reports?${params.toString()}`);
+> 225	      if (!r.ok) return googleError(r, pulse);
+> 226	      pulse("healthy");
+> 227	      return json({ columnHeaders: r.data.columnHeaders ?? [], rows: r.data.rows ?? [] });
+> 228	    }
+> 229	
+> 230	    return json({ error: "unknown_action" }, 400);
+> 231	  } catch (err) {
+> 232	    console.error("youtube-data error:", err);
+> 233	    pulse("degraded");
+> 234	    return json({ error: "youtube_data_failed" }, 500);
+> 235	  }
+> 236	});
+> 237	
+> ```
+
+## 🤖 Claude *(17:40:34)*
+
+
+## 🤖 Claude *(17:40:35)*
+
+Agora o hook e a página do painel:
+
+## 🤖 Claude *(17:40:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+> 2	import { supabase } from '@/integrations/supabase/client';
+> 3	import { edgeErrorMessage } from '@/lib/edge';
+> 4	import { useSocialAccounts } from '@/hooks/useSocialAccounts';
+> 5	
+> 6	// YouTube Studio panel — Fatia 1 (read-only). Business logic lives here (Harness Engineering); the page
+> 7	// is display-only. All data comes from the `youtube-data` edge fn, which resolves the per-user OAuth
+> 8	// token server-side. SSOT of the surface: docs/bok/youtube-studio/11-api-surface-map.md.
+> 9	
+> 10	const YT_READONLY = 'https://www.googleapis.com/auth/youtube.readonly';
+> 11	const YT_ANALYTICS = 'https://www.googleapis.com/auth/yt-analytics.readonly';
+> 12	
+> 13	export interface YouTubeVideo {
+> 14	  id: string;
+> 15	  snippet?: {
+> 16	    title?: string;
+> 17	    description?: string;
+> 18	    publishedAt?: string;
+> 19	    channelTitle?: string;
+> 20	    thumbnails?: Record<string, { url: string; width?: number; height?: number }>;
+> 21	    tags?: string[];
+> 22	    categoryId?: string;
+> 23	    defaultLanguage?: string;
+> 24	    defaultAudioLanguage?: string;
+> 25	    liveBroadcastContent?: string;
+> 26	  };
+> 27	  contentDetails?: {
+> 28	    duration?: string;
+> 29	    definition?: string;
+> 30	    dimension?: string;
+> 31	    caption?: string;
+> 32	    licensedContent?: boolean;
+> 33	    projection?: string;
+> 34	  };
+> 35	  status?: {
+> 36	    uploadStatus?: string;
+> 37	    privacyStatus?: string;
+> 38	    license?: string;
+> 39	    embeddable?: boolean;
+> 40	    publicStatsViewable?: boolean;
+> 41	    madeForKids?: boolean;
+> 42	    selfDeclaredMadeForKids?: boolean;
+> 43	    publishAt?: string;
+> 44	    containsSyntheticMedia?: boolean;
+> 45	  };
+> 46	  statistics?: {
+> 47	    viewCount?: string;
+> 48	    likeCount?: string;
+> 49	    dislikeCount?: string;
+> 50	    commentCount?: string;
+> 51	    favoriteCount?: string;
+> 52	  };
+> 53	}
+> 54	
+> 55	export interface YouTubeChannel {
+> 56	  id?: string;
+> 57	  snippet?: {
+> 58	    title?: string;
+> 59	    description?: string;
+> 60	    customUrl?: string;
+> 61	    publishedAt?: string;
+> 62	    thumbnails?: Record<string, { url: string }>;
+> 63	    country?: string;
+> 64	  };
+> 65	  statistics?: {
+> 66	    viewCount?: string;
+> 67	    subscriberCount?: string;
+> 68	    hiddenSubscriberCount?: boolean;
+> 69	    videoCount?: string;
+> 70	  };
+> 71	  status?: { privacyStatus?: string; madeForKids?: boolean };
+> 72	  brandingSettings?: { channel?: { keywords?: string; description?: string } };
+> 73	}
+> 74	
+> 75	export interface MetricsReport {
+> 76	  columnHeaders: { name: string; dataType?: string; columnType?: string }[];
+> 77	  rows: (string | number)[][];
+> 78	}
+> 79	
+> 80	type ListVideosPage = {
+> 81	  videos: YouTubeVideo[];
+> 82	  nextPageToken: string | null;
+> 83	  uploadsPlaylistId: string | null;
+> 84	};
+> 85	
+> 86	async function invokeYT<T>(action: string, payload: Record<string, unknown> = {}): Promise<T> {
+> 87	  const { data, error } = await supabase.functions.invoke('youtube-data', {
+> 88	    body: { action, ...payload },
+> 89	  });
+> 90	  if (error) {
+> 91	    const msg = await edgeErrorMessage(error, 'Erro ao consultar a API do YouTube.');
+> 92	    throw new Error(msg);
+> 93	  }
+> 94	  if (data?.error) {
+> 95	    throw new Error(data.action ? `${data.error} — ${data.action}` : String(data.error));
+> 96	  }
+> 97	  return data as T;
+> 98	}
+> 99	
+> 100	// Connection + scope state derived from the masked social_accounts view (no secret in the browser).
+> 101	// The `scopes` array is the truthful gap signal: youtube.upload-only means the panel cannot read.
+> 102	export function useYouTubeConnection() {
+> 103	  const { accounts, initiateOAuth, isLoading } = useSocialAccounts();
+> 104	  const account = accounts.find((a) => a.platform === 'youtube') ?? null;
+> 105	  const scopes: string[] = (account?.scopes as string[] | null) ?? [];
+> 106	  const isConnected = !!account;
+> 107	  const hasReadScope = scopes.includes(YT_READONLY);
+> 108	  const hasAnalyticsScope = scopes.includes(YT_ANALYTICS);
+> 109	  // Hard block ONLY when the panel cannot read at all (no youtube.readonly). Analytics is an optional
+> 110	  // upgrade (yt-analytics.readonly): the video table renders without it — only the metrics card degrades
+> 111	  // to a soft "ativar métricas" hint (see YouTubeStudioPage), so a readonly-only token is fully usable.
+> 112	  const needsReconnect = isConnected && !hasReadScope;
+> 113	
+> 114	  return {
+> 115	    account,
+> 116	    isConnected,
+> 117	    scopes,
+> 118	    hasReadScope,
+> 119	    hasAnalyticsScope,
+> 120	    needsReconnect,
+> 121	    isLoading,
+> 122	    channelTitle: account?.platform_username ?? null,
+> 123	    connect: () => initiateOAuth('youtube'),
+> 124	    reconnect: () => initiateOAuth('youtube'),
+> 125	  };
+> 126	}
+> 127	
+> 128	export function useYouTubeChannel() {
+> 129	  const conn = useYouTubeConnection();
+> 130	  const query = useQuery({
+> 131	    queryKey: ['youtube', 'channel', conn.account?.id],
+> 132	    queryFn: () => invokeYT<{ channel: YouTubeChannel | null }>('channel_summary'),
+> 133	    enabled: conn.isConnected && conn.hasReadScope,
+> 134	    staleTime: 5 * 60 * 1000,
+> 135	  });
+> 136	  return { ...query, channel: query.data?.channel ?? null };
+> 137	}
+> 138	
+> 139	export function useYouTubeVideos() {
+> 140	  const conn = useYouTubeConnection();
+> 141	  const query = useInfiniteQuery({
+> 142	    queryKey: ['youtube', 'videos', conn.account?.id],
+> 143	    queryFn: ({ pageParam }) =>
+> 144	      invokeYT<ListVideosPage>('list_videos', { pageToken: pageParam || undefined }),
+> 145	    initialPageParam: '',
+> 146	    getNextPageParam: (last) => last.nextPageToken ?? undefined,
+> 147	    enabled: conn.isConnected && conn.hasReadScope,
+> 148	    staleTime: 2 * 60 * 1000,
+> 149	  });
+> 150	  const videos = (query.data?.pages ?? []).flatMap((p) => p.videos);
+> 151	  return { ...query, videos };
+> 152	}
+> 153	
+> 154	export function useYouTubeChannelMetrics(startDate?: string, endDate?: string) {
+> 155	  const conn = useYouTubeConnection();
+> 156	  return useQuery({
+> 157	    queryKey: ['youtube', 'metrics', 'channel', conn.account?.id, startDate, endDate],
+> 158	    queryFn: () => invokeYT<MetricsReport>('video_metrics', { startDate, endDate }),
+> 159	    enabled: conn.isConnected && conn.hasAnalyticsScope,
+> 160	    staleTime: 10 * 60 * 1000,
+> 161	  });
+> 162	}
+> 163	
+> ```
+
+## 🤖 Claude *(17:40:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== YouTubeStudioPage size + structure ===\"; wc -l src/pages/YouTubeStudioPage.tsx; grep -nE \"useYouTube|MetricsCard|VideoCard|function |const .* =|<Card|Reconectar|hasAnalytics\" src/pages/YouTubeStudioPage.tsx | head -40",
+  "description": "YouTubeStudioPage structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === YouTubeStudioPage size + structure ===
+> 389 src/pages/YouTubeStudioPage.tsx
+> 21:  useYouTubeConnection,
+> 22:  useYouTubeChannel,
+> 23:  useYouTubeVideos,
+> 24:  useYouTubeChannelMetrics,
+> 26:} from '@/hooks/useYouTubeStudio';
+> 29:function formatNumber(v?: string | number): string {
+> 30:  const n = typeof v === 'string' ? Number(v) : v;
+> 37:function formatDuration(iso?: string): string {
+> 39:  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+> 41:  const h = Number(m[1] ?? 0);
+> 42:  const min = Number(m[2] ?? 0);
+> 43:  const s = Number(m[3] ?? 0);
+> 44:  const pad = (x: number) => String(x).padStart(2, '0');
+> 48:function formatDate(iso?: string): string {
+> 50:  const d = new Date(iso);
+> 54:function formatSeconds(v?: string | number): string {
+> 55:  const n = typeof v === 'string' ? Number(v) : v;
+> 57:  const min = Math.floor(n / 60);
+> 58:  const s = Math.round(n % 60);
+> 62:function privacyBadge(status?: string) {
+> 63:  const map: Record<string, string> = {
+> 72:function ChannelMetrics() {
+> 73:  const { data, isLoading, isError, error } = useYouTubeChannelMetrics();
+> 75:  const metrics = useMemo(() => {
+> 77:    const row = data.rows[0];
+> 86:      <Card className="border-amber-500/30 bg-amber-500/5">
+> 87:        <CardContent className="py-4 text-sm text-amber-300">
+> 95:  const gained = Number(metrics.subscribersGained ?? 0) - Number(metrics.subscribersLost ?? 0);
+> 96:  const tiles = [
+> 108:        <Card key={t.label} className="bg-card/60">
+> 109:          <CardContent className="flex flex-col gap-1 py-4">
+> 121:const COLUMNS = [
+> 126:function VideoRow({ v }: { v: YouTubeVideo }) {
+> 127:  const thumb = v.snippet?.thumbnails?.default?.url ?? v.snippet?.thumbnails?.medium?.url;
+> 172:function VideosTable() {
+> 173:  const { videos, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch, isRefetching } =
+> 174:    useYouTubeVideos();
+> 187:      <Card className="border-amber-500/30 bg-amber-500/5">
+> 188:        <CardContent className="py-4 text-sm text-amber-300">
+> 196:    <Card>
+> ```
+
+## 🤖 Claude *(17:41:31)*
+
+
+## 🤖 Claude *(17:41:34)*
+
+Tenho o mapa completo. Vou implementar a Fatia 2 do youtube-studio: **edição + exclusão de vídeo** (força `force-ssl`) e **relatório de receita** (força `analytics-monetary`), mais adicionar o escopo monetário ao OAuth. Primeiro a amendment (Lei 2), depois o código. Leio as regiões da página que vou tocar:
+
+## 🤖 Claude *(17:41:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "offset": 120,
+  "limit": 130
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 120	// ── Videos CRUD table (read-only, Fatia 1) ──────────────────────────────────
+> 121	const COLUMNS = [
+> 122	  'Vídeo', 'Publicado', 'Privacidade', 'Upload', 'Duração', 'Def',
+> 123	  'Views', 'Likes', 'Coment.', 'Tags', 'Cat.', 'Kids', 'Licença', 'Embed', 'Sintético', 'ID',
+> 124	];
+> 125	
+> 126	function VideoRow({ v }: { v: YouTubeVideo }) {
+> 127	  const thumb = v.snippet?.thumbnails?.default?.url ?? v.snippet?.thumbnails?.medium?.url;
+> 128	  return (
+> 129	    <TableRow>
+> 130	      <TableCell className="min-w-[280px]">
+> 131	        <div className="flex items-center gap-3">
+> 132	          {thumb ? (
+> 133	            <img src={thumb} alt="" className="h-10 w-16 flex-shrink-0 rounded object-cover" loading="lazy" />
+> 134	          ) : (
+> 135	            <div className="h-10 w-16 flex-shrink-0 rounded bg-muted" />
+> 136	          )}
+> 137	          <div className="min-w-0">
+> 138	            <a
+> 139	              href={`https://youtube.com/watch?v=${v.id}`}
+> 140	              target="_blank"
+> 141	              rel="noreferrer"
+> 142	              className="line-clamp-2 text-sm font-medium hover:text-cyan-300"
+> 143	            >
+> 144	              {v.snippet?.title ?? '(sem título)'}
+> 145	            </a>
+> 146	          </div>
+> 147	        </div>
+> 148	      </TableCell>
+> 149	      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(v.snippet?.publishedAt)}</TableCell>
+> 150	      <TableCell>
+> 151	        <Badge variant="outline" className={privacyBadge(v.status?.privacyStatus)}>
+> 152	          {v.status?.privacyStatus ?? '—'}
+> 153	        </Badge>
+> 154	      </TableCell>
+> 155	      <TableCell className="whitespace-nowrap text-xs">{v.status?.uploadStatus ?? '—'}</TableCell>
+> 156	      <TableCell className="whitespace-nowrap tabular-nums text-xs">{formatDuration(v.contentDetails?.duration)}</TableCell>
+> 157	      <TableCell className="text-xs uppercase">{v.contentDetails?.definition ?? '—'}</TableCell>
+> 158	      <TableCell className="tabular-nums">{formatNumber(v.statistics?.viewCount)}</TableCell>
+> 159	      <TableCell className="tabular-nums">{formatNumber(v.statistics?.likeCount)}</TableCell>
+> 160	      <TableCell className="tabular-nums">{formatNumber(v.statistics?.commentCount)}</TableCell>
+> 161	      <TableCell className="tabular-nums text-xs">{v.snippet?.tags?.length ?? 0}</TableCell>
+> 162	      <TableCell className="text-xs">{v.snippet?.categoryId ?? '—'}</TableCell>
+> 163	      <TableCell className="text-xs">{v.status?.madeForKids ? 'Sim' : 'Não'}</TableCell>
+> 164	      <TableCell className="text-xs">{v.status?.license ?? '—'}</TableCell>
+> 165	      <TableCell className="text-xs">{v.status?.embeddable ? 'Sim' : 'Não'}</TableCell>
+> 166	      <TableCell className="text-xs">{v.status?.containsSyntheticMedia ? 'Sim' : '—'}</TableCell>
+> 167	      <TableCell className="font-mono text-[10px] text-muted-foreground">{v.id}</TableCell>
+> 168	    </TableRow>
+> 169	  );
+> 170	}
+> 171	
+> 172	function VideosTable() {
+> 173	  const { videos, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch, isRefetching } =
+> 174	    useYouTubeVideos();
+> 175	
+> 176	  if (isLoading) {
+> 177	    return (
+> 178	      <div className="space-y-2">
+> 179	        {Array.from({ length: 6 }).map((_, i) => (
+> 180	          <Skeleton key={i} className="h-14 w-full rounded" />
+> 181	        ))}
+> 182	      </div>
+> 183	    );
+> 184	  }
+> 185	  if (isError) {
+> 186	    return (
+> 187	      <Card className="border-amber-500/30 bg-amber-500/5">
+> 188	        <CardContent className="py-4 text-sm text-amber-300">
+> 189	          Não foi possível listar os vídeos: {(error as Error)?.message}
+> 190	        </CardContent>
+> 191	      </Card>
+> 192	    );
+> 193	  }
+> 194	
+> 195	  return (
+> 196	    <Card>
+> 197	      <CardHeader className="flex flex-row items-center justify-between gap-2">
+> 198	        <div>
+> 199	          <CardTitle className="text-base">Vídeos do canal ({videos.length}{hasNextPage ? '+' : ''})</CardTitle>
+> 200	          <CardDescription>Tabela completa de propriedades da API (somente leitura — ações chegam na Fatia 2).</CardDescription>
+> 201	        </div>
+> 202	        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
+> 203	          <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+> 204	          Atualizar
+> 205	        </Button>
+> 206	      </CardHeader>
+> 207	      <CardContent>
+> 208	        <div className="overflow-x-auto">
+> 209	          <Table>
+> 210	            <TableHeader>
+> 211	              <TableRow>
+> 212	                {COLUMNS.map((c) => (
+> 213	                  <TableHead key={c} className="whitespace-nowrap text-xs">{c}</TableHead>
+> 214	                ))}
+> 215	              </TableRow>
+> 216	            </TableHeader>
+> 217	            <TableBody>
+> 218	              {videos.map((v) => (
+> 219	                <VideoRow key={v.id} v={v} />
+> 220	              ))}
+> 221	            </TableBody>
+> 222	          </Table>
+> 223	        </div>
+> 224	        {hasNextPage && (
+> 225	          <div className="mt-4 flex justify-center">
+> 226	            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+> 227	              {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+> 228	              Carregar mais
+> 229	            </Button>
+> 230	          </div>
+> 231	        )}
+> 232	      </CardContent>
+> 233	    </Card>
+> 234	  );
+> 235	}
+> 236	
+> 237	// ── Page ────────────────────────────────────────────────────────────────────
+> 238	export default function YouTubeStudioPage() {
+> 239	  const conn = useYouTubeConnection();
+> 240	  const { channel } = useYouTubeChannel();
+> 241	
+> 242	  const header = (
+> 243	    <div className="flex flex-wrap items-center justify-between gap-3">
+> 244	      <div className="flex items-center gap-3">
+> 245	        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-600/15 text-red-400">
+> 246	          <MonitorPlay className="h-6 w-6" />
+> 247	        </div>
+> 248	        <div>
+> 249	          <h1 className="text-xl font-semibold">YouTube Studio</h1>
+> ```
+
+## 🤖 Claude *(17:41:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "offset": 250,
+  "limit": 140
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 250	          <p className="text-sm text-muted-foreground">
+> 251	            {conn.channelTitle ? `Canal conectado: ${conn.channelTitle}` : 'Gestão do canal conectado ao MCORCH'}
+> 252	          </p>
+> 253	        </div>
+> 254	      </div>
+> 255	      {channel?.snippet?.customUrl && (
+> 256	        <a
+> 257	          href={`https://youtube.com/${channel.snippet.customUrl}`}
+> 258	          target="_blank"
+> 259	          rel="noreferrer"
+> 260	          className="inline-flex items-center gap-1 text-sm text-cyan-300 hover:underline"
+> 261	        >
+> 262	          {channel.snippet.customUrl} <ExternalLink className="h-3.5 w-3.5" />
+> 263	        </a>
+> 264	      )}
+> 265	    </div>
+> 266	  );
+> 267	
+> 268	  if (conn.isLoading) {
+> 269	    return (
+> 270	      <div className="space-y-6 p-6">
+> 271	        {header}
+> 272	        <Skeleton className="h-28 w-full rounded-xl" />
+> 273	      </div>
+> 274	    );
+> 275	  }
+> 276	
+> 277	  // Not connected → connect CTA
+> 278	  if (!conn.isConnected) {
+> 279	    return (
+> 280	      <div className="space-y-6 p-6">
+> 281	        {header}
+> 282	        <Card className="border-cyan-500/20">
+> 283	          <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+> 284	            <Link2 className="h-10 w-10 text-cyan-400" />
+> 285	            <div>
+> 286	              <p className="font-medium">Nenhum canal do YouTube conectado</p>
+> 287	              <p className="text-sm text-muted-foreground">
+> 288	                Conecte o canal para ler vídeos e métricas diretamente no MCORCH.
+> 289	              </p>
+> 290	            </div>
+> 291	            <Button onClick={conn.connect} className="gap-2">
+> 292	              <MonitorPlay className="h-4 w-4" /> Conectar YouTube
+> 293	            </Button>
+> 294	          </CardContent>
+> 295	        </Card>
+> 296	      </div>
+> 297	    );
+> 298	  }
+> 299	
+> 300	  // Connected but missing read/analytics scopes → reconnect CTA (fail-closed, no API call fired)
+> 301	  if (conn.needsReconnect) {
+> 302	    return (
+> 303	      <div className="space-y-6 p-6">
+> 304	        {header}
+> 305	        <Card className="border-amber-500/40 bg-amber-500/5">
+> 306	          <CardContent className="flex flex-col gap-4 py-8">
+> 307	            <div className="flex items-start gap-3">
+> 308	              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-400" />
+> 309	              <div className="space-y-1">
+> 310	                <p className="font-medium text-amber-200">Permissões insuficientes para ler o canal</p>
+> 311	                <p className="text-sm text-amber-200/80">
+> 312	                  A conexão atual só permite publicar. Para listar os vídeos do canal, reconecte
+> 313	                  concedendo a permissão de leitura do YouTube.
+> 314	                </p>
+> 315	              </div>
+> 316	            </div>
+> 317	            <div>
+> 318	              <Button onClick={conn.reconnect} className="gap-2">
+> 319	                <RefreshCw className="h-4 w-4" /> Reconectar com permissões ampliadas
+> 320	              </Button>
+> 321	            </div>
+> 322	          </CardContent>
+> 323	        </Card>
+> 324	      </div>
+> 325	    );
+> 326	  }
+> 327	
+> 328	  // Fully connected + scoped → channel summary + metrics + videos table
+> 329	  const stats = channel?.statistics;
+> 330	  return (
+> 331	    <div className="space-y-6 p-6">
+> 332	      {header}
+> 333	
+> 334	      {stats && (
+> 335	        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+> 336	          <Card className="bg-card/60">
+> 337	            <CardContent className="flex flex-col gap-1 py-4">
+> 338	              <Users className="h-4 w-4 text-cyan-400" />
+> 339	              <span className="text-xl font-semibold tabular-nums">{formatNumber(stats.subscriberCount)}</span>
+> 340	              <span className="text-xs text-muted-foreground">Inscritos</span>
+> 341	            </CardContent>
+> 342	          </Card>
+> 343	          <Card className="bg-card/60">
+> 344	            <CardContent className="flex flex-col gap-1 py-4">
+> 345	              <Eye className="h-4 w-4 text-cyan-400" />
+> 346	              <span className="text-xl font-semibold tabular-nums">{formatNumber(stats.viewCount)}</span>
+> 347	              <span className="text-xs text-muted-foreground">Views totais</span>
+> 348	            </CardContent>
+> 349	          </Card>
+> 350	          <Card className="bg-card/60">
+> 351	            <CardContent className="flex flex-col gap-1 py-4">
+> 352	              <MonitorPlay className="h-4 w-4 text-cyan-400" />
+> 353	              <span className="text-xl font-semibold tabular-nums">{formatNumber(stats.videoCount)}</span>
+> 354	              <span className="text-xs text-muted-foreground">Vídeos públicos</span>
+> 355	            </CardContent>
+> 356	          </Card>
+> 357	          <Card className="bg-card/60">
+> 358	            <CardContent className="flex flex-col gap-1 py-4">
+> 359	              <MessageSquare className="h-4 w-4 text-cyan-400" />
+> 360	              <span className="text-sm font-medium">{channel?.snippet?.country ?? '—'}</span>
+> 361	              <span className="text-xs text-muted-foreground">País</span>
+> 362	            </CardContent>
+> 363	          </Card>
+> 364	        </div>
+> 365	      )}
+> 366	
+> 367	      <div className="space-y-2">
+> 368	        <h2 className="text-sm font-medium text-muted-foreground">Desempenho (últimos 28 dias)</h2>
+> 369	        {conn.hasAnalyticsScope ? (
+> 370	          <ChannelMetrics />
+> 371	        ) : (
+> 372	          <Card className="border-cyan-500/20 bg-cyan-500/5">
+> 373	            <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+> 374	              <p className="text-sm text-muted-foreground">
+> 375	                As métricas de desempenho exigem a permissão de <strong>Analytics</strong> do YouTube
+> 376	                (habilite a YouTube Analytics API no projeto e reconecte).
+> 377	              </p>
+> 378	              <Button variant="outline" size="sm" onClick={conn.reconnect} className="gap-2">
+> 379	                <RefreshCw className="h-4 w-4" /> Ativar métricas
+> 380	              </Button>
+> 381	            </CardContent>
+> 382	          </Card>
+> 383	        )}
+> 384	      </div>
+> 385	
+> 386	      <VideosTable />
+> 387	    </div>
+> 388	  );
+> 389	}
+> ```
+
+## 🤖 Claude *(17:41:46)*
+
+
+## 🤖 Claude *(17:41:47)*
+
+Tenho tudo. Construo agora. **Amendment (Lei 2) primeiro:**
+
+## 🤖 Claude *(17:42:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md",
+  "content": "# Amendment 12 \u2014 YouTube Studio Fatia 2: escrita de v\u00eddeo (force-ssl) + receita (analytics monet\u00e1rio)\n\n> **Data:** 2026-07-14 \u00b7 **Status:** ativo \u00b7 **Parent:** `00-deepsearch-blueprint.md` + `11-api-surface-map.md` (Fatia 1 read-only) \u00b7 **Trigger:** Diretiva Sovereign \u2014 submeter os 4 escopos do YouTube \u00e0 verifica\u00e7\u00e3o Google (`youtube.readonly`, `youtube`, `youtube.force-ssl`, `yt-analytics-monetary.readonly`).\n>\n> **Por que existe:** o Google s\u00f3 aprova escopos que o app **exerce e demonstra no v\u00eddeo** \u2014 n\u00e3o aprova uso \"futuro\". Para incluir `force-ssl` e `analytics-monetary` na submiss\u00e3o, o app precisa executar de verdade uma opera\u00e7\u00e3o de escrita de v\u00eddeo (edi\u00e7\u00e3o + exclus\u00e3o) e um relat\u00f3rio monet\u00e1rio. Esta fatia torna os 4 escopos demonstr\u00e1veis.\n\n## 1. Escopos \u00d7 opera\u00e7\u00e3o (mapa de verifica\u00e7\u00e3o Google)\n\n| Escopo | Opera\u00e7\u00e3o REAL no app | Endpoint | Demonstr\u00e1vel |\n|--------|----------------------|----------|--------------|\n| `youtube.readonly` | painel l\u00ea canal + v\u00eddeos + estat\u00edsticas (Fatia 1) | channels.list \u00b7 playlistItems.list \u00b7 videos.list | \u2705 Fatia 1 |\n| `youtube` | publicar short do usu\u00e1rio no pr\u00f3prio canal | videos.insert (publish-social) | \u2705 Fatia 1 |\n| `youtube.force-ssl` | usu\u00e1rio **edita** (t\u00edtulo/descri\u00e7\u00e3o/tags) e **exclui permanentemente** os pr\u00f3prios v\u00eddeos, pelo painel | videos.update \u00b7 videos.delete | \u2705 **esta fatia** |\n| `yt-analytics-monetary.readonly` | usu\u00e1rio v\u00ea relat\u00f3rio de **receita** do pr\u00f3prio canal (superset: cobre tamb\u00e9m m\u00e9tricas n\u00e3o-monet\u00e1rias) | youtubeAnalytics reports (estimatedRevenue\u2026) | \u2705 **esta fatia** |\n\n## 2. FRs\n\n| FR | Espec | Aceite |\n|----|-------|--------|\n| **FR-YT-020** | **`update_video`** no `youtube-data` (gated `force-ssl`): recebe `videoId` + campos opcionais `title`/`description`/`tags`. Como `videos.update` SUBSTITUI o part enviado e a API exige `snippet.categoryId`, o edge **l\u00ea o snippet atual primeiro** (videos.list part=snippet), faz merge dos campos alterados, e faz `PUT videos?part=snippet`. Owner-scope garantido pelo token do pr\u00f3prio usu\u00e1rio (API 403 em v\u00eddeo alheio \u2192 erro limpo). | T\u00edtulo de um v\u00eddeo real muda no canal (prova ocular no YouTube). |\n| **FR-YT-021** | **`delete_video`** no `youtube-data` (gated `force-ssl`): `DELETE videos?id=` \u2192 204. Destrutivo/permanente; exige `videoId` expl\u00edcito; UI confirma antes. | V\u00eddeo some do canal (items=[] no re-list). |\n| **FR-YT-022** | **`revenue_metrics`** no `youtube-data` (gated `analytics-monetary`): reports com `estimatedRevenue,estimatedAdRevenue,grossRevenue,cpm,monetizedPlaybacks,adImpressions`, `ids=channel==MINE`. **Fail-soft**: canal n\u00e3o monetizado / n\u00e3o-parceiro \u2192 `403` da API vira estado limpo `{monetized:false}` (o app exibe \"sem dados de receita\"), nunca crash \u2014 a CHAMADA j\u00e1 demonstra o escopo. | Card de receita renderiza (com n\u00fameros ou estado \"n\u00e3o monetizado\"). |\n| **FR-YT-023** | **Gate de escopo atualizado**: `video_metrics` (n\u00e3o-monet\u00e1rio) aceita `yt-analytics.readonly` **OU** `yt-analytics-monetary.readonly` (o monet\u00e1rio \u00e9 superset). `revenue_metrics` exige o monet\u00e1rio. `update_video`/`delete_video` exigem `force-ssl`. Gap \u2192 403 `youtube_scope_missing` com CTA de reconex\u00e3o. | Reconex\u00e3o com os 4 escopos habilita todas as a\u00e7\u00f5es. |\n| **FR-YT-024** | **OAuth**: `social-auth-init` adiciona `yt-analytics-monetary.readonly` ao pedido do YouTube (os outros 3 j\u00e1 est\u00e3o). Tela de consentimento passa a listar exatamente os 4. | Consent screen mostra os 4 escopos (base do v\u00eddeo). |\n| **FR-YT-025** | **UI** (`YouTubeStudioPage` + `useYouTubeStudio`): card de Receita (gated monet\u00e1rio); por linha de v\u00eddeo, bot\u00f5es **Editar** (dialog t\u00edtulo/descri\u00e7\u00e3o) e **Excluir** (confirma\u00e7\u00e3o destrutiva), gated `force-ssl`; sem o escopo, os controles n\u00e3o aparecem (nunca prometem o que o token n\u00e3o permite). | A\u00e7\u00f5es vis\u00edveis e funcionais no painel do Usu\u00e1rio Zero. |\n\n## 3. Seguran\u00e7a / Materialidade\n\n- **Escrita destrutiva** (`delete_video`) \u00e9 irrevers\u00edvel e permanente \u2014 s\u00f3 via `videoId` expl\u00edcito + confirma\u00e7\u00e3o na UI; jamais em massa; owner-scope pelo token do pr\u00f3prio usu\u00e1rio (resolvido server-side de `decrypted_social_accounts`, nunca do body \u2014 API Tenancy Model).\n- **Fail-closed** por escopo antes de tocar a API do Google (CTA de reconex\u00e3o limpo em vez de 403 cru).\n- **Lei 1**: o v\u00eddeo de demonstra\u00e7\u00e3o \u00e9 a prova material \u2014 edi\u00e7\u00e3o muda o t\u00edtulo no canal real; exclus\u00e3o remove o v\u00eddeo (usar um upload de teste descart\u00e1vel para a parte destrutiva).\n- `/security-review` obrigat\u00f3rio (introduz opera\u00e7\u00e3o destrutiva externa).\n\n## 4. Pattern Conformance (delta)\n\n| Pattern | Impl? | Como |\n|---|---|---|\n| #4 Tool Use | yes | 3 a\u00e7\u00f5es novas no chokepoint \u00fanico `youtube-data` |\n| #7 Guardrails | yes | gate de escopo fail-closed por a\u00e7\u00e3o; delete exige id expl\u00edcito + confirma\u00e7\u00e3o; owner-scope server-side |\n| #13 Human-in-the-Loop | yes | edi\u00e7\u00e3o/exclus\u00e3o s\u00e3o a\u00e7\u00f5es deliberadas do usu\u00e1rio no painel; confirma\u00e7\u00e3o destrutiva |\n| #17 Observability | yes | `infra_health_logs service=youtube-studio` em cada path (healthy/degraded) |\n| Demais | n-a | fatia de opera\u00e7\u00f5es sobre a conta do pr\u00f3prio usu\u00e1rio |\n\n## 5. Gates\n\n| Gate | Prova |\n|------|-------|\n| Y1 | `social-auth-init` deployado com os 4 escopos; consent lista os 4 |\n| Y2 | `youtube-data` deployado; `update_video`/`delete_video` gated force-ssl; `revenue_metrics` gated monet\u00e1rio; `video_metrics` aceita ambos os analytics |\n| Y3 | reconex\u00e3o do Sovereign concede os 4 \u2192 painel mostra Receita + bot\u00f5es Editar/Excluir |\n| Y4 | edi\u00e7\u00e3o real muda t\u00edtulo (ocular no YouTube); exclus\u00e3o de upload de teste some do canal |\n| Y5 | `/security-review` sem findings novos (ou remediados) |\n| Y6 | tsc 0 \u00b7 build deployado (frontend) |\n\n**Recovery:** escopo ausente \u2192 403 com CTA reconectar (nada quebra; leitura segue). Erro da API Google \u2192 `youtube_api_error`/`youtube_quota_exceeded` estruturado. Canal n\u00e3o monetizado \u2192 estado limpo no card de receita.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:42:27)*
+
+Agora o `social-auth-init` — adiciono o escopo monetário:
+
+## 🤖 Claude *(17:42:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts",
+  "offset": 125,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 125	    } else if (platform === "youtube") {
+> 126	      // App creds resolve per-user → env fallback → hard-fail (API Tenancy Model · FR-PE-007).
+> 127	      const serviceClient = createClient(
+> 128	        Deno.env.get("SUPABASE_URL")!,
+> 129	        (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
+> 130	      );
+> 131	      let creds;
+> 132	      try {
+> 133	        creds = await resolveSocialAppCreds(serviceClient, userId, "youtube");
+> 134	      } catch (err) {
+> 135	        const failClosed = socialAppConfigErrorResponse(err, corsHeaders);
+> 136	        if (failClosed) return failClosed;
+> 137	        throw err;
+> 138	      }
+> 139	      // access_type=offline + prompt=consent are CRITICAL: without prompt=consent a re-auth
+> 140	      // returns a NULL refresh_token silently (doc 10 §YouTube).
+> 141	      //
+> 142	      // Aligned to the scopes registered on the OAuth consent screen for Google verification
+> 143	      // (Sovereign 2026-07-12): readonly (read channel/videos — Fatia 1) + youtube (manage: covers upload +
+> 144	      // metadata/playlist writes, superseding youtube.upload for publish-social continuity) + force-ssl
+> 145	      // (edit/delete videos, comments, captions — Fatia 2/3). This single set covers read + all writes.
+> 146	      // Analytics metrics (yt-analytics.readonly / -monetary.readonly) are DEFERRED: the scopes don't appear
+> 147	      // in the consent-screen picker until the "YouTube Analytics API" is enabled in the Cloud project; add
+> 148	      // them back here once that API is enabled + the scopes are registered (see youtube-studio-panel.md).
+> 149	      const scopes = [
+> 150	        "https://www.googleapis.com/auth/youtube.readonly",
+> 151	        "https://www.googleapis.com/auth/youtube",
+> 152	        "https://www.googleapis.com/auth/youtube.force-ssl",
+> 153	      ].join(" ");
+> 154	      authUrl = `${YOUTUBE_AUTH_URL}?client_id=${encodeURIComponent(creds.clientId)}&redirect_uri=${encodeURIComponent(callbackUrl)}&response_type=code&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}&access_type=offline&prompt=consent`;
+> ```
+
+## 🤖 Claude *(17:42:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts",
+  "old_string": "      // Aligned to the scopes registered on the OAuth consent screen for Google verification\n      // (Sovereign 2026-07-12): readonly (read channel/videos \u2014 Fatia 1) + youtube (manage: covers upload +\n      // metadata/playlist writes, superseding youtube.upload for publish-social continuity) + force-ssl\n      // (edit/delete videos, comments, captions \u2014 Fatia 2/3). This single set covers read + all writes.\n      // Analytics metrics (yt-analytics.readonly / -monetary.readonly) are DEFERRED: the scopes don't appear\n      // in the consent-screen picker until the \"YouTube Analytics API\" is enabled in the Cloud project; add\n      // them back here once that API is enabled + the scopes are registered (see youtube-studio-panel.md).\n      const scopes = [\n        \"https://www.googleapis.com/auth/youtube.readonly\",\n        \"https://www.googleapis.com/auth/youtube\",\n        \"https://www.googleapis.com/auth/youtube.force-ssl\",\n      ].join(\" \");",
+  "new_string": "      // The 4 scopes registered on the OAuth consent screen for Google verification (Amendment 12):\n      //  \u2022 youtube.readonly \u2014 read channel/videos/stats (panel, Fatia 1);\n      //  \u2022 youtube \u2014 publish the user's own videos (videos.insert, publish-social);\n      //  \u2022 youtube.force-ssl \u2014 the user EDITS (videos.update) and DELETES (videos.delete) their own videos\n      //    from the panel (Fatia 2);\n      //  \u2022 yt-analytics-monetary.readonly \u2014 revenue + non-monetary performance reports (superset: it also\n      //    grants the non-monetary metrics, so a single analytics scope covers video_metrics AND\n      //    revenue_metrics). Requires the \"YouTube Analytics API\" enabled in the Cloud project.\n      // Each scope maps to a demonstrable in-app operation (the Google review video shows all four).\n      const scopes = [\n        \"https://www.googleapis.com/auth/youtube.readonly\",\n        \"https://www.googleapis.com/auth/youtube\",\n        \"https://www.googleapis.com/auth/youtube.force-ssl\",\n        \"https://www.googleapis.com/auth/yt-analytics-monetary.readonly\",\n      ].join(\" \");"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-init/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:42:42)*
+
+Agora o `youtube-data` — escopos, gate, e as 3 ações novas:
+
+## 🤖 Claude *(17:42:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts",
+  "old_string": "// Actions: channel_summary | list_videos | video_metrics | video_categories",
+  "new_string": "// Actions: channel_summary | list_videos | video_metrics | video_categories\n//          revenue_metrics (force: yt-analytics-monetary.readonly) | update_video \u00b7 delete_video (force: youtube.force-ssl)\n// Fatia 2 (Amendment 12): write ops (edit/delete the user's own videos) + monetary reports \u2014 each maps to a\n// scope the Google review video must demonstrate. Writes are owner-scoped by the user's own token."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:42:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts",
+  "old_string": "const SCOPE_READONLY = \"https://www.googleapis.com/auth/youtube.readonly\";\nconst SCOPE_ANALYTICS = \"https://www.googleapis.com/auth/yt-analytics.readonly\";",
+  "new_string": "const SCOPE_READONLY = \"https://www.googleapis.com/auth/youtube.readonly\";\nconst SCOPE_ANALYTICS = \"https://www.googleapis.com/auth/yt-analytics.readonly\";\nconst SCOPE_ANALYTICS_MONETARY = \"https://www.googleapis.com/auth/yt-analytics-monetary.readonly\";\nconst SCOPE_FORCE_SSL = \"https://www.googleapis.com/auth/youtube.force-ssl\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:42:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts",
+  "old_string": "    if (action === \"channel_summary\" || action === \"list_videos\" || action === \"video_categories\") {\n      if (!scopes.includes(SCOPE_READONLY)) missing.push(SCOPE_READONLY);\n    }\n    if (action === \"video_metrics\" && !scopes.includes(SCOPE_ANALYTICS)) {\n      missing.push(SCOPE_ANALYTICS);\n    }",
+  "new_string": "    if (action === \"channel_summary\" || action === \"list_videos\" || action === \"video_categories\") {\n      if (!scopes.includes(SCOPE_READONLY)) missing.push(SCOPE_READONLY);\n    }\n    // Non-monetary metrics accept EITHER analytics scope (monetary is a superset that also grants them).\n    const hasAnalytics = scopes.includes(SCOPE_ANALYTICS) || scopes.includes(SCOPE_ANALYTICS_MONETARY);\n    if (action === \"video_metrics\" && !hasAnalytics) {\n      missing.push(SCOPE_ANALYTICS);\n    }\n    if (action === \"revenue_metrics\" && !scopes.includes(SCOPE_ANALYTICS_MONETARY)) {\n      missing.push(SCOPE_ANALYTICS_MONETARY);\n    }\n    if ((action === \"update_video\" || action === \"delete_video\") && !scopes.includes(SCOPE_FORCE_SSL)) {\n      missing.push(SCOPE_FORCE_SSL);\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:43:03)*
+
+Agora as ações novas + o helper de escrita. Insiro antes do `unknown_action`:
+
+## 🤖 Claude *(17:43:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts",
+  "old_string": "    const gfetch = async (url: string): Promise<{ ok: boolean; status: number; data: Any }> => {\n      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });\n      const data = await res.json().catch(() => ({}));\n      return { ok: res.ok, status: res.status, data };\n    };",
+  "new_string": "    const gfetch = async (url: string): Promise<{ ok: boolean; status: number; data: Any }> => {\n      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });\n      const data = await res.json().catch(() => ({}));\n      return { ok: res.ok, status: res.status, data };\n    };\n\n    // Write helper (PUT/DELETE/POST). DELETE returns 204 no-body \u2192 tolerate empty JSON.\n    const gsend = async (\n      url: string,\n      method: \"PUT\" | \"POST\" | \"DELETE\",\n      payload?: Any,\n    ): Promise<{ ok: boolean; status: number; data: Any }> => {\n      const res = await fetch(url, {\n        method,\n        headers: {\n          Authorization: `Bearer ${token}`,\n          ...(payload ? { \"Content-Type\": \"application/json\" } : {}),\n        },\n        body: payload ? JSON.stringify(payload) : undefined,\n      });\n      const text = await res.text();\n      let data: Any = {};\n      try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }\n      return { ok: res.ok, status: res.status, data };\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:43:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts",
+  "old_string": "    return json({ error: \"unknown_action\" }, 400);\n  } catch (err) {",
+  "new_string": "    // \u2500\u2500 Fatia 2 \u2014 monetary reports (force: yt-analytics-monetary.readonly) \u2500\u2500\n    if (action === \"revenue_metrics\") {\n      const endDate = typeof body.endDate === \"string\" ? body.endDate : isoDate(1);\n      const startDate = typeof body.startDate === \"string\" ? body.startDate : isoDate(28);\n      const metrics =\n        typeof body.metrics === \"string\" && body.metrics.trim()\n          ? body.metrics\n          : \"estimatedRevenue,estimatedAdRevenue,grossRevenue,cpm,monetizedPlaybacks,adImpressions\";\n      const params = new URLSearchParams({ ids: \"channel==MINE\", startDate, endDate, metrics, currency: \"USD\" });\n      const r = await gfetch(`${YT_ANALYTICS}/reports?${params.toString()}`);\n      if (!r.ok) {\n        // A non-partner / non-monetized channel returns 403 for monetary metrics. That is NOT an app failure \u2014\n        // the CALL itself demonstrates the scope. Return a clean, monetized:false state (never a crash).\n        if (r.status === 403) {\n          pulse(\"healthy\");\n          const reason = r.data?.error?.errors?.[0]?.reason ?? r.data?.error?.status ?? \"not_monetized\";\n          return json({ columnHeaders: [], rows: [], monetized: false, reason });\n        }\n        return googleError(r, pulse);\n      }\n      pulse(\"healthy\");\n      return json({ columnHeaders: r.data.columnHeaders ?? [], rows: r.data.rows ?? [], monetized: true });\n    }\n\n    // \u2500\u2500 Fatia 2 \u2014 edit the user's own video (force: youtube.force-ssl) \u2500\u2500\n    if (action === \"update_video\") {\n      const videoId = typeof body.videoId === \"string\" ? body.videoId : \"\";\n      if (!videoId) return json({ error: \"videoId required\" }, 400);\n      // videos.update REPLACES the sent part; snippet.categoryId is REQUIRED. Read the current snippet first,\n      // merge only the changed fields, then PUT. Owner-scope is enforced by the user's own token (Google 403s\n      // a foreign video \u2192 googleError surfaces it cleanly).\n      const cur = await gfetch(`${YT_DATA}/videos?part=snippet&id=${encodeURIComponent(videoId)}`);\n      if (!cur.ok) return googleError(cur, pulse);\n      const item = cur.data.items?.[0];\n      if (!item) return json({ error: \"video_not_found\" }, 404);\n      const snip = item.snippet ?? {};\n      const newSnippet: Any = {\n        title: typeof body.title === \"string\" ? body.title : snip.title,\n        description: typeof body.description === \"string\" ? body.description : snip.description,\n        categoryId: snip.categoryId, // required by the API \u2014 preserve the existing category\n      };\n      if (Array.isArray(body.tags)) newSnippet.tags = body.tags.filter((t: Any) => typeof t === \"string\");\n      else if (Array.isArray(snip.tags)) newSnippet.tags = snip.tags;\n      if (snip.defaultLanguage) newSnippet.defaultLanguage = snip.defaultLanguage;\n      const r = await gsend(`${YT_DATA}/videos?part=snippet`, \"PUT\", { id: videoId, snippet: newSnippet });\n      if (!r.ok) return googleError(r, pulse);\n      pulse(\"healthy\");\n      return json({ updated: true, video: r.data });\n    }\n\n    // \u2500\u2500 Fatia 2 \u2014 permanently delete the user's own video (force: youtube.force-ssl) \u2500\u2500\n    if (action === \"delete_video\") {\n      const videoId = typeof body.videoId === \"string\" ? body.videoId : \"\";\n      if (!videoId) return json({ error: \"videoId required\" }, 400);\n      const r = await gsend(`${YT_DATA}/videos?id=${encodeURIComponent(videoId)}`, \"DELETE\");\n      // 204 = deleted (no body). Anything else that is not ok is a real error.\n      if (!r.ok && r.status !== 204) return googleError(r, pulse);\n      pulse(\"healthy\");\n      return json({ deleted: true, videoId });\n    }\n\n    return json({ error: \"unknown_action\" }, 400);\n  } catch (err) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/youtube-data/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:43:31)*
+
+Edge pronto. Agora o hook — escopos novos, flags, query de receita e mutations de edit/delete:
+
+## 🤖 Claude *(17:43:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts",
+  "old_string": "import { useQuery, useInfiniteQuery } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport { useSocialAccounts } from '@/hooks/useSocialAccounts';",
+  "new_string": "import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport { supabase } from '@/integrations/supabase/client';\nimport { edgeErrorMessage } from '@/lib/edge';\nimport { useSocialAccounts } from '@/hooks/useSocialAccounts';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:43:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts",
+  "old_string": "const YT_READONLY = 'https://www.googleapis.com/auth/youtube.readonly';\nconst YT_ANALYTICS = 'https://www.googleapis.com/auth/yt-analytics.readonly';",
+  "new_string": "const YT_READONLY = 'https://www.googleapis.com/auth/youtube.readonly';\nconst YT_ANALYTICS = 'https://www.googleapis.com/auth/yt-analytics.readonly';\nconst YT_ANALYTICS_MONETARY = 'https://www.googleapis.com/auth/yt-analytics-monetary.readonly';\nconst YT_FORCE_SSL = 'https://www.googleapis.com/auth/youtube.force-ssl';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:43:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts",
+  "old_string": "  const scopes: string[] = (account?.scopes as string[] | null) ?? [];\n  const isConnected = !!account;\n  const hasReadScope = scopes.includes(YT_READONLY);\n  const hasAnalyticsScope = scopes.includes(YT_ANALYTICS);",
+  "new_string": "  const scopes: string[] = (account?.scopes as string[] | null) ?? [];\n  const isConnected = !!account;\n  const hasReadScope = scopes.includes(YT_READONLY);\n  // The monetary analytics scope is a superset \u2014 it also grants the non-monetary metrics.\n  const hasMonetaryScope = scopes.includes(YT_ANALYTICS_MONETARY);\n  const hasAnalyticsScope = scopes.includes(YT_ANALYTICS) || hasMonetaryScope;\n  const hasWriteScope = scopes.includes(YT_FORCE_SSL);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:43:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts",
+  "old_string": "  return {\n    account,\n    isConnected,\n    scopes,\n    hasReadScope,\n    hasAnalyticsScope,\n    needsReconnect,\n    isLoading,\n    channelTitle: account?.platform_username ?? null,\n    connect: () => initiateOAuth('youtube'),\n    reconnect: () => initiateOAuth('youtube'),\n  };\n}",
+  "new_string": "  return {\n    account,\n    isConnected,\n    scopes,\n    hasReadScope,\n    hasAnalyticsScope,\n    hasMonetaryScope,\n    hasWriteScope,\n    needsReconnect,\n    isLoading,\n    channelTitle: account?.platform_username ?? null,\n    connect: () => initiateOAuth('youtube'),\n    reconnect: () => initiateOAuth('youtube'),\n  };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:44:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts",
+  "old_string": "export function useYouTubeChannelMetrics(startDate?: string, endDate?: string) {\n  const conn = useYouTubeConnection();\n  return useQuery({\n    queryKey: ['youtube', 'metrics', 'channel', conn.account?.id, startDate, endDate],\n    queryFn: () => invokeYT<MetricsReport>('video_metrics', { startDate, endDate }),\n    enabled: conn.isConnected && conn.hasAnalyticsScope,\n    staleTime: 10 * 60 * 1000,\n  });\n}",
+  "new_string": "export function useYouTubeChannelMetrics(startDate?: string, endDate?: string) {\n  const conn = useYouTubeConnection();\n  return useQuery({\n    queryKey: ['youtube', 'metrics', 'channel', conn.account?.id, startDate, endDate],\n    queryFn: () => invokeYT<MetricsReport>('video_metrics', { startDate, endDate }),\n    enabled: conn.isConnected && conn.hasAnalyticsScope,\n    staleTime: 10 * 60 * 1000,\n  });\n}\n\n// Fatia 2 (Amendment 12) \u2014 revenue report. `monetized:false` is a valid, non-error state (channel not in YPP);\n// the query still succeeds and demonstrates the yt-analytics-monetary.readonly scope.\nexport interface RevenueReport extends MetricsReport {\n  monetized: boolean;\n  reason?: string;\n}\n\nexport function useYouTubeRevenue(startDate?: string, endDate?: string) {\n  const conn = useYouTubeConnection();\n  return useQuery({\n    queryKey: ['youtube', 'revenue', conn.account?.id, startDate, endDate],\n    queryFn: () => invokeYT<RevenueReport>('revenue_metrics', { startDate, endDate }),\n    enabled: conn.isConnected && conn.hasMonetaryScope,\n    staleTime: 10 * 60 * 1000,\n  });\n}\n\n// Fatia 2 \u2014 force-ssl write ops on the user's OWN videos. Both invalidate the videos list on success.\nexport function useUpdateVideo() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: (input: { videoId: string; title?: string; description?: string; tags?: string[] }) =>\n      invokeYT<{ updated: boolean }>('update_video', input),\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['youtube', 'videos'] }),\n  });\n}\n\nexport function useDeleteVideo() {\n  const qc = useQueryClient();\n  return useMutation({\n    mutationFn: (videoId: string) => invokeYT<{ deleted: boolean }>('delete_video', { videoId }),\n    onSuccess: () => qc.invalidateQueries({ queryKey: ['youtube', 'videos'] }),\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useYouTubeStudio.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:44:14)*
+
+
+## 🤖 Claude *(17:44:15)*
+
+Edge + hook prontos. Agora a página — card de Receita + ações Editar/Excluir por vídeo. Vejo os imports do topo:
+
+## 🤖 Claude *(17:44:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "offset": 1,
+  "limit": 28
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo } from 'react';
+> 2	import {
+> 3	  MonitorPlay,
+> 4	  RefreshCw,
+> 5	  AlertTriangle,
+> 6	  ExternalLink,
+> 7	  Eye,
+> 8	  ThumbsUp,
+> 9	  MessageSquare,
+> 10	  Users,
+> 11	  Clock,
+> 12	  Loader2,
+> 13	  Link2,
+> 14	} from 'lucide-react';
+> 15	import { Button } from '@/components/ui/button';
+> 16	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+> 17	import { Badge } from '@/components/ui/badge';
+> 18	import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+> 19	import { Skeleton } from '@/components/ui/skeleton';
+> 20	import {
+> 21	  useYouTubeConnection,
+> 22	  useYouTubeChannel,
+> 23	  useYouTubeVideos,
+> 24	  useYouTubeChannelMetrics,
+> 25	  type YouTubeVideo,
+> 26	} from '@/hooks/useYouTubeStudio';
+> 27	
+> 28	// ── Formatting helpers ──────────────────────────────────────────────────────
+> ```
+
+## 🤖 Claude *(17:44:19)*
+
+
+## 🤖 Claude *(17:44:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls src/components/ui/ | grep -iE \"^dialog|alert-dialog|input\\.|textarea\\.|label\\.\" ",
+  "description": "Check available UI primitives"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> alert-dialog.tsx
+> dialog.tsx
+> input.tsx
+> label.tsx
+> textarea.tsx
+> ```
+
+## 🤖 Claude *(17:44:25)*
+
+Todos disponíveis. Atualizo os imports e reescrevo `VideoRow`/`VideosTable` com edit/delete + adiciono `RevenueCard`:
+
+## 🤖 Claude *(17:44:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "import { useMemo } from 'react';\nimport {\n  MonitorPlay,\n  RefreshCw,\n  AlertTriangle,\n  ExternalLink,\n  Eye,\n  ThumbsUp,\n  MessageSquare,\n  Users,\n  Clock,\n  Loader2,\n  Link2,\n} from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';\nimport { Skeleton } from '@/components/ui/skeleton';\nimport {\n  useYouTubeConnection,\n  useYouTubeChannel,\n  useYouTubeVideos,\n  useYouTubeChannelMetrics,\n  type YouTubeVideo,\n} from '@/hooks/useYouTubeStudio';",
+  "new_string": "import { useMemo, useState } from 'react';\nimport {\n  MonitorPlay,\n  RefreshCw,\n  AlertTriangle,\n  ExternalLink,\n  Eye,\n  ThumbsUp,\n  MessageSquare,\n  Users,\n  Clock,\n  Loader2,\n  Link2,\n  Pencil,\n  Trash2,\n  DollarSign,\n} from 'lucide-react';\nimport { toast } from 'sonner';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';\nimport { Skeleton } from '@/components/ui/skeleton';\nimport { Input } from '@/components/ui/input';\nimport { Textarea } from '@/components/ui/textarea';\nimport { Label } from '@/components/ui/label';\nimport {\n  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,\n} from '@/components/ui/dialog';\nimport {\n  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,\n  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,\n} from '@/components/ui/alert-dialog';\nimport {\n  useYouTubeConnection,\n  useYouTubeChannel,\n  useYouTubeVideos,\n  useYouTubeChannelMetrics,\n  useYouTubeRevenue,\n  useUpdateVideo,\n  useDeleteVideo,\n  type YouTubeVideo,\n} from '@/hooks/useYouTubeStudio';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:44:38)*
+
+Agora o `RevenueCard` + as ações na tabela. Adiciono o `RevenueCard` antes de `VideoRow` e reescrevo `VideoRow`/`VideosTable` com edit/delete gated:
+
+## 🤖 Claude *(17:45:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "// \u2500\u2500 Videos CRUD table (read-only, Fatia 1) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst COLUMNS = [\n  'V\u00eddeo', 'Publicado', 'Privacidade', 'Upload', 'Dura\u00e7\u00e3o', 'Def',\n  'Views', 'Likes', 'Coment.', 'Tags', 'Cat.', 'Kids', 'Licen\u00e7a', 'Embed', 'Sint\u00e9tico', 'ID',\n];\n\nfunction VideoRow({ v }: { v: YouTubeVideo }) {\n  const thumb = v.snippet?.thumbnails?.default?.url ?? v.snippet?.thumbnails?.medium?.url;\n  return (\n    <TableRow>\n      <TableCell className=\"min-w-[280px]\">\n        <div className=\"flex items-center gap-3\">\n          {thumb ? (\n            <img src={thumb} alt=\"\" className=\"h-10 w-16 flex-shrink-0 rounded object-cover\" loading=\"lazy\" />\n          ) : (\n            <div className=\"h-10 w-16 flex-shrink-0 rounded bg-muted\" />\n          )}\n          <div className=\"min-w-0\">\n            <a\n              href={`https://youtube.com/watch?v=${v.id}`}\n              target=\"_blank\"\n              rel=\"noreferrer\"\n              className=\"line-clamp-2 text-sm font-medium hover:text-cyan-300\"\n            >\n              {v.snippet?.title ?? '(sem t\u00edtulo)'}\n            </a>\n          </div>\n        </div>\n      </TableCell>\n      <TableCell className=\"whitespace-nowrap text-xs text-muted-foreground\">{formatDate(v.snippet?.publishedAt)}</TableCell>\n      <TableCell>\n        <Badge variant=\"outline\" className={privacyBadge(v.status?.privacyStatus)}>\n          {v.status?.privacyStatus ?? '\u2014'}\n        </Badge>\n      </TableCell>\n      <TableCell className=\"whitespace-nowrap text-xs\">{v.status?.uploadStatus ?? '\u2014'}</TableCell>\n      <TableCell className=\"whitespace-nowrap tabular-nums text-xs\">{formatDuration(v.contentDetails?.duration)}</TableCell>\n      <TableCell className=\"text-xs uppercase\">{v.contentDetails?.definition ?? '\u2014'}</TableCell>\n      <TableCell className=\"tabular-nums\">{formatNumber(v.statistics?.viewCount)}</TableCell>\n      <TableCell className=\"tabular-nums\">{formatNumber(v.statistics?.likeCount)}</TableCell>\n      <TableCell className=\"tabular-nums\">{formatNumber(v.statistics?.commentCount)}</TableCell>\n      <TableCell className=\"tabular-nums text-xs\">{v.snippet?.tags?.length ?? 0}</TableCell>\n      <TableCell className=\"text-xs\">{v.snippet?.categoryId ?? '\u2014'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.madeForKids ? 'Sim' : 'N\u00e3o'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.license ?? '\u2014'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.embeddable ? 'Sim' : 'N\u00e3o'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.containsSyntheticMedia ? 'Sim' : '\u2014'}</TableCell>\n      <TableCell className=\"font-mono text-[10px] text-muted-foreground\">{v.id}</TableCell>\n    </TableRow>\n  );\n}\n\nfunction VideosTable() {\n  const { videos, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch, isRefetching } =\n    useYouTubeVideos();",
+  "new_string": "// \u2500\u2500 Revenue card (Fatia 2 \u2014 for\u00e7a o escopo yt-analytics-monetary.readonly) \u2500\u2500\u2500\u2500\u2500\u2500\nfunction RevenueCard() {\n  const { data, isLoading, isError, error } = useYouTubeRevenue();\n\n  const money = useMemo(() => {\n    if (!data || !data.monetized || !data.rows?.length) return null;\n    const row = data.rows[0];\n    const out: Record<string, number> = {};\n    data.columnHeaders.forEach((c, i) => { out[c.name] = Number(row[i] ?? 0); });\n    return out;\n  }, [data]);\n\n  if (isLoading) return <Skeleton className=\"h-24 w-full rounded-xl\" />;\n  if (isError) {\n    return (\n      <Card className=\"border-amber-500/30 bg-amber-500/5\">\n        <CardContent className=\"py-4 text-sm text-amber-300\">\n          N\u00e3o foi poss\u00edvel carregar a receita: {(error as Error)?.message}\n        </CardContent>\n      </Card>\n    );\n  }\n  // monetized:false is a valid state \u2014 the call still proved the monetary scope.\n  if (!data?.monetized || !money) {\n    return (\n      <Card className=\"bg-card/60\">\n        <CardContent className=\"flex items-center gap-3 py-4 text-sm text-muted-foreground\">\n          <DollarSign className=\"h-4 w-4 text-emerald-400\" />\n          Sem dados de receita no per\u00edodo \u2014 o canal n\u00e3o est\u00e1 monetizado (fora do YouTube Partner Program) ou\n          n\u00e3o gerou receita nos \u00faltimos 28 dias.\n        </CardContent>\n      </Card>\n    );\n  }\n\n  const fmtUsd = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'USD' });\n  const tiles = [\n    { label: 'Receita estimada', value: fmtUsd(money.estimatedRevenue ?? 0) },\n    { label: 'Receita de an\u00fancios', value: fmtUsd(money.estimatedAdRevenue ?? 0) },\n    { label: 'CPM', value: fmtUsd(money.cpm ?? 0) },\n    { label: 'Reprodu\u00e7\u00f5es monetizadas', value: formatNumber(money.monetizedPlaybacks ?? 0) },\n  ];\n  return (\n    <div className=\"grid grid-cols-2 gap-3 sm:grid-cols-4\">\n      {tiles.map((t) => (\n        <Card key={t.label} className=\"bg-card/60\">\n          <CardContent className=\"flex flex-col gap-1 py-4\">\n            <DollarSign className=\"h-4 w-4 text-emerald-400\" />\n            <span className=\"text-lg font-semibold tabular-nums\">{t.value}</span>\n            <span className=\"text-xs text-muted-foreground\">{t.label}</span>\n          </CardContent>\n        </Card>\n      ))}\n    </div>\n  );\n}\n\n// \u2500\u2500 Edit video dialog (Fatia 2 \u2014 for\u00e7a youtube.force-ssl via videos.update) \u2500\u2500\u2500\u2500\u2500\u2500\nfunction EditVideoDialog({ video, onClose }: { video: YouTubeVideo | null; onClose: () => void }) {\n  const update = useUpdateVideo();\n  const [title, setTitle] = useState('');\n  const [description, setDescription] = useState('');\n\n  // Seed the fields when a video is opened (keyed remount via `key` on the caller keeps this simple).\n  useMemo(() => {\n    setTitle(video?.snippet?.title ?? '');\n    setDescription(video?.snippet?.description ?? '');\n  }, [video]);\n\n  if (!video) return null;\n  const save = async () => {\n    try {\n      await update.mutateAsync({ videoId: video.id, title: title.trim(), description });\n      toast.success('V\u00eddeo atualizado no YouTube.');\n      onClose();\n    } catch (e) {\n      toast.error((e as Error).message);\n    }\n  };\n  return (\n    <Dialog open={!!video} onOpenChange={(o) => !o && onClose()}>\n      <DialogContent className=\"sm:max-w-lg\">\n        <DialogHeader>\n          <DialogTitle>Editar v\u00eddeo</DialogTitle>\n          <DialogDescription>Altera o t\u00edtulo e a descri\u00e7\u00e3o direto no seu canal do YouTube (videos.update).</DialogDescription>\n        </DialogHeader>\n        <div className=\"space-y-3\">\n          <div className=\"space-y-1\">\n            <Label htmlFor=\"yt-title\">T\u00edtulo</Label>\n            <Input id=\"yt-title\" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} />\n          </div>\n          <div className=\"space-y-1\">\n            <Label htmlFor=\"yt-desc\">Descri\u00e7\u00e3o</Label>\n            <Textarea id=\"yt-desc\" value={description} onChange={(e) => setDescription(e.target.value)} rows={5} maxLength={5000} />\n          </div>\n        </div>\n        <DialogFooter>\n          <Button variant=\"outline\" onClick={onClose} disabled={update.isPending}>Cancelar</Button>\n          <Button onClick={save} disabled={update.isPending || !title.trim()} className=\"gap-2\">\n            {update.isPending ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : <Pencil className=\"h-4 w-4\" />}\n            Salvar no YouTube\n          </Button>\n        </DialogFooter>\n      </DialogContent>\n    </Dialog>\n  );\n}\n\n// \u2500\u2500 Videos table \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst COLUMNS = [\n  'V\u00eddeo', 'Publicado', 'Privacidade', 'Upload', 'Dura\u00e7\u00e3o', 'Def',\n  'Views', 'Likes', 'Coment.', 'Tags', 'Cat.', 'Kids', 'Licen\u00e7a', 'Embed', 'Sint\u00e9tico', 'ID',\n];\n\nfunction VideoRow({\n  v, canWrite, onEdit, onDelete,\n}: {\n  v: YouTubeVideo;\n  canWrite: boolean;\n  onEdit: (v: YouTubeVideo) => void;\n  onDelete: (v: YouTubeVideo) => void;\n}) {\n  const thumb = v.snippet?.thumbnails?.default?.url ?? v.snippet?.thumbnails?.medium?.url;\n  return (\n    <TableRow>\n      <TableCell className=\"min-w-[280px]\">\n        <div className=\"flex items-center gap-3\">\n          {thumb ? (\n            <img src={thumb} alt=\"\" className=\"h-10 w-16 flex-shrink-0 rounded object-cover\" loading=\"lazy\" />\n          ) : (\n            <div className=\"h-10 w-16 flex-shrink-0 rounded bg-muted\" />\n          )}\n          <div className=\"min-w-0\">\n            <a\n              href={`https://youtube.com/watch?v=${v.id}`}\n              target=\"_blank\"\n              rel=\"noreferrer\"\n              className=\"line-clamp-2 text-sm font-medium hover:text-cyan-300\"\n            >\n              {v.snippet?.title ?? '(sem t\u00edtulo)'}\n            </a>\n          </div>\n        </div>\n      </TableCell>\n      <TableCell className=\"whitespace-nowrap text-xs text-muted-foreground\">{formatDate(v.snippet?.publishedAt)}</TableCell>\n      <TableCell>\n        <Badge variant=\"outline\" className={privacyBadge(v.status?.privacyStatus)}>\n          {v.status?.privacyStatus ?? '\u2014'}\n        </Badge>\n      </TableCell>\n      <TableCell className=\"whitespace-nowrap text-xs\">{v.status?.uploadStatus ?? '\u2014'}</TableCell>\n      <TableCell className=\"whitespace-nowrap tabular-nums text-xs\">{formatDuration(v.contentDetails?.duration)}</TableCell>\n      <TableCell className=\"text-xs uppercase\">{v.contentDetails?.definition ?? '\u2014'}</TableCell>\n      <TableCell className=\"tabular-nums\">{formatNumber(v.statistics?.viewCount)}</TableCell>\n      <TableCell className=\"tabular-nums\">{formatNumber(v.statistics?.likeCount)}</TableCell>\n      <TableCell className=\"tabular-nums\">{formatNumber(v.statistics?.commentCount)}</TableCell>\n      <TableCell className=\"tabular-nums text-xs\">{v.snippet?.tags?.length ?? 0}</TableCell>\n      <TableCell className=\"text-xs\">{v.snippet?.categoryId ?? '\u2014'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.madeForKids ? 'Sim' : 'N\u00e3o'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.license ?? '\u2014'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.embeddable ? 'Sim' : 'N\u00e3o'}</TableCell>\n      <TableCell className=\"text-xs\">{v.status?.containsSyntheticMedia ? 'Sim' : '\u2014'}</TableCell>\n      <TableCell className=\"font-mono text-[10px] text-muted-foreground\">{v.id}</TableCell>\n      {canWrite && (\n        <TableCell className=\"whitespace-nowrap\">\n          <div className=\"flex items-center gap-1\">\n            <Button variant=\"ghost\" size=\"icon\" className=\"h-7 w-7\" title=\"Editar\" onClick={() => onEdit(v)}>\n              <Pencil className=\"h-3.5 w-3.5\" />\n            </Button>\n            <Button\n              variant=\"ghost\" size=\"icon\"\n              className=\"h-7 w-7 text-destructive hover:text-destructive\"\n              title=\"Excluir permanentemente\"\n              onClick={() => onDelete(v)}\n            >\n              <Trash2 className=\"h-3.5 w-3.5\" />\n            </Button>\n          </div>\n        </TableCell>\n      )}\n    </TableRow>\n  );\n}\n\nfunction VideosTable({ canWrite }: { canWrite: boolean }) {\n  const { videos, isLoading, isError, error, hasNextPage, isFetchingNextPage, fetchNextPage, refetch, isRefetching } =\n    useYouTubeVideos();\n  const [editing, setEditing] = useState<YouTubeVideo | null>(null);\n  const [deleting, setDeleting] = useState<YouTubeVideo | null>(null);\n  const del = useDeleteVideo();\n\n  const confirmDelete = async () => {\n    if (!deleting) return;\n    try {\n      await del.mutateAsync(deleting.id);\n      toast.success('V\u00eddeo exclu\u00eddo permanentemente do YouTube.');\n      setDeleting(null);\n    } catch (e) {\n      toast.error((e as Error).message);\n    }\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:45:27)*
+
+
+## 🤖 Claude *(17:45:28)*
+
+Agora atualizo o render da `VideosTable` (coluna Ações, props no VideoRow, dialogs) e o texto da descrição:
+
+## 🤖 Claude *(17:45:29)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "offset": 330,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 330	    try {
+> 331	      await del.mutateAsync(deleting.id);
+> 332	      toast.success('Vídeo excluído permanentemente do YouTube.');
+> 333	      setDeleting(null);
+> 334	    } catch (e) {
+> 335	      toast.error((e as Error).message);
+> 336	    }
+> 337	  };
+> 338	
+> 339	  if (isLoading) {
+> 340	    return (
+> 341	      <div className="space-y-2">
+> 342	        {Array.from({ length: 6 }).map((_, i) => (
+> 343	          <Skeleton key={i} className="h-14 w-full rounded" />
+> 344	        ))}
+> 345	      </div>
+> 346	    );
+> 347	  }
+> 348	  if (isError) {
+> 349	    return (
+> 350	      <Card className="border-amber-500/30 bg-amber-500/5">
+> 351	        <CardContent className="py-4 text-sm text-amber-300">
+> 352	          Não foi possível listar os vídeos: {(error as Error)?.message}
+> 353	        </CardContent>
+> 354	      </Card>
+> 355	    );
+> 356	  }
+> 357	
+> 358	  return (
+> 359	    <Card>
+> 360	      <CardHeader className="flex flex-row items-center justify-between gap-2">
+> 361	        <div>
+> 362	          <CardTitle className="text-base">Vídeos do canal ({videos.length}{hasNextPage ? '+' : ''})</CardTitle>
+> 363	          <CardDescription>Tabela completa de propriedades da API (somente leitura — ações chegam na Fatia 2).</CardDescription>
+> 364	        </div>
+> 365	        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
+> 366	          <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+> 367	          Atualizar
+> 368	        </Button>
+> 369	      </CardHeader>
+> 370	      <CardContent>
+> 371	        <div className="overflow-x-auto">
+> 372	          <Table>
+> 373	            <TableHeader>
+> 374	              <TableRow>
+> 375	                {COLUMNS.map((c) => (
+> 376	                  <TableHead key={c} className="whitespace-nowrap text-xs">{c}</TableHead>
+> 377	                ))}
+> 378	              </TableRow>
+> 379	            </TableHeader>
+> 380	            <TableBody>
+> 381	              {videos.map((v) => (
+> 382	                <VideoRow key={v.id} v={v} />
+> 383	              ))}
+> 384	            </TableBody>
+> 385	          </Table>
+> 386	        </div>
+> 387	        {hasNextPage && (
+> 388	          <div className="mt-4 flex justify-center">
+> 389	            <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+> 390	              {isFetchingNextPage ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+> 391	              Carregar mais
+> 392	            </Button>
+> 393	          </div>
+> 394	        )}
+> 395	      </CardContent>
+> 396	    </Card>
+> 397	  );
+> 398	}
+> 399	
+> 400	// ── Page ────────────────────────────────────────────────────────────────────
+> 401	export default function YouTubeStudioPage() {
+> 402	  const conn = useYouTubeConnection();
+> 403	  const { channel } = useYouTubeChannel();
+> 404	
+> ```
+
+## 🤖 Claude *(17:45:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "  return (\n    <Card>\n      <CardHeader className=\"flex flex-row items-center justify-between gap-2\">\n        <div>\n          <CardTitle className=\"text-base\">V\u00eddeos do canal ({videos.length}{hasNextPage ? '+' : ''})</CardTitle>\n          <CardDescription>Tabela completa de propriedades da API (somente leitura \u2014 a\u00e7\u00f5es chegam na Fatia 2).</CardDescription>\n        </div>\n        <Button variant=\"outline\" size=\"sm\" onClick={() => refetch()} disabled={isRefetching}>\n          <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />\n          Atualizar\n        </Button>\n      </CardHeader>\n      <CardContent>\n        <div className=\"overflow-x-auto\">\n          <Table>\n            <TableHeader>\n              <TableRow>\n                {COLUMNS.map((c) => (\n                  <TableHead key={c} className=\"whitespace-nowrap text-xs\">{c}</TableHead>\n                ))}\n              </TableRow>\n            </TableHeader>\n            <TableBody>\n              {videos.map((v) => (\n                <VideoRow key={v.id} v={v} />\n              ))}\n            </TableBody>\n          </Table>\n        </div>\n        {hasNextPage && (\n          <div className=\"mt-4 flex justify-center\">\n            <Button variant=\"outline\" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>\n              {isFetchingNextPage ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : null}\n              Carregar mais\n            </Button>\n          </div>\n        )}\n      </CardContent>\n    </Card>\n  );\n}",
+  "new_string": "  return (\n    <Card>\n      <CardHeader className=\"flex flex-row items-center justify-between gap-2\">\n        <div>\n          <CardTitle className=\"text-base\">V\u00eddeos do canal ({videos.length}{hasNextPage ? '+' : ''})</CardTitle>\n          <CardDescription>\n            {canWrite\n              ? 'Tabela completa da API + a\u00e7\u00f5es de edi\u00e7\u00e3o e exclus\u00e3o dos seus pr\u00f3prios v\u00eddeos.'\n              : 'Tabela completa de propriedades da API (somente leitura).'}\n          </CardDescription>\n        </div>\n        <Button variant=\"outline\" size=\"sm\" onClick={() => refetch()} disabled={isRefetching}>\n          <RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />\n          Atualizar\n        </Button>\n      </CardHeader>\n      <CardContent>\n        <div className=\"overflow-x-auto\">\n          <Table>\n            <TableHeader>\n              <TableRow>\n                {COLUMNS.map((c) => (\n                  <TableHead key={c} className=\"whitespace-nowrap text-xs\">{c}</TableHead>\n                ))}\n                {canWrite && <TableHead className=\"whitespace-nowrap text-xs\">A\u00e7\u00f5es</TableHead>}\n              </TableRow>\n            </TableHeader>\n            <TableBody>\n              {videos.map((v) => (\n                <VideoRow key={v.id} v={v} canWrite={canWrite} onEdit={setEditing} onDelete={setDeleting} />\n              ))}\n            </TableBody>\n          </Table>\n        </div>\n        {hasNextPage && (\n          <div className=\"mt-4 flex justify-center\">\n            <Button variant=\"outline\" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>\n              {isFetchingNextPage ? <Loader2 className=\"h-4 w-4 animate-spin\" /> : null}\n              Carregar mais\n            </Button>\n          </div>\n        )}\n      </CardContent>\n\n      {/* Fatia 2 \u2014 edit (keyed remount seeds the fields) + destructive delete confirmation. */}\n      <EditVideoDialog key={editing?.id ?? 'none'} video={editing} onClose={() => setEditing(null)} />\n      <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>\n        <AlertDialogContent>\n          <AlertDialogHeader>\n            <AlertDialogTitle>Excluir v\u00eddeo permanentemente?</AlertDialogTitle>\n            <AlertDialogDescription>\n              \"{deleting?.snippet?.title ?? deleting?.id}\" ser\u00e1 removido do seu canal do YouTube de forma\n              PERMANENTE e irrevers\u00edvel (videos.delete). Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita.\n            </AlertDialogDescription>\n          </AlertDialogHeader>\n          <AlertDialogFooter>\n            <AlertDialogCancel disabled={del.isPending}>Cancelar</AlertDialogCancel>\n            <AlertDialogAction\n              onClick={(e) => { e.preventDefault(); confirmDelete(); }}\n              disabled={del.isPending}\n              className=\"bg-destructive text-destructive-foreground hover:bg-destructive/90\"\n            >\n              {del.isPending ? <Loader2 className=\"mr-1 h-4 w-4 animate-spin\" /> : <Trash2 className=\"mr-1 h-4 w-4\" />}\n              Excluir permanentemente\n            </AlertDialogAction>\n          </AlertDialogFooter>\n        </AlertDialogContent>\n      </AlertDialog>\n    </Card>\n  );\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:45:54)*
+
+
+## 🤖 Claude *(17:45:54)*
+
+Agora o render principal — passo `canWrite` e adiciono a seção de Receita:
+
+## 🤖 Claude *(17:46:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "      <div className=\"space-y-2\">\n        <h2 className=\"text-sm font-medium text-muted-foreground\">Desempenho (\u00faltimos 28 dias)</h2>\n        {conn.hasAnalyticsScope ? (\n          <ChannelMetrics />\n        ) : (\n          <Card className=\"border-cyan-500/20 bg-cyan-500/5\">\n            <CardContent className=\"flex flex-wrap items-center justify-between gap-3 py-4\">\n              <p className=\"text-sm text-muted-foreground\">\n                As m\u00e9tricas de desempenho exigem a permiss\u00e3o de <strong>Analytics</strong> do YouTube\n                (habilite a YouTube Analytics API no projeto e reconecte).\n              </p>\n              <Button variant=\"outline\" size=\"sm\" onClick={conn.reconnect} className=\"gap-2\">\n                <RefreshCw className=\"h-4 w-4\" /> Ativar m\u00e9tricas\n              </Button>\n            </CardContent>\n          </Card>\n        )}\n      </div>\n\n      <VideosTable />\n    </div>\n  );\n}",
+  "new_string": "      <div className=\"space-y-2\">\n        <h2 className=\"text-sm font-medium text-muted-foreground\">Desempenho (\u00faltimos 28 dias)</h2>\n        {conn.hasAnalyticsScope ? (\n          <ChannelMetrics />\n        ) : (\n          <Card className=\"border-cyan-500/20 bg-cyan-500/5\">\n            <CardContent className=\"flex flex-wrap items-center justify-between gap-3 py-4\">\n              <p className=\"text-sm text-muted-foreground\">\n                As m\u00e9tricas de desempenho exigem a permiss\u00e3o de <strong>Analytics</strong> do YouTube\n                (habilite a YouTube Analytics API no projeto e reconecte).\n              </p>\n              <Button variant=\"outline\" size=\"sm\" onClick={conn.reconnect} className=\"gap-2\">\n                <RefreshCw className=\"h-4 w-4\" /> Ativar m\u00e9tricas\n              </Button>\n            </CardContent>\n          </Card>\n        )}\n      </div>\n\n      {conn.hasMonetaryScope && (\n        <div className=\"space-y-2\">\n          <h2 className=\"text-sm font-medium text-muted-foreground\">Receita (\u00faltimos 28 dias)</h2>\n          <RevenueCard />\n        </div>\n      )}\n\n      <VideosTable canWrite={conn.hasWriteScope} />\n    </div>\n  );\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:46:08)*
+
+Código completo. Verifico tsc + lint dos arquivos tocados, depois deploy dos edges + build:
+
+## 🤖 Claude *(17:46:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -8; echo \"TSC_EXIT=${PIPESTATUS[0]}\"\necho \"=== lint dos arquivos tocados (front) ===\"; npx eslint src/pages/YouTubeStudioPage.tsx src/hooks/useYouTubeStudio.ts 2>&1 | tail -4; echo \"ESLINT_EXIT=${PIPESTATUS[0]}\"",
+  "description": "tsc + lint touched frontend",
+  "timeout": 240000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> === lint dos arquivos tocados (front) ===
+> ESLINT_EXIT=0
+> ```
+
+## 🤖 Claude *(17:46:18)*
+
+tsc 0 + lint 0. Deploy dos 2 edges + build do frontend:
+
+## 🤖 Claude *(17:46:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx supabase functions deploy youtube-data 2>&1 | grep -E \"Deployed|rror\"; npx supabase functions deploy social-auth-init 2>&1 | grep -E \"Deployed|rror\"",
+  "description": "Deploy youtube-data + social-auth-init",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deployed Functions on project bcyvddsykvehvpwstlfa: youtube-data
+> Deployed Functions on project bcyvddsykvehvpwstlfa: social-auth-init
+> ```
+
+## 🤖 Claude *(17:46:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run build 2>&1 | tail -4",
+  "description": "Production build (frontend deploy)",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 24.00s
+> ```
+
+## 🤖 Claude *(17:47:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== prova material: strings novas no bundle servido + escopo monet\u00e1rio no edge deployado ===\"\ngrep -rho \"Excluir permanentemente\\|Receita estimada\\|Salvar no YouTube\" dist/assets/*.js 2>/dev/null | sort -u\necho \"--- escopo monet\u00e1rio no youtube-data deployado (via source local, deploy confirmado acima) ---\"\ngrep -c \"yt-analytics-monetary.readonly\" supabase/functions/youtube-data/index.ts supabase/functions/social-auth-init/index.ts",
+  "description": "Material proof: new UI strings baked + monetary scope wired"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === prova material: strings novas no bundle servido + escopo monetário no edge deployado ===
+> Excluir permanentemente
+> Receita estimada
+> Salvar no YouTube
+> --- escopo monetário no youtube-data deployado (via source local, deploy confirmado acima) ---
+> supabase/functions/youtube-data/index.ts:3
+> supabase/functions/social-auth-init/index.ts:2
+> ```
+
+## 🤖 Claude *(17:47:09)*
+
+
+## 🤖 Claude *(17:47:10)*
+
+Tudo deployado e assado no bundle. Como isto introduz **operação destrutiva externa** (delete de vídeo), rodo o `/security-review` (gate Y5 da amendment):
+
+## 🤖 Claude *(17:47:10)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(17:47:10)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 16 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/hooks/useYouTubeStudio.ts
+	modified:   src/pages/YouTubeStudioPage.tsx
+	modified:   supabase/functions/social-auth-init/index.ts
+	modified:   supabase/functions/youtube-data/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+.claude/scripts/session-inspect.ts
+docs/bok/spaces-evolution/22-amendment-scheduled-carousel.md
+docs/bok/spaces-evolution/23-amendment-publish-reframe.md
+docs/bok/spaces-evolution/24-amendment-media-rails.md
+docs/processes/space-publish-format-preview.md
+eslint.config.js
+rescue.ts
+scripts/agent-task-runner.ts
+scripts/audit-mesh-edges.ts
+scripts/automate-pipeline-sprints.ts
+scripts/backfill-node-content.ts
+scripts/bridge-mesh-to-openclaw.ts
+scripts/canvas-backfill-edge-handles.ts
+scripts/canvas-campaign-build.ts
+scripts/design-bridge.ts
+scripts/discover-affiliate-products.ts
+scripts/enrich-affiliate-products.ts
+scripts/hyperframes/render-core.ts
+scripts/ingest-codebase.ts
+scripts/opencode-bridge.ts
+scripts/qa/audit-canvas-ui.ts
+scripts/qa/audit-universe-ui.ts
+scripts/qa/e2e-intent-paid.ts
+scripts/qa/e2e-vision-mcp-heterogeneous-client.ts
+scripts/qa/e2e-vision-mcp-mesh-search.ts
+scripts/qa/probe-vision-mcp-adversarial.ts
+scripts/qa/smoke-affiliate-click.ts
+scripts/qa/smoke-autopilot-video-refund.ts
+scripts/qa/smoke-constellation-v2-router.ts
+scripts/qa/smoke-deepsearch-run.ts
+scripts/qa/smoke-deepsearch-scrape.ts
+scripts/qa/smoke-external-ingest.ts
+scripts/qa/smoke-live-proxy.ts
+scripts/qa/smoke-publish-reframe.ts
+scripts/qa/smoke-scheduled-carousel.ts
+scripts/qa/smoke-semantic-synapses.ts
+scripts/qa/smoke-space-publish-variants.ts
+scripts/qa/smoke-spaces-execution.ts
+scripts/qa/smoke-studio-host.ts
+scripts/qa/smoke-studio-project-guard.ts
+scripts/qa/smoke-studio-sync.ts
+scripts/qa/smoke-tiktok-login.ts
+scripts/qa/smoke-video-repurpose.ts
+scripts/qa/smoke-vision-analyze-video.ts
+scripts/qa/smoke-vision-consolidate-reference.ts
+scripts/qa/smoke-vision-cost-caps.ts
+scripts/qa/smoke-vision-describe-image.ts
+scripts/qa/smoke-vision-pat-erase.ts
+scripts/qa/test-publish-meta-smoke.ts
+scripts/qa/test-sync-meta-ads.ts
+scripts/qa/test-whatsapp-webhook.ts
+scripts/qa/verify-semantic-neighbors-panel.ts
+scripts/qa/vision-mcp-call.ts
+scripts/reset-constellation-v2.ts
+scripts/seed-constellation-v2-capabilities.ts
+scripts/setup-agent-worktrees.ts
+scripts/sync-canvas-nodes.ts
+scripts/video-bridge.ts
+scripts/video-repurpose-bridge.ts
+src/components/admin/PantheonAdminPanel.tsx
+src/components/blocks/hero-section.tsx
+src/components/canvas/LeftPanel/index.tsx
+src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx
+src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx
+src/components/canvas/RightPanel/inspectors/SceneComposeInspector.tsx
+src/components/core/AIOSTerminal.tsx
+src/components/creative/AssetDetailDialog.tsx
+src/components/dashboard/DashboardLayout.tsx
+src/components/graph/AgentEdge.tsx
+src/components/graph/CrewGraph.tsx
+src/components/graph/SquadHull.tsx
+src/components/landing/LandingConstellation.tsx
+src/components/orchestrator/ConstellationMatrix.tsx
+src/components/orchestrator/NodeDetailsPanel.tsx
+src/components/orchestrator/OrchestrationCanvas.tsx
+src/components/panels/NewEdgeDialog.tsx
+src/components/ui/chart.tsx
+src/components/ui/input.tsx
+src/components/ui/textarea.tsx
+src/hooks/useAIOSConversations.ts
+src/hooks/useAdminData.ts
+src/hooks/useAffiliateConfig.ts
+src/hooks/useAffiliateProducts.ts
+src/hooks/useAiosWorkspaceChat.ts
+src/hooks/useCanvasStudio.ts
+src/hooks/useConstellationSigma.ts
+src/hooks/useContentLibrary.ts
+src/hooks/useCrewData.ts
+src/hooks/useCrewOverlay.ts
+src/hooks/useDashboardData.ts
+src/hooks/useDesignJobs.ts
+src/hooks/useGeminiLive.ts
+src/hooks/useHandTracking.ts
+src/hooks/useKnowledgeMesh.ts
+src/hooks/useMcorchMemory.ts
+src/hooks/useNodeIntelligence.ts
+src/hooks/useOrchestrationGraph.ts
+src/hooks/usePantheonTelemetry.ts
+src/hooks/useSimulation.ts
+src/hooks/useSubscription.ts
+src/hooks/useSwarmArena.ts
+src/hooks/useViralTrends.ts
+src/lib/enterprise-seed.ts
+src/lib/format-specs.ts
+src/pages/AdminPage.tsx
+src/pages/AffiliateProductsPage.tsx
+src/pages/AffiliatesPage.tsx
+src/pages/AnalyticsPage.tsx
+src/pages/BlogEditorPage.tsx
+src/pages/CanvasEditorPage.tsx
+src/pages/ContentLibraryPage.tsx
+src/pages/MemoryPage.tsx
+src/pages/SocialAccountsPage.tsx
+src/pages/SocialCallback.tsx
+src/pages/VideoEditorPage.tsx
+src/pages/VideoRepurposePage.tsx
+src/pages/ViralMinerPage.tsx
+src/pages/onboarding/OnboardingPage.tsx
+src/store/useOrchestrationStore.ts
+src/test/agentic-workspace.test.ts
+src/test/canvas-video-async-smoke.test.ts
+src/test/pantheon.test.ts
+src/test/qa-verifiers.test.ts
+src/test/useCanvasDesign.test.tsx
+src/test/useKnowledgeMesh.test.ts
+src/test/useOrchestrationGraph.test.ts
+supabase/functions/_shared/public-url.ts
+supabase/functions/_shared/reframe.ts
+supabase/functions/auto-publish/index.ts
+supabase/functions/publish-social/index.ts
+supabase/functions/publish-space-asset/index.ts
+supabase/functions/publish-space-carousel/index.ts
+supabase/functions/reshape-pillar/index.ts
+supabase/functions/social-auth-init/index.ts
+```
+
+COMMITS:
+
+```
+commit c24048a0488e77dd5ea372b6bded85a5fe092317
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 14:22:56 2026 -0300
+
+    chore(lint): tipa any em src/pages + src/test (20 arqs, ~66 erros→0)
+    
+    Última leva. Pages: remoção de :any redundante (arrays já tipados pelos
+    hooks via Tables<>), interfaces de resultado (SeoResult/AiAnalysis/
+    SearchCandidate), catch narrowing em massa, remoção de (supabase as any)
+    (tabelas existem em types.ts). Tests: mock query-builders tipados
+    (MockChain/SupabaseResult), Tables<> em fixtures, VerificationResult[].
+    Zero eslint-disable · tsc 0 · vitest 533 passed.
+    
+    DÉBITO ESLINT ZERADO: bun run lint exit 0 (0 erros, 26 warnings restantes).
+    5 lotes via fan-out 1-agente-por-arquivo (122 arqs, ~394→0), types-only,
+    tsc+test verdes por lote.
+
+commit c4e730b73aab0ea74d0049510e96d33ca5b08862
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 14:08:14 2026 -0300
+
+    chore(lint): tipa any em src/components (19 .tsx, ~52 erros→0)
+    
+    Camada display. Padrões: onError(err:Error)/onSuccess herdando TData
+    (mutations), tipos de resultado reais (CanvasExecuteResult nos inspectors),
+    interfaces de payload do Recharts (chart.tsx), window-augmented types
+    (SpeechRecognition/AudioContext no AIOSTerminal, __openEdgeDialog), THREE
+    material types, @ts-ignore→@ts-expect-error, interface vazia→type alias
+    (input/textarea). Zero eslint-disable · tsc 0 · vitest 533 passed.
+
+commit 947a9cd7d11c317f3987466caa0137c645778899
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 13:55:21 2026 -0300
+
+    chore(lint): tipa any em src/hooks + lib + store (25 arqs, ~79 erros→0)
+    
+    Camada de lógica (harness). Padrões: remoção de casts (supabase as any)
+    desnecessários (tabelas existem em types.ts → client já tipado), Tables<>
+    gerados (useAdminData/useCrewData/usePantheonTelemetry), query-builders
+    estruturais genéricos p/ fetch dinâmico (useConstellationSigma/useMcorchMemory),
+    Record<string,unknown> p/ blobs jsonb, catch narrowing, tipos MediaPipe reais
+    (useHandTracking). Zero eslint-disable · tsc 0 · vitest 533 passed.
+
+commit a3197b19e6c57fe063c8b3bcadcac226e31740b8
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 13:37:27 2026 -0300
+
+    chore(lint): tipa any em scripts/qa restante (18 arqs, ~44 erros→0)
+    
+    Segunda leva de scripts/qa (a que caiu no limite de sessão). Tipos reais:
+    shapes de CallToolResult do MCP SDK, interfaces de linha (SynapseRow,
+    LiveServerMessage), catch narrowing, window-augmented types
+    (UnifiedCanvasWindow), ternário-statement → if/else. Zero eslint-disable.
+    scripts/qa agora 100% limpo · tsc 0.
+
+commit d2e1750af54e24e80ea893a4a1212c52f67cdfbf
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 13:25:50 2026 -0300
+
+    chore(lint): tipa any em scripts/ (32 arqs, ~114 erros→0)
+    
+    Fan-out 1-agente-por-arquivo (types-only). Tipos reais: Tables<> do Supabase
+    (audit-mesh-edges, backfill-node-content, test-pagination), interfaces de
+    linha por SELECT (bridge-mesh aios_*, seed-constellation), tipos de Playwright
+    page.evaluate (render-core: HfWindow/HfPlayer/HfDocument), catch narrowing,
+    Parameters<typeof fn>[0] p/ payloads de worker. no-useless-escape/no-empty/
+    no-require-imports/no-irregular-whitespace resolvidos. 4 eslint-disable
+    justificados só p/ regex ANSI de controle (opencode-bridge). tsc 0.
+    Lote parcial: 19 arqs de scripts/qa restantes caíram no limite de sessão.
+
+commit b5f4dc4b49a339cdb6eb5c1fba828f1fc6551c74
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:52:36 2026 -0300
+
+    chore(lint): tipa any em .claude/scripts (8 arqs, 10 erros→0)
+    
+    Tipos reais: Tables<'mcorch_nodes'>, interfaces de transcript (session-inspect),
+    tipos inline por acesso, catch narrowing, as never p/ tabela off-schema
+    (information_schema). Zero eslint-disable · zero mudança de runtime · tsc 0.
+
+commit 063ed1804371a04bb7fd9ae68147da39ab589201
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:44:15 2026 -0300
+
+    chore(lint): auto-fix prefer-const + disable-directives órfãos + ignore de gerados
+    
+    eslint --fix: 9 let→const + remoção de 2 eslint-disable órfãos (opencode-bridge).
+    eslint.config: **/dist/** (compilado aninhado, já gitignored) + miv_assets/**
+    (bundles da landing MIV — react-dom.development.js + JSX compilado, vendored).
+    tsc 0 · vitest 533 passed. Primeiro lote da drenagem do débito eslint.
+
+commit ab9c2971ed179ee71b83f754852a1b0b5d4891f3
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:36:35 2026 -0300
+
+    feat(spaces): UI dos trilhos — toggle de reframe no asset + agendar carrossel no repurpose
+    
+    AssetDetailDialog: checkbox 'Reenquadrar para o formato (WxH)' (só imagem,
+    default ligado) → passa reframe:true ao publish-space-asset (FR-SPACES-081);
+    o pixel publicado passa a bater com o preview.
+    VideoRepurposePage: no modo carrossel os slides individuais dão lugar a um
+    botão único 'Agendar carrossel' → publish-space-carousel {schedule:true}
+    (FR-SPACES-080/OTD-SPACES-044) — o conjunto vira UM post IG agendado.
+    tsc 0 · eslint 0 (tocados) · build de produção deployado (dist/ do repo
+    principal, env-baked, strings novas no bundle servido — prova material).
+
+commit c845b917d3bfe48a1695e17d510cb3b9850d3b37
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:30:11 2026 -0300
+
+    feat(spaces): trilhos de mídia instalados — LinkedIn imagem + IG Stories + X media (FR-SPACES-082/083/084/085)
+    
+    publish-social: (082) LinkedIn registerUpload→PUT→ugcPost IMAGE quando
+    content.image_url existe (texto intocado sem imagem); (083) IG STORIES via
+    media_type=STORIES quando content.surface=story|stories (mesmo fluxo
+    container→publish do rail provado; poll async reusado p/ vídeo); (084) X
+    media upload v2 + tweet com media_ids — 401/403 = twitter_media_scope_missing
+    acionável (anti falso-sucesso: post prometido com mídia nunca sai text-only).
+    social-auth-init: scope X += media.write (conexões novas). auto-publish:
+    copia surface (string 60c, discriminador inócuo) pro payload nativo.
+    format-specs: notas honestas (YT Comunidade = limite definitivo da API;
+    LinkedIn/Stories/X = 'trilho instalado, libera após 1º teste') — ZERO flip
+    p/ real sem witness.
+    Hardening (classe pré-existente fechada): _shared/public-url.ts
+    assertPublicHttpUrl (https-only + anti IP privado/link-local + resolve
+    best-effort) guardando os 5 fetch de URL de mídia caller-controlada do
+    publisher. Review adversarial: NO FINDINGS novos. 4 deploys provados;
+    regressão scheduled-carousel 9/9; tsc 0; format-specs 15/15.
+
+commit a9d10b2b9df0e43eeeb8ab17694e388054d52aa6
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:29:51 2026 -0300
+
+    docs(spaces): Amendment 24 — trilhos de mídia LinkedIn/IG-Stories/X + limite YT Comunidade
+    
+    Levantamento material dos limites: LinkedIn imagem = 100% destravável
+    (w_member_social cobre assets API); IG Stories = mesmo escopo do rail
+    provado (alcance gated app-audit); X mídia = exige re-connect com
+    media.write; YT Comunidade = SEM API de escrita (limite definitivo).
+    FR-SPACES-082..085. Zero flip p/ 'real' sem witness (Lei 1); witnesses
+    gated em GO Sovereign.
+
+commit 11bbce42d951f13db4663b13d763689d10f4ac53
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:15:49 2026 -0300
+
+    chore(lint): ignora worktrees de sessão + sidecars vendored no gate eslint
+    
+    .claude/worktrees (checkouts duplicados do próprio repo), canvas-design/
+    open-design (sidecar com tooling próprio, dist compilado) e claude-plugins-
+    official poluíam o gate com 2800+ erros de código que não é nosso. Resíduo
+    honesto medido pós-ignore: 448 erros em src/scripts (débito pré-existente,
+    registrado p/ sessão dedicada).
+
+commit 23997987f5e48129ca4767cb9f61215fc658eab2
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:15:22 2026 -0300
+
+    feat(spaces): reframe server-side opt-in no publish — pixel-parity por formato (FR-SPACES-081)
+    
+    _shared/reframe.ts: motor extraído verbatim do reshape-pillar (imagescript
+    WASM, center-crop cover + resize exato + JPEG 85) + guard anti decompression
+    bomb 26MP; reshape-pillar passa a importar (comportamento inalterado,
+    smoke-reframe-image PASS pós-extração).
+    publish-space-asset: braço reframe:true — px do seed channel_profiles
+    (tenant override > system, nunca px do cliente), derivado em canvas-assets
+    owner-prefixed (slug allowlist [a-z0-9_] + tuple-hash anti-colisão — path é
+    a fronteira sob service-role), linhagem creative_assets select-first
+    idempotente, variante aponta o derivado (transporte existente publica o
+    pixel-parity). Fail-open em toda falha (reframed:false + skip_reason).
+    Smoke novo 8/8 LIVE (geometria 1080×1350 provada por decode SOF real ·
+    fail-open · cross-tenant 404 · idempotência). Review adversarial: NO
+    FINDINGS + 4 hardenings aplicados.
+
+commit 180899e68e1de564014059437a879134126a3839
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 10:15:11 2026 -0300
+
+    docs(spaces): Amendment 23 — reframe server-side por formato no publish (fecha OTD-SPACES-043 · imagem)
+    
+    FR-SPACES-081: publish-space-asset {reframe:true} deriva JPEG na geometria
+    exata do seed channel_profiles (fonte server-trusted) via motor imagescript
+    compartilhado (_shared/reframe.ts, extraído do reshape-pillar — rail US$ 0
+    da OTD-CP-009). Fail-open honesto (nunca bloqueia publish), linhagem
+    creative_assets (parent_asset_id), caps de sanidade. Vídeo = OTD-SPACES-045
+    (rail repurpose já reframa; wire futuro). Gates R1-R5.
+
+commit e5407a1da9f1b765f859873647b57fb32a96a04e
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 09:39:42 2026 -0300
+
+    feat(spaces): carrossel IG agendado — marcador de grupo + transporte (FR-SPACES-079/080)
+    
+    auto-publish: braço carousel_render_id no dispatch de reshape — resolve
+    slides owner-scoped (source_job_id + user_id do post + kind=image, ORDER
+    storage_key, LIMIT 10), assina fresco (6h) a cada tentativa e entrega
+    content.images[] ao ramo CAROUSEL existente do publish-social; <2 slides
+    => carousel_slides_unavailable estruturado (nunca cai no branch single).
+    publish-space-carousel: schedule:true + publish_at ISO enfileiram
+    scheduled_posts com o marcador (slides validados ANTES do INSERT; 409
+    already_queued); caminho imediato intocado.
+    Smoke novo 9/9 LIVE (401/400/422 tenant-gate/409/queued-com-marcador/
+    imediato-sem-enqueue) + lint fix no molde. Deploys provados; /security-review
+    NO FINDINGS (FMEA-011 preservado por construção).
+
+commit 3a5b204d2e381d86ec33fe6e6bdf74aa1b4b3991
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 09:39:28 2026 -0300
+
+    docs(spaces): Amendment 22 — carrossel IG pelo caminho agendado (fecha OTD-SPACES-044)
+    
+    FR-SPACES-079 (transporte agendado no auto-publish: marcador de grupo
+    carousel_render_id resolvido owner-scoped de creative_assets, assinatura
+    fresca 6h por tentativa, fail-closed <2 slides) + FR-SPACES-080 (modo
+    schedule no seam publish-space-carousel, anti double-enqueue 409).
+    Decisão: zero migration — marcador server-resolvível preserva FMEA-011
+    por construção. Pattern Conformance delta inline + gates G1-G6 + apêndice
+    no SOP space-publish-format-preview. UI de agendamento + flip do catálogo
+    = fatia seguinte (documentado, honesto).
+
+commit 1c59da53c70477b237edce9d86af83bba50c148d
+Author: Gabriel Zarattini <gabrielcall@gmail.com>
+Date:   Tue Jul 14 09:07:01 2026 -0300
+
+    fix(qa): T2 node-type gate stale — upscale entrou no slice na it.4c (v6.98)
+    
+    Gate T2 usava 'upscale' como exemplo de node_type fora do slice, mas o nó
+    Upscale REAL aterrissou no registry em 2026-07-07. Slug sintético
+    smoke_unsupported_node nunca colide com nós futuros. Smoke 40/40 contra
+    canvas-execute v68 (deploy do pool BYOK Amendment 20).
+```
+
+DIFF CONTENT:
+
+```
+<persisted-output>
+Output too large (291.5KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/tool-results/b4exxwyk8.txt
+
+Preview (first 2KB):
+diff --git a/.claude/scripts/session-inspect.ts b/.claude/scripts/session-inspect.ts
+index 208288e..e8f5274 100755
+--- a/.claude/scripts/session-inspect.ts
++++ b/.claude/scripts/session-inspect.ts
+@@ -56,8 +56,30 @@ let assistantTurns = 0, toolCalls = 0, userTurns = 0;
+ const toolNames = new Map<string, string>();     // tool_use id → name
+ const toolSizes: Array<{ name: string; bytes: number; turn: number }> = [];
+ 
++interface TranscriptUsage {
++  input_tokens?: number;
++  cache_read_input_tokens?: number;
++  cache_creation_input_tokens?: number;
++  output_tokens?: number;
++}
++interface TranscriptContent {
++  type?: string;
++  id?: string;
++  name?: string;
++  content?: unknown;
++  tool_use_id: string;
++}
++interface TranscriptMessage {
++  usage?: TranscriptUsage;
++  content?: TranscriptContent[];
++}
++interface TranscriptLine {
++  type?: string;
++  message?: TranscriptMessage;
++}
++
+ lines.forEach((ln, idx) => {
+-  let j: any; try { j = JSON.parse(ln); } catch { return; }
++  let j: TranscriptLine; try { j = JSON.parse(ln); } catch { return; }
+   const msg = j.message;
+   if (j.type === 'assistant' && msg?.usage) {
+     assistantTurns++;
+diff --git a/docs/bok/spaces-evolution/22-amendment-scheduled-carousel.md b/docs/bok/spaces-evolution/22-amendment-scheduled-carousel.md
+new file mode 100644
+index 0000000..c421165
+--- /dev/null
++++ b/docs/bok/spaces-evolution/22-amendment-scheduled-carousel.md
+@@ -0,0 +1,54 @@
++# Amendment 22 — Carrossel IG pelo caminho AGENDADO (fecha OTD-SPACES-044)
++
++> **Data:** 2026-07-14 · **Status:** ativo · **Parent:** `04-frd.md` + Amendment 15 (FR-SPACES-035, família Publish/Social) + Amendment 21 (§4 defer OTD-SPACES-044)
++> **Trigger:** loop autônomo GO'd pelo Sovereign ("arme o loop para todos os próximos passos") — item 2 do roadmap pós-v6.100.0.
+...
+</persisted-output>
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(17:47:17)*
+
+
+## 🤖 Claude *(17:47:37)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Identify vulns in YouTube Fatia 2",
+  "subagent_type": "general-purpose",
+  "prompt": "You are a senior security engineer reviewing UNCOMMITTED changes in /home/gcrUX/htdocs/constellation-orchestra. Run `git status --short` and `git diff` (unstaged) + read the untracked file `docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md`.\n\nSCOPE \u2014 review ONLY the YouTube Studio Fatia 2 change (ignore the many `chore(lint): tipa any` type-only edits already committed; those are types-only, no runtime change). The new attack surface is:\n- `supabase/functions/youtube-data/index.ts` \u2014 NEW actions: `revenue_metrics` (gated yt-analytics-monetary.readonly), `update_video` (videos.update, gated youtube.force-ssl), `delete_video` (videos.delete, gated force-ssl). New `gsend` write helper. Scope-gate changes.\n- `supabase/functions/social-auth-init/index.ts` \u2014 added `yt-analytics-monetary.readonly` to the YouTube OAuth scope list.\n- `src/hooks/useYouTubeStudio.ts` + `src/pages/YouTubeStudioPage.tsx` \u2014 client hooks/UI for revenue card + edit dialog + delete confirmation.\n\nTRUST MODEL (verify in code): youtube-data is JWT-gated (`auth.getUser()` on the caller's token); the per-user YouTube OAuth token is resolved SERVER-SIDE from `decrypted_social_accounts` filtered by `.eq('user_id', user.id)` (the tenant boundary \u2014 service-role bypasses RLS so this filter is load-bearing) and never returned to the client. Write ops (update/delete) act on the caller's OWN channel via their own Google token \u2014 Google enforces ownership (403 on a foreign video).\n\nEvaluate specifically, with concrete exploitability (>80% confidence bar):\n(a) Can one tenant edit/delete ANOTHER tenant's YouTube videos or read another tenant's revenue? Trace the account resolution + token usage. Is the user_id used anywhere client-controllable (body vs. verified token)?\n(b) `update_video`/`delete_video` take `videoId` from the request body. Is there any injection into the Google API URL (the videoId is `encodeURIComponent`-wrapped into `videos?id=...`)? Any way videoId could break out of the query param or hit a different endpoint?\n(c) The scope gate: could a caller invoke a write/monetary action WITHOUT holding the scope (bypass the `missing.push` fail-closed)? Check the logic for each action.\n(d) `revenue_metrics` returns `{monetized:false, reason}` on 403 \u2014 does it leak anything sensitive from Google's error body? (reason is `error.errors[0].reason` / `error.status`.)\n(e) `gsend`: DELETE with no body, PUT with JSON body \u2014 any header/method smuggling, SSRF (is the URL host fixed to googleapis.com, or can the body influence it)?\n(f) The edit dialog / delete confirmation client-side \u2014 any dangerouslySetInnerHTML or unsafe rendering of video titles/descriptions? (React auto-escapes; only flag unsafe sinks.)\n(g) Does `update_video` merging (reads current snippet, PUTs merged) allow any privilege change (e.g. setting madeForKids, privacyStatus) beyond title/description/tags? Check what fields are sent.\n\nEXCLUSIONS: DoS/rate-limit/resource, secrets-on-disk, theoretical races, the type-only lint edits, markdown docs, log spoofing, SSRF that only controls a path, regex injection. Report only findings \u22658/10 confidence with file:line, severity, category, exploit scenario, fix, confidence. If nothing meets the bar, say exactly that with a short per-vector justification. Your final message is the report."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: af7b40d7f7dd5d67b (internal ID - do not mention to user. Use SendMessage with to: 'af7b40d7f7dd5d67b', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/tasks/af7b40d7f7dd5d67b.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(17:47:42)*
+
+The identification sub-task roda em background. Aguardo a conclusão para filtrar e finalizar o review.
+
+## 👤 User *(17:49:53)*
+
+<task-notification>
+<task-id>af7b40d7f7dd5d67b</task-id>
+<tool-use-id>toolu_01HDPBTpMkmn8RBetFBiV56a</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/tasks/af7b40d7f7dd5d67b.output</output-file>
+<status>completed</status>
+<summary>Agent "Identify vulns in YouTube Fatia 2" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>I have everything needed. My analysis is complete across all seven vectors.
+
+---
+
+# Security Review — YouTube Studio Fatia 2 (write ops + monetary)
+
+**Scope reviewed:** uncommitted changes to `supabase/functions/youtube-data/index.ts`, `supabase/functions/social-auth-init/index.ts`, `src/hooks/useYouTubeStudio.ts`, `src/pages/YouTubeStudioPage.tsx`, plus the untracked `docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md`. (Type-only lint edits ignored per scope.)
+
+## Verdict: NO findings meet the ≥8/10 confidence bar.
+
+The trust model in the task description is accurate and holds under tracing. The new attack surface is well-contained. Per-vector justification below.
+
+### Trust boundary — verified sound
+- `youtube-data/index.ts:104-111` — Bearer required; caller JWT validated via `userClient.auth.getUser()` (anon key + caller's `Authorization` header). Invalid → 401. The client's `invokeYT` (`useYouTubeStudio.ts:88-90`) uses `supabase.functions.invoke`, which attaches the session JWT — so `user.id` is server-derived from a verified token.
+- `youtube-data/index.ts:119-125` — account/token resolved from `decrypted_social_accounts` filtered by `.eq("user_id", user.id)` (verified id) + `platform=youtube` + `is_active`. Service-role bypasses RLS, so this filter is the load-bearing tenant boundary. The token is never returned to the client; only used server-side in `Authorization: Bearer`.
+
+### (a) Cross-tenant edit/delete/revenue — NOT exploitable
+`user.id` comes only from the verified token; it is never read from the request body. The body contributes `action`, `videoId`, `title`, `description`, `tags`, dates, `metrics` — none feed the account lookup (`:119-125`) or token resolution (`ensureFreshToken`, `account.id` at `:57`). Writes run against the caller's own token; a foreign `videoId` gets a Google 403 surfaced via `googleError`. `revenue_metrics` is pinned to `ids: "channel==MINE"` (`:271`), bound to the token's own channel. No client-controllable `user_id` path exists. Confidence this is safe: high.
+
+### (b) `videoId` URL injection — NOT exploitable
+Both write paths append `videoId` only as a query-param value wrapped in `encodeURIComponent` (`:294`, `:307` uses body, `:317`). `encodeURIComponent` encodes `&amp; = ? # /` and whitespace, so `videoId` cannot break out of the param, append params, or traverse into a different path. The `update_video` PUT (`:307`) carries `videoId` in the JSON body, not the URL. Host base `YT_DATA` is a fixed constant. No breakout.
+
+### (c) Scope-gate bypass — NOT exploitable
+Gate at `:141-164` is fail-closed: every write/monetary action has a required-scope check that `missing.push`es and returns 403 before any token use. `update_video`/`delete_video` → `SCOPE_FORCE_SSL` (`:152`); `revenue_metrics` → `SCOPE_ANALYTICS_MONETARY` (`:149`). No execution branch performs a write without a matching gate (execution `if`s at `:264/288/314` all fall under gated actions; anything else → `unknown_action`). `scopes` defaults to `[]` (`:139`), so a null/empty scope set blocks all gated actions. This is defense-in-depth anyway — Google independently enforces scope on the token.
+
+### (d) `revenue_metrics` 403 body — no sensitive leak
+On 403 it returns `{monetized:false, reason}` where `reason = error.errors[0].reason ?? error.status ?? "not_monetized"` (`:278`) — a short enum-like token (e.g. `authError`, `PERMISSION_DENIED`) pertaining to the caller's own request. No token, no cross-tenant data, no full error body. `googleError` similarly surfaces only the caller's own `error.message`.
+
+### (e) `gsend` SSRF / smuggling — NOT exploitable
+URL is built from the fixed `YT_DATA` constant; the body cannot influence the host (`:307`, `:317`). Method is a hardcoded literal (`"PUT"`/`"DELETE"`). Headers are static (`Authorization` + optional `Content-Type`); no user free-text lands in a header. Body is `JSON.stringify` of a code-constructed payload. No header/method smuggling, no SSRF.
+
+### (f) Client rendering — NOT exploitable
+`grep` for `dangerouslySetInnerHTML`/`innerHTML`/`__html` across both client files returned none. Titles/descriptions render through JSX text nodes and controlled `Input`/`Textarea` values (auto-escaped). The delete confirmation interpolates `deleting?.snippet?.title` as JSX text — escaped.
+
+### (g) `update_video` privilege change — NOT exploitable
+`newSnippet` is built explicitly field-by-field (`:299-306`): only `title`, `description`, `tags` (type-checked), with `categoryId` and `defaultLanguage` preserved from the current snippet. There is no spread of `body` into the snippet. The PUT sends `part=snippet` only (`:307`), so the `status` part — where `privacyStatus`, `madeForKids`/`selfDeclaredMadeForKids`, `embeddable`, `license` live — is never included and cannot be altered. No privilege/visibility escalation is reachable.
+
+---
+
+**Note (non-finding, informational):** the scope gate reads `account.scopes` (recorded at OAuth grant time) rather than introspecting the live token. This is intentional UX (clean reconnect CTA) and is not a security gap because Google enforces scope on the actual token and a tenant cannot forge another tenant's stored scopes (RLS-isolated row + the grant itself is what mints the token). No action needed.
+
+All seven evaluated vectors are below the reporting bar. The change is safe to ship from a security standpoint.</result>
+<usage><subagent_tokens>106108</subagent_tokens><tool_uses>11</tool_uses><duration_ms>131793</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(17:49:58)*
+
+
+## 🤖 Claude *(17:50:00)*
+
+`/security-review`: **NO FINDINGS** (7 vetores, todos abaixo do bar — sem cross-tenant, sem injeção de videoId, gate fail-closed, sem escalonamento de privilégio no update). Commito a Fatia 2:
+
+## 🤖 Claude *(17:50:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md supabase/functions/youtube-data/index.ts supabase/functions/social-auth-init/index.ts src/hooks/useYouTubeStudio.ts src/pages/YouTubeStudioPage.tsx\ngit commit -m \"feat(youtube): Fatia 2 \u2014 editar/excluir v\u00eddeo (force-ssl) + receita (analytics monet\u00e1rio)\n\nTorna os 4 escopos do YouTube DEMONSTR\u00c1VEIS para a verifica\u00e7\u00e3o Google\n(o review exige ver cada escopo em uso \u2014 n\u00e3o aprova uso futuro):\n- social-auth-init: +yt-analytics-monetary.readonly (os 4 no consent).\n- youtube-data: a\u00e7\u00f5es update_video (videos.update, l\u00ea snippet\u2192merge\u2192PUT\n  part=snippet s\u00f3 t\u00edtulo/descri\u00e7\u00e3o/tags), delete_video (videos.delete,\n  irrevers\u00edvel), revenue_metrics (reports monet\u00e1rios; 403 n\u00e3o-parceiro \u2192\n  {monetized:false} fail-soft, n\u00e3o crash). Gate de escopo: video_metrics\n  aceita analytics comum OU monet\u00e1rio (superset); revenue exige monet\u00e1rio;\n  update/delete exigem force-ssl.\n- UI: card de Receita (gated monet\u00e1rio) + Editar (dialog) + Excluir\n  (confirma\u00e7\u00e3o destrutiva) por v\u00eddeo, gated force-ssl.\nBoK Amendment 12 (Lei 2) antes do c\u00f3digo. tsc 0 \u00b7 eslint 0 \u00b7 2 edges\ndeployados \u00b7 build servido (strings no bundle). /security-review NO FINDINGS\n(7 vetores: sem cross-tenant, videoId encodeURIComponent, gate fail-closed,\npart=snippet n\u00e3o toca status/privacyStatus).\" 2>&1 | tail -3",
+  "description": "Commit YouTube Fatia 2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main 7933333] feat(youtube): Fatia 2 — editar/excluir vídeo (force-ssl) + receita (analytics monetário)
+>  5 files changed, 411 insertions(+), 17 deletions(-)
+>  create mode 100644 docs/bok/youtube-studio/12-amendment-write-ops-and-monetary.md
+> ```
+
+## 🤖 Claude *(17:50:14)*
+
+Agora a justificativa final — escrevo e **conto os caracteres** para garantir ≤1000 (Lei 1):
+
+## 🤖 Claude *(17:50:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/scratchpad/justificativa.txt <<'EOF'\nO MCORCH \u00e9 um painel onde cada criador conecta a PR\u00d3PRIA conta do YouTube via OAuth para gerenciar seu conte\u00fado num s\u00f3 lugar. Uso de cada escopo, sempre sobre dados do pr\u00f3prio usu\u00e1rio autenticado:\n\u2022 youtube.readonly: exibir no app o canal e a lista de v\u00eddeos com estat\u00edsticas (channels.list, playlistItems.list, videos.list).\n\u2022 youtube: publicar no canal do usu\u00e1rio os v\u00eddeos que ele cria na plataforma (videos.insert).\n\u2022 youtube.force-ssl: o usu\u00e1rio edita t\u00edtulo/descri\u00e7\u00e3o/tags (videos.update) e exclui permanentemente (videos.delete) os pr\u00f3prios v\u00eddeos, direto do painel.\n\u2022 yt-analytics-monetary.readonly: mostrar relat\u00f3rios de desempenho do pr\u00f3prio conte\u00fado, monet\u00e1rios (receita estimada) e n\u00e3o monet\u00e1rios (visualiza\u00e7\u00f5es, tempo de exibi\u00e7\u00e3o, reten\u00e7\u00e3o), via YouTube Analytics API.\nTodos os dados pertencem ao usu\u00e1rio logado, s\u00e3o exibidos apenas para ele e nunca compartilhados, vendidos ou usados para treinar modelos. Escopos mais restritos n\u00e3o bastam: ler canal+v\u00eddeos exige readonly; publicar/editar/excluir exige escrita; e o relat\u00f3rio de receita exige o escopo monet\u00e1rio.\nEOF\necho \"=== CARACTERES: $(wc -m < /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/scratchpad/justificativa.txt) (limite 1000) ===\"",
+  "description": "Write justification + count chars"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CARACTERES: 1078 (limite 1000) ===
+> ```
+
+## 🤖 Claude *(17:50:26)*
+
+1078 — preciso cortar ~80. Enxugo (removo nomes de API e redundâncias) e reconto:
+
+## 🤖 Claude *(17:50:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/scratchpad/justificativa.txt <<'EOF'\nO MCORCH \u00e9 um painel onde cada criador conecta a PR\u00d3PRIA conta do YouTube via OAuth para gerenciar seu conte\u00fado num s\u00f3 lugar. Uso de cada escopo, sempre sobre dados do pr\u00f3prio usu\u00e1rio autenticado:\n\u2022 youtube.readonly: exibir no app o canal e a lista de v\u00eddeos com suas estat\u00edsticas.\n\u2022 youtube: publicar no canal do usu\u00e1rio os v\u00eddeos que ele cria na plataforma (videos.insert).\n\u2022 youtube.force-ssl: o usu\u00e1rio edita t\u00edtulo/descri\u00e7\u00e3o/tags e exclui permanentemente os pr\u00f3prios v\u00eddeos, direto do painel (videos.update/delete).\n\u2022 yt-analytics-monetary.readonly: mostrar relat\u00f3rios de desempenho do pr\u00f3prio conte\u00fado \u2014 monet\u00e1rios (receita estimada) e n\u00e3o monet\u00e1rios (visualiza\u00e7\u00f5es, tempo de exibi\u00e7\u00e3o, reten\u00e7\u00e3o).\nTodos os dados pertencem ao usu\u00e1rio logado, s\u00e3o exibidos s\u00f3 para ele e nunca compartilhados, vendidos ou usados para treinar modelos. Escopos mais restritos n\u00e3o bastam: ler canal+v\u00eddeos exige readonly; publicar/editar/excluir exige escrita; o relat\u00f3rio de receita exige o escopo monet\u00e1rio.\nEOF\necho \"=== CARACTERES: $(wc -m < /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/80146c8f-28c7-48a1-94ee-7a28fde4432d/scratchpad/justificativa.txt) (limite 1000) ===\"",
+  "description": "Trim justification + recount"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === CARACTERES: 993 (limite 1000) ===
+> ```
+
+## 🤖 Claude *(17:50:36)*
+
+
+## 🤖 Claude *(17:50:57)*
+
+Pronto — **993 caracteres**, cabe no formulário. Tudo implementado, deployado e revisado. Segue o que você precisa.
+
+## ✅ O que eu construí (para os escopos serem demonstráveis no vídeo)
+
+O Google não aprova escopo "para o futuro" — o vídeo tem que **mostrar cada um funcionando**. Então implementei a Fatia 2 do YouTube Studio (commit `7933333`, BoK Amendment 12, `/security-review` NO FINDINGS):
+
+| Escopo | Agora demonstrável via |
+|---|---|
+| `youtube.readonly` | painel `/dashboard/youtube` (canal + vídeos + stats) — já existia |
+| `youtube` | publicar vídeo (upload) — já existia |
+| `youtube.force-ssl` | **novo:** botões **Editar** (título/descrição) e **Excluir permanentemente** por vídeo, no painel |
+| `yt-analytics-monetary.readonly` | **novo:** card de **Receita** (receita estimada, CPM, reproduções monetizadas) |
+
+Também adicionei `yt-analytics-monetary.readonly` ao pedido OAuth — agora a tela de consentimento lista **exatamente os 4 escopos** do formulário.
+
+⚠️ **Antes de gravar, você precisa reconectar o YouTube** (Redes Sociais → YouTube → Reconectar) para o token pegar os 4 escopos novos, **e habilitar a "YouTube Analytics API"** no projeto Google (senão receita/métricas dão erro).
+
+## 📋 Justificativa (cole no campo — 993/1000)
+
+```
+O MCORCH é um painel onde cada criador conecta a PRÓPRIA conta do YouTube via OAuth para gerenciar seu conteúdo num só lugar. Uso de cada escopo, sempre sobre dados do próprio usuário autenticado:
+• youtube.readonly: exibir no app o canal e a lista de vídeos com suas estatísticas.
+• youtube: publicar no canal do usuário os vídeos que ele cria na plataforma (videos.insert).
+• youtube.force-ssl: o usuário edita título/descrição/tags e exclui permanentemente os próprios vídeos, direto do painel (videos.update/delete).
+• yt-analytics-monetary.readonly: mostrar relatórios de desempenho do próprio conteúdo — monetários (receita estimada) e não monetários (visualizações, tempo de exibição, retenção).
+Todos os dados pertencem ao usuário logado, são exibidos só para ele e nunca compartilhados, vendidos ou usados para treinar modelos. Escopos mais restritos não bastam: ler canal+vídeos exige readonly; publicar/editar/excluir exige escrita; o relatório de receita exige o escopo monetário.
+```
+
+## 🎥 Como gravar o vídeo (link do YouTube, não listado ou público)
+
+Grave a tela, narre/legende, e **cubra todos os clientes OAuth do projeto**. Roteiro (~3 min):
+
+1. **Abertura (10s):** mostre a URL real (`login.mcorch.com`) e diga em uma frase o que o app faz.
+2. **Consentimento OAuth (30s) — o mais crítico:** no app, "Conectar YouTube". Filme a **tela de consentimento do Google inteira**, com os **4 escopos** aparecendo, e conceda. (Se houver mais de um cliente OAuth, mostre cada um.)
+3. **`youtube.readonly` (30s):** abra `/dashboard/youtube` com o canal populado — inscritos, views, lista de vídeos.
+4. **`yt-analytics-monetary.readonly` (30s):** mostre o **card de Receita** + as métricas de desempenho (deixe claro que são relatórios do próprio canal).
+5. **`youtube` (30s):** publique um vídeo pelo app e mostre-o aparecendo no canal.
+6. **`youtube.force-ssl` (40s):** clique **Editar** num vídeo, mude o título, salve, e mostre o título atualizado no YouTube; depois clique **Excluir** (use um **upload de teste descartável** — é permanente) e mostre que sumiu do canal.
+7. **Fecho (10s):** reafirme que os dados são do próprio usuário e não são compartilhados/vendidos (espelha sua `/privacy`).
+
+**Não reprove por bobagem:** dado real (nada de mockup); a tela de consentimento no vídeo tem que listar os **mesmos 4 escopos** do formulário; domínio verificado no OAuth consent screen; conta de teste real logada.
+
+---
+
+Uma observação honesta (Lei 1): a UI nova tem prova de build (as strings "Excluir permanentemente", "Receita estimada", "Salvar no YouTube" estão no bundle servido) mas **não fiz o teste ocular logado** — isso acontece naturalmente quando você reconectar e gravar. Se quiser, quando reconectar eu faço uma verificação em browser real antes da gravação. Quer que eu prepare também o card do painel para mostrar as métricas não-monetárias mesmo antes de habilitar a Analytics API, ou seguimos assim?
+
+## 👤 User *(18:52:39)*
+
+ótimo enviei o video para aprovação acho que ficou completo perdi um pouco de tempo ficou meio grande, mas consegui fazer tudo desde login com google, conectando youtube, publicando, editando e excluindo videos. 
+
+Agora estou com um problema no Brading no google cloud. Problemas encontrados na tentativa de verificação anterior:
+
+* Sua página inicial está protegida por uma página de login.
+Atualize sua página inicial para permitir que os usuários vejam informações sobre o app sem precisar fazer login.[Saiba mais](https://support.google.com/cloud/answer/13807376?hl=pt_BR)
+* O nome do app "MCORCH" configurado para a tela de consentimento do OAuth não corresponde ao nome do app na sua página inicial.
+Configure seu app com um nome de aplicativo preciso e atualizado.[Saiba mais](https://support.google.com/cloud/answer/13804963?hl=pt_BR)
+
+## 🤖 Claude *(18:53:05)*
+
+
+## 🤖 Claude *(18:53:06)*
+
+Você conseguiu o vídeo completo — ótimo. Agora os dois problemas de branding são de configuração da home pública. Deixa eu ver o que o `/` realmente serve hoje (se redireciona pro login) e onde está o nome do app.
+
+## 🤖 Claude *(18:53:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== rotas raiz / landing / auth em App.tsx ===\"; grep -nE 'path=\"/\"|path=\"/auth\"|path=\"/lp\"|Navigate|Landing|index|element=' src/App.tsx | head -40",
+  "description": "Root routing in App.tsx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas raiz / landing / auth em App.tsx ===
+> 2:import { BrowserRouter, Route, Routes, Navigate, useParams } from "react-router-dom";
+> 14:const Landing = lazy(() => import("./pages/Landing.tsx"));
+> 15:const LandingV2 = lazy(() => import("./pages/LandingV2.tsx"));
+> 65:  return <Navigate to={`/dashboard/spaces/${id}`} replace />;
+> 81:  if (!user) return <Navigate to="/auth" replace />;
+> 92:    return <Navigate to="/dashboard" replace />;
+> 106:              <Route path="/" element={<LandingV2 />} />
+> 107:              <Route path="/legacy" element={<Landing />} />
+> 110:                element={
+> 116:                <Route index element={<DashboardHome />} />
+> 117:                <Route path="constellation" element={<ConstellationPage />} />
+> 118:                <Route path="constellation/memory" element={<MemoryPage />} />
+> 119:                <Route path="constellation/matrix" element={<MatrixPage />} />
+> 120:                <Route path="marketing" element={<MarketingPage />} />
+> 121:                <Route path="autopilot" element={<AutopilotPage />} />
+> 122:                <Route path="video" element={<VideoStudioPage />} />
+> 123:                <Route path="campaigns" element={<CampaignsPage />} />
+> 124:                <Route path="campaigns/new" element={<CampaignWizard />} />
+> 125:                <Route path="campaigns/:id" element={<CampaignDetail />} />
+> 126:                <Route path="content" element={<ContentLibraryPage />} />
+> 127:                <Route path="content/video-editor" element={<Navigate to="/dashboard/content" replace />} />
+> 128:                <Route path="content/video-editor/:id" element={<VideoEditorPage />} />
+> 129:                <Route path="calendar" element={<CalendarPage />} />
+> 130:                <Route path="social" element={<SocialAccountsPage />} />
+> 131:                <Route path="youtube" element={<YouTubeStudioPage />} />
+> 132:                <Route path="repurpose" element={<VideoRepurposePage />} />
+> 133:                <Route path="analytics" element={<AnalyticsPage />} />
+> 134:                <Route path="blog" element={<BlogEditorPage />} />
+> 135:                <Route path="admin" element={<AdminPage />} />
+> 136:                <Route path="orchestration" element={<OrchestrationPage />} />
+> 137:                <Route path="affiliates" element={<AffiliatesPage />} />
+> 138:                <Route path="affiliate-products" element={<AffiliateProductsPage />} />
+> 139:                <Route path="arena" element={<ModelArenaPage />} />
+> 140:                <Route path="core" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 141:                <Route path="core-v2" element={<Navigate to="/dashboard/core-fable" replace />} />
+> 142:                <Route path="core-fable" element={<CoreFablePage />} />
+> 143:                <Route path="universe" element={<UnifiedCanvasPage />} />
+> 144:                <Route path="settings" element={<SettingsPage />} />
+> 145:                <Route path="settings/higgsfield/callback" element={<HiggsfieldCallbackPage />} />
+> 146:                <Route path="billing" element={<BillingPage />} />
+> ```
+
+## 🤖 Claude *(18:53:23)*
+
+
+## 🤖 Claude *(18:53:26)*
+
+`/` renderiza `LandingV2` (fora do guard de auth). Mas o Google diz que a home está atrás de login — preciso ver o que **a produção realmente devolve** em `login.mcorch.com/` (pode ser redirect, Cloudflare Access, ou o wrapper). E qual nome de marca a LandingV2 mostra. Verifico materialmente:
+
+## 🤖 Claude *(18:53:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== o que a produ\u00e7\u00e3o devolve no / (sem login) ===\"\ncurl -s -I -L --max-redirs 5 https://login.mcorch.com/ 2>&1 | grep -iE \"^HTTP|^location|^cf-|server:\" | head -20\necho \"\"\necho \"=== wrapper da rota / (guard?) ===\"; sed -n 86,112p src/App.tsx",
+  "description": "Prod root response + route guard for /"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o que a produção devolve no / (sem login) ===
+> HTTP/2 200 
+> server: cloudflare
+> cf-cache-status: DYNAMIC
+> cf-ray: a1b2bb005eebd4ad-GRU
+> 
+> === wrapper da rota / (guard?) ===
+>   const { user, loading } = useAuth();
+>   if (loading) return <PageLoader />;
+>   if (user) {
+>     // SSO loop: an already-authenticated user who landed on /auth?return_to=<isolated app> bounces back.
+>     const rt = safeReturnTo();
+>     if (rt) { window.location.replace(rt); return <PageLoader />; }
+>     return <Navigate to="/dashboard" replace />;
+>   }
+>   return <>{children}</>;
+> }
+> 
+> const App = () => (
+>   <QueryClientProvider client={queryClient}>
+>     <HelmetProvider>
+>       <TooltipProvider>
+>         <Toaster />
+>         <Sonner />
+>         <BrowserRouter>
+>           <Suspense fallback={<PageLoader />}>
+>             <Routes>
+>               <Route path="/" element={<LandingV2 />} />
+>               <Route path="/legacy" element={<Landing />} />
+>               <Route
+>                 path="/dashboard"
+>                 element={
+>                   <ProtectedRoute>
+>                     <DashboardLayout />
+> ```
+
+## 🤖 Claude *(18:53:43)*
+
+
+## 🤖 Claude *(18:53:45)*
+
+Home retorna **200 público** (não redireciona) e `/` = `LandingV2` sem guard. Então o problema não é o `/` em si — é ou (a) a URL de "página inicial" configurada no consent screen aponta pra outro lugar (ex.: `/auth` ou `/dashboard`), ou (b) o conteúdo/nome da LandingV2. Vejo o que a LandingV2 mostra como nome de marca:
+
+## 🤖 Claude *(18:53:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== nome de marca exibido na LandingV2 ===\"; grep -nE \"MCORCH|Constellation|brand|<h1|logo|Entrar|Login|Sign|t\u00edtulo|title\" src/pages/LandingV2.tsx | head -30\necho \"\"\necho \"=== <title> e meta no index.html ===\"; grep -nE \"<title>|og:title|og:site_name|name=\\\"application-name\\\"|apple-mobile\" index.html 2>/dev/null | head",
+  "description": "Brand name in LandingV2 + index.html title"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nome de marca exibido na LandingV2 ===
+> 1:// MCORCH Landing — 100% faithful to the original Claude Design handoff.
+> 15:    name: 'MCORCH',
+> 16:    alternateName: 'Magic Constellation Orchestra',
+> 19:      'MCORCH ativa uma agência inteira operada por IA — um CEO, um PMO e um PMI dedicados à sua operação e integrados ao seu stack. Exclusivo e personalizado para cada operação.',
+> 25:        <title>MCORCH — A agência autônoma · CEO · PMO · PMI dedicados a você</title>
+> 30:        <meta property="og:title" content="MCORCH — A agência autônoma" />
+> 42:        title="MCORCH — A agência autônoma"
+> 
+> === <title> e meta no index.html ===
+> 6:    <title>MCORCH — A agência autônoma</title>
+> 27:    <meta property="og:title" content="MCORCH — A agência autônoma">
+> ```
+
+## 🤖 Claude *(18:54:14)*
+
+
+## 🤖 Claude *(18:54:16)*
+
+LandingV2 tem "MCORCH" no título/JSON-LD — mas vejo um `title=` de **iframe** (linha 42). Se a home renderiza via iframe, o reviewer do Google (e o verificador automático) não lê o conteúdo/nome dentro dele → daí os dois erros. Leio a estrutura da LandingV2:
+
+## 🤖 Claude *(18:54:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/LandingV2.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// MCORCH Landing — 100% faithful to the original Claude Design handoff.
+> 2	// The real landing (WebGL Three.js hero, GSAP/ScrollTrigger reveals, Lenis smooth
+> 3	// scroll, custom cursor, magnetic CTAs) lives self-contained under public/landing/
+> 4	// (built verbatim from design_handoff_mcorch/site-root). Only the copy was edited
+> 5	// to be honest — no fabricated metrics, scarcity or shelf prices. It is served in a
+> 6	// full-viewport iframe so its own CDN runtime (React UMD + Babel + Three + GSAP)
+> 7	// stays isolated from the app bundle. Helmet keeps crawlable meta on the parent.
+> 8	// A prior React reconstruction is preserved in git as v2.1 (commit 415b901).
+> 9	import { Helmet } from 'react-helmet-async';
+> 10	
+> 11	export default function LandingV2() {
+> 12	  const jsonLd = {
+> 13	    '@context': 'https://schema.org',
+> 14	    '@type': 'Organization',
+> 15	    name: 'MCORCH',
+> 16	    alternateName: 'Magic Constellation Orchestra',
+> 17	    url: 'https://login.mcorch.com',
+> 18	    description:
+> 19	      'MCORCH ativa uma agência inteira operada por IA — um CEO, um PMO e um PMI dedicados à sua operação e integrados ao seu stack. Exclusivo e personalizado para cada operação.',
+> 20	  };
+> 21	
+> 22	  return (
+> 23	    <>
+> 24	      <Helmet>
+> 25	        <title>MCORCH — A agência autônoma · CEO · PMO · PMI dedicados a você</title>
+> 26	        <meta
+> 27	          name="description"
+> 28	          content="Um CEO, um PMO e um PMI orquestrados por IA, dedicados à sua operação e integrados às ferramentas que você já usa. Exclusivo e personalizado para cada operação."
+> 29	        />
+> 30	        <meta property="og:title" content="MCORCH — A agência autônoma" />
+> 31	        <meta
+> 32	          property="og:description"
+> 33	          content="Um CEO, um PMO e um PMI orquestrados por IA — dedicados à sua operação, integrados ao seu stack."
+> 34	        />
+> 35	        <meta property="og:type" content="website" />
+> 36	        <link rel="canonical" href="https://login.mcorch.com" />
+> 37	        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+> 38	      </Helmet>
+> 39	
+> 40	      <iframe
+> 41	        src="/landing/index.html"
+> 42	        title="MCORCH — A agência autônoma"
+> 43	        style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', border: 0, display: 'block' }}
+> 44	      />
+> 45	    </>
+> 46	  );
+> 47	}
+> 48	
+> ```
+
+## 🤖 Claude *(18:54:53)*
+
+
+## 🤖 Claude *(18:54:55)*
+
+Home = iframe full-viewport carregando `/landing/index.html`; o pai só tem meta (Helmet), zero texto visível no DOM. O verificador do Google lê o DOM do pai → não acha o nome nem descrição como texto real, e se o iframe (runtime via CDN/Babel) não renderiza pra ele, parece "sem info / atrás de login". Confirmo o conteúdo do landing e se depende de CDN frágil:
+
+## 🤖 Claude *(18:54:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== /landing/index.html \u00e9 p\u00fablico? ===\"; curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" https://login.mcorch.com/landing/index.html\necho \"=== existe local? ===\"; ls -la public/landing/index.html dist/landing/index.html 2>/dev/null\necho \"=== depende de CDN/Babel? (fragilidade) ===\"; grep -icE \"unpkg|cdn|jsdelivr|babel|type=\\\"text/babel\\\"\" public/landing/index.html 2>/dev/null\necho \"=== mostra MCORCH + descri\u00e7\u00e3o + privacidade VIS\u00cdVEL? ===\"; grep -ioE \"MCORCH|privacidade|privacy|termos|ag\u00eancia|CEO|PMO\" public/landing/index.html 2>/dev/null | sort | uniq -c | head",
+  "description": "Landing publicness + CDN dependency + visible brand/privacy"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /landing/index.html é público? ===
+> HTTP 200
+> === existe local? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 14753 Jul 14 14:46 dist/landing/index.html
+> -rw-rw-r-- 1 gcrUX  gcrUX  14753 Jul  3 22:05 public/landing/index.html
+> === depende de CDN/Babel? (fragilidade) ===
+> 12
+> === mostra MCORCH + descrição + privacidade VISÍVEL? ===
+>       4 agência
+>       3 CEO
+>       4 MCORCH
+>       1 pMo
+>       3 PMO
+> ```
+
+## 🤖 Claude *(18:55:49)*
+
+
+## 🤖 Claude *(18:55:52)*
+
+Diagnóstico material claro: o landing depende de **12 refs CDN/Babel** (JSX transformado no browser) e **não tem link de privacidade/termos**; e o pai (`/`) só tem `<Helmet>` + iframe — **zero texto crawlável no DOM do pai**. O verificador do Google, ao renderizar, pode ver página em branco (Babel/CDN) e não acha o nome "MCORCH" nem info como texto real → os dois erros. Confirmo que `/privacy` e `/terms` são rotas públicas antes de corrigir:
+
+## 🤖 Claude *(18:55:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== rotas privacy/terms ===\"; grep -nE 'path=\"/(privacy|terms|privacidade|termos)\"|Privacy|Terms' src/App.tsx | head\necho \"=== s\u00e3o p\u00fablicas em prod? ===\"; for p in privacy terms; do echo -n \"/$p \u2192 \"; curl -s -o /dev/null -w \"%{http_code}\\n\" \"https://login.mcorch.com/$p\"; done",
+  "description": "Privacy/Terms routes + public reachability"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === rotas privacy/terms ===
+> 45:const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+> 46:const TermsOfService = lazy(() => import("./pages/TermsOfService.tsx"));
+> 169:              <Route path="/privacy" element={<PrivacyPolicy />} />
+> 170:              <Route path="/terms" element={<TermsOfService />} />
+> === são públicas em prod? ===
+> /privacy → 200
+> /terms → 200
+> ```
+
+## 🤖 Claude *(18:56:39)*
+
+
+## 🤖 Claude *(18:56:42)*
+
+`/privacy` e `/terms` são públicas (200). O plano é seguro: reestruturar a `LandingV2` para carregar **conteúdo real e crawlável no DOM do pai** — nome "MCORCH", descrição, e links Entrar/Privacidade/Termos — sem depender do iframe/Babel, mantendo o hero cinematográfico. Isso resolve os dois erros pelo lado do código.
+
+## 🤖 Claude *(18:56:59)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/LandingV2.tsx",
+  "content": "// MCORCH Landing \u2014 100% faithful to the original Claude Design handoff.\n// The real landing (WebGL Three.js hero, GSAP/ScrollTrigger reveals, Lenis smooth\n// scroll, custom cursor, magnetic CTAs) lives self-contained under public/landing/\n// (built verbatim from design_handoff_mcorch/site-root). It is served in an iframe so\n// its own CDN runtime (React UMD + Babel + Three + GSAP) stays isolated from the app bundle.\n//\n// Google OAuth verification (2026-07-14): the homepage must (1) be reachable WITHOUT login and\n// (2) show the app name \"MCORCH\" matching the consent screen. The iframe alone is not enough \u2014 an\n// automated verifier reads the PARENT DOM and may not render the CDN/Babel iframe. So the parent\n// now carries real, visible, login-free content: the MCORCH wordmark + a one-line description +\n// links to Entrar / Privacidade / Termos (all public routes). No cloaking \u2014 the text is visible.\nimport { Helmet } from 'react-helmet-async';\n\nexport default function LandingV2() {\n  const jsonLd = {\n    '@context': 'https://schema.org',\n    '@type': 'Organization',\n    name: 'MCORCH',\n    alternateName: 'Magic Constellation Orchestra',\n    url: 'https://login.mcorch.com',\n    description:\n      'MCORCH ativa uma ag\u00eancia inteira operada por IA \u2014 um CEO, um PMO e um PMI dedicados \u00e0 sua opera\u00e7\u00e3o e integrados ao seu stack. Exclusivo e personalizado para cada opera\u00e7\u00e3o.',\n  };\n\n  return (\n    <>\n      <Helmet>\n        <title>MCORCH \u2014 A ag\u00eancia aut\u00f4noma \u00b7 CEO \u00b7 PMO \u00b7 PMI dedicados a voc\u00ea</title>\n        <meta\n          name=\"description\"\n          content=\"Um CEO, um PMO e um PMI orquestrados por IA, dedicados \u00e0 sua opera\u00e7\u00e3o e integrados \u00e0s ferramentas que voc\u00ea j\u00e1 usa. Exclusivo e personalizado para cada opera\u00e7\u00e3o.\"\n        />\n        <meta property=\"og:title\" content=\"MCORCH \u2014 A ag\u00eancia aut\u00f4noma\" />\n        <meta\n          property=\"og:description\"\n          content=\"Um CEO, um PMO e um PMI orquestrados por IA \u2014 dedicados \u00e0 sua opera\u00e7\u00e3o, integrados ao seu stack.\"\n        />\n        <meta property=\"og:type\" content=\"website\" />\n        <link rel=\"canonical\" href=\"https://login.mcorch.com\" />\n        <script type=\"application/ld+json\">{JSON.stringify(jsonLd)}</script>\n      </Helmet>\n\n      <div\n        style={{\n          display: 'flex',\n          flexDirection: 'column',\n          height: '100vh',\n          width: '100vw',\n          background: '#05060a',\n        }}\n      >\n        {/* Semantic heading for crawlers/screen readers \u2014 real DOM, matches the visible wordmark + meta. */}\n        <h1\n          style={{\n            position: 'absolute',\n            width: 1,\n            height: 1,\n            padding: 0,\n            margin: -1,\n            overflow: 'hidden',\n            clip: 'rect(0 0 0 0)',\n            whiteSpace: 'nowrap',\n            border: 0,\n          }}\n        >\n          MCORCH \u2014 A ag\u00eancia aut\u00f4noma operada por IA\n        </h1>\n\n        <iframe\n          src=\"/landing/index.html\"\n          title=\"MCORCH \u2014 A ag\u00eancia aut\u00f4noma\"\n          style={{ flex: 1, width: '100%', border: 0, display: 'block' }}\n        />\n\n        {/* Login-free app identity + privacy/terms \u2014 the content Google's OAuth verification reads. */}\n        <footer\n          style={{\n            display: 'flex',\n            flexWrap: 'wrap',\n            alignItems: 'center',\n            justifyContent: 'space-between',\n            gap: '8px 20px',\n            padding: '10px 20px',\n            background: 'rgba(5, 6, 10, 0.92)',\n            borderTop: '1px solid rgba(34, 211, 238, 0.18)',\n            color: '#c7d2de',\n            font: '13px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif',\n          }}\n        >\n          <span style={{ minWidth: 0 }}>\n            <strong style={{ color: '#22d3ee', letterSpacing: '0.04em' }}>MCORCH</strong>\n            {' \u2014 A ag\u00eancia aut\u00f4noma operada por IA: um CEO, um PMO e um PMI dedicados \u00e0 sua opera\u00e7\u00e3o.'}\n          </span>\n          <nav style={{ display: 'flex', gap: 18, whiteSpace: 'nowrap' }}>\n            <a href=\"/auth\" style={{ color: '#e2e8f0', textDecoration: 'none' }}>Entrar</a>\n            <a href=\"/privacy\" style={{ color: '#94a3b8', textDecoration: 'none' }}>Privacidade</a>\n            <a href=\"/terms\" style={{ color: '#94a3b8', textDecoration: 'none' }}>Termos</a>\n          </nav>\n        </footer>\n      </div>\n    </>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/LandingV2.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:57:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc --noEmit 2>&1 | tail -3; echo \"TSC=${PIPESTATUS[0]}\"\nnpx eslint src/pages/LandingV2.tsx 2>&1 | tail -2; echo \"ESLINT=${PIPESTATUS[0]}\"\nbun run build 2>&1 | tail -3",
+  "description": "tsc + lint + build after LandingV2 fix",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC=0
+> ESLINT=0
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 24.32s
+> ```
+
+## 🤖 Claude *(18:57:38)*
+
+Deployado (build no dist/ do repo principal). Prova ocular em produção **sem login** (Lei 1) — carrego a home num contexto limpo e confirmo "MCORCH" + links visíveis:
+
+## 🤖 Claude *(18:57:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== strings no bundle servido (prova de build) ===\"\ngrep -rho \"A ag\u00eancia aut\u00f4noma operada por IA: um CEO\" dist/assets/*.js 2>/dev/null | head -1 && echo \"footer text baked \u2705\"\necho \"=== hash do chunk da landing ===\"; ls -la dist/assets/LandingV2-*.js 2>/dev/null | tail -1",
+  "description": "Confirm footer text in built bundle"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === strings no bundle servido (prova de build) ===
+> A agência autônoma operada por IA: um CEO
+> footer text baked ✅
+> === hash do chunk da landing ===
+> -rw-rw-r-- 1 ubuntu ubuntu 2599 Jul 14 15:57 dist/assets/LandingV2-DtYzvFbi.js
+> ```
+
+## 🤖 Claude *(18:57:50)*
+
+
+## 🤖 Claude *(18:57:51)*
+
+Build tem o texto. Verificação ocular em navegador real (sem sessão) — carrego a URL de produção e leio o DOM renderizado do pai:
+
+## 🤖 Claude *(18:57:52)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:mcp__playwright__browser_navigate,mcp__playwright__browser_evaluate,mcp__playwright__browser_console_messages,mcp__playwright__browser_close",
+  "max_results": 5
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_navigate'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_evaluate'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_console_messages'}, {'type': 'tool_reference', 'tool_name': 'mcp__playwright__browser_close'}]
+> ```
+
+## 🤖 Claude *(18:58:03)*
+
+
+🛠️ **Tool Call**: `mcp__playwright__browser_navigate`
+```json
+{
+  "url": "https://login.mcorch.com/"
+}
+```
+
+> **Tool Result (mcp__playwright__browser_navigate)** - ❌ Error
+>
+> ```
+> ### Error
+> Error: async initializeServer: Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome
+> Run "npx playwright install chrome"
+> ```
+
+## 🤖 Claude *(18:58:32)*
+
+
+## 🤖 Claude *(18:58:33)*
+
+Playwright sem Chrome neste ambiente. Faço a prova material pelo que a **produção realmente serve** (nginx serve o dist/ direto) — busco o chunk da LandingV2 na URL pública e confirmo o conteúdo:
+
+## 🤖 Claude *(18:58:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== o chunk novo da LandingV2 est\u00e1 SERVIDO em produ\u00e7\u00e3o? ===\"\ncurl -s \"https://login.mcorch.com/assets/LandingV2-DtYzvFbi.js\" | grep -oE \"A ag\u00eancia aut\u00f4noma operada por IA: um CEO|/privacy|/terms|Privacidade|Termos|Entrar\" | sort -u\necho \"=== HTTP do chunk ===\"; curl -s -o /dev/null -w \"%{http_code}\\n\" \"https://login.mcorch.com/assets/LandingV2-DtYzvFbi.js\"\necho \"=== / continua p\u00fablico (sem redirect p/ login)? ===\"; curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -L --max-redirs 3 \"https://login.mcorch.com/\"",
+  "description": "Confirm prod serves the new landing chunk with footer/links"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o chunk novo da LandingV2 está SERVIDO em produção? ===
+> A agência autônoma operada por IA: um CEO
+> Entrar
+> Privacidade
+> /privacy
+> Termos
+> /terms
+> === HTTP do chunk ===
+> 200
+> === / continua público (sem redirect p/ login)? ===
+> HTTP 200
+> ```
+
+## 🤖 Claude *(18:58:50)*
+
+
+## 🤖 Claude *(18:58:52)*
+
+Prova material completa: produção serve o chunk novo (HTTP 200) com o texto visível **"MCORCH — A agência autônoma…"** + links **Entrar / Privacidade / Termos** (→ `/privacy`, `/terms`), e `/` segue **público (200, sem redirect)**. Commito:
+
+## 🤖 Claude *(18:58:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/pages/LandingV2.tsx && git commit -m \"fix(landing): home crawl\u00e1vel login-free p/ verifica\u00e7\u00e3o OAuth Google (branding)\n\nGoogle reprovou o branding: (1) home 'atr\u00e1s de login', (2) nome do app n\u00e3o\nbate com a home. Causa no lado do c\u00f3digo: a LandingV2 era s\u00f3 <Helmet> + iframe\nfull-viewport (runtime CDN/Babel) \u2014 o verificador do Google l\u00ea o DOM do PAI e\nvia p\u00e1gina sem texto/nome (ou iframe em branco). Fix: o pai agora carrega\nconte\u00fado REAL e vis\u00edvel, sem login e sem depender do iframe \u2014 wordmark\n'MCORCH' + descri\u00e7\u00e3o de 1 linha (CEO/PMO/PMI) + links Entrar/Privacidade/Termos\n(rotas p\u00fablicas 200) num footer, + <h1> sem\u00e2ntico sr-only. Hero cinematogr\u00e1fico\npreservado (iframe agora flex:1). tsc 0 \u00b7 eslint 0 \u00b7 build servido: chunk\nLandingV2 novo em prod com o texto+links (curl 200); / p\u00fablico (200).\" 2>&1 | tail -2",
+  "description": "Commit landing branding fix"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [main af8163f] fix(landing): home crawlável login-free p/ verificação OAuth Google (branding)
+>  1 file changed, 66 insertions(+), 10 deletions(-)
+> ```
+
+## 🤖 Claude *(18:59:20)*
+
+Feito. Corrigi o lado do código, mas **os dois erros do Google vêm principalmente de dois campos que só você edita no Cloud Console** — o código só ajudava a expor o problema.
+
+## O que eu corrigi (já no ar)
+
+A sua home (`login.mcorch.com/`) era só `<Helmet>` (meta) + um **iframe** full-viewport que carrega o landing via CDN/Babel. O verificador do Google lê o **DOM da página-pai** — e via uma página **sem texto e sem nome visível** (ou o iframe em branco, porque o Babel-no-browser pode não renderizar pro robô dele). Isso explica os dois erros: "sem info / atrás de login" e "nome não corresponde".
+
+Agora a página-pai carrega **conteúdo real, visível e sem login**, independente do iframe:
+- wordmark **MCORCH** + descrição de uma linha (CEO/PMO/PMI),
+- links **Entrar · Privacidade · Termos** (rotas públicas, HTTP 200),
+- `<h1>` semântico para leitores/crawlers, hero cinematográfico preservado.
+
+**Prova material:** produção já serve o chunk novo (curl 200) com o texto e os links; `/` continua público (200, sem redirect). Commit `af8163f`.
+
+## O que VOCÊ precisa fazer no Google Cloud Console (a causa real dos 2 erros)
+
+No **OAuth consent screen → Branding**:
+
+1. **Página inicial do app** → defina exatamente `https://login.mcorch.com/`
+   Se estava apontando para outra URL (ex.: `/dashboard` ou `/auth`), *era isso* que dava "protegida por login" — o reviewer caía na tela de login. Agora essa URL mostra a home pública com o nome e a info.
+2. **Nome do app** → deixe exatamente **`MCORCH`** (sem sufixo), para casar com o wordmark "MCORCH" que agora aparece visível na home. Se estiver "MCORCH — A agência autônoma" ou outro, alinhe: ou o nome do app = "MCORCH" (recomendado), ou o mesmo texto que a home exibe.
+3. Confirme também que **Política de privacidade** = `https://login.mcorch.com/privacy` e **Termos** = `https://login.mcorch.com/terms` (ambas públicas, 200) — o branding costuma exigir esses links.
+4. **Salvar** e **reenviar para verificação**.
+
+Um detalhe: o subdomínio se chama literalmente `login.` — não é bloqueador desde que a URL resolva na home pública (resolve). Se quiser reduzir atrito futuro, dá para configurar a home em `mcorch.com`/`www.mcorch.com`, mas **não é necessário agora**.
+
+## Ressalva honesta (Lei 1)
+
+Confirmei o deploy **materialmente** (o chunk servido em produção contém o footer + os links, e `/` responde 200 público). O que **não** consegui foi a prova ocular do DOM renderizado num navegador real — o Playwright aqui está sem Chrome e o agent-browser a partir deste datacenter costuma bater no Cloudflare. Recomendo você dar um **Ctrl+Shift+R** em `login.mcorch.com` e confirmar que vê o rodapé "MCORCH — A agência autônoma… Entrar · Privacidade · Termos" antes de reenviar. Se preferir, eu tento o agent-browser para te mandar um print — quer que eu tente?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
