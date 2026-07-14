@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2289
-> * **Sessões do Claude**: 2242
+> * **Total de Sessões Registradas**: 2290
+> * **Sessões do Claude**: 2243
 > * **Sessões do Gemini**: 47
 
 ---
@@ -84,7 +84,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-14 - agent-af14e77c4a4f6df87]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-af0af1e06f2546027]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-aecfd266107964d84]]` - *2026-07-14*
-*   *... e mais 2234 sessões nessa categoria.*
+*   *... e mais 2235 sessões nessa categoria.*
 
 ---
 
@@ -1897,6 +1897,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-14 - agent-a00bc104f8a34da7b]]` (ClaudeSessions)
 *   `[[2026-07-14 - Montar loop para próximos passos]]` (ClaudeSessions)
 *   `[[2026-07-14 - Fix alerts and optimize viral video clips]]` (ClaudeSessions)
+*   `[[2026-07-14 - Criar loop de vídeos com avatar no Vertex AI]]` (ClaudeSessions)
 *   `[[2026-07-14 - Autorizar cadência de conteúdo e refatorar UI assets]]` (ClaudeSessions)
 *   `[[2026-07-13 - fca7f00a-1b8c-4cf0-8a86-eea82481bf47]]` (ClaudeSessions)
 *   `[[2026-07-13 - agent-ac74bcce18c115070]]` (ClaudeSessions)

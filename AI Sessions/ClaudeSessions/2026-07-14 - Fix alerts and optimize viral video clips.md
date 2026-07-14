@@ -13840,6 +13840,6 @@ Sessão-maratona selada com integridade, Maestro. O motor Viral Quality está co
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-14 - Autorizar cadência de conteúdo e refatorar UI assets]]
+> * **Sessão Anterior**: [[2026-07-14 - Criar loop de vídeos com avatar no Vertex AI]]
 > * **Próxima Sessão**: [[2026-07-14 - Montar loop para próximos passos]]
 %% --- TIMELINE END --- %%

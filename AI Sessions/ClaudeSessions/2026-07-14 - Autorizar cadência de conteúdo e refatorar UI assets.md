@@ -6830,5 +6830,5 @@ HANDOFF.md atualizado. **Fase 5b — secret scan no HANDOFF.md** antes de commit
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-13 - fca7f00a-1b8c-4cf0-8a86-eea82481bf47]]
-> * **Próxima Sessão**: [[2026-07-14 - Fix alerts and optimize viral video clips]]
+> * **Próxima Sessão**: [[2026-07-14 - Criar loop de vídeos com avatar no Vertex AI]]
 %% --- TIMELINE END --- %%
