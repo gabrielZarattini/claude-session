@@ -36,6 +36,15 @@ Se um futuro requisito pedir que "o preview seja pixel-exato ao publicado", isso
 formato (OTD-SPACES-043) — é money-path (compute), exige BoK/gate de custo e NÃO pode ser embutido no preview
 display-only sob pena de virar cobrança-sem-declaração. Preview permanece aproximação até esse OTD ser resolvido.
 
+## Apêndice (2026-07-14) — Carrossel IG agendado (OTD-SPACES-044 → Amendment 22)
+
+O transporte agendado do carrossel vive em `docs/bok/spaces-evolution/22-amendment-scheduled-carousel.md`
+(FR-SPACES-079/080 + gates G1-G6). Resumo operacional: `publish-space-carousel {render_id, caption, schedule:true, publish_at?}`
+enfileira `scheduled_posts` com o marcador `metadata.reshape.carousel_render_id`; o cron `auto-publish` resolve os
+slides OWNER-SCOPED de `creative_assets` no momento do publish (assinatura fresca 6h por tentativa) e entrega
+`content.images[]` ao ramo CAROUSEL do `publish-social`. FMEA-011 preservado: o marcador nunca é uma ref de asset.
+Smoke: `scripts/qa/smoke-scheduled-carousel.ts`. UI de agendamento + flip do catálogo = fatia seguinte.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

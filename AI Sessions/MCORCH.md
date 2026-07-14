@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 82
-> * **Total de Sessões**: 2136
+> * **Total de Sessões**: 2143
 
 ---
 
@@ -105,14 +105,21 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-14 - agent-af1f379857f9088a2]]` (ClaudeSessions) - *2026-07-14*
+*   `[[2026-07-14 - agent-ac7ffe7fc4edbd0f5]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-ac471142e96a3b2df]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-ab91db126cc7266f6]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-ab06741d5bc28e55d]]` (ClaudeSessions) - *2026-07-14*
+*   `[[2026-07-14 - agent-a9bbe88a5dded31da]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-a90a22787dc50c7a8]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-a8ceedf9e7b984e62]]` (ClaudeSessions) - *2026-07-14*
+*   `[[2026-07-14 - agent-a716345fbccbc156b]]` (ClaudeSessions) - *2026-07-14*
+*   `[[2026-07-14 - agent-a6d6f4600a2d120ad]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-a4a226b3757511ff7]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-a37008b3137da02ce]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - agent-a1611d83feed849e4]]` (ClaudeSessions) - *2026-07-14*
+*   `[[2026-07-14 - agent-a1294fa152f365bae]]` (ClaudeSessions) - *2026-07-14*
+*   `[[2026-07-14 - Montar loop para próximos passos]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - Fix alerts and optimize viral video clips]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-14 - Autorizar cadência de conteúdo e refatorar UI assets]]` (ClaudeSessions) - *2026-07-14*
 *   `[[2026-07-13 - fca7f00a-1b8c-4cf0-8a86-eea82481bf47]]` (ClaudeSessions) - *2026-07-13*

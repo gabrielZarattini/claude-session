@@ -1,4 +1,4 @@
-# Montar loop para próximos passos
+# [[2026-07-14 - Montar loop para próximos passos|Montar loop para próximos passos]]
 **Date:** 2026-07-08 | **Session ID:** `0040fea6-03c6-4785-867c-7c9249855765`
 
 ---
