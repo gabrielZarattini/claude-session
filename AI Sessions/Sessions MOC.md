@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2326
-> * **Sessões do Claude**: 2279
+> * **Total de Sessões Registradas**: 2331
+> * **Sessões do Claude**: 2284
 > * **Sessões do Gemini**: 47
 
 ---
@@ -72,19 +72,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-15 - agent-ae8af20053f7e46f4]]` - *2026-07-15*
+*   `[[2026-07-15 - agent-a8fb40539220d85dd]]` - *2026-07-15*
+*   `[[2026-07-15 - agent-a89d372c220165e45]]` - *2026-07-15*
+*   `[[2026-07-15 - agent-a5eccc941632fb6e1]]` - *2026-07-15*
 *   `[[2026-07-15 - agent-a5a39e7a71b463a84]]` - *2026-07-15*
+*   `[[2026-07-15 - Resolver sessão não compactando e handoff]]` - *2026-07-15*
 *   `[[2026-07-15 - Criar loop de vídeos com avatar no Vertex AI]]` - *2026-07-15*
 *   `[[2026-07-14 - agent-afd439284c3859e67]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-afc2c52e5b89aae06]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-afc27ac3bc789c519]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-afb5185ba863a740e]]` - *2026-07-14*
 *   `[[2026-07-14 - agent-af7b40d7f7dd5d67b]]` - *2026-07-14*
-*   `[[2026-07-14 - agent-af6d0258e0b123458]]` - *2026-07-14*
-*   `[[2026-07-14 - agent-af623f277b26352e5]]` - *2026-07-14*
-*   `[[2026-07-14 - agent-af60ee17548d9c231]]` - *2026-07-14*
-*   `[[2026-07-14 - agent-af53c244a9a20bb55]]` - *2026-07-14*
-*   `[[2026-07-14 - agent-af33f8b3ff3af5880]]` - *2026-07-14*
-*   *... e mais 2271 sessões nessa categoria.*
+*   *... e mais 2276 sessões nessa categoria.*
 
 ---
 
@@ -1740,7 +1740,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-15 - agent-ae8af20053f7e46f4]]` (ClaudeSessions)
+*   `[[2026-07-15 - agent-a8fb40539220d85dd]]` (ClaudeSessions)
+*   `[[2026-07-15 - agent-a89d372c220165e45]]` (ClaudeSessions)
+*   `[[2026-07-15 - agent-a5eccc941632fb6e1]]` (ClaudeSessions)
 *   `[[2026-07-15 - agent-a5a39e7a71b463a84]]` (ClaudeSessions)
+*   `[[2026-07-15 - Resolver sessão não compactando e handoff]]` (ClaudeSessions)
 *   `[[2026-07-15 - Criar loop de vídeos com avatar no Vertex AI]]` (ClaudeSessions)
 *   `[[2026-07-14 - agent-afd439284c3859e67]]` (ClaudeSessions)
 *   `[[2026-07-14 - agent-afc2c52e5b89aae06]]` (ClaudeSessions)
