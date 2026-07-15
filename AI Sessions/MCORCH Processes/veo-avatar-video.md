@@ -70,6 +70,10 @@ registrado, saldo debitado **exatamente** pelo valor da âncora — e o rosto do
    legada — a feature nasce morta em 422. O gate vive em `needsLedgerRun()` (`useCanvasStudio.ts`).
 3. **Bucket privado ⇒ `StorageImg`/`StorageVideo`, nunca `<img src>` cru.** Foi pego por prova ocular, não por teste.
 4. **Pool de chaves sem failover é pool de mentira.** Se o topo esgota, tudo cai. 429 é grátis → tente a próxima.
+5. **Probe de role no caminho SA NÃO é o poison-pill.** Testemunhado 2026-07-15: `durationSeconds=999` num
+   `predictLongRunning` via service account retorna `200`+LRO (não o `403` do gate de *API key* do caminho
+   Gemini) → enfileira uma operação real (custo). Para provar a role sem gastar, usar **IAM
+   `testIamPermissions`** (read-only) ou o próprio `canvas-execute` 403→refund. Nunca um submit poison-pill no SA.
 
 ---
 
