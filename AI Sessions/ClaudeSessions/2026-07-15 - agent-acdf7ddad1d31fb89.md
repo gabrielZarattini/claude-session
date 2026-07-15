@@ -2843,5 +2843,5 @@ Plus: suite is still v0.1 **draft** (Step 2 "revisão Sovereign pendente"); `/se
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-15 - agent-ac65645a66f3d1991]]
-> * **Próxima Sessão**: [[2026-07-15 - agent-ad771ae3ac0da8ca7]]
+> * **Próxima Sessão**: [[2026-07-15 - agent-ad07e409734249e33]]
 %% --- TIMELINE END --- %%
