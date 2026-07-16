@@ -10550,5 +10550,5 @@ Sessão selada. O loop está pausado — para religar depois de destravar um gat
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-15 - agent-afe1dce9cf24f5fc2]]
-> * **Próxima Sessão**: [[2026-07-16 - Roadmap de automação de conteúdo com IA e Claude Code]]
+> * **Próxima Sessão**: [[2026-07-16 - Configure Pinterest API credentials and global auth keys]]
 %% --- TIMELINE END --- %%

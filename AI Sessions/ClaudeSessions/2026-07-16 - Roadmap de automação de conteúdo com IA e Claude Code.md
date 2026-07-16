@@ -8280,6 +8280,6 @@ Aí sim ataco o asset-bundler com a Fonte da Verdade selada — do jeito certo (
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-16 - Configurar loop e blueprint do video-repurposeyoutube-studio]]
+> * **Sessão Anterior**: [[2026-07-16 - Configure Pinterest API credentials and global auth keys]]
 > * **Próxima Sessão**: [[2026-07-16 - agent-a04eb3eba0238ed33]]
 %% --- TIMELINE END --- %%
