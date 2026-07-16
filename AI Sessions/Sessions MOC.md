@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2427
-> * **Sessões do Claude**: 2380
+> * **Total de Sessões Registradas**: 2432
+> * **Sessões do Claude**: 2385
 > * **Sessões do Gemini**: 47
 
 ---
@@ -83,8 +83,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-16 - agent-ac85d8eed7af13f88]]` - *2026-07-16*
 *   `[[2026-07-16 - agent-ac612c3df3e2d00ce]]` - *2026-07-16*
 *   `[[2026-07-16 - agent-ac37630f5619108d2]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-abcd8399aa7503f28]]` - *2026-07-16*
-*   *... e mais 2372 sessões nessa categoria.*
+*   `[[2026-07-16 - agent-abfa2108037f4d175]]` - *2026-07-16*
+*   *... e mais 2377 sessões nessa categoria.*
 
 ---
 
@@ -1751,6 +1751,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-16 - agent-ac85d8eed7af13f88]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-ac612c3df3e2d00ce]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-ac37630f5619108d2]]` (ClaudeSessions)
+*   `[[2026-07-16 - agent-abfa2108037f4d175]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-abcd8399aa7503f28]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-aa9cebc255581a8b5]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a9e06a360298b5273]]` (ClaudeSessions)
@@ -1761,21 +1762,25 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-16 - agent-a7564a3cc0442f1f9]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a72081f46929d470b]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a69dccfcb398ae900]]` (ClaudeSessions)
+*   `[[2026-07-16 - agent-a664e4f3842576158]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a639dba2c73606b70]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a5cdf90427a74b893]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a57ba0ab74ca7ff09]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a4f556df162786886]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a4ed73a3cc1d93900]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a4e736d9888cdc315]]` (ClaudeSessions)
+*   `[[2026-07-16 - agent-a4ba756cc1794218b]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a48a6440ffaead0c5]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a423a93e5826b55a7]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a22411cef5711eeba]]` (ClaudeSessions)
+*   `[[2026-07-16 - agent-a19f73b6eea140c12]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a113f291f5a51087f]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a0fb19e60f38832e8]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a07857cfbfebf7db8]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a06714c99e82bfcaa]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-a04eb3eba0238ed33]]` (ClaudeSessions)
 *   `[[2026-07-16 - Roadmap de automação de conteúdo com IA e Claude Code]]` (ClaudeSessions)
+*   `[[2026-07-16 - Configurar loop e blueprint do video-repurposeyoutube-studio]]` (ClaudeSessions)
 *   `[[2026-07-15 - agent-afe1dce9cf24f5fc2]]` (ClaudeSessions)
 *   `[[2026-07-15 - agent-afa049e03135ecca2]]` (ClaudeSessions)
 *   `[[2026-07-15 - agent-af365b88aa30e7172]]` (ClaudeSessions)

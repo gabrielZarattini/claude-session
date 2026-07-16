@@ -2699,5 +2699,5 @@ Nota: não rodei `deno check` (deno não instalado no ambiente); a lógica do ca
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-15 - agent-afa049e03135ecca2]]
-> * **Próxima Sessão**: [[2026-07-16 - Roadmap de automação de conteúdo com IA e Claude Code]]
+> * **Próxima Sessão**: [[2026-07-16 - Configurar loop e blueprint do video-repurposeyoutube-studio]]
 %% --- TIMELINE END --- %%
