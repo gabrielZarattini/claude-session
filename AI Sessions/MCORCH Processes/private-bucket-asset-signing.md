@@ -8,6 +8,15 @@
 > service-role). Este SOP é a forma correta de **exibir mídia de bucket privado só pro dono**, sem
 > reabrir acesso de terceiro.
 
+> **Amendment 2026-07-15 — Reuso de signed URL (egress, US$ 0).** Descoberto por auditoria de egress do
+> Supabase (9 GB uncached + 7,6 GB cached no período vs ~dezenas de MB de mídia armazenada = a MESMA mídia
+> re-baixada centenas de vezes). Causa: `signStorageRef` mintava um **token novo a cada render/reload** →
+> URL única → o cache do browser/CDN nunca reusava → re-download. **Fix** (`src/lib/asset-url.ts`): TTL de
+> display **1h → 24h** + **cache persistente em localStorage** da URL assinada por `(uid, bucket, key)`,
+> reusada até ~10 min antes de expirar. Namespaced por `uid` ⇒ **zero reuso cross-account** em device
+> compartilhado (signed URL é bearer). Ainda muito mais curto que os refs client (365d). Prova: unit
+> `asset-url.test.ts` (12/12, incl. cache/namespace/expiry) + `/security-review` + smoke owner-signing.
+
 ## Fatos materiais que fundam o processo (provados 2026-07-03, Lei 1)
 
 - Buckets **privados**: `canvas-assets`, `generated-images`, `video-studio-assets`, `video-studio-projects`,
