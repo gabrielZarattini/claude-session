@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 85
-> * **Total de Sessões**: 2427
+> * **Total de Processos**: 86
+> * **Total de Sessões**: 2450
 
 ---
 
@@ -54,6 +54,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[handoff-material-proof-audit]]` - *Processo*
 *   `[[intent-plan-execution]]` - *Processo*
 *   `[[kanban-roadmap-reconciler]]` - *Processo*
+*   `[[landing-bundler]]` - *Processo*
 *   `[[llm-cascading-fallback]]` - *Processo*
 *   `[[mcoin-cost-calibration]]` - *Processo*
 *   `[[mcoins-ledger-reconciliation]]` - *Processo*
@@ -111,21 +112,38 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-af69dc310ca67e139]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-af03e988006a8e43a]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-aec44318bddbe695f]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ae9dbcb4ac4d7fbaa]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ae88d67e696ff8fd7]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ae84a16a21c322397]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ae7db45ebd0e35452]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ae43e8f972da14079]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ae3be5d39116e02a8]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ad937fe06399b18e3]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ad71fdfaa6601d29b]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ac85d8eed7af13f88]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ac612c3df3e2d00ce]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-ac37630f5619108d2]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ac0b910b2aaa0f12e]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-abfebe308a7febb05]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-abfa2108037f4d175]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-abe0dd18b5a643f65]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-abcd8399aa7503f28]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ab5ac8935f14d1963]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ab5a60b3fb0afefed]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-ab1d57404a1dcf458]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-aacbd68670ed28aa1]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-aa9cebc255581a8b5]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-aa98ab9daafe6e8ae]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-aa2f2289ee8af11c8]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-aa2a6159de7bfa441]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a9e06a360298b5273]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a95f91a7f71567da0]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a9311b68954bfa10c]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a8f19fe9fce93ac4c]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a892b135a2dd5b85a]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a88f3ffa96d03332b]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a8033f2cb92bb4813]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a80059d9f32d0dc40]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a7564a3cc0442f1f9]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a72081f46929d470b]]` (ClaudeSessions) - *2026-07-16*
@@ -140,11 +158,17 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-16 - agent-a4ba756cc1794218b]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a48a6440ffaead0c5]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a423a93e5826b55a7]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a40e56dced173aa54]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a3d95d82814e590f1]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a3c52c31d35f2c694]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a22411cef5711eeba]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a1aad67e4ed6b3b5a]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a19f73b6eea140c12]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a113f291f5a51087f]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a0fb19e60f38832e8]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a0f50264c45713e10]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a07857cfbfebf7db8]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a07696a08a0cfb9c1]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a06714c99e82bfcaa]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a04eb3eba0238ed33]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - Roadmap de automação de conteúdo com IA e Claude Code]]` (ClaudeSessions) - *2026-07-16*
