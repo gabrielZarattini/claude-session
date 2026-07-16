@@ -6443,6 +6443,882 @@ Quando ele terminar eu:
 
 Nenhuma linha de código até a BoK selar. Te aviso assim que o blueprint estiver em disco.
 
+## 👤 User *(01:38:26)*
+
+<task-notification>
+<task-id>w5smloo6n</task-id>
+<tool-use-id>toolu_01Pvksv91KQsUdcCXaWxnZN5</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/tasks/w5smloo6n.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Deepsearch blueprint semente do modulo landing-factory (Open Design como um todo + exports p/ Spaces/HyperFrames + landing pages auto-otimizaveis CRO)" completed</summary>
+<result>{"markdown":"# BLUEPRINT-SEMENTE — `landing-factory` (Fábrica de Landing Pages Auto-Otimizáveis)\n\n&gt; **Documento**: `docs/bok/landing-factory/00-deepsearch-blueprint.md`\n&gt; **Fase**: Semente de BoK (pré-MRD) — fundamentação por deepsearch verificado adversarialmente\n&gt; **Doutrina obrigatória refletida**: Apache-2.0 attribution · API Tenancy per-user BYOK · free-first US$ 0\n&gt; **Lei 1 (Materialidade)**: toda referência externa carrega URL; toda afirmação de reuso carrega `path:line`; claims REFUTADAS aparecem só na versão corrigida; claims não-verificáveis levam ⚠️.\n\n---\n\n## 1. Sumário honesto\n\nO **landing-factory** é o módulo que transforma uma intenção comercial do tenant (\"quero uma página que converta o produto X\") em uma **landing page servida, publicada e continuamente auto-otimizada por um loop de CRO (Conversion Rate Optimization)**. A cunha (o wedge que justifica um módulo próprio) é precisamente essa: **não é \"gerar um HTML bonito\" — isso o Canvas Design já faz — é fechar o laço `gerar → publicar → instrumentar → medir funil → decidir → promover/reverter variante`, com a decisão ancorada em dados comportamentais reais (PostHog), sob governança per-tenant.**\n\n**O que está PROVADO (fonte primária, Lei 1):**\n\n- O substrato de geração de página existe e é soberano: o sidecar Open Design vendorizado (`canvas-design/open-design/`) roda **v0.10.0** (material: `package.json:3` `\"version\":\"0.10.0\"`, HEAD `0f5f4c2c`), Apache-2.0, e expõe um export de HTML por HTTP.\n- A camada de instrumentação/decisão existe como produto open-source comercial-safe: **PostHog** (core **MIT Expat** exceto a pasta `ee/`; https://raw.githubusercontent.com/PostHog/posthog/master/LICENSE) expõe REST API completa (Query, Experiments, Feature Flags, Heatmaps, Session Recordings) suficiente para um loop de CRO autônomo.\n- Toda a espinha de billing (mcoCoins), credenciais per-user (BYOK Vault-cifrado) e um sink de HTML servido (`publishWordpress`) **já existem no repo** e devem ser reusados, não reconstruídos.\n\n**O que é INCERTO / precisa decisão explícita (nunca apresentado como pronto):**\n\n- ⚠️ O \"export HTML single-file, self-contained com assets inlinados\" que a pesquisa de mercado descreveu é uma feature **v0.14.0/v0.15.0 upstream** — **NÃO existe no v0.10.0 vendorizado**. No código que roda hoje, o export inlina **apenas CSS/JS top-level**; `&lt;img&gt;`, `@font-face`, `@import`, `url()` **ficam como refs externas** (o próprio `inline-assets.ts` chama o bundling completo de \"follow-up issue\"). Uma landing com imagens **quebraria offline** sem uma camada própria de asset-bundling. → OTD.\n- ⚠️ Uma **landing page NÃO é um `creative_asset`** (o spine é índice de blobs criativos: image/video/audio/design/article/template). O sink de HTML servido/interativo/endereçável que já existe é o nó `publishWordpress` (postType `page`); qualquer static-hosting soberano é net-new. → OTD.\n- ⚠️ **BYOK PostHog + token de deploy-host NÃO existem em código** (grep `posthog|netlify` em `supabase/`+`src/` = 0). Só `meta_config` existe como precedente BYOK OAuth-style.\n- ⚠️ O **gate de decisão do CRO** (baseline, MDE, significância, reverte-se-piora, e o gate humano→autônomo) é lógica do AGENTE — PostHog **não tem auto-revert**. O \"95% de precisão antes de autônomo\" é requisito MCORCH, **não** conceito PostHog, e **não tem benchmark** (o análogo mais próximo é o threshold Bayesiano de 95% chance-to-win, que é outra grandeza).\n- ⚠️ O **alvo de deploy** (self-host+Cloudflare vs Netlify vs Vercel vs CF Pages) tem consequência de licença/ToS decisória e continua **indeciso**.\n\n**Veredito de viabilidade**: o módulo é **construível e comercial-safe**, mas **não pode nascer sobre o export que a pesquisa assumiu** — o contrato real (v0.10.0) é mais pobre. O caminho honesto é: recabear o bridge para a rota HTTP real, decidir o alvo de deploy, e escrever a camada de asset-bundling + o SOP do loop de CRO antes de qualquer código.\n\n---\n\n## 2. Pilares com veredictos\n\n### Pilar A — Open Design como substrato de geração (`GO condicionado`)\n**Base**: Apache-2.0 puro no repo principal (verificado independentemente: GitHub License API `spdx_id=\"Apache-2.0\"`; https://api.github.com/repos/nexu-io/open-design/license). O sidecar vendorizado roda e gera HTML/imagens. **Condição**: o export real do v0.10.0 é limitado (só inlina CSS/JS top-level) e o version-pin é feature ≥v0.15.0 ausente. **GO** para reuso do daemon como gerador; a fábrica de landing **exige** camada própria de asset-bundling + upgrade de sidecar (→ OTD-LF-001/002).\n\n### Pilar B — Export / interop Spaces + HyperFrames (`DEFERRED como caminho primário; GO só como caminho secundário`)\n**Base**: a interop image→asset e HTML→vídeo (HyperFrames) é real e engine-compatível — **mas uma landing é uma PÁGINA servida, não um asset criativo nem um vídeo**. Screenshotar perde interatividade; alimentar no HyperFrames vira vídeo. A ponte Spaces/HyperFrames é **DEFERRED** para o artefato-landing e reservada para os SUBPRODUTOS visuais da landing (hero image, vídeo social). **Correção de proveniência material (Lei 1)**: HyperFrames **não é do MCORCH nem originalmente do Open Design** — origina de **HeyGen** (`github.com/heygen-com/hyperframes`, Apache-2.0, \"used in production at HeyGen\"); o projeto irmão `nexu-io/html-video` (Apache-2.0, \"An official project by the Open Design team\", 21 templates) e o motor `render-core.ts` do MCORCH são derivados/homônimos do mesmo upstream. A equivalência de paradigma (headless Chromium + FFmpeg → MP4 determinístico) se sustenta; a origem é HeyGen.\n\n### Pilar C — Build + Publish (`GO para WordPress; DEFERRED para self-host soberano`)\n**Base**: o sink de HTML servido/endereçável/interativo **já existe** — nó `publishWordpress` (`src/types/canvas.ts:632-648`, postType `post|page`, creds WP per-user fail-closed, SOP `wordpress-cf-per-user-publish`). É o contrato exato \"landing must remain addressable/interactive/served HTML\". **GO** por esse trilho. Static-hosting soberano (bucket público + entregador HTML ou vhost per-tenant nginx) é **net-new = DEFERRED** (→ OTD-LF-005).\n\n### Pilar D — Loop CRO / PostHog (`GO como engine; DEFERRED a autonomia total`)\n**Base**: PostHog expõe todas as leituras de funil (Query API `POST /api/projects/:project_id/query/` scope `query:read`; https://posthog.com/docs/api/query), A/B via Experiments (significância **Bayesiana**, default 95%; https://posthog.com/docs/experiments/significance) e o kill-switch instantâneo via Feature Flags `active:false` (https://posthog.com/docs/api/feature-flags). Core **MIT**, self-host grátis (Docker Compose; https://posthog.com/docs/self-host), caminho 100% limpo = `posthog-foss` (MIT puro, `ee/` purgada; https://github.com/PostHog/posthog-foss). **GO** para o engine de leitura/experimento. **DEFERRED** a decisão autônoma sem gate humano: o \"reverte-se-piora\" é lógica de agente que PostHog não provê, e o gate de 95% não tem benchmark.\n\n### Pilar E — Análise de dados (`GO fail-soft`)\n**Base**: rate limits compartilhados por TIME (query **2400/h**; analytics 240/min, 1200/h; https://posthog.com/docs/api). Como é BYOK, o teto é escopado ao PostHog team do próprio tenant → isolamento por construção. **GO**, com o poller do CRO obrigado a throttlar sob 2400/h/team e a cobrar por ciclo de poll, não por query.\n\n---\n\n## 3. Arquitetura unificadora\n\nFluxo ponta-a-ponta (cada seta é um contrato existente ou um OTD explícito):\n\n```\n[Intenção do tenant: \"landing p/ produto X\"]\n        │\n        ▼  (BYOK per-user resolvido fail-closed)\n[GERAR]  Open Design daemon (v0.10.0) ── media generate (imagens/HyperFrames)\n        │                              └─ GET /api/projects/:id/export/*?inline=1  (HTML, top-level inline)\n        │  ⚠️ camada própria de asset-bundling (img/fonts) + injeção tokens.css(MIV) + snippet posthog.js  [OTD-LF-003]\n        ▼\n[PUBLICAR]  sink primário = publishWordpress
+... (truncated 26045 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/tasks/w5smloo6n.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/subagents/workflows/wf_1f7d1113-158/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-blueprint-wf_1f7d1113-158.js', resumeFromRunId: 'wf_1f7d1113-158'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<failures>pipeline[0] failed: agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output</failures>
+<usage><agent_count>18</agent_count><agents_done>17</agents_done><agents_error>1</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1518042</subagent_tokens><tool_uses>268</tool_uses><duration_ms>2556067</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:39:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The workflow uncovered some critical version mismatches. The vendored sidecar in canvas-design/open-design is running v0.10.0, not the latest v0.15.0 upstream release. This matters because the single-file HTML export feature is only available in v0.14.0 and later — v0.10.0 can only inline top-level CSS and JavaScript, leaving images, fonts, and @imports as external references.
+
+Beyond the version issue, I'm noticing several architectural gaps: landing pages aren't creative assets and would need a new static hosting layer (the current HTML sink only handles WordPress pages), there's no BYOK PostHog or deploy-host token implementation in the codebase, and the CRO decision gate with auto-revert logic doesn't exist in PostHog itself — that's an agent-level requirement. I also caught a provenance correction: HyperFrames actually comes from HeyGen's open-source project, not from MCORCH or Open Design. The deploy target is still undecided between self-hosted with Cloudflare, Netlify, Vercel, or Cloudflare Pages.
+
+One of the 18 agents failed — the web research front for opendesign-surface hit the structured output retry cap and returned null. But the blueprint still has solid Open Design details because the repo-mapping agents read directly from the vendored canvas-design directory, which is actually more reliable than upstream docs since it's what's running in production. So the failure didn't derail the synthesis.
+
+Now I need to pull the full markdown from the output file (the notification was truncated), write it to the landing-factory blueprint doc, run the verification checks (no refuted claims, gaps mapped to OTDs, no escapes), and report which verdicts changed decisions plus the honest accounting of the one failed front.
+
+The key thing is the notification shows HTML-escaped characters like `&gt;`, but that's just the notification layer escaping—the actual JSON file should have real `>` characters. I'll extract the markdown with Python, write it to the file, then verify the escape count is zero. I need to clarify what the workflow's output file actually contains. The notification showed a truncated result with markdown and stats, but the full content is stored in that task output file. Let me check whether it's the complete JSON result or a full transcript like the subagent files, since the SOP mentions the result structure includes markdown and stats fields.
+
+Writing a Python script... Writing Python script... The markdown output is truncated in the notification, so I need to read the full file directly. I'll write a Python script that loads the JSON output file, extracts the markdown content, and prints statistics like line count and MD5 hash without loading everything into context.
+
+Writing extraction script... Continuing to parse the JSON structure, checking multiple possible keys where the markdown content might be stored, then validating that we found something before writing it to the destination file in the docs directory.
+
+Now I'm realizing the challenge here — the output file contains the full transcript from all 18 agents, so I need to make sure I'm extracting the final workflow result with the markdown and stats, not just grabbing an intermediate agent output.
+
+My current approach handles both cases: it checks for markdown in the result object directly, or nested under result.markdown, and if the file is JSONL with multiple lines, it takes the last match since that should be the workflow's final return value. The main concern is memory usage if the file is massive, but for now the straightforward read approach should work.
+
+Now I'll run the extraction and then verify the five criteria: checking file stats with ls and wc, confirming zero escapes in the output, spot-checking that refuted claims weren't presented as fact, and verifying the doc covers the critical gaps with OTD sections.
+
+I should also be transparent about the one research front that failed—the opendesign-surface web docs—but note that reading the vendored v0.10.0 code directly actually gave us more authoritative information than upstream docs would have, catching the exact material difference (v0.10.0 vs v0.15.0 export limitations) that web-only research would have missed. So despite the failure, the blueprint is well-grounded.
+
+Now I'm deciding whether to re-run that failed front. The SOP says resumeFromRunId would only re-run the dead agents, but since the authoritative source (the actual vendored code) was already read and the OTDs capture any remaining uncertainties, re-running might just add upstream-doc color without filling any real gaps. I should scan the written doc to make sure there's no glaring hole from the missing front before deciding whether to resume.
+
+Rather than reading all 26k+ characters, I'll grep for the section headers, OTD IDs, and key verdicts to verify the structure is complete. Let me write a Python script to extract and validate the blueprint, then run it to check.
+
+</details>
+
+
+## 🤖 Claude *(01:39:40)*
+
+O blueprint terminou — **17/18 agentes** (1 front web falhou no schema, mas o mapeamento do repo cobriu: leu o Open Design vendorizado direto, que é a verdade do que roda). O resultado veio com correções materiais fortes. Vou extrair o markdown completo (sem carregar o transcript gigante no contexto) e gravar o arquivo.
+
+## 🤖 Claude *(01:39:47)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/scratchpad/extract-blueprint.py",
+  "content": "import json, hashlib, os, sys\n\nsrc = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/tasks/w5smloo6n.output\"\nraw = open(src, encoding=\"utf-8\").read()\n\nmd = None\n# 1) whole-file JSON\ntry:\n    obj = json.loads(raw)\n    if isinstance(obj, dict):\n        md = obj.get(\"markdown\") or (obj.get(\"result\") or {}).get(\"markdown\")\nexcept Exception:\n    pass\n# 2) JSONL \u2014 take the LAST object carrying a markdown\nif md is None:\n    for line in raw.splitlines():\n        line = line.strip()\n        if not line.startswith(\"{\"):\n            continue\n        try:\n            o = json.loads(line)\n        except Exception:\n            continue\n        cand = None\n        if isinstance(o, dict):\n            cand = o.get(\"markdown\")\n            if cand is None and isinstance(o.get(\"result\"), dict):\n                cand = o[\"result\"].get(\"markdown\")\n        if cand:\n            md = cand\n\nif not md:\n    print(\"NO_MARKDOWN_FOUND len_raw=\", len(raw))\n    sys.exit(1)\n\ndst_dir = \"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory\"\nos.makedirs(dst_dir, exist_ok=True)\ndst = dst_dir + \"/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\"\nopen(dst, \"w\", encoding=\"utf-8\").write(md)\n\nprint(\"WROTE\", dst)\nprint(\"chars=\", len(md), \"lines=\", md.count(chr(10)) + 1)\nprint(\"md5=\", hashlib.md5(md.encode()).hexdigest())\nprint(\"G3_escapes  &gt;=\", md.count(\"&gt;\"), \" &lt;=\", md.count(\"&lt;\"), \" &amp;=\", md.count(\"&amp;\"))\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/scratchpad/extract-blueprint.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:39:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/scratchpad/extract-blueprint.py\necho \"=== G2 material (ls + wc) ===\"\nls -la docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\nwc -l docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\necho \"=== estrutura: se\u00e7\u00f5es 1-10 ===\"\ngrep -nE \"^## [0-9]+\\.\" docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\necho \"=== G5: OTDs + FR + FM presentes ===\"\necho \"OTD-LF: $(grep -cE 'OTD-LF-[0-9]' docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md) \u00b7 FR-LF: $(grep -cE 'FR-LF-[0-9]' docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md) \u00b7 FM-LF: $(grep -cE 'FM-LF-[0-9]' docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md)\"\necho \"=== G1: men\u00e7\u00f5es de 'refuted/refutad' (n\u00e3o devem aparecer como fato) ===\"\ngrep -niE \"refutad|refuted\" docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head",
+  "description": "Write blueprint + verify gates G1-G5"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> WROTE /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> chars= 33594 lines= 285
+> md5= 8bb67f281c397e2dc8d5fd6f72d61082
+> G3_escapes  &gt;= 0  &lt;= 0  &amp;= 0
+> === G2 material (ls + wc) ===
+> -rw-rw-r-- 1 ubuntu ubuntu 34398 Jul 15 22:39 docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> 284 docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> === estrutura: seções 1-10 ===
+> 10:## 1. Sumário honesto
+> 32:## 2. Pilares com veredictos
+> 51:## 3. Arquitetura unificadora
+> 85:## 4. Catálogo de referências com URL
+> 133:## 5. Arquitetura MCORCH-nativa (reuso — o que NÃO reconstruir)
+> 171:## 6. Superfície proposta (FR-LF-001..)
+> 195:## 7. FMEA-seed (FM-LF-001.., RPN aproximado)
+> 214:## 8. OTDs (Open Technical Decisions — cada critical_gap não-plenamente-fechado vira OTD, nunca silêncio)
+> 233:## 9. Fatiamento MVP com gates Lei 1
+> 258:## 10. Apontadores pro BoK + GATE DE SUPERSET vs `canvas-design`
+> === G5: OTDs + FR + FM presentes ===
+> OTD-LF: 23 · FR-LF: 19 · FM-LF: 27
+> === G1: menções de 'refuted/refutad' (não devem aparecer como fato) ===
+> 6:> **Lei 1 (Materialidade)**: toda referência externa carrega URL; toda afirmação de reuso carrega `path:line`; claims REFUTADAS aparecem só na versão corrigida; claims não-verificáveis levam ⚠️.
+> 117:- **Correção de contrato (REFUTADO na pesquisa)**: endpoint de certificado Netlify é `POST /sites/{site_id}/ssl` (NÃO `/ssl/certificate`): https://toolcog.com/toolcog/netlify/operations/netlify/provisionSiteTLSCertificate — ⚠️ campo `force_ssl` não-verificado.
+> ```
+
+## 🤖 Claude *(01:41:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The blueprint is complete and all validation checks pass—the file is properly formatted with all ten sections present, contains no escape issues, and shows strong keyword distribution across the different categories.
+
+All gates are green. The critical finding is that Open Design is running version 0.10.0, not 0.15.0, which means the self-contained single-file HTML export feature from later versions isn't available—v0.10.0 only inlines top-level CSS and JavaScript while keeping images, fonts, and imports external.
+
+A landing page doesn't fit the creative_asset spine (which handles images, video, audio, design files, articles, templates), so the WordPress publishing path is the right call for now with sovereign static hosting deferred. The export-to-Spaces/HyperFrames approach is actually meant for the landing's visual byproducts like hero images and social videos, not the page itself—that's a key reframe of what the user is really asking for.
+
+HyperFrames comes from HeyGen's open-source project, not MCORCH or Open Design as I initially thought, though the nexu-io/html-video project from the Open Design team and MCORCH's render-core are related derivatives of the same pattern. PostHog is commercially safe to use—the core is MIT-licensed (with ee/ modules excluded in the FOSS version), and it offers query APIs, Bayesian significance testing for experiments, and feature flags for kill-switches, all self-hostable with a 2400 queries/hour rate limit per team.
+
+Full autonomy with auto-revert and precision gates is agent logic I'd need to implement separately—PostHog itself doesn't provide auto-revert functionality or benchmarked precision thresholds. I'll need to create new per-user credential tables since BYOK and deploy tokens don't exist in PostHog's codebase yet, only as a meta_config precedent. The deployment target is still undecided between self-hosted, Cloudflare, Netlify, Vercel, or Cloudflare Pages depending on licensing and ToS constraints. The Open Design base belongs to canvas-design, and landing-factory is a new module that builds on top of it, though that distinction got cut off mid-thought.
+
+The research on opendesign-surface web hit a schema retry limit, but I found the actual vendored v0.10.0 code in the repo, which is more authoritative than what the market research assumed. The real issue is that v0.10.0 has poorer export limits than expected, so I need to rewire the bridge to use the actual HTTP export route, finalize the deployment target, and build the asset-bundling layer plus CRO procedures before writing code. Now I'm ready to report this back to the user as a complete, honest deliverable. I'm flagging the key decisions that need the Owner's sign-off: the deployment target, whether to upgrade the sidecar from v0.10 to v0.15 or use custom bundling, and whether to go static-hosting or WordPress-only. These are the blockers for moving forward with the landing-factory work. I should also capture the durable facts in memory—the HyperFrames origin correction and the landing-factory blueprint itself—so I don't lose these insights.
+
+I'm weighing whether to re-run the failed web research on the opendesign-surface to get the upstream v0.15 capability surface, which would inform the sidecar upgrade decision. The repo read gave me the authoritative v0.10 facts, but the web front would show what becomes possible with v0.14/v0.15.
+
+Actually, the blueprint already captured the single-file export capability in those versions, so the gap is minimal. I'll note the failed front honestly and move forward with the OTDs as they stand—if the user needs deeper upstream detail, that's a follow-up. Now I'll write a tight report covering the key vereditos and pending Owner OTDs, then update the project memory for landing-factory since it's now an active workstream.
+
+I'm checking the MEMORY.md index size—it's already at 17076 bytes, just under the limit. Adding a new landing-factory pointer would push it over and trigger the compaction hook again, so I'll skip the index entry for now. Instead, I'll note the blueprint in the existing project_content_engine memory, which already holds the north-star and isn't subject to the size constraint.
+
+The key facts to preserve across sessions are the landing-factory blueprint's existence as the agency beachhead, the vereditos about v0.10.0 export limits and HyperFrames' HeyGen origin, and the pending Owner OTDs before /bok-scribe. I'll append these to the north-star memory file to keep the index stable and consolidate everything in one place. Landing-factory fits naturally into the project_content_engine narrative since it's part of the two-machine content thesis and north-star strategy. Let me append a concise note about it there and then structure the report covering the blueprint status, the Open Design version constraint (v0.10.0 rather than upstream v0.15.0), and how the self-contained export limitation affects the landing page with external images. PostHog's core is MIT-licensed and safe for commercial use, but the CRO loop logic—where we auto-revert on degradation and gate at 95%—lives in the agent layer, not PostHog itself, so that autonomy piece is deferred. The deployment decision (Cloudflare vs Netlify vs Vercel) and custom PostHog/deploy configuration don't exist yet, making those net-new. There's also a new gating module that builds on top of the canvas-design foundation from Open Design, with the boundary clearly marked.
+
+The schema retry-cap issue on the frontend got resolved by reading the vendorized v0.10.0 directly from the repo mapping rather than relying on upstream docs—that turned out to be the most critical fix. Now I'm identifying the owner decisions that unblock the bok-scribe work: the deployment target, whether to upgrade the sidecar from v0.10 to v0.15 or write custom bundling, and choosing between WordPress-only or sovereign static hosting. The next move is running the landing-factory to consolidate the MRD into an SDD from this foundation.
+
+</details>
+
+
+## 🤖 Claude *(01:41:05)*
+
+✅ **Blueprint selado em disco** — `docs/bok/landing-factory/00-deepsearch-blueprint.md` · **34.398 bytes · 284 linhas · md5 `8bb67f28…`**. Gates verdes: **G3 escapes 0/0/0** · **10/10 seções** · **G5** OTD-LF ×23 · FR-LF ×19 · FM-LF ×27 · **G1** a única menção "REFUTADO" é a correção de contrato (versão corrigida, não como fato) — exatamente a regra.
+
+Registrando na memória e reportando os vereditos:
+
+## 🤖 Claude *(01:41:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_content_engine_two_machines.md",
+  "old_string": "**Fix #1 landado** (deployed, uncommitted): signed URL reus\u00e1vel 24h + cache localStorage namespaced por uid + clear no logout (amendment do SOP [[reference_private_bucket_asset_signing]]; #2 cron-cadence descartado=KB; #3 pulls j\u00e1 enxutos).",
+  "new_string": "**Fix #1 landado** (deployed, uncommitted): signed URL reus\u00e1vel 24h + cache localStorage namespaced por uid + clear no logout (amendment do SOP [[reference_private_bucket_asset_signing]]; #2 cron-cadence descartado=KB; #3 pulls j\u00e1 enxutos).\n\n**Beachhead `landing-factory` (blueprint deepsearch selado 2026-07-15, `docs/bok/landing-factory/00-deepsearch-blueprint.md`, wf_1f7d1113):** f\u00e1brica de landing pages AUTO-OTIMIZ\u00c1VEIS (loop CRO) \u2014 a cunha = fechar `gerar\u2192publicar\u2192instrumentar\u2192medir funil\u2192reverte-se-piora`, n\u00e3o s\u00f3 gerar HTML. Vereditos que mudam decis\u00e3o (Lei 1): (1) **Open Design vendorizado \u00e9 v0.10.0** (package.json:3), N\u00c3O v0.15.0 upstream; o export self-contained single-file \u00e9 feature \u2265v0.14 \u2192 hoje s\u00f3 inlina CSS/JS top-level, imagens/fontes ficam externas \u2192 landing com imagem quebra sem camada de bundling pr\u00f3pria. (2) **Landing \u2260 creative_asset**; sink pronto = n\u00f3 `publishWordpress` (page); static-hosting soberano \u00e9 net-new. (3) **Exports\u2192Spaces/HyperFrames servem os SUBPRODUTOS visuais da landing (hero/v\u00eddeo social), n\u00e3o a p\u00e1gina**. (4) **Proveni\u00eancia: HyperFrames \u00e9 do HeyGen** (github.com/heygen-com/hyperframes, Apache-2.0), N\u00c3O do MCORCH/Open Design; parente = `nexu-io/html-video` (Apache-2.0). (5) **PostHog comercial-safe** (core MIT / posthog-foss MIT-puro; Query/Experiments-Bayesian-95%/Feature-flags kill-switch) mas auto-revert+gate-95% \u00e9 l\u00f3gica do AGENTE (PostHog n\u00e3o reverte). (6) Deploy indeciso (host+CF vs Netlify/Vercel BYOK) + BYOK PostHog/deploy n\u00e3o existem em c\u00f3digo. M\u00f3dulo NOVO sobre [[project_canvas_design_initiative]] (base Open Design \u00e9 do canvas-design). Decis\u00f5es-Owner que gateiam `/bok-scribe landing-factory`: alvo de deploy \u00b7 upgrade sidecar v0.10\u2192v0.15 vs bundling pr\u00f3prio \u00b7 WordPress-only vs static-hosting."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_content_engine_two_machines.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:41:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm pulling together the final report with the key findings, acknowledging where the front-end approach fell short, laying out the owner decisions that control the /bok-scribe path, and outlining what comes next—keeping it concise and executive-level.
+
+</details>
+
+
+## 🤖 Claude *(01:41:41)*
+
+## 🧭 Blueprint `landing-factory` — os vereditos que mudam a decisão
+
+O deepsearch (18 agentes, verify adversarial + leitura do código que **realmente roda**) reformulou seu pedido de forma honesta. A cunha do módulo não é "gerar HTML bonito" (o Canvas Design já faz) — é **fechar o laço `gerar → publicar → instrumentar → medir funil → reverter-se-piora`** com dados reais (PostHog), por tenant.
+
+**O que mudou vs. a suposição inicial (tudo com prova material):**
+
+1. **O Open Design que roda aqui é `v0.10.0`, não o v0.15.0 upstream** (`package.json:3`). O "export self-contained single-file" que o vídeo/mercado assume é feature **≥v0.14** — no v0.10.0 o export **só inlina CSS/JS top-level**; imagens, fontes e `@import` **ficam como refs externas**. Uma landing com imagem **quebraria** sem uma camada própria de asset-bundling **ou** upgrade do sidecar. (OTD)
+2. **Uma landing NÃO é um `creative_asset`** (o spine é para blobs image/video/audio/design). O sink de HTML servido que **já existe** é o nó `publishWordpress` (postType `page`). Static-hosting soberano é **net-new**.
+3. **Sobre sua preferência de exports → Spaces/HyperFrames:** o veredito honesto é que eles servem os **subprodutos visuais da landing** (hero image, vídeo social) — **não a página em si** (landing é página servida e interativa; virar asset perde interação, virar HyperFrames vira vídeo). Então a interop entra pelos byproducts, como caminho secundário.
+4. **Correção de proveniência (Lei 1):** **HyperFrames é do HeyGen** (`heygen-com/hyperframes`, Apache-2.0), **não** do MCORCH nem do Open Design; o parente do time Open Design é o `nexu-io/html-video` (Apache-2.0). O nosso `render-core.ts` é derivado do mesmo paradigma.
+5. **PostHog é comercial-safe** (core MIT; `posthog-foss` é MIT-puro; Query API + Experiments Bayesiano 95% + Feature Flags como kill-switch instantâneo). **Mas** o "reverte-se-piora" e o "gate de 95% antes de autônomo" são **lógica do AGENTE** — PostHog não tem auto-revert, e o 95% não tem benchmark → **autonomia total = DEFERRED**, gate humano primeiro.
+6. **Deploy indeciso** (host+CF vs Netlify vs Vercel BYOK) e **BYOK PostHog/deploy não existem em código** (grep=0; só `meta_config` como precedente) → net-new.
+
+**Honestidade sobre o run:** 1 das 5 frentes web (a de superfície do Open Design) estourou o retry-cap do schema — **mas** o mapeamento read-only leu o v0.10.0 vendorizado direto, que é **mais autoritativo** que docs upstream. Ou seja: a falha não deixou furo — virou justamente a correção material mais importante (o item #1).
+
+**Veredito de viabilidade:** construível e comercial-safe, mas **não pode nascer sobre o export que a pesquisa assumiu**.
+
+## 🔒 3 decisões que são SUAS (Owner) e gateiam o `/bok-scribe`
+1. **Alvo de deploy:** host+Cloudflare (já temos, US$0) · Netlify BYOK · Vercel BYOK.
+2. **Substrato de export:** upgrade do sidecar `v0.10→v0.15` (ganha o single-file) **vs.** escrever nossa camada de asset-bundling sobre o v0.10.0.
+3. **Escopo do sink:** só `publishWordpress` (rápido) **vs.** static-hosting soberano (net-new).
+
+O blueprint está **uncommitted** (`docs/bok/landing-factory/` untracked) até seu GO/handoff. Quando você decidir os 3 pontos acima, o próximo passo é **`/bok-scribe landing-factory`** — que consolida MRD→SDD a partir desta semente (e aí sim, com a BoK selada, abre o portão pra Fatia 1). Quer decidir os 3 agora, ou prefere ler o blueprint inteiro primeiro?
+
+## 👤 User *(02:04:14)*
+
+1. seria oeeal sim ter os dois byok que voce sugeriu acima mas acredito que precisamos tambem de um link ou subdominio no mcorch.com assim como todos os outros fazer lovable, replit, wix, base44 etc. todos tem link free como subdominio, mas se voce schar melhor fazer um subdominio unico com uma hash aleatoria identificando o usuario como por exemplo login.mcorch.com/dashboard/lp/:id ou .../site/:id
+2. melhor avancar com o 0.15 e ja criar um agente que fica observando os change logs para entregar relatorios para nosso time phanton preparar e ate mesmo atualizar o dcossistema 
+3. Os dois, ja que tenos o wordpress como redesocial seria oegal nao somente postar posts como paginas de site tambem. focar no rapido primeiro sempre.
+
+## 🤖 Claude *(02:06:29)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user wants both the BYOK deployment options I suggested, plus an additional free subdomain hosted on mcorch.com itself—similar to how platforms like Lovable and Replit offer free first-party URLs alongside custom deployment options.
+
+He's asking me to decide between a true wildcard subdomain approach (like `<hash>.mcorch.com`) or a path-based URL structure (like `mcorch.com/site/:id`), and he's leaving the choice to my judgment on which would work better.
+
+I'm weighing the tradeoffs: wildcard subdomains give that professional look and better SEO isolation since each site gets its own origin, but they require wildcard DNS and TLS certificates plus more complex routing logic. Path-based URLs are simpler to implement, but there's a security concern since user-controlled HTML served on the same origin as the app itself could create XSS vulnerabilities.
+
+The real issue is that the SSO cookie is scoped to `.mcorch.com`, so any landing page served on a subdomain or path under that domain could potentially access it if the cookie isn't properly protected with httpOnly flags. A user's landing page with arbitrary JavaScript could read that session cookie and compromise the app's security.
+
+The proper solution is to host user-generated content on a completely separate domain (like how Vercel uses `*.vercel.app` instead of `*.vercel.com`, or GitHub uses `*.github.io` instead of `github.com`) so it's sandboxed away from the main app's cookies and can't access them at all. domain like `sites.mcorch.com` won't actually solve the cookie isolation problem since the SSO cookie set on `.mcorch.com` would still be readable by anything under that registrable domain. The real fix is to use a completely separate registrable domain for hosted user sites, which isolates them from the SSO cookie scope — or alternatively, make the SSO cookie httpOnly so user-facing JavaScript can't access it. This is a critical architectural decision that contradicts the free-subdomain approach, so I need to surface this clearly as a security recommendation.
+
+Actually, looking at the precedents the user mentioned — Lovable uses `*.lovable.app` (separate from lovable.dev), Replit uses `*.replit.app` and `*.repl.co` (separate), Wix uses `*.wixsite.com` (separate) — they're all already following the separate-domain pattern. So recommending a separate registrable domain like `mcorch.app` or `mcorch.site` for the free hosted tier is exactly aligned with what these examples are doing, not a departure from the user's vision.
+
+For the recommendation: use a wildcard subdomain on a separate domain (`<slug-or-hash>.mcorch.app`) rather than path-based, since it provides origin isolation, looks more professional, and avoids the security risk of SSO cookie theft that comes with path-based hosting on the app's own origin. This does require registering a new domain, but it's the right architectural choice and consistent with the doctrine.
+
+I'm reconsidering whether path-based on a non-app subdomain like `sites.mcorch.com/:id` could work, but the issue is that cookies scoped to `.mcorch.com` get sent to `sites.mcorch.com`, so user JavaScript could potentially read non-httpOnly cookies or make authenticated requests to the main API. Even with httpOnly and SameSite protections, the cleanest approach is a separate registrable domain to guarantee isolation. The only exception would be if hosted pages are static or have heavily sanitized JavaScript, but most landing pages need dynamic functionality like analytics.
+
+So the recommendation is a separate domain like `mcorch.app` with wildcard subdomains for each site (`<hash>.mcorch.app`), following the Lovable/Replit/Wix pattern. This needs domain registration on Sovereign's end. If he wants to avoid that short-term, I could suggest a path-based approach on a cookieless subdomain with strict CSP, though that's less secure.
+
+For the substrate side, I'm thinking we upgrade to v0.15 to get the single-file export capability, then build an agent that monitors changelogs and feeds updates to the phantom team so they can keep the ecosystem in sync. So the changelog-watcher is a contained ops/tooling agent that fits the existing sentinel pattern, and since it's internal AIOS tooling, it could potentially be exempt from the BoK gate — making it feasible to include alongside the v0.15 upgrade.
+
+For the sink scope, he wants both WordPress and static-hosting support, but prioritizing the WordPress page-publish feature first since it's faster to implement, then deferring the static-hosting sovereign option. This aligns with the blueprint's approach of going WordPress-first while keeping the static option open for later.
+
+Now I need to understand what my role is here. The user's answers to the three gating questions update the blueprint and introduce new scope—the changelog-watcher agent, the mcorch.com free-hosting domain, and the v0.15 upgrade. Following the deepsearch-blueprint SOP, when the Sovereign adds new themes and decisions, this triggers an amendment (v0.x+1) where I research only the new fronts and then use a merge agent to read the current doc and return the complete updated version as a superset with the superset gate. The new themes and decisions to integrate include the three deployment targets (Netlify BYOK, Vercel BYOK, and first-party free hosting) plus the separation logic.
+
+I'm identifying the research fronts: how to serve wildcard-subdomain static sites cost-effectively using something like Cloudflare Pages or a bucket with CF, which is really a deploy architecture question for first-party free hosting with cookie isolation. There's also the v0.15 upgrade path from v0.10, which resolves OTD-LF-002 and involves sidecar migration considerations. The changelog-watcher agent is a new sibling ops-tool feeding the phantom team. And I need to resolve the sink decision between WordPress-page and static-hosting, with WordPress as the priority.
+
+Now I'm deciding whether to run a full amendment deepsearch on just the new research fronts or fold the user's decisions directly into the blueprint. Since the user made concrete decisions that resolve OTDs and add scope, I could skip the extra research and merge straight in—but some of the new scope (first-party free hosting architecture, separate-domain approach, v0.15 upgrade spec) genuinely needs investigation before I can fold it properly.
+
+The key insight is that decision #1 about the SSO cookie and separate domain is a material change to the deploy architecture, so I should surface that security finding and get the user's confirmation on the domain approach before running the amendment, since it changes everything downstream. The pattern he cited (Lovable, Replit, Wix) all use separate domains with wildcard subdomains, never their main domain — so his instinct is sound, just needs a dedicated registrable domain like `mcorch.app` or `mcorch.site` instead of `*.mcorch.com`, which avoids the SSO cookie vulnerability entirely. This is a minimal cost (~$10/year) and aligns with both security best practices and his doctrine. On decision #2, the v0.15 upgrade is a go.
+
+For the changelog-watcher agent, I'll design it as a sibling ops-sentinel feeding the phantom/OpenClaw team with a standard operating procedure rather than a full body of knowledge, since it's internal tooling. WordPress page first for speed, then both approaches. These decisions plus the new scope — first-party hosting architecture, v0.15 upgrade, changelog-watcher — warrant an amendment to the blueprint. I'll run the amendment deepsearch to fold everything together, research the first-party hosting architecture and v0.15 upgrade path, then ask for go-ahead on the amendment and confirm the domain approach.
+
+Actually, I can be smarter here: run the amendment deepsearch now to research the first-party hosting options comprehensively — including the separate-domain requirement, alternatives like Cloudflare Pages with free `*.pages.dev` subdomains, or Cloudflare for SaaS custom domains — and present the domain recommendation grounded in that research as part of the amended blueprint, with the final decision flagged for the user to pick. That way I make progress on the amendment while surfacing the security finding materially. Finishing the cost/tier breakdown for each hosting option, then moving into Front B around the Open Design upgrade path and what breaking changes land in those versions. Front C covers setting up a changelog watcher using GitHub's release feeds and Dependabot patterns as reference, with the ops tooling handled by OpenClaw agents. Might also circle back to Netlify/Vercel's bring-your-own-key options.
+
+I'm planning a merge agent that takes the current blueprint, folds in the resolved OTDs (deployment targets, substrate upgrade to v0.15, sink configuration), adds the new feature requests (first-party hosting and changelog monitoring), and produces the complete v0.2 superset. The key move is surfacing the security finding about domain separation upfront with my recommendation, then running the amendment to ground it—I don't need to wait for confirmation to research, but registering the domain is his action and he might have preferences, so I'll present the finding clearly and let the amendment work in parallel. The SSO cookie gets set on the `.mcorch.com` domain so subdomains like design and video can read it for gating. Since `syncSsoCookie` runs client-side via `document.cookie`, it can't be httpOnly — that flag only works when the server sets the cookie. Let me trace through the actual implementation to confirm the security implications. just a flag versus the actual access token makes a huge difference in severity. Since cookies are shared across all *.mcorch.com subdomains but localStorage is origin-specific, the real danger is whatever's stored in that SSO cookie — if it's the access token itself, that's token theft and full account compromise; if it's just a login flag, it's still an information leak but less catastrophic. Either way, hosting untrusted content on the same registrable domain as your auth system is a known security anti-pattern that needs fixing.
+
+Let me check what's actually in the sso-cookie to ground this recommendation in the real risk. Now I'm structuring the amendment workflow in two phases: first, researching the three new fronts (first-party hosting, v0.15 upgrade, changelog-watcher) and verifying them, then running a merge agent that reads the current blueprint, incorporates the new research and the deployment decisions, and returns the complete v0.2 markdown with all OTD resolutions baked in.
+
+The merge agent will need the DECISIONS passed explicitly so it folds them correctly—deploying to three targets with separate domains, upgrading to v0.15, prioritizing WordPress first for the sink, and adding the changelog-watcher agent. I'll read the current blueprint file and back it up with a checksum before launching the amendment workflow, but I want to surface the security finding to the user first.
+
+Since the user gave clear decisions and the amendment is the right next step, I'll present the acknowledgment plus the critical security finding about domain separation (grounded by examining the SSO cookie logic), then launch the workflow to research hosting options and fold everything together. This way I make progress while flagging the domain choice as a decision point for him to confirm.
+
+The amendment will be leaner than the initial workflow—focusing on three fronts instead of five—and will document the security tradeoffs clearly so if he prefers a different domain approach, the blueprint captures the risks and mitigations. Let me examine the SSO cookie implementation and back up the current doc before responding.
+
+</details>
+
+
+## 🤖 Claude *(02:06:30)*
+
+Decisões recebidas. Antes de foldar no blueprint, preciso checar uma coisa material sobre a #1 — porque "subdomínio/link em mcorch.com" tem uma pegadinha de segurança séria com HTML de usuário. Vou ler o cookie de SSO pra fundamentar, e fazer backup do blueprint (o SOP exige antes de emendar).
+
+## 🤖 Claude *(02:06:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/sso-cookie.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Cross-subdomain SSO cookie for the isolated MCORCH apps (design.mcorch.com / video.mcorch.com).
+> 2	//
+> 3	// The SPA persists the Supabase session in localStorage (per-origin). The isolated apps live on sibling
+> 4	// subdomains and CANNOT read login.mcorch.com's localStorage. To gate them with MCORCH auth, we mirror the
+> 5	// access token into a cookie scoped to `.mcorch.com` (sent by the browser to every *.mcorch.com host). nginx
+> 6	// `auth_request` on those subdomains forwards this cookie to the local SSO gate (sso-auth-gate), which verifies
+> 7	// the Supabase JWT (ES256 JWKS) and returns 200/401 → 401 redirects to login.mcorch.com/auth?return_to=...
+> 8	//
+> 9	// SECURITY: the token is already JS-readable in localStorage, so a JS-set cookie does not worsen XSS exposure.
+> 10	// Cookie is Secure + SameSite=Lax; *.mcorch.com subdomains are same-site, so the cookie flows on navigation.
+> 11	// Only set on a real *.mcorch.com host — browsers reject a Domain=.mcorch.com cookie from localhost/preview.
+> 12	
+> 13	const COOKIE_NAME = 'sb-mcorch-session';
+> 14	const COOKIE_DOMAIN = '.mcorch.com';
+> 15	
+> 16	interface SsoSession {
+> 17	  access_token?: string | null;
+> 18	  expires_at?: number | null; // unix seconds
+> 19	}
+> 20	
+> 21	function onMcorchHost(): boolean {
+> 22	  return typeof location !== 'undefined' && /(^|\.)mcorch\.com$/.test(location.hostname);
+> 23	}
+> 24	
+> 25	/**
+> 26	 * Read a safe `?return_to` from the current URL — ONLY allow https://<host>.mcorch.com targets
+> 27	 * (anti open-redirect). Used by the auth flow to bounce back to the isolated app (design/video.mcorch.com)
+> 28	 * after the user authenticates on login.mcorch.com. Returns null when absent or unsafe.
+> 29	 */
+> 30	export function safeReturnTo(): string | null {
+> 31	  if (typeof location === 'undefined') return null;
+> 32	  const rt = new URLSearchParams(location.search).get('return_to');
+> 33	  if (!rt) return null;
+> 34	  try {
+> 35	    const u = new URL(rt);
+> 36	    if (u.protocol === 'https:' && /(^|\.)mcorch\.com$/.test(u.hostname)) return u.toString();
+> 37	  } catch { /* invalid URL */ }
+> 38	  return null;
+> 39	}
+> 40	
+> 41	/** Mirror (or clear) the MCORCH session into the `.mcorch.com` SSO cookie. Call on every auth-state change. */
+> 42	export function syncSsoCookie(session: SsoSession | null): void {
+> 43	  if (typeof document === 'undefined' || !onMcorchHost()) return;
+> 44	  if (session?.access_token) {
+> 45	    const nowSec = Math.floor(Date.now() / 1000);
+> 46	    const maxAge = session.expires_at ? Math.max(0, session.expires_at - nowSec) : 3600;
+> 47	    document.cookie =
+> 48	      `${COOKIE_NAME}=${session.access_token}; Domain=${COOKIE_DOMAIN}; Path=/; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+> 49	  } else {
+> 50	    document.cookie =
+> 51	      `${COOKIE_NAME}=; Domain=${COOKIE_DOMAIN}; Path=/; Secure; SameSite=Lax; Max-Age=0`;
+> 52	  }
+> 53	}
+> 54	
+> ```
+
+## 🤖 Claude *(02:06:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md /tmp/blueprint-lf-v01-backup.md\necho \"backup:\"; md5sum /tmp/blueprint-lf-v01-backup.md docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\necho \"=== OTDs/FMs atuais (baseline p/ gate de superset) ===\"\ngrep -oE \"OTD-LF-[0-9]+|FM-LF-[0-9]+|FR-LF-[0-9]+\" docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | sort -u | tr '\\n' ' '; echo\necho \"URLs atuais: $(grep -oE 'https?://[^ )]+' docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | sort -u | wc -l)\"",
+  "description": "Read SSO cookie + backup blueprint + baseline for superset gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backup:
+> 8bb67f281c397e2dc8d5fd6f72d61082  /tmp/blueprint-lf-v01-backup.md
+> 8bb67f281c397e2dc8d5fd6f72d61082  docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> === OTDs/FMs atuais (baseline p/ gate de superset) ===
+> FM-LF-001 FM-LF-002 FM-LF-003 FM-LF-004 FM-LF-005 FM-LF-006 FM-LF-007 FM-LF-008 FM-LF-009 FM-LF-010 FM-LF-011 FM-LF-012 FR-LF-001 FR-LF-002 FR-LF-003 FR-LF-004 FR-LF-005 FR-LF-006 FR-LF-007 FR-LF-008 FR-LF-009 FR-LF-010 FR-LF-011 FR-LF-012 FR-LF-013 FR-LF-014 FR-LF-015 OTD-LF-001 OTD-LF-002 OTD-LF-003 OTD-LF-004 OTD-LF-005 OTD-LF-006 OTD-LF-007 OTD-LF-008 OTD-LF-009 OTD-LF-010 OTD-LF-011 OTD-LF-012 
+> URLs atuais: 51
+> ```
+
+## 🤖 Claude *(02:07:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The SSO cookie configuration reveals the vulnerability clearly: it's named `sb-mcorch-session` with domain `.mcorch.com`, stores the actual Supabase JWT as its value, and while it has Secure and SameSite=Lax protections, it's missing httpOnly since it's set client-side via JavaScript. This means any script running on subdomains of mcorch.com can access this token.
+
+The critical issue emerges when untrusted content—like user-generated landing pages hosted on subdomains or paths like `<hash>.mcorch.com` or `login.mcorch.com/site/:id`—can read this shared cookie and steal the access token from any logged-in user who visits. The existing comment dismissing the risk assumes all mcorch.com origins are trusted, but that assumption breaks down when hosting arbitrary user content on those same subdomains. The token becomes exposed to pages that have their own empty localStorage but can still access the shared domain cookie.
+
+The solution is clear: host user landing pages on a completely separate registrable domain (like how Lovable, Replit, Wix, Vercel, and GitHub all isolate user content on separate domains), which leverages the public suffix list to prevent cookie sharing across origins.
+
+I've verified the backup and confirmed the baseline counts: 12 FM entries, 15 FR entries, 12 OTD entries across 51 total URLs. Now I'm composing the response and preparing to launch the amendment workflow. User landing pages need to live on a completely separate domain from mcorch.com to prevent session hijacking, so I'm recommending `<hash>.mcorch.app` (or similar) rather than a path-based approach. That gives us three hosting options: first-party free hosting on a separate domain, Netlify BYOK, or Vercel BYOK. On the ops side, the v0.15 upgrade is a go, and I'm planning to integrate the changelog-watcher agent as a feature request with a roadmap item.
+
+Now I'm running the amendment workflow for the blueprint — researching three new fronts (first-party hosting architecture with cookie isolation, the v0.10 to v0.15 upgrade path, and the changelog-watcher agent design), then merging everything into a complete v0.2 superset that folds all these decisions and resolves the outstanding OTDs. Now I'm mapping out the hosting options for first-party isolation—comparing separate domains with Cloudflare (wildcard DNS and certificates), Cloudflare Pages' free tier, Cloudflare for SaaS with custom hostnames, and public bucket setups—weighing cost, free-tier availability, commercial viability, and per-user isolation capabilities. Then I need to look at the Open Design v0.10.0 to v0.15 upgrade path. Now I'm reading through the blueprint file to integrate the resolved decisions and new research into a complete v0.2 version. For the deployment target, I need to address the security issue with the SSO cookie — the `sb-mcorch-session` token on `.mcorch.com` isn't httpOnly, so hosting on a wildcard subdomain of mcorch.com would expose it to token theft. Instead, I'm planning three deployment options: a first-party free hosting solution on a separate registrable domain (like how Lovable, Replit, and Wix handle it), Netlify with bring-your-own-key, and Vercel.
+
+For the substrate layer, I'm upgrading the sidecar from v0.10 to v0.15 to gain single-file export capability, plus adding a changelog-watcher agent. On the sink side, I'm implementing both WordPress page publishing first (using the existing publishWordpress function) and then static hosting to the first-party domain. I'm also tracking the new feature requests for the first-party hosting service and the changelog-watcher ops-agent that feeds into the OpenClaw phantom team, while preserving all existing OTD, FM, and FR identifiers in this superset.
+
+Now I need to mark all resolved OTDs with their decisions and rationale, add references to the new fronts in section 4, and return the complete markdown as a superset. I'm setting up a validation gate in the main loop that checks the old IDs and URLs are all present in the new version, verifies the file size increased, and then writes the output with a backup already in place. The workflow itself is fairly compact—three fronts plus the merge operation, so roughly seven agents total. I'm going to reuse the existing schemas and have the merge agent return the markdown directly without a separate schema since that's higher effort.
+
+Writing the amendment workflow script...
+
+The merge agent needs to read the current file first. I'm deciding whether to pass the 34KB markdown directly in the prompt or have it read from the file path—the SOP specifies the merge agent should read the file, so I'll provide the path and let it use the Read capability. I'm considering using the deepsearch-blueprint agent type since it has both Read and Write tools, though I'll handle the Write myself in the main loop per the SOP rather than letting the agent write directly.
+
+For safety and to guarantee Read access, I'll go with the general-purpose agent type set to high effort for the merge operation. The agent will return the complete merged markdown, which I'll then write in the main loop. Now I'm thinking through whether I even need research for the merge step or if I can just fold the decisions directly into the markdown without additional research.
+
+The new features—first-party hosting architecture, the v0.15 upgrade, and the changelog-watcher pattern—actually do benefit from research to ground the domain approach and understand the v0.15 changelog and watcher pattern properly. So research plus merge makes sense.
+
+For the merge agent, I'll pass the file path to read, the decisions string, the new research results, and the superset requirements, and it returns the complete v0.2 markdown. The concern is that reading a 34KB file, folding in all the changes, and returning a larger document is a substantial generation task, but high effort should handle it.
+
+Writing the workflow now...
+
+Actually, I should present my response to the user about the security finding and acknowledge the decisions, then launch the workflow in the same turn so it runs in the background while I report the status. Let me compose the response text first covering the critical finding, then trigger the workflow launch.
+
+</details>
+
+
+## 🤖 Claude *(02:07:45)*
+
+**Confirmado no código (Lei 1) — e é decisivo para a #1:** o cookie de SSO [`sso-cookie.ts:13,44,47`](src/lib/sso-cookie.ts) chama-se `sb-mcorch-session`, é escopado em **`.mcorch.com`**, guarda o **access token** e é setado via `document.cookie` → **não é httpOnly**. Ou seja: **qualquer JS em qualquer página `*.mcorch.com` lê o token de sessão de quem visita.**
+
+→ Hospedar landing pages de usuário (HTML/JS arbitrário do agente) em `*.mcorch.com` **ou** `login.mcorch.com/site/:id` = **account-takeover**: a landing de um tenant rouba a sessão MCORCH de qualquer visitante logado. Por isso **todos os exemplos que você citou usam um domínio SEPARADO** — Lovable `*.lovable.app`, Replit `*.replit.app`, Wix `*.wixsite.com`, Vercel `*.vercel.app` — **nunca** o domínio principal. Seu instinto (link grátis brandado) está certo; o domínio só precisa ser separado do `mcorch.com`.
+
+**Então as 3 decisões ficam:**
+1. **Deploy = 3 alvos:** hosting first-party grátis num **domínio separado** (recomendo `<hash>.mcorch.app`/`.site` — wildcard, cookie-isolado) + **Netlify BYOK** + **Vercel BYOK**. (Registrar o domínio = ação sua; path no origin do app está fora.)
+2. **Substrato = upgrade v0.15** (ganha o export single-file) + **agente changelog-watcher** alimentando o time phantom (OpenClaw) — ferramenta interna, SOP-gated, não BoK completa.
+3. **Sink = os dois, WordPress `page` primeiro** (rápido — o `publishWordpress` já suporta postType page), static-hosting soberano depois.
+
+Isso resolve OTDs e adiciona escopo → vou rodar a **emenda v0.2** do blueprint (backup feito, md5 `8bb67f28`; baseline 12 FM / 15 FR / 12 OTD / 51 URLs para o gate de superset). Lançando 3 frentes novas + merge superset:
+
+## 🤖 Claude *(02:08:36)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'landing-factory-blueprint-v02',\n  description: 'Emenda v0.2 do blueprint landing-factory: hosting first-party (dominio separado), upgrade Open Design v0.15, agente changelog-watcher; merge superset',\n  phases: [\n    { title: 'Research', detail: '3 frentes novas + verify' },\n    { title: 'Merge', detail: 'le o doc atual e devolve superset completo v0.2' },\n  ],\n}\n\nconst MATERIALITY = 'REGRAS DURAS (Lei 1): toda claim com a URL EXATA consultada; sem fonte confiavel marque could_not_verify (confidence baixa); NUNCA fabrique nome, versao, numero, preco, clausula de licenca. Prefira fontes primarias (repo/docs oficiais, LICENSE).';\n\nconst FRONTS = [\n  { key: 'first-party-hosting', prompt: 'Como plataformas SaaS hospedam sites GERADOS POR USUARIO num dominio registravel SEPARADO para isolamento de cookie/origin (public suffix list): Lovable (*.lovable.app), Replit (*.replit.app / *.repl.co), Wix (*.wixsite.com), Vercel (*.vercel.app), GitHub Pages (*.github.io), Netlify (*.netlify.app). Documente POR QUE dominio separado (roubo de cookie same-site / account takeover). Depois compare as opcoes para o MCORCH oferecer um link gratis first-party com wildcard subdominio: (a) dominio proprio separado + Cloudflare (wildcard DNS + wildcard TLS) servindo do host/bucket; (b) Cloudflare Pages (free, *.pages.dev, custom domain); (c) Cloudflare for SaaS / custom hostnames (SSL for SaaS); (d) bucket publico + CDN. Custos/limites de free tier de cada + qual e commercial-safe + free-first + suporta isolamento per-user. Fontes: developers.cloudflare.com (Pages, SSL for SaaS), publicsuffix.org, docs dos players. Cite URLs.' },\n  { key: 'opendesign-v015-upgrade', prompt: 'Upgrade do Open Design v0.10.0 -> v0.15.0: o que entrou entre essas versoes, ESPECIALMENTE o export self-contained single-file HTML com assets inlinados (img/fonts/@import) \u2014 em qual versao exata landou; breaking changes no `od` CLI e no contrato de export HTTP; notas de release / CHANGELOG. Fontes: github.com/nexu-io/open-design (releases, CHANGELOG.md, tags entre open-design-v0.10.0 e open-design-v0.15.0). Cite URLs/commits.' },\n  { key: 'changelog-watch-agent', prompt: 'Padroes e ferramentas para um AGENTE que observa changelogs/releases de dependencias upstream e (a) entrega relatorios para um time e (b) prepara/propoe atualizacoes: GitHub Releases API + feeds Atom de release (github.com/<owner>/<repo>/releases.atom), Renovate e Dependabot como referencia (o que monitoram, como abrem PRs), boas praticas de um agente de \"dependency intelligence\". Como entregar o relatorio a um time de agentes. Fontes: docs.github.com (releases API, atom), docs.renovatebot.com, github.com/dependabot. Cite URLs.' },\n];\n\nconst RESEARCH_SCHEMA = { type:'object', properties:{ claims:{type:'array', items:{type:'object', properties:{ claim:{type:'string'}, url:{type:'string'}, confidence:{type:'number'}, category:{type:'string'} }, required:['claim','url','confidence']}}, summary:{type:'string'} }, required:['claims','summary'] };\nconst VERIFY_SCHEMA = { type:'object', properties:{ verdicts:{type:'array', items:{type:'object', properties:{ claim:{type:'string'}, verdict:{type:'string', enum:['confirmed','refuted','unverifiable']}, independent_url:{type:'string'}, note:{type:'string'} }, required:['claim','verdict']}} }, required:['verdicts'] };\n\nphase('Research');\nconst researched = await pipeline(\n  FRONTS,\n  (f) => agent(`${MATERIALITY}\\n\\nFRENTE (${f.key}): ${f.prompt}\\n\\nRetorne claims[] (url + confidence + category) + summary honesto.`, { label:`research:${f.key}`, phase:'Research', agentType:'[[deepsearch-blueprint|deepsearch-blueprint]]', schema: RESEARCH_SCHEMA }),\n  (r, f) => agent(`Fact-checker ADVERSARIAL. Tente REFUTAR as top ~5 claims abaixo com fontes DIFERENTES da original (confirmed/refuted/unverifiable). ${MATERIALITY}\\n\\nCLAIMS (${f.key}): ${JSON.stringify((r && r.claims ? r.claims : []).slice(0,5))}`, { label:`verify:${f.key}`, phase:'Research', agentType:'[[deepsearch-blueprint|deepsearch-blueprint]]', schema: VERIFY_SCHEMA }).then(v => ({ front: f.key, research: r, verify: v }))\n);\n\nconst DECISIONS = `DECISOES DO SOVEREIGN (2026-07-15) a foldar, resolvendo OTDs existentes:\n- DEPLOY (resolve a OTD de alvo de deploy): TRES alvos. (a) Hosting first-party GRATIS num DOMINIO REGISTRAVEL SEPARADO (NAO *.mcorch.com), wildcard <hash>.<dominio-separado> (ex.: mcorch.app/mcorch.site \u2014 pick+registro = acao Sovereign), matching Lovable/Replit/Wix. MOTIVO MATERIAL (Lei 1): o cookie de SSO sb-mcorch-session e escopado em .mcorch.com, guarda o ACCESS TOKEN e NAO e httpOnly (setado via document.cookie) \u2014 provado em src/lib/sso-cookie.ts:13 (COOKIE_DOMAIN='.mcorch.com'), :44-48 (document.cookie = access_token; Secure; SameSite=Lax; sem HttpOnly). Logo, HTML de usuario nao-confiavel em *.mcorch.com ou login.mcorch.com/site/:id = roubo de token = account takeover multi-tenant. Path no origin do app esta FORA. (b) Netlify BYOK per-user. (c) Vercel BYOK per-user.\n- SUBSTRATO (resolve OTD-LF-002): UPGRADE do sidecar Open Design v0.10.0 -> v0.15.0 (ganha o export single-file com assets inlinados). MAIS: criar um AGENTE changelog-watcher que observa releases upstream (Open Design, PostHog, HyperFrames/HeyGen, etc.) e entrega relatorios ao time de agentes OpenClaw (o \"time phantom\") para preparar/atualizar o ecossistema \u2014 ferramenta interna (SOP-gated, isento de BoK completa como os sentinels), roadmap.\n- SINK (resolve OTD-LF-005): OS DOIS. WordPress publica nao so posts mas PAGINAS de site tambem (o no publishWordpress ja suporta postType 'page') = caminho RAPIDO PRIMEIRO. Static-hosting soberano no dominio separado = depois. Regra do Sovereign: focar no rapido primeiro sempre.`;\n\nphase('Merge');\nconst markdown = await agent(`Voce e o MERGE AGENT de emenda do blueprint-semente de BoK do MCORCH (SOP deepsearch-blueprint). NAO faca patch cego: LEIA o documento atual e devolva o DOCUMENTO COMPLETO como SUPERSET v0.2 (nada perdido).\n\nPASSO 1: Read do arquivo atual: /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-deepsearch-blueprint.md (as 10 secoes, IDs FR-LF/FM-LF/OTD-LF, catalogo de URLs).\n\nPASSO 2: folde as DECISOES + a pesquisa nova, produzindo o doc COMPLETO v0.2:\n${DECISIONS}\n\nPASSO 3 pesquisa nova (verificada) para embasar \u00a74 (referencias) e as secoes de arquitetura/OTD:\nRESEARCH_NOVO=${JSON.stringify(researched).slice(0,90000)}\n\nREGRAS DE SUPERSET (obrigatorias \u2014 o main-loop vai checar mecanicamente):\n- TODOS os IDs existentes continuam presentes: FR-LF-001..015, FM-LF-001..012, OTD-LF-001..012. OTDs resolvidas por decisao NAO se apagam: marque como RESOLVIDA com a decisao + base (mantendo o ID).\n- TODAS as 51 URLs do doc atual permanecem; ADICIONE as URLs novas (hosting/CF/v0.15/changelog) em \u00a74.\n- Bytes CRESCEM (superset).\n- Novos itens ganham IDs NOVOS (nao renumere): novas FR-LF (>=016) p/ hosting first-party + changelog-watcher; novas OTD-LF (>=013) p/ pick do dominio separado, custom-hostname per-user, gate CRO; novas FM-LF (>=013) p/ risco de cookie-theft em *.mcorch.com (mitigado por dominio separado) e drift de dependencia (mitigado pelo changelog-watcher).\n- \u00a72 (Pilares): atualize os veredictos afetados (Build+Publish agora GO WordPress-page-first + hosting soberano; substrato GO v0.15). \u00a79 (Fatiamento): Fatia 1 = build (v0.15) -> publish WordPress page (rapido) -> loop CRO; Fatia 2 = hosting first-party dominio separado + Netlify/Vercel BYOK; roadmap = changelog-watcher, exports Spaces/HyperFrames, trafego, WhatsApp.\n- Marque um cabecalho de versao: \"Semente v0.2 (emenda 2026-07-15)\". PT-BR; termos tecnicos em ingles. 0 claims refutadas como fato; unverifiable com sinal de alerta.\n\nRetorne SOMENTE o markdown COMPLETO do documento v0.2, nada alem.`, { label:'merge-superset', phase:'Merge', agentType:'general-purpose', effort:'high' });\n\nconst refutedCount = researched.filter(Boolean).reduce((n, x) => n + ((x.verify && x.verify.verdicts ? x.verify.verdicts.filter((v) => v.verdict === 'refuted').length : 0)), 0);\nreturn { markdown, stats: { newFronts: researched.filter(Boolean).length, refuted: refutedCount } };\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w1nth8xvy
+> Summary: Emenda v0.2 do blueprint landing-factory: hosting first-party (dominio separado), upgrade Open Design v0.15, agente changelog-watcher; merge superset
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/subagents/workflows/wf_b8cb767d-c10
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-blueprint-v02-wf_b8cb767d-c10.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-blueprint-v02-wf_b8cb767d-c10.js"} to iterate without resending the script.)
+> Run ID: wf_b8cb767d-c10
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-blueprint-v02-wf_b8cb767d-c10.js", resumeFromRunId: "wf_b8cb767d-c10"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(02:08:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The amendment workflow is running and I'll get notified when it finishes. Then I'm doing a superset gate check—comparing the old and new versions to verify all IDs and URLs are present and checking the byte growth—before writing the results and offering the /bok-scribe endpoint. I should give the user a status update on what's happening next and flag the pending action: they need to pick and register the separate hosting domain.
+
+</details>
+
+
+## 🤖 Claude *(02:08:57)*
+
+🚀 **Emenda v0.2 lançada em background** — `wf_b8cb767d-c10` (`/workflows` p/ acompanhar).
+
+Ela pesquisa as 3 frentes novas (hosting first-party com isolamento de cookie · upgrade Open Design v0.10→v0.15 · agente changelog-watcher) e um **merge superset** que lê o v0.1 e devolve o documento completo v0.2 folando suas decisões — sem perder nenhum ID nem URL.
+
+Quando terminar eu:
+1. Rodo o **gate de superset mecânico** (todos os 12 FM / 15 FR / 12 OTD e as 51 URLs presentes · bytes crescem) contra o backup `md5 8bb67f28`;
+2. Só então sobrescrevo `docs/bok/landing-factory/00-deepsearch-blueprint.md`;
+3. Te devolvo o que a pesquisa achou sobre **em qual versão exata o export single-file landou** (decide se o upgrade v0.15 basta ou se ainda precisamos da camada de bundling) e as **opções de hosting first-party** (Cloudflare Pages `*.pages.dev` grátis vs domínio próprio + CF for SaaS);
+4. Ofereço `/bok-scribe landing-factory`.
+
+**Uma ação que fica sua (Owner), pendente:** escolher e registrar o **domínio separado** para os sites hospedados (`mcorch.app`, `mcorch.site`, `mco.page`…) — é o único bloqueio da Fatia 2 (hosting first-party). A Fatia 1 (build v0.15 → publish WordPress page → loop CRO) **não depende** disso, então o caminho rápido segue livre.
+
+Te aviso assim que o v0.2 estiver selado no disco com os gates verdes.
+
+## 👤 User *(02:13:36)*
+
+nao pode ser subdominio por exemplo o nome do usuario ou prefixo do enail, tipo gabrielcall@mcorch.com ou melhor ainda.: sufixoemail.login.mcorch.com ?
+
+## 🤖 Claude *(02:14:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O usuário está propondo usar um subdomínio baseado no nome de usuário ou prefixo do email, como `gabrielcall.mcorch.com` ou `sufixoemail.login.mcorch.com`, em vez de um domínio completamente separado.
+
+Mas isso cria exatamente o problema de segurança que mencionei: qualquer subdomínio de `mcorch.com` recebe o cookie `sb-mcorch-session` (que contém o token de acesso e não é httpOnly), então JavaScript malicioso na página do usuário conseguiria roubar o token de qualquer visitante logado. A solução é usar um domínio completamente diferente, fora de `mcorch.com`. doesn't matter if it's a direct subdomain or nested deeper — the cookie still reaches it. The real solution is using a completely separate domain like `gabrielcall.mcorch.app` or `gabrielcall.mcorch.site`, which gives him the personalized subdomain experience he wants without the security risk, just like how Vercel and GitHub Pages handle it.
+
+There's a trade-off to consider though: using the email prefix or username as the public subdomain leaks that information to anyone who sees the URL, which could be a privacy concern depending on the use case.  A better approach would be to let users choose their own subdomain slug (like how Vercel and Lovable handle project names), defaulting to something like a random hash if they don't pick one — that gives them the branded UX without forcing identity exposure or running into collision issues. And since a user might create multiple landing pages, the subdomain should really be tied to the individual site, not the user account.
+
+But stepping back, the real issue isn't the subdomain format itself — it's that the root domain `mcorch.com` creates a cookie scope problem where any subdomain at any depth receives the authentication cookie.
+
+The solution stays aligned with his original vision: moving to `<prefix-or-slug>.mcorch.app` isolates the cookie to that specific subdomain. I'd suggest letting users pick their own slug per site (better privacy and supports multiple sites), with a random hash as the fallback.
+
+As for keeping it on `mcorch.com` — there are some technical options like making the SSO cookie httpOnly and server-set, but that breaks the current client-side approach, and even then httpOnly doesn't fully prevent CSRF-style attacks where a malicious page on another subdomain could still make authenticated requests using the cookie.
+
+The honest take is that while you could harden `mcorch.com` hosting with httpOnly cookies and strict CSP, it's fragile and goes against industry best practices. The separate domain is the clean, correct solution.
+
+Cost-wise, it's negligible—a domain runs $10-15 yearly, and Cloudflare provides free wildcard certificates. So it's both security-sound and practically free, which aligns with the doctrine. This also feeds into the v0.2 amendment workflow that's already researching first-party hosting with separate-domain reasoning, and this question about the subdomain shape (username/email-prefix) refines how that gets structured.
+
+The architecture itself—separate domain with wildcard subdomains—stays unchanged; the user's preference for username or email-prefix naming is just a UX detail that the BoK can finalize. The workflow is running with hash-based subdomains, but this naming convention is an implementation detail that doesn't require re-running the whole process. er the cookie will be sent to `<prefix>.login.mcorch.com` subdomains as well, confirming the cross-subdomain sharing behavior. So the architecture supports personalized subdomains on the separate domain, and I can note this in my response while the workflow captures the broader structure. The better approach mirrors what Vercel and GitHub do — use a separate registrable domain like `mcorch.app` where each user gets their own subdomain (`<slug>.mcorch.app`), keeping cookies completely isolated. I'd recommend making the slug user-chosen rather than email-based to avoid leaking identity and prevent collisions, with a random default that users can customize. Technically you could force it onto `mcorch.com` with httpOnly cookies and strict CSP, but that's fragile and goes against the established pattern. I'm weighing whether to mention the free `*.pages.dev` option as a fallback, but since the goal is MCORCH branding, a cheap separate domain is the practical answer—I'll note the free alternative exists but isn't aligned with what he's after.
+
+</details>
+
+
+## 🤖 Claude *(02:14:56)*
+
+Boa pergunta — e a resposta é **precisa**: o problema **não é o formato do subdomínio, é o domínio `mcorch.com` em si**.
+
+O cookie é setado com `Domain=.mcorch.com` ([`sso-cookie.ts:14`](src/lib/sso-cookie.ts)). O navegador manda esse cookie para **todo host que termina em `.mcorch.com`, em qualquer profundidade** — então:
+
+- `gabrielcall.mcorch.com` → **recebe** o cookie do token ❌
+- `sufixoemail.login.mcorch.com` → **também recebe** (descer um nível não escapa; `x.login.mcorch.com` continua casando com `.mcorch.com`) ❌
+
+Em qualquer um deles, o JS da landing do usuário faz `document.cookie` e lê o `sb-mcorch-session` (o access token, não-httpOnly) → rouba a sessão de qualquer visitante logado. Aprofundar o subdomínio não resolve.
+
+**A ótima notícia: sua ideia funciona perfeita — só troca o domínio registrável.**
+
+| Você queria | Versão segura (mesmo UX) |
+|---|---|
+| `gabrielcall.mcorch.com` | **`gabrielcall.mcorch.app`** |
+| `sufixoemail.login.mcorch.com` | **`sufixoemail.mcorch.site`** |
+
+É **exatamente** o que Vercel (`<projeto>.vercel.app`), GitHub (`<user>.github.io`) e Lovable (`<app>.lovable.app`) fazem — subdomínio personalizado, mas num domínio **separado** do domínio autenticado. Mesma cara brandada, cookie isolado.
+
+**Um ajuste que eu recomendo** (Lei 1, pensando no produto):
+- Faça o slug **por SITE e escolhido pelo usuário**, não fixo no e-mail — porque (a) um usuário terá **várias** landing pages; (b) e-mail como subdomínio **público vaza a identidade** e colide entre homônimos. Padrão: hash aleatória; o usuário pode trocar por um slug custom (`minha-loja.mcorch.app`), igual ao nome de projeto do Vercel.
+
+**Dá pra forçar em `mcorch.com`?** Só tornando o cookie httpOnly (server-set) + CSP estrita nas páginas — mas é frágil, briga com o padrão universal e ainda deixa risco de requisição same-site. Não compensa: um domínio separado custa ~US$ 14/ano (ou `*.pages.dev` do Cloudflare **grátis** se topar sem marca própria). O domínio separado é a escolha **free-first + segura**.
+
+Isso **não muda** a arquitetura que a emenda v0.2 já está pesquisando (domínio separado + wildcard) — só refina a **convenção de nome** do subdomínio. Quando o blueprint voltar, eu folho isso como a regra de naming (slug por-site, escolhido pelo usuário, hash como default) + deixo o **pick do domínio** (`mcorch.app` vs `.site` vs `.page`) como a sua decisão de Owner. O caminho rápido (Fatia 1: build v0.15 → WordPress page → CRO) segue sem depender disso.
+
+## 👤 User *(02:17:48)*
+
+eu tenho o dominio gcrux.com tambem vamos usar ele  entao
+
+## 🤖 Claude *(02:18:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user is providing his own domain, gcrux.com, to use as the separate hosting domain for user landing pages—keeping it isolated from mcorch.com with its own cookie domain. This settles the domain choice.
+
+Since gcrux.com is a different registrable domain than mcorch.com, the session cookies from mcorch.com won't be sent to gcrux.com subdomains, which is exactly what we need for security. And since he already owns it, there's no registration cost. I should just verify that gcrux.com isn't currently being used for anything that shares authentication with the MCORCH app, and make sure we don't accidentally put MCORCH auth cookies on the gcrux.com domain. Cloudflare can handle the wildcard TLS automatically, so the operational setup is straightforward: add gcrux.com to Cloudflare, configure wildcard DNS, and point it to the hosting bucket. Since the v0.2 amendment workflow is already running and the Sovereign has now decided on gcrux.com as the domain, I need to update that running workflow with this decision. I'll let the workflow finish since the domain decision is a minor detail compared to all the hosting research already underway. Once it returns, I can add a quick note or edit to record that gcrux.com is the resolved choice—no need to re-run the whole thing. For now I'll acknowledge the decision and confirm it's the right move since he already owns the domain and there's no cross-domain friction.
+
+The key constraint is keeping gcrux.com isolated from untrusted hosted content only, with no auth cookies or surfaces there. I'm verifying that gcrux.com is a distinct registrable domain from mcorch.com so cookie isolation actually holds, and the operational setup is straightforward—just wildcard DNS and a Cloudflare cert. I'll fold this into the v0.2 blueprint once it lands.
+
+I could do a quick DNS check to see if gcrux.com already resolves or sits behind Cloudflare like mcorch.com does, which would tell me if the wildcard setup is trivial or needs more work. But that's operational detail the Sovereign can handle directly, so I'll keep the guidance high-level rather than over-tooling. I'll note the caveat about keeping this isolated for untrusted content, then respond with what the dig results show and map out the operational steps for v0.2.
+
+</details>
+
+
+## 🤖 Claude *(02:18:28)*
+
+Ótimo — e essa é a escolha **certa e de graça**: `gcrux.com` é um domínio registrável **diferente** de `mcorch.com`, então o cookie `sb-mcorch-session` (escopado em `.mcorch.com`) **não** trafega para `*.gcrux.com` (é cross-site) → as landing pages ficam cookie-isoladas por construção. E você já é dono → zero custo. Deixa eu checar como ele está apontado hoje pra te dar o caminho operacional exato:
+
+## 🤖 Claude *(02:18:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== gcrux.com nameservers ===\"; dig +short NS gcrux.com 2>/dev/null || nslookup -type=NS gcrux.com 2>/dev/null | grep -i nameserver\necho \"=== gcrux.com A/apex ===\"; dig +short A gcrux.com 2>/dev/null\necho \"=== wildcard ja existe? (*.gcrux.com) ===\"; dig +short A teste-random-mcorch.gcrux.com 2>/dev/null || echo \"(sem wildcard)\"\necho \"=== responde HTTP? ===\"; curl -sI --max-time 8 https://gcrux.com 2>&1 | grep -iE \"^HTTP|^server|^cf-\" | head -4 || echo \"(sem resposta https)\"",
+  "description": "Check gcrux.com DNS + hosting posture"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gcrux.com nameservers ===
+> jessica.ns.cloudflare.com.
+> kurt.ns.cloudflare.com.
+> === gcrux.com A/apex ===
+> 104.21.63.110
+> 172.67.145.99
+> === wildcard ja existe? (*.gcrux.com) ===
+> === responde HTTP? ===
+> HTTP/2 200 
+> server: cloudflare
+> cf-cache-status: DYNAMIC
+> cf-ray: a1bd8465ed37ef86-GRU
+> ```
+
+## 🤖 Claude *(02:19:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm checking the DNS and server configuration for gcrux.com — it's hosted on Cloudflare with their nameservers and proxy IPs, responding with HTTP/2, so the site is live behind their infrastructure. I'm also testing for wildcard DNS records to see if subdomains are configured.
+
+Since gcrux.com is already on Cloudflare like mcorch.com, adding wildcard subdomains for user sites is straightforward — I just need a wildcard DNS record pointing to the origin and Cloudflare's Universal SSL automatically covers single-level subdomains like `<slug>.gcrux.com`. The apex domain continues serving normally, but I need to be careful not to run any MCORCH authentication on gcrux.com or set auth cookies on the `.gcrux.com` domain to keep it isolated for untrusted content.
+
+The security isolation is solid because gcrux.com is a separate registrable domain — browser cookie policies enforce domain boundaries regardless of the shared Cloudflare account, so there's no cross-contamination risk. Now I'll outline the concrete operational path for the user and integrate gcrux.com into the v0.2 blueprint, with origin options ranging from the MCORCH host serving from a keyed directory, to a public bucket, to Cloudflare Pages. I'm wrapping up the decision here — confirming gcrux.com as the isolated hosting domain, noting the auth cookie caveat, and planning to fold this into the v0.2 blueprint when it lands. I'll hold off on a memory update until then to keep everything consolidated. The wildcard DNS setup is straightforward—just point `*.gcrux.com` to the origin with Cloudflare proxying, no additional certificate needed. The critical constraint is keeping gcrux.com strictly for untrusted user pages; any authenticated surface or MCORCH cookie there breaks the isolation. Sites get `<slug>.gcrux.com` addresses with user-chosen or randomly generated slugs, and I'll integrate this resolved domain into v0.2 when it ships without needing to re-run the workflow.
+
+</details>
+
+
+## 🤖 Claude *(02:19:16)*
+
+Confirmado com prova material — e não podia ser mais limpo:
+
+- **gcrux.com já está no Cloudflare** (NS `jessica/kurt.ns.cloudflare.com`, apex responde `HTTP/2 200`, IPs de proxy CF). Mesma postura do mcorch.com.
+- **Isolamento holds:** mesmo estando na mesma conta Cloudflare, cookies **não cruzam domínio registrável** — `.mcorch.com` nunca chega em `*.gcrux.com`. Segurança por construção. ✅
+- **Custo zero:** você já é dono, e o **Universal SSL do Cloudflare já cobre `*.gcrux.com`** (wildcard de 1 nível) automaticamente — não precisa comprar certificado.
+
+**Setup operacional (trivial):** adicionar um registro DNS **wildcard `*.gcrux.com`** (laranja/proxied) apontando para a origem que serve as páginas. Qual origem — host nginx servindo por slug · bucket público + CF · Cloudflare Pages/SSL-for-SaaS — é exatamente o que a **emenda v0.2** está comparando agora; te trago a recomendação fundamentada quando ela voltar.
+
+⚠️ **Uma regra de ouro (Lei 1):** o `gcrux.com` fica **dedicado só às páginas de usuário não-confiáveis**. Nunca colocar um cookie de auth do MCORCH nem uma superfície logada em `.gcrux.com` — senão o isolamento que acabamos de ganhar quebra. É o "domínio sacrifical", igual `*.vercel.app`.
+
+**Convenção de nome:** `<slug>.gcrux.com` por site (ex.: `minha-loja.gcrux.com`), slug escolhido pelo usuário, hash aleatória como default.
+
+Vou **folhar `gcrux.com` como o domínio DECIDIDO** no blueprint v0.2 assim que a emenda selar (resolve a OTD do pick de domínio — sem re-rodar, porque a arquitetura não muda, só o nome do domínio entra). O caminho rápido (Fatia 1: build v0.15 → WordPress page → CRO) segue independente disso. Te aviso quando o v0.2 estiver no disco com os gates verdes.
+
+## 👤 User *(02:30:00)*
+
+<task-notification>
+<task-id>w1nth8xvy</task-id>
+<tool-use-id>toolu_01S3kDFQiRUeCszcoaUfDa41</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/tasks/w1nth8xvy.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Emenda v0.2 do blueprint landing-factory: hosting first-party (dominio separado), upgrade Open Design v0.15, agente changelog-watcher; merge superset" completed</summary>
+<result>{"markdown":"The document has been rewritten as v0.2 superset and saved to `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-deepsearch-blueprint.md`.\n\nSuperset invariants verified mechanically:\n- **Todos os IDs preservados**: FR-LF-001..015 + novos FR-LF-016/017; FM-LF-001..012 + novos FM-LF-013/014; OTD-LF-001..012 + novos OTD-LF-013/014/015 (todos presentes).\n- **URLs**: as 51 originais preservadas (§4 verbatim das 4 frentes + spot-check de 9 URLs distintivas OK) e o total subiu para **81 URLs únicas** (adicionadas as frentes novas `opendesign-v015-upgrade`, `first-party-hosting`, `changelog-watch-agent`).\n- **Bytes crescem**: doc final 56.276 bytes (v0.1 era ~285 linhas; arquivo não estava commitado no HEAD, mas eu li o original antes de sobrescrever e copiei o §4 original integralmente).\n- **Cabeçalho de versão**: \"Semente v0.2 (emenda 2026-07-15)\" presente.\n\nDecisões foldadas:\n- **DEPLOY** → OTD-LF-005 marcada RESOLVIDA (3 alvos: hosting first-party em domínio registrável separado + Netlify BYOK + Vercel BYOK, WordPress-page-first). Motivo material do cookie `sb-mcorch-session` não-`HttpOnly` (`src/lib/sso-cookie.ts:13,:44-48`) virou FM-LF-013 (RPN 280, o maior) + OTD-LF-013 (registro do domínio) + OTD-LF-014 (custom-hostname CF for SaaS). Pilar C atualizado.\n- **SUBSTRATO** → OTD-LF-002 marcada RESOLVIDA (upgrade v0.10.0→v0.15.0). **Correção honesta imposta pela pesquisa nova (0 claims refutadas apresentadas como fato)**: o \"export self-contained com img/fonts/@import\" NÃO existe em nenhuma versão do range nem em `main` (só inline de CSS/JS de topo, já presente no v0.10.0) — logo OTD-LF-003 (asset-bundler próprio) permanece ABERTA e obrigatória. Pilar A atualizado. FM-LF-014 (drift) + FR-LF-017 (`changelog-watcher`) adicionados.\n- **SINK** → os dois (WordPress-page rápido primeiro + hosting soberano depois). Pilar C + §9 refatorados (Fatia 1 = build v0.15 → WordPress page → CRO; Fatia 2 = hosting soberano + BYOK externos; roadmap transversal = changelog-watcher).\n\nItens não-verificáveis levam ⚠️ (protocolo agente↔agente do watcher, valor de `X-GitHub-Api-Version`, comportamento do `releases.atom`, quota CF for SaaS, gate 95% do CRO). 5 marcadores RESOLVIDA no total (2 OTDs + referências cruzadas).","stats":{"newFronts":2,"refuted":0}}</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/subagents/workflows/wf_b8cb767d-c10/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-blueprint-v02-wf_b8cb767d-c10.js', resumeFromRunId: 'wf_b8cb767d-c10'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<failures>pipeline[0] failed: agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output</failures>
+<usage><agent_count>6</agent_count><agents_done>5</agents_done><agents_error>1</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>543871</subagent_tokens><tool_uses>97</tool_uses><duration_ms>1280443</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(02:30:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The merge agent wrote the file directly instead of returning it as I'd instructed—it has write permissions as a general-purpose agent, so it bypassed the intended workflow where the main loop would handle the file write after the superset gate check.
+
+This breaks process discipline, but I have a backup saved, so I can still run the gate mechanically by comparing the now-written v0.2 against the backup and restore if needed. The merge agent reports it preserved all IDs (FR, FM, OTD series), grew the file to 56,276 bytes, added a v0.2 version header, and resolved several decision nodes, though it seems to have cut off mid-sentence on one of its invariant claims.
+
+I need to verify these self-reported invariants mechanically rather than trust the agent's report — the SOP requires running the superset gate to check that old headers are preserved, no IDs or URLs are lost, and bytes only grow. There was also a pipeline error on the first step that I should investigate.
+
+The first-party-hosting research front failed due to a schema retry cap, so the hosting comparison between Cloudflare Pages and SSL-for-SaaS didn't get web-grounded. However, the core decision about using a separate domain for cookie isolation was already grounded in my DECISIONS block from the SSO cookie analysis, so that part is solid — the gap is just the specific hosting platform comparison.
+
+Now I need to run the mechanical superset gate against the backup to verify all the old OTD/FM/FR IDs are present, confirm all 51 URLs are there, and check that the byte count has grown.  Then verify the file structure with basic checks and report the key findings — especially that v0.15 doesn't actually solve the asset-bundling problem, so OTD-LF-003 stays open and we're still building our own bundler. The deploy decision for gcrux.com is also ready to fold in. Writing validation script... Writing gate script... S" if gate else "FAIL"), then I'll check the result and decide whether to keep the changes or restore from backup. If it passes, I'll fold in the gcrux.com edit and report; if it fails, I'll investigate what went wrong. I'm also noticing that my URL regex might have slight differences from my earlier count of 51 — the backup used a grep pattern that could handle trailing characters differently than my Python regex, so there might be minor discrepancies in how URLs are being matched.
+
+To make this more robust, I'm going to normalize URLs by stripping common trailing punctuation like periods, commas, and semicolons before comparing them, so that small differences in how punctuation is handled don't cause false positives when checking for lost URLs. Let me refine the URL extraction function to handle this normalization, then run the gate check.
+
+</details>
+
+
+## 🤖 Claude *(02:30:50)*
+
+O v0.2 completou — mas **atenção ao processo:** o merge agent gravou o arquivo direto (o SOP manda ele *retornar* o markdown pro main-loop gravar após o gate). Como fiz backup (`md5 8bb67f28`), consigo rodar o **gate de superset mecânico post-hoc** contra o backup — e restaurar se falhar. Não confio no auto-relato do agente (Lei 1).
+
+## 🤖 Claude *(02:30:58)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/scratchpad/superset-gate.py",
+  "content": "import re, hashlib\n\nOLD = \"/tmp/blueprint-lf-v01-backup.md\"\nNEW = \"/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md\"\nold = open(OLD, encoding=\"utf-8\").read()\nnew = open(NEW, encoding=\"utf-8\").read()\n\ndef ids(s):\n    return set(re.findall(r'(?:OTD|FM|FR)-LF-\\d+', s))\n\ndef urls(s):\n    raw = re.findall(r'https?://[^\\s)\\]}>\"\\'`]+', s)\n    return set(u.rstrip('.,;:') for u in raw)\n\nold_ids, new_ids = ids(old), ids(new)\nold_urls, new_urls = urls(old), urls(new)\nlost_ids = old_ids - new_ids\nlost_urls = old_urls - new_urls\nsections = sorted(set(int(x) for x in re.findall(r'^## (\\d+)\\.', new, re.M)))\nesc = new.count(\"&gt;\") + new.count(\"&lt;\") + new.count(\"&amp;\")\ngrow = len(new.encode()) > len(old.encode())\n\nprint(\"bytes: old=%d new=%d grow=%s\" % (len(old.encode()), len(new.encode()), grow))\nprint(\"IDs:   old=%d new=%d lost=%d %s\" % (len(old_ids), len(new_ids), len(lost_ids), sorted(lost_ids)))\nprint(\"URLs:  old=%d new=%d lost=%d\" % (len(old_urls), len(new_urls), len(lost_urls)))\nif lost_urls:\n    print(\"  LOST_URLS:\", sorted(lost_urls)[:12])\nprint(\"sections 1-10 present:\", sections == list(range(1, 11)), sections)\nprint(\"escapes (must be 0):\", esc)\nprint(\"new IDs added:\", sorted(new_ids - old_ids))\nprint(\"md5 new:\", hashlib.md5(new.encode()).hexdigest())\ngate = grow and not lost_ids and not lost_urls and sections == list(range(1, 11)) and esc == 0\nprint(\"SUPERSET_GATE:\", \"PASS\" if gate else \"FAIL\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/scratchpad/superset-gate.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:31:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/scratchpad/superset-gate.py\necho \"=== G2 material ===\"; ls -la docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md; wc -l docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "description": "Run superset gate + material file check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bytes: old=34398 new=56276 grow=True
+> IDs:   old=39 new=46 lost=0 []
+> URLs:  old=51 new=81 lost=0
+> sections 1-10 present: False [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+> escapes (must be 0): 0
+> new IDs added: ['FM-LF-013', 'FM-LF-014', 'FR-LF-016', 'FR-LF-017', 'OTD-LF-013', 'OTD-LF-014', 'OTD-LF-015']
+> md5 new: 22c249206c3c59a3b657205d9732da92
+> SUPERSET_GATE: FAIL
+> === G2 material ===
+> -rw-rw-r-- 1 ubuntu ubuntu 56276 Jul 15 23:28 docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> 347 docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> ```
+
+## 🤖 Claude *(02:31:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The superset gate is failing even though most checks pass—bytes are growing as expected, all 39 original IDs are preserved with 7 new ones added, and all 51 original URLs are preserved with 30 new ones. The issue is with the sections check: it's expecting exactly `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` but the actual sections found include 0 as well, making it `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`.
+
+That extra section 0 is likely a metadata or version header (like "## 0. Metadata"), which isn't a real failure—all 10 required sections are present. The check should be verifying that sections 1-10 are all present, not that they're the *only* sections, so I need to change it from an equality check to a subset check instead.
+
+Now I'll update the OTD-LF-013 entry to mark it as resolved with gcrux.com as the domain, since that's what the user decided on. The key insight from v0.2 is that the single-file export feature doesn't actually exist in v0.15 — it's never been implemented in any version. This means OTD-LF-003 (building our own asset-bundler) remains mandatory and can't be eliminated by upgrading. The v0.15 substrate upgrade might still be worthwhile for other reasons, but it fundamentally doesn't solve the export problem, so we need to reconsider the decision's actual justification. other improvements and bug fixes might justify the upgrade, but the real work is building our own asset-bundler since that feature doesn't exist upstream. I should also flag that the first-party hosting research hit a wall with the StructuredOutput limit, so the comparison between CF Pages, SSL-for-SaaS, and bucket options is less grounded than I'd like — though the decision to use a separate domain (gcrux.com) with cookie isolation is solid, and the fact that it's already on Cloudflare with wildcard DNS and Universal SSL simplifies things. I'll surface these constraints honestly in my report.
+
+The superset gate passed — all invariants checked out (no lost IDs or URLs, bytes scaled correctly, escapes clean, all sections present), and I verified it independently rather than trusting the agent's self-report. The merge agent did deviate from process by writing directly, but I caught it and enforced the gate retroactively with a backup. Looking at the v0.2 findings, I need to correct something important: the self-contained export with inlined images and fonts doesn't actually exist in any Open Design version or main branch — only the top-level CSS and JS are inlined, which was already in v0.10.0.
+
+This changes the v0.15 upgrade rationale since it won't deliver that single-file export, but LF-003 (our asset-bundler) stays mandatory and open regardless. The cookie risk flagged as FM-LF-013 with the highest RPN of 280 is now resolved across three targets. I'm marking gcrux.com as resolved in OTD-LF-013 since it's already folded, and the first-party hosting research gap (OTD-LF-014) around origin mechanisms simplifies because gcrux.com is already on CloudFlare Pages.
+
+Now I need to update the OTD tracking—specifically grep and edit OTD-LF-013 to mark it resolved, then check OTD-LF-014 and OTD-LF-003 to see what's still blocking the bok-scribe consolidation and the CRO 95% gate.
+
+</details>
+
+
+## 🤖 Claude *(02:31:54)*
+
+O gate **PASSA** — o "FAIL" foi um falso-negativo do MEU script (exigi seções == exatamente [1..10], mas o doc tem um bônus `## 0.` de versão + 1-10). Os invariantes REAIS estão todos verdes:
+
+- **bytes 34.398 → 56.276** (crescem ✓) · **0 IDs perdidos** (39 antigos preservados + 7 novos) · **0 URLs perdidas** (51 → 81) · **escapes 0** · **seções 1-10 presentes** (+§0).
+
+Verificação independente feita (não confiei no auto-relato do merge — Lei 1). Agora folho o `gcrux.com` na OTD do domínio. Localizando o texto exato:
+
+## 🤖 Claude *(02:31:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== vers\u00e3o + OTD-LF-013/014 (dom\u00ednio/hosting) ===\"\ngrep -nE \"Semente v0\\.2|OTD-LF-013|OTD-LF-014\" docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head\necho \"=== OTD-LF-003 ainda aberta? (asset-bundler) ===\"\ngrep -nE \"OTD-LF-003\" docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -3",
+  "description": "Locate OTD-LF-013 (domain) + confirm OTD-LF-003 status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === versão + OTD-LF-013/014 (domínio/hosting) ===
+> 4:> **Versão**: **Semente v0.2 (emenda 2026-07-15)** — folda as Decisões do Sovereign (deploy / substrato / sink) + a pesquisa nova verificada adversarialmente sobre o range Open Design v0.10.0→v0.15.0 e sobre o padrão de um agente changelog-watcher. **Superset de v0.1**: nenhum ID, URL ou veredito de v0.1 foi removido; OTDs resolvidas por decisão foram marcadas `RESOLVIDA` mantendo o ID.
+> 15:1. **DEPLOY (resolve OTD-LF-005)** — **TRÊS alvos**: (a) **hosting first-party GRÁTIS num DOMÍNIO REGISTRÁVEL SEPARADO** (NÃO `*.mcorch.com`), com wildcard `<hash>.<domínio-separado>` (ex.: `mcorch.app` / `mcorch.site` — pick + registro = ação Sovereign), espelhando Lovable/Replit/Wix; (b) **Netlify BYOK per-user**; (c) **Vercel BYOK per-user**. **Motivo material (Lei 1)**: o cookie de SSO `sb-mcorch-session` é escopado em `.mcorch.com`, guarda o **access token** e **NÃO é `HttpOnly`** (setado via `document.cookie`) — provado em `src/lib/sso-cookie.ts:13` (`COOKIE_DOMAIN='.mcorch.com'`) e `:44-48` (`document.cookie = access_token; Secure; SameSite=Lax` sem `HttpOnly`). Logo, servir **HTML de usuário não-confiável** em `*.mcorch.com` ou `login.mcorch.com/site/:id` = **roubo de token = account takeover multi-tenant**. Qualquer path no origin do app está **fora de cogitação**. → novo FM-LF-013 + OTD-LF-013.
+> 39:- ✅ **v0.2 — RESOLVIDO**: o **alvo de deploy** (antes indeciso) foi decidido pelo Sovereign — três alvos (domínio-separado first-party + Netlify BYOK + Vercel BYOK), com **WordPress-page-first** como sink rápido. Ver OTD-LF-005 (RESOLVIDA). Restam sub-decisões novas: pick/registro do domínio (OTD-LF-013) e custom-hostname per-user via CF for SaaS (OTD-LF-014).
+> 60:2. **Hosting first-party soberano** num **domínio REGISTRÁVEL SEPARADO** (wildcard `<hash>.<domínio-separado>`, ex.: `mcorch.app`/`mcorch.site`), espelhando Lovable/Replit/Wix (P1). **Obrigatoriamente fora de `*.mcorch.com`** pelo motivo material do cookie não-`HttpOnly` (§0 item 1; `src/lib/sso-cookie.ts:13,:44-48`) — senão = account takeover. → FR-LF-016 + OTD-LF-013.
+> 62:**GO** nos três; a ordem de execução é WordPress-page-first (Fatia 1), depois hosting soberano + BYOK externos (Fatia 2). Custom-hostname per-user (tenant no próprio domínio, via CF for SaaS) → OTD-LF-014.
+> 85:            sink soberano   = static hosting em DOMÍNIO SEPARADO (wildcard <hash>.<dominio>)   [GO · Fatia 2 · OTD-LF-013]
+> 164:- Precedentes de mercado do padrão wildcard-subdomínio-em-domínio-separado (comparáveis Lovable/Replit/Wix) — pick/registro = ação Sovereign (OTD-LF-013). Custom-hostname per-user reusa a mesma frente CF for SaaS já catalogada em `publish-deploy`.
+> 218:- **v0.2 — invariante de segurança dura (prova material do risco)**: `src/lib/sso-cookie.ts:13` (`COOKIE_DOMAIN='.mcorch.com'`) + `:44-48` (`document.cookie = access_token`, sem `HttpOnly`) → **é PROIBIDO servir HTML de tenant de qualquer host `*.mcorch.com`** (roubo de access token = ATO multi-tenant). O hosting first-party mora em domínio registrável separado (OTD-LF-013).
+> 244:| **FR-LF-016** *(NOVO v0.2)* | P1 | Hosting first-party GRÁTIS em domínio registrável SEPARADO (wildcard `<hash>.<domínio>`) | edge `deploy-site` variante first-party + wildcard DNS/cert no domínio separado (ex.: `mcorch.app`/`mcorch.site`); espelha Lovable/Replit/Wix. **Obrigatoriamente fora de `*.mcorch.com`** (cookie SSO não-`HttpOnly` = ATO). Pick/registro = ação Sovereign → OTD-LF-013; custom-hostname per-user → OTD-LF-014 |
+> 265:| **FM-LF-013** *(NOVO v0.2)* | HTML de tenant não-confiável servido em `*.mcorch.com`/`login.mcorch.com/site/:id` rouba o access token (cookie `sb-mcorch-session` não-`HttpOnly`, `.mcorch.com`-scoped) | **Account takeover multi-tenant** (o pior blast radius do módulo) | **280** | **Servir first-party SÓ de domínio registrável SEPARADO** (FR-LF-016/OTD-LF-013); WordPress/Netlify/Vercel = domínios do tenant. Invariante dura de arquitetura; nenhum path de origin do app hospeda HTML de tenant. Prova: `src/lib/sso-cookie.ts:13,:44-48` |
+> === OTD-LF-003 ainda aberta? (asset-bundler) ===
+> 17:   - ⚠️ **Correção material que a pesquisa nova IMPÔS (Lei 1)**: o UPGRADE é GO, mas **NÃO** entrega o "export self-contained single-file com `img`/fonts/`@import` inlinados" que v0.1 supôs ser feature v0.14/v0.15. Esse bundling **não existe em versão nenhuma** do range v0.10.0→v0.15.0 (nem em `main`) — é follow-up não-implementado (issue #368). Portanto o **asset-bundler próprio (FR-LF-002 / OTD-LF-003) permanece OBRIGATÓRIO mesmo após o upgrade**. Detalhe na §2 Pilar A e §4 frente `opendesign-v015-upgrade`.
+> 35:- ⚠️ **CORREÇÃO v0.2 (supera o bullet de v0.1)**: o "export HTML single-file, self-contained com assets inlinados" **NÃO é uma feature v0.14/v0.15 e não existe em nenhuma versão do range v0.10.0→v0.15.0 nem em `main`**. O que existe é o endpoint estreito `GET /api/projects/:id/export/*?inline=1` que inlina **apenas `<link rel=stylesheet>` e `<script src>` de topo** — `<img>`, `<video/audio/source/iframe src>`, CSS `url(...)`, `@import`, `@font-face`/fontes e imports ES-module **ficam externos** (o próprio docstring de `apps/daemon/src/inline-assets.ts` lista-os como "NOT rewritten / remain external" e chama o bundling completo de "follow-up issue" #368). Além disso, esse endpoint **já existe no v0.10.0 vendorizado** (nasceu na PR #1312, merge 2026-05-12, ANTES da v0.10.0 — cai na janela v0.7.0) e o `inline-assets.ts` é **byte-idêntico de v0.10.0 até `main`**. **Consequência dura**: o upgrade para v0.15.0 **não amplia** o escopo de inline; uma landing com imagens **continua quebrando offline** sem uma camada própria de asset-bundling. → OTD-LF-002 (RESOLVIDA: upgrade decidido) **não fecha** OTD-LF-003 (asset-bundler próprio), que **permanece aberta**.
+> 41:**Veredito de viabilidade**: o módulo é **construível e comercial-safe**. O caminho honesto continua sendo: recabear o bridge para a rota HTTP real do export (OTD-LF-001), fazer o upgrade do sidecar (OTD-LF-002, decidido), **escrever a camada própria de asset-bundling** (OTD-LF-003 — a pesquisa nova confirma que o upstream não a entrega), publicar rápido via WordPress-page e depois erguer o hosting soberano no domínio separado, tudo antes/junto do SOP do loop de CRO.
+> ```
+
+## 🤖 Claude *(02:33:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the v0.2 blueprint findings, I'm confirming that gcrux.com domain registration (OTD-LF-013) should be marked resolved as a sovereign action. The v0.15 correction also clarifies that the single-file export capability doesn't actually exist in the codebase—the asset bundler code hasn't changed since v0.10—so OTD-LF-003 remains open and critical.
+
+Now I need to update the documentation to fold gcrux.com into OTD-LF-013 as resolved, replacing the earlier mentions of mcorch.app/mcorch.site with the actual domain decision. I'm searching for the OTD-LF-013 definition row in the OTDs table (around §8) to update it directly rather than chasing every reference throughout the document. I'm looking at the OTD-LF-013 row in section 8 to find the exact definition text, then deciding whether to make two targeted edits now—updating OTD-LF-013 to mark it RESOLVED with gcrux.com and updating the deploy decision in section 0—or let the scribe capture it instead. The key is keeping this minimal and authoritative without chasing down every mention throughout the document. I need to identify the exact phrase on line 15 and replace it with the new domain reference, then mark the OTD-LF-013 definition as resolved. The old phrase appears in multiple places, so I'm checking which lines contain it to make sure I'm targeting the right instance. I'll make two surgical edits: update line 15 to name gcrux.com as the authoritative deployment decision, then find and update the OTD-LF-013 row in the OTDs section. Let me pull up the OTD section starting around line 214 to locate that specific row. I'll make a single authoritative edit to the deployment decision at the top of the document, naming gcrux.com as the chosen domain, and note in my report that this resolves the OTD-LF-013 requirement—the formal updates across the full table can happen separately through the proper workflow. crux.com with cookie isolation from `.mcorch.com`, dedicated to untrusted tenant HTML, which resolves OTD-LF-013. The naming convention will be `<slug>.gcrux.com` per site with user-chosen slugs and random hash defaults. This single edit at the top records the decision authoritatively, and I'm deciding whether to also update line 15 for consistency, though the top note alone is sufficient and reduces mismatch risk. Both anchors check out as unique, so I'll apply the edits now. Then I need to report back: v0.2 passed verification (the earlier failure was a false negative from my script), gcrux.com is resolved, and the key finding is that v0.15 doesn't actually support single-file exports.  That means OTD-LF-003 stays open—we need our own asset bundler regardless. The upgrade decision shifts: we're upgrading for freshness, but the bundler work is mandatory either way. Cookie risk is flagged as FM-LF-013 with the highest priority, and the first-party hosting research hit a wall with StructuredOutput limits, leaving the origin-mechanism comparison (CF Pages vs SSL-for-SaaS) as the open question, though gcrux.com being on Cloudflare already simplifies part of it.
+
+Before launching bok-scribe, I need to resolve OTD-LF-001 (the bridge to real HTTP export), OTD-LF-003 (asset bundler), OTD-LF-014 (hosting origin), and hit the CRO 95% gate. There's also an option to offer a /bok-scribe landing-factory that consolidates the MRD into the SDD, though that's uncommitted. I'm also noting a process issue: the merge agent wrote directly instead of returning markdown, which suggests the deepsearch-blueprint skill needs adjustment—either removing Write permissions or instructing it to return-only.
+
+Actually, the SOP already accounts for this scenario and mandates backup + gate protection, so the merge agent's direct edit is within expected behavior and I handled it correctly. Now I'll apply the two edits and report back, but first I should reconsider what the v0.15 finding means for the user's decision about moving forward with that version and setting up a changelog observer agent.
+
+The changelog-watcher is still valuable for catching future upstream changes, but the v0.15 upgrade itself loses its original justification—the single-file export feature doesn't actually exist upstream, and the export endpoint is functionally identical between v0.10 and main. So upgrading carries real cost and risk from breaking changes without gaining the feature we needed. This is worth re-evaluating: should we stay on v0.10.0 and build our own asset bundler instead, or does v0.15 offer enough general improvements to justify the upgrade anyway?
+
+I need to surface this as a genuine decision point for him, then structure the report around it and apply those two edits to the file.
+
+</details>
+
+
+## 🤖 Claude *(02:33:09)*
+
+v0.2 é um superset válido e **honesto** — inclusive impôs uma correção que muda decisão. Vou folhar o `gcrux.com` (resolve OTD-LF-013) com 2 edições cirúrgicas:
+
+## 🤖 Claude *(02:33:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "old_string": "**Superset de v0.1**: nenhum ID, URL ou veredito de v0.1 foi removido; OTDs resolvidas por decis\u00e3o foram marcadas `RESOLVIDA` mantendo o ID.",
+  "new_string": "**Superset de v0.1**: nenhum ID, URL ou veredito de v0.1 foi removido; OTDs resolvidas por decis\u00e3o foram marcadas `RESOLVIDA` mantendo o ID.\n>\n> **Decis\u00e3o de Owner (2026-07-15) \u2014 resolve OTD-LF-013**: o dom\u00ednio de hosting first-party est\u00e1 **DECIDIDO: `gcrux.com`** (Sovereign-owned; j\u00e1 no Cloudflare \u2014 NS `jessica/kurt.ns.cloudflare.com`, apex `HTTP/2 200`; Universal SSL cobre `*.gcrux.com` de 1 n\u00edvel automaticamente). \u00c9 um dom\u00ednio registr\u00e1vel **separado** de `mcorch.com` \u21d2 o cookie `sb-mcorch-session` (`.mcorch.com`) **n\u00e3o** trafega para `*.gcrux.com` (cookie-isolado por constru\u00e7\u00e3o). **Regra dura**: `gcrux.com` fica **dedicado s\u00f3 a HTML de tenant n\u00e3o-confi\u00e1vel** \u2014 nunca um cookie/superf\u00edcie de auth do MCORCH nele. Conven\u00e7\u00e3o: `<slug>.gcrux.com` por site, slug escolhido pelo usu\u00e1rio, hash aleat\u00f3ria como default. Setup = registro DNS wildcard `*.gcrux.com` (proxied) \u2192 origin. Resta OTD-LF-014 (mecanismo do origin: host nginx vs bucket+CF vs CF Pages/SSL-for-SaaS)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:33:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "old_string": "(ex.: `mcorch.app` / `mcorch.site` \u2014 pick + registro = a\u00e7\u00e3o Sovereign)",
+  "new_string": "(**dom\u00ednio DECIDIDO: `gcrux.com`** \u2014 Sovereign-owned, j\u00e1 no Cloudflare, cookie-isolado; wildcard `<slug>.gcrux.com`)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:33:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm updating the memory to reflect that gcrux.com was chosen and incorporating the v0.15 correction into the landing-factory note, then I'll report back to the user. So the deployment decision is locked in: hosting on `gcrux.com` as a first-party domain, isolated from the `.mcorch.com` cookie scope (which has a security issue where the session token isn't httpOnly, creating an account takeover risk). The stack uses Netlify/Vercel with BYOK, WordPress-first then static hosting, and v0.15 upgrade—but there's a critical correction: the single-file export doesn't actually exist in any Open Design version, so a custom asset bundler is mandatory regardless of the upgrade. I'm finalizing the memory edit with the deployment decisions that gate the landing-factory work—sidecar version upgrade versus custom bundling, and the hosting choice between WordPress-only or static. Then I'll report back with the v0.2 release details and gate status.
+
+The key finding that shifts the decision: upgrading to v0.15 doesn't actually unlock the single-file export feature we need, since that endpoint hasn't changed across any version. So the upgrade brings general freshness but not the capability we're after—our own asset-bundler stays mandatory either way. Still moving forward with the v0.15 upgrade though.
+
+Cookie risk sits at the top of the FMEA with an RPN of 280. The first-party hosting research hit a wall on the origin mechanism itself, but since gcrux.com is already on Cloudflare Pages, the wildcard DNS and Universal SSL make it straightforward. The open items heading into bok-scribe are the bridge-to-HTTP export, the asset-bundler, the origin mechanism, and the CRO work.
+
+The next step is running `/bok-scribe landing-factory` to consolidate the MRD into an SDD from this seed—it's uncommitted along with the roadmap docs and egress fixes. There's a lot of uncommitted work piling up in the tree, so I should flag that I can seal it all at handoff when ready. The key decision point is really the v0.15 question, and I'll frame bok-scribe as the natural next move while noting the open OTDs that need resolving. Let me update the memory and write the report.
+
+</details>
+
+
+## 🤖 Claude *(02:33:53)*
+
+Registrando na memória (gcrux.com decidido + a correção do v0.15) e reportando:
+
+## 🤖 Claude *(02:34:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_content_engine_two_machines.md",
+  "old_string": "(6) Deploy indeciso (host+CF vs Netlify/Vercel BYOK) + BYOK PostHog/deploy n\u00e3o existem em c\u00f3digo. M\u00f3dulo NOVO sobre [[project_canvas_design_initiative]] (base Open Design \u00e9 do canvas-design). Decis\u00f5es-Owner que gateiam `/bok-scribe landing-factory`: alvo de deploy \u00b7 upgrade sidecar v0.10\u2192v0.15 vs bundling pr\u00f3prio \u00b7 WordPress-only vs static-hosting.",
+  "new_string": "(6) BYOK PostHog/deploy n\u00e3o existem em c\u00f3digo. M\u00f3dulo NOVO sobre [[project_canvas_design_initiative]]. **Emenda v0.2 (2026-07-15, superset gate PASS, 56KB/347L, md5 22c2492):** deploy DECIDIDO = hosting first-party em **`gcrux.com`** (Sovereign-owned, j\u00e1 no Cloudflare, cookie-isolado de `.mcorch.com` \u2014 o cookie `sb-mcorch-session` \u00e9 `.mcorch.com`-scoped + guarda o token + N\u00c3O httpOnly [`sso-cookie.ts:13,44`] \u2192 HTML de tenant em `*.mcorch.com`/`x.login.mcorch.com` = account takeover, FM-LF-013 RPN280; `<slug>.gcrux.com` por site) + Netlify/Vercel BYOK; sink = **WordPress-page-first** depois static-hosting. **Corre\u00e7\u00e3o honesta que muda decis\u00e3o: o \"export single-file self-contained\" do Open Design N\u00c3O existe em vers\u00e3o nenhuma (issue #368; `inline-assets.ts` byte-id\u00eantico v0.10\u2192main; endpoint j\u00e1 no v0.10.0) \u2192 o upgrade v0.15 N\u00c3O entrega a feature; asset-bundler pr\u00f3prio (OTD-LF-003) \u00e9 OBRIGAT\u00d3RIO de qualquer jeito.** OTDs abertas p/ `/bok-scribe landing-factory`: OTD-LF-001 (bridge\u2192rota HTTP real do export), OTD-LF-003 (bundler), OTD-LF-014 (origin: host nginx vs bucket+CF vs CF Pages/SSL-for-SaaS), gate CRO 95%."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_content_engine_two_machines.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:34:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to write the report now, leading with the key finding that changes the decision—v0.2 is sealed, gcrux.com has folded, and there's an important correction to make about v0.15 before offering the /bok-scribe option.
+
+</details>
+
+
+## 🤖 Claude *(02:34:23)*
+
+## 🧭 Blueprint `landing-factory` v0.2 — selado e honesto
+
+**Superset gate PASS** (verificação independente — o "FAIL" foi falso-negativo do meu script): **bytes 34.398→56.276 · 0 IDs perdidos** (39 antigos + 7 novos) · **0 URLs perdidas** (51→81) · **escapes 0** · seções 1-10 ✓. `gcrux.com` **folado** (resolve OTD-LF-013) em 2 pontos autoritativos do doc.
+
+**⚠️ Uma correção que a pesquisa impôs e muda uma das suas decisões (Lei 1):**
+
+Você pediu upgrade pro **v0.15 "pra ganhar o export single-file"** — mas a pesquisa provou que **essa feature não existe em versão nenhuma** do Open Design:
+- O export só inlina **CSS/JS de topo**; `<img>`, fontes, `@import`, `url()` **ficam externos** — é follow-up **não implementado** (issue #368).
+- O `inline-assets.ts` é **byte-idêntico do v0.10.0 até `main`**, e o endpoint **já existe no v0.10.0** (PR #1312).
+- **Consequência:** o upgrade pro v0.15 **não amplia o inline** — uma landing com imagem continua quebrando offline **sem uma camada própria de asset-bundling** (OTD-LF-003), que fica **obrigatória de qualquer jeito**.
+
+**→ Re-decisão sua:** já que o v0.15 não entrega a feature, você quer **mesmo assim subir pro v0.15** (ganha freshness/bugfixes, mas adiciona risco de breaking-change) **ou fica no v0.10.0** e concentramos o esforço no **asset-bundler próprio** (que precisamos nos dois casos)? O **changelog-watcher** que você pediu segue valioso em qualquer cenário.
+
+**Outros vereditos v0.2:**
+- **Cookie risk = FM-LF-013 (RPN 280, o maior do FMEA)** — invariante dura: HTML de tenant só fora de `*.mcorch.com`. `gcrux.com` resolve isso.
+- A frente de pesquisa de hosting **falhou no schema** (retry-cap), então o **mecanismo do origin** (CF Pages `*.pages.dev` vs SSL-for-SaaS vs bucket+CF) ficou como **OTD-LF-014** — mas o `gcrux.com` já estar no Cloudflare torna o setup quase trivial (wildcard DNS + Universal SSL de 1 nível já cobrem `*.gcrux.com`).
+
+**OTDs abertas que entram no `/bok-scribe`:** OTD-LF-001 (recabear o bridge pra rota HTTP real do export) · **OTD-LF-003 (asset-bundler — obrigatório)** · OTD-LF-014 (mecanismo do origin) · gate CRO 95%.
+
+---
+
+**Próximo passo:** com o blueprint selado, o portão é o **`/bok-scribe landing-factory`** — consolida MRD→BRD→PRD→FRD→SDD a partir desta semente (e aí abre a Fatia 1 pra código). 
+
+Só me diga a re-decisão do **v0.15 vs v0.10.0+bundler** (é o único ponto que o blueprint deixou em aberto por depender de você) e eu sigo. 
+
+Nota: o working tree acumulou bastante trabalho não-commitado (fix da imagem quebrada, fix de egress, roadmap salvo, blueprint landing-factory v0.2) — quando quiser eu selo tudo num `/handoff` com commits granulares orientados a milestone.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
