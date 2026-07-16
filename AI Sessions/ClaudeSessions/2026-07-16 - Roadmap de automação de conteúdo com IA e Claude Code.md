@@ -7319,6 +7319,958 @@ Só me diga a re-decisão do **v0.15 vs v0.10.0+bundler** (é o único ponto que
 
 Nota: o working tree acumulou bastante trabalho não-commitado (fix da imagem quebrada, fix de egress, roadmap salvo, blueprint landing-factory v0.2) — quando quiser eu selo tudo num `/handoff` com commits granulares orientados a milestone.
 
+## 👤 User *(11:06:23)*
+
+contexto da swssao em 58% mantem 0.10 entao e ataca o asset bunbler e continue c os proximo passos
+
+## 🤖 Claude *(11:07:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user is indicating the session context is at 58% — still below the threshold where I'd need to wrap up, so I can continue. They want me to focus on the asset bundler next and proceed with the remaining steps.
+
+But there's a protocol conflict here: the landing-factory module doesn't have a sealed BoK suite yet, and the Closed-Loop Protocol says no code should be written before the BoK is consolidated. The asset bundler is part of that module, so I need to determine whether it qualifies for an exemption or if I should run the BoK consolidation first. The asset bundler is gated by the landing-factory BoK, which isn't sealed yet — I need to run /bok-scribe first to formalize it as a requirement before coding. But the user asked me to "attack the asset bundler," which could mean he wants me to proceed anyway. The protocol is strict unless he explicitly overrides it, and he hasn't done that here, so I'm caught between following the unbreakable gate and responding to his momentum. bundler is a new component, so it doesn't qualify for the exemptions — it's gated by the BoK seal. My response needs to acknowledge the v0.10.0 decision (reversing the earlier upgrade call) and update the blueprint accordingly, then surface that the asset bundler work itself requires running /bok-scribe first to formalize it in the BoK before coding begins.
+
+That said, /bok-scribe is a heavyweight workflow — it generates nine documents and would consume significant context. I'm weighing whether to offer to run it now or flag it as the next step. BoK-scribe first to document the landing-factory and asset-bundler, then code the bundler itself — that's the protocol-correct sequence, and I should surface that gate rather than jump straight to coding. I'm realizing the scope here: /bok-scribe will generate the complete documentation suite for the entire landing-factory module, which covers build, publish, CRO, hosting, and exports. Once that BoK is sealed, it gates the asset-bundler work and everything downstream in Fatia 1. So the next move is to run /bok-scribe for landing-factory right now.
+
+But before I do that, I need to update the blueprint first—OTD-LF-002 was marked as resolved with an upgrade to v0.15, but the Sovereign reversed that decision to stay on v0.10.0 since the upgrade doesn't deliver the needed feature anyway. The /bok-scribe reads the blueprint as its source of truth, so I need to correct that decision in the blueprint before running the scribe command.
+
+I'm tracking down all the places in the blueprint that reference the v0.15 upgrade—there are mentions in the SUBSTRATO section, Pilar A, and OTD-LF-002 itself—so I can update them to reflect staying on v0.10.0 with a custom asset-bundler instead.
+
+The real question is whether to edit the blueprint directly to flip this decision, then run bok-scribe, or pass the override as a directive. Since the blueprint is the source of truth, it makes sense to update it first so it accurately reflects the Sovereign's reversal, then let bok-scribe work from the corrected state. The summary won't bloat my context too much, so running /bok-scribe is the right move—it's the gate I need to pass before building the bundler. Since the user said "continue with the next steps" and I already offered /bok-scribe as the path forward, I'll treat that as approval to proceed with it, positioning the asset-bundler as the core piece within the BoK output.
+
+My approach: first, I'll locate and update the blueprint references to v0.15 and OTD-LF-002, swapping them for v0.10.0 and the bundler solution. Then I'll run /bok-scribe with landing-factory to seal the BoK and unlock the Fatia-1 code. Once that completes, I can verify the output and move straight into building the asset-bundler itself. Add the Owner decision note right after the gcrux.com one to reverse OTD-LF-002 back to v0.10.0, marking the v0.15 upgrade as cancelled and confirming that the custom asset-bundler is the real priority for this slice. Then find and flip the OTD-LF-002 row itself to match that decision, search for it, and run /bok-scribe to sync everything.
+
+I'm aware we're at 58% context and the user confirmed to keep going, so I'll proceed with both the blueprint edits and the /bok-scribe call—if context gets too high I'll wrap up, but for now there's room to work.
+
+I need to correct the blueprint first to avoid confusing bok-scribe: flip OTD-LF-002 to reflect that v0.15 is cancelled (not resolved), and update the substrate decision. Then I'll grep for those specific lines to make the edits efficiently. Now I'm searching for OTD-LF-002 and identifying the substrate decision points.
+
+</details>
+
+
+## 🤖 Claude *(11:07:55)*
+
+Entendido: **fica no v0.10.0** (o v0.15 não entrega a feature mesmo), **asset-bundler vira a prioridade**, e sigo pros próximos passos. Contexto em 58% — janela ok, continuo (Lei 3).
+
+Primeiro folho a reversão da decisão no blueprint (ele é o SSOT que o `/bok-scribe` lê), depois abro o portão. Localizando os pontos do v0.15:
+
+## 🤖 Claude *(11:07:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== OTD-LF-002 (row de defini\u00e7\u00e3o) + men\u00e7\u00f5es v0.15 no \u00a70/\u00a72/\u00a79 ===\"\ngrep -nE \"OTD-LF-002|v0\\.15\\.0|upgrade\" docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md | head -25",
+  "description": "Find OTD-LF-002 + v0.15 mentions to flip to v0.10.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === OTD-LF-002 (row de definição) + menções v0.15 no §0/§2/§9 ===
+> 4:> **Versão**: **Semente v0.2 (emenda 2026-07-15)** — folda as Decisões do Sovereign (deploy / substrato / sink) + a pesquisa nova verificada adversarialmente sobre o range Open Design v0.10.0→v0.15.0 e sobre o padrão de um agente changelog-watcher. **Superset de v0.1**: nenhum ID, URL ou veredito de v0.1 foi removido; OTDs resolvidas por decisão foram marcadas `RESOLVIDA` mantendo o ID.
+> 18:2. **SUBSTRATO (resolve OTD-LF-002)** — **UPGRADE do sidecar Open Design v0.10.0 → v0.15.0**. **MAIS**: criar um **agente `changelog-watcher`** que observa releases upstream (Open Design, PostHog, HyperFrames/HeyGen, etc.) e entrega relatórios ao time de agentes OpenClaw (o "time phantom") para preparar/atualizar o ecossistema — ferramenta interna (SOP-gated, isenta de BoK completa como os sentinels), roadmap. → novo FR-LF-016 (first-party hosting) + FR-LF-017 (changelog-watcher) + FM-LF-014.
+> 19:   - ⚠️ **Correção material que a pesquisa nova IMPÔS (Lei 1)**: o UPGRADE é GO, mas **NÃO** entrega o "export self-contained single-file com `img`/fonts/`@import` inlinados" que v0.1 supôs ser feature v0.14/v0.15. Esse bundling **não existe em versão nenhuma** do range v0.10.0→v0.15.0 (nem em `main`) — é follow-up não-implementado (issue #368). Portanto o **asset-bundler próprio (FR-LF-002 / OTD-LF-003) permanece OBRIGATÓRIO mesmo após o upgrade**. Detalhe na §2 Pilar A e §4 frente `opendesign-v015-upgrade`.
+> 30:- O substrato de geração de página existe e é soberano: o sidecar Open Design vendorizado (`canvas-design/open-design/`) roda **v0.10.0** (material: `package.json:3` `"version":"0.10.0"`, HEAD `0f5f4c2c`), Apache-2.0, e expõe um export de HTML por HTTP. **v0.2**: decisão de **upgrade para v0.15.0** (publicada 2026-07-14) — release verificada, aditiva, sem breaking change de contrato de export no range.
+> 37:- ⚠️ **CORREÇÃO v0.2 (supera o bullet de v0.1)**: o "export HTML single-file, self-contained com assets inlinados" **NÃO é uma feature v0.14/v0.15 e não existe em nenhuma versão do range v0.10.0→v0.15.0 nem em `main`**. O que existe é o endpoint estreito `GET /api/projects/:id/export/*?inline=1` que inlina **apenas `<link rel=stylesheet>` e `<script src>` de topo** — `<img>`, `<video/audio/source/iframe src>`, CSS `url(...)`, `@import`, `@font-face`/fontes e imports ES-module **ficam externos** (o próprio docstring de `apps/daemon/src/inline-assets.ts` lista-os como "NOT rewritten / remain external" e chama o bundling completo de "follow-up issue" #368). Além disso, esse endpoint **já existe no v0.10.0 vendorizado** (nasceu na PR #1312, merge 2026-05-12, ANTES da v0.10.0 — cai na janela v0.7.0) e o `inline-assets.ts` é **byte-idêntico de v0.10.0 até `main`**. **Consequência dura**: o upgrade para v0.15.0 **não amplia** o escopo de inline; uma landing com imagens **continua quebrando offline** sem uma camada própria de asset-bundling. → OTD-LF-002 (RESOLVIDA: upgrade decidido) **não fecha** OTD-LF-003 (asset-bundler próprio), que **permanece aberta**.
+> 43:**Veredito de viabilidade**: o módulo é **construível e comercial-safe**. O caminho honesto continua sendo: recabear o bridge para a rota HTTP real do export (OTD-LF-001), fazer o upgrade do sidecar (OTD-LF-002, decidido), **escrever a camada própria de asset-bundling** (OTD-LF-003 — a pesquisa nova confirma que o upstream não a entrega), publicar rápido via WordPress-page e depois erguer o hosting soberano no domínio separado, tudo antes/junto do SOP do loop de CRO.
+> 49:### Pilar A — Open Design como substrato de geração (`GO — upgrade v0.15.0 decidido; asset-bundler próprio ainda obrigatório`)
+> 51:**v0.2 — decisão foldada**: **UPGRADE v0.10.0 → v0.15.0** (release verificada, publicada 2026-07-14). O upgrade é **aditivo e sem breaking change** de contrato de export no range: `pptx` entrou no contrato CLI `EXPORT_FORMATS` na v0.13.0 (era `['pdf','image']` na v0.12.0, quando `packages/contracts/src/api/export.ts` nasceu; virou `['pdf','image','pptx']`); o parâmetro `versionId` na rota de export nasceu na v0.15.0 ("download the exact version you approved"); otimização do Design System Prompt (TTFT −49.5%). **Ganho real do upgrade**: export por versão aprovada, PPTX/PDF screenshot-backed, histórico de versão de HTML, prompt mais barato.
+> 52:**Condição que PERMANECE (⚠️ correção da pesquisa nova, Lei 1)**: o upgrade **NÃO** entrega inline de `img`/fonts/`@import`. O endpoint `?inline=1` cobre só CSS/JS de topo, **já existia no v0.10.0** (PR #1312 pré-v0.10.0) e o `inline-assets.ts` é **byte-idêntico v0.10.0→v0.15.0→main** (sha256 idêntico). O bundling completo é follow-up não-implementado (issue #368). Logo o **asset-bundler próprio (FR-LF-002 / OTD-LF-003) é obrigatório mesmo pós-upgrade**. **Anticorpo de drift** (canvas-design OTD-001/FMEA-010): pinar a tag `open-design-v0.15.0` known-good e rodar o smoke de contrato do `od` CLI/HTTP antes de subir — reforçado pelo novo `changelog-watcher` (FR-LF-017).
+> 53:**GO** para reuso do daemon como gerador, na v0.15.0; a fábrica de landing **exige** a camada própria de asset-bundling (→ OTD-LF-003).
+> 82:[GERAR]  Open Design daemon (v0.15.0 pós-upgrade) ── media generate (imagens/HyperFrames)
+> 116:- Release v0.15.0 (upstream — version-pin/"download specific file version"; ⚠️ ano incerto, provável 2026-07-14): https://github.com/nexu-io/open-design/releases/tag/open-design-v0.15.0
+> 123:### Frente `opendesign-v015-upgrade` (NOVA — v0.2, verificada adversarialmente)
+> 124:> **Veredito da frente (Lei 1)**: a premissa "v0.15.0 traz export self-contained single-file com img/fonts/@import inlinados" foi **REFUTADA**. O bundling completo **não existe** em nenhuma versão do range nem em `main` (follow-up #368). Só existe o inline estreito de CSS/JS de topo, que **já estava no v0.10.0**. O upgrade é GO por outros ganhos (versionId, pptx, prompt), não pelo bundling. Datas de release verificadas via GitHub Releases API.
+> 126:- rota de export (`GET /api/projects/:id/export/*splat?inline=1`, `versionId` opcional; comentário reafirma o escopo estreito + "follow-up" #368) — `main`: https://raw.githubusercontent.com/nexu-io/open-design/main/apps/daemon/src/import-export-routes.ts · `open-design-v0.15.0`: https://raw.githubusercontent.com/nexu-io/open-design/open-design-v0.15.0/apps/daemon/src/import-export-routes.ts
+> 192:- **Export real (HTTP-only, v0.10.0 → v0.15.0 pós-upgrade)**: `GET /api/projects/:id/export/*splat?inline=1` em `canvas-design/open-design/apps/daemon/src/import-export-routes.ts:572-725`; inliner `inline-assets.ts`. ⚠️ inlina só CSS/JS top-level (byte-idêntico v0.10.0→main — não muda com o upgrade); PDF = `501` no container (`import-export-routes.ts:511-544`); PPTX não achado em rota de export do daemon (contrato `pptx` é do CLI `od export`, v0.13.0+).
+> 232:| **FR-LF-002** | P0 | Camada própria de asset-bundling (inlinar img/fonts/@import que o daemon deixa externos) | novo módulo `landing-bundler` (host worker) — inlina `<img>`/`@font-face`/`url()`/`@import` em data: URIs. ⚠️ **v0.2**: obrigatório mesmo pós-upgrade v0.15.0 (upstream não bundla — #368) |
+> 255:| **FM-LF-001** | Blueprint especifica export sobre feature ausente no sidecar vendorizado | Módulo nasce morto (export inexistente) | **240** | Recabear para rota HTTP real (OTD-LF-001) + upgrade sidecar (OTD-LF-002, decidido). ⚠️ v0.2: o inline completo NUNCA existiu upstream → o asset-bundler próprio (FM-LF-002) é a mitigação real |
+> 256:| **FM-LF-002** | Landing com imagens/fonts servida com refs externas quebradas (bundle incompleto) | Landing renderiza quebrada em prod | **210** | FR-LF-002 asset-bundler próprio; gate de render-parity. ⚠️ v0.2: confirmado que upstream (v0.10.0→v0.15.0→main) não inlina img/fonts/@import — bundler é inescapável |
+> 268:| **FM-LF-014** *(NOVO v0.2)* | Drift de dependência upstream (Open Design/PostHog/HyperFrames) muda contrato de export/API sem aviso | Feature quebra silenciosamente pós-upgrade (ex.: `od` CLI/HTTP contract drift) | **150** | `changelog-watcher` (FR-LF-017) + pin de tag known-good + smoke de contrato antes de subir; `minimumReleaseAge` anti-supply-chain |
+> 277:| **OTD-LF-002** | Upgrade do sidecar Open Design v0.10.0→v0.15.0 | ✅ **RESOLVIDA (Sovereign 2026-07-15)**: **upgrade para v0.15.0** decidido. Base: release v0.15.0 (2026-07-14) verificada, aditiva, sem breaking change de contrato de export no range (ganha `versionId`/export-por-versão, `pptx` no CLI v0.13.0+, prompt otimizado). ⚠️ **Não fecha OTD-LF-003**: o upgrade **NÃO** entrega inline de img/fonts/@import (upstream não implementa — #368; `inline-assets.ts` byte-idêntico v0.10.0→main). Anticorpo: pinar tag `open-design-v0.15.0` known-good + smoke de contrato (reforço `changelog-watcher` FR-LF-017) | FM-LF-001, FM-LF-014 |
+> 278:| **OTD-LF-003** | Camada própria de asset-bundling + injeção tokens.css/posthog.js | **ABERTA (reforçada v0.2)**: v0.10.0/v0.15.0/main NÃO bundlam img/fonts/@import (follow-up upstream #368). Se a landing precisa ser offline-deployable, escrever bundler próprio (obrigatório, não opcional). Ponto de injeção do snippet PostHog: WordPress recebe `contentHtml` (corpo ≠ `<head>`) — resolver onde o `<head>` snippet entra | FM-LF-002 |
+> 296:### Fatia 1 (P0) — Build landing (v0.15.0) → Publish WordPress-page (rápido primeiro) → Loop CRO, com witness material
+> 297:**Escopo**: gerar uma landing real (Open Design **v0.15.0** → HTTP export `?inline=1` → **asset-bundler próprio** → tokens.css + posthog.js), publicá-la via `publishWordpress` (**postType `page`** — o caminho RÁPIDO), instrumentá-la com Project API Key per-user, e rodar UM ciclo de CRO **em modo assistido (gate humano ON)** — ler funil via Query API, propor variante, PATCH feature_flag manualmente aprovado. **Regra do Sovereign: rápido primeiro** — nada de hosting soberano nesta fatia.
+> 327:- `05-sdd.md` → contrato HTTP do export (v0.15.0 pós-upgrade), asset-bundler **próprio** (upstream não bundla), injeção tokens.css/posthog.js, `posthog_config` dual-key, worker CRO, **invariante de segurança do domínio separado (cookie SSO não-`HttpOnly`)**; **Pattern Conformance Declaration** (21 padrões de `docs/architecture/agentic-vision.md`) obrigatória.
+> ```
+
+## 🤖 Claude *(11:08:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing that v0.15 is referenced throughout the codebase in many places, so reverting everything back to v0.10.0 would require a lot of scattered edits and be risky. Though looking closer, the v0.15 upgrade actually delivers some legitimate improvements beyond what I initially considered.
+
+The user has decided to stick with v0.10.0 to avoid the upgrade risk since the single-file export feature he wanted isn't there. The cleanest approach would be to add one authoritative owner decision note at the top that reverses the v0.15 decision and flips the OTD-LF-002 row to reflect keeping v0.10.0, but I'm realizing that leaving "build v0.15.0" in other sections while the top says "keep v0.10.0" creates a contradiction that could confuse the system reading this later. I need to think through the most integrity-preserving way to handle this. The user chose to keep v0.10, so I should honor that decision while documenting it properly—adding a note that the v0.15 gains (versionId, pptx, cheaper prompts) are worth revisiting later as a separate decision. I'll flip the OTD-LF-002 row to reflect this reversal and make the asset-bundler the centerpiece of the first phase work. The Pilar A mentions of v0.15 serve as useful context showing what was considered and why, but the direct contradiction in §9 Fatia 1 needs fixing. I'll update those three key points — the governing note, the OTD-LF-002 row, and the §9 Fatia 1 header and scope — to consistently reflect v0.10.0, then pass that decision to bok-scribe with clear arguments that v0.10.0 is the binding choice and asset-bundler belongs in Fatia 1.
+
+Now I'm deciding whether to invoke /bok-scribe directly or reconsider given the context load and output size. It's a substantial operation — nine documents — but it's the critical gate-opener and the user asked me to continue, so I'll run it. The bok-scribe agent will handle the translation and write the structured markdown family to disk, keeping my context growth manageable.
+
+I need to invoke it as a Skill, passing the landing-factory blueprint as the source document and the governing decisions as constraints — specifically keeping Open Design at v0.10.0 and using the custom asset-bundler rather than upgrading.
+
+Now I'm making the three edits to the blueprint. First, I'll add the v0.10.0 reversal note after the existing gcrux.com hosting note. Then I'll update the OTD-LF-002 row to reflect the current state, and finally update OTD-LF-003 to mark it as the P0 centerpiece for Slice 1 with the Pattern Conformance Declaration requirement. Updating the version references in those two lines from v0.15.0 back to v0.10.0 to reflect the decision to keep the current version. I need to verify these strings are unique before applying the edits — the gcrux note should be distinctive enough, and the OTD-LF-002 row with the v0.15.0 upgrade mention appears to be specific. Now I'm working through the third edit for the §9 header, replacing the version reference from v0.15.0 to v0.10.0 in the landing build section.
+
+</details>
+
+
+## 🤖 Claude *(11:08:48)*
+
+O v0.15 aparece em ~18 lugares, mas o decisivo são 3 pontos de decisão. Vou reverter no blueprint (SSOT) com edições cirúrgicas — nota governante no topo + a row da OTD-LF-002 + a Fatia 1 — deixando o Pilar A com o histórico honesto (v0.15 foi avaliado, ganho não existe):
+
+## 🤖 Claude *(11:08:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "old_string": "Resta OTD-LF-014 (mecanismo do origin: host nginx vs bucket+CF vs CF Pages/SSL-for-SaaS).",
+  "new_string": "Resta OTD-LF-014 (mecanismo do origin: host nginx vs bucket+CF vs CF Pages/SSL-for-SaaS).\n>\n> **Decis\u00e3o de Owner (2026-07-16) \u2014 REVERTE OTD-LF-002**: **MANTER Open Design v0.10.0** (N\u00c3O fazer o upgrade v0.15). Motivo: a pesquisa v0.2 provou que o v0.15 **n\u00e3o entrega** o inline de img/fonts/@import (upstream #368; `inline-assets.ts` byte-id\u00eantico v0.10.0\u2192main) \u2014 o ganho que motivava o upgrade n\u00e3o existe, e os ganhos colaterais (versionId/pptx/prompt) n\u00e3o justificam o risco de upgrade agora (revisitar como OTD futura). **O asset-bundler pr\u00f3prio (FR-LF-002 / OTD-LF-003) \u00e9 a solu\u00e7\u00e3o real e a PRIORIDADE P0 da Fatia 1.** O `changelog-watcher` (FR-LF-017) permanece (avisa quando o inline completo/#368 landar upstream \u2192 a\u00ed revisita o upgrade). Onde o doc disser \"v0.15.0\", ler \"v0.10.0 (pinado)\"."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:08:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "old_string": "\u2705 **RESOLVIDA (Sovereign 2026-07-15)**: **upgrade para v0.15.0** decidido.",
+  "new_string": "\u2705 **RESOLVIDA (Sovereign 2026-07-16 \u2014 REVERTE a decis\u00e3o de 07-15)**: **MANTER v0.10.0 pinado** (n\u00e3o upgrade). O v0.15 N\u00c3O entrega o inline de img/fonts/@import (#368; `inline-assets.ts` byte-id\u00eantico v0.10.0\u2192main) e os ganhos colaterais (versionId/pptx/prompt) n\u00e3o justificam o risco agora \u2192 revisitar como OTD futura quando #368 landar. O asset-bundler pr\u00f3prio (OTD-LF-003) \u00e9 a solu\u00e7\u00e3o real. Anteriormente (07-15) decidido upgrade; base:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:09:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "old_string": "### Fatia 1 (P0) \u2014 Build landing (v0.15.0) \u2192 Publish WordPress-page (r\u00e1pido primeiro) \u2192 Loop CRO, com witness material",
+  "new_string": "### Fatia 1 (P0) \u2014 Build landing (v0.10.0 pinado) \u2192 **asset-bundler pr\u00f3prio** \u2192 Publish WordPress-page (r\u00e1pido primeiro) \u2192 Loop CRO, com witness material"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:09:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md",
+  "old_string": "gerar uma landing real (Open Design **v0.15.0** \u2192 HTTP export `?inline=1`",
+  "new_string": "gerar uma landing real (Open Design **v0.10.0 pinado** \u2192 HTTP export `?inline=1`"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:10:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've updated the blueprint to lock in v0.10.0, and now I'm invoking the bok-scribe skill to seal the Book of Knowledge before proceeding with any implementation. I'm passing it the module slug for landing-factory along with the source blueprint document to establish the governing decisions.
+
+The key directives I'm feeding it are: stick with Open Design v0.10.0, make asset-bundler the centerpiece of Fatia-1, host on gcrux.com as an isolated domain, prioritize WordPress-page-first architecture, self-host PostHog, implement per-user tenancy, apply Apache-2.0 licensing, and adopt a free-first model. The SDD output needs to carry the Pattern Conformance Declaration covering all 21 patterns, and I need the full 9-document suite generated.
+
+I'm pausing to reconsider the context implications—bok-scribe is an agent that writes to disk, so invoking it as a subagent should only add a summary to my context rather than loading all the generation instructions inline, which would be prohibitive at 58% capacity. Generating the docs inline would risk pushing context toward 85-90%, but given the user's awareness of the window and the need to keep moving forward, it might be worth the trade-off — though nine documents is substantial and I should be mindful of that limit.
+
+The cleaner approach is to spin up a Workflow that distributes the nine docs across subagents, which keeps my main context lean and aligns with ultracode's guidance on using Workflows for substantive tasks. The trade-off is that bok-scribe has its own established methodology and templates that a hand-rolled Workflow might not perfectly match, so I'd need to either replicate that structure or accept some deviation from the house BoK format. Invoking the bok-scribe skill directly seems like the right move — it'll either run in a subagent and return results, or give me instructions to orchestrate. But I'm second-guessing whether the user actually wants the full nine-document BoK right now, or if "próximos passos" just means keep pushing toward the bundler. The protocol says BoK before code, so technically that's the honest next step — but a complete BoK for the entire landing-factory scope (build, publish, CRO, hosting, exports) is massive.
+
+I'm weighing two paths: invoke bok-scribe now to seal the gate properly and respect the protocol, but risk burning through context; or recognize that the user's focus is really on the asset-bundler as a scoped component, and maybe I can narrow the BoK to just that piece. The asset-bundler is product-facing, so it doesn't qualify for the internal tooling exemption—it needs proper BoK coverage. The cleanest path is to invoke /bok-scribe to seal the landing-factory BoK with the asset-bundler specified as an FR-LF-002 component, then proceed with implementation. Given the token budget and the user's signal to continue, I'll move forward with that approach. I'll invoke the bok-scribe skill and let it run—either it loads instructions for me to execute or it runs as a subagent and returns the result. Either way, I'll handle the context implications as they come. The user wants me to keep moving forward, so I should invoke the bok-scribe skill directly to generate the 9 documents. Running it as a workflow will keep my context lean by having subagents handle the actual writing, grounded in the blueprint, governing decisions, and the MCORCH structure. I'm locking in Open Design v0.10.0 to avoid waiting for upstream fixes, and the custom asset bundler that inlines images and fonts into data URIs is the critical piece for phase one. First-party hosting on gcrux.com with cookie isolation is mandatory to prevent SSO token theft.
+
+I'm also planning WordPress as the initial page layer for speed, then moving to sovereign static hosting, with PostHog self-hosted for conversion optimization and human-in-the-loop gates before autonomous decisions. The core doctrine is per-user API tenancy with Apache 2.0 licensing, free tier, and reusing existing canvas design assets without rebuilding. Phase one focuses on building v0.10.0, the asset bundler, WordPress integration, and the assisted CRO loop.
+
+I'm concerned about context window limits for the heavy BoK generation, so I'm going to invoke the bok-scribe skill directly rather than risk inlining it—if it runs as a subagent, that's ideal, and I can observe the output. If it loads inline instead, I'll pivot to authoring a workflow, but let me try the skill first.
+
+</details>
+
+
+## 🤖 Claude *(11:10:16)*
+
+Blueprint revertido pro v0.10.0 (nota governante + row da OTD-LF-002 + Fatia 1). Agora o portão: com o blueprint como Fonte da Verdade, invoco o **`/bok-scribe`** pra selar a família BoK (MRD→SDD) — o asset-bundler entra como o **P0 centerpiece da Fatia 1**. Só depois da BoK selada é que o código do bundler destrava (Closed-Loop).
+
+## 🤖 Claude *(11:10:30)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "bok-scribe",
+  "args": "landing-factory \u2014 gerar a fam\u00edlia BoK completa (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics) em docs/bok/landing-factory/, usando docs/bok/landing-factory/00-[[deepsearch-blueprint|deepsearch-blueprint]].md (Semente v0.2 + emendas de Owner 2026-07-16) como Fonte da Verdade \u00daNICA \u2014 n\u00e3o inventar al\u00e9m dela; ambiguidade volta pro blueprint.\n\nDecis\u00f5es governantes do Sovereign a respeitar:\n1. MANTER Open Design v0.10.0 pinado (N\u00c3O upgrade v0.15 \u2014 n\u00e3o entrega o inline de assets; revisitar quando upstream #368 landar).\n2. Asset-bundler pr\u00f3prio = P0 centerpiece da Fatia 1: m\u00f3dulo `landing-bundler` (host worker) que inlina `<img>`/`@font-face`/`url()`/`@import`/imports ES em data: URIs sobre o HTML do export `?inline=1` (que s\u00f3 cobre CSS/JS de topo). \u00c9 FR-LF-002 / OTD-LF-003.\n3. Hosting first-party em `gcrux.com` (dom\u00ednio registr\u00e1vel SEPARADO, cookie-isolado; `<slug>.gcrux.com` por site, slug do usu\u00e1rio + hash default). NUNCA `*.mcorch.com` \u2014 o cookie SSO `sb-mcorch-session` \u00e9 `.mcorch.com`-scoped, guarda o access token e n\u00e3o \u00e9 HttpOnly (`src/lib/sso-cookie.ts:13,44-48`) \u2192 account takeover (FM-LF-013, RPN 280). + Netlify/Vercel BYOK per-user.\n4. Sink: WordPress-page-first (r\u00e1pido \u2014 n\u00f3 `publishWordpress` postType `page`); static-hosting soberano em gcrux.com depois.\n5. CRO via PostHog self-host/BYOK (posthog-foss MIT): ler funil (Query API), variantes (Experiments/Feature Flags), auto-revert + gate 95% = l\u00f3gica do AGENTE (PostHog n\u00e3o reverte), gate humano\u2192aut\u00f4nomo obrigat\u00f3rio na Fatia 1.\n6. Doutrina: API Tenancy per-user BYOK; Apache-2.0 attribution (NOTICE); free-first US$0; REUSAR canvas-design (design-bridge/design_jobs), creative_assets/register_creative_asset, mcoCoins/deduct_mco_coins, credenciais per-user \u2014 N\u00c3O reconstruir.\n\nA SDD (05-sdd.md) DEVE carregar a Pattern Conformance Declaration (tabela dos 21 padr\u00f5es ag\u00eanticos de docs/architecture/agentic-vision.md: Pattern | Implemented yes/deferred/n-a | How/Why-deferred). Fatia 1 = build v0.10.0 \u2192 asset-bundler \u2192 WordPress page \u2192 loop CRO assistido com witness material; roadmap = hosting soberano gcrux.com + Netlify/Vercel BYOK, exports Spaces/HyperFrames (subprodutos), tr\u00e1fego Meta ads, WhatsApp SDR, dashboards NL, changelog-watcher. Owner = Sovereign; nenhum c\u00f3digo antes desta BoK selar."
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: bok-scribe
+> ```
+
+## 👤 User *(11:10:30)*
+
+# MCORCH BoK Scribe Agent
+
+You are the **MCORCH BoK Scribe Agent** — the Requirements Engineering layer of the MCORCH
+Sovereign Ecosystem. Your role is to act as the translation layer between the
+Sovereign/Maestro (the human architect) and the Execution Agents (Claude/Antigravity).
+
+When given a raw business idea in `landing-factory — gerar a família BoK completa (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics) em docs/bok/landing-factory/, usando docs/bok/landing-factory/00-deepsearch-blueprint.md (Semente v0.2 + emendas de Owner 2026-07-16) como Fonte da Verdade ÚNICA — não inventar além dela; ambiguidade volta pro blueprint.
+
+Decisões governantes do Sovereign a respeitar:
+1. MANTER Open Design v0.10.0 pinado (NÃO upgrade v0.15 — não entrega o inline de assets; revisitar quando upstream #368 landar).
+2. Asset-bundler próprio = P0 centerpiece da Fatia 1: módulo `landing-bundler` (host worker) que inlina `<img>`/`@font-face`/`url()`/`@import`/imports ES em data: URIs sobre o HTML do export `?inline=1` (que só cobre CSS/JS de topo). É FR-LF-002 / OTD-LF-003.
+3. Hosting first-party em `gcrux.com` (domínio registrável SEPARADO, cookie-isolado; `<slug>.gcrux.com` por site, slug do usuário + hash default). NUNCA `*.mcorch.com` — o cookie SSO `sb-mcorch-session` é `.mcorch.com`-scoped, guarda o access token e não é HttpOnly (`src/lib/sso-cookie.ts:13,44-48`) → account takeover (FM-LF-013, RPN 280). + Netlify/Vercel BYOK per-user.
+4. Sink: WordPress-page-first (rápido — nó `publishWordpress` postType `page`); static-hosting soberano em gcrux.com depois.
+5. CRO via PostHog self-host/BYOK (posthog-foss MIT): ler funil (Query API), variantes (Experiments/Feature Flags), auto-revert + gate 95% = lógica do AGENTE (PostHog não reverte), gate humano→autônomo obrigatório na Fatia 1.
+6. Doutrina: API Tenancy per-user BYOK; Apache-2.0 attribution (NOTICE); free-first US$0; REUSAR canvas-design (design-bridge/design_jobs), creative_assets/register_creative_asset, mcoCoins/deduct_mco_coins, credenciais per-user — NÃO reconstruir.
+
+A SDD (05-sdd.md) DEVE carregar a Pattern Conformance Declaration (tabela dos 21 padrões agênticos de docs/architecture/agentic-vision.md: Pattern | Implemented yes/deferred/n-a | How/Why-deferred). Fatia 1 = build v0.10.0 → asset-bundler → WordPress page → loop CRO assistido com witness material; roadmap = hosting soberano gcrux.com + Netlify/Vercel BYOK, exports Spaces/HyperFrames (subprodutos), tráfego Meta ads, WhatsApp SDR, dashboards NL, changelog-watcher. Owner = Sovereign; nenhum código antes desta BoK selar.`, you autonomously produce the complete
+documentation family using the phased workflow below. All documents are saved as markdown
+files under `docs/bok/<project-slug>/`.
+
+---
+
+## Identity
+
+```
+Role:       Scientist / Architect Layer
+Position:   Between Sovereign vision and Execution implementation
+Mandate:    Zero-ambiguity documentation; every output feeds directly into
+            Supabase schema, Edge Functions, or n8n process flows
+Standards:  BABOK v3 · ProdBOK · CXBOK · SWEBOK v4 · CISSP CBK 2024
+            DMBOK v2 · BPM CBOK v4 · CMQ/OE BOK
+Output dir: docs/bok/<project-slug>/
+```
+
+---
+
+## Phase 0 — Project Bootstrapping
+
+Load the agent definition from `.claude/agents/bok-scribe-agent.md` and execute the
+full 7-phase workflow described there.
+
+**Input capture (ask if not provided in landing-factory — gerar a família BoK completa (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics) em docs/bok/landing-factory/, usando docs/bok/landing-factory/00-deepsearch-blueprint.md (Semente v0.2 + emendas de Owner 2026-07-16) como Fonte da Verdade ÚNICA — não inventar além dela; ambiguidade volta pro blueprint.
+
+Decisões governantes do Sovereign a respeitar:
+1. MANTER Open Design v0.10.0 pinado (NÃO upgrade v0.15 — não entrega o inline de assets; revisitar quando upstream #368 landar).
+2. Asset-bundler próprio = P0 centerpiece da Fatia 1: módulo `landing-bundler` (host worker) que inlina `<img>`/`@font-face`/`url()`/`@import`/imports ES em data: URIs sobre o HTML do export `?inline=1` (que só cobre CSS/JS de topo). É FR-LF-002 / OTD-LF-003.
+3. Hosting first-party em `gcrux.com` (domínio registrável SEPARADO, cookie-isolado; `<slug>.gcrux.com` por site, slug do usuário + hash default). NUNCA `*.mcorch.com` — o cookie SSO `sb-mcorch-session` é `.mcorch.com`-scoped, guarda o access token e não é HttpOnly (`src/lib/sso-cookie.ts:13,44-48`) → account takeover (FM-LF-013, RPN 280). + Netlify/Vercel BYOK per-user.
+4. Sink: WordPress-page-first (rápido — nó `publishWordpress` postType `page`); static-hosting soberano em gcrux.com depois.
+5. CRO via PostHog self-host/BYOK (posthog-foss MIT): ler funil (Query API), variantes (Experiments/Feature Flags), auto-revert + gate 95% = lógica do AGENTE (PostHog não reverte), gate humano→autônomo obrigatório na Fatia 1.
+6. Doutrina: API Tenancy per-user BYOK; Apache-2.0 attribution (NOTICE); free-first US$0; REUSAR canvas-design (design-bridge/design_jobs), creative_assets/register_creative_asset, mcoCoins/deduct_mco_coins, credenciais per-user — NÃO reconstruir.
+
+A SDD (05-sdd.md) DEVE carregar a Pattern Conformance Declaration (tabela dos 21 padrões agênticos de docs/architecture/agentic-vision.md: Pattern | Implemented yes/deferred/n-a | How/Why-deferred). Fatia 1 = build v0.10.0 → asset-bundler → WordPress page → loop CRO assistido com witness material; roadmap = hosting soberano gcrux.com + Netlify/Vercel BYOK, exports Spaces/HyperFrames (subprodutos), tráfego Meta ads, WhatsApp SDR, dashboards NL, changelog-watcher. Owner = Sovereign; nenhum código antes desta BoK selar.):**
+1. Business idea (free text — what problem does it solve?)
+2. Target market segment (B2B / B2C / B2B2C)
+3. Monetization model (subscription / transaction / hybrid)
+4. Regulatory sensitivity (LGPD / GDPR / financial / healthcare / none)
+5. Integration surface (standalone / extends existing MCORCH feature)
+
+Derive `<project-slug>` from the business idea (kebab-case, max 32 chars).
+Create `docs/bok/<project-slug>/` if it does not exist.
+
+---
+
+## Execution
+
+After collecting inputs, execute ALL phases in strict sequence. Do NOT skip phases.
+Each phase reads the output of the previous phase.
+
+Load full workflow from: `.claude/agents/bok-scribe-agent.md`
+Load all document templates from: `.claude/agents/bok-scribe/templates/`
+
+After all phases complete:
+1. Print a summary table listing every file created with its purpose.
+2. Insert a Knowledge Mesh node (see Phase 7 in agent definition).
+3. Confirm: "BoK documentation suite complete for `<project-slug>`."
+
+
+## 🤖 Claude *(11:11:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The bok-scribe skill is loaded and pointing me to the workflow definition and templates. I need to execute a 7-phase workflow to generate 9 documentation files, but since the context is already at 58%, running all of this inline would exceed my window. I should use a workflow approach to distribute the doc generation work instead.
+
+My strategy is to first read the agent definition to understand the 7-phase structure and doc requirements, then scan the templates directory to grasp the structure without loading everything in full. After that, I'll author a workflow that spawns agents to generate each of the 9 docs, grounded in the blueprint and governing decisions, writing output to docs/bok/landing-factory/. The SDD agent will include the Pattern Conformance Declaration. I need to be strategic about context usage since reading the agent definition and templates could add another 10-15%. I'll read the bok-scribe agent definition to understand the workflow structure, then check the templates directory and review the SDD and index templates to see how the docs should be formatted. Once I have those reference points, I can author the workflow that passes the blueprint and template structures to each doc-generating agent. I'll proceed with the workflow approach. The BoK generation can run in the background while I keep context lean, and I'll handle the Knowledge Mesh node insertion afterward once I verify the output. Let me start by reading the agent definition to understand the 7-phase workflow and what each document should contain, then check the templates directory structure. The workflow needs to produce exactly those nine canonical filenames that the handson gate checks for, so I'll read the agent definition briefly to understand the per-document content specs, then author the workflow to generate each file with the right structure. I'll rely on standard BoK sections and the blueprint rather than loading all the templates into context.
+
+</details>
+
+
+## 🤖 Claude *(11:11:05)*
+
+A skill delega o workflow de 7 fases + templates. Gerar 9 docs inline estouraria a janela (58%) — então vou fanout via **Workflow** (ultracode + protege o contexto), cada doc num agente lendo o blueprint. Primeiro leio a estrutura oficial (agent def + templates) pra manter a fidelidade da casa:
+
+## 🤖 Claude *(11:11:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/agents/bok-scribe-agent.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# MCORCH BoK Scribe Agent — Operational Framework
+> 2	
+> 3	**Version:** 1.0.0  
+> 4	**Date:** 2026-05-06  
+> 5	**Invocation:** `/bok-scribe <business-idea>`  
+> 6	**Output root:** `docs/bok/<project-slug>/`
+> 7	
+> 8	---
+> 9	
+> 10	## Agent Identity Contract
+> 11	
+> 12	```
+> 13	Name:         MCORCH BoK Scribe Agent
+> 14	Archetype:    Scientist / Architect Layer
+> 15	Layer:        Requirements Engineering (between Sovereign and Execution)
+> 16	Authority:    Reads from all BoKs; writes only to docs/bok/ and mcorch_nodes
+> 17	Restrictions: NEVER writes code. NEVER modifies src/. NEVER touches supabase/functions/.
+> 18	              NEVER deducts mcoCoins. Documentation only.
+> 19	Language:     Thinking = English. Headings & labels = English.
+> 20	              Narrative explanations to Sovereign = Português (Brasil).
+> 21	```
+> 22	
+> 23	---
+> 24	
+> 25	## Input Schema
+> 26	
+> 27	```typescript
+> 28	interface BokScribeInput {
+> 29	  businessIdea:       string   // raw free-text description
+> 30	  marketSegment:      'B2B' | 'B2C' | 'B2B2C'
+> 31	  monetizationModel:  'subscription' | 'transaction' | 'hybrid'
+> 32	  regulatoryProfile:  'LGPD' | 'GDPR' | 'financial' | 'healthcare' | 'none'
+> 33	  integrationSurface: 'standalone' | 'extends-mcorch'
+> 34	  projectSlug:        string   // derived: kebab-case, max 32 chars
+> 35	}
+> 36	```
+> 37	
+> 38	---
+> 39	
+> 40	## Output File Map
+> 41	
+> 42	```
+> 43	docs/bok/<project-slug>/
+> 44	├── 00-index.md              Phase 0  — Project manifest + file registry
+> 45	├── 01-mrd.md                Phase 1  — Market Requirements Document (BABOK)
+> 46	├── 02-brd.md                Phase 1  — Business Requirements Document (BABOK)
+> 47	├── 03-prd.md                Phase 2  — Product Requirements Document (ProdBOK + CXBOK)
+> 48	├── 04-frd.md                Phase 3  — Functional Requirements Document (SWEBOK)
+> 49	├── 05-sdd.md                Phase 3  — System Design Document (SWEBOK + CISSP CBK)
+> 50	├── 06-data-model.md         Phase 4  — Data Models (DMBOK + Supabase schema)
+> 51	├── 07-process-flow.md       Phase 4  — Process Flows (BPM CBOK + n8n)
+> 52	└── 08-quality-metrics.md    Phase 5  — Self-Optimization & Self-Healing (CMQ/OE BOK)
+> 53	```
+> 54	
+> 55	---
+> 56	
+> 57	## Workflow Engine
+> 58	
+> 59	### Phase 0 — Project Bootstrap
+> 60	
+> 61	**BoK lens:** None (structural setup)  
+> 62	**Template:** `templates/00-index.md`  
+> 63	**Actions:**
+> 64	1. Derive `projectSlug` from business idea (lowercase, hyphens, max 32 chars).
+> 65	2. Create directory `docs/bok/<project-slug>/`.
+> 66	3. Render `00-index.md` with all input metadata, today's date, version `v0.1`.
+> 67	4. Record all planned output files with status `[ ] pending`.
+> 68	
+> 69	**Guardrails:**
+> 70	- If directory already exists → check `00-index.md`; ask Sovereign before overwriting.
+> 71	- Slug must match `^[a-z0-9-]{3,32}$`.
+> 72	
+> 73	---
+> 74	
+> 75	### Phase 1 — Market & Business Intelligence (BABOK v3)
+> 76	
+> 77	**BoK lens:** BABOK v3 — Business Analysis Body of Knowledge  
+> 78	**BABOK knowledge areas applied:**
+> 79	- *Business Analysis Planning & Monitoring* → defines stakeholders and elicitation plan
+> 80	- *Elicitation & Collaboration* → extracts needs from raw idea
+> 81	- *Requirements Life Cycle Mgmt* → traces market needs → business objectives
+> 82	- *Strategy Analysis* → current state, desired state, gap analysis
+> 83	- *Requirements Analysis & Design Definition* → MRD + BRD sections
+> 84	
+> 85	**Output A — `01-mrd.md` (Market Requirements Document):**
+> 86	```
+> 87	Sections to generate:
+> 88	  1. Executive Summary
+> 89	  2. Market Problem Statement (current state)
+> 90	  3. Target Market Segments + TAM/SAM/SOM (estimated)
+> 91	  4. Competitive Landscape (min 3 alternatives)
+> 92	  5. Market Opportunity & Timing
+> 93	  6. Key Market Requirements (MR-001..MR-NNN, priority: Critical/High/Medium/Low)
+> 94	  7. Success Metrics (market-level KPIs)
+> 95	  8. Regulatory & Compliance Context
+> 96	  9. Traceability Matrix stub (MR → BR link)
+> 97	```
+> 98	
+> 99	**Output B — `02-brd.md` (Business Requirements Document):**
+> 100	```
+> 101	Sections to generate:
+> 102	  1. Executive Summary
+> 103	  2. Business Objectives (SMART format, min 3)
+> 104	  3. Stakeholder Register (Role, Interest, Influence, Communication)
+> 105	  4. Business Requirements (BR-001..BR-NNN traced to MR-NNN)
+> 106	  5. ROI Model (costs, revenue streams, payback period estimate)
+> 107	  6. mcoCoins Economics (coin cost per operation, plan tier mapping)
+> 108	  7. Constraints & Assumptions
+> 109	  8. Business Risks (Risk ID, Description, Probability, Impact, Mitigation)
+> 110	  9. Acceptance Criteria (business-level)
+> 111	  10. Traceability Matrix (MR → BR → PR link stubs)
+> 112	```
+> 113	
+> 114	**Transition check before Phase 2:**
+> 115	- Every BR must trace to at least one MR.
+> 116	- mcoCoins cost must be defined if feature uses AI generation.
+> 117	
+> 118	---
+> 119	
+> 120	### Phase 2 — Product Definition (ProdBOK + CXBOK)
+> 121	
+> 122	**BoK lens:** ProdBOK (Product Management Body of Knowledge) + CXBOK (Customer Experience)  
+> 123	**ProdBOK areas applied:**
+> 124	- *Product Vision & Strategy* → product goal and positioning
+> 125	- *Roadmap Planning* → release phasing (MVP → v1 → v2)
+> 126	- *Feature Definition & Prioritization* → MoSCoW method
+> 127	- *Metrics & Analytics* → product KPIs
+> 128	
+> 129	**CXBOK areas applied:**
+> 130	- *Customer Understanding* → persona construction
+> 131	- *Experience Design* → journey mapping, touchpoint inventory
+> 132	- *Luxury UX Standards* → MCORCH aesthetic rules (dark mesh, neon accents, micro-animations)
+> 133	
+> 134	**Output — `03-prd.md` (Product Requirements Document):**
+> 135	```
+> 136	Sections to generate:
+> 137	  1. Product Vision Statement (one sentence)
+> 138	  2. User Personas (min 2: primary + secondary)
+> 139	     - Name, Role, Goals, Frustrations, Tech-savviness, MCORCH usage pattern
+> 140	  3. User Journey Maps (per persona, happy path + 2 edge cases)
+> 141	  4. Feature Inventory (MoSCoW: Must / Should / Could / Won't)
+> 142	     - Feature ID: PR-001..PR-NNN
+> 143	     - Description, Persona served, BR traced, Effort (S/M/L/XL), mcoCoins cost
+> 144	  5. Release Phasing
+> 145	     - MVP scope (Must-haves only)
+> 146	     - v1.0 scope (Must + prioritized Shoulds)
+> 147	     - Future scope (Coulds)
+> 148	  6. Luxury UX Specifications
+> 149	     - Color palette constraints (dark mesh: #0A0A0F, neon violet: #7C3AED)
+> 150	     - Animation guidelines (Framer Motion tokens)
+> 151	     - Interaction patterns (glass morphism cards, particle effects)
+> 152	     - Accessibility requirements (WCAG 2.1 AA minimum)
+> 153	  7. Acceptance Criteria (product-level, Gherkin format: Given/When/Then)
+> 154	  8. Traceability Matrix (MR → BR → PR link)
+> 155	```
+> 156	
+> 157	**Transition check before Phase 3:**
+> 158	- Every PR must trace to at least one BR.
+> 159	- MVP scope must be achievable without new Edge Functions (or explicitly note which new ones are needed).
+> 160	
+> 161	---
+> 162	
+> 163	### Phase 3 — Technical Specification (SWEBOK v4 + CISSP CBK 2024)
+> 164	
+> 165	**BoK lens A — SWEBOK v4:**
+> 166	- *Software Requirements* → formal FR elicitation from PRD
+> 167	- *Software Design* → architectural decisions, component decomposition
+> 168	- *Software Construction* → Harness Engineering constraints
+> 169	- *Software Testing* → test strategy per requirement
+> 170	
+> 171	**BoK lens B — CISSP CBK 2024:**
+> 172	- *Security & Risk Management* → threat model (STRIDE)
+> 173	- *Identity & Access Management* → RLS policies, JWT validation
+> 174	- *Software Development Security* → secure coding constraints
+> 175	- *Cryptography* → data-at-rest and in-transit requirements
+> 176	
+> 177	**Output A — `04-frd.md` (Functional Requirements Document):**
+> 178	```
+> 179	Sections to generate:
+> 180	  1. Scope Statement
+> 181	  2. Functional Requirements (FR-001..FR-NNN)
+> 182	     - ID, Title, Description, Priority, PR traced, Acceptance Test ID
+> 183	     - Category: UI / Hook / Edge Function / DB / Cron
+> 184	  3. Non-Functional Requirements (NFR-001..NFR-NNN)
+> 185	     - Performance, Scalability, Availability, Maintainability
+> 186	  4. Interface Requirements
+> 187	     - UI contracts (component → hook → Edge Function)
+> 188	     - External API contracts (input/output shape, error codes)
+> 189	  5. Data Requirements (input validation rules, data types)
+> 190	  6. Test Strategy matrix (Unit / Integration / E2E per FR)
+> 191	  7. Traceability Matrix (PR → FR link)
+> 192	```
+> 193	
+> 194	**Output B — `05-sdd.md` (System Design Document):**
+> 195	```
+> 196	Sections to generate:
+> 197	  1. Architecture Overview (text diagram, Harness Engineering layer map)
+> 198	  2. Component Catalog
+> 199	     - New hooks (src/hooks/)
+> 200	     - New components (display-only, src/components/)
+> 201	     - New Edge Functions (supabase/functions/)
+> 202	     - New Zustand store slices (if needed)
+> 203	     - New DB tables / columns (migration stubs)
+> 204	  3. Data Flow Diagrams (per major use case)
+> 205	  4. API Contract Definitions (Edge Function signatures)
+> 206	     - Method, Path, Auth, Request body, Response body, Error codes
+> 207	     - mcoCoins deduction point (RPC call location)
+> 208	  5. Security Design
+> 209	     - Threat model (STRIDE per component)
+> 210	     - RLS policy definitions
+> 211	     - JWT validation points
+> 212	     - Secrets inventory (which vault keys are needed)
+> 213	  6. Infrastructure Touchpoints
+> 214	     - Docker Sovereign Mesh dependencies
+> 215	     - ChromaDB usage (if vector search needed)
+> 216	     - Watchdog telemetry events (new infra_health_logs event types)
+> 217	  7. Migration Stubs (table name, columns, RLS template, HNSW index if embeddings)
+> 218	  8. Open Technical Decisions (OTD-001..OTD-NNN, each with options + recommendation)
+> 219	```
+> 220	
+> 221	**Security guardrails enforced automatically:**
+> 222	- Every Edge Function must have JWT validation stub.
+> 223	- Every new table must have `RLS enabled; default deny` noted in migration stub.
+> 224	- `mcoCoins` deduction MUST route through `deduct_mco_coins` RPC — never client-side.
+> 225	- No secret key referenced in FRD/SDD may appear in `src/` paths.
+> 226	
+> 227	**Transition check before Phase 4:**
+> 228	- Every FR must trace to at least one PR.
+> 229	- Every Edge Function in SDD must list its secret dependencies.
+> 230	- Threat model must have at least one mitigation per identified threat.
+> 231	
+> 232	---
+> 233	
+> 234	### Phase 4 — Data & Process Engineering (DMBOK v2 + BPM CBOK v4)
+> 235	
+> 236	**BoK lens A — DMBOK v2:**
+> 237	- *Data Modeling & Design* → conceptual → logical → physical schema
+> 238	- *Data Quality* → validation rules, nullability constraints
+> 239	- *Reference & Master Data* → system nodes in mcorch_nodes
+> 240	- *Data Warehousing & BI* → analytics views if applicable
+> 241	
+> 242	**BoK lens B — BPM CBOK v4:**
+> 243	- *Process Modeling* → BPMN-lite notation in markdown
+> 244	- *Process Analysis* → bottlenecks, automation opportunities
+> 245	- *Process Design* → n8n workflow blueprint
+> 246	- *Process Performance Mgmt* → SLA per process step
+> 247	
+> 248	**Output A — `06-data-model.md` (Data & Knowledge Model):**
+> 249	```
+> 250	Sections to generate:
+> 251	  1. Conceptual Data Model (entity list + relationships, text ERD)
+> 252	  2. Logical Data Model (per table: columns, types, constraints, FK references)
+> 253	  3. Supabase Physical Schema Stubs
+> 254	     - CREATE TABLE skeleton (copy into migration file)
+> 255	     - RLS policy shells (default deny + per-role)
+> 256	     - Index definitions (HNSW for embeddings, B-tree for FKs)
+> 257	  4. GraphRAG Knowledge Nodes
+> 258	     - Node types this feature introduces into mcorch_nodes
+> 259	     - Edge types this feature introduces into mcorch_edges
+> 260	     - Embedding fields (which text columns feed embed-mcorch-node)
+> 261	     - stability_score initial value + FSRS-6 decay parameters
+> 262	  5. Tenant Isolation Map (user_id + project_id scope per table)
+> 263	  6. Data Quality Rules (per column: allowed values, validation regex, null policy)
+> 264	  7. Retention & Archival Policy
+> 265	```
+> 266	
+> 267	**Output B — `07-process-flow.md` (Process & Automation Blueprint):**
+> 268	```
+> 269	Sections to generate:
+> 270	  1. Process Inventory (list of all automated processes this feature introduces)
+> 271	  2. BPMN-lite Process Maps (per major process)
+> 272	     - Start event, Tasks (human/automated), Gateways, End events
+> 273	     - Swimlanes: User | Frontend Hook | Edge Function | External API | DB
+> 274	  3. n8n Workflow Blueprints (per automated process)
+> 275	     - Trigger (webhook / cron / event), Node sequence, Error branches
+> 276	     - Data mapping: input fields → output fields
+> 277	  4. Orchestration Integration Points
+> 278	     - Steps within orchestrate-content pipeline (if applicable)
+> 279	     - New pipeline step ID and position
+> 280	     - mcoCoins deduction trigger point
+> 281	  5. Error Handling & Retry Strategy (per process step)
+> 282	  6. SLA Definitions (expected duration per step, timeout thresholds)
+> 283	  7. Cron Jobs (schedule, idempotency key, failure alerting)
+> 284	```
+> 285	
+> 286	**Transition check before Phase 5:**
+> 287	- Every table in data model must appear in at least one process flow.
+> 288	- Every n8n workflow must define its error branch.
+> 289	- GraphRAG node insertion must be present in at least one process.
+> 290	
+> 291	---
+> 292	
+> 293	### Phase 5 — Quality & Autonomic Engineering (CMQ/OE BOK)
+> 294	
+> 295	**BoK lens:** CMQ/OE BOK (Certified Manager of Quality / Organizational Excellence)  
+> 296	**Areas applied:**
+> 297	- *Process Management* → control charts, process capability (Cp/Cpk targets)
+> 298	- *Quality Tools* → FMEA for critical paths
+> 299	- *Customer-Focused Org* → NPS/CSAT hooks
+> 300	- *Organizational Excellence* → self-optimization loops
+> 301	- *Continuous Improvement* → PDCA cycles for autonomic self-healing
+> 302	
+> 303	**Output — `08-quality-metrics.md` (Self-Optimization & Self-Healing Specification):**
+> 304	```
+> 305	Sections to generate:
+> 306	  1. Quality Objectives (aligned to business objectives in BRD)
+> 307	  2. KPI Dashboard Definition
+> 308	     - KPI ID, Name, Formula, Target, Threshold (warn/critical), Data source
+> 309	     - Supabase table/view that stores the metric
+> 310	  3. FMEA Table (per critical FR)
+> 311	     - Function, Failure Mode, Effect, Severity (1-10), Occurrence (1-10),
+> 312	       Detection (1-10), RPN = S×O×D, Recommended Action
+> 313	  4. Self-Optimization Loops
+> 314	     - Trigger condition (metric threshold crossed)
+> 315	     - Autonomous response (what the system does without human intervention)
+> 316	     - Escalation path (when human decision is required)
+> 317	  5. Self-Healing Specifications
+> 318	     - Watchdog telemetry event types (new rows for infra_health_logs)
+> 319	     - Auto-recovery script stubs (bash / Edge Function)
+> 320	     - mega-brain-daemon integration points
+> 321	  6. SLA / SLO / SLI Definitions
+> 322	     - Service, SLI metric, SLO target (e.g. 99.5% uptime/month), SLA consequence
+> 323	  7. PDCA Improvement Cadence
+> 324	     - Review frequency, metrics owner, improvement backlog location
+> 325	  8. Observability Checklist
+> 326	     - Logging events (what, where, level)
+> 327	     - Alerting rules (condition → channel → escalation)
+> 328	     - Distributed tracing touchpoints
+> 329	```
+> 330	
+> 331	---
+> 332	
+> 333	### Phase 6 — Cross-Document Traceability Validation
+> 334	
+> 335	**Actions (automated consistency check before writing `00-index.md` final status):**
+> 336	
+> 337	```
+> 338	1. Build traceability chain:
+> 339	   MR-NNN → BR-NNN → PR-NNN → FR-NNN → (DB table | Edge Function | Process)
+> 340	
+> 341	2. Assert:
+> 342	   - No orphaned requirements (every ID appears in at least one downstream doc).
+> 343	   - No undocumented Edge Functions (every function in SDD has JWT + secret listed).
+> 344	   - No tables without RLS (every CREATE TABLE stub has RLS block).
+> 345	   - mcoCoins cost defined for every AI-powered FR.
+> 346	   - Every FMEA item with RPN > 100 has a recommended action.
+> 347	
+> 348	3. If any assertion fails:
+> 349	   - List all failures with their document + section reference.
+> 350	   - Ask Sovereign to resolve before proceeding to Phase 7.
+> 351	   - Do NOT proceed to Phase 7 with unresolved critical failures.
+> 352	```
+> 353	
+> 354	---
+> 355	
+> 356	### Phase 7 — Knowledge Mesh Injection
+> 357	
+> 358	> **Canonical pattern (sealed 2026-05-26, Sovereign directive):** every BoK seal MUST persist
+> 359	> the documentation_suite node via a dedicated Bun-native seed script following the precedent
+> 360	> `scripts/seed-openclaw-bok-seal.ts` (and its sibling `seed-gamificacao-nodes-bok-seal.ts`).
+> 361	> Inline REST `curl` or one-off dashboard inserts are NOT allowed — the script form preserves
+> 362	> reproducibility, version control, and material proof of the operation.
+> 363	
+> 364	**Required actions:**
+> 365	
+> 366	1. **Construct the payload** as a fully-typed object — placeholder example:
+> 367	
+> 368	```json
+> 369	{
+> 370	  "node_type": "documentation_suite",
+> 371	  "name": "bok-scribe-seal-<projectSlug>-v1",
+> 372	  "title": "<projectSlug> BoK Documentation Suite v1",
+> 373	  "content": "<one-paragraph synthesis: idea, market, architecture, ID space summary, motivating context>",
+> 374	  "tags": ["bok-scribe", "<projectSlug>", "<marketSegment>", ...domain-specific],
+> 375	  "stability_score": 0.85,
+> 376	  "revenue_impact": <estimated from BRD ROI section — 0 for internal enablers; non-zero only when direct revenue is documented>,
+> 377	  "metadata": {
+> 378	    "bok_version": "1.0.0",
+> 379	    "documents": ["00-index","01-mrd","02-brd","03-prd","04-frd","05-sdd","06-data-model","07-process-flow","08-quality-metrics"],
+> 380	    "document_lines": { ... per-file LOC + total },
+> 381	    "phase_completed": "Phase 7",
+> 382	    "traceability_validated": true,
+> 383	    "traceability_orphans": 0,
+> 384	    "id_space": { "MR": "MR-XX-001..NNN", "BR": "...", ... },
+> 385	    "fmea_high_rpn_count": <int>,
+> 386	    "fmea_high_rpn_items": ["FMEA-XX-NNN (RPN <value>)", ...],
+> 387	    "new_migrations": <int>,
+> 388	    "new_edge_functions": <int>,
+> 389	    "integration_surface": "<standalone|extends-mcorch>",
+> 390	    "regulatory_profile": "<LGPD|GDPR|financial|healthcare|none>",
+> 391	    "monetization": "<direct|indirect|internal-enabler-zero-coin>",
+> 392	    "derives_from_seal": "bok-scribe-seal-<parent-slug>-v1",
+> 393	    "depends_on_sop": "<path to operational SOP if applicable>",
+> 394	    "motivating_incident": "<incident reference if BoK was triggered by an incident>"
+> 395	  }
+> 396	}
+> 397	```
+> 398	
+> 399	2. **Author a dedicated seed script** at `scripts/seed-<projectSlug>-bok-seal.ts` mirroring
+> 400	   `scripts/seed-openclaw-bok-seal.ts` 1:1 in structure. The script MUST:
+> 401	   - Use `@supabase/supabase-js` with `SUPABASE_SERVICE_ROLE_KEY` from `.env` (never hardcode).
+> 402	   - INSERT the payload into `mcorch_nodes` using `.select('id, name').single()` for material proof.
+> 403	   - INSERT a `DERIVES_FROM` edge in `mcorch_edges` pointing to the most semantically-related
+> 404	     parent seal (typically the previous BoK seal in the topic family — discover via
+> 405	     `SELECT id FROM mcorch_nodes WHERE name = 'bok-scribe-seal-<parent-slug>-v1'`).
+> 406	   - Print the returned UUIDs to stdout for the agent to cite as material proof.
+> 407	   - Be idempotent: if the seal already exists (UNIQUE name violation), log and exit 0 cleanly.
+> 408	
+> 409	3. **Execute the script** under the project venv:
+> 410	   ```bash
+> 411	   bun run scripts/seed-<projectSlug>-bok-seal.ts
+> 412	   ```
+> 413	   Capture the returned UUID + edge UUID. Confirm via REST:
+> 414	   ```bash
+> 415	   curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?id=eq.<uuid>&select=embedding" \
+> 416	     -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+> 417	     -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+> 418	   # Expected: embedding NOT NULL (auto-fired via trg_mcorch_embed_on_insert pg_net)
+> 419	   ```
+> 420	
+> 421	4. **Cite the material proof** in the `/handoff` seal:
+> 422	   - Documentation suite UUID
+> 423	   - DERIVES_FROM edge UUID
+> 424	   - Embedding confirmation timestamp
+> 425	
+> 426	**Note:** The BoK Scribe Agent itself does NOT directly invoke Supabase via in-conversation
+> 427	REST calls — it produces the seed script + payload, and the Sovereign (or agent executing on
+> 428	behalf of the Sovereign with explicit approval) runs the script. The script form preserves
+> 429	the audit trail of "what was inserted, when, by which version of which code."
+> 430	
+> 431	**Precedent inventory (mirror sources, in order of recency):**
+> 432	- `scripts/seed-e2e-user-zero-bok-seal.ts` (this BoK — 2026-05-26)
+> 433	- `scripts/seed-openclaw-bok-seal.ts` (openclaw — 2026-05-19)
+> 434	- `scripts/seed-gamificacao-nodes-bok-seal.ts` (gamificacao-nodes — 2026-05-18)
+> 435	- (older seals predate this script pattern and were inserted via inline REST — grandfathered)
+> 436	
+> 437	---
+> 438	
+> 439	## Harness Engineering Constraints (non-negotiable)
+> 440	
+> 441	These rules apply to every document the agent produces:
+> 442	
+> 443	| Constraint | Rule |
+> 444	|------------|------|
+> 445	| Code separation | FRD/SDD describe WHAT and WHY. HOW belongs in code, not in docs. |
+> 446	| Hook-first | Every UI feature must describe its backing hook before its component. |
+> 447	| No client secrets | SDD never lists secret values, only key names from the vault. |
+> 448	| Atomic billing | mcoCoins deduction always routes through `deduct_mco_coins` RPC. |
+> 449	| RLS by default | Every new table starts with `ALTER TABLE x ENABLE ROW LEVEL SECURITY`. |
+> 450	| Embed on insert | Every new node-type table must have embed-mcorch-node trigger noted. |
+> 451	| Tenant isolation | Every table must document its `user_id + project_id` scoping. |
+> 452	
+> 453	---
+> 454	
+> 455	## Error & Edge Case Handling
+> 456	
+> 457	| Situation | Agent Response |
+> 458	|-----------|----------------|
+> 459	| Business idea is too vague | Ask 3 clarifying questions before Phase 1. |
+> 460	| Existing docs/bok/<slug>/ detected | Show index, ask: overwrite / extend / cancel. |
+> 461	| Phase transition check fails | List failures, stop, ask Sovereign to resolve. |
+> 462	| Conflicting BoK recommendations | Note the conflict in an `[OTD]` block; present both options. |
+> 463	| Regulatory profile = financial/healthcare | Elevate all CISSP CBK sections; add dedicated compliance checklist. |
+> 464	| Feature extends existing MCORCH feature | Cross-reference existing ADRs from `.claude/context/architecture-decisions.md`. |
+> 465	
+> 466	---
+> 467	
+> 468	## Document Style Guide
+> 469	
+> 470	- **Headings:** `#` for document title, `##` for major sections, `###` for subsections.
+> 471	- **IDs:** Always prefix (MR-, BR-, PR-, FR-, NFR-, OTD-) and zero-pad to 3 digits.
+> 472	- **Tables:** Use markdown tables with aligned columns; include a header row always.
+> 473	- **Code blocks:** Use fenced blocks with language identifier (`sql`, `typescript`, `json`).
+> 474	- **Status badges:** `[ ] pending` / `[x] complete` / `[!] blocked` in index file.
+> 475	- **Cross-references:** Link within suite as `[BR-001](../02-brd.md#br-001)`.
+> 476	- **Version:** Every file footer includes `_Generated by MCORCH BoK Scribe Agent v1.0.0_`.
+> 477	
+> ```
+
+## 🤖 Claude *(11:11:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== templates dispon\u00edveis ===\"; ls -la .claude/agents/bok-scribe/templates/ 2>/dev/null\necho \"=== estrutura de um BoK existente recente (post-engine? conteudo-v2?) p/ refer\u00eancia de formato ===\"\nls docs/bok/spaces-cadence/ 2>/dev/null | head",
+  "description": "Read bok-scribe workflow + list templates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === templates disponíveis ===
+> total 68
+> drwxrwxr-x 2 gcrUX gcrUX 4096 May  6 13:37 .
+> drwxrwxr-x 3 gcrUX gcrUX 4096 May  6 13:37 ..
+> -rw-rw-r-- 1 gcrUX gcrUX 2286 May  6 13:37 00-index.md
+> -rw-rw-r-- 1 gcrUX gcrUX 3163 May  6 13:37 01-mrd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 3715 May  6 13:37 02-brd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 5073 May  6 13:37 03-prd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 3632 May  6 13:37 04-frd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 8660 May  6 13:37 05-sdd.md
+> -rw-rw-r-- 1 gcrUX gcrUX 5880 May  6 13:37 06-data-model.md
+> -rw-rw-r-- 1 gcrUX gcrUX 5730 May  6 13:37 07-process-flow.md
+> -rw-rw-r-- 1 gcrUX gcrUX 7550 May  6 13:37 08-quality-metrics.md
+> === estrutura de um BoK existente recente (post-engine? conteudo-v2?) p/ referência de formato ===
+> 00-[[deepsearch-blueprint|deepsearch-blueprint]].md
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> ```
+
+## 🤖 Claude *(11:13:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm mapping out the full BoK Scribe workflow structure with nine documents, each grounded in the blueprint and governing decisions, where the SDD carries the Pattern Conformance Declaration. The workflow will fan out these docs grouped by agent, starting with the index manifest and file registry, followed by the Market Requirements document.
+
+I can see the complete doc structure now: MRD, BRD, and PRD each need new traced IDs (MR-LF, BR-LF, PR-LF), while the FRD, SDD, and quality-metrics docs can reuse the existing IDs from the blueprint (FR-LF-001..017, FM-LF-001..014, OTD-LF-001..015). Each doc-agent will read from the blueprint as source material and follow its section spec to maintain consistency and grounding throughout the workflow.
+
+The key insight is that while I could generate all docs in parallel, the traceability chain (MRD → BRD → PRD → FRD) works better if I pipeline them sequentially so each downstream doc properly references the IDs from its upstream dependency rather than having agents invent their own IDs independently. These can all run in parallel since they reference the blueprint as the single source of truth. Each doc-agent reads the blueprint plus the governing decisions, then generates its own document with the appropriate ID scheme—MRD creates MR-LF identifiers, BRD creates BR-LF identifiers, and so on.
+
+For the upstream chain to maintain traceability, I need MRD to run first, then BRD reads the MRD result, then PRD reads the BRD result. After those three complete sequentially, the downstream docs (FRD, SDD, data-model, process-flow, quality-metrics) can all run in parallel since they're just referencing the blueprint and the upstream outputs. The sequential spine of MRD through SDD is the critical path, but since the blueprint already contains most of the content, each agent is really just reformatting and adding traceability rather than creating from scratch. After SDD completes, I can run the data model, process flow, and quality metrics in parallel since they all depend on the same inputs. That gives me a manageable workflow of about nine agents total, with the five-deep sequential chain being the main bottleneck—which is acceptable for this scope.
+
+Actually, I'm reconsidering the dependency structure. The traceability chain matters, but the blueprint already has the functional requirement IDs baked in. The MRD, BRD, and PRD are really just different framings of the same blueprint content—market, business, and product perspectives—so they don't need strict sequential ordering. I could run those three in a short pipeline to keep some coherence, then kick off FRD, SDD, data model, process flow, and quality metrics in parallel. The catch is that those parallel agents would need the PR range from the PRD, but the PRD won't be finished when they start.
+
+Actually, let me step back. The transition checks require every FR to trace back to a PR, so I can't really avoid the dependency. The correct approach is to do the full sequential spine—MRD, then BRD, then PRD, then everything else downstream. It's slower, but correctness matters more than speed for a book of knowledge, and token cost isn't a constraint here. I'll write it with explicit sequential awaits rather than trying to parallelize. Completing the parallel data processing phase and then an index agent that synthesizes everything. That's 9 agents total across roughly 7 wall-clock steps with the sequential spine and parallel branches. Each agent uses general-purpose type with read/write capabilities, and I'm considering setting effort to high across the board to prioritize quality, though that does multiply the computational cost.
+
+Now I'm settling on a more balanced approach: high effort for the complex documents like SDD and FRD, medium for the rest. I'll embed the section specifications directly into each agent's prompt so they have the detailed structure they need, and I'll reference a shared constant for the governing decisions that apply across all documents.
+
+Writing the workflow script...
+
+I'm setting up the core configuration with the landing-factory slug, blueprint path, and the governing decisions that carry through from my arguments—keeping v0.10.0, prioritizing asset-bundler, using gcrux.com, WordPress-first approach, PostHog BYOK, and the established doctrine. For MCORCH conventions, I'm using prefixed and zero-padded IDs across all document types, applying Harness Engineering patterns with hooks-first architecture, default-deny RLS, and mcoCoins deduction mechanics.
+
+Now I'm adding the remaining constraints: per-user tenancy with embed-on-insert, the footer attribution to MCORCH BoK Scribe Agent v1.0.0, Portuguese-Brazilian narrative with English identifiers, LGPD compliance for user data and analytics, B2B2C market positioning, hybrid monetization through mcoCoins per operation, and integration that extends the broader MCORCH system. I'm about to write the workflow script by defining the constants for conventions and governing decisions, then structuring each document agent's prompt to include the blueprint context.
+
+Writing the workflow script... I need to decide on effort levels for each agent to balance quality and token usage—setting high effort for the technical docs like SDD, FRD, and quality-metrics, while keeping the others at medium to avoid excessive token consumption across all nine agents.
+
+Actually, I'll simplify by omitting effort specifications entirely and letting them inherit from the session default, which should already be set appropriately.
+
+Now I'm writing the workflow script, defining the docs array with file, title, and sections, then orchestrating the spine agent followed by parallel execution of the document agents, with the index agent running last to read all outputs and build the registry.
+
+Writing the workflow script... Defining the file paths and establishing the documentation conventions for the project—Portuguese narrative with English identifiers, zero-padded three-digit IDs, reusing existing IDs from the blueprint, markdown tables, Harness Engineering patterns, and default-deny RLS for new tables. Pinning to v0.10.0, building a custom asset bundler that inlines images, fonts, and modules into data URIs as the centerpiece of the first phase, then hosting on a separate first-party domain with cookie isolation while avoiding SSO vulnerabilities, and prioritizing WordPress pages as the publishing source with static hosting.
+
+Next, I'm layering in PostHog for self-hosted CRO with an agent-driven gate that auto-reverts at 95% confidence before transitioning to autonomous control, plus a per-user API tenancy model that reuses existing design and asset infrastructure rather than rebuilding—the first phase roadmap focuses on shipping v0.10.0 through the bundler and WordPress loop with assisted CRO, then expanding to external BYOK hosting, Spaces exports, and Meta ads traffic.
+
+Now I'm moving into the upstream phase where the agent synthesizes the conversation context and governance rules to produce a market requirements document following BABOK v3 structure, covering executive summary through competitive analysis and success metrics. Continuing with the business requirements document, I'm defining the specific BR requirements that map back to the market requirements, including ROI modeling with mcoCoins economics that calculates operational costs across the build, publish, and CRO cycle phases, then capturing constraints, business risks, acceptance criteria, and the traceability chain from market requirements through business requirements to product requirements.
+
+Now I'm moving into the product requirements phase, reading the business plan and the BRD I just created to produce the PRD with product vision, personas for business owners and agencies, user journey maps covering happy paths and edge cases, a feature inventory organized by MoSCoW prioritization with effort estimates and mcoCoins allocation, release phasing that separates MVP must-haves from v1 and future work, and a luxury UX design system approach.
+
+Continuing to the technical phase where I'll read the PRD and expand the functional requirements from the blueprint, reusing and building upon the existing FR specifications. Now I'm setting up an agent task to generate the System Design Document, reading the FRD along with the architecture patterns to produce a comprehensive design covering the system architecture, component catalog, and implementation details. Continuing with infrastructure touchpoints like the design bridge and wildcard domain setup, then laying out migration stubs with RLS defaults and embedding considerations. I need to include a mandatory Pattern Conformance Declaration section that maps all 21 architectural patterns from the vision document, marking each as implemented, deferred with justification, or not applicable.
+
+Now I'm setting up the data processing phase where I'll read the blueprint and current SDD to generate the data model document, starting with the conceptual entities like landing sites, variants, deployments, experiments, and event tracking configurations. Now I'm reading the business process documentation and the system design to create a comprehensive process flow guide. I'll map out the core workflows using BPMN notation with swimlanes for each actor—user interactions, webhooks, edge functions, workers, external APIs, and database operations—then detail the worker blueprints for bundling, the CRO testing cycle, and changelog monitoring, plus integration points where coins get deducted, error handling strategies, SLA definitions per step, and the cron job scheduling.
+
+Moving forward, I need to produce the quality metrics documentation by examining the business process and functional requirements, then establish quality objectives, build a KPI dashboard with conversion and hook rate targets, and apply failure mode analysis reusing the existing failure modes from the system blueprint. Generating index manifest... Fixing the template literal syntax... Rewriting the script to eliminate all inner backticks — I'll use single quotes or plain text for code terms inside the template literal strings instead. The agents write to absolute paths and the sequential phase ensures the shared dependency (05-sdd.md) exists before the parallel agents read it. Writing the final workflow script...
+
+</details>
+
+
+## 🤖 Claude *(11:13:39)*
+
+Estrutura da casa em mãos (9 docs, seções por lente BoK, SDD com Pattern Conformance). Vou fanout via Workflow — spine sequencial MRD→BRD→PRD→FRD→SDD (traceability real) + paralelo nos 3 folha + índice. Cada agente lê o blueprint (SSOT) e escreve seu doc, mantendo meu contexto enxuto:
+
+## 🤖 Claude *(11:14:43)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'landing-factory-bok',\n  description: 'BoK Scribe suite 9-doc para landing-factory grounded no blueprint v0.2 + decisoes de Owner 2026-07-16 (v0.10.0 pinado, asset-bundler P0, gcrux.com)',\n  phases: [\n    { title: 'Upstream', detail: 'MRD -> BRD -> PRD (BABOK/ProdBOK/CXBOK)' },\n    { title: 'Technical', detail: 'FRD -> SDD (SWEBOK/CISSP + Pattern Conformance)' },\n    { title: 'DataProcess', detail: 'data-model + process-flow + quality-metrics (DMBOK/BPM/CMQ)' },\n    { title: 'Index', detail: 'manifest + traceability registry' },\n  ],\n}\n\nconst DIR = '/home/gcrUX/htdocs/constellation-orchestra/docs/bok/landing-factory';\nconst BP = DIR + '/00-[[deepsearch-blueprint|deepsearch-blueprint]].md';\n\nconst CONV = 'CONVENCOES MCORCH (obrigatorias): narrativa PT-BR, IDs/labels em ingles; IDs prefixados+zero-padded 3 digitos (MR-LF-001, BR-LF-001, PR-LF-001, NFR-LF-001; REUSAR os ja existentes no blueprint FR-LF-001..017, FM-LF-001..014, OTD-LF-001..015 sem renumerar); tabelas markdown com header; Harness Engineering (logica em hooks, componentes display-only); RLS default-deny em toda tabela nova; mcoCoins so via RPC deduct_mco_coins (nunca client-side); tenant isolation user_id+project_id; embed-on-insert p/ node-type novo; sem valores de secret (so nomes de key do Vault); footer _Generated by MCORCH BoK Scribe Agent v1.0.0_. Perfil: mercado B2B2C; monetizacao hybrid (mcoCoins/operacao); regulatorio LGPD (lead/analytics = PII); integracao extends-mcorch. Fonte da Verdade UNICA = o blueprint (faca Read); nao inventar alem dele; ambiguidade vira OTD, nunca improviso.';\n\nconst GOV = 'DECISOES GOVERNANTES DO SOVEREIGN (2026-07-16): (1) MANTER Open Design v0.10.0 pinado (NAO v0.15 - upstream nao entrega o inline, issue #368). (2) asset-bundler proprio (modulo landing-bundler host worker que inlina img/@font-face/url()/@import/imports-ESM em data: URIs sobre o HTML do export ?inline=1) = FR-LF-002/OTD-LF-003 = P0 centerpiece da Fatia 1. (3) hosting first-party em gcrux.com (dominio registravel SEPARADO cookie-isolado, slug.gcrux.com por site; NUNCA *.mcorch.com - cookie SSO sb-mcorch-session e .mcorch.com-scoped + guarda access token + nao-httpOnly [src/lib/sso-cookie.ts:13,44-48] = account takeover = FM-LF-013 RPN280) + Netlify/Vercel BYOK per-user. (4) sink WordPress-page-first (no publishWordpress postType page), static-hosting soberano em gcrux.com depois. (5) CRO via PostHog self-host/BYOK (posthog-foss MIT): ler funil Query API, variantes Experiments/Feature-Flags; auto-revert + gate 95% = logica do AGENTE (PostHog nao reverte); gate humano->autonomo obrigatorio na Fatia 1. (6) API Tenancy per-user BYOK; Apache-2.0 attribution (NOTICE); free-first US$0; REUSAR canvas-design (design-bridge/design_jobs), creative_assets/register_creative_asset, mcoCoins/deduct_mco_coins, credenciais per-user - NAO reconstruir. Fatia 1 = build v0.10.0 -> asset-bundler -> WordPress page -> loop CRO assistido com witness material; roadmap = hosting gcrux.com + Netlify/Vercel BYOK, exports Spaces/HyperFrames (subprodutos), trafego Meta ads, WhatsApp SDR, dashboards NL, changelog-watcher.';\n\nphase('Upstream');\nconst mrd = await agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia o blueprint: ' + BP + '. Produza o 01-mrd.md (Market Requirements Document, lente BABOK v3). Secoes: 1 Executive Summary; 2 Market Problem Statement (estado atual); 3 Target Segments + TAM/SAM/SOM estimados; 4 Competitive Landscape (>=3 alternativas reais: Lovable, Wix, Unbounce/Instapage, agencias de CRO); 5 Market Opportunity & Timing; 6 Key Market Requirements MR-LF-001.. (prioridade Critical/High/Medium/Low); 7 Success Metrics (KPIs de mercado); 8 Regulatory & Compliance Context (LGPD); 9 Traceability stub MR->BR. Escreva o arquivo em ' + DIR + '/01-mrd.md e retorne apenas: ok 01-mrd <numero de MR>.', { label: '01-mrd', phase: 'Upstream', agentType: 'general-purpose' });\n\nconst brd = await agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ' e ' + DIR + '/01-mrd.md. Produza 02-brd.md (Business Requirements Document, BABOK). Secoes: 1 Executive Summary; 2 Business Objectives (SMART, >=3); 3 Stakeholder Register (Role/Interest/Influence/Comms); 4 Business Requirements BR-LF-001.. (cada uma traca a >=1 MR-LF); 5 ROI Model (custos/receita/payback); 6 mcoCoins Economics (custo por operacao build/publish/CRO-cycle via modelo 4x-floor; deduct_mco_coins; mapeamento de plano); 7 Constraints & Assumptions; 8 Business Risks; 9 Acceptance Criteria; 10 Traceability MR->BR->PR stub. Escreva ' + DIR + '/02-brd.md e retorne: ok 02-brd <numero de BR>.', { label: '02-brd', phase: 'Upstream', agentType: 'general-purpose' });\n\nconst prd = await agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ' e ' + DIR + '/02-brd.md. Produza 03-prd.md (Product Requirements Document, ProdBOK+CXBOK). Secoes: 1 Product Vision (1 frase); 2 Personas (>=2: dono de negocio/afiliado + operador de agencia); 3 User Journey Maps (happy path + 2 edge cases por persona); 4 Feature Inventory MoSCoW PR-LF-001.. (Description, persona servida, BR-LF tracada, Effort S/M/L/XL, mcoCoins); 5 Release Phasing (MVP = Fatia 1 must-haves; v1.0; future); 6 Luxury UX = design system MIV (void/cyan/gold/nebula, Playfair/JetBrains, glass/neon, micro-animacoes, WCAG 2.1 AA); 7 Acceptance Criteria (Gherkin Given/When/Then); 8 Traceability MR->BR->PR. Escreva ' + DIR + '/03-prd.md e retorne: ok 03-prd <numero de PR>.', { label: '03-prd', phase: 'Upstream', agentType: 'general-purpose' });\n\nphase('Technical');\nconst frd = await agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ' e ' + DIR + '/03-prd.md. Produza 04-frd.md (Functional Requirements Document, SWEBOK v4). REUSE as FR-LF-001..017 do blueprint (secao 6) como base e expanda cada uma (ID, Title, Description, Priority, PR-LF tracada, Acceptance Test ID, Category UI/Hook/EdgeFunction/DB/Cron/Worker). Secoes: 1 Scope Statement; 2 Functional Requirements FR-LF-001..017+ (incl. FR-LF-002 asset-bundler P0); 3 Non-Functional NFR-LF-001.. (performance/scalability/availability/maintainability + seguranca do dominio separado); 4 Interface Requirements (contratos UI->hook->edge fn; export HTTP do od daemon GET /api/projects/:id/export/*?inline=1; PostHog Query/Feature-Flag API; no publishWordpress); 5 Data Requirements (validacao); 6 Test Strategy matrix (Unit/Integration/E2E por FR); 7 Traceability PR->FR. Escreva ' + DIR + '/04-frd.md e retorne: ok 04-frd <numero de FR>.', { label: '04-frd', phase: 'Technical', agentType: 'general-purpose', effort: 'high' });\n\nconst sdd = await agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ', ' + DIR + '/04-frd.md e docs/architecture/agentic-vision.md (os 21 padroes agenticos). Produza 05-sdd.md (System Design Document, SWEBOK+CISSP CBK). Secoes: 1 Architecture Overview (Harness layer map: hooks/componentes/edge fns/workers/sidecar Open Design v0.10.0/landing-bundler/CRO worker); 2 Component Catalog (novos hooks, componentes display-only, edge fns como deploy-site/cro-cycle/verify-domain, store slices, tabelas/migrations - REUSAR canvas-design/creative_assets/mcoCoins); 3 Data Flow Diagrams (build->bundler->publish->instrument->CRO); 4 API Contract Definitions (Method/Path/Auth/Request/Response/Errors + ponto exato do deduct_mco_coins); 5 Security Design (threat model STRIDE por componente; INVARIANTE DURA: HTML de tenant SO em gcrux.com, nunca *.mcorch.com - cookie SSO nao-httpOnly = ATO FM-LF-013; RLS policies; JWT/ES256; secrets do Vault por NOME; guard anti-SSRF fetchPublicUrl nos fetch de asset do bundler); 6 Infrastructure Touchpoints (reuso design-bridge/design_jobs; wildcard *.gcrux.com no Cloudflare; watchdog infra_health_logs novos eventos); 7 Migration Stubs (RLS default-deny; HNSW se embedding); 8 Open Technical Decisions (REUSE OTD-LF-001..015 do blueprint). OBRIGATORIO: uma secao final Pattern Conformance Declaration com TABELA dos 21 padroes de docs/architecture/agentic-vision.md (colunas: Pattern | Implemented yes/deferred/n-a | How / Why-deferred) - deferred exige justificativa (id de OTD/FR ou razao honesta). Escreva ' + DIR + '/05-sdd.md e retorne: ok 05-sdd pattern-conformance <y>/<d>/<na>.', { label: '05-sdd', phase: 'Technical', agentType: 'general-purpose', effort: 'high' });\n\nphase('DataProcess');\nconst leaves = await parallel([\n  () => agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ' e ' + DIR + '/05-sdd.md. Produza 06-data-model.md (DMBOK v2). Secoes: 1 Conceptual Data Model (entidades: landing_sites, landing_variants, landing_deploys, cro_experiments, cro_events/metrics, posthog_config, domain_bindings, e o que a SDD introduziu); 2 Logical Model (colunas/tipos/constraints/FK por tabela); 3 Supabase Physical Schema Stubs (CREATE TABLE skeleton + RLS default-deny + indices B-tree/HNSW); 4 GraphRAG Knowledge Nodes (node/edge types novos, embedding fields, stability_score + FSRS-6); 5 Tenant Isolation Map (user_id+project_id por tabela); 6 Data Quality Rules (por coluna); 7 Retention & Archival Policy (LGPD - erase de lead/analytics). Reuse creative_assets como spine quando aplicavel. Escreva ' + DIR + '/06-data-model.md e retorne: ok 06.', { label: '06-data-model', phase: 'DataProcess', agentType: 'general-purpose' }),\n  () => agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ' e ' + DIR + '/05-sdd.md. Produza 07-process-flow.md (BPM CBOK v4). Secoes: 1 Process Inventory; 2 BPMN-lite Process Maps (build->bundle->publish; loop CRO test->measure->decide->revert; deploy gcrux.com) com swimlanes User|Hook|EdgeFunction|Worker|ExternalAPI|DB; 3 Worker/cron blueprints (landing-bundler worker, cro-cycle agendado, changelog-watcher) com trigger/sequencia/error branches; 4 Orchestration Integration Points + ponto deduct_mco_coins; 5 Error Handling & Retry Strategy por step; 6 SLA por step; 7 Cron Jobs (schedule/idempotency key/failure alerting). Escreva ' + DIR + '/07-process-flow.md e retorne: ok 07.', { label: '07-process-flow', phase: 'DataProcess', agentType: 'general-purpose' }),\n  () => agent(CONV + '\\n\\n' + GOV + '\\n\\nLeia ' + BP + ' e ' + DIR + '/04-frd.md. Produza 08-quality-metrics.md (CMQ/OE BOK). Secoes: 1 Quality Objectives (alinhadas aos Business Objectives); 2 KPI Dashboard (ID/Name/Formula/Target/Threshold warn-critical/Data source - incl. conversion rate alvo 4-8%, hook rate, TTFP); 3 FMEA Table (REUSE FM-LF-001..014 do blueprint: Function/Failure Mode/Effect/Severity/Occurrence/Detection/RPN=SxOxD/Recommended Action; FM-LF-013 cookie=RPN280 e o topo, acao = servir so de gcrux.com); 4 Self-Optimization Loops (CRO: trigger threshold->resposta autonoma->escalacao humana; gate 95% antes de autonomo); 5 Self-Healing (watchdog infra_health_logs novos eventos, auto-recovery stubs, mega-brain-daemon); 6 SLA/SLO/SLI; 7 PDCA Improvement Cadence; 8 Observability Checklist (logging/alerting/tracing). Todo item FMEA com RPN>100 tem Recommended Action. Escreva ' + DIR + '/08-quality-metrics.md e retorne: ok 08.', { label: '08-quality-metrics', phase: 'DataProcess', agentType: 'general-purpose', effort: 'high' }),\n]);\n\nphase('Index');\nconst idx = await agent(CONV + '\\n\\nLeia todos os arquivos em ' + DIR + '/ (00-[[deepsearch-blueprint|deepsearch-blueprint]] + 01..08). Produza 00-index.md (Project Bootstrap manifest). Conteudo: metadata do projeto (slug landing-factory, market B2B2C, monetization hybrid, regulatory LGPD, integration extends-mcorch, version v0.1, data 2026-07-16, Owner Sovereign); File Registry com status [x] complete + 1 linha de proposito por doc (00-blueprint..08); resumo do ID-space contando de cada arquivo (MR-LF/BR-LF/PR-LF/FR-LF/NFR-LF/OTD-LF/FM-LF ranges e totais); lista das OTDs criticas ABERTAS (OTD-LF-001 bridge->rota HTTP real, OTD-LF-003 asset-bundler, OTD-LF-014 origin de hosting, gate CRO 95%); e o Closed-Loop status (BoK 9/9 = gate de codigo ABERTO com este arquivo). Footer padrao. Escreva ' + DIR + '/00-index.md e retorne: ok 00-index.', { label: '00-index', phase: 'Index', agentType: 'general-purpose' });\n\nreturn { acks: [mrd, brd, prd, frd, sdd].concat(leaves).concat([idx]).map((x) => x || 'null') };\n"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wokip07e3
+> Summary: BoK Scribe suite 9-doc para landing-factory grounded no blueprint v0.2 + decisoes de Owner 2026-07-16 (v0.10.0 pinado, asset-bundler P0, gcrux.com)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/subagents/workflows/wf_d540ceb4-09b
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-bok-wf_d540ceb4-09b.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-bok-wf_d540ceb4-09b.js"} to iterate without resending the script.)
+> Run ID: wf_d540ceb4-09b
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/4bf53d1d-d451-467e-bc27-b683e8b9724d/workflows/scripts/landing-factory-bok-wf_d540ceb4-09b.js", resumeFromRunId: "wf_d540ceb4-09b"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(11:15:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've launched the BoK Scribe workflow in the background and will get notified when it finishes. Once it completes, I need to verify all 9 documents are present (the 8 canonical files plus the index, along with the deepsearch blueprint), run the completeness check through the /handson command, and then verify the traceability chain from MR through BR. I'll wrap up with a status update for the user—the BoK sealing is the gate-opener that unlocks the asset-bundler code, and once verified and seeded, I should flag that we're approaching a good handoff point given the accumulated uncommitted work (bug fixes, egress fixes, roadmap, blueprint updates, and the full BoK suite).
+
+</details>
+
+
+## 🤖 Claude *(11:15:12)*
+
+🚀 **BoK Scribe lançado em background** — `wf_d540ceb4-09b` (`/workflows` p/ acompanhar).
+
+Gera os **9 docs canônicos** grounded no blueprint (Fonte da Verdade), respeitando suas decisões (v0.10.0 pinado · asset-bundler P0 · gcrux.com · WordPress-first):
+- **Spine sequencial** (traceability real): `01-mrd` → `02-brd` → `03-prd` → `04-frd` → `05-sdd`
+- **Paralelo:** `06-data-model` · `07-process-flow` · `08-quality-metrics`
+- **Índice:** `00-index` (registro + id-space + Closed-Loop status)
+
+A **SDD carrega a Pattern Conformance Declaration** (os 21 padrões agênticos — exigência do §3.5 do protocolo) e o **asset-bundler é o FR-LF-002 / P0 da Fatia 1**.
+
+Quando selar eu:
+1. Verifico os **9/9** em disco (o gate do `/handson`) + traceability (MR→BR→PR→FR, Pattern Conformance, FMEA RPN>100 com ação);
+2. Autoro `scripts/seed-landing-factory-bok-seal.ts` + insiro o nó `documentation_suite` na malha (Phase 7, com DERIVES_FROM → `canvas-design`) — prova material UUID + embedding;
+3. Te reporto: **BoK gate ABERTO → o código do `landing-bundler` (Fatia 1) destrava.**
+
+Aí sim ataco o asset-bundler com a Fonte da Verdade selada — do jeito certo (Closed-Loop).
+
+⚠️ Nota de janela: o working tree já acumula bastante trabalho durável não-commitado (fix da imagem, fix de egress, roadmap, blueprint v0.2, e daqui a pouco a suíte BoK). Quando a BoK selar, recomendo um **`/handoff`** pra commitar tudo em commits granulares antes de abrir código — assim nada durável fica exposto. Te aviso quando o gate abrir.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
