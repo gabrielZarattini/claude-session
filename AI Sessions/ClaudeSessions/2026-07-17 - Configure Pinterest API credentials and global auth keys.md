@@ -11045,5 +11045,5 @@ Termina a gravação do Pinterest tranquilo. Quando quiser, eu disparo o `/bok-s
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]
-> * **Próxima Sessão**: [[2026-07-17 - agent-a1f5a982d34e64a8a]]
+> * **Próxima Sessão**: [[2026-07-17 - agent-a064b6e18092ad7e8]]
 %% --- TIMELINE END --- %%

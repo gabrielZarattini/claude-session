@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2488
-> * **Sessões do Claude**: 2441
+> * **Total de Sessões Registradas**: 2505
+> * **Sessões do Claude**: 2458
 > * **Sessões do Gemini**: 47
 
 ---
@@ -75,18 +75,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-ae0492dc64dbc325d]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-adbf396225306e0e7]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-ad5dde26245dcfc22]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-accc88b61394592fa]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-acc847827b06bcc54]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-ac821c6950d9d6d75]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-ac3e41a1c5ae616b9]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-ac39040dea508c1d2]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-abc2c153d46214d4a]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-aa4987bad127f25db]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a9cf085692acd965a]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a91dc0608623a5b78]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a8c6b93585216f69c]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a87b3d1d43a0cf6da]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a82ab170f1534e23b]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a81dbf1f18147cb61]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a72cc157cc0d41d27]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-a698d799862a2719d]]` - *2026-07-17*
-*   *... e mais 2431 sessões nessa categoria.*
+*   `[[2026-07-17 - agent-a9e3af62c29cde315]]` - *2026-07-17*
+*   *... e mais 2448 sessões nessa categoria.*
 
 ---
 
@@ -1743,23 +1743,40 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-ae0492dc64dbc325d]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-adbf396225306e0e7]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-ad5dde26245dcfc22]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-accc88b61394592fa]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-acc847827b06bcc54]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-ac821c6950d9d6d75]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-ac3e41a1c5ae616b9]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-ac39040dea508c1d2]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-abc2c153d46214d4a]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-aa4987bad127f25db]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a9e3af62c29cde315]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a9cf085692acd965a]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a91dc0608623a5b78]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a8c6b93585216f69c]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a8bcb9a65e100b59b]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a8991a3f3b4bb0d35]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a87b3d1d43a0cf6da]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a82ab170f1534e23b]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a81dbf1f18147cb61]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a73b20b532761befd]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a72cc157cc0d41d27]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a698d799862a2719d]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a682ee6fc56103771]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a67dc70803c0249b5]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a66c37f45e18bad15]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a6537ec4f2152700c]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a61ea69e1c17f6a0c]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a5ec53359196266e7]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a57502a01fe921dd6]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a49e5518595aee114]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a1f5a982d34e64a8a]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a09dd5759e16ca622]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a099d6666eb7eb117]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a064b6e18092ad7e8]]` (ClaudeSessions)
 *   `[[2026-07-17 - Configure Pinterest API credentials and global auth keys]]` (ClaudeSessions)
 *   `[[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-afc4d9e5bd87ab8f6]]` (ClaudeSessions)
