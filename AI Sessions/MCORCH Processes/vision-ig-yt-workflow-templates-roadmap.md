@@ -142,6 +142,35 @@ workflow templates automatizados no mcorch.
 
 ---
 
+## 6. Achados da sessão web (2026-07-17) — teste ao vivo do Vision MCP
+
+Com um **PAT efêmero** (gerado só p/ esta sessão, revogar amanhã), dirigi o Vision MCP direto via HTTP
+(JSON-RPC / Streamable HTTP), já que ele não está plugado como tool nativa no Claude Code Web.
+
+- **✅ Handshake/auth OK.** `initialize` → `200`, `serverInfo: vision-mcp-core v0.1.0`. Servidor **stateless**
+  (não emite `Mcp-Session-Id`; não precisa reusar sessão). Resposta em SSE (`event: message` + `data:`).
+- **✅ `tools/list` = 8 tools** (o README dizia 7). A **8ª** é `vision_parse_sensory_gate` (gate sensorial
+  Tier 1, grátis/determinístico: loudness EBU R128 + contraste WCAG/APCA → GO/NO-GO). Demais:
+  `mesh_search`, `vision_describe_image` (2 mco/BYOK grátis), `vision_analyze_video`
+  (**aceita URL do YouTube ou vídeo https direto**; ≤20MB inline, 20–100MB via Files API; 2 mco/min),
+  `deepsearch_scrape` (Firecrawl), `mesh_consolidate_reference`, `deepsearch_run`, `deepsearch_poll`.
+- **✅ `deepsearch_run` + `deepsearch_poll` funcionam.** Job assíncrono, `charged_mco: 0` → **BYOK Google
+  está configurado** (rodou de graça). Mas p/ `@drogarthas` o grounding voltou só genérico ("marketing
+  digital no Brasil / economia dos criadores") — a conta é **invisível ao índice público** (login-wall).
+- **❌ `deepsearch_scrape` BLOQUEADO** → `{"error":"firecrawl_not_configured", "action":"Configure sua chave
+  Firecrawl em /dashboard/settings"}`. **Este é o gargalo do Vision IG:** sem Firecrawl não dá p/ raspar o
+  perfil, listar reels nem resolver o `.mp4` direto que o `vision_analyze_video` exige.
+
+> [!important] Desbloqueio (fazer antes de retomar o IG)
+> 1. **Configurar `firecrawl_api_key`** (BYOK) em `/dashboard/settings` → habilita `deepsearch_scrape`.
+> 2. Aí o pipeline IG roda: `deepsearch_scrape` perfil → permalinks/legendas dos reels →
+>    `deepsearch_scrape` cada reel p/ extrair `og:video`/mp4 → `vision_analyze_video` por reel.
+> 3. **Alternativa sem Firecrawl:** fornecer as **URLs diretas dos vídeos** (mp4/CDN) ou os arquivos —
+>    `vision_analyze_video` aceita YouTube ou https direto, **não** a página do reel.
+> 4. O host **SSH** (onde a tool roda com a sessão/rede do dono) tende a passar melhor no login-wall do IG.
+
+---
+
 ## Anexo A — Mapa mental (fonte bruta, colada pelo usuário)
 
 > Material de aula · julho de 2026 · "O mar azul das canetas emagrecedoras" (nicho de suporte a GLP-1).
