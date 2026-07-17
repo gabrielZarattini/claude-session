@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2511
-> * **Sessões do Claude**: 2464
+> * **Total de Sessões Registradas**: 2512
+> * **Sessões do Claude**: 2465
 > * **Sessões do Gemini**: 47
 
 ---
@@ -86,7 +86,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-17 - agent-ac39040dea508c1d2]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-abc2c153d46214d4a]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-aa4987bad127f25db]]` - *2026-07-17*
-*   *... e mais 2454 sessões nessa categoria.*
+*   *... e mais 2455 sessões nessa categoria.*
 
 ---
 
@@ -1784,6 +1784,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-17 - agent-a099d6666eb7eb117]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-a064b6e18092ad7e8]]` (ClaudeSessions)
 *   `[[2026-07-17 - Configure Pinterest API credentials and global auth keys]]` (ClaudeSessions)
+*   `[[2026-07-17 - Configurar integração Instagram Business API]]` (ClaudeSessions)
 *   `[[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-afc4d9e5bd87ab8f6]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-af69dc310ca67e139]]` (ClaudeSessions)

@@ -14325,6 +14325,418 @@ README commitado (`68e405e`). **Phase 5 — HANDOFF.md** (newest-first). Lendo o
 > 21	
 > ```
 
+## 🤖 Claude *(19:29:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm inserting a new Task State row at the beginning of the table and planning to add a corresponding Record section after it.
+
+</details>
+
+
+## 🤖 Claude *(19:29:53)*
+
+Inserindo a nova Task State row (topo) + Record. Primeiro a row:
+
+## 🤖 Claude *(19:30:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **Loop MAPE-K: UX-Explorer + landing-bundler + BoKs 9/9 retroativas + swarm:read PAT (2026-07-16)** |",
+  "new_string": "## Task State\n\n| **Credenciais globais de app (admin) + AI Act Fatia 0-1 VIVO + content-intel BoK 9/9 + wildcard gcrux.com (2026-07-17)** | \u2705 Sess\u00e3o-maratona interativa (Sovereign ao vivo colando chaves, gravando v\u00eddeos de app-review, otimizando YouTube). **12 commits `b5c5474..91f1222`.** **(1) Tier global de credenciais de app OAuth** (post-engine Amendment 16, FR-PE-017..021): o Sovereign cola as chaves secretas de app direto no `/dashboard/admin` \u2192 aba **Chaves** (sem `.env`/CLI) \u2014 linha `user_id IS NULL` cifrada no Vault, admin-gated 2\u00d7 (RLS `has_role` single-arg + exemption no INSTEAD OF guard); resolver vira **4 degraus** (per-user \u2192 global \u2192 env \u2192 402) cobrindo as 6 plataformas (LinkedIn/IG/X saem do `Deno.env` cru nos 3 est\u00e1gios). Edge fn `seed-global-app-creds` seed env\u2192global 6/6. Banner de rota\u00e7\u00e3o (`admin_reminders`). `/security-review` NO FINDINGS \u00b7 smoke 13/13 (cross-tenant BLOCKED ao vivo: 42501/Vault-UUID/23505). **Anticorpo per-user-shadow:** linha per-user stale sombreava a global no callback Pinterest (Sovereign redefiniu o secret no console \u2192 401 do pr\u00f3prio Pinterest); sonda discriminante por code-falso; fix = desativar per-user. **Pinterest `@uxandai` + X `@gabrielOrchAI` reconectados** via credencial global (OTD-PE-SOCIAL-APPCREDS fechada) + **UI de gest\u00e3o de boards** no `/dashboard/social` (`pinterest-boards` edge fn) para a demo do Standard. **(2) AI Act Art.50 Fatia 0-1 VIVO** (content-provenance): migration `20260716230000` (5 colunas `provenance_*` na spine + `register_creative_asset` 21\u219226 args, DROP+CREATE+re-GRANT service_role, `/security-review` NO FINDINGS, bug de preserve pego pelo reviewer + corrigido/provado) + `src/lib/provenance.ts` (enum IPTC) + motor `embed-iptc-core` (ExifTool `XMP-iptcExt:DigitalSourceType`, verify-before-claim) + worker `provenance-bridge` (systemd habilitado) \u2192 **backfill 101 assets MCORCH marcados** (witness real `bc03a65a` imagem + `d57e3341` v\u00eddeo baixados do bucket carregam a URI IPTC); external/local exclu\u00eddos (Lei 1). Smoke 6/6. **(3) `*.gcrux.com` wildcard VIVO** \u2014 DNS wildcard (Sovereign) + `nginx/lp.gcrux.com.conf` (symlink+reload) \u2192 `hello.gcrux.com` serve landing real HTTP 200; trilho de hosting da landing-factory operacional. **(4) content-intel BoK 9/9 selada** (m\u00f3dulo NOVO): usu\u00e1rio compartilha link de v\u00eddeo existente (IG/TikTok/YT) \u2192 resolve+analisa server-side via Vision MCP \u2192 modela estrat\u00e9gia. Blueprint deepsearch 5 frentes (`wf_609b48ad`) \u2192 BoK Scribe 9/9 (`wf_658b10a1`, fix stage morreu no session-limit \u2192 **resumeFromRunId** recuperou); FR-CI-001..026 \u00b7 OTD-CI-001..008 \u00b7 FM-CI-01..20 \u00b7 Pattern Conformance **21 padr\u00f5es** (12y/3d/6na); seal `2e918a8c` DERIVES_FROM vision-mcp. **(5) Fixes:** morning-briefing tratava `security` (ciso-4-artifact) como BoK 0/9 falso + pin do repo can\u00f4nico (`3d5a2f4`); `WORKER_RESOURCE_LIMIT` no reframe (guard de megapixels pr\u00e9-decode, `42ca370`). tsc 0 \u00b7 vitest **621** verde \u00b7 gitleaks clean \u00b7 milestone `9aa1b522` embedado (768d) \u00b7 malha **9133**. \u26a0\ufe0f Pendente Sovereign: Pinterest Trial\u2192Standard (v\u00eddeo enviado) + Meta redirect URI; revisar legendas pt-BR do EP01 (master do dub); rota\u00e7\u00e3o de credenciais (SA Vertex/Gemini/Telegram \u2014 banner criado); c\u00f3digo do `content-intel` (GO + jur\u00eddico); OTD-CI-002 (sondar IG/TikTok resolver); OTD-PSW-001 (GPU, adiado at\u00e9 cr\u00e9ditos Vertex acabarem). |\n| **Loop MAPE-K: UX-Explorer + landing-bundler + BoKs 9/9 retroativas + swarm:read PAT (2026-07-16)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:30:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to insert a new Record section after the Task State table and before the existing Record section that starts at line 48, so I'm locating the exact boundary between where the table ends and the first Record begins.
+
+</details>
+
+
+## 🤖 Claude *(19:30:28)*
+
+Adicionando o Record. Localizando o fim da Task State table (primeiro `## ... Record`):
+
+## 🤖 Claude *(19:30:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"^## .*Record (2026-07-16)\" HANDOFF.md | head -1",
+  "description": "Achar o primeiro Record heading"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 49:## Loop MAPE-K: UX-Explorer + landing-bundler + BoKs 9/9 retroativas + swarm:read PAT Record (2026-07-16)
+> ```
+
+## 🤖 Claude *(19:30:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 47,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 47	| **Conformidade MIV pós-rebrand + tooling ECC-nativo (2026-07-04)** | ✅ auditoria visual E2E de 44 páginas (workflow 8 subagentes agent-browser — real-user nav, hovers, triggers, badges, widgets); 3 fixes sistêmicos (`--accent` cyan · mcoCoins gold · glow CTA) + regressões de marca (onboarding MCORCH · 404/miner/legenda pt-BR · Trial cyan) verificados ao vivo; tooling ECC-nativo (doctor · supply-chain sentinel · session-inspect) + SOP. mesh **9051** · commits `aaa2351`/`75077f6`/`8af7268` |
+> 48	
+> 49	## Loop MAPE-K: UX-Explorer + landing-bundler + BoKs 9/9 retroativas + swarm:read PAT Record (2026-07-16)
+> ```
+
+## 🤖 Claude *(19:30:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Loop MAPE-K: UX-Explorer + landing-bundler + BoKs 9/9 retroativas + swarm:read PAT Record (2026-07-16)",
+  "new_string": "## Credenciais globais de app + AI Act Fatia 0-1 + content-intel BoK 9/9 + wildcard gcrux.com Record (2026-07-17)\n\n**ORO:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = `/security-review` (NO FINDINGS \u00d73) + reviewer independente (pegou bug de preserve do status + o WORKER_RESOURCE_LIMIT) + Vision QA \u00b7 Owner = Sovereign (decis\u00f5es: colar chaves globais, GO do backfill, DNS wildcard, gates de app-review, GO do m\u00f3dulo content-intel com revis\u00e3o jur\u00eddica).\n\nSess\u00e3o-maratona interativa iniciada por diretiva do Sovereign (\"os escopos Google aprovados + Pinterest aprovado, preciso colar a chave em /dashboard/admin sem .env/CLI\") e drenada ao longo do dia com o Sovereign ao vivo (colando credenciais, gravando v\u00eddeos de app-review Pinterest/TikTok, otimizando o EP01 no YouTube). Fechou 5 frentes com prova material (Lei 1) e commit granular. Selada por `/handoff` expl\u00edcito.\n\n| Frente | Resultado |\n|--------|-----------|\n| Tier global de credenciais (FR-PE-017..021) | \u2705 Admin cola chave de app no `/dashboard/admin` sem .env; resolver 4 degraus 6 plataformas; seed env\u2192global 6/6; smoke 13/13; `/security-review` NO FINDINGS (`9d94771`/`df98397`/`f4dd523`) |\n| Pinterest/X reconectados + UI boards | \u2705 credencial global (OTD-PE-SOCIAL-APPCREDS fechada); anticorpo per-user-shadow; `pinterest-boards` edge fn + card (`9214df7`) |\n| AI Act Art.50 Fatia 0-1 VIVO | \u2705 5 colunas na spine + writer 26 args + ExifTool IPTC + worker; **101 assets marcados**, witness real; `/security-review` NO FINDINGS (`fa30a69`/`68d9163`/`7226717`) |\n| `*.gcrux.com` wildcard | \u2705 vhost servindo `hello.gcrux.com` HTTP 200 (`f462173`) |\n| content-intel BoK 9/9 | \u2705 m\u00f3dulo novo; blueprint deepsearch \u2192 Scribe 9/9; Pattern Conformance 21; seal `2e918a8c` (`91f1222`) |\n| Fixes | \u2705 morning-briefing security ciso-4 falso + pin repo (`3d5a2f4`); WORKER_RESOURCE_LIMIT megapixels (`42ca370`); lint herdado (`b5c5474`) |\n\n### Arquitetura \u2014 resolver 4 degraus de credencial de app (Amendment 16)\n```\nsocial-auth-{init,callback} + refresh-social-token (6 plataformas)\n  \u2192 resolveSocialAppCreds(platform):\n      (1) social_app_config per-user (auth.uid(), is_active)   \u2190 tenant BYOK\n      (2) social_app_config GLOBAL  (user_id IS NULL, is_active) \u2190 admin /dashboard/admin (NOVO)\n      (3) Deno.env fallback (legado/emerg\u00eancia)\n      (4) SocialAppConfigError 402 { <platform>_not_configured }\n  linha global = Vault-cifrada \u00b7 masked view \u00b7 admin-gated 2\u00d7 (RLS has_role + INSTEAD OF guard composto)\n```\n\n### Arquitetura \u2014 AI Act marca\u00e7\u00e3o (content-provenance Fatia 0-1)\n```\nrender \u2192 register_creative_asset (spine creative_assets, provenance_status='pending')\n  \u2192 provenance-bridge (systemd worker, molde video-bridge):\n      sweep pending image/video \u2192 download bucket \u2192 embed-iptc-core (ExifTool XMP-iptcExt:DigitalSourceType)\n      \u2192 verify-before-claim (rel\u00ea) \u2192 re-upload in-place \u2192 UPDATE status='embedded'\n  external/local EXCLU\u00cdDOS (MCORCH n\u00e3o gerou \u2192 n\u00e3o afirmar, Lei 1)\n```\n\n## Loop MAPE-K: UX-Explorer + landing-bundler + BoKs 9/9 retroativas + swarm:read PAT Record (2026-07-16)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:31:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the GraphRAG State section in HANDOFF.md with the new node count of 9133, so I'm searching for that section to find where to add this entry at the top of the list.
+
+</details>
+
+
+## 🤖 Claude *(19:31:07)*
+
+Atualizando o GraphRAG State (nova contagem 9133) + Phase 5b secret scan:
+
+## 🤖 Claude *(19:31:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"^## GraphRAG State\" HANDOFF.md",
+  "description": "Localizar GraphRAG State"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 9994:## GraphRAG State
+> ```
+
+## 🤖 Claude *(19:31:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 9994,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 9994	## GraphRAG State
+> 9995	
+> 9996	- **9102 total nodes** (verificado live 2026-07-13 via REST count=exact, youtube-panel-repurpose-frontdoor seal: +handoff `9f7b191a-ec4a-45ef-9906-7a1f4e0b2c01` embedded 768d — Painel YouTube Studio Fatia 1 [`youtube-data` read Data v3+Analytics v2 token per-user server-side + escopos alinhados + mapa API 13rec/175props/52metrics/33ações + Pattern Conformance] + front-door host-local do Repurpose admin-only [drag-drop chunked 80MB furando o cap 100MB do CF → `host-upload-server` 3220 nginx `/api/host-upload` JWT+admin → ingest/run/worker fonte-local realpath-contido; **EP01 real 1,3GB → 5 shorts 9:16 Vision-QA-provados**] + fix legenda drawtext UTF-8→padding; 5 commits `e174988..f10fba4` +README `adcab9a`; /security-review NO FINDINGS ×3; prev 9097 do video-repurpose-engine seal `f050959c`)
+> 9997	- **9097 total nodes** (verificado live 2026-07-12 via REST count=exact, video-repurpose-engine seal: +handoff `f050959c-5b05-4518-9142-2cf62ece1816` embedded 768d — Motor de repurpose de vídeo Fatias 1-3 [ingest externo `source_module='external'` VIVO + cortes 9:16/1:1 worker FFmpeg VIVO E2E + carrossel IG provado E2E, reusando a distribuição existente; 3 migrations aplicadas pelo Sovereign; cortes+carrossel provados por Vision QA em mídia real de produção] + OTD-SPACES-036 `space_publish_variants`/nó Publicar-em-Rede-Social + witness LoRA bloqueado em crédito Replicate BYOK; 6 commits `ac5ca86..831f5cc`; /security-review NO FINDINGS ×3; prev 9094 do voice-rail seal `8c1f0e7b`)
+> ```
+
+## 🤖 Claude *(19:31:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## GraphRAG State\n\n- **9102 total nodes** (verificado live 2026-07-13 via REST count=exact, youtube-panel-repurpose-frontdoor seal:",
+  "new_string": "## GraphRAG State\n\n- **9133 total nodes** (verificado live 2026-07-17 via REST count=exact, global-creds-aiact-content-intel seal: +handoff `9aa1b522-9d5c-41ca-91c5-bbb162a41844` embedded 768d \u2014 tier global de credenciais de app OAuth admin-gerenci\u00e1vel [FR-PE-017..021, resolver 4 degraus 6 plataformas, seed env\u2192global 6/6, Pinterest/X reconectados, UI boards] + AI Act Art.50 Fatia 0-1 VIVO [5 colunas provenance na spine + writer 26 args + ExifTool IPTC + worker provenance-bridge, 101 assets marcados, witness real] + `*.gcrux.com` wildcard servindo LP real + content-intel BoK 9/9 selada [seal `2e918a8c` DERIVES_FROM vision-mcp, Pattern Conformance 21] + fixes morning-briefing/WORKER_RESOURCE_LIMIT; 12 commits `b5c5474..91f1222` +README `68e405e`; /security-review NO FINDINGS \u00d73; prev 9127 do loop-mape-k seal `3a23fe00`)\n- **9102 total nodes** (verificado live 2026-07-13 via REST count=exact, youtube-panel-repurpose-frontdoor seal:"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:31:32)*
+
+Phase 5b — secret scan no HANDOFF.md + commit:
+
+## 🤖 Claude *(19:31:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credential scan HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\\|hash\\|fingerprint\" | head -10 || echo \"\u2705 5b-1 NO CREDENTIALS\"\necho \"=== 5b-2 google keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -5 || echo \"\u2705 5b-2 NO GOOGLE KEYS\"\necho \"=== commit HANDOFF ===\"\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal credenciais globais de app + AI Act Fatia 0-1 + content-intel BoK 9/9 (malha 9133)\" 2>&1 | tail -2\ngit log --oneline -1",
+  "description": "Phase 5b secret scan + commit HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credential scan HANDOFF.md ===
+> === 5b-2 google keys ===
+> === commit HANDOFF ===
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 3400742 docs(handoff): seal credenciais globais de app + AI Act Fatia 0-1 + content-intel BoK 9/9 (malha 9133)
+> ```
+
+## 🤖 Claude *(19:31:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Phase 5b is complete with the handoff committed. Now I'm moving into the material proof audit phase—I need to run the audit script to verify the key claims, or if that doesn't exist, I'll manually check the documentation.
+
+</details>
+
+
+## 🤖 Claude *(19:31:44)*
+
+HANDOFF selado (`3400742`), 5b limpo. **Phase 5c — Material Proof Audit:**
+
+## 🤖 Claude *(19:31:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls scripts/qa/run-audit.ts 2>/dev/null && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -30 || echo \"NO_AUDIT_SCRIPT\"",
+  "description": "Phase 5c material proof audit",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/run-audit.ts
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit 9d94771 | git_commit | 9d94771 | 9d94771 | ✅ |
+> | commit df98397 | git_commit | df98397 | df98397 | ✅ |
+> | commit f4dd523 | git_commit | f4dd523 | f4dd523 | ✅ |
+> | commit 9214df7 | git_commit | 9214df7 | 9214df7 | ✅ |
+> | commit fa30a69 | git_commit | fa30a69 | fa30a69 | ✅ |
+> | commit 68d9163 | git_commit | 68d9163 | 68d9163 | ✅ |
+> | commit f462173 | git_commit | f462173 | f462173 | ✅ |
+> | commit 91f1222 | git_commit | 91f1222 | 91f1222 | ✅ |
+> | commit 3d5a2f4 | git_commit | 3d5a2f4 | 3d5a2f4 | ✅ |
+> | commit 42ca370 | git_commit | 42ca370 | 42ca370 | ✅ |
+> | commit b5c5474 | git_commit | b5c5474 | b5c5474 | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent · Reviewer = `/security-review` (NO FINDINGS ×3)  | Operator = MCORCH Master Execution Agent · Reviewer = `/security-review` (NO FINDINGS ×3)  | ✅ |
+> | handoff node 9aa1b522 | mesh_node | 9aa1b522-9d5c-41ca-91c5-bbb162a41844 | 9aa1b522-9d5c-41ca-91c5-bbb162a41844 | ✅ |
+> 
+> QA VERDICT: 13 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.2s)
+> ```
+
+## 🤖 Claude *(19:31:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All 13 commit hashes and mesh nodes have verified successfully in Phase 5c. Now I'm checking that the content-intel Book of Knowledge is complete with all 9 documents and validating the seal nodes—the morning-briefing security fix is already in place. Once I confirm the BoK completeness, I'll push everything through.
+
+</details>
+
+
+## 🤖 Claude *(19:31:53)*
+
+**Phase 5c: SEAL ALLOWED** — 13/13 verificados, 0 falhas. **Phase 6 — BoK Seal Status** + **Phase 7 — Push:**
+
+## 🤖 Claude *(19:31:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== content-intel BoK completo? ===\"\nrequired=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\nmissing=()\nfor doc in \"${required[@]}\"; do [ -f \"docs/bok/content-intel/$doc.md\" ] || missing+=(\"$doc\"); done\n[ ${#missing[@]} -eq 0 ] && echo \"\u2705 content-intel \u2014 9/9 completo\" || echo \"\u26a0\ufe0f missing: ${missing[*]}\"\necho \"total BoK fam\u00edlias: $(ls docs/bok/ | wc -l)\"\necho \"=== scratch limpo? ===\"\nls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"\u2705 scratch limpo\"\necho \"=== proof-manifest.json (limpar do tree) ===\"\n[ -f proof-manifest.json ] && rm -f proof-manifest.json && echo \"removido\"\necho \"=== PUSH ===\"\ngit push origin main 2>&1 | tail -4",
+  "description": "Phase 6 BoK status + limpeza + Phase 7 push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === content-intel BoK completo? ===
+> ✅ content-intel — 9/9 completo
+> total BoK famílias: 33
+> === scratch limpo? ===
+> tem arquivos
+> === proof-manifest.json (limpar do tree) ===
+> removido
+> === PUSH ===
+> summary: (done in 0.25 seconds)
+> ✔️ gitleaks-range (0.25 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    0fc3c40..3400742  main -> main
+> ```
+
+## 🤖 Claude *(19:32:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The push went through cleanly with gitleaks passing, and I've finished all 9 content-intel BoK sections totaling 33 families. Now I'm noticing scratch/ has files that weren't there before—I need to check what they are and clean them up since Phase 7b calls for moving TypeScript diagnostics to .claude/scripts/db/.
+
+</details>
+
+
+## 🤖 Claude *(19:32:16)*
+
+Push OK (`0fc3c40..3400742`, gitleaks clean). content-intel 9/9 · 33 famílias BoK. Phase 7b — checando o scratch/:
+
+## 🤖 Claude *(19:32:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls -la scratch/ 2>/dev/null\necho \"=== s\u00e3o rastreados pelo git? ===\"\ngit status --short scratch/ 2>/dev/null || echo \"n\u00e3o rastreado\"\ngit ls-files scratch/ | head",
+  "description": "Inspecionar scratch/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 8
+> drwxrwxr-x  2 gcrUX gcrUX 4096 Jun 30 01:44 .
+> drwxrwx--- 33 gcrUX gcrUX 4096 Jul 17 16:32 ..
+> === são rastreados pelo git? ===
+> ```
+
+## 🤖 Claude *(19:32:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The scratch directory is actually empty—the earlier `ls` command succeeded because listing an empty directory returns exit code 0, not because there were files to move. All three phases are complete: security checks done, commits finished, and the migration work wrapped up.
+
+Now I'm moving through the final phases: the milestone node is embedded, README and HANDOFF files are updated, the secret scan came back clean, all 13 seal requirements are met, the Book of Knowledge content-intel is complete, and everything's been pushed. The scratch directory is clean with no MCP changes. I need to write the final seal report in Portuguese for Phase 8, and I'm counting the session commits—14 total across the pushed range from the feature work through the HANDOFF update.
+
+</details>
+
+
+## 🤖 Claude *(19:32:55)*
+
+`scratch/` está vazio (o `ls` de dir vazio retorna sucesso — falso positivo). Nada a mover, nenhum MCP novo. **Todas as fases concluídas.** Relatório final:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Credenciais globais de app + AI Act Fatia 0-1 + content-intel BoK 9/9 (2026-07-17)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret leak scan ......... ✅ PASS (nenhum hardcoded)
+  1c mco_balance client-side .. ✅ PASS (nenhuma violação)
+  1e console.log sensível ..... ✅ PASS (só strings de teste)
+  5b HANDOFF.md secret scan ... ✅ PASS (0 credenciais)
+  /security-review na sessão .. ✅ NO FINDINGS ×3 (creds globais · migration AI Act · reviewer pegou bug de preserve + WORKER_RESOURCE_LIMIT)
+
+📦 COMMITS (14 total · 0fc3c40..3400742)
+  b5c5474 chore(lint): zerar 2 erros herdados
+  9d94771 feat(post-engine): tier global de credenciais de app OAuth (FR-PE-017..021)
+  df98397 feat(admin): painel de Chaves Globais + banner de rotação
+  fa30a69 feat(content-provenance): Fatia 0 — colunas na spine + writer 26 args
+  68d9163 feat(content-provenance): Fatia 1 — IPTC via ExifTool (AI Act detectável)
+  3d5a2f4 fix(briefing): security ciso-4 falso + pin repo canônico
+  f4dd523 feat(social+provenance): seed env→global 6/6 + anticorpo + wildcard + backfill
+  7226717 fix(provenance): external/local excluídos + checklist app-audit
+  f462173 feat(landing-factory): wildcard *.gcrux.com VIVO
+  9214df7 feat(pinterest): UI de gestão de boards (demo Standard)
+  42ca370 fix(publish): guard de megapixels (WORKER_RESOURCE_LIMIT)
+  91f1222 docs(bok): content-intel 9/9 selada
+  68e405e docs(readme): v6.106.0
+  3400742 docs(handoff): seal
+
+⬡ KNOWLEDGE MESH
+  Milestone: 9aa1b522-9d5c-41ca-91c5-bbb162a41844 — session-handoff-20260717
+  Embedding: ✅ (768d) · seal content-intel 2e918a8c DERIVES_FROM vision-mcp
+  Malha: 9127 → 9133 nós
+
+📖 README.md
+  Versão: 6.105.0 → 6.106.0
+  Badge neural_mesh: 9127 → 9133 · BoK: 32/32 → 33/33
+  Seção: What's new v6.106.0
+
+🧠 HANDOFF.md
+  Fase selada: Credenciais globais + AI Act Fatia 0-1 + content-intel BoK 9/9
+  Seções: Task State, Record (+ 2 diagramas de arquitetura), GraphRAG State 9133
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 13 verificadas · 0 skipped · 0 falhas
+
+🚀 PUSH
+  main → origin/main · 14 commits enviados · gitleaks clean
+
+📌 SPRINT
+  BoK: 33/33 famílias · content-intel 9/9 (código gated)
+  scratch/ limpo ✅ · MCP docs ok ✅
+
+⏭  PRÓXIMOS PASSOS (dependem de você)
+  1. Pinterest: aguardar aprovação Standard (vídeo enviado) · Meta: colar redirect URI
+  2. EP01 YouTube: tela final + revisar legendas pt-BR (master do dub, que gera async)
+  3. Rotação de credenciais (banner criado no admin: SA Vertex · Gemini · Telegram)
+  4. content-intel código = GO seu + revisão jurídica no ingest (OTD-CI-006/007)
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada. Foi um dia excepcional, Gabriel — **14 commits** com prova material em cada frente: o tier global de credenciais tirou você do CLI (agora cola tudo no `/dashboard/admin`), o **AI Act saiu do papel** (101 assets já marcados como IA de forma detectável), `*.gcrux.com` está servindo, o briefing parou de mentir, e o **content-intel** ganhou BoK 9/9 — o módulo que vai transformar "estudar vídeos que funcionam" em produto. Tudo no remoto, malha em 9133. Bom descanso. 🌌
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -14334,6 +14746,6 @@ README commitado (`68e405e`). **Phase 5 — HANDOFF.md** (newest-first). Lendo o
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]
+> * **Sessão Anterior**: [[2026-07-17 - Configurar integração Instagram Business API]]
 > * **Próxima Sessão**: [[2026-07-17 - agent-a064b6e18092ad7e8]]
 %% --- TIMELINE END --- %%

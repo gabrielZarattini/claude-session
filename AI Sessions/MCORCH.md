@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 88
-> * **Total de Sessões**: 2506
+> * **Total de Sessões**: 2507
 
 ---
 
@@ -153,6 +153,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-17 - agent-a099d6666eb7eb117]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-17 - agent-a064b6e18092ad7e8]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-17 - Configure Pinterest API credentials and global auth keys]]` (ClaudeSessions) - *2026-07-17*
+*   `[[2026-07-17 - Configurar integração Instagram Business API]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-afc4d9e5bd87ab8f6]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-af69dc310ca67e139]]` (ClaudeSessions) - *2026-07-16*
