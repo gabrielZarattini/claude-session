@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 87
-> * **Total de Sessões**: 2462
+> * **Total de Processos**: 88
+> * **Total de Sessões**: 2464
 
 ---
 
@@ -44,6 +44,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[constellation-economic-activation]]` - *Processo*
 *   `[[content-asset-history]]` - *Processo*
 *   `[[content-cadence-strategy]]` - *Processo*
+*   `[[content-provenance-marking]]` - *Processo*
 *   `[[creative-assets-registry]]` - *Processo*
 *   `[[creative-qa-vision-gate]]` - *Processo*
 *   `[[credential-disconnect-clear]]` - *Processo*
@@ -158,6 +159,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-16 - agent-a72081f46929d470b]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a6b26b607d58b2c7a]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a69dccfcb398ae900]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a67abf54d959b23e6]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a664e4f3842576158]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a639dba2c73606b70]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a5cdf90427a74b893]]` (ClaudeSessions) - *2026-07-16*
@@ -173,6 +175,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-16 - agent-a3d6040db2e22dc11]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a3c52c31d35f2c694]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a22411cef5711eeba]]` (ClaudeSessions) - *2026-07-16*
+*   `[[2026-07-16 - agent-a1dbc66a9845de05a]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a1aad67e4ed6b3b5a]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a19f73b6eea140c12]]` (ClaudeSessions) - *2026-07-16*
 *   `[[2026-07-16 - agent-a113f291f5a51087f]]` (ClaudeSessions) - *2026-07-16*

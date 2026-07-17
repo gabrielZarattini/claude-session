@@ -44,6 +44,8 @@
 
 ## Recovery path
 
+- **⚠️ ANTICORPO (witnessed 2026-07-16): "Authentication failed." no callback com credencial global VÁLIDA** → uma **linha per-user antiga** (degrau 1) está sombreando a global (degrau 2). Caso real: o Sovereign redefiniu o secret no console Pinterest → o secret da linha per-user de 28/jun morreu → o init montou o consent (client_id igual, parece ok) mas o token exchange usou o secret VELHO per-user → 401 `{"code":2,"message":"Authentication failed."}` do próprio Pinterest. **Diagnóstico discriminante (zero-custo):** sondar o token exchange com `code` falso usando cada credencial — `invalid_client`/`Authentication failed` = secret errado; `invalid grant (283)` = credencial válida. **Fix:** `UPDATE social_app_config_table SET is_active=false WHERE platform='<p>' AND user_id IS NOT NULL` (service-role) → resolver cai na global. Regra: ao promover uma plataforma para o tier global, DESATIVAR (ou atualizar) as linhas per-user do mesmo app.
+- **Seed do que já existe**: edge fn `seed-global-app-creds` (service-role-only, idempotente — nunca sobrescreve linha global existente) materializa credenciais do env-vault como linhas globais; per-user→global promotion via script service-role (o decrypted view fornece o plaintext ao service_role; o trigger Vault re-cifra no insert).
 - **Secret colado errado** → recolar o correto na mesma seção (UPDATE in-place; `vault_upsert_secret` re-cifra por nome — sem 23505).
 - **Falha no OAuth pós-troca** (401/invalid_client) → conferir no console se o secret foi *redefinido* (o antigo morre na hora em algumas plataformas); recolar o vigente.
 - **Linha global órfã/indevida** → deletar pela UI admin (DELETE via view; visibilidade RLS garante que só admin alcança) e recriar.
