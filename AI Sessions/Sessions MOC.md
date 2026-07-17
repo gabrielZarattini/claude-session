@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2469
-> * **Sessões do Claude**: 2422
+> * **Total de Sessões Registradas**: 2488
+> * **Sessões do Claude**: 2441
 > * **Sessões do Gemini**: 47
 
 ---
@@ -67,25 +67,26 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-04 - Fix message options overflow in Core V2]]` - *2026-05-04*
 
 ### Security & Credentials
+*   `[[2026-07-17 - Configure Pinterest API credentials and global auth keys]]` - *2026-07-17*
 *   `[[2026-07-16 - Configure Pinterest API credentials and global auth keys]]` - *2026-07-16*
 *   `[[2026-06-02 - Fix vault secret upsert duplicate key error]]` - *2026-06-02*
 *   `[[2026-05-30 - Fix API key leak and reconfigure model defaults]]` - *2026-05-30*
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
-*   `[[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-afc4d9e5bd87ab8f6]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-af69dc310ca67e139]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-af03e988006a8e43a]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-aec44318bddbe695f]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae9dbcb4ac4d7fbaa]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae88d67e696ff8fd7]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae84a16a21c322397]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae7db45ebd0e35452]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae43e8f972da14079]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae3be5d39116e02a8]]` - *2026-07-16*
-*   `[[2026-07-16 - agent-ae26b06cc75ef9d26]]` - *2026-07-16*
-*   *... e mais 2413 sessões nessa categoria.*
+*   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-ac821c6950d9d6d75]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-ac39040dea508c1d2]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-aa4987bad127f25db]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a9cf085692acd965a]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a91dc0608623a5b78]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a8c6b93585216f69c]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a87b3d1d43a0cf6da]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a82ab170f1534e23b]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a81dbf1f18147cb61]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a72cc157cc0d41d27]]` - *2026-07-17*
+*   `[[2026-07-17 - agent-a698d799862a2719d]]` - *2026-07-17*
+*   *... e mais 2431 sessões nessa categoria.*
 
 ---
 
@@ -1741,6 +1742,25 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-ac821c6950d9d6d75]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-ac39040dea508c1d2]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-aa4987bad127f25db]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a9cf085692acd965a]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a91dc0608623a5b78]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a8c6b93585216f69c]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a87b3d1d43a0cf6da]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a82ab170f1534e23b]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a81dbf1f18147cb61]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a72cc157cc0d41d27]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a698d799862a2719d]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a682ee6fc56103771]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a66c37f45e18bad15]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a6537ec4f2152700c]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a61ea69e1c17f6a0c]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a49e5518595aee114]]` (ClaudeSessions)
+*   `[[2026-07-17 - agent-a1f5a982d34e64a8a]]` (ClaudeSessions)
+*   `[[2026-07-17 - Configure Pinterest API credentials and global auth keys]]` (ClaudeSessions)
 *   `[[2026-07-16 - d6ec7e6b-7ebd-46be-9065-173b91242b97]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-afc4d9e5bd87ab8f6]]` (ClaudeSessions)
 *   `[[2026-07-16 - agent-af69dc310ca67e139]]` (ClaudeSessions)
