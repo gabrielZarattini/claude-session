@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2519
-> * **Sessões do Claude**: 2472
+> * **Total de Sessões Registradas**: 2535
+> * **Sessões do Claude**: 2488
 > * **Sessões do Gemini**: 47
 
 ---
@@ -74,19 +74,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
-*   `[[2026-07-18 - Configurar integração Instagram Business API]]` - *2026-07-18*
-*   `[[2026-07-17 - agent-afa476b10f1b6756a]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-af2d70f586db1b6c5]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ae0492dc64dbc325d]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-adbf396225306e0e7]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ad7aad88c8fe833d9]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ad5dde26245dcfc22]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-accc88b61394592fa]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-acc847827b06bcc54]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ac821c6950d9d6d75]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ac3e41a1c5ae616b9]]` - *2026-07-17*
-*   *... e mais 2462 sessões nessa categoria.*
+*   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-aa988956670c0e57a]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a96f179782377e994]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a5514743ce3b7d476]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a53874163b7126a69]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a3129eb5d3f589fac]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a30d17222e847514c]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a286074c1c5cbb19d]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-a1aca2c15fbe7edd6]]` - *2026-07-18*
+*   *... e mais 2478 sessões nessa categoria.*
 
 ---
 
@@ -1742,7 +1742,23 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-aa988956670c0e57a]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a96f179782377e994]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a5514743ce3b7d476]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a53874163b7126a69]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a3129eb5d3f589fac]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a30d17222e847514c]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a286074c1c5cbb19d]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a1aca2c15fbe7edd6]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a100baa65a88dcf34]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a0e190ea8803e2f99]]` (ClaudeSessions)
 *   `[[2026-07-18 - Configurar integração Instagram Business API]]` (ClaudeSessions)
+*   `[[2026-07-18 - Configurar WhatsApp para abrir inbox no CRM]]` (ClaudeSessions)
+*   `[[2026-07-18 - 1e281932-cb2d-4aec-bdc3-913eeb7c5218]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-afa476b10f1b6756a]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-af2d70f586db1b6c5]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` (ClaudeSessions)

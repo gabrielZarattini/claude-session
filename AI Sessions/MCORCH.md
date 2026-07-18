@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 88
-> * **Total de Sessões**: 2514
+> * **Total de Sessões**: 2530
 
 ---
 
@@ -111,7 +111,23 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-aa988956670c0e57a]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a96f179782377e994]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a5514743ce3b7d476]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a53874163b7126a69]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a3129eb5d3f589fac]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a30d17222e847514c]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a286074c1c5cbb19d]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a1aca2c15fbe7edd6]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a100baa65a88dcf34]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a0e190ea8803e2f99]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - Configurar integração Instagram Business API]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - Configurar WhatsApp para abrir inbox no CRM]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - 1e281932-cb2d-4aec-bdc3-913eeb7c5218]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-17 - agent-afa476b10f1b6756a]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-17 - agent-af2d70f586db1b6c5]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` (ClaudeSessions) - *2026-07-17*

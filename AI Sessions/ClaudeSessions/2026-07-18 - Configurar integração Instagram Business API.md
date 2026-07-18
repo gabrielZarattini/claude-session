@@ -10218,5 +10218,6 @@ Checking the infra_health_logs... Let me check the infra_health_logs schema to f
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-17 - agent-afa476b10f1b6756a]]
+> * **Sessão Anterior**: [[2026-07-18 - Configurar WhatsApp para abrir inbox no CRM]]
+> * **Próxima Sessão**: [[2026-07-18 - agent-a0e190ea8803e2f99]]
 %% --- TIMELINE END --- %%
