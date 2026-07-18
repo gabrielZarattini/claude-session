@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2518
-> * **Sessões do Claude**: 2471
+> * **Total de Sessões Registradas**: 2519
+> * **Sessões do Claude**: 2472
 > * **Sessões do Gemini**: 47
 
 ---
@@ -74,6 +74,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-18 - Configurar integração Instagram Business API]]` - *2026-07-18*
 *   `[[2026-07-17 - agent-afa476b10f1b6756a]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-af2d70f586db1b6c5]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` - *2026-07-17*
@@ -85,8 +86,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-17 - agent-acc847827b06bcc54]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-ac821c6950d9d6d75]]` - *2026-07-17*
 *   `[[2026-07-17 - agent-ac3e41a1c5ae616b9]]` - *2026-07-17*
-*   `[[2026-07-17 - agent-ac39040dea508c1d2]]` - *2026-07-17*
-*   *... e mais 2461 sessões nessa categoria.*
+*   *... e mais 2462 sessões nessa categoria.*
 
 ---
 
@@ -1742,6 +1742,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-18 - Configurar integração Instagram Business API]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-afa476b10f1b6756a]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-af2d70f586db1b6c5]]` (ClaudeSessions)
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` (ClaudeSessions)
