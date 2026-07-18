@@ -14747,5 +14747,5 @@ Sessão selada. Foi um dia excepcional, Gabriel — **14 commits** com prova mat
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-17 - Configurar integração Instagram Business API]]
-> * **Próxima Sessão**: [[2026-07-17 - agent-a064b6e18092ad7e8]]
+> * **Próxima Sessão**: [[2026-07-17 - agent-a004981fd4e610d33]]
 %% --- TIMELINE END --- %%
