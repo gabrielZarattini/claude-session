@@ -1,4 +1,4 @@
-# Continue com os próximos passos
+# [[2026-07-06 - Continue com os próximos passos|Continue com os próximos passos]]
 **Date:** 2026-07-05 | **Session ID:** `be8df5a5-f15e-42b8-8659-5b49cc9f4cea`
 
 ---
@@ -5742,3 +5742,741 @@ tsc + build (deploy do cutover) e depois o gate E2E do Universo:
   "timeout": 240000
 }
 ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc ===
+> tsc exit: 0
+> === build (deploy cutover) ===
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 57.41s
+> build exit: 0
+> ```
+
+## 🤖 Claude *(23:01:14)*
+
+
+## 🤖 Claude *(23:01:16)*
+
+tsc 0 · build 0 · cutover deployado. Agora o gate E2E do Universo (pode levar ~1-2min pela query lenta do código + Vision):
+
+## 🤖 Claude *(23:01:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/audit-universe-ui.ts 2>&1 | tail -25\necho \"audit exit: ${PIPESTATUS[0]}\"",
+  "description": "Run Universo E2E UI audit + Vision QA gate",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🚀 Starting Unified Sensorial Canvas (Universo) E2E audit...
+> 🔐 Generating one-time Magic Link for gabrielcall@gmail.com...
+> 🔗 Magic Link generated.
+> 🌐 Launching headless Chromium...
+> ✈️ Navigating via magic link...
+> 📍 Redirected to: https://login.mcorch.com/dashboard/universe
+> ⏳ Waiting for the Unified Sensorial Canvas HUD...
+> ❌ Assert Failed: "Unified Sensorial Canvas" HUD not found.
+> audit exit: 1
+> ```
+
+## 🤖 Claude *(23:02:11)*
+
+
+## 🤖 Claude *(23:02:12)*
+
+O HUD não apareceu em 20s — provavelmente auth/hydration + lazy-load do R3F pesado leva mais. Torno o gate mais paciente e adiciono diagnóstico (dump do texto + screenshot de debug) em caso de falha:
+
+## 🤖 Claude *(23:02:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts",
+  "old_string": "  // Structural assert: the Unified Sensorial Canvas HUD must mount.\n  console.log('\u23f3 Waiting for the Unified Sensorial Canvas HUD...');\n  try {\n    await page.waitForFunction(\n      () => document.body.innerText.includes('Unified Sensorial Canvas'),\n      { timeout: 20000 },\n    );\n  } catch {\n    console.error('\u274c Assert Failed: \"Unified Sensorial Canvas\" HUD not found.');\n    await browser.close();\n    process.exit(1);\n  }",
+  "new_string": "  // Let the SPA hydrate the magic-link session and mount the protected route.\n  await page.waitForLoadState('networkidle').catch(() => {});\n  // Structural assert: the Unified Sensorial Canvas HUD must mount (heavy R3F lazy chunk \u2192 be patient).\n  console.log('\u23f3 Waiting for the Unified Sensorial Canvas HUD...');\n  try {\n    await page.waitForFunction(\n      () => document.body.innerText.includes('Unified Sensorial Canvas'),\n      { timeout: 45000 },\n    );\n  } catch {\n    const diag = await page.evaluate(() => ({\n      title: document.title,\n      url: location.href.split('#')[0],\n      bodyHead: document.body.innerText.slice(0, 400),\n    }));\n    console.error('\u274c Assert Failed: \"Unified Sensorial Canvas\" HUD not found.');\n    console.error('   URL:', diag.url, '| title:', diag.title);\n    console.error('   body[0:400]:', JSON.stringify(diag.bodyHead));\n    const dbg = `/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/be8df5a5-f15e-42b8-8659-5b49cc9f4cea/scratchpad/universe-debug.png`;\n    try { await page.screenshot({ path: dbg, type: 'png' }); console.error('   debug shot:', dbg); } catch { /* ignore */ }\n    await browser.close();\n    process.exit(1);\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:02:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/audit-universe-ui.ts 2>&1 | tail -25\necho \"audit exit: ${PIPESTATUS[0]}\"",
+  "description": "Re-run Universo audit with diagnostics",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🚀 Starting Unified Sensorial Canvas (Universo) E2E audit...
+> 🔐 Generating one-time Magic Link for gabrielcall@gmail.com...
+> 🔗 Magic Link generated.
+> 🌐 Launching headless Chromium...
+> ✈️ Navigating via magic link...
+> 📍 Redirected to: https://login.mcorch.com/dashboard/universe
+> ⏳ Waiting for the Unified Sensorial Canvas HUD...
+> ❌ Assert Failed: "Unified Sensorial Canvas" HUD not found.
+>    URL: https://login.mcorch.com/dashboard/universe | title: MCORCH — A agência autônoma
+>    body[0:400]: "MCORCH\nPrincipal\nVisão Geral\nConstelação\nCanvas Studio\nConteúdo & Campanhas\nMonetização\nInteligência IA\nSistema\nRedes Sociais\nAssinatura\nConfigurações\nAdmin\nAdministração\nSair\nToggle Sidebar\nPainel\nUniverso\n4559\nmcoCoins\nG\nUNIFIED SENSORIAL CANVAS\nEPSILON V9 · 3.9\nMATRIX\nMEMÓRIA\nUNIVERSO\nUNIVERSO\nCÓDIGO\nMEMÓRIA\nSINAPSES\nTERMINAL TÁTICO\nVISÃO ATIVA\nUNIVERSE\nREDE DE CÓDIGO (LOUVAIN)\nNÓS\n8.624\nARESTA"
+> audit exit: 1
+> ```
+
+## 🤖 Claude *(23:03:53)*
+
+
+## 🤖 Claude *(23:03:56)*
+
+A página **está renderizando perfeitamente** — o dump mostra "UNIFIED SENSORIAL CANVAS", "EPSILON V9 · 3.9" (minha mudança live!), "NÓS 8.624" (rede de código resolvida), "UNIVERSE" ativo. O bug é **meu**: o HUD usa CSS `uppercase`, então `innerText` retorna maiúsculo, mas eu comparei com case misto. Corrijo a asserção para case-insensitive:
+
+## 🤖 Claude *(23:03:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts",
+  "old_string": "    await page.waitForFunction(\n      () => document.body.innerText.includes('Unified Sensorial Canvas'),\n      { timeout: 45000 },\n    );",
+  "new_string": "    // NOTE: the HUD span is CSS `uppercase`, so innerText returns \"UNIFIED SENSORIAL CANVAS\" \u2014\n    // compare case-insensitively.\n    await page.waitForFunction(\n      () => document.body.innerText.toUpperCase().includes('UNIFIED SENSORIAL CANVAS'),\n      { timeout: 45000 },\n    );"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:04:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/audit-universe-ui.ts 2>&1 | tail -22\necho \"audit exit: ${PIPESTATUS[0]}\"",
+  "description": "Re-run Universo audit (assertion fixed)",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ⏳ Waiting for the Unified Sensorial Canvas HUD...
+> 🪐 Switched to Universo view.
+> ⏳ Waiting for network data to settle (code query is slow)...
+> 📊 Code network resolved.
+> 🎨 WebGL <canvas> elements: 2
+> 📸 Capturing Full HD (1920x1080) screenshot...
+> ❌ Audit failed unexpectedly: 123 | 
+> 124 |   // Let the R3F scene draw a couple of frames.
+> 125 |   await page.waitForTimeout(4000);
+> 126 | 
+> 127 |   console.log('📸 Capturing Full HD (1920x1080) screenshot...');
+> 128 |   const shotBuffer = await page.screenshot({ type: 'png', fullPage: false });
+>                                       ^
+> TimeoutError: screenshot: Timeout 30000ms exceeded.
+> Call log:
+>   - taking page screenshot
+>   - waiting for fonts to load...
+>   - fonts loaded
+> 
+>       at runAudit (/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts:128:33)
+>       at processTicksAndRejections (native:7:39)
+> 
+> audit exit: 1
+> ```
+
+## 🤖 Claude *(23:05:14)*
+
+
+## 🤖 Claude *(23:05:16)*
+
+Progresso: HUD encontrado, Universo ativo, rede resolvida, **2 canvas WebGL**. Mas o `screenshot()` estourou 30s — o backdrop raymarch (`MegaBrainVisualizer`) sob **software GL headless** é brutalmente lento (confirma o OTD-UCANVAS-PERF e a memória `[[webgl-canvas-stabilization]]`). Aumento o timeout do screenshot:
+
+## 🤖 Claude *(23:05:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts",
+  "old_string": "  console.log('\ud83d\udcf8 Capturing Full HD (1920x1080) screenshot...');\n  const shotBuffer = await page.screenshot({ type: 'png', fullPage: false });\n  await browser.close();",
+  "new_string": "  console.log('\ud83d\udcf8 Capturing Full HD (1920x1080) screenshot...');\n  // The Mega Brain raymarch backdrop stalls the compositor under headless software GL (SwiftShader),\n  // so the capture needs a long ceiling; disable CSS animations to reduce churn.\n  const shotBuffer = await page.screenshot({ type: 'png', fullPage: false, timeout: 90000, animations: 'disabled' });\n  await browser.close();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:05:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/audit-universe-ui.ts 2>&1 | tail -20\necho \"audit exit: ${PIPESTATUS[0]}\"",
+  "description": "Re-run Universo audit (screenshot timeout bumped)",
+  "timeout": 260000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🚀 Starting Unified Sensorial Canvas (Universo) E2E audit...
+> 🔐 Generating one-time Magic Link for gabrielcall@gmail.com...
+> 🔗 Magic Link generated.
+> 🌐 Launching headless Chromium...
+> ✈️ Navigating via magic link...
+> 📍 Redirected to: https://login.mcorch.com/dashboard/universe
+> ⏳ Waiting for the Unified Sensorial Canvas HUD...
+> ❌ Assert Failed: "Unified Sensorial Canvas" HUD not found.
+>    URL: https://login.mcorch.com/dashboard/universe | title: MCORCH — A agência autônoma
+>    body[0:400]: "MCORCH\nPrincipal\nVisão Geral\nConstelação\nCanvas Studio\nConteúdo & Campanhas\nMonetização\nInteligência IA\nSistema\nRedes Sociais\nAssinatura\nConfigurações\nAdmin\nAdministração\nSair\nToggle Sidebar\nPainel\nUniverso\n4559\nmcoCoins\nG\nUNIFIED SENSORIAL CANVAS\nEPSILON V9 · 3.9\nMATRIX\nMEMÓRIA\nUNIVERSO\nUNIVERSO\nCÓDIGO\nMEMÓRIA\nSINAPSES\nTERMINAL TÁTICO\nVISÃO ATIVA\nUNIVERSE\nREDE DE CÓDIGO (LOUVAIN)\nNÓS\n8.624\nARESTA"
+> audit exit: 1
+> ```
+
+## 🤖 Claude *(23:07:39)*
+
+
+## 🤖 Claude *(23:07:42)*
+
+Inconsistência entre runs (run 3 passou o HUD e chegou ao screenshot; run 4 falhou o HUD) = **flakiness de timing** sob software-GL headless: o dump prova que o HUD renderiza, mas às vezes leva >45s (auth + chunk R3F de 824kB + query lenta competindo pelo main thread). Removo o `networkidle` (que desperdiça budget — websockets nunca idle) e torno o HUD wait bem mais generoso:
+
+## 🤖 Claude *(23:07:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts",
+  "old_string": "  // Let the SPA hydrate the magic-link session and mount the protected route.\n  await page.waitForLoadState('networkidle').catch(() => {});\n  // Structural assert: the Unified Sensorial Canvas HUD must mount (heavy R3F lazy chunk \u2192 be patient).\n  console.log('\u23f3 Waiting for the Unified Sensorial Canvas HUD...');\n  try {\n    // NOTE: the HUD span is CSS `uppercase`, so innerText returns \"UNIFIED SENSORIAL CANVAS\" \u2014\n    // compare case-insensitively.\n    await page.waitForFunction(\n      () => document.body.innerText.toUpperCase().includes('UNIFIED SENSORIAL CANVAS'),\n      { timeout: 45000 },\n    );",
+  "new_string": "  // Structural assert: the Unified Sensorial Canvas HUD must mount. The heavy R3F lazy chunk (~824kB\n  // react-three-fiber) + magic-link session hydration + software-GL competing for the main thread make\n  // mount time highly variable under headless \u2014 be very patient. NOTE: the HUD span is CSS `uppercase`,\n  // so innerText returns \"UNIFIED SENSORIAL CANVAS\" \u2014 compare case-insensitively.\n  console.log('\u23f3 Waiting for the Unified Sensorial Canvas HUD...');\n  try {\n    await page.waitForFunction(\n      () => document.body.innerText.toUpperCase().includes('UNIFIED SENSORIAL CANVAS'),\n      { timeout: 90000, polling: 500 },\n    );\n    console.log('\ud83d\udef0\ufe0f HUD mounted.');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/audit-universe-ui.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:07:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run scripts/qa/audit-universe-ui.ts 2>&1 | tail -20\necho \"audit exit: ${PIPESTATUS[0]}\"",
+  "description": "Re-run Universo audit (patient HUD wait)",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 🚀 Starting Unified Sensorial Canvas (Universo) E2E audit...
+> 🔐 Generating one-time Magic Link for gabrielcall@gmail.com...
+> 🔗 Magic Link generated.
+> 🌐 Launching headless Chromium...
+> ✈️ Navigating via magic link...
+> 📍 Redirected to: https://login.mcorch.com/dashboard/universe
+> ⏳ Waiting for the Unified Sensorial Canvas HUD...
+> 🛰️ HUD mounted.
+> 🪐 Switched to Universo view.
+> ⏳ Waiting for network data to settle (code query is slow)...
+> 📊 Code network resolved.
+> 🎨 WebGL <canvas> elements: 2
+> 📸 Capturing Full HD (1920x1080) screenshot...
+> 🔗 Screenshot (signed, 1h): https://bcyvddsykvehvpwstlfa.supabase.co/storage/v1/object/sign/generated-images/qa-audits/universe-e2e-1783292991335.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9iNzFjZTA4Yy0xYWFjLTQ1MDUtOGEyZC04Y2Y5ZTU5MzI5MzIiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJnZW5lcmF0ZWQtaW1hZ2VzL3FhLWF1ZGl0cy91bml2ZXJzZS1lMmUtMTc4MzI5Mjk5MTMzNS5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgzMjkyOTkxLCJleHAiOjE3ODMyOTY1OTF9.fDz4rmLqbPIgDR5-Fv7GxsdAcpeDW5v-0fHxjQyP4lI
+> 👁️ Vision QA gate — judging the real screenshot...
+> ✅ vision_describe_image
+>    confidence: high  cost_mco: 0
+>    APROVADO, a imagem exibe o Unified Sensorial Canvas com um fundo escuro e uma rede 3D de pontos coloridos como esperado, sem nenhum problema visual objetivo como tela preta/vazia, mensagem de erro, layout quebrado ou texto ilegível.
+> ✅ Vision gate APROVADO
+> 🎉 Unified Sensorial Canvas (Universo) E2E audit completed successfully!
+> audit exit: 0
+> ```
+
+## 🤖 Claude *(23:10:25)*
+
+
+## 🤖 Claude *(23:10:27)*
+
+**Gate E2E Lei-1 do Universo — PASSOU.** HUD montado · Universo ativo · rede resolvida (8624 nós) · 2 canvas WebGL · screenshot 1920×1080 · **Vision QA APROVADO** (high): *"fundo escuro e rede 3D de pontos coloridos como esperado, sem problema visual objetivo"* · **exit 0**.
+
+3.9 completo (cutover + gate). Antes de commitar, rodo a suíte de testes para garantir zero regressão (mudanças de brand + unified):
+
+## 🤖 Claude *(23:10:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run test 2>&1 | tail -30\necho \"test exit: ${PIPESTATUS[0]}\"",
+  "description": "Run vitest suite",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [llm-fallback] All LLM providers in cascade failed.
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > does not fall back on a non-billing client error (e.g. 400 bad request)
+> [llm-fallback] Attempting primary LLM request with model "anthropic/claude-3.5-sonnet"
+> 
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > does not fall back on a non-billing client error (e.g. 400 bad request)
+> [llm-fallback] Primary request failed with status 400 (no fallback triggered)
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting primary LLM request with model "anthropic/claude-3.5-sonnet"
+> 
+> stderr | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Primary request failed (status=402). Initiating cascade. Details: {}
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting Gemini Free fallback. Candidates: gemini-2.5-pro, gemini-1.5-pro
+> [llm-fallback] Dispatching fallback request to Gemini Free using model "gemini-2.5-pro"
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Gemini Free fallback succeeded with model "gemini-2.5-pro"
+> 
+>  ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 57ms
+>  ✓ supabase/functions/_shared/smart-delete-classify.test.ts (15 tests) 26ms
+>  ↓ src/test/canvas-video-async-smoke.test.ts (1 test | 1 skipped)
+> 
+>  Test Files  31 passed | 2 skipped (33)
+>       Tests  398 passed | 2 skipped (400)
+>    Start at  20:10:30
+>    Duration  52.90s (transform 8.06s, setup 15.15s, collect 22.96s, tests 6.85s, environment 57.80s, prepare 15.78s)
+> 
+> test exit: 0
+> ```
+
+## 🤖 Claude *(23:11:33)*
+
+
+## 🤖 Claude *(23:11:33)*
+
+Testes: **398 passed | 2 skipped · exit 0** — zero regressão (as stderr são logs esperados do teste de cascade LLM). Commito o 3.9:
+
+## 🤖 Claude *(23:11:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/components/dashboard/DashboardSidebar.tsx src/pages/UnifiedCanvasPage.tsx scripts/qa/audit-universe-ui.ts\ngit commit -q -m \"feat(universe): Epsilon V9 3.9 \u2014 cutover de nav para o Unified Sensorial Canvas\n\nO Unified Sensorial Canvas atinge paridade e vira a superf\u00edcie PRIM\u00c1RIA de\nconstela\u00e7\u00e3o: funde a Rede de C\u00f3digo (Louvain) + Rede de Mem\u00f3ria (GraphRAG) +\nsinapses reais sobre o backdrop do Mega Brain. Matrix e Mem\u00f3ria legadas seguem\nroteadas como backup (nav rotulada, zero dele\u00e7\u00e3o \u2014 n\u00e3o-quebrante).\n\n- DashboardSidebar: Universo promovido a 1\u00ba sub-item de Constela\u00e7\u00e3o; Matrix/Mem\u00f3ria\n  marcadas 'backup' abaixo (rotas legadas intactas)\n- UnifiedCanvasPage: HUD 3.8\u21923.9; painel reflete cutover conclu\u00eddo\n- scripts/qa/audit-universe-ui.ts: gate E2E Lei-1 re-execut\u00e1vel do /universe\n  (magic-link \u2192 Playwright 1920\u00d71080 \u2192 Vision QA fail-closed) \u2014 anticorpo Lei 2\n\nVerificado: tsc 0 \u00b7 build 0 \u00b7 vitest 398 passed \u00b7 gate E2E /universe exit 0\nVision-APROVADO (rede 3D real, 8624 n\u00f3s, sem tela preta/erro/layout quebrado).\"\ngit log --oneline -1",
+  "description": "Commit Epsilon V9 3.9 cutover"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:11PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:11PM[0m [32mINF[0m scan completed in 37.2ms
+> [90m8:11PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.15 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.08 seconds)
+> ✔️ gitleaks-staged (0.14 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 4729dd4 feat(universe): Epsilon V9 3.9 — cutover de nav para o Unified Sensorial Canvas
+> ```
+
+## 🤖 Claude *(23:12:51)*
+
+
+## 🤖 Claude *(23:12:55)*
+
+Committed **`4729dd4`** — lefthook verde. 
+
+**Unified Canvas 3.5-3.10 — completo (100%).** 3.5-3.8 já estavam vivas; **3.9 (cutover + gate E2E Lei-1) fechada e deployada** agora; 3.10 (seal formal com nó mesh) fica para o /handoff final da sessão. O Universo é a superfície primária de constelação, com Matrix/Memória como backup.
+
+mcp__ccd_session__mark_chapter para a 2ª frente e verifico o estado real do "Viral Autopilot - Video" antes de agir (o editor HyperFrames Studio é o item central):
+
+## 🤖 Claude *(23:12:57)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Viral Autopilot - Video",
+  "summary": "2\u00aa frente da diretiva: pr\u00f3ximos passos do v\u00eddeo do Viral Autopilot \u2014 avaliar o que \u00e9 acion\u00e1vel sem gate Sovereign"
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Viral Autopilot - Video". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(23:13:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== HyperFrames Studio editor blueprint ===\"; ls -la .claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md 2>/dev/null && wc -l .claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md\necho \"\"; echo \"=== video-studio BoK suite ===\"; ls docs/bok/video-studio/ 2>/dev/null\necho \"\"; echo \"=== VS-UI editor already partly live? (VideoStudioEditorPage + service) ===\"; ls -la src/pages/VideoStudioEditorPage.tsx 2>/dev/null; python3 -c \"import subprocess; print(subprocess.run(['grep','-rn','video-studio.service\\|VideoStudioEditor\\|studio.mcorch.com\\|VS-UI','src/pages/VideoStudioEditorPage.tsx'],capture_output=True,text=True).stdout[:800])\"\necho \"\"; echo \"=== is video-studio editor route live? ===\"; python3 -c \"import subprocess; print(subprocess.run(['grep','-rn','canvas/video\\|VideoStudioEditor','src/App.tsx','src/pages/CanvasEditorPage.tsx'],capture_output=True,text=True).stdout[:600])\"",
+  "description": "Assess Viral Autopilot video / HyperFrames editor state"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HyperFrames Studio editor blueprint ===
+> -rw-rw-r-- 1 ubuntu ubuntu 9683 Jun 24 14:10 .claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md
+> 117 .claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md
+> 
+> === video-studio BoK suite ===
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> 
+> === VS-UI editor already partly live? (VideoStudioEditorPage + service) ===
+> -rw-rw-r-- 1 ubuntu ubuntu 1213 Jun 24 20:03 src/pages/VideoStudioEditorPage.tsx
+> <string>:1: SyntaxWarning: invalid escape sequence '\|'
+> 5:// transitions) is the official `hyperframes preview` server (systemd video-studio.service, host loopback
+> 7:// in that standalone process → no conflict with this React 18 SPA. SDD: video-studio Amendment v0.4 (VS-UI).
+> 8:export default function VideoStudioEditorPage() {
+> 
+> 
+> === is video-studio editor route live? ===
+> <string>:1: SyntaxWarning: invalid escape sequence '\|'
+> src/App.tsx:51:const VideoStudioEditorPage = lazy(() => import("./pages/VideoStudioEditorPage.tsx"));
+> src/App.tsx:141:                <Route path="canvas/video" element={<VideoStudioEditorPage />} />
+> ```
+
+## 🤖 Claude *(23:13:35)*
+
+
+## 🤖 Claude *(23:13:38)*
+
+**Achado material importante:** o editor HyperFrames Studio **já está VIVO** — `VideoStudioEditorPage.tsx` roteado em `/dashboard/canvas/video`, video-studio BoK 9/9 completa, e a memória `[[project_video_studio]]` confirma "Fase B completa 2026-07-01". O HANDOFF Pending Actions que li era snapshot antigo. Não vou trabalhar em cima de doc stale (Lei 1) — leio o estado real dos itens de vídeo do Viral Autopilot:
+
+## 🤖 Claude *(23:13:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_viral_autopilot.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 3 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project_viral_autopilot
+> 3	description: Motor de conteúdo viral autônomo monetizado (afiliado ML) — BoK 9/9 + Fatias 1/1b/2 + ATIVADO 2026-06-23 (1º ciclo PAGO provado + pg_cron heartbeat live) + FR-VA-018 (trend-informed angle, hardened pt-BR injection). Pendente: mídia 9:16 + postback ML real.
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 21b2d649-94ad-4468-9821-20f76eae70a3
+> 8	---
+> 9	
+> 10	Diretiva Sovereign 2026-06-17: construir o **motor de conteúdo viral autônomo** — o coração de receita do MCORCH. Quatro requisitos:
+> 11	- **R1** gerar conteúdo p/ redes sociais automaticamente · **R2** agendar (tudo de uma vez OU lote a cada 3 dias) · **R3** a cada ciclo analisar o desempenho anterior p/ melhorar os próximos criativos (loop auto-melhorável) · **R4** conteúdo viral com comissão de afiliado do Mercado Livre.
+> 12	
+> 13	**Auditoria material (workflow 7-agentes, 2026-06-17 — cada achado com path:linha):**
+> 14	- **R1 parcial:** pipeline de TEXTO vivo (`orchestrate-content`→`orchestrate-step` gera artigo+LinkedIn+X). `generate-image`/`generate-video` são ÓRFÃS (zero callers); só publica WP/LinkedIn/X; Canvas assets não entram no publish.
+> 15	- **R2 parcial:** "tudo de uma vez" existe (`campaign-run` fan-out). **A recorrência "a cada 3 dias" NÃO existe** — só 2 pg_cron (memory-decay + nurture-drip), nenhum re-gera. Agendamento é offset fixo +1h/+2h hardcoded.
+> 16	- **R3 ausente:** loop aberto em 3 quebras — `campaign_metrics` tem ZERO writers (roda vazio); `optimization_policy` nunca lida por gerador; `self-optimize` sem cron (só botão UI). Engajamento orgânico por post nunca coletado.
+> 17	- **R4 parcial:** receita ML madura (`affiliate_config` per-user, click ledger, `handle-ml-postback` HMAC). MAS conteúdo é product-unaware — monetiza só o artigo, catálogo hardcoded 3 SKUs por regex; `affiliate_url` da UI ignorado; `fetch-trends`/`vm_trends` desconectados; prompts são B2B "IA p/ agências", não venda de produto físico.
+> 18	
+> 19	**3 descasamentos centrais:** (1) a IA escreve sem saber qual produto vende; (2) não há gatilho recorrente (molde = cadência nurturing `next_run_at`+pg_cron, mas finita/lead/email); (3) o loop não fecha — desempenho passado nunca volta ao prompt.
+> 20	
+> 21	**STATUS: BoK 9/9 SELADA 2026-06-17** (nó `documentation_suite` `b3398294-aa75-4810-845b-3a15cfe802e7`, embedded 768d ✅; edge DERIVES_FROM `05cea16d` → marketing-hub `d5163fed`; 1889 LOC; ID space MR/BR-VA-001..008 · PR-VA-001..022 · FR-VA-001..021 · 8 OTD · 12 FMEA 4×RPN>100). Seed: `scripts/seed-viral-autopilot-bok-seal.ts`. **BoK Gate ABERTO** p/ código.
+> 22	
+> 23	**✅ FATIA 1 ENTREGUE + PROVADA EM PROD 2026-06-20** (commit `4af8b8b`, = passo 2 da rota "geração product-aware") — fecha R1/R4 nas 3 superfícies de TEXTO sem tocar cron (R2) nem o loop que LÊ optimization_policy (R3):
+> 24	- **FR-VA-003** prompts product-aware (artigo/LinkedIn/X) featuring o produto escolhido; fallback B2B quando sem produto (backward-compat: campaign-run/intent-execute intactos).
+> 25	- **FR-VA-004** `monetizeForProduct` (`_shared/affiliate.ts`) monetiza as 3 superfícies (não só artigo) determinístico por produto (não regex dos 3 SKUs); grava `affiliate_links.content_id = content_library.id` (ANTES sempre null — defeito-núcleo fechado). HTML inline-link/CTA · texto append-URL (LinkedIn/X). escapeHtml no name (DiD do /security-review).
+> 26	- **FR-VA-016 metade-produto** orchestrate-content resolve `product_ids` do `vm_affiliate_products` (authoritative, descarta name/price do cliente), **sanitiza cada nome pelo sentinel** (Apify = dado externo → injeção, fail-closed por produto), grava em `pipeline_runs.metadata.products`. orchestrate-step lê e ramifica.
+> 27	- **FR-VA-009** nova migration `creative_metrics` (`20260619140000`, aplicada+verificada: RLS SELECT-own · service-role-write default-deny · RESTRICTIVE no-delete · UNIQUE(content_variant_id,source) · 5 CHECKs; cycle_id NULL-able reservado p/ a fatia do cron, sem FK física ainda). Gerador escreve baseline source='organic' zeros por criativo (semeia R3).
+> 28	- **UI** picker de produtos na `TriggerNode` (`useAffiliateProducts`, 3 SKUs do catálogo, 1º=★ primary) substitui o input de URL livre que era dropado. `runPipeline`/store mandam `product_ids`.
+> 29	- **DESCOPES declarados:** imagem (FR-VA-013) — entregue na Fatia 1b (abaixo); cron/cadência (R2) + loop R3.
+> 30	
+> 31	**✅ FATIA 1b ENTREGUE + PROVADA 2026-06-20** (commit `ba5d281`, FR-VA-013 — imagem product-referenced):
+> 32	- `generate-image` ganhou **dual-path auth** (service-role + `user_id` no body, espelha `publish-wordpress`; byte-equal bearer = fronteira) pra orchestrate-step invocá-la com service-key; **retorna o `path` do storage** (re-assinável) além do signed URL 1h.
+> 33	- orchestrate-step: bloco de imagem **dentro do `article_generation`** (NÃO novo step na ladder — evita drift do stepsOrder), gated `hasProducts`, **FAIL-OPEN com status `skipped`** (não `error` — senão o finalize marcaria o run error). Guarda **PATH durável** em `content_library.media_url` (bucket `generated-images` é PRIVADO → re-assina na leitura; signed URL 1h morre antes do publish +1-2h). Sem migration, sem mudança de frontend, **sem cobrança extra** (imagem já no bundle de 10, billing.ts).
+> 34	- **Correções materiais ao contrato:** `generate-image` é DALL·E **text-only** (sem image-to-image) → product-referenced = prompt descritivo (nome+categoria), NÃO o `image_url` como referência visual (deferido). Anexo no publish-social (LinkedIn/X/Meta) + featured-image WP = deferidos (publish-layer).
+> 35	- **Prova (run `46a98963`):** auth 400(sem user_id)/401(não-service)/alcança-provider; step `image_generation` `skipped` (fail-open) com `article_generation` `done` e run NÃO-errado pela imagem; 3/3 affiliate_links content_id NON-NULL (zero regressão Fatia 1); delta saldo exatamente 10. /security-review SAFE 9/10 · tsc 0.
+> 36	**🔬 DIAGNÓSTICO da saída visível 2026-06-20 (Sovereign pediu "destravar") — 3 blockers, causas raiz CRAVADAS materialmente:**
+> 37	1. **WordPress publish falha (todo run) = Cloudflare bot-challenge.** `wp_site_url=https://www.mcorch.com` (já www canônico — NÃO é mais o 301). `GET /wp-json` → **403 `text/html` "Just a moment..."** com `cf-mitigated: challenge`, `server: cloudflare` — mesmo AUTENTICADO com as creds reais (Basic Auth). O CF desafia o request server-to-server da edge function (cliente não-browser) ANTES do WordPress; o `await wpRes.json()` no `publish-wordpress:133` lança na resposta HTML → catch 500 "Falha ao publicar... Verifique a conexão". **Credenciais WP estão OK.** **AÇÃO SOVEREIGN:** regra Cloudflare WAF **Skip** pro path `/wp-json/*` (idêntico ao que já fizeram pro `mcp.mcorch.com` — ver [[project_vision_mcp]]).
+> 38	2. **Imagem nanobana = endpoint MORTO.** `api.nanobana.com` **não resolve DNS** (http=000). Qualquer `pref_image_provider=nanobana` sempre falha. Bug latente no `generate-image` (branch nanobana aponta pra domínio inexistente, comentado "Assuming standard proxy or mock"). **Recomendado:** remover nanobana como provider selecionável OU fiar endpoint real.
+> 39	3. **Imagem openai = 2 bugs, 1 corrigido + 1 config de conta.** (a) **CORRIGIDO (commit `803f946`):** `generate-image` mandava `response_format:"b64_json"` → OpenAI 400 "Unknown parameter" (param removido pela OpenAI). Fix: remover param + tratar resposta url(dall-e-3 default)/b64/data-URI (baixa bytes da url) + surfacing `upstream`. (b) **AÇÃO SOVEREIGN:** a chave-PROJETO do Zero (`sk-proj`, `proj_rWo9VkBo6n9WQro93dzCZglr`) **não tem acesso a NENHUM modelo de imagem** (dall-e-2/3 "does not exist", gpt-image-1 "does not have access", models list sem image). Habilitar acesso a modelo de imagem no OpenAI dashboard (project → model access; gpt-image-1 exige org verification+billing) OU usar chave/projeto com acesso OU rota OpenRouter de imagem. A chave em si é VÁLIDA (`/v1/models`→200). Toggle pref nanobana→openai→nanobana usado no QA (restaurado). Cron/cadência (R2) + loop R3 = ✅ ENTREGUES na Fatia 2 (abaixo).
+> 40	
+> 41	**✅ FATIA 2 COMPLETA + PROVADA 2026-06-20 — cadência R2 + loop R3 auto-melhorável** (4 commits: `686bae3` fundação · `0c59e4d` smoke RPC · `54ac2a9` edge fns · `35554da` R3). **Gate Lei 2 OTD-VA-008 FECHADO:** SOP `docs/processes/autopilot-cron-identity.md` (cron prova `Bearer SB_SECRET_KEY` in-function + `user_id` server-trusted da linha, NUNCA body; 10 gates). **Migrations** (aplicadas+verificadas Management API — `20260620120000..120300`): `autopilot_plans`/`autopilot_cycles` (FK composta tenant-escopada `(plan_id,user_id)`, RESTRICTIVE no-delete, fecha FK composta de `creative_metrics`) + RPC `begin_autopilot_cycle` (cap diário+ciclo+saldo + pré-débito ÚNICO sob `pg_advisory_xact_lock` anti-TOCTOU, service-role-only) + RPC `finalize_autopilot_cycle` (refund crédito-positivo idempotente claim-once, espelha `finalize_vision_job`; NUNCA deduct negativo — anti-mint `20260603220000:45`). **Edge fns** (deployadas, `verify_jwt=false`): `autopilot-run` (executor: identidade 2-caminhos service-role+header server-trusted OU user-JWT+load tenant-scoped → begin → fan-out `orchestrate-content` PREPAID → finalize → re-arma `next_run_at`; `dry_run` projeta sem gastar) · `autopilot-cadence-cron` (driver pg_cron, espelha nurture-cron, 403 sem service-key, fan-out user_id da linha) · `autopilot-analyze` (FR-VA-010: tenant da linha do ciclo, lê `creative_metrics` do ciclo anterior → ranqueia produto/rede por cliques+receita → `optimization_policy` `action_type='viral_autopilot'`+scope no context; 2mco SÓ standalone+`has_real_data`, inline=prepaid; NÃO inventa policy) · `autopilot-collect` (FR-VA-008: `affiliate_links`.clicks/revenue → `creative_metrics` 'affiliate_click'; orgânico best-effort fail-soft, não fabrica). **orchestrate-content** FR-VA-016 (caminho cron `prepaid` pula débito SEM tocar sentinel/produtos/kick; **user-path 100% intacto**) + **orchestrate-step** FR-VA-011 (lê a policy mais recente do tenant → injeta diretiva vencedora nos 3 prompts; taggeia `creative_metrics.cycle_id`; hint sanitizado). **/security-review SAFE 3×** (migrations 6-vetores · edge fns 6-vetores · R3 7-classes). **3 smokes zero-cost (31 gates)** com usuário descartável: `smoke-autopilot-budget` 11/11 (pré-débito exato/cap diário+ciclo+saldo abortam sem deduzir/refund idempotente/clamp anti-mint/cascade) · `smoke-autopilot-run` 9/9 (identity 403/401/400/422 + dry_run projected=32 sem gastar + cross-tenant header→404) · `smoke-autopilot-loop` 11/11 (analyze ranqueia WIN>LOSE→policy · collect sincroniza clicks=5 · empty→has_real_data=false não inventa). **Cost model cravado:** `projected=N_runs×10+ANALYZE_COST(2)`, `N_runs=produtos×redes×ab_variants`; imagem no bundle de 10; analyze inline=prepaid (a reserva de 2 só vira `actual` quando a policy nasce de dado real, senão `finalize` estorna). Prova viva: anon→401/403 `permission denied`, service-role `projected=0`→`22023` guard antes de débito. **PENDENTE (fatias seguintes):** UI `useAutopilot`+`AutopilotPage` (FR-VA-014, autônomo) · **ativação pg_cron + 1º ciclo PAGO real** (gated GO Sovereign + os 2 blockers de saída visível abaixo: CF WAF `/wp-json` + OpenAI image access) · `fetch-trends`→pauta (FR-VA-018). ⚠️ Sem UI, planos só existem via SQL; sem pg_cron schedule, nem auto-disparam (a função `autopilot-cadence-cron` existe e está provada, mas o job pg_cron que a chama é ativação Sovereign-side).
+> 42	- **Prova material (Lei 1):** E2E pago Usuário Zero run `158ba7fc` → 3 criativos product-aware (cada um cita Roborock + link rastreável), **3 affiliate_links content_id NON-NULL casando os 3 content_library.id**, 3 creative_metrics baseline, **delta saldo = exatamente 10**. /security-review SAFE · tsc 0 · 295 testes · picker validado oculamente 1920×1080 (preview local + sessão injetada). Edge fns deployadas (orchestrate-content 113.8kB · orchestrate-step 129.3kB), frontend buildado. **A run caiu p/ status `error` SÓ pelo wordpress_publish** (problema WP 301/config = ação Sovereign, ortogonal). SOP Lei 2 `docs/processes/viral-autopilot-product-aware-monetization.md`.
+> 43	
+> 44	**Validação Fase 6 = 4 rodadas adversariais** (workflow 4 críticos): R1 NO_GO (2 blockers+7 high) → R2 NO_GO (2 blockers, 1 que EU introduzi: refund por deduct negativo viola RPC anti-mint `20260603220000:45`) → R3 GO_WITH_FIXES → R4 GO_WITH_FIXES (síntese caiu por session-limit, críticos OK). **Lição:** cada "fix" meu deixou um resíduo que a rodada seguinte pegou — verificação adversarial + grep determinístico foram essenciais; não auto-declarar GO.
+> 45	
+> 46	**Decisões de design cravadas pela validação (entram na implementação):**
+> 47	- **Identidade do cron (SEC-VA-CRIT-01):** `verify_jwt=false` → `autopilot-run`/`-analyze`/`-collect`/`-cadence-cron` PROVAM service-role in-function (`Authorization === 'Bearer '+SB_SECRET_KEY`, padrão `orchestrate-step:50-53`) ANTES de confiar no header `x-autopilot-user-id` (server-trusted = `autopilot_plans.user_id`, nunca do body). `orchestrate-content` estendida p/ aceitar esse caminho + `prepaid`. SOP `edge-jwt-identity-verification`.
+> 48	- **Custo/atomicidade:** `projected = N_runs×10 + 2`, `N_runs = produtos × redes × ab_variants` (imagem JÁ no bundle de 10, `billing.ts:16-21`, NÃO somar). **RPC `begin_autopilot_cycle`** (advisory lock por user_id) = cap diário (FR-VA-021) + cap por ciclo + pré-débito atômico ÚNICO + open, anti-TOCTOU. **RPC `finalize_autopilot_cycle`** credita refund via `add_mco_coins` (POSITIVO ledgered, espelha `finalize_vision_job`; NUNCA deduct negativo). Sub-runs `prepaid` (não self-bill).
+> 49	- **`autopilot-analyze` inline pós-ciclo** (não 3º cron); tenant derivado de `previous_cycle_id` (anti-IDOR, nunca do body); 2 mco só se `has_real_data` (0 senão).
+> 50	- **`content_variant_id` = `content_library.id`** (ref. LÓGICA, sem FK física — retenção independente); grava `affiliate_links.content_id`. **FK COMPOSTA tenant-escopada** `(plan_id,user_id)`/`(cycle_id,user_id)` (espelha Marketing Hub) + `user_id` FK real + RESTRICTIVE no-delete nas 3 tabelas.
+> 51	- **`campaign_metrics` DEPRECADA** p/ o módulo → `creative_metrics` é a unidade canônica (sem ETL). **`optimization_policy` com `scope='viral_autopilot:<plan_id>'`** (desambigua do `self-optimize` legado). KPI lift fallback p/ cliques de afiliado quando orgânico ausente.
+> 52	
+> 53	**4 decisões Sovereign (parametrizam o BoK):**
+> 54	1. **BoK Gate** = `/bok-scribe` suite-mãe NOVO `viral-autopilot` unificando R1-R4 (R2 cadência + R3 loop não têm FR em suite algum).
+> 55	2. **MVP** = texto+imagem nas redes ATUAIS (WP/LinkedIn/X) primeiro; vídeo 9:16 + TikTok/IG/YT = fase 2.
+> 56	3. **Sinal R3** = combo completo (cliques afiliado [já temos] + engajamento orgânico [coletor novo] + receita postback ML).
+> 57	4. **Produtos** = 3 SKUs semente (Roborock S8 / Samsung Neo QLED 8K / Family Hub) por ora, escalar catálogo depois.
+> 58	
+> 59	**Rota recomendada (8 passos, do maior alavancagem):** 1 BoK gate → 2 geração product-aware (honrar param produto, monetizar TODO formato c/ content_variant_id) → 3 reconectar `fetch-trends`/`vm_affiliate_products` à pauta → 4 cadência 3 dias (generalizar primitiva nurture, auto-refill) → 5 coletor de engajamento por post → 6 fechar loop R3 (gerador lê `optimization_policy`) → 7 mídia viral 9:16 (fase 2) → 8 provar postback ML real (OTD-ML-MP-PER-USER).
+> 60	
+> 61	**✅ ATIVAÇÃO + FR-VA-018 — 2026-06-23 (sessão "continue" sob ultracode):**
+> 62	- **1º ciclo PAGO provado material.** Plano mínimo do User 0 (`640b3b67`, Roborock `MLB27834876` × WP+LinkedIn × ab=1, `mode=all_at_once`, caps 22/50) → disparei `autopilot-cadence-cron` 1× (Bearer SB_SECRET_KEY) → `{due:1,dispatched:1,errors:0}`. Ciclo `947ef8b5` `completed` · spend 22 · refund 2 · saldo **5096→5076** (delta exato −20 = 2 sub-runs×10; refund 2 = analyze não cobrou sem ciclo anterior). Ledger: `autopilot_cycle −22` + `autopilot_refund +2` (crédito POSITIVO, anti-mint OK). Plano auto-desativou (`is_active:false`, one-shot). 2 pipeline_runs `done` product-aware. Telemetria healthy. **Gotcha:** `orchestrate-content` resolve produto por **`external_id`** (`.in("external_id",ids)`), NÃO o UUID — plano usa MLB*, não o id de vm_affiliate_products.
+> 63	- **pg_cron heartbeat LIVE.** Migration `20260623040000_viral_autopilot_cadence_cron.sql` (clone verbatim do `nurture_advance_cron`; Vault `sb_secret_key`; `/security-review` SAFE) aplicada via db push → `cron.job` jobid=3 `autopilot-cadence` `*/15 * * * *` `active:true` (verificado Management API). **Seguro/no-op** até um plano `every_n_days` ser ativado; reversível `cron.unschedule`.
+> 64	- **FR-VA-018 SHIPPED + HARDENED.** `autopilot-run` lê `vm_trends` (catálogo GLOBAL pt-BR) p/ pautar o ângulo (`topic: viralTopic`, antes `plan.name` cru); niche-match→fallback global→top-5 skip-and-continue. **Revisão adversarial `wf_6cc97c75` pegou MEDIUM (conf 8):** o sentinel COMPARTILHADO (`_shared/sentinel.ts`) é **English-only/score≥2** → injection pt-BR semeada num trend viral passa os 2 gates e dirige o LLM cross-tenant. Fix defense-in-depth: `sanitizeTrendTitle` (whitelist charset `/[^\p{L}\p{N}\s-]/gu` destrói URLs/markdown/tags/aspas + `TREND_OVERRIDE_RE` rejeita verbos override pt-BR/en) → sentinel genérico 2ª camada → framing inerte `(tema em alta: …)`. **Smoke material:** os 3 payloads exatos do red-team rejeitados, benigno escolhido, 0 URL/verbo no topic, 0 resíduo. SOP `docs/processes/trend-informed-angle-sanitization.md`. **OTD-VA-018-SENTINEL-PTBR (diferida p/ arco de segurança):** adicionar padrões pt-BR ao `INJECTION_PATTERNS` compartilhado (afeta todos os callers — testar falso-positivo em copy pt-BR legítima). Ver [[reference_shared_sentinel_english_only]].
+> 65	- **Pendente commit no seal:** migration `20260623040000` (aplicada à prod) + `autopilot-run` (deployado 69.42kB) + SOP. tsc 0 (edge fns fora do escopo do tsc).
+> 66	
+> 67	**✅ 1º CICLO PAGO DE VÍDEO 9:16 WITNESSED E2E + 2 BUGS DE RECEITA FIXADOS — 2026-06-26 (sessão "faça tudo" sob ultracode, GO Sovereign texto+vídeo).** Recon material (workflow `wf_6475e2f8`) desmontou o HANDOFF stale: crons VIVOS (auto-publish 200/5min, pg_cron `*/15` heartbeat), 2/3 produtos já com shortlink assinado, www.mcorch.com 200 limpo — gargalo do 1º R$ = **distribuição+conversão, não infra**. Disparei o ciclo pago `2403bfcb` (plano `640b3b67`, flip `video_enabled=true`+`budget_cap 22→50`, `is_active=false` p/ zero corrida com cron): **render 9:16 REAL `8b0787e0` 1080×1920 h264 5s 748KB** no bucket `video-studio-assets` (ffprobe provado), conteúdo product-aware gerado, LinkedIn queued. Depois reconfigurei p/ **distribuição recorrente text-only** (`mode=every_n_days`/3d, `video_enabled=false`, `is_active=true`, next_run +3d). Editor HyperFrames Fase A verificado em **browser real** (agent-browser → `:3210`, NLE 9:16 multi-camada Glow/Brand/Hook + Export, screenshot visto). **Commit `df7505b`, /security-review SAFE:**
+> 68	- **🐞 BILLING TRAP (fix durável):** `autopilot-run` cobrava vídeo `succeeded × VIDEO_COST(12)` assumindo 1 vídeo/sub-run, MAS só o **article-flow (platform=wordpress)** enfileira render (`orchestrate-content:231-232`); sub-run linkedin/twitter NUNCA tem `video_generation` → over-charge sem refund (o `refund_autopilot_video_enqueue` de `orchestrate-step:454` só cobre enqueue-**attempt**-fail, não flow-sem-passo-de-vídeo). Fix: `nVideoRuns`/`succeededVideo` contam só sub-runs de article-flow (`VIDEO_FLOW_PLATFORMS={wordpress}`). dry_run prova `projected 46→34`, `n_video 2→1`. Tenant refundado 12 do ciclo via RPC (saldo 5076−34=**5042**). ⚠️ **se adicionar nova plataforma que gere vídeo, incluir no set.**
+> 69	- **🐞 CTA-LEAK texto puro (fix durável):** `rewriteHomepageCtas` (`_shared/affiliate.ts`) só pegava `href=mcorch.com` (HTML); o LLM escreve `Garanta o seu aqui: https://mcorch.com` como **texto puro** em LinkedIn/X → clique de maior intenção vazava pra homepage morta (R$0, sem atribuição). Guard agora reescreve URL bare-text→afiliado (lookahead `(?![\w/])` poupa deep links), aplicado nos **2 formatos** (`monetizeForProduct` não gateia mais só html). Post real `queued` corrigido antes do publish. Ver [[project_revenue_funnel_repair]].
+> 70	- **Gotcha de schema (REST):** `video_renders` usa coluna `state` (não status) + output em `storage_key`; `pipeline_runs` NÃO tem `created_at`/`cycle_id` (cycle vive em `metadata->>cycle_id`, platform em coluna `platforms` jsonb); `content_library` usa `type` (não content_type). **Erro meu (Lei 1) registrado:** truncar um UUID no display me levou a fabricar zeros num `p_run_id` de RPC — o crédito caiu certo mas a âncora de idempotência ficou no id falso; corrigi inserindo o marcador no run_id real + deletando a linha fabricada (service-role bypassa o RESTRICTIVE no-delete). NUNCA preencher UUID de cabeça — re-query o full id.
+> 71	- **Pendente (gated Sovereign):** 3º shortlink assinado (Samsung Neo QLED, IP residencial ML) · 1º vídeo publicado vertical (TikTok/IG/YT = OAuth+App Review) · postback ML com venda real · ciclos de vídeo recorrentes (hoje só texto recorre).
+> 72	
+> 73	**Riscos:** custo descontrolado do cron autônomo (precisa teto mcoCoins + kill-switch por ciclo — JÁ implementado via begin_autopilot_cycle caps); R3 pode virar "auto-melhoria teatral" se rodar sem dado real; postback ML nunca provado em prod.
+> 74	
+> 75	Suites a referenciar/promover: [[project_marketing_hub_v2]] (campaign-run executor), mercado-livre-api FR-ML-*, post-engine FR-PE-*, viral-daily-canvas FR-VDC-*. Relacionado: [[project_orchestrate_pipeline_repair]] (pipeline async), [[project_authenticated_browser_operator]] (atribuição ML), [[project_mcoin_calibration]] (custo por run).
+> 76	
+> 77	
+> 78	---
+> 79	### Snapshot do índice (arquivado na compactação de 2026-07-01)
+> 80	
+> 81	- [Motor de conteúdo viral autônomo (viral-autopilot) — BoK 9/9 + FATIAS 1/1b/2 + **ATIVADO 2026-06-23** (1º ciclo PAGO `947ef8b5` provado −20 + pg_cron heartbeat jobid 3 live) + **FR-VA-018** (trend-informed angle, hardened pt-BR injection via `sanitizeTrendTitle`, smoke red-team verde)](project_viral_autopilot.md) — Diretiva Sovereign 2026-06-17: alimentar redes com conteúdo viral auto-gerado/agendado (R1-R4), monetizado c/ afiliado ML. BoK SELADA (nó `b3398294`, 1889 LOC). **Fatia 1 (commit `4af8b8b`):** gerador product-aware (FR-VA-003) + monetização nas 3 superfícies texto (FR-VA-004, `affiliate_links.content_id` antes-null FECHADO) + threading `product_ids` sanitizado p/ sentinel (FR-VA-016) + tabela `creative_metrics` (FR-VA-009) + picker na TriggerNode. E2E pago `158ba7fc`: 3 criativos, 3 content_id NON-NULL, delta 10. **Fatia 1b (commit `ba5d281`, FR-VA-013):** imagem product-referenced no pipeline — `generate-image` dual-path auth (service-role+user_id) + retorna storage `path`; bloco fail-open (`skipped`) dentro do article_generation, guarda PATH durável em `content_library.media_url` (bucket privado); sem migration/frontend/cobrança extra. E2E `46a98963` provou fail-open + zero regressão. **⚠️ providers de imagem do Usuário Zero quebrados** (nanobana=mock endpoint, openai=erro) → imagem visível bloqueada por CONFIG, não código. **Fatia 2 COMPLETA (commits `686bae3`/`0c59e4d`/`54ac2a9`/`35554da`):** cadência R2 + loop R3 — SOP Lei 2 `autopilot-cron-identity.md` (OTD-VA-008 fechado) + migrations (`autopilot_plans`/`autopilot_cycles` FK composta tenant + RPCs `begin`/`finalize_autopilot_cycle` atômicos service-role-only) + 4 edge fns deployadas (`autopilot-run` executor · `-cadence-cron` driver pg_cron · `-analyze` FR-VA-010 ranqueia→optimization_policy · `-collect` FR-VA-008) + orchestrate-content FR-VA-016 prepaid + orchestrate-step FR-VA-011 feedback injection. /security-review SAFE 3× · 3 smokes zero-cost (31 gates). **Pendente:** UI (FR-VA-014, autônomo) + **ativação pg_cron + 1º ciclo PAGO** (gated GO Sovereign + blocker de saída visível **CF WAF `/wp-json`** — SOP `wordpress-cf-publish-unblock.md` + edge fn `publish-wordpress` host-gated JÁ deployada 2026-06-22; falta só a regra CF + secrets `WP_PUBLISH_SECRET`/`_HOST` [ação Sovereign]. **OpenAI image RESOLVIDO 2026-06-22** — `generate-image` roteia por OpenRouter Gemini, OpenAI virou fallback inalcançável) + fetch-trends→pauta (FR-VA-018).
+> 82	
+> ```
+
+## 🤖 Claude *(23:13:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_video_studio.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 3 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project-video-studio
+> 3	description: Módulo Vídeo (video-studio) — BoK 9/9; motor HyperFrames NATIVO license-clean (FR-VS-050); Fase B COMPLETA — editor billável vivo no 3210 (host próprio + McorchAdapter + durability)
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: f232593a-1ef8-4045-8b83-67389d10213f
+> 8	---
+> 9	
+> 10	Módulo **Vídeo** (`video-studio`): dois motores criativos isolados sob MCORCH — (A) **Faceless Studio** (estúdio E2E sobre o n8n `e7e3beeb58f7411a` em `/home/gcrUX/studio`, repo externo single-tenant) + (B) **HyperFrames editor** (NLE HTML→MP4, Apache-2.0). BoK **9/9 selada** (commit `f003e32`) + emenda v1.1 (camada de alavancagem de agência: org→clients, white-label, wholesale mcoCoins). Posicionamento: "AI content agency in a box".
+> 11	
+> 12	**Fundação já landada antes desta sessão:** SSO R3 (`sso-auth-gate.service` vivo, gate genérico serve `video.`) + tenancy de agência (`organizations`/`organization_members`/`clients` + RPC `create_organization` + helpers anti-recursão `is_org_member`/`org_role`) — migrations `20260622030000/030100`, **vivas no DB**.
+> 13	
+> 14	**Fatia VS-UI Fase A VIVA (2026-06-24, commits `bc5f0e5` + `94ae0db`):** editor HyperFrames NLE ENTREGUE — diretiva Sovereign "entregar valor visível, menos técnico" ([[feedback_deliver_user_value_not_plumbing]]). **Decisão-chave material:** o servidor oficial **`hyperframes preview`** (CLI unscoped `hyperframes@0.7.5`, NÃO `@hyperframes/cli` que não existe) É o editor completo (StudioApp React 19 + Hono `/api`) — roda como **processo node standalone** → o conflito React 19/18 some SEM Docker. Implantado como **serviço host systemd `video-studio.service`** (molde video-bridge): `node v22 EXPLÍCITO` (`/home/ubuntu/.local/bin/node …/hyperframes/dist/cli.js preview <projeto> --port 3210 --no-open`) — ⚠️ systemd pega `/usr/bin/node` **v18** que quebra com `styleText`/util; o `env node` do shebang NÃO resolve v22. Projeto 9:16 semeado: `hyperframes init mcorch-video --example warm-grain --resolution portrait --non-interactive` (live `/api/projects`→`mcorch-video`; re-semeado com o starter MCORCH 9:16 — o `mcorch-demo` do init original ficou stale). **PROVA:** `active`, `curl :3210/`→200 `HyperFrames Studio`, `/api/projects`→200 com o projeto. Frontend: `VideoStudioEditorPage` iframe `/dashboard/canvas/video` (rota ANTES de `canvas/:id`), nav "Vídeo" no Canvas Studio, build deployado (chunk `VideoStudioEditorPage-CCjrPhI0`). vhost `nginx/video.mcorch.com.conf` (SSO-gated, espelha design). **Contrato `/api` (Lei 2) selado dos `.d.ts` publicados** — `StudioApiAdapter` {listProjects,resolveProject,bundle→`bundleToSingleHtml`,lint,runtimeUrl,rendersDir,**startRender**}; `createStudioApi(adapter)` monta TODAS as rotas → host implementa SÓ o adapter. **Render-parity (R1) resolvido por construção:** `@hyperframes/core/runtime` IIFE = mesmo runtime no preview e (Fase B) no nosso motor. SDD §VS-UI Amendment v0.4 + SOP `video-studio-editor-deploy-and-provision.md`. **GOTCHAS:** `preview` é **single-project** (exige `index.html` no DIR, não aceita dir-pai → OTD-VS-016); `pkill -f hyperframes` **mata o próprio shell** (a linha de comando casa) — matar por pid da porta. **PENDENTE Sovereign (2 sudo):** cert self-signed `video.mcorch.com.{key,crt}` + `ln -s`+`nginx -t`+reload (DNS já feito). **Fase B (próxima):** `McorchAdapter.startRender`→`video-render` (motor MCORCH + mcoCoins prepaid) substitui o engine local do CLI + project store em Supabase Storage. ⚠️ `pré-VS-UI` o blueprint dizia `studio.mcorch.com`; nome adotado = **`video.mcorch.com`** (sso-gate já o lista).
+> 15	
+> 16	**Fatia 1 SHIPPED (2026-06-22, commits `c92850f` + `e3b0716`):** domínio + contrato edge, tenancy-aware desde o nascimento (org_id/client_id NULLABLE = solo backward-compat).
+> 17	- Migration `20260622040000`: `video_renders` (máquina de estados + ledger atômico charged/refunded) + `video_assets` (manifest de erasure) + `finalize_video_render` (terminal+refund service-role, espelha `finalize_vision_job`). RLS cross-tenant (FMEA-VS-020): SELECT own-or-org-member, **sem write p/ authenticated** (só service-role pós-deduct), RESTRICTIVE no-delete. `/security-review` SAFE. Provado: tabelas 200, finalize anon→42501, anon INSERT→42501.
+> 18	- Edge fns `video-render` (submit) + `video-render-poll` (tenant-bound). Contrato: JWT→engine→voice_consent(FR-VS-032 409)→BYOK `google_api_key` fail-closed(402)→[dry_run]→**worker-gate 503 ANTES de deduct**→[Fatia2] deduct→insert→trigger→refund idempotente. Custos provisórios `VIDEO_FACELESS_RENDER=125`/`VIDEO_HYPERFRAMES_RENDER=12` (OTD-VS-007). `/security-review` SAFE. Provado zero-cost (13 gates, saldo 5096 intacto). Smoke pegou o drift da coluna BYOK ([[reference_byok_gemini_column]]).
+> 19	
+> 20	**Fatia 1b SHIPPED (commit `f343dd2`):** UI `/dashboard/video` (`useVideoRender` + `VideoStudioPage` display-only + rota lazy + nav "Estúdio de Vídeo" ícone Film). tsc limpo + build OK (chunk no dist servido, env baked) — frontend **deployado**. Ocular logado NÃO rodado (cérebro-sem-mãos por budget).
+> 21	
+> 22	**DECISÃO ARQUITETURAL Sovereign 2026-06-22 — DE-n8n (emenda BoK SDD v1.2 §1.5, commit `167cfc3`):** o **MCORCH não usa n8n** (single-tenant não escala num SaaS per-user; era um stack paralelo cujo único elo era a ponte R5). **OTD-VS-001 (R5) VOID.** O motor **faceless** é re-implantado **NATIVO**: orquestrado no **Visual Orchestrator** (`/dashboard/orchestration` — já tem SceneNode/QualityGateNode/PublishNode) compondo capabilities que JÁ existem → roteiro=Gemini · imagem=`canvas-execute`/`generate-image` · voz=`tts-speak` · motion=`canvas-execute` Higgsfield DoP (provado) · QA=`vision-mcp` · overlay/composite=Remotion+FFmpeg em **container MCORCH-owned co-locado na `mcorch-sovereign-net`** (→ vision_mcp/chroma sem ponte). O `video-render` muda só o destino do trigger (n8n webhook → orquestração nativa); contrato idêntico. **HyperFrames editor** = app isolado em **`video.mcorch.com`** (igual open-design; SSO R3 pronto; DNS+cert = ação Sovereign). Novos: OTD-VS-014 (container Remotion+FFmpeg nativo) · OTD-VS-015 (vhost video.mcorch.com). OTD-VS-006 (sandbox HyperFrames) mantida.
+> 23	
+> 24	**Fatia VS-2 — Motor HyperFrames VIVO (2026-06-24, commit `39f8001`):** o motor de render determinístico está **de pé** (não mais "blocked"), single-tenant Usuário Zero (hardening multi-tenant FMEA-VS-001 diferido p/ User 1 — OTD-VA-011). `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920) + `scripts/video-bridge.ts` (worker host molde `design-bridge`: claim atômico `video_renders` engine=hyperframes → render → bucket privado `video-studio-assets` → `finalize_video_render`; systemd `video-bridge.service` active). Migration `20260624120000` (coluna `composition` jsonb + bucket). Edge `video-render` ganhou transporte `poll://` (Edge não alcança host). **Provado:** ffprobe 1080×1920, **sha256 byte-idêntico** 2 renders (NFR-VS-016), E2E via service. `/security-review` SAFE. Consumido pelo Viral Autopilot ([[project_viral_autopilot]] Fatia VA-V1 — vídeo 9:16 autônomo).
+> 25	
+> 26	**Faceless nativo (o OUTRO motor) — ainda a construir:** orquestrador nativo + legs compostas + container Remotion/FFmpeg (De-n8n). Separado do HyperFrames (este já vivo).
+> 27	
+> 28	**FASE B COMPLETA (2026-07-01, loop autônomo — commits `c422de7`→`4fd9b89`):** o editor é módulo MCORCH billável VIVO.
+> 29	- **FR-VS-050 render NATIVO license-clean (OTD-VS-020, SDD §VS-UI-C):** `renderStudioProject` reimplementado sobre `@hyperframes/core` (Apache-2.0, LICENSE **shipa** no tarball — o CLI npm `hyperframes` NÃO shipa grant nenhum) — `bundleToSingleHtml` → Playwright dirige `__player.renderSeek(i/fps)` (seek SÍNCRONO em SEGUNDOS; o `{frame,seekMode}` é o bridge de preview, NÃO o render) → FFmpeg bitexact. Provado: 4 renders **byte-idênticos** em 4 contextos (sha `c721f8f4`), SSIM 0.9934 vs ref CLI, Vision-QA high. Rollback: `STUDIO_RENDER_ENGINE=cli`.
+> 30	- **Host próprio (`scripts/video-studio-host/`):** Hono + `createStudioApi(mcorchAdapter)` (13 métodos §B.2; a interface REAL vive em `@hyperframes/studio-server` — o `core/studio-api` é re-export deprecado) + **SPA pré-buildado** do `@hyperframes/studio` dist (React 19 bundlado; carrier isolado `packages/video-studio-host-ui/` — NUNCA instalar studio no root, react@19 hoisted quebraria o SPA React 18). `video-studio.service` swapado p/ nosso host na MESMA porta 3210 (rollback no unit). Hash do editor = **`#project/<id>`** (não `#project=`).
+> 31	- **FR-VS-048 (A) billing:** `startRender` minta JWT User 0 (generateLink→verifyOtp) → `video-render` edge fn (chokepoint único) → **E2E PAGO provado** (12 mco, row `b25838a0`). ⚠️ `VIDEO_HYPERFRAMES_WEBHOOK=poll://` **já está ativo** — Export do editor COBRA de verdade.
+> 32	- **FR-VS-049 durability:** sweep write-back p/ bucket privado `video-studio-projects` + materialização staging+rename no `resolveProject`. Smoke 7/7; /security-review NO FINDINGS.
+> 33	- **Restante:** deletar wrap CLI+`hyperframes` global (pós uso real pelo Sovereign) · vhost cert `video.mcorch.com` (Sovereign, 2 sudo) · faceless nativo.
+> 34	
+> 35	**Pendências de doc (anticorpo):** BoK 06 §2.5 ainda diz `gemini_api_key` (canônico = `google_api_key`, [[reference_byok_gemini_column]]). Relacionado: [[project_viral_autopilot]] (mesmo padrão prepaid + finalize).
+> 36	
+> 37	
+> 38	---
+> 39	### Snapshot do índice (arquivado na compactação de 2026-07-01)
+> 40	
+> 41	- [Módulo Vídeo (video-studio) — Fase B COMPLETA: render nativo license-clean FR-VS-050 + editor billável vivo no 3210](project_video_studio.md) — 2026-07-01: host próprio createStudioApi(McorchAdapter) + SPA pré-buildado; Export COBRA (12 mco, webhook poll:// ativo); hash #project/<id>; rollback STUDIO_RENDER_ENGINE=cli.
+> 42	
+> ```
+
+## 🤖 Claude *(23:14:30)*
+
+
+## 🤖 Claude *(23:14:32)*
+
+Estado material do "Viral Autopilot - Video" (memória de 3 dias — verifico contra o vivo, Lei 1):
+
+A leitura mostra que a **pipeline de vídeo já está materialmente completa**: motor HyperFrames vivo, editor billável (Fase B, 2026-07-01), integração 9:16 no Autopilot, e o **1º ciclo pago de vídeo 9:16 já foi WITNESSED E2E** (2026-06-26, ciclo `2403bfcb`, render `8b0787e0`). Faço uma verificação fresca do que sustenta isso:
+
+## 🤖 Claude *(23:14:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== video-studio.service (editor bill\u00e1vel vivo) ===\"; systemctl --user is-active video-studio.service 2>/dev/null || systemctl is-active video-studio.service 2>/dev/null || echo \"checking via curl\"\ncurl -s -o /dev/null -w \"editor :3210 \u2192 HTTP %{http_code}\\n\" http://127.0.0.1:3210/ 2>/dev/null\necho \"\"; echo \"=== video-bridge.service (worker de render) ===\"; systemctl --user is-active video-bridge.service 2>/dev/null || systemctl is-active video-bridge.service 2>/dev/null || echo \"n/a\"\necho \"\"; echo \"=== witnessed 9:16 video renders (fresh REST count) ===\"\nsource .env 2>/dev/null\ncurl -s \"${SUPABASE_URL}/rest/v1/video_renders?select=id,state,engine,created_at&engine=eq.hyperframes&order=created_at.desc&limit=3\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" 2>/dev/null | head -c 600\necho \"\"",
+  "description": "Verify video pipeline live state materially"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === video-studio.service (editor billável vivo) ===
+> active
+> editor :3210 → HTTP 200
+> 
+> === video-bridge.service (worker de render) ===
+> active
+> 
+> === witnessed 9:16 video renders (fresh REST count) ===
+> [{"id":"3d83ed7e-1b7c-4378-8c09-7068fdc467dc","state":"done","engine":"hyperframes","created_at":"2026-07-04T03:28:20.733071+00:00"}, 
+>  {"id":"b25838a0-fca3-4133-b1d5-670d2cb780e8","state":"done","engine":"hyperframes","created_at":"2026-07-01T21:59:37.018153+00:00"}, 
+>  {"id":"020e9bef-7f4a-48f1-8d3a-c5450ac019c0","state":"done","engine":"hyperframes","created_at":"2026-07-01T21:44:40.679639+00:00"}]
+> ```
+
+## 🤖 Claude *(23:15:26)*
+
+
+## 🤖 Claude *(23:15:37)*
+
+**Verificação material fresca confirma — Viral Autopilot - Video está operacional e completo:**
+- `video-studio.service` **active** · editor `:3210` → **HTTP 200** (editor billável vivo, Export cobra 12 mco)
+- `video-bridge.service` **active** (worker de render)
+- `video_renders` engine=hyperframes: renders **`done`** reais, o mais recente de **ontem (2026-07-04)** — a pipeline 9:16 está produzindo vídeo de verdade
+
+Somado ao que a memória registra (motor VS-2 vivo, integração 9:16 no Autopilot, **1º ciclo pago de vídeo 9:16 já WITNESSED E2E** em 2026-06-26, billing-trap + CTA-leak corrigidos), a **pipeline de vídeo do Viral Autopilot está materialmente completa**.
+
+**Reportando com honestidade (Lei 1):** os dois itens que você sequenciou estão feitos —
+- ✅ **Unified Canvas 3.5-3.10** (cutover + gate E2E fechados nesta sessão)
+- ✅ **Viral Autopilot - Video** (pipeline completa e verificada viva; nada de código ungated de alto valor pendente)
+
+O que **resta** no vídeo é tudo **Sovereign-gated** ou **iniciativa nova grande**, não trabalho autônomo limpo:
+
+| Item restante | Gate |
+|---|---|
+| Publish vertical TikTok/IG/YT | OAuth + App Review (TikTok reprovado pendente rebrand — `[[project_tiktok_review_rebrand_requirements]]`) |
+| Cert vhost `video.mcorch.com` | 2× sudo (Sovereign) |
+| Postback ML com venda real | precisa de venda real |
+| Cadência de vídeo **recorrente** | money-sensitive (12 mco × N autônomo) — hoje só texto recorre |
+| Faceless nativo (2º motor, De-n8n) | build novo grande (container Remotion/FFmpeg) |
+
+Como o roadmap que você nomeou está esgotado (gatilho de seal da Lei 3), preciso da sua direção:
+
+## 🤖 Claude *(23:15:43)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Ambos os itens do roadmap est\u00e3o feitos e verificados. Como seguir?",
+      "header": "Dire\u00e7\u00e3o",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Selar a sess\u00e3o (/handoff)",
+          "description": "Roadmap esgotado + 2 milestones entregues (cauda de brand 100% + Unified Canvas cutover). O /handoff faz commits granulares (j\u00e1 feitos), insere o n\u00f3 milestone na malha, atualiza HANDOFF.md e roda a auto-auditoria das Leis. Os itens gated viram agenda da pr\u00f3xima sess\u00e3o. Recomendado."
+        },
+        {
+          "label": "Cad\u00eancia de v\u00eddeo recorrente",
+          "description": "Construir a \u00fanica fatia de c\u00f3digo ungated que resta: fazer o ciclo de v\u00eddeo 9:16 RECORRER (hoje s\u00f3 texto recorre), com cap de custo pr\u00f3prio e default OFF (ligar = GO seu). Money-sensitive, entrego com smoke zero-custo."
+        },
+        {
+          "label": "Prep do publish vertical",
+          "description": "Deixar o publisher vertical (TikTok/IG/YT) pronto-para-OAuth: c\u00f3digo + fail-closed, provado zero-custo, esperando s\u00f3 o App Review/credenciais (a\u00e7\u00e3o sua). Distribui\u00e7\u00e3o = maior lever de receita, mas n\u00e3o ativa at\u00e9 voc\u00ea destravar o OAuth."
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-04 - agent-aea4cc075927ec918]]
+> * **Próxima Sessão**: [[2026-07-05 - E2E visual testing and Handson protocol review]]
+%% --- TIMELINE END --- %%

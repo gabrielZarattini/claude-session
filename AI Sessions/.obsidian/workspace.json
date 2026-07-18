@@ -11,10 +11,17 @@
             "id": "f17dda916d8a9606",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Visualização em gráfico"
+              "type": "canvas",
+              "state": {
+                "file": "Sem título.canvas",
+                "viewState": {
+                  "x": 0,
+                  "y": 0,
+                  "zoom": 0
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Sem título"
             }
           }
         ]
@@ -70,7 +77,8 @@
               "title": "Marcadores"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -168,11 +176,12 @@
               "title": "Propriedades dos arquivos"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "horizontal",
-    "width": 200,
+    "width": 330.5,
     "collapsed": true
   },
   "left-ribbon": {
@@ -189,7 +198,16 @@
   },
   "active": "f17dda916d8a9606",
   "lastOpenFiles": [
+    "Sem título.canvas",
+    "Sem título 1.md",
     "Sem título.md",
+    "MCORCH Processes/synapse-embedding-similarity.md",
+    "ClaudeSessions/2026-07-07 - agent-ac5a4dfe28c890617.md",
+    "ClaudeSessions/2026-07-07 - agent-ac21c97295c524e52.md",
+    "ClaudeSessions/2026-07-07 - agent-aa474a97bb25489dd.md",
+    "ClaudeSessions/2026-07-07 - agent-a76261a47a12fbe10.md",
+    "ClaudeSessions/2026-07-07 - agent-a740f9831227f2e09.md",
+    "ClaudeSessions/2026-07-07 - agent-a6c9dd66cf44ca412.md",
     "ClaudeSessions/2026-07-05 - agent-aed41526b2d0082ee.md",
     "ClaudeSessions/2026-07-05 - agent-ae6cf60a3b1fcceb1.md",
     "ClaudeSessions/2026-07-05 - agent-adfd61319aeaf80ac.md",
@@ -206,15 +224,6 @@
     "ClaudeSessions/2026-07-05 - agent-aa544592e8d37d212.md",
     "ClaudeSessions/2026-07-05 - agent-a98c8760ae986aca0.md",
     "ClaudeSessions/2026-07-05 - agent-a89a1127fda6a8107.md",
-    "ClaudeSessions/2026-07-05 - agent-a89913a584ada3129.md",
-    "ClaudeSessions/2026-07-05 - agent-a88828546254f1312.md",
-    "ClaudeSessions/2026-07-05 - agent-a8451156656962ff2.md",
-    "ClaudeSessions/2026-07-05 - agent-a7584bd5dc3619acd.md",
-    "ClaudeSessions/2026-07-05 - agent-a71f8ccdd8851474a.md",
-    "ClaudeSessions/2026-07-04 - agent-abc5bfb335f7c6c81.md",
-    "ClaudeSessions/2026-07-04 - agent-ab11e0d7f346bd0d1.md",
-    "ClaudeSessions/2026-07-04 - agent-aad1c8160bf567cc9.md",
-    "ClaudeSessions/2026-07-04 - agent-aa4754fda9c80e3da.md",
     "MCORCH Processes",
     "ClaudeSessions/image.png",
     "skills-lock.json"
