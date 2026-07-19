@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 90
-> * **Total de Sessões**: 2548
+> * **Total de Sessões**: 2550
 
 ---
 
@@ -117,6 +117,8 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-19 - agent-a42973a6e9cc04a1a]]` (ClaudeSessions) - *2026-07-19*
 *   `[[2026-07-19 - agent-a2fee68c1880dabe2]]` (ClaudeSessions) - *2026-07-19*
 *   `[[2026-07-19 - Resolver credenciais expostas e executar próximos passos]]` (ClaudeSessions) - *2026-07-19*
+*   `[[2026-07-19 - Refinar inbox WhatsApp×MIV e enriquecer schema leads]]` (ClaudeSessions) - *2026-07-19*
+*   `[[2026-07-19 - CRM Inbox FR-CRM-028 reações de emoji e omnichannel]]` (ClaudeSessions) - *2026-07-19*
 *   `[[2026-07-18 - eb0262f6-e35f-4101-be5e-35c24a9a5e1f]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-af850dad83c03a6f8]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` (ClaudeSessions) - *2026-07-18*
