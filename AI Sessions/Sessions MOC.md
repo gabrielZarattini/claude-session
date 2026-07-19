@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2546
-> * **Sessões do Claude**: 2499
+> * **Total de Sessões Registradas**: 2553
+> * **Sessões do Claude**: 2506
 > * **Sessões do Gemini**: 47
 
 ---
@@ -74,19 +74,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-19 - agent-ade8d11a0c2bef713]]` - *2026-07-19*
+*   `[[2026-07-19 - agent-a42973a6e9cc04a1a]]` - *2026-07-19*
+*   `[[2026-07-19 - agent-a2fee68c1880dabe2]]` - *2026-07-19*
+*   `[[2026-07-19 - Resolver credenciais expostas e executar próximos passos]]` - *2026-07-19*
 *   `[[2026-07-18 - eb0262f6-e35f-4101-be5e-35c24a9a5e1f]]` - *2026-07-18*
 *   `[[2026-07-18 - agent-af850dad83c03a6f8]]` - *2026-07-18*
 *   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-af25d623acc9a75c5]]` - *2026-07-18*
 *   `[[2026-07-18 - agent-aea2bd213a953a6e7]]` - *2026-07-18*
+*   `[[2026-07-18 - agent-adec958a1d79b79f3]]` - *2026-07-18*
 *   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` - *2026-07-18*
 *   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-aa988956670c0e57a]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a96f179782377e994]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a5a2fc09af5a62245]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a5514743ce3b7d476]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a53874163b7126a69]]` - *2026-07-18*
-*   *... e mais 2489 sessões nessa categoria.*
+*   *... e mais 2496 sessões nessa categoria.*
 
 ---
 
@@ -1742,16 +1742,23 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-19 - agent-ade8d11a0c2bef713]]` (ClaudeSessions)
+*   `[[2026-07-19 - agent-a42973a6e9cc04a1a]]` (ClaudeSessions)
+*   `[[2026-07-19 - agent-a2fee68c1880dabe2]]` (ClaudeSessions)
+*   `[[2026-07-19 - Resolver credenciais expostas e executar próximos passos]]` (ClaudeSessions)
 *   `[[2026-07-18 - eb0262f6-e35f-4101-be5e-35c24a9a5e1f]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-af850dad83c03a6f8]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-af25d623acc9a75c5]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-aea2bd213a953a6e7]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-adec958a1d79b79f3]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-aa988956670c0e57a]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-a96f179782377e994]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-a5a2fc09af5a62245]]` (ClaudeSessions)
+*   `[[2026-07-18 - agent-a5844225bd865a0c4]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-a5514743ce3b7d476]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-a53874163b7126a69]]` (ClaudeSessions)
 *   `[[2026-07-18 - agent-a3a472f26c1a43cf7]]` (ClaudeSessions)

@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 89
-> * **Total de Sessões**: 2541
+> * **Total de Processos**: 90
+> * **Total de Sessões**: 2548
 
 ---
 
@@ -49,6 +49,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[creative-qa-vision-gate]]` - *Processo*
 *   `[[credential-disconnect-clear]]` - *Processo*
 *   `[[crm-inbox-window-state]]` - *Processo*
+*   `[[crm-media-ingest]]` - *Processo*
 *   `[[deepsearch-blueprint]]` - *Processo*
 *   `[[ecc-harness-tools]]` - *Processo*
 *   `[[edge-jwt-identity-verification]]` - *Processo*
@@ -112,16 +113,23 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-19 - agent-ade8d11a0c2bef713]]` (ClaudeSessions) - *2026-07-19*
+*   `[[2026-07-19 - agent-a42973a6e9cc04a1a]]` (ClaudeSessions) - *2026-07-19*
+*   `[[2026-07-19 - agent-a2fee68c1880dabe2]]` (ClaudeSessions) - *2026-07-19*
+*   `[[2026-07-19 - Resolver credenciais expostas e executar próximos passos]]` (ClaudeSessions) - *2026-07-19*
 *   `[[2026-07-18 - eb0262f6-e35f-4101-be5e-35c24a9a5e1f]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-af850dad83c03a6f8]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-af25d623acc9a75c5]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-aea2bd213a953a6e7]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-adec958a1d79b79f3]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-aa988956670c0e57a]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a96f179782377e994]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a5a2fc09af5a62245]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a5844225bd865a0c4]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a5514743ce3b7d476]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a53874163b7126a69]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a3a472f26c1a43cf7]]` (ClaudeSessions) - *2026-07-18*
