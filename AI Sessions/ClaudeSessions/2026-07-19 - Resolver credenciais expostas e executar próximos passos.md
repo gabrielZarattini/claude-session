@@ -9932,5 +9932,5 @@ Cola isso na outra sessão que ela retoma exatamente daqui. Quer que eu já bump
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-19 - Refinar inbox WhatsApp×MIV e enriquecer schema leads]]
-> * **Próxima Sessão**: [[2026-07-19 - agent-a2fee68c1880dabe2]]
+> * **Próxima Sessão**: [[2026-07-19 - Set up YouTube upload loop and CRM suite implementation]]
 %% --- TIMELINE END --- %%
