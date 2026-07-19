@@ -1,4 +1,4 @@
-# Pesquisar mercado freelance de IA e montar posicionamento como dev
+# [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev|Pesquisar mercado freelance de IA e montar posicionamento como dev]]
 **Date:** 2026-07-06 | **Session ID:** `3562232e-cb65-439c-b99c-a8f274a24b81`
 
 ---
@@ -1154,3 +1154,16 @@ continue
   "timeout": 600000
 }
 ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-a0184792be790a9ca]]
+%% --- TIMELINE END --- %%

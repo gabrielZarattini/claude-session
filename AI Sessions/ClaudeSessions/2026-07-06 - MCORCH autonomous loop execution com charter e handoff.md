@@ -1,4 +1,4 @@
-# MCORCH autonomous loop execution com charter e handoff
+# [[2026-07-07 - MCORCH autonomous loop execution com charter e handoff|MCORCH autonomous loop execution com charter e handoff]]
 **Date:** 2026-07-06 | **Session ID:** `ab8c4379-5c3c-4680-8780-9cbdc9717a69`
 
 ---
@@ -11755,5 +11755,5 @@ Ação Sovereign, e opere no MODO que o estado pedir:
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
-> * **Próxima Sessão**: [[2026-07-06 - agent-a33248f50594146ba]]
+> * **Próxima Sessão**: [[2026-07-06 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
 %% --- TIMELINE END --- %%

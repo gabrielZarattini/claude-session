@@ -189,6 +189,98 @@ mudança de integração Higgsfield; drift = exit 1):
 - **OTD-SPACES-006** — refs por PATH + re-assinatura on-read (mata o rot de 365d/7d).
 - **OTD-SPACES-007** — conector per-user do **MCP oficial Higgsfield** (`mcp.higgsfield.ai/mcp`): handshake+tools/list funcionam com `Bearer <api_key>` BYOK (provado), mas tools de CONTA (generate/balance/media) exigem OAuth de conta (`openid email offline_access`). Caminho viável provado: `registration_endpoint` público + grants `authorization_code`+`refresh_token` + device-flow (`fnf-device-auth.higgsfield.ai`) ⇒ fluxo "Conectar Higgsfield" per-user com refresh token no Vault (classe `social_credentials`). Destrava 30+ modelos (Sora 2, Veo 3.1, Kling 3.0, Nano Banana Pro, Soul 2.0) atrás de UMA integração com schema auto-descritivo. **BoK amendment obrigatória antes do código** (Closed-Loop Step 3.5).
 
+### Amendment it.2a — project-dispatch + catálogo-completo no ledger (2026-07-07, ANTES do código — Amendment 14 FR-SPACES-024)
+
+**Contexto:** a superfície consolidada (`/dashboard/spaces`, corpo Canvas Studio, `vm_canvas_projects`) migra do
+deduct-after-success para o ledger-first. Mapa vivo: `wf_b0473f31` (5 leitores). D1 = **Opção A** (aditiva).
+
+**Operator (manual hoje):** rodar um nó pago na UI consolidada → débito só após sucesso (sem row antes, sem refund
+automático); recuperação de vídeo órfão = cron `canvas-video-watchdog.sh` (só `vm_canvas_executions`).
+
+**Sequence (it.2a — servidor, provável sem UI):**
+1. **Migration `generations` project-dispatch (D1-A, tudo aditivo):**
+   `vm_canvas_projects` ganha âncora `UNIQUE (id, user_id)` (metadata-only; PK(id) já implica) →
+   `generations.space_id` DROP NOT NULL + `project_id uuid` + FK composta `(project_id, owner_id) →
+   vm_canvas_projects(id, user_id)` ON DELETE CASCADE + CHECK `num_nonnulls(space_id, project_id) = 1` +
+   índice parcial. `begin_space_generation` re-criada com `p_project_id uuid DEFAULT NULL` (**param names
+   existentes intocados** — T6a-f/T8 do smoke sobrevivem verbatim), guard XOR interno, INSERT do project_id;
+   DROP da assinatura antiga (ambiguidade PostgREST) + **trailer REVOKE/GRANT re-emitido** (lição grant-drift).
+   `finalize_space_generation` = ZERO mudança (keyed por node_run_id, surface-agnóstica).
+2. **Edge fn `canvas-execute`:** dispatch ledger vira `(space_id || project_id) && node_run_id`; ownership 404
+   pre-check na tabela certa (spaces OU vm_canvas_projects, ambas owner-scoped); catálogo-completo do slice =
+   resolução de custo fail-closed por `CREDIT_COSTS` (reusa `resolveHiggsfieldSoulKey` + `provider/model`;
+   chave ausente → 422 pré-débito) substituindo o set-membership `SPACES_IMAGE_MODELS`; braço `style_transfer`
+   (o único post-proc que a UI emite); magic_prompt com contexto de campanha (lookup `vm_canvas_projects →
+   campaigns` do path legado); `scene_compose` coalesce `input_image_1/2/layout` → reference list; **GAP-8**:
+   refund/response usam `effectiveCost` (não `creditCost`).
+3. **Testes na MESMA mudança:** mirror-parity (count vídeo dinâmico · scalars ancorados no bloco CREDIT_COSTS ·
+   describe catálogo-completo · pin do dispatch guard) · fixtures negativas do smoke viram sentinelas permanentes
+   (`qa_never_supported` / `qa/never-a-model`) ANTES do widening · P-series (project 422/404/402/idempotência/
+   cross-surface-confusion 404) · **gate single-money-path** (run consolidado ⇒ 0 rows `vm_canvas_executions` +
+   0 ações legadas em `mcoin_transactions` — fecha OTD-SPACES-012).
+4. `/security-review` independente (money path) → apply via Management API + registro no ledger → deploy fn →
+   smoke completo zero-custo.
+
+**it.2b (cliente — fatia seguinte):** chokepoint `useCanvasExecute` minta `node_run_id = crypto.randomUUID()` por
+tentativa + envia `project_id`; dual-read HistoryTab/AssetsTab/StatusBar (union `vm_canvas_executions ∪
+generations`); settle de vídeo async via poller portado (`watchVideoGeneration`) — sem mudar publication realtime.
+**it.2c (watchdog):** 2º passe do `canvas-video-watchdog.sh` sobre `generations` (`operation_id not null`, BYOK
+per-owner na consulta Higgsfield; failed/timeout → `finalize` error+refund idempotente; completed → entrada de
+resgate service-role no `higgsfield-webhook` por `node_run_id` + `Bearer SB_SECRET_KEY` [hash-only impede replay]);
+`self-heal-spaces.sh` ganha `&operation_id=is.null` ANTES de qualquer cron (blind-refund só para engines síncronos).
+
+**Verification gates:** G-P1 ladder 401→422→404→402 contra id de `vm_canvas_projects` · G-P2 idempotência
+duplicate:true zero-2º-débito · G-P3 single-money-path · G-P4 cross-surface 404 · G-P5 mirror-parity verde ·
+G-P6 (it.2c) row stale semeada → recuperada com refund exato.
+
+**Recovery:** migration é aditiva (rollback = DROP COLUMN/CONSTRAINT novos + re-CREATE RPC antiga); edge fn com
+deploy anterior preservado; nenhum dado existente muda (6 rows fixtures satisfazem o XOR).
+
+**Success signal:** smoke completo verde incl. P-series + single-money-path; nenhuma transação legada nova após
+o flip do cliente (it.2b).
+
+### Amendment it.4a — nó Lista (productList) + batch template×dados (2026-07-07, ANTES do código — FR-SPACES-029)
+
+**Referência mecânica:** Magnific Lists (frame-a-frame 2026-07-07): lista como NÓ; template × itens → N criativos.
+**Operator (manual hoje):** o Sovereign duplica um nó de imagem por produto e edita o prompt à mão (ou roda
+`canvas-campaign-build.ts` por CLI) — sem lote nativo no canvas.
+
+**Sequence (MVP):**
+1. Node kind novo `productList` (client-only, zero migration): `items[] {name, description?, image_url?, external_id?}`,
+   fontes = manual + picker de `vm_affiliate_products` (hook `useAffiliateProducts` existente). Cap 8 itens (paridade batch).
+2. Conexão `productList → generateImage`: o prompt do generateImage vira TEMPLATE com placeholders
+   `{{name}}`/`{{description}}` (substituição client-side pura, testável).
+3. Run do generateImage com lista upstream = EXPANSÃO em N execuções ledger-first (1 node_run_id fresco por item;
+   `reference_image_urls` do item quando `image_url` presente — consistência por produto). Custo mostrado = N × preço
+   do modelo (G7); saldo insuficiente bloqueia ANTES.
+4. Provenance: cada output já entra em `creative_assets` (spine, prompt do item) — N criativos rastreáveis.
+
+**Verification gates:** unit da expansão/substituição (puro) · tsc 0 · witness pago 1 item (≤10 mco, saldo exato) ·
+browser+Vision no nó/inspector · **lote ≥3 itens (~30 mco) = GO de gasto na Fila** (gate §9 do Amendment 14).
+**Recovery:** expansão é client-side; cada item é um run ledger independente (refund automático por item — nada novo).
+**Success signal:** 1 template + lista de N produtos ML → N imagens consistentes na Biblioteca com provenance por item.
+
+### Amendment it.4c — nó Upscale REAL (Magnific-signature, Replicate real-esrgan) — 2026-07-07, ANTES do código
+
+**Contexto:** o Sovereign pediu paridade "exponencial" com o Magnific, cuja capacidade-assinatura é UPSCALE.
+Provider CERTO (probe 2026-07-07 com a chave Replicate do vault do User 0): `nightmareai/real-esrgan`
+version `b3ef194191d1…` — input `{image, scale∈{2,4}, face_enhance}`, output URL. NÃO é placeholder: é uma
+operação real de imagem→imagem. upscale-2x=8 / upscale-4x=20 já em CREDIT_COSTS.
+**Operator (manual hoje):** rodar real-esrgan no site do Replicate à mão e baixar. Sem nó nativo.
+
+**Sequence:**
+1. Provider fn `generateReplicateUpscale(key, imageUrl, scale, faceEnhance)` — cria prediction + poll (mesmo
+   padrão de `generateReplicate`), version pinada.
+2. `executeSpacesNode`: `upscale` entra no slice gate; custo = `upscale-${scale}x` fail-closed (scale∉{2,4}→422);
+   422 se sem imagem de entrada (input_asset_url OU reference upstream); BYOK replicate fail-closed 402;
+   dispatch no retry loop → generateReplicateUpscale; modelKey `replicate/real-esrgan`; materializa + creative_assets.
+3. Cliente: kind `upscale` + factory + node + inspector (2x/4x + face_enhance) + registry (Transform) + dispatch +
+   resolveExecutePayload (`node_type:'upscale'`, scale/face_enhance em parameters) + estimateNodeCost (`upscale-${scale}x`)
+   + pipeline (upscale QUER imagem upstream, como styleTransfer: `input_asset_url` = findUpstreamImage).
+**Verification gates:** unit do custo por scale · tsc 0 · **witness pago** (imagem real → upscale 2x, saldo −8 exato,
+asset registrado) · browser render + Vision. **Recovery:** run ledger independente (refund automático em falha).
+**Success signal:** conectar Gerar Imagem → Upscale → imagem em alta no `creative_assets`, cobrança exata por scale.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

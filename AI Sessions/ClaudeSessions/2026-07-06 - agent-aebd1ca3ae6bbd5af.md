@@ -57,3 +57,16 @@ Rules (Survival Law 1 — materiality):
 > ```
 > Structured output provided successfully
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - agent-ae23c4478cf3f2955]]
+> * **Próxima Sessão**: [[2026-07-06 - agent-af2080f3e4ec22283]]
+%% --- TIMELINE END --- %%
