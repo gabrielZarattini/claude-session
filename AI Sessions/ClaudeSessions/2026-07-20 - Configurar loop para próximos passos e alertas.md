@@ -1191,6 +1191,1647 @@ E o ponto decisivo: **os dois casam com o contrato `beats[{t_start,t_end,phrase,
 
 O diagnóstico das 7 frentes ainda está rodando. Assim que voltar, abro a implementação.
 
+## 👤 User *(05:11:36)*
+
+<task-notification>
+<task-id>wm0dc0xgw</task-id>
+<tool-use-id>toolu_01KDuoY4YyV9EM9azJEv6rdX</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks/wm0dc0xgw.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Diagnostico read-only das 6 frentes do loop + alertas, com verificacao adversarial do P0 beats" completed</summary>
+<result>{"p0_veredito":"## VEREDITO FINAL — o \"bug do `caption_mode:'beats'`\" não existe\n\nO sintoma reportado é a soma de **três incidentes independentes** que o A/B do Sovereign colapsou num só rótulo. Nenhum deles é uma falha do motor `beats`.\n\nTodas as afirmações abaixo foram **re-verificadas por mim nesta sessão** (não herdadas dos investigadores), exceto onde marcado.\n\n---\n\n## 1. O que é CERTEZA (prova material citada)\n\n### C1 — O motor `beats` renderiza, encoda e sobe. Provado.\n`GET .../infra_health_logs?service=eq.video-repurpose-bridge` (http=200) devolve, para o render `672f5efa`, apenas `clip_upload_failed[2]` — os clipes `[0]` e `[1]`, ambos `caption_mode:'beats'`, subiram. O Refutador 2 extraiu o frame t=2s do `clip_000.mp4` e o overlay karaokê está visível. **A premissa \"beats falha, drawtext passa\" está refutada.**\n\n### C2 — Os `ffmpeg exit 69` são master indecodificável, não lógica de beats. Provado.\n`infra_health_logs.metadata` dos renders `89434b68` (03:29:45Z) e `8662da09` (03:08:32Z), literal:\n```\n[vist#0:0/h264] Decoding error: Invalid data found when processing input\n[vist#0:0/h264] Decode error rate 1 exceeds maximum 0.666667\n[out#0/mp4] Nothing was written into output file, because at least one of its streams received no packets.\n```\nO Refutador 3 reproduziu essa assinatura byte-a-byte com um master **pré-alocado com buracos de zeros** — e, decisivo, **`drawtext` falhou exatamente igual no mesmo estado do master**. Não é mode-dependent.\n\n### C3 — O master mudou no meio do A/B. Provado.\n`ls -la --time-style=full-iso repurpose-inbox/ada39fae-.../` → `EP02_-_MASTER__YouTube_.mp4  529015996  2026-07-20 00:36:12.536788383 -0300`, **owner `ubuntu`** (todos os outros arquivos do diretório são `gcrUX`), com o diretório-irmão `.uploads/` de mtime idêntico `00:36:12.648`. Os dois `exit 69` são de 00:08 e 00:29 (**antes**); o `672f5efa` é de 00:37 e o `drawtext` de 00:50 (**depois**). O braço \"beats\" e o braço \"drawtext\" do experimento rodaram contra **arquivos diferentes**.\n\n### C4 — Nada foi \"adulterado\": são dois renders distintos.\n`video_renders`: `89434b68` = spec 36/20/21, `qa:null`, **nada produzido**. `672f5efa` = spec 14/17/**90**, produziu os arquivos de 14s e 17s. O \"-ss 47\" é literalmente `clips[2].in_sec = 47`.\n\n### C5 — O ÚNICO defeito de código genuíno: cadeia do clipe de 90s sem legenda.\nVerificada linha a linha por mim:\n- `supabase/functions/detect-viral-moments/index.ts:23` → `const MAX_CLIP_S = 90;` (o prompt do próprio arquivo pede 15-45s)\n- `:212-214` cues inexistentes são filtradas em silêncio; `:215-217` expansão condicional; `:224` `outSec = inSec + MAX_CLIP_S` → **47+90=137 exato**; `:228-234` o loop descarta beats que caíram fora após o clamp\n- `supabase/functions/video-repurpose-run/index.ts:52` → única validação de janela é `outS &lt;= inS`. **Sem teto de duração, sem rejeitar `beats` com `text_beats` vazio.**\n- `scripts/video-repurpose/segment-core.ts:79` → `clip.caption_mode === 'beats' &amp;&amp; clip.text_beats &amp;&amp; clip.text_beats.length` → com `[]` **cai mudo** no legado; `:107` exige `clip.caption` não-vazia → também pulado ⇒ **90s de vídeo nu**\n- `src/pages/VideoRepurposePage.tsx:164-165` → `caption: '', caption_mode: 'beats'` carimbado **incondicionalmente** pelo cliente. `grep -c caption_mode detect-viral-moments/index.ts` = **0** — o detector nunca emite esse campo.\n\n### C6 — Não há gate de integridade do master no ingest.\n`scripts/video-repurpose-bridge.ts:82-83` valida apenas `existsSync` + contenção de path. `grep -nE \"duration|local_source\" supabase/functions/video-repurpose-run/index.ts` → **zero linhas**. Nada verifica se o arquivo está estável ou decodificável na região dos cortes.\n\n### C7 — Worker stale, confirmado.\n`systemctl --user show` → `MainPID=3107297`, `ActiveEnterTimestamp=Mon 2026-07-13 22:40:16 -03`. `render-core.ts` mtime `2026-07-14 11:00:34` (**posterior ao boot**) — o `renderAlphaFrames` em execução **não é** o do disco. `segment-core.ts` mtime `2026-07-13 18:20` (anterior) ⇒ a lógica de `beats` executada **é** a lida acima.\n\n### C8 — Dois FIXes propostos estão REFUTADOS (não implementar).\n- **p0-render FIX 7** (\"`infra_health_logs` retornou ZERO linhas, `logHealth` engole erro\"): **falso**. A telemetria existe (http=200, 4 linhas). O investigador consultou por `created_at`, coluna que não existe (é `last_seen_at`).\n- **p0-beats FIX 3a** (\"`err.slice(-500)` escondeu o erro\"): **falso**. O `slice` preserva a **cauda**, e a cauda contém todo o diagnóstico (ver C2). O que foi cortado foi o cabeçalho.\n- **p0-upload FIX 1** (`caption_mode` dentro de `detect-viral-moments`): **não compila** — o campo não existe naquele arquivo (C5).\n- **`if (!beatCues.length) continue`** (p0-beats 1a e p0-upload 1): **no-op** sob o segundo mecanismo. O guard tem que ser sobre `text_beats.length` **depois** do loop `:228-234`.\n\n---\n\n## 2. NÃO VERIFICADO (hipóteses remanescentes)\n\n| # | Questão em aberto | Experimento que resolveria |\n|---|---|---|\n| H1 | **Qual dos dois caminhos** produziu `text_beats: []` no `clip[2]`: índices de cue inválidos (`:212-214`) ou o clamp de `:224` comendo os próprios beats (`:228-233`). Analisei a aritmética: ambos produzem `in_sec:47 / out_sec:137 / text_beats:[] / caption:\"\"`. Os dados residuais **não distinguem**. | Logar o `parsed.clips` cru do LLM em `infra_health_logs.metadata` (ou re-executar o detector com o mesmo SRT + seed). **Irrelevante para o fix** — o guard proposto (F5) cobre os dois. |\n| H2 | **Qual clipe** morreu nos `exit 69` (Refutador 1 diz `clip[1] in=134` por aritmética de vazão; Refutador 3 diz `clip[2] 376→397`). `workDir` é `rmSync`'d em `video-repurpose-bridge.ts:152`. | Impossível hoje. F4d (preservar workdir na falha) torna resolvível no próximo incidente. |\n| H3 | **O mecanismo** do reupload das 00:36:12. O owner `ubuntu` (contra `gcrUX` dos demais arquivos) **contradiz** a hipótese \"upload CloudPanel em voo\" do Refutador 3, embora o `.uploads/` de mtime idêntico a sustente. O *fato* do reupload é certo (C3); o *como* não. | `journalctl`/log do CloudPanel no intervalo 23:30–00:36, ou `auditd`. Não altera nenhum fix. |\n| H4 | **O valor exato do teto global de upload** (50 MiB é o documentado em `scripts/video-repurpose-bridge.ts:40`; intervalo medido: 33.352.981 B aceito ↔ 62.634.038 B rejeitado). Nenhuma sonda de escrita é possível em read-only. | Um upload de sonda de 52.428.801 B. Ou F6 (fixar `file_size_limit` explícito no bucket), que torna a pergunta irrelevante. |\n\n---\n\n## 3. PLANO DE CORREÇÃO DEFINITIVO\n\n**ORO:** Operator: MCORCH Master Execution Agent · Reviewer: Sovereign · Owner: Sovereign (blast radius = rail de repurpose, único tenant).\n**Lei 2:** antes do código, emendar `docs/processes/` com o SOP do gate de integridade de master (F0) — é processo novo, não bug fix de feature documentada. F1-F6 são correções em feature já documentada (`docs/bok/video-repurpose/`) ⇒ isentas do gate BoK.\n\nOrdem: **F1 → F2 → F3 → F4 → F0 → F5 → F6 → F7**. (F1+F2 fecham o P0 sozinhos e são baratos; F3 fecha uma violação de Lei 1 embutida no rail.)\n\n---\n\n### F1 — Fail-closed no contrato de entrada (único ponto que nenhum caller contorna)\n**Arquivo:** `supabase/functions/video-repurpose-run/index.ts:46-61` (`sanitizeClips`)\n\nO carimbo `caption_mode:'beats'` vem do **cliente** (`VideoRepurposePage.tsx:165`, `RepurposeWizard.tsx:152`), dissociado de quem produz os beats. Este é o chokepoint.\n\n```diff\n+const MAX_CLIP_SPAN_S = 60;   // teto real de Short/Reel; alinha com o clamp de render-core.ts:362\n function sanitizeClips(raw: unknown) {\n   for (const c of raw) {\n     if (!Number.isFinite(inS) || !Number.isFinite(outS) || inS &lt; 0 || outS &lt;= inS)\n       return { clips: [], error: \"clip_range_invalid\" };\n+    if (outS - inS &gt; MAX_CLIP_SPAN_S)\n+      return { clips: [], error: \"clip_too_long\" };\n     const text_beats = caption_mode === \"be
+... (truncated 115872 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks/wm0dc0xgw.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/subagents/workflows/wf_d54da5c3-37f/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/workflows/scripts/mcorch-loop-diagnose-2026-07-20-wf_d54da5c3-37f.js', resumeFromRunId: 'wf_d54da5c3-37f'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>11</agent_count><agents_done>11</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1405786</subagent_tokens><tool_uses>257</tool_uses><duration_ms>3115157</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(05:11:43)*
+
+
+## 🤖 Claude *(05:11:44)*
+
+O diagnóstico voltou e **derrubou a premissa do P0**. Extraindo as demais frentes antes de reportar:
+
+## 🤖 Claude *(05:11:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks && jq -r '.outras_frentes[] | \"\\n\u2550\u2550\u2550 \\(.label) [confianca: \\(.confianca)] \u2550\u2550\u2550\\nCAUSA-RAIZ: \\(.causa_raiz)\\n\\nPLANO:\\n\\(.plano_de_fix)\\n\\nARQUIVOS: \\(.arquivos | join(\", \"))\\nRISCOS:\\n\\(.riscos | map(\"- \" + .) | join(\"\\n\"))\"' wm0dc0xgw.output 2>&1 | head -220",
+  "description": "Extract non-P0 fronts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> jq: error (at wm0dc0xgw.output:574): Cannot iterate over null (null)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(05:11:50)*
+
+
+## 🤖 Claude *(05:11:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks && echo \"=== size ===\" && wc -c wm0dc0xgw.output && echo \"=== top-level keys ===\" && jq -r 'keys[]?' wm0dc0xgw.output 2>&1 | head && echo \"=== head ===\" && head -c 300 wm0dc0xgw.output",
+  "description": "Inspect output file structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === size ===
+> 145560 wm0dc0xgw.output
+> === top-level keys ===
+> agentCount
+> logs
+> result
+> summary
+> totalTokens
+> totalToolCalls
+> workflowProgress
+> === head ===
+> {
+>   "summary": "Diagnostico read-only das 6 frentes do loop + alertas, com verificacao adversarial do P0 beats",
+>   "agentCount": 11,
+>   "logs": [
+>     "Diagnostico: 7/7 frentes retornaram"
+>   ],
+>   "result": {
+>     "p0_veredito": "## VEREDITO FINAL — o \"bug do `caption_mode:'beats'`\" não existe\n\nO
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(05:11:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks && jq -r '.result.outras_frentes[] | \"\\n\u2550\u2550\u2550 \\(.label) [\\(.confianca)] \u2550\u2550\u2550\\nCAUSA-RAIZ: \\(.causa_raiz)\\n\\nARQUIVOS: \\(.arquivos|join(\", \"))\\n\\nPLANO:\\n\\(.plano_de_fix)\"' wm0dc0xgw.output 2>&1 | head -260",
+  "description": "Extract non-P0 fronts correctly"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (34.5KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tool-results/bsu9e92uy.txt
+> 
+> Preview (first 2KB):
+> ═══ Catalogo HyperFrames 404 [alta] ═══
+> CAUSA-RAIZ: A rota que o SPA chama NÃO é /api/catalog — é **`/api/registry/blocks`**, e ela EXISTE e responde, mas com **HTTP 501 `{"error":"Registry not available"}`**, não 404. O motivo é que `createStudioApi` só serve o catálogo quando o adapter implementa o método OPCIONAL `listRegistryCatalog()`, e o `mcorchAdapter` (scripts/video-studio-host/adapter.ts) o omite **deliberadamente** — o próprio comentário final do arquivo declara a omissão ("registry catalog/install (supply-chain risk in the render sandbox — MCORCH uses its own allowlist)"). O front-end do @hyperframes/studio não distingue 501 de erro de rede: `if (!res.ok) throw new Error("Failed to load catalog")`. Ou seja: não há bug de roteamento, nem drift de versão, nem prefixo comido pelo nginx — é uma capability do adapter que nunca foi implementada, e a UI de terceiro reporta isso como falha genérica. NÃO É um 404 de rota: o 404 de /api/catalog é apenas uma rota inexistente que não faz parte do contrato.
+> 
+> ARQUIVOS: scripts/video-studio-host/adapter.ts, docs/processes/video-studio-registry-catalog.md, docs/bok/video-studio/05-sdd.md, scripts/qa/smoke-studio-registry-catalog.ts, nginx/video.mcorch.com.conf
+> 
+> PLANO:
+> ROTA CORRETA (provada): `GET /api/registry/blocks` no host 127.0.0.1:3210. Ela NÃO precisa ser criada nem remapeada — precisa ganhar a capability no adapter. Duas opções, e a escolha é Sovereign porque a #2 abre egress de supply-chain que o próprio código declarou recusar.
+> 
+> OPÇÃO A (recomendada, zero supply-chain novo) — catálogo LOCAL curado:
+> 1. Criar `scripts/video-studio-host/registry-catalog.ts` com um catálogo servido de disco: um `registry.json` MCORCH-owned versionado no repo (ex.: `packages/video-studio-registry/registry.json` + um dir por item com `registry-item.json`), contendo só os blocos que o MCORCH homologou.
+> 2. Em `scripts/video-studio-host/adapter.ts`, ANTES do comentário de omissão (linha 179), adicionar:
+> ...
+> </persisted-output>
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(05:12:01)*
+
+
+## 🤖 Claude *(05:12:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '/\u2550\u2550\u2550 privacyStatus/,/\u2550\u2550\u2550 Assets/p' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tool-results/bsu9e92uy.txt | head -60",
+  "description": "Read privacyStatus front"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ privacyStatus configuravel [alta] ═══
+> CAUSA-RAIZ: Duas causas somadas, não uma. (1) O payload do YouTube em publish-social/index.ts:536-540 monta `status.privacyStatus: "public"` como literal, sem ler nada do `content` recebido. (2) MAIS GRAVE e não-óbvio: mesmo que publish-space-asset passasse um campo `privacy` no `metadata.reshape.content`, ele seria SILENCIOSAMENTE DESCARTADO — o auto-publish NÃO repassa o objeto `content` da metadata; ele RECONSTRÓI um objeto `native` novo do zero (auto-publish/index.ts:115) e copia apenas uma allowlist explícita de campos: `text` (:115), `surface` (:118), refs de asset resolvidos server-side (:120-172) e `thread` (:173). Qualquer campo desconhecido morre ali. Portanto um fix só na ponta (UI ou publish-space-asset) nasce morto: a opção viajaria até o auto-publish e evaporaria sem erro. O read-back honesto (publish-social:576-587) já lê o privacyStatus REAL de volta da API e NÃO precisa de nenhuma alteração — se pedirmos "private" ele reportará "private" corretamente.
+> 
+> ARQUIVOS: supabase/functions/publish-social/index.ts, supabase/functions/auto-publish/index.ts, supabase/functions/publish-space-asset/index.ts, src/components/creative/AssetDetailDialog.tsx
+> 
+> PLANO:
+> METADATA RESOLVE — ZERO MIGRATION. `scheduled_posts.metadata jsonb` já existe (migration 20260402014040:172). Campo unificado `privacy` com enum YouTube-nativo `private|unlisted|public`, viajando como string INERTE pelo mesmo trilho já provado do `surface` (FR-SPACES-083). 4 passos, ~15 linhas, nenhuma alteração de schema, nenhuma regeneração de types.ts.
+> 
+> PASSO 1 (fundo do trilho — publish-social/index.ts, região 502-541). Antes do fetch de init (linha ~519) inserir a resolução, respeitando o shape duplo de `content`:
+>   const YT_PRIVACY = new Set(["private", "unlisted", "public"]);
+>   const rawPrivacy = (typeof content === "object" && content !== null) ? (content as Record<string, unknown>).privacy : undefined;
+>   const requestedPrivacy = typeof rawPrivacy === "string" && YT_PRIVACY.has(rawPrivacy) ? rawPrivacy : "public";
+> Trocar o literal da linha 537 por `privacyStatus: requestedPrivacy`. Allowlist fechada (Set) = valor inválido cai em "public" (comportamento de hoje), nunca chega lixo à API do Google.
+> PRESERVAR INTACTO o read-back 576-587. Único acréscimo recomendado (honestidade Lei 1): no `pulse` da linha 587 adicionar `requested_privacy: requestedPrivacy` ao lado do `privacy_status` já existente — assim a telemetria mostra pedido-vs-real e um projeto não-auditado forçando private fica auditável em vez de invisível.
+> 
+> PASSO 2 (O PASSO QUE DESTRAVA TUDO — auto-publish/index.ts). Logo após a linha 118 (`if (typeof c.surface === "string") ...`), adicionar a irmã:
+>   if (typeof c.privacy === "string") native.privacy = c.privacy.slice(0, 20);
+> O argumento de segurança é literalmente o mesmo já escrito no comentário 116-117: string inerte que seleciona um enum, jamais uma referência de asset — nada aqui é assinado nem lido do Storage, então FMEA-011 não é tocado. SEM este passo os outros 3 são no-op.
+> 
+> PASSO 3 (origem — publish-space-asset/index.ts). Junto do parse de `surface` (linha 57):
+>   const PRIVACY = new Set(["private","unlisted","public"]);
+>   const privacy = typeof body.privacy === "string" && PRIVACY.has(body.privacy) ? body.privacy : null;
+> E na linha 201: `const content: Record<string, unknown> = { text, surface, channel, ...(privacy ? { privacy } : {}) };`
+> DECISÃO DO SOVEREIGN (recomendo a segunda): (a) omitir → default "public" preserva 100% do comportamento atual; (b) default `private` quando `variant.platform === "youtube"` e o body não trouxer nada — alinha o servidor à regra perene "ir até o último passo REVERSÍVEL sozinho" e torna impossível um publish público por esquecimento de fiação na UI. (b) é fail-safe; (a) é fail-open.
+> 
+> PASSO 4 (UI mínima — AssetDetailDialog.tsx:112). É a tela por onde o Sovereign publica os cortes. Adicionar um Select pt-BR "Privacidade" (Privado / Não listado / Público), default **Privado**, visível apenas quando a plataforma resolvida for youtube, e incluir `privacy` no body do `supabase.functions.invoke("publish-space-asset", ...)`. Os outros dois chamadores (useVideoRepurpose.ts:194 e PublishSocialInspector.tsx:67) NÃO precisam mudar agora — sem o campo herdam o default do Passo 3.
+> 
+> GANHO OPCIONAL DE 2 LINHAS (TikTok, publish-social:403-407): reusar em vez de inventar. Quando o pedido for `private`, inverter a preferência da cascata para SELF_ONLY em vez de PUBLIC_TO_EVERYONE, mantendo o resto da negociação intacto:
+>   const wantPrivate = requestedPrivacy === "private";
+>   const privacyLevel = (wantPrivate ? undefined : privacyOptions.find(p => p === "PUBLIC_TO_EVERYONE")) ?? privacyOptions.find(p => p === "SELF_ONLY") ?? privacyOptions[0] ?? "SELF_ONLY";
+> Isso exige mover a resolução do Passo 1 para ANTES do bloco TikTok (topo do handler, após o parse do body) — o que aliás é o lugar mais limpo para ela de qualquer forma.
+> 
+> UNIFICAÇÃO (resposta ao item 4): SIM, um campo só, mas com honestidade sobre o alcance. `privacy` é semanticamente YouTube-nativo e mapeia limpo para TikTok (private→SELF_ONLY, public→PUBLIC_TO_EVERYONE). Para LinkedIn (:183 PUBLIC hardcoded), IG e Pinterest o campo é NO-OP DOCUMENTADO — essas APIs não expõem publicação privada; fingir suporte violaria a doutrina de format-specs.ts:9 ("never promise reach a rail can't deliver"). Documentar o no-op no comentário do campo, não silenciá-lo.
+> 
+> VERIFICAÇÃO MATERIAL (gates, nesta ordem): G1 `bun run build` exit 0 (tsc na raiz é no-op, não serve de gate). G2 deploy single-fn `npx supabase functions deploy publish-social` + `auto-publish` + `publish-space-asset` (bulk = 402 pelo cap de 100). G3 publicar 1 corte com privacy=private e provar pelo retorno/pulse `privacy_status: "private"` — o read-back 584 é a prova, não o 201. G4 abrir o vídeo no YouTube Studio e confirmar Privado. G5 publicar sem o campo e provar que continua "public" (zero regressão).
+> 
+> ═══ Assets delete + selo de saude do master [alta] ═══
+> ```
+
+## 🤖 Claude *(05:12:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '/\u2550\u2550\u2550 decode-probe/,$p' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tool-results/bsu9e92uy.txt | head -70",
+  "description": "Read probe+alerts front"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ decode-probe + auditoria de alertas [alta] ═══
+> CAUSA-RAIZ: ITEM A: no caminho `caption_mode='beats'` (o default do wizard viral), `renderClip` renderiza PRIMEIRO os N frames alpha em Chromium headless (`segment-core.ts:79-85` → `render-core.ts:371-395`, um `page.screenshot()` por frame = `duration_s × fps` screenshots) e SÓ DEPOIS entrega o master ao ffmpeg (`segment-core.ts:86-97`). Logo, uma fonte não-decodificável só se revela depois de minutos de Chromium. Não existe NENHUMA validação do input entre a resolução do `inputPath` (`video-repurpose-bridge.ts:76-93`) e a chamada a `segmentVideo` (linha 115) — nem ffprobe, nem decode, nem checagem de janela contra a duração do master. Achado material decisivo: `ffprobe` do container NÃO detecta a corrupção do tipo EP02 (chunk duplicado) — reporta duração plausível e exit 0 — e o `-xerror` do ffmpeg NÃO é confiável sozinho (em t=20s da fixture corrompida o erro apareceu no stderr com exit 0). O gate honesto exige DOIS sinais: exit≠0 OU stderr não-vazio. ITEM B: (1) crm-suite tem 1/10 docs — falta a família inteira; (2) crm-inbox é drift PURO de nomenclatura (00-deepsearch-blueprint vs 00-index exigido pelo gate); (3) youtube-upload.service existe só no repo, `is-enabled` = `not-found`; (4) não há runbook de rotação de credenciais em docs/processes/; (5) guard-sweep --fast = 0 RED.
+> 
+> ARQUIVOS: scripts/video-repurpose/probe-core.ts, scripts/video-repurpose-bridge.ts, docs/processes/video-repurpose-source-probe.md, docs/bok/crm-inbox/00-index.md, docs/bok/crm-suite/, scripts/systemd/youtube-upload.service, docs/processes/credential-rotation-runbook.md
+> 
+> PLANO:
+> ITEM A — PROBE (o que construir e ONDE)
+> 
+> DECISÃO justificada (probar CADA corte, não só o mais tardio): a varredura material na fixture corrompida mostra que t=0 e t=10 passam limpos e só a partir de t=20 aparece erro — probar só o PRIMEIRO corte não pega nada. Probar só o MAIS TARDIO pegaria este caso, mas (a) uma corrupção mid-file com re-sync depois deixaria o ponto final limpo, (b) o erro deixa de ser honesto ("o master está corrompido" vs "o corte #3 em 00:42:10 não decodifica") e (c) o custo de probar todos é irrisório: 0,25 s por probe medido em masters de 529 MB e 1,3 GB → N=5 cortes ≈ 1,3 s, contra minutos de Chromium (duration_s × fps screenshots). Portanto: N probes de 2 s, um por janela, MAIS um probe no ponto mais tardio que o render vai tocar (max out_sec − 2 s), deduplicado.
+> 
+> Também obrigatório o ffprobe de container ANTES: (i) pega arquivo que não é container/sem faixa de vídeo em 89 ms; (ii) dá a duração para rejeitar janela que ultrapassa o fim do master (`cut_window_exceeds_source`); (iii) **fecha a armadilha do passe vacuoso** — `-ss` além do EOF retorna exit 0 com stderr vazio (medido no EP01), então sem o gate de duração um probe fora de faixa "passa" mentindo.
+> 
+> Critério de veredito (medido): FALHA se `exit !== 0` **OU** `stderr` não-vazio. Só o exit code não basta (t=20 e t=22 da fixture: stderr com `Invalid NAL unit size`, exit 0). Arquivo íntegro dá stderr_len=0 em todos os pontos → zero falso-positivo.
+> 
+> PASSO 1 — novo arquivo `scripts/video-repurpose/probe-core.ts`:
+> 
+> ```ts
+> #!/usr/bin/env bun
+> /**
+>  * Fail-fast source probe do rail de repurpose. Guarda o caminho `beats`, que renderiza N frames alpha em
+>  * Chromium ANTES de tocar o master (segment-core.ts:79-85) — sem este gate a fonte corrompida só aparece
+>  * depois de minutos. Medido: ffprobe 0,089s / decode-probe 0,25s por janela (masters de 529MB e 1,3GB).
+>  * PROVADO 2026-07-20 contra fixture com chunk duplicado (bug do EP02): ffprobe NÃO detecta; `-xerror`
+>  * sozinho NÃO detecta (exit 0 com stderr sujo em t=20) — o veredito exige exit!=0 OU stderr não-vazio.
+>  */
+> import { spawn } from 'node:child_process';
+> 
+> export interface ProbeWindow { index: number; in_sec: number; out_sec: number }
+> export interface SourceProbe { durationSec: number }
+> 
+> function sh(cmd: string, args: string[]): Promise<{ code: number; out: string; err: string }> {
+>   return new Promise((resolve, reject) => {
+>     const p = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+>     let out = '', err = '';
+>     p.stdout.on('data', (d) => { out += d.toString(); });
+>     p.stderr.on('data', (d) => { err += d.toString(); });
+>     p.on('error', reject);
+>     p.on('close', (code) => resolve({ code: code ?? -1, out, err }));
+>   });
+> }
+> 
+> /** Gate 1 — container/streams/duração. ~90ms, sem decode. */
+> export async function probeContainer(path: string): Promise<SourceProbe> {
+>   const r = await sh('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type', '-of', 'json', path]);
+>   if (r.code !== 0) throw new Error(`source_corrupt: ffprobe não lê o container — ${r.err.trim().slice(-300)}`);
+>   let j: { format?: { duration?: string }; streams?: { codec_type?: string }[] };
+>   try { j = JSON.parse(r.out); } catch { throw new Error('source_corrupt: ffprobe devolveu saída ilegível'); }
+>   const durationSec = Number(j?.format?.duration);
+>   if (!Number.isFinite(durationSec) || durationSec <= 0) throw new Error('source_corrupt: duração indeterminada no container');
+>   if (!j?.streams?.some((s) => s.codec_type === 'video')) throw new Error('source_corrupt: o arquivo não tem faixa de vídeo');
+>   return { durationSec };
+> }
+> 
+> /** Gate 2 — decode REAL de `probeSec` a partir de `at`. Falha em ~0,25s numa região corrompida. */
+> export async function probeDecodeAt(path: string, at: number, probeSec: number, label: string): Promise<void> {
+>   const r = await sh('ffmpeg', [
+>     '-v', 'error', '-xerror',
+>     '-ss', String(Math.max(0, at)), '-t', String(probeSec), '-i', path,
+>     '-map', '0:v:0', '-f', 'null', '-',
+>   ]);
+>   // exit code sozinho NÃO basta (medido: erro no stderr com exit 0). stderr vazio = sadio (medido no íntegro).
+>   const dirty = r.err.trim();
+>   if (r.code !== 0 || dirty) throw new Error(`source_corrupt: falha ao decodificar ${label} — ${dirty.slice(-300) || `exit ${r.code}`}`);
+> }
+> 
+> /** Gate completo. Custo ≈ 0,09s + 0,25s por janela. Lança erro honesto; nunca retorna falso-sadio. */
+> export async function assertSourceDecodable(path: string, windows: ProbeWindow[], probeSec = 2): Promise<SourceProbe> {
+>   const info = await probeContainer(path);
+>   const TOL = 0.5;
+>   for (const w of windows) {
+> ```
+
+## 🤖 Claude *(05:12:21)*
+
+
+## 🤖 Claude *(05:12:51)*
+
+O diagnóstico voltou com **11 agentes, 0 erros** — e a conclusão mais importante é que eu estaria prestes a corrigir um bug que não existe.
+
+## 🔴 O P0 foi REFUTADO — o A/B do senhor foi inválido
+
+**A premissa "beats falha, drawtext passa" está materialmente derrubada.** Três achados encadeados:
+
+**1. O motor `beats` funciona.** No render `672f5efa`, os clipes `[0]` e `[1]` — ambos `caption_mode:'beats'` — **subiram normalmente**. Um refutador extraiu o frame t=2s do `clip_000.mp4` e o overlay karaokê **está lá, visível**. Só o clipe `[2]` falhou.
+
+**2. O master mudou no meio do experimento.** Isto é o ponto decisivo:
+
+```
+EP02_-_MASTER__YouTube_.mp4   529015996   2026-07-20 00:36:12   owner: ubuntu
+```
+
+Os dois `ffmpeg exit 69` são de **00:08 e 00:29**. O braço "beats" (`672f5efa`) é de **00:37** e o "drawtext" de **00:50**. O arquivo foi reescrito às 00:36:12 — **entre os braços**. O senhor comparou dois modos contra **arquivos diferentes**. E o refutador provou que `drawtext` falha **exatamente igual** contra um master com buracos de zeros. Não é dependente de modo.
+
+⚠️ Note o `owner: ubuntu` — todos os outros arquivos daquele diretório são `gcrUX`. **Não sabemos o que reescreveu esse arquivo.** O fato é certo; o mecanismo não. Vale o senhor saber.
+
+**3. "Durações adulteradas" eram dois renders distintos.** `89434b68` tinha a spec 36/20/21 e **não produziu nada**. `672f5efa` tinha spec 14/17/**90** e produziu os 14s e 17s. E o famoso `-ss 47`? É literalmente `clips[2].in_sec = 47`. Nada foi adulterado.
+
+## Mas há um defeito real, e é pior que o suposto
+
+O clipe `[2]` era de **90 segundos, sem legenda nenhuma**. A cadeia:
+
+- `detect-viral-moments:23` → `MAX_CLIP_S = 90`, enquanto o prompt do próprio arquivo pede cortes de 15-45s
+- `:224` → `outSec = inSec + 90` ⇒ **47+90 = 137 exato**
+- `video-repurpose-run:52` → a **única** validação de janela é `outS <= inS`. **Sem teto de duração.**
+- `segment-core.ts:79` → `text_beats: []` cai **mudo** no caminho legado; `:107` exige `caption` não-vazia, também pulado ⇒ **90s de vídeo nu**
+- `VideoRepurposePage.tsx:165` → o cliente carimba `caption_mode:'beats'` **incondicionalmente**; o detector nunca emite esse campo (`grep -c` = **0**)
+
+Ou seja: um Short de 90 segundos sem legenda passou por todos os gates e só morreu no teto de upload. **O erro de upload era sintoma, não causa.**
+
+O sintetizador também **refutou 4 fixes propostos pelos próprios investigadores** (incluindo dois baseados em leitura alucinada de código). Não vou implementá-los.
+
+## As outras frentes
+
+| Frente | Achado |
+|---|---|
+| **Catálogo** | Não é 404 de rota. A rota é `/api/registry/blocks` e responde **501** — o `mcorchAdapter` **omite `listRegistryCatalog()` de propósito**, com o comentário no código dizendo *"supply-chain risk in the render sandbox"*. O SPA de terceiro traduz 501 como "Failed to load catalog". **Não é bug: é capability nunca implementada.** |
+| **privacyStatus** | Um fix só na ponta **nasceria morto**: o `auto-publish:115` **reconstrói** o objeto e copia só uma allowlist — campo desconhecido evapora sem erro. Precisa de 1 linha lá. Zero migration (`metadata jsonb` já existe). |
+| **decode-probe** | Achado material forte: **`ffprobe` NÃO detecta** a corrupção tipo EP02 (reporta duração plausível, exit 0). E `-xerror` sozinho também não (exit 0 com stderr sujo). O gate honesto exige **dois sinais**: `exit≠0` **OU** `stderr` não-vazio. Custo medido: 0,25s por janela. |
+| **Alertas** | `crm-inbox` é **drift puro de nomenclatura** (tem `00-deepsearch-blueprint`, o gate procura `00-index`). `crm-suite` = 1/10 docs. `youtube-upload.service` → `is-enabled: not-found`. **Não existe runbook de rotação** em `docs/processes/`. `guard-sweep --fast` = **0 RED**. |
+
+## Convergência que vale nomear
+
+O catálogo está desligado por **risco de supply-chain** — e o senhor quer justamente puxar componentes do catálogo HyperFrames. A **Opção A** resolve os dois: um registry **local, curado e versionado no repo**, com só os blocos que homologarmos (`caption-highlight`, `caption-pill-karaoke`, `instagram-follow`). Liga o catálogo **sem abrir egress**.
+
+Vou seguir com a implementação. Duas decisões que assumo pelo senhor, declaradas:
+- **Privacidade: default `private` para YouTube** — a regra perene do projeto é ir até o último passo reversível. Fail-safe em vez de fail-open.
+- **Catálogo: Opção A** (curado local, zero supply-chain novo).
+
+Se discordar de qualquer uma, me diga agora — ainda não escrevi código.
+
+## 👤 User *(10:01:07)*
+
+ótimo continua
+
+## 🤖 Claude *(10:01:27)*
+
+
+## 🤖 Claude *(10:01:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '/\u2550\u2550\u2550 Assets delete/,/\u2550\u2550\u2550 decode-probe/p' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tool-results/bsu9e92uy.txt | head -75",
+  "description": "Read UI surfaces plan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ═══ Assets delete + selo de saude do master [alta] ═══
+> CAUSA-RAIZ: ITEM A — A página /dashboard/spaces/assets (CreativeAssetsPage → CreativeAssetGallery → CreativeAssetCard) nunca expôs exclusão; o único call-site de useDeleteAsset() é o RepurposeWizard. Dois bloqueios reais na inserção: (1) BUG DE INVALIDAÇÃO — useDeleteAsset invalida a queryKey ['creative_assets'] (underscore) mas a galeria usa ["creative-assets", kind ?? "all"] (hífen); a chave nunca casa, então o grid NÃO atualiza após excluir; (2) NESTED BUTTON — o CreativeAssetCard tem <button> como raiz, então um botão de lixeira dentro dele é HTML inválido; exige restruturar a raiz para <div> com o tile como <button> interno.
+> 
+> ITEM B — O selo de saúde do ARQUIVO é impossível hoje a partir do banco: a comparação declarado-vs-real NÃO existe. O byte-count declarado (file.size → header X-Total-Bytes) é usado apenas transitoriamente pelo host-upload-server no gate de integridade e é descartado; e o ingest-external-asset NÃO passa p_file_size_bytes ao register_creative_asset (o RPC aceita o parâmetro, com DEFAULT NULL). Confirmado ao vivo: os 2 únicos masters externos em produção têm file_size_bytes:null E duration_seconds:null. Pior: mesmo se persistíssemos o tamanho, ele não provaria decodabilidade — chunks fora de ordem/duplicados produzem tamanho total IDÊNTICO, e ffprobe de cabeçalho passa em arquivo corrompido no meio. O sinal honesto só pode vir de um probe no HOST (os masters são bucket='local', em disco, não no bucket do Supabase).
+> 
+> ARQUIVOS: src/components/creative/CreativeAssetCard.tsx, src/components/creative/CreativeAssetGallery.tsx, src/hooks/useVideoRepurpose.ts, src/hooks/useCreativeAssets.ts, src/components/repurpose/RepurposeWizard.tsx, scripts/host-upload-server.ts, supabase/functions/ingest-external-asset/index.ts, docs/processes/repurpose-host-infra-provisioning.md
+> 
+> PLANO:
+> === ITEM A — botão de excluir em /dashboard/spaces/assets ===
+> 
+> A1. CORRIGIR A INVALIDAÇÃO PRIMEIRO (senão o botão parece quebrado). Em src/hooks/useVideoRepurpose.ts:258-259, trocar `qc.invalidateQueries({ queryKey: ['creative_assets'] })` por `qc.invalidateQueries({ queryKey: ['creative-assets'] })` (prefix-match cobre todas as variantes de `kind`). Manter a invalidação de ['ingested_masters']. Sem isso, a galeria (useCreativeAssets.ts:15, chave "creative-assets") não refaz o fetch.
+> 
+> A2. DESANINHAR O BOTÃO em src/components/creative/CreativeAssetCard.tsx. A raiz (linha 40) vira `<div className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 transition-colors hover:border-primary">` e o conteúdo clicável vira um `<button type="button" onClick={() => onSelect?.(asset)} className="absolute inset-0 h-full w-full text-left">` que envolve APENAS a mídia + título + badges (ou, mais simples: manter o <button> como filho ocupando inset-0 sob os overlays, com os overlays em z-10). Nada de <button> dentro de <button>.
+> 
+> A3. NOVA PROP OPCIONAL no card: `onDelete?: (a: CreativeAsset) => void` + `deleting?: boolean`. Quando `onDelete` existir, renderizar no canto INFERIOR direito (`absolute bottom-1.5 right-1.5 z-10`) — o superior direito já é do glifo AI Act (linha 100) — um `<Button variant="ghost" size="icon" className="h-7 w-7 bg-black/50 backdrop-blur-sm text-white/80 hover:text-destructive hover:bg-black/70 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100" aria-label={`Excluir ${asset.title ?? 'asset'}`} disabled={deleting} onClick={(e) => { e.stopPropagation(); onDelete(asset); }}>` com `<Trash2 className="h-3.5 w-3.5" />`. `opacity-100` no mobile (sem hover) e `focus-visible:opacity-100` para teclado — igual ao padrão já usado no título (linha 111).
+> 
+> A4. MIV: usar `hover:text-destructive` (token `--destructive: 0 72% 52%` em src/index.css:31), NÃO `var(--gold)`. O molde do wizard (RepurposeWizard.tsx:222) usa gold, o que contraria a doutrina (gold = valor); o padrão destrutivo real do repo é `text-destructive` (ConstellationPage.tsx:94, UserActionsMenu.tsx:106). Recomendo também corrigir o wizard para `hover:text-destructive` na mesma passada (1 linha).
+> 
+> A5. CONFIRMAÇÃO — subir de `confirm()` nativo para AlertDialog (shadcn, já em src/components/ui/alert-dialog.tsx), seguindo ConstellationPage.tsx:88-118. Dono do estado: CreativeAssetGallery. Adicionar `const [pendingDelete, setPendingDelete] = useState<CreativeAsset | null>(null); const del = useDeleteAsset();`. Passar `onDelete={setPendingDelete}` e `deleting={del.isPending && pendingDelete?.id === a.id}` a cada CreativeAssetCard. Renderizar UM AlertDialog controlado (`open={!!pendingDelete}` / `onOpenChange={(o) => !o && setPendingDelete(null)}`) fora do grid:
+>   - AlertDialogTitle: `Excluir "{pendingDelete?.title ?? 'este asset'}"?`
+>   - AlertDialogDescription (pt-BR, honesta): "Remove o registro do acervo e apaga em cascata as variantes de publicação ligadas a ele. O arquivo em disco/bucket permanece — um novo envio com o mesmo nome o sobrescreve. Esta ação não pode ser desfeita."  (a cascata é real: space_publish_variants ON DELETE CASCADE, migration 20260710233000:30)
+>   - AlertDialogCancel: "Cancelar"
+>   - AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90": "Excluir"
+>   - onClick → `del.mutate(pendingDelete.id, { onSuccess: () => { toast.success('Asset excluído.'); setPendingDelete(null); }, onError: (e) => toast.error(e instanceof Error ? e.message : 'Falha ao excluir.') })`  (mesmos toasts do molde, RepurposeWizard.tsx:228-229)
+> 
+> A6. Import de `useDeleteAsset` na galeria vem de '@/hooks/useVideoRepurpose' (é onde ele mora). Se incomodar semanticamente, re-exportar de useCreativeAssets — opcional, não bloqueia.
+> 
+> A7. Verificação (Lei 1): `bun run build` + rodar o gate de UI 1920x1080 (`bun run scripts/qa/audit-canvas-ui.ts`) e provar no browser real que (a) o grid some o tile após excluir (prova de que A1 funcionou) e (b) a linha sumiu do banco via SELECT.
+> 
+> === ITEM B — selo de saúde do master ===
+> 
+> B0. RESPOSTA HONESTA À PERGUNTA DE DESIGN: NÃO dá para saber se o master é decodificável a partir do banco, e NÃO existe hoje um par declarado-vs-real para comparar (file_size_bytes é NULL nas 2 linhas reais; o X-Total-Bytes declarado nunca é persistido). E mais: mesmo persistindo, tamanho NÃO prova decodabilidade — chunks reordenados/duplicados dão tamanho idêntico, e o ffprobe de cabeçalho passa (provado acima no EP02). O sinal honesto EXIGE um probe no host. Proponho abaixo o probe barato + o backfill do tamanho como sinal secundário.
+> 
+> B1. (barato, imediato, sem host) Fazer useIngestedMasters selecionar também `file_size_bytes, duration_seconds` e expor `sizeBytes`, `durationSeconds` e `health` (lido de `metadata.health`). Só isso já permite mostrar duração/tamanho no seletor quando existirem — hoje é NULL, então é a base para B2/B3.
+> 
+> B2. (fecha o buraco daqui para frente) Persistir o tamanho REAL no registro:
+>   - supabase/functions/ingest-external-asset/index.ts: aceitar `file_size_bytes` no body (number ≥ 0) e passar `p_file_size_bytes: fileSizeBytes` no rpc (o RPC já tem o parâmetro — migration 20260716230000:60).
+>   - src/hooks/useVideoRepurpose.ts (useIngestMaster): adicionar `file_size_bytes?: number` ao tipo do input.
+>   - src/components/repurpose/RepurposeWizard.tsx:116-122: passar `file_size_bytes: r.bytes` (o valor já está em mãos e hoje é descartado).
+>   Isso dá um segundo sinal barato: DB (`file_size_bytes`) vs HEAD no host (`Content-Length`) → detecta arquivo truncado/substituído DEPOIS do registro. Não cobre os 2 masters legados (ficam NULL → estado "não verificado").
+> 
+> B3. (o selo de verdade) Nova rota owner-scoped no host: `GET /api/host-probe?key=<uid>/<file>` em scripts/host-upload-server.ts, reusando `authenticate()` e a MESMA validação de chave do serveMedia (linhas 84-87: `key.startsWith(userId+'/')`, sem '..', `resolve(path).startsWith(INBOX_BASE+'/')`).
+>   Sequência dentro da rota:
+>    1. `existsSync` → se não, `{ verdict: 'missing' }`.
+>    2. `statSync(path).size` → bytes reais.
+>    3. `ffprobe -v error -show_entries format=duration -show_entries stream=codec_name -of json <path>` via `Bun.spawn(['ffprobe', ...])` com ARRAY de args (nunca string de shell — anti command-injection). Timeout 30s.
+>    4. Spot-decode em 3 offsets derivados da duração (20%/50%/90%): `ffmpeg -v error -ss <t> -i <path> -frames:v 12 -f null -`, cada um com timeout ~60s. Provado barato (rc=0 em segundos num arquivo de 529 MB).
+>    5. Veredito: `ok` se ffprobe exit 0 E os 3 spots exit 0; `corrupt` se qualquer um falhar; `missing` se o arquivo sumiu.
+>    6. Persistir o veredito com o client `admin` (service-role) que o servidor JÁ tem: `update creative_assets set metadata = metadata || {health:{verdict, bytes, duration, spots, checked_at}} where storage_bucket='local' and storage_key=<key> and user_id=<userId>` — o filtro por user_id é obrigatório (owner-scoped, não confiar só na chave).
+>    7. Responder `{ verdict, bytes, duration, spots, checked_at }`.
+>   nginx: acrescentar `location = /api/host-probe { proxy_pass http://127.0.0.1:3220; proxy_set_header Authorization $http_authorization; proxy_read_timeout 180; }` em infra/nginx/host-upload.location.conf — aplicar em /etc/nginx é AÇÃO SOVEREIGN (mesmo gate documentado no arquivo).
+> 
+> B4. UI do selo — no bloco inline do seletor (RepurposeWizard.tsx:196-240), ao lado do Badge de SRT existente (linha 217-219), acrescentar um Badge de saúde tri-estado (mesma linguagem visual: `variant="outline"` + classe de cor):
+>   - VERDE `border-emerald-500/40 text-emerald-300` — texto "Arquivo íntegro" · tooltip: "Verificado em <data>: cabeçalho legível e 3 amostras de vídeo decodificadas (20%, 50%, 90%). <dur> · <GB>. Amostragem — não é uma decodificação completa."
+>   - AMARELO `border-amber-500/40 text-amber-300` — texto "Não verificado" · tooltip: "Ainda não checamos este arquivo (ou a checagem tem mais de 7 dias). Clique para verificar — leva poucos segundos." Clique → chama /api/host-probe e invalida ['ingested_masters']. Este é também o estado dos masters que NÃO são bucket='local' (não há rota de probe para eles) — tooltip: "Master fora do disco do host — não há como verificar a integridade daqui."
+>   - VERMELHO `border-destructive/40 text-destructive` — texto "Arquivo corrompido" · tooltip: "A decodificação falhou em <n> ponto(s) do vídeo. Reenvie o master — os cortes vão falhar com 'Invalid NAL unit size'." E, como no `keyLooksSanitized` (linha 204-207), DESABILITAR a seleção desse master (`disabled` + `cursor-not-allowed opacity-50`) — é exatamente o gate que faltava e que deixou o Sovereign reusar o master corrompido.
+>   - O `keyLooksSanitized === false` já existente vira também VERMELHO ("nome com espaço/parêntese — arquivo não localizável"), unificando o vocabulário.
+>   Regra de frescor: `metadata.health.checked_at` mais velho que 7 dias, ou `metadata.health.bytes !== file_size_bytes` (quando ambos existirem) → cai para AMARELO.
+> 
+> B5. Lei 2 — a rota de probe é automação nova: emendar docs/processes/repurpose-host-infra-provisioning.md com Operator/Sequence/Verification/Recovery/Success do host-probe ANTES de escrever o código. B1/B2/B4 são bugfix/UI sobre feature já documentada.
+> 
+> B6. Verificação (Lei 1): rodar o probe contra os 3 arquivos reais em repurpose-inbox e colar os exit codes; provar um caso VERMELHO truncando uma CÓPIA (`head -c` num /tmp) — nunca num master de produção.
+> 
+> ═══ decode-probe + auditoria de alertas [alta] ═══
+> ```
+
+## 🤖 Claude *(10:01:54)*
+
+
+## 🤖 Claude *(10:01:57)*
+
+Plano de implementação fechado. Duas descobertas colaterais que valem nomear: o `useDeleteAsset` invalida `['creative_assets']` mas a galeria usa `["creative-assets"]` — **a chave nunca casa**, então excluir nunca atualizou o grid; e o `CreativeAssetCard` tem `<button>` na raiz, então lixeira dentro dele seria HTML inválido.
+
+Abrindo a implementação em grupos de arquivos **disjuntos** (sem colisão entre agentes):
+
+## 🤖 Claude *(10:05:25)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'mcorch-loop-implementar-2026-07-20',\n  description: 'Implementa os 6 passos + alertas em grupos de arquivos disjuntos, com revisao adversarial por grupo',\n  phases: [\n    { title: 'Implementar', detail: '5 grupos disjuntos: repurpose-backend, privacy, catalogo, UI+saude, docs/alertas' },\n    { title: 'Revisar', detail: 'revisor adversarial por grupo' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst BASE = [\n  'CONTEXTO MCORCH (obrigatorio):',\n  '- Repo: ' + REPO + '. Leia CLAUDE.md e .claude/rules/survival.md ANTES de escrever qualquer codigo.',\n  '- LEI 1 (Materialidade): jamais reporte SUCCESS sem prova material (output literal de comando, file:line).',\n  '  Se nao conseguiu verificar, escreva \"NAO VERIFICADO\". Fabricar prova = falha total.',\n  '- LEI 2 (Processo Antecipado): automacao NOVA exige SOP em docs/processes/<slug>.md ANTES do codigo',\n  '  (Operator / Sequence / Verification gates / Recovery path / Success signal). Bugfix em feature ja',\n  '  documentada e isento.',\n  '- Codigo, variaveis, comentarios e logs em INGLES. Texto de UI, validacao e toasts em PORTUGUES do Brasil.',\n  '- TypeScript strict. Tipos explicitos em props, respostas de API e payloads.',\n  '',\n  'REGRAS DESTE FAN-OUT (criticas \u2014 varios agentes editam o repo em paralelo):',\n  '- Edite SOMENTE os arquivos listados no SEU grupo. Tocar arquivo de outro grupo corrompe o trabalho alheio.',\n  '- NAO rode `bun run build`, `npx supabase functions deploy`, nem git commit/push. O orquestrador faz isso',\n  '  uma unica vez no fim. Rodar build em paralelo destroi o dist/.',\n  '- Voce PODE e DEVE rodar checagens locais e baratas: leitura de arquivos, grep, `npx tsc -p tsconfig.app.json',\n  '  --noEmit` (para ver se VOCE introduziu erro novo \u2014 ha erros PRE-EXISTENTES em src/test/*.test.ts* e em',\n  '  src/types/canvas.ts:790; ignore esses), `bun run test <arquivo>` para testes pontuais, ffprobe/ffmpeg.',\n  '- Se precisar de arquivos temporarios use /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/scratchpad',\n  '- NAO aplique migrations em producao. Se concluir que precisa de migration, PARE e reporte \u2014 e gate Sovereign.',\n  '- Reporte em portugues do Brasil, identificadores no original.',\n].join('\\n')\n\nconst OUT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['grupo', 'feito', 'arquivos_alterados', 'prova', 'nao_feito', 'riscos_para_o_revisor'],\n  properties: {\n    grupo: { type: 'string' },\n    feito: { type: 'array', items: { type: 'string' }, description: 'O que foi de fato implementado' },\n    arquivos_alterados: { type: 'array', items: { type: 'string' } },\n    prova: { type: 'array', items: { type: 'string' }, description: 'Provas materiais: output literal de comando, file:line' },\n    nao_feito: { type: 'array', items: { type: 'string' }, description: 'O que ficou de fora e por que (gates, migrations, decisoes Sovereign)' },\n    riscos_para_o_revisor: { type: 'array', items: { type: 'string' }, description: 'Onde voce acha que errou ou tem duvida' },\n  },\n}\n\nconst GRUPOS = [\n  {\n    key: 'repurpose-backend',\n    prompt: [\n      'GRUPO 1 \u2014 backend do rail de repurpose: fechar os defeitos REAIS + o decode-probe.',\n      '',\n      'SEUS ARQUIVOS (nao toque em nenhum outro):',\n      '  supabase/functions/video-repurpose-run/index.ts',\n      '  supabase/functions/detect-viral-moments/index.ts',\n      '  scripts/video-repurpose/probe-core.ts        (ARQUIVO NOVO)',\n      '  scripts/video-repurpose-bridge.ts',\n      '  docs/processes/video-repurpose-source-probe.md  (ARQUIVO NOVO \u2014 SOP, escreva ANTES do codigo)',\n      '  scripts/qa/smoke-repurpose-guards.ts         (ARQUIVO NOVO \u2014 anticorpo)',\n      '',\n      'CONTEXTO PROVADO (um diagnostico adversarial ja rodou; NAO re-investigue, implemente):',\n      'O suposto bug do caption_mode:beats NAO EXISTE. O A/B do Sovereign foi invalido \u2014 o master foi reescrito',\n      'no meio do experimento (mtime 2026-07-20 00:36:12, owner ubuntu). Os dois `ffmpeg exit 69` foram master',\n      'indecodificavel, e o `drawtext` falha IGUAL no mesmo estado do arquivo. O motor beats renderiza e sobe.',\n      '',\n      'OS DEFEITOS REAIS a corrigir, todos verificados linha a linha:',\n      '',\n      'D1 \u2014 Sem teto de duracao de corte. supabase/functions/video-repurpose-run/index.ts:52: a UNICA validacao',\n      '  de janela e `outS <= inS`. Um corte de 90s passou. Adicione `MAX_CLIP_SPAN_S = 60` (teto real de',\n      '  Short/Reel) e retorne erro estruturado `clip_too_long` com uma `action` em pt-BR, seguindo EXATAMENTE o',\n      '  padrao de erro ja usado no arquivo (veja a linha ~105: json(422, { error, action })). Leia o arquivo',\n      '  inteiro antes de editar para casar o estilo.',\n      '',\n      'D2 \u2014 beats com text_beats vazio vira video NU. segment-core.ts:79 exige `text_beats.length` e cai mudo',\n      '  no caminho legado; :107 exige `caption` nao-vazia e tambem e pulado \u21d2 90s sem legenda nenhuma.',\n      '  No MESMO chokepoint (video-repurpose-run, sanitizeClips), rejeite fail-closed: se',\n      '  `caption_mode === \"beats\"` e os `text_beats` resultantes de sanitizeBeats vierem VAZIOS, retorne erro',\n      '  `beats_without_text` com action em pt-BR. IMPORTANTE: o guard tem que ser sobre o resultado DEPOIS do',\n      '  sanitizeBeats, nao sobre a entrada crua \u2014 um guard na entrada e no-op.',\n      '',\n      'D3 \u2014 MAX_CLIP_S incoerente. detect-viral-moments/index.ts:23 tem `MAX_CLIP_S = 90` enquanto o proprio',\n      '  prompt do arquivo (linha ~150) pede arcos de 15-45s. O clamp de :224 (`outSec = inSec + MAX_CLIP_S`)',\n      '  produziu o corte de 137s. Alinhe para 60 (coerente com D1). Leia :206-245 inteiro antes de mexer \u2014',\n      '  entenda o clamp e o loop :228-234 que descarta beats fora da janela. Se o clamp puder zerar os beats,',\n      '  o corte nao deve ser emitido: adicione um `continue` que descarte o clipe quando text_beats ficar vazio',\n      '  APOS o loop de construcao (nao antes).',\n      '',\n      'D4 \u2014 Cliente carimba caption_mode incondicionalmente. src/pages/VideoRepurposePage.tsx:165 e',\n      '  RepurposeWizard.tsx:152 marcam caption_mode:\"beats\" sempre, dissociado de quem produz os beats.',\n      '  ATENCAO: esses dois arquivos sao de OUTRO GRUPO \u2014 NAO os edite. O guard D2 no servidor ja fecha o',\n      '  buraco (fail-closed no chokepoint que nenhum caller contorna). Apenas MENCIONE no seu relatorio que a',\n      '  ponta cliente continua carimbando, para o orquestrador decidir.',\n      '',\n      'D5 \u2014 DECODE-PROBE (o item 2 do roadmap). Crie scripts/video-repurpose/probe-core.ts com o gate de duas',\n      '  fases. ACHADOS MATERIAIS que voce DEVE respeitar (medidos por um agente anterior, nao re-derive):',\n      '   * `ffprobe` NAO detecta a corrupcao tipo EP02 (chunk duplicado): reporta duracao plausivel e exit 0.',\n      '   * `ffmpeg -xerror` sozinho TAMBEM nao basta: em t=20s da fixture corrompida o erro apareceu no stderr',\n      '     COM exit 0.',\n      '   * Portanto o veredito honesto e: FALHA se `exit !== 0` OU `stderr` nao-vazio. Em arquivo integro o',\n      '     stderr vem vazio em todos os pontos (zero falso-positivo medido).',\n      '   * `-ss` alem do EOF retorna exit 0 com stderr vazio \u2014 um passe VACUOSO. Por isso o ffprobe de',\n      '     container vem ANTES: pega a duracao e permite rejeitar janela fora de faixa (`cut_window_exceeds_source`).',\n      '   * Custo medido: ffprobe 0,089s; decode-probe 0,25s por janela em masters de 529MB e 1,3GB.',\n      '  Exporte: `probeContainer(path)` \u2192 { durationSec }; `probeDecodeAt(path, at, probeSec, label)`;',\n      '  `assertSourceDecodable(path, windows, probeSec = 2)`. Probe CADA janela (nao so a mais tardia) + um',\n      '  probe no ponto mais tardio que o render vai tocar (max out_sec \u2212 probeSec), deduplicado. Use spawn com',\n      '  ARRAY de args, nunca string de shell (anti command-injection). Mensagens de erro honestas e especificas',\n      '  (\"o corte #3 em 00:42:10 nao decodifica\"), nao genericas.',\n      '',\n      'D6 \u2014 Fiar o probe no worker. scripts/video-repurpose-bridge.ts: chame assertSourceDecodable no ponto onde',\n      '  o inputPath ja esta resolvido (~:76-93) e ANTES da chamada a segmentVideo (~:115). Reporte a falha',\n      '  seguindo EXATAMENTE o mesmo padrao que o bridge ja usa hoje para reportar erro (leia como ele finaliza',\n      '  com status/erro na tabela video_renders e no infra_health_logs) \u2014 NAO invente um caminho novo.',\n      '  BONUS de baixo custo (o diagnostico apontou): hoje o workDir e rmSync-ado em :152 mesmo na falha, o que',\n      '  destruiu a evidencia deste incidente. Preserve o workDir QUANDO a falha ocorrer (e logue o caminho),',\n      '  mantendo a limpeza no caminho de sucesso.',\n      '',\n      'D7 \u2014 ANTICORPO. Crie scripts/qa/smoke-repurpose-guards.ts, zero-custo e hermetico, provando:',\n      '  G1 clip_too_long rejeitado \u00b7 G2 beats_without_text rejeitado \u00b7 G3 janela valida aceita \u00b7',\n      '  G4 probe passa em arquivo integro (gere com ffmpeg testsrc no scratchpad) \u00b7',\n      '  G5 probe FALHA em arquivo corrompido (gere corrompendo uma COPIA no scratchpad \u2014 nunca um master real) \u00b7',\n      '  G6 janela alem do EOF rejeitada (fecha o passe vacuoso).',\n      '  Siga o estilo dos smokes existentes em scripts/qa/ (leia um, ex: smoke-video-repurpose.ts). RODE o smoke',\n      '  e cole o output literal como prova.',\n      '',\n      'ORDEM: escreva o SOP docs/processes/video-repurpose-source-probe.md PRIMEIRO (Lei 2 \u2014 o probe e automacao',\n      'nova), depois o codigo. D1/D2/D3/D6-workdir sao bugfix em feature documentada (isentos de SOP).',\n    ].join('\\n'),\n  },\n  {\n    key: 'privacy',\n    prompt: [\n      'GRUPO 2 \u2014 privacidade de publicacao configuravel (postar os cortes do EP01 como PRIVADOS).',\n      '',\n      'SEUS ARQUIVOS (nao toque em nenhum outro):',\n      '  supabase/functions/publish-social/index.ts',\n      '  supabase/functions/auto-publish/index.ts',\n      '  supabase/functions/publish-space-asset/index.ts',\n      '  src/components/creative/AssetDetailDialog.tsx',\n      '',\n      'DECISAO SOVEREIGN JA TOMADA: default `private` para YouTube. A regra perene do projeto e \"ir ate o ultimo',\n      'passo REVERSIVEL sozinho \u2014 postar privado/rascunho/agendado; o Sovereign vira publico\". Fail-safe, nao fail-open.',\n      '',\n      'ZERO MIGRATION: `scheduled_posts.metadata jsonb` ja existe. Campo unificado `privacy` com enum',\n      'YouTube-nativo `private|unlisted|public`, viajando como string INERTE pelo mesmo trilho ja provado do',\n      '`surface` (FR-SPACES-083).',\n      '',\n      'PASSO 1 \u2014 publish-social/index.ts (regiao 480-620). Resolva a privacidade no TOPO do handler (logo apos o',\n      '  parse do body), nao no meio: isso permite o passo 5. Use allowlist FECHADA (Set) \u2014 valor invalido cai em',\n      '  \"public\" (comportamento de hoje), nunca chega lixo a API do Google. Troque o literal da linha 537',\n      '  (`privacyStatus: \"public\"`) pela variavel resolvida.',\n      '  PRESERVE INTACTO o read-back honesto das linhas ~576-587 (ele le o privacyStatus REAL de volta da API).',\n      '  ACRESCENTE ao `pulse` da linha ~587 o campo `requested_privacy` ao lado do `privacy_status` ja existente',\n      '  \u2014 assim a telemetria mostra pedido-vs-real e um projeto nao-auditado forcando private fica auditavel.',\n      '',\n      'PASSO 2 \u2014 auto-publish/index.ts. ESTE E O PASSO QUE DESTRAVA TUDO; sem ele os outros tres sao NO-OP.',\n      '  Motivo material: o auto-publish NAO repassa o objeto `content` da metadata \u2014 ele RECONSTROI um objeto',\n      '  `native` do zero (linha ~115) e copia apenas uma allowlist explicita (`text` :115, `surface` :118, refs',\n      '  de asset resolvidos server-side :120-172, `thread` :173). Campo desconhecido MORRE ali, em silencio.',\n      '  Logo apos a linha ~118 (a irma do `surface`), adicione a copia de `privacy` com o mesmo shape defensivo',\n      '  (string, truncada). Leia o comentario das linhas 116-117 \u2014 o argumento de seguranca dele vale igual aqui:',\n      '  string inerte que seleciona um enum, jamais referencia de asset; nada e assinado nem lido do Storage,',\n      '  entao FMEA-011 nao e tocado. Escreva um comentario equivalente.',\n      '',\n      'PASSO 3 \u2014 publish-space-asset/index.ts. Junto do parse de `surface` (~:57), parseie `privacy` com a mesma',\n      '  allowlist. Na montagem do content (~:201) inclua o campo. DEFAULT: quando a plataforma resolvida for',\n      '  youtube e o body nao trouxer nada, use `private` (decisao Sovereign acima). Isso torna impossivel um',\n      '  publish publico por esquecimento de fiacao na UI.',\n      '',\n      'PASSO 4 \u2014 AssetDetailDialog.tsx (~:112). E a tela por onde o Sovereign publica os cortes. Adicione um',\n      '  Select pt-BR \"Privacidade\" com as opcoes Privado / Nao listado / Publico, **default Privado**, visivel',\n      '  apenas quando a plataforma resolvida for youtube. Inclua `privacy` no body do invoke de',\n      '  publish-space-asset. Siga os tokens MIV e o padrao de Select ja usado no arquivo \u2014 leia antes de escrever.',\n      '  Acrescente um texto de ajuda curto em pt-BR explicando que privado permite revisar antes de publicar.',\n      '',\n      'PASSO 5 \u2014 TikTok (publish-social ~:403-407), ganho de 2 linhas: REUSE em vez de inventar. Quando o pedido',\n      '  for `private`, inverta a preferencia da cascata para SELF_ONLY em vez de PUBLIC_TO_EVERYONE, mantendo o',\n      '  resto da negociacao intacto. Leia o bloco inteiro antes \u2014 ele negocia com as opcoes que a API devolve.',\n      '',\n      'HONESTIDADE OBRIGATORIA (doutrina format-specs.ts:9 \"never promise reach a rail can\\'t deliver\"): para',\n      'LinkedIn (~:183 PUBLIC hardcoded), Instagram e Pinterest o campo `privacy` e NO-OP \u2014 essas APIs nao expoem',\n      'publicacao privada. DOCUMENTE o no-op num comentario no ponto onde o campo e resolvido. Nao finja suporte,',\n      'e nao silencie: se a UI oferecer privacidade para essas redes, ela estaria mentindo.',\n      '',\n      'VERIFICACAO: rode `npx tsc -p tsconfig.app.json --noEmit` e confirme que voce nao introduziu erro novo',\n      '(ha erros PRE-EXISTENTES em src/test/* e src/types/canvas.ts:790 \u2014 ignore). Para as edge functions rode',\n      '`deno check` se disponivel. NAO faca deploy \u2014 o orquestrador faz.',\n      '',\n      'ISENTO de SOP (Lei 2): e extensao de feature ja documentada, nao automacao nova.',\n    ].join('\\n'),\n  },\n  {\n    key: 'catalogo',\n    prompt: [\n      'GRUPO 3 \u2014 ligar o catalogo do HyperFrames Studio SEM abrir supply-chain.',\n      '',\n      'SEUS ARQUIVOS (nao toque em nenhum outro):',\n      '  scripts/video-studio-host/adapter.ts',\n      '  scripts/video-studio-host/registry-catalog.ts     (ARQUIVO NOVO)',\n      '  packages/video-studio-registry/                    (DIRETORIO NOVO)',\n      '  docs/processes/video-studio-registry-catalog.md    (ARQUIVO NOVO \u2014 SOP, ANTES do codigo)',\n      '',\n      'CAUSA-RAIZ JA PROVADA (nao re-investigue): /dashboard/spaces/video aba catalog mostra \"Failed to load',\n      'catalog\". NAO e 404 de rota nem drift de versao nem nginx. A rota correta e `GET /api/registry/blocks` e',\n      'ela responde **HTTP 501 {\"error\":\"Registry not available\"}**. Motivo: `createStudioApi` so serve o catalogo',\n      'quando o adapter implementa o metodo OPCIONAL `listRegistryCatalog()`, e o mcorchAdapter o OMITE',\n      'DELIBERADAMENTE \u2014 o comentario final do proprio arquivo (~:179) declara a omissao: \"registry catalog/install',\n      '(supply-chain risk in the render sandbox \u2014 MCORCH uses its own allowlist)\". O SPA de terceiro nao distingue',\n      '501 de erro de rede: `if (!res.ok) throw new Error(\"Failed to load catalog\")`.',\n      '',\n      'DECISAO SOVEREIGN JA TOMADA: OPCAO A \u2014 catalogo LOCAL curado. Zero egress novo. A recusa registrada no',\n      'codigo estava CERTA e deve ser preservada: nunca busque registry remoto em runtime.',\n      '',\n      'IMPLEMENTE:',\n      '1. Crie `packages/video-studio-registry/registry.json` versionado no repo + um diretorio por item com seu',\n      '   `registry-item.json`, contendo SOMENTE blocos que o MCORCH homologou. Comece com os blocos que ja',\n      '   existem em scripts/hyperframes/templates/ \u2014 leia o diretorio e catalogue o que ja e nosso e ja roda.',\n      '   NAO baixe nada de fora nesta fatia. O catalogo tem que refletir a verdade do que o render sabe rodar.',\n      '2. Crie scripts/video-studio-host/registry-catalog.ts que le esse catalogo do DISCO e o devolve no shape',\n      '   que o @hyperframes/core espera. Descubra o shape exato lendo os tipos do pacote',\n      '   (node_modules/@hyperframes/core \u2014 procure a assinatura de listRegistryCatalog e o tipo de retorno).',\n      '   NAO adivinhe o shape: leia o .d.ts. Se o shape nao for determinavel, PARE e reporte.',\n      '3. Em scripts/video-studio-host/adapter.ts, implemente `listRegistryCatalog()` chamando o modulo acima.',\n      '   ATUALIZE o comentario de omissao (~:179) para refletir a nova realidade: o catalogo agora existe, e',\n      '   LOCAL e curado, e o que continua recusado e o INSTALL remoto. Nao apague o raciocinio de seguranca \u2014',\n      '   ele e o registro de por que a decisao foi tomada.',\n      '4. Garanta que o metodo de INSTALL remoto continue NAO implementado. Se o Studio oferecer um botao de',\n      '   instalar, ele deve falhar de forma limpa e honesta, nunca buscar da rede.',\n      '',\n      'VERIFICACAO (Lei 1 \u2014 obrigatoria): apos editar, reinicie o servico e prove com curl.',\n      '  systemctl --user restart video-studio.service',\n      '  sleep 3',\n      '  curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:3210/api/registry/blocks',\n      '  curl -s http://127.0.0.1:3210/api/registry/blocks | head -c 600',\n      'Cole o output LITERAL. HTTP 200 com JSON de catalogo = sucesso. Se continuar 501, o metodo nao foi',\n      'reconhecido: releia a assinatura no .d.ts. NOTA: o servico roda como o usuario deste shell via',\n      'systemctl --user; se o restart falhar por permissao, reporte em vez de contornar.',\n      '',\n      'ORDEM: SOP docs/processes/video-studio-registry-catalog.md PRIMEIRO (Lei 2 \u2014 capability nova), com',\n      'Operator/Sequence/Verification/Recovery/Success e uma secao explicita sobre a postura anti-supply-chain',\n      '(o que entra no catalogo, quem homologa, por que install remoto continua proibido).',\n    ].join('\\n'),\n  },\n  {\n    key: 'ui-assets-saude',\n    prompt: [\n      'GRUPO 4 \u2014 UI: excluir asset na galeria + selo de saude do master no seletor.',\n      '',\n      'SEUS ARQUIVOS (nao toque em nenhum outro):',\n      '  src/hooks/useVideoRepurpose.ts',\n      '  src/hooks/useIngestedMasters.ts',\n      '  src/components/creative/CreativeAssetCard.tsx',\n      '  src/components/creative/CreativeAssetGallery.tsx',\n      '  src/components/repurpose/RepurposeWizard.tsx',\n      '  scripts/host-upload-server.ts',\n      '  supabase/functions/ingest-external-asset/index.ts',\n      '  docs/processes/repurpose-host-infra-provisioning.md  (EMENDA \u2014 Lei 2, antes do codigo do probe)',\n      '',\n      '=== ITEM A \u2014 botao de excluir em /dashboard/spaces/assets ===',\n      'A pagina e CreativeAssetsPage \u2192 CreativeAssetGallery \u2192 CreativeAssetCard. Dois BLOQUEIOS REAIS ja',\n      'diagnosticados (nao re-investigue):',\n      '',\n      'A1. BUG DE INVALIDACAO \u2014 CORRIJA PRIMEIRO, senao o botao parece quebrado. Em',\n      '   src/hooks/useVideoRepurpose.ts (~:258-259) o useDeleteAsset invalida a queryKey [\\'creative_assets\\']',\n      '   com UNDERSCORE, mas a galeria usa [\"creative-assets\", kind ?? \"all\"] com HIFEN (useCreativeAssets.ts:15).',\n      '   A chave NUNCA casa \u21d2 o grid nao atualiza apos excluir. Troque para [\\'creative-assets\\'] (prefix-match',\n      '   cobre todas as variantes de kind). MANTENHA a invalidacao de [\\'ingested_masters\\'].',\n      '',\n      'A2. NESTED BUTTON \u2014 CreativeAssetCard.tsx tem <button> como RAIZ (~:40); um botao de lixeira dentro dele',\n      '   e HTML invalido. Reestruture: raiz vira <div className=\"group relative ...\">, e o conteudo clicavel',\n      '   vira um <button type=\"button\"> em inset-0 SOB os overlays (overlays com z-10). Preserve exatamente as',\n      '   classes visuais existentes \u2014 nao mude a aparencia do card.',\n      '',\n      'A3. Prop opcional no card: `onDelete?: (a: CreativeAsset) => void` e `deleting?: boolean`. Quando onDelete',\n      '   existir, renderize a lixeira no canto INFERIOR direito (absolute bottom-1.5 right-1.5 z-10) \u2014 o canto',\n      '   SUPERIOR direito ja e do glifo AI Act (~:100). Use Trash2 do lucide-react. Acessibilidade: aria-label em',\n      '   pt-BR, `opacity-100` no mobile e `sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100`',\n      '   (mesmo padrao ja usado no titulo, ~:111). `e.stopPropagation()` no onClick.',\n      '',\n      'A4. MIV: use `hover:text-destructive` (token --destructive em src/index.css:31). NAO use gold \u2014 gold e',\n      '   reservado a VALOR na doutrina MIV. O molde do wizard (RepurposeWizard.tsx:222) usa gold, o que contraria',\n      '   a doutrina; corrija o wizard para text-destructive na mesma passada (1 linha). O padrao destrutivo real',\n      '   do repo esta em ConstellationPage.tsx:94 e UserActionsMenu.tsx:106 \u2014 leia um deles como molde.',\n      '',\n      'A5. CONFIRMACAO: suba de confirm() nativo para AlertDialog (shadcn, ja em src/components/ui/alert-dialog.tsx),',\n      '   seguindo ConstellationPage.tsx:88-118. O estado mora no CreativeAssetGallery (um unico AlertDialog',\n      '   controlado fora do grid, nao um por card). A descricao pt-BR deve ser HONESTA sobre o efeito real:',\n      '   remove o registro do acervo e apaga em cascata as variantes de publicacao ligadas (a cascata e real:',\n      '   space_publish_variants ON DELETE CASCADE, migration 20260710233000:30), mas o arquivo em disco/bucket',\n      '   PERMANECE. Nao prometa apagar o que nao apaga. Toasts pt-BR seguindo o molde do wizard (~:228-229).',\n      '',\n      '=== ITEM B \u2014 selo de saude do master ===',\n      'VERDADE HONESTA JA ESTABELECIDA (nao tente contornar): NAO da para saber se o master e decodificavel a',\n      'partir do banco. Nao existe par declarado-vs-real (file_size_bytes e NULL nas 2 linhas reais; o',\n      'X-Total-Bytes declarado nunca e persistido). E mesmo se fosse, TAMANHO NAO PROVA DECODABILIDADE \u2014 chunks',\n      'reordenados/duplicados dao tamanho identico e o ffprobe de cabecalho passa. O sinal honesto exige probe no',\n      'HOST (os masters sao bucket=local, em disco).',\n      '',\n      'B1. useIngestedMasters: selecione tambem `file_size_bytes, duration_seconds` e exponha `sizeBytes`,',\n      '   `durationSeconds` e `health` (lido de metadata.health). Base para B2/B4.',\n      '',\n      'B2. Persistir o tamanho REAL daqui pra frente: ingest-external-asset aceita `file_size_bytes` no body',\n      '   (number >= 0, validado) e passa `p_file_size_bytes` ao register_creative_asset \u2014 o RPC JA tem o',\n      '   parametro com DEFAULT NULL (migration 20260716230000:60), entao NAO precisa de migration. Fie a ponta:',\n      '   useIngestMaster aceita o campo e RepurposeWizard (~:116-122) passa `r.bytes`, que ja esta em maos e hoje',\n      '   e descartado. Os 2 masters legados ficam NULL \u21d2 estado \"nao verificado\", o que e honesto.',\n      '',\n      'B3. O SELO DE VERDADE \u2014 rota owner-scoped nova no host: `GET /api/host-probe?key=<uid>/<file>` em',\n      '   scripts/host-upload-server.ts. REUSE `authenticate()` e a MESMA validacao de chave do serveMedia',\n      '   (~:84-87: key.startsWith(userId+\"/\"), sem \"..\", resolve(path).startsWith(INBOX_BASE+\"/\")). Sequencia:',\n      '   existsSync \u2192 statSync(size) \u2192 ffprobe (duracao + streams) \u2192 spot-decode em 3 offsets derivados da',\n      '   duracao (20%/50%/90%) com `ffmpeg -v error -ss <t> -i <path> -frames:v 12 -f null -`.',\n      '   VEREDITO: `ok` se ffprobe exit 0 E os 3 spots limpos; `corrupt` se qualquer um falhar; `missing` se',\n      '   sumiu. ATENCAO (medido): o criterio de spot limpo e `exit === 0 E stderr vazio` \u2014 exit code sozinho NAO',\n      '   basta (a corrupcao tipo EP02 produz stderr sujo com exit 0).',\n      '   Use Bun.spawn com ARRAY de args, NUNCA string de shell (anti command-injection). Timeouts: ffprobe 30s,',\n      '   cada spot 60s. Persista o veredito em creative_assets.metadata.health com o client service-role que o',\n      '   servidor JA tem, filtrando por storage_bucket=local AND storage_key=<key> AND user_id=<userId> \u2014 o',\n      '   filtro por user_id e OBRIGATORIO (owner-scoped; nao confie so na chave).',\n      '   nginx: NAO edite /etc/nginx (acao Sovereign). Escreva o bloco `location = /api/host-probe` sugerido no',\n      '   arquivo de infra do repo (infra/nginx/host-upload.location.conf ou equivalente \u2014 procure) e reporte que',\n      '   a aplicacao em producao e gate Sovereign.',\n      '',\n      'B4. UI do selo \u2014 no bloco inline do seletor em RepurposeWizard.tsx (~:196-240), ao lado do Badge de SRT',\n      '   (~:217-219), um Badge tri-estado na MESMA linguagem visual (variant=\"outline\" + classe de cor):',\n      '   VERDE \"Arquivo integro\" (border-emerald-500/40 text-emerald-300) \u00b7 AMARELO \"Nao verificado\"',\n      '   (border-amber-500/40 text-amber-300, clicavel \u2192 chama /api/host-probe e invalida [\\'ingested_masters\\'])',\n      '   \u00b7 VERMELHO \"Arquivo corrompido\" (border-destructive/40 text-destructive).',\n      '   Tooltips pt-BR honestos: o verde deve dizer que e AMOSTRAGEM (3 pontos), nao decodificacao completa.',\n      '   NO VERMELHO, DESABILITE a selecao desse master (disabled + cursor-not-allowed opacity-50) \u2014 este e',\n      '   exatamente o gate que faltava e que deixou o Sovereign reusar o master corrompido. Unifique o',\n      '   `keyLooksSanitized === false` ja existente (~:204-207) no mesmo vocabulario vermelho.',\n      '   Frescor: health.checked_at com mais de 7 dias, ou health.bytes !== file_size_bytes (quando ambos',\n      '   existirem), cai para AMARELO. Master que NAO for bucket=local tambem e AMARELO, com tooltip explicando',\n      '   que nao ha como verificar dali.',\n      '',\n      'ORDEM: emende docs/processes/repurpose-host-infra-provisioning.md com o SOP do host-probe ANTES de',\n      'escrever B3 (Lei 2 \u2014 rota nova = automacao nova). A1/A2/A3/A5/B1/B2/B4 sao bugfix/UI sobre feature',\n      'documentada (isentos).',\n      '',\n      'VERIFICACAO: `npx tsc -p tsconfig.app.json --noEmit` sem erro NOVO (ignore os pre-existentes em',\n      'src/test/* e src/types/canvas.ts:790). Para B3, rode o probe contra os arquivos reais em repurpose-inbox e',\n      'cole os exit codes; prove um caso VERMELHO truncando uma COPIA no scratchpad \u2014 NUNCA num master de producao.',\n    ].join('\\n'),\n  },\n  {\n    key: 'docs-alertas',\n    prompt: [\n      'GRUPO 5 \u2014 fechar os alertas de documentacao e operacao.',\n      '',\n      'SEUS ARQUIVOS (nao toque em nenhum outro):',\n      '  docs/bok/crm-inbox/00-index.md                      (ARQUIVO NOVO)',\n      '  docs/processes/credential-rotation-runbook.md       (ARQUIVO NOVO)',\n      '  docs/processes/youtube-upload-service-activation.md (ARQUIVO NOVO)',\n      '',\n      'A1 \u2014 BoK crm-inbox: drift PURO de nomenclatura. A suite foi selada 9/9 mas usa 00-deepsearch-blueprint',\n      '  enquanto o gate do /handson procura 00-index. Liste o diretorio (ls docs/bok/crm-inbox/), leia os',\n      '  titulos reais dos 9 documentos e escreva um 00-index.md que seja um INDICE HONESTO: uma linha por',\n      '  documento com o nome real do arquivo, seu titulo e uma frase do que ele cobre. Compare com o 00-index.md',\n      '  de outra suite ja completa (ex: docs/bok/vision-mcp/00-index.md) e siga o mesmo formato. NAO invente',\n      '  conteudo: o indice descreve o que EXISTE.',\n      '',\n      'A2 \u2014 Runbook de rotacao de credenciais. Nao existe nenhum em docs/processes/ (verificado). O HANDOFF.md',\n      '  cita repetidamente \"rotacionar credenciais expostas\" sem dizer COMO. Escreva o runbook no formato Lei 2',\n      '  (Operator / Sequence / Verification gates / Recovery path / Success signal).',\n      '  REGRA ABSOLUTA: NUNCA leia, imprima ou transcreva o VALOR de um segredo. O runbook lista apenas NOMES',\n      '  (nome do secret no vault, nome da coluna, nome da variavel) e o procedimento.',\n      '  Levante os nomes reais lendo o HANDOFF.md e o CLAUDE.md (grep por rotac/rotation/rotate/expost). Os que',\n      '  o handoff menciona incluem: META_APP_SECRET, tokens EAA/IG, service account Vertex, chave Gemini, token',\n      '  do Telegram. Confirme cada um materialmente antes de listar \u2014 se nao achar referencia, nao invente.',\n      '  Para CADA credencial documente: (a) onde ela vive (vault do Supabase? coluna cifrada? env do host?),',\n      '  (b) em qual console externo se gera a nova, (c) o comando exato de atualizacao, (d) COMO PROVAR que a',\n      '  nova esta valendo (o gate de verificacao \u2014 ex: uma chamada que retorna 200), (e) o que quebra enquanto',\n      '  a rotacao acontece (blast radius) e (f) o rollback. Ordene por risco.',\n      '  Inclua uma secao final \"Ordem recomendada de execucao pelo Sovereign\" \u2014 e ele quem vai rodar isso.',\n      '',\n      'A3 \u2014 Ativacao do youtube-upload.service. Estado material: o unit existe SO no repo; `systemctl --user',\n      '  is-enabled youtube-upload.service` retorna `not-found` (o unit nunca foi instalado em',\n      '  ~/.config/systemd/user/). Ele nasce desabilitado DE PROPOSITO \u2014 e um gate Sovereign, nao um esquecimento.',\n      '  Ache o arquivo do unit no repo (procure em scripts/systemd/) e leia-o. Escreva o SOP de ativacao com:',\n      '  (a) as pre-condicoes que o Sovereign precisa confirmar ANTES (verificacao do app YouTube / CASA / quota \u2014',\n      '  o handoff cita isso como pendencia), (b) os comandos exatos de instalacao/habilitacao/start, (c) o gate',\n      '  de verificacao material que prova que o worker esta vivo e consumindo a fila, (d) como parar e reverter,',\n      '  (e) o que observar nas primeiras horas.',\n      '  NAO habilite o servico. Escrever o SOP e o entregavel; a execucao e do Sovereign.',\n      '',\n      'ESTILO: siga o formato dos SOPs existentes em docs/processes/ \u2014 leia 2 ou 3 antes de escrever (ex:',\n      'build-deploy-materiality.md e um bom molde de gates materiais). Portugues do Brasil, comandos e',\n      'identificadores no original.',\n    ].join('\\n'),\n  },\n]\n\nphase('Implementar')\n\n// pipeline: cada grupo vai para a revisao assim que TERMINA, sem esperar os outros.\nconst resultados = await pipeline(\n  GRUPOS,\n  (g) => agent(BASE + '\\n\\n' + g.prompt, { label: g.key, phase: 'Implementar', schema: OUT_SCHEMA }),\n  (out, g) => {\n    if (!out) return null\n    return agent(\n      BASE + '\\n\\n' + [\n        'Voce e um REVISOR ADVERSARIAL. Outro agente acabou de implementar o grupo \"' + g.key + '\".',\n        'Sua missao NAO e elogiar \u2014 e achar o que esta ERRADO antes que chegue em producao.',\n        '',\n        'O QUE ELE DIZ QUE FEZ:',\n        (out.feito || []).map((x) => '- ' + x).join('\\n'),\n        '',\n        'ARQUIVOS QUE ELE DIZ TER ALTERADO:',\n        (out.arquivos_alterados || []).map((x) => '- ' + x).join('\\n'),\n        '',\n        'O QUE ELE MESMO MARCOU COMO DUVIDA:',\n        (out.riscos_para_o_revisor || []).map((x) => '- ' + x).join('\\n'),\n        '',\n        'PROVAS QUE ELE APRESENTOU:',\n        (out.prova || []).map((x) => '- ' + x).join('\\n'),\n        '',\n        'FACA (nesta ordem):',\n        '1. LEIA de fato cada arquivo alterado com git diff (git diff -- <arquivo>). NAO confie no relatorio dele:',\n        '   agentes alucinam edicoes que nao fizeram. Confirme que o codigo no disco faz o que ele afirma.',\n        '2. Cace estas classes de defeito especificamente:',\n        '   - Fix que NASCE MORTO (o valor viaja mas e descartado por uma allowlist/reconstrucao no meio do caminho).',\n        '   - Guard aplicado no lugar errado (ex: validar entrada crua quando o dano acontece depois da',\n        '     transformacao) \u2014 um guard no-op e pior que nenhum, porque da falsa seguranca.',\n        '   - Erro engolido: catch vazio, fail-soft sem log, `.rpc()` cujo `error` nao e checado (no supabase-js o',\n        '     rpc NAO lanca excecao \u2014 ignorar o error e um falso-sucesso silencioso; ja mordeu este projeto).',\n        '   - Vazamento cross-tenant: query sem filtro de user_id, chave de storage sem owner-scope.',\n        '   - Command-injection: spawn com string de shell em vez de array de args.',\n        '   - UI que promete o que o rail nao entrega (doutrina format-specs.ts:9).',\n        '   - Texto de UI em ingles (deve ser pt-BR) ou codigo/comentario em pt-BR (deve ser ingles).',\n        '   - Regressao visual: classes MIV trocadas, gold usado fora de contexto de valor.',\n        '3. Rode `npx tsc -p tsconfig.app.json --noEmit` e verifique se ha erro NOVO. Erros PRE-EXISTENTES em',\n        '   src/test/*.test.ts* e src/types/canvas.ts:790 NAO contam \u2014 ignore-os.',\n        '4. Se ele criou um smoke/teste, RODE e cole o output literal. Se o smoke passa trivialmente (nao testa',\n        '   o que diz testar), isso e um achado grave \u2014 reporte.',\n        '5. CORRIJA voce mesmo os defeitos que achar, DENTRO dos mesmos arquivos do grupo. Nao expanda o escopo',\n        '   para arquivos de outros grupos.',\n        '',\n        'Entregue um relatorio: defeitos encontrados (com file:line e a prova), o que voce corrigiu, e o que',\n        'permanece aberto exigindo decisao do Sovereign. Se estiver tudo correto, diga isso \u2014 mas so depois de',\n        'ter lido o diff de verdade. \"Parece bom\" sem diff lido e falha de revisao.',\n      ].join('\\n'),\n      { label: 'revisar:' + g.key, phase: 'Revisar' },\n    ).then((rev) => ({ grupo: g.key, implementacao: out, revisao: rev }))\n  },\n)\n\nconst ok = resultados.filter(Boolean)\nlog('Implementacao + revisao: ' + ok.length + '/' + GRUPOS.length + ' grupos concluidos')\n\nreturn { grupos: ok, perdidos: GRUPOS.length - ok.length }\n",
+  "description": "Implementar 5 grupos + revis\u00e3o adversarial"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w67fimnfr
+> Summary: Implementa os 6 passos + alertas em grupos de arquivos disjuntos, com revisao adversarial por grupo
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/subagents/workflows/wf_1b5d5fce-fca
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/workflows/scripts/mcorch-loop-implementar-2026-07-20-wf_1b5d5fce-fca.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/workflows/scripts/mcorch-loop-implementar-2026-07-20-wf_1b5d5fce-fca.js"} to iterate without resending the script.)
+> Run ID: wf_1b5d5fce-fca
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/workflows/scripts/mcorch-loop-implementar-2026-07-20-wf_1b5d5fce-fca.js", resumeFromRunId: "wf_1b5d5fce-fca"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(10:05:37)*
+
+
+## 🤖 Claude *(10:05:39)*
+
+Enquanto os 5 grupos rodam, disparo o alerta que é independente de todos eles — a família BoK do `crm-suite` (hoje 1/10, com o spine **já shipado em código**, o que é dívida real de doutrina):
+
+## 🤖 Claude *(10:06:08)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "BoK crm-suite 9/9",
+  "prompt": "Voc\u00ea \u00e9 o BoK Scribe Agent do MCORCH. Miss\u00e3o: fechar a fam\u00edlia BoK do m\u00f3dulo `crm-suite`, hoje em 1/10.\n\nREPO: /home/gcrUX/htdocs/constellation-orchestra\n\nLEIA PRIMEIRO (nesta ordem, s\u00e3o load-bearing):\n1. `CLAUDE.md` \u2014 em especial o MCORCH MASTER EXECUTION PROTOCOL (o Closed-Loop e o Step 3.5).\n2. `.claude/rules/survival.md` \u2014 as 4 Leis.\n3. `.claude/agents/bok-scribe-agent.md` e os templates em `.claude/agents/bok-scribe/templates/` \u2014 este \u00e9 o seu framework de autoria. SIGA-O.\n4. `docs/bok/crm-suite/00-spine-blueprint.md` \u2014 a semente j\u00e1 existente. \u00c9 a FONTE DA VERDADE do escopo.\n5. `docs/roadmap/crm-suite-and-marketing.md` \u2014 o SSOT do roadmap declarado pelo Sovereign.\n6. `docs/architecture/agentic-vision.md` \u2014 os 21 padr\u00f5es ag\u00eanticos. Obrigat\u00f3rio para o Step 3.5.\n7. `docs/bok/crm-inbox/` \u2014 a su\u00edte IRM\u00c3, j\u00e1 selada. Use como molde de forma e profundidade; o crm-suite DERIVES_FROM/estende esse trabalho.\n\nARQUIVOS A PRODUZIR em `docs/bok/crm-suite/` (o gate do /handson procura exatamente estes nomes):\n`00-index.md`, `01-mrd.md`, `02-brd.md`, `03-prd.md`, `04-frd.md`, `05-sdd.md`, `06-data-model.md`, `07-process-flow.md`, `08-quality-metrics.md`\n(o `00-spine-blueprint.md` j\u00e1 existe \u2014 preserve-o, n\u00e3o sobrescreva).\n\nCONTEXTO CR\u00cdTICO \u2014 o c\u00f3digo do spine J\u00c1 FOI SHIPADO antes da BoK. Isso \u00e9 d\u00edvida de doutrina que voc\u00ea est\u00e1 pagando. As tabelas `companies`, `crm_pipelines`, `crm_pipeline_stages`, `deals`, `crm_associations`, `crm_activities` e `leads.company_id` J\u00c1 EXISTEM em produ\u00e7\u00e3o, com RLS owner-scoped, FKs compostas e trigger guards de tenant. As p\u00e1ginas `/dashboard/companies` e `/dashboard/deals` est\u00e3o VIVAS.\n\nPortanto o `06-data-model.md` N\u00c3O \u00e9 um desenho especulativo: ele deve documentar o schema REAL. V\u00e1 l\u00ea-lo materialmente:\n- `grep -rl \"companies\\|crm_pipelines\\|crm_associations\\|crm_activities\" supabase/migrations/` e leia as migrations que criam essas tabelas.\n- `src/integrations/supabase/types.ts` para os tipos gerados.\nDocumente o que EXISTE, e marque explicitamente o que \u00e9 PROPOSTA para os pilares futuros. Nunca misture os dois sem r\u00f3tulo \u2014 um leitor precisa saber o que j\u00e1 est\u00e1 em produ\u00e7\u00e3o e o que \u00e9 plano.\n\nPILARES a cobrir (do SSOT). Marque o estado real de cada um:\n- CRM: Contatos \u00b7 Empresas(\u2705 vivo) \u00b7 Leads(\u2705 vivo) \u00b7 Neg\u00f3cios(\u2705 vivo) \u00b7 Tickets \u00b7 Produtos \u00b7 Servi\u00e7os \u00b7 Pedidos \u00b7 Compromissos \u00b7 Caixa-de-entrada(\u2705 vivo, ver crm-inbox) \u00b7 Chamadas \u00b7 Reuni\u00f5es \u00b7 Tarefas \u00b7 Playbooks \u00b7 Listas \u00b7 Segmentos \u00b7 Modelos \u00b7 Snippets\n- Marketing: AEO \u00b7 Beta \u00b7 SEO \u00b7 Campanhas(\u2705) \u00b7 E-mail \u00b7 Redes(\u2705) \u00b7 An\u00fancios \u00b7 Eventos \u00b7 Formul\u00e1rios(\u2705 vivo) \u00b7 CTAs \u00b7 SMS \u00b7 Inten\u00e7\u00e3o \u00b7 Pontua\u00e7\u00e3o(\u2705) \u00b7 An\u00e1lise \u00b7 Marca\n\nOBRIGAT\u00d3RIO \u2014 Step 3.5, Pattern Conformance Declaration: o `05-sdd.md` DEVE carregar uma tabela com UMA LINHA POR PADR\u00c3O dos 21 padr\u00f5es ag\u00eanticos de `docs/architecture/agentic-vision.md`, no formato `Pattern | Implemented? (yes/deferred/n-a) | How / Why-deferred`. `deferred` exige justificativa material (um id de OTD/FR ou uma raz\u00e3o de uma linha \u2014 \"sem benef\u00edcio neste escopo\" \u00e9 aceito, mas tem que ser honesto). Conte os 21 MATERIALMENTE lendo o doc \u2014 n\u00e3o presuma o n\u00famero nem invente nomes de padr\u00f5es. Um seal anterior deste projeto quase passou com a contagem errada; n\u00e3o repita.\n\nIDs a usar (siga a conven\u00e7\u00e3o das su\u00edtes existentes): MR-CS-nnn, BR-CS-nnn, PR-CS-nnn, FR-CS-nnn, NFR-CS-nnn, OTD-CS-nnn, FM-CS-nn.\n\nLEI 1 \u2014 MATERIALIDADE: toda afirma\u00e7\u00e3o sobre o estado atual do sistema tem que vir de leitura real de arquivo (cite file:line) ou de output de comando. Se voc\u00ea n\u00e3o conseguiu verificar algo, escreva \"N\u00c3O VERIFICADO\" no pr\u00f3prio documento. Uma BoK que mente sobre o que j\u00e1 existe \u00e9 pior que uma BoK ausente \u2014 ela vira a Fonte da Verdade e propaga o erro para todo c\u00f3digo futuro.\n\nN\u00c3O FA\u00c7A:\n- N\u00e3o escreva c\u00f3digo de aplica\u00e7\u00e3o, n\u00e3o crie migrations, n\u00e3o fa\u00e7a commit/push.\n- N\u00e3o rode `bun run build` nem deploy (outros agentes est\u00e3o trabalhando no repo em paralelo).\n- N\u00e3o toque em NENHUM arquivo fora de `docs/bok/crm-suite/`.\n- N\u00e3o insira n\u00f3s na Knowledge Mesh (o seal \u00e9 etapa separada, do orquestrador).\n\nEscreva em portugu\u00eas do Brasil, com identificadores/termos t\u00e9cnicos no original.\n\nENTREG\u00c1VEL FINAL: um relat\u00f3rio curto listando os 9 arquivos criados com o n\u00famero de linhas de cada um (`wc -l docs/bok/crm-suite/*.md`), a contagem verificada dos padr\u00f5es ag\u00eanticos (quantos yes / deferred / n-a), e uma lista honesta do que ficou marcado como N\u00c3O VERIFICADO ou como proposta n\u00e3o-implementada."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: a0e2622906b6e7003 (internal ID - do not mention to user. Use SendMessage with to: 'a0e2622906b6e7003', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks/a0e2622906b6e7003.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(10:06:19)*
+
+Trabalhos em voo:
+
+| Frente | Estado |
+|---|---|
+| 5 grupos de implementação (repurpose-backend · privacidade · catálogo · UI+saúde · docs/alertas) | 🔄 rodando, cada um com revisor adversarial que **lê o `git diff` de verdade** antes de aprovar |
+| BoK `crm-suite` 9/9 | 🔄 rodando |
+
+Enquanto isso, o que ficará **por sua conta** ao final (e eu não vou fingir que resolvi):
+
+1. **Rotação de credenciais** — vou entregar o runbook com nomes, consoles, comandos e o gate de verificação de cada uma. A execução é no console.
+2. **`youtube-upload.service`** — SOP de ativação pronto; o `systemctl enable` é seu, depois de confirmar verify/CASA/quota do app.
+3. **`location = /api/host-probe` no nginx** — o bloco vai escrito no repo; aplicar em `/etc/nginx` é ação Sovereign (mesmo gate que o senhor já respeitou antes).
+4. **Autorização MCP** (Adobe/Linear/Notion/Slack…) — impossível em sessão não-interativa.
+5. **Reconectar o canal YouTube com Analytics** — OAuth no browser.
+
+E uma recomendação que nasce do diagnóstico: **o EP02 merece um re-teste limpo**. O master foi reescrito às 00:36 por algo que roda como `ubuntu`, e o senhor comparou dois modos contra arquivos diferentes. Depois que o decode-probe estiver fiado, um único run vai dizer em ~1,3 s se o arquivo em disco hoje presta — em vez de minutos de Chromium para descobrir que não.
+
+Reporto assim que os grupos fecharem.
+
+## 👤 User *(10:25:09)*
+
+<task-notification>
+<task-id>a0e2622906b6e7003</task-id>
+<tool-use-id>toolu_01SXxNLoY5CMkiC5dX9cAVfs</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks/a0e2622906b6e7003.output</output-file>
+<status>completed</status>
+<summary>Agent "BoK crm-suite 9/9" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Suíte BoK do `crm-suite` fechada — 9 arquivos autorais + o `00-spine-blueprint.md` preservado intacto.
+
+## Arquivos criados (`wc -l`)
+
+| Arquivo | Linhas |
+|---|--:|
+| `00-index.md` | 171 |
+| `01-mrd.md` | 172 |
+| `02-brd.md` | 201 |
+| `03-prd.md` | 284 |
+| `04-frd.md` | 222 |
+| `05-sdd.md` | 321 |
+| `06-data-model.md` | 401 |
+| `07-process-flow.md` | 236 |
+| `08-quality-metrics.md` | 193 |
+
+Total da suíte com o blueprint: **2280 linhas**. `git status` confirma que nada fora de `docs/bok/crm-suite/` foi tocado por mim (as demais modificações são de agentes paralelos).
+
+## Pattern Conformance — contagem verificada materialmente
+
+Contei os 21 padrões lendo `docs/architecture/agentic-vision.md` §2, **linhas 46-66** (uma linha de tabela por padrão, numeradas 1-21). A declaração está em `05-sdd.md` §8, uma linha por padrão:
+
+- **yes = 6** — #5 Tool Use, #8 Memory Management, #11 Goal Setting &amp; Monitoring, #12 Exception Handling &amp; Recovery, #13 Human-in-the-Loop, #18 Guardrails/Safety
+- **deferred = 4** — #1 Prompt Chaining, #2 Routing, #9 Learning &amp; Adaptation, #19 Evaluation &amp; Monitoring (cada um com OTD/FR nomeado)
+- **n-a = 11** — #3, #4, #6, #7, #10, #14, #15, #16, #17, #20, #21
+- **6+4+11 = 21** ✔
+
+Placar deliberadamente modesto: a Fase 0 é fundação de dados operada por humano, zero LLM. Marcar padrões agênticos como `yes` descreveria um agente que a arquitetura não contém.
+
+## Achados materiais que mudaram o documento
+
+O schema shipado é **maior** do que o briefing indicava — além da spine, existe também `20260719160000_crm_forms_and_capture.sql` (`forms` + RPC `crm_capture_lead`), a edge fn `submit-lead-webhook` com `verify_jwt=false`, e as páginas `/dashboard/forms` + `/f/:formId`. Ou seja: o pilar **Formulários já está vivo**, não pendente.
+
+Três achados que o `06-data-model.md` registra com destaque:
+- **`crm_associations` tem ZERO consumidores** em `src/` e `supabase/functions/` — tabela viva, correta e nunca usada.
+- **`crm_activities` tem 1 escritor e 0 leitores** (`usePipelines.ts:115`, só `stage_change`); 8 dos 9 `activity_type` nunca foram gravados, e o índice parcial de tarefas está pago sem uso.
+- **Mesh Connection Mandate descumprido** — zero referências a `mcorch_nodes` em todo o módulo.
+
+## NÃO VERIFICADO (marcado como tal nos docs)
+
+- **TAM/SAM/SOM e dimensionamento de mercado** — não há deepsearch para este módulo (a suíte irmã tem `00-deepsearch-blueprint.md`, esta não). Recusei-me a projetar números.
+- **Payback quantificado** — sem volume de leads/ticket médio medidos.
+- **Execução do `/security-review`** nas duas migrations — exigido por CLAUDE.md, não verificável a partir dos arquivos.
+- **Posicionamento competitivo do Pipedrive** — inferência, sem fonte citada.
+- **Mensagem de erro ao visitante** para form inexistente/inativo — não li o caminho exato no código.
+- **Alvos de SLA** (§6 do process-flow) — derivados da forma das queries, sem benchmark.
+
+## Proposta não-implementada (rotulada em todo lugar)
+
+17 tabelas confirmadas **ABSENT** por varredura: `tickets`, `products`, `services`, `orders`, `appointments`, `calls`, `meetings`, `tasks`, `playbooks`, `lists`, `segments`, `message_templates`, `snippets`, `ctas`, `sms_messages`, `ads`, `events`. FR-CS-023..041 são todas proposta; `06-data-model.md` §7 carrega o aviso no cabeçalho.
+
+**Placar honesto: 9 de 33 pilares vivos** (5 CRM + 4 Marketing). O item "Beta" ficou registrado como escopo não-especificado — o próprio roadmap o marca "🔎 clarificar com Sovereign", e não inventei escopo para ele.
+
+Duas lacunas que recomendo tratar antes de qualquer pilar novo: **OTD-CS-005** (erasure LGPD não cobre a spine — FM-CS-02, RPN 324, o maior da suíte) e **OTD-CS-004** (zero teste automatizado no módulo; especifiquei o smoke de 8 gates em `08-quality-metrics.md` §7).</result>
+<usage><subagent_tokens>207121</subagent_tokens><tool_uses>27</tool_uses><duration_ms>1141188</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(10:25:15)*
+
+
+## 🤖 Claude *(10:25:26)*
+
+BoK `crm-suite` fechada — **9 documentos, 2.280 linhas**, com a contagem dos 21 padrões conferida linha a linha (`agentic-vision.md:46-66` → **6 yes / 4 deferred / 11 n-a = 21** ✔). Placar deliberadamente modesto e honesto: a Fase 0 é fundação de dados operada por humano, sem LLM — marcar padrões agênticos como `yes` descreveria um agente que a arquitetura não contém.
+
+Mas a auditoria material desenterrou **quatro coisas que o senhor precisa saber**, e uma delas é séria:
+
+**🔴 LGPD — o `erase_lead()` não cobre a spine.** `FM-CS-02`, **RPN 324, o maior da suíte**. As tabelas `companies`/`deals`/`crm_activities` foram para produção **depois** da função de apagamento, e ela não cascateia até elas. Ou seja: hoje um pedido de eliminação de titular apaga o lead e deixa rastro nas entidades novas. Isso exige migration ⇒ **gate Sovereign**. Recomendo tratar antes de qualquer pilar novo.
+
+**Duas tabelas vivas e nunca usadas** — `crm_associations` tem **zero consumidores** em todo o `src/` e `supabase/functions/`; `crm_activities` tem **1 escritor e 0 leitores** (só `stage_change`, em `usePipelines.ts:115`), com 8 dos 9 `activity_type` nunca gravados e um índice parcial pago sem uso.
+
+**Mesh Connection Mandate descumprido** — zero referências a `mcorch_nodes` em todo o módulo, o que o `CLAUDE.md` exige de toda feature.
+
+**E uma correção ao meu próprio briefing:** o pilar **Formulários já está vivo** (migration `20260719160000` + `submit-lead-webhook` + `/dashboard/forms` + `/f/:formId`). Eu havia reportado como pendente. Placar real: **9 de 33 pilares vivos**.
+
+O agente também recusou-se a inventar TAM/SAM/SOM e payback — sem deepsearch para este módulo, marcou `NÃO VERIFICADO` em vez de projetar números. Correto.
+
+Os 5 grupos de implementação seguem rodando.
+
+## 👤 User *(10:48:47)*
+
+<task-notification>
+<task-id>w67fimnfr</task-id>
+<tool-use-id>toolu_01Pwo4JbEaP6sGAiUwDu8drf</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks/w67fimnfr.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Implementa os 6 passos + alertas em grupos de arquivos disjuntos, com revisao adversarial por grupo" completed</summary>
+<result>{"grupos":[{"grupo":"repurpose-backend","implementacao":{"grupo":"GRUPO 1 — backend do rail de repurpose (defeitos reais + decode-probe)","feito":["SOP escrito PRIMEIRO (Lei 2): docs/processes/video-repurpose-source-probe.md — ORO, Operator manual (ffprobe/ffmpeg à mão), tabela de achados materiais A1-A5, Sequence de 6 passos, gates G1-G6, Recovery por classe de falha, Success signal, Notas de design.","D1 — teto de duração: MAX_CLIP_SPAN_S=60 em video-repurpose-run; sanitizeClips passou a devolver {clips,error,action} e o call site usa `r.action ?? &lt;default&gt;`, casando o padrão json(422,{error,action}) já existente no arquivo. Erro `clip_too_long` com action pt-BR nomeando o corte e a duração.","D2 — beats fail-closed no chokepoint: guard sobre o RESULTADO de sanitizeBeats (não sobre a entrada crua). caption_mode='beats' com text_beats vazio pós-sanitize → 422 `beats_without_text`. Fecha o buraco em que segment-core.ts:79 (exige text_beats.length) e :107 (exige caption) são AMBOS pulados → vídeo nu.","D3 — MAX_CLIP_S 90→60 em detect-viral-moments (coerente com D1 e com o próprio prompt de 15-45s do arquivo, que pedia arcos curtos enquanto o clamp de :224 emitia 137s). Adicionado `if (!text_beats.length) continue;` DEPOIS do loop de construção e do sort — a posição importa: o clamp de MAX_CLIP_S encolhe out_sec e pode expulsar todos os beats da janela final.","D5 — scripts/video-repurpose/probe-core.ts (NOVO): gate de duas fases. probeContainer (ffprobe → durationSec), probeDecodeAt (ffmpeg -xerror -f null -, veredito = exit!==0 OU stderr não-vazio), assertSourceDecodable (fase container+janela ANTES do decode, depois probe em cada in_sec + no ponto mais tardio max(out_sec)−probeSec, deduplicado). spawn com ARRAY de args em todos os caminhos. Mensagens nomeiam corte e timestamp (formatTc HH:MM:SS).","D6 — probe fiado no worker: assertSourceDecodable chamado logo após a resolução do inputPath e antes de segmentVideo/buildCarousel; janelas derivadas de comp.clips (repurpose) ou comp.slides (carousel). Falha reportada pelo caminho EXISTENTE do bridge (finalize_video_render state='failed' + refund + logHealth 'repurpose_failed'), sem inventar caminho novo.","D6-bonus — evidência preservada: flag `failed`; o rmSync do finally passou a rodar SÓ no caminho de sucesso. Em falha loga o caminho e adiciona `work_dir_preserved` ao metadata do infra_health_logs. Foi exatamente o rmSync incondicional que destruiu a evidência do incidente 2026-07-20.","D7 — scripts/qa/smoke-repurpose-guards.ts (NOVO): 6 gates, zero-custo, hermético (1 usuário throwaway + fixtures ffmpeg testsrc geradas no scratchpad; NUNCA um master real). A corrupção da fixture é feita numa CÓPIA em memória (chunk duplicado preservando o tamanho, moov intacto = classe EP02).","Achado NOVO material (A5), mais forte que o previsto no briefing: sobre master corrompido o segmentVideo NÃO falha — sai exit 0 em 1,78s e produz MP4 estruturalmente válido (4,000s, 120 frames, idêntico ao íntegro) com 24.987 bytes contra 231.779 do íntegro (frames lixo). É FALSO-VERDE: duração ✓, frames ✓, MP4 válido ✓ — nenhuma checagem a jusante pega. O probe rejeitou o mesmo arquivo em 259ms. Registrado no SOP como A5 e o Success signal foi reescrito."],"arquivos_alterados":["/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/video-repurpose-run/index.ts (M — D1+D2)","/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/detect-viral-moments/index.ts (M — D3)","/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts (M — D6, +20/-2)","/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/probe-core.ts (NOVO — D5)","/home/gcrUX/htdocs/constellation-orchestra/docs/processes/video-repurpose-source-probe.md (NOVO — SOP Lei 2)","/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-repurpose-guards.ts (NOVO — D7)"],"prova":["A1/A2/A3 reproduzidos na fixture — ffprobe bad.mp4: `20.000000` + `ffprobe exit=0`; decode-probe em 8s no bad.mp4: `exit=0  stderr bytes=1800` com `[NULL @ ...] Invalid NAL unit size (-491273151 &gt; 582).`; mesmo probe no good.mp4: `exit=0  stderr bytes=0`. ⇒ o exit code SOZINHO teria aprovado o master corrompido.","A4 reproduzido — `ffmpeg -v error -xerror -ss 500 -i good.mp4 -t 2 -f null -` num arquivo de 20s: `exit=0  stderr bytes=0` (passe vacuoso). Prova que a ordem container-antes-de-decode é load-bearing.","probe-core exercitado contra as fixtures: `OK container good → {\"durationSec\":20}` · `OK good window 8-12 → {\"durationSec\":20,\"probedAt\":[8,10]}` · `THROW bad window 8-12 → source_decode_failed: o corte #1 em 00:00:08 não decodifica (ffmpeg exit 0: ...)` · `THROW window past EOF → cut_window_exceeds_source: o corte #3 (00:01:40–00:02:20) ultrapassa a duração do master (00:00:20).`","Smoke rodado (output literal): `✅ G3 janela válida (30s + beats) → 202` · `✅ G4 probe passa em master íntegro → dur=20.00s pontos=8,10` · `✅ G5 probe FALHA em master corrompido → source_decode_failed: ... (ffmpeg exit 0: ...)` · `✅ G6 janela além do EOF recusada → cut_window_exceeds_source: ...` · `❌ G1 ... status=202` e `❌ G2 ... status=202` · `EXIT=1`. G1/G2 batem na edge function DEPLOYADA (o orquestrador só faz deploy no fim) — o 202 É a prova do defeito D1/D2 na versão em produção hoje.","D1/D2 provados sobre o CÓDIGO EDITADO (não retipado): sanitizeClips extraído verbatim do arquivo via sed e rodado em Deno → `G1 90s cut: error=clip_too_long clips=0 action=\"O corte #1 dura 90s — o limite de um Short/Reel é 60s. Encurte a janela.\"` · `G2 beats out of window: error=beats_without_text clips=0 action=\"O corte #1 pede legendas em \"beats\"...\"` · `G3 valid 30s + beats: error=(none) clips=1`. ⇒ G1/G2 ficam verdes pós-deploy.","A5 (falso-verde) medido: `probe REJEITA em 259 ms → source_decode_failed: ...` vs `segmentVideo: exit 0 em 1779 ms → bytes 24987 (FALSO-VERDE)`; master íntegro pelo mesmo caminho → `clip bytes 231779`. ffprobe nos dois clipes: `out/clip_000.mp4 dur=4.000000s frames=120` e `out2/clip_000.mp4 dur=4.000000s frames=120` — indistinguíveis por duração/frames.","tsc: `npx tsc -p tsconfig.app.json --noEmit` filtrado pelos meus arquivos → `(nenhum erro nos meus arquivos)`.","deno check video-repurpose-run/index.ts → limpo. deno check detect-viral-moments/index.ts → TS2345 em :271 (refundMco/BillingAdmin) PRÉ-EXISTENTE: provado com `git stash push` do arquivo e re-check no origin/main puro → mesmo `TS2345 [ERROR] ... 'PostgrestFilterBuilder' is missing ... from type 'Promise&lt;{ error: unknown; }&gt;'`. Código que não toquei (bloco catch).","Erro de bundle chromium-bidi/electron no bridge = PRÉ-EXISTENTE: `git stash push scripts/video-repurpose-bridge.ts` + build do origin/main no MESMO path → `Could not resolve: \"electron\"` e `Could not resolve: \"chromium-bidi/...\"`. É playwright puxado via segment-core→hyperframes/render-core; o worker roda por `bun run`, não bundlado. Imports LOCAIS do bridge provados: `bun build --packages=external` → `Bundled 5 modules in 5ms` + `grep -c assertSourceDecodable` no bundle → `3`.","Escopo: `git status --short` dos meus 6 arquivos = 3 M + 3 ?? esperados; os demais arquivos modificados na árvore (AssetDetailDialog.tsx, auto-publish, publish-social, publish-space-asset, docs/bok/crm-suite/*, packages/video-studio-registry) são de OUTROS grupos e NÃO foram tocados por mim."],"nao_feito":["D4 (cliente carimba caption_mode:'beats' incondicionalmente) — NÃO tocado, conforme instruído: src/pages/VideoRepurposePage.tsx:165 e src/components/.../RepurposeWizard.tsx:152 são de OUTRO GRUPO. O guard D2 no servidor fecha o buraco fail-closed no chokepoint que nenhum caller contorna, mas a ponta cliente CONTINUA carimbando — com D2 no ar, um wizard que mande beats inválidos passa a receber 422 em vez de gerar vídeo nu. Isso é o comportamento correto, porém é MUDANÇA DE UX visível: vale o orquestrador alinhar o cliente para (a) só carimbar 'beats' quando de fato houver beats e (b) exibir o `action` pt-BR 
+... (truncated 86068 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks/w67fimnfr.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/subagents/workflows/wf_1b5d5fce-fca/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/workflows/scripts/mcorch-loop-implementar-2026-07-20-wf_1b5d5fce-fca.js', resumeFromRunId: 'wf_1b5d5fce-fca'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>10</agent_count><agents_done>10</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1465503</subagent_tokens><tool_uses>401</tool_uses><duration_ms>2602447</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(10:48:54)*
+
+
+## 🤖 Claude *(10:48:55)*
+
+Grupo 1 desenterrou algo grave. Extraindo os demais grupos e os revisores:
+
+## 🤖 Claude *(10:48:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks && jq -r '.result.grupos[] | \"\\n\u2554\u2550\u2550 \\(.grupo) \u2550\u2550\u2557\\n\u25b8 FEITO:\\n\\(.implementacao.feito | map(\"  \u2022 \" + .) | join(\"\\n\"))\\n\\n\u25b8 NAO FEITO:\\n\\(.implementacao.nao_feito | map(\"  \u26a0 \" + .) | join(\"\\n\"))\"' w67fimnfr.output 2>&1 | head -120",
+  "description": "Extract all groups summary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ╔══ repurpose-backend ══╗
+> ▸ FEITO:
+>   • SOP escrito PRIMEIRO (Lei 2): docs/processes/video-repurpose-source-probe.md — ORO, Operator manual (ffprobe/ffmpeg à mão), tabela de achados materiais A1-A5, Sequence de 6 passos, gates G1-G6, Recovery por classe de falha, Success signal, Notas de design.
+>   • D1 — teto de duração: MAX_CLIP_SPAN_S=60 em video-repurpose-run; sanitizeClips passou a devolver {clips,error,action} e o call site usa `r.action ?? <default>`, casando o padrão json(422,{error,action}) já existente no arquivo. Erro `clip_too_long` com action pt-BR nomeando o corte e a duração.
+>   • D2 — beats fail-closed no chokepoint: guard sobre o RESULTADO de sanitizeBeats (não sobre a entrada crua). caption_mode='beats' com text_beats vazio pós-sanitize → 422 `beats_without_text`. Fecha o buraco em que segment-core.ts:79 (exige text_beats.length) e :107 (exige caption) são AMBOS pulados → vídeo nu.
+>   • D3 — MAX_CLIP_S 90→60 em detect-viral-moments (coerente com D1 e com o próprio prompt de 15-45s do arquivo, que pedia arcos curtos enquanto o clamp de :224 emitia 137s). Adicionado `if (!text_beats.length) continue;` DEPOIS do loop de construção e do sort — a posição importa: o clamp de MAX_CLIP_S encolhe out_sec e pode expulsar todos os beats da janela final.
+>   • D5 — scripts/video-repurpose/probe-core.ts (NOVO): gate de duas fases. probeContainer (ffprobe → durationSec), probeDecodeAt (ffmpeg -xerror -f null -, veredito = exit!==0 OU stderr não-vazio), assertSourceDecodable (fase container+janela ANTES do decode, depois probe em cada in_sec + no ponto mais tardio max(out_sec)−probeSec, deduplicado). spawn com ARRAY de args em todos os caminhos. Mensagens nomeiam corte e timestamp (formatTc HH:MM:SS).
+>   • D6 — probe fiado no worker: assertSourceDecodable chamado logo após a resolução do inputPath e antes de segmentVideo/buildCarousel; janelas derivadas de comp.clips (repurpose) ou comp.slides (carousel). Falha reportada pelo caminho EXISTENTE do bridge (finalize_video_render state='failed' + refund + logHealth 'repurpose_failed'), sem inventar caminho novo.
+>   • D6-bonus — evidência preservada: flag `failed`; o rmSync do finally passou a rodar SÓ no caminho de sucesso. Em falha loga o caminho e adiciona `work_dir_preserved` ao metadata do infra_health_logs. Foi exatamente o rmSync incondicional que destruiu a evidência do incidente 2026-07-20.
+>   • D7 — scripts/qa/smoke-repurpose-guards.ts (NOVO): 6 gates, zero-custo, hermético (1 usuário throwaway + fixtures ffmpeg testsrc geradas no scratchpad; NUNCA um master real). A corrupção da fixture é feita numa CÓPIA em memória (chunk duplicado preservando o tamanho, moov intacto = classe EP02).
+>   • Achado NOVO material (A5), mais forte que o previsto no briefing: sobre master corrompido o segmentVideo NÃO falha — sai exit 0 em 1,78s e produz MP4 estruturalmente válido (4,000s, 120 frames, idêntico ao íntegro) com 24.987 bytes contra 231.779 do íntegro (frames lixo). É FALSO-VERDE: duração ✓, frames ✓, MP4 válido ✓ — nenhuma checagem a jusante pega. O probe rejeitou o mesmo arquivo em 259ms. Registrado no SOP como A5 e o Success signal foi reescrito.
+> 
+> ▸ NAO FEITO:
+>   ⚠ D4 (cliente carimba caption_mode:'beats' incondicionalmente) — NÃO tocado, conforme instruído: src/pages/VideoRepurposePage.tsx:165 e src/components/.../RepurposeWizard.tsx:152 são de OUTRO GRUPO. O guard D2 no servidor fecha o buraco fail-closed no chokepoint que nenhum caller contorna, mas a ponta cliente CONTINUA carimbando — com D2 no ar, um wizard que mande beats inválidos passa a receber 422 em vez de gerar vídeo nu. Isso é o comportamento correto, porém é MUDANÇA DE UX visível: vale o orquestrador alinhar o cliente para (a) só carimbar 'beats' quando de fato houver beats e (b) exibir o `action` pt-BR do 422.
+>   ⚠ Nenhum build (`bun run build`), nenhum `supabase functions deploy`, nenhum git commit/push — conforme as regras do fan-out. As duas edge functions editadas (video-repurpose-run, detect-viral-moments) PRECISAM de deploy para G1/G2 ficarem verdes.
+>   ⚠ Nenhuma migration proposta ou aplicada — nada aqui exigiu schema.
+>   ⚠ Não re-investiguei o falso bug do caption_mode:beats (o briefing já o declarou inexistente com prova). Não rodei o worker contra a fila viva (`--once` drenaria renders reais).
+>   ⚠ O probe NÃO foi exercitado contra um master real de 529MB/1,3GB nesta sessão — os números de custo (0,089s ffprobe / 0,25s por janela) vêm da medição do agente anterior citada no briefing. O que medi aqui foi na fixture de 20s/600KB: 259ms para a rejeição completa.
+> 
+> ╔══ privacy ══╗
+> ▸ FEITO:
+>   • PASSO 1 — publish-social/index.ts: privacidade resolvida no TOPO do handler (logo após o guard de `platform`/`content`, antes do adminClient), com allowlist FECHADA `new Set(['private','unlisted','public'])`. Valor ausente/inválido colapsa em 'public' (comportamento idêntico ao de hoje) — fail-safe, nunca lixo chegando à API do Google. O literal `privacyStatus: "public"` foi trocado pela variável resolvida (agora publish-social/index.ts:563).
+>   • PASSO 1 (telemetria) — o pulse de sucesso do YouTube agora emite `requested_privacy` ao lado do `privacy_status` já existente (publish-social/index.ts:615-619), tornando auditável o par pedido-vs-real (projeto não auditado força private em silêncio). O read-back honesto da API (linhas 602-610) ficou BYTE-IDÊNTICO — só acrescentei campo ao pulse.
+>   • PASSO 2 — auto-publish/index.ts: adicionada a cópia de `privacy` na allowlist explícita do objeto `native`, imediatamente após a irmã `surface` (auto-publish/index.ts:125), com shape defensivo (`typeof === 'string'` + `.slice(0,20)`). Comentário equivalente ao do `surface` argumentando por que FMEA-011 não é tocado: string inerte que seleciona um enum da API, jamais referência de asset; nada é assinado nem lido do Storage por conta dela.
+>   • PASSO 3 — publish-space-asset/index.ts: `PRIVACY_LEVELS` no escopo do módulo (junto de PLATFORMS); parse de `privacy` com a mesma allowlist junto do parse de `surface` (linha ~62); e na montagem do content (linha ~212-215) o DEFAULT SOBERANO: `requestedPrivacy ?? (variant.platform === 'youtube' ? 'private' : null)`. Um publish de YouTube sem fiação vinda da UI sai PRIVADO — publish público por esquecimento vira estruturalmente impossível.
+>   • PASSO 4 — AssetDetailDialog.tsx: `Select` pt-BR "Privacidade" (Privado / Não listado / Público), default `private`, re-armado no useEffect a cada asset aberto, visível SOMENTE quando `selectedFormat?.platform === 'youtube'`. Texto de ajuda pt-BR curto explicando que privado permite revisar antes de publicar. `privacy` incluído no body do invoke de publish-space-asset apenas quando a plataforma é youtube.
+>   • PASSO 5 — TikTok (publish-social ~:426-433): REUSO, não invenção. Quando `privacy === 'private'`, a preferência da cascata inverte para SELF_ONLY em vez de PUBLIC_TO_EVERYONE; os fallbacks seguintes (SELF_ONLY → privacyOptions[0] → 'SELF_ONLY') e toda a negociação com `creator_info` ficaram intactos.
+>   • HONESTIDADE (doutrina format-specs.ts:9) — o no-op está DOCUMENTADO no ponto de resolução do campo em publish-social (bloco de comentário do topo): só YouTube (status.privacyStatus) e TikTok (post_info.privacy_level) honram privacidade; LinkedIn (visibility hardcoded PUBLIC), Instagram e Pinterest são NO-OP explícito. A UI reflete isso: o controle não aparece — e o campo não é enviado — para essas redes.
+> 
+> ▸ NAO FEITO:
+>   ⚠ ZERO migration, conforme instruído: o campo trafega em `scheduled_posts.metadata jsonb` (já existente) pelo trilho já provado do `surface` (FR-SPACES-083). Nenhuma alteração de schema foi necessária nem tentada.
+>   ⚠ Nenhum `bun run build`, `npx supabase functions deploy` ou git commit/push — o orquestrador faz isso uma única vez no fim. Consequência: as mudanças nas 3 edge functions NÃO estão em produção; até o deploy, o default `private` do YouTube é código, não comportamento vivo.
+>   ⚠ `deno check` das edge functions NÃO EXECUTADO (deno ausente no host). Ver Provas para o substituto (parse de sintaxe) e Riscos para a limitação.
+>   ⚠ SOP em docs/processes/ não escrito — isento por Lei 2 (extensão de feature já documentada: publish-space-asset/space-publish-variants + FR-SPACES-083, não automação nova).
+>   ⚠ Sem witness E2E (Lei 1): NÃO postei nenhum corte do EP01 nem li de volta um `privacyStatus` real da API do YouTube. A cadeia UI→publish-space-asset→scheduled_posts→auto-publish→publish-social→YouTube está fiada mas NÃO foi provada ponta-a-ponta nesta sessão. O witness depende do deploy do orquestrador.
+>   ⚠ Controle de privacidade para TikTok NÃO exposto na UI. O passo 5 faz o backend HONRAR `private` no TikTok (SELF_ONLY), mas o briefing especificou o Select como youtube-only e eu não extrapolei — hoje só chega `private` ao TikTok se outro caller mandar.
+> 
+> ╔══ catalogo ══╗
+> ▸ FEITO:
+>   • SOP escrito PRIMEIRO (Lei 2) em docs/processes/video-studio-registry-catalog.md — Operator/Sequence(S1-S8)/Verification gates(G1-G6)/Recovery/Success signal + seção normativa §1 anti-supply-chain (critérios C1-C5 do que entra, o que nunca entra, por que install remoto continua proibido, matriz ORO de quem homologa)
+>   • Shape do RegistryItem LIDO do .d.ts (não adivinhado): node_modules/@hyperframes/studio-server/dist/index.d.ts:156 declara `listRegistryCatalog?(): Promise<RegistryItem[]>`; RegistryItem definido em node_modules/@hyperframes/core/dist/registry/types.d.ts:100 como união ExampleItem|BlockItem|ComponentItem. Nossos templates = 'hyperframes:block' (composições standalone com dimensions+duration obrigatórios)
+>   • packages/video-studio-registry/ criado: registry.json (manifesto) + 4 blocks/<name>/registry-item.json + README.md. Catálogo espelha EXATAMENTE VALID_TEMPLATES (render-core.ts:90) — igualdade de conjunto provada no G6. Dimensões lidas do HTML real (viral-long-16x9 = 1920x1080; os outros 3 = 1080x1920); duration=6 = default literal do motor (`spec.duration_s ?? 6`, render-core.ts:200/286). NADA foi baixado de fora
+>   • scripts/video-studio-host/registry-catalog.ts: lê o catálogo do DISCO, zero primitiva de rede (G5). Fail-closed — item com arquivo-fonte ausente é DROPADO (nunca anunciado); jail em REPO_ROOT rejeita path absoluto e traversal; SAFE_NAME kebab-case bloqueia nome-como-fragmento-de-path; JSON inválido derruba só o item, manifesto ausente degrada p/ catálogo vazio (nunca 500). Self-check embutido via import.meta.main (precedente: render-core.ts:543)
+>   • adapter.ts: listRegistryCatalog() implementado delegando ao loader. Comentário de omissão (~:179) ATUALIZADO sem apagar o raciocínio de segurança — registra que a recusa original estava certa quanto ao que de fato protegia (o INSTALL remoto), e que só o catálogo mudou porque o SPA de terceiro não distingue 501 de erro de rede
+>   • installRegistryBlock deixado NÃO implementado de propósito, com a justificativa material escrita no código: instalar bloco escreve arquivo no diretório de projeto que o sandbox de render executa (sandbox que minta JWT do Usuário Zero e fala com o chokepoint de billing) = vetor de execução de código arbitrário. Rota falha limpa em 501, sem tocar a rede (G4 provado)
+> 
+> ▸ NAO FEITO:
+>   ⚠ NÃO VERIFICADO EM BROWSER: a aba catalog de /dashboard/spaces/video não foi aberta. Provei que a API responde 200 com 4 itens tipados válidos, mas NÃO provei que o SPA de terceiro os renderiza corretamente na tela. Item 3 do Success signal do SOP (§6) segue pendente de witness visual — precisa de agent-browser contra a rota logada
+>   ⚠ NÃO rodei bun run build, npx supabase functions deploy, nem git commit/push (regra do fan-out — orquestrador faz uma vez no fim)
+>   ⚠ NÃO baixei nada de registry remoto nesta fatia (decisão Sovereign OPÇÃO A). O catálogo tem só os 4 blocos que já são nossos e que o motor já roda
+>   ⚠ installRegistryBlock permanece NÃO implementado por decisão de segurança (não é lacuna — é a recusa preservada). Se o Sovereign quiser install algum dia, exige fatia própria com SOP e /security-review
+>   ⚠ NÃO adicionei preview media (video/poster) aos itens — campo é opcional no tipo e não temos thumbs renderizados dos templates. O catálogo pode aparecer sem miniatura na UI
+>   ⚠ NÃO toquei scripts/hyperframes/templates/ nem render-core.ts (arquivos de outro grupo). G3 foi provado via STUDIO_REGISTRY_ROOT apontando p/ scratchpad justamente para não renomear template alheio durante fan-out paralelo
+>   ⚠ Sem migration — esta fatia não toca banco
+> 
+> ╔══ ui-assets-saude ══╗
+> ▸ FEITO:
+>   • A1 — Bug de invalidação CORRIGIDO: `useDeleteAsset` invalidava `['creative_assets']` (underscore); a galeria usa `["creative-assets", kind]` (hífen). Trocado para `['creative-assets']` (prefix-match cobre todas as variantes de kind); `['ingested_masters']` mantida.
+>   • A2 — Nested button ELIMINADO em CreativeAssetCard: a raiz virou `<div className="group relative …">` (classes visuais preservadas byte-a-byte) e a superfície clicável virou um `<button type="button">` em `absolute inset-0 z-0`, SOB os overlays (badges/glifo/título/lixeira em z-10).
+>   • A2-bis — Regressão de hover CAÇADA E CORRIGIDA (não estava no brief): com o botão inset-0 por cima do `<video>`, o `onMouseEnter` do próprio elemento nunca mais dispararia. Hover-play movido para a raiz via `useRef<HTMLVideoElement>`. O `<audio>` ganhou `relative z-10` pelo mesmo motivo (controles de transporte ficariam inalcançáveis).
+>   • A3 — Props `onDelete?: (a: CreativeAsset) => void` e `deleting?: boolean`. Lixeira no canto INFERIOR direito (`absolute bottom-1.5 right-1.5 z-10`), Trash2, `aria-label` pt-BR, `opacity-100` no mobile + `sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100`, `e.stopPropagation()`, spinner quando `deleting`. Título ganhou `pr-9` para não passar por baixo do ícone.
+>   • A4 — MIV: lixeira usa `hover:text-destructive`. O gold do wizard (RepurposeWizard.tsx:222, `hover:text-[var(--gold)]`) foi corrigido para `hover:text-destructive` na mesma passada — gold é reservado a VALOR na doutrina MIV.
+>   • A5 — `confirm()` nativo substituído por AlertDialog shadcn em AMBAS as superfícies: um único diálogo controlado no CreativeAssetGallery (estado `pending`, fora do grid) e um no RepurposeWizard (`pendingDelete`). Descrição HONESTA: remove o registro + cascata das variantes de publicação (real — space_publish_variants ON DELETE CASCADE), mas o arquivo em disco/bucket PERMANECE. Toasts pt-BR.
+>   • B1 — `useIngestedMasters` passou a selecionar `file_size_bytes, duration_seconds` e a expor `sizeBytes`, `durationSeconds`, `health` (de `metadata.health`) e `seal`. Nova função pura exportada `sealMasterHealth()` rebaixa a `unverified` quando o veredito não pode ser afirmado com honestidade (bucket≠local · nunca sondado · checked_at >7d · health.bytes ≠ file_size_bytes); `corrupt`/`missing` NUNCA são suavizados.
+>   • B2 — Tamanho real persistido daqui pra frente: `ingest-external-asset` valida `file_size_bytes` (number finito ≥0, `Math.floor`) e passa `p_file_size_bytes` ao `register_creative_asset`. SEM MIGRATION — o parâmetro já existe com DEFAULT NULL (20260716230000:60). Ponta fiada: `useIngestMaster` aceita o campo e o wizard passa `r.bytes` (o valor confirmado pelo host, que já estava em mãos e era descartado).
+>   • B3 — Rota `GET /api/host-probe?key=<uid>/<file>` em host-upload-server.ts. Reusa `authenticate()` e a MESMA validação de chave do serveMedia. Sequência existsSync → statSync → ffprobe (duração+streams, timeout 30s) → spot-decode em 20/50/90% (12 frames, timeout 60s cada). `Bun.spawn` com ARRAY de args. Persistência owner-scoped filtrando por `user_id` + `storage_bucket='local'` + `storage_key`. Telemetria em infra_health_logs.
+>   • B3-CORREÇÃO MATERIAL DO CRITÉRIO (o achado mais importante desta passada): o critério do brief — `exit === 0 E stderr vazio` — é INSUFICIENTE. Medido: uma cópia do EP02 truncada a 300MB devolveu `exit=0 stderr_bytes=0` nos TRÊS spots e passaria por íntegra. Só a contagem de frames a denunciou. O critério implementado tem TRÊS partes: exit 0 E stderr vazio E `frames > 0`, via `-progress pipe:1` (que manda o contador para stdout e mantém o stderr limpo para o teste 2).
+>   • B4 — Badge tri-estado no seletor do wizard, ao lado do de SRT, mesma linguagem visual (`variant="outline"` + classe de cor): VERDE `border-emerald-500/40 text-emerald-300` · AMARELO `border-amber-500/40 text-amber-300` clicável (dispara o probe + invalida `['ingested_masters']`, com spinner) · VERMELHO `border-destructive/40 text-destructive`. Tooltips pt-BR honestos — o verde diz explicitamente que é AMOSTRAGEM de 3 pontos, não decodificação completa.
+>   • B4-GATE — No VERMELHO a seleção do master é DESABILITADA (`disabled` + `cursor-not-allowed opacity-50`). O `keyLooksSanitized === false` foi unificado no mesmo vocabulário vermelho via um único booleano `blocked`. Este é exatamente o gate que faltava e que deixou o Sovereign reusar o master corrompido do EP02.
+>   • B4-bis — Os badges saíram de DENTRO do `<button>` de seleção (o amarelo é acionável; controle dentro de controle é HTML inválido — mesma classe de bug do A2).
+>   • Lei 2 — SOP `docs/processes/repurpose-host-infra-provisioning.md` emendado ANTES do código do probe: seção "Rota de saúde /api/host-probe" com Operator / Sequence (7 passos com critério material) / os 3 testes de spot limpo com a prova de por que cada um é necessário / gates H1-H7 / Recovery / Frescor / Success signal.
+>   • Bloco nginx `location = /api/host-probe` versionado em `infra/nginx/host-upload.location.conf`, marcado NÃO APLICADO. `/etc/nginx` não foi tocado.
+> 
+> ▸ NAO FEITO:
+>   ⚠ `src/hooks/useIngestedMasters.ts` NÃO EXISTE no repo — `useIngestedMasters` sempre viveu dentro de `src/hooks/useVideoRepurpose.ts` (linha ~215). Editei em PLACE em vez de criar arquivo novo: extrair o hook seria uma reorganização não pedida, quebraria o import atual do RepurposeWizard e colidiria com quem mais estiver no arquivo. Nenhum arquivo novo criado.
+>   ⚠ NÃO VERIFICADO — a rota HTTP `/api/host-probe` end-to-end pela rede. Provei o MOTOR de veredito (`probeFile`, 4/4 contra arquivos reais). NÃO executei: o handler `serveProbe` via HTTP, a persistência em `creative_assets.metadata.health`, nem os gates H1-H4/H7 do SOP. Fazer isso exigiria (a) reiniciar a unit systemd viva e (b) escrever numa linha de PRODUÇÃO — ambos fora do meu mandato neste fan-out. Os guards de auth/chave são reuso byte-idêntico do `serveMedia` já provado (206/400/401/403 no seal 2026-07-13), mas o caminho de DB é código NOVO e NÃO EXECUTADO.
+>   ⚠ nginx NÃO aplicado — `location = /api/host-probe` está só versionado em `infra/nginx/host-upload.location.conf`, marcado "NÃO APLICADO". `sudo nginx -t && sudo systemctl reload nginx` é ação Sovereign. Até lá o badge amarelo dá 404 em produção.
+>   ⚠ A unit `host-upload.service` VIVA ainda roda o código ANTIGO — precisa de `systemctl --user restart host-upload.service` para a rota existir no loopback. Não reiniciei (serviço de produção, e o restart derrubaria upload em voo).
+>   ⚠ Nenhuma migration criada nem aplicada. B2 usa `p_file_size_bytes`, que já existe com DEFAULT NULL (migration 20260716230000, assinatura de 26 args) — confirmei lendo o CREATE FUNCTION.
+>   ⚠ Não rodei `bun run build` nem `supabase functions deploy` nem git commit/push (regra do fan-out). `ingest-external-asset` só passa a persistir o tamanho DEPOIS do deploy.
+>   ⚠ Os 2 masters legados continuam com `file_size_bytes = NULL` — não fiz backfill (seria escrita em produção). Eles caem em "Não verificado", que é o estado honesto.
+> 
+> ╔══ docs-alertas ══╗
+> ▸ FEITO:
+>   • A1 — `docs/bok/crm-inbox/00-index.md` criado (12.933 bytes). Indice HONESTO no formato de `docs/bok/vision-mcp/00-index.md`: Project Manifest, File Registry (11 arquivos com titulo H1 REAL extraido por grep, contagem de linhas por `wc -l` e uma frase do que cada um cobre, derivada dos headings `##` reais), ID Space vivo levantado por grep, Pattern Conformance (8y/3d/10na, copiado do 09), Lineage e Cross-references. O gate mecanico do /handson (`.claude/commands/handson.md:53`) agora passa para crm-inbox — verificado por loop sobre os 9 nomes exigidos.
+>   • A1-extra — 4 divergencias REAIS encontradas ao montar o indice, declaradas na secao §5 em vez de reconciliadas em silencio: D1 (o script de selo ja declarava `00-index` que nao existia), D2 (o id_space do selo eh anterior ao Amendment 10: selo diz FR..022/NFR..008/OTD..014/FM..14, arquivos vivos vao a FR-033/NFR-012/OTD-020/FM-20), **D3 = colisao real de IDs** (`FM-CRM-15..19` existem com vetores DIFERENTES em `08-quality-metrics.md` §3.2 e em `10-amendment` §7 — citar 'FM-CRM-16' hoje eh ambiguo), D4 (drift conceitual is_template/charged_mco ja reconhecido pelo proprio selo). Nao corrigi nenhuma — corrigir seria editar doc selado fora do meu escopo.
+>   • A2 — `docs/processes/credential-rotation-runbook.md` criado (25.860 bytes). Formato Lei 2 completo (ORO / Inventario / Sequence / Verification gates / Recovery path / Success signal / Anti-patterns). 6 credenciais ordenadas por risco, cada uma com (a) onde vive (b) console de emissao (c) comando exato (d) gate material (e) blast radius (f) rollback: R1 META_APP_SECRET, R2 service account Vertex, R3 token EAA, R4 token IGAA, R5 chave Gemini (DUAS superficies: `user_api_keys.google_api_key` + secret de sistema `MESH_EMBED_GEMINI_KEY`), R6 token Telegram. Cada linha do inventario carrega coluna 'Evidencia' com file:line que provou a existencia. Secao final 'Ordem recomendada de execucao pelo Sovereign' com pre-condicao e justificativa por posicao.
+>   • A2 — REGRA ABSOLUTA respeitada: nenhum VALOR de segredo foi lido, impresso ou transcrito. Todos os greps foram por NOME de variavel/coluna. O runbook abre com um bloco proibindo cat/echo/jq que imprima valor, e os comandos usam `read -rs` + `unset` + `history -d`.
+>   • A3 — `docs/processes/youtube-upload-service-activation.md` criado (17.201 bytes). Estado material verificado no topo (`is-enabled` = `not-found`, `is-active` = `inactive`, unit ausente de `~/.config/systemd/user/`), com a citacao literal do comentario do proprio unit provando que o gate eh DELIBERADO. Cobre (a) 6 pre-condicoes P1-P6 com verificacao material cada, (b) sequence de instalacao/enable/start com ensaio a seco `--once` ANTES de instalar, (c) 6 gates G1-G6, (d) 3 niveis de reversao + o que a reversao NAO desfaz, (e) tabela de observacao por janela temporal (5min / 1o upload / 1a hora / 24h / pos-reboot).
+>   • A3 — NAO habilitei o servico. `systemctl --user is-enabled youtube-upload.service` continua `not-found`.
+> 
+> ▸ NAO FEITO:
+>   ⚠ NAO habilitei o `youtube-upload.service` — e gate Sovereign explicito e a instrucao mandava so escrever o SOP. `is-enabled` continua `not-found`.
+>   ⚠ NAO rodei `bun run build`, `npx supabase functions deploy` nem git commit/push (regra do fan-out).
+>   ⚠ NAO apliquei migration nem consultei o banco de producao. Por isso a pre-condicao P1 do SOP A3 (migration `youtube_uploads` viva) esta escrita como algo que o Sovereign deve RE-CONFIRMAR por `select to_regclass(...)`, com a nota explicita de nao confiar no texto do HANDOFF.
+>   ⚠ NAO corrigi as 4 divergencias que achei no BoK crm-inbox (D1-D4 do §5 do indice). Corrigir `08-quality-metrics.md` ou o `10-amendment` para resolver a colisao `FM-CRM-15..19` seria editar arquivo fora do meu grupo e mexer em doc selado. Ficou registrado como divida nomeada.
+>   ⚠ NAO semeei linhas em `admin_reminders` para META_APP_SECRET/EAA/IG (exigiria migration ou escrita em prod). Apenas documentei a ausencia como item de fechamento do runbook.
+>   ⚠ NAO escrevi script executavel de verificacao de rotacao (ex: um `smoke-credential-rotation.ts`). O runbook descreve os gates em prosa + SQL/CLI; automatizar seria feature nova, fora do escopo do grupo.
+>   ⚠ NAO validei os gates do runbook contra as APIs reais (nao chamei Meta/Google/Telegram). Os gates sao derivados de codigo e de modos de falha ja registrados no HANDOFF, nao de execucao nesta sessao.
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(10:49:15)*
+
+
+## 🤖 Claude *(10:49:21)*
+
+Dois achados que **corrigiram meu próprio briefing** — e ambos importam:
+
+**🔴 O `segmentVideo` produz falso-verde.** Sobre master corrompido ele **não falha**: sai `exit 0` em 1,78s e gera um MP4 estruturalmente válido — 4,000s, 120 frames, indistinguível do íntegro por duração e contagem de frames. A única diferença é o peso: **24.987 bytes contra 231.779** (frames lixo). Nenhuma checagem a jusante pegava isso. O probe rejeita o mesmo arquivo em **259 ms**.
+
+**🔴 O critério que eu especifiquei estava insuficiente.** Eu mandei `exit 0 E stderr vazio`. O agente mediu: uma cópia do EP02 truncada a 300 MB devolveu `exit=0, stderr_bytes=0` nos **três** spots e passaria por íntegra. Só a **contagem de frames** a denunciou. O critério implementado tem três partes: `exit 0` **E** `stderr vazio` **E** `frames > 0`, via `-progress pipe:1`.
+
+Rodando os gates materiais:
+
+## 🤖 Claude *(10:49:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== GIT SCOPE ===\" && git status --short && echo && echo \"=== BUILD (gate real) ===\" && bun run build 2>&1 | tail -25",
+  "description": "Git scope + production build",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GIT SCOPE ===
+>  M docs/processes/repurpose-host-infra-provisioning.md
+>  M infra/nginx/host-upload.location.conf
+>  M scripts/host-upload-server.ts
+>  M scripts/video-repurpose-bridge.ts
+>  M scripts/video-studio-host/adapter.ts
+>  M src/components/creative/AssetDetailDialog.tsx
+>  M src/components/creative/CreativeAssetCard.tsx
+>  M src/components/creative/CreativeAssetGallery.tsx
+>  M src/components/repurpose/RepurposeWizard.tsx
+>  M src/hooks/useVideoRepurpose.ts
+>  M supabase/functions/auto-publish/index.ts
+>  M supabase/functions/detect-viral-moments/index.ts
+>  M supabase/functions/ingest-external-asset/index.ts
+>  M supabase/functions/publish-social/index.ts
+>  M supabase/functions/publish-space-asset/index.ts
+>  M supabase/functions/video-repurpose-run/index.ts
+> ?? docs/bok/crm-inbox/00-index.md
+> ?? docs/bok/crm-suite/00-index.md
+> ?? docs/bok/crm-suite/01-mrd.md
+> ?? docs/bok/crm-suite/02-brd.md
+> ?? docs/bok/crm-suite/03-prd.md
+> ?? docs/bok/crm-suite/04-frd.md
+> ?? docs/bok/crm-suite/05-sdd.md
+> ?? docs/bok/crm-suite/06-data-model.md
+> ?? docs/bok/crm-suite/07-process-flow.md
+> ?? docs/bok/crm-suite/08-quality-metrics.md
+> ?? docs/processes/credential-rotation-runbook.md
+> ?? docs/processes/video-repurpose-source-probe.md
+> ?? docs/processes/video-studio-registry-catalog.md
+> ?? docs/processes/youtube-upload-service-activation.md
+> ?? packages/video-studio-registry/
+> ?? scripts/qa/smoke-repurpose-guards.ts
+> ?? scripts/video-repurpose/probe-core.ts
+> ?? scripts/video-studio-host/registry-catalog.ts
+> 
+> === BUILD (gate real) ===
+> dist/assets/AreaChart-Dy-09hdQ.js                41.29 kB │ gzip:  11.42 kB
+> dist/assets/core.esm-IhlQMFtX.js                 43.21 kB │ gzip:  14.35 kB
+> dist/assets/hands-DgnQ0iKP.js                    45.32 kB │ gzip:  17.07 kB
+> dist/assets/CampaignWizard-Bri3cBaE.js           45.51 kB │ gzip:  14.38 kB
+> dist/assets/AffiliateProductsPage-Cb543hud.js    46.64 kB │ gzip:  13.85 kB
+> dist/assets/InboxPage-BjDuk7J3.js                50.84 kB │ gzip:  14.23 kB
+> dist/assets/AIOSTerminal-Bi6aKn6r.js             70.49 kB │ gzip:  21.72 kB
+> dist/assets/Vignette-Bsz8nlMi.js                 70.87 kB │ gzip:  17.39 kB
+> dist/assets/SettingsPage-vFMMPEh3.js             73.98 kB │ gzip:  20.20 kB
+> dist/assets/DashboardHome-4OMR7Rs4.js            74.17 kB │ gzip:  22.93 kB
+> dist/assets/useNodeIntelligence-BtsTpzTN.js      99.45 kB │ gzip:  22.50 kB
+> dist/assets/proxy-szYUGf0I.js                   125.30 kB │ gzip:  41.24 kB
+> dist/assets/ConstellationMatrix-Cu5L2p8z.js     134.44 kB │ gzip:  37.20 kB
+> dist/assets/index-iFdUKBsu.js                   167.01 kB │ gzip:  53.33 kB
+> dist/assets/ConstellationPage-vgI4_GkL.js       186.25 kB │ gzip:  64.14 kB
+> dist/assets/CanvasEditorPage-LRQPyz2w.js        251.54 kB │ gzip:  66.37 kB
+> dist/assets/CartesianChart-CHsMH-aZ.js          325.07 kB │ gzip:  96.84 kB
+> dist/assets/index-G8kJvEGR.js                   672.17 kB │ gzip: 199.51 kB
+> dist/assets/react-three-fiber.esm-By3EPjxY.js   824.11 kB │ gzip: 221.90 kB
+> 
+> (!) Some chunks are larger than 500 kB after minification. Consider:
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 25.38s
+> ```
+
+## 🤖 Claude *(10:49:54)*
+
+
+## 🤖 Claude *(10:49:57)*
+
+Build **verde** — `✓ built in 25.38s`. ⚠️ Nota importante: nginx serve `dist/` do repo principal direto, então **as mudanças de frontend já estão no ar** em login.mcorch.com (seletor de privacidade, botão excluir, selo de saúde). É reversível por rebuild a partir do git, mas o senhor deve saber que isso não ficou em stage.
+
+Rodando a suíte e conferindo se algum revisor deixou item aberto:
+
+## 🤖 Claude *(10:49:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test 2>&1 | tail -18",
+  "description": "Run test suite",
+  "timeout": 420000
+}
+```
+
+## 🤖 Claude *(10:50:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/d0ed63c2-9678-4c01-95fc-6d554d6141c3/tasks && jq -r '.result.grupos[] | \"\\n### \\(.grupo) \u2014 REVISOR:\\n\\(.revisao | tostring | .[0:2600])\"' w67fimnfr.output 2>&1 | head -150",
+  "description": "Extract reviewer verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Attempting Gemini Free fallback. Candidates: gemini-2.5-pro, gemini-1.5-pro
+> [llm-fallback] Dispatching fallback request to Gemini Free using model "gemini-2.5-pro"
+> 
+> stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> [llm-fallback] Gemini Free fallback succeeded with model "gemini-2.5-pro"
+> 
+>  ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 35ms
+>  ✓ supabase/functions/_shared/higgsfield-oauth.test.ts (17 tests) 14ms
+>  ↓ src/test/canvas-video-async-smoke.test.ts (1 test | 1 skipped)
+>  ✓ supabase/functions/_shared/autopilot-video-cadence.test.ts (10 tests) 9ms
+>  ✓ supabase/functions/_shared/smart-delete-classify.test.ts (15 tests) 7ms
+> 
+>  Test Files  53 passed | 2 skipped (55)
+>       Tests  648 passed | 2 skipped (650)
+>    Start at  07:49:59
+>    Duration  24.62s (transform 2.26s, setup 6.66s, collect 7.15s, tests 4.71s, environment 32.67s, prepare 8.29s)
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### repurpose-backend — REVISOR:
+> RELATÓRIO DE REVISÃO ADVERSARIAL — grupo `repurpose-backend`
+> 
+> ## Veredito
+> 
+> Li o `git diff` de cada arquivo. O relatório dele é **honesto**: o código no disco faz o que ele afirma, as provas que apresentou são reproduzíveis, e não há alucinação de edição. D1/D2 **não** nascem morto (verifiquei o call site: `video-repurpose-run/index.ts:159-161` insere a variável `clips` **sanitizada** no `composition`, não `body.clips`). Nenhuma injeção de shell (único `spawn` é `probe-core.ts:67`, com array). Nenhuma query sem escopo de tenant. Nenhum `.rpc()` novo com `error` ignorado.
+> 
+> **Mas achei 1 defeito grave que ele não viu, e provei materialmente.**
+> 
+> ## DEFEITO P0 — o gate de decode aprovava master corrompido (cobertura parcial = falsa segurança)
+> 
+> `probe-core.ts` sondava 2s em cada `in_sec` + **um** ponto perto do `max(out_sec)` **global**. Corrupção em qualquer outro lugar da janela passava batido. Prova, contra o código dele:
+> 
+> ```
+> # fixture 60s corrompida em t=15 (chunk duplicado, moov intacto)
+> t=0   exit=0 stderr_bytes=0
+> t=14  exit=0 stderr_bytes=0
+> t=15  exit=0 stderr_bytes=2093   ← o dano
+> t=40  exit=0 stderr_bytes=0
+> t=58  exit=0 stderr_bytes=0
+> 
+> # cortes [(0,20),(40,60)] — o corte #1 CONTÉM o dano:
+> ❌ FALSO-VERDE — o gate APROVOU o master corrompido: {"durationSec":60,"probedAt":[0,40,58]}
+> ```
+> 
+> O render então entregaria exatamente o **A5 falso-verde que ele mesmo documentou**: MP4 estruturalmente válido, duração ✓, frames ✓, cheio de frames-lixo. Ou seja: o gate falhava justamente no caso que justifica sua existência. Pior que não ter gate — dá falsa segurança. Os comentários em `probe-core.ts:5-6` e no bridge afirmavam "decodifica em **cada ponto** que o render vai tocar", o que era materialmente falso (violação de Lei 1 na documentação).
+> 
+> **Corrigido:** Fase 2 agora decodifica a **janela inteira** de cada corte, com janelas sobrepostas fundidas num único passe. Mesmo caso, depois:
+> 
+> ```
+> ✅ rejeitado: source_decode_failed: o trecho 00:00:00–00:00:20 (corte #1) não decodifica
+> ✅ íntegro aprovado: decoded [{0→20},{40→60}] decodedSec=40   ← zero falso-positivo
+> ✅ merge: cortes (0,20)+(10,30)+(25,40) → 1 trecho, 40.0s     ← não decodifica 2×
+> ```
+> 
+> **Custo — decisão consciente, não acidente.** Medido em 1080p: decodificar 60s = **2,8s**, contra dezenas de segundos para re-encodar os mesmos 60s a `preset medium` ⇒ o gate custa ~10% do render que protege. E `-xerror` aborta no primeiro pacote ruim, então **master corrompido falha rápido** — o custo cheio só é pago em master saudável. Contrapartida honesta: no pior caso teórico (50 cortes × 60s sem sobreposição) são ~140s 
+> 
+> ### privacy — REVISOR:
+> REVISÃO ADVERSARIAL — grupo "privacy" — DIFF LIDO NA ÍNTEGRA (4 arquivos)
+> 
+> ## Veredito
+> O núcleo do trabalho é **real e correto**. Confirmei linha a linha via `git diff` que o código no disco faz o que ele afirma — nenhuma edição alucinada. O trilho `publish-space-asset → scheduled_posts.metadata.reshape.content → auto-publish (native) → publish-social` transporta o campo de ponta a ponta sem ser descartado no meio (classe "nasce morto" CHECADA e NEGATIVA para o caminho do YouTube). Mas **a afirmação de PASSO 3 — "publish público por esquecimento vira estruturalmente impossível" — é FALSA**, e o PASSO 5 (TikTok) é código sem chamador.
+> 
+> ## Defeitos encontrados
+> 
+> **D1 — GUARD NA ALTITUDE ERRADA (o mais grave; aberto, exige Sovereign).** O default soberano `private` foi colocado em `publish-space-asset/index.ts:212`, que é **um** dos produtores de `scheduled_posts`, não o chokepoint. Existem pelo menos dois outros produtores que enfileiram YouTube **sem** `content.privacy`, e portanto caem no fallback `"public"` de `publish-social/index.ts:52-56`:
+> - `supabase/functions/cadence-run/index.ts:299-305` — `const content = { text, channel }` e `platform: channel` (channel pode ser `youtube`); nenhum `privacy`.
+> - `supabase/functions/reshape-pillar/index.ts:~487` (mesmo molde de enqueue, citado pelo próprio comentário do cadence-run).
+> 
+> O único ponto que cobre TODOS os trilhos é `publish-social`. Patch de 1 linha (`publish-social/index.ts:56`): trocar o fallback `: "public"` por `: (platform === "youtube" ? "private" : "public")`. **NÃO apliquei** — muda comportamento do Viral Autopilot (rail de receita): num projeto já verificado, vídeos que hoje saem públicos passariam a sair privados em silêncio. Lei 4: Owner = Sovereign. Hoje, na prática, o projeto não-auditado já força private (comentário honesto em `publish-social/index.ts:603` + `format-specs.ts:114/120`), então o patch seria quase no-op imediato e fail-safe no futuro. Decisão do Sovereign.
+> 
+> **D2 — PASSO 5 (TikTok) é código sem chamador — "nasce morto" por ausência de emissor.** `publish-social/index.ts:428-430` inverte a preferência para `SELF_ONLY` quando `privacy === "private"`, mas **nenhum caller no repo envia `privacy` para tiktok**: a UI só envia quando `platform === "youtube"` (`AssetDetailDialog.tsx:136`), o default soberano de `publish-space-asset:212` só dispara para youtube, e cadence-run/reshape-pillar não enviam nada. Grep exaustivo em `src/` e `supabase/functions/` confirma. A dúvida que ele registrou ("indistinguível numa conta não auditada") subestima: não é indistinguível, é **inalcançável**. 
+> 
+> ### catalogo — REVISOR:
+> ## Relatório de revisão adversarial — grupo `catalogo`
+> 
+> Li o diff de verdade (`git diff -- scripts/video-studio-host/adapter.ts`) e o conteúdo integral dos 7 arquivos novos. **O relatório dele é honesto** — as provas G1–G6 reproduzem, os arquivos no disco fazem o que ele afirma, e as 6 dúvidas que ele mesmo levantou são reais e bem caracterizadas. Mas encontrei **1 defeito de classe grave que ele não viu** (guard com furo), mais 2 menores e 1 questão de doutrina de UI.
+> 
+> ### Verificações que passaram (conferidas, não aceitas de palavra)
+> 
+> | Claim | Veredito |
+> |---|---|
+> | Rota de terceiro repassa os itens **sem** allowlist/reconstrução (`index.js:4149-4156`: `const items = await adapter.listRegistryCatalog(); return c.json(items)`) | ✅ **não nasce morto** |
+> | Tipos `RegistryItem`/`RegistryManifest`/`RegistryManifestEntry`/`ItemType` existem e são exportados (`@hyperframes/core/dist/index.d.ts:38`) | ✅ |
+> | `category` **não** é campo obrigatório de `BlockItem` (só `dimensions`+`duration`, `types.d.ts:78-86`) — o cast duplo da linha 91 não esconde item estruturalmente inválido | ✅ |
+> | Dimensões lidas do HTML real: `viral-long-16x9.html:15 → 1920px/1080px`; os outros 3 → `1080px/1920px` | ✅ exatas |
+> | `VALID_TEMPLATES` (`render-core.ts:90`) == 4 nomes do catálogo | ✅ igualdade de conjunto |
+> | `spec.duration_s ?? 6` em `render-core.ts:200/286/362` | ✅ |
+> | Jail `abs.startsWith(REPO_ROOT + '/')` (linha 51) — precede o `existsSync`, é o lugar certo | ✅ guard no lugar certo |
+> | Zero primitiva de rede no loader | ✅ |
+> | Live após meu fix: `blocks HTTP 200`, `grep -oc '"type":"hyperframes:block"'` → `4`, install → `HTTP 501` | ✅ |
+> 
+> Sem `.rpc()`, sem query de tenant, sem `spawn`, sem classe MIV/gold, sem texto de UI nosso — as categorias de vazamento cross-tenant, command-injection e regressão visual **não se aplicam** a esta fatia.
+> 
+> ---
+> 
+> ### D1 — GRAVE · guard de tipo desconhecido é NO-OP para chaves do protótipo → 500 no catálogo inteiro
+> 
+> `scripts/video-studio-host/registry-catalog.ts:34` usava objeto literal, que herda de `Object.prototype`. Uma entrada `{"type":"toString"}` (ou `constructor`/`valueOf`/`hasOwnProperty`) resolvia para uma **função herdada** — *truthy* — passava direto pelo `if (!typeDir)` da linha 124 e estourava dentro do `join()`. Prova literal, **antes** do fix:
+> 
+> ```
+> [studio-host] registry: skipping "..." — unknown type "..."   ← nunca chegou a imprimir
+> 129 |     const itemDir = join(REGISTRY_ROOT, typeDir, entry.name);
+> TypeError: The "paths[1]" property must be of type string, got function
+>     at loadRegistryCatalog (.../registry-catalog.ts:129:21
+> 
+> ### ui-assets-saude — REVISOR:
+> # Revisão adversarial — grupo `ui-assets-saude`
+> 
+> Li o `git diff` de todos os 8 arquivos. **O relatório dele é honesto** — não achei nenhuma edição alucinada, e a alegação mais forte (o critério do brief ser insuficiente) eu **reproduzi independentemente**. Mas achei **1 defeito P0 que teria chegado em produção** e 3 menores. Todos corrigidos.
+> 
+> ## 🔴 P0 — O selo de saúde condenava masters saudáveis (CORRIGIDO)
+> 
+> `src/hooks/useVideoRepurpose.ts:314` (antes do fix):
+> 
+> ```ts
+> const body = await res.json().catch(() => ({}));
+> if (!res.ok && res.status !== 404) { throw … }
+> return body as MasterHealth;   // ← qualquer 200 não-JSON vira {}
+> ```
+> 
+> **Prova material, colhida em produção agora:**
+> 
+> ```
+> $ curl -w 'HTTP=%{http_code} CT=%{content_type} SIZE=%{size_download}\n' \
+>     'https://login.mcorch.com/api/host-probe?key=x/y.mp4'
+> HTTP=200 CT=text/html SIZE=3649
+> <!doctype html><html lang="pt-BR">…<title>MCORCH — A agência autônoma</title>
+> ```
+> 
+> O vhost vivo (`/etc/nginx/sites-enabled/www.mcorch.com.conf:59,69`) tem `= /api/host-upload` e `= /api/host-media`, **não** `= /api/host-probe`. O `location /` (linha 37-38, `try_files $uri $uri/ /index.html`) casa e devolve a SPA com **200**.
+> 
+> Trace: `res.ok` true → `res.json()` estoura no HTML → `.catch(() => ({}))` → `{}` → `h.status` undefined → cai no `else` final do wizard → **`toast.error('Arquivo corrompido — envie o master novamente.')`**.
+> 
+> Ou seja: o Sovereign clica no badge amarelo do EP01 (1,3 GB, íntegro) e a UI manda ele reenviar. **É o inverso exato do bug que a feature existe para corrigir** — e ele não viu porque testou o motor `probeFile()` por import, nunca o caminho HTTP.
+> 
+> **Fix:** o cliente agora valida a *forma* do veredito (`status ∈ ok|corrupt|missing`) antes de acreditar nele; qualquer outra coisa vira erro alto e explícito ("a verificação não está disponível… nenhuma conclusão foi tirada sobre este arquivo"). Falha alto em vez de inventar veredito.
+> 
+> ## 🟠 P1 — Erro engolido na persistência do veredito (CORRIGIDO)
+> 
+> `scripts/host-upload-server.ts:223` — `const { data: rows } = await admin.from(...).select(...)` com o `error` descartado, e o `.update()` sem checagem nenhuma. `supabase-js` **não lança** em erro SQL: se a escrita falhasse, o veredito sumia em silêncio, o badge ficava amarelo para sempre e o operador re-disparava um probe de 3 spot-decodes que já rodou. Exatamente a classe de falso-sucesso que já mordeu este projeto. Agora ambos os erros são checados, logados, contados (`persisted`) e devolvidos ao caller (`persist_error`); o `infra_health_logs` marca `degraded` quando o veredito não foi gravado.
+> 
+> 
+> ### docs-alertas — REVISOR:
+> ## Relatório de revisão adversarial — grupo `docs-alertas`
+> 
+> Li os três arquivos **integralmente** e re-executei mecanicamente cada prova antes de julgar. O relatório dele é, em larguíssima maioria, **honesto e verificável** — algo raro. Mas encontrei **4 defeitos reais**, dois deles do tipo "nasce morto com gate verde", que é exatamente a classe mais perigosa.
+> 
+> ### O que verifiquei e CONFIRMEI (não confiei no relatório)
+> 
+> - **Contagens de linha e títulos H1**: os 11 arquivos batem exato. Soma canônica `01..09` = **2582**, idêntica a `document_lines.total_suite` em `seed-crm-inbox-bok-seal.ts`.
+> - **Pattern Conformance**: tally correto — **8 yes / 3 deferred / 10 n-a** em exatamente 21 linhas. Os números dos padrões citados em §4 (`yes`=5,8,11,12,13,16,18,19 · `deferred`=1,2,9) batem célula a célula.
+> - **Colisão D3 é REAL**: `08-quality-metrics.md:127-136` define `FM-CRM-15` = *Ingest — redelivery*; `10-amendment:146` define `FM-CRM-15` = *SSRF no download de mídia*. Mesmos IDs, vetores diferentes. Achado legítimo.
+> - **Gate `/handson`**: rodei o loop eu mesmo sobre as 35 suítes — `crm-inbox` passa (só `security` falta, e ela é isenta por branch dedicado em `handson.md:48-51`).
+> - **Todas as ~20 citações `file:line` do runbook**: conferi uma a uma. **Nenhuma fabricada.**
+> - **Regra do sigilo respeitada**: varri os 3 arquivos por strings com forma de chave (`AIzaSy…`, `EAA…`, `IGAA…`, `BEGIN`, token TG) — **zero valores de segredo**.
+> - **tsc**: erros são todos pré-existentes e em arquivos de *outros* grupos (`inbox/`, `canvas/`, `graph/`, `landing/`). Meu grupo é doc-only, zero TS.
+> 
+> ### Defeitos encontrados e CORRIGIDOS
+> 
+> **D1 (ALTO) — a rotação R1 nascia morta para o Instagram, com o gate ficando verde.**
+> O runbook tratava `META_APP_SECRET` como "a única fronteira de confiança". São **três** superfícies independentes:
+> - `whatsapp-webhook/index.ts:110` → `META_APP_SECRET || INSTAGRAM_APP_SECRET`
+> - `instagram-webhook/index.ts:32` → `INSTAGRAM_APP_SECRET ?? META_APP_SECRET` — **o IG prefere o outro nome**
+> - `meta-privacy/index.ts:25-38` → ordem `social_app_config` (banco) → `INSTAGRAM_APP_SECRET` → `META_APP_SECRET` — **a linha do banco vence os dois envs**
+> 
+> Consequência material: o Sovereign redefine no console (o que invalida o segredo para os três), atualiza só `META_APP_SECRET`, roda o gate "mensagem do celular → inbox" e vê **VERDE** — porque `whatsapp-webhook` prefere exatamente a superfície atualizada. Enquanto isso o Instagram rejeita todo inbound e o `meta-privacy` falha os callbacks de deauth/deleção (obrigação LGPD/Meta), **ambos em silêncio**. Corrigi:
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(10:50:34)*
+
+
+## 🤖 Claude *(10:50:41)*
+
+Gates verdes: **build ✓ 25.38s** · **648 testes passaram**, 2 skipped.
+
+Os revisores adversariais pegaram **4 defeitos graves** que os implementadores não viram. O mais assustador:
+
+**🔴 O selo de saúde condenaria masters saudáveis.** O nginx vivo não tem a rota `/api/host-probe`, então o `location /` casa e devolve a **SPA em HTTP 200**. O cliente fazia `res.json().catch(() => ({}))` → `{}` → caía no `else` → **`toast.error('Arquivo corrompido — envie o master novamente.')`**. O senhor clicaria no badge do EP01 (1,3 GB, íntegro) e a UI mandaria reenviar. O revisor provou com `curl` real e corrigiu para falhar alto. É o inverso exato do bug que a feature existe para corrigir.
+
+E no meu próprio grupo 1: o probe sondava só **pontos**, não a janela — corrupção no meio de um corte passava batido. O revisor reproduziu o falso-verde e reescreveu para decodificar a **janela inteira**, com fusão de janelas sobrepostas.
+
+Rodando o gate de segurança antes de qualquer deploy:
+
+## 🤖 Claude *(10:50:41)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(10:50:41)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   docs/processes/repurpose-host-infra-provisioning.md
+	modified:   infra/nginx/host-upload.location.conf
+	modified:   scripts/host-upload-server.ts
+	modified:   scripts/video-repurpose-bridge.ts
+	modified:   scripts/video-studio-host/adapter.ts
+	modified:   src/components/creative/AssetDetailDialog.tsx
+	modified:   src/components/creative/CreativeAssetCard.tsx
+	modified:   src/components/creative/CreativeAssetGallery.tsx
+	modified:   src/components/repurpose/RepurposeWizard.tsx
+	modified:   src/hooks/useVideoRepurpose.ts
+	modified:   supabase/functions/auto-publish/index.ts
+	modified:   supabase/functions/detect-viral-moments/index.ts
+	modified:   supabase/functions/ingest-external-asset/index.ts
+	modified:   supabase/functions/publish-social/index.ts
+	modified:   supabase/functions/publish-space-asset/index.ts
+	modified:   supabase/functions/video-repurpose-run/index.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/bok/crm-inbox/00-index.md
+	docs/bok/crm-suite/00-index.md
+	docs/bok/crm-suite/01-mrd.md
+	docs/bok/crm-suite/02-brd.md
+	docs/bok/crm-suite/03-prd.md
+	docs/bok/crm-suite/04-frd.md
+	docs/bok/crm-suite/05-sdd.md
+	docs/bok/crm-suite/06-data-model.md
+	docs/bok/crm-suite/07-process-flow.md
+	docs/bok/crm-suite/08-quality-metrics.md
+	docs/processes/credential-rotation-runbook.md
+	docs/processes/video-repurpose-source-probe.md
+	docs/processes/video-studio-registry-catalog.md
+	docs/processes/youtube-upload-service-activation.md
+	packages/video-studio-registry/
+	scripts/qa/smoke-repurpose-guards.ts
+	scripts/video-repurpose/probe-core.ts
+	scripts/video-studio-host/registry-catalog.ts
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(10:50:45)*
+
+
+## 🤖 Claude *(10:51:14)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "run_in_background": false,
+  "description": "Identificar vulnerabilidades no diff",
+  "prompt": "You are a senior security engineer conducting a focused security review of the uncommitted changes on branch `main` of the repo at /home/gcrUX/htdocs/constellation-orchestra.\n\nFIRST: gather the diff yourself. The harness did not supply it. Run:\n  cd /home/gcrUX/htdocs/constellation-orchestra\n  git diff -- scripts/host-upload-server.ts scripts/video-repurpose-bridge.ts scripts/video-studio-host/adapter.ts src/components/creative/AssetDetailDialog.tsx src/components/creative/CreativeAssetCard.tsx src/components/creative/CreativeAssetGallery.tsx src/components/repurpose/RepurposeWizard.tsx src/hooks/useVideoRepurpose.ts supabase/functions/auto-publish/index.ts supabase/functions/detect-viral-moments/index.ts supabase/functions/ingest-external-asset/index.ts supabase/functions/publish-social/index.ts supabase/functions/publish-space-asset/index.ts supabase/functions/video-repurpose-run/index.ts\nAnd read these NEW untracked files in full:\n  scripts/video-repurpose/probe-core.ts\n  scripts/video-studio-host/registry-catalog.ts\n  scripts/qa/smoke-repurpose-guards.ts\n  packages/video-studio-registry/  (list and read the json files)\nIGNORE all markdown/documentation files (docs/**) \u2014 documentation findings are excluded.\n\nOBJECTIVE:\nPerform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by these changes. Do not comment on existing security concerns.\n\nCRITICAL INSTRUCTIONS:\n1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability\n2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings\n3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise\n4. EXCLUSIONS: Do NOT report the following issue types:\n   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption\n   - Secrets or sensitive data stored on disk (these are handled by other processes)\n   - Rate limiting or resource exhaustion issues\n\nSECURITY CATEGORIES TO EXAMINE:\n\n**Input Validation Vulnerabilities:**\n- SQL injection via unsanitized user input\n- Command injection in system calls or subprocesses\n- XXE injection in XML parsing\n- Template injection in templating engines\n- NoSQL injection in database queries\n- Path traversal in file operations\n\n**Authentication & Authorization Issues:**\n- Authentication bypass logic\n- Privilege escalation paths\n- Session management flaws\n- JWT token vulnerabilities\n- Authorization logic bypasses\n\n**Crypto & Secrets Management:**\n- Hardcoded API keys, passwords, or tokens\n- Weak cryptographic algorithms or implementations\n- Improper key storage or management\n- Cryptographic randomness issues\n- Certificate validation bypasses\n\n**Injection & Code Execution:**\n- Remote code execution via deseralization\n- Pickle injection in Python\n- YAML deserialization vulnerabilities\n- Eval injection in dynamic code execution\n- XSS vulnerabilities in web applications (reflected, stored, DOM-based)\n\n**Data Exposure:**\n- Sensitive data logging or storage\n- PII handling violations\n- API endpoint data leakage\n- Debug information exposure\n\nAdditional notes:\n- Even if something is only exploitable from the local network, it can still be a HIGH severity issue\n\nPROJECT SECURITY MODEL (important context \u2014 read CLAUDE.md and .claude/rules/survival.md):\n- Multi-tenant Supabase with RLS default-deny on every table. Cross-tenant leakage is the #1 risk class (FMEA-011).\n- Edge functions require valid JWT; service-role paths must never be reachable by a user JWT.\n- Storage buckets are private; assets are served via short-lived owner-scoped signed URLs.\n- `scripts/host-upload-server.ts` is a host-local server on loopback 3220 behind nginx, admin-authed, that has a SERVICE-ROLE Supabase client. Any path there that writes to the DB without an owner filter, or that reads a caller-controlled path, is high value.\n- `supabase-js` .rpc()/.from() do NOT throw on error \u2014 ignoring `error` is a silent-failure class this project has been bitten by.\n- Anti-SSRF doctrine: `_shared/public-url.ts` `fetchPublicUrl` must be used for caller-supplied URLs because it re-validates every 3xx hop.\n\nANALYSIS METHODOLOGY:\n\nPhase 1 - Repository Context Research (Use file search tools):\n- Identify existing security frameworks and libraries in use\n- Look for established secure coding patterns in the codebase\n- Examine existing sanitization and validation patterns\n- Understand the project's security model and threat model\n\nPhase 2 - Comparative Analysis:\n- Compare new code changes against existing security patterns\n- Identify deviations from established secure practices\n- Look for inconsistent security implementations\n- Flag code that introduces new attack surfaces\n\nPhase 3 - Vulnerability Assessment:\n- Examine each modified file for security implications\n- Trace data flow from user inputs to sensitive operations\n- Look for privilege boundaries being crossed unsafely\n- Identify injection points and unsafe deserialization\n\nREQUIRED OUTPUT FORMAT:\n\nYou MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.\n\nFor example:\n\n# Vuln 1: XSS: `foo.py:42`\n\n* Severity: High\n* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks\n* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft\n* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML\n\nSEVERITY GUIDELINES:\n- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass\n- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact\n- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities\n\nCONFIDENCE SCORING:\n- 0.9-1.0: Certain exploit path identified, tested if possible\n- 0.8-0.9: Clear vulnerability pattern with known exploitation methods\n- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit\n- Below 0.7: Don't report (too speculative)\n\nFINAL REMINDER:\nFocus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.\n\nOutput ONLY the markdown report of findings. If there are no findings, say \"NO FINDINGS\"."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'NO FINDINGS\n\n**Scope reviewed:** the 14-file diff plus the new untracked files (`scripts/video-repurpose/probe-core.ts`, `scripts/video-studio-host/registry-catalog.ts`, `scripts/qa/smoke-repurpose-guards.ts`, `packages/video-studio-registry/**`). No HIGH or MEDIUM security finding met the >80% exploitability bar.\n\nKey surfaces checked and why they cleared:\n\n- **`scripts/host-upload-server.ts` new `GET /api/host-probe` (service-role client).** Sits behind the pre-existing `authenticate()` JWT + `user_roles` admin gate. The `key` guard (`!key.includes(\'..\')` + `key.startsWith(userId + \'/\')` + `resolve()` containment) matches `serveMedia`. The DB write is correctly owner-filtered on both legs — `.eq(\'user_id\', userId)` on the SELECT *and* on the UPDATE — so the caller-supplied `storage_key` is never the sole row selector. `error` is checked on both calls (the project\'s silent-failure class is handled). `ffmpeg`/`ffprobe` are spawned via `Bun.spawn` with an **argv array**, and the path is always absolute under `INBOX_BASE`, so neither shell nor leading-`-` argument injection applies.\n- **Privacy field (`publish-space-asset` → `auto-publish` → `publish-social`).** Closed allowlist at every hop; unknown values collapse to the prior behavior. It selects a platform-API enum, never an asset ref or storage path, so FMEA-011 is untouched. The change is strictly fail-*safer* than the previous hardcoded `privacyStatus: "public"`.\n- **`registry-catalog.ts`.** Zero egress by construction (no `fetch`), `SAFE_NAME` regex on directory segments, `files[].path` jailed to `REPO_ROOT` via `resolve()` prefix check, and a null-prototype type map that blocks `__proto__`/`toString` manifest entries. `installRegistryBlock` is deliberately left unimplemented, so the arbitrary-write-into-render-sandbox path stays closed.\n- **New delete UI (`CreativeAssetGallery` / `CreativeAssetCard`).** Goes through the pre-existing `creative_assets_delete_own` policy (`auth.uid() = user_id`); RLS holds.\n- **`probe-core.ts`.** `spawn(cmd, args[])` throughout, no shell.\n\nTwo non-security observations noted but not reported as findings (both outside the security scope you defined):\n\n1. `useDeleteAsset` deletes by `id` only. RLS blocks cross-tenant deletes, but `creative_assets` SELECT is `own OR org member`, so an org-shared asset owned by another user renders a delete button that returns 0 rows with no error and still fires the "Asset excluído" success toast — a false-success (Lei 1) bug, not a privilege escalation.\n2. `video-repurpose-bridge.ts` now preserves `/tmp/repurpose-<id>` (containing the downloaded tenant master) indefinitely on failure. This falls under your explicit "sensitive data on disk" exclusion, but worth knowing it has no reaper.'}, {'type': 'text', 'text': "agentId: a924dff23f6a1e0a2 (use SendMessage with to: 'a924dff23f6a1e0a2', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 148825\ntool_uses: 16\nduration_ms: 133393</usage>"}]
+> ```
+
+## 🤖 Claude *(10:53:44)*
+
+
+## 🤖 Claude *(10:53:59)*
+
+# Relatório de Security Review
+
+**NO FINDINGS**
+
+**Escopo revisado:** diff de 14 arquivos + os arquivos novos não rastreados (`scripts/video-repurpose/probe-core.ts`, `scripts/video-studio-host/registry-catalog.ts`, `scripts/qa/smoke-repurpose-guards.ts`, `packages/video-studio-registry/**`). Nenhum achado HIGH ou MEDIUM atingiu o corte de >80% de exploitabilidade.
+
+Superfícies checadas e por que passaram:
+
+* **`scripts/host-upload-server.ts` — nova rota `GET /api/host-probe` (client service-role).** Fica atrás do `authenticate()` JWT + gate de admin em `user_roles` já existentes. O guard da `key` (`!key.includes('..')` + `key.startsWith(userId + '/')` + contenção por `resolve()`) espelha o do `serveMedia`. A escrita no banco é corretamente owner-filtered **nas duas pernas** — `.eq('user_id', userId)` no SELECT *e* no UPDATE — então a `storage_key` controlada pelo caller nunca é o seletor único da linha. O `error` é checado nas duas chamadas (a classe de falha silenciosa do projeto está tratada). `ffmpeg`/`ffprobe` são disparados via `Bun.spawn` com **array de argv**, e o path é sempre absoluto sob `INBOX_BASE` — nem injeção de shell nem de argumento com `-` inicial se aplicam.
+* **Campo `privacy` (`publish-space-asset` → `auto-publish` → `publish-social`).** Allowlist fechada em cada salto; valor desconhecido colapsa no comportamento anterior. Seleciona um enum de API de plataforma, jamais uma referência de asset ou path de storage ⇒ FMEA-011 intocado. A mudança é estritamente *mais* fail-safe que o `privacyStatus: "public"` hardcoded anterior.
+* **`registry-catalog.ts`.** Zero egress por construção (nenhum `fetch`), regex `SAFE_NAME` nos segmentos de diretório, `files[].path` enjaulado em `REPO_ROOT` por prefixo de `resolve()`, e mapa de tipos com protótipo nulo que bloqueia entradas de manifesto `__proto__`/`toString`. `installRegistryBlock` deliberadamente não implementado ⇒ o caminho de escrita arbitrária no sandbox de render permanece fechado.
+* **UI de exclusão (`CreativeAssetGallery` / `CreativeAssetCard`).** Passa pela policy pré-existente `creative_assets_delete_own` (`auth.uid() = user_id`); RLS se sustenta.
+* **`probe-core.ts`.** `spawn(cmd, args[])` em todos os caminhos, sem shell.
+
+**Duas observações fora do escopo de segurança**, registradas por serem acionáveis:
+
+1. `useDeleteAsset` deleta por `id` apenas. O RLS bloqueia exclusão cross-tenant, mas o SELECT de `creative_assets` é `own OR org member` — então um asset compartilhado de org, pertencente a outro usuário, renderiza botão de excluir que retorna 0 linhas sem erro e **ainda dispara o toast de sucesso "Asset excluído"**. Falso-sucesso (Lei 1), não escalação de privilégio.
+2. `video-repurpose-bridge.ts` agora preserva `/tmp/repurpose-<id>` (contendo o master do tenant baixado) indefinidamente em caso de falha. Cai na exclusão explícita de "dados sensíveis em disco", mas vale saber que **não há reaper**.
+
+---
+
+Gate de segurança limpo. Fechando os dois achados de Lei 1 e publicando as edge functions:
+
+## 🤖 Claude *(10:54:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "for fn in publish-social auto-publish publish-space-asset video-repurpose-run detect-viral-moments ingest-external-asset; do\n  printf '%-24s ' \"$fn\"\n  out=$(npx supabase functions deploy \"$fn\" 2>&1)\n  if echo \"$out\" | grep -qi \"deployed\\|success\"; then echo \"OK\"; else echo \"FALHOU\"; echo \"$out\" | tail -4; fi\ndone",
+  "description": "Deploy 6 edge functions individually",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> publish-social           OK
+> auto-publish             OK
+> publish-space-asset      OK
+> video-repurpose-run      OK
+> detect-viral-moments     OK
+> ingest-external-asset    OK
+> ```
+
+## 🤖 Claude *(10:54:26)*
+
+
+## 🤖 Claude *(10:54:27)*
+
+6/6 deployadas. Agora os guards estão vivos — rodando o smoke que antes falhava em G1/G2 justamente por bater na versão antiga:
+
+## 🤖 Claude *(10:54:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "timeout 300 bun run scripts/qa/smoke-repurpose-guards.ts 2>&1 | tail -20; echo \"EXIT=$?\"",
+  "description": "Run repurpose guards smoke post-deploy",
+  "timeout": 330000
+}
+```
+
+## 🤖 Claude *(10:54:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"useDeleteAsset\" -A 22 src/hooks/useVideoRepurpose.ts | head -40",
+  "description": "Read useDeleteAsset"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G1 clip_too_long (90s) → 422  → status=422 error=clip_too_long
+> ✅ G2 beats_without_text → 422  → status=422 error=beats_without_text
+> ✅ G3 janela válida (30s + beats) → 202  → status=202 error=-
+> ✅ G4 probe passa em master íntegro (janela inteira)  → dur=20.00s decodificado=4.00s em 1 trecho(s)
+> ✅ G5 probe FALHA em master corrompido  → source_decode_failed: o trecho 00:00:08–00:00:12 (corte #1) não decodifica (ffmpeg exit 0: ing packet in decod
+> ✅ G6 janela além do EOF recusada  → cut_window_exceeds_source: o corte #1 (00:01:40–00:02:20) ultrapassa a duração do master (00:00:20). O cut-spe
+> ✅ G7 corrupção no miolo da janela é pega  → source_decode_failed: o trecho 00:00:00–00:00:20 (corte #1) não decodifica (ffmpeg exit 0: ing packet in decod
+> 
+> ✅ SMOKE PASS — guardas do rail de repurpose (janela · beats · decode-probe)
+> EXIT=0
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 347:export function useDeleteAsset() {
+> 348-  const qc = useQueryClient();
+> 349-  return useMutation<void, Error, string>({
+> 350-    mutationFn: async (assetId: string) => {
+> 351-      const { error } = await supabase.from('creative_assets').delete().eq('id', assetId);
+> 352-      if (error) throw new Error(error.message);
+> 353-    },
+> 354-    onSuccess: () => {
+> 355-      qc.invalidateQueries({ queryKey: ['ingested_masters'] });
+> 356-      // ⚠️ 'creative-assets' com HÍFEN — é a chave real da galeria (useCreativeAssets.ts:15,
+> 357-      // ["creative-assets", kind ?? "all"]). A variante com underscore NUNCA casava, então o grid
+> 358-      // de /dashboard/spaces/assets não atualizava após excluir e o botão parecia quebrado.
+> 359-      // O prefix-match do TanStack cobre todas as variantes de `kind` de uma vez.
+> 360-      qc.invalidateQueries({ queryKey: ['creative-assets'] });
+> 361-    },
+> 362-  });
+> 363-}
+> 364-
+> 365-// S1 UX: honest SRT badge — server truth from the ingested master's metadata (RLS own).
+> 366-export function useMasterSrtStatus(assetId: string | null) {
+> 367-  return useQuery({
+> 368-    queryKey: ['master_srt', assetId],
+> 369-    enabled: !!assetId,
+> ```
+
+## 🤖 Claude *(10:54:38)*
+
+
+## 🤖 Claude *(10:54:39)*
+
+Smoke **7/7 PASS** (o revisor acrescentou o G7 — corrupção no miolo da janela). Fechando o falso-sucesso que o security-review apontou:
+
+## 🤖 Claude *(10:54:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts",
+  "old_string": "    mutationFn: async (assetId: string) => {\n      const { error } = await supabase.from('creative_assets').delete().eq('id', assetId);\n      if (error) throw new Error(error.message);\n    },",
+  "new_string": "    mutationFn: async (assetId: string) => {\n      // `.select()` returns the rows RLS actually let us delete. Without it a blocked delete resolves\n      // with error=null and 0 rows, and the caller fires a success toast for a row that still exists \u2014\n      // the SELECT policy is `own OR org member` while the DELETE policy is owner-only, so an asset\n      // shared into the org renders a delete button that silently no-ops. Fail loud instead (Lei 1).\n      const { data, error } = await supabase\n        .from('creative_assets')\n        .delete()\n        .eq('id', assetId)\n        .select('id');\n      if (error) throw new Error(error.message);\n      if (!data || data.length === 0) {\n        throw new Error('Voc\u00ea n\u00e3o tem permiss\u00e3o para excluir este asset \u2014 ele pertence a outra conta.');\n      }\n    },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useVideoRepurpose.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:54:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -3 && echo \"--- TESTES ---\" && bun run test 2>&1 | tail -5",
+  "description": "Rebuild + retest after delete fix",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 25.64s
+> --- TESTES ---
+>  Test Files  53 passed | 2 skipped (55)
+>       Tests  648 passed | 2 skipped (650)
+>    Start at  07:55:13
+>    Duration  23.45s (transform 2.17s, setup 5.88s, collect 6.61s, tests 3.75s, environment 31.52s, prepare 7.84s)
+> ```
+
+## 🤖 Claude *(10:55:50)*
+
+
+## 🤖 Claude *(10:55:52)*
+
+Tudo verde: **build ✓ 25.64s** · **648 testes**. 
+
+Uma memória do projeto ficou **factualmente errada** com este diagnóstico — vou corrigi-la para não envenenar sessões futuras:
+
+## 🤖 Claude *(10:55:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_repurpose_beats_bug_and_open_fixes.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_repurpose_beats_bug_and_open_fixes
+> 3	description: "Fila de correções ABERTA do rail de repurpose (2026-07-20): bug do caption_mode='beats' ISOLADO por teste do Sovereign (drawtext passa, beats falha + adultera durações), decode-probe pré-Playwright, selo de saúde do master no seletor, excluir asset na página /dashboard/spaces/assets, e catálogo do HyperFrames quebrado em /dashboard/spaces/video."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 2d99e54c-5adb-4868-a61e-f9ee9089dec1
+> 8	  modified: 2026-07-20T03:55:55.097Z
+> 9	---
+> 10	
+> 11	**Contexto:** sessão 2026-07-19/20 destravou o rail de repurpose do EP02. Ficaram 5 correções nomeadas e não feitas (janela de contexto esgotada). Ver [[project_audience_flywheel_distribution]] · [[project_video_repurpose_engine]].
+> 12	
+> 13	## 1. BUG `caption_mode: 'beats'` — ISOLADO, causa ainda não corrigida (P0)
+> 14	**Prova experimental do Sovereign:** o MESMO corte (`in_sec 376 → out_sec 397`) **falha com `beats`** e **passa com `drawtext`**. Logo o defeito está no caminho de overlay motion-graphic (Playwright → frames alpha RGBA → FFmpeg overlay), NÃO no clipe, no upload nem no master.
+> 15	Sintomas correlacionados a investigar juntos:
+> 16	- Erro reportado era enganoso: `clip_upload_failed[2]: The object exceeded the maximum allowed size` — mas o limite do projeto é **50 MB** (`GET /v1/projects/<ref>/config/storage` → `fileSizeLimit: 52428800`) e os clipes que passaram tinham 6,8 e 9,4 MB. A mensagem do Supabase NÃO reflete a causa real.
+> 17	- **Durações adulteradas:** spec pedia 36 s / 20 s / 21 s; produzidos 14 s e 17 s.
+> 18	- **`-ss 47` inexplicado** no comando FFmpeg observado em `ps` — não corresponde a nenhum `in_sec` da spec (5, 134, 376).
+> 19	Hipótese a testar: o pipeline de beats recalcula a janela do corte a partir dos `text_beats` (que são relativos ao clipe) e produz offsets/durações erradas. Arquivos: `scripts/video-repurpose/segment-core.ts` (2 invocações de ffmpeg: linha ~90 caminho beats com 2 inputs, linha ~123 caminho simples) + o renderizador de frames alpha.
+> 20	
+> 21	## 2. Decode-probe ANTES do Playwright (P1)
+> 22	O worker gasta minutos desenhando frames no Chromium e só então descobre que a fonte não decodifica. Fazer um probe de ~2 s nas posições de cada corte (`ffmpeg -ss T -t 2 -i src -f null -`) ANTES de qualquer render → falhar em segundos com `source_corrupt` em vez de `Invalid NAL unit size` no fim. Arquivo: `scripts/video-repurpose-bridge.ts`.
+> 23	
+> 24	## 3. Selo de saúde do master no seletor (P1)
+> 25	`useIngestedMasters` (em `src/hooks/useVideoRepurpose.ts`) já expõe `hasSrt` e `keyLooksSanitized`. Falta **saúde do arquivo** — foi o seletor que permitiu ao Sovereign reusar um master corrompido. Ideia: probe server-side sob demanda + badge.
+> 26	
+> 27	## 4. Excluir asset na página de Assets (P1 — pedido direto)
+> 28	`useDeleteAsset()` JÁ existe (`src/hooks/useVideoRepurpose.ts`) e a policy RLS `creative_assets_delete_own` (`auth.uid() = user_id`) já existia. Falta só expor o botão em **`/dashboard/spaces/assets`** (hoje só está no seletor do RepurposeWizard).
+> 29	
+> 30	## 5. Catálogo do HyperFrames quebrado (P1 — regressão)
+> 31	`/dashboard/spaces/video`, aba **catalog** → **"Failed to load catalog"**. Verificar se o servidor `video-studio.service` (hyperframes preview, `127.0.0.1:3210`) está vivo e se o vhost `video.mcorch.com` responde. Ver [[reference_hyperframes_worker_restart]] · [[project_video_studio]].
+> 32	
+> 33	## 6. Pergunta aberta do Sovereign (produto, não bug)
+> 34	"Esse é o melhor formato de legenda? Acredito que existam outros mais impactantes." → avaliar estilos de legenda (karaoke word-by-word, highlight por palavra, pop-in) contra o que a pesquisa verificada sustenta (claim #4: Shorts são consumidos SEM SOM ⇒ legenda é canal primário). Nenhum benchmark externo de estilo sobreviveu à verificação — logo isto é **hipótese a testar**, não cópia de fórmula.
+> 35	
+> 36	## Estado dos ativos (2026-07-20)
+> 37	Master EP02 íntegro no host: `repurpose-inbox/ada39fae-…/EP02_-_MASTER__YouTube_.mp4` (529.015.996 bytes — o corrompido tinha 555.949.879, **+26,9 MB de chunk duplicado**). 3 cortes do EP01 + 3 do EP02 produzidos (os do EP02: 2 com `beats` e 1 com `drawtext`, legenda inconsistente entre eles).
+> 38	
+> ```
+
+## 🤖 Claude *(10:56:30)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_repurpose_beats_bug_and_open_fixes.md",
+  "content": "---\nname: project_repurpose_beats_bug_and_open_fixes\ndescription: \"Rail de repurpose (RESOLVIDO 2026-07-20): o 'bug do caption_mode=beats' foi REFUTADO \u2014 o A/B do Sovereign comparou arquivos diferentes. Os defeitos reais eram teto de dura\u00e7\u00e3o ausente, beats sem texto virando v\u00eddeo nu, e o falso-verde do segmentVideo sobre master corrompido. Decode-probe, selo de sa\u00fade, excluir asset e cat\u00e1logo HyperFrames: todos fechados.\"\nmetadata:\n  node_type: memory\n  type: project\n  originSessionId: 2d99e54c-5adb-4868-a61e-f9ee9089dec1\n  modified: 2026-07-20T08:00:00.000Z\n---\n\n**Contexto:** a fila aberta em 2026-07-19/20 foi drenada em 2026-07-20 (loop de 21 agentes: diagn\u00f3stico adversarial + implementa\u00e7\u00e3o + revis\u00e3o). Ver [[project_audience_flywheel_distribution]] \u00b7 [[project_video_repurpose_engine]].\n\n## \u26a0\ufe0f 1. O \"bug do `caption_mode: 'beats'`\" N\u00c3O EXISTE \u2014 premissa refutada\n\n**A vers\u00e3o anterior desta mem\u00f3ria estava errada.** O A/B do Sovereign foi inv\u00e1lido: **o master foi reescrito no meio do experimento**.\n\n- `EP02_-_MASTER__YouTube_.mp4` \u00b7 mtime `2026-07-20 00:36:12` \u00b7 **owner `ubuntu`** (todos os outros arquivos do diret\u00f3rio s\u00e3o `gcrUX`) \u2014 mecanismo do reupload NUNCA foi determinado.\n- Os dois `ffmpeg exit 69` s\u00e3o de 00:08 e 00:29 (**antes**); o bra\u00e7o `beats` (`672f5efa`) \u00e9 de 00:37 e o `drawtext` de 00:50 (**depois**). Bra\u00e7os diferentes rodaram contra **arquivos diferentes**.\n- O motor `beats` funciona: no `672f5efa` os clipes `[0]` e `[1]` (ambos beats) subiram; o frame t=2s do `clip_000.mp4` mostra o overlay karaok\u00ea. `drawtext` falha IGUAL sobre master corrompido.\n- \"Dura\u00e7\u00f5es adulteradas\" eram **dois renders distintos** (`89434b68` spec 36/20/21 n\u00e3o produziu nada; `672f5efa` spec 14/17/90 produziu 14s e 17s). O `-ss 47` era literalmente `clips[2].in_sec = 47`.\n\n**Li\u00e7\u00e3o perene:** antes de acreditar num A/B sobre arquivo local, cheque o `mtime`/owner do insumo nos dois bra\u00e7os.\n\n## \ud83d\udd34 2. O achado que importa \u2014 `segmentVideo` produz FALSO-VERDE\n\nSobre master corrompido o `segmentVideo` **n\u00e3o falha**: `exit 0` em 1,78s, MP4 estruturalmente v\u00e1lido, dura\u00e7\u00e3o e contagem de frames **id\u00eanticas** ao \u00edntegro (4,000s / 120 frames). A \u00fanica diferen\u00e7a \u00e9 o peso: **24.987 bytes vs 231.779** (frames lixo). Nenhuma checagem a jusante pegava. \u00c9 por isso que o decode-probe existe.\n\n## \u2705 3. Fechado \u2014 guards + decode-probe (`scripts/video-repurpose/probe-core.ts`)\n\n**Crit\u00e9rio de veredito tem TR\u00caS partes** (medido, n\u00e3o deduzido): `exit === 0` **E** `stderr vazio` **E** `frames > 0` via `-progress pipe:1`.\n- s\u00f3 `exit` n\u00e3o basta: corrup\u00e7\u00e3o EP02 d\u00e1 `exit 0` com stderr sujo;\n- `exit + stderr` n\u00e3o basta: c\u00f3pia truncada a 300MB deu `exit=0, stderr=0` nos 3 spots e passaria por \u00edntegra \u2014 s\u00f3 a contagem de frames a denunciou.\n\n**Sondar PONTOS n\u00e3o basta** \u2014 corrup\u00e7\u00e3o no meio de um corte passa batido. O probe decodifica a **janela inteira** de cada corte, com janelas sobrepostas fundidas. Custo ~2,8s por 60s de 1080p (~10% do render que protege); `-xerror` aborta no 1\u00ba pacote ruim \u21d2 master ruim falha r\u00e1pido.\n\nOrdem load-bearing: **container ANTES de decode** \u2014 `-ss` al\u00e9m do EOF retorna `exit 0` com stderr vazio (passe vacuoso). SOP: `docs/processes/video-repurpose-source-probe.md`. Smoke `scripts/qa/smoke-repurpose-guards.ts` **7/7**.\n\nOutros guards: `MAX_CLIP_SPAN_S=60` em `video-repurpose-run` (n\u00e3o havia teto \u2014 um corte de 90s passou); `beats_without_text` fail-closed **sobre o resultado do `sanitizeBeats`**, n\u00e3o sobre a entrada crua; `MAX_CLIP_S` 90\u219260 em `detect-viral-moments`. O `workDir` agora \u00e9 preservado na falha (o `rmSync` incondicional destruiu a evid\u00eancia deste incidente) \u2014 **sem reaper, cresce em disco**.\n\n## \u2705 4. Fechado \u2014 selo de sa\u00fade, excluir asset, cat\u00e1logo\n\n- **Selo de sa\u00fade:** rota `GET /api/host-probe` no `host-upload-server.ts` + badge tri-estado; **vermelho DESABILITA a sele\u00e7\u00e3o** do master. \u26a0\ufe0f Depende do bloco nginx `location = /api/host-probe` (versionado em `infra/nginx/host-upload.location.conf`, **N\u00c3O APLICADO** \u2014 a\u00e7\u00e3o Sovereign) e de `systemctl --user restart host-upload.service`.\n- **Excluir asset:** o bug real era a **queryKey**: `useDeleteAsset` invalidava `['creative_assets']` (underscore) e a galeria usa `[\"creative-assets\"]` (h\u00edfen) \u2014 nunca casava. Tamb\u00e9m: `CreativeAssetCard` tinha `<button>` na raiz (nested button). E o delete por `id` s\u00f3 resolvia com falso-sucesso \u2014 corrigido com `.select('id')` + erro quando 0 linhas (SELECT \u00e9 `own OR org member`, DELETE \u00e9 owner-only).\n- **Cat\u00e1logo HyperFrames:** N\u00c3O era 404 nem servi\u00e7o morto. Rota real `/api/registry/blocks` devolvia **501** porque o `mcorchAdapter` omitia `listRegistryCatalog()` **de prop\u00f3sito** (supply-chain). Resolvido com registry **local curado** em `packages/video-studio-registry/`; `installRegistryBlock` continua recusado.\n\n## 5. Formato de legenda \u2014 ver [[reference_hyperframes_caption_catalog]]\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_repurpose_beats_bug_and_open_fixes.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(10:56:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_hyperframes_caption_catalog.md",
+  "content": "---\nname: reference_hyperframes_caption_catalog\ndescription: \"HyperFrames \u00e9 open-source da HeyGen (docs em hyperframes.heygen.com, N\u00c3O docs.hyperframes.dev). Cat\u00e1logo tem 16 componentes caption-*; Blend Difference \u00e9 incompat\u00edvel com nosso render alpha-overlay e falharia em SIL\u00caNCIO.\"\nmetadata:\n  node_type: memory\n  type: reference\n  modified: 2026-07-20T08:00:00.000Z\n---\n\n**HyperFrames = open-source da HeyGen** (`heygen-com/hyperframes`, declarado no `package.json` de `@hyperframes/core`, v0.7.22 instalada). `docs.hyperframes.dev` **n\u00e3o existe** \u2014 a doc real \u00e9 `hyperframes.heygen.com`; `hyperframes.dev` \u00e9 a vitrine, cujo `<h1>` \u00e9 literalmente \"Community Playground\" (galeria de remixes, **n\u00e3o** hospeda os templates). Os `caption-*` vivem em `hyperframes.heygen.com/catalog/`. Instala\u00e7\u00e3o: `npx hyperframes add <nome>`.\n\n## \u26a0\ufe0f Blend Difference N\u00c3O funciona na nossa arquitetura \u2014 e falha em sil\u00eancio\n\n\u00c9 `mix-blend-mode: difference` em CSS puro (variantes `difference`/`exclusion`/`screen`), com requisito **`isolation: isolate` no root**. Fonte: `raw.githubusercontent.com/heygen-com/hyperframes/main/registry/components/caption-blend-difference/caption-blend-difference.html`.\n\nNosso `renderAlphaFrames` (`scripts/hyperframes/render-core.ts:378-396`) faz `page.screenshot({ omitBackground: true })` \u2014 **n\u00e3o h\u00e1 v\u00eddeo dentro do browser**; o FFmpeg comp\u00f5e depois por alpha-over. `mix-blend-mode` exige o v\u00eddeo como irm\u00e3o no mesmo contexto de composi\u00e7\u00e3o. Copiar-colar o CSS renderiza texto branco comum, **sem erro nenhum**.\n\nDois caminhos: **(A)** mover o blend para o FFmpeg \u2014 `blend=all_mode=difference|exclusion|screen` **confirmado presente** no ffmpeg deste host (`ffmpeg -h filter=blend`), com `maskedmerge` para restringir aos pixels do texto (filtergraph **N\u00c3O testado**); **(B)** compor no browser (injetar o frame, render opaco) \u2014 fidelidade exata, mas \u00e9 um 2\u00ba rail e decodifica no Chromium por frame.\n\n## O caminho curto: 2 legendas-padr\u00e3o que faltam\n\nNosso `viral-caption-overlay-9x16.html` j\u00e1 faz \u00e0 m\u00e3o algo pr\u00f3ximo de `caption-kinetic-slam` + `caption-neon-accent`. Faltam os dois que o cat\u00e1logo trata como baseline de shorts, e **ambos casam com o contrato `beats[{t_start,t_end,phrase,emphasis}]` que j\u00e1 temos, sem GSAP**:\n- `caption-highlight` \u2014 sweep de fundo vermelho atr\u00e1s da palavra ativa (TikTok-style)\n- `caption-pill-karaoke` \u2014 p\u00edlula com destaque karaok\u00ea por palavra\n\nOs 16 do cat\u00e1logo (fonte: `hyperframes.heygen.com/llms.txt`): highlight \u00b7 pill-karaoke \u00b7 kinetic-slam \u00b7 blend-difference \u00b7 clip-wipe \u00b7 editorial-emphasis \u00b7 emoji-pop \u00b7 glitch-rgb \u00b7 gradient-fill \u00b7 matrix-decode \u00b7 neon-accent \u00b7 neon-glow \u00b7 parallax-layers \u00b7 particle-burst \u00b7 texture \u00b7 weight-shift.\n\n## `instagram-follow` \u2014 porte de baixo risco\nBlock 1080\u00d71920, **4.5s**, GSAP timeline pausada em `window.__timelines[id]`; card lower-third (avatar 120px, selo verificado, bot\u00e3o com spring `elastic.out(1,0.4)` Follow\u2192Following aos 1.15s). J\u00e1 nasce com fundo transparente \u21d2 compat\u00edvel com nosso overlay. Irm\u00e3o: `tiktok-follow`. Ponte determin\u00edstica: `window.applyFrame = (i) => tl.seek(i / FPS)`.\n\n**Exige vendorizar GSAP** (`node_modules/gsap` N\u00c3O existe no repo) e DM Sans \u2014 sob `file://` sem rede o `<script src=cdn>` falha em sil\u00eancio e o template renderiza est\u00e1tico.\n\n## Gates antes de portar\n1. **Licen\u00e7a N\u00c3O verificada** \u2014 o repo tem `LICENSE` e `CREDITS.md`, n\u00e3o lidos. Ver [[feedback_opensource_first_zero_cost_equity]]: AGPL j\u00e1 derrubou reuso neste projeto.\n2. \u00c9 **feature nova** \u21d2 Closed-Loop exige Amendment BoK antes do c\u00f3digo.\n3. O cat\u00e1logo local curado onde isso entraria: `packages/video-studio-registry/` \u2014 ver [[project_repurpose_beats_bug_and_open_fixes]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_hyperframes_caption_catalog.md
+> ```
+
+## 🤖 Claude *(10:57:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory && python3 - <<'EOF'\nimport re\np='MEMORY.md'\ns=open(p).read()\nold_line=[l for l in s.split('\\n') if 'project_repurpose_beats_bug_and_open_fixes' in l]\nnew='- [Rail de repurpose \u2014 fila DRENADA 2026-07-20; bug do `beats` REFUTADO](project_repurpose_beats_bug_and_open_fixes.md) \u2014 o A/B comparou arquivos diferentes. Achado real: segmentVideo d\u00e1 falso-verde sobre master corrompido. Probe = exit+stderr+frames, janela inteira.'\nif old_line:\n    s=s.replace(old_line[0], new)\n    print(\"substituida:\", old_line[0][:80])\n# insert new reference line after it\nif 'reference_hyperframes_caption_catalog' not in s:\n    s=s.replace(new, new+'\\n- [HyperFrames = open-source da HeyGen; Blend Difference N\u00c3O funciona no nosso render](reference_hyperframes_caption_catalog.md) \u2014 falha em sil\u00eancio (alpha-overlay, sem v\u00eddeo no browser). caption-highlight e pill-karaoke casam com nosso contrato de beats sem GSAP.')\n    print(\"referencia adicionada\")\nopen(p,'w').write(s)\nEOF\ngrep -c \"^- \\[\" MEMORY.md",
+  "description": "Update memory index"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> substituida: - [🔧 FILA ABERTA — bug do `beats` isolado + 5 correções do rail de repurpose](pr
+> referencia adicionada
+> 95
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(10:57:11)*
+
+
+## 🤖 Claude *(10:57:41)*
+
+Loop drenado. Relatório final.
+
+## Os 6 passos
+
+| # | Item | Estado |
+|---|---|---|
+| 1 | **P0 `beats`** | ✅ **Refutado + defeitos reais fechados.** Não havia bug de modo. Fechados: teto `MAX_CLIP_SPAN_S=60`, `beats_without_text` fail-closed, `MAX_CLIP_S` 90→60, workDir preservado na falha |
+| 2 | **decode-probe** | ✅ `probe-core.ts` + fiado no worker. **Smoke 7/7** |
+| 3 | **Selo de saúde** | ⚠️ Código pronto, **bloqueado no nginx** (ver abaixo) |
+| 4 | **Excluir asset** | ✅ Vivo — mais 3 bugs colaterais fechados |
+| 5 | **Catálogo HyperFrames** | ✅ `HTTP 200`, 4 blocos, registry local curado |
+| 6 | **`privacyStatus` privado** | ✅ Deployado, default `private` no YouTube |
+
+## Alertas
+
+✅ BoK `crm-suite` **9/9** (2.280 linhas, 21 padrões conferidos) · ✅ `crm-inbox/00-index.md` (gate do `/handson` passa) · ✅ **runbook de rotação** (6 credenciais, ordenadas por risco, zero valores transcritos) · ✅ **SOP de ativação do `youtube-upload.service`** · ⚠️ MCP: impossível aqui.
+
+## Gates materiais
+
+`build ✓ 25,64s` · `648 testes` · `/security-review` **NO FINDINGS** · `smoke 7/7` · **6/6 edge functions deployadas**.
+
+## O que a revisão adversarial salvou
+
+Os revisores acharam **4 defeitos P0 que os implementadores não viram** — e dois deles eram do tipo que passa em todo teste:
+
+- **O selo de saúde condenaria masters saudáveis.** Sem a rota no nginx, o `location /` devolve a SPA em **200**; o cliente virava `{}` e disparava *"Arquivo corrompido — envie o master novamente"*. O senhor clicaria no EP01 íntegro e a UI mandaria reenviar.
+- **Meu critério de probe estava errado.** Especifiquei `exit 0 E stderr vazio`; medição provou que uma cópia truncada a 300 MB passa nos dois. Só a **contagem de frames** denuncia. São três partes.
+- **O probe sondava pontos, não janelas** — corrupção no miolo de um corte passava batido.
+- **Falso-sucesso no excluir** (achado do security-review): DELETE por `id` com SELECT `own OR org member` retornava 0 linhas sem erro e mostrava "Asset excluído". Corrigido com `.select('id')`.
+
+## 🔒 Fica com o senhor
+
+1. **`nginx`: `location = /api/host-probe`** — bloco versionado em `infra/nginx/host-upload.location.conf`. Sem ele o badge amarelo não funciona (mas falha honesto, não mente). Depois: `systemctl --user restart host-upload.service` (derruba upload em voo).
+2. **Decisão aberta — altitude do default `private`.** Coloquei em `publish-space-asset`, que é *um* produtor. `cadence-run` e `reshape-pillar` enfileiram YouTube sem o campo e caem em `public`. O patch de 1 linha em `publish-social:56` cobriria todos — **não apliquei** porque muda o comportamento do Viral Autopilot (rail de receita). Owner é o senhor.
+3. **TikTok: código sem chamador.** O backend honra `private`→`SELF_ONLY`, mas nenhum caller envia `privacy` para TikTok. Está inalcançável, não indistinguível.
+4. **🔴 LGPD `FM-CS-02`, RPN 324** — `erase_lead()` não cascateia para `companies`/`deals`/`crm_activities`, que foram para produção depois dela. Exige migration.
+5. **Rotação de credenciais** — runbook pronto; execução no console.
+6. **`youtube-upload.service`** — SOP pronto; `is-enabled` continua `not-found`.
+
+## Duas coisas que o senhor precisa saber
+
+**Não commitei.** São 34 arquivos na árvore (16 M + 18 novos). Prefiro que o senhor decida — posso rodar `/handoff` para selar com commits granulares.
+
+**O frontend já está no ar.** `bun run build` no repo principal *é* o deploy — nginx serve `dist/` direto. Seletor de privacidade, botão excluir e selo de saúde estão vivos em login.mcorch.com. Reversível por rebuild a partir do git, mas não ficou em stage.
+
+## Sobre o HyperFrames
+
+**Blend Difference é uma armadilha na nossa arquitetura** — renderizamos a legenda isolada em RGBA, sem vídeo no browser; `mix-blend-mode` não teria contra o que inverter e produziria texto branco comum **sem erro nenhum**. Confirmei que o ffmpeg deste host tem `blend=all_mode=difference`, então dá para mover o efeito para o FFmpeg — mas o filtergraph é desenho meu, sem witness.
+
+O caminho curto são **`caption-highlight`** e **`caption-pill-karaoke`** — os dois que o catálogo trata como baseline de shorts, e que **casam com o contrato `beats` que já temos, sem GSAP**. Isso é feature nova ⇒ Amendment BoK antes do código. E antes disso: **a licença do repo HeyGen não foi lida** — dado que AGPL já derrubou reuso aqui, não vou vendorizar nada sem checar.
+
+Registrei tudo em memória, incluindo a correção da memória que afirmava que o bug do `beats` era real.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
