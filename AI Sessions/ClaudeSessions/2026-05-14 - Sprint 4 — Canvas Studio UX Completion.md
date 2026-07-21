@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 
 > Read in parallel:
 > - `HANDOFF.md` (full file — Task State, last Record, Pending Actions, GraphRAG State, Infrastructure)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-14 - Build content v2 AI canvas platform]]
+> * **Próxima Sessão**: [[2026-05-14 - agent-a39fc769c2dd846b0]]
+%% --- TIMELINE END --- %%

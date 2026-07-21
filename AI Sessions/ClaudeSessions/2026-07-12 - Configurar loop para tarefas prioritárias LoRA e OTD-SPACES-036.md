@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-12 - Configurar loop para taref
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-12%20-%20Configurar%20loop%20para%20tarefas%20priorit%C3%A1rias%20LoRA%20e%20OTD-SPACES-036.md
 ---
 
-# Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036
+# [[2026-07-11 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036|Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**1.6 MB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-12 - Build API dashboard with video metrics and CRUD operations]]
+> * **Próxima Sessão**: [[2026-07-12 - agent-a0456d3223540b817]]
+%% --- TIMELINE END --- %%

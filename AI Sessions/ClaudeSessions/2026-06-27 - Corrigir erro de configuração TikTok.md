@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-27 - Corrigir erro de configura
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-27%20-%20Corrigir%20erro%20de%20configura%C3%A7%C3%A3o%20TikTok.md
 ---
 
-# Corrigir erro de configuração TikTok
+# [[2026-06-28 - Corrigir erro de configuração TikTok|Corrigir erro de configuração TikTok]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**423 KB**) foi movido para fora do cofre
@@ -78,3 +78,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-27 - Conectar redes sociais TikTok, YouTube e Pinterest]]
+> * **Próxima Sessão**: [[2026-06-27 - agent-a011adcb2efd37d56]]
+%% --- TIMELINE END --- %%

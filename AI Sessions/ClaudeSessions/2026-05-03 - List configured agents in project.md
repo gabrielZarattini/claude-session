@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 >   "subagent_type": "Explore",
 >   "prompt": "Explore the codebase at /home/gcrUX/htdocs/constellation-orchestra and list ALL configured agents. Look for:\n\n1. Agent definitions in src/ (any files named *agent*, *Agent*, crew configs, squad configs)\n2. Supabase Edge Functions in supabase/functions/ \u2014 list all function directories and their purpose\n3. Zustand stores for agents: src/store/useCrewStore.ts \u2014 what agent types/squads are defined?\n4. Any agent registry, SQUAD_META, or agent catalog (static configs, constants)\n5. n8n or automation configs (look in root, scripts/, config/)\n6. Any .json or .yaml files defining agents\n7. Docker services in docker-compose files\n\nFor each agent found, report:\n- Name/ID\n- Type (Edge Function, AI agent, automation, etc.)\n- Trigger mechanism (HTTP, cron, event, manual)\n- File path\n\nBe thorough \u2014 search breadth: very thorough."
 > }
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-03 - Fix constellation matrix rendering]]
+> * **Próxima Sessão**: [[2026-05-03 - Seal Kore Voice Only memory loop handoff]]
+%% --- TIMELINE END --- %%

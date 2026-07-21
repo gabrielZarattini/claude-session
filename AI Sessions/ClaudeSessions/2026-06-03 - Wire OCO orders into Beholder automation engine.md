@@ -62,4 +62,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 
 > ## 🤖 Claude *(19:40:19)*
 > 
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-03 - Upgrade node-binance-api to 1.0.27 and implement OCO]]
+> * **Próxima Sessão**: [[2026-06-03 - a9beda03-6192-4989-aed8-b75558abf414]]
+%% --- TIMELINE END --- %%

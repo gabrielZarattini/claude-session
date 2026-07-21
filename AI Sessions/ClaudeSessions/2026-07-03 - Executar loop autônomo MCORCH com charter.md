@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-03 - Executar loop autônomo MC
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-03%20-%20Executar%20loop%20aut%C3%B4nomo%20MCORCH%20com%20charter.md
 ---
 
-# Executar loop autônomo MCORCH com charter
+# [[2026-07-02 - Executar loop autônomo MCORCH com charter|Executar loop autônomo MCORCH com charter]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**3.1 MB**) foi movido para fora do cofre
@@ -71,3 +71,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - 7bb4586f-3050-4a11-99ef-569c4b75c080]]
+> * **Próxima Sessão**: [[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma]]
+%% --- TIMELINE END --- %%

@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-30 - Criar estratégia de conte
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-30%20-%20Criar%20estrat%C3%A9gia%20de%20conte%C3%BAdo%20e%20avatar%20para%20Gabriel%20AI.md
 ---
 
-# Criar estratégia de conteúdo e avatar para Gabriel AI
+# [[2026-06-29 - Criar estratégia de conteúdo e avatar para Gabriel AI|Criar estratégia de conteúdo e avatar para Gabriel AI]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**1.1 MB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-30 - Configurar loop autônomo e definir fila soberana]]
+> * **Próxima Sessão**: [[2026-06-30 - Usar comando loop para continuar sequência lógica]]
+%% --- TIMELINE END --- %%

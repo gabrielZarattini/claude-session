@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-23 - Próximos passos do projet
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-23%20-%20Pr%C3%B3ximos%20passos%20do%20projeto.md
 ---
 
-# Próximos passos do projeto
+# [[2026-06-24 - Próximos passos do projeto|Próximos passos do projeto]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**431 KB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-23 - Lovable Loop (Driver+Critico via n8n)]]
+> * **Próxima Sessão**: [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]
+%% --- TIMELINE END --- %%

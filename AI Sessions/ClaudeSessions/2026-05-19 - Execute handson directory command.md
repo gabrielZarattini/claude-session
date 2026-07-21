@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > Execute the ShakeHands /handson ritual for this project.
 > 
 > > **v3 (2026-05-08):** Added BoK Gate enforcement per MCORCH Master Execution Protocol — alert when active module work has no sealed BoK suite at `docs/bok/<slug>/`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-19 - Document current plan before implementation]]
+> * **Próxima Sessão**: [[2026-05-19 - Provision ML affiliate token before E2E tests]]
+%% --- TIMELINE END --- %%

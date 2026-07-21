@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-05-21 - Fix OpenClaw cron job disp
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-05-21%20-%20Fix%20OpenClaw%20cron%20job%20display%20issues.md
 ---
 
-# Fix OpenClaw cron job display issues
+# [[2026-05-25 - Fix OpenClaw cron job display issues|Fix OpenClaw cron job display issues]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**484 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-20 - agent-aa78631336c942439]]
+> * **Próxima Sessão**: [[2026-05-25 - 47e741a8-523d-4500-9797-99b2fa4494c2]]
+%% --- TIMELINE END --- %%

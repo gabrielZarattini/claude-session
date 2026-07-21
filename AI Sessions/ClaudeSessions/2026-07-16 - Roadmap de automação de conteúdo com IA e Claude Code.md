@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-16 - Roadmap de automação de 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-16%20-%20Roadmap%20de%20automa%C3%A7%C3%A3o%20de%20conte%C3%BAdo%20com%20IA%20e%20Claude%20Code.md
 ---
 
-# Roadmap de automação de conteúdo com IA e Claude Code
+# [[2026-07-15 - Roadmap de automação de conteúdo com IA e Claude Code|Roadmap de automação de conteúdo com IA e Claude Code]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**918 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-16 - Configure Pinterest API credentials and global auth keys]]
+> * **Próxima Sessão**: [[2026-07-16 - agent-a04eb3eba0238ed33]]
+%% --- TIMELINE END --- %%

@@ -62,4 +62,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 
 > 
 >         "title": "O que você acha disso.: ═════════════════════════════════════════════════════...",
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Fix TTS bridge and resolve critical production issues]]
+> * **Próxima Sessão**: [[2026-05-02 - Set up priorities and AIOS system prompt]]
+%% --- TIMELINE END --- %%

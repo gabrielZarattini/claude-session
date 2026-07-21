@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > > - /
 > > 
 > > Additionally, your current permission grants (listed in the order they are checked) are:
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-26 - Faça um premortem do projeto homegcrUXhtdocsconstellation-orchestra]]
+> * **Próxima Sessão**: [[2026-05-27 - handson]]
+%% --- TIMELINE END --- %%

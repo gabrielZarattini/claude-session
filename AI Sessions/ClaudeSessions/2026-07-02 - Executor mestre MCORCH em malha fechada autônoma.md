@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-02 - Executor mestre MCORCH em 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-02%20-%20Executor%20mestre%20MCORCH%20em%20malha%20fechada%20aut%C3%B4noma.md
 ---
 
-# Executor mestre MCORCH em malha fechada autônoma
+# [[2026-07-03 - Executor mestre MCORCH em malha fechada autônoma|Executor mestre MCORCH em malha fechada autônoma]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**805 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - Executar loop autônomo MCORCH com charter]]
+> * **Próxima Sessão**: [[2026-07-02 - Resolver alertas de produção e migrations]]
+%% --- TIMELINE END --- %%

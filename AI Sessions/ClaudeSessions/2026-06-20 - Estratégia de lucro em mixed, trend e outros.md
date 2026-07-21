@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-20 - Estratégia de lucro em mi
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-20%20-%20Estrat%C3%A9gia%20de%20lucro%20em%20mixed%2C%20trend%20e%20outros.md
 ---
 
-# Estratégia de lucro em mixed, trend e outros
+# [[2026-06-19 - Estratégia de lucro em mixed, trend e outros|Estratégia de lucro em mixed, trend e outros]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**881 KB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-20 - Analisar estratégia de trading e sinais de lucro]]
+> * **Próxima Sessão**: [[2026-06-20 - Próximos passos do projeto]]
+%% --- TIMELINE END --- %%

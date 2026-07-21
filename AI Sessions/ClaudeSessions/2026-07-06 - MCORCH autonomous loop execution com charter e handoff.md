@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-06 - MCORCH autonomous loop exe
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-06%20-%20MCORCH%20autonomous%20loop%20execution%20com%20charter%20e%20handoff.md
 ---
 
-# MCORCH autonomous loop execution com charter e handoff
+# [[2026-07-07 - MCORCH autonomous loop execution com charter e handoff|MCORCH autonomous loop execution com charter e handoff]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**845 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
+> * **Próxima Sessão**: [[2026-07-06 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+%% --- TIMELINE END --- %%

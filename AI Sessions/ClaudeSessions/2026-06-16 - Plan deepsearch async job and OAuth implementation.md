@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-16 - Plan deepsearch async job 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-16%20-%20Plan%20deepsearch%20async%20job%20and%20OAuth%20implementation.md
 ---
 
-# Plan deepsearch async job and OAuth implementation
+# [[2026-06-15 - Plan deepsearch async job and OAuth implementation|Plan deepsearch async job and OAuth implementation]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**992 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-16 - Build trading dashboard with AI strategy validation]]
+> * **Próxima Sessão**: [[2026-06-16 - agent-a04b67f29a2820d36]]
+%% --- TIMELINE END --- %%

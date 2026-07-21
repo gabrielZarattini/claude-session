@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-07 - Refinar qualidade criativa
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-07%20-%20Refinar%20qualidade%20criativa%20e%20consolidar%20Canvas%20com%20Spaces%20v2.md
 ---
 
-# Refinar qualidade criativa e consolidar Canvas com Spaces v2
+# [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2|Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**5.4 MB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-07 - Pesquisar mercado freelance de IA e montar posicionamento como dev]]
+> * **Próxima Sessão**: [[2026-07-07 - Revisar status do cockpit]]
+%% --- TIMELINE END --- %%

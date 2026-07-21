@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-05-29 - Fix API key leak and recon
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-05-29%20-%20Fix%20API%20key%20leak%20and%20reconfigure%20model%20defaults.md
 ---
 
-# Fix API key leak and reconfigure model defaults
+# [[2026-05-30 - Fix API key leak and reconfigure model defaults|Fix API key leak and reconfigure model defaults]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**644 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-29 - 1307a9dd-bac8-4f84-b1e9-b5c4b53726bc]]
+> * **Próxima Sessão**: [[2026-05-29 - Update context and continue antigravity handoff]]
+%% --- TIMELINE END --- %%

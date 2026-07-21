@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-04 - Verificar sinais de negoci
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-04%20-%20Verificar%20sinais%20de%20negocia%C3%A7%C3%A3o%20no%20Telegram.md
 ---
 
-# Verificar sinais de negociação no Telegram
+# [[2026-07-05 - Verificar sinais de negociação no Telegram|Verificar sinais de negociação no Telegram]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**421 KB**) foi movido para fora do cofre
@@ -67,3 +67,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]
+> * **Próxima Sessão**: [[2026-07-04 - agent-a1b011dc038095b9f]]
+%% --- TIMELINE END --- %%

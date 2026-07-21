@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-23 - Resolver CF WAF e secrets 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-23%20-%20Resolver%20CF%20WAF%20e%20secrets%20para%20a%C3%A7%C3%A3o%20Sovereign.md
 ---
 
-# Resolver CF WAF e secrets para ação Sovereign
+# [[2026-06-22 - Resolver CF WAF e secrets para ação Sovereign|Resolver CF WAF e secrets para ação Sovereign]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**634 KB**) foi movido para fora do cofre
@@ -70,3 +70,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-23 - Próximos passos do projeto]]
+> * **Próxima Sessão**: [[2026-06-23 - Verificar backtest-results e fixes de design]]
+%% --- TIMELINE END --- %%

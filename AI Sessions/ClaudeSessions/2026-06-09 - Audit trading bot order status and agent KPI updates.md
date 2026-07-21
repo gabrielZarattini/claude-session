@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-09 - Audit trading bot order st
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-09%20-%20Audit%20trading%20bot%20order%20status%20and%20agent%20KPI%20updates.md
 ---
 
-# Audit trading bot order status and agent KPI updates
+# [[2026-06-08 - Audit trading bot order status and agent KPI updates|Audit trading bot order status and agent KPI updates]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**615 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-08 - agent-aeba8bb08b81aa215]]
+> * **Próxima Sessão**: [[2026-06-09 - Commit predictive engineering documentation]]
+%% --- TIMELINE END --- %%

@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-14 - Montar loop para próximos
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-14%20-%20Montar%20loop%20para%20pr%C3%B3ximos%20passos.md
 ---
 
-# Montar loop para próximos passos
+# [[2026-07-08 - Montar loop para próximos passos|Montar loop para próximos passos]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**901 KB**) foi movido para fora do cofre
@@ -68,3 +68,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-14 - Fix alerts and optimize viral video clips]]
+> * **Próxima Sessão**: [[2026-07-14 - agent-a00bc104f8a34da7b]]
+%% --- TIMELINE END --- %%

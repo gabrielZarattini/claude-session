@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-05-26 - Install agent-browser for 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-05-26%20-%20Install%20agent-browser%20for%20E2E%20testing.md
 ---
 
-# Install agent-browser for E2E testing
+# [[2026-05-25 - Install agent-browser for E2E testing|Install agent-browser for E2E testing]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**843 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-26 - Fix OpenRouter multimodal error and token limits]]
+> * **Próxima Sessão**: [[2026-05-27 - 98202356-feef-4f6b-9631-acfe0d7e685d]]
+%% --- TIMELINE END --- %%

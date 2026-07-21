@@ -64,4 +64,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ls docs/bok/ 2>/dev/null                    # BoK suites disponíveis
 > wc -l HANDOFF.md                            # total lines — drives the read-from-end offset
 > ```
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-15 - Criar loop de vídeos com avatar no Vertex AI]]
+> * **Próxima Sessão**: [[2026-07-15 - Roadmap de automação de conteúdo com IA e Claude Code]]
+%% --- TIMELINE END --- %%

@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-18 - Configurar integração In
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-18%20-%20Configurar%20integra%C3%A7%C3%A3o%20Instagram%20Business%20API.md
 ---
 
-# Configurar integração Instagram Business API
+# [[2026-07-17 - Configurar integração Instagram Business API|Configurar integração Instagram Business API]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**901 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-18 - Configurar WhatsApp para abrir inbox no CRM]]
+> * **Próxima Sessão**: [[2026-07-18 - acd08d4f-e0ac-4e07-932b-890027f15a9b]]
+%% --- TIMELINE END --- %%

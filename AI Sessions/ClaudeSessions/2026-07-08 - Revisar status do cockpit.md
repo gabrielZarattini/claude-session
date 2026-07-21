@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-08 - Revisar status do cockpit.
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-08%20-%20Revisar%20status%20do%20cockpit.md
 ---
 
-# Revisar status do cockpit
+# [[2026-07-07 - Revisar status do cockpit|Revisar status do cockpit]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**371 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]
+> * **Próxima Sessão**: [[2026-07-08 - agent-a0b13f35b35bdfe4d]]
+%% --- TIMELINE END --- %%

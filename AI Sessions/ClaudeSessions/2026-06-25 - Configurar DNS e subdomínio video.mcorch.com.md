@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-25 - Configurar DNS e subdomín
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-25%20-%20Configurar%20DNS%20e%20subdom%C3%ADnio%20video.mcorch.com.md
 ---
 
-# Configurar DNS e subdomínio video.mcorch.com
+# [[2026-06-24 - Configurar DNS e subdomínio video.mcorch.com|Configurar DNS e subdomínio video.mcorch.com]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**812 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - Analisar paper e oportunidades de trading]]
+> * **Próxima Sessão**: [[2026-06-25 - Validar ecossistema e gerar lucros antes dos 90 dias]]
+%% --- TIMELINE END --- %%

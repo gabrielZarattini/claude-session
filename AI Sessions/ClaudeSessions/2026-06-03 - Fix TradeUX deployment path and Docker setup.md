@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-03 - Fix TradeUX deployment pat
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-03%20-%20Fix%20TradeUX%20deployment%20path%20and%20Docker%20setup.md
 ---
 
-# Fix TradeUX deployment path and Docker setup
+# [[2026-06-02 - Fix TradeUX deployment path and Docker setup|Fix TradeUX deployment path and Docker setup]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**699 KB**) foi movido para fora do cofre
@@ -70,3 +70,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > ## 🤖 Claude *(23:31:02)*
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[TradeUX]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-03 - Design agentic marketing framework for universal platforms]]
+> * **Próxima Sessão**: [[2026-06-03 - Monitor affiliate product updates and test results]]
+%% --- TIMELINE END --- %%

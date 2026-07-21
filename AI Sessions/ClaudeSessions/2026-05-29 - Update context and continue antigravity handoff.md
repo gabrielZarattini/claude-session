@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-05-29 - Update context and continu
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-05-29%20-%20Update%20context%20and%20continue%20antigravity%20handoff.md
 ---
 
-# Update context and continue antigravity handoff
+# [[2026-05-28 - Update context and continue antigravity handoff|Update context and continue antigravity handoff]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**1.0 MB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-29 - Fix API key leak and reconfigure model defaults]]
+> * **Próxima Sessão**: [[2026-05-30 - 0fb17c7c-3e60-44a1-b426-8966b708f3dc]]
+%% --- TIMELINE END --- %%

@@ -67,3 +67,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > - `CLAUDE.md` (architecture rules, data flow, key files)
 > - `.claude/context/sprint-priorities.md` (sprint goal, 4Cs snapshot, top gaps)
 > - `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (memory index)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-08 - agent-ae7410c00bb860c8b]]
+> * **Próxima Sessão**: [[2026-05-14 - Sprint 4 — Canvas Studio UX Completion]]
+%% --- TIMELINE END --- %%

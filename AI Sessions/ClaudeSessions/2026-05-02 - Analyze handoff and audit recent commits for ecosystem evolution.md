@@ -66,4 +66,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 4.  **Memory Mesh (UX/Performance):**
 > 
 >     *   **Anti-Crash:** Sigma Graph protegido contra falhas de redimensionamento.
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - 815f4d1e-ada4-445c-a0ff-7d13a567be7d]]
+> * **Próxima Sessão**: [[2026-05-02 - Deploy Phase Zeta with database migrations]]
+%% --- TIMELINE END --- %%

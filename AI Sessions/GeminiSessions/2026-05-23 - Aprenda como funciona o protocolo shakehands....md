@@ -63,3 +63,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > Redefinir
 > Memory Dreaming Promotion
 > Cron 0 3 * * *
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-21 - Olá tenho o seguinte docker e58e6b52ace8...]]
+> * **Próxima Sessão**: [[2026-05-23 - Consegue me ajudar identificar qual o...]]
+%% --- TIMELINE END --- %%

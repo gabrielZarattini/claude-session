@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-23 - Verificar backtest-results
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-23%20-%20Verificar%20backtest-results%20e%20fixes%20de%20design.md
 ---
 
-# Verificar backtest-results e fixes de design
+# [[2026-06-22 - Verificar backtest-results e fixes de design|Verificar backtest-results e fixes de design]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**664 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-23 - Resolver CF WAF e secrets para ação Sovereign]]
+> * **Próxima Sessão**: [[2026-06-23 - agent-a0ab9f49893cfaa5e]]
+%% --- TIMELINE END --- %%

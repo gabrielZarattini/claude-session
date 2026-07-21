@@ -69,4 +69,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > <local-command-stdout>Set effort level to ultracode (this session only): xhigh + dynamic workflow orchestration</local-command-stdout>
 > 
 > ## 👤 User *(04:39:47)*
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-02 - 9a39408b-0790-4623-aa69-b2cae6792a9f]]
+> * **Próxima Sessão**: [[2026-07-02 - Executar loop autônomo MCORCH com charter]]
+%% --- TIMELINE END --- %%

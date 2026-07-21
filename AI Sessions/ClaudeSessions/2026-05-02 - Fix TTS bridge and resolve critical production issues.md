@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 
 > # Validação de TypeScript
 > npx tsc --noEmit 2>&1 | tail -20
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Deploy Phase Zeta with database migrations]]
+> * **Próxima Sessão**: [[2026-05-02 - Fix incomplete API responses across all models]]
+%% --- TIMELINE END --- %%

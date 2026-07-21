@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > <summary>💭 Thinking Process</summary>
 > 
 > The user wants me to analyze the complete state of the repository and apply all pending work in main following MCORCH protocols. This is a complex task that requires planning first (since plan mode is active).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-05 - agent-ab52cb481cf529706]]
+> * **Próxima Sessão**: [[2026-05-06 - Fix layout issues and synchronize mesh node data]]
+%% --- TIMELINE END --- %%
