@@ -13,6 +13,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 > * **Total de Processos**: 58
 > * **Total de Sessões**: 1557
 =======
@@ -27,6 +28,10 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 > * **Total de Processos**: 88
 > * **Total de Sessões**: 2530
 >>>>>>> 6356b3f79c50ef002761f3a52eb8dec59695d54e
+=======
+> * **Total de Processos**: 89
+> * **Total de Sessões**: 2541
+>>>>>>> bba25be357e51178e0fef43b8cbf961f24f67ef1
 
 ---
 
@@ -63,6 +68,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[creative-assets-registry]]` - *Processo*
 *   `[[creative-qa-vision-gate]]` - *Processo*
 *   `[[credential-disconnect-clear]]` - *Processo*
+*   `[[crm-inbox-window-state]]` - *Processo*
 *   `[[deepsearch-blueprint]]` - *Processo*
 *   `[[ecc-harness-tools]]` - *Processo*
 *   `[[edge-jwt-identity-verification]]` - *Processo*
@@ -129,26 +135,40 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 =======
 =======
+=======
+*   `[[2026-07-18 - eb0262f6-e35f-4101-be5e-35c24a9a5e1f]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-af850dad83c03a6f8]]` (ClaudeSessions) - *2026-07-18*
+>>>>>>> bba25be357e51178e0fef43b8cbf961f24f67ef1
 *   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-aea2bd213a953a6e7]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-aa988956670c0e57a]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a96f179782377e994]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a5a2fc09af5a62245]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a5514743ce3b7d476]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a53874163b7126a69]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a3a472f26c1a43cf7]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a3129eb5d3f589fac]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a30d17222e847514c]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a286074c1c5cbb19d]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a23f81f5e59e411c9]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a1aca2c15fbe7edd6]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - agent-a11536122f78333bd]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a100baa65a88dcf34]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - agent-a0e190ea8803e2f99]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - acd08d4f-e0ac-4e07-932b-890027f15a9b]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - Configurar integração Instagram Business API]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - Configurar WhatsApp para abrir inbox no CRM]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - 7dd316fd-8fc6-49f0-b521-99c15605f3a2]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - 2b5ddb18-8e79-4edb-bb6d-d9163f134c51]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-18 - 1e281932-cb2d-4aec-bdc3-913eeb7c5218]]` (ClaudeSessions) - *2026-07-18*
+*   `[[2026-07-18 - 180b24d1-943d-4d9c-8a81-747ec40fe99f]]` (ClaudeSessions) - *2026-07-18*
 *   `[[2026-07-17 - agent-afa476b10f1b6756a]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-17 - agent-af2d70f586db1b6c5]]` (ClaudeSessions) - *2026-07-17*
 *   `[[2026-07-17 - agent-ae836ae6ed8217d95]]` (ClaudeSessions) - *2026-07-17*
