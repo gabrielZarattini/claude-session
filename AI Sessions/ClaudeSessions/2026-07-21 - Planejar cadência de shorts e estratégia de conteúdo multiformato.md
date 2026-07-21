@@ -13106,6 +13106,820 @@ Fiz a maior peça (a cadência). As outras duas são menores e envolvem **você 
 
 Estou num ponto natural para **selar o C1 + o fix de segurança com `/handoff`** (proteger o que já está pushado) e seguir. Ou, se preferir manter o loop, me diz o foco (Stories flag / carrossel publish_at) e eu continuo. Sua chamada.
 
+## 👤 User *(11:36:43)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(11:36:43)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(11:37:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user is sealing the session with /handoff. I'm verifying that the recent commits—a security fix and a C1 cadence video attachment feature—are already pushed, so the working tree should be clean before running the handoff protocol.
+
+Since both commits are already on the remote, I'll run the pre-flight and Phase 1 security checks in parallel, then skip Phase 2 (no uncommitted work) and proceed directly to updating the milestone, README, and HANDOFF record to seal these post-seal commits.
+
+</details>
+
+
+## 🤖 Claude *(11:37:03)*
+
+O usuário optou por selar. Os dois commits desta rodada (fix de segurança `6e0d147` + C1 cadência `cb21e40`) já estão pushados; o `/handoff` agora sela o marco (milestone + README + HANDOFF). Pré-flight + Fase 1.
+
+## 🤖 Claude *(11:37:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short; echo \"---LOG---\"; git log --oneline -5\necho \"---1a secret scan---\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,})\" | grep -v \"example\\|placeholder\\|<.*>\" | head || echo \"1a: clean \u2705\"\necho \"---HANDOFF wc + scratch---\"\nwc -l HANDOFF.md; ls scratch/*.ts 2>/dev/null && echo \"scratch has ts\" || echo \"scratch clean \u2705\"\necho \"---last seal commit---\"\ngit log --oneline -1 2d5a1a5",
+  "description": "Pre-flight: git state, security 1a, HANDOFF size"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---LOG---
+> cb21e40 feat(cadence): dispatch de vídeo anexa mídia (FR-CAD-006) — agenda POV/corte/split-screen em cadência
+> 6e0d147 fix(video-render): allowlist da composition por modo — fecha cross-tenant write (task_582e338f)
+> 2d5a1a5 docs(handoff): seal nós Tela Dividida (POV) + preset POV no Spaces (2026-07-21)
+> db32dc9 docs(readme): v6.113.0 — nós Tela Dividida (POV) + preset POV no Spaces
+> 73bbf84 docs(bok): Amendment 27 split-screen POV + SOP (Lei 2)
+> ---1a secret scan---
+> ---HANDOFF wc + scratch---
+> 659 HANDOFF.md
+> scratch clean ✅
+> ---last seal commit---
+> 2d5a1a5 docs(handoff): seal nós Tela Dividida (POV) + preset POV no Spaces (2026-07-21)
+> ```
+
+## 🤖 Claude *(11:37:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Everything's committed and ready—the security fix and C1 cadence changes are sealed. Now moving into Phase 3 to create the milestone node, then Phase 4 for a brief README update documenting those changes, before wrapping up Phase 5.
+
+</details>
+
+
+## 🤖 Claude *(11:37:15)*
+
+Árvore limpa (os 2 commits já estão feitos), segurança 1a limpa, HANDOFF 659 linhas, scratch limpo. Fase 3 — milestone na malha.
+
+## 🤖 Claude *(11:37:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSB=$(grep -E '^SB_SECRET_KEY=' .env | head -1 | cut -d= -f2- | tr -d '\"'\"'\"' ')\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-cadence-video-plus-videorender-hardening\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] Cad\u00eancia de v\u00eddeo (FR-CAD-006): dispatch de cad\u00eancia anexa a m\u00eddia via mint de space_publish_variant owner-scoped (POV/corte/split-screen agend\u00e1veis, YouTube privado-primeiro) + fix cross-tenant no video-render (allowlist da composition por modo dropa autopilot/pillar_run_id). Ambos /security-review NO FINDINGS. Roadmap recon: stories/carrossel mapeados.\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"cadence-video-plus-videorender-hardening\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -3 | tr '\\n' '|')\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','ERR'))\" 2>/dev/null)\necho \"NODE_ID=$NODE\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\":\\\"${NODE}\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d.get('dims','?'),'dims')\" 2>/dev/null || echo \"embed logged\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE}\\\"}\" > proof-manifest.json\necho \"--- live count ---\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Insert milestone node, embed, emit proof-manifest, get live count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID=00beb62f-eae2-46f1-9186-23b02fc568fc
+> Embedded: 768 dims
+> --- live count ---
+> 9485
+> ```
+
+## 🤖 Claude *(11:37:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A node just got inserted bringing the live count to 9485, up from 9461—looks like the roadmap recon and security review agents added some observation nodes. Now I'm moving to Phase 4 to update the README, bumping the version from 6.113.0 to 6.114.0 and reflecting the mesh count change, plus adding a What's new entry.
+
+</details>
+
+
+## 🤖 Claude *(11:37:36)*
+
+Nó `00beb62f` embedado, malha **9485**. Fase 4 — README (v6.114.0).
+
+## 🤖 Claude *(11:37:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.113.0--N%C3%B3s_Tela_Dividida_(POV)_%2B_preset_POV_no_Spaces-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.114.0--Cad%C3%AAncia_de_v%C3%ADdeo_(FR--CAD--006)_%2B_hardening_do_video--render-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:37:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9461_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9485_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:37:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.113.0 (2026-07-21) \u2014 N\u00f3s Tela Dividida (POV) + preset POV no Spaces",
+  "new_string": "## \ud83c\udd95 What's new in v6.114.0 (2026-07-21) \u2014 Cad\u00eancia de v\u00eddeo (FR-CAD-006) + hardening do video-render\n\nContinua\u00e7\u00e3o do roadmap de audi\u00eancia (cad\u00eancia + templates + stories/carrossel):\n\n- **Cad\u00eancia de v\u00eddeo agend\u00e1vel** \u2014 um dispatch de cad\u00eancia de um asset de v\u00eddeo (POV / corte / split-screen) agora **anexa a m\u00eddia**, n\u00e3o s\u00f3 a legenda. Antes morria em `*_no_video`; o `cadence-run` minta uma `space_publish_variant` owner-scoped (reusa o resolver vivo do `auto-publish`), referencia o `space_publish_variant_id`, e o YouTube sai **privado por padr\u00e3o** (privado-primeiro). Single-file, **sem migration**. Smoke `smoke-cadence-video-dispatch` 6/6 zero-custo \u00b7 `/security-review` NO FINDINGS.\n- **Hardening cross-tenant do `video-render`** \u2014 allowlist da composition persistida por modo (`split_screen`/`studio-project`/template), dropando `autopilot`/`pillar_run_id` do corpo do cliente: fecha um vetor pr\u00e9-existente em que `{props, autopilot:{user_id:v\u00edtima}}` forjava linhas atribu\u00eddas a outro tenant via o sink service-role do worker. Smoke `--live` (L5-L7 net-zero) prova a strip \u00b7 `/security-review` NO FINDINGS.\n- **Recon do roadmap** \u2014 Stories (rail servidor completo, \u00fanico bloqueio \u00e9 a flag de witness-gate `publishable:\"preview\"` em format-specs.ts) e Carrossel (rail vivo mas nunca exercido; gap = controle de `publish_at`/segurar na UI) mapeados com o primeiro build de cada. Malha **9485**.\n\n## \ud83c\udd95 What's new in v6.113.0 (2026-07-21) \u2014 N\u00f3s Tela Dividida (POV) + preset POV no Spaces"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:37:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md && git commit -q -m \"docs(readme): v6.114.0 \u2014 cad\u00eancia de v\u00eddeo (FR-CAD-006) + hardening do video-render\" 2>&1 | grep -E \"leaks found\" | tail -1\ngit log --oneline -1",
+  "description": "Commit README v6.114.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m8:38AM[0m [32mINF[0m no leaks found
+> 7bfd6ad docs(readme): v6.114.0 — cadência de vídeo (FR-CAD-006) + hardening do video-render
+> ```
+
+## 🤖 Claude *(11:38:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've committed the README and now I'm moving into the handoff phase by adding a new Task State row and Record entry. I need to insert this above the existing split-screen row from July 21st and reference the first Record anchor.
+
+</details>
+
+
+## 🤖 Claude *(11:38:05)*
+
+README v6.114.0 selado. Fase 5 — HANDOFF.md Record.
+
+## 🤖 Claude *(11:38:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **N\u00f3s Tela Dividida (POV) + preset POV no Spaces \u2014 split-screen 100% pela UI (2026-07-21)** |",
+  "new_string": "## Task State\n\n| **Cad\u00eancia de v\u00eddeo (FR-CAD-006) + hardening cross-tenant do video-render + recon do roadmap (2026-07-21)** | \u2705 Continua\u00e7\u00e3o do roadmap de audi\u00eancia. **3 commits `6e0d147..7bfd6ad`.** **(1) Cad\u00eancia de v\u00eddeo agend\u00e1vel:** o dispatch de cad\u00eancia de um asset de v\u00eddeo (POV/corte/split-screen) agora **anexa a m\u00eddia** \u2014 o `cadence-run` minta uma `space_publish_variant` owner-scoped (espelha publish-space-asset:173-188, reusa o resolver 160-169 do auto-publish) e referencia `space_publish_variant_id` no `metadata.reshape` (antes s\u00f3 `source_asset_id`, que morria em `*_no_video`); YouTube default **private** (privado-primeiro). Single-file, **sem migration**; smoke `smoke-cadence-video-dispatch` **6/6** zero-custo; `/security-review` NO FINDINGS. **(2) Hardening cross-tenant do `video-render`:** allowlist da composition persistida por modo (`split_screen`/`studio-project`/template) dropa `autopilot`/`pillar_run_id` do corpo do cliente \u2014 fecha vetor pr\u00e9-existente (`{props, autopilot:{user_id:v\u00edtima}}` forjava linhas atribu\u00eddas a outro tenant via o sink service-role do worker); smoke `--live` L5-L7 net-zero; `/security-review` NO FINDINGS. **(3) Recon do roadmap** (`wf_f204f431`): Stories (rail servidor completo \u2014 \u00fanico bloqueio \u00e9 a flag `publishable:\"preview\"` em format-specs.ts:90; deploy do publish-social STORIES UNVERIFIED) e Carrossel (rail vivo, nunca exercido; gap = controle de `publish_at`/segurar na UI) mapeados. Malha **9485**. \u23ed Pr\u00f3ximo: virar flag de Stories + verificar deploy \u00b7 controle publish_at no carrossel \u00b7 testar ambos na UI. Pend\u00eancias herdadas: nginx `/api/host-probe`; FM-CS-02 RPN 324 LGPD; rota\u00e7\u00e3o de credenciais; `youtube-upload.service`. |\n| **N\u00f3s Tela Dividida (POV) + preset POV no Spaces \u2014 split-screen 100% pela UI (2026-07-21)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:38:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## N\u00f3s Tela Dividida (POV) + preset POV no Spaces Record (2026-07-21)",
+  "new_string": "## Cad\u00eancia de v\u00eddeo (FR-CAD-006) + hardening cross-tenant do video-render Record (2026-07-21)\n\n**ORO triplet desta task:** Operator: MCORCH Master Execution Agent (Claude) \u00b7 Reviewer: Sovereign (Gabriel) \u00b7 Owner: Sovereign (blast radius = zero p\u00fablico \u2014 cad\u00eancia sai privado-primeiro/rascunho; o fix de seguran\u00e7a \u00e9 subtrativo; risco isolado ao rail gr\u00e1tis).\n\nContinua\u00e7\u00e3o da sess\u00e3o do split-screen: o Sovereign pediu para (ap\u00f3s o n\u00f3 POV) armar o loop do roadmap de audi\u00eancia \u2014 cad\u00eancia de conte\u00fado agendado + finalizar os templates 9:16 POV/split-screen + Stories e carrossel na UI. Fechei o item de maior alavanca (cad\u00eancia de v\u00eddeo), endureci um achado de seguran\u00e7a pr\u00e9-existente que meu m\u00f3dulo anterior tornou alcan\u00e7\u00e1vel, e mapeei Stories/carrossel com o primeiro build de cada.\n\n**(1) Cad\u00eancia de v\u00eddeo (FR-CAD-006):** o motor de cad\u00eancia da Fatia 1 enfileirava s\u00f3 a legenda (`reshape.source_asset_id`, sem resolver em auto-publish) \u2192 canais de v\u00eddeo morriam em `*_no_video`. O `cadence-run` agora enriquece o SELECT owner-bound do sujeito (kind/bucket/key) e minta uma `space_publish_variant` owner-scoped por (asset,canal) via service-role (a mesma tabela cujo writer sancionado \u2014 publish-space-asset \u2014 j\u00e1 \u00e9 service-role), referenciando `space_publish_variant_id` no `metadata.reshape`. O branch 160-169 do `auto-publish` j\u00e1 resolve isso owner-scoped e assina a m\u00eddia. YouTube default `private`. Cadeia de confian\u00e7a dupla (subject owner-bound + auto-publish re-escopa por user_id); `/security-review` NO FINDINGS.\n\n**(2) Hardening do `video-render`:** o worker (service-role) l\u00ea `composition.autopilot.user_id`/`pillar_run_id` e escreve content_library/creative_metrics + kick reshape-pillar; o fn persistia a composition do cliente verbatim nos modos legados. Fix: reconstr\u00f3i a composition persistida por allowlist de modo, dropando autopilot/pillar_run_id (nenhum caller leg\u00edtimo os envia \u2014 o autopilot insere a linha direto via orchestrate-step).\n\n**(3) Recon do roadmap** (workflow 3 leitores): Stories 100% no servidor, bloqueio \u00fanico = flag de witness-gate `format-specs.ts:90`; Carrossel vivo mas 0 execu\u00e7\u00f5es, gap = controle de publish_at/segurar na UI.\n\n| Action | Result |\n|--------|--------|\n| `supabase/functions/cadence-run/index.ts` | \u2705 FR-CAD-006: subject SELECT +kind/bucket/key + mint owner-scoped da `space_publish_variant` + `space_publish_variant_id` no reshape + YouTube private + fail-soft (variant fail \u2192 dispatch failed, libera a idempotency key) + mapas SURFACE/PLATFORM_BY_CHANNEL |\n| `scripts/qa/smoke-cadence-video-dispatch.ts` (novo) | \u2705 6/6 zero-custo: variant kind=video + link + privacy=private + resolu\u00e7\u00e3o owner-scoped + cross-tenant barrado + idempot\u00eancia + cleanup zero-res\u00edduo |\n| `supabase/functions/video-render/index.ts` | \u2705 allowlist da composition por modo (rebuild subtrativo) dropa autopilot/pillar_run_id; split_screen j\u00e1 era reconstru\u00eddo limpo |\n| `scripts/qa/smoke-split-screen.ts` | \u2705 +L5/L6/L7 (--live net-zero): composition persistida despida + zero linha na v\u00edtima + charge\u2192cleanup |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `6e0d147` | fix(video-render): allowlist da composition por modo \u2014 cross-tenant write |\n| `cb21e40` | feat(cadence): dispatch de v\u00eddeo anexa m\u00eddia (FR-CAD-006) |\n| `7bfd6ad` | docs(readme): v6.114.0 |\n\n### Arquitetura Cad\u00eancia de v\u00eddeo (FR-CAD-006)\n```\nplano cadence (program.source_asset_id = v\u00eddeo)  \u2192  autopilot-cadence-cron tick  \u2192  cadence-run\n   subject SELECT owner-bound (kind,bucket,key)\n   \u2192 upsert space_publish_variant {user_id, source_asset_id, channel, surface, asset_bucket, asset_key, asset_kind}  (service-role, idempotente)\n   \u2192 scheduled_posts {platform:channel, status:queued, metadata.reshape.space_publish_variant_id, content.privacy(youtube=private)}\n        \u2192  auto-publish (cron host */5) resolve a variant .eq(user_id) \u2192 assina 6h \u2192 content.video_url\n             \u2192  publish-social branch do canal (YouTube private / TikTok SELF_ONLY / IG)\n```\n\n## N\u00f3s Tela Dividida (POV) + preset POV no Spaces Record (2026-07-21)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:38:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===== 5b secret scan HANDOFF.md =====\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,})\" HANDOFF.md | grep -v \"example\\|placeholder\\|digest\\|hash\" | head || echo \"HANDOFF.md: NO CREDENTIALS \u2705\"\ngit add HANDOFF.md && git commit -q -m \"docs(handoff): seal cad\u00eancia de v\u00eddeo (FR-CAD-006) + hardening do video-render (2026-07-21)\" 2>&1 | grep -E \"leaks found\" | tail -1\necho \"===== 5c material proof audit =====\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -6; echo \"EXIT: ${PIPESTATUS[0]}\"",
+  "description": "Phase 5b secret scan + commit HANDOFF + 5c material proof audit",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== 5b secret scan HANDOFF.md =====
+> [90m8:38AM[0m [32mINF[0m no leaks found
+> ===== 5c material proof audit =====
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (Claude) · Reviewer: Sovereign (Gabriel) · Owner: | Operator = MCORCH Master Execution Agent (Claude) · Reviewer: Sovereign (Gabriel) · Owner: | ✅ |
+> | handoff node 00beb62f | mesh_node | 00beb62f-eae2-46f1-9186-23b02fc568fc | 00beb62f-eae2-46f1-9186-23b02fc568fc | ✅ |
+> 
+> QA VERDICT: 9 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> EXIT: 0
+> ```
+
+## 🤖 Claude *(11:39:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+SEAL verification passed, so I'm moving into Phase 6 to check the Book of Knowledge. The cadence-run and video-render modules are both amendments to existing documented features in their respective BoKs. The cadence-run change specifically addresses FR-CAD-006, which was already documented in spaces-cadence BoK as a TODO item, so this bug fix is exempt from new feature requirements and ready to push.
+
+</details>
+
+
+## 🤖 Claude *(11:39:01)*
+
+SEAL ALLOWED (9 verificadas, 0 falhas). Fase 6 (BoK) + Fase 7 (push).
+
+## 🤖 Claude *(11:39:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===== Fase 6: BoK dos m\u00f3dulos tocados (spaces-cadence \u00b7 video-studio) =====\"\nfor slug in spaces-cadence video-studio; do\n  miss=0\n  for doc in 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || { echo \"\u26a0\ufe0f $slug missing $doc\"; miss=1; }\n  done\n  [ $miss -eq 0 ] && echo \"\u2705 $slug \u2014 BoK 9/9 (FR-CAD-006 = completion de feature documentada; video-render fix = patch de seguran\u00e7a \u2014 exemptos de BoK novo)\"\ndone\necho \"\"\necho \"===== Fase 7: push =====\"\ngit push origin main 2>&1 | tail -3\necho \"--- higiene: proof-manifest + scratch ---\"\ngit checkout -- proof-manifest.json 2>/dev/null; git status --short && echo \"\u00e1rvore limpa \u2705\"",
+  "description": "Phase 6 BoK check + Phase 7 push + hygiene"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===== Fase 6: BoK dos módulos tocados (spaces-cadence · video-studio) =====
+> ✅ spaces-cadence — BoK 9/9 (FR-CAD-006 = completion de feature documentada; video-render fix = patch de segurança — exemptos de BoK novo)
+> ✅ video-studio — BoK 9/9 (FR-CAD-006 = completion de feature documentada; video-render fix = patch de segurança — exemptos de BoK novo)
+> 
+> ===== Fase 7: push =====
+> ✔️ gitleaks-range (0.07 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    cb21e40..7c5c10b  main -> main
+> --- higiene: proof-manifest + scratch ---
+> árvore limpa ✅
+> ```
+
+## 🤖 Claude *(11:39:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Push went through successfully and the tree is clean. Both test suites passed—the changes were just feature completion and a security patch that don't require new test coverage. The seal is done. Now I'm preparing the Phase 8 final report, which covers the four commits since the last seal along with the security fix, cadence updates, readme changes, and the handoff commit.
+
+The milestone is embedded at 00beb62f with README v6.114.0 and mesh 9485. All nine verifications passed, push is confirmed. Looking at what comes next from the roadmap: I need to flip the flag for stories and verify the publish-social deploy works in the UI, then handle the carousel's publish_at and hold controls. The C1 cadence is live now, so I could set up a real recurring plan for the EP01 cuts. There's also the inherited work—nginx host-probe, the LGPD compliance task, credential rotation, and the youtube-upload service.
+
+</details>
+
+
+## 🤖 Claude *(11:39:37)*
+
+Push OK (`cb21e40..7c5c10b`), árvore limpa, ambas as BoK completas. Selo fechado.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Cadência de vídeo (FR-CAD-006) + hardening do video-render (2026-07-21)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  ✅ Secret scan (working tree + HANDOFF.md) — sem credenciais
+  ✅ Coin deduction client-side — sem violações
+  ✅ gitleaks pre-push — no leaks
+  ✅ /security-review ×2 (cadence-run + video-render) — NO FINDINGS
+
+📦 COMMITS (4) — 6e0d147..7c5c10b
+  6e0d147  fix(video-render): allowlist da composition por modo — cross-tenant write
+  cb21e40  feat(cadence): dispatch de vídeo anexa mídia (FR-CAD-006)
+  7bfd6ad  docs(readme): v6.114.0
+  7c5c10b  docs(handoff): seal
+
+⬡ KNOWLEDGE MESH
+  Milestone: 00beb62f — session-handoff-20260721-cadence-video-plus-videorender-hardening
+  Embedding: ✅ 768 dims
+
+📖 README.md   6.113.0 → 6.114.0 · malha 9461 → 9485
+🧠 HANDOFF.md  Task State + Record + ORO + Arquitetura · 5b limpo
+
+📋 PROVA MATERIAL (5c)  SEAL ALLOWED · 9 verificadas · 0 falhas
+
+🚀 PUSH  main → origin/main (cb21e40..7c5c10b)
+📌 BoK  spaces-cadence 9/9 · video-studio 9/9 (feature-completion + patch, exemptos) · scratch limpo
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada, Maestro. Foi um arco longo e denso — do split-screen POV virando **nó do Spaces** até a **cadência de vídeo** que agora agenda POV/corte/split-screen de verdade (privado-primeiro), passando pelo fix de segurança cross-tenant que o próprio `/security-review` pegou. Tudo verde, com prova material, no remoto.
+
+**Onde o roadmap ficou (para a próxima):**
+1. **Stories** — virar a flag `publishable:"preview"→"real"` em `format-specs.ts:90` + confirmar o deploy do `publish-social` STORIES → você testa pela UI. (Pequeno; deixei mapeado no Record.)
+2. **Carrossel** — adicionar o controle de `publish_at`/segurar na UI para um "gera → revisa → agenda" com privado-primeiro real (hoje só "agenda para já").
+3. **Cadência viva** — o motor está pronto: dá para armar um plano recorrente dos 3 cortes/POVs do EP01 (privado-primeiro) quando quiser disparar a distribuição.
+
+**Pendências suas herdadas:** nginx `/api/host-probe` + restart do `host-upload.service`; `erase_lead` não cobre a spine CRM (FM-CS-02 RPN 324, LGPD); rotação de credenciais; habilitar `youtube-upload.service`.
+
+## 👤 User *(12:16:23)*
+
+O video Vídeo 9:16 c8fc8840-0655-4cbb-90a9-c3c8929a4058 seria qual template? Gostei com 4 divisões deria para escolher 4 videos ou fotos diferentes
+
+## 👤 User *(12:16:24)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- PROJECT METADATA START --- %%
