@@ -5643,5 +5643,5 @@ Continuo no seu comando. Quer que eu rode o `/handoff`, ou há mais alguma fatia
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-19 - agent-aff04cd99558c3d0a]]
-> * **Próxima Sessão**: [[2026-07-20 - Set up YouTube upload loop and CRM suite implementation]]
+> * **Próxima Sessão**: [[2026-07-20 - Planejar cadência de shorts e estratégia de conteúdo multiformato]]
 %% --- TIMELINE END --- %%
