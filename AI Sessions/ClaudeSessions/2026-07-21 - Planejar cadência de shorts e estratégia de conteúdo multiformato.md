@@ -13929,6 +13929,6 @@ O video Vídeo 9:16 c8fc8840-0655-4cbb-90a9-c3c8929a4058 seria qual template? Go
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-20 - agent-aff1631278fb1baa1]]
+> * **Sessão Anterior**: [[2026-07-21 - 1f1cadef-e8ac-41bb-b6d7-b00643cad9a6]]
 > * **Próxima Sessão**: [[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]
 %% --- TIMELINE END --- %%
