@@ -67,4 +67,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 
 > Keep the brief tight — no padding, no headers beyond the bullets above.
 > 
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-04-26 - ffc7407f-40e6-45ef-a261-ef73cd5bca92]]
+> * **Próxima Sessão**: [[2026-05-01 - Enterprise infrastructure and monetization quantum leap]]
+%% --- TIMELINE END --- %%

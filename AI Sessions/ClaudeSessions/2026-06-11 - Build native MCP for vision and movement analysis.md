@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-11 - Build native MCP for visio
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-11%20-%20Build%20native%20MCP%20for%20vision%20and%20movement%20analysis.md
 ---
 
-# Build native MCP for vision and movement analysis
+# [[2026-06-10 - Build native MCP for vision and movement analysis|Build native MCP for vision and movement analysis]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**348 KB**) foi movido para fora do cofre
@@ -68,3 +68,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-10 - agent-af4b1636e0bff4513]]
+> * **Próxima Sessão**: [[2026-06-11 - agent-a04b9077b568bb736]]
+%% --- TIMELINE END --- %%

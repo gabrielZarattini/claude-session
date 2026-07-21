@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 >   Badge nodes:     2065 → 2066 nós
 >   Badge AIOS:      AIOS_Consciousness_v2 → v3
 >   Badge adicionado: Phase_Zeta-live-cyan
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Analyze handoff and audit recent commits for ecosystem evolution]]
+> * **Próxima Sessão**: [[2026-05-02 - Fix TTS bridge and resolve critical production issues]]
+%% --- TIMELINE END --- %%

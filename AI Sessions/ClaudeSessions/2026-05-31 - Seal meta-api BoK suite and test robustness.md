@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-05-31 - Seal meta-api BoK suite an
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-05-31%20-%20Seal%20meta-api%20BoK%20suite%20and%20test%20robustness.md
 ---
 
-# Seal meta-api BoK suite and test robustness
+# [[2026-05-30 - Seal meta-api BoK suite and test robustness|Seal meta-api BoK suite and test robustness]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**406 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > Ran command: `source .env && curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'`
 > Ran command: `source .env && curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "Prefer: count=exact" -I`
 > Viewed README.md:1-800
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-31 - Fix tenant isolation in edge functions]]
+> * **Próxima Sessão**: [[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]
+%% --- TIMELINE END --- %%

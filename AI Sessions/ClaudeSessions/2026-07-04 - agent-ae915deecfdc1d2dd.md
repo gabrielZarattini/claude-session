@@ -63,3 +63,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 1. `agent-browser --session miv-g4 open "http://127.0.0.1:4173<rota>"`
 > 2. `agent-browser --session miv-g4 wait <wait do item>`
 > 3. Confirme render: `agent-browser --session miv-g4 eval "location.pathname"`. Se voltou pra `/auth` inesperadamente numa rota protegida → registre loaded=false + nota "redirect /auth — sessao", e siga pra proxima pagina.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-04 - agent-adde171de0d9a4c77]]
+> * **Próxima Sessão**: [[2026-07-04 - agent-aea4cc075927ec918]]
+%% --- TIMELINE END --- %%

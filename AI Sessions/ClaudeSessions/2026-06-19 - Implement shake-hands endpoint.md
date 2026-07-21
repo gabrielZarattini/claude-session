@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ## /handson — enter (load context in <10s, don't re-discover)
 > 1. `cat /home/gcrux-tradeux/HANDOFF.md`
 > 2. `git -C /home/gcrux-tradeux/tradeux -c safe.directory='*' log --oneline -7`
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-19 - Estratégia de lucro em mixed, trend e outros]]
+> * **Próxima Sessão**: [[2026-06-19 - agent-a009438569d3ec97d]]
+%% --- TIMELINE END --- %%

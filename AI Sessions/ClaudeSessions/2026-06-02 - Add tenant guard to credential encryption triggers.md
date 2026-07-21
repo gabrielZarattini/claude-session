@@ -64,4 +64,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ## 🤖 Claude *(15:39:29)*
 > 
 > Vou começar verificando materialmente o estado atual — porque tanto o `CLAUDE.md` (Key Files Reference) quanto o git log mais recente (`87c926f`, `66859b0`) quanto minha memória indicam que esse exato gap já foi selado na migration `20260602150000_meta_social_instead_of_tenant_guard.sql` (v6.20.2). Antes de criar qualquer migration nova, preciso confirmar a realidade material (Lei 1) — não posso assumir que o gap está aberto só porque o prompt o descreve assim, nem assumir que está fechado só porque a memória diz.
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-01 - agent-af11d6fa76341891b]]
+> * **Próxima Sessão**: [[2026-06-02 - Finalize visual design and unblock next phases]]
+%% --- TIMELINE END --- %%

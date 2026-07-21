@@ -63,3 +63,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ═══════════════════════════════════════════════════════════
 > 
 > 🏁 ESTADO ATUAL
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-12 - handson]]
+> * **Próxima Sessão**: [[2026-06-14 - handson]]
+%% --- TIMELINE END --- %%

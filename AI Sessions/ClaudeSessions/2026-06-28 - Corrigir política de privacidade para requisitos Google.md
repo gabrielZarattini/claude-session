@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-28 - Corrigir política de priv
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-28%20-%20Corrigir%20pol%C3%ADtica%20de%20privacidade%20para%20requisitos%20Google.md
 ---
 
-# Corrigir política de privacidade para requisitos Google
+# [[2026-06-29 - Corrigir política de privacidade para requisitos Google|Corrigir política de privacidade para requisitos Google]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**501 KB**) foi movido para fora do cofre
@@ -68,3 +68,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-28 - Corrigir erro de configuração TikTok]]
+> * **Próxima Sessão**: [[2026-06-28 - Implementar reshaper para posts nativos multiplataforma]]
+%% --- TIMELINE END --- %%

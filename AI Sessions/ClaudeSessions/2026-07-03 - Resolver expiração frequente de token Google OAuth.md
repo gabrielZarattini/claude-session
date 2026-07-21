@@ -65,4 +65,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > - `5m` → empty prompt → show usage
 > 
 > ## Offer cloud first
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - Resolver alertas de produção e migrations]]
+> * **Próxima Sessão**: [[2026-07-03 - Validar ecossistema e gerar lucros antes dos 90 dias]]
+%% --- TIMELINE END --- %%

@@ -69,3 +69,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > | MCP tools (deferred) | 24.3k | 2.4% |
 > | System tools (deferred) | 15.7k | 1.6% |
 > | Custom agents | 331 | 0.0% |
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-03 - Validar ecossistema e gerar lucros antes dos 90 dias]]
+> * **Próxima Sessão**: [[2026-07-03 - Verificar sinais de negociação no Telegram]]
+%% --- TIMELINE END --- %%

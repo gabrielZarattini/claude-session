@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-25 - Analisar paper e oportunid
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-25%20-%20Analisar%20paper%20e%20oportunidades%20de%20trading.md
 ---
 
-# Analisar paper e oportunidades de trading
+# [[2026-06-24 - Analisar paper e oportunidades de trading|Analisar paper e oportunidades de trading]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**802 KB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - 1744ad7a-f93b-4937-aa35-6a9d5b11b1c2]]
+> * **Próxima Sessão**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
+%% --- TIMELINE END --- %%

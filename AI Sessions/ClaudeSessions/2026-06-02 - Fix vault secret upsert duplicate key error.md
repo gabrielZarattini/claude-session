@@ -63,4 +63,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > Lei 2 (Processo Antecipado): isto é **bug fix em feature já documentada** (SOP `docs/processes/credential-disconnect-clear.md` existe) → sem BoK gate. Mas toca a camada de encriptação → `/security-review` obrigatório.
 > 
 > Vou explorar o estado material primeiro.
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-02 - Fix WordPress credentials save and disconnect in SocialAccountsPage]]
+> * **Próxima Sessão**: [[2026-06-02 - agent-a5d10b1c82e30c144]]
+%% --- TIMELINE END --- %%

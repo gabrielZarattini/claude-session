@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-03 - Audit database migrations 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-03%20-%20Audit%20database%20migrations%20and%20clean%20test%20artifacts.md
 ---
 
-# Audit database migrations and clean test artifacts
+# [[2026-06-04 - Audit database migrations and clean test artifacts|Audit database migrations and clean test artifacts]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**534 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-03 - Address alerts timezone issue and next steps]]
+> * **Próxima Sessão**: [[2026-06-03 - Design agentic marketing framework for universal platforms]]
+%% --- TIMELINE END --- %%

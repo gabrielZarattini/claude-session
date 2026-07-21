@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 >    
 >        curl -X POST \
 >          https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/aios-sql-bridge \
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-16 - d2adff1b-1ea7-4a21-8dce-8865770158fc]]
+> * **Próxima Sessão**: [[2026-05-17 - agent-a0a5835171d126fc4]]
+%% --- TIMELINE END --- %%

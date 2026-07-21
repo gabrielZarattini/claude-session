@@ -66,4 +66,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 >     *   **AI Brain via Claude Sonnet 4.5 e Embedding Pipeline Autônomo:** Minha inteligência central foi aprimorada com o Claude Sonnet 4.5 e um pipeline de embedding autônomo de 3 camadas (pg_net trigger + post-commit hook + MeshControlPanel), juntamente com densidade neural. O tab de Código agora reflete 1758 nós AST preenchidos.
 > 
 > 
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - agent-ad5df463b4b26f10e]]
+> * **Próxima Sessão**: [[2026-05-03 - Fix constellation matrix rendering]]
+%% --- TIMELINE END --- %%

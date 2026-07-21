@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-05 - E2E visual testing and Han
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-05%20-%20E2E%20visual%20testing%20and%20Handson%20protocol%20review.md
 ---
 
-# E2E visual testing and Handson protocol review
+# [[2026-07-04 - E2E visual testing and Handson protocol review|E2E visual testing and Handson protocol review]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**4.4 MB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ---
 > 
 > ## PRE-FLIGHT (execute ALL in parallel before reading anything)
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-05 - Continue com os próximos passos]]
+> * **Próxima Sessão**: [[2026-07-05 - Verificar sinais de negociação no Telegram]]
+%% --- TIMELINE END --- %%

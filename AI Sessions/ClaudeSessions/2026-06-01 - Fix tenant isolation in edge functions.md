@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-01 - Fix tenant isolation in ed
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-01%20-%20Fix%20tenant%20isolation%20in%20edge%20functions.md
 ---
 
-# Fix tenant isolation in edge functions
+# [[2026-05-31 - Fix tenant isolation in edge functions|Fix tenant isolation in edge functions]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**333 KB**) foi movido para fora do cofre
@@ -65,3 +65,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ## 🤖 Claude *(21:59:35)*
 > 
 > Vou começar auditando o escopo materialmente. Primeiro, deixe-me declarar o enquadramento e mapear o padrão vulnerável em todas as edge functions.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-01 - Fix failing smoke test Supabase auth key migration]]
+> * **Próxima Sessão**: [[2026-06-01 - Plan Canvas Studio Phase 4.2 and e2e-user-zero]]
+%% --- TIMELINE END --- %%

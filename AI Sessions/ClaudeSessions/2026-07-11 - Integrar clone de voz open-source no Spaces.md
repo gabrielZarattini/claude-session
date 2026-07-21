@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-11 - Integrar clone de voz open
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-11%20-%20Integrar%20clone%20de%20voz%20open-source%20no%20Spaces.md
 ---
 
-# Integrar clone de voz open-source no Spaces
+# [[2026-07-10 - Integrar clone de voz open-source no Spaces|Integrar clone de voz open-source no Spaces]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**2.6 MB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-11 - Configurar loop para tarefas prioritárias LoRA e OTD-SPACES-036]]
+> * **Próxima Sessão**: [[2026-07-11 - agent-a1e92e85dd0cbda13]]
+%% --- TIMELINE END --- %%

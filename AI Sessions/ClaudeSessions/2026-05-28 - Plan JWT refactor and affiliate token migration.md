@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-05-28 - Plan JWT refactor and affi
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-05-28%20-%20Plan%20JWT%20refactor%20and%20affiliate%20token%20migration.md
 ---
 
-# Plan JWT refactor and affiliate token migration
+# [[2026-05-27 - Plan JWT refactor and affiliate token migration|Plan JWT refactor and affiliate token migration]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**816 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-28 - 9bb9165f-6ffc-42a6-a6e7-d5311c647700]]
+> * **Próxima Sessão**: [[2026-05-28 - Update context and continue antigravity handoff]]
+%% --- TIMELINE END --- %%

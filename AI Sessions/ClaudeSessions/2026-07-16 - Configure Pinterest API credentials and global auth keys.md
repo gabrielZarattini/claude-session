@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-16 - Configure Pinterest API cr
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-16%20-%20Configure%20Pinterest%20API%20credentials%20and%20global%20auth%20keys.md
 ---
 
-# Configure Pinterest API credentials and global auth keys
+# [[2026-07-17 - Configure Pinterest API credentials and global auth keys|Configure Pinterest API credentials and global auth keys]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**716 KB**) foi movido para fora do cofre
@@ -71,3 +71,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-16 - Configurar loop e blueprint do video-repurposeyoutube-studio]]
+> * **Próxima Sessão**: [[2026-07-16 - Roadmap de automação de conteúdo com IA e Claude Code]]
+%% --- TIMELINE END --- %%

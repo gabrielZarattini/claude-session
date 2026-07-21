@@ -14,36 +14,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-> * **Total de Sessões Registradas**: 1562
-> * **Sessões do Claude**: 1519
-> * **Sessões do Gemini**: 43
-=======
-> * **Total de Sessões Registradas**: 1872
-> * **Sessões do Claude**: 1826
-=======
-> * **Total de Sessões Registradas**: 1890
-> * **Sessões do Claude**: 1844
->>>>>>> 00e1078eeaa62bf755c4be9b2c03d3d7be03cc9d
-> * **Sessões do Gemini**: 46
->>>>>>> a3bb5d5cee1268232a5837ed0937ada48c758c03
-=======
-> * **Total de Sessões Registradas**: 2535
-> * **Sessões do Claude**: 2488
-=======
-> * **Total de Sessões Registradas**: 2546
-> * **Sessões do Claude**: 2499
->>>>>>> bba25be357e51178e0fef43b8cbf961f24f67ef1
-=======
-> * **Total de Sessões Registradas**: 2870
-> * **Sessões do Claude**: 2823
->>>>>>> 934c6c8eda6e7866409c9b6bf03e1ccfc4afa6a5
+> * **Total de Sessões Registradas**: 2879
+> * **Sessões do Claude**: 2832
 > * **Sessões do Gemini**: 47
->>>>>>> 6356b3f79c50ef002761f3a52eb8dec59695d54e
 
 ---
 
@@ -82,6 +55,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   *... e mais 7 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
+*   `[[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]` - *2026-07-21*
 *   `[[2026-07-08 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` - *2026-07-08*
 *   `[[2026-07-07 - Refinar qualidade criativa e consolidar Canvas com Spaces v2]]` - *2026-07-07*
 *   `[[2026-06-22 - Validar studio design e canvas studio end-to-end]]` - *2026-06-22*
@@ -101,91 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-*   `[[2026-06-28 - handson]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-af701086aecdaf67f]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-af3193f113b71a308]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-aef77397227eb4a2a]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-aef0052197dbdc7b4]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-aed251029f012be34]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-ae0a402dc1c35a471]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-adfa93f758986cd1e]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-adeafbf88587d4bb8]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-adb7444b9d0b9cc5e]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-ad927da167abbada0]]` - *2026-06-28*
-*   `[[2026-06-28 - agent-ad8e42de72ed0d68a]]` - *2026-06-28*
-*   *... e mais 1518 sessões nessa categoria.*
-=======
-=======
-*   `[[2026-07-06 - agent-ac0baed1f369a85e1]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-a6cf83bd7fa3e9633]]` - *2026-07-06*
-*   `[[2026-07-06 - agent-a33248f50594146ba]]` - *2026-07-06*
-*   `[[2026-07-06 - Encontrar oportunidades de mercado em alta]]` - *2026-07-06*
-*   `[[2026-07-06 - Continue com os próximos passos]]` - *2026-07-06*
->>>>>>> 00e1078eeaa62bf755c4be9b2c03d3d7be03cc9d
-*   `[[2026-07-05 - agent-aed41526b2d0082ee]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-ae6cf60a3b1fcceb1]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-adfd61319aeaf80ac]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-adce11e3b05c91a52]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-acbbab1d010adc9c5]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-ac5b74d0153e35024]]` - *2026-07-05*
-<<<<<<< HEAD
-*   `[[2026-07-05 - agent-ab940ff81e33af5d8]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-ab75ea3de5681b768]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-aad83b7211d9ed913]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-aa75d3f9ced0f5fd0]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-aa544592e8d37d212]]` - *2026-07-05*
-*   `[[2026-07-05 - agent-a98c8760ae986aca0]]` - *2026-07-05*
-*   *... e mais 1821 sessões nessa categoria.*
->>>>>>> a3bb5d5cee1268232a5837ed0937ada48c758c03
-=======
-*   `[[2026-07-05 - agent-ac37e4b2ab2eb744a]]` - *2026-07-05*
-*   *... e mais 1838 sessões nessa categoria.*
->>>>>>> 00e1078eeaa62bf755c4be9b2c03d3d7be03cc9d
-=======
-=======
-*   `[[2026-07-18 - eb0262f6-e35f-4101-be5e-35c24a9a5e1f]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-af850dad83c03a6f8]]` - *2026-07-18*
->>>>>>> bba25be357e51178e0fef43b8cbf961f24f67ef1
-*   `[[2026-07-18 - agent-af815e7a0f9eaf309]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-aea2bd213a953a6e7]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-ad1c3af7c5918387d]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-ac3d9a7d38984ee1f]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-aa988956670c0e57a]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a96f179782377e994]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a606a68d857f6ddaa]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a5a2fc09af5a62245]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a5514743ce3b7d476]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a53874163b7126a69]]` - *2026-07-18*
-<<<<<<< HEAD
-*   `[[2026-07-18 - agent-a3129eb5d3f589fac]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a30d17222e847514c]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a286074c1c5cbb19d]]` - *2026-07-18*
-*   `[[2026-07-18 - agent-a1aca2c15fbe7edd6]]` - *2026-07-18*
-*   *... e mais 2478 sessões nessa categoria.*
->>>>>>> 6356b3f79c50ef002761f3a52eb8dec59695d54e
-=======
-*   *... e mais 2489 sessões nessa categoria.*
->>>>>>> bba25be357e51178e0fef43b8cbf961f24f67ef1
-=======
+*   `[[2026-07-21 - agent-af9b610d3f474d05d]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-ae1505d94321d1e7f]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a93b864a5c00bd9e9]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-a8bffff4a89a60207]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-a8a539f7a71852077]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-a70f171958a4714a4]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a6d0115d1f0963e01]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a6aa29518de89836b]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-a6093ec49f09f904f]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a5e2499ceef785dea]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a4a175e38592e20ff]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-a30eb0adeffa481fc]]` - *2026-07-21*
-*   `[[2026-07-21 - agent-a07de31c5d167a993]]` - *2026-07-21*
-*   `[[2026-07-21 - Planejar cadência de shorts e estratégia de conteúdo multiformato]]` - *2026-07-21*
-*   `[[2026-07-20 - agent-aff1631278fb1baa1]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-afe6aeaaf4676b331]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-afcabb0721d89ba97]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-afc46555bba29bf83]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-afbb8c87afb9103a2]]` - *2026-07-20*
-*   *... e mais 2813 sessões nessa categoria.*
->>>>>>> 934c6c8eda6e7866409c9b6bf03e1ccfc4afa6a5
+*   *... e mais 2821 sessões nessa categoria.*
 
 ---
 
@@ -376,8 +278,6 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-01 - Deploy Gemini API and Supabase functions]]` (ClaudeSessions)
 
 ### Junho 2026
-<<<<<<< HEAD
-=======
 *   `[[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]` (ClaudeSessions)
 *   `[[2026-06-30 - agent-afe53acf872b6f4a1]]` (ClaudeSessions)
 *   `[[2026-06-30 - agent-afdffbfa17d110b65]]` (ClaudeSessions)
@@ -507,7 +407,6 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-29 - Corrigir política de privacidade para requisitos Google]]` (ClaudeSessions)
 *   `[[2026-06-29 - 2b75f395-3d0c-474f-a0c9-ab9fb903cc72]]` (ClaudeSessions)
 *   `[[2026-06-29 - 20894beb-8faf-40d8-bce8-715b0c184c7f]]` (ClaudeSessions)
->>>>>>> a3bb5d5cee1268232a5837ed0937ada48c758c03
 *   `[[2026-06-28 - handson]]` (GeminiSessions)
 *   `[[2026-06-28 - agent-af701086aecdaf67f]]` (ClaudeSessions)
 *   `[[2026-06-28 - agent-af3193f113b71a308]]` (ClaudeSessions)
@@ -1844,12 +1743,21 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-21 - agent-af9b610d3f474d05d]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-ae1505d94321d1e7f]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a93b864a5c00bd9e9]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-a8bffff4a89a60207]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-a8a539f7a71852077]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-a70f171958a4714a4]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a6d0115d1f0963e01]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a6aa29518de89836b]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-a6093ec49f09f904f]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a5e2499ceef785dea]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a4a175e38592e20ff]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-a30eb0adeffa481fc]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a1753103ee5c5837c]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-a07de31c5d167a993]]` (ClaudeSessions)
+*   `[[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]` (ClaudeSessions)
 *   `[[2026-07-21 - Planejar cadência de shorts e estratégia de conteúdo multiformato]]` (ClaudeSessions)
 *   `[[2026-07-20 - agent-aff1631278fb1baa1]]` (ClaudeSessions)
 *   `[[2026-07-20 - agent-afe6aeaaf4676b331]]` (ClaudeSessions)

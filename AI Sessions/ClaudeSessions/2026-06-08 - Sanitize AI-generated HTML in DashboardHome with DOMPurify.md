@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-08 - Sanitize AI-generated HTML
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-08%20-%20Sanitize%20AI-generated%20HTML%20in%20DashboardHome%20with%20DOMPurify.md
 ---
 
-# Sanitize AI-generated HTML in DashboardHome with DOMPurify
+# [[2026-06-04 - Sanitize AI-generated HTML in DashboardHome with DOMPurify|Sanitize AI-generated HTML in DashboardHome with DOMPurify]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**554 KB**) foi movido para fora do cofre
@@ -67,3 +67,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🛠️ **Tool Call**: `Read`
 > ```json
 > {
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-08 - Audit trading bot order status and agent KPI updates]]
+> * **Próxima Sessão**: [[2026-06-08 - agent-a0a17aa1b197bcb71]]
+%% --- TIMELINE END --- %%

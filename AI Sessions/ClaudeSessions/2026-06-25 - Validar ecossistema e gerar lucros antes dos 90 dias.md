@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-25 - Validar ecossistema e gera
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-25%20-%20Validar%20ecossistema%20e%20gerar%20lucros%20antes%20dos%2090%20dias.md
 ---
 
-# Validar ecossistema e gerar lucros antes dos 90 dias
+# [[2026-07-03 - Validar ecossistema e gerar lucros antes dos 90 dias|Validar ecossistema e gerar lucros antes dos 90 dias]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**1.9 MB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]
+> * **Próxima Sessão**: [[2026-06-25 - agent-a11ea711912f7b89c]]
+%% --- TIMELINE END --- %%

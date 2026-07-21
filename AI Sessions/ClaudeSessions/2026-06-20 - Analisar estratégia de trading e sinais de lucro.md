@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-20 - Analisar estratégia de tr
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-20%20-%20Analisar%20estrat%C3%A9gia%20de%20trading%20e%20sinais%20de%20lucro.md
 ---
 
-# Analisar estratégia de trading e sinais de lucro
+# [[2026-06-21 - Analisar estratégia de trading e sinais de lucro|Analisar estratégia de trading e sinais de lucro]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**416 KB**) foi movido para fora do cofre
@@ -69,3 +69,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-19 - agent-af6d93040e18b75ff]]
+> * **Próxima Sessão**: [[2026-06-20 - Estratégia de lucro em mixed, trend e outros]]
+%% --- TIMELINE END --- %%

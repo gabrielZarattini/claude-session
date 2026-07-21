@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-01 - Configurar loop autônomo 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-01%20-%20Configurar%20loop%20aut%C3%B4nomo%20e%20definir%20fila%20soberana.md
 ---
 
-# Configurar loop autônomo e definir fila soberana
+# [[2026-06-30 - Configurar loop autônomo e definir fila soberana|Configurar loop autônomo e definir fila soberana]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**805 KB**) foi movido para fora do cofre
@@ -67,3 +67,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > * `mcorch_vision_mcp`: Up 29h (healthy)
 > * `mega-brain-{daemon,webhook,dashboard}`: ✅ healthy/up
 > 🧠 KNOWLEDGE MESH 8996 nós · ~9070 arestas · 100% embedded (768d HNSW cosine) Último nó: handoff `c138539f` (Fatia 2/3a) + milestone Fatia 2 `b51d8de6`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-30 - agent-afe5bdb8ee6c0b0ac]]
+> * **Próxima Sessão**: [[2026-07-01 - Executar loop autônomo MCORCH com charter]]
+%% --- TIMELINE END --- %%

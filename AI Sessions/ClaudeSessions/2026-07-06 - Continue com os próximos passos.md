@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-06 - Continue com os próximos 
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-06%20-%20Continue%20com%20os%20pr%C3%B3ximos%20passos.md
 ---
 
-# Continue com os próximos passos
+# [[2026-07-05 - Continue com os próximos passos|Continue com os próximos passos]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**1.5 MB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-05 - agent-aed41526b2d0082ee]]
+> * **Próxima Sessão**: [[2026-07-06 - Encontrar oportunidades de mercado em alta]]
+%% --- TIMELINE END --- %%

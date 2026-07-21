@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-10 - Generate security BoK docu
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-10%20-%20Generate%20security%20BoK%20documentation%20suite.md
 ---
 
-# Generate security BoK documentation suite
+# [[2026-06-09 - Generate security BoK documentation suite|Generate security BoK documentation suite]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**544 KB**) foi movido para fora do cofre
@@ -66,3 +66,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-10 - Build native MCP for vision and movement analysis]]
+> * **Próxima Sessão**: [[2026-06-10 - Refactor Core-v2 to Core-Fable]]
+%% --- TIMELINE END --- %%

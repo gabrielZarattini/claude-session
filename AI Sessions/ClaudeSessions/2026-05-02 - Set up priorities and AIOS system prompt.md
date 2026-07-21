@@ -65,4 +65,17 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > - `HANDOFF.md` (full file — Task State, last Record, Pending Actions, GraphRAG State, Infrastructure)
 > - `CLAUDE.md` (architecture rules, data flow, key files)
 > - `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (memory index)
-> 
+>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-05-02 - Fix incomplete API responses across all models]]
+> * **Próxima Sessão**: [[2026-05-02 - agent-a0df0579c69f136dd]]
+%% --- TIMELINE END --- %%

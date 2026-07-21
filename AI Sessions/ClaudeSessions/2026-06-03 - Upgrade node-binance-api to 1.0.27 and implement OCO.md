@@ -63,3 +63,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 >   "command": "sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux status 2>&1 | head -30; echo \"---BRANCH---\"; sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux branch -vv 2>&1 | head -10; echo \"---LAST COMMITS---\"; sudo -n -u gcrux-tradeux git -C /home/gcrux-tradeux/tradeux log --oneline -8 2>&1",
 >   "description": "Check repo git status, branch, recent commits"
 > }
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-03 - Plan paid E2E cascade run and prioritize next features]]
+> * **Próxima Sessão**: [[2026-06-03 - Wire OCO orders into Beholder automation engine]]
+%% --- TIMELINE END --- %%

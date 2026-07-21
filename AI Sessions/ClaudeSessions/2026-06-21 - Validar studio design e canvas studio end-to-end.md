@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-21 - Validar studio design e ca
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-21%20-%20Validar%20studio%20design%20e%20canvas%20studio%20end-to-end.md
 ---
 
-# Validar studio design e canvas studio end-to-end
+# [[2026-06-22 - Validar studio design e canvas studio end-to-end|Validar studio design e canvas studio end-to-end]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**446 KB**) foi movido para fora do cofre
@@ -64,3 +64,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-21 - Validar automações e estratégias de trading LTCUSDT]]
+> * **Próxima Sessão**: [[2026-06-21 - agent-a04a1e7d50c5ea281]]
+%% --- TIMELINE END --- %%

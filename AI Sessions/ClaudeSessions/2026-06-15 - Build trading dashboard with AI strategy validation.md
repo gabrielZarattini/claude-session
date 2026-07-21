@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-06-15 - Build trading dashboard wi
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-06-15%20-%20Build%20trading%20dashboard%20with%20AI%20strategy%20validation.md
 ---
 
-# Build trading dashboard with AI strategy validation
+# [[2026-06-16 - Build trading dashboard with AI strategy validation|Build trading dashboard with AI strategy validation]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**778 KB**) foi movido para fora do cofre
@@ -73,3 +73,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > 🏁 ESTADO     : <fase atual + 1 linha>
 > 🧾 COMMITS    : <3 últimos hash — msg>
 > 🐳 STACK      : db/backend/frontend <status> · site <HTTP>
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-06-15 - Build native MCP for vision and movement analysis]]
+> * **Próxima Sessão**: [[2026-06-15 - Plan deepsearch async job and OAuth implementation]]
+%% --- TIMELINE END --- %%

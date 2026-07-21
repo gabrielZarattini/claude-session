@@ -9,7 +9,7 @@ full_path: _full-sessions/ClaudeSessions/2026-07-13 - Fix alerts and optimize vi
 github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessions/ClaudeSessions/2026-07-13%20-%20Fix%20alerts%20and%20optimize%20viral%20video%20clips.md
 ---
 
-# Fix alerts and optimize viral video clips
+# [[2026-07-14 - Fix alerts and optimize viral video clips|Fix alerts and optimize viral video clips]]
 
 > [!abstract] Sessao arquivada
 > O conteudo completo (**1.1 MB**) foi movido para fora do cofre
@@ -67,3 +67,16 @@ github: https://github.com/gabrielZarattini/claude-session/blob/main/_full-sessi
 > ```
 > 
 > Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; arquivo monolítico newest-first em ~3170+ linhas, leitura completa estoura limite de 25k tokens):
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-07-13 - Build API dashboard with video metrics and CRUD operations]]
+> * **Próxima Sessão**: [[2026-07-13 - agent-a4db4681abaf71231]]
+%% --- TIMELINE END --- %%
