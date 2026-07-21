@@ -17012,5 +17012,5 @@ Uma dica pro próximo `/handson`: o item autônomo #1 já está pronto pra ele p
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-21 - Planejar cadência de shorts e estratégia de conteúdo multiformato]]
-> * **Próxima Sessão**: [[2026-07-21 - agent-a07de31c5d167a993]]
+> * **Próxima Sessão**: [[2026-07-21 - Validar legendas e formatos de grid para conteúdo]]
 %% --- TIMELINE END --- %%
