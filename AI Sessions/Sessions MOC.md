@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2865
-> * **Sessões do Claude**: 2818
+> * **Total de Sessões Registradas**: 2870
+> * **Sessões do Claude**: 2823
 > * **Sessões do Gemini**: 47
 
 ---
@@ -75,18 +75,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-21 - agent-a8bffff4a89a60207]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a8a539f7a71852077]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a70f171958a4714a4]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a6093ec49f09f904f]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a30eb0adeffa481fc]]` - *2026-07-21*
+*   `[[2026-07-21 - agent-a07de31c5d167a993]]` - *2026-07-21*
 *   `[[2026-07-21 - Planejar cadência de shorts e estratégia de conteúdo multiformato]]` - *2026-07-21*
 *   `[[2026-07-20 - agent-aff1631278fb1baa1]]` - *2026-07-20*
 *   `[[2026-07-20 - agent-afe6aeaaf4676b331]]` - *2026-07-20*
 *   `[[2026-07-20 - agent-afcabb0721d89ba97]]` - *2026-07-20*
 *   `[[2026-07-20 - agent-afc46555bba29bf83]]` - *2026-07-20*
 *   `[[2026-07-20 - agent-afbb8c87afb9103a2]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-af9db7a8ba37eb0b3]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-af981797b5c628681]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-af652e9042568605c]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-af6331ce9853e712f]]` - *2026-07-20*
-*   `[[2026-07-20 - agent-af4a6cca7df4f9718]]` - *2026-07-20*
-*   *... e mais 2808 sessões nessa categoria.*
+*   *... e mais 2813 sessões nessa categoria.*
 
 ---
 
@@ -1743,6 +1743,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-21 - agent-a8bffff4a89a60207]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a8a539f7a71852077]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a70f171958a4714a4]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a6093ec49f09f904f]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a30eb0adeffa481fc]]` (ClaudeSessions)
+*   `[[2026-07-21 - agent-a07de31c5d167a993]]` (ClaudeSessions)
 *   `[[2026-07-21 - Planejar cadência de shorts e estratégia de conteúdo multiformato]]` (ClaudeSessions)
 *   `[[2026-07-20 - agent-aff1631278fb1baa1]]` (ClaudeSessions)
 *   `[[2026-07-20 - agent-afe6aeaaf4676b331]]` (ClaudeSessions)
