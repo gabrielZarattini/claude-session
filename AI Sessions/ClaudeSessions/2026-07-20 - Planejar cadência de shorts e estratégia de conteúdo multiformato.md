@@ -1,4 +1,4 @@
-# Planejar cadência de shorts e estratégia de conteúdo multiformato
+# [[2026-07-21 - Planejar cadência de shorts e estratégia de conteúdo multiformato|Planejar cadência de shorts e estratégia de conteúdo multiformato]]
 **Date:** 2026-07-20 | **Session ID:** `b657e7ec-c127-44fd-9895-509cecaef8e2`
 
 ---
