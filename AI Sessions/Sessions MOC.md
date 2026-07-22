@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2896
-> * **Sessões do Claude**: 2849
+> * **Total de Sessões Registradas**: 2900
+> * **Sessões do Claude**: 2853
 > * **Sessões do Gemini**: 47
 
 ---
@@ -76,18 +76,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-07-22 - db9b9f6b-501f-42ba-ba65-252fc72f22d3]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a998c8eb4b43b6733]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a8225ee73b8049ec5]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a5360e812711b05dd]]` - *2026-07-22*
 *   `[[2026-07-22 - agent-a50bd4e2bdd04ee3a]]` - *2026-07-22*
 *   `[[2026-07-22 - agent-a47813230091adc31]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a26c49421d4c438c8]]` - *2026-07-22*
 *   `[[2026-07-22 - Validar legendas e formatos de grid para conteúdo]]` - *2026-07-22*
 *   `[[2026-07-22 - Sincronizar animações de legendas com duração da frase]]` - *2026-07-22*
 *   `[[2026-07-21 - agent-af9b610d3f474d05d]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-ae18b34d4c4cbacdd]]` - *2026-07-21*
 *   `[[2026-07-21 - agent-ae1505d94321d1e7f]]` - *2026-07-21*
-*   `[[2026-07-21 - agent-ac1cf9da3ad122493]]` - *2026-07-21*
-*   `[[2026-07-21 - agent-abf8130afa8c22b49]]` - *2026-07-21*
-*   `[[2026-07-21 - agent-ab77f29addf9f26e2]]` - *2026-07-21*
-*   `[[2026-07-21 - agent-aa6bc09f4c7537e31]]` - *2026-07-21*
-*   *... e mais 2838 sessões nessa categoria.*
+*   *... e mais 2842 sessões nessa categoria.*
 
 ---
 
@@ -1744,8 +1744,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Julho 2026
 *   `[[2026-07-22 - db9b9f6b-501f-42ba-ba65-252fc72f22d3]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a998c8eb4b43b6733]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a8225ee73b8049ec5]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a5360e812711b05dd]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a50bd4e2bdd04ee3a]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a47813230091adc31]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a26c49421d4c438c8]]` (ClaudeSessions)
 *   `[[2026-07-22 - Validar legendas e formatos de grid para conteúdo]]` (ClaudeSessions)
 *   `[[2026-07-22 - Sincronizar animações de legendas com duração da frase]]` (ClaudeSessions)
 *   `[[2026-07-21 - agent-af9b610d3f474d05d]]` (ClaudeSessions)
