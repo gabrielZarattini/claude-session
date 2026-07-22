@@ -2129,6 +2129,760 @@ I've got a workflow running in the background with 4 designs, 4 critics, and a s
 > 167:CREATE TABLE IF NOT EXISTS public.crm_activities (
 > ```
 
+## 🤖 Claude *(04:30:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing the issue with FM-CS-02 now. The `erase_lead` function removes leads and cascades deletions through conversations and messages via composite foreign keys, plus the WhatsApp leads mirror table. But the CRM spine has a different approach—deals reference leads with `ON DELETE SET NULL`, so the deal persists but its lead_id becomes null. The concern is whether the deal's name or description might still contain the lead's personal information that should be erased for LGPD compliance.
+
+Beyond that, there are orphaned references in `crm_associations` and `crm_activities` that don't have foreign key constraints protecting them. The associations table uses a generic pattern with source and target types and IDs, so rows pointing to the erased lead would remain as dangling references. Activities tied to the lead—either through an entity_type/entity_id pattern or a direct lead_id column—could also retain PII in their notes. I need to extend `erase_lead` to clean up these tables by deleting association rows where either side references the lead, and activity rows linked to it. The deal nullification happens automatically via the FK constraint, which is fine since deals are business records, not lead PII, though I should count them in the residue report. I should also verify whether `form_submissions`, `lead_events`, and `sequence_enrollments` are already covered by cascade rules from earlier migrations.
+
+</details>
+
+
+## 🤖 Claude *(04:30:43)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Identifiquei o gap no FM-CS-02: o `erase_lead` limpa conversations/messages/whatsapp_leads, mas a nova spine CRM tem `deals.lead_id` com ON DELETE SET NULL e provavelmente `crm_associations`/`crm_activities` referenciando o lead sem FK, deixando registros órfãos. Vou verificar o shape exato dessas tabelas.
+
+</details>
+
+
+## 🤖 Claude *(04:30:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '144,215p' supabase/migrations/20260719140000_crm_suite_spine.sql",
+  "description": "Read crm_associations and crm_activities exact columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -- 4. crm_associations (N:N polimórfico entre objetos)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE TABLE IF NOT EXISTS public.crm_associations (
+>   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+>   user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   from_type   text NOT NULL CHECK (from_type IN ('contact','company','deal','ticket','order')),
+>   from_id     uuid NOT NULL,
+>   to_type     text NOT NULL CHECK (to_type IN ('contact','company','deal','ticket','order')),
+>   to_id       uuid NOT NULL,
+>   relation    text NOT NULL DEFAULT 'related',
+>   created_at  timestamptz NOT NULL DEFAULT now(),
+>   CONSTRAINT uniq_crm_assoc UNIQUE (user_id, from_type, from_id, to_type, to_id, relation)
+> );
+> ALTER TABLE public.crm_associations ENABLE ROW LEVEL SECURITY;
+> CREATE POLICY crm_assoc_select ON public.crm_associations FOR SELECT USING (auth.uid() = user_id);
+> CREATE POLICY crm_assoc_insert ON public.crm_associations FOR INSERT WITH CHECK (auth.uid() = user_id);
+> CREATE POLICY crm_assoc_delete ON public.crm_associations FOR DELETE USING (auth.uid() = user_id);
+> CREATE INDEX IF NOT EXISTS idx_crm_assoc_from ON public.crm_associations (user_id, from_type, from_id);
+> CREATE INDEX IF NOT EXISTS idx_crm_assoc_to ON public.crm_associations (user_id, to_type, to_id);
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 5. crm_activities (timeline polimórfica — Tarefas/Chamadas/Reuniões = views por activity_type)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE TABLE IF NOT EXISTS public.crm_activities (
+>   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+>   user_id       uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   object_type   text NOT NULL CHECK (object_type IN ('contact','company','deal','ticket','order')),
+>   object_id     uuid NOT NULL,
+>   activity_type text NOT NULL CHECK (activity_type IN ('note','task','call','meeting','email','whatsapp','stage_change','form_submit','system')),
+>   title         text,
+>   body          text,
+>   due_at        timestamptz,
+>   completed_at  timestamptz,
+>   owner_id      uuid,
+>   metadata      jsonb NOT NULL DEFAULT '{}'::jsonb,
+>   created_at    timestamptz NOT NULL DEFAULT now(),
+>   CONSTRAINT uniq_crm_activities_id_user UNIQUE (id, user_id)
+> );
+> ALTER TABLE public.crm_activities ENABLE ROW LEVEL SECURITY;
+> CREATE POLICY crm_act_select ON public.crm_activities FOR SELECT USING (auth.uid() = user_id);
+> CREATE POLICY crm_act_insert ON public.crm_activities FOR INSERT WITH CHECK (auth.uid() = user_id);
+> CREATE POLICY crm_act_update ON public.crm_activities FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> CREATE POLICY crm_act_delete ON public.crm_activities FOR DELETE USING (auth.uid() = user_id);
+> CREATE INDEX IF NOT EXISTS idx_crm_act_object ON public.crm_activities (user_id, object_type, object_id, created_at DESC);
+> CREATE INDEX IF NOT EXISTS idx_crm_act_tasks ON public.crm_activities (user_id, activity_type, due_at) WHERE completed_at IS NULL;
+> ```
+
+## 🤖 Claude *(04:30:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"lead_id\" supabase/migrations/20260603000000_marketing_hub_lead_core.sql supabase/migrations/20260603050000_marketing_hub_nurturing.sql | grep -iE \"REFERENCES|CASCADE\" | head",
+  "description": "Check lead_events/enrollments FK behavior"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/migrations/20260603050000_marketing_hub_nurturing.sql:66:--    sequence_enrollments.lead_id is composite FK ON DELETE CASCADE, so they vanish with the lead;
+> supabase/migrations/20260603050000_marketing_hub_nurturing.sql:110:  DELETE FROM public.leads WHERE id = p_lead_id AND user_id = v_uid;  -- cascades sequence_enrollments
+> supabase/migrations/20260603000000_marketing_hub_lead_core.sql:84:  lead_id      uuid REFERENCES public.leads(id) ON DELETE SET NULL,
+> ```
+
+## 🤖 Claude *(04:31:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the database schema for FM-CS-02, I'm seeing that `crm_associations` uses polymorphic references with `from_type/from_id` and `to_type/to_id` where 'contact' represents a lead, and there's no foreign key constraint—so when a lead gets deleted, those association rows become orphaned dangling references. Similarly, `crm_activities` stores activity records tied to contacts by `object_type='contact'` and `object_id`, which means timeline data like notes, calls, and WhatsApp messages containing PII remain in the database even after the lead is erased.
+
+The activities table is the bigger LGPD concern because the title, body, and metadata fields hold personal information about the individual that persists post-erasure. For `deals`, the `lead_id` column has `ON DELETE SET NULL`, so the deal record survives but loses its lead reference—that's acceptable since deals are business records owned by the tenant, though I should flag this in the report. Deal names might contain contact PII (like "Negócio - João da Silva"), but that's tenant-authored business data and standard practice is to preserve it. For `lead_events`, there's a `lead_id` foreign key with `ON DELETE SET NULL` as well, but I need to verify whether `lead_events` stores form submission payloads or other sensitive data that would constitute residual PII after erasure.
+
+The fix migration needs to expand the `erase_lead` function to explicitly delete activity records tied to the contact, plus any associations where the contact appears as either the source or target, ensuring we capture all the PII-bearing relationships. I need to compare the original migration from 20260603 with the latest 20260718 version to see if lead_events and marketing_consents deletion got dropped during the replace — that would explain why residual data might still exist.
+
+</details>
+
+
+## 🤖 Claude *(04:31:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmei que os resíduos LGPD em `crm_activities` e `crm_associations` sobrevivem ao `erase_lead`, então vou verificar se a versão atual da função ainda trata `lead_events` e `marketing_consents` corretamente.
+
+</details>
+
+
+## 🤖 Claude *(04:31:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '75,130p' supabase/migrations/20260603000000_marketing_hub_lead_core.sql; echo \"=== erase_lead v1 body ===\"; sed -n '130,175p' supabase/migrations/20260603000000_marketing_hub_lead_core.sql",
+  "description": "Original lead core tables and erase_lead v1"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> CREATE INDEX IF NOT EXISTS idx_lead_events_user ON public.lead_events (user_id);
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 3. marketing_consents — LGPD legal basis per lead (consent proof retained after erasure)
+> --    lead_id FK is ON DELETE SET NULL so the legal proof of basis survives a lead erasure,
+> --    de-linked from the (now-deleted) contact PII.
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE TABLE IF NOT EXISTS public.marketing_consents (
+>   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+>   lead_id      uuid REFERENCES public.leads(id) ON DELETE SET NULL,
+>   user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   basis        text NOT NULL CHECK (basis IN ('consent','legitimate_interest','contract')),
+>   granted      boolean NOT NULL DEFAULT false,
+>   granted_at   timestamptz,
+>   withdrawn_at timestamptz,
+>   source_proof jsonb NOT NULL DEFAULT '{}'::jsonb,    -- how/where consent was captured (no raw contact)
+>   created_at   timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+>   updated_at   timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+>   CONSTRAINT uniq_consent_lead UNIQUE (lead_id)
+> );
+> 
+> ALTER TABLE public.marketing_consents ENABLE ROW LEVEL SECURITY;
+> 
+> CREATE POLICY "consents_select_own" ON public.marketing_consents
+>   FOR SELECT USING (auth.uid() = user_id);
+> -- WITH CHECK also asserts the referenced lead is owned by the caller (lead_id may be NULL = retained
+> -- proof de-linked from an erased lead). Mirrors the lead_events tenant-scoped FK; SET NULL on lead_id
+> -- prevents using a composite FK here (it would also null user_id and break tenant scoping of the proof).
+> CREATE POLICY "consents_insert_own" ON public.marketing_consents
+>   FOR INSERT WITH CHECK (
+>     auth.uid() = user_id
+>     AND (lead_id IS NULL OR EXISTS (
+>       SELECT 1 FROM public.leads l WHERE l.id = lead_id AND l.user_id = auth.uid()))
+>   );
+> CREATE POLICY "consents_update_own" ON public.marketing_consents
+>   FOR UPDATE USING (auth.uid() = user_id)
+>   WITH CHECK (
+>     auth.uid() = user_id
+>     AND (lead_id IS NULL OR EXISTS (
+>       SELECT 1 FROM public.leads l WHERE l.id = lead_id AND l.user_id = auth.uid()))
+>   );
+> -- No DELETE policy: consent proof is retained for legal traceability (LGPD).
+> 
+> CREATE INDEX IF NOT EXISTS idx_consents_user ON public.marketing_consents (user_id);
+> 
+> CREATE TRIGGER tr_update_consents_updated_at
+>   BEFORE UPDATE ON public.marketing_consents
+>   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 4. erase_lead() — LGPD erasure with zero-residue control (FMEA-MH-003)
+> --    SECURITY DEFINER + search_path='' + auth.uid()-scoped + tenant-guard.
+> --    Deletes lead PII (contact/name) + events; retains consent basis (de-linked) as legal proof.
+> --    NOTE: every future PII table for marketing-hub MUST extend this function (erasure completeness).
+> -- ─────────────────────────────────────────────────────────────────────────────
+> CREATE OR REPLACE FUNCTION public.erase_lead(p_lead_id uuid)
+> === erase_lead v1 body ===
+> CREATE OR REPLACE FUNCTION public.erase_lead(p_lead_id uuid)
+> RETURNS jsonb
+> LANGUAGE plpgsql
+> SECURITY DEFINER
+> SET search_path = ''
+> AS $$
+> DECLARE
+>   v_uid      uuid := auth.uid();
+>   v_owner    uuid;
+>   v_events   integer := 0;
+>   v_consents integer := 0;
+> BEGIN
+>   IF v_uid IS NULL THEN
+>     RAISE EXCEPTION 'authentication required' USING errcode = '28000';
+>   END IF;
+> 
+>   SELECT user_id INTO v_owner FROM public.leads WHERE id = p_lead_id;
+>   IF v_owner IS NULL THEN
+>     RETURN jsonb_build_object('erased', false, 'reason', 'not_found');
+>   END IF;
+>   IF v_owner <> v_uid THEN
+>     RAISE EXCEPTION 'cannot erase a lead owned by another tenant' USING errcode = '42501';
+>   END IF;
+> 
+>   DELETE FROM public.lead_events WHERE lead_id = p_lead_id AND user_id = v_uid;
+>   GET DIAGNOSTICS v_events = ROW_COUNT;
+> 
+>   -- Retain consent proof (basis/timestamps) but mark withdrawn; FK SET NULL de-links on lead delete.
+>   UPDATE public.marketing_consents
+>      SET granted = false, withdrawn_at = COALESCE(withdrawn_at, timezone('utc'::text, now()))
+>    WHERE lead_id = p_lead_id AND user_id = v_uid;
+>   GET DIAGNOSTICS v_consents = ROW_COUNT;
+> 
+>   DELETE FROM public.leads WHERE id = p_lead_id AND user_id = v_uid;
+> 
+>   RETURN jsonb_build_object(
+>     'erased', true,
+>     'lead_id', p_lead_id,
+>     'events_deleted', v_events,
+>     'consents_withdrawn', v_consents
+>   );
+> END;
+> $$;
+> 
+> REVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM PUBLIC;
+> REVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM anon;
+> ```
+
+## 🤖 Claude *(04:31:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm spotting a regression in the latest `erase_lead` version—it's missing the explicit `lead_events` deletion and the `marketing_consents` withdrawal that were in v1. The issue is that v1 had to delete `lead_events` explicitly because the foreign key constraint uses `ON DELETE SET NULL` rather than cascading deletes.
+
+Now I need to trace through v2 and v3 to understand how this handling got lost. The v3 function (20260718200000) that's currently deployed only handles conversations, messages, and the lead itself—no events cleanup, no consent withdrawal. I should check the `lead_events` table definition to confirm whether its `lead_id` FK is also `SET NULL`, which would mean orphaned event records with PII survive the deletion.
+
+</details>
+
+
+## 🤖 Claude *(04:31:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei um problema pior que o FM-CS-02 declarado: a versão mais recente do `erase_lead` perdeu o `DELETE lead_events` e o withdraw de `marketing_consents` que existiam na v1, uma regressão real. Vou conferir a FK de `lead_events` e a v2 para completar a análise.
+
+</details>
+
+
+## 🤖 Claude *(04:31:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '55,75p' supabase/migrations/20260603000000_marketing_hub_lead_core.sql; echo \"=== v2 nurturing body ===\"; sed -n '69,130p' supabase/migrations/20260603050000_marketing_hub_nurturing.sql",
+  "description": "lead_events FK + erase_lead v2 body"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,  -- denormalized for RLS
+>   channel     text NOT NULL,                          -- whatsapp | email | social | web
+>   event_type  text NOT NULL,                          -- message_sent | opened | clicked | converted | opt_out
+>   payload     jsonb NOT NULL DEFAULT '{}'::jsonb,
+>   occurred_at timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+>   -- tenant-scoped FK: an event can only reference a lead owned by the SAME tenant.
+>   -- Closes the cross-tenant linkage gap (A inserting an event onto B's lead_id) flagged in /security-review.
+>   CONSTRAINT fk_lead_events_lead FOREIGN KEY (lead_id, user_id)
+>     REFERENCES public.leads (id, user_id) ON DELETE CASCADE
+> );
+> 
+> ALTER TABLE public.lead_events ENABLE ROW LEVEL SECURITY;
+> 
+> CREATE POLICY "lead_events_select_own" ON public.lead_events
+>   FOR SELECT USING (auth.uid() = user_id);
+> CREATE POLICY "lead_events_insert_own" ON public.lead_events
+>   FOR INSERT WITH CHECK (auth.uid() = user_id);
+> -- Events are immutable: no UPDATE/DELETE policies (DELETE cascades with the parent lead).
+> 
+> CREATE INDEX IF NOT EXISTS idx_lead_events_lead ON public.lead_events (lead_id);
+> CREATE INDEX IF NOT EXISTS idx_lead_events_user ON public.lead_events (user_id);
+> === v2 nurturing body ===
+> CREATE OR REPLACE FUNCTION public.erase_lead(p_lead_id uuid)
+> RETURNS jsonb
+> LANGUAGE plpgsql
+> SECURITY DEFINER
+> SET search_path = ''
+> AS $$
+> DECLARE
+>   v_uid       uuid := auth.uid();
+>   v_owner     uuid;
+>   v_events    integer := 0;
+>   v_consents  integer := 0;
+>   v_attr      integer := 0;
+>   v_enroll    integer := 0;
+> BEGIN
+>   IF v_uid IS NULL THEN
+>     RAISE EXCEPTION 'authentication required' USING errcode = '28000';
+>   END IF;
+> 
+>   SELECT user_id INTO v_owner FROM public.leads WHERE id = p_lead_id;
+>   IF v_owner IS NULL THEN
+>     RETURN jsonb_build_object('erased', false, 'reason', 'not_found');
+>   END IF;
+>   IF v_owner <> v_uid THEN
+>     RAISE EXCEPTION 'cannot erase a lead owned by another tenant' USING errcode = '42501';
+>   END IF;
+> 
+>   DELETE FROM public.lead_events WHERE lead_id = p_lead_id AND user_id = v_uid;
+>   GET DIAGNOSTICS v_events = ROW_COUNT;
+> 
+>   SELECT count(*) INTO v_attr
+>     FROM public.marketing_attribution WHERE lead_id = p_lead_id AND user_id = v_uid;
+> 
+>   -- count enrollments about to be CASCADE-removed when the lead is deleted
+>   SELECT count(*) INTO v_enroll
+>     FROM public.sequence_enrollments WHERE lead_id = p_lead_id AND user_id = v_uid;
+> 
+>   UPDATE public.marketing_consents
+>      SET granted = false, withdrawn_at = COALESCE(withdrawn_at, timezone('utc'::text, now()))
+>    WHERE lead_id = p_lead_id AND user_id = v_uid;
+>   GET DIAGNOSTICS v_consents = ROW_COUNT;
+> 
+>   DELETE FROM public.leads WHERE id = p_lead_id AND user_id = v_uid;  -- cascades sequence_enrollments
+> 
+>   RETURN jsonb_build_object(
+>     'erased', true,
+>     'lead_id', p_lead_id,
+>     'events_deleted', v_events,
+>     'consents_withdrawn', v_consents,
+>     'attributions_delinked', v_attr,
+>     'enrollments_removed', v_enroll
+>   );
+> END;
+> $$;
+> 
+> REVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM PUBLIC;
+> REVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM anon;
+> GRANT EXECUTE ON FUNCTION public.erase_lead(uuid) TO authenticated;
+> ```
+
+## 🤖 Claude *(04:32:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The good news is that `lead_events` rows cascade-delete automatically when a lead is removed, so there's no orphaned data there — v3 dropping the explicit delete statement doesn't cause a problem since the database constraint handles it. The real issue is that v3 stopped withdrawing marketing consents during erasure, leaving them marked as granted even after the lead is deleted, which is a genuine regression.
+
+The v4 migration needs to fix this by marking all consents as withdrawn with a timestamp, restore the event counts for reporting, and add new deletions for CRM activities and associations tied to the contact (which are timeline PII). I also need to watch out for a mesh observation node that's logging the contact's phone number in plaintext — that's PII leaking into the audit trail.
+
+The fix is to drop the contact from the observation node entirely and use only the lead_id for audit purposes. I'll capture the contact before deleting the lead row (needed for the WhatsApp cleanup), but won't persist it anywhere. I should also keep the marketing_attribution count for report completeness since v2 tracked those de-links, and verify that conversations cascade properly on lead deletion.
+
+Now I need to write the migration with v4 of the erase_lead function and run it through the security review before committing, then apply it to production via the Management API or psql. I need to make sure all schema references are fully qualified with `public.` since I'm setting `search_path=''`, and I'll explicitly declare the REVOKE and GRANT statements for the authenticated role. The tricky part is keeping v3's error handling contract — it raises an exception when a lead isn't found or the user lacks access — which the UI depends on, so I'll maintain that behavior while extending the logic for the erase operation.
+
+Now I'm checking how the client actually calls `erase_lead` to see what response shape it expects, since v3 returns `{ok:true,...}` but v1/v2 returned `{erased:true,...}`.
+
+</details>
+
+
+## 🤖 Claude *(04:32:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei duas regressões reais na v3 do `erase_lead`: o withdraw de `marketing_consents` foi perdido e o contato do lead apagado fica gravado no Knowledge Mesh. Vou verificar o contrato do cliente e escrever a migration v4 para corrigir isso junto com o gap de `crm_activities` e `crm_associations`.
+
+</details>
+
+
+## 🤖 Claude *(04:32:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"erase_lead\" src/ | head -5",
+  "description": "Client callers of erase_lead"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/integrations/supabase/types.ts:6174:      erase_lead: { Args: { p_lead_id: string }; Returns: Json }
+> ```
+
+## 🤖 Claude *(04:32:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Since there's no current rewritten thinking yet, I'll start fresh with the next thinking:
+
+Since erase_lead isn't connected to the UI yet and only serves as an LGPD RPC endpoint, I have flexibility with the contract shape. I'll keep the v3 exception behavior intact and write the v4 migration.
+
+</details>
+
+
+## 🤖 Claude *(04:32:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Nenhum caller no cliente ainda, só types — contrato livre para estender. Agora vou escrever a migration v4.
+
+</details>
+
+
+## 🤖 Claude *(04:32:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql",
+  "content": "-- ============================================================================\n-- 20260722120000_fix_erase_lead_crm_spine.sql\n-- FM-CS-02 (RPN 324, LGPD) \u2014 erase_lead() v4: cobre a spine CRM + 2 regress\u00f5es da v3.\n--\n-- O que a v3 (20260718200000:171) deixava para tr\u00e1s ap\u00f3s um erasure:\n--   (a) crm_activities object_type='contact' \u2014 timeline com PII do titular em\n--       title/body/metadata (notas, chamadas, form_submit com campos enviados);\n--   (b) crm_associations from/to_type='contact' \u2014 v\u00ednculos polim\u00f3rficos SEM FK\n--       (linhas \u00f3rf\u00e3s apontando para o lead apagado);\n--   (c) REGRESS\u00c3O: o CREATE OR REPLACE da v3 perdeu o withdraw de\n--       marketing_consents da v1/v2 \u2014 o consentimento permanecia granted=true\n--       depois do apagamento do titular;\n--   (d) REGRESS\u00c3O: o observation node da v3 gravava o CONTATO do titular\n--       (telefone/e-mail) em mcorch_nodes.content e metadata.contact \u2014 PII\n--       persistida FORA do cascade, derrotando o pr\u00f3prio erasure. O n\u00f3 de\n--       auditoria agora carrega apenas o uuid opaco do lead.\n--\n-- Continuam por cascade f\u00edsico (sem mudan\u00e7a): conversations/messages e\n-- sequence_enrollments (FKs compostas ON DELETE CASCADE), lead_events\n-- (fk_lead_events_lead CASCADE). deals.lead_id e marketing_attribution.lead_id\n-- s\u00e3o ON DELETE SET NULL por design (registro de neg\u00f3cio do tenant sobrevive\n-- de-linkado) \u2014 contados no relat\u00f3rio zero-residue.\n-- ============================================================================\n\nCREATE OR REPLACE FUNCTION public.erase_lead(p_lead_id uuid)\nRETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$\nDECLARE\n  v_lead        record;\n  v_user_id     uuid;\n  v_contact     text;\n  v_conv_count  int := 0;\n  v_msg_count   int := 0;\n  v_evt_count   int := 0;\n  v_act_count   int := 0;\n  v_assoc_count int := 0;\n  v_deal_count  int := 0;\n  v_attr_count  int := 0;\n  v_consents    int := 0;\n  v_wl_deleted  int := 0;\nBEGIN\n  -- 1) Tenancy: o lead DEVE pertencer ao caller (mesmo contrato da v3)\n  SELECT l.*, l.user_id INTO v_lead\n  FROM public.leads l\n  WHERE l.id = p_lead_id AND l.user_id = auth.uid();\n\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'lead not found or access denied';\n  END IF;\n\n  v_user_id := v_lead.user_id;\n  v_contact := v_lead.contact;\n\n  -- 2) Contagens pr\u00e9-delete das tabelas que caem por CASCADE (relat\u00f3rio zero-residue)\n  SELECT count(*) INTO v_conv_count\n  FROM public.conversations\n  WHERE lead_id = p_lead_id AND user_id = v_user_id;\n\n  SELECT count(*) INTO v_msg_count\n  FROM public.messages\n  WHERE user_id = v_user_id\n    AND conversation_id IN (SELECT id FROM public.conversations WHERE lead_id = p_lead_id AND user_id = v_user_id);\n\n  SELECT count(*) INTO v_evt_count\n  FROM public.lead_events\n  WHERE lead_id = p_lead_id AND user_id = v_user_id;\n\n  -- de-linkados por FK SET NULL quando o lead cair (registro de neg\u00f3cio sobrevive sem PII do titular)\n  SELECT count(*) INTO v_deal_count\n  FROM public.deals\n  WHERE lead_id = p_lead_id AND user_id = v_user_id;\n\n  SELECT count(*) INTO v_attr_count\n  FROM public.marketing_attribution\n  WHERE lead_id = p_lead_id AND user_id = v_user_id;\n\n  -- 3) FM-CS-02 \u2014 spine CRM sem FK para leads: apagar explicitamente.\n  --    'contact' \u00e9 o object_type/from_type/to_type que representa o lead na spine.\n  DELETE FROM public.crm_activities\n  WHERE user_id = v_user_id AND object_type = 'contact' AND object_id = p_lead_id;\n  GET DIAGNOSTICS v_act_count = ROW_COUNT;\n\n  DELETE FROM public.crm_associations\n  WHERE user_id = v_user_id\n    AND ((from_type = 'contact' AND from_id = p_lead_id)\n      OR (to_type   = 'contact' AND to_id   = p_lead_id));\n  GET DIAGNOSTICS v_assoc_count = ROW_COUNT;\n\n  -- 4) Regress\u00e3o (c): consentimento vira withdrawn; a prova legal sobrevive de-linkada (FK SET NULL)\n  UPDATE public.marketing_consents\n     SET granted = false, withdrawn_at = COALESCE(withdrawn_at, timezone('utc'::text, now()))\n   WHERE lead_id = p_lead_id AND user_id = v_user_id;\n  GET DIAGNOSTICS v_consents = ROW_COUNT;\n\n  -- 5) Delete do lead (CASCADE f\u00edsico \u2192 conversations/messages, lead_events, sequence_enrollments;\n  --    SET NULL \u2192 deals.lead_id, marketing_attribution.lead_id, marketing_consents.lead_id)\n  DELETE FROM public.leads WHERE id = p_lead_id AND user_id = v_user_id;\n\n  -- 6) Espelho whatsapp_leads (UNIQUE (user_id, phone_number))\n  DELETE FROM public.whatsapp_leads\n  WHERE user_id = v_user_id AND phone_number = v_contact;\n  GET DIAGNOSTICS v_wl_deleted = ROW_COUNT;\n\n  -- 7) Observation node de auditoria \u2014 APENAS o uuid opaco; nunca o contato (regress\u00e3o (d))\n  INSERT INTO public.mcorch_nodes (name, node_type, content, stability_score, metadata, user_id)\n  VALUES (\n    'erasure:lead:' || p_lead_id,\n    'observation',\n    'LGPD erasure cascade executed for lead ' || p_lead_id,\n    1.0,\n    jsonb_build_object(\n      'lead_id', p_lead_id,\n      'conversations_removed', v_conv_count,\n      'messages_removed', v_msg_count,\n      'lead_events_removed', v_evt_count,\n      'crm_activities_removed', v_act_count,\n      'crm_associations_removed', v_assoc_count,\n      'deals_delinked', v_deal_count,\n      'attributions_delinked', v_attr_count,\n      'consents_withdrawn', v_consents,\n      'whatsapp_leads_removed', v_wl_deleted,\n      'source', 'erase_lead_rpc'\n    ),\n    v_user_id\n  );\n\n  RETURN jsonb_build_object(\n    'ok', true,\n    'lead_id', p_lead_id,\n    'conversations_removed', v_conv_count,\n    'messages_removed', v_msg_count,\n    'lead_events_removed', v_evt_count,\n    'crm_activities_removed', v_act_count,\n    'crm_associations_removed', v_assoc_count,\n    'deals_delinked', v_deal_count,\n    'attributions_delinked', v_attr_count,\n    'consents_withdrawn', v_consents,\n    'whatsapp_leads_removed', v_wl_deleted\n  );\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM PUBLIC;\nREVOKE ALL ON FUNCTION public.erase_lead(uuid) FROM anon;\nGRANT EXECUTE ON FUNCTION public.erase_lead(uuid) TO authenticated;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:32:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've written the migration and need to run the security review before committing, following the requirement that every migration must pass the review first. I could run it now since the migration is standalone, though I might batch it with other grid changes depending on timing.
+
+For applying to production, I'll need to use the SQL Management API pattern that's been used in recent sessions, being careful with the WAF gotcha around large DDL statements. After the security review passes, I should apply it to prod and verify, then potentially write a smoke test using a throwaway user to verify the erasure functionality works end-to-end with no residual data. Let me invoke the security-review skill now on this migration.
+
+</details>
+
+
+## 🤖 Claude *(04:32:52)*
+
+Migration v4 escrita. Regra do CLAUDE.md: toda migration passa por `/security-review` antes do commit — rodando agora:
+
+## 🤖 Claude *(04:32:52)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(04:32:52)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(04:32:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm starting a security review to check for vulnerabilities in the SQL migration file that erases lead data, and I'm launching an analysis subagent to help identify potential issues.
+
+</details>
+
+
+## 🤖 Claude *(04:33:14)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "description": "Security analysis of migration",
+  "run_in_background": false,
+  "prompt": "You are a senior security engineer conducting a focused security review of a single new file on this branch (repo: /home/gcrUX/htdocs/constellation-orchestra).\n\nTHE ONLY CHANGE IN THIS PR is the new untracked file:\n`supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql`\n\nIt redefines the SECURITY DEFINER function `public.erase_lead(p_lead_id uuid)` (v4) to close LGPD erasure gaps: deletes crm_activities (object_type='contact') and crm_associations (from/to_type='contact') rows tied to the lead, restores marketing_consents withdraw, counts CASCADE'd tables (conversations/messages/lead_events), counts SET NULL de-links (deals, marketing_attribution), deletes whatsapp_leads mirror by (user_id, phone_number), and inserts an audit observation node into mcorch_nodes WITHOUT the contact PII (only the opaque lead uuid).\n\nOBJECTIVE: identify HIGH-CONFIDENCE security vulnerabilities NEWLY ADDED by this change. Focus ONLY on security implications of this migration. Do not comment on pre-existing concerns in other files.\n\nANALYSIS METHODOLOGY:\n1. Read the new migration file completely.\n2. Read the prior versions of erase_lead for comparison: supabase/migrations/20260603000000_marketing_hub_lead_core.sql (v1, line ~130), supabase/migrations/20260603050000_marketing_hub_nurturing.sql (v2, line ~69), supabase/migrations/20260718200000_crm_inbox_conversations.sql (v3, line ~171).\n3. Read the CRM spine schema: supabase/migrations/20260719140000_crm_suite_spine.sql (companies, crm_pipelines, crm_pipeline_stages, deals, crm_associations, crm_activities).\n4. Examine the SECURITY DEFINER pattern used across this codebase (search_path='', tenant guard via auth.uid(), REVOKE/GRANT discipline) and check whether this function conforms.\n\nSECURITY CATEGORIES TO EXAMINE (relevant here):\n- Authorization bypass: can a tenant erase or mutate ANOTHER tenant's rows through this function? Check every DELETE/UPDATE/INSERT is bound to v_user_id derived from the auth.uid()-guarded lead row.\n- SQL injection: any dynamic SQL? (should be none \u2014 static statements).\n- Privilege escalation via SECURITY DEFINER: search_path pinned? GRANT surface (authenticated only, no anon/PUBLIC)?\n- Data exposure: does the audit node or return payload leak PII (contact, phone) of the erased subject? Does anything write PII to a globally-readable table? NOTE: mcorch_nodes with user_id set is tenant-isolated; user_id NULL would be system/global-visible \u2014 check what this INSERT sets.\n- Logic flaws that break the security goal (erasure completeness): does any statement miss the tenant scope or the lead scope?\n\nCONFIDENCE: only report findings with >0.7 confidence; describe exploit scenario concretely.\n\nOUTPUT: a list of candidate findings, each with: file:line, severity (HIGH/MEDIUM/LOW), category, description, exploit scenario, recommendation, confidence (0-1). If there are no credible findings, say so explicitly and explain the checks you performed that came back clean."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'The review is complete. I examined the new migration against all four prior versions of `erase_lead`, the CRM spine schema, the `mcorch_nodes` RLS/trigger stack, and the codebase\'s SECURITY DEFINER conventions.\n\n## Verdict: no credible newly-added security findings (>0.7 confidence)\n\nThe v4 redefinition in `/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql` is a net security improvement over the live v3, and every new statement it introduces is correctly tenant- and lead-scoped. Below are the checks performed and their results, followed by informational residual notes (all pre-existing, none introduced by this change).\n\n## Checks performed — all clean\n\n**1. Authorization / tenant binding (every statement audited):**\n- Guard (lines 42-48): `WHERE l.id = p_lead_id AND l.user_id = auth.uid()` → `RAISE EXCEPTION` on NOT FOUND. Fails closed for anon (`auth.uid()` NULL) and for cross-tenant callers, without an existence oracle (same generic error for "missing" and "not yours" — same contract as v3).\n- All 5 count queries (lines 54-74): bound to `user_id = v_user_id` (which equals `auth.uid()` by construction). Read-only, own-tenant.\n- NEW `DELETE crm_activities` (line 78-79): `user_id = v_user_id AND object_type = \'contact\' AND object_id = p_lead_id`. Correct — cannot touch another tenant\'s rows, and cannot touch same-tenant rows of other object types even if a uuid were reused.\n- NEW `DELETE crm_associations` (lines 82-85): `user_id = v_user_id AND ((from_type=\'contact\' AND from_id=p_lead_id) OR (to_type=\'contact\' AND to_id=p_lead_id))` — parenthesization is correct, so the tenant predicate applies to both OR branches (I checked this specifically; a mis-parenthesized OR here would have been a cross-row deletion bug).\n- Restored `UPDATE marketing_consents` (lines 89-91): `lead_id = p_lead_id AND user_id = v_user_id`. Matches v1/v2 exactly.\n- `DELETE leads` (line 96) and `DELETE whatsapp_leads` (lines 99-100): tenant-bound; `whatsapp_leads` has `UNIQUE (user_id, phone_number)` (20260531200000:18) so at most 1 own-tenant row.\n- No statement grants the caller a write it shouldn\'t have: `crm_activities`/`crm_associations`/`whatsapp_leads` already have owner DELETE policies; the definer-only `leads` DELETE (and its composite-FK cascades to `conversations`/`messages`/`sequence_enrollments`) is the deliberate design (v1 line 40: "No DELETE policy... erasure only via erase_lead()").\n- TOCTOU: between guard and deletes the lead cannot change owner (`leads_update_own` WITH CHECK pins `user_id = auth.uid()`), and every subsequent statement re-asserts `user_id = v_user_id` anyway — defense-in-depth holds even under concurrent mutation.\n\n**2. SQL injection:** none possible — all statements are static; the only concatenations (`\'erasure:lead:\' || p_lead_id`, line 106) build *values* from a typed `uuid` parameter, never SQL text.\n\n**3. SECURITY DEFINER discipline:** conforms to the codebase pattern. `SET search_path = \'\'` (line 26); every relation schema-qualified (`public.*`), `auth.uid()` qualified; remaining functions (`count`, `jsonb_build_object`, `timezone`, `now`) are `pg_catalog`, which is always implicitly searched. GRANT surface (lines 142-144) is the strictest of all four versions: explicit `REVOKE ALL FROM PUBLIC`, `REVOKE ALL FROM anon`, `GRANT EXECUTE TO authenticated` — v3 (20260718200000:239) had only the re-GRANT and relied on ACL preservation; v4 restores the full explicit block from v1/v2. No PUBLIC/anon execute.\n\n**4. Data exposure — this is where v4 materially *fixes* a leak rather than adding one:**\n- v3 (20260718200000:216, 220) wrote the subject\'s contact (phone/e-mail) into `mcorch_nodes.content` and `metadata.contact`. That node\'s insert also fires `trg_mcorch_embed_on_insert` (20260503120000), which ships the node to the `embed-mcorch-node` edge function and thence to an external embedding provider — i.e., v3 exfiltrated erased-subject PII to a third party and persisted it outside the cascade. v4\'s insert (lines 104-124) carries only the opaque lead uuid + row counts. Verified char-by-char: `name`, `content`, and every `metadata` key are uuid/counts only.\n- The audit node sets `user_id = v_user_id` (line 123), which is NOT NULL (`leads.user_id NOT NULL`), so under `nodes_tenant_select` (20260425210000:35-37) it is visible only to the owning tenant — it does not become a system/global node.\n- The return payload (lines 126-138) is uuid + counts, no PII.\n\n**5. Atomicity:** the whole function is one transaction — a failure at any step (including the audit insert) rolls back all deletes, so there is no partial-erasure state that reports success.\n\n**6. Carried-over quirk (not a finding):** `SELECT l.*, l.user_id INTO v_lead` (line 42) produces a record with a duplicate `user_id` field; PL/pgSQL resolves field access to the first match, both fields hold the same value, and the identical pattern is already live in v3 production. Cosmetic only.\n\n## Informational residual notes (pre-existing, NOT introduced by this migration — listed because the header claims FM-CS-02 closure)\n\n- **Storage media residue (OTD-CRM-017, tracked):** `crm-media/<uid>/` objects referenced by cascaded `messages.media_asset_path` are not removed (Storage objects are non-FK). Openly registered in 20260718230000:48-52 as a future slice. Severity MEDIUM as an LGPD-completeness gap, but pre-existing and documented — not a v4 regression.\n- **`deals.name` PII:** the FMEA that motivates this migration (docs/bok/crm-suite/08-quality-metrics.md:57, FM-CS-02) names "PII em `deals.name`" in the failure mode. v4 counts deals as de-linked (by design, lines 67-70) but a deal named after the contact retains that name. Partial closure of FM-CS-02, acknowledged by the SET NULL-by-design comment (lines 20-22). LOW, pre-existing.\n- **No in-function zero-residue verification SELECT:** FM-CS-02\'s prescribed action says "A RPC deve terminar com SELECT de verificação de zero resíduo"; v4 reports pre-delete counts instead of post-delete verification. Audit-integrity nuance (counts are a snapshot, not proof), not an exploitable vulnerability. LOW.\n\nNone of these three are exploitable by another tenant and none were added by this change; they are completeness debt already tracked in the BoK.\n\n**Summary:** the migration closes two real v3 regressions (PII in the mesh/embedding path; lost consent withdraw) and extends erasure to the FK-less CRM spine with correct tenant guards throughout. I found no authorization bypass, no injection surface, no privilege-escalation vector, and no new data-exposure path. Clean from a newly-introduced-vulnerability standpoint.'}, {'type': 'text', 'text': "agentId: a1bc3c09fedc6ab03 (use SendMessage with to: 'a1bc3c09fedc6ab03', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 136676\ntool_uses: 15\nduration_ms: 254281</usage>"}]
+> ```
+
+## 🤖 Claude *(04:37:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Since the analysis found no vulnerabilities, I can skip the false-positive filtering step and move straight to the final report. The three informational notes are pre-existing issues that I'm explicitly excluding from my response, so I'll just deliver the markdown report as requested.
+
+</details>
+
+
+## 🤖 Claude *(04:37:47)*
+
+# Security Review — `supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql`
+
+**NO FINDINGS** — nenhuma vulnerabilidade nova introduzida por esta migration (revisão + verificação: 0 candidatos ≥ confiança 8).
+
+## Verificações executadas (todas limpas)
+
+* **Autorização / tenant binding:** guard `l.id = p_lead_id AND l.user_id = auth.uid()` fail-closed (anon e cross-tenant caem no mesmo erro genérico, sem oráculo de existência); todos os DELETE/UPDATE/INSERT subsequentes re-asseguram `user_id = v_user_id` — inclusive a parentetização do OR em `crm_associations`, checada especificamente (o predicado de tenant se aplica aos dois ramos).
+* **SQL injection:** inexistente — statements estáticos; a única concatenação (`'erasure:lead:' || p_lead_id`) constrói *valor* a partir de `uuid` tipado, nunca texto SQL.
+* **Disciplina SECURITY DEFINER:** `SET search_path = ''`, todas as relações qualificadadas `public.*`, e a superfície de GRANT mais estrita das 4 versões (`REVOKE ALL FROM PUBLIC` + `REVOKE ALL FROM anon` + `GRANT EXECUTE TO authenticated`).
+* **Exposição de dados:** a v4 **fecha** um vazamento em vez de criar um — a v3 gravava o contato do titular em `mcorch_nodes.content`/`metadata.contact`, que ainda disparava o trigger de embedding (PII do titular apagado enviada a provedor externo). A v4 carrega apenas o uuid opaco + contagens, com `user_id = v_user_id` NOT NULL (nó tenant-isolado, nunca global). Payload de retorno sem PII.
+* **Atomicidade:** função inteira em uma transação — falha em qualquer passo reverte tudo; não existe estado de erasure parcial reportado como sucesso.
+
+## Notas residuais (pré-existentes, fora do escopo desta mudança)
+
+* Objetos em `crm-media/<uid>/` referenciados por `messages.media_asset_path` não são removidos (OTD-CRM-017, já rastreado como fatia futura).
+* `deals.name` pode reter o nome do contato (SET NULL by design, comentado na própria migration) — fechamento parcial do FM-CS-02, débito registrado no BoK.
+* FM-CS-02 prescreve SELECT de verificação pós-delete; a v4 reporta contagens pré-delete (nuance de auditoria, não explorável).
+
+## 👤 User *(04:45:23)*
+
+<task-notification>
+<task-id>w2zoxuovh</task-id>
+<tool-use-id>toolu_01Lykee87VGn6XuHn1BQo3UZ</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/36e70cd6-1f66-4786-8e7b-0169cc76d0c4/tasks/w2zoxuovh.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Design fundamentado + crítico adversarial + veredito para 4 frentes (cortes, grid, agendamento, agentes)" completed</summary>
+<result>{"synthesis":null,"fronts":[{"key":"cortes","verdict":"REVISE","blockers":["Dedup 'obrigatório' é dead code como escrito: o snippet constrói `kept` mas a única edição downstream especificada é `clips.slice(0, effectiveTopN)` em :256 — `kept` nunca é consumido. Um implementador fiel à letra shipa ZERO dedup enquanto a proposta o declara mitigação Lei 1 obrigatória. Corrigir o contrato para `const top = kept.slice(0, effectiveTopN)` (e definir o comportamento quando `kept.length &lt; effectiveTopN`).","O piso `effectiveTopN = max(clamp(body.top_n,1,12), duração≥300s ? 5 : 1)` SOBRESCREVE um top_n explícito do caller, e a ordem de execução da própria proposta (edge fn primeiro, UI depois) + bundles stale no Cloudflare garantem uma janela em que os callers atuais — página `:167 top_n:3`, wizard `:190 top_n:3`, inspector `topN≤8` — QUEIMAM tudo que o servidor retornar: usuário pede 3 num master de 6 min e recebe 5-12 cortes queimados na biblioteca, piorando exatamente a dor declarada (ruído). Fix trivial e retrocompatível: aplicar suggestedN/piso SOMENTE quando `top_n` estiver AUSENTE no body (o novo doDetect já envia ausente); top_n explícito permanece autoritativo e o `max()` desaparece."]},{"key":"grid","verdict":"APPROVE","blockers":[]},{"key":"agendamento","verdict":"REVISE","blockers":["§3 Pinterest refutado: o trilho vivo NÃO publica link clicável — o payload de criação de pin em publish-social (~l.725) tem só board_id/title/description (sem campo `link`) e o builder nativo do auto-publish (l.113-181) não encaminha `c.link`. O 'único clique nativo do funil' está não-construído, contradizendo o 'zero código novo'. Ou (a) patch pequeno: forward de `link` no auto-publish + `link` no body do pin em publish-social, ou (b) reescrever o template Pinterest sem a promessa de clique — decidir ANTES de agendar, senão o funil entrega zero cliques na única plataforma que os prometia.","Fail-open-to-public no YouTube: publish-social:52-55 defaulta privacy ausente/inválida para 'public'. O caminho recomendado (insert direto) abandona o default estrutural privado de publish-space-asset:213 e o guard 409, confiando em disciplina de insert — violação da doutrina privado-primeiro codificada no próprio arquivo ('makes a public post-by-forgotten-wiring structurally impossible'). O 'patch opcional ~5 linhas' (publish_at no publish-space-asset) deve virar OBRIGATÓRIO, ou no mínimo um gate de verificação pós-insert (SELECT provando metadata.reshape.content.privacy='private' em toda linha youtube queued ANTES do primeiro tick do cron)."]},{"key":"agentes"}]}</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/36e70cd6-1f66-4786-8e7b-0169cc76d0c4/subagents/workflows/wf_4eae6fd6-e07/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/36e70cd6-1f66-4786-8e7b-0169cc76d0c4/workflows/scripts/mcorch-multi-front-verdict-wf_4eae6fd6-e07.js', resumeFromRunId: 'wf_4eae6fd6-e07'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<failures>[critic:agentes] failed: You've hit your session limit · resets 2:50am (America/Sao_Paulo)
+[verdict:sintese] failed: You've hit your session limit · resets 2:50am (America/Sao_Paulo)</failures>
+<usage><agent_count>9</agent_count><agents_done>7</agents_done><agents_error>2</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>940428</subagent_tokens><tool_uses>96</tool_uses><duration_ms>914315</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(04:45:23)*
+
+You've hit your session limit · resets 2:50am (America/Sao_Paulo)
+
 ---
 
 %% --- PROJECT METADATA START --- %%
