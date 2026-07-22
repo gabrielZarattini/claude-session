@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 2903
-> * **Sessões do Claude**: 2856
+> * **Total de Sessões Registradas**: 2913
+> * **Sessões do Claude**: 2866
 > * **Sessões do Gemini**: 47
 
 ---
@@ -77,17 +77,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-07-22 - eb5f8f68-8fd6-43ef-bfe3-8d76aa95ca4d]]` - *2026-07-22*
 *   `[[2026-07-22 - db9b9f6b-501f-42ba-ba65-252fc72f22d3]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-adde128cd7c8aa294]]` - *2026-07-22*
 *   `[[2026-07-22 - agent-add2b7880334191a8]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-ac3479560a0df6745]]` - *2026-07-22*
 *   `[[2026-07-22 - agent-a998c8eb4b43b6733]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a906ba0406000875f]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a8d68ad88639a7918]]` - *2026-07-22*
 *   `[[2026-07-22 - agent-a8225ee73b8049ec5]]` - *2026-07-22*
-*   `[[2026-07-22 - agent-a5360e812711b05dd]]` - *2026-07-22*
-*   `[[2026-07-22 - agent-a50bd4e2bdd04ee3a]]` - *2026-07-22*
-*   `[[2026-07-22 - agent-a47813230091adc31]]` - *2026-07-22*
-*   `[[2026-07-22 - agent-a26c49421d4c438c8]]` - *2026-07-22*
-*   `[[2026-07-22 - Validar legendas e formatos de grid para conteúdo]]` - *2026-07-22*
-*   `[[2026-07-22 - Sincronizar animações de legendas com duração da frase]]` - *2026-07-22*
-*   `[[2026-07-22 - Enriquecer arquivos dos agentes Pantheon e otimizar geração de cortes de vídeo]]` - *2026-07-22*
-*   *... e mais 2845 sessões nessa categoria.*
+*   `[[2026-07-22 - agent-a7dec6d7d25330076]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a59f0af2f23b5602f]]` - *2026-07-22*
+*   `[[2026-07-22 - agent-a578954da07048eb9]]` - *2026-07-22*
+*   *... e mais 2855 sessões nessa categoria.*
 
 ---
 
@@ -1745,13 +1745,23 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Julho 2026
 *   `[[2026-07-22 - eb5f8f68-8fd6-43ef-bfe3-8d76aa95ca4d]]` (ClaudeSessions)
 *   `[[2026-07-22 - db9b9f6b-501f-42ba-ba65-252fc72f22d3]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-adde128cd7c8aa294]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-add2b7880334191a8]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-ac3479560a0df6745]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a998c8eb4b43b6733]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a906ba0406000875f]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a8d68ad88639a7918]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a8225ee73b8049ec5]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a7dec6d7d25330076]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a59f0af2f23b5602f]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a578954da07048eb9]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a5446a48d7d0e9906]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a5360e812711b05dd]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a50bd4e2bdd04ee3a]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a47813230091adc31]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a27197d3e1f4c8688]]` (ClaudeSessions)
 *   `[[2026-07-22 - agent-a26c49421d4c438c8]]` (ClaudeSessions)
+*   `[[2026-07-22 - agent-a1bc3c09fedc6ab03]]` (ClaudeSessions)
 *   `[[2026-07-22 - Validar legendas e formatos de grid para conteúdo]]` (ClaudeSessions)
 *   `[[2026-07-22 - Sincronizar animações de legendas com duração da frase]]` (ClaudeSessions)
 *   `[[2026-07-22 - Enriquecer arquivos dos agentes Pantheon e otimizar geração de cortes de vídeo]]` (ClaudeSessions)
