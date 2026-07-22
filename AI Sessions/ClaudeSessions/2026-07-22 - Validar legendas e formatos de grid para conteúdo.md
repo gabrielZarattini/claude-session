@@ -15816,6 +15816,6 @@ Sessão-maratona selada. **Todas as frentes que você GO'd entregues e verificad
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-21 - agent-af9b610d3f474d05d]]
-> * **Próxima Sessão**: [[2026-07-22 - db9b9f6b-501f-42ba-ba65-252fc72f22d3]]
+> * **Sessão Anterior**: [[2026-07-22 - Sincronizar animações de legendas com duração da frase]]
+> * **Próxima Sessão**: [[2026-07-22 - agent-a47813230091adc31]]
 %% --- TIMELINE END --- %%
