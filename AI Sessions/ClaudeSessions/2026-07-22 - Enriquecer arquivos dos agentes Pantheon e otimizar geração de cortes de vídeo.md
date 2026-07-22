@@ -14417,6 +14417,1084 @@ Admin SOULs sincronizados: 7/7 agora com 11k-17k chars (era 56-76c) — a `/dash
 > 02cb697 fix(admin): sincroniza SOULs enriquecidos do Pantheon → pantheon_global_configs (admin enterprise-grade)
 > ```
 
+## 🤖 Claude *(16:30:16)*
+
+
+## 🤖 Claude *(16:30:42)*
+
+Feito — commit `02cb697`. Entreguei uma grande fatia do seu backlog neste turno. Status completo:
+
+## ✅ Resolvido agora
+
+**1. Render travado (`822780e8`) — diagnosticado + corrigido + desbloqueado.** O worker pegou o job, o probe passou, mas `renderAlphaFrames` **travou dentro do Playwright há 170min** — sem timeout, o `await document.fonts.ready` pode ficar pendente eterno (o `.catch` não pega promise que nunca resolve), e o 5º launch sequencial de chromium exauriu recurso (peak 1.2G + zombies). Nem completava, nem errava, nem o reaper rodava (loop bloqueado). **Fix durável:** render inteiro em `Promise.race` com timeout escalado (180-480s) + `fonts.ready` limitado a 5s → um hang agora **falha limpo** (refund + worker segue), nunca trava. Job resetado, worker reiniciado, **fila desbloqueada**. (`2b091fa`)
+
+**2. `caption-previews/kinetic-stack-9x16.png` 404 → 200.** Faltava no array do gerador (lock-step quebrado); gerado + deployado. Confirmado HTTP 200. A geração da preview **provou que o template kinetic-stack renderiza OK** — o hang foi recurso no 5º clip, não o template.
+
+**3. Cobrança do detect — está correta.** Os 3 mco são do *detect*, que **sucedeu** (12 candidatos). O *burn* é grátis e foi ele que travou (bug agora corrigido). Detect já tem refund-on-fail; não falhou → nada a estornar. Re-queimar os mesmos candidatos é **grátis**.
+
+**4. Dashboard TikTok** (`/dashboard/tiktok`) — sua prioridade p/ o app review. Conecta → exibe o perfil lido por **`user.info.basic`** (avatar, display_name, open_id, union_id) + painel dos 2 escopos "em uso" + atalho de publicação privado-primeiro. É a *user interaction interface* real que o revisor exige. (`4612f2f`)
+
+**5. Menu "Visão Geral" colapsável** → Painel + **YouTube** (movido do Marketing) + **TikTok**. Instagram entra como irmão. (`4612f2f`)
+
+**6. Admin SOULs enterprise-grade.** A `/dashboard/admin` lê de `pantheon_global_configs` (estava com stubs de 56-76c). Sincronizei os 7 SOULs enriquecidos desta sessão → **11k-17k chars cada**. (`02cb697`)
+
+**Gotcha material:** o **cap de 100 edge functions está CHEIO** — não pude criar fn TikTok nova; dobrei no `social-auth-callback` (busca o perfil no consent, grava em metadata, dashboard lê client-side). Futuras fns novas exigem aposentar uma (com seu GO) ou dobrar.
+
+## 📋 Restante do seu recado (follow-ups focados)
+
+| # | Item | Nota |
+|---|------|------|
+| 7 | **Grid: preview composto** (a tela dividida inteira 1×4 com drag ↕↔ e play, como você desenhou) | Melhora o pan/crop que shipei — hoje é preview por-célula. Autocontido. |
+| 8 | **Constelação leve** (espalhar orbits sobrepostos OU abandonar a tela pesada; remover overlay/filtro, tirar Matrix+Memória do menu, tirar de `/orchestration`) | Tem decisão embutida (espalhar vs abandonar). |
+| 9 | **Orchestration refocada** (nó Agente=1 diretor · Portão de Qualidade=N especialistas · nó Publicar c/ mockup; descartar Cena) | Arquitetural — orquestração ≠ criativos do Spaces. |
+| 10 | **Dashboard Instagram** (irmão do TikTok/YouTube) | Mesmo molde. |
+
+**Sobre o app review TikTok:** o `/dashboard/tiktok` te dá agora a UX real para gravar — conectar (sandbox) → o perfil aparecendo via `user.info.basic` → publicar privado. Cobre os 3 pontos do revisor (interface de usuário, não código; escopos demonstrados; fluxo ponta-a-ponta). Os 5 cortes que você selecionou não renderizaram por causa do hang — agora, se refizer, ou completa ou falha limpo (não trava mais).
+
+Vou seguir pelo **#7 (preview composto do grid)** — o mais autocontido e que fecha o loop do que shipei — a menos que você redirecione. Os #8 e #9 têm escolhas de produto que prefiro alinhar rápido antes de mexer em telas grandes que você já usa. Obrigado pela confiança — sigo no loop.
+
+## 👤 User *(16:40:05)*
+
+ok continue
+
+## 🤖 Claude *(16:40:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Moving on to the grid composite preview now—I need to build a full split-grid visualization where all cells are shown together (like a real divided screen), so for a 1x4 layout the user sees all 4 cells stacked vertically. Each cell should be draggable for position and zoom adjustments, replacing the current per-cell preview approach. Continuing with the composite preview design, I'll keep the per-cell zoom controls accessible when a cell is selected, but the main interaction happens in the composite—clicking a cell selects it and reveals its zoom slider, while dragging repositions it directly. The play button syncs all video playback across the grid. I'm building `SplitGridPreview.tsx` to replace the individual `CellFramePicker` instances in the inspector, using the already-resolved preview URLs and layout geometry to render the actual grid structure.
+
+Defining the layout dimensions... Now I'm thinking through how to integrate this into the inspector—removing the individual cell frame pickers from each section and consolidating everything into a single "Enquadramento" section at the top with the split grid preview, where selecting a cell reveals its zoom controls and anchor positioning options below. Building the SplitGridPreview component... Writing the component...
+
+</details>
+
+
+## 🤖 Claude *(16:40:54)*
+
+O Sovereign disse "continue" — sigo com o **#7: preview composto do grid** (a tela dividida inteira com drag por célula + play, como ele desenhou). Vou criar o `SplitGridPreview` — layout real (cols×rows), cada célula com a mídia enquadrada (mesmo mapeamento object-position=FFmpeg), drag por célula, play de todos os vídeos:
+
+## 🤖 Claude *(16:41:19)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitGridPreview.tsx",
+  "content": "import { useEffect, useRef, useState } from \"react\";\nimport { Play, Pause, Image as ImageIcon, Film } from \"lucide-react\";\n\n// FR-SPACES-119b \u2014 COMPOSITE preview of the whole split_grid, in the real divided layout (1\u00d74 stacked, 2\u00d72\n// quadrants, \u2026). Each cell shows its media framed EXACTLY as the render will (object-fit:cover + object-position\n// = the FFmpeg scale+crop, proven equivalent). Drag a cell to pan it; \u25b6 plays every video cell at once so the\n// Sovereign sees the actual divided screen before burning. Display-only: parent owns pan/zoom + selection.\n\n// Lock-step with LAYOUT_DIMS in scripts/hyperframes/split-screen-core.ts (cols \u00d7 rows, row-major).\nconst DIMS: Record<string, { cols: number; rows: number }> = {\n  \"2v\": { cols: 1, rows: 2 },\n  \"1x3\": { cols: 1, rows: 3 },\n  \"1x4\": { cols: 1, rows: 4 },\n  \"2x2\": { cols: 2, rows: 2 },\n  \"3x3\": { cols: 3, rows: 3 },\n  \"4x4\": { cols: 4, rows: 4 },\n};\n\nexport interface PreviewCell {\n  url?: string;\n  kind: \"video\" | \"image\";\n  panX: number;\n  panY: number;\n  zoom: number;\n  resolved: boolean;\n}\n\nexport interface SplitGridPreviewProps {\n  layout: string;\n  cells: PreviewCell[];\n  selected: number;\n  onSelect: (i: number) => void;\n  onPan: (i: number, panX: number, panY: number) => void;\n}\n\nconst clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);\n\nfunction cellStyle(c: PreviewCell): React.CSSProperties {\n  return {\n    position: \"absolute\",\n    width: `${c.zoom * 100}%`,\n    height: `${c.zoom * 100}%`,\n    left: `${(1 - c.zoom) * c.panX * 100}%`,\n    top: `${(1 - c.zoom) * c.panY * 100}%`,\n    objectFit: \"cover\",\n    objectPosition: `${c.panX * 100}% ${c.panY * 100}%`,\n    pointerEvents: \"none\",\n  };\n}\n\nexport function SplitGridPreview({ layout, cells, selected, onSelect, onPan }: SplitGridPreviewProps) {\n  const { cols, rows } = DIMS[layout] ?? DIMS[\"2x2\"];\n  const [playing, setPlaying] = useState(false);\n  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);\n  const drag = useRef<{ i: number; x: number; y: number; px: number; py: number } | null>(null);\n  const cellBox = useRef<HTMLDivElement | null>(null);\n\n  useEffect(() => {\n    videoRefs.current.forEach((v) => {\n      if (!v) return;\n      if (playing) v.play().catch(() => {});\n      else { v.pause(); v.currentTime = 0; }\n    });\n  }, [playing, cells.length]);\n\n  const onPointerDown = (i: number) => (e: React.PointerEvent<HTMLDivElement>) => {\n    onSelect(i);\n    const cell = cells[i];\n    if (!cell?.url) return;\n    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);\n    cellBox.current = e.currentTarget as HTMLDivElement;\n    drag.current = { i, x: e.clientX, y: e.clientY, px: cell.panX, py: cell.panY };\n  };\n  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {\n    const st = drag.current;\n    const box = cellBox.current;\n    if (!st || !box) return;\n    const rect = box.getBoundingClientRect();\n    // Dragging content right reveals more of its LEFT \u21d2 pan decreases. The composite mirrors the render, so\n    // \"drag until it looks right\" = correct burn.\n    const dpx = (e.clientX - st.x) / rect.width;\n    const dpy = (e.clientY - st.y) / rect.height;\n    onPan(st.i, clamp01(st.px - dpx), clamp01(st.py - dpy));\n  };\n  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {\n    const box = cellBox.current;\n    if (box?.hasPointerCapture(e.pointerId)) box.releasePointerCapture(e.pointerId);\n    drag.current = null;\n  };\n\n  const anyVideo = cells.some((c) => c.kind === \"video\" && c.url);\n\n  return (\n    <div className=\"space-y-1.5\">\n      <div className=\"flex items-center justify-between\">\n        <span className=\"text-[10px] text-muted-foreground\">Pr\u00e9via da tela dividida \u2014 arraste cada c\u00e9lula p/ enquadrar</span>\n        {anyVideo && (\n          <button\n            type=\"button\"\n            onClick={() => setPlaying((p) => !p)}\n            className=\"flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground hover:border-accent/50 hover:text-foreground\"\n          >\n            {playing ? <Pause className=\"h-3 w-3\" /> : <Play className=\"h-3 w-3\" />}\n            {playing ? \"Pausar\" : \"Reproduzir\"}\n          </button>\n        )}\n      </div>\n      <div\n        className=\"relative mx-auto aspect-[9/16] w-40 overflow-hidden rounded-lg border border-border bg-black\"\n        style={{ display: \"grid\", gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)`, gap: \"1px\" }}\n      >\n        {cells.map((c, i) => (\n          <div\n            key={i}\n            onPointerDown={onPointerDown(i)}\n            onPointerMove={onPointerMove}\n            onPointerUp={endDrag}\n            onPointerCancel={endDrag}\n            className={`relative overflow-hidden bg-muted/40 ${c.url ? \"cursor-grab active:cursor-grabbing\" : \"\"} ${\n              selected === i ? \"ring-2 ring-inset ring-accent\" : \"\"\n            }`}\n          >\n            {c.url ? (\n              c.kind === \"video\" ? (\n                <video ref={(el) => (videoRefs.current[i] = el)} src={c.url} muted loop playsInline preload=\"metadata\" style={cellStyle(c)} />\n              ) : (\n                <img src={c.url} alt=\"\" style={cellStyle(c)} />\n              )\n            ) : (\n              <div className=\"grid h-full w-full place-items-center text-muted-foreground\">\n                {c.kind === \"video\" ? <Film className=\"h-4 w-4\" /> : <ImageIcon className=\"h-4 w-4\" />}\n              </div>\n            )}\n            <span className=\"absolute left-0.5 top-0.5 rounded bg-black/50 px-1 text-[8px] text-white/80\">{i + 1}</span>\n          </div>\n        ))}\n      </div>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitGridPreview.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:41:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm wiring this into SplitScreenInspector by introducing a selected cell state to track which cell is being edited, then consolidating the per-cell framing controls into a single composite preview with zoom and anchor options for just the active cell. I'll start by adding the state hook and building out the preview cells array. Adding a `compact` prop to CellFramePicker to hide the preview and show only the anchor grid and zoom controls, then restructuring the inspector to use the composite SplitGridPreview for the whole grid with the compact CellFramePicker below for the selected cell's controls.
+
+</details>
+
+
+## 🤖 Claude *(16:41:38)*
+
+Agora vou tornar o `CellFramePicker` reusável em modo compacto (só âncora + zoom, sem a prévia própria — a prévia agora é o composto):
+
+## 🤖 Claude *(16:41:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx",
+  "old_string": "export interface CellFramePickerProps {\n  panX: number;\n  panY: number;\n  zoom: number;\n  onChange: (patch: { panX?: number; panY?: number; zoom?: number }) => void;\n  /** Signed URL of the cell media (fail-soft: absent \u21d2 anchors+zoom still work, just no live preview). */\n  previewUrl?: string;\n  kind?: \"video\" | \"image\";\n}\n\nexport function CellFramePicker({ panX, panY, zoom, onChange, previewUrl, kind }: CellFramePickerProps) {",
+  "new_string": "export interface CellFramePickerProps {\n  panX: number;\n  panY: number;\n  zoom: number;\n  onChange: (patch: { panX?: number; panY?: number; zoom?: number }) => void;\n  /** Signed URL of the cell media (fail-soft: absent \u21d2 anchors+zoom still work, just no live preview). */\n  previewUrl?: string;\n  kind?: \"video\" | \"image\";\n  /** compact = anchors + zoom only (no own preview box) \u2014 used when a composite preview owns the visual + drag. */\n  compact?: boolean;\n}\n\nexport function CellFramePicker({ panX, panY, zoom, onChange, previewUrl, kind, compact }: CellFramePickerProps) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:41:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx",
+  "old_string": "  return (\n    <div className=\"space-y-2\">\n      <div className=\"flex gap-2.5\">\n        {/* Live preview \u2014 mirrors the render. 9:16 box (grid cells are portrait-ish); drag to fine-tune. */}\n        <div\n          ref={boxRef}\n          onPointerDown={onPointerDown}\n          onPointerMove={onPointerMove}\n          onPointerUp={endDrag}\n          onPointerCancel={endDrag}\n          className={`relative aspect-[9/16] w-14 shrink-0 overflow-hidden rounded border border-border bg-black/40 ${\n            previewUrl ? \"cursor-grab active:cursor-grabbing\" : \"\"\n          }`}\n          title={previewUrl ? \"Arraste para reposicionar\" : undefined}\n        >\n          {previewUrl ? (\n            kind === \"video\" ? (\n              <video src={previewUrl} muted playsInline preload=\"metadata\" style={mediaStyle} />\n            ) : (\n              <img src={previewUrl} alt=\"\" style={mediaStyle} />\n            )\n          ) : (\n            <div className=\"grid h-full w-full place-items-center px-1 text-center text-[8px] leading-tight text-muted-foreground\">\n              sem pr\u00e9via\n            </div>\n          )}\n        </div>\n\n        {/* 3\u00d73 anchor grid */}\n        <div className=\"grid grid-cols-3 gap-1 self-start\">",
+  "new_string": "  return (\n    <div className=\"space-y-2\">\n      <div className=\"flex gap-2.5\">\n        {/* Live preview \u2014 mirrors the render. 9:16 box (grid cells are portrait-ish); drag to fine-tune.\n            Hidden in `compact` mode: a composite preview owns the visual + drag. */}\n        {!compact && (\n          <div\n            ref={boxRef}\n            onPointerDown={onPointerDown}\n            onPointerMove={onPointerMove}\n            onPointerUp={endDrag}\n            onPointerCancel={endDrag}\n            className={`relative aspect-[9/16] w-14 shrink-0 overflow-hidden rounded border border-border bg-black/40 ${\n              previewUrl ? \"cursor-grab active:cursor-grabbing\" : \"\"\n            }`}\n            title={previewUrl ? \"Arraste para reposicionar\" : undefined}\n          >\n            {previewUrl ? (\n              kind === \"video\" ? (\n                <video src={previewUrl} muted playsInline preload=\"metadata\" style={mediaStyle} />\n              ) : (\n                <img src={previewUrl} alt=\"\" style={mediaStyle} />\n              )\n            ) : (\n              <div className=\"grid h-full w-full place-items-center px-1 text-center text-[8px] leading-tight text-muted-foreground\">\n                sem pr\u00e9via\n              </div>\n            )}\n          </div>\n        )}\n\n        {/* 3\u00d73 anchor grid */}\n        <div className=\"grid grid-cols-3 gap-1 self-start\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:42:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to integrate SplitGridPreview into the inspector and refactor how the cell frame picker works—moving it from being duplicated in each cell to a single composite section that updates based on the selected cell, while building out the preview cells array and managing the selection state.
+
+</details>
+
+
+## 🤖 Claude *(16:42:06)*
+
+Agora integrar no inspector: remover o `CellFramePicker` por-célula e adicionar a seção composta. Primeiro removo o bloco por-célula:
+
+## 🤖 Claude *(16:42:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx",
+  "old_string": "              </p>\n\n              {/* FR-SPACES-119 \u2014 enquadramento dentro da c\u00e9lula (posi\u00e7\u00e3o + zoom), s\u00f3 quando h\u00e1 fonte. */}\n              {cellResolved(cell, i) && (\n                <div className=\"mt-2\">\n                  <p className=\"mb-1 text-[10px] text-muted-foreground\">Enquadramento (arraste a pr\u00e9via ou escolha a \u00e2ncora)</p>\n                  <CellFramePicker\n                    panX={cell.panX ?? 0.5}\n                    panY={cell.panY ?? 0.5}\n                    zoom={cell.zoom ?? 1}\n                    kind={usingUpstream ? \"video\" : cell.kind}\n                    previewUrl={cellPreviews[i]}\n                    onChange={(patch) => setCell(i, patch)}\n                  />\n                </div>\n              )}\n            </Section>\n          );\n        })}",
+  "new_string": "              </p>\n            </Section>\n          );\n        })}\n\n        {/* FR-SPACES-119b \u2014 COMPOSITE framing: the whole split screen in its real layout, drag each cell to\n            frame it (mirrors the FFmpeg crop), \u25b6 plays all video cells. The selected cell gets a zoom + anchor\n            control below. Only shown once at least one cell has a source. */}\n        {cells.some((c, i) => cellResolved(c, i)) && (\n          <Section title=\"Enquadramento da tela dividida\">\n            <SplitGridPreview\n              layout={layout}\n              selected={selectedCell}\n              onSelect={setSelectedCell}\n              onPan={(i, panX, panY) => setCell(i, { panX, panY })}\n              cells={cells.map((cell, i) => {\n                const usingUpstream = cell.assetId === \"__upstream__\";\n                return {\n                  url: usingUpstream ? undefined : cellPreviews[i],\n                  kind: (usingUpstream ? \"video\" : cell.kind) as \"video\" | \"image\",\n                  panX: cell.panX ?? 0.5,\n                  panY: cell.panY ?? 0.5,\n                  zoom: cell.zoom ?? 1,\n                  resolved: cellResolved(cell, i),\n                };\n              })}\n            />\n            {cells[selectedCell] && cellResolved(cells[selectedCell], selectedCell) && (\n              <div className=\"mt-2\">\n                <p className=\"mb-1 text-[10px] text-muted-foreground\">C\u00e9lula {selectedCell + 1} \u2014 posi\u00e7\u00e3o (\u00e2ncora) + zoom</p>\n                <CellFramePicker\n                  compact\n                  panX={cells[selectedCell].panX ?? 0.5}\n                  panY={cells[selectedCell].panY ?? 0.5}\n                  zoom={cells[selectedCell].zoom ?? 1}\n                  onChange={(patch) => setCell(selectedCell, patch)}\n                />\n              </div>\n            )}\n          </Section>\n        )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:42:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to add the SplitGridPreview import alongside the CellFramePicker import, set up the selectedCell state with useState, and make sure it resets to 0 whenever the layout changes to keep it in bounds.
+
+</details>
+
+
+## 🤖 Claude *(16:42:28)*
+
+Agora o import + estado `selectedCell`:
+
+## 🤖 Claude *(16:42:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx",
+  "old_string": "import { CellFramePicker } from \"./CellFramePicker\";\nimport { Section, InspectorHeader } from \"../shared\";",
+  "new_string": "import { CellFramePicker } from \"./CellFramePicker\";\nimport { SplitGridPreview } from \"./SplitGridPreview\";\nimport { Section, InspectorHeader } from \"../shared\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:42:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx",
+  "old_string": "  const [rendering, setRendering] = useState(false);\n\n  const d = node.data;",
+  "new_string": "  const [rendering, setRendering] = useState(false);\n  const [selectedCell, setSelectedCell] = useState(0);\n\n  const d = node.data;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:42:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to clamp the selectedCell value when the layout changes since setLayout resets it to 0, and I should guard against accessing cells at an out-of-bounds index after the layout shrinks — while the JSX already handles undefined cells safely, it's better to reset selectedCell proactively rather than passing an invalid index to SplitGridPreview.
+
+</details>
+
+
+## 🤖 Claude *(16:42:42)*
+
+Vou resetar `selectedCell` ao trocar de layout (evita índice fora do range):
+
+## 🤖 Claude *(16:42:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx",
+  "old_string": "  const setLayout = (next: SplitLayout) => {\n    const want = splitCellCount(next);\n    const resized = cells.slice(0, want);\n    while (resized.length < want) resized.push({ assetId: \"\", assetTitle: \"\", kind: \"video\" });\n    updateNodeData(node.id, { layout: next, cells: resized, status: \"idle\", error: undefined });\n  };",
+  "new_string": "  const setLayout = (next: SplitLayout) => {\n    const want = splitCellCount(next);\n    const resized = cells.slice(0, want);\n    while (resized.length < want) resized.push({ assetId: \"\", assetTitle: \"\", kind: \"video\" });\n    setSelectedCell(0); // avoid an out-of-range selected cell after shrinking the grid\n    updateNodeData(node.id, { layout: next, cells: resized, status: \"idle\", error: undefined });\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:42:50)*
+
+Vou validar (tsc + eslint) e buildar:
+
+## 🤖 Claude *(16:42:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc-app ===\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c \"error TS\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -E \"SplitGridPreview|SplitScreenInspector|CellFramePicker\" || echo \"\u2192 grid preview files clean \u2713\"\necho \"=== eslint ===\"\nnpx eslint src/components/canvas/RightPanel/inspectors/SplitGridPreview.tsx src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx 2>&1 | tail -6; echo \"exit=${PIPESTATUS[0]}\"",
+  "description": "Validate composite grid preview"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc-app ===
+> 135
+> → grid preview files clean ✓
+> === eslint ===
+> exit=0
+> ```
+
+## 🤖 Claude *(16:44:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All tests passing with no regressions, linting is clean, and the grid preview files look good. Now I'll build and verify the baked output before committing.
+
+</details>
+
+
+## 🤖 Claude *(16:44:16)*
+
+tsc 135 (=+0), eslint 0. Build + verificação + commit:
+
+## 🤖 Claude *(16:44:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 300 bun run build 2>&1 | tail -2; echo \"build exit=${PIPESTATUS[0]}\"\ngrep -rl \"Pr\u00e9via da tela dividida\\|Enquadramento da tela dividida\" dist/assets/*.js 2>/dev/null | head -1 && echo \"\u2192 composite grid preview baked \u2713\" || echo \"\u2717 not baked\"",
+  "description": "Build + verify composite preview baked"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 25.67s
+> build exit=0
+> dist/assets/CanvasEditorPage-CIjWTEt7.js
+> → composite grid preview baked ✓
+> ```
+
+## 🤖 Claude *(16:44:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/components/canvas/RightPanel/inspectors/SplitGridPreview.tsx src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx src/components/canvas/RightPanel/inspectors/SplitScreenInspector.tsx\ngit commit -q -m \"feat(spaces): preview composto da tela dividida \u2014 grid real + drag por c\u00e9lula + play (FR-SPACES-119b)\n\nDiretiva: 'n\u00e3o consigo identificar o resultado dos enquadramentos; queria uma pr\u00e9via igual \u00e0 das\nlegendas mostrando a tela realmente dividida (ex.: 1x4), onde o drag corrige \u2195\u2194 e o zoom.'\n\nSplitGridPreview: renderiza a composi\u00e7\u00e3o no LAYOUT REAL (cols\u00d7rows, lock-step com LAYOUT_DIMS do\ncore) num quadro 9:16; cada c\u00e9lula mostra sua m\u00eddia enquadrada EXATAMENTE como o render (object-fit\ncover + object-position = o scale+crop do FFmpeg, equival\u00eancia j\u00e1 provada). Arraste qualquer c\u00e9lula\np/ pan; \u25b6 reproduz todos os v\u00eddeos ao mesmo tempo \u2192 v\u00ea a tela dividida real antes de queimar.\nClique seleciona a c\u00e9lula (ring accent).\n\nInspector: substitui as N pr\u00e9vias por-c\u00e9lula por UMA pr\u00e9via composta + controle da c\u00e9lula\nselecionada (zoom slider + \u00e2ncora 3\u00d73, CellFramePicker em modo 'compact' sem pr\u00e9via duplicada).\nselectedCell reseta ao trocar layout (sem \u00edndice fora de range).\n\ntsc-app 135 (=+0) \u00b7 eslint 0 \u00b7 build env-baked (pr\u00e9via verificada no bundle).\" && git log --oneline -1",
+  "description": "Commit composite grid preview"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:44PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:44PM[0m [32mINF[0m scan completed in 13ms
+> [90m1:44PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> f7e3c5b feat(spaces): preview composto da tela dividida — grid real + drag por célula + play (FR-SPACES-119b)
+> ```
+
+## 🤖 Claude *(16:45:29)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've committed the grid composite preview work. Looking at what's left from the Sovereign's message, there are three items: refining the constellation view by simplifying the orbits and removing some UI elements, refocusing the orchestration diagram to highlight specific nodes, and building an Instagram dashboard. I noted that the first two have some product decisions baked in that I need to align on.
+
+He gave me the go-ahead to continue, so I'm moving forward. For the constellation issue, the overlapping orbits are a real layout bug—the studio squad was positioned at an angle that conflicts with the ops squad, and there's also overlap between the two core squads. The fix is to recalculate all five squad positions so they're evenly distributed around the orbit without collisions.
+
+He also mentioned the possibility of abandoning the heavy constellation screen entirely and going with something lighter, removing the matrix and memory effects. That's a bigger UX call that needs his input. Since he said to keep going and this touches a screen he actively uses, I'm focusing on the low-risk, unambiguous wins first—specifically fixing the overlapping orbits by updating the position data. That directly addresses what he flagged about needing to spread things out.
+
+The position spread is straightforward: the existing squads are at 90-degree intervals (0°, 90°, 180°, 270°) and studio ended up at 288°, which puts it too close to ops. I need to write a script that recomputes positions for all squads... I'll focus on the respace fix first since that directly addresses the overlap issue he flagged, then tackle the orchestration and matrix-memória decisions with clear, unambiguous changes — dropping the Cena node, keeping Agent with one director plus Quality Gate with specialists and Publish with mockup, while preserving orchestration itself since he clarified it's the canvas for workflow coordination.
+
+Let me pull up the crew positions to calculate the respace adjustment.
+
+</details>
+
+
+## 🤖 Claude *(16:45:30)*
+
+Grid composto shipado (`f7e3c5b`). Agora o **#8 — constelação com orbits sobrepostos**. A parte inequívoca (sem decisão de produto) é **espalhar** as posições (você tem 5 squads agora — content/tech/market/ops/studio + core + pantheon-main; o studio que semeei em 288° colide com ops em 270°). Vou ver as posições atuais e recomputar espaçado:
+
+## 🤖 Claude *(16:45:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env && set +a && bun -e '\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb=createClient(process.env.SUPABASE_URL,process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\nconst U0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst {data}=await sb.from(\"crew_agents\").select(\"agent_key,squad,level,position\").eq(\"user_id\",U0).order(\"squad\").order(\"level\");\n// group by squad, show lead positions\nconst leads=(data??[]).filter(a=>a.level===1||a.agent_key===\"core\"||a.agent_key.startsWith(\"pantheon\"));\nconsole.log(\"leads/core/pantheon positions:\");\nfor(const a of leads)console.log(`  ${a.agent_key} | squad=${a.squad} | pos=${JSON.stringify(a.position)}`);\n// distinct squads\nconst squads=[...new Set((data??[]).filter(a=>a.squad).map(a=>a.squad))];\nconsole.log(\"squads:\",squads.join(\", \"));\nconsole.log(\"total agents:\",data?.length);\n' 2>&1 | head -20",
+  "description": "Inspect current constellation positions + overlap"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> leads/core/pantheon positions:
+>   lead-content | squad=content | pos="[8,2,0]"
+>   lead-market | squad=market | pos="[-8,2,9.797174393178826e-16]"
+>   lead-ops | squad=ops | pos="[-1.4695761589768238e-15,2,-8]"
+>   pantheon-main | squad=pantheon | pos=[0,0,0]
+>   lead-studio | squad=studio | pos=[2.472135954999578,2,-7.608452130361229]
+>   lead-tech | squad=tech | pos="[4.898587196589413e-16,2,8]"
+>   core | squad=null | pos="[0,0,0]"
+> squads: content, market, ops, pantheon, studio, tech
+> total agents: 25
+> ```
+
+## 🤖 Claude *(16:45:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing the spatial overlaps now—the core and pantheon-main squads occupy the exact same position, which explains the visual duplication. The lead-studio and lead-ops squads are only about 18 degrees apart in angle despite different coordinates, so they're appearing to overlap visually as well. The original four squads seem to be distributed around different angles, though the thought cuts off before I can see the full pattern. Writing the respace script...
+
+</details>
+
+
+## 🤖 Claude *(16:45:56)*
+
+Overlaps confirmados: **core e pantheon-main ambos em [0,0,0]** (os "dois cores"), e **lead-studio (288°) colide com lead-ops (270°)**. Há 5 squads reais em espaçamento de 90° (só cabem 4). Vou recomputar tudo espaçado a 72° + separar pantheon-main do core:
+
+## 🤖 Claude *(16:46:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/respace-constellation.ts",
+  "content": "// respace-constellation \u2014 recomputes crew_agents.position for a user so the 3D squads DON'T overlap.\n// Bug (2026-07-22): the constellation had 5 squads (content/tech/market/ops/studio) crammed into a 90\u00b0-spaced\n// layout (only 4 slots) \u2192 lead-studio (288\u00b0) sat on top of lead-ops (270\u00b0); and pantheon-main shared [0,0,0]\n// with core (the \"two cores\" the Sovereign saw). This spaces every squad evenly (N squads at 360/N\u00b0), rings the\n// specialists deterministically around each lead, keeps core at the origin, and lifts pantheon-main clear of it.\n// Idempotent + deterministic (no Math.random). Run:\n//   set -a && source .env && set +a && bun run scripts/respace-constellation.ts [<user_id>]\nimport { createClient } from '@supabase/supabase-js';\n\nconst sb = createClient(process.env.SUPABASE_URL!, (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!, {\n  auth: { persistSession: false },\n});\nconst U0 = process.argv[2] ?? 'ada39fae-67e1-4e53-af1c-5a18e1c108e8';\n\n// Stable, intuitive squad order (drives the ring angles).\nconst SQUAD_ORDER = ['content', 'tech', 'market', 'ops', 'studio'];\nconst SQUAD_RADIUS = 9;   // was 8 \u2014 a touch wider so the specialist rings of adjacent squads don't kiss\nconst MEMBER_RADIUS = 3;\n\nconst round = (n: number) => Math.round(n * 1e6) / 1e6;\n\nasync function main() {\n  const { data: agents } = await sb.from('crew_agents')\n    .select('id, agent_key, squad, level').eq('user_id', U0);\n  if (!agents?.length) { console.error('no crew for user'); process.exit(1); }\n\n  // squads present, ordered (unknown squads appended stably)\n  const present = [...new Set(agents.filter((a) => a.squad).map((a) => a.squad as string))];\n  const squads = [...SQUAD_ORDER.filter((s) => present.includes(s)), ...present.filter((s) => !SQUAD_ORDER.includes(s))];\n  const N = squads.length;\n\n  const updates: { id: string; position: [number, number, number] }[] = [];\n  for (const a of agents) {\n    let pos: [number, number, number];\n    if (a.agent_key === 'core') {\n      pos = [0, 0, 0];\n    } else if (a.agent_key.startsWith('pantheon')) {\n      pos = [0, 6, 0]; // lifted clear above the core so the two never overlap\n    } else if (a.squad) {\n      const sIdx = squads.indexOf(a.squad);\n      const angle = (sIdx / N) * Math.PI * 2;\n      const sx = Math.cos(angle) * SQUAD_RADIUS;\n      const sz = Math.sin(angle) * SQUAD_RADIUS;\n      if (a.level === 1) {\n        pos = [round(sx), 2, round(sz)]; // lead\n      } else {\n        // specialist: deterministic ring around the lead, indexed within its squad\n        const squadMembers = agents.filter((m) => m.squad === a.squad && m.level !== 1).sort((x, y) => x.agent_key.localeCompare(y.agent_key));\n        const mIdx = squadMembers.findIndex((m) => m.id === a.id);\n        const mAngle = (mIdx / Math.max(1, squadMembers.length)) * Math.PI * 2;\n        const mx = sx + Math.cos(mAngle) * MEMBER_RADIUS;\n        const mz = sz + Math.sin(mAngle) * MEMBER_RADIUS;\n        const my = -1 + (mIdx % 4) * 0.9; // deterministic vertical spread (\u22121 .. 1.7)\n        pos = [round(mx), round(my), round(mz)];\n      }\n    } else {\n      pos = [0, 0, 0];\n    }\n    updates.push({ id: a.id, position: pos });\n  }\n\n  let ok = 0;\n  for (const u of updates) {\n    const { error } = await sb.from('crew_agents').update({ position: u.position }).eq('id', u.id);\n    if (!error) ok++;\n  }\n\n  // Material proof \u2014 leads/core/pantheon spacing\n  const { data: after } = await sb.from('crew_agents')\n    .select('agent_key,squad,level,position').eq('user_id', U0)\n    .or('level.eq.1,agent_key.eq.core,agent_key.like.pantheon%').order('squad');\n  console.log(`\u2705 respaced ${ok}/${updates.length} agents \u00b7 ${N} squads at ${Math.round(360 / N)}\u00b0 apart`);\n  for (const a of after ?? []) console.log(`  ${a.agent_key} | ${a.squad ?? '\u2014'} | ${JSON.stringify(a.position)}`);\n}\n\nmain().catch((e) => { console.error('RESPACE_FAIL', e.message); process.exit(1); });\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/respace-constellation.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env && set +a && bun run scripts/respace-constellation.ts 2>&1 | head -15",
+  "description": "Respace User 0 constellation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ respaced 25/25 agents · 6 squads at 60° apart
+>   lead-content | content | [9,2,0]
+>   lead-market | market | [-4.5,2,7.794229]
+>   lead-ops | ops | [-9,2,0]
+>   pantheon-main | pantheon | [0,6,0]
+>   lead-studio | studio | [-4.5,2,-7.794229]
+>   lead-tech | tech | [4.5,2,7.794229]
+>   core | — | [0,0,0]
+> ```
+
+## 🤖 Claude *(16:46:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing there's a mismatch in the squad count — the layout expects 6 squads at 60° intervals, but my SQUAD_ORDER only had 5 entries, so 'pantheon' got appended as the 6th. However, pantheon-main is being routed through a separate branch that places it at a fixed position, so it's not actually being positioned in the circular layout like the others.
+
+The real issue is that the 5 actual squads are now spaced at 60° instead of 72°, leaving an empty 300° slot where pantheon would theoretically go. To fix this cleanly, I should filter out 'pantheon' from the squads array entirely so the 5 real squads space evenly at 72° with no gaps.
+
+</details>
+
+
+## 🤖 Claude *(16:46:34)*
+
+6 squads porque 'pantheon' entrou na contagem (pantheon-main tem squad='pantheon', mas é coordenador, colocado à parte). Vou excluí-lo da contagem p/ os 5 squads reais ficarem a 72° sem gap:
+
+## 🤖 Claude *(16:46:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/respace-constellation.ts",
+  "old_string": "  // squads present, ordered (unknown squads appended stably)\n  const present = [...new Set(agents.filter((a) => a.squad).map((a) => a.squad as string))];\n  const squads = [...SQUAD_ORDER.filter((s) => present.includes(s)), ...present.filter((s) => !SQUAD_ORDER.includes(s))];\n  const N = squads.length;",
+  "new_string": "  // squads present, ordered (unknown squads appended stably). 'pantheon' is EXCLUDED \u2014 pantheon-main is the\n  // OpenClaw coordinator, placed apart (above core), not a ring squad; counting it would leave an empty gap.\n  const present = [...new Set(agents.filter((a) => a.squad && a.squad !== 'pantheon').map((a) => a.squad as string))];\n  const squads = [...SQUAD_ORDER.filter((s) => present.includes(s)), ...present.filter((s) => !SQUAD_ORDER.includes(s))];\n  const N = squads.length;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/respace-constellation.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:46:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env && set +a && bun run scripts/respace-constellation.ts 2>&1 | head -12",
+  "description": "Re-run respace with pantheon excluded"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ respaced 25/25 agents · 5 squads at 72° apart
+>   lead-content | content | [9,2,0]
+>   lead-market | market | [-7.281153,2,5.290067]
+>   lead-ops | ops | [-7.281153,2,-5.290067]
+>   pantheon-main | pantheon | [0,6,0]
+>   lead-studio | studio | [2.781153,2,-8.559509]
+>   lead-tech | tech | [2.781153,2,8.559509]
+>   core | — | [0,0,0]
+> ```
+
+## 🤖 Claude *(16:47:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The five squads are now evenly spaced at 72-degree intervals around the circle with the core positioned at the origin and pantheon-main lifted above it to eliminate any overlap. I'm verifying that the minimum distances between all squad leads are consistent to confirm there are no remaining collisions.
+
+I've successfully delivered the grid composite preview and fixed the constellation overlap issue through the respace script. The remaining work involves architectural decisions around removing the overlay filter and matrix/memória from the menu, plus refocusing the orchestration layer—these are genuine product decisions that need a clear proposal rather than just technical fixes. Rather than guess at the ambiguous parts, I should commit the respace as a clear win and then present the remaining architectural decisions—especially around what "deixando somente o backup do menu" means—as a focused decision point for him to clarify. This avoids breaking anything on screens he actively uses.
+
+</details>
+
+
+## 🤖 Claude *(16:47:07)*
+
+5 squads a 72° sem overlap, core na origem, pantheon-main erguido para [0,6,0]. Overlaps resolvidos (data fix — o 3D lê as posições, aparece no próximo load). Commit:
+
+## 🤖 Claude *(16:47:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/respace-constellation.ts\ngit commit -q -m \"fix(constellation): espalha os squads (72\u00b0) + separa pantheon-main do core (fim dos orbits sobrepostos)\n\nBug visto no print: 5 squads (content/tech/market/ops/studio) espremidos num layout de 90\u00b0 (s\u00f3 4\nslots) \u2192 lead-studio (288\u00b0) em cima de lead-ops (270\u00b0); e pantheon-main dividia [0,0,0] com core\n(os 'dois cores'). respace-constellation.ts recomputa determin\u00edstico: N squads a 360/N\u00b0 (agora 72\u00b0),\nspecialists em anel ao redor de cada lead, core na origem, pantheon-main erguido a [0,6,0] (fora do\ncore; exclu\u00eddo da contagem de squads p/ n\u00e3o deixar gap). Idempotente. Witness: 25/25 reposicionados,\n5 leads a 72\u00b0, zero colis\u00e3o. Data-fix \u2014 o 3D l\u00ea crew_agents.position, aparece no pr\u00f3ximo load.\" && git log --oneline -1",
+  "description": "Commit constellation respace"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:47PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:47PM[0m [32mINF[0m scan completed in 8.05ms
+> [90m1:47PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 7cb94cf fix(constellation): espalha os squads (72°) + separa pantheon-main do core (fim dos orbits sobrepostos)
+> ```
+
+## 🤖 Claude *(16:48:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've committed the changes and completed the grid preview and constellation respace work. Now I need to tackle the remaining architectural decisions: finishing the constellation cleanup by removing overlay effects and menu items, refocusing the orchestration layer around agent and quality gate nodes, and then moving into item ten.
+
+These are substantial product decisions that carry real rework risk if I guess wrong. The orchestration canvas redesign especially — he described specific node semantics but also expressed some hesitation about the current approach. The constellation changes have that ambiguous phrase about what stays in the menu. The Instagram dashboard clone is the clearest remaining task since it follows the established TikTok pattern, but I should probably pause here and present the decision points rather than push forward autonomously on the architectural items. Instagram is marked as future work ("teremos também"), so it's lower priority than the TikTok dashboard he emphasized. I'm weighing whether to keep grinding through the architectural decisions autonomously or checkpoint with a clear status of what's been delivered and where the key forks are, letting him direct the next moves on the orchestration refactor rather than risk rework on live screens. or if there's a real decision needed there. The orchestration refocus feels more like a clarification than a fork — maybe I should tackle that first, then ask about the constellation decision, then do Instagram as the clean completion. to connect outputs to publishing destinations with a mockup preview across all connected networks, similar to how assets work. So he did specify #9 clearly — the implementation scope involves modifying the existing orchestration canvas nodes: remove the Scene node, enhance the Agent node to select a constellation director, upgrade the Quality Gate to invoke multiple specialists, and add mockup preview to the Publish node. It's a substantial refactor but well-defined, though I'm hesitant to tackle the full orchestration rebuild right now since it's a complex multi-node change to a live canvas.
+
+I'm thinking the smartest move is to finish the Instagram dashboard next — it completes the social trio cleanly, mirrors the TikTok work, and carries minimal risk. Then I'll pause and give a comprehensive status summary with the two genuine decision points: whether to abandon or lighten the constellation approach, and whether to tackle the orchestration refocus as a dedicated session rather than cramming it in now.
+
+Let me check what Instagram connection and profile data is available through the social accounts and callback storage to mirror the TikTok dashboard structure.
+
+</details>
+
+
+## 🤖 Claude *(16:48:01)*
+
+Commit `7cb94cf`. #7 (grid preview) + o ganho claro do #8 (respace) feitos. Vou fazer o **#10 Instagram dashboard** (completa o trio "Visão Geral > YouTube/TikTok/Instagram", espelha o TikTok — baixo risco). Vou checar o que o IG já armazena:
+
+## 🤖 Claude *(16:48:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== IG callback: profile fields stored ===\"\ngrep -nE \"instagram|graph.instagram|username|account_type|media_count|followers|profile_picture|metadata\" supabase/functions/social-auth-callback/index.ts 2>/dev/null | grep -iE \"instagram|username|account_type|media_count|profile_picture\" | head\necho \"=== IG account User 0 ===\"\nset -a && source .env && set +a && bun -e '\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb=createClient(process.env.SUPABASE_URL,process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\nconst {data}=await sb.from(\"social_accounts\").select(\"platform,platform_username,platform_user_id,metadata,is_active,scopes\").eq(\"user_id\",\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\").eq(\"platform\",\"instagram\").maybeSingle();\nconsole.log(data?JSON.stringify({user:data.platform_username,id:data.platform_user_id,active:data.is_active,scopes:data.scopes,meta:Object.keys(data.metadata??{})}):\"IG NONE connected\");\n' 2>&1 | tail -3",
+  "description": "IG profile storage + User 0 IG account"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === IG callback: profile fields stored ===
+> 123:    } else if (platform === "instagram" || platform === "facebook") {
+> 124:      // "facebook" uses the instagram (Meta) app credentials — one Meta app serves both (FR-PE-018).
+> 125:      const creds = await resolveSocialAppCreds(supabase, userId, "instagram");
+> 128:      const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
+> 147:        `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${encodeURIComponent(creds.clientSecret)}&access_token=${encodeURIComponent(shortToken)}`
+> 152:      scopes = ["instagram_business_basic", "instagram_business_content_publish"];
+> 154:      // Fetch username
+> 155:      const meRes = await fetch(`https://graph.instagram.com/v21.0/me?fields=username,name&access_token=${accessToken}`);
+> 157:      platformUsername = me.username || me.name || platformUserId;
+> 193:      platformUsername = meData.data?.username;
+> === IG account User 0 ===
+> {"user":"gabrielorchai","id":"26558143600461172","active":true,"scopes":["instagram_business_basic","instagram_business_content_publish"],"meta":[]}
+> ```
+
+## 🤖 Claude *(16:48:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+User 0 has Instagram connected with the username `gabrielorchai` and I'm storing the basic profile data from the callback, but to build out a richer IG dashboard I'd need to fetch additional profile details like profile picture, account type, media count, and follower information.
+
+I'm planning to extend the Instagram callback to grab those richer fields (account_type, media_count, profile_picture_url, followers_count) that are available through the instagram_business_basic scope and store them in metadata, then build out the dashboard page and add the route to the menu.
+
+But I'm realizing this is a significant scope expansion at the end of a long push, and the Sovereign's core priority was TikTok (which is done). Instagram was mentioned as a future addition. The architectural work he emphasized more—the lighten decision and orchestration refocus—might be better tackled in a focused next phase rather than tacking on the full Instagram dashboard now. I should probably checkpoint what's been delivered and propose the Instagram work as a clear next step.
+
+Actually, he did say "continue," so let me honor that but be strategic: building Instagram by mirroring the TikTok pattern is low-risk and completes the trio he outlined. Let me extend the Instagram callback branch to fetch the profile metadata, then build the dashboard page.
+
+</details>
+
+
+## 🤖 Claude *(16:48:30)*
+
+User 0 tem IG conectado (`gabrielorchai`, business_basic). O callback só guarda username. Vou espelhar o padrão TikTok: estender o callback IG p/ buscar o perfil rico + página IG + menu. Vou ler o branch IG:
+
+## 🤖 Claude *(16:48:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts",
+  "offset": 152,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 152	      scopes = ["instagram_business_basic", "instagram_business_content_publish"];
+> 153	
+> 154	      // Fetch username
+> 155	      const meRes = await fetch(`https://graph.instagram.com/v21.0/me?fields=username,name&access_token=${accessToken}`);
+> 156	      const me = await meRes.json();
+> 157	      platformUsername = me.username || me.name || platformUserId;
+> 158	
+> 159	    } else if (platform === "twitter") {
+> 160	      // App credentials resolve per-user → GLOBAL admin row → env fallback → hard-fail (FR-PE-018).
+> 161	      const creds = await resolveSocialAppCreds(supabase, userId, "twitter");
+> 162	
+> 163	      // PKCE code verifier = the state used as plain challenge
+> 164	      const codeVerifier = stateStr.slice(0, 43);
+> 165	
+> ```
+
+## 🤖 Claude *(16:48:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts",
+  "old_string": "      // Fetch username\n      const meRes = await fetch(`https://graph.instagram.com/v21.0/me?fields=username,name&access_token=${accessToken}`);\n      const me = await meRes.json();\n      platformUsername = me.username || me.name || platformUserId;\n",
+  "new_string": "      // Fetch profile via instagram_business_basic (username + account_type + media_count + avatar + followers).\n      // Stashed in metadata.ig_profile so /dashboard/instagram displays it (same pattern as TikTok \u2014 no new fn,\n      // 100-fn cap is full). Fail-soft: a profile miss must not block the connection.\n      const meRes = await fetch(`https://graph.instagram.com/v21.0/me?fields=username,name,account_type,media_count,profile_picture_url,followers_count&access_token=${accessToken}`);\n      const me = await meRes.json().catch(() => ({}));\n      platformUsername = me.username || me.name || platformUserId;\n      if (me && (me.username || me.profile_picture_url)) {\n        metadata = {\n          ...metadata,\n          ig_profile: {\n            username: me.username ?? null,\n            account_type: me.account_type ?? null,\n            media_count: typeof me.media_count === \"number\" ? me.media_count : null,\n            followers_count: typeof me.followers_count === \"number\" ? me.followers_count : null,\n            profile_picture_url: me.profile_picture_url ?? null,\n            fetched_at: new Date().toISOString(),\n          },\n        };\n      }\n"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/social-auth-callback/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:48:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm setting up the Instagram studio hook and page to match the TikTok structure, reading the ig_profile from metadata.
+
+</details>
+
+
+## 🤖 Claude *(16:48:46)*
+
+Agora o hook + página Instagram (espelho do TikTok):
+
+## 🤖 Claude *(16:48:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useInstagramStudio.ts",
+  "content": "import { useSocialAccounts } from '@/hooks/useSocialAccounts';\n\n// Instagram Studio \u2014 business logic (Harness Engineering). The page is display-only. Profile (username,\n// account_type, media_count, followers, avatar) is fetched by social-auth-callback via instagram_business_basic\n// and stashed in social_accounts.metadata.ig_profile (no dedicated edge fn \u2014 the 100-fn cap is full). Read here.\n\nexport interface InstagramProfile {\n  username: string | null;\n  account_type: string | null;\n  media_count: number | null;\n  followers_count: number | null;\n  profile_picture_url: string | null;\n  fetched_at: string | null;\n}\n\ninterface IgMeta {\n  ig_profile?: {\n    username?: string | null;\n    account_type?: string | null;\n    media_count?: number | null;\n    followers_count?: number | null;\n    profile_picture_url?: string | null;\n    fetched_at?: string | null;\n  };\n}\n\nexport function useInstagramConnection() {\n  const { accounts, initiateOAuth, disconnectAccount, isLoading } = useSocialAccounts();\n  const account = accounts.find((a) => a.platform === 'instagram') ?? null;\n  const meta = (account?.metadata ?? {}) as IgMeta;\n  const p = meta.ig_profile;\n  const profile: InstagramProfile | null = account\n    ? {\n        username: p?.username ?? account.platform_username ?? null,\n        account_type: p?.account_type ?? null,\n        media_count: p?.media_count ?? null,\n        followers_count: p?.followers_count ?? null,\n        profile_picture_url: p?.profile_picture_url ?? null,\n        fetched_at: p?.fetched_at ?? null,\n      }\n    : null;\n\n  return {\n    isLoading,\n    account,\n    isConnected: !!account?.is_active,\n    username: account?.platform_username ?? null,\n    accountId: account?.id ?? null,\n    profile,\n    hasProfile: !!p?.username || !!p?.profile_picture_url,\n    connect: () => initiateOAuth('instagram'),\n    reconnect: () => initiateOAuth('instagram'),\n    disconnect: () => (account ? disconnectAccount.mutateAsync(account.id) : Promise.resolve()),\n  };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useInstagramStudio.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/InstagramStudioPage.tsx",
+  "content": "import { Instagram, CheckCircle2, AlertTriangle, Link2, ShieldCheck, Upload, RefreshCw } from 'lucide-react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { toast } from 'sonner';\nimport { useInstagramConnection } from '@/hooks/useInstagramStudio';\n\n// Instagram Studio (/dashboard/instagram) \u2014 display-only (Harness Engineering). Surfaces the granted scopes in a\n// REAL interaction interface: instagram_business_basic (profile below) + instagram_business_content_publish\n// (Reels posting). Mirrors the TikTok dashboard; profile read from social_accounts.metadata.ig_profile.\n\nfunction ScopeRow({ scope, desc, on }: { scope: string; desc: string; on: boolean }) {\n  return (\n    <div className=\"flex items-start gap-2.5 rounded-lg border border-border bg-card/40 p-3\">\n      <ShieldCheck className={`mt-0.5 h-4 w-4 shrink-0 ${on ? 'text-emerald-400' : 'text-muted-foreground'}`} />\n      <div className=\"min-w-0\">\n        <p className=\"font-mono text-sm text-foreground\">{scope}</p>\n        <p className=\"text-xs text-muted-foreground\">{desc}</p>\n      </div>\n      <Badge variant=\"outline\" className={`ml-auto shrink-0 text-[10px] ${on ? 'border-emerald-500/40 text-emerald-300' : 'border-border text-muted-foreground'}`}>\n        {on ? 'em uso' : 'inativo'}\n      </Badge>\n    </div>\n  );\n}\n\nfunction Stat({ label, value }: { label: string; value: string }) {\n  return (\n    <div className=\"rounded-lg border border-border bg-card/40 p-3 text-center\">\n      <p className=\"text-lg font-semibold\">{value}</p>\n      <p className=\"text-[11px] text-muted-foreground\">{label}</p>\n    </div>\n  );\n}\n\nexport default function InstagramStudioPage() {\n  const conn = useInstagramConnection();\n  const profile = conn.profile;\n\n  const doConnect = async () => {\n    try { await conn.connect(); } catch { /* toast handled in hook */ }\n  };\n\n  return (\n    <div className=\"mx-auto max-w-4xl space-y-6 p-4 sm:p-6\">\n      <header className=\"flex items-center gap-3\">\n        <div className=\"grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-primary/30 to-primary/5 ring-1 ring-primary/30\">\n          <Instagram className=\"h-5 w-5 text-primary\" />\n        </div>\n        <div>\n          <h1 className=\"font-heading text-xl font-semibold\">Instagram</h1>\n          <p className=\"text-sm text-muted-foreground\">Perfil, escopos e publica\u00e7\u00e3o \u2014 a superf\u00edcie da integra\u00e7\u00e3o Instagram.</p>\n        </div>\n        {conn.isConnected ? (\n          <Badge variant=\"outline\" className=\"ml-auto border-emerald-500/40 text-emerald-300\">\n            <CheckCircle2 className=\"mr-1 h-3 w-3\" /> Conectado\n          </Badge>\n        ) : (\n          <Badge variant=\"outline\" className=\"ml-auto border-amber-500/40 text-amber-300\">\n            <AlertTriangle className=\"mr-1 h-3 w-3\" /> N\u00e3o conectado\n          </Badge>\n        )}\n      </header>\n\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"text-base\">Conex\u00e3o</CardTitle>\n          <CardDescription>\n            {conn.isConnected\n              ? `Conta Instagram conectada${conn.username ? ` \u2014 @${conn.username}` : ''}.`\n              : 'Conecte sua conta Instagram (profissional) para exibir o perfil e publicar Reels.'}\n          </CardDescription>\n        </CardHeader>\n        <CardContent className=\"flex flex-wrap items-center gap-2\">\n          {!conn.isConnected ? (\n            <Button onClick={doConnect} className=\"gap-2\">\n              <Link2 className=\"h-4 w-4\" /> Conectar Instagram\n            </Button>\n          ) : (\n            <>\n              <Button variant=\"outline\" onClick={doConnect} className=\"gap-2\">\n                <RefreshCw className=\"h-4 w-4\" /> Reconectar / atualizar perfil\n              </Button>\n              <Button\n                variant=\"ghost\"\n                onClick={async () => { await conn.disconnect(); toast.success('Instagram desconectado.'); }}\n                className=\"gap-2 text-muted-foreground\"\n              >\n                Desconectar\n              </Button>\n            </>\n          )}\n        </CardContent>\n      </Card>\n\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"text-base\">Perfil da conta</CardTitle>\n          <CardDescription>\n            Dados lidos pelo escopo <span className=\"font-mono text-foreground\">instagram_business_basic</span> na conex\u00e3o.\n          </CardDescription>\n        </CardHeader>\n        <CardContent>\n          {!conn.isConnected ? (\n            <p className=\"text-sm text-muted-foreground\">Conecte o Instagram para ver o perfil.</p>\n          ) : !conn.hasProfile ? (\n            <div className=\"rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200\">\n              Perfil n\u00e3o capturado \u2014 reconecte para atualizar (requer conta profissional/Business).\n            </div>\n          ) : profile ? (\n            <div className=\"space-y-4\">\n              <div className=\"flex items-center gap-4\">\n                {profile.profile_picture_url ? (\n                  <img src={profile.profile_picture_url} alt={profile.username ?? 'avatar'} className=\"h-16 w-16 rounded-full border border-border object-cover\" />\n                ) : (\n                  <div className=\"grid h-16 w-16 place-items-center rounded-full border border-border bg-muted\"><Instagram className=\"h-6 w-6 text-muted-foreground\" /></div>\n                )}\n                <div>\n                  <p className=\"font-medium\">@{profile.username ?? '\u2014'}</p>\n                  <p className=\"text-xs text-muted-foreground\">{profile.account_type ?? 'conta'}</p>\n                </div>\n              </div>\n              <div className=\"grid grid-cols-2 gap-2 sm:grid-cols-3\">\n                <Stat label=\"Seguidores\" value={profile.followers_count != null ? profile.followers_count.toLocaleString('pt-BR') : '\u2014'} />\n                <Stat label=\"Publica\u00e7\u00f5es\" value={profile.media_count != null ? profile.media_count.toLocaleString('pt-BR') : '\u2014'} />\n                <Stat label=\"Tipo\" value={profile.account_type ?? '\u2014'} />\n              </div>\n            </div>\n          ) : null}\n        </CardContent>\n      </Card>\n\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"text-base\">Escopos concedidos</CardTitle>\n          <CardDescription>Os escopos que o app usa \u2014 demonstrados nesta tela.</CardDescription>\n        </CardHeader>\n        <CardContent className=\"space-y-2\">\n          <ScopeRow scope=\"instagram_business_basic\" desc=\"L\u00ea o perfil (usu\u00e1rio, tipo, seguidores, publica\u00e7\u00f5es) exibido acima.\" on={conn.isConnected && conn.hasProfile} />\n          <ScopeRow scope=\"instagram_business_content_publish\" desc=\"Publica Reels na conta conectada.\" on={conn.isConnected} />\n        </CardContent>\n      </Card>\n\n      <Card>\n        <CardHeader>\n          <CardTitle className=\"text-base\">Publicar no Instagram</CardTitle>\n          <CardDescription>Reels a partir dos criativos do Spaces.</CardDescription>\n        </CardHeader>\n        <CardContent>\n          <Button asChild variant=\"outline\" className=\"gap-2\">\n            <a href=\"/dashboard/spaces/assets\"><Upload className=\"h-4 w-4\" /> Ir para os criativos \u2192 publicar</a>\n          </Button>\n          <p className=\"mt-2 text-xs text-muted-foreground\">\n            A publica\u00e7\u00e3o usa <span className=\"font-mono\">instagram_business_content_publish</span> na conta conectada.\n          </p>\n        </CardContent>\n      </Card>\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/pages/InstagramStudioPage.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm setting up the Instagram route with lazy loading in App.tsx and adding the corresponding menu item in the sidebar under Visão Geral with the proper state management for collapsed sections and active states.
+
+</details>
+
+
+## 🤖 Claude *(16:49:30)*
+
+Agora rota + menu do Instagram:
+
+## 🤖 Claude *(16:49:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "const TikTokStudioPage = lazy(() => import(\"./pages/TikTokStudioPage.tsx\"));",
+  "new_string": "const TikTokStudioPage = lazy(() => import(\"./pages/TikTokStudioPage.tsx\"));\nconst InstagramStudioPage = lazy(() => import(\"./pages/InstagramStudioPage.tsx\"));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/App.tsx",
+  "old_string": "                <Route path=\"tiktok\" element={<TikTokStudioPage />} />\n                <Route path=\"repurpose\" element={<VideoRepurposePage />} />",
+  "new_string": "                <Route path=\"tiktok\" element={<TikTokStudioPage />} />\n                <Route path=\"instagram\" element={<InstagramStudioPage />} />\n                <Route path=\"repurpose\" element={<VideoRepurposePage />} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/App.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "  const isOverviewActive = location.pathname === '/dashboard' || location.pathname.includes('/youtube') || location.pathname.includes('/tiktok');",
+  "new_string": "  const isOverviewActive = location.pathname === '/dashboard' || location.pathname.includes('/youtube') || location.pathname.includes('/tiktok') || location.pathname.includes('/instagram');"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "    { title: 'YouTube', url: '/dashboard/youtube/studio-yt', icon: MonitorPlay },\n    { title: 'TikTok', url: '/dashboard/tiktok', icon: Music2 },\n    { title: 'Constela\u00e7\u00e3o', url: '/dashboard/constellation', icon: Orbit },",
+  "new_string": "    { title: 'YouTube', url: '/dashboard/youtube/studio-yt', icon: MonitorPlay },\n    { title: 'TikTok', url: '/dashboard/tiktok', icon: Music2 },\n    { title: 'Instagram', url: '/dashboard/instagram', icon: Instagram },\n    { title: 'Constela\u00e7\u00e3o', url: '/dashboard/constellation', icon: Orbit },"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:49:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx",
+  "old_string": "                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink to=\"/dashboard/tiktok\" className=\"hover:bg-muted/50\" activeClassName=\"text-primary font-medium\">\n                                <Music2 className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>TikTok</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                        </SidebarMenuSub>",
+  "new_string": "                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink to=\"/dashboard/tiktok\" className=\"hover:bg-muted/50\" activeClassName=\"text-primary font-medium\">\n                                <Music2 className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>TikTok</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                          <SidebarMenuSubItem>\n                            <SidebarMenuSubButton asChild>\n                              <NavLink to=\"/dashboard/instagram\" className=\"hover:bg-muted/50\" activeClassName=\"text-primary font-medium\">\n                                <Instagram className=\"mr-2 h-3.5 w-3.5 shrink-0\" />\n                                <span>Instagram</span>\n                              </NavLink>\n                            </SidebarMenuSubButton>\n                          </SidebarMenuSubItem>\n                        </SidebarMenuSub>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/dashboard/DashboardSidebar.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:50:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm adding the Instagram icon to the sidebar, then I'll validate everything, deploy the callback, build the project, and commit the changes.
+
+</details>
+
+
+## 🤖 Claude *(16:50:04)*
+
+Vou importar o ícone `Instagram` + validar tudo:
+
+## 🤖 Claude *(16:50:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -q \"^  Instagram,\" src/components/dashboard/DashboardSidebar.tsx && echo \"Instagram j\u00e1 importado\" || sed -i 's/^  Music2,/  Music2,\\n  Instagram,/' src/components/dashboard/DashboardSidebar.tsx\ngrep -n \"Instagram,\" src/components/dashboard/DashboardSidebar.tsx | head -2\necho \"=== tsc + eslint + deno ===\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c \"error TS\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -E \"Instagram|useInstagram\" || echo \"\u2192 IG files clean \u2713\"\n/home/ubuntu/.deno/bin/deno check supabase/functions/social-auth-callback/index.ts 2>&1 | grep -E \"error:|TS[0-9]+\" | grep -vi BillingAdmin | head -3 || echo \"\u2192 deno clean \u2713\"\nnpx eslint src/pages/InstagramStudioPage.tsx src/hooks/useInstagramStudio.ts src/components/dashboard/DashboardSidebar.tsx 2>&1 | tail -4; echo \"eslint exit=${PIPESTATUS[0]}\"",
+  "description": "Import Instagram icon + validate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 38:  Instagram,
+> === tsc + eslint + deno ===
+> 137
+> src/components/dashboard/DashboardSidebar.tsx(38,3): error TS2305: Module '"lucide-react"' has no exported member 'Instagram'.
+> src/pages/InstagramStudioPage.tsx(1,10): error TS2305: Module '"lucide-react"' has no exported member 'Instagram'.
+> eslint exit=0
+> ```
+
+## 🤖 Claude *(16:51:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Lucide-react removed brand icons in version 1.11, so `Instagram` isn't available—that's why TypeScript is now reporting 137 errors across DashboardSidebar and InstagramStudioPage. I need to swap it for a generic icon like `Camera` or `Aperture` instead, similar to how I used `Music2` for TikTok.
+
+</details>
+
+
+## 🤖 Claude *(16:51:38)*
+
+`lucide-react` removeu os ícones de marca (`Instagram`, como `Youtube` antes — memória conhecida). Vou trocar por `Camera` (genérico, válido) em todos os pontos:
+
+## 🤖 Claude *(16:51:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# swap Instagram icon \u2192 Camera (brand icon removed from lucide)\nsed -i 's/^  Instagram,/  Camera,/' src/components/dashboard/DashboardSidebar.tsx\nsed -i 's/icon: Instagram }/icon: Camera }/' src/components/dashboard/DashboardSidebar.tsx\nsed -i 's/<Instagram className=\"mr-2 h-3.5 w-3.5 shrink-0\" \\/>/<Camera className=\"mr-2 h-3.5 w-3.5 shrink-0\" \\/>/' src/components/dashboard/DashboardSidebar.tsx\n# page: import + usages\nsed -i \"s/import { Instagram, /import { Camera, /\" src/pages/InstagramStudioPage.tsx\nsed -i 's/<Instagram /<Camera /g' src/pages/InstagramStudioPage.tsx\necho \"=== residual Instagram icon refs? ===\"\ngrep -rn \"Instagram\" src/components/dashboard/DashboardSidebar.tsx src/pages/InstagramStudioPage.tsx | grep -iE \"icon|lucide|<Instagram|  Instagram,\" || echo \"\u2192 no icon refs (only text labels remain, ok)\"\necho \"=== tsc ===\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c \"error TS\"",
+  "description": "Swap Instagram icon to Camera + recheck tsc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === residual Instagram icon refs? ===
+> src/components/dashboard/DashboardSidebar.tsx:195:    { title: 'Instagram', url: '/dashboard/instagram', icon: Camera },
+> === tsc ===
+> 135
+> ```
+
+## 🤖 Claude *(16:52:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+TypeScript is back to 135 with the Camera type resolved and both errors cleared—the remaining "Instagram" text is just the menu label, which is fine. Now I'm running eslint on the Instagram files and building to make sure everything's clean before deploying, committing the changes.
+
+</details>
+
+
+## 🤖 Claude *(16:52:28)*
+
+tsc de volta a 135 (Camera válido). Vou lintar, deployar o callback + build + verificar + commit:
+
+## 🤖 Claude *(16:52:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx eslint src/pages/InstagramStudioPage.tsx src/hooks/useInstagramStudio.ts src/components/dashboard/DashboardSidebar.tsx src/App.tsx 2>&1 | tail -3; echo \"eslint=${PIPESTATUS[0]}\"\ntimeout 180 npx supabase functions deploy social-auth-callback 2>&1 | grep -E \"Deployed Functions|402|Error\" | head -2\ntimeout 300 bun run build 2>&1 | tail -2; echo \"build=${PIPESTATUS[0]}\"\ngrep -rl \"instagram_business_basic\\|Perfil da conta\" dist/assets/*.js 2>/dev/null | head -1 && echo \"\u2192 IG dashboard baked \u2713\"",
+  "description": "Lint + deploy callback + build + verify IG"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> eslint=0
+> Deployed Functions on project bcyvddsykvehvpwstlfa: social-auth-callback
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 26.31s
+> build=0
+> dist/assets/InstagramStudioPage-WAvUpZJs.js
+> → IG dashboard baked ✓
+> ```
+
+## 🤖 Claude *(16:53:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/social-auth-callback/index.ts src/pages/InstagramStudioPage.tsx src/hooks/useInstagramStudio.ts src/App.tsx src/components/dashboard/DashboardSidebar.tsx\ngit commit -q -m \"feat(instagram): dashboard Instagram (perfil business_basic) \u2014 completa Vis\u00e3o Geral > YT/TikTok/IG\n\nTerceiro irm\u00e3o do trio de dashboards anal\u00edticos por plataforma. Mesmo padr\u00e3o do TikTok:\n- /dashboard/instagram (InstagramStudioPage): conecta \u2192 exibe perfil lido por\n  instagram_business_basic (@usu\u00e1rio, tipo, seguidores, publica\u00e7\u00f5es, avatar) + painel dos 2\n  escopos (basic + content_publish) + atalho de publica\u00e7\u00e3o de Reels.\n- social-auth-callback (fn existente estendida \u2014 cap de fns cheio): no connect do IG busca\n  username/account_type/media_count/profile_picture_url/followers_count e grava em\n  metadata.ig_profile. Fail-soft. Dashboard l\u00ea client-side (0 fn nova).\n- Menu: Instagram entra sob 'Vis\u00e3o Geral' ao lado de YouTube/TikTok (+ modo colapsado).\n- \u00cdcone: Camera (lucide removeu o \u00edcone de marca Instagram, como fez com Youtube).\n\nUser 0 j\u00e1 tem IG conectado (@gabrielorchai, business_basic) \u2192 reconectar popula o perfil.\ntsc-app 135 (=+0) \u00b7 eslint 0 \u00b7 deno limpo \u00b7 callback deployado + build baked.\" && git log --oneline -1",
+  "description": "Commit Instagram dashboard"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:53PM[0m [32mINF[0m 1 commits scanned.
+> [90m1:53PM[0m [32mINF[0m scan completed in 9.16ms
+> [90m1:53PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> b8b9691 feat(instagram): dashboard Instagram (perfil business_basic) — completa Visão Geral > YT/TikTok/IG
+> ```
+
+## 🤖 Claude *(16:53:39)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've pushed the commit and wrapped up three tasks: the grid composite preview, the constellation respace fix, and the Instagram dashboard. Now I'm looking at what's left to decide on—mainly whether to lighten or abandon the constellation piece, and cleaning up some of the overlay effects and menu items.
+
+The orchestration refocus is the other big one: it's a substantial architectural change involving agent, quality-gate, and publish nodes while dropping the cena component. I've shipped a lot this session already, so the clearest path forward is to give a full status update and use AskUserQuestion to surface the constellation direction as a genuine fork—spread it out, lighten it, or abandon it entirely—since that's a real either/or the user posed. The orchestration piece is more of a "do it now versus defer" call, so I'll note that separately. I'm settling on two concrete decisions to ask: whether to keep the 3D constellation as-is (just removing heavy effects and trimming the menu), go fully lightweight with a 2D replacement, or leave it unchanged for now; and whether to tackle the orchestration refocus immediately or defer it to a dedicated session. These are genuine product-direction forks that only he can decide, so I'll present the status concisely and ask both at once.
+
+</details>
+
+
+## 🤖 Claude *(16:53:42)*
+
+Instagram shipado (`b8b9691`) — trio "Visão Geral > YouTube/TikTok/Instagram" completo. 
+
+Neste "continue" fechei: **#7 preview composto do grid**, **#8 respace da constelação** (fim dos orbits sobrepostos), **#10 dashboard Instagram**. Restam dois itens do seu recado que são **decisões de produto suas** (mexem em telas que você usa ativamente, e chutar errado = retrabalho). Antes de atacá-los, preciso da sua direção:
+
+## 🤖 Claude *(16:53:53)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "A constela\u00e7\u00e3o: o overlap j\u00e1 foi corrigido (5 squads espalhados a 72\u00b0 + pantheon-main separado do core). Como quer o resto do tratamento dela?",
+      "header": "Constela\u00e7\u00e3o",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Aliviar a 3D atual",
+          "description": "Mant\u00e9m a vis\u00e3o 3D mas remove os efeitos pesados de overlay/filtro + tira Matrix e Mem\u00f3ria do menu (viram s\u00f3 backup). Mais leve, mesma tela."
+        },
+        {
+          "label": "Trocar por algo leve",
+          "description": "Abandona a 3D pesada e substitui por uma vis\u00e3o 2D/lista leve dos agentes (sem WebGL/shaders). Mais r\u00e1pido de carregar, menos 'wow'."
+        },
+        {
+          "label": "S\u00f3 o respace basta por ora",
+          "description": "O fim dos orbits sobrepostos j\u00e1 resolve o inc\u00f4modo imediato; deixamos o al\u00edvio/refactor para depois."
+        }
+      ]
+    },
+    {
+      "question": "A p\u00e1gina /dashboard/orchestration (voc\u00ea a redefiniu como canvas de ORQUESTRA\u00c7\u00c3O de workflows, distinta do Spaces): quando fazer o refocus (n\u00f3 Agente=1 diretor \u00b7 Port\u00e3o de Qualidade=N especialistas \u00b7 n\u00f3 Publicar c/ mockup \u00b7 descartar Cena)?",
+      "header": "Orchestration",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Fazer agora",
+          "description": "Ataco o refocus completo dos n\u00f3s j\u00e1 nesta sequ\u00eancia \u2014 \u00e9 uma mudan\u00e7a grande no canvas, com testes."
+        },
+        {
+          "label": "Sess\u00e3o dedicada",
+          "description": "\u00c9 um build arquitetural grande; melhor uma sess\u00e3o focada (BoK/plano + implementa\u00e7\u00e3o + witness) em vez do fim desta maratona."
+        },
+        {
+          "label": "S\u00f3 remover o n\u00f3 Cena",
+          "description": "Fa\u00e7o s\u00f3 a parte inequ\u00edvoca agora (tirar o n\u00f3 Cena, j\u00e1 coberto pelos n\u00f3s de imagem/v\u00eddeo do Spaces) e deixo o resto para depois."
+        }
+      ]
+    }
+  ]
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%

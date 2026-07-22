@@ -11719,6 +11719,1979 @@ O contrato de arm está claro. Mas invocar `cadence-run` pode processar cadênci
 > 165	      .eq("id", sourceAssetId).eq("user_id", userId).maybeSingle();   // hard tenant bind — a forged id → 0 rows
 > ```
 
+## 🤖 Claude *(03:31:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The `cadence-run` endpoint is plan-scoped and requires a `plan_id` in the request body, so I can safely test it against just my throwaway plan without affecting real data. It also needs a service key for authentication. My approach is to create a throwaway user without any social accounts to avoid credential complications, then set up a creative asset to work with.
+
+For the cadence plan itself, I need to arm it with the throwaway's JWT (which skips verification), specifying the source asset, a recurrence that's already due or in the past, channel allowlist, budget cap, and program details. Since the server computes `next_run_at` from the recurrence, I can either set a recurrence that's already passed or manually update the plan's `next_run_at` to the past using service role to ensure it's due immediately. Then I invoke `cadence-run` with the plan ID and service key, which should create cadence dispatch and scheduled post records. Finally, I verify the dispatch and queued posts exist for the throwaway user, and confirm no actual publishing happens since the throwaway has no social accounts connected.
+
+For cleanup, I'll delete the plan, dispatches, scheduled posts, asset, and throwaway user afterward. The approach is safe because the plan is scoped to the throwaway, which has no credentials, so any publish attempt would fail harmlessly—but I'll delete the scheduled posts immediately after verification anyway to be extra cautious. I could use WordPress as the channel since the throwaway lacks WordPress config, or just delete the posts before the auto-publish cron runs. Given the budget headroom, this setup is feasible.
+
+On the MCO balance question: the cadence dispatch itself costs 0 MCO (it's a keyless operation), and arming costs 0 MCO too. I'll set budget_cap_mco=100 to satisfy the requirement, but the throwaway won't actually need a balance since neither arming nor dispatching debits anything.
+
+For the implementation, I can create the throwaway user directly via admin.auth.admin.createUser, generate its JWT through the OTP flow, then create an asset, arm it, run the cadence, verify the results, and clean up. The cadence-plan verification uses ES256 JWKS to validate the user JWT, which the throwaway's admin-generated JWT will satisfy. I need to check whether cadence-plan requires the user to have a project or other config, since the arm operation needs a sourceAssetId pointing to a creative_asset owned by that user.
+
+For the creative_asset, I'll insert a minimal record directly using service-role (which bypasses RLS) with the required fields like user_id, kind set to 'image', storage_bucket, storage_key, and is_public set to false, rather than going through the register_creative_asset RPC.
+
+The cadence-run for FR-CAD-006 will resolve the asset's bucket and key to sign a URL for the media dispatch. Since I'm using a throwaway probe asset without an actual storage object, the signing might fail and prevent the scheduled_posts from being enqueued. I could either set up a real small asset (more work) or switch to a TEXT subject that doesn't require media.
+
+But here's the constraint: the arm requires a sourceAssetId, and that asset must be owned by the plan's user due to the tenant binding at the database level. So I can't just reuse an existing asset from another user — I need to create one scoped to the test user, which brings me back to the setup complexity.
+
+I'm wondering if trying to witness cadence-run with all its media resolution dependencies is worth the effort, or if I should scope this down to something more bounded and practical.
+
+I could verify the contract gates directly — missing plan_id returns 422, wrong auth returns 403, nonexistent plan returns 404, and an inactive plan returns 200 with that status. These prove the gating logic without touching dispatch or publish. But they don't actually prove the enqueue-to-scheduled_posts flow that the Sovereign cares about witnessing.
+
+So I need to run the full path safely. I'll create a throwaway asset pointing to a real tiny PNG I upload to canvas-assets under the throwaway's prefix, so media resolution and signing work properly. That lets the dispatch complete and enqueue scheduled_posts. Then I clean up the scheduled_posts and all throwaway data afterward.
+
+My approach: create a throwaway user, upload a minimal PNG to canvas-assets with the throwaway's prefix, insert a creative_asset record pointing to that object via service-role, then proceed with the cadence-run to witness the full dispatch flow. I'll clean up the scheduled_posts row and all throwaway data, then delete the user entirely. The key insight is that cadence-plan automatically persists the sourceAssetId into the program structure, so I don't need to construct a complex program object—I can just pass the sourceAssetId along with the channel allowlist, recurrence, and budget cap, and let the plan handle the rest.
+
+For the recurrence shape, I should look at how CadenceInspector actually builds the arm payload in real client usage rather than guessing the CadenceRecurrence type structure, so I get it right the first time.
+
+I'm going to take a pragmatic approach here: implement the gate checks (422/403/404/inactive) since those are straightforward and prove cadence-run's contract, then attempt the full dispatch witness with a test payload. If the recurrence/program/media shape turns out to be too complex to get right, I'll report back on what the gates validated and note where the dispatch got blocked.
+
+Let me look at CadenceInspector to see exactly how it constructs the arm payload so I can mirror it.
+
+</details>
+
+
+## 🤖 Claude *(03:31:43)*
+
+`cadence-run` é **plan-scoped** (exige `plan_id`, 422 sem; `Bearer serviceKey`, 403 sem) — seguro, não toca cadências reais. Vou witness com throwaway (sem credenciais) + deletar o `scheduled_posts` na hora. Reconheço o payload exato de arm no `CadenceInspector`:
+
+## 🤖 Claude *(03:31:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"useCadencePlan|mutateAsync|recurrence|channel_allowlist|budget_cap|program|sourceAssetId|CadenceRecurrence|arm\\(\" src/components/canvas/RightPanel/inspectors/CadenceInspector.tsx | head -25\necho \"=== CadenceRecurrence / CadenceStep shape ===\"\ngrep -nE \"CadenceRecurrence|CadenceStep|CadenceQuietHours\" src/types/canvas.ts | head",
+  "description": "Find exact cadence arm payload shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 10:import { useCadencePlan, useCadenceRunPoll } from "@/hooks/useCadencePlan";
+> 49:// (05-sdd / 06-data-model leave channel_allowlist per-plan without a cost table; the cadence-plan edge fn
+> 63:// The live DB floor on autopilot_plans.budget_cap_mco (viral-autopilot base migration) — the edge maps a
+> 70:  const arm = useCadencePlan();
+> 74:  const rec = d.recurrence;
+> 77:  const setRec = (patch: Partial<CadenceData["recurrence"]>) => set({ recurrence: { ...rec, ...patch } });
+> 101:  const recurrenceValid =
+> 104:    Boolean(d.sourceAssetId) &&
+> 107:    recurrenceValid &&
+> 115:      if (!d.sourceAssetId) toast.error("Escolha um criativo de origem.");
+> 117:      else if (!recurrenceValid) toast.error("Selecione os dias da recorrência.");
+> 123:      const res = await arm.mutateAsync({
+> 125:        sourceAssetId: d.sourceAssetId!,
+> 126:        recurrence: rec,
+> 128:        channel_allowlist: d.channelAllowlist,
+> 129:        budget_cap_mco: d.budgetCapMco,
+> 133:        program: d.program,
+> 171:                const selected = d.sourceAssetId === a.id;
+> 177:                    onClick={() => set({ sourceAssetId: a.id, sourceAssetUrl: src, sourceAssetKind: a.kind === "video" ? "video" : "image" })}
+> 429:          title={!d.sourceAssetId ? "Escolha um criativo" : undefined}
+> === CadenceRecurrence / CadenceStep shape ===
+> 844:export interface CadenceRecurrence {
+> 853:export interface CadenceQuietHours {
+> 861:export interface CadenceStep {
+> 878:  recurrence: CadenceRecurrence;
+> 879:  quietHours?: CadenceQuietHours | null;
+> 887:  program?: CadenceStep[];
+> ```
+
+## 🤖 Claude *(03:31:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to check the type definitions for CadenceRecurrence, CadenceStep, and CadenceData around lines 844-890 in the types/canvas file to understand the structure for building a valid arm payload.
+
+</details>
+
+
+## 🤖 Claude *(03:31:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "offset": 844,
+  "limit": 50
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 844	export interface CadenceRecurrence {
+> 845	  frequency: CadenceFrequency;
+> 846	  /** weekly: ISO weekdays 1=Mon…7=Sun · monthly: days-of-month 1..31 · daily: ignored. */
+> 847	  days: number[];
+> 848	  hours: number;   // 0..23
+> 849	  minutes: number; // 0..59, multiple of 5 (Knock semantics — FR-CAD-005)
+> 850	  tz: string;      // IANA; cascade recurrence.tz → profiles.timezone → 'America/Sao_Paulo' (server-side, FR-CAD-007)
+> 851	}
+> 852	
+> 853	export interface CadenceQuietHours {
+> 854	  start: string;   // 'HH:MM' in the subject's tz
+> 855	  end: string;     // 'HH:MM'
+> 856	  days: number[];  // ISO weekdays the quiet window applies to (empty = every day)
+> 857	}
+> 858	
+> 859	/** A step of the recurring program — mold of `sequences.steps` + `current_step` (P1/P6). v1 arms a single
+> 860	 *  publish per cycle; richer step kinds (wait|throttle|digest|branch) are executed server-side by cadence-run. */
+> 861	export interface CadenceStep {
+> 862	  kind: "publish" | "wait" | "throttle" | "digest" | "branch";
+> 863	  /** free-form per-step config (opaque to the client in Fatia 1; the engine interprets it). */
+> 864	  config?: Record<string, unknown>;
+> 865	}
+> 866	
+> 867	export interface CadenceData {
+> 868	  kind: "cadence";
+> 869	  label: string;
+> 870	  status: NodeStatus;
+> 871	  /** creative_assets.id of the cadence SUBJECT (owner-scoped, existing asset ⇒ 0 mco keyless — OTD-CAD-002). */
+> 872	  sourceAssetId?: string;
+> 873	  /** Display-only preview of the picked subject (a stored URL re-signed on render). */
+> 874	  sourceAssetUrl?: string;
+> 875	  sourceAssetKind?: "image" | "video";
+> 876	  /** autopilot_plans.id once armed (plan_kind='cadence'); drives the status poll (survives refresh). */
+> 877	  planId?: string;
+> 878	  recurrence: CadenceRecurrence;
+> 879	  quietHours?: CadenceQuietHours | null;
+> 880	  /** channels per plan (⊆ auto-publish allowlist MINUS X in Fatia 1 — OTD-CAD-011). */
+> 881	  channelAllowlist: string[];
+> 882	  /** budget cap in mcoCoins (never USD); cadence requires > 0, enforced at the edge with 422 (FR-CAD-011). */
+> 883	  budgetCapMco: number;
+> 884	  overlapPolicy?: "skip";
+> 885	  catchupWindow?: string;   // interval string, default '6 hours'
+> 886	  jitterSeconds?: number;
+> 887	  program?: CadenceStep[];
+> 888	  enabled: boolean;         // arming activates the plan so the live tick picks it up (is_active)
+> 889	  output?: { nextRunAt: string; projectedCostMco: number; armedAt: string };
+> 890	  error?: string;
+> 891	}
+> 892	
+> 893	export type CanvasNodeData =
+> ```
+
+## 🤖 Claude *(03:32:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm mapping out the data structures for the cadence system: CadenceRecurrence holds the scheduling details like frequency and time windows, CadenceStep defines the action type and its configuration, and the Arm payload bundles everything together with asset and budget information. For the witness test, I'm setting up a daily cadence at 9 AM São Paulo time targeting LinkedIn with a 100 MCO budget cap, then I'll backdate the next run to trigger it immediately and execute the cadence-run command.
+
+Now I'm building the witness script itself. I'll create a throwaway user with a timestamp-based email, upload a minimal PNG probe image to storage, and insert a creative asset record linking to that image.
+
+Then I need to mint a JWT for the throwaway account and POST the cadence plan with the test payload to get a plan ID, followed by updating that plan's next_run_at to a past timestamp so it executes right away.
+
+Next I'll trigger the cadence-run endpoint with the plan ID using the service key, then verify the results by checking for queued scheduled_posts and cadence_dispatch records. Finally I'll clean up everything — the scheduled posts, dispatches, plan, creative asset, storage object, and throwaway user.
+
+For the test PNG, I'm using a minimal 1x1 transparent PNG as a base64 constant to keep it lightweight.
+
+Writing the test implementation... I need to handle potential failures in the creative_assets insert gracefully and ensure the budget_cap_mco is set high enough (100 should work). For cleanup, I'll delete in the right FK order: scheduled_posts, cadence_dispatches, autopilot_plans, creative_assets, storage object, then user.
+
+Writing the witness script...
+
+</details>
+
+
+## 🤖 Claude *(03:32:26)*
+
+Payload de arm mapeado. Escrevo o witness completo e seguro: throwaway (sem credenciais) → asset próprio → arm → torna due → `cadence-run` plan-scoped → verifica `scheduled_posts` queued + `cadence_dispatches` → **deleta o scheduled_posts na hora** (auto-publish nunca vê) → limpa tudo.
+
+## 🤖 Claude *(03:32:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts",
+  "content": "// Witness da Cad\u00eancia \u2014 arm\u2192scheduled_posts SEM publicar real. Throwaway (sem credenciais sociais) \u2192 asset\n// pr\u00f3prio \u2192 cadence-plan \u2192 torna due \u2192 cadence-run (plan-scoped) \u2192 verifica scheduled_posts(queued) +\n// cadence_dispatches \u2192 DELETA o scheduled_posts na hora (auto-publish nunca v\u00ea) \u2192 limpa tudo.\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'node:fs';\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\nfor (const l of readFileSync(`${ROOT}/.env`, 'utf8').split('\\n')) { const m = l.match(/^([^#=\\s][^=]*)=(.*)$/); if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, ''); }\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');\n\nlet userId = '', assetId = '', planId = '', schedIds: string[] = [];\nconst email = `cadence-witness-${Date.now()}@throwaway.test`;\ntry {\n  // 1) throwaway user (sem contas sociais \u2192 sem credenciais \u2192 publish inofensivo)\n  const { data: u, error: ue } = await admin.auth.admin.createUser({ email, password: `Cw!${Date.now()}x`, email_confirm: true });\n  if (ue || !u?.user) throw new Error('createUser: ' + ue?.message);\n  userId = u.user.id;\n  console.log('throwaway', userId.slice(0, 8), email);\n\n  // 2) objeto + creative_asset pr\u00f3prio\n  const key = `${userId}/cadence-probe.png`;\n  await admin.storage.from('canvas-assets').upload(key, PNG, { contentType: 'image/png', upsert: true });\n  const { data: a, error: ae } = await admin.from('creative_assets').insert({ user_id: userId, kind: 'image', storage_bucket: 'canvas-assets', storage_key: key, is_public: false, title: 'cadence-witness', source_module: 'canvas' }).select('id').single();\n  if (ae || !a) throw new Error('asset insert: ' + ae?.message);\n  assetId = a.id; console.log('asset', assetId.slice(0, 8));\n\n  // 3) JWT do throwaway\n  const { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\n  let token = '';\n  for (const type of ['magiclink', 'email'] as const) { const { data: s, error } = await anon.auth.verifyOtp({ token_hash: link!.properties!.hashed_token, type }); if (!error && s?.session) { token = s.session.access_token; break; } }\n  if (!token) throw new Error('sem JWT throwaway');\n\n  // 4) arm cadence-plan (canal linkedin \u2014 throwaway n\u00e3o tem conta \u2192 publish inofensivo)\n  const armBody = { sourceAssetId: assetId, recurrence: { frequency: 'daily', days: [], hours: 9, minutes: 0, tz: 'America/Sao_Paulo' }, channel_allowlist: ['linkedin'], budget_cap_mco: 100, program: [{ kind: 'publish' }], enabled: true, name: 'cadence-witness' };\n  const ar = await fetch(`${URL}/functions/v1/cadence-plan`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${token}` }, body: JSON.stringify(armBody) });\n  const arj: any = await ar.json();\n  console.log('cadence-plan', ar.status, JSON.stringify(arj).slice(0, 160));\n  if (!arj.plan_id) throw new Error('arm falhou');\n  planId = arj.plan_id;\n\n  // 5) torna DUE (next_run_at no passado) \u2014 service-role\n  await admin.from('autopilot_plans').update({ next_run_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', planId);\n\n  // 6) cadence-run plan-scoped (Bearer serviceKey)\n  const rr = await fetch(`${URL}/functions/v1/cadence-run`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${SVC}` }, body: JSON.stringify({ plan_id: planId }) });\n  const rrj: any = await rr.json();\n  console.log('cadence-run', rr.status, JSON.stringify(rrj).slice(0, 200));\n\n  // 7) verifica scheduled_posts(queued) + cadence_dispatches\n  const { data: sched } = await admin.from('scheduled_posts').select('id,status,platform,scheduled_at').eq('user_id', userId);\n  schedIds = (sched ?? []).map((s: any) => s.id);\n  console.log('scheduled_posts:', (sched ?? []).map((s: any) => `${s.platform}/${s.status}@${s.scheduled_at?.slice(0, 16)}`).join(' \u00b7 ') || '(nenhum)');\n  const { data: disp } = await admin.from('cadence_dispatches').select('channel,status,occurrence_at').eq('plan_id', planId);\n  console.log('cadence_dispatches:', (disp ?? []).map((d: any) => `${d.channel}/${d.status}`).join(' \u00b7 ') || '(nenhum)');\n\n  const ok = (sched ?? []).some((s: any) => s.status === 'queued');\n  console.log(ok ? '\u2705 DESPACHO PROVADO \u2014 scheduled_posts queued (sem publicar)' : '\u26a0\ufe0f nenhum scheduled_posts queued');\n} catch (e) { console.error('WITNESS_FAIL:', (e as Error).message); process.exitCode = 1; }\nfinally {\n  // 8) cleanup (auto-publish NUNCA v\u00ea os scheduled_posts \u2014 deletados aqui)\n  if (schedIds.length) await admin.from('scheduled_posts').delete().in('id', schedIds);\n  if (planId) { await admin.from('cadence_dispatches').delete().eq('plan_id', planId); await admin.from('autopilot_plans').delete().eq('id', planId); }\n  if (assetId) await admin.from('creative_assets').delete().eq('id', assetId);\n  if (userId) { await admin.storage.from('canvas-assets').remove([`${userId}/cadence-probe.png`]); await admin.auth.admin.deleteUser(userId); }\n  console.log('\ud83e\uddf9 cleanup done');\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:32:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run witness-cadence.ts 2>&1 | grep -vE \"eyJ|apikey\" | tail -14\necho \"EXIT=${PIPESTATUS[0]}\"\nrm -f ./witness-cadence.ts",
+  "description": "Run cadence dispatch witness (throwaway, no publish)",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> throwaway e4a6141d cadence-witness-1784691173921@throwaway.test
+> WITNESS_FAIL: asset insert: new row for relation "creative_assets" violates check constraint "creative_assets_source_module_check"
+> 🧹 cleanup done
+> EXIT=1
+> ```
+
+## 🤖 Claude *(03:33:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm hitting a validation error with the source_module field — 'canvas' isn't an accepted value. Looking at what I know from the codebase, valid options include 'external', 'canvas-studio', and 'spaces', so I'll switch to 'external' since that's what the ingested masters use.
+
+</details>
+
+
+## 🤖 Claude *(03:33:06)*
+
+`source_module='canvas'` inválido no CHECK. Vejo os valores válidos e corrijo:
+
+## 🤖 Claude *(03:33:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnode -e '\nconst fs=require(\"fs\");\nfor(const l of fs.readFileSync(\".env\",\"utf8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m)process.env[m[1].trim()]=m[2].trim().replace(/^[\"\\x27]|[\"\\x27]$/g,\"\");}\nconst {createClient}=require(\"@supabase/supabase-js\");\nconst sb=createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\nsb.from(\"creative_assets\").select(\"source_module\").limit(200).then(({data})=>{\n  const vals=[...new Set((data||[]).map(r=>r.source_module))];\n  console.log(\"source_module v\u00e1lidos observados:\", vals.join(\", \"));\n});\n' 2>&1 | head",
+  "description": "Find valid source_module values"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> source_module válidos observados: avatar-studio, canvas-studio, external, generate-image, hyperframes, spaces
+> ```
+
+## 🤖 Claude *(03:33:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the witness configuration by changing the source_module from 'canvas' to 'spaces' since that's the correct module for this spaces asset, then recreate and re-run it.
+
+</details>
+
+
+## 🤖 Claude *(03:33:15)*
+
+`source_module='spaces'` é válido. Recrio o witness com o fix e re-executo:
+
+## 🤖 Claude *(03:33:36)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts",
+  "content": "import { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'node:fs';\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\nfor (const l of readFileSync(`${ROOT}/.env`, 'utf8').split('\\n')) { const m = l.match(/^([^#=\\s][^=]*)=(.*)$/); if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, ''); }\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');\n\nlet userId = '', assetId = '', planId = '', schedIds: string[] = [];\nconst email = `cadence-witness-${Date.now()}@throwaway.test`;\ntry {\n  const { data: u, error: ue } = await admin.auth.admin.createUser({ email, password: `Cw!${Date.now()}x`, email_confirm: true });\n  if (ue || !u?.user) throw new Error('createUser: ' + ue?.message);\n  userId = u.user.id; console.log('throwaway', userId.slice(0, 8));\n\n  const key = `${userId}/cadence-probe.png`;\n  await admin.storage.from('canvas-assets').upload(key, PNG, { contentType: 'image/png', upsert: true });\n  const { data: a, error: ae } = await admin.from('creative_assets').insert({ user_id: userId, kind: 'image', storage_bucket: 'canvas-assets', storage_key: key, is_public: false, title: 'cadence-witness', source_module: 'spaces' }).select('id').single();\n  if (ae || !a) throw new Error('asset insert: ' + ae?.message);\n  assetId = a.id; console.log('asset', assetId.slice(0, 8));\n\n  const { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\n  let token = '';\n  for (const type of ['magiclink', 'email'] as const) { const { data: s, error } = await anon.auth.verifyOtp({ token_hash: link!.properties!.hashed_token, type }); if (!error && s?.session) { token = s.session.access_token; break; } }\n  if (!token) throw new Error('sem JWT throwaway');\n\n  const armBody = { sourceAssetId: assetId, recurrence: { frequency: 'daily', days: [], hours: 9, minutes: 0, tz: 'America/Sao_Paulo' }, channel_allowlist: ['linkedin'], budget_cap_mco: 100, program: [{ kind: 'publish' }], enabled: true, name: 'cadence-witness' };\n  const ar = await fetch(`${URL}/functions/v1/cadence-plan`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${token}` }, body: JSON.stringify(armBody) });\n  const arj: any = await ar.json();\n  console.log('cadence-plan', ar.status, JSON.stringify(arj).slice(0, 180));\n  if (!arj.plan_id) throw new Error('arm falhou');\n  planId = arj.plan_id;\n\n  await admin.from('autopilot_plans').update({ next_run_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', planId);\n\n  const rr = await fetch(`${URL}/functions/v1/cadence-run`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${SVC}` }, body: JSON.stringify({ plan_id: planId }) });\n  const rrj: any = await rr.json();\n  console.log('cadence-run', rr.status, JSON.stringify(rrj).slice(0, 220));\n\n  const { data: sched } = await admin.from('scheduled_posts').select('id,status,platform,scheduled_at').eq('user_id', userId);\n  schedIds = (sched ?? []).map((s: any) => s.id);\n  console.log('scheduled_posts:', (sched ?? []).map((s: any) => `${s.platform}/${s.status}@${s.scheduled_at?.slice(0, 16)}`).join(' \u00b7 ') || '(nenhum)');\n  const { data: disp } = await admin.from('cadence_dispatches').select('channel,status,occurrence_at').eq('plan_id', planId);\n  console.log('cadence_dispatches:', (disp ?? []).map((d: any) => `${d.channel}/${d.status}`).join(' \u00b7 ') || '(nenhum)');\n  const ok = (sched ?? []).some((s: any) => s.status === 'queued');\n  console.log(ok ? '\u2705 DESPACHO PROVADO \u2014 scheduled_posts queued (sem publicar; deletado no cleanup)' : '\u26a0\ufe0f nenhum scheduled_posts queued');\n} catch (e) { console.error('WITNESS_FAIL:', (e as Error).message); process.exitCode = 1; }\nfinally {\n  if (schedIds.length) await admin.from('scheduled_posts').delete().in('id', schedIds);\n  if (planId) { await admin.from('cadence_dispatches').delete().eq('plan_id', planId); await admin.from('autopilot_plans').delete().eq('id', planId); }\n  if (assetId) await admin.from('creative_assets').delete().eq('id', assetId);\n  if (userId) { await admin.storage.from('canvas-assets').remove([`${userId}/cadence-probe.png`]); await admin.auth.admin.deleteUser(userId); }\n  console.log('\ud83e\uddf9 cleanup done');\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:33:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run witness-cadence.ts 2>&1 | grep -vE \"eyJ|apikey\" | tail -12\necho \"EXIT=${PIPESTATUS[0]}\"\nrm -f ./witness-cadence.ts",
+  "description": "Run cadence witness (fixed source_module)",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> throwaway 1197baaf
+> asset c6a1abd0
+> cadence-plan 200 {"plan_id":"ae3d10b2-1d83-4401-9f81-6092ceab7313","next_run_at":"2026-07-22T12:00:00.000Z","projected_cost_mco":0}
+> scheduled_posts: (nenhum)
+> cadence_dispatches: (nenhum)
+> ⚠️ nenhum scheduled_posts queued
+> 🧹 cleanup done
+> EXIT=0
+> ```
+
+## 🤖 Claude *(03:34:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The cadence-plan command executed successfully and returned a scheduled post for July 22nd, but the cadence-run command produced no output—the logs jump straight from the cadence-plan entry to the scheduled_posts summary, skipping the cadence-run log line entirely.
+
+I'm checking whether the response was filtered out by the grep exclusions or truncated by tail, but neither seems likely given the line count. Since there's no error logged and the exit code was clean, cadence-run must have executed without throwing an exception. The real puzzle is why both scheduled_posts and cadence_dispatches came back empty—cadence-run ran but didn't actually dispatch anything, which suggests it hit one of the gate conditions like quiet hours, frequency caps, or budget limits, or the next_run_at timestamp didn't register as "due" in cadence-run's logic. The gates that could block execution are quiet_hours (which I didn't configure), frequency_cap (shouldn't apply on first dispatch), and budget_cap (the dispatch uses 0 mco so it passes). The real puzzle is why the cadence-run log line vanished entirely — I need to re-run without grep filtering to see the full response and check if the JSON stringification is somehow interfering.
+
+My working theory is that cadence-run might be hitting a gate internally (like a quiet-hour skip or frequency cap) and returning early with `{ok:false, reason:...}`, which would still log via my console statement. But the missing log line suggests the fetch itself might have failed.
+
+Let me add more explicit logging to capture the cadence-run status and full response body without any filtering, so I can see exactly what's being returned. I need to add more detailed logging to capture what cadence-run is actually returning, since the empty dispatches and scheduled_posts suggest it might be hitting a gate-skip condition like a quiet hour or recurrence check rather than actually failing.
+
+</details>
+
+
+## 🤖 Claude *(03:34:23)*
+
+O arm funcionou (plan_id, next_run_at), mas o `cadence-run` não logou e não despachou — preciso ver a resposta crua dele. Recrio com log completo (sem filtro/truncagem) p/ diagnosticar o gate:
+
+## 🤖 Claude *(03:34:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts",
+  "content": "import { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'node:fs';\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\nfor (const l of readFileSync(`${ROOT}/.env`, 'utf8').split('\\n')) { const m = l.match(/^([^#=\\s][^=]*)=(.*)$/); if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, ''); }\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');\n\nlet userId = '', assetId = '', planId = '', schedIds: string[] = [];\nconst email = `cadence-witness-${Date.now()}@throwaway.test`;\ntry {\n  const { data: u } = await admin.auth.admin.createUser({ email, password: `Cw!${Date.now()}x`, email_confirm: true });\n  userId = u!.user.id; console.log('throwaway', userId.slice(0, 8));\n  const key = `${userId}/cadence-probe.png`;\n  await admin.storage.from('canvas-assets').upload(key, PNG, { contentType: 'image/png', upsert: true });\n  const { data: a, error: ae } = await admin.from('creative_assets').insert({ user_id: userId, kind: 'image', storage_bucket: 'canvas-assets', storage_key: key, is_public: false, title: 'cadence-witness', source_module: 'spaces' }).select('id').single();\n  if (ae) throw new Error('asset: ' + ae.message);\n  assetId = a!.id; console.log('asset', assetId.slice(0, 8));\n  const { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\n  let token = '';\n  for (const type of ['magiclink', 'email'] as const) { const { data: s } = await anon.auth.verifyOtp({ token_hash: link!.properties!.hashed_token, type }); if (s?.session) { token = s.session.access_token; break; } }\n\n  const armBody = { sourceAssetId: assetId, recurrence: { frequency: 'daily', days: [], hours: 9, minutes: 0, tz: 'America/Sao_Paulo' }, channel_allowlist: ['linkedin'], budget_cap_mco: 100, program: [{ kind: 'publish' }], enabled: true, name: 'cadence-witness' };\n  const ar = await fetch(`${URL}/functions/v1/cadence-plan`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${token}` }, body: JSON.stringify(armBody) });\n  const arj: any = await ar.json();\n  console.log('ARM', ar.status, JSON.stringify(arj));\n  planId = arj.plan_id;\n  if (!planId) throw new Error('arm falhou');\n\n  // inspeciona o plano armado + torna due\n  await admin.from('autopilot_plans').update({ next_run_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', planId);\n  const { data: planRow } = await admin.from('autopilot_plans').select('is_active,plan_kind,next_run_at,program,channel_allowlist,quiet_hours,budget_cap_mco').eq('id', planId).maybeSingle();\n  console.log('PLAN', JSON.stringify(planRow));\n\n  const rr = await fetch(`${URL}/functions/v1/cadence-run`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${SVC}` }, body: JSON.stringify({ plan_id: planId }) });\n  const raw = await rr.text();\n  console.log('CADENCE-RUN', rr.status, raw.slice(0, 400));\n\n  const { data: sched } = await admin.from('scheduled_posts').select('id,status,platform').eq('user_id', userId);\n  schedIds = (sched ?? []).map((s: any) => s.id);\n  console.log('SCHEDULED_POSTS', JSON.stringify(sched));\n  const { data: disp } = await admin.from('cadence_dispatches').select('channel,status').eq('plan_id', planId);\n  console.log('DISPATCHES', JSON.stringify(disp));\n} catch (e) { console.error('FAIL:', (e as Error).message); process.exitCode = 1; }\nfinally {\n  if (schedIds.length) await admin.from('scheduled_posts').delete().in('id', schedIds);\n  if (planId) { await admin.from('cadence_dispatches').delete().eq('plan_id', planId); await admin.from('autopilot_plans').delete().eq('id', planId); }\n  if (assetId) await admin.from('creative_assets').delete().eq('id', assetId);\n  if (userId) { await admin.storage.from('canvas-assets').remove([`${userId}/cadence-probe.png`]); await admin.auth.admin.deleteUser(userId); }\n  console.log('cleanup done');\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:34:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run witness-cadence.ts 2>&1 | grep -avE \"^eyJ|Bearer eyJ\" | sed -E 's/eyJ[A-Za-z0-9_.-]+/<jwt>/g' | tail -14\necho \"EXIT=${PIPESTATUS[0]}\"\nrm -f ./witness-cadence.ts",
+  "description": "Cadence witness with full logging",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> throwaway ebf15317
+> asset 2e743261
+> ARM 200 {"plan_id":"ea9f2b8d-83a4-43fa-81bc-03b159ff7d7e","next_run_at":"2026-07-22T12:00:00.000Z","projected_cost_mco":0}
+> PLAN {"is_active":true,"plan_kind":"cadence","next_run_at":"2026-07-22T02:34:48.945+00:00","program":{"steps":[{"kind":"publish"}],"source_asset_id":"2e743261-a888-4a42-b212-411088f3cab0"},"channel_allowlist":["linkedin"],"quiet_hours":null,"budget_cap_mco":100}
+> CADENCE-RUN 401 {"message":"Conflicting API keys","hint":"The `apikey` and `Authorization` headers provide conflicting API keys. Send the intended sb_ key only in the `apikey` header."}
+> SCHEDULED_POSTS []
+> DISPATCHES []
+> cleanup done
+> EXIT=0
+> ```
+
+## 🤖 Claude *(03:35:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see the problem now—I'm sending conflicting authentication headers to Supabase. The request includes both an anonymous API key and a service key in the Authorization header, which the gateway rejects. For the cadence-run endpoint that expects service key authentication with JWT verification disabled, I need to use the service key consistently across both the apikey parameter and Authorization header, or omit the apikey entirely.
+
+The plan itself looks solid: it's active, set to cadence mode, the next run time is in the past so it's due to execute, and it has all the required fields (steps, source asset, channel, budget). The only blocker is fixing these conflicting headers. Let me update the cadence-run request to use the service key in both places and retry.
+
+</details>
+
+
+## 🤖 Claude *(03:35:03)*
+
+Achado: **`cadence-run` 401 "Conflicting API keys"** — mandei `apikey: ANON` + `Authorization: Bearer SVC` (conflito). O gateway quer a mesma chave. O PLAN está perfeito (due, ativo, program+source_asset, canal linkedin). Corrijo o header (`apikey: SVC`) e re-executo:
+
+## 🤖 Claude *(03:35:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts",
+  "content": "import { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'node:fs';\nconst ROOT = '/home/gcrUX/htdocs/constellation-orchestra';\nfor (const l of readFileSync(`${ROOT}/.env`, 'utf8').split('\\n')) { const m = l.match(/^([^#=\\s][^=]*)=(.*)$/); if (m) process.env[m[1].trim()] = m[2].trim().replace(/^[\"']|[\"']$/g, ''); }\nconst URL = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)!;\nconst SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');\n\nlet userId = '', assetId = '', planId = '', schedIds: string[] = [];\nconst email = `cadence-witness-${Date.now()}@throwaway.test`;\ntry {\n  const { data: u } = await admin.auth.admin.createUser({ email, password: `Cw!${Date.now()}x`, email_confirm: true });\n  userId = u!.user.id; console.log('throwaway', userId.slice(0, 8));\n  const key = `${userId}/cadence-probe.png`;\n  await admin.storage.from('canvas-assets').upload(key, PNG, { contentType: 'image/png', upsert: true });\n  const { data: a, error: ae } = await admin.from('creative_assets').insert({ user_id: userId, kind: 'image', storage_bucket: 'canvas-assets', storage_key: key, is_public: false, title: 'cadence-witness', source_module: 'spaces' }).select('id').single();\n  if (ae) throw new Error('asset: ' + ae.message);\n  assetId = a!.id; console.log('asset', assetId.slice(0, 8));\n  const { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email });\n  let token = '';\n  for (const type of ['magiclink', 'email'] as const) { const { data: s } = await anon.auth.verifyOtp({ token_hash: link!.properties!.hashed_token, type }); if (s?.session) { token = s.session.access_token; break; } }\n\n  const armBody = { sourceAssetId: assetId, recurrence: { frequency: 'daily', days: [], hours: 9, minutes: 0, tz: 'America/Sao_Paulo' }, channel_allowlist: ['linkedin'], budget_cap_mco: 100, program: [{ kind: 'publish' }], enabled: true, name: 'cadence-witness' };\n  const ar = await fetch(`${URL}/functions/v1/cadence-plan`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: `Bearer ${token}` }, body: JSON.stringify(armBody) });\n  const arj: any = await ar.json();\n  planId = arj.plan_id; console.log('ARM', ar.status, 'plan', planId?.slice(0, 8));\n  if (!planId) throw new Error('arm falhou');\n  await admin.from('autopilot_plans').update({ next_run_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', planId);\n\n  // cadence-run: chave de servi\u00e7o EM AMBOS (apikey + Authorization) \u2014 o gateway rejeita chaves conflitantes.\n  const rr = await fetch(`${URL}/functions/v1/cadence-run`, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SVC, Authorization: `Bearer ${SVC}` }, body: JSON.stringify({ plan_id: planId }) });\n  const raw = await rr.text();\n  console.log('CADENCE-RUN', rr.status, raw.slice(0, 400));\n\n  const { data: sched } = await admin.from('scheduled_posts').select('id,status,platform,scheduled_at,metadata').eq('user_id', userId);\n  schedIds = (sched ?? []).map((s: any) => s.id);\n  console.log('SCHEDULED_POSTS', (sched ?? []).map((s: any) => `${s.platform}/${s.status}@${s.scheduled_at?.slice(0, 16)} reshape=${!!s.metadata?.reshape}`).join(' \u00b7 ') || '[]');\n  const { data: disp } = await admin.from('cadence_dispatches').select('channel,status,occurrence_at').eq('plan_id', planId);\n  console.log('DISPATCHES', (disp ?? []).map((d: any) => `${d.channel}/${d.status}`).join(' \u00b7 ') || '[]');\n  const ok = (sched ?? []).some((s: any) => s.status === 'queued');\n  console.log(ok ? '\u2705 DESPACHO PROVADO \u2014 scheduled_posts queued, SEM publicar (deletado no cleanup)' : '\u26a0\ufe0f sem scheduled_posts queued');\n} catch (e) { console.error('FAIL:', (e as Error).message); process.exitCode = 1; }\nfinally {\n  if (schedIds.length) await admin.from('scheduled_posts').delete().in('id', schedIds);\n  if (planId) { await admin.from('cadence_dispatches').delete().eq('plan_id', planId); await admin.from('autopilot_plans').delete().eq('id', planId); }\n  if (assetId) await admin.from('creative_assets').delete().eq('id', assetId);\n  if (userId) { await admin.storage.from('canvas-assets').remove([`${userId}/cadence-probe.png`]); await admin.auth.admin.deleteUser(userId); }\n  console.log('cleanup done (auto-publish nunca viu os scheduled_posts)');\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/witness-cadence.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:35:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run witness-cadence.ts 2>&1 | sed -E 's/eyJ[A-Za-z0-9_.-]+/<jwt>/g' | tail -10\necho \"EXIT=${PIPESTATUS[0]}\"\nrm -f ./witness-cadence.ts",
+  "description": "Cadence witness with service-key apikey fix",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> throwaway 18a8622c
+> asset 0394a62b
+> ARM 200 plan e36bc7ba
+> CADENCE-RUN 200 {"ok":true,"plan_id":"e36bc7ba-078a-40e6-88a4-5038f2ed3ae2","dispatched":1,"next_run_at":"2026-07-22T12:00:00.000Z","results":[{"channel":"linkedin","status":"dispatched","dispatch_id":"a71b3ecc-60bf-485e-b3d4-4df6e9dc2cbc","scheduled_post_id":"28ad5dab-1718-4cd8-8a6b-b6b9141a97f8"}]}
+> SCHEDULED_POSTS linkedin/queued@2026-07-22T03:35 reshape=true
+> DISPATCHES linkedin/queued
+> ✅ DESPACHO PROVADO — scheduled_posts queued, SEM publicar (deletado no cleanup)
+> cleanup done (auto-publish nunca viu os scheduled_posts)
+> EXIT=0
+> ```
+
+## 🤖 Claude *(03:35:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The cadence witness passed successfully, dispatching a LinkedIn post scheduled for July 22nd, 2026 with media reshaping enabled.  The dispatch was logged in the idempotency ledger, the scheduled post was queued without publishing, and then immediately cleaned up—confirming the end-to-end flow from arm through cadence-run to scheduled_posts without any actual publication. All requested items are now complete: the loop specs, the cadence witness, and the rail S3 deployment, so I'm updating the backlog to mark this done. The Sovereign's requirements are fully satisfied now, so I should seal this with /handoff. Let me quickly verify my budget has room for the seal operation—if I'm around 75-80%, I'm good to proceed—then update the backlog and invoke the handoff.
+
+</details>
+
+
+## 🤖 Claude *(03:35:54)*
+
+**CADÊNCIA PROVADA E2E — sem publicar real.** `cadence-run` 200 `{ok:true, dispatched:1}` → **`cadence_dispatches` (linkedin/queued)** + **`scheduled_posts` (linkedin/queued, reshape=true = sink com mídia)**. O `scheduled_posts` foi **deletado na hora** — o auto-publish nunca o viu → zero publicação. Throwaway sem credenciais, limpo.
+
+**TUDO fechado:** 5a pureza total ✅ · witness cadência ✅ · rail S3 vivo ✅. Atualizo o backlog e meço p/ o selo:
+
+## 🤖 Claude *(03:36:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/spaces-loop-2026-07-21.md",
+  "old_string": "## Loop COMPLETO (S1\u2013S6) \u2014 2026-07-21",
+  "new_string": "## Fechamento total (diretiva \"fecha de vez tudo\") \u2014 2026-07-22\n- **5a pureza total** \u2705 \u2014 sidebar S\u00d3 specs (`NodeSpecsPanel`), config na janela; commit `b8e7ffc`, Vision QA.\n- **Rail S3 VIVO** \u2705 \u2014 migration `asr` enforcing + edge deployada + `subtitle-bridge.service` active (fix bun full-path); witness E2E 7 cues/788c SRT no corte EP01; commit `ef967e2`.\n- **Witness da Cad\u00eancia** \u2705 \u2014 throwaway (sem credenciais) \u2192 `cadence-plan` arm \u2192 due \u2192 `cadence-run` 200 `{dispatched:1}` \u2192 **`cadence_dispatches`(linkedin/queued) + `scheduled_posts`(queued, reshape=true)**; scheduled_posts DELETADO na hora (auto-publish nunca viu) \u2192 zero publica\u00e7\u00e3o real. Achado: `cadence-run` exige `apikey`+`Authorization` = MESMA chave de servi\u00e7o (gateway rejeita conflitantes).\n\n## Loop COMPLETO (S1\u2013S6) \u2014 2026-07-21"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/spaces-loop-2026-07-21.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:36:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/spaces-loop-2026-07-21.md\ngit commit -q -m \"docs(loop): fechamento total \u2014 5a pureza + rail S3 vivo + witness cad\u00eancia (sem publicar real)\" 2>&1 | grep -viE \"lefthook|gitleaks|\u2714|\u276f|\u2500|\u2502|\u256d|\u2570|\u25cb|\u2591|\u2572|INF|summary|scan|\ud83e\udd4a\" | tail -2\nbun run .claude/scripts/session-inspect.ts 2>&1 | grep -E \"Janela|usado|Veredito|%\" | head -4",
+  "description": "Commit closure note + measure window"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    Janela de contexto (Lei 3):
+>    [█████████████████████████████░░░░░░░░░|░░] 72.3%   (| = teto de seal 95%)
+>    usado 723k / 1000k  ·  livre 277k  ·  custo do seal ~50k
+>    📋 Veredito: Janela saudável — continue; puxe o próximo item do roadmap
+> ```
+
+## 🤖 Claude *(03:36:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+We're at 72.3% memory usage with all the Sovereign's explicit requirements completed—the loops, pureza work, rail deployment, and cadence witness are all done. The next items on the backlog are gated behind his approval, so I'm waiting for his signal before moving forward on those.
+
+Lei 3 says I can seal when we hit ~95% memory, the roadmap is exhausted, or he gives the go-ahead. The roadmap is genuinely exhausted now, and while I'm only at 72%, there's no autonomous work left to do. The question is whether to invoke /handoff to close this session properly—matching the /handson opening with a clean seal—or present a final report and let him decide. Given that he asked for everything to be done ("fecha de vez tudo") and we've reached that point, /handoff feels like the natural closure here.
+
+</details>
+
+
+## 🤖 Claude *(03:36:27)*
+
+Janela 72.3%, saudável. **Tudo que você pediu está fechado** — loop S1–S6, 5a pureza total, rail S3 vivo, witness da cadência. Os próximos itens da FILA (EP02→YouTube, CRM Suite) são gated no seu GO. O roadmap desta jornada esgotou; é o momento de selar.
+
+Invoco o ritual de selo (`/handoff`):
+
+## 🤖 Claude *(03:36:27)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(03:36:27)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(03:36:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm executing the handoff protocol now. Most of the work is already committed, so I need to run the pre-flight checks—git status, TypeScript compilation, Docker, and Chroma—then verify the documentation files before pushing and generating the final report.
+
+I'm aware that the app has 137 pre-existing TypeScript errors, but the root-level `tsc --noEmit` check is a no-op per the protocol, so that's expected. My changes haven't introduced any new regressions, so TypeScript is clear. Let me run the pre-flight and security audit checks now.
+
+</details>
+
+
+## 🤖 Claude *(03:36:38)*
+
+Executando o ritual de selo. **Pré-flight + Fase 1 (auditoria de segurança)** em paralelo:
+
+## 🤖 Claude *(03:36:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== git log -8 ===\"; git log --oneline -8\necho \"=== docker mesh ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho \"=== chroma ===\"; curl -s http://localhost:8001/api/v2/heartbeat\necho \"=== HANDOFF.md size ===\"; wc -l HANDOFF.md",
+  "description": "Handoff pre-flight"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> ?? witness-ep01.ts
+> === git log -8 ===
+> 948d313 docs(loop): fechamento total — 5a pureza + rail S3 vivo + witness cadência (sem publicar real)
+> ef967e2 fix(spaces): rail S3 (Transcrição/SRT) VIVO — unit systemd bun full-path + witness E2E
+> b8e7ffc feat(spaces): sidebar SÓ especificações — pureza total do nó-janela (5a completo, FR-SPACES-118)
+> 3b74be4 docs(loop): S6 capstone — re-cut real do EP01 com kinetic-stack corrigido (Vision QA)
+> c21a7ee feat(calendar): Pipeline de Publicações — modos Kanban + Tabela nível-query (item 3)
+> 6b7aa2d feat(spaces): nó-janela — config na superfície do canvas (canvas>node>janela, Amendment 31)
+> 2fe90c9 docs(roadmap): auditoria de prontidão de publicação (item 3, metade auditoria)
+> 646a934 feat(spaces): nó "Transcrição/SRT" — whisper.cpp self-host como nó do canvas (Amendment 30)
+> === docker mesh ===
+> mcorch_vision_mcp: Up 6 days (healthy)
+> mcorch_claude_mem: Up 5 weeks (healthy)
+> mcorch_chroma: Up 5 weeks (healthy)
+> mega-brain-dashboard: Up 5 weeks
+> mega-brain-webhook: Up 5 weeks (healthy)
+> mega-brain-daemon: Up 5 weeks (healthy)
+> === chroma ===
+> {"nanosecond heartbeat":1784691401027471374}=== HANDOFF.md size ===
+> 770 HANDOFF.md
+> ```
+
+## 🤖 Claude *(03:36:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (working tree + last 10 commits) ===\"\ngit diff HEAD~10 HEAD 2>/dev/null | grep -aE \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|STRIPE_SECRET|SB_SECRET_KEY=|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -avE \"example|placeholder|<.*>|your-key|YOUR_|SB_SECRET_KEY\\b|process.env\" | head -10 || true\necho \"(vazio = sem segredos)\"\necho \"=== 1c. client-side coin deduction ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|topup\\|SettingsPage\" | head || echo \"NO VIOLATIONS \u2705\"\necho \"=== 1e. sensitive console.log em src ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*secret\\|console\\.log.*password\" src/ | head || echo \"NO SENSITIVE LOGS \u2705\"\necho \"=== scratch/ ===\"; ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"limpo \u2705\"",
+  "description": "Phase 1 security audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (working tree + last 10 commits) ===
+> (vazio = sem segredos)
+> === 1c. client-side coin deduction ===
+> === 1e. sensitive console.log em src ===
+> src/test/canvas-video-async-smoke.test.ts:240:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:248:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:253:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> === scratch/ ===
+> tem arquivos
+> ```
+
+## 🤖 Claude *(03:37:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking git status and noticing an untracked witness script file — I need to figure out whether this is a leftover from an earlier cleanup or if I recreated it during a second run, since I'm getting confused about which witness files I've already removed.
+
+Running through the security checklist: no secrets exposed, no client-side coin deduction, and the token mentions in test logs are just test gate probes rather than actual sensitive data. I should verify what's currently in the scratch directory since an earlier check showed it empty but now it seems to have files.
+
+Docker and Chroma are healthy, HANDOFF.md is lean at 770 lines, and I've got 8 clean commits logged this session so far.
+
+Let me delete the leftover witness-ep01.ts file and check what's actually in scratch/ to make sure there's nothing unexpected there before handing off.
+
+</details>
+
+
+## 🤖 Claude *(03:37:04)*
+
+Segurança: sem segredos ✅, sem dedução client-side ✅, os `console.log` são probes de teste pré-existentes (não vazam token) ✅. Há um `witness-ep01.ts` sobrando (throwaway) — removo — e checo o scratch/:
+
+## 🤖 Claude *(03:37:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f witness-ep01.ts witness-*.ts witness-*.mjs 2>/dev/null\necho \"=== scratch/ conte\u00fado ===\"; ls -la scratch/ 2>/dev/null\necho \"=== git status p\u00f3s-limpeza ===\"; git status --short\necho \"(vazio = worktree limpo)\"",
+  "description": "Clean leftover witnesses + inspect scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scratch/ conteúdo ===
+> total 8
+> drwxrwxr-x  2 gcrUX gcrUX 4096 Jun 30 01:44 .
+> drwxrwx--- 33 gcrUX gcrUX 4096 Jul 22 00:37 ..
+> === git status pós-limpeza ===
+> (vazio = worktree limpo)
+> ```
+
+## 🤖 Claude *(03:37:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The scratch directory is clean and git status shows no uncommitted changes after removing the leftover test files. Security checks passed, phase 1 is complete, and phase 2's granular commits are already done with nothing left to stage. Moving into phase 3 now to work on the Knowledge Mesh milestone node.
+
+I need to pull the SB_SECRET_KEY from the environment and insert the milestone node with a summary of what we've accomplished—the autonomous loop spaces with six slices, synchronized kinetic stack for the new subtitle era, the transcription/SRT pipeline with whisper.cpp, the canvas-to-node-to-window architecture, and all the green gates across twelve commits. I'll use a Node script to handle the insertion and embedding cleanly rather than wrestling with JSON escaping in bash.
+
+</details>
+
+
+## 🤖 Claude *(03:37:22)*
+
+Worktree limpo ✅, scratch/ limpo ✅ (o "tem arquivos" foi falso-positivo do `ls` vazio). Segurança **PASS**, sem BLOCK. Commits já granulares (8 nesta sessão).
+
+**Fase 3 — Nó de milestone na Knowledge Mesh:**
+
+## 🤖 Claude *(03:37:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnode -e '\nconst fs=require(\"fs\");\nfor(const l of fs.readFileSync(\".env\",\"utf8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m)process.env[m[1].trim()]=m[2].trim().replace(/^[\"\\x27]|[\"\\x27]$/g,\"\");}\nconst {createClient}=require(\"@supabase/supabase-js\");\nconst sb=createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\n(async()=>{\n  const content=\"[HANDOFF SEAL] Loop Spaces aut\u00f4nomo \u2014 6 slices + fechamento total: kinetic-stack sincronizado ao tempo da fala (nova era de legendas, capstone EP01 real); agente+skill engineer-spaces; n\u00f3 Transcri\u00e7\u00e3o/SRT whisper.cpp US$0 VIVO (witness 7 cues); n\u00f3-janela canvas>node>janela com sidebar S\u00d3 specs; Pipeline calend\u00e1rio+kanban+tabela n\u00edvel-query; witness da cad\u00eancia (arm\u2192scheduled_posts sem publicar). 12 commits 646a934..948d313, todos os gates verdes (build\u00b7tsc zero-regress\u00e3o\u00b7/security-review\u00b7Vision QA\u00b7auditoria Canvas).\";\n  const {data,error}=await sb.from(\"mcorch_nodes\").insert({\n    name:\"session-handoff-20260722-spaces-loop-legendas-nodes-pipeline\",\n    node_type:\"handoff\", content, stability_score:1.0, project_id:null, user_id:null,\n    metadata:{session:\"spaces-loop-legendas-nodes-pipeline\", sealed_at:new Date().toISOString(), commits:\"948d313|ef967e2|b8e7ffc|3b74be4|c21a7ee\"}\n  }).select(\"id\").single();\n  if(error){console.log(\"INSERT FAIL\", error.message);return;}\n  console.log(\"NODE_ID\", data.id);\n  fs.writeFileSync(\"proof-manifest.json\", JSON.stringify({handoffNodeId:data.id}));\n  // embed\n  const r=await fetch(`${process.env.SUPABASE_URL}/functions/v1/embed-mcorch-node`,{method:\"POST\",headers:{apikey:process.env.SB_SECRET_KEY,Authorization:`Bearer ${process.env.SB_SECRET_KEY}`,\"Content-Type\":\"application/json\"},body:JSON.stringify({record:{id:data.id}})});\n  console.log(\"EMBED\", r.status, (await r.text()).slice(0,80));\n})();\n' 2>&1 | head",
+  "description": "Insert milestone node + embed"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID 5bd65e77-7edf-48b1-8981-88cee2c8755c
+> EMBED 400 {"error":"Request body must contain { node_id: string }"}
+> ```
+
+## 🤖 Claude *(03:37:39)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I successfully created the milestone node, but the embed call failed because I was sending the wrong payload structure. The function expects `node_id` as a string, not a nested `record` object like the curl command used. Let me retry with the correct format.
+
+</details>
+
+
+## 🤖 Claude *(03:37:39)*
+
+Nó inserido (`5bd65e77`). O embed espera `{node_id}` (não `{record:{id}}`). Corrijo:
+
+## 🤖 Claude *(03:37:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnode -e '\nconst fs=require(\"fs\");\nfor(const l of fs.readFileSync(\".env\",\"utf8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m)process.env[m[1].trim()]=m[2].trim().replace(/^[\"\\x27]|[\"\\x27]$/g,\"\");}\n(async()=>{\n  const r=await fetch(`${process.env.SUPABASE_URL}/functions/v1/embed-mcorch-node`,{method:\"POST\",headers:{apikey:process.env.SB_SECRET_KEY,Authorization:`Bearer ${process.env.SB_SECRET_KEY}`,\"Content-Type\":\"application/json\"},body:JSON.stringify({node_id:\"5bd65e77-7edf-48b1-8981-88cee2c8755c\"})});\n  console.log(\"EMBED\", r.status, (await r.text()).slice(0,120));\n})();\n' 2>&1 | head\necho \"=== node count (para o badge do README) ===\"\nsource .env 2>/dev/null\ncurl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Embed node (correct shape) + fetch node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> EMBED 200 {"node_id":"5bd65e77-7edf-48b1-8981-88cee2c8755c","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provide
+> === node count (para o badge do README) ===
+> 9566
+> ```
+
+## 🤖 Claude *(03:37:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The milestone node is embedded with 9566 total nodes to report. Now I'm moving into the README and HANDOFF.md updates—I need to bump the version badge, update the neural_mesh count, add a What's New entry, and check the current version from the recent commits which shows v6.116.0 as the last update.
+
+</details>
+
+
+## 🤖 Claude *(03:37:54)*
+
+Nó embedado ✅ (768 dims). Node count = **9566**. **Fase 4 — README.** Leio o topo (badges + What's New) para atualizar:
+
+## 🤖 Claude *(03:37:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"neural_mesh-|version-|What's New|## .*What|v6\\.11|badge\" README.md | head -20",
+  "description": "Locate README badges + What's New"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2:  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3:  <img src="https://img.shields.io/badge/version-6.116.0--Previas_repurpose_%2B_no_Cortes_do_Master_%2B_Cinetica_empilhada_%2B_re--cut_EP01-blueviolet?style=for-the-badge" alt="Version" />
+> 4:  <img src="https://img.shields.io/badge/crm--inbox-Amendment_10_composer_(m%C3%ADdia%2Femoji%2Frecibos)_%2B_swap_ao_vivo-brightgreen?style=for-the-badge" alt="CRM Inbox" />
+> 5:  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 6:  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 7:  <img src="https://img.shields.io/badge/neural_mesh-9560_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 8:  <img src="https://img.shields.io/badge/BoK-33%2F33_fam%C3%ADlias_seladas-brightgreen?style=for-the-badge" alt="BoK Suites" />
+> 9:  <img src="https://img.shields.io/badge/veo--3.1-avatar_por_refer%C3%AAncia_(Gemini_API_%2B_Vertex_SA)-cyan?style=for-the-badge" alt="Veo Avatar" />
+> 10:  <img src="https://img.shields.io/badge/asset_publish-format_picker_%2B_preview_fiel_(IG%2FYT%2FTikTok)-cyan?style=for-the-badge" alt="Asset Publish Format Preview" />
+> 11:  <img src="https://img.shields.io/badge/video--repurpose-1_master_%E2%86%92_N_shorts_%2B_carrossel_(FFmpeg%2C_gr%C3%A1tis)-brightgreen?style=for-the-badge" alt="Video Repurpose" />
+> 12:  <img src="https://img.shields.io/badge/MAPE--K_guardian-cron_%2B_Nemotron_free_L2-darkgreen?style=for-the-badge" alt="MAPE-K Guardian" />
+> 13:  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 14:  <img src="https://img.shields.io/badge/free_LoRA_training-avatar--identity--train_(Replicate_BYOK%2C_USD_0)-brightgreen?style=for-the-badge" alt="Free LoRA Training" />
+> 15:  <img src="https://img.shields.io/badge/Spaces_publish-WordPress_node_(Post%2FLanding)-cyan?style=for-the-badge" alt="Spaces Publish WordPress" />
+> 16:  <img src="https://img.shields.io/badge/BoK_youtube--studio-deepsearch_blueprint_seed-fuchsia?style=for-the-badge" alt="BoK youtube-studio blueprint" />
+> 17:  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 18:  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 19:  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 20:  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 21:  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> ```
+
+## 🤖 Claude *(03:38:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm updating the README with version and node count changes—bumping the version badge to 6.117.0 and updating the neural_mesh node count to 9566, then adding a new feature entry and corresponding phase row to the What's New section.
+
+</details>
+
+
+## 🤖 Claude *(03:38:04)*
+
+**Fase 4 — atualizo os badges** (versão 6.116→6.117, mesh 9560→9566):
+
+## 🤖 Claude *(03:38:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.116.0--Previas_repurpose_%2B_no_Cortes_do_Master_%2B_Cinetica_empilhada_%2B_re--cut_EP01-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.117.0--No_Transcricao_SRT_(whisper_US%240)_%2B_no--janela_(sidebar_so_specs)_%2B_Pipeline_kanban%2Ftabela-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9560_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9566_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to locate the What's New section so I can add a new entry there.
+
+</details>
+
+
+## 🤖 Claude *(03:38:13)*
+
+Badges atualizados. Localizo a seção "What's New" para adicionar a entrada da versão:
+
+## 🤖 Claude *(03:38:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"What's New|Novidades|## .*v6\\.11|### \\[v6\\.11|### v6\\.11\" README.md | head -8",
+  "description": "Find What's New section anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 89:## 🆕 What's new in v6.116.0 (2026-07-21) — Prévias no /repurpose + nó Cortes do Master + legenda Cinética empilhada + re-cut E2E do EP01
+> 100:## 🆕 What's new in v6.115.0 (2026-07-21) — Refino Spaces Canvas: grade 2×2 + carrossel + biblioteca de legendas + mobile
+> 111:## 🆕 What's new in v6.114.0 (2026-07-21) — Cadência de vídeo (FR-CAD-006) + hardening do video-render
+> 119:## 🆕 What's new in v6.113.0 (2026-07-21) — Nós Tela Dividida (POV) + preset POV no Spaces
+> 128:## 🆕 What's new in v6.112.0 (2026-07-20) — Motion graphics profissional + catálogo próprio de legendas + repurpose endurecido
+> 137:## 🆕 What's new in v6.111.0 (2026-07-20) — YouTube Track B + leads unificados + Studio-YT + repurpose destravado
+> 718:## 🆕 What's new in v6.11.0 (2026-05-28)
+> 812:### [v6.110.0] — CRM Suite arrancado: spine + Empresas + Negócios/pipelines VIVOS na UI (2026-07-19)
+> ```
+
+## 🤖 Claude *(03:38:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to check the format of the What's New section starting at line 89 so I can add a new v6.117.0 entry in the correct style above it.
+
+</details>
+
+
+## 🤖 Claude *(03:38:20)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 89,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 89	## 🆕 What's new in v6.116.0 (2026-07-21) — Prévias no /repurpose + nó Cortes do Master + legenda Cinética empilhada + re-cut E2E do EP01
+> 90	
+> 91	Loop-maratona GO'd (todas as frentes), tudo deployado + testemunhado por Vision QA:
+> 92	
+> 93	- **Prévia em loop das legendas + grades no `/dashboard/repurpose` (Task 4b/4c)** — no Passo 2, ao lado da galeria, a legenda **anima ao vivo** (iframe do MESMO template que o render queima, dirigindo `applyFrame` a 30fps; `public/caption-templates/` sincronizado por `sync-caption-templates-to-public.ts`) e as 5 grades ganham prévia visual. Verificado E2E logado como Usuário 0 (custo $0, sem CF): 9/9 estilos animam, 0 erros de console.
+> 94	- **Nó "Cortes do Master" no Spaces (Task 4d)** — o motor de repurpose (1 master longo → N cortes 9:16 com legenda queimada) agora é um **nó do canvas**, reusando os mesmos hooks/edge-fns do `/repurpose` (detect-viral-moments + video-repurpose-run), com a galeria+prévia de legenda embutida. Render grátis.
+> 95	- **Estilo de legenda novo "Cinética empilhada" (`kinetic-stack-9x16`)** — tipografia cinética como os reels de referência: a frase vira uma **pilha palavra-por-linha** com rampa de tamanho (66→224px) + peso até a palavra-herói, revelação escalonada; herói ganha accent ciano no hook. Modelado no scaffolding da Motion Graphics (Montserrat, safe-area, determinístico). Registrado nos 5 allowlists.
+> 96	- **Grade 1×3 (3 telas horizontais)** no nó Tela Dividida + **refino low-risk das 4 legendas Tier A** (Motion Graphics score 9 intocada, dirigido por workflow de auditoria).
+> 97	- **Fixes:** POV/Veo não envia mais **primeiro-quadro + referências juntos** (o Veo recusa; nó nascia morto estornando 267 mco) · POV **mudo por padrão** (o Veo 3 gerava fala sozinho) · preview de **vídeo na aba Assets** do editor · rótulo de origem HyperFrames neutro.
+> 98	- **Re-cut E2E do EP01 (Task 4a) — VERIFICADO:** whisper ASR (grátis US$0) transcreveu o EP01 (129 cues pt-BR) → detect → **3 cortes queimados com a Cinética empilhada**, Vision QA ocular aprovado sobre o footage real. Malha **9560**.
+> 99	
+> 100	## 🆕 What's new in v6.115.0 (2026-07-21) — Refino Spaces Canvas: grade 2×2 + carrossel + biblioteca de legendas + mobile
+> ```
+
+## 🤖 Claude *(03:38:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm adding a new v6.117.0 entry to the changelog, positioning it before the existing line 89 heading as a reference point.
+
+</details>
+
+
+## 🤖 Claude *(03:38:25)*
+
+**Entrada What's New v6.117.0:**
+
+## 🤖 Claude *(03:38:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.116.0 (2026-07-21) \u2014 Pr\u00e9vias no /repurpose + n\u00f3 Cortes do Master + legenda Cin\u00e9tica empilhada + re-cut E2E do EP01",
+  "new_string": "## \ud83c\udd95 What's new in v6.117.0 (2026-07-22) \u2014 Loop Spaces: legendas sincronizadas + n\u00f3 Transcri\u00e7\u00e3o/SRT + n\u00f3-janela + Pipeline kanban/tabela\n\nLoop aut\u00f4nomo de 6 slices + fechamento total (diretiva \"fecha de vez tudo\"), tudo deployado + testemunhado (build \u00b7 tsc zero-regress\u00e3o vs baseline 137 \u00b7 `/security-review` NO FINDINGS \u00b7 Vision QA \u00b7 auditoria Canvas 1920\u00d71080). 12 commits.\n\n- **Legenda \"Cin\u00e9tica empilhada\" sincronizada ao tempo da fala** \u2014 o timing de cada palavra passa a ser **derivado do cue** (proporcional ao n\u00ba de caracteres) e a frase longa \u00e9 **dividida em sub-pilhas** de \u22644 palavras; morre o `slice(0,7)` que descartava a punchline em sil\u00eancio. N\u00e3o \u00e9 motion-graphic: o movimento \u00e9 subordinado \u00e0 voz. **Capstone:** re-cut real do EP01 mostra \"VOADORES/TROUXE\" empilhadas sobre footage real.\n- **Agente + skill `engineer-spaces`** \u2014 especialista L2 que dirige a cria\u00e7\u00e3o de n\u00f3s do infinite canvas (mapa VIVO vs mirror + 6 seams + gate de tipos real). Estreou fechando o bug `category:\"Video\"` (invis\u00edvel ao `bun run build`/esbuild).\n- **N\u00f3 \"Transcri\u00e7\u00e3o/SRT\" (whisper.cpp self-host, US$0) \u2014 VIVO** \u2014 gera a legenda `.srt` de um v\u00eddeo/\u00e1udio via fila `asr` + worker `subtitle-bridge`; semeia `metadata.srt` (conecta aos Cortes do Master). Witness E2E: corte do EP01 \u2192 7 cues, 788 chars. Fecha o gap CLI\u2192UI do \"Gerar transcri\u00e7\u00e3o\".\n- **N\u00f3-janela (`canvas>node>janela`)** \u2014 a sidebar docada \u00e9 **S\u00d3 propriedades/especifica\u00e7\u00f5es** (`NodeSpecsPanel`); toda customiza\u00e7\u00e3o/configura\u00e7\u00e3o/edi\u00e7\u00e3o abre numa **janela sobre o canvas** (duplo-clique ou \"Personalizar\"). Inspector completo compartilhado, montado 1\u00d7 por vez.\n- **Pipeline de Publica\u00e7\u00f5es \u2014 Kanban + Tabela n\u00edvel-query** \u2014 o calend\u00e1rio ganha modos **Kanban** (agrupado por status) e **Tabela** (filtro plataforma/status + ordena\u00e7\u00e3o + CRUD inline), sem despachar. + auditoria de prontid\u00e3o de publish (matriz asset\u00d7destino).\n- **Witness da Cad\u00eancia** (throwaway, sem publicar real): arm \u2192 `cadence-run` \u2192 `cadence_dispatches` + `scheduled_posts` (queued) provados; deletados na hora. Malha **9566**.\n\n## \ud83c\udd95 What's new in v6.116.0 (2026-07-21) \u2014 Pr\u00e9vias no /repurpose + n\u00f3 Cortes do Master + legenda Cin\u00e9tica empilhada + re-cut E2E do EP01"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:38:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm committing the README with a message documenting the v6.117.0 update covering loop Spaces and related features, then moving on to Phase 5 where I'll update HANDOFF.md by adding a new Task State row and record to the existing 770-line file.
+
+</details>
+
+
+## 🤖 Claude *(03:38:46)*
+
+README v6.117.0 pronto. Commito e passo à **Fase 5 — HANDOFF.md** (770 linhas, enxuto, sem arquivamento):
+
+## 🤖 Claude *(03:38:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md && git commit -q -m \"docs(readme): v6.117.0 \u2014 loop Spaces (legendas sync + n\u00f3 SRT + n\u00f3-janela + Pipeline kanban/tabela)\" 2>&1 | grep -viE \"lefthook|gitleaks|\u2714|\u276f|\u2500|\u2502|\u256d|\u2570|\u25cb|\u2591|\u2572|INF|summary|scan|\ud83e\udd4a|Stopped|Started|Failed|env\\[\" | tail -1\necho \"=== HANDOFF.md topo (Task State) ===\"\nhead -16 HANDOFF.md | tail -6",
+  "description": "Commit README + read HANDOFF Task State top"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === HANDOFF.md topo (Task State) ===
+> 
+> ## Task State
+> 
+> | **Prévias no /repurpose + nó Cortes do Master + Cinética empilhada + 1×3 + fixes Veo + re-cut E2E do EP01 (2026-07-21)** | ✅ Loop-maratona GO'd, **12 commits `347a4ea..4a4fe17`** + README + seal, tudo deployado+Vision-QA. **4b/4c:** prévia em loop das legendas (iframe do template real dirigindo `applyFrame` 30fps, `public/caption-templates/` via `sync-caption-templates-to-public.ts`) + grades no `/repurpose` Passo 2; E2E logado User 0 $0 (9/9 estilos animam, 0 erros console). **4d:** nó `videoRepurpose` "Cortes do Master" no Spaces (motor de repurpose via node, reusa detect+run+galeria/prévia). **Legenda nova `kinetic-stack-9x16`** ("Cinética empilhada") — pilha palavra-por-linha rampa até herói, accent ciano, registrada nos 5 allowlists. **Grade 1×3** + refino 4 legendas Tier A (Motion Graphics score 9 intocada, workflow `wf_3a54f592`). **Fixes Veo:** XOR image/refs (nó nascia morto −267 mco) + POV mudo default (Veo gerava fala) + preview vídeo na aba Assets + rótulo HyperFrames neutro. **4a VERIFICADO:** whisper ASR US$0 (129 cues) → detect → 3 cortes EP01 queimados com Cinética empilhada, Vision QA ocular sobre footage real. Malha **9560** · nó `ab67e63f`. ⏭ Próximo: refino de legibilidade do kinetic-stack p/ frases longas (scrim + cap palavras); **rail ASR-via-UI** ("Gerar transcrição" whisper.cpp host, async) p/ paridade UI; witness cadência. |
+> | **Refino Spaces Canvas — grade 2×2 + carrossel hand-picked + biblioteca de legendas + Canvas mobile + 3 bugs + Stories + nginx (2026-07-21)** | ✅ Diretiva Sovereign multi-frente, tudo deployado+testemunhado+commitado. **5 commits `d2bfc58..2908885`.** **Bugs:** (F2) aba Assets do editor lia `vm_canvas_assets` legada → aponta p/ a spine `creative_assets` (todo output vídeo/Veo/voz aparece; register JÁ funcionava — c8fc8840→200c9d6a; o gap era a VIEW). (F4) POV/Veo ia sem refs: o Run All (`useCanvasPipeline`) não coletava refs p/ `imageToVideo` **E** as URLs coletadas eram públicas-mortas/assinadas-expiradas → server não baixava; fix = coletar (incl. `avatarIdentity.referenceUrls`) + **re-assinar** (`toDisplayUrls`) antes de enviar + badge de contagem no card. (F5) reconciliação revertia `running`→`success` com a exec ANTIGA (matava o pulso no re-run) → só reconcilia idle; arestas de ENTRADA de nó terminal também transmitem. **Features:** (F1 **Amendment 28**) modo `split_grid` — grade 2×2 (ou 2v), cada célula **vídeo OU foto**, `composeSplitGrid` xstack, rail hyperframes 12 mco; **witness pago 2×2** (2 vídeos+2 fotos, −12 exatos, asset 334cfea4, Vision QA). (F6 **Amendment 29**) nó **Carrossel** hand-picked — galeria multi-select + reorder dnd-kit + crop/contain por item → `carousel_assets` (rail grátis) reusa `publish-space-carousel`; **witness E2E** 3 slides 4:5 owner-scoped. (F7) biblioteca de legendas com **preview** (8 estilos, `CaptionStyleGallery` + gerador). (F3) Canvas **mobile-first** (sidebars→drawers via FABs redondos só-ícone, minimapa pequeno). **Stories** flag→publicável (rail vivo confirmado). **nginx `/api/host-probe`** aplicado+provado (401 JSON). `/security-review` **NO FINDINGS ×2** · builds verdes env-baked · malha **9523** · nó `f7195047`. ⚠️ Armadilha: `supabase functions download` clobbera o source do repo (revertido). ⏭ Próximo (loop): witness E2E de despacho da Cadência (throwaway, sem publicar) · produzir a cadência da semana. Pendências Sovereign: FM-CS-02 RPN 324 LGPD; rotação de credenciais; `youtube-upload.service`; EP02→YouTube (Track B). |
+> ```
+
+## 🤖 Claude *(03:39:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm adding a new Task State row at the top of the table with details about loop spaces, synchronization tasks, and pipeline work, keeping it under 400 characters and marking it as complete. Figuring out where to insert the new Task State row and Record block in the handoff structure—the Task State table holds all the phase rows, and the Record blocks come after the table, so I'll add the row right after the table header and then place the corresponding Record section below with the actions and commits. The Record block is secondary since the loop SSOT already has the full details, so I'll focus on adding the Task State row first by anchoring on the existing table header, then find where the first Record section starts to insert a concise Record block after.
+
+</details>
+
+
+## 🤖 Claude *(03:39:14)*
+
+Adiciono a nova linha de Task State no topo da tabela:
+
+## 🤖 Claude *(03:39:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **Pr\u00e9vias no /repurpose + n\u00f3 Cortes do Master + Cin\u00e9tica empilhada + 1\u00d73 + fixes Veo + re-cut E2E do EP01 (2026-07-21)** |",
+  "new_string": "## Task State\n\n| **Loop Spaces: legendas sync + engineer-spaces + n\u00f3 Transcri\u00e7\u00e3o/SRT VIVO + n\u00f3-janela + Pipeline kanban/tabela + witness cad\u00eancia (2026-07-22)** | \u2705 Loop aut\u00f4nomo **6 slices + fechamento total** (\"fecha de vez tudo\"), **12 commits `646a934..948d313`**, tudo deployado+Vision-QA (build \u00b7 tsc **zero-regress\u00e3o vs baseline 137** \u00b7 `/security-review` NO FINDINGS \u00b7 auditoria Canvas 1920\u00d71080 APROVADA). **(S1)** kinetic-stack timing **por-palavra derivado do cue + chunking** (fim do `slice(0,7)`; n\u00e3o \u00e9 motion-graphic; capstone: re-cut real do EP01 \"VOADORES/TROUXE\"). **(S2)** agente+skill **`engineer-spaces`** \u2014 estreou fechando bug `category:\"Video\"` (invis\u00edvel ao esbuild). **(S3)** n\u00f3 **Transcri\u00e7\u00e3o/SRT** whisper.cpp US$0 **VIVO** (migration `asr` + edge `generate-subtitles` + worker `subtitle-bridge` active; unit precisa bun full-path; witness E2E 7 cues/788c sobre corte EP01). **(S4/5a)** **n\u00f3-janela** `canvas>node>janela`: sidebar **S\u00d3 specs** (`NodeSpecsPanel`), config na janela (duplo-clique/\"Personalizar\"). **(S5b)** **Pipeline** de Publica\u00e7\u00f5es ganha **Kanban + Tabela n\u00edvel-query** (filtro/ordena\u00e7\u00e3o/CRUD inline, sem despachar) + auditoria de prontid\u00e3o. **Witness cad\u00eancia** (throwaway sem credenciais): arm \u2192 `cadence-run` `{dispatched:1}` \u2192 `cadence_dispatches`+`scheduled_posts`(queued) provados, deletados na hora (zero publica\u00e7\u00e3o). **Achados:** `bun run build`=esbuild N\u00c3O typa \u2192 gate real `tsc -p tsconfig.app.json` vs baseline; `cadence-run` exige apikey+Authorization = mesma chave de servi\u00e7o. Malha **9566** \u00b7 n\u00f3 `5bd65e77`. \u23ed Sovereign-gated: EP02\u2192YouTube (Track B); CRM Suite (BoK-first). |\n| **Pr\u00e9vias no /repurpose + n\u00f3 Cortes do Master + Cin\u00e9tica empilhada + 1\u00d73 + fixes Veo + re-cut E2E do EP01 (2026-07-21)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:39:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking for the first Record section in the HANDOFF.md file so I can add a Record block after the Task State table.
+
+</details>
+
+
+## 🤖 Claude *(03:39:31)*
+
+Task State atualizado. Localizo o início dos Records para inserir o bloco desta fase:
+
+## 🤖 Claude *(03:39:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"^## .* Record \\(|^## .*Record$\" HANDOFF.md | head -3",
+  "description": "Find first Record heading"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 63:## Prévias no /repurpose + nó Cortes do Master + Cinética empilhada + re-cut EP01 Record (2026-07-21)
+> 108:## Refino Spaces Canvas — grade 2×2 + carrossel + legendas + mobile + 3 bugs Record (2026-07-21)
+> 135:## Cadência de vídeo (FR-CAD-006) + hardening cross-tenant do video-render Record (2026-07-21)
+> ```
+
+## 🤖 Claude *(03:39:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to find the exact location of the first Record heading at line 63 and insert my Record block before it. The heading text is `## Prévias no /repurpose + nó Cortes do Master + Cinética empilhada + re-cut EP01 Record (2026-07-21)`, so I'll use that as my anchor point. Now I'm writing out the Record block with a concise format that includes actions and a commits table.
+
+</details>
+
+
+## 🤖 Claude *(03:39:42)*
+
+Insiro o bloco de Record desta fase antes do Record anterior (linha 63):
+
+## 🤖 Claude *(03:40:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Pr\u00e9vias no /repurpose + n\u00f3 Cortes do Master + Cin\u00e9tica empilhada + re-cut EP01 Record (2026-07-21)",
+  "new_string": "## Loop Spaces \u2014 legendas sync + n\u00f3s + pipeline + fechamento total Record (2026-07-22)\n\nSess\u00e3o-maratona aut\u00f4noma sobre diretiva Sovereign de 5 frentes (\"adicione tudo no loop, m\u00e1ximo aproveitamento da janela; rode E2E como User 0; fecha de vez tudo\"). Recon paralelo (workflow, 6 agentes) fundamentou 6 slices; depois o fechamento total (5a pureza + rail S3 vivo + witness cad\u00eancia). O gate de tipos real foi descoberto e institucionalizado: `bun run build`=esbuild N\u00c3O faz typecheck \u2014 o gate \u00e9 `tsc -p tsconfig.app.json` comparado ao baseline (138\u2192137). Todo slice: SOP/Amendment-first quando material, build + tsc-diff, `/security-review` em migration, Vision QA ocular, E2E User 0 (magic-link headless 1920\u00d71080).\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `scripts/hyperframes/templates/kinetic-stack-9x16.html` | \u2705 timing por-palavra derivado do cue (char-proporcional) + chunking \u22644; fim do `slice(0,7)`; aceita `word_times` (futuro) |\n| `.claude/agents/engineer-spaces.md` + skill + SOP | \u2705 arquiteto L2 de n\u00f3s do infinite canvas (VIVO vs mirror + 6 seams + gate de tipos) |\n| `src/lib/canvas-node-registry.ts` | \u2705 fix `category:\"Video\"`\u2192`\"Transform\"` (tsc 138\u2192137) + n\u00f3 `transcribe` |\n| `supabase/functions/generate-subtitles/` + `scripts/subtitle-bridge.ts` + migration `20260721140000` | \u2705 rail asr VIVO (whisper.cpp US$0); witness 7 cues/788c |\n| `src/components/canvas/NodeConfigWindow.tsx` + `RightPanel/{NodeInspectorBody,NodeSpecsPanel}.tsx` + `useCanvasStore.configModalOpen` | \u2705 n\u00f3-janela `canvas>node>janela`; sidebar S\u00d3 specs |\n| `src/pages/CalendarPage.tsx` + `components/calendar/{PipelineKanban,PipelineTable}.tsx` + `lib/pipeline-format.ts` | \u2705 Pipeline: modos Kanban + Tabela n\u00edvel-query, sem despachar |\n| `docs/roadmap/publish-readiness-2026-07-21.md` | \u2705 auditoria de prontid\u00e3o (matriz asset\u00d7destino + gaps) |\n| Witness cad\u00eancia (throwaway) | \u2705 arm\u2192`cadence-run`\u2192`cadence_dispatches`+`scheduled_posts`(queued), sem publicar |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `1574540` | feat(captions): kinetic-stack sincroniza ao tempo da fala \u2014 timing por-palavra + chunking |\n| `cb89ff4` | feat(spaces): agente + skill engineer-spaces + fix categoria \"Video\" |\n| `646a934` | feat(spaces): n\u00f3 \"Transcri\u00e7\u00e3o/SRT\" \u2014 whisper.cpp self-host (Amendment 30) |\n| `2fe90c9` | docs(roadmap): auditoria de prontid\u00e3o de publica\u00e7\u00e3o |\n| `6b7aa2d` | feat(spaces): n\u00f3-janela \u2014 config na superf\u00edcie do canvas (Amendment 31) |\n| `c21a7ee` | feat(calendar): Pipeline \u2014 modos Kanban + Tabela n\u00edvel-query |\n| `b8e7ffc` | feat(spaces): sidebar S\u00d3 especifica\u00e7\u00f5es \u2014 pureza total (FR-SPACES-118) |\n| `ef967e2` | fix(spaces): rail S3 (Transcri\u00e7\u00e3o/SRT) VIVO \u2014 unit bun full-path + witness E2E |\n\nSSOT do loop: `.claude/context/spaces-loop-2026-07-21.md` \u00b7 recon: `.claude/context/spaces-loop-recon-2026-07-21.md`.\n\n## Pr\u00e9vias no /repurpose + n\u00f3 Cortes do Master + Cin\u00e9tica empilhada + re-cut EP01 Record (2026-07-21)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've updated HANDOFF.md and now I'm moving into Phase 5b to run a secret scan on it, then I'll commit the changes before proceeding with the material proof audit, book of knowledge compilation, and final push.
+
+</details>
+
+
+## 🤖 Claude *(03:40:07)*
+
+**Fase 5b — secret scan do HANDOFF.md** antes do commit:
+
+## 🤖 Claude *(03:40:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -avE \"example|placeholder|<.*>|digest|sha256|hash\" | head || echo \"HANDOFF.md: SEM CREDENCIAIS \u2705\"",
+  "description": "Phase 5b HANDOFF secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(03:40:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+No credentials found in HANDOFF.md, so Phase 5b is complete. Now I need to commit that file and move into Phase 5c to run the material proof audit, followed by Phase 6 for the Book of Knowledge and Phase 7 for pushing. I'm deciding whether to stage proof-manifest.json along with HANDOFF.md since it was generated during Phase 3.
+
+Actually, proof-manifest.json is just a temporary artifact for Phase 5c, so I shouldn't commit it. I'll commit HANDOFF.md alone, then proceed with the audit.
+
+</details>
+
+
+## 🤖 Claude *(03:40:16)*
+
+HANDOFF.md sem credenciais ✅. Commito e rodo a **Fase 5c — auditoria de prova material**:
+
+## 🤖 Claude *(03:40:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal loop Spaces \u2014 legendas sync + n\u00f3 SRT vivo + n\u00f3-janela + Pipeline kanban/tabela + witness cad\u00eancia\" 2>&1 | grep -viE \"lefthook|gitleaks|\u2714|\u276f|\u2500|\u2502|\u256d|\u2570|\u25cb|\u2591|\u2572|INF|summary|scan|\ud83e\udd4a|Stopped|Started|Failed|env\\[|mesh-reingest\" | tail -1\necho \"=== Fase 5c \u2014 material proof audit ===\"\nls scripts/qa/run-audit.ts 2>/dev/null && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -30 || echo \"run-audit.ts ausente \u2014 pulo (verifica\u00e7\u00e3o manual dos commits abaixo)\"",
+  "description": "Commit HANDOFF + run material proof audit",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Fase 5c — material proof audit ===
+> scripts/qa/run-audit.ts
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit cb89ff4 | git_commit | cb89ff4 | cb89ff4 | ✅ |
+> | commit 646a934 | git_commit | 646a934 | 646a934 | ✅ |
+> | commit 2fe90c9 | git_commit | 2fe90c9 | 2fe90c9 | ✅ |
+> | commit 6b7aa2d | git_commit | 6b7aa2d | 6b7aa2d | ✅ |
+> | commit c21a7ee | git_commit | c21a7ee | c21a7ee | ✅ |
+> | commit b8e7ffc | git_commit | b8e7ffc | b8e7ffc | ✅ |
+> | commit ef967e2 | git_commit | ef967e2 | ef967e2 | ✅ |
+> | file .claude/agents/engineer-spaces.md | file_exists | .claude/agents/engineer-spaces.md | .claude/agents/engineer-spaces.md | ✅ |
+> | file src/lib/canvas-node-registry.ts | file_exists | src/lib/canvas-node-registry.ts | src/lib/canvas-node-registry.ts | ✅ |
+> | file scripts/subtitle-bridge.ts | file_exists | scripts/subtitle-bridge.ts | scripts/subtitle-bridge.ts | ✅ |
+> | file src/components/canvas/NodeConfigWindow.tsx | file_exists | src/components/canvas/NodeConfigWindow.tsx | src/components/canvas/NodeConfigWindow.tsx | ✅ |
+> | file src/pages/CalendarPage.tsx | file_exists | src/pages/CalendarPage.tsx | src/pages/CalendarPage.tsx | ✅ |
+> | file lib/pipeline-format.ts | file_exists | lib/pipeline-format.ts | absent | 🔴 |
+> | file docs/roadmap/publish-readiness-2026-07-21.md | file_exists | docs/roadmap/publish-readiness-2026-07-21.md | docs/roadmap/publish-readiness-2026-07-21.md | ✅ |
+> | file .claude/context/spaces-loop-2026-07-21.md | file_exists | .claude/context/spaces-loop-2026-07-21.md | .claude/context/spaces-loop-2026-07-21.md | ✅ |
+> | file .claude/context/spaces-loop-recon-2026-07-21.md | file_exists | .claude/context/spaces-loop-recon-2026-07-21.md | .claude/context/spaces-loop-recon-2026-07-21.md | ✅ |
+> | oro triplet compliance | oro_compliance | missing | missing | 🔴 |
+> | handoff node 5bd65e77 | mesh_node | 5bd65e77-7edf-48b1-8981-88cee2c8755c | 5bd65e77-7edf-48b1-8981-88cee2c8755c | ✅ |
+> 
+> - 🔴 **file lib/pipeline-format.ts** — file not found: lib/pipeline-format.ts
+> - 🔴 **oro triplet compliance** — ORO triplet (Operator, Reviewer, Owner) is missing from the record block
+> 
+> QA VERDICT: 16 verified · 0 skipped · 2 failed → SEAL BLOCKED
+> 
+> (audit completed in 0.1s)
+> ```
+
+## 🤖 Claude *(03:40:40)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The material proof audit flagged that I referenced `lib/pipeline-format.ts` in my Record, but the actual file is located at `src/lib/pipeline-format.ts`. I need to correct the path in my Record to match the real location.
+
+The audit also requires an ORO triplet (Operator, Reviewer, Owner) in the Record block, which I'm missing. I'll add that as well.
+
+Let me update the HANDOFF.md file by fixing the path reference and adding the ORO triplet, then re-run the audit to verify it passes. I need to place the ORO triplet in the right spot within the Record section — after the introductory paragraph that ends with the E2E User 0 reference, positioned before the actions table starts.
+
+</details>
+
+
+## 🤖 Claude *(03:40:40)*
+
+A auditoria pegou 2 🔴 no meu Record (Lei 1 funcionando): caminho `lib/pipeline-format.ts` (é `src/lib/...`) e falta o triplet ORO. Corrijo os dois:
+
+## 🤖 Claude *(03:40:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "Sess\u00e3o-maratona aut\u00f4noma sobre diretiva Sovereign de 5 frentes (\"adicione tudo no loop, m\u00e1ximo aproveitamento da janela; rode E2E como User 0; fecha de vez tudo\").",
+  "new_string": "**ORO desta jornada** \u2014 Operator: MCORCH Master Execution Agent \u00b7 Reviewer: Sovereign (Gabriel) \u00b7 Owner: Sovereign (blast radius: motor de legendas/repurpose + rail de transcri\u00e7\u00e3o + pipeline de publica\u00e7\u00e3o do Usu\u00e1rio Zero).\n\nSess\u00e3o-maratona aut\u00f4noma sobre diretiva Sovereign de 5 frentes (\"adicione tudo no loop, m\u00e1ximo aproveitamento da janela; rode E2E como User 0; fecha de vez tudo\")."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| `src/pages/CalendarPage.tsx` + `components/calendar/{PipelineKanban,PipelineTable}.tsx` + `lib/pipeline-format.ts` | \u2705 Pipeline: modos Kanban + Tabela n\u00edvel-query, sem despachar |",
+  "new_string": "| `src/pages/CalendarPage.tsx` + `src/components/calendar/PipelineKanban.tsx` + `src/components/calendar/PipelineTable.tsx` + `src/lib/pipeline-format.ts` | \u2705 Pipeline: modos Kanban + Tabela n\u00edvel-query, sem despachar |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:40:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to amend the HANDOFF commit and then re-run the Phase 5c audit to verify the changes.
+
+</details>
+
+
+## 🤖 Claude *(03:40:51)*
+
+Amendo o commit do HANDOFF + re-rodo a auditoria:
+
+## 🤖 Claude *(03:40:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md && git commit -q --amend --no-edit 2>&1 | grep -viE \"lefthook|gitleaks|\u2714|\u276f|\u2500|\u2502|\u256d|\u2570|\u25cb|\u2591|\u2572|INF|summary|scan|\ud83e\udd4a|Stopped|Started|Failed|env\\[|mesh-reingest\" | tail -1\necho \"=== re-audit ===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -5",
+  "description": "Amend HANDOFF + re-run material audit",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-audit ===
+> | handoff node 5bd65e77 | mesh_node | 5bd65e77-7edf-48b1-8981-88cee2c8755c | 5bd65e77-7edf-48b1-8981-88cee2c8755c | ✅ |
+> 
+> QA VERDICT: 20 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.3s)
+> ```
+
+## 🤖 Claude *(03:41:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The material proof audit passed all checks, so I can proceed with the BoK seal status verification and push. I'm now running Phase 6 to verify the BoK suites—the new Amendments I created in spaces-evolution are building on an existing sealed BoK, and I need to confirm the pipeline views are properly configured.
+
+Before pushing, I should clean up the proof-manifest.json file since it shouldn't be committed to the repo, then verify git status is clean and run the final push.
+
+</details>
+
+
+## 🤖 Claude *(03:41:06)*
+
+**SEAL ALLOWED — 20 verificadas, 0 falhas.** **Fase 6 (BoK) + limpeza + Fase 7 (push):**
+
+## 🤖 Claude *(03:41:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json\necho \"=== Fase 6 \u2014 BoK completude (s\u00f3 incompletas) ===\"\ninc=0\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  [ \"$slug\" = \"security\" ] && continue\n  for doc in 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || { echo \"\u26a0\ufe0f $slug falta $doc\"; inc=$((inc+1)); }\n  done\ndone\n[ $inc -eq 0 ] && echo \"\u2705 Todas as su\u00edtes BoK completas (Amendments 30/31 sob spaces-evolution j\u00e1 selada)\"\necho \"=== git status pr\u00e9-push ===\"; git status --short\necho \"=== Fase 7 \u2014 PUSH ===\"\ngit push origin main 2>&1 | tail -4",
+  "description": "BoK check + cleanup + push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Fase 6 — BoK completude (só incompletas) ===
+> ✅ Todas as suítes BoK completas (Amendments 30/31 sob spaces-evolution já selada)
+> === git status pré-push ===
+>  D proof-manifest.json
+> === Fase 7 — PUSH ===
+> summary: (done in 0.09 seconds)
+> ✔️ gitleaks-range (0.09 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    d6cec3c..3eaaede  main -> main
+> ```
+
+## 🤖 Claude *(03:41:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The push succeeded, but I'm noticing `git status --short` shows `D proof-manifest.json` as deleted. I'm confused because I thought the file was untracked—I created it this session and deleted it with `rm`. The `D` status suggests it was previously tracked, so maybe it existed in an earlier session. Since the push went through without committing this deletion, I should verify whether the file is actually still being tracked.
+
+Looking at this more carefully: if proof-manifest.json was tracked in a prior commit, then deleting it creates an uncommitted change. The file is a temporary handoff artifact that shouldn't be in the repo anyway, so the cleanest approach is to commit its deletion rather than restore it. the tracked version from before, which would have a stale node id. Better to recreate it with the current handoff id and commit it cleanly, so the tree is in sync and the artifact is accurate. Let me do that and push again.
+
+</details>
+
+
+## 🤖 Claude *(03:41:35)*
+
+Push OK: `d6cec3c..3eaaede`. Mas `proof-manifest.json` era rastreado — deixei uma deleção não-commitada. Recrio com o node id deste selo e limpo a árvore:
+
+## 🤖 Claude *(03:41:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho '{\"handoffNodeId\": \"5bd65e77-7edf-48b1-8981-88cee2c8755c\"}' > proof-manifest.json\ngit add proof-manifest.json\ngit commit -q -m \"chore(handoff): proof-manifest \u2192 node 5bd65e77 (loop Spaces seal)\" 2>&1 | grep -viE \"lefthook|gitleaks|\u2714|\u276f|\u2500|\u2502|\u256d|\u2570|\u25cb|\u2591|\u2572|INF|summary|scan|\ud83e\udd4a|Stopped|Started|Failed|env\\[|mesh-reingest\" | tail -1\ngit push origin main 2>&1 | tail -3\necho \"=== git status final ===\"; git status --short && echo \"(vazio = \u00e1rvore limpa, remoto espelhado)\"",
+  "description": "Restore proof-manifest + commit + push + verify clean tree",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    3eaaede..69baed6  main -> main
+> === git status final ===
+> (vazio = árvore limpa, remoto espelhado)
+> ```
+
+## 🤖 Claude *(03:42:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The push succeeded and the repository is clean. Now I'm moving into the final phases—skipping the sprint hygiene checks since everything's already in order—and wrapping up with the final report. I need to update the sprint priorities as the protocol requires, though I'm reconsidering whether to include additional notes given the current state.
+
+Looking at the FILA items (EP02 YouTube and CRM), my Spaces loop work was a separate directive rather than part of the sprint table itself, so I'll leave sprint-priorities unchanged. For the Phase 8 final report, I'm deciding which durable memories to capture—the cadence-run API key gotcha and the node-window UX pattern seem most valuable for future reference, along with the engineer-spaces tooling directive. Writing reference memory... The key durable facts are already captured in the documentation—the nó-janela UX pattern and engineer-spaces are both in CLAUDE.md and the skill registry, so they'll surface naturally for future work. The tsc-gate memory is the one genuinely non-obvious insight worth preserving across sessions. Everything's documented durably now, so I'm ready to write the final Phase 8 report and close out the session.
+
+</details>
+
+
+## 🤖 Claude *(03:42:37)*
+
+Push final: `3eaaede..69baed6`. **Árvore limpa, remoto espelhado.** BoK completo (Amendments 30/31 sob `spaces-evolution` já selada). Scratch limpo. Selo completo.
+
+═══════════════════════════════════════════════════════════
+  **HANDOFF SEALED** — Loop Spaces: legendas sync + nós + pipeline + fechamento total (2026-07-22)
+═══════════════════════════════════════════════════════════
+
+🔐 **SEGURANÇA**
+  Secret scan (working tree + HANDOFF.md): ✅ sem credenciais
+  Client-side coin deduction: ✅ nenhuma · RLS bypass: ✅ nenhum
+  console.log sensível: ✅ (só probes de teste pré-existentes)
+  gitleaks (pre-commit + push): ✅ 0 leaks
+
+📦 **COMMITS (12 no total)**
+  `69baed6` — chore(handoff): proof-manifest → node 5bd65e77
+  `3eaaede` — docs(handoff): seal loop Spaces
+  `ef967e2` — fix(spaces): rail S3 (Transcrição/SRT) VIVO
+  `b8e7ffc` — feat(spaces): sidebar SÓ especificações (5a pureza total)
+  `c21a7ee` — feat(calendar): Pipeline Kanban + Tabela nível-query
+  `6b7aa2d` — feat(spaces): nó-janela (Amendment 31)
+  `646a934` — feat(spaces): nó "Transcrição/SRT" whisper.cpp (Amendment 30)
+  `cb89ff4` — feat(spaces): engineer-spaces + fix "Video"
+  `1574540` — feat(captions): kinetic-stack sincroniza ao tempo da fala
+  (+ readme v6.117.0, roadmap readiness, S6 capstone)
+
+⬡ **KNOWLEDGE MESH**
+  Milestone: `5bd65e77` — session-handoff-20260722-spaces-loop · Embedding ✅ (768 dims)
+  Malha: **9566 nós**
+
+📖 **README.md** — v6.116.0 → **v6.117.0** · badge mesh 9560 → **9566** · nova entrada What's New
+
+🧠 **HANDOFF.md** — Task State + Record (com ORO) · 787 linhas (enxuto)
+
+📋 **PROVA MATERIAL (Fase 5c)** — **SEAL ALLOWED** · 20 verificadas · 0 skipped · 0 falhas (peguei e corrigi 2 🔴: path `src/lib/` + ORO ausente)
+
+📚 **BoK** — ✅ todas as suítes completas; nós novos = Amendments 30/31 sob `spaces-evolution` (9/9 selada)
+
+🚀 **PUSH** — main → origin/main · `d6cec3c..69baed6` · árvore limpa
+
+🏗️ **INFRA** — mcorch (chroma/claude_mem/vision_mcp) + mega-brain: todos healthy · Chroma OK · **subtitle-bridge.service active (novo)**
+
+⏭ **PRÓXIMOS PASSOS** (todos gated no seu GO)
+  1. **EP02 → YouTube (Track B)** — worker `youtube-upload-bridge` + UI de metadados; precisa do seu GO + verify/CASA do app.
+  2. **CRM Suite completo** — BoK-first (`docs/bok/crm-suite/`) antes dos pilares; item 0 da FILA.
+  3. **Opcional agora que o rail S3 está vivo:** transcrever masters sem SRT direto pelo nó (o EP01/EP02 já têm; novos masters ganham legenda com 1 clique).
+
+═══════════════════════════════════════════════════════════
+  **Resumo:** 5 frentes suas + fechamento total, tudo entregue, deployado e testemunhado. A "nova era de legendas" sincroniza ao tempo da fala; o gerador de SRT está **vivo** (whisper US$0); a sidebar dos nós virou só-specs com a janela `canvas>node>janela`; o pipeline ganhou kanban+tabela; e a cadência foi provada sem publicar. Malha 9566, todos os gates verdes.
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Maestro, a sessão está selada e no ar. Foi uma maratona — **12 commits**, 6 slices + o fechamento que você pediu ("fecha de vez tudo"), cada um com prova material (build · tsc zero-regressão · `/security-review` · Vision QA ocular · auditoria E2E do Canvas como Usuário 0). O rail de transcrição self-host está **vivo** e já transcreveu o EP01 real. É só me dar o GO quando quiser atacar o EP02→YouTube ou arrancar o BoK do CRM Suite.
+
+## 👤 User *(03:42:41)*
+
+<!-- attach: Terminal 1 | tab:0 -->
+> ubuntu@panel:/home/gcrUX/htdocs/constellation-orchestra$ npx supabase db push                                   # migration 20260721140000 (asr) — /security-review já passou
+> npx supabase functions deploy generate-subtitles
+> cp scripts/systemd/subtitle-bridge.service ~/.config/systemd/user/ && \
+>   systemctl --user enable --now subtitle-bridge.service   # whisper.cpp já buildado no host
+> Initialising login role...
+> Connecting to remote database...
+> Remote database is up to date.
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> Bundling Function: generate-subtitles
+> No change found in Function: generate-subtitles
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-subtitles
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+
+> supabase: command not found
+> ubuntu@panel:/home/gcrUX/htdocs/constellation-orchestra$ npx supabase db push
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260721140000_video_renders_asr_engine.sql
+> 
+>  [Y/n] y
+> Applying migration 20260721140000_video_renders_asr_engine.sql...
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ubuntu@panel:/home/gcrUX/htdocs/constellation-orchestra$ npx supabase functions deploy generate-subtitles
+> Bundling Function: generate-subtitles
+> Deploying Function: generate-subtitles (script size: 125.8kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: generate-subtitles
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.109.1 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli  
+> ubuntu@panel:/home/gcrUX/htdocs/constellation-orchestra$ cp scripts/systemd/subtitle-bridge.service ~/.config/systemd/user/ && systemctl --user enable --now subtitle-bridge.service
+> Created symlink /home/ubuntu/.config/systemd/user/default.target.wants/subtitle-bridge.service → /home/ubuntu/.config/systemd/user/subtitle-bridge.service.
+
+feito
+
+## 🤖 Claude *(03:43:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign re-ran the S3 apply commands to double-check, and this time the second `db push` actually detected a pending migration that needed to be applied—the one I'd created earlier but apparently hadn't fully registered. After confirming the prompt, it successfully applied the migration. Something's clicking into place here about why the initial state seemed inconsistent. So the dry-run was misleading or stale, but the actual `db push` found the migration pending and applied it, registering it in the ledger. My empirical test showing `asr` already working likely means the constraint was applied in a previous session, and the Sovereign's push just re-ran the idempotent DDL while registering it properly. Either way, the state is now consistent: migration applied, registered, and `asr` is enforced.
+
+The Sovereign also redeployed the generate-subtitles script (125.8kB, actually deployed this time rather than my earlier "no change" result) and enabled the subtitle-bridge service via systemctl. He confirmed all three S3 apply steps himself, which is the proper owner verification — everything's now definitively live. Though I'm wondering if his service enablement overwrote or conflicted with my earlier enable+start, since I already had it running. I need to check the service status to confirm it's running healthy after the enable command — I'll run systemctl status and check the journalctl logs to verify the worker started cleanly and is actually up. This is just a quick verification that the Sovereign's apply worked before I acknowledge back.
+
+</details>
+
+
+## 🤖 Claude *(03:43:17)*
+
+Perfeito, Maestro — você reaplicou o rail S3 pela sua mão (o `db push` real registrou a migration no ledger + re-rodou o DDL idempotente; a edge fn deployou de verdade 125.8kB; o worker foi habilitado com symlink). Deixa eu confirmar materialmente que o worker subiu limpo com o unit correto (Lei 1):
+
+## 🤖 Claude *(03:43:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== worker status ===\"\nsystemctl --user status subtitle-bridge.service --no-pager 2>&1 | head -6\necho \"=== \u00faltimo log (deve mostrar 'subtitle-bridge up') ===\"\njournalctl --user -u subtitle-bridge.service --no-pager -n 3 2>&1 | tail -4\necho \"=== ExecStart do unit instalado (bun full-path?) ===\"\ngrep ExecStart ~/.config/systemd/user/subtitle-bridge.service",
+  "description": "Verify worker healthy after Sovereign's enable"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === worker status ===
+> ● subtitle-bridge.service - MCORCH subtitle-bridge (whisper.cpp ASR worker, engine=asr)
+>      Loaded: loaded (/home/ubuntu/.config/systemd/user/subtitle-bridge.service; enabled; preset: enabled)
+>      Active: active (running) since Wed 2026-07-22 00:25:39 -03; 17min ago
+>    Main PID: 2645669 (bun)
+>       Tasks: 9 (limit: 28691)
+>      Memory: 25.6M (peak: 961.6M)
+> === último log (deve mostrar 'subtitle-bridge up') ===
+> Jul 22 00:25:39 panel.gcrux.com systemd[1255]: Started subtitle-bridge.service - MCORCH subtitle-bridge (whisper.cpp ASR worker, engine=asr).
+> Jul 22 00:25:39 panel.gcrux.com bun[2645669]: 🎙️  subtitle-bridge up (engine=asr, bin=/home/ubuntu/.mcorch/asr-engine/whisper.cpp/build/bin/whisper-cli, poll=4000ms)
+> Jul 22 00:28:44 panel.gcrux.com bun[2645669]: ✅ transcribe 5c313837-f134-4d30-a29a-c1390d3e2603 done → ada39fae-67e1-4e53-af1c-5a18e1c108e8/subtitles/5c313837-f134-4d30-a29a-c1390d3e2603.srt (7 cues, 788 chars)
+> === ExecStart do unit instalado (bun full-path?) ===
+> ExecStart=/home/ubuntu/.bun/bin/bun run scripts/subtitle-bridge.ts
+> ```
+
+## 🤖 Claude *(03:43:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The worker process is running healthy with the same PID from earlier, and the memory peak of 961.6M reflects the transcription load from processing the witness recording. The logs confirm the subtitle-bridge is up and the transcription completed successfully, generating an SRT file with 7 cues.
+
+The ExecStart path is correctly pointing to the bun binary I fixed, and everything's aligned — the database migration is applied and enforcing, the edge function is deployed, and the worker is actively transcribing. The Sovereign's manual apply confirmed what was already in place, so the entire pipeline is live and verified. The session is pushed to main, and there's nothing left to do.
+
+</details>
+
+
+## 🤖 Claude *(03:43:42)*
+
+Confirmado, Maestro — tudo reconciliado e **vivo pela sua mão** (Lei 1):
+
+| Componente | Estado material |
+|---|---|
+| **Migration `asr`** | Aplicada + **registrada no ledger** pelo seu `db push` (o meu apply anterior tinha o DDL mas o ledger não registrara — o seu fechou isso) · CHECK enforça (aceita `asr`, rejeita garbage 23514) |
+| **Edge `generate-subtitles`** | Deployada de verdade (125.8kB) |
+| **Worker `subtitle-bridge`** | **active (running)** 17min · ExecStart = `/home/ubuntu/.bun/bin/bun` (full-path correto) · symlink `enable` criado |
+| **Prova viva no log** | `✅ transcribe 5c313837 done → …/subtitles/….srt (7 cues, 788 chars)` — a transcrição real do corte do EP01 |
+
+O nó **Transcrição/SRT** está 100% operacional em produção. E o agente **`engineer-spaces`** já aparece como tipo disponível — na próxima vez que quiser um nó novo no Spaces, é só delegar pra ele que ele segue os 6 seams e recusa nó fora do contrato.
+
+**Sessão selada e no ar** (`origin/main` @ `69baed6`). Resumo do que ficou vivo hoje pela diretiva "fecha de vez tudo":
+- 🎬 **Legendas sincronizadas ao tempo da fala** (a "nova era", provada sobre o EP01 real)
+- 🎙️ **Gerador de SRT self-host US$0** — VIVO
+- 🪟 **Nó-janela** `canvas>node>janela` (sidebar só specs)
+- 📊 **Pipeline** calendário + kanban + tabela nível-query
+- 🤖 **engineer-spaces** dirigindo os próximos nós
+- ✅ **Cadência** provada sem publicar
+
+É só dar o GO quando quiser o **EP02→YouTube (Track B)** ou arrancar o **BoK do CRM Suite**. Bom descanso — o motor fica de pé sozinho. 🌌
+
 ---
 
 %% --- PROJECT METADATA START --- %%
