@@ -2504,6 +2504,2908 @@ Recomendação do audit: **não** criar refund automático quando o corte gráti
 
 Duas coisas sem risco eu já resolvo agora se você der GO: **(A)** creditar os 3 mco de cortesia, **(B)** remover os 2 escopos IG não usados. Para o item 1 (fazer o corte suceder) e o item 2 (refocus), qual você quer que eu ataque primeiro?
 
+## 👤 User *(20:19:47)*
+
+Review TikTok reprovado: Já enviei o video agora mostrando tudo novo. Agora ataque então todos os proximos passos principalmente o: O que realmente falta (priorizado) os 3 pontos pois o numero 3 eu ja fiz pode manter IG e seus escopos pois ainda não vamos gravar videos para a META por enquanto somente se depois necessário então não remover 2 escoposo sem uso nem nenhum escopo sem uso ainda.
+
+Não precisa creditar mco eu mesmo faço isso manualmente se precisar. B não fazer isso agora. Quero conseguir fazer os cortes que antes funcionavam no /dashboard/repurpose mas não testei mais depois das alterações de hoje mas parece tudo ok estou fazendo o teste agora, a unica diferença que não consigo selecionar as fatias do json gerado, gerou agora 11 cortes no json e esta rodando. 
+
+ótimo agora precisamos continuar  com o resto do pront anterior você fez o a visão pronta agora arme o loop para conseguir fazer tudo com a mão na massa robusto e sofisticado.
+
+## 🤖 Claude *(20:21:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm parsing through the user's instructions here. They've already re-recorded and submitted the TikTok video showing the new features, so that's handled. I should keep the Instagram scopes as they are rather than removing unused ones. I'm also skipping the manual credit step since the user handles that themselves.
+
+The real priority is getting the cuts working again on /dashboard/repurpose like they did before. The user is testing now and says everything looks okay, but there's a critical issue: they can't select individual slices from the generated JSON. The system generated 11 cuts and is running them all, but the ViralCandidatePicker isn't letting them pick and choose which ones to use.
+
+The main ask now is to continue building on the vision that's ready — they want me to set up the loop to handle everything robustly and sophisticatedly, getting hands-on with the implementation. So the user is asking me to set up an autonomous loop that handles both the immediate fixes—getting the 5-clip cuts working with browser reuse and resolving the slice selection bug on the repurpose dashboard—and then building out the Orchestration refocus starting with the knowledge base-first approach, moving through the operational view, multiple orchestras, and the node architecture.
+
+The governance here is clear: the orchestration work requires the BoK suite first since it touches multiple agentic patterns, so I need to run the bok-scribe command for the control room before writing any code. But the cut-render fix is a straightforward bug fix on an existing feature, so that's exempt from the BoK gate and can be handled immediately.
+
+My approach is to start by diagnosing the repurpose picker issue the user is testing now, then move straight into fixing the cut render problem in the browser reuse logic. Once that's working and tested, I'll tackle the BoK documentation for the orchestration control room, which unblocks the remaining phases of the work.
+
+The user wants me to activate an autonomous execution loop where I'm actually building and implementing things hands-on across the session, using workflows to move through each phase systematically until we've covered everything or hit context limits. I'll leverage Ultracode to make this robust and sophisticated. I need to nail down the execution order: start by diagnosing the picker issue and fixing the render bug (both unblocked), then move into the BoK-first orchestration work. The `/loop` skill here means I should set up the ORO structure and roadmap chapters, then immediately begin Phase 0/1 rather than waiting—keep pulling items as context allows until I hit ~95% window saturation. move through each chapter systematically). That's the most pragmatic reading: I'm already here, engaged, and ready to work—so I'll treat this session as the autonomous loop itself, executing methodically through the roadmap without pausing until I've made substantial progress.
+
+I need to be surgical about sequencing though. Rather than launching into a massive workflow blindly, I'll start with a clear first step.
+
+I'm marking the chapter for this execution loop focused on cuts and orchestration refocus, then declaring the ORO triplet. The immediate priority is diagnosing the /repurpose picker issue since the user is testing it live right now with 11 cuts running — I need to understand whether the picker interface isn't displaying or responding, or if something else triggered all 11 cuts to run. I'll also examine the render-core and segment-core to design the browser-reuse fix, since both the picker and render issues are blocking the cuts from working properly.
+
+The user just clarified that the picker actually worked and generated 11 cuts, but now he can't select individual slices from the generated JSON — this is a regression introduced by today's changes when the picker was added. So the real bug is in the RepurposeWizard and ViralCandidatePicker interaction. I need to investigate those components in parallel with the render browser-reuse issue, then fix both.
+
+I'm mapping out the files to read: the RepurposeWizard flow, the ViralCandidatePicker component itself, the useVideoRepurpose hook that orchestrates detect→pick→run, the repurpose page, and the render-core and segment-core scripts for the browser launch issue. Let me start digging into these files now. I'll set up the ORO structure with myself as the execution agent, Gabriel as reviewer, and the user as owner—the cuts feature drives their audience engagement and the orchestration layer gives them operational visibility. Now I'm diving into the picker regression and render issue by examining the RepurposeWizard and ViralCandidatePicker files to understand the flow and diagnose what's broken.
+
+I need to trace through the hook logic and core rendering pipeline, so I'm reading useVideoRepurpose.ts for the detect/run/selection logic, then pulling the launch sequence from render-core.ts and the per-clip loop from segment-core.ts to map where the failure occurs. Let me pull these files in parallel to get the full picture.
+
+</details>
+
+
+## 🤖 Claude *(20:21:08)*
+
+Entendido. Recalibrando o alvo do loop com base na sua direção:
+
+- ✅ TikTok demo — **você regravou/enviou**, saio disso.
+- ✅ IG e escopos — **mantidos como estão** (não removo nada, nem escopo sem uso).
+- ✅ Crédito mco — **você faz manual**, não toco.
+- 🎯 **Foco real:** fazer os cortes funcionarem de novo no `/dashboard/repurpose` (você achou uma regressão: **não consegue selecionar as fatias** — gerou 11 e já saiu rodando tudo) **+** fazer o render de N clipes suceder **+** construir o refocus da Orquestração (visão pronta → agora mão na massa, BoK-first pelo gate Closed-Loop).
+
+**ORO desta task (loop):**
+- **Operator:** MCORCH Master Execution Agent + subagents de workflow
+- **Reviewer:** Sovereign (Gabriel)
+- **Owner:** Sovereign / User Zero — ROI: os cortes são o motor do flywheel de audiência; a sala de controle é a visibilidade operacional pedida.
+
+Vou **armar o loop** e já começar com a mão na massa pelo item mais urgente (você está testando agora): diagnosticar a regressão do seletor de fatias + desenhar o fix do render. Reconhecimento paralelo primeiro.
+
+## 🤖 Claude *(20:21:09)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Loop: cortes + refocus Orquestra\u00e7\u00e3o",
+  "summary": "Loop de execu\u00e7\u00e3o hands-on: (1) regress\u00e3o do seletor de fatias no /repurpose + render de N clipes suceder (browser reuse); (2) refocus da Orquestra\u00e7\u00e3o (sala de controle) BoK-first \u2192 Vista Operacional \u2192 m\u00faltiplas Orquestras \u2192 n\u00f3s."
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Loop: cortes + refocus Orquestração". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(20:21:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== /repurpose page + wizard + picker files ===\"\nls src/components/repurpose/ 2>/dev/null\necho \"--- route ---\"\ngrep -nE \"repurpose|Repurpose\" src/App.tsx | head\necho \"=== ViralCandidatePicker size ===\"\nwc -l src/components/repurpose/ViralCandidatePicker.tsx src/components/repurpose/RepurposeWizard.tsx 2>/dev/null\necho \"=== render-core launch structure ===\"\ngrep -nE \"chromium.launch|renderAlphaFrames|export (async )?function|await browser|browser.close|newPage|newContext\" scripts/hyperframes/render-core.ts | head -30\necho \"=== segment-core per-clip loop ===\"\ngrep -nE \"for |map\\(|renderAlphaFrames|clips|async function|export\" scripts/video-repurpose/segment-core.ts | head -30",
+  "description": "Recon: picker regression + render browser-reuse structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === /repurpose page + wizard + picker files ===
+> CaptionLoopPreview.tsx
+> CaptionStyleGallery.tsx
+> GridLayoutPreview.tsx
+> RepurposeWizard.tsx
+> ViralCandidatePicker.tsx
+> --- route ---
+> 34:const VideoRepurposePage = lazy(() => import("./pages/VideoRepurposePage.tsx"));
+> 148:                <Route path="repurpose" element={<VideoRepurposePage />} />
+> === ViralCandidatePicker size ===
+>   112 src/components/repurpose/ViralCandidatePicker.tsx
+>   538 src/components/repurpose/RepurposeWizard.tsx
+>   650 total
+> === render-core launch structure ===
+> 160:export async function encodeImageSequence(spec: ImageSequenceSpec, outPath: string): Promise<RenderResult> {
+> 221:export async function encodeKenBurns(spec: KenBurnsSpec, outPath: string): Promise<RenderResult> {
+> 308:export async function renderComposition(spec: RenderSpec, outPath: string): Promise<RenderResult> {
+> 321:  const browser = await chromium.launch({
+> 327:    const page = await browser.newPage({
+> 353:    await browser.close();
+> 363:    await browser.close().catch(() => {});
+> 385:export async function renderAlphaFrames(spec: RenderSpec, outDir?: string): Promise<AlphaFramesResult> {
+> 403:  const browser = await chromium.launch({
+> 412:        const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+> 442:    await browser.close();
+> 450:    await browser.close().catch(() => {});
+> 462:export async function renderStudioProject(spec: StudioProjectSpec, outPath: string): Promise<RenderResult> {
+> 501:  const browser = await chromium.launch({
+> 507:    const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+> 536:    await browser.close();
+> 547:    await browser.close().catch(() => {});
+> === segment-core per-clip loop ===
+> 12: * Reframe is source-agnostic (expression crop): for a target aspect ar, keep the largest centered rect of that aspect.
+> 21:import { renderAlphaFrames } from '../hyperframes/render-core.ts';
+> 27:export type Reframe = '9:16' | '1:1';
+> 28:export interface TextBeat { t_start: number; t_end: number; phrase: string; emphasis?: 'hook' | 'punch' | 'normal' }
+> 31:export interface ClipSpec {
+> 34:  caption?: string;          // burned bottom-center caption (drawtext textfile); omit for none
+> 38:  text_beats?: TextBeat[];   // clip-relative beats for caption_mode='beats'
+> 39:  // Visual style of the beats overlay = the HyperFrames template slug. Only meaningful for caption_mode='beats'
+> 43:export interface SegmentSpec {
+> 45:  clips: ClipSpec[];
+> 49:export interface ClipResult {
+> 64:export const CAPTION_STYLES = [
+> 80:export const DEFAULT_CAPTION_STYLE = 'viral-caption-overlay-9x16';
+> 83:export const MOTION_GRAPHICS_STYLE = 'motion-graphics-hero-9x16';
+> 90:export function resolveCaptionStyle(style?: string): string {
+> 112:/** Cut + reframe + optional caption for ONE clip. Returns the output path. */
+> 113:async function renderClip(spec: SegmentSpec, clip: ClipSpec, index: number): Promise<ClipResult> {
+> 126:    // don't. So the saliency pass runs ONLY for the motion-graphics style — the other styles keep the plain
+> 127:    // beats props (no zone) and never pay for a saliency probe. Fail-open: pickCalmestZone is contractually
+> 147:          console.warn(`[repurpose] face-detect degraded for clip ${index} — could not measure, no face region (Fatia 1 fallback)`);
+> 153:        console.warn(`[repurpose] face-detect threw for clip ${index} (kept Fatia 1, no face region): ${e instanceof Error ? e.message : String(e)}`);
+> 164:          console.warn(`[repurpose] zone-saliency degraded for clip ${index} — probe did not measure, using default zone '${zone}'`);
+> 169:          console.warn(`[repurpose] face fills every readable zone for clip ${index} — placed at least-covered zone '${zone}' (degraded face-avoidance)`);
+> 174:        // silence (an empty catch with no log is exactly the false-success trap flagged for this project).
+> 175:        console.warn(`[repurpose] zone-saliency threw for clip ${index} (kept default '${DEFAULT_ZONE}'): ${e instanceof Error ? e.message : String(e)}`);
+> 180:      beatProps = clip.text_beats.map((b) => ({ ...b, zone }));
+> 183:      await renderAlphaFrames(
+> 189:        // `-ss`+`-t` are INPUT options for input 0 (the master) — MUST precede its `-i`, else `-t` binds to the
+> 212:    // (byteLen − codepointLen) — a byte-vs-char bug that clips accented captions' tails ("notícia." → "notíc").
+> 235:/** Segment a master into N clips per the cut-spec. Serial (deterministic, memory-safe for a long master). */
+> ```
+
+## 🤖 Claude *(20:21:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to dig into the specific files causing these issues—the picker regression in RepurposeWizard and ViralCandidatePicker, plus the render browser-reuse problem in the render and segment cores. Let me start by examining those components and their hook flows.
+
+</details>
+
+
+## 🤖 Claude *(20:21:21)*
+
+Vou ler os arquivos-chave para diagnosticar as duas frentes dos cortes: o seletor de fatias (regressão no wizard) e o loop de render por clipe (browser reuse).
+
+## 🤖 Claude *(20:21:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/ViralCandidatePicker.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { CheckCircle2, Circle, Clapperboard } from 'lucide-react';
+> 2	import { Badge } from '@/components/ui/badge';
+> 3	import type { ViralClip } from '@/hooks/useVideoRepurpose';
+> 4	
+> 5	// FR-VR-010/015 — the candidate picker. The detector now returns ABUNDANT candidates (duration-aware, up to 12
+> 6	// for a 5min+ master); the Sovereign chooses which to burn BEFORE the render, instead of every candidate hitting
+> 7	// the library as noise. Display-only (Harness Engineering): parent owns the selection Set and the burn action.
+> 8	// Shared across the page, the wizard, and the canvas node inspector so the three surfaces behave identically.
+> 9	
+> 10	function mmss(s: number): string {
+> 11	  const t = Math.max(0, Math.round(s));
+> 12	  const m = Math.floor(t / 60);
+> 13	  const r = t % 60;
+> 14	  return `${m}:${String(r).padStart(2, '0')}`;
+> 15	}
+> 16	
+> 17	// Score → a calm 0-100 badge tone. No red for low scores — hiding a candidate is the user's call now.
+> 18	function scoreTone(score: number): string {
+> 19	  if (score >= 0.75) return 'border-emerald-500/40 text-emerald-300';
+> 20	  if (score >= 0.5) return 'border-primary/40 text-primary';
+> 21	  return 'border-muted-foreground/30 text-muted-foreground';
+> 22	}
+> 23	
+> 24	export interface ViralCandidatePickerProps {
+> 25	  candidates: ViralClip[];
+> 26	  /** Indices (into `candidates`) currently selected. */
+> 27	  selected: number[];
+> 28	  onToggle: (index: number) => void;
+> 29	  onSelectAll?: () => void;
+> 30	  onClear?: () => void;
+> 31	  className?: string;
+> 32	}
+> 33	
+> 34	export function ViralCandidatePicker({
+> 35	  candidates,
+> 36	  selected,
+> 37	  onToggle,
+> 38	  onSelectAll,
+> 39	  onClear,
+> 40	  className,
+> 41	}: ViralCandidatePickerProps) {
+> 42	  if (!candidates.length) return null;
+> 43	  const selectedSet = new Set(selected);
+> 44	
+> 45	  return (
+> 46	    <div className={`space-y-2 ${className ?? ''}`}>
+> 47	      <div className="flex items-center justify-between gap-2">
+> 48	        <p className="text-xs text-muted-foreground">
+> 49	          <span className="text-foreground font-medium">{candidates.length}</span> candidato(s) detectado(s) —
+> 50	          escolha os melhores ({selected.length} selecionado(s))
+> 51	        </p>
+> 52	        {(onSelectAll || onClear) && (
+> 53	          <div className="flex gap-2 text-[11px]">
+> 54	            {onSelectAll && (
+> 55	              <button type="button" onClick={onSelectAll} className="text-primary/80 hover:text-primary underline-offset-2 hover:underline">
+> 56	                Todos
+> 57	              </button>
+> 58	            )}
+> 59	            {onClear && (
+> 60	              <button type="button" onClick={onClear} className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+> 61	                Limpar
+> 62	              </button>
+> 63	            )}
+> 64	          </div>
+> 65	        )}
+> 66	      </div>
+> 67	
+> 68	      <ul className="space-y-1.5">
+> 69	        {candidates.map((c, i) => {
+> 70	          const isSel = selectedSet.has(i);
+> 71	          const dur = Math.round(c.out_sec - c.in_sec);
+> 72	          const label = (c.title || c.hook_phrase || 'Corte').trim();
+> 73	          return (
+> 74	            <li key={`${c.in_sec}-${c.out_sec}-${i}`}>
+> 75	              <button
+> 76	                type="button"
+> 77	                onClick={() => onToggle(i)}
+> 78	                aria-pressed={isSel}
+> 79	                className={`w-full text-left rounded-lg border p-2.5 transition-colors ${
+> 80	                  isSel ? 'border-primary bg-primary/10' : 'border-border bg-card/40 hover:border-primary/40'
+> 81	                }`}
+> 82	              >
+> 83	                <div className="flex items-start gap-2.5">
+> 84	                  {isSel ? (
+> 85	                    <CheckCircle2 className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+> 86	                  ) : (
+> 87	                    <Circle className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+> 88	                  )}
+> 89	                  <div className="min-w-0 flex-1">
+> 90	                    <div className="flex items-center gap-2">
+> 91	                      <span className="truncate text-sm font-medium">{label}</span>
+> 92	                      <Badge variant="outline" className={`shrink-0 text-[10px] ${scoreTone(c.score)}`}>
+> 93	                        {(c.score * 100).toFixed(0)}
+> 94	                      </Badge>
+> 95	                    </div>
+> 96	                    <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+> 97	                      <Clapperboard className="h-3 w-3" />
+> 98	                      {mmss(c.in_sec)}–{mmss(c.out_sec)} · {dur}s · {c.text_beats?.length ?? 0} beat(s)
+> 99	                    </p>
+> 100	                    {c.reason && (
+> 101	                      <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground/80">{c.reason}</p>
+> 102	                    )}
+> 103	                  </div>
+> 104	                </div>
+> 105	              </button>
+> 106	            </li>
+> 107	          );
+> 108	        })}
+> 109	      </ul>
+> 110	    </div>
+> 111	  );
+> 112	}
+> 113	
+> ```
+
+## 🤖 Claude *(20:21:23)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo, useState } from 'react';
+> 2	import { toast } from 'sonner';
+> 3	import {
+> 4	  UploadCloud, Sparkles, Loader2, Check, FileText, Film, Images, ArrowRight, ArrowLeft, Wand2, Library, Trash2,
+> 5	} from 'lucide-react';
+> 6	import { Button } from '@/components/ui/button';
+> 7	import { Input } from '@/components/ui/input';
+> 8	import { Label } from '@/components/ui/label';
+> 9	import { Textarea } from '@/components/ui/textarea';
+> 10	import { Badge } from '@/components/ui/badge';
+> 11	import { Progress } from '@/components/ui/progress';
+> 12	import { useAuth } from '@/hooks/useAuth';
+> 13	import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+> 14	import { CaptionStyleGallery } from '@/components/repurpose/CaptionStyleGallery';
+> 15	import { CaptionLoopPreview } from '@/components/repurpose/CaptionLoopPreview';
+> 16	import { GridLayoutPreview, GRID_LAYOUTS } from '@/components/repurpose/GridLayoutPreview';
+> 17	import {
+> 18	  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+> 19	  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+> 20	} from '@/components/ui/alert-dialog';
+> 21	import {
+> 22	  uploadMasterToHost, useIngestMaster, useLaunchRepurpose, useDetectViralMoments,
+> 23	  useMasterSrtStatus, useRenderStatus, useIngestedMasters, useDeleteAsset, useProbeMasterHealth,
+> 24	  DEFAULT_CAPTION_STYLE,
+> 25	  type ClipSpecInput, type SlideSpecInput, type ViralClip, type IngestedMaster, type CaptionStyle,
+> 26	} from '@/hooks/useVideoRepurpose';
+> 27	
+> 28	// Wizard guiado do Repurpose (Enviar master → Metadados & cortes → Gerar). Display-only (Harness): toda a
+> 29	// lógica vive em useVideoRepurpose. Reúne numa trilha única capacidades que já existiam mas estavam dispersas —
+> 30	// inclusive o GERADOR DE SPEC (detect-viral-moments), que ancora cada corte em cues reais do SRT (zero fabricação).
+> 31	
+> 32	// Neon: caixa em repouso = só sombra (sem borda); campo ativo = borda neon + halo.
+> 33	const NEON_BOX =
+> 34	  'rounded-xl bg-card/60 border border-transparent shadow-[0_0_30px_-12px_hsl(var(--primary)/0.55)] transition';
+> 35	const NEON_FIELD =
+> 36	  'rounded-lg transition focus-within:border-primary/70 focus-within:shadow-[0_0_0_1px_hsl(var(--primary)/0.55),0_0_22px_-4px_hsl(var(--primary)/0.5)]';
+> 37	
+> 38	const STEPS = ['Enviar o master', 'Metadados & cortes', 'Gerar'] as const;
+> 39	
+> 40	function Stepper({ step }: { step: number }) {
+> 41	  return (
+> 42	    <div className="flex items-center gap-2">
+> 43	      {STEPS.map((label, i) => {
+> 44	        const n = i + 1;
+> 45	        const done = step > n;
+> 46	        const active = step === n;
+> 47	        return (
+> 48	          <div key={label} className="flex items-center gap-2">
+> 49	            <div
+> 50	              className={`grid h-7 w-7 place-items-center rounded-full text-xs font-semibold transition ${
+> 51	                active
+> 52	                  ? 'bg-primary/15 text-primary shadow-[0_0_16px_-2px_hsl(var(--primary)/0.7)]'
+> 53	                  : done
+> 54	                    ? 'bg-emerald-500/15 text-emerald-300'
+> 55	                    : 'bg-muted/40 text-muted-foreground'
+> 56	              }`}
+> 57	            >
+> 58	              {done ? <Check className="h-3.5 w-3.5" /> : n}
+> 59	            </div>
+> 60	            <span className={`text-xs ${active ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
+> 61	            {n < STEPS.length && <span className="mx-1 h-px w-6 bg-border" />}
+> 62	          </div>
+> 63	        );
+> 64	      })}
+> 65	    </div>
+> 66	  );
+> 67	}
+> 68	
+> 69	// ── Selo de saúde do master ────────────────────────────────────────────────────────────────────────────
+> 70	// O veredito vem do HOST (GET /api/host-probe: ffprobe + spot-decode em 3 pontos), nunca do banco — não há
+> 71	// como saber se um arquivo decodifica olhando uma linha. SOP: docs/processes/repurpose-host-infra-provisioning.md.
+> 72	const HEALTH_SEAL: Record<
+> 73	  IngestedMaster['seal'],
+> 74	  { label: string; className: string; tip: string; blocks: boolean }
+> 75	> = {
+> 76	  ok: {
+> 77	    label: 'Arquivo íntegro',
+> 78	    className: 'border-emerald-500/40 text-emerald-300',
+> 79	    tip: 'Verificado por AMOSTRAGEM: o servidor decodificou 3 trechos (20%, 50% e 90%) sem erro. Não é uma decodificação completa do arquivo.',
+> 80	    blocks: false,
+> 81	  },
+> 82	  unverified: {
+> 83	    label: 'Não verificado',
+> 84	    className: 'border-amber-500/40 text-amber-300 cursor-pointer hover:bg-amber-500/10',
+> 85	    tip: 'Ainda não sabemos se este arquivo decodifica. Clique para o servidor verificar agora (leva alguns segundos).',
+> 86	    blocks: false,
+> 87	  },
+> 88	  corrupt: {
+> 89	    label: 'Arquivo corrompido',
+> 90	    className: 'border-destructive/40 text-destructive',
+> 91	    tip: 'O servidor não conseguiu decodificar pelo menos um trecho do arquivo. Usar este master faria todos os cortes falharem — envie o master de novo.',
+> 92	    blocks: true,
+> 93	  },
+> 94	  missing: {
+> 95	    label: 'Arquivo sumiu',
+> 96	    className: 'border-destructive/40 text-destructive',
+> 97	    tip: 'O registro existe, mas o arquivo não está mais no disco do servidor. Exclua este registro e envie o master de novo.',
+> 98	    blocks: true,
+> 99	  },
+> 100	};
+> 101	
+> 102	export function RepurposeWizard() {
+> 103	  const [step, setStep] = useState(1);
+> 104	
+> 105	  // Step 1
+> 106	  const [file, setFile] = useState<File | null>(null);
+> 107	  const [srtText, setSrtText] = useState('');
+> 108	  const [srtName, setSrtName] = useState('');
+> 109	  const [title, setTitle] = useState('');
+> 110	  const [assetId, setAssetId] = useState<string | null>(null);
+> 111	
+> 112	  // Step 2
+> 113	  const [mode, setMode] = useState<'repurpose' | 'carousel'>('repurpose');
+> 114	  const [spec, setSpec] = useState('');
+> 115	  // Uma escolha por JOB (não por corte) — é o que mantém os cortes de um episódio visualmente irmãos.
+> 116	  const [captionStyle, setCaptionStyle] = useState<CaptionStyle>(DEFAULT_CAPTION_STYLE);
+> 117	
+> 118	  // Step 3
+> 119	  const [renderId, setRenderId] = useState<string | null>(null);
+> 120	
+> 121	  const [uploadPct, setUploadPct] = useState(0);
+> 122	  const [uploading, setUploading] = useState(false);
+> 123	  const [log, setLog] = useState('');
+> 124	
+> 125	  // Exclusão confirmada por AlertDialog (um só, controlado fora da lista) — `pendingDelete` é o flag de abertura.
+> 126	  const [pendingDelete, setPendingDelete] = useState<IngestedMaster | null>(null);
+> 127	
+> 128	  const { user } = useAuth();
+> 129	  const { masters } = useIngestedMasters();
+> 130	  const del = useDeleteAsset();
+> 131	  const probe = useProbeMasterHealth();
+> 132	  const ingest = useIngestMaster();
+> 133	  const detect = useDetectViralMoments();
+> 134	  const launch = useLaunchRepurpose();
+> 135	  const srtStatus = useMasterSrtStatus(assetId);
+> 136	  const render = useRenderStatus(renderId);
+> 137	
+> 138	  const specValid = useMemo(() => {
+> 139	    if (!spec.trim()) return false;
+> 140	    try {
+> 141	      const parsed = JSON.parse(spec);
+> 142	      return Array.isArray(parsed) && parsed.length > 0;
+> 143	    } catch { return false; }
+> 144	  }, [spec]);
+> 145	
+> 146	  const handleSrtFile = async (f: File | null) => {
+> 147	    if (!f) { setSrtText(''); setSrtName(''); return; }
+> 148	    setSrtName(f.name);
+> 149	    setSrtText(await f.text());
+> 150	  };
+> 151	
+> 152	  // Upload pelo trilho do HOST (chunked, XHR, disco local). O caminho de signed-URL do Supabase Storage
+> 153	  // estoura o cap do projeto num master grande (HTTP 413 "Payload too large") — por isso o fluxo manual
+> 154	  // sempre usou este. A chave é montada com o nome SANITIZADO que o servidor devolve (nunca file.name),
+> 155	  // que é o que evita o divórcio chave↔arquivo (causa de `local_source_not_found`).
+> 156	  const doUpload = async () => {
+> 157	    if (!file) { toast.error('Escolha o arquivo do master.'); return; }
+> 158	    if (!user) { toast.error('Sessão expirada — entre novamente.'); return; }
+> 159	    setUploading(true); setUploadPct(0);
+> 160	    setLog(`Enviando ${file.name} (${(file.size / 1e6).toFixed(0)} MB) em blocos…`);
+> 161	    try {
+> 162	      const r = await uploadMasterToHost(file, setUploadPct);
+> 163	      setLog(`Recebido no host: ${r.filename} · ${(r.bytes / 1e6).toFixed(0)} MB — registrando…`);
+> 164	      const res = await ingest.mutateAsync({
+> 165	        storage_bucket: 'local',
+> 166	        storage_key: `${user.id}/${r.filename}`,
+> 167	        title: title.trim() || r.filename,
+> 168	        mime_type: file.type || 'video/mp4',
+> 169	        // Tamanho REAL confirmado pelo host (não `file.size` do cliente). Já estava em mãos e era descartado —
+> 170	        // é ele que dá ao selo de saúde um par declarado-vs-real para desconfiar depois.
+> 171	        file_size_bytes: r.bytes,
+> 172	        srt_pt: srtText || undefined,
+> 173	      });
+> 174	      setAssetId(res.asset_id);
+> 175	      setLog(`Pronto: ${r.filename}`);
+> 176	      toast.success('Master registrado. Agora gere os cortes.');
+> 177	      setStep(2);
+> 178	    } catch (e) {
+> 179	      const msg = e instanceof Error ? e.message : 'Falha no envio.';
+> 180	      setLog(`Falhou: ${msg}`);
+> 181	      toast.error(msg);
+> 182	    } finally {
+> 183	      setUploading(false);
+> 184	    }
+> 185	  };
+> 186	
+> 187	  const generateSpec = async () => {
+> 188	    if (!assetId) return;
+> 189	    try {
+> 190	      // top_n omitido → o servidor sugere a quantidade pela duração do master (mín. 5 num vídeo de 5min+).
+> 191	      // A spec JSON abaixo é editável: o usuário remove/ajusta os cortes que não quiser antes de enfileirar.
+> 192	      const { clips } = await detect.mutateAsync({ master_asset_id: assetId });
+> 193	      if (mode === 'carousel') {
+> 194	        const slides: SlideSpecInput[] = clips.map((c: ViralClip) => ({
+> 195	          t_sec: Math.round(c.in_sec),
+> 196	          caption: c.hook_phrase,
+> 197	        }));
+> 198	        setSpec(JSON.stringify(slides, null, 2));
+> 199	      } else {
+> 200	        const cuts: ClipSpecInput[] = clips.map((c: ViralClip) => ({
+> 201	          in_sec: Math.round(c.in_sec),
+> 202	          out_sec: Math.round(c.out_sec),
+> 203	          reframe: '9:16',
+> 204	          caption: c.hook_phrase,
+> 205	          caption_mode: 'beats',
+> 206	          text_beats: c.text_beats,
+> 207	        }));
+> 208	        setSpec(JSON.stringify(cuts, null, 2));
+> 209	      }
+> 210	      toast.success(`${clips.length} momento(s) detectado(s) — revise e ajuste o que quiser.`);
+> 211	    } catch (e) {
+> 212	      toast.error(e instanceof Error ? e.message : 'Falha ao gerar a spec.');
+> 213	    }
+> 214	  };
+> 215	
+> 216	  const doLaunch = async () => {
+> 217	    if (!assetId || !specValid) return;
+> 218	    try {
+> 219	      const parsed = JSON.parse(spec);
+> 220	      // O estilo é do JOB: carimba TODOS os cortes com a mesma escolha. Um `caption_style` escrito à mão
+> 221	      // na spec é respeitado (fluxo avançado), mas o padrão é a consistência entre os cortes do episódio.
+> 222	      const clips = (parsed as ClipSpecInput[]).map((c) => ({ ...c, caption_style: c.caption_style ?? captionStyle }));
+> 223	      const res = await launch.mutateAsync({
+> 224	        source_asset_id: assetId,
+> 225	        mode,
+> 226	        ...(mode === 'carousel' ? { slides: parsed as SlideSpecInput[] } : { clips }),
+> 227	      });
+> 228	      setRenderId(res.render_id);
+> 229	      toast.success(`Enfileirado: ${res.count} peça(s) em produção.`);
+> 230	      setStep(3);
+> 231	    } catch (e) {
+> 232	      toast.error(e instanceof Error ? e.message : 'Falha ao enfileirar.');
+> 233	    }
+> 234	  };
+> 235	
+> 236	  const busy = uploading || ingest.isPending;
+> 237	
+> 238	  return (
+> 239	    <div className={`${NEON_BOX} p-5 space-y-5`}>
+> 240	      <div className="flex flex-wrap items-center justify-between gap-3">
+> 241	        <div>
+> 242	          <h3 className="font-heading text-lg text-foreground tracking-tight">Produzir cortes</h3>
+> 243	          <p className="text-sm text-muted-foreground">Do master ao corte publicável, em três passos.</p>
+> 244	        </div>
+> 245	        <Stepper step={step} />
+> 246	      </div>
+> 247	
+> 248	      {/* ── Passo 1 — Enviar o master ───────────────────────────── */}
+> 249	      {step === 1 && (
+> 250	        <div className="space-y-4">
+> 251	          {/* Caminho curto: o master já está no acervo — não re-subir 500MB+. */}
+> 252	          {masters.length > 0 && (
+> 253	            <div className={`${NEON_FIELD} space-y-2 p-3`}>
+> 254	              <Label className="flex items-center gap-1.5"><Library className="h-3.5 w-3.5" /> Usar um master já enviado</Label>
+> 255	              <div className="max-h-56 space-y-1.5 overflow-y-auto">
+> 256	                {masters.map((m) => {
+> 257	                  const seal = HEALTH_SEAL[m.seal];
+> 258	                  // Dois motivos independentes para bloquear a seleção, no MESMO vocabulário vermelho:
+> 259	                  // a chave impronunciável (arquivo não localizável) e o veredito ruim do probe. Foi
+> 260	                  // exatamente a ausência deste segundo gate que deixou reusar o master corrompido do EP02.
+> 261	                  const blocked = !m.keyLooksSanitized || seal.blocks;
+> 262	                  const probing = probe.isPending && probe.variables?.storageKey === m.storageKey;
+> 263	                  // Só há o que sondar quando o veredito falta E o arquivo está no disco do host.
+> 264	                  const canProbe = m.seal === 'unverified' && m.bucket === 'local';
+> 265	                  const runProbe = () => {
+> 266	                    if (!canProbe || probe.isPending) return;
+> 267	                    probe.mutate(
+> 268	                      { storageKey: m.storageKey },
+> 269	                      {
+> 270	                        onSuccess: (h) => {
+> 271	                          if (h.status === 'ok') toast.success('Arquivo íntegro — os 3 trechos decodificaram.');
+> 272	                          else if (h.status === 'missing') toast.error('O arquivo não está mais no disco do servidor.');
+> 273	                          else toast.error('Arquivo corrompido — envie o master novamente.');
+> 274	                        },
+> 275	                        onError: (e) => toast.error(e instanceof Error ? e.message : 'Falha ao verificar.'),
+> 276	                      },
+> 277	                    );
+> 278	                  };
+> 279	                  return (
+> 280	                    <div key={m.id} className="flex items-center gap-2">
+> 281	                      <button
+> 282	                        type="button"
+> 283	                        disabled={blocked}
+> 284	                        onClick={() => { setAssetId(m.id); toast.success('Master selecionado.'); setStep(2); }}
+> 285	                        className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-border/50 px-3 py-2 text-left transition ${
+> 286	                          blocked ? 'cursor-not-allowed opacity-50' : 'hover:border-primary/50 hover:bg-primary/5'
+> 287	                        }`}
+> 288	                      >
+> 289	                        <span className="min-w-0 flex-1">
+> 290	                          <span className="block truncate text-sm">{m.title}</span>
+> 291	                          <span className="block truncate text-[11px] text-muted-foreground">
+> 292	                            {new Date(m.createdAt).toLocaleDateString('pt-BR')} · {m.bucket}
+> 293	                            {m.sizeBytes != null && ` · ${(m.sizeBytes / 1e6).toFixed(0)} MB`}
+> 294	                            {!m.keyLooksSanitized && ' · nome com espaço/parêntese — arquivo não localizável'}
+> 295	                          </span>
+> 296	                        </span>
+> 297	                      </button>
+> 298	
+> 299	                      {/* Selos fora do <button> de seleção: o amarelo é acionável (dispara o probe) e um
+> 300	                          controle dentro de outro controle é HTML inválido. */}
+> 301	                      <Badge
+> 302	                        variant="outline"
+> 303	                        className={`shrink-0 ${m.hasSrt ? 'border-emerald-500/40 text-emerald-300' : 'text-muted-foreground'}`}
+> 304	                      >
+> 305	                        {m.hasSrt ? 'SRT ok' : 'sem SRT'}
+> 306	                      </Badge>
+> 307	
+> 308	                      <Tooltip>
+> 309	                        <TooltipTrigger asChild>
+> 310	                          <Badge
+> 311	                            variant="outline"
+> 312	                            // Acionável só quando há o que sondar: amarelo E master no disco do host. Fora
+> 313	                            // disso não recebe foco nem afordância de clique — um cursor-pointer que não faz
+> 314	                            // nada é uma promessa que a UI não cumpre.
+> 315	                            role={canProbe ? 'button' : undefined}
+> 316	                            tabIndex={canProbe ? 0 : undefined}
+> 317	                            aria-label={canProbe ? `Verificar integridade de ${m.title}` : undefined}
+> 318	                            aria-busy={probing || undefined}
+> 319	                            // Teclado ativa igual ao mouse: `role="button"` sem handler de tecla dá foco e
+> 320	                            // não dispara nada (armadilha clássica de div-como-botão).
+> 321	                            onKeyDown={(e) => {
+> 322	                              if (!canProbe) return;
+> 323	                              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runProbe(); }
+> 324	                            }}
+> 325	                            className={`shrink-0 gap-1 ${canProbe ? seal.className : seal.className.replace(' cursor-pointer hover:bg-amber-500/10', '')}`}
+> 326	                            onClick={runProbe}
+> 327	                          >
+> 328	                            {probing && <Loader2 className="h-3 w-3 animate-spin" />}
+> 329	                            {seal.label}
+> 330	                          </Badge>
+> 331	                        </TooltipTrigger>
+> 332	                        <TooltipContent className="max-w-[280px] text-xs">
+> 333	                          {m.bucket !== 'local'
+> 334	                            ? 'Este master não está no disco do servidor, então não há como verificar a integridade dele daqui.'
+> 335	                            : seal.tip}
+> 336	                        </TooltipContent>
+> 337	                      </Tooltip>
+> 338	
+> 339	                      <Button
+> 340	                        variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+> 341	                        aria-label={`Excluir ${m.title}`}
+> 342	                        disabled={del.isPending}
+> 343	                        onClick={() => setPendingDelete(m)}
+> 344	                      >
+> 345	                        <Trash2 className="h-4 w-4" />
+> 346	                      </Button>
+> 347	                    </div>
+> 348	                  );
+> 349	                })}
+> 350	              </div>
+> 351	              <p className="text-xs text-muted-foreground">Ou envie um master novo abaixo.</p>
+> 352	            </div>
+> 353	          )}
+> 354	
+> 355	          <div className={`${NEON_FIELD} space-y-1.5 p-3`}>
+> 356	            <Label htmlFor="rp-file" className="flex items-center gap-1.5"><Film className="h-3.5 w-3.5" /> Vídeo master</Label>
+> 357	            <Input id="rp-file" type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+> 358	            {file && <p className="text-xs text-muted-foreground">{file.name} · {(file.size / 1e6).toFixed(0)} MB</p>}
+> 359	          </div>
+> 360	
+> 361	          <div className={`${NEON_FIELD} space-y-1.5 p-3`}>
+> 362	            <Label htmlFor="rp-title">Título</Label>
+> 363	            <Input id="rp-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="EP03 — …" />
+> 364	          </div>
+> 365	
+> 366	          <div className={`${NEON_FIELD} space-y-1.5 p-3`}>
+> 367	            <Label htmlFor="rp-srt" className="flex items-center gap-1.5"><FileText className="h-3.5 w-3.5" /> Legenda SRT pt-BR <span className="text-muted-foreground">(opcional)</span></Label>
+> 368	            <Input id="rp-srt" type="file" accept=".srt,text/plain" onChange={(e) => handleSrtFile(e.target.files?.[0] ?? null)} />
+> 369	            <p className="text-xs text-muted-foreground">
+> 370	              {srtName ? `${srtName} · ${srtText.length} caracteres` : 'Sem SRT o gerador de cortes por IA não roda — ele ancora cada corte nas falas reais.'}
+> 371	            </p>
+> 372	          </div>
+> 373	
+> 374	          {(uploading || log) && (
+> 375	            <div className="space-y-2">
+> 376	              {uploading && <Progress value={uploadPct} className="h-1.5" />}
+> 377	              <div className="flex items-center justify-between gap-3">
+> 378	                <p className="truncate font-mono text-[11px] text-muted-foreground">{log}</p>
+> 379	                {uploading && <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{uploadPct}%</span>}
+> 380	              </div>
+> 381	            </div>
+> 382	          )}
+> 383	
+> 384	          <Button className="w-full gap-2" onClick={doUpload} disabled={busy || !file}>
+> 385	            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+> 386	            {uploading ? `Enviando… ${uploadPct}%` : ingest.isPending ? 'Registrando…' : 'Enviar master'}
+> 387	          </Button>
+> 388	        </div>
+> 389	      )}
+> 390	
+> 391	      {/* ── Passo 2 — Metadados & cortes ────────────────────────── */}
+> 392	      {step === 2 && (
+> 393	        <div className="space-y-4">
+> 394	          <div className="flex flex-wrap items-center gap-2">
+> 395	            <Button variant={mode === 'repurpose' ? 'default' : 'outline'} size="sm" className="gap-1.5"
+> 396	              onClick={() => { setMode('repurpose'); setSpec(''); }}>
+> 397	              <Film className="h-3.5 w-3.5" /> Cortes verticais 9:16
+> 398	            </Button>
+> 399	            <Button variant={mode === 'carousel' ? 'default' : 'outline'} size="sm" className="gap-1.5"
+> 400	              onClick={() => { setMode('carousel'); setSpec(''); }}>
+> 401	              <Images className="h-3.5 w-3.5" /> Carrossel IG 4:5
+> 402	            </Button>
+> 403	            {srtStatus.data?.hasSrt && <Badge variant="outline" className="border-emerald-500/40 text-emerald-300">SRT ok</Badge>}
+> 404	          </div>
+> 405	
+> 406	          {/* Estilo da legenda — vale para TODOS os cortes deste job. Só aparece no modo cortes: o
+> 407	              carrossel gera imagens estáticas, sem a camada de beats onde o estilo existe. */}
+> 408	          {mode === 'repurpose' && (
+> 409	            <div className={`${NEON_FIELD} space-y-1.5 p-3`}>
+> 410	              <Label htmlFor="rp-caption-style">Estilo da legenda</Label>
+> 411	              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+> 412	                <div className="min-w-0 flex-1">
+> 413	                  <CaptionStyleGallery value={captionStyle} onChange={setCaptionStyle} />
+> 414	                </div>
+> 415	                {/* Task 4b — prévia AO VIVO em loop do estilo escolhido (iframe do MESMO template que o
+> 416	                    render queima), sem gastar render. Troca instantânea ao clicar num estilo. */}
+> 417	                <div className="flex shrink-0 flex-col items-center gap-1 self-center sm:self-start sm:sticky sm:top-2">
+> 418	                  <CaptionLoopPreview styleSlug={captionStyle} widthPx={196} />
+> 419	                </div>
+> 420	              </div>
+> 421	              <p className="text-xs text-muted-foreground">
+> 422	                Aplicado a todos os cortes deste envio — é o que mantém o episódio visualmente coerente.
+> 423	                Vale só para legendas em modo “beats”.
+> 424	              </p>
+> 425	            </div>
+> 426	          )}
+> 427	
+> 428	          {/* Task 4c — grades disponíveis também no Repurpose (antes só pelo nó). Prévia visual dos 5
+> 429	              layouts; a composição em si (cada célula um clipe/foto) é feita no nó Tela Dividida / Grade. */}
+> 430	          {mode === 'repurpose' && (
+> 431	            <div className={`${NEON_FIELD} space-y-2 p-3`}>
+> 432	              <Label>Grades (Tela Dividida)</Label>
+> 433	              <div className="flex flex-wrap items-end gap-3">
+> 434	                {GRID_LAYOUTS.map((g) => (
+> 435	                  <div key={g.id} className="flex flex-col items-center gap-1">
+> 436	                    <GridLayoutPreview layout={g.id} />
+> 437	                    <span className="text-[10px] text-muted-foreground">{g.label}</span>
+> 438	                  </div>
+> 439	                ))}
+> 440	              </div>
+> 441	              <p className="text-xs text-muted-foreground">
+> 442	                Combine cortes ou fotos numa grade 9:16 (cada célula um vídeo OU imagem). Para montar, use o
+> 443	                nó <strong>Tela Dividida / Grade</strong> no Spaces — os grids saem no mesmo rail grátis.
+> 444	              </p>
+> 445	            </div>
+> 446	          )}
+> 447	
+> 448	          <div className={`${NEON_FIELD} space-y-2 p-3`}>
+> 449	            <div className="flex items-center justify-between">
+> 450	              <Label>Spec dos {mode === 'carousel' ? 'slides' : 'cortes'} (JSON)</Label>
+> 451	              <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs text-primary"
+> 452	                onClick={generateSpec} disabled={detect.isPending}>
+> 453	                {detect.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+> 454	                Gerar com IA
+> 455	              </Button>
+> 456	            </div>
+> 457	            <Textarea
+> 458	              rows={12}
+> 459	              value={spec}
+> 460	              onChange={(e) => setSpec(e.target.value)}
+> 461	              className="font-mono text-xs"
+> 462	              placeholder={mode === 'carousel'
+> 463	                ? '[\n  { "t_sec": 12, "caption": "…" }\n]'
+> 464	                : '[\n  { "in_sec": 12, "out_sec": 45, "reframe": "9:16", "caption": "…" }\n]'}
+> 465	            />
+> 466	            <p className="text-xs text-muted-foreground">
+> 467	              {mode === 'carousel'
+> 468	                ? 'Cada item vira um slide 4:5 a partir do frame em t_sec.'
+> 469	                : 'Cada item vira um corte 9:16 com legenda queimada. O gerador ancora os cortes nas falas reais do SRT.'}
+> 470	              {spec && !specValid && <span className="text-red-300"> · JSON inválido</span>}
+> 471	            </p>
+> 472	          </div>
+> 473	
+> 474	          <div className="flex gap-2">
+> 475	            <Button variant="outline" className="gap-2" onClick={() => setStep(1)}>
+> 476	              <ArrowLeft className="h-4 w-4" /> Voltar
+> 477	            </Button>
+> 478	            <Button className="flex-1 gap-2" onClick={doLaunch} disabled={launch.isPending || !specValid}>
+> 479	              {launch.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+> 480	              Gerar {mode === 'carousel' ? 'carrossel' : 'cortes'}
+> 481	              <ArrowRight className="h-4 w-4" />
+> 482	            </Button>
+> 483	          </div>
+> 484	        </div>
+> 485	      )}
+> 486	
+> 487	      {/* ── Passo 3 — Produção ─────────────────────────────────── */}
+> 488	      {step === 3 && (
+> 489	        <div className="space-y-4">
+> 490	          <div className={`${NEON_BOX} p-4`}>
+> 491	            <p className="text-sm">
+> 492	              Estado: <strong>{render.data?.state ?? 'enfileirado'}</strong>
+> 493	            </p>
+> 494	            <p className="mt-1 text-xs text-muted-foreground">
+> 495	              A produção roda no servidor (FFmpeg, custo US$ 0). As peças aparecem na biblioteca ao terminar —
+> 496	              você pode fechar esta página.
+> 497	            </p>
+> 498	          </div>
+> 499	          <div className="flex gap-2">
+> 500	            <Button variant="outline" className="gap-2" onClick={() => { setStep(1); setFile(null); setSpec(''); setAssetId(null); setRenderId(null); setSrtText(''); setSrtName(''); setTitle(''); }}>
+> 501	              Produzir outro
+> 502	            </Button>
+> 503	          </div>
+> 504	        </div>
+> 505	      )}
+> 506	
+> 507	      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
+> 508	        <AlertDialogContent>
+> 509	          <AlertDialogHeader>
+> 510	            <AlertDialogTitle>Excluir “{pendingDelete?.title ?? 'este master'}”?</AlertDialogTitle>
+> 511	            <AlertDialogDescription>
+> 512	              Remove o registro do acervo e apaga em cascata as variantes de publicação ligadas a ele.
+> 513	              O arquivo em si permanece no disco do servidor — um novo envio com o mesmo nome o sobrescreve.
+> 514	              Esta ação não pode ser desfeita.
+> 515	            </AlertDialogDescription>
+> 516	          </AlertDialogHeader>
+> 517	          <AlertDialogFooter>
+> 518	            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+> 519	            <AlertDialogAction
+> 520	              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+> 521	              onClick={() => {
+> 522	                const target = pendingDelete;
+> 523	                setPendingDelete(null);
+> 524	                if (!target) return;
+> 525	                del.mutate(target.id, {
+> 526	                  onSuccess: () => toast.success('Master excluído do acervo.'),
+> 527	                  onError: (e) => toast.error(e instanceof Error ? e.message : 'Falha ao excluir.'),
+> 528	                });
+> 529	              }}
+> 530	            >
+> 531	              Excluir
+> 532	            </AlertDialogAction>
+> 533	          </AlertDialogFooter>
+> 534	        </AlertDialogContent>
+> 535	      </AlertDialog>
+> 536	    </div>
+> 537	  );
+> 538	}
+> 539	
+> ```
+
+## 🤖 Claude *(20:22:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see the issue now—the RepurposeWizard completely bypasses the ViralCandidatePicker. Instead, it collects all clips into a JSON spec through `generateSpec()`, then `doLaunch()` parses and launches everything at once, which explains why the picker's filtering logic isn't being applied.
+
+The user's complaint makes sense: the wizard generates 11 cuts and the only way to deselect is manually editing the JSON textarea. The ViralCandidatePicker exists elsewhere (maybe on the node inspector or another page), but it's not integrated into this wizard flow. I need to check what VideoRepurposePage actually renders to see if there's a separate picker-based surface or if the wizard is the only entry point.
+
+Regardless, the solution is clear: the wizard should display the ViralCandidatePicker after detection so users can choose which candidates to process instead of manually deleting JSON blocks. problem is that he can't select slices from the generated JSON in the wizard — it just outputs raw JSON without a picker interface, even though the cuts themselves are rendering and running fine.
+
+The solution is to add the ViralCandidatePicker component to the RepurposeWizard so after generating with AI, he sees all 11 candidates and can choose which ones to actually process, keeping the JSON textarea as a fallback for manual editing. I'm planning to store the full candidates array in state and wire up the picker with a selected indices state that defaults to all candidates. I need to check how the node inspector wires up the picker to match that pattern for consistency. Let me look at VideoRepurposePage, VideoRepurposeInspector, and the useVideoRepurpose hook to see whether the picker derives the spec or passes indices directly to launch.
+
+Now I'm looking at the render browser reuse problem — the core issue is that renderAlphaFrames launches a fresh chromium instance for each clip, creating N sequential browser launches for N clips. I can fix this by adding an optional browser parameter to renderAlphaFrames: if provided, it reuses that browser; if not, it launches and closes one (maintaining backward compatibility). Then in segment-core, I'd launch a single browser before the clip loop, pass it through to each renderClip call, and close it after. I should prioritize the picker fix since that's what the user is testing right now, but both are tied to making cuts work. Let me read the key files strategically — renderAlphaFrames, renderClip with its loop, the inspector component to understand the picker wiring, and the hook signatures to see the ViralClip type and relevant functions.
+
+</details>
+
+
+## 🤖 Claude *(20:22:13)*
+
+Diagnóstico do seletor **confirmado**: o `RepurposeWizard` (o que a página `/dashboard/repurpose` renderiza) **não usa** o `ViralCandidatePicker`. O `generateSpec()` despeja os 11 cortes num Textarea JSON cru (linha 208) e o `doLaunch()` enfileira **todos**. O picker existe e é usado no nó do Spaces, mas **nunca foi ligado no wizard da página** — por isso você "não consegue selecionar as fatias". É exatamente o gap.
+
+Vou ler o resto para implementar as duas frentes com o padrão certo: o inspector do nó (que já tem o picker, pra espelhar) + o loop de render por clipe (browser reuse) + a página.
+
+## 🤖 Claude *(20:22:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "offset": 385,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 385	export async function renderAlphaFrames(spec: RenderSpec, outDir?: string): Promise<AlphaFramesResult> {
+> 386	  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';
+> 387	  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));
+> 388	  const durationS = Math.max(1, Math.min(60, spec.duration_s ?? 6));
+> 389	  const width = spec.width ?? 1080;
+> 390	  const height = spec.height ?? 1920;
+> 391	  const totalFrames = Math.round(durationS * fps);
+> 392	
+> 393	  const templatePath = resolve(__dirname, 'templates', `${template}.html`);
+> 394	  if (!existsSync(templatePath)) throw new Error(`template_not_found: ${template}`);
+> 395	
+> 396	  const frameDir = outDir ?? mkdtempSync(join(tmpdir(), 'hf-alpha-'));
+> 397	  // HARD CEILING per alpha render (2026-07-22 incident: render 822780e8 hung 170min inside Playwright —
+> 398	  // `document.fonts.ready` on a template with a missing @font-face never settles, and `.catch` doesn't help a
+> 399	  // promise that never rejects; nothing bounded the whole render → the worker's poll loop was blocked forever
+> 400	  // (no finalize, no error, the 15min reaper never ran because the loop never returned). A hung template MUST
+> 401	  // fail cleanly (throw → finalize failed + refund + worker continues), never hang. Scales with frame count.
+> 402	  const HARD_TIMEOUT_MS = Math.min(480_000, Math.max(180_000, totalFrames * 300));
+> 403	  const browser = await chromium.launch({
+> 404	    headless: true,
+> 405	    // --allow-file-access-from-files: let the file:// template load its self-hosted @font-face (fonts/*.ttf).
+> 406	    args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text', '--allow-file-access-from-files'],
+> 407	  });
+> 408	  let timer: ReturnType<typeof setTimeout> | undefined;
+> 409	  try {
+> 410	    await Promise.race([
+> 411	      (async () => {
+> 412	        const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+> 413	        await page.goto(`file://${templatePath}`, { waitUntil: 'load', timeout: 30_000 });
+> 414	        await page.evaluate(
+> 415	          (props) => (window as HfWindow).applyProps(props),
+> 416	          { ...spec.props, fps, durationSec: durationS } as Record<string, unknown>,
+> 417	        );
+> 418	
+> 419	        // Wait for the self-hosted @font-face to settle → no fallback-font early frames (deterministic). BOUNDED
+> 420	        // (5s): a @font-face pointing at a 404 leaves fonts.ready pending forever; race it against a timer so a
+> 421	        // missing font degrades to fallback glyphs instead of hanging the whole render.
+> 422	        await Promise.race([
+> 423	          page.evaluate(() => (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready),
+> 424	          new Promise((r) => setTimeout(r, 5_000)),
+> 425	        ]).catch(() => {});
+> 426	
+> 427	        for (let i = 0; i < totalFrames; i++) {
+> 428	          await page.evaluate(([idx, total]) => (window as HfWindow).applyFrame(idx, total), [i, totalFrames] as [number, number]);
+> 429	          await page.screenshot({
+> 430	            path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),
+> 431	            clip: { x: 0, y: 0, width, height },
+> 432	            omitBackground: true,           // ← RGBA, transparent bg preserved (the overlay layer)
+> 433	            animations: 'disabled',
+> 434	            timeout: 30_000,
+> 435	          });
+> 436	        }
+> 437	      })(),
+> 438	      new Promise<never>((_, rej) => {
+> 439	        timer = setTimeout(() => rej(new Error(`alpha_render_timeout_${HARD_TIMEOUT_MS}ms:${template}`)), HARD_TIMEOUT_MS);
+> 440	      }),
+> 441	    ]);
+> 442	    await browser.close();
+> 443	
+> 444	    const first = join(frameDir, 'f_00000.png');
+> 445	    if (!existsSync(first) || statSync(first).size < 1024) throw new Error(`alpha_frames_too_small: ${first}`);
+> 446	
+> 447	    return { frameDir, framePattern: 'f_%05d.png', frames: totalFrames, fps, width, height };
+> 448	  } finally {
+> 449	    if (timer) clearTimeout(timer);
+> 450	    await browser.close().catch(() => {});
+> 451	  }
+> 452	}
+> 453	
+> 454	/**
+> 455	 * Render a Studio-authored project — FR-VS-050 (SDD §VS-UI-C): NATIVE engine on @hyperframes/core (Apache-2.0)
+> 456	 * by default; the legacy CLI wrap (FR-VS-047 §B.3) remains available as emergency rollback via
+> 457	 * STUDIO_RENDER_ENGINE=cli. Throws on any failure (worker → finalize_video_render(failed, refund)).
+> 458	 *
+> 459	 * Security: `project_dir` MUST resolve strictly under STUDIO_PROJECTS_ROOT (no traversal / arbitrary path exec).
+> ```
+
+## 🤖 Claude *(20:22:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "offset": 235,
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 235	/** Segment a master into N clips per the cut-spec. Serial (deterministic, memory-safe for a long master). */
+> 236	export async function segmentVideo(spec: SegmentSpec): Promise<ClipResult[]> {
+> 237	  if (!existsSync(spec.sourcePath)) throw new Error(`source_not_found: ${spec.sourcePath}`);
+> 238	  if (!Array.isArray(spec.clips) || spec.clips.length === 0) throw new Error('cut_spec_empty');
+> 239	  mkdirSync(spec.outDir, { recursive: true });
+> 240	  const out: ClipResult[] = [];
+> 241	  for (let i = 0; i < spec.clips.length; i++) {
+> 242	    const c = spec.clips[i];
+> 243	    if (!(c.out_sec > c.in_sec) || c.in_sec < 0) throw new Error(`clip_${i}_invalid_range`);
+> 244	    out.push(await renderClip(spec, c, i));
+> 245	  }
+> 246	  return out;
+> 247	}
+> 248	
+> ```
+
+## 🤖 Claude *(20:22:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VideoRepurposeInspector.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useState } from "react";
+> 2	import { toast } from "sonner";
+> 3	import { Scissors, Loader2, Library, CheckCircle2, Sparkles } from "lucide-react";
+> 4	import { Button } from "@/components/ui/button";
+> 5	import { useCanvasStore } from "@/store/useCanvasStore";
+> 6	import { Section, InspectorHeader } from "../shared";
+> 7	import { CaptionStyleGallery } from "@/components/repurpose/CaptionStyleGallery";
+> 8	import { CaptionLoopPreview } from "@/components/repurpose/CaptionLoopPreview";
+> 9	import { ViralCandidatePicker } from "@/components/repurpose/ViralCandidatePicker";
+> 10	import { useIngestedMasters, useDetectViralMoments, useLaunchRepurpose, useRenderStatus, type CaptionStyle, type ClipSpecInput } from "@/hooks/useVideoRepurpose";
+> 11	import type { VideoRepurposeData } from "@/types/canvas";
+> 12	
+> 13	const selectClass = "w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm";
+> 14	
+> 15	// Cortes do Master — o motor de repurpose (/dashboard/repurpose) como um nó do Spaces. Escolhe um master
+> 16	// ingerido → detect-viral-moments (ancorado no SRT) → video-repurpose-run com a legenda escolhida (beats).
+> 17	// Reusa os MESMOS hooks e o mesmo par galeria+prévia da página; render grátis, custo só do detect (IA).
+> 18	export function VideoRepurposeInspector({ node }: { node: { id: string; data: VideoRepurposeData } }) {
+> 19	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 20	  const d = node.data;
+> 21	  const { masters } = useIngestedMasters();
+> 22	  const detect = useDetectViralMoments();
+> 23	  const launch = useLaunchRepurpose();
+> 24	  const render = useRenderStatus(d.renderId ?? null);
+> 25	  const [busy, setBusy] = useState(false);
+> 26	
+> 27	  // The detector NEEDS an SRT, and the host key must be sane — only those masters are runnable.
+> 28	  const usable = masters.filter((m) => m.hasSrt && m.keyLooksSanitized);
+> 29	
+> 30	  // Reconcile the node status from the render poll: done → success, failed/error → failed.
+> 31	  useEffect(() => {
+> 32	    const st = (render.data as { state?: string } | undefined)?.state;
+> 33	    if (!st || d.status !== "running") return;
+> 34	    if (st === "done") updateNodeData(node.id, { status: "success" });
+> 35	    else if (st === "failed" || st === "error") updateNodeData(node.id, { status: "failed", error: "Falha no render dos cortes." });
+> 36	  }, [render.data, d.status, node.id, updateNodeData]);
+> 37	
+> 38	  const candidates = d.candidates ?? [];
+> 39	  const selectedIdx = d.selectedIdx ?? [];
+> 40	
+> 41	  // Phase 1 — detect ABUNDANT candidates. top_n is sent ONLY when the Sovereign raised it above the default 3
+> 42	  // (explicit override wins); leaving it at the default lets the server pick a duration-aware count (min 5 for a
+> 43	  // 5min+ master). Candidates + selection persist in the node data (the detection cost mco → survives reload).
+> 44	  const doDetect = async () => {
+> 45	    if (!d.masterAssetId) return toast.error("Escolha um master.");
+> 46	    setBusy(true);
+> 47	    updateNodeData(node.id, { status: "running", error: undefined, candidates: undefined, selectedIdx: undefined, renderId: undefined, output: undefined });
+> 48	    try {
+> 49	      const { clips } = await detect.mutateAsync(
+> 50	        d.topN > 3 ? { master_asset_id: d.masterAssetId, top_n: d.topN } : { master_asset_id: d.masterAssetId },
+> 51	      );
+> 52	      if (!clips.length) throw new Error("Nenhum momento viral detectado no master.");
+> 53	      updateNodeData(node.id, {
+> 54	        status: "idle",
+> 55	        candidates: clips,
+> 56	        selectedIdx: clips.slice(0, 3).map((_, i) => i), // pré-seleciona top-3 (já ordenado por score)
+> 57	      });
+> 58	      toast.success(`${clips.length} candidato(s) detectado(s) — escolha os melhores e queime.`);
+> 59	    } catch (e) {
+> 60	      const msg = e instanceof Error ? e.message : String(e);
+> 61	      updateNodeData(node.id, { status: "failed", error: msg });
+> 62	      toast.error(msg);
+> 63	    } finally {
+> 64	      setBusy(false);
+> 65	    }
+> 66	  };
+> 67	
+> 68	  // Phase 2 — burn ONLY the selected candidates (render grátis, 0 mco).
+> 69	  const doBurn = async () => {
+> 70	    if (!d.masterAssetId || !selectedIdx.length) return;
+> 71	    const chosen = selectedIdx.map((i) => candidates[i]).filter(Boolean);
+> 72	    if (!chosen.length) return;
+> 73	    setBusy(true);
+> 74	    updateNodeData(node.id, { status: "running", error: undefined });
+> 75	    try {
+> 76	      // Build ClipSpecInput explicitly — a candidate carries score/reason/title the launch contract doesn't want;
+> 77	      // spreading them tripped TS2322 (pre-existing) and leaked noise into the render body. reframe/caption are
+> 78	      // repurpose-spec concerns the detector doesn't set (default 9:16, no burned-in bar — beats own the text).
+> 79	      const runClips: ClipSpecInput[] = chosen.map((c) => ({
+> 80	        in_sec: c.in_sec,
+> 81	        out_sec: c.out_sec,
+> 82	        reframe: "9:16",
+> 83	        caption: "",
+> 84	        caption_mode: "beats",
+> 85	        text_beats: c.text_beats,
+> 86	        caption_style: d.captionStyle as CaptionStyle,
+> 87	      }));
+> 88	      const res = await launch.mutateAsync({ source_asset_id: d.masterAssetId, mode: "repurpose", clips: runClips });
+> 89	      updateNodeData(node.id, {
+> 90	        renderId: res.render_id,
+> 91	        status: "running",
+> 92	        output: { cutCount: chosen.length, launchedAt: new Date().toISOString() },
+> 93	      });
+> 94	      toast.success(`${chosen.length} corte(s) enfileirado(s) — renderizando…`);
+> 95	    } catch (e) {
+> 96	      const msg = e instanceof Error ? e.message : String(e);
+> 97	      updateNodeData(node.id, { status: "failed", error: msg });
+> 98	      toast.error(msg);
+> 99	    } finally {
+> 100	      setBusy(false);
+> 101	    }
+> 102	  };
+> 103	
+> 104	  const toggleCandidate = (i: number) =>
+> 105	    updateNodeData(node.id, {
+> 106	      selectedIdx: selectedIdx.includes(i) ? selectedIdx.filter((x) => x !== i) : [...selectedIdx, i],
+> 107	    });
+> 108	
+> 109	  const running = busy || d.status === "running";
+> 110	  const detecting = busy && d.status === "running" && !candidates.length;
+> 111	  const canDetect = Boolean(d.masterAssetId) && !running;
+> 112	
+> 113	  return (
+> 114	    <div className="flex h-full flex-col">
+> 115	      <div className="flex-1 overflow-y-auto">
+> 116	        <InspectorHeader icon={<Scissors className="h-3.5 w-3.5" />} label={d.label} id={node.id} />
+> 117	
+> 118	        <Section title="Master (vídeo longo)">
+> 119	          <select
+> 120	            className={selectClass}
+> 121	            value={d.masterAssetId ?? ""}
+> 122	            onChange={(e) => {
+> 123	              const m = usable.find((x) => x.id === e.target.value);
+> 124	              // Trocar de master invalida os candidatos do anterior — zerar junto (senão sobrevivem no node data).
+> 125	              updateNodeData(node.id, { masterAssetId: m?.id, masterTitle: m?.title, status: "idle", error: undefined, renderId: undefined, candidates: undefined, selectedIdx: undefined });
+> 126	            }}
+> 127	          >
+> 128	            <option value="">Escolha um master…</option>
+> 129	            {usable.map((m) => (
+> 130	              <option key={m.id} value={m.id}>{m.title}</option>
+> 131	            ))}
+> 132	          </select>
+> 133	          {masters.length > 0 && usable.length === 0 && (
+> 134	            <p className="mt-1 text-[10px] text-amber-400">
+> 135	              Nenhum master com transcrição (SRT). O detector de cortes precisa do SRT — envie/processe o master pelo /dashboard/repurpose.
+> 136	            </p>
+> 137	          )}
+> 138	          <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+> 139	            <Library className="h-3 w-3" /> Mesmo acervo de masters do /dashboard/repurpose.
+> 140	          </p>
+> 141	        </Section>
+> 142	
+> 143	        <Section title="Quantos candidatos">
+> 144	          <input
+> 145	            type="number"
+> 146	            min={1}
+> 147	            max={12}
+> 148	            value={d.topN}
+> 149	            className={selectClass}
+> 150	            onChange={(e) => updateNodeData(node.id, { topN: Math.min(12, Math.max(1, Math.round(Number(e.target.value) || 3))) })}
+> 151	          />
+> 152	          <p className="mt-1 text-[10px] text-muted-foreground">
+> 153	            No padrão (3), o detector sugere a quantidade pela duração do master (mín. 5 num vídeo de 5min+). Suba
+> 154	            para forçar um número exato.
+> 155	          </p>
+> 156	        </Section>
+> 157	
+> 158	        {candidates.length > 0 && (
+> 159	          <Section title="Escolha os cortes">
+> 160	            <ViralCandidatePicker
+> 161	              candidates={candidates}
+> 162	              selected={selectedIdx}
+> 163	              onToggle={toggleCandidate}
+> 164	              onSelectAll={() => updateNodeData(node.id, { selectedIdx: candidates.map((_, i) => i) })}
+> 165	              onClear={() => updateNodeData(node.id, { selectedIdx: [] })}
+> 166	            />
+> 167	          </Section>
+> 168	        )}
+> 169	
+> 170	        <Section title="Estilo da legenda">
+> 171	          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+> 172	            <div className="min-w-0 flex-1">
+> 173	              <CaptionStyleGallery
+> 174	                value={d.captionStyle as CaptionStyle}
+> 175	                onChange={(v) => updateNodeData(node.id, { captionStyle: v })}
+> 176	              />
+> 177	            </div>
+> 178	            <div className="flex shrink-0 flex-col items-center gap-1 self-center sm:self-start sm:sticky sm:top-2">
+> 179	              <CaptionLoopPreview styleSlug={d.captionStyle} widthPx={180} />
+> 180	            </div>
+> 181	          </div>
+> 182	        </Section>
+> 183	
+> 184	        {d.error && (
+> 185	          <Section>
+> 186	            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2.5 text-[11px] text-destructive">{d.error}</div>
+> 187	          </Section>
+> 188	        )}
+> 189	        {d.status === "success" && d.output && (
+> 190	          <Section title="Resultado">
+> 191	            <div className="flex items-center gap-1.5 text-[12px] text-emerald-400">
+> 192	              <CheckCircle2 className="h-4 w-4" /> {d.output.cutCount} cortes prontos — veja na Biblioteca de Assets.
+> 193	            </div>
+> 194	          </Section>
+> 195	        )}
+> 196	      </div>
+> 197	
+> 198	      <div className="space-y-2 border-t border-border bg-card p-3">
+> 199	        <Button type="button" variant={candidates.length ? "outline" : "accent"} className="w-full gap-2" disabled={!canDetect} onClick={doDetect} title={!d.masterAssetId ? "Escolha um master" : undefined}>
+> 200	          {detecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+> 201	          {detecting ? "Detectando…" : candidates.length ? "Detectar de novo (3 mco)" : "Detectar momentos (3 mco)"}
+> 202	        </Button>
+> 203	        {candidates.length > 0 && (
+> 204	          <Button type="button" variant="accent" className="w-full gap-2" disabled={!selectedIdx.length || running} onClick={doBurn}>
+> 205	            {running && !detecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scissors className="h-4 w-4" />}
+> 206	            {d.status === "running" && !detecting ? "Cortando…" : `Queimar ${selectedIdx.length} corte(s) (grátis)`}
+> 207	          </Button>
+> 208	        )}
+> 209	        <p className="text-center text-[9px] text-muted-foreground">
+> 210	          Detecta os momentos virais (3 mco) · você escolhe quais queimar · render grátis
+> 211	        </p>
+> 212	      </div>
+> 213	    </div>
+> 214	  );
+> 215	}
+> 216	
+> ```
+
+## 🤖 Claude *(20:22:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoRepurposePage.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState, useRef, useEffect } from 'react';
+> 2	import { RepurposeWizard } from '@/components/repurpose/RepurposeWizard';
+> 3	import { CaptionStyleGallery } from '@/components/repurpose/CaptionStyleGallery';
+> 4	import { ViralCandidatePicker } from '@/components/repurpose/ViralCandidatePicker';
+> 5	import {
+> 6	  UploadCloud,
+> 7	  Film,
+> 8	  Plus,
+> 9	  Trash2,
+> 10	  Loader2,
+> 11	  CheckCircle2,
+> 12	  AlertTriangle,
+> 13	  Scissors,
+> 14	  Images,
+> 15	  PlayCircle,
+> 16	  Sparkles,
+> 17	} from 'lucide-react';
+> 18	import { Button } from '@/components/ui/button';
+> 19	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+> 20	import { Input } from '@/components/ui/input';
+> 21	import { Badge } from '@/components/ui/badge';
+> 22	import { toast } from 'sonner';
+> 23	import { useAuth } from '@/hooks/useAuth';
+> 24	import { useIsAdmin } from '@/hooks/useAdminData';
+> 25	import { supabase } from '@/integrations/supabase/client';
+> 26	import { edgeErrorMessage } from '@/lib/edge';
+> 27	import {
+> 28	  uploadMasterToHost,
+> 29	  useIngestMaster,
+> 30	  useLaunchRepurpose,
+> 31	  useRenderStatus,
+> 32	  useRepurposeResults,
+> 33	  useDetectViralMoments,
+> 34	  usePublishSpaceAsset,
+> 35	  useMasterSrtStatus,
+> 36	  DEFAULT_CAPTION_STYLE,
+> 37	  type ClipSpecInput,
+> 38	  type SlideSpecInput,
+> 39	  type CaptionStyle,
+> 40	  type ViralClip,
+> 41	} from '@/hooks/useVideoRepurpose';
+> 42	
+> 43	const STATE_LABEL: Record<string, string> = {
+> 44	  queued: 'Na fila',
+> 45	  running: 'Processando',
+> 46	  done: 'Concluído',
+> 47	  failed: 'Falhou',
+> 48	  error: 'Erro',
+> 49	};
+> 50	
+> 51	export default function VideoRepurposePage() {
+> 52	  const { user } = useAuth();
+> 53	  const { isAdmin, loading: adminLoading } = useIsAdmin();
+> 54	
+> 55	  const [hostFilename, setHostFilename] = useState('');
+> 56	  const [title, setTitle] = useState('');
+> 57	  const [dragOver, setDragOver] = useState(false);
+> 58	  const [uploading, setUploading] = useState(false);
+> 59	  const [uploadProgress, setUploadProgress] = useState(0);
+> 60	  const fileInputRef = useRef<HTMLInputElement>(null);
+> 61	  const [srtPt, setSrtPt] = useState('');
+> 62	  const [mode, setMode] = useState<'repurpose' | 'carousel'>('repurpose');
+> 63	  const [clips, setClips] = useState<ClipSpecInput[]>([{ in_sec: 0, out_sec: 20, reframe: '9:16', caption: '' }]);
+> 64	  const [slides, setSlides] = useState<SlideSpecInput[]>([{ t_sec: 0, caption: '' }]);
+> 65	  const [handle, setHandle] = useState('');
+> 66	  // Escolha ÚNICA por job — carimbada em todos os cortes no envio (ver doLaunch/doViralCuts).
+> 67	  const [captionStyle, setCaptionStyle] = useState<CaptionStyle>(DEFAULT_CAPTION_STYLE);
+> 68	  const [jsonText, setJsonText] = useState('');
+> 69	  const [assetId, setAssetId] = useState<string | null>(null);
+> 70	  const [renderId, setRenderId] = useState<string | null>(null);
+> 71	
+> 72	  // FR-VR-015: viral-run progress (bar + single-line log tail). null = idle.
+> 73	  const [viral, setViral] = useState<{ pct: number; log: string; total: number; done: boolean } | null>(null);
+> 74	  // FR-VR-010: two-phase viral flow — detect fills `candidates`, the Sovereign picks, then burn. Ephemeral is
+> 75	  // fine on the page (re-detection costs 3 mco but the picker is the durable value); the canvas node persists.
+> 76	  const [detecting, setDetecting] = useState(false);
+> 77	  const [candidates, setCandidates] = useState<ViralClip[]>([]);
+> 78	  const [selectedIdx, setSelectedIdx] = useState<number[]>([]);
+> 79	
+> 80	  // S1 UX: per-clip distribution target + last enqueue result (asset_id → platform / status).
+> 81	  const [pubTarget, setPubTarget] = useState<Record<string, string>>({});
+> 82	  const [pubSent, setPubSent] = useState<Record<string, string>>({});
+> 83	  // OTD-SPACES-044 — carousel is published as ONE IG post (not per-slide). Track the scheduled state.
+> 84	  const [carouselSent, setCarouselSent] = useState<string | null>(null);
+> 85	  const [carouselBusy, setCarouselBusy] = useState(false);
+> 86	
+> 87	  const ingest = useIngestMaster();
+> 88	  const launch = useLaunchRepurpose();
+> 89	  const detect = useDetectViralMoments();
+> 90	  const publish = usePublishSpaceAsset();
+> 91	  const render = useRenderStatus(renderId);
+> 92	  const results = useRepurposeResults(assetId && renderId ? assetId : null, !!viral && !viral.done);
+> 93	  const srtStatus = useMasterSrtStatus(assetId);
+> 94	
+> 95	  const doPublish = async (clipAssetId: string) => {
+> 96	    const platform = pubTarget[clipAssetId] ?? 'tiktok';
+> 97	    try {
+> 98	      await publish.mutateAsync({ source_asset_id: clipAssetId, platform });
+> 99	      setPubSent((m) => ({ ...m, [clipAssetId]: platform }));
+> 100	      toast.success(
+> 101	        platform === 'tiktok'
+> 102	          ? 'Na fila de distribuição (TikTok sai PRIVADO até a auditoria do app).'
+> 103	          : 'Na fila de distribuição — o auto-publish cuida do resto.',
+> 104	      );
+> 105	    } catch (e) {
+> 106	      toast.error((e as Error).message);
+> 107	    }
+> 108	  };
+> 109	
+> 110	  // OTD-SPACES-044 — schedule the whole slide set as ONE IG CAROUSEL via publish-space-carousel {schedule:true}.
+> 111	  const scheduleCarousel = async () => {
+> 112	    if (!renderId) return;
+> 113	    setCarouselBusy(true);
+> 114	    try {
+> 115	      const { data, error } = await supabase.functions.invoke('publish-space-carousel', {
+> 116	        body: { render_id: renderId, caption: title || '', schedule: true },
+> 117	      });
+> 118	      if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao agendar carrossel'));
+> 119	      if (data?.error) throw new Error(data.error);
+> 120	      setCarouselSent(data?.scheduled_post_id ?? 'queued');
+> 121	      toast.success(`Carrossel agendado (${data?.slides ?? slides.length} slides) — o auto-publish cuida do resto.`);
+> 122	    } catch (e) {
+> 123	      toast.error((e as Error).message);
+> 124	    } finally {
+> 125	      setCarouselBusy(false);
+> 126	    }
+> 127	  };
+> 128	
+> 129	  const renderState = (render.data as { state?: string } | undefined)?.state;
+> 130	
+> 131	  // Progress driven by REAL signals: queue state + children registered so far (one per finished clip).
+> 132	  const clipsReady = (results.data ?? []).filter(
+> 133	    (a) => renderId && (a.metadata as { render_id?: string } | null)?.render_id === renderId,
+> 134	  ).length;
+> 135	  useEffect(() => {
+> 136	    if (!viral || viral.done || !renderId) return;
+> 137	    if (renderState === 'queued') {
+> 138	      setViral((v) => v && { ...v, pct: 38, log: '⏳ Na fila do worker de render…' });
+> 139	    } else if (renderState === 'running') {
+> 140	      const pct = 42 + Math.round((clipsReady / Math.max(1, viral.total)) * 50);
+> 141	      setViral((v) => v && {
+> 142	        ...v, pct,
+> 143	        log: clipsReady > 0
+> 144	          ? `🎞️ Clipe ${Math.min(clipsReady + 1, viral.total)}/${viral.total} — ${clipsReady} pronto(s), renderizando motion-graphic…`
+> 145	          : `🎞️ Renderizando clipe 1/${viral.total} (overlay motion-graphic sobre o footage)…`,
+> 146	      });
+> 147	    } else if (renderState === 'done') {
+> 148	      setViral((v) => v && { ...v, pct: 100, done: true, log: `✅ ${viral.total} corte(s) prontos — confira em Resultados e na Biblioteca.` });
+> 149	      toast.success('Cortes virais prontos!');
+> 150	    } else if (renderState === 'failed' || renderState === 'error') {
+> 151	      setViral((v) => v && { ...v, done: true, log: '❌ Render falhou — veja o estado em Resultados.' });
+> 152	    }
+> 153	  }, [viral?.done, viral?.total, renderId, renderState, clipsReady]); // eslint-disable-line react-hooks/exhaustive-deps
+> 154	
+> 155	  const toggleCandidate = (i: number) =>
+> 156	    setSelectedIdx((s) => (s.includes(i) ? s.filter((x) => x !== i) : [...s, i]));
+> 157	
+> 158	  // FR-VR-010 phase 1 — detect ABUNDANT candidates (server picks a duration-aware count when top_n is omitted;
+> 159	  // min 5 for a 5min+ master, up to 12). Does NOT burn — fills the picker. Re-detecting resets the selection.
+> 160	  const doDetect = async () => {
+> 161	    if (!user || (!assetId && !hostFilename.trim())) return;
+> 162	    setCandidates([]);
+> 163	    setSelectedIdx([]);
+> 164	    setViral(null);
+> 165	    setDetecting(true);
+> 166	    try {
+> 167	      let aid = assetId;
+> 168	      if (!aid) {
+> 169	        const ing = await ingest.mutateAsync({
+> 170	          storage_bucket: 'local',
+> 171	          storage_key: `${user.id}/${hostFilename.trim()}`,
+> 172	          title: title || hostFilename.trim(),
+> 173	          mime_type: 'video/mp4',
+> 174	          srt_pt: srtPt || undefined,
+> 175	        });
+> 176	        aid = ing.asset_id;
+> 177	        setAssetId(aid);
+> 178	      }
+> 179	      // top_n OMITTED → the server decides the count from the real transcript span (Lei 1: min 5 for 5min+).
+> 180	      const det = await detect.mutateAsync({ master_asset_id: aid! });
+> 181	      setCandidates(det.clips);
+> 182	      // Pre-select the top-3 by score (the detector already sorted desc) — a sensible default, fully editable.
+> 183	      setSelectedIdx(det.clips.slice(0, 3).map((_, i) => i));
+> 184	      toast.success(`${det.clips.length} candidato(s) detectado(s) — escolha os melhores e queime.`);
+> 185	    } catch (e) {
+> 186	      toast.error((e as Error).message);
+> 187	    } finally {
+> 188	      setDetecting(false);
+> 189	    }
+> 190	  };
+> 191	
+> 192	  // FR-VR-010 phase 2 — burn ONLY the selected candidates (rail grátis, 0 mco). Same caption style on every
+> 193	  // clip of the episode (the EP02 complaint was INCONSISTENCY between them). Style stamped at SEND, never in the
+> 194	  // clips state (there it became an invisible residue that a later manual send preferred over the picker).
+> 195	  const doBurn = async () => {
+> 196	    if (!user || !assetId || !selectedIdx.length) return;
+> 197	    const chosen = selectedIdx.map((i) => candidates[i]).filter(Boolean);
+> 198	    if (!chosen.length) return;
+> 199	    const detClips: ClipSpecInput[] = chosen.map((c) => ({
+> 200	      in_sec: c.in_sec, out_sec: c.out_sec, reframe: '9:16', caption: '',
+> 201	      caption_mode: 'beats', text_beats: c.text_beats,
+> 202	    }));
+> 203	    setMode('repurpose');
+> 204	    setClips(detClips);
+> 205	    setViral({ pct: 30, total: detClips.length, done: false, log: `🎯 Enfileirando ${detClips.length} corte(s) selecionado(s)…` });
+> 206	    try {
+> 207	      const run = await launch.mutateAsync({
+> 208	        source_asset_id: assetId, mode: 'repurpose', fps: 30,
+> 209	        clips: detClips.map((c) => ({ ...c, caption_style: captionStyle })),
+> 210	      });
+> 211	      setRenderId(run.render_id);
+> 212	      setViral((v) => v && { ...v, pct: 35, log: `🚀 Render ${run.render_id.slice(0, 8)} enfileirado (${run.count} cortes)…` });
+> 213	    } catch (e) {
+> 214	      setViral((v) => v && { ...v, done: true, log: `❌ ${(e as Error).message}` });
+> 215	      toast.error((e as Error).message);
+> 216	    }
+> 217	  };
+> 218	
+> 219	  const applyJson = () => {
+> 220	    try {
+> 221	      const parsed = JSON.parse(jsonText);
+> 222	      const arr = Array.isArray(parsed) ? parsed : parsed.clips ?? parsed.slides;
+> 223	      if (!Array.isArray(arr)) throw new Error('JSON deve ser uma lista de cortes ou slides.');
+> 224	      if (arr.length && 't_sec' in arr[0]) {
+> 225	        setMode('carousel');
+> 226	        setSlides(arr.map((s: SlideSpecInput) => ({ ...s, t_sec: Number(s.t_sec) || 0, caption: s.caption ?? '' })));
+> 227	      } else {
+> 228	        setMode('repurpose');
+> 229	        setClips(
+> 230	          // SPREAD-THEN-NORMALIZE, never field-by-field. The previous version rebuilt each clip from exactly
+> 231	          // four keys, so it ATE `caption_mode`, `text_beats` and `caption_style`: pasting the viral
+> 232	          // detector's own spec back in produced clips that silently fell through to the legacy drawtext bar
+> 233	          // (segment-core's beats branch requires text_beats), and the chosen caption style never reached the
+> 234	          // engine at all. Spreading first makes every present and future ClipSpecInput field survive by
+> 235	          // construction; the edge function re-sanitizes each one against a closed allowlist, so carrying an
+> 236	          // unknown key here costs nothing.
+> 237	          arr.map((c: ClipSpecInput) => ({
+> 238	            ...c,
+> 239	            in_sec: Number(c.in_sec) || 0,
+> 240	            out_sec: Number(c.out_sec) || 0,
+> 241	            reframe: c.reframe === '1:1' ? '1:1' : '9:16',
+> 242	            caption: c.caption ?? '',
+> 243	          })),
+> 244	        );
+> 245	      }
+> 246	      toast.success('Spec carregada do JSON.');
+> 247	    } catch (e) {
+> 248	      toast.error(`JSON inválido: ${(e as Error).message}`);
+> 249	    }
+> 250	  };
+> 251	
+> 252	  const doLaunch = async () => {
+> 253	    if (!user || !hostFilename.trim()) return;
+> 254	    try {
+> 255	      let aid = assetId;
+> 256	      if (!aid) {
+> 257	        const ing = await ingest.mutateAsync({
+> 258	          storage_bucket: 'local',
+> 259	          storage_key: `${user.id}/${hostFilename.trim()}`,
+> 260	          title: title || hostFilename.trim(),
+> 261	          mime_type: 'video/mp4',
+> 262	          srt_pt: srtPt || undefined,
+> 263	        });
+> 264	        aid = ing.asset_id;
+> 265	        setAssetId(aid);
+> 266	      }
+> 267	      const run = await launch.mutateAsync(
+> 268	        mode === 'carousel'
+> 269	          ? { source_asset_id: aid, mode, slides, handle: handle || undefined }
+> 270	          : {
+> 271	            source_asset_id: aid, mode, fps: 30,
+> 272	            // Estilo do JOB carimbado em todos os cortes; um valor já presente na spec colada prevalece.
+> 273	            clips: clips.map((c) => ({ ...c, caption_style: c.caption_style ?? captionStyle })),
+> 274	          },
+> 275	      );
+> 276	      setRenderId(run.render_id);
+> 277	      toast.success(`Enfileirado: ${run.count} ${mode === 'carousel' ? 'slides' : 'cortes'}.`);
+> 278	    } catch (e) {
+> 279	      toast.error((e as Error).message);
+> 280	    }
+> 281	  };
+> 282	
+> 283	  const handleUpload = async (file: File) => {
+> 284	    setUploading(true);
+> 285	    setUploadProgress(0);
+> 286	    try {
+> 287	      const r = await uploadMasterToHost(file, setUploadProgress);
+> 288	      setHostFilename(r.filename);
+> 289	      if (!title) setTitle(r.filename.replace(/\.[^.]+$/, ''));
+> 290	      toast.success(`Master enviado ao host (${(r.bytes / 1048576).toFixed(1)} MB).`);
+> 291	    } catch (e) {
+> 292	      toast.error((e as Error).message);
+> 293	    } finally {
+> 294	      setUploading(false);
+> 295	    }
+> 296	  };
+> 297	
+> 298	  const canLaunch =
+> 299	    !!hostFilename.trim() &&
+> 300	    (mode === 'carousel' ? slides.length > 0 : clips.length > 0) &&
+> 301	    !launch.isPending &&
+> 302	    !ingest.isPending;
+> 303	
+> 304	  // ── Admin gate (Sovereign directive: "ser e aparecer somente para admin") ──
+> 305	  if (adminLoading) {
+> 306	    return <div className="p-6 text-sm text-muted-foreground">Carregando…</div>;
+> 307	  }
+> 308	  if (!isAdmin) {
+> 309	    return (
+> 310	      <div className="mx-auto max-w-4xl p-6">
+> 311	        <Card className="border-amber-500/30 bg-amber-500/5">
+> 312	          <CardContent className="py-10 text-center text-sm text-amber-300">
+> 313	            Esta função (Repurpose de Vídeo) é restrita a administradores.
+> 314	          </CardContent>
+> 315	        </Card>
+> 316	      </div>
+> 317	    );
+> 318	  }
+> 319	
+> 320	  const inboxPath = `repurpose-inbox/${user?.id ?? '<seu-id>'}/`;
+> 321	
+> 322	  return (
+> 323	    <div className="mx-auto max-w-4xl space-y-6 p-6">
+> 324	      <div className="flex items-center gap-3">
+> 325	        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400">
+> 326	          <Scissors className="h-6 w-6" />
+> 327	        </div>
+> 328	        <div>
+> 329	          <h1 className="text-xl font-semibold">Repurpose de Vídeo</h1>
+> 330	          <p className="text-sm text-muted-foreground">
+> 331	            1 master 16:9 → N shorts verticais legendados + carrossel. Rail FFmpeg grátis (US$ 0).
+> 332	          </p>
+> 333	        </div>
+> 334	      </div>
+> 335	
+> 336	      {/* Trilha guiada (wizard 3 passos) — o caminho recomendado: master → spec por IA → produção.
+> 337	          Os controles avulsos abaixo permanecem para o fluxo manual/avançado. */}
+> 338	      <RepurposeWizard />
+> 339	
+> 340	      <details className="group">
+> 341	        <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+> 342	          Controles avançados (fluxo manual)
+> 343	        </summary>
+> 344	        <div className="space-y-6 pt-4">
+> 345	
+> 346	      {/* Step 1 — Drag & drop upload straight to host */}
+> 347	      <Card>
+> 348	        <CardHeader>
+> 349	          <CardTitle className="flex items-center gap-2 text-base">
+> 350	            <UploadCloud className="h-4 w-4 text-cyan-400" /> 1. Enviar o master
+> 351	          </CardTitle>
+> 352	          <CardDescription>
+> 353	            Arraste o MP4 do documentário aqui — vai direto pro disco do host (sem o limite de 50 MB do Supabase).
+> 354	            Só os cortes gerados (pequenos) sobem pro Supabase.
+> 355	          </CardDescription>
+> 356	        </CardHeader>
+> 357	        <CardContent className="space-y-3">
+> 358	          <div
+> 359	            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+> 360	            onDragLeave={() => setDragOver(false)}
+> 361	            onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}
+> 362	            onClick={() => fileInputRef.current?.click()}
+> 363	            className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-6 py-10 text-center transition ${dragOver ? 'border-cyan-400 bg-cyan-500/10' : 'border-border hover:border-cyan-500/50'} ${uploading ? 'pointer-events-none opacity-60' : ''}`}
+> 364	          >
+> 365	            <UploadCloud className="h-8 w-8 text-cyan-400" />
+> 366	            <p className="text-sm">Arraste o MP4 do master aqui, ou clique para escolher</p>
+> 367	            <p className="text-xs text-muted-foreground">Vai direto pro host — arquivos grandes (GB) OK</p>
+> 368	            <input
+> 369	              ref={fileInputRef}
+> 370	              type="file"
+> 371	              accept="video/mp4,video/quicktime,video/*"
+> 372	              className="hidden"
+> 373	              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}
+> 374	            />
+> 375	          </div>
+> 376	
+> 377	          {uploading && (
+> 378	            <div className="space-y-1">
+> 379	              <div className="h-2 w-full overflow-hidden rounded bg-muted">
+> 380	                <div className="h-full bg-cyan-500 transition-all" style={{ width: `${uploadProgress}%` }} />
+> 381	              </div>
+> 382	              <p className="text-xs text-muted-foreground">Enviando… {uploadProgress}%</p>
+> 383	            </div>
+> 384	          )}
+> 385	          {hostFilename && !uploading && (
+> 386	            <div className="flex items-center gap-2 text-sm text-emerald-400">
+> 387	              <CheckCircle2 className="h-4 w-4" /> <span className="font-mono">{hostFilename}</span> pronto no host
+> 388	            </div>
+> 389	          )}
+> 390	
+> 391	          <details className="text-xs text-muted-foreground">
+> 392	            <summary className="cursor-pointer select-none">Ou usar um arquivo já enviado por fora (CloudPanel)</summary>
+> 393	            <div className="mt-2 space-y-1">
+> 394	              <div className="rounded-md border border-border bg-muted/40 px-3 py-1.5 font-mono">{inboxPath}</div>
+> 395	              <Input value={hostFilename} onChange={(e) => setHostFilename(e.target.value)} placeholder="ep01-master.mp4" className="max-w-md font-mono" />
+> 396	            </div>
+> 397	          </details>
+> 398	        </CardContent>
+> 399	      </Card>
+> 400	
+> 401	      {/* Step 2 — Metadata + cuts */}
+> 402	      <Card>
+> 403	        <CardHeader>
+> 404	          <CardTitle className="flex items-center gap-2 text-base">
+> 405	            <Film className="h-4 w-4 text-cyan-400" /> 2. Metadados & cortes
+> 406	          </CardTitle>
+> 407	          <CardDescription>
+> 408	            Título e (opcional) legenda SRT em pt-BR. Defina os cortes por tempo (segundos) — ou cole o JSON pronto.
+> 409	          </CardDescription>
+> 410	        </CardHeader>
+> 411	        <CardContent className="space-y-4">
+> 412	          <div className="grid gap-3 sm:grid-cols-2">
+> 413	            <div className="space-y-1">
+> 414	              <label className="text-xs text-muted-foreground">Título do episódio</label>
+> 415	              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="EP01 — …" />
+> 416	            </div>
+> 417	            <div className="space-y-1">
+> 418	              <label className="text-xs text-muted-foreground">@handle (carrossel IG, opcional)</label>
+> 419	              <Input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@theneurallink" />
+> 420	            </div>
+> 421	          </div>
+> 422	
+> 423	          <div className="space-y-1">
+> 424	            <div className="flex items-center justify-between">
+> 425	              <label className="text-xs text-muted-foreground">Legenda SRT pt-BR (opcional)</label>
+> 426	              {/* FR-VR: upload the .srt file instead of pasting — reads into the same field. */}
+> 427	              <label className="text-xs text-primary cursor-pointer hover:underline">
+> 428	                Subir arquivo .srt
+> 429	                <input
+> 430	                  type="file"
+> 431	                  accept=".srt,.vtt,text/plain"
+> 432	                  className="hidden"
+> 433	                  onChange={(e) => {
+> 434	                    const f = e.target.files?.[0];
+> 435	                    if (!f) return;
+> 436	                    f.text().then((t) => setSrtPt(t)).catch(() => toast.error('Falha ao ler o arquivo SRT'));
+> 437	                    e.target.value = '';
+> 438	                  }}
+> 439	                />
+> 440	              </label>
+> 441	            </div>
+> 442	            <textarea
+> 443	              value={srtPt}
+> 444	              onChange={(e) => setSrtPt(e.target.value)}
+> 445	              rows={2}
+> 446	              placeholder="1&#10;00:00:00,000 --> 00:00:03,000&#10;…"
+> 447	              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+> 448	            />
+> 449	            {srtPt.trim().length > 0 && (
+> 450	              <p className="text-[11px] text-muted-foreground">{(srtPt.length / 1024).toFixed(1)} KB de legenda carregada</p>
+> 451	            )}
+> 452	          </div>
+> 453	
+> 454	          {/* FR-VR-015 — Cortes virais com 1 clique: detector (SRT) → beats → render, com barra + log tail. */}
+> 455	          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+> 456	            <div className="flex items-center justify-between gap-3">
+> 457	              <div>
+> 458	                <p className="text-sm font-medium flex items-center gap-2">
+> 459	                  <Sparkles className="h-4 w-4 text-primary" /> Gerar cortes virais (IA)
+> 460	                  {assetId && srtStatus.data && (
+> 461	                    srtStatus.data.hasSrt ? (
+> 462	                      <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 text-[10px]">
+> 463	                        SRT ✓ {(srtStatus.data.chars / 1024).toFixed(1)}k
+> 464	                      </Badge>
+> 465	                    ) : (
+> 466	                      <Badge variant="outline" className="border-amber-500/40 text-amber-300 text-[10px]">
+> 467	                        master sem SRT
+> 468	                      </Badge>
+> 469	                    )
+> 470	                  )}
+> 471	                </p>
+> 472	                <p className="text-xs text-muted-foreground">
+> 473	                  Detecta os melhores momentos no SRT (mín. 5 num vídeo de 5min+); você escolhe quais renderizar.
+> 474	                </p>
+> 475	              </div>
+> 476	              <Button
+> 477	                type="button"
+> 478	                size="sm"
+> 479	                onClick={doDetect}
+> 480	                disabled={(!assetId && !hostFilename.trim()) || detecting || (!!viral && !viral.done)}
+> 481	                className="gap-2 shrink-0"
+> 482	              >
+> 483	                {detecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+> 484	                {detecting ? 'Detectando…' : 'Detectar momentos (3 mco)'}
+> 485	              </Button>
+> 486	            </div>
+> 487	
+> 488	            {/* Phase 1 result — the candidate picker. The Sovereign selects; burn is a separate, free step. */}
+> 489	            {candidates.length > 0 && (
+> 490	              <div className="space-y-2 rounded-lg border border-border bg-background/40 p-2.5">
+> 491	                <ViralCandidatePicker
+> 492	                  candidates={candidates}
+> 493	                  selected={selectedIdx}
+> 494	                  onToggle={toggleCandidate}
+> 495	                  onSelectAll={() => setSelectedIdx(candidates.map((_, i) => i))}
+> 496	                  onClear={() => setSelectedIdx([])}
+> 497	                />
+> 498	                <Button
+> 499	                  type="button"
+> 500	                  size="sm"
+> 501	                  onClick={doBurn}
+> 502	                  disabled={!selectedIdx.length || (!!viral && !viral.done)}
+> 503	                  className="w-full gap-2"
+> 504	                >
+> 505	                  {viral && !viral.done ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scissors className="h-4 w-4" />}
+> 506	                  {viral && !viral.done
+> 507	                    ? 'Renderizando…'
+> 508	                    : `Queimar ${selectedIdx.length} corte(s) selecionado(s) (grátis)`}
+> 509	                </Button>
+> 510	              </div>
+> 511	            )}
+> 512	
+> 513	            {viral && (
+> 514	              <div className="space-y-1.5">
+> 515	                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+> 516	                  <div
+> 517	                    className="h-full rounded-full bg-primary transition-all duration-700"
+> 518	                    style={{ width: `${viral.pct}%` }}
+> 519	                  />
+> 520	                </div>
+> 521	                {/* tail de linha única — o último evento real do pipeline */}
+> 522	                <p className="truncate font-mono text-[11px] leading-4 text-muted-foreground">
+> 523	                  <span className="text-primary/70">{viral.pct}%</span> · {viral.log}
+> 524	                </p>
+> 525	              </div>
+> 526	            )}
+> 527	          </div>
+> 528	
+> 529	          <div className="flex gap-2">
+> 530	            <Button type="button" variant={mode === 'repurpose' ? 'default' : 'outline'} size="sm" onClick={() => setMode('repurpose')} className="gap-2">
+> 531	              <Scissors className="h-4 w-4" /> Shorts 9:16
+> 532	            </Button>
+> 533	            <Button type="button" variant={mode === 'carousel' ? 'default' : 'outline'} size="sm" onClick={() => setMode('carousel')} className="gap-2">
+> 534	              <Images className="h-4 w-4" /> Carrossel IG
+> 535	            </Button>
+> 536	          </div>
+> 537	
+> 538	          {/* Estilo da legenda — uma escolha por job, aplicada a todos os cortes. Ausente no carrossel:
+> 539	              slides são imagens estáticas, sem a camada de beats onde o estilo vive. */}
+> 540	          {mode === 'repurpose' && (
+> 541	            <div className="space-y-1">
+> 542	              <label htmlFor="vr-caption-style" className="text-xs text-muted-foreground">
+> 543	                Estilo da legenda (vale para todos os cortes deste envio)
+> 544	              </label>
+> 545	              <CaptionStyleGallery value={captionStyle} onChange={setCaptionStyle} />
+> 546	              <p className="text-[11px] text-muted-foreground">
+> 547	                Aplicado às legendas em modo “beats” (as do gerador de cortes virais).
+> 548	              </p>
+> 549	            </div>
+> 550	          )}
+> 551	
+> 552	          <div className="space-y-1">
+> 553	            <label className="text-xs text-muted-foreground">
+> 554	              Colar spec (JSON) — lista de {`{in_sec,out_sec,reframe,caption}`} ou {`{t_sec,caption}`}
+> 555	            </label>
+> 556	            <div className="flex gap-2">
+> 557	              <textarea
+> 558	                value={jsonText}
+> 559	                onChange={(e) => setJsonText(e.target.value)}
+> 560	                rows={2}
+> 561	                placeholder='[{"in_sec":95,"out_sec":116,"reframe":"9:16","caption":"O salto não é a notícia."}]'
+> 562	                className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs"
+> 563	              />
+> 564	              <Button type="button" variant="outline" size="sm" onClick={applyJson} disabled={!jsonText.trim()}>
+> 565	                Aplicar
+> 566	              </Button>
+> 567	            </div>
+> 568	          </div>
+> 569	
+> 570	          {mode === 'repurpose' ? (
+> 571	            <div className="space-y-2">
+> 572	              {clips.map((c, i) => (
+> 573	                <div key={i} className="flex flex-wrap items-center gap-2">
+> 574	                  <Input type="number" value={c.in_sec} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, in_sec: Number(e.target.value) } : x)))} className="w-24" placeholder="in (s)" />
+> 575	                  <Input type="number" value={c.out_sec} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, out_sec: Number(e.target.value) } : x)))} className="w-24" placeholder="out (s)" />
+> 576	                  <select value={c.reframe} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, reframe: e.target.value as '9:16' | '1:1' } : x)))} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
+> 577	                    <option value="9:16">9:16</option>
+> 578	                    <option value="1:1">1:1</option>
+> 579	                  </select>
+> 580	                  <Input value={c.caption} onChange={(e) => setClips((p) => p.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)))} className="min-w-[160px] flex-1" placeholder="Legenda (hook)" />
+> 581	                  <Button type="button" variant="ghost" size="icon" onClick={() => setClips((p) => p.filter((_, j) => j !== i))}>
+> 582	                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+> 583	                  </Button>
+> 584	                </div>
+> 585	              ))}
+> 586	              <Button type="button" variant="outline" size="sm" onClick={() => setClips((p) => [...p, { in_sec: 0, out_sec: 20, reframe: '9:16', caption: '' }])} className="gap-2">
+> 587	                <Plus className="h-4 w-4" /> Adicionar corte
+> 588	              </Button>
+> 589	            </div>
+> 590	          ) : (
+> 591	            <div className="space-y-2">
+> 592	              {slides.map((s, i) => (
+> 593	                <div key={i} className="flex flex-wrap items-center gap-2">
+> 594	                  <Input type="number" value={s.t_sec} onChange={(e) => setSlides((p) => p.map((x, j) => (j === i ? { ...x, t_sec: Number(e.target.value) } : x)))} className="w-28" placeholder="tempo (s)" />
+> 595	                  <Input value={s.caption} onChange={(e) => setSlides((p) => p.map((x, j) => (j === i ? { ...x, caption: e.target.value } : x)))} className="min-w-[160px] flex-1" placeholder="Legenda do slide" />
+> 596	                  <Button type="button" variant="ghost" size="icon" onClick={() => setSlides((p) => p.filter((_, j) => j !== i))}>
+> 597	                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+> 598	                  </Button>
+> 599	                </div>
+> 600	              ))}
+> 601	              <Button type="button" variant="outline" size="sm" onClick={() => setSlides((p) => [...p, { t_sec: 0, caption: '' }])} className="gap-2">
+> 602	                <Plus className="h-4 w-4" /> Adicionar slide
+> 603	              </Button>
+> 604	            </div>
+> 605	          )}
+> 606	        </CardContent>
+> 607	      </Card>
+> 608	
+> 609	      {/* Step 3 — Launch + status */}
+> 610	      <Card>
+> 611	        <CardHeader>
+> 612	          <CardTitle className="flex items-center gap-2 text-base">
+> 613	            <PlayCircle className="h-4 w-4 text-cyan-400" /> 3. Gerar
+> 614	          </CardTitle>
+> 615	          <CardDescription>
+> 616	            O worker (FFmpeg, grátis) lê o master do host, corta e legenda em segundo plano.
+> 617	          </CardDescription>
+> 618	        </CardHeader>
+> 619	        <CardContent className="space-y-3">
+> 620	          <Button onClick={doLaunch} disabled={!canLaunch} className="gap-2">
+> 621	            {launch.isPending || ingest.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scissors className="h-4 w-4" />}
+> 622	            Registrar & gerar {mode === 'carousel' ? 'carrossel' : 'cortes'}
+> 623	          </Button>
+> 624	
+> 625	          {renderId && (
+> 626	            <div className="flex items-center gap-2 text-sm">
+> 627	              <span className="text-muted-foreground">Status:</span>
+> 628	              <Badge variant="outline" className={renderState === 'done' ? 'border-emerald-500/40 text-emerald-300' : 'border-cyan-500/40 text-cyan-300'}>
+> 629	                {['done', 'failed', 'error'].includes(renderState ?? '') ? null : <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+> 630	                {STATE_LABEL[renderState ?? ''] ?? 'Aguardando…'}
+> 631	              </Badge>
+> 632	            </div>
+> 633	          )}
+> 634	
+> 635	          {renderState === 'done' && (
+> 636	            <div className="space-y-2">
+> 637	              <div className="flex items-center gap-2 text-sm text-emerald-400">
+> 638	                <CheckCircle2 className="h-4 w-4" />
+> 639	                {results.data?.length ?? 0} {mode === 'carousel' ? 'slides' : 'cortes'} gerados —{' '}
+> 640	                <a href="/dashboard/spaces/assets" className="underline hover:text-emerald-300">ver na Biblioteca</a>
+> 641	              </div>
+> 642	              {/* OTD-SPACES-044 — carrossel publica como UM post IG (todos os slides), não por-slide. */}
+> 643	              {mode === 'carousel' && (
+> 644	                <div className="flex items-center gap-2 rounded-md border border-border/60 px-3 py-2 text-sm">
+> 645	                  <span className="min-w-0 flex-1 text-xs text-muted-foreground">
+> 646	                    Carrossel Instagram · {(results.data ?? []).length} slides
+> 647	                  </span>
+> 648	                  {carouselSent ? (
+> 649	                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-300">agendado</Badge>
+> 650	                  ) : (
+> 651	                    <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={carouselBusy} onClick={scheduleCarousel}>
+> 652	                      {carouselBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="h-3.5 w-3.5" />}
+> 653	                      Agendar carrossel
+> 654	                    </Button>
+> 655	                  )}
+> 656	                </div>
+> 657	              )}
+> 658	              {/* S1 UX — o último metro produzir→distribuir: cada corte ganha destino + envio à fila real.
+> 659	                  (Modo carrossel: os slides individuais ficam ocultos — o post é o conjunto.) */}
+> 660	              {mode !== 'carousel' && (results.data ?? []).map((a, i) => (
+> 661	                <div key={a.id} className="flex items-center gap-2 rounded-md border border-border/60 px-3 py-2 text-sm">
+> 662	                  <Film className="h-4 w-4 shrink-0 text-muted-foreground" />
+> 663	                  <span className="min-w-0 flex-1 truncate font-mono text-xs">
+> 664	                    {mode === 'carousel' ? `slide_${i}` : `clip_${String(i).padStart(3, '0')}`} · {(a.storage_key ?? '').split('/').pop()}
+> 665	                  </span>
+> 666	                  {pubSent[a.id] ? (
+> 667	                    <Badge variant="outline" className="border-emerald-500/40 text-emerald-300">
+> 668	                      na fila · {pubSent[a.id]}
+> 669	                    </Badge>
+> 670	                  ) : (
+> 671	                    <>
+> 672	                      <select
+> 673	                        value={pubTarget[a.id] ?? 'tiktok'}
+> 674	                        onChange={(e) => setPubTarget((m) => ({ ...m, [a.id]: e.target.value }))}
+> 675	                        className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+> 676	                      >
+> 677	                        <option value="tiktok">TikTok (privado até auditoria)</option>
+> 678	                        <option value="youtube">YouTube Shorts</option>
+> 679	                        <option value="instagram">Instagram Reels</option>
+> 680	                        <option value="linkedin">LinkedIn</option>
+> 681	                      </select>
+> 682	                      <Button type="button" size="sm" variant="outline" className="gap-1.5"
+> 683	                        disabled={publish.isPending} onClick={() => doPublish(a.id)}>
+> 684	                        {publish.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlayCircle className="h-3.5 w-3.5" />}
+> 685	                        Distribuir
+> 686	                      </Button>
+> 687	                    </>
+> 688	                  )}
+> 689	                </div>
+> 690	              ))}
+> 691	            </div>
+> 692	          )}
+> 693	          {(renderState === 'failed' || renderState === 'error') && (
+> 694	            <div className="flex items-center gap-2 text-sm text-amber-400">
+> 695	              <AlertTriangle className="h-4 w-4" /> O worker falhou. Confira se o arquivo existe na pasta do host e o nome está correto.
+> 696	            </div>
+> 697	          )}
+> 698	        </CardContent>
+> 699	      </Card>
+> 700	        </div>
+> 701	      </details>
+> 702	    </div>
+> 703	  );
+> 704	}
+> 705	
+> ```
+
+## 🤖 Claude *(20:24:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm realizing there are actually two separate surfaces on the /repurpose page — the `RepurposeWizard` component at the top which is the main guided flow and doesn't have the picker, and then there's a collapsed "Controles avançados" section below that contains the older manual flow which does have the picker.
+
+The regression is that users naturally gravitate toward the wizard (the recommended path), which generates 11 cuts and dumps them into JSON without any way to select individual candidates. The picker exists on the page but it's hidden away in the collapsed advanced controls, so users never see it.
+
+The solution is to integrate the `ViralCandidatePicker` directly into the `RepurposeWizard` at Step 2 — after detection generates the candidates, I'd store them in state and render the picker so users can select which cuts to run, keeping the JSON textarea as a fallback for advanced users.
+
+For the default selection behavior, I'm weighing whether to pre-select all candidates (matching today's behavior but giving users control to deselect) or default to the top-3 like the node inspector and advanced flow do (safer and cheaper, but potentially surprising). The detector is now duration-aware and might return 11 cuts for a long master, so I need to decide what makes sense as the default.
+
+The picker component was always meant to be shared across all three surfaces for consistency, so defaulting to top-3 aligns with that original intent and restores the parity that was never fully wired into the wizard. I'll go with top-3 to match the other surfaces, and keep the JSON textarea as-is.
+
+For syncing, the cleanest approach is to let the picker drive the burn when candidates exist—building clips directly from selected candidates like the node inspector does—while also keeping the spec textarea synced from the selection so advanced users can still hand-edit if needed.
+
+The wizard needs restructuring: "Gerar com IA" detects and populates both the picker (with candidates and selections) and the JSON textarea so they stay aligned, with the picker only shown when candidates are available.
+
+For the launch action, I'll mirror the burn pattern exactly—keep `candidates` and `selected` state, derive the `spec` JSON from the current selection, and let the user hand-edit the textarea if needed (JSON takes precedence at launch). This keeps it simple and consistent without fighting over textarea updates. Setting up the component state and helper functions... I'm now thinking through the browser reuse optimization for `renderAlphaFrames`. Currently each clip triggers a separate chromium launch and close sequentially, which causes memory exhaustion across multiple clips. Even though launches are sequential with only one browser active at a time, the accumulation of zombie processes across five calls is hitting the 1.2G memory ceiling, so I need to refactor to keep a single browser instance alive across all clips instead. so the unresolved promise kept the browser alive indefinitely, accumulating memory until it hit 1.2G. The real question is whether browser reuse is actually necessary for the 5-clip test to work, or if the timeout fix alone solves the problem.
+
+The commit message suggests the job now fails cleanly after the timeout, which means either the rendering itself is too slow to complete 5 clips within their individual budgets, or there's still a font loading issue causing fallbacks and subsequent failures. Since each clip gets its own 3-8 minute window, the bottleneck is likely a missing or broken `@font-face` declaration in the kinetic-stack template that's preventing proper font loading.
+
+Alternatively, launching 5 chromium instances sequentially could be accumulating zombie processes or causing memory exhaustion on the host — the agent flagged this as a possibility given the 1.2G peak usage. Browser reuse across clips is the proposed fix, which makes sense from an engineering standpoint even if I can't confirm it's the sole issue without re-running.
+
+I'll implement browser reuse by adding an optional `sharedBrowser` parameter to `renderAlphaFrames` — when provided, it skips the launch/close cycle and just creates a new page within the existing browser instance. This maintains backward compatibility for other callers while letting segment-core reuse a single browser across all 5 clips. Then I'll run the full EP01 job to verify it actually works.
+
+Updating the function signatures... Refactoring the page lifecycle management... Finishing the timeout handler and cleanup logic, making sure the page always closes in the finally block regardless of whether we own the browser, and only closing the browser itself if we created it. I'm noticing there's a potential race condition where the timeout might fire while the page is still being set up. browser instance alive across clips, but close individual pages on timeout to prevent poisoning the next clip. If page.close() hangs, I'd need to bound that too, but it's unlikely since we're not killing the browser itself—just the page.
+
+Actually, looking at the code flow: segmentVideo throws immediately on the first clip error with no try/catch wrapping the renderClip calls, so the whole job fails atomically and the browser gets cleaned up in the finally block anyway. That means a hung page only becomes a problem if page.close() itself hangs, so I'll add a 10-second timeout around that to be safe.
+
+Now I'm structuring segmentVideo to reuse a single Chromium instance across all clips instead of launching a new browser for each one — that was causing memory churn and zombie process accumulation that broke the 5-clip test.
+
+I'll check if any clips need the browser for caption rendering, launch it only if necessary, then iterate through the clips with proper range validation and use a finally block to ensure cleanup.
+
+I need to make sure chromium and its launch arguments are properly imported and configured.
+
+The cleanest approach is to export a dedicated browser launcher function from render-core that handles all the launch configuration in one place, so I can reuse it wherever needed without duplicating the args.
+
+Writing the browser launcher function... `await renderAlphaFrames({...}, alphaDir, sharedBrowser)`. I need to update renderClip's signature to accept the optional sharedBrowser parameter, then trace through the logic to confirm when renderAlphaFrames actually gets called — it's only in the beats branch when caption_mode is 'beats' and text_beats exists.
+
+The question is whether I should optimize by only launching a browser when needed, or just always create one and pass it through. If I skip the optimization, I'd launch an unused browser for clips that use the simple drawtext path instead of beats, so checking which clips actually need it would be more efficient.
+
+Let me look at the full renderClip function and the imports in render-core to understand the exact condition for when beats processing happens, then I can implement both the picker fix in the wizard and the browser reuse pattern properly.
+
+</details>
+
+
+## 🤖 Claude *(20:24:14)*
+
+Agora o quadro está completo. A regressão do seletor é clara:
+
+- A página `/dashboard/repurpose` renderiza **dois** fluxos: o `RepurposeWizard` (guiado, em destaque no topo) e os **"Controles avançados"** (colapsados). O **picker existe só nos controles avançados** (linha 491) — o **wizard não tem picker**: ele despeja os 11 cortes num Textarea JSON e o `doLaunch` roda todos. Você usou o wizard → sem seleção. O padrão correto já existe no nó (`VideoRepurposeInspector`) e no fluxo avançado; falta **ligar no wizard**.
+
+Vou ver o `renderClip` e os imports do render-core para fechar o fix de browser-reuse com o mesmo cuidado.
+
+## 🤖 Claude *(20:24:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "offset": 108,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 108	  const ch = `min(ih\\,iw/${ar})`;
+> 109	  return `crop=${cw}:${ch}:(iw-ow)/2:(ih-oh)/2,scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1`;
+> 110	}
+> 111	
+> 112	/** Cut + reframe + optional caption for ONE clip. Returns the output path. */
+> 113	async function renderClip(spec: SegmentSpec, clip: ClipSpec, index: number): Promise<ClipResult> {
+> 114	  const target = TARGET[clip.reframe ?? '9:16'];
+> 115	  const fps = spec.fps ?? 30;
+> 116	  const dur = Math.max(0.1, clip.out_sec - clip.in_sec);
+> 117	  const outPath = join(spec.outDir, `clip_${String(index).padStart(3, '0')}.mp4`);
+> 118	  const reframe = reframeChain(target.ar, target.w, target.h);
+> 119	
+> 120	  // FR-VR-011: motion-graphic "text beats" — render the transparent (RGBA) text layer, composite OVER the
+> 121	  // reframed footage in a single pass (reframe [0:v] → overlay the alpha PNG seq [1:v]). Not the drawtext bar.
+> 122	  if (clip.caption_mode === 'beats' && clip.text_beats && clip.text_beats.length) {
+> 123	    const alphaDir = mkdtempSync(join(tmpdir(), 'vr-beats-'));
+> 124	    const style = resolveCaptionStyle(clip.caption_style);
+> 125	    // Motion graphics anchors its card in the calmest zone of the frame; the footer-anchored karaoke styles
+> 126	    // don't. So the saliency pass runs ONLY for the motion-graphics style — the other styles keep the plain
+> 127	    // beats props (no zone) and never pay for a saliency probe. Fail-open: pickCalmestZone is contractually
+> 128	    // no-throw (returns the deterministic default with degraded:true on any FFmpeg/source failure), but the
+> 129	    // try/catch guarantees a cosmetic zone pick can NEVER block a multi-minute re-encode (Lei 1).
+> 130	    let beatProps: BeatWithZone[] = clip.text_beats;
+> 131	    let zone: string | undefined;
+> 132	    if (style === MOTION_GRAPHICS_STYLE) {
+> 133	      zone = DEFAULT_ZONE;
+> 134	      // Fatia 2 (OTD-VR-016): BEFORE the calm-zone pick, detect the face(s) over the SAME start/mid/end instants
+> 135	      // the saliency picker samples, and hand their union to pickCalmestZone as a FORBIDDEN region. This closes
+> 136	      // the Fatia 1 limit where a calm background behind a face reads as "calm" and text lands on the subject.
+> 137	      // ONLY the motion-graphics style pays this pre-pass; the footer-anchored karaoke styles never enter here.
+> 138	      // Fail-open: detectFaceRegions is contractually no-throw (any detector/asset/FFmpeg failure → empty
+> 139	      // forbidden → identical to Fatia 1). The try/catch is belt-and-suspenders so a face pass can NEVER block
+> 140	      // a multi-minute re-encode — a silent empty catch is the false-success trap this project has been bitten by.
+> 141	      let forbidden: NormRect[] = [];
+> 142	      try {
+> 143	        const times = sampleTimes(clip.in_sec, clip.out_sec, 3);
+> 144	        const faces = await detectFaceRegions(spec.sourcePath, times);
+> 145	        forbidden = faces.forbidden;
+> 146	        if (faces.degraded) {
+> 147	          console.warn(`[repurpose] face-detect degraded for clip ${index} — could not measure, no face region (Fatia 1 fallback)`);
+> 148	        } else if (faces.forbidden.length) {
+> 149	          const m = faces.merged;
+> 150	          console.log(`[repurpose] face-detect clip ${index}: ${faces.forbidden.length} region(s) over ${faces.sampled} frame(s), merged=${m ? `(x${m.x.toFixed(2)},y${m.y.toFixed(2)},w${m.w.toFixed(2)},h${m.h.toFixed(2)})` : 'none'} (${faces.elapsedMs.toFixed(0)}ms)`);
+> 151	        }
+> 152	      } catch (e) {
+> 153	        console.warn(`[repurpose] face-detect threw for clip ${index} (kept Fatia 1, no face region): ${e instanceof Error ? e.message : String(e)}`);
+> 154	      }
+> 155	      try {
+> 156	        const pick = await pickCalmestZone(spec.sourcePath, clip.in_sec, clip.out_sec, { forbidden });
+> 157	        zone = pick.zone;
+> 158	        // Fail-open telemetry (Lei 1): `degraded` means the saliency probe silently fell back to the default
+> 159	        // (FFmpeg/edgedetect missing, unreadable window). The render still ships — but log it, or a permanently
+> 160	        // broken saliency pass would masquerade as "working" forever, always emitting lower-left. A silent
+> 161	        // fail-open is the false-success class this project has been bitten by; the render must never depend on
+> 162	        // this log, but the operator must be able to SEE that the pick was never actually measured.
+> 163	        if (pick.degraded) {
+> 164	          console.warn(`[repurpose] zone-saliency degraded for clip ${index} — probe did not measure, using default zone '${zone}'`);
+> 165	        }
+> 166	        // Fatia 2 telemetry: the face covered EVERY readable zone, so text was placed at the least-covered one.
+> 167	        // Surface it — this is exactly the "the card may still touch a face" case worth an operator's eye.
+> 168	        if (pick.faceExcludedAll) {
+> 169	          console.warn(`[repurpose] face fills every readable zone for clip ${index} — placed at least-covered zone '${zone}' (degraded face-avoidance)`);
+> 170	        }
+> 171	      } catch (e) {
+> 172	        // pickCalmestZone is contractually no-throw; reaching here is an unexpected failure. Keep the cosmetic
+> 173	        // default so a decorative zone pick can NEVER block a multi-minute re-encode — but NEVER swallow it in
+> 174	        // silence (an empty catch with no log is exactly the false-success trap flagged for this project).
+> 175	        console.warn(`[repurpose] zone-saliency threw for clip ${index} (kept default '${DEFAULT_ZONE}'): ${e instanceof Error ? e.message : String(e)}`);
+> 176	      }
+> 177	      // The template reads `zone` PER BEAT (b.zone). One face-aware calm zone governs the whole clip window, so
+> 178	      // stamp it on every beat. Top-level `zone` is carried too to honour the {beats, zone} props contract
+> 179	      // (forward-compat; the template ignores it today).
+> 180	      beatProps = clip.text_beats.map((b) => ({ ...b, zone }));
+> 181	    }
+> 182	    try {
+> 183	      await renderAlphaFrames(
+> 184	        { template: style, props: { beats: beatProps, ...(zone ? { zone } : {}) }, duration_s: dur, fps, width: target.w, height: target.h },
+> 185	        alphaDir,
+> 186	      );
+> 187	      await run('ffmpeg', [
+> ```
+
+## 🤖 Claude *(20:24:17)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "offset": 1,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * scripts/hyperframes/render-core.ts
+> 4	 *
+> 5	 * HyperFrames deterministic render engine: a composition spec → 9:16 1080×1920 MP4.
+> 6	 * BoK SSOT: docs/bok/video-studio/04-frd.md FR-VS-024 (deterministic HTML→MP4 via headless Chrome + FFmpeg)
+> 7	 *           + FR-VS-025 (per-render sandbox) · viral-autopilot FR-VA-023/024 · SOP autopilot-video-9x16.md.
+> 8	 *
+> 9	 * Pipeline (no AI leg — fully deterministic, NFR-VS-016):
+> 10	 *   1. Playwright Chromium headless, viewport 1080×1920, deviceScaleFactor 1.
+> 11	 *   2. Load templates/<template>.html (file://), inject props via applyProps (textContent → XSS-safe).
+> 12	 *   3. For each of N = duration_s × fps frames: applyFrame(i, N) → page.screenshot(PNG).
+> 13	 *   4. FFmpeg: PNG sequence → H.264 yuv420p MP4, fixed fps, -fflags +bitexact (reproducible).
+> 14	 *
+> 15	 * This is the renderer CORE — pure (no DB, no network beyond the product image). The host worker
+> 16	 * (video-bridge.ts) wraps it with the queue claim + upload + finalize_video_render.
+> 17	 *
+> 18	 * CLI (material proof): bun run scripts/hyperframes/render-core.ts --out /tmp/test.mp4 \
+> 19	 *     --hook "Sua casa limpa sozinha" --caption "Robô aspirador..." --cta "Ver no ML" --duration 4
+> 20	 */
+> 21	
+> 22	import { chromium } from 'playwright';
+> 23	import { spawn } from 'child_process';
+> 24	import { mkdtempSync, rmSync, existsSync, statSync, writeFileSync, unlinkSync } from 'fs';
+> 25	import { join, dirname, resolve } from 'path';
+> 26	import { tmpdir } from 'os';
+> 27	import { fileURLToPath } from 'url';
+> 28	
+> 29	const __dirname = dirname(fileURLToPath(import.meta.url));
+> 30	
+> 31	/**
+> 32	 * Browser-context globals injected by the HyperFrames templates / embedded runtime. Typed only so the
+> 33	 * type-checker can see the shapes accessed inside page.evaluate callbacks — erased at runtime (no behavior).
+> 34	 */
+> 35	interface HfPlayer {
+> 36	  renderSeek: (t: number) => void;
+> 37	  getDuration: () => number;
+> 38	}
+> 39	type HfWindow = Window & typeof globalThis & {
+> 40	  applyProps: (props: unknown) => void;
+> ```
+
+## 🤖 Claude *(20:25:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've identified where `renderAlphaFrames` gets called—it's only in the beats branch when there's text with beats, so I need to check if any clip uses that combination to determine if a browser is needed. I'm importing the Browser type from Playwright in render-core and now implementing two separate fixes to handle this properly.
+
+For the first fix, I'm modifying `renderAlphaFrames` to accept an optional shared browser parameter. If one isn't provided, it launches its own; if it is, it reuses that instance. The function will track the page separately and close it in a finally block, but only close the browser if it created one itself. I'm removing the premature browser close that happens mid-success and replacing the entire function body with this new logic.
+
+Rewriting the function implementation... Writing browser automation code... Writing screenshot capture logic... Setting up the template file path and validating it exists, then creating the output directory and calculating timeout limits based on frame count, with a note about reusing the browser instance across multiple clips. Writing rendering logic... Finishing the frame validation and cleanup logic...
+
+The `page` variable is declared in the function scope and assigned inside the async IIFE within Promise.race, so TypeScript should handle the type narrowing correctly — after assignment, `page` is treated as defined within that block, and the optional chaining in the finally block safely handles any undefined cases.
+
+I should simplify the type annotation by importing `Page` directly from Playwright rather than using `Awaited<ReturnType<...>>`, then declare `page` as `Page | undefined`. I'll add the `launchAlphaBrowser` helper and its arguments before the `renderAlphaFrames` function.
+
+Writing helper function... Writing segmentVideo function... Closing out the browser in the finally block, then checking the renderClip function signature to confirm it accepts the shared browser parameter, and verifying that the segment-core imports don't already have Browser or play types.
+
+Now I need to add the Playwright Browser type import to segment-core, then wire up the ViralCandidatePicker into RepurposeWizard by importing the component and ViralClip type, setting up state for candidates and selected indices, building a helper to construct the spec JSON from the selected candidates, and updating generateSpec to populate the candidates field.
+
+I'll also need to handle toggling candidates and clearing selections, reset the candidates when the mode switches, and render the picker in Step 2 once candidates are available.
+
+Building the spec helper function... Calling the detector to find viral moments in the asset, then pre-selecting the top three by score as defaults while letting the user edit them, populating the candidates list and building the initial spec from that selection, with a success toast showing how many moments were found.
+
+Now I'm adding helper functions to toggle individual candidates on and off, select all of them at once, or clear the selection entirely, each one updating the spec based on the new selection state.
+
+I notice I'm calling setSpec inside the state updater, which violates React's purity principle — the updater should be a pure function. Let me refactor to compute the next selection outside the updater, then call both setSelected and setSpec sequentially. This way I'm reading selected from the closure, which is fine since the component re-renders anyway.
+
+For mode changes, I'll also need to clear the candidates and selection when switching modes.
+
+Now I'm inserting the candidate picker component into Step 2, right before the JSON spec box. I'll render it conditionally when there are candidates available, passing in the current selection state and the toggle handler.
+
+I should also update the "Gerar com IA" button label to show the cost upfront — changing it to "Gerar com IA (3 mco)" so users know what they're spending before they click.
+
+The main launch button at line 478 uses `specValid` to check if there's a valid selection, so if the user detects moments but selects zero cuts, the spec becomes empty and the button stays disabled — which is the right behavior.
+
+Now I'm thinking through the `hook_phrase` handling for ViralClip. The node's doBurn uses an empty caption for beats since the beats themselves render the text, but the wizard's original generateSpec was using `caption: c.hook_phrase`. I need to figure out which approach is correct by checking how segment-core's renderClip handles captions.
+
+When `caption_mode` is set to 'beats', the engine renders the alpha overlay and ignores the caption field entirely — it only uses caption for non-beats modes. So functionally it doesn't matter, but for consistency with the node and advanced page implementations, I should set `caption: ''` for beats cuts to match the proven pattern exactly.
+
+Now I need to verify that ViralClip has the `hook_phrase` and `text_beats` fields I'm relying on. Looking at the ViralCandidatePicker references, it pulls `hook_phrase`, `text_beats`, `score`, and the timing fields, which confirms these exist. The carousel should use `hook_phrase` as the visible slide caption, while repurpose beats leaves caption empty. Let me also check that `ClipSpecInput` includes both `caption_mode` and `text_beats` fields.
+
+I can see that `doBurn` constructs the spec with `caption_mode: 'beats'` and `text_beats`, which gets passed as `ClipSpecInput[]`. The wizard's `doLaunch` spreads these values through, so they survive the pipeline, and then `launch` adds the `caption_style` on top. Everything chains together correctly. Now I'll make the edits, being careful with exact string matching in render-core.ts.
+
+I need to update the import statement to include the Browser and Page types, then add a helper function before `renderAlphaFrames`, and finally replace the function body itself. Let me start with the import fix. Preparing the edit with precise whitespace...
+
+</details>
+
+
+## 🤖 Claude *(20:25:52)*
+
+Diagnóstico fechado. `renderClip` chama `renderAlphaFrames` só no ramo `beats` (linha 122) e cada chamada abre um chromium próprio → N clipes = N launches sequenciais (o pico de 1,2G que matou o job de 5). Vou implementar as duas frentes agora.
+
+**Fix 1 — Render: reuso de browser entre clipes** (`render-core.ts`):
+
+## 🤖 Claude *(20:25:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "import { chromium } from 'playwright';",
+  "new_string": "import { chromium, type Browser, type Page } from 'playwright';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:26:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "export async function renderAlphaFrames(spec: RenderSpec, outDir?: string): Promise<AlphaFramesResult> {\n  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';\n  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));\n  const durationS = Math.max(1, Math.min(60, spec.duration_s ?? 6));\n  const width = spec.width ?? 1080;\n  const height = spec.height ?? 1920;\n  const totalFrames = Math.round(durationS * fps);\n\n  const templatePath = resolve(__dirname, 'templates', `${template}.html`);\n  if (!existsSync(templatePath)) throw new Error(`template_not_found: ${template}`);\n\n  const frameDir = outDir ?? mkdtempSync(join(tmpdir(), 'hf-alpha-'));\n  // HARD CEILING per alpha render (2026-07-22 incident: render 822780e8 hung 170min inside Playwright \u2014\n  // `document.fonts.ready` on a template with a missing @font-face never settles, and `.catch()` doesn't help a\n  // promise that never rejects; nothing bounded the whole render \u2192 the worker's poll loop was blocked forever\n  // (no finalize, no error, the 15min reaper never ran because the loop never returned). A hung template MUST\n  // fail cleanly (throw \u2192 finalize failed + refund + worker continues), never hang. Scales with frame count.\n  const HARD_TIMEOUT_MS = Math.min(480_000, Math.max(180_000, totalFrames * 300));\n  const browser = await chromium.launch({\n    headless: true,\n    // --allow-file-access-from-files: let the file:// template load its self-hosted @font-face (fonts/*.ttf).\n    args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text', '--allow-file-access-from-files'],\n  });\n  let timer: ReturnType<typeof setTimeout> | undefined;\n  try {\n    await Promise.race([\n      (async () => {\n        const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });\n        await page.goto(`file://${templatePath}`, { waitUntil: 'load', timeout: 30_000 });\n        await page.evaluate(\n          (props) => (window as HfWindow).applyProps(props),\n          { ...spec.props, fps, durationSec: durationS } as Record<string, unknown>,\n        );\n\n        // Wait for the self-hosted @font-face to settle \u2192 no fallback-font early frames (deterministic). BOUNDED\n        // (5s): a @font-face pointing at a 404 leaves fonts.ready pending forever; race it against a timer so a\n        // missing font degrades to fallback glyphs instead of hanging the whole render.\n        await Promise.race([\n          page.evaluate(() => (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready),\n          new Promise((r) => setTimeout(r, 5_000)),\n        ]).catch(() => {});\n\n        for (let i = 0; i < totalFrames; i++) {\n          await page.evaluate(([idx, total]) => (window as HfWindow).applyFrame(idx, total), [i, totalFrames] as [number, number]);\n          await page.screenshot({\n            path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),\n            clip: { x: 0, y: 0, width, height },\n            omitBackground: true,           // \u2190 RGBA, transparent bg preserved (the overlay layer)\n            animations: 'disabled',\n            timeout: 30_000,\n          });\n        }\n      })(),\n      new Promise<never>((_, rej) => {\n        timer = setTimeout(() => rej(new Error(`alpha_render_timeout_${HARD_TIMEOUT_MS}ms:${template}`)), HARD_TIMEOUT_MS);\n      }),\n    ]);\n    await browser.close();\n\n    const first = join(frameDir, 'f_00000.png');\n    if (!existsSync(first) || statSync(first).size < 1024) throw new Error(`alpha_frames_too_small: ${first}`);\n\n    return { frameDir, framePattern: 'f_%05d.png', frames: totalFrames, fps, width, height };\n  } finally {\n    if (timer) clearTimeout(timer);\n    await browser.close().catch(() => {});\n  }\n}",
+  "new_string": "// Chromium launch args shared by every alpha render. --allow-file-access-from-files lets the file:// template\n// load its self-hosted @font-face (fonts/*.ttf). Exposed so segmentVideo can launch ONE browser for a whole job\n// (N clips) instead of one launch per clip \u2014 the per-clip launch churned memory/zombies and failed the 5-clip\n// kinetic-stack job (incident 822780e8 follow-up).\nconst ALPHA_BROWSER_ARGS = ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text', '--allow-file-access-from-files'];\nexport async function launchAlphaBrowser(): Promise<Browser> {\n  return chromium.launch({ headless: true, args: ALPHA_BROWSER_ARGS });\n}\n\nexport async function renderAlphaFrames(spec: RenderSpec, outDir?: string, sharedBrowser?: Browser): Promise<AlphaFramesResult> {\n  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';\n  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));\n  const durationS = Math.max(1, Math.min(60, spec.duration_s ?? 6));\n  const width = spec.width ?? 1080;\n  const height = spec.height ?? 1920;\n  const totalFrames = Math.round(durationS * fps);\n\n  const templatePath = resolve(__dirname, 'templates', `${template}.html`);\n  if (!existsSync(templatePath)) throw new Error(`template_not_found: ${template}`);\n\n  const frameDir = outDir ?? mkdtempSync(join(tmpdir(), 'hf-alpha-'));\n  // HARD CEILING per alpha render (2026-07-22 incident: render 822780e8 hung 170min inside Playwright \u2014\n  // `document.fonts.ready` on a template with a missing @font-face never settles, and `.catch()` doesn't help a\n  // promise that never rejects; nothing bounded the whole render \u2192 the worker's poll loop was blocked forever\n  // (no finalize, no error, the 15min reaper never ran because the loop never returned). A hung template MUST\n  // fail cleanly (throw \u2192 finalize failed + refund + worker continues), never hang. Scales with frame count.\n  const HARD_TIMEOUT_MS = Math.min(480_000, Math.max(180_000, totalFrames * 300));\n  // Reuse a caller-supplied browser across clips (segmentVideo launches ONE for the whole job). When no browser\n  // is passed we own one and close it (backward-compat for one-off callers / the CLI). The PAGE is always closed\n  // in finally so a shared browser never accumulates pages across clips.\n  const ownBrowser = !sharedBrowser;\n  const browser = sharedBrowser ?? await launchAlphaBrowser();\n  let timer: ReturnType<typeof setTimeout> | undefined;\n  let page: Page | undefined;\n  try {\n    await Promise.race([\n      (async () => {\n        page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });\n        await page.goto(`file://${templatePath}`, { waitUntil: 'load', timeout: 30_000 });\n        await page.evaluate(\n          (props) => (window as HfWindow).applyProps(props),\n          { ...spec.props, fps, durationSec: durationS } as Record<string, unknown>,\n        );\n\n        // Wait for the self-hosted @font-face to settle \u2192 no fallback-font early frames (deterministic). BOUNDED\n        // (5s): a @font-face pointing at a 404 leaves fonts.ready pending forever; race it against a timer so a\n        // missing font degrades to fallback glyphs instead of hanging the whole render.\n        await Promise.race([\n          page.evaluate(() => (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready),\n          new Promise((r) => setTimeout(r, 5_000)),\n        ]).catch(() => {});\n\n        for (let i = 0; i < totalFrames; i++) {\n          await page.evaluate(([idx, total]) => (window as HfWindow).applyFrame(idx, total), [i, totalFrames] as [number, number]);\n          await page.screenshot({\n            path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),\n            clip: { x: 0, y: 0, width, height },\n            omitBackground: true,           // \u2190 RGBA, transparent bg preserved (the overlay layer)\n            animations: 'disabled',\n            timeout: 30_000,\n          });\n        }\n      })(),\n      new Promise<never>((_, rej) => {\n        timer = setTimeout(() => rej(new Error(`alpha_render_timeout_${HARD_TIMEOUT_MS}ms:${template}`)), HARD_TIMEOUT_MS);\n      }),\n    ]);\n\n    const first = join(frameDir, 'f_00000.png');\n    if (!existsSync(first) || statSync(first).size < 1024) throw new Error(`alpha_frames_too_small: ${first}`);\n\n    return { frameDir, framePattern: 'f_%05d.png', frames: totalFrames, fps, width, height };\n  } finally {\n    if (timer) clearTimeout(timer);\n    // Always close the PAGE (a shared browser must not accumulate pages across clips). Only close the BROWSER\n    // when we own it \u2014 a shared browser is closed by the caller (segmentVideo) after all clips finish.\n    await page?.close().catch(() => {});\n    if (ownBrowser) await browser.close().catch(() => {});\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String: export async function renderAlphaFrames(spec: RenderSpec, outDir?: string): Promise<AlphaFramesResult> {
+>   const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';
+>   const fps = Math.max(1, Math.min(60, spec.fps ?? 30));
+>   const durationS = Math.max(1, Math.min(60, spec.duration_s ?? 6));
+>   const width = spec.width ?? 1080;
+>   const height = spec.height ?? 1920;
+>   const totalFrames = Math.round(durationS * fps);
+> 
+>   const templatePath = resolve(__dirname, 'templates', `${template}.html`);
+>   if (!existsSync(templatePath)) throw new Error(`template_not_found: ${template}`);
+> 
+>   const frameDir = outDir ?? mkdtempSync(join(tmpdir(), 'hf-alpha-'));
+>   // HARD CEILING per alpha render (2026-07-22 incident: render 822780e8 hung 170min inside Playwright —
+>   // `document.fonts.ready` on a template with a missing @font-face never settles, and `.catch()` doesn't help a
+>   // promise that never rejects; nothing bounded the whole render → the worker's poll loop was blocked forever
+>   // (no finalize, no error, the 15min reaper never ran because the loop never returned). A hung template MUST
+>   // fail cleanly (throw → finalize failed + refund + worker continues), never hang. Scales with frame count.
+>   const HARD_TIMEOUT_MS = Math.min(480_000, Math.max(180_000, totalFrames * 300));
+>   const browser = await chromium.launch({
+>     headless: true,
+>     // --allow-file-access-from-files: let the file:// template load its self-hosted @font-face (fonts/*.ttf).
+>     args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text', '--allow-file-access-from-files'],
+>   });
+>   let timer: ReturnType<typeof setTimeout> | undefined;
+>   try {
+>     await Promise.race([
+>       (async () => {
+>         const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+>         await page.goto(`file://${templatePath}`, { waitUntil: 'load', timeout: 30_000 });
+>         await page.evaluate(
+>           (props) => (window as HfWindow).applyProps(props),
+>           { ...spec.props, fps, durationSec: durationS } as Record<string, unknown>,
+>         );
+> 
+>         // Wait for the self-hosted @font-face to settle → no fallback-font early frames (deterministic). BOUNDED
+>         // (5s): a @font-face pointing at a 404 leaves fonts.ready pending forever; race it against a timer so a
+>         // missing font degrades to fallback glyphs instead of hanging the whole render.
+>         await Promise.race([
+>           page.evaluate(() => (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready),
+>           new Promise((r) => setTimeout(r, 5_000)),
+>         ]).catch(() => {});
+> 
+>         for (let i = 0; i < totalFrames; i++) {
+>           await page.evaluate(([idx, total]) => (window as HfWindow).applyFrame(idx, total), [i, totalFrames] as [number, number]);
+>           await page.screenshot({
+>             path: join(frameDir, `f_${String(i).padStart(5, '0')}.png`),
+>             clip: { x: 0, y: 0, width, height },
+>             omitBackground: true,           // ← RGBA, transparent bg preserved (the overlay layer)
+>             animations: 'disabled',
+>             timeout: 30_000,
+>           });
+>         }
+>       })(),
+>       new Promise<never>((_, rej) => {
+>         timer = setTimeout(() => rej(new Error(`alpha_render_timeout_${HARD_TIMEOUT_MS}ms:${template}`)), HARD_TIMEOUT_MS);
+>       }),
+>     ]);
+>     await browser.close();
+> 
+>     const first = join(frameDir, 'f_00000.png');
+>     if (!existsSync(first) || statSync(first).size < 1024) throw new Error(`alpha_frames_too_small: ${first}`);
+> 
+>     return { frameDir, framePattern: 'f_%05d.png', frames: totalFrames, fps, width, height };
+>   } finally {
+>     if (timer) clearTimeout(timer);
+>     await browser.close().catch(() => {});
+>   }
+> }
+> (note: Edit also tried swapping \uXXXX escapes and their characters; neither form matched, so the mismatch is likely elsewhere in old_string. Re-read the file and copy the exact surrounding text.)</tool_use_error>
+> ```
+
+## 🤖 Claude *(20:27:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The string mismatch is likely due to special characters like the left arrow `←` or em-dash in the comments not matching exactly. I need to re-read the exact region verbatim to get the precise characters, especially around the `omitBackground: true` line and the comment markers.
+
+Rather than trying one large replacement, I'll break this into smaller targeted edits: first, I'll add the helper function and update the signature plus launch block while declaring `page` as a variable; then change the inline `const page =` to just `page =`; remove the `await browser.close()` call on the success path; and finally update the finally block. This approach minimizes the surface area for string matching issues. Refactoring the browser lifecycle to support reusing a shared browser instance across multiple clips while ensuring each page is properly closed, and I still need to update the function signature. Adding the optional parameter is backward compatible, so existing calls won't break. Now I need to remove the `await browser.close()` call that happens mid-function after the screenshots are taken, and update the finally block to only close the browser if we created it ourselves rather than receiving it as a parameter.
+
+Looking at the other functions like renderComposition and renderStudioProject, they also have browser.close() calls in their finally blocks, but the timer cleanup pattern with `if (timer) clearTimeout(timer)` appears to be specific to renderAlphaFrames since it's the only one using HARD_TIMEOUT. I'll make sure to preserve that distinction when updating the finally block. I need to carefully re-read the exact byte range to make sure I'm editing the right section and catch any hidden characters that might have caused issues before.
+
+</details>
+
+
+## 🤖 Claude *(20:27:00)*
+
+O bloco grande não casou (provável caractere invisível `←`/`→` num comentário). Vou reler a região exata e fazer edições menores e cirúrgicas.
+
+## 🤖 Claude *(20:27:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "offset": 385,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 385	export async function renderAlphaFrames(spec: RenderSpec, outDir?: string): Promise<AlphaFramesResult> {
+> 386	  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';
+> 387	  const fps = Math.max(1, Math.min(60, spec.fps ?? 30));
+> 388	  const durationS = Math.max(1, Math.min(60, spec.duration_s ?? 6));
+> 389	  const width = spec.width ?? 1080;
+> 390	  const height = spec.height ?? 1920;
+> 391	  const totalFrames = Math.round(durationS * fps);
+> 392	
+> 393	  const templatePath = resolve(__dirname, 'templates', `${template}.html`);
+> 394	  if (!existsSync(templatePath)) throw new Error(`template_not_found: ${template}`);
+> ```
+
+## 🤖 Claude *(20:27:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The signature matches, so I'm making the targeted edits to the helper and signature line.
+
+</details>
+
+
+## 🤖 Claude *(20:27:05)*
+
+Vou fazer 4 edições cirúrgicas. Primeira — helper + assinatura:
+
+## 🤖 Claude *(20:27:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "export async function renderAlphaFrames(spec: RenderSpec, outDir?: string): Promise<AlphaFramesResult> {\n  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';",
+  "new_string": "// Chromium launch args shared by every alpha render. --allow-file-access-from-files lets the file:// template\n// load its self-hosted @font-face (fonts/*.ttf). Exposed so segmentVideo can launch ONE browser for a whole job\n// (N clips) instead of one launch per clip \u2014 the per-clip launch churned memory/zombies and failed the 5-clip\n// kinetic-stack job (incident 822780e8 follow-up).\nconst ALPHA_BROWSER_ARGS = ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text', '--allow-file-access-from-files'];\nexport async function launchAlphaBrowser(): Promise<Browser> {\n  return chromium.launch({ headless: true, args: ALPHA_BROWSER_ARGS });\n}\n\nexport async function renderAlphaFrames(spec: RenderSpec, outDir?: string, sharedBrowser?: Browser): Promise<AlphaFramesResult> {\n  const template = spec.template && VALID_TEMPLATES.has(spec.template) ? spec.template : 'viral-caption-overlay-9x16';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:27:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm focusing on editing the launch block and setting up the page constant declaration.
+
+</details>
+
+
+## 🤖 Claude *(20:27:17)*
+
+Segunda — trocar o launch por reuso + declarar `page` no escopo externo:
+
+## 🤖 Claude *(20:27:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "  const HARD_TIMEOUT_MS = Math.min(480_000, Math.max(180_000, totalFrames * 300));\n  const browser = await chromium.launch({\n    headless: true,\n    // --allow-file-access-from-files: let the file:// template load its self-hosted @font-face (fonts/*.ttf).\n    args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb', '--disable-lcd-text', '--allow-file-access-from-files'],\n  });\n  let timer: ReturnType<typeof setTimeout> | undefined;\n  try {\n    await Promise.race([\n      (async () => {\n        const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });",
+  "new_string": "  const HARD_TIMEOUT_MS = Math.min(480_000, Math.max(180_000, totalFrames * 300));\n  // Reuse a caller-supplied browser across clips (segmentVideo launches ONE for the whole job). When no browser\n  // is passed we own one and close it (backward-compat for one-off callers / the CLI). The PAGE is always closed\n  // in finally so a shared browser never accumulates pages across clips.\n  const ownBrowser = !sharedBrowser;\n  const browser = sharedBrowser ?? await launchAlphaBrowser();\n  let timer: ReturnType<typeof setTimeout> | undefined;\n  let page: Page | undefined;\n  try {\n    await Promise.race([\n      (async () => {\n        page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:27:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to remove the `await browser.close();` call from the middle of section C.
+
+</details>
+
+
+## 🤖 Claude *(20:27:22)*
+
+Terceira — remover o `browser.close()` do caminho de sucesso:
+
+## 🤖 Claude *(20:27:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts",
+  "old_string": "      }),\n    ]);\n    await browser.close();\n\n    const first = join(frameDir, 'f_00000.png');\n    if (!existsSync(first) || statSync(first).size < 1024) throw new Error(`alpha_frames_too_small: ${first}`);\n\n    return { frameDir, framePattern: 'f_%05d.png', frames: totalFrames, fps, width, height };\n  } finally {\n    if (timer) clearTimeout(timer);\n    await browser.close().catch(() => {});\n  }\n}",
+  "new_string": "      }),\n    ]);\n\n    const first = join(frameDir, 'f_00000.png');\n    if (!existsSync(first) || statSync(first).size < 1024) throw new Error(`alpha_frames_too_small: ${first}`);\n\n    return { frameDir, framePattern: 'f_%05d.png', frames: totalFrames, fps, width, height };\n  } finally {\n    if (timer) clearTimeout(timer);\n    // Always close the PAGE (a shared browser must not accumulate pages across clips). Only close the BROWSER\n    // when we own it \u2014 a shared browser is closed by the caller (segmentVideo) after all clips finish.\n    await page?.close().catch(() => {});\n    if (ownBrowser) await browser.close().catch(() => {});\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/hyperframes/render-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:27:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm moving to segment-core.ts and threading the shared browser instance through it. I need to import the browser launcher and Browser type from Playwright, then update the renderClip function signature to accept the browser parameter.
+
+</details>
+
+
+## 🤖 Claude *(20:27:33)*
+
+`render-core.ts` pronto. Agora `segment-core.ts` — encadear o browser compartilhado:
+
+## 🤖 Claude *(20:27:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "import { renderAlphaFrames } from '../hyperframes/render-core.ts';",
+  "new_string": "import { renderAlphaFrames, launchAlphaBrowser } from '../hyperframes/render-core.ts';\nimport type { Browser } from 'playwright';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:27:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "async function renderClip(spec: SegmentSpec, clip: ClipSpec, index: number): Promise<ClipResult> {",
+  "new_string": "async function renderClip(spec: SegmentSpec, clip: ClipSpec, index: number, sharedBrowser?: Browser): Promise<ClipResult> {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:27:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "      await renderAlphaFrames(\n        { template: style, props: { beats: beatProps, ...(zone ? { zone } : {}) }, duration_s: dur, fps, width: target.w, height: target.h },\n        alphaDir,\n      );",
+  "new_string": "      await renderAlphaFrames(\n        { template: style, props: { beats: beatProps, ...(zone ? { zone } : {}) }, duration_s: dur, fps, width: target.w, height: target.h },\n        alphaDir,\n        sharedBrowser,\n      );"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:27:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts",
+  "old_string": "  mkdirSync(spec.outDir, { recursive: true });\n  const out: ClipResult[] = [];\n  for (let i = 0; i < spec.clips.length; i++) {\n    const c = spec.clips[i];\n    if (!(c.out_sec > c.in_sec) || c.in_sec < 0) throw new Error(`clip_${i}_invalid_range`);\n    out.push(await renderClip(spec, c, i));\n  }\n  return out;\n}",
+  "new_string": "  mkdirSync(spec.outDir, { recursive: true });\n  const out: ClipResult[] = [];\n  // Reuse ONE chromium across every clip that needs the alpha overlay (caption_mode='beats'). Launching a fresh\n  // browser per clip churned memory and accumulated zombies \u2014 the 5-clip kinetic-stack job (incident 822780e8)\n  // exhausted the host and failed. Lazy: only pay the launch when at least one clip is a beats overlay; the\n  // drawtext / no-caption path never touches Playwright.\n  const needsBrowser = spec.clips.some((c) => c.caption_mode === 'beats' && Array.isArray(c.text_beats) && c.text_beats.length > 0);\n  const browser = needsBrowser ? await launchAlphaBrowser() : undefined;\n  try {\n    for (let i = 0; i < spec.clips.length; i++) {\n      const c = spec.clips[i];\n      if (!(c.out_sec > c.in_sec) || c.in_sec < 0) throw new Error(`clip_${i}_invalid_range`);\n      out.push(await renderClip(spec, c, i, browser));\n    }\n    return out;\n  } finally {\n    if (browser) await browser.close().catch(() => {});\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose/segment-core.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:28:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The browser reuse is done, so now I need to typecheck the TypeScript scripts that run via bun and deno. Since they're not part of the app's tsconfig, I'll need to verify them separately—running bun to import them should at least catch any syntax errors.
+
+Before I do that though, let me implement Fix 2 for the RepurposeWizard picker. I need to add the ViralCandidatePicker component import, and I notice ViralClip is already imported in the hook imports, so I just need to bring in the picker component itself. Then I'll add the state management after the renderId line.
+
+I'm creating a helper function to build the spec from the selected candidates, and I'll place it right before generateSpec. After that, I need to rewrite generateSpec to populate the candidates and selected state, then add handlers for toggling selections, selecting all, and clearing. The mode buttons should also reset the candidates and selected state, and finally I'll render the picker in the UI.
+
+I should also update the "Gerar com IA" button to display the cost (3 mco) and keep the JSON textarea synced.
+
+Now I'm starting with the imports.
+
+</details>
+
+
+## 🤖 Claude *(20:28:09)*
+
+`segment-core.ts` pronto. Agora **Fix 2 — ligar o `ViralCandidatePicker` no `RepurposeWizard`** (o `ViralClip` já está importado; falta só o componente).
+
+## 🤖 Claude *(20:28:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "import { CaptionStyleGallery } from '@/components/repurpose/CaptionStyleGallery';\nimport { CaptionLoopPreview } from '@/components/repurpose/CaptionLoopPreview';\nimport { GridLayoutPreview, GRID_LAYOUTS } from '@/components/repurpose/GridLayoutPreview';",
+  "new_string": "import { CaptionStyleGallery } from '@/components/repurpose/CaptionStyleGallery';\nimport { CaptionLoopPreview } from '@/components/repurpose/CaptionLoopPreview';\nimport { GridLayoutPreview, GRID_LAYOUTS } from '@/components/repurpose/GridLayoutPreview';\nimport { ViralCandidatePicker } from '@/components/repurpose/ViralCandidatePicker';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:28:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "  // Uma escolha por JOB (n\u00e3o por corte) \u2014 \u00e9 o que mant\u00e9m os cortes de um epis\u00f3dio visualmente irm\u00e3os.\n  const [captionStyle, setCaptionStyle] = useState<CaptionStyle>(DEFAULT_CAPTION_STYLE);",
+  "new_string": "  // Uma escolha por JOB (n\u00e3o por corte) \u2014 \u00e9 o que mant\u00e9m os cortes de um epis\u00f3dio visualmente irm\u00e3os.\n  const [captionStyle, setCaptionStyle] = useState<CaptionStyle>(DEFAULT_CAPTION_STYLE);\n  // FR-VR-010 \u2014 o detector devolve candidatos ABUNDANTES (at\u00e9 12 num master 5min+); o Sovereign ESCOLHE quais\n  // queimar ANTES do render (o wizard antes despejava todos no JSON e enfileirava tudo \u2014 o gap do \"n\u00e3o consigo\n  // selecionar as fatias\"). O picker dirige a spec: s\u00f3 os marcados entram no JSON abaixo e no doLaunch.\n  const [candidates, setCandidates] = useState<ViralClip[]>([]);\n  const [selected, setSelected] = useState<number[]>([]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:28:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm replacing the generateSpec function to handle the spec generation, where the server suggests the number of cuts based on the master video's duration with a minimum of 5 for videos longer than 5 minutes, and the resulting JSON spec is editable so users can remove or adjust the cuts as needed. Building the spec helper... Writing component logic... When the user switches modes, I need to re-derive the spec using the same selected candidates rather than clearing it. I'm creating a helper function that updates the mode and rebuilds the spec from the current candidates and selection, then wiring up the mode buttons to use this instead of just clearing the spec. Next I'll render the candidate picker UI in Step 2 before the JSON output box. Finishing the picker's helper text, then updating the "Gerar com IA" button to show the cost estimate of 3 mco, and adjusting the mode buttons as well. Refactoring the click handlers to use a shared changeMode function instead of inline state updates.
+
+</details>
+
+
+## 🤖 Claude *(20:28:53)*
+
+Agora o núcleo — helper `buildSpec` + `generateSpec` que preenche o picker + handlers de seleção:
+
+## 🤖 Claude *(20:29:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "  const generateSpec = async () => {\n    if (!assetId) return;\n    try {\n      // top_n omitido \u2192 o servidor sugere a quantidade pela dura\u00e7\u00e3o do master (m\u00edn. 5 num v\u00eddeo de 5min+).\n      // A spec JSON abaixo \u00e9 edit\u00e1vel: o usu\u00e1rio remove/ajusta os cortes que n\u00e3o quiser antes de enfileirar.\n      const { clips } = await detect.mutateAsync({ master_asset_id: assetId });\n      if (mode === 'carousel') {\n        const slides: SlideSpecInput[] = clips.map((c: ViralClip) => ({\n          t_sec: Math.round(c.in_sec),\n          caption: c.hook_phrase,\n        }));\n        setSpec(JSON.stringify(slides, null, 2));\n      } else {\n        const cuts: ClipSpecInput[] = clips.map((c: ViralClip) => ({\n          in_sec: Math.round(c.in_sec),\n          out_sec: Math.round(c.out_sec),\n          reframe: '9:16',\n          caption: c.hook_phrase,\n          caption_mode: 'beats',\n          text_beats: c.text_beats,\n        }));\n        setSpec(JSON.stringify(cuts, null, 2));\n      }\n      toast.success(`${clips.length} momento(s) detectado(s) \u2014 revise e ajuste o que quiser.`);\n    } catch (e) {\n      toast.error(e instanceof Error ? e.message : 'Falha ao gerar a spec.');\n    }\n  };",
+  "new_string": "  // Monta a spec de lan\u00e7amento a partir dos candidatos ATUALMENTE selecionados. Modo beats: caption vazio (a\n  // camada de beats \u00e9 dona do texto); carrossel: a legenda do slide \u00c9 o gancho. Mant\u00e9m o Textarea JSON em sincronia\n  // com o picker, ent\u00e3o o doLaunch (que l\u00ea o JSON) queima exatamente o que est\u00e1 marcado \u2014 e o JSON segue edit\u00e1vel.\n  const buildSpec = (cands: ViralClip[], sel: number[], m: 'repurpose' | 'carousel'): string => {\n    const chosen = sel.map((i) => cands[i]).filter(Boolean);\n    if (m === 'carousel') {\n      const slides: SlideSpecInput[] = chosen.map((c) => ({ t_sec: Math.round(c.in_sec), caption: c.hook_phrase }));\n      return JSON.stringify(slides, null, 2);\n    }\n    const cuts: ClipSpecInput[] = chosen.map((c) => ({\n      in_sec: Math.round(c.in_sec),\n      out_sec: Math.round(c.out_sec),\n      reframe: '9:16',\n      caption: '',\n      caption_mode: 'beats',\n      text_beats: c.text_beats,\n    }));\n    return JSON.stringify(cuts, null, 2);\n  };\n\n  const generateSpec = async () => {\n    if (!assetId) return;\n    try {\n      // top_n omitido \u2192 o servidor sugere a quantidade pela dura\u00e7\u00e3o do master (m\u00edn. 5 num v\u00eddeo de 5min+).\n      const { clips } = await detect.mutateAsync({ master_asset_id: assetId });\n      if (!clips.length) { toast.error('Nenhum momento viral detectado no master.'); return; }\n      // Pr\u00e9-seleciona o top-3 por score (o detector j\u00e1 ordena desc) \u2014 mesmo padr\u00e3o do n\u00f3 e do fluxo avan\u00e7ado,\n      // totalmente edit\u00e1vel. O picker abaixo deixa marcar/desmarcar; a spec JSON reflete a sele\u00e7\u00e3o.\n      const sel = clips.slice(0, 3).map((_, i) => i);\n      setCandidates(clips);\n      setSelected(sel);\n      setSpec(buildSpec(clips, sel, mode));\n      toast.success(`${clips.length} momento(s) detectado(s) \u2014 escolha os melhores abaixo.`);\n    } catch (e) {\n      toast.error(e instanceof Error ? e.message : 'Falha ao gerar a spec.');\n    }\n  };\n\n  // Picker \u2192 sele\u00e7\u00e3o \u2192 re-deriva a spec JSON (l\u00ea `selected` do closure; o re-render garante o valor atual).\n  const toggleCandidate = (i: number) => {\n    const next = selected.includes(i) ? selected.filter((x) => x !== i) : [...selected, i];\n    setSelected(next);\n    setSpec(buildSpec(candidates, next, mode));\n  };\n  const selectAllCandidates = () => {\n    const next = candidates.map((_, i) => i);\n    setSelected(next);\n    setSpec(buildSpec(candidates, next, mode));\n  };\n  const clearCandidates = () => {\n    setSelected([]);\n    setSpec(buildSpec(candidates, [], mode));\n  };\n  // Trocar de modo re-deriva a spec dos MESMOS candidatos no novo formato (sen\u00e3o o JSON some ao alternar).\n  const changeMode = (m: 'repurpose' | 'carousel') => {\n    setMode(m);\n    setSpec(candidates.length ? buildSpec(candidates, selected, m) : '');\n  };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:29:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the mode buttons to call changeMode, position the color picker above the JSON output area, and change the "Gerar com IA" button label.
+
+</details>
+
+
+## 🤖 Claude *(20:29:12)*
+
+Agora os botões de modo (usar `changeMode`) e inserir o picker antes do JSON:
+
+## 🤖 Claude *(20:29:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "            <Button variant={mode === 'repurpose' ? 'default' : 'outline'} size=\"sm\" className=\"gap-1.5\"\n              onClick={() => { setMode('repurpose'); setSpec(''); }}>\n              <Film className=\"h-3.5 w-3.5\" /> Cortes verticais 9:16\n            </Button>\n            <Button variant={mode === 'carousel' ? 'default' : 'outline'} size=\"sm\" className=\"gap-1.5\"\n              onClick={() => { setMode('carousel'); setSpec(''); }}>\n              <Images className=\"h-3.5 w-3.5\" /> Carrossel IG 4:5\n            </Button>",
+  "new_string": "            <Button variant={mode === 'repurpose' ? 'default' : 'outline'} size=\"sm\" className=\"gap-1.5\"\n              onClick={() => changeMode('repurpose')}>\n              <Film className=\"h-3.5 w-3.5\" /> Cortes verticais 9:16\n            </Button>\n            <Button variant={mode === 'carousel' ? 'default' : 'outline'} size=\"sm\" className=\"gap-1.5\"\n              onClick={() => changeMode('carousel')}>\n              <Images className=\"h-3.5 w-3.5\" /> Carrossel IG 4:5\n            </Button>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:29:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "          <div className={`${NEON_FIELD} space-y-2 p-3`}>\n            <div className=\"flex items-center justify-between\">\n              <Label>Spec dos {mode === 'carousel' ? 'slides' : 'cortes'} (JSON)</Label>\n              <Button variant=\"ghost\" size=\"sm\" className=\"h-7 gap-1 text-xs text-primary\"\n                onClick={generateSpec} disabled={detect.isPending}>\n                {detect.isPending ? <Loader2 className=\"h-3 w-3 animate-spin\" /> : <Wand2 className=\"h-3 w-3\" />}\n                Gerar com IA\n              </Button>\n            </div>",
+  "new_string": "          {/* Picker de candidatos \u2014 o detector devolve N momentos; o Sovereign escolhe quais queimar ANTES do\n              render. S\u00f3 aparece depois do \"Gerar com IA\". A spec JSON abaixo espelha a sele\u00e7\u00e3o. */}\n          {candidates.length > 0 && (\n            <div className={`${NEON_FIELD} space-y-2 p-3`}>\n              <Label>Escolha os cortes ({selected.length} de {candidates.length})</Label>\n              <ViralCandidatePicker\n                candidates={candidates}\n                selected={selected}\n                onToggle={toggleCandidate}\n                onSelectAll={selectAllCandidates}\n                onClear={clearCandidates}\n              />\n              <p className=\"text-xs text-muted-foreground\">\n                S\u00f3 os cortes marcados s\u00e3o gerados. O JSON abaixo reflete sua sele\u00e7\u00e3o \u2014 ainda d\u00e1 para ajustar \u00e0 m\u00e3o.\n              </p>\n            </div>\n          )}\n\n          <div className={`${NEON_FIELD} space-y-2 p-3`}>\n            <div className=\"flex items-center justify-between\">\n              <Label>Spec dos {mode === 'carousel' ? 'slides' : 'cortes'} (JSON)</Label>\n              <Button variant=\"ghost\" size=\"sm\" className=\"h-7 gap-1 text-xs text-primary\"\n                onClick={generateSpec} disabled={detect.isPending}>\n                {detect.isPending ? <Loader2 className=\"h-3 w-3 animate-spin\" /> : <Wand2 className=\"h-3 w-3\" />}\n                Gerar com IA (3 mco)\n              </Button>\n            </div>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:29:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to make sure the candidates and selected state get cleared whenever the user picks a different master in Step 1, and also when they trigger the "Produzir outro" reset in Step 3 or after a successful upload, so I'll add those state resets to those handlers.
+
+</details>
+
+
+## 🤖 Claude *(20:29:37)*
+
+Resetar candidatos ao trocar de master e ao "Produzir outro" (evita candidatos órfãos do master anterior):
+
+## 🤖 Claude *(20:29:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "                        onClick={() => { setAssetId(m.id); toast.success('Master selecionado.'); setStep(2); }}",
+  "new_string": "                        onClick={() => { setAssetId(m.id); setCandidates([]); setSelected([]); setSpec(''); toast.success('Master selecionado.'); setStep(2); }}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:29:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx",
+  "old_string": "            <Button variant=\"outline\" className=\"gap-2\" onClick={() => { setStep(1); setFile(null); setSpec(''); setAssetId(null); setRenderId(null); setSrtText(''); setSrtName(''); setTitle(''); }}>\n              Produzir outro\n            </Button>",
+  "new_string": "            <Button variant=\"outline\" className=\"gap-2\" onClick={() => { setStep(1); setFile(null); setSpec(''); setAssetId(null); setRenderId(null); setSrtText(''); setSrtName(''); setTitle(''); setCandidates([]); setSelected([]); }}>\n              Produzir outro\n            </Button>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/repurpose/RepurposeWizard.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:30:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Both fixes are in place. Now I'm running the TypeScript type checker against the app to catch any regressions in the wizard, and I need to verify the render scripts parse correctly—they're not included in the app's tsconfig, so I'll do a targeted check on them. Bun doesn't have built-in typechecking, so I'll need to handle that separately.
+
+The real proof of the render fix working end-to-end would be to run an actual multi-clip render through the CLI and confirm it produces MP4 files. That requires the source master file and SRT data—the EP01 master is stored in the local bucket on the host disk. I need to track down the exact host path and then either find a CLI entry point in segment-core or enqueue a render job directly through the database to witness the fix in action.
+
+My plan is to run the TypeScript check in the background while I locate the EP01 master file and figure out how to invoke the segmentVideo function directly with a couple of test clips, which would prove the browser reuse works without hanging or running out of memory.
+
+</details>
+
+
+## 🤖 Claude *(20:30:00)*
+
+Ambos os fixes implementados. Agora validação: gate de tipos da app (vs baseline 135) + localizar o master EP01 no disco do host para a testemunha real do render multi-clipe.
+
+## 🤖 Claude *(20:30:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c \"error TS\"; echo \"^ tsc app error count (baseline 135)\"",
+  "description": "App tsc gate vs baseline",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b7bk5tqn9. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a18d8bf1-f093-4089-9c4d-e02cf2f479ba/tasks/b7bk5tqn9.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(20:30:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== EP01 master on host disk (bucket 'local' realpath) ===\"\ngrep -rnE \"repurpose-inbox|bucket.*local|resolveLocal|realpath|LOCAL_ROOT|HOST_MASTER\" scripts/video-repurpose-bridge.ts | head -10\necho \"--- find the actual file ---\"\nfind /home/ubuntu /home/gcrUX -name \"EP01_*Revolucao*.mp4\" 2>/dev/null | head; find / -path '*repurpose-inbox/ada39fae*' -name \"*.mp4\" 2>/dev/null | head -5\necho \"=== segment-core CLI / test harness? ===\"\ngrep -rnE \"import.meta.main|segmentVideo\\(\" scripts/video-repurpose/segment-core.ts scripts/video-repurpose-bridge.ts | head",
+  "description": "Locate EP01 master + segment invocation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === EP01 master on host disk (bucket 'local' realpath) ===
+> scripts/video-repurpose-bridge.ts:18:import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync, realpathSync } from 'fs';
+> scripts/video-repurpose-bridge.ts:41:// go to Storage, so the master lives on host disk (uploaded via CloudPanel to repurpose-inbox/<uid>/) and the
+> scripts/video-repurpose-bridge.ts:43:const INBOX_BASE = resolve(__dirname, '../repurpose-inbox');
+> scripts/video-repurpose-bridge.ts:81:    if (bucket === 'local') {
+> scripts/video-repurpose-bridge.ts:82:      // Host-local master (CloudPanel upload → repurpose-inbox/<uid>/). Read from disk; no Supabase download.
+> scripts/video-repurpose-bridge.ts:87:      const real = existsSync(candidate) ? realpathSync(candidate) : '';
+> --- find the actual file ---
+> === segment-core CLI / test harness? ===
+> scripts/video-repurpose/segment-core.ts:238:export async function segmentVideo(spec: SegmentSpec): Promise<ClipResult[]> {
+> scripts/video-repurpose-bridge.ts:135:      const clips = await segmentVideo({ sourcePath: inputPath, outDir: join(workDir, 'out'), fps: comp.fps ?? 30, clips: comp.clips! });
+> ```
+
+## 🤖 Claude *(20:30:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The `find` command for the EP01 master file came up empty, so the file might not exist in those directories or the search timed out. I'm working through the path resolution for `INBOX_BASE` — it's set to resolve from the scripts directory up to a `repurpose-inbox` folder at the repo root level, but I need to verify the exact path structure.
+
+Let me check the bridge file's path resolution logic and look inside the inbox directory to locate the master file. I'm also reconsidering whether I actually need the EP01 master to test the browser-reuse fix — I could witness that segmentVideo handles multiple beats clips through a single browser without hanging using any small source video, though using EP01 would prove the exact failing scenario with the 5-clip kinetic-stack. The tradeoff is that running 5 clips of 12 seconds each at 30fps might be resource-intensive.
+
+The cleanest approach is to enqueue a real `video_renders` row via PostgREST with a few short kinetic-stack clips pointing at the EP01 master and let the live worker process it. But I just realized the running worker (PID 111863) started at 13:13:59 with the old code — my edits to render-core.ts and segment-core.ts are on disk but haven't been loaded yet. I need to restart the service for it to pick up my browser-reuse changes.
+
+The witness plan is straightforward: restart the worker, enqueue a real render with 2-3 kinetic-stack clips, and confirm the MP4s are produced with render state=done. This proves the full pipeline works. But the user is testing right now with 11 cuts on the old worker, so restarting could disrupt his test.
+
+Instead, I'll run segmentVideo directly via a throwaway witness script—no live worker involved, no queue interference—to prove the browser-reuse fix works in isolation. That's clean evidence without disrupting his active test.
+
+For the witness script I need the master file path, so I'll trace through the bridge resolution and check what's in the inbox. But stepping back on sequencing, I've got a lot to cover: both cut fixes plus the full orchestration refocus. Let me prioritize: confirm tsc passes, witness the render fix with a direct segmentVideo call on a few EP01 clips, deploy the frontend via the build-deploy-guardian pattern, then restart the worker once his test wraps up.
+
+Actually, the worker restart is critical for the render fix to go live, but I need to think through the timing. If I restart now with the new code and his 11-clip render is currently running on the old worker, the old worker dies, the row gets stuck, then my reaper re-queues it after 15 minutes and the new worker picks it up with browser reuse—that's actually better odds for him than letting the old code keep running. There's a gap, but it might be worth it.
+
+Let me step back though. I should witness the fix working in isolation first with a direct segmentVideo call, confirm it actually solves the problem, then restart the worker and deploy. I need to check the tsc result that's running in the background and find the master path to verify everything.
+
+</details>
+
+
+## 🤖 Claude *(20:30:52)*
+
+O `find` amplo não achou o master (provável restrição). O inbox é `repo/repurpose-inbox/<uid>/`. Vou ler a resolução exata do bridge e localizar o arquivo do EP01 para a testemunha isolada (sem tocar no worker que você está usando agora).
+
+## 🤖 Claude *(20:30:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "offset": 80,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 80	    let inputPath: string;
+> 81	    if (bucket === 'local') {
+> 82	      // Host-local master (CloudPanel upload → repurpose-inbox/<uid>/). Read from disk; no Supabase download.
+> 83	      // Containment: key must be `${uid}/…`, no `..`, and the RESOLVED real path must stay strictly under
+> 84	      // INBOX_BASE (defends against symlink/traversal escaping the per-user inbox).
+> 85	      if (!key.startsWith(`${row.user_id}/`) || key.includes('..')) throw new Error('source_ref_rejected');
+> 86	      const candidate = join(INBOX_BASE, key);
+> 87	      const real = existsSync(candidate) ? realpathSync(candidate) : '';
+> 88	      if (!real || !real.startsWith(INBOX_BASE + '/')) throw new Error('local_source_not_found');
+> 89	      inputPath = real;
+> 90	    } else {
+> 91	      if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {
+> 92	        throw new Error('source_ref_rejected');
+> 93	      }
+> 94	      const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);
+> 95	      if (dlErr || !blob) throw new Error(`source_download_failed: ${dlErr?.message ?? 'no blob'}`);
+> 96	      writeFileSync(srcPath, new Uint8Array(await blob.arrayBuffer()));
+> 97	      inputPath = srcPath;
+> ```
+
+## 🤖 Claude *(20:30:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== inbox dir ===\"\nls -la repurpose-inbox/ 2>/dev/null | head\necho \"--- user 0 masters ---\"\nls -lah repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ 2>/dev/null | head -20",
+  "description": "Locate EP01 master file on host disk"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === inbox dir ===
+> total 12
+> drwxrwsr-x  3 gcrUX gcrUX 4096 Jul 12 23:10 .
+> drwxrwx--- 33 gcrUX gcrUX 4096 Jul 22 14:18 ..
+> drwxrwsr-x  3 gcrUX gcrUX 4096 Jul 20 00:36 ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> --- user 0 masters ---
+> total 1.8G
+> drwxrwsr-x 3 gcrUX  gcrUX 4.0K Jul 20 00:36 .
+> drwxrwsr-x 3 gcrUX  gcrUX 4.0K Jul 12 23:10 ..
+> -rw-rw-r-- 1 gcrUX  gcrUX 1.3G Jul 13 00:27 EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+> -rw-rw-r-- 1 ubuntu gcrUX 505M Jul 20 00:36 EP02_-_MASTER__YouTube_.mp4
+> -rw-r--r-- 1 gcrUX  gcrUX  12M Jul 15 22:43 GraphoEnterprise-pt1.mp4
+> -rw-r--r-- 1 gcrUX  gcrUX  12M Jul 15 22:45 GraphoEnterprise-pt2.mp4
+> drwxrwsr-x 2 gcrUX  gcrUX 4.0K Jul 20 00:36 .uploads
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
