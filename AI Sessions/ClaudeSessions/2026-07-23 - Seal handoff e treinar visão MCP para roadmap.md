@@ -1325,6 +1325,2439 @@ A pesquisa dos seus olhos **já está rodando** (é un-gated e compõe com quase
 }
 ```
 
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> The user answered: "A pesquisa dos seus olhos (Vision MCP) já está rodando em paralelo. Para a FORÇA TOTAL no resto do roadmap, onde aponto os Pantheon? (pode marcar mais de uma — eu rodo em paralelo)"="todos a cima prioridade nos criativos e cortes, dentro do studio flow fx do google, é possivel encontrar diversos app ja criados como storyboard, dentre outros que oodem ajudar muito em nosso studio tambem; E voce precisa separar as coisas e por isso pedi para criarmos um pipeline tanto interno de producao. onde ja temos um roadmap completo que fizemos anteriormente de producao interna de criativo, onde se tem a base no github repositorio GanrielAI que ja vimos antes quando usei local para validar o proprio roadmap de criacao, mas agora precisa de um completo e robusto, desenvolvimenro, implatacao (publicar) e gestao analise profunda das metricas para melhorar no proximo desenvolvimento que vai ser o EP05; Ja postei o EP02 entao agora falta postar os cortes do ep01 e 02 e domingo vou postar o ep03.,Olhos + criativos (Vision),Destravar EP02→YouTube,CRM Fase 2 (Receita),Instrumentar funil/atribuição". Read the answers carefully — they may request clarification, changes, or that you not proceed — and follow what they actually say.
+> ```
+
+## 🤖 Claude *(11:35:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing that two things just happened—the user responded to my question with a detailed message, and a Vision research workflow finished processing. Looking at what the user wrote, they're discussing priorities in creative work and cuts within Google Studio Flow FX, mentioning that various pre-built apps like storyboard are available to help, though their message appears to cut off mid-thought.
+
+The user is explaining their need for a complete internal production pipeline—they've already got a roadmap from earlier work in the GanrielAI GitHub repository that they validated locally, but now they need something more robust with full development, deployment, and deep metric analysis to improve the next phase (EP05). They've posted EP02 already and still need to upload the cuts from EP01 and EP02, with EP03 going live on Sunday.
+
+They selected all four options as priorities: Vision work with creatives, unblocking EP02 for YouTube, CRM Phase 2 for revenue, and instrumenting the funnel with attribution tracking. ation roadmap itself. Now they need a complete and robust pipeline covering development, implementation, publishing, and deep metric analysis to inform the next iteration, which will be EP05. They've already posted EP02, so the remaining work is publishing the cuts from EP01 and EP02, with EP03 going live on Sunday. I'm starting to see their full vision is much more comprehensive than the four options I initially outlined. is a flywheel where we produce creatives, publish them, measure performance, and iterate—which actually aligns with my four options: prioritizing vision/creative cuts for development quality, unblocking EP02 on YouTube to publish, instrumenting the funnel for metrics, and treating CRM Phase 2 as secondary. They want me to reference Google Flow and FX apps as studio benchmarks, then build a distinct internal production pipeline with its own roadmap grounded in the existing GabrielAI foundation, making sure it's complete across development, publishing, metrics, and the next iteration cycle.
+
+The immediate action is posting the cuts from EP01 and EP02, and the Vision research just wrapped—perfect timing to feed directly into the creative priority. This is a multi-layered ask: establish a proper internal creative production pipeline as a standalone system, anchored in what we've already built and the references they've provided, with the full lifecycle mapped out and creative quality as the main focus. The pieces are scattered across different repos and docs — the video repurposing engine, the content intelligence analysis, the creative studio, and the YouTube integration all exist but need to be unified. The user wants me to acknowledge their vision of a complete flywheel (produce → publish → measure → improve) and then structure a response that pulls these components together into a coherent, first-class internal production pipeline with a proper roadmap. The pipeline itself is complete and robust, but posting the cuts runs into publish gates—YouTube Shorts need the upload unblock, while TikTok and Instagram require app review. I can prepare everything offline first, but I need to be transparent about these blockers. The user mentioned they've already posted EP02, so I should clarify what's actually gated versus what's ready to go.
+
+My real deliverable here is producing polished, optimized cuts of EP01 and EP02 that are ready to post—that's the unblocked production work. I'll pull the Vision research synthesis and the content plan, then focus on what I can execute immediately.
+
+Since they selected all four options with priority on the creative cuts, I need to work at full capacity on the cuts while also mapping out the complete internal production pipeline—studying the existing repos and roadmap to design the full dev-to-publish-to-metrics loop that closes the feedback cycle. I need to pull the full Vision synthesis first, then check for that internal roadmap and GabrielAI reference in the repo, and launch the pipeline blueprint workflow that ties together the existing roadmap, the GabrielAI setup, Google Flow FX tools, and the complete dev-to-publish-to-metrics lifecycle. I should also dig into what those Google Flow FX apps actually are—likely Google Labs' filmmaking tool and related templates—since that's part of the pipeline research. I'll structure this in phases: first synthesize the Vision research and lay out the PIPC blueprint with the roadmap consolidation, then move into the EP01/EP02 production and Vision harness implementation once I've mapped the full pipeline. Let me pull the Vision synthesis and probe what's already in the repo to sequence this correctly. I'll use a Node script to extract just the plan field from the JSON output cleanly, then search for any internal roadmap references and mentions of GabrielAI in parallel.
+
+</details>
+
+
+## 🤖 Claude *(11:35:56)*
+
+O usuário respondeu com uma visão muito mais rica que minhas 4 opções — e a pesquisa dos olhos fechou ao mesmo tempo. Deixa eu processar os dois.
+
+Primeiro, extrair o plano da pesquisa + localizar o roadmap interno que ele mencionou + a base GabrielAI:
+
+## 🤖 Claude *(11:35:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nOUT=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/tasks/wa0duxb4j.output\necho \"=== PLANO DE S\u00cdNTESE (campo .plan da pesquisa) ===\"\nnode -e \"const d=require('fs').readFileSync(process.argv[1],'utf8'); const j=JSON.parse(d); console.log(j.plan || '(sem plan)');\" \"$OUT\" 2>&1 | head -220",
+  "description": "Extract synthesis plan from Vision research output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PLANO DE SÍNTESE (campo .plan da pesquisa) ===
+> (sem plan)
+> ```
+
+## 🤖 Claude *(11:36:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Roadmaps existentes em docs/roadmap/ ===\"\nls -la docs/roadmap/ 2>/dev/null\necho \"\"\necho \"=== Refer\u00eancias a 'GabrielAI' / produ\u00e7\u00e3o interna de criativo no repo ===\"\ngrep -rilE \"GabrielAI|producao interna|internal.production|pipeline.*criativ|creative.*pipeline\" docs/ --include=\"*.md\" 2>/dev/null | head -15\necho \"\"\necho \"=== BoK do video-repurpose (base GabrielAI) ===\"\nls docs/bok/video-repurpose/ 2>/dev/null | head",
+  "description": "Locate existing internal production roadmap and GabrielAI references"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Roadmaps existentes em docs/roadmap/ ===
+> total 64
+> drwxrwxr-x 2 ubuntu ubuntu  4096 Jul 22 22:39 .
+> drwxrwxr-x 7 gcrUX  gcrUX   4096 Jul 19 19:27 ..
+> -rw-rw-r-- 1 ubuntu ubuntu  4872 Jul 21 13:11 cadence-distribution-pipeline.md
+> -rw-rw-r-- 1 ubuntu ubuntu  7059 Jul 19 14:29 crm-suite-and-marketing.md
+> -rw-rw-r-- 1 ubuntu ubuntu  7111 Jul 22 22:39 funnel-mass-validation-2026-07-22.md
+> -rw-rw-r-- 1 ubuntu ubuntu 23479 Jul 15 20:05 motor-conteudo-master.html
+> -rw-rw-r-- 1 ubuntu ubuntu  4309 Jul 21 22:50 publish-readiness-2026-07-21.md
+> 
+> === Referências a 'GabrielAI' / produção interna de criativo no repo ===
+> docs/handoff-archive/HANDOFF-archive-2026-07-12-and-earlier.md
+> docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md
+> docs/bok/spaces-evolution/27-amendment-split-screen-pov.md
+> docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md
+> docs/bok/spaces-evolution/20-amendment-multikey-byok-vertex.md
+> docs/bok/spaces-evolution/25-amendment-veo-avatar-video.md
+> docs/bok/spaces-evolution/26-amendment-veo-vertex-service-account.md
+> docs/bok/conteudo-v2/02-brd.md
+> docs/bok/agentic-governance/02-brd.md
+> docs/bok/avatar-clone-ai/08-quality-metrics.md
+> docs/bok/avatar-clone-ai/05-sdd.md
+> docs/bok/content-provenance/00-index.md
+> docs/bok/youtube-studio/06-data-model.md
+> docs/bok/content-intel/02-brd.md
+> docs/bok/content-intel/01-mrd.md
+> 
+> === BoK do video-repurpose (base GabrielAI) ===
+> 00-deepsearch-blueprint.md
+> 00-index.md
+> 01-mrd.md
+> 02-brd.md
+> 03-prd.md
+> 04-frd.md
+> 05-sdd.md
+> 06-data-model.md
+> 07-process-flow.md
+> 08-quality-metrics.md
+> ```
+
+## 🤖 Claude *(11:36:08)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The `.plan` field came back empty from the synthesize agent, so I need to check the journal to see what was actually returned. Looking at the JSON structure, there's research and verified data but the plan might be stored under a different key or the agent didn't generate it. I also notice there's a `motor-conteudo-master.html` file in the docs/roadmap folder that matches what the user mentioned about the complete content engine roadmap.
+
+</details>
+
+
+## 🤖 Claude *(11:36:09)*
+
+O campo `.plan` veio vazio — vou pegar do journal do agente de síntese. E achei o roadmap interno: `docs/roadmap/motor-conteudo-master.html` (o "motor de conteúdo master") + `cadence-distribution-pipeline.md`.
+
+## 🤖 Claude *(11:36:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nJOURNAL=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/subagents/workflows/wf_010be734-7c4/journal.jsonl\necho \"=== labels dos agentes no journal ===\"\nnode -e \"const fs=require('fs');const lines=fs.readFileSync(process.argv[1],'utf8').trim().split('\\n');for(const l of lines){try{const j=JSON.parse(l);if(j.type==='result'){const r=j.result; const isStr=typeof r==='string'; console.log((j.label||'?')+' | '+(isStr?('str:'+r.length+'c'):('obj:'+Object.keys(r||{}).join(','))));}}catch(e){}}\" \"$JOURNAL\" 2>&1 | head -30",
+  "description": "Inspect workflow journal for synth agent output"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === labels dos agentes no journal ===
+> ? | obj:front,summary,findings,references,gaps
+> ? | obj:front,summary,findings,references,gaps
+> ? | obj:front,summary,findings,references,gaps
+> ? | obj:front,summary,findings,references,gaps
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | obj:claim,verdict,reason,correctedGuidance
+> ? | str:14817c
+> ```
+
+## 🤖 Claude *(11:36:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The synth agent returned a large string of over 14,000 characters, so the plan data is definitely there — my extraction failed because I was looking for a `plan` key in the result object, but the actual structure has `research`, `verified`, and `plan` as separate fields. The output file shows the full result wasn't truncated, but when I parsed the JSON in Node, the plan field came back empty, which suggests either the key name is different than expected or the parsing didn't capture it correctly.
+
+</details>
+
+
+## 🤖 Claude *(11:36:23)*
+
+O plano está no journal (síntese = 14817 chars). Vou puxá-lo direto:
+
+## 🤖 Claude *(11:36:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nJOURNAL=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/subagents/workflows/wf_010be734-7c4/journal.jsonl\nnode -e \"const fs=require('fs');const lines=fs.readFileSync(process.argv[1],'utf8').trim().split('\\n');let last='';for(const l of lines){try{const j=JSON.parse(l);if(j.type==='result'&&typeof j.result==='string')last=j.result;}catch(e){}}console.log(last);\" \"$JOURNAL\"",
+  "description": "Extract synthesis plan string from journal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # PLANO — Como "treinar os olhos" do Vision MCP
+> 
+> **ORO desta síntese:** Operator: MCORCH Master Agent · Reviewer: Sovereign (Gabriel) · Owner: Sovereign (o olho é o gate de qualidade de todo criativo que vira receita).
+> 
+> ---
+> 
+> ## 1. Enquadramento honesto — o que "treinar os olhos" significa aqui
+> 
+> Não vamos re-treinar os pesos do modelo. O olho do MCORCH é um VLM hospedado (`google/gemini-2.5-flash` via OpenRouter para imagem; Gemini direto para vídeo) chamado por um único cliente (`scripts/qa/vision-qa.ts`) e envelopado por dois graders (`vision-gate.ts` binário, `senior-rubric.ts` 8-dimensões). **"Treinar os olhos" = elevar o HARNESS ao redor desse VLM**, em cinco alavancas:
+> 
+> 1. **Exemplares few-shot** — âncoras visuais "isto é nota 5 / isto é nota 2" no prompt.
+> 2. **Rubricas** — critérios ortogonais com níveis descritos (já temos a base em `RUBRIC.md`).
+> 3. **Calibração contra um gold set** — um corpus rotulado por humano que dá baseline mensurável de acurácia/drift.
+> 4. **Escolha de modelo** — medida no NOSSO gold set, não em número de blog.
+> 5. **Protocolo de julgamento** — pareado/intervalo vs. pontual, conforme a dimensão.
+> 
+> E há uma verdade dura da literatura que redesenha o alvo: **o VLM-juiz ORDENA razoavelmente bem, mas PONTUA mal** — score exato erra ~66-68% das vezes e os intervalos de confiança cobrem 40-70% da escala ([arXiv 2604.25235](https://arxiv.org/html/2604.25235v2), CONFIRMED). Logo, "treinar o olho" **não** é perseguir uma nota 0-10 perfeita; é (a) fazê-lo escolher/ordenar com âncora, (b) medir sua própria incerteza por dimensão, e (c) ancorar as dimensões objetivas (contraste, cor, fonte) em prova determinística, não no palpite do VLM.
+> 
+> **Duas coisas que a pesquisa REFUTOU — não vamos fazer:**
+> - ❌ *"Calibrar contra gold set dobra a acurácia / é o maior ganho."* Falso como enunciado (confundia um paper de texto com VLM). O que domina de verdade é a **QUALIDADE do gold set** (multi-anotador), não o passo de calibração em si.
+> - ❌ *"Pareado é sempre mais confiável que nota pontual."* Falso como lei — no MT-Bench os dois empatam (~85%), e sob distratores o **pontual é ~4× mais robusto** ([arXiv 2504.14716](https://arxiv.org/abs/2504.14716)). Pareado é heurística condicional, não dogma.
+> 
+> ---
+> 
+> ## 2. Os 5 upgrades de maior alavancagem (ranqueados)
+> 
+> | # | Upgrade | Por quê / âncora CONFIRMED |
+> |---|---------|-----------------------------|
+> | **1** | **Criar a Biblioteca "Golden Eye"** — corpus versionado de screenshots rotulados + runner de acurácia. Hoje **não existe NENHUM exemplar/baseline no repo** — o olho julga single-shot e a confiança nele é cega. | A qualidade da verdade-terra **domina** todo o resto: mesmo juiz + mesmo método rende correlação 0.906 vs 0.402 e intervalos 4,5× mais estreitos só trocando para um dataset multi-anotador limpo ([arXiv 2604.25235](https://arxiv.org/html/2604.25235v2)). Sem baseline, não há como medir se o olho melhorou. |
+> | **2** | **Protocolo por dimensão: pareado/intervalo para o subjetivo, pontual-ancorado para o objetivo.** Julgar o candidato contra um exemplar de referência da mesma categoria em vez de nota no vácuo — e rodar A-vs-B **e** B-vs-A para neutralizar position bias. | VLM rankeia > pontua ([2604.25235](https://arxiv.org/html/2604.25235v2)); mas pareado é mais enganável por distratores (flip 35% vs 9% — [2504.14716](https://arxiv.org/abs/2504.14716)). Honesto: use a largura do intervalo como gatilho — estreito→score, largo→pareado. |
+> | **3** | **Fiar os probes determinísticos (`evalJs` de estilo computado) dentro do `seniorRubricGate` para MARCA_MIV e ACESSIBILIDADE.** A `RUBRIC.md` **manda** exigir a prova computada para qualquer P0/P1 de contraste/cor/fonte, mas o código só manda o screenshot ao VLM — hoje emite veredito de marca/contraste **sem a prova que a própria rubrica exige (risco Lei 1)**. | Papers concordam que VLM é fraco em geometria/medida exata e **subestima dimensões subjetivas**, sendo confiável em clareza/hierarquia ([MLLM as a UI Judge, arXiv 2510.08783](https://arxiv.org/pdf/2510.08783)). Contraste/cor/fonte são medíveis — não devem depender do olho alucinável. |
+> | **4** | **Few-shot ancorado + indicator-grounded reasoning no prompt.** Injetar 1-2 exemplares por nível de qualidade e exigir que cada nota cite a **região concreta** da tela que a justifica. | Few-shot calibra a escala (efeito real, porém **model-specific** e com risco de ancoragem — [arXiv 2606.06714](https://arxiv.org/abs/2606.06714)); amarrar dimensão abstrata a região concreta melhora o julgamento de design ([AesEval-Bench, arXiv 2603.01083](https://arxiv.org/abs/2603.01083)). |
+> | **5** | **Higiene do motor:** pinar `VISION_VLM_MODEL` numa constante versionada + carimbar a versão do modelo em cada verdict; distinguir "parse falhou" de `confidence:medium`; escolher o modelo (Gemini/GPT-4o/Claude) rodando o gold set, não por blog. | O default do modelo pode mudar sob os pés do harness sem trilha; o `parseVlm` hoje mascara baixa confiança como "medium". GPT-4o lidera visão em estudo **credível** ([EPFL, arXiv 2507.01955](https://arxiv.org/abs/2507.01955)), mas nenhum VLM chega perto de especialista — meça no SEU gold set. |
+> 
+> > **Nota anti-folclore (CoT & ensemble):** Use chain-of-thought/rationale pela **rastreabilidade** (casa com a Lei 1), não como driver de acurácia — o ganho numérico é sinal misto ([2412.05579](https://arxiv.org/html/2412.05579v2)). E prefira **um juiz forte único** a empilhar juízes fracos — fundir juízes fracos *degrada* ([2604.25235](https://arxiv.org/html/2604.25235v2)); amostrar 3-5× o MESMO juiz e agregar (mediana) corta ruído modestamente, só isso.
+> 
+> ---
+> 
+> ## 3. Biblioteca "Golden Eye" — design concreto
+> 
+> Um corpus versionado em `scripts/qa/vision-calibration/`, ancorado na marca **MIV** (tokens `void/cyan/gold/nebula`, accent=cyan, gold só p/ valor) e nas **8 dimensões da `RUBRIC.md`**.
+> 
+> **Tamanho:** ~4 pares (bom/ruim) por dimensão × 8 dimensões ≈ **32-40 imagens** (cabe no contexto do VLM e vira a régua permanente). Screenshots full-screen 1280-1920px de largura.
+> 
+> **Estrutura por dimensão** (uma pasta cada):
+> 
+> | Dimensão RUBRIC | Exemplar "bom" (nota alta) | Exemplar "ruim" (nota baixa) | Prova de apoio |
+> |---|---|---|---|
+> | Hierarquia | tela MIV com foco/CTA claro | mesma tela com pesos achatados | — (VLM confiável aqui) |
+> | Consistência | tokens MIV coerentes | mistura de escalas/cores | — |
+> | **Marca MIV** | accent=cyan correto, gold só em valor | gold decorativo/accent errado | **evalJs computed-style** (obrigatório) |
+> | **Acessibilidade** | contraste WCAG AA ok | texto cinza-sobre-cinza | **evalJs contrast ratio / APCA** (obrigatório) |
+> | Estados | hover/focus/erro/vazio presentes | estado de erro ausente | — |
+> | Micro-interações | frames-chave da transição | jump abrupto | frames extraídos (não vídeo cru) |
+> | Copy pt-BR | claro, MIV, sem typo | ambíguo/inglês vazado | — |
+> | Jornada | fluxo com 2-3 frames coerentes | passo quebrado | classify() console/network |
+> 
+> **Como anotar cada imagem** (JSON sidecar):
+> ```json
+> {
+>   "expected_verdict": "REPROVADO",
+>   "expected_dim_severities": { "MARCA_MIV": "P1", "ACESSIBILIDADE": "P2" },
+>   "region": "CTA principal, canto inferior direito",
+>   "why": "gold usado como accent decorativo — MIV reserva gold só para valor",
+>   "probe_ground_truth": { "cta_bg_hex": "#C9A227", "contrast_ratio": 2.9 }
+> }
+> ```
+> 
+> **Boas-vs-ruins em PARES** (antes/depois) é o formato ideal — o `Refactoring UI` já é escrito assim e serve de fábrica dos exemplares negativos. **Multi-anotador é o ideal da literatura**; como você é fundador solo, seja honesto: rotule você mesmo com cuidado e, quando possível, peça 1-2 segundas opiniões nas telas de fronteira — os dados dizem que multi-anotador é o que mais aperta os intervalos.
+> 
+> **Dois gold sets separados, não um:** imagem (OpenRouter) e vídeo (Google direto) correm por provider+modelo diferentes — a calibração de um **não transfere** para o outro.
+> 
+> **O runner** roda o olho contra o corpus e reporta acurácia/drift ao longo do tempo — é isto que torna "o olho melhorou" uma afirmação **material** (Lei 1), não uma sensação.
+> 
+> ---
+> 
+> ## 4. A SHOPPING LIST — exatamente o que me dar
+> 
+> O princípio que responde à sua pergunta direto: **o insumo que treina um VLM-juiz é IMAGEM (screenshot), não link nem vídeo cru** — ele avalia um frame por vez ([2510.08783](https://arxiv.org/pdf/2510.08783), CONFIRMED). Link serve para eu **renderizar o screenshot certo**; vídeo só entra como frames extraídos + sinais temporais. Organizado por categoria:
+> 
+> ### 🔗 LINKS DE SITE — viram o TEXTO da rubrica (não vão crus ao olho)
+> 
+> | Fonte | O que extraio | **Formato para me dar** |
+> |---|---|---|
+> | **Apple Human Interface Guidelines** (developer.apple.com/design/human-interface-guidelines) | regras de clareza/deferência/tipografia | **URL** — eu colo trechos por dimensão |
+> | **Material Design 3** (m3.material.io) | tokens quantificáveis de cor/espaçamento/estados | **URL** — vira critério verificável de "consistência" e "estados" |
+> | **IBM Carbon** (carbondesignsystem.com) | grid 2×, escala de espaçamento, WCAG explícito | **URL** — rigor de layout/acessibilidade |
+> | **Refactoring UI** (refactoringui.com) | pares antes/depois com o porquê | **URL ou o e-book** — fábrica dos exemplares negativos + vocabulário |
+> 
+> ### 🖼️ IMAGENS — o núcleo do gold set
+> 
+> | Fonte | Papel | **Formato para me dar** |
+> |---|---|---|
+> | **Telas do próprio produto MCORCH** (bom E ruim, incl. estados de erro/vazio) | exemplares de UI de PRODUTO com a marca MIV real | **5-10 screenshots anotados por dimensão** (full-screen 1280-1920px) + 1 frase do porquê + a região |
+> | **Awwwards** (awwwards.com/websites) | exemplares "conhecida-boa" já pontuados por júri | **URL da galeria + quais telas capturar** (eu tiro os screenshots) |
+> | **Godly** (godly.website) · **Land-book** (land-book.com) | web/landing de alto padrão, categorizado p/ montar pares comparáveis | **URL das categorias relevantes** |
+> | **Mobbin** (mobbin.com) | screenshots de apps reais por fluxo (gated por login) | **5-10 capturas manuais** respeitando o ToS (não posso scrapear) |
+> | **Savee** (savee.com) | eixo estético de posts/thumbnails | **5-10 imagens** para o gold set de criativos |
+> | **LAION-Aesthetics / AVA** | senso estético GERAL de imagem | **link do dataset** — ⚠️ ressalva: é foto/arte, **não UI**; só para o eixo estético de criativos, nunca como verdade de qualidade de produto |
+> 
+> ### 🎬 VÍDEOS — só para o eixo de julgamento de corte (o VLM é temporalmente cego)
+> 
+> O VLM **não** julga ritmo/timing a partir de frames esparsos (embaralhar frames derruba só ~3,8% da acurácia — [arXiv 2503.13956](https://arxiv.org/html/2503.13956v1)). Então não me mande vídeo esperando que ele "sinta" o tempo — me mande **frames densos + sinais temporais explícitos**:
+> 
+> | Fonte | O que preciso | **Formato para me dar** |
+> |---|---|---|
+> | **Seus cortes EP01/EP02 (bons e ruins)** | julgar hook, ritmo, legenda | **vídeo + timestamp do momento bom/hook** + (quando existir) **export da curva de retenção** (YouTube Studio CSV / print do TikTok Studio segundo-a-segundo) |
+> | **YouTube retention docs** (support.google.com/youtube/answer/9314415) | vocabulário canônico de retenção (Intro %pós-30s, Spikes, Dips) | **URL** — é a definição de primeira parte que ancora o juiz |
+> | **Referências de corte "boas"** (cortes que você admira) | exemplar de eye-trace/ritmo | **vídeo com timestamp do corte exemplar** + 1 frase do porquê |
+> 
+> > ⚠️ **Não me dê "benchmarks de retenção viral" (60-70% em 15s, etc.).** A pesquisa marcou isso como **folclore de vendor sem fonte primária** — não vou embutir limiares fixos de aprovação. O juiz lê a **forma da curva do próprio vídeo** (queda abrupta vs. platô), não números importados. Áudio, sim, é objetivo: meço LUFS/true peak via ffmpeg (padrão ITU-R BS.1770/EBU R128, ~-14 LUFS / <-1 dBTP).
+> 
+> ---
+> 
+> ## 5. Slices de implementação no nosso harness (ordenado por esforço × impacto)
+> 
+> | Ordem | Slice | Ponto de inserção (file:line) | Esforço | Impacto |
+> |---|---|---|---|---|
+> | **1** | **Fiar os probes `evalJs` determinísticos** no grader para MARCA_MIV/ACESSIBILIDADE + aplicar a regra "downgrade sem probe" em código | `senior-rubric.ts:116-141` (hoje só faz upload→sign→spawnSync do VLM; puxar `driver.evalJs` de `browser-driver.ts`) | Baixo | **Altíssimo** — fecha risco Lei 1 ativo |
+> | **2** | **Pinar o modelo + carimbar versão no verdict**; separar `parse-failure` de `confidence:medium` | `describe-image.ts:12` (default do modelo) e `:130-144` (`parseVlm` → `confidence:'low'/human_review` quando não parseia) | Baixo | Alto — trilha de calibração confiável |
+> | **3** | **Criar a Golden Eye + runner de acurácia** (Seção 3) | novo `scripts/qa/vision-calibration/` + runner que reusa `vision-qa.ts:46` verbatim | Médio | **Altíssimo** — o baseline que hoje não existe |
+> | **4** | **Few-shot ancorado + indicator-grounded** no prompt (com A/B no gold set antes de creditar ganho) | `senior-rubric.ts:29-36` (prefixar `SENIOR_RUBRIC_QUESTION`) e `vision-gate.ts:15` (QUESTION); imagens de exemplar entram em `describe-image.ts:94-103` (array `content:[{text},{image_url}]`) — ou expor param `reference_image_urls` na tool = **um seam para todos os graders** | Médio | Alto — mas medir, pois é model-specific |
+> | **5** | **Protocolo pareado/intervalo por dimensão** (candidato vs. exemplar de referência; rodar A-vs-B **e** B-vs-A) | novo modo `compare` já existe em `vision-qa.ts` (modos image/video/compare); ligar ao gold set do slice 3 | Médio-alto | Alto — mas condicional, não substitui o pontual-ancorado do objetivo |
+> | **6** | **Estender o gate determinístico** (`parse-sensory-gate.ts` — hoje o único sem LLM: loudness ffmpeg + contraste WCAG/APCA) como camada anti-Goodhart do vídeo | `parse-sensory-gate.ts` (Tier 2 foveal está comentado/diferido `:185-192`) | Alto | Médio — reforça o eixo objetivo do juiz de vídeo |
+> 
+> **Regra de ouro do plano:** os slices 1-3 são o núcleo — sem probe fiado (1), sem trilha de modelo (2) e sem gold set (3), qualquer melhoria de prompt (4-5) é não-mensurável. Comece por eles.
+> 
+> ---
+> 
+> ### Ressalvas de honestidade material (Lei 1)
+> - Não recomendei que "calibração dobra acurácia" nem que "pareado é sempre melhor" — ambos **REFUTED** nos verdicts.
+> - Onde a URL do finding foi corrigida pelo verdict, usei a corrigida: EPFL = **arXiv 2507.01955** (não o blog fm-vision-evals); "juiz forte único" = **2604.25235** (não 2510.11822); few-shot em VLM = **2606.06714/2405.13532** (a evidência numérica original era de juiz de texto).
+> - O corpus multi-anotador é o ideal da literatura, mas você é solo — sinalizei o trade-off honestamente em vez de fingir que temos um painel de anotadores.
+> - Custo: sob BYOK do Usuário Zero, todo esse QA roda a **0 mco** (`credentials.ts:43-67`), então "treinar o olho" não introduz custo novo.
+> ```
+
+## 🤖 Claude *(11:37:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Vision research came together into a solid, actionable plan with the shopping list the Sovereign requested. I've now located the internal production roadmap across multiple documents—the master content engine file, the cadence distribution pipeline, and the funnel validation data—and I'm tracking Gabriel's involvement in this.
+
+The AI foundation sits in the `video-repurpose` body of knowledge from the GabrielAI repo. Synthesizing the user's directive: the priority is creative work and cuts, I need to study Google Flow FX apps as reference material for the studio, and I'm building a first-class internal creative production pipeline separate from existing systems. This pipeline needs to be grounded in the existing roadmap and GabrielAI, with a complete loop from development through publishing to metrics analysis and iteration. The immediate need is posting cuts from episodes one and two before Sunday's episode three, and they've committed to all four força-total options.
+
+The real deliverable here is designing a complete, robust creative production pipeline as a new architectural program—this needs a blueprint and body of knowledge using Closed-Loop methodology. It's ungated design work and a perfect target for deep-search blueprint work. But I also need to deliver value fast, starting with those creative cuts.
+
+I'm framing this as a program called PIPC—Pipeline Interno de Produção Criativa—structured as a flywheel with four stages: development where we produce cuts and quality-graded content using the studio, motor-conteudo-master, GabrielAI, and Google Flow FX references; publication handling scheduled and private-first releases across YouTube and social channels; analysis diving into YouTube metrics, retention curves, and funnel instrumentation; and feedback loops that feed metrics back into the next episode's production decisions. This maps directly to their four selected options. Now I'm planning the execution strategy, starting with designing the PIPC blueprint through deep-search work.
+
+I need to research Google Flow and Flow FX apps for storyboarding, study the GabrielAI repository as the foundation, consolidate the existing internal roadmap from the motor-conteudo-master and cadence-distribution-pipeline documents, then design the complete four-stage pipeline with a clear roadmap of slices. This blueprint document becomes the deliverable that separates and organizes everything into a robust, complete system—essentially seeding a knowledge base for this new creative production pipeline module.
+
+There are already several existing knowledge bases I should reference: spaces-evolution, video-repurpose, youtube-studio, content-intel, and conteudo-v2. Rather than creating a brand new knowledge base, the user wants these consolidated into a coherent pipeline, so the real deliverable is a roadmap and blueprint document that consolidates these existing pieces, identifies gaps, and provides a clear direction—all grounded in research about Flow and the GabrielAI foundation.
+
+I'm mapping out a phased approach: Phase B focuses on the Vision implementation (the creative quality work with model pinning and grading), Phase C handles producing the actual episode cuts using the repurpose pipeline, and Phase D sets up the funnel and attribution tracking. For this immediate turn, I need to deliver the Vision plan and a shopping list to get started.
+
+The key insight is that I already have the exact references the Sovereign asked for—that's the priority to surface right now. I should reframe everything as the PIPC program to separate concerns cleanly, then launch the blueprint deepsearch workflow using Flow FX and GabrielAI. I could optionally kick off the Vision harness slices 1-2 since they're low-effort and high-impact, but given the trust-rebuild context, it's probably cleaner to present the plan first and make that a focused next phase rather than dumping multiple workflows at once.
+
+So my move is to present the Vision plan with the shopping list as a direct answer to their question, reframe it all as PIPC with the flywheel logic, and launch just the one blueprint deepsearch workflow—that's the "completo e robusto" piece they're asking for. After that, I'll lay out the immediate next actions I'll handle autonomously: implementing Vision slices 1-3 for creative quality, producing the EP01/EP02 cuts once I have the masters on the host, and building out the funnel instrumentation. I'll save the Vision plan to a doc so it persists.
+
+I should also capture the key durable facts in memory—the Vision eye-training plan as a project reference, the PIPC program direction, and the reconciliation lesson about showing all commits in hands-on work. Let me prioritize the most important memory writes.
+
+Now I'm deciding where to save the Vision plan: it's a roadmap for training the eyes, so `docs/roadmap/vision-golden-eye.md` makes sense as the durable location for that shopping list they can act on.
+
+Before launching the PIPC workflow, I should quickly review the existing motor-conteudo-master.html and cadence-distribution-pipeline.md to ground myself in what's already there, so the workflow agents can reference those materials and I can frame the PIPC blueprint properly. I'll consolidate this into two focused passes: first, I'll read through the roadmap docs and scan the HTML structure to ground the PIPC blueprint, then in the next message I'll write the Vision doc, launch the workflow, and present. I'm also weighing whether to use the [[deepsearch-blueprint|deepsearch-blueprint]] agent—it's built for exactly this kind of grounded research-to-blueprint work, though I need to think through whether a custom workflow might be better suited here.
+
+Actually, I think a custom workflow makes more sense since PIPC is really about weaving together our existing modules with new references like Flow FX, and I need fine-grained control over how I'm consolidating the roadmap, studying external tools, and designing the lifecycle. I'll structure it with the same rigor as [[deepsearch-blueprint|deepsearch-blueprint]]—multiple research fronts, verification, synthesis—but tailored to pull in our existing docs and external references. The first front is mapping out what Google Flow and Flow FX actually offer in terms of apps and capabilities. I need to map out the full production lifecycle from creation through publishing to metrics and improvement, grounded in evidence rather than assumptions. Then I'll synthesize everything into the PIPC framework—a four-stage pipeline that integrates Flow FX patterns, the GabrielAI base architecture, and our existing infrastructure—showing exactly where the early episodes fit and how the feedback loop for later episodes plugs in. I should also stress-test the external claims about Flow FX capabilities and GabrielAI facts against what we actually know.
+
+Let me pull the grounding documents now—cadence-distribution-pipeline.md and funnel-mass-validation-2026-07-22.md—to get the full context and HTML structure, then I'll compose the complete doc, workflow, and presentation in one go.
+
+</details>
+
+
+## 🤖 Claude *(11:37:33)*
+
+A pesquisa entregou ouro — tenho o plano dos olhos com a **shopping list exata** que você pediu. E localizei o seu roadmap interno: `docs/roadmap/motor-conteudo-master.html` + `cadence-distribution-pipeline.md`. A base GabrielAI está ancorada no BoK `video-repurpose` (9/9).
+
+Deixa eu ler o roadmap interno existente pra ancorar corretamente o pipeline que você pediu pra separar — não vou reinventar o que já desenhamos:
+
+## 🤖 Claude *(11:37:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/cadence-distribution-pipeline.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Roadmap — Pipeline de Cadência & Distribuição (audiência → receita)
+> 2	
+> 3	**Data:** 2026-07-21 · **Owner (ROI):** Sovereign · **Operator:** MCORCH Agent + trilhos vivos
+> 4	**Norte:** transformar o acervo criativo (EP01/EP02 + cortes + grades 2×2 + carrosséis) num **motor de distribuição recorrente** que roda sozinho, mede o desfecho real e reinveste no que converte. Audiência e vendas como engrenagens (memória `project_audience_flywheel_distribution`).
+> 5	
+> 6	## 1. O que JÁ existe (não reconstruir)
+> 7	
+> 8	| Camada | Trilho vivo | Estado |
+> 9	|--------|-------------|--------|
+> 10	| **Produção de cortes** | `video-repurpose` (1 master → N shorts 9:16 + carrossel) + detector Hormozi + **8 estilos de legenda** (agora com **biblioteca de previews**, F7) | ✅ VIVO |
+> 11	| **Produção de composições** | Nó **Tela Dividida / Grade** (`split_screen` + **`split_grid` 2×2**, vídeo/foto por célula — Amendment 28) + **POV (Selfie/Vlog)** Veo | ✅ VIVO |
+> 12	| **Motor de cadência** | `spaces-cadence` Fatia 1: nó **Cadência** arma `autopilot_plans (plan_kind='cadence')` → tick vivo roteia por `plan_kind` → `cadence-run` → `cadence_dispatches` → **`scheduled_posts`** → `auto-publish` → `publish-social` | ✅ SHIPPADA (`c994c363`) |
+> 13	| **Cadência de vídeo** | `cadence-run` anexa mídia de asset de vídeo (POV/corte/split) via `space_publish_variant` (FR-CAD-006); YouTube default **private** (privado-primeiro) | ✅ SHIPPADA (`7c5c10b`) |
+> 14	| **Canais de saída** | `publish-social` — LinkedIn · X · **IG Reels/Feed/Carrossel/STORIES (flag virada)** · YouTube · Pinterest | ✅ (real depende de app-audit por rede) |
+> 15	| **Medição honesta** | `creative_metrics` (hook_rate, revenue_cents) + `collective_efficiency_ledger` (mco/resultado, anti-Goodhart) | ✅ VIVO |
+> 16	
+> 17	## 2. O pipeline-alvo (produce → schedule → distribute → measure)
+> 18	
+> 19	```
+> 20	[Acervo] EP01/EP02 masters (host-disk) + assets da spine creative_assets
+> 21	   │
+> 22	   ├─(produce)→ nó Repurpose (cortes+legenda) · nó Grade 2×2 · nó Carrossel(**F6, em construção**) · nó POV
+> 23	   │            └─ todo output cai na spine creative_assets (owner-scoped, aparece na aba Assets — F2)
+> 24	   │
+> 25	   ├─(schedule)→ nó Cadência: escolhe o asset + recorrência (diária/semanal) + canais + teto de mco
+> 26	   │            └─ arma autopilot_plans → tick → cadence-run → scheduled_posts (privado-primeiro/rascunho)
+> 27	   │
+> 28	   ├─(distribute)→ auto-publish drena scheduled_posts → publish-social (Reels/Feed/Carrossel/Stories/LinkedIn/X/YT)
+> 29	   │
+> 30	   └─(measure)→ creative_metrics + collective_efficiency_ledger → reward brand-first → realocação ε-greedy
+> 31	```
+> 32	
+> 33	## 3. Cadência concreta v1 (regra, não folclore)
+> 34	
+> 35	Da pesquisa adversarial (25 claims → 9 confirmadas): **cadência = inventário ÷ ciclo**, não número mágico.
+> 36	
+> 37	- **Ciclo-âncora:** episódio novo todo domingo (após 16h) ⇒ ciclo de 7 dias.
+> 38	- **Derivação:** 3 posts/semana por episódio = 1 corte-gancho (dia 0) · 1 grade 2×2/carrossel (dia 3) · 1 corte-CTA (dia 5). O nó Cadência arma isso como `weekly`.
+> 39	- **Edição mais barata do próximo EP:** cortar os primeiros 10s (maior queda do EP02 = −9,7% aos 10s — orientação oficial verificada).
+> 40	- **Funil nativo:** "Related video" do YouTube + CTA nos últimos 5s + gancho nos 5-10s. `impressions`/CTR de miniatura **não existem** na Analytics v2 → não medir hook_rate por impressão no YouTube.
+> 41	
+> 42	## 4. Próximos passos (ordem)
+> 43	
+> 44	| # | Item | Gate |
+> 45	|---|------|------|
+> 46	| 1 | **F6 — nó Carrossel multi-imagem** (galeria + reorder dnd + crop por item → `video-render` mode `carousel` normaliza N assets 4:5 com `source_job_id` compartilhado → reusa `publish-space-carousel`) | /security-review + witness (código = fatia dedicada) |
+> 47	| 2 | **Witness E2E de despacho da Cadência** (arm → scheduled_posts via throwaway/UI, sem publicar real) | throwaway |
+> 48	| 3 | **Produzir a cadência da semana**: EP01 → 3 cortes (legenda escolhida na biblioteca F7) + 1 grade 2×2 + 1 carrossel → armar 1 plano de Cadência semanal (privado/rascunho) | GO Sovereign p/ gasto |
+> 49	| 4 | **Postar EP02 no YouTube pela plataforma** (Track B fábrica — worker `youtube-upload.service` + UI de metadados) | Sovereign: habilitar service + verify/CASA/quota |
+> 50	| 5 | **Cadência Fatia 2 — inbound IG DM** ("além do ManyChat", PROBE-GATED FM-CAD-02) | probe-first |
+> 51	| 6 | **Medir e reinvestir**: painel por-publicação + reward brand-first fecha o loop produce→measure→reallocate | re-OAuth IG insights |
+> 52	
+> 53	## 5. Alertas herdados (destravar em paralelo)
+> 54	
+> 55	- `FM-CS-02 RPN 324 (LGPD)`: `erase_lead` não cobre a spine CRM — dívida de conformidade.
+> 56	- Rotação de credenciais expostas no chat (META_APP_SECRET / EAA / IG) — runbook pronto.
+> 57	- `youtube-upload.service` nasce desabilitado — habilitar (ação Sovereign).
+> 58	
+> ```
+
+## 🤖 Claude *(11:37:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/funnel-mass-validation-2026-07-22.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Roadmap — Publicar conteúdo + validar campanhas em MASSA nos funis (SSOT)
+> 2	
+> 3	**Data:** 2026-07-22 · **Método:** Workflow maestro+enxame (`wf_04833184-273`, 50 agentes, 32 células `S×P`, verificação adversarial) · **Owner (ROI):** Sovereign · **Operator:** MCORCH Agent + trilhos vivos + enxame
+> 4	**Fundado em:** [`zerar-journey-map-2026-07-22.md`](../../.claude/context/zerar-journey-map-2026-07-22.md) (jornada E2E User 0) + recon do pipeline vivo + Fila Sovereign.
+> 5	
+> 6	> **Ranking do enxame:** `shortest-brl` (8,38) · `brand-flywheel` (8,31) · `compliance-safe` (8,31) · `mass-funnel` (8,0).
+> 7	> **Escolha:** espinha **shortest-brl** (funil un-gated → 1º R$) **enxertada** com o fan-out barato + métrica brand-first do `brand-flywheel`.
+> 8	> **Refutação adversarial (Lei 1):** o publish CF **per-user** (`wordpress-cf-per-user-publish.md`) é SOP selado com **código pendente** (sem coluna `wp_cf_publish_secret`, sem `verify-wp-cf`, sem UI). O roadmap **NÃO** o pressupõe — o Usuário Zero fatura pelo **rail GLOBAL tenant-zero** (`WP_PUBLISH_SECRET/_HOST`, provado `post_id:18`).
+> 9	
+> 10	## Tese
+> 11	
+> 12	A malha para faturar já está **VIVA de ponta a ponta**. Nada precisa ser construído para o 1º R$ — há um caminho a **percorrer** (privado-primeiro, rascunho → GO Sovereign vira público) e a **instrumentar em massa**. O gargalo não é gerar nem publicar: é **distribuição + atribuição** de muitas variantes baratas, decidindo **por dado** qual funil merece reinvestimento.
+> 13	
+> 14	## Pipeline (produce → schedule → distribute → measure)
+> 15	
+> 16	- **produce** — `orchestrate-content`→`orchestrate-step` (product-aware: branch HOOK→VALUE→CTA por produto de `vm_affiliate_products`) gera o artigo-pilar; `_shared/affiliate.ts` embute link ML + UTM `magic_constellation_v1` + `content_variant_id`. Fan-out barato do acervo/pilar em N variantes nativas via `reshape-pillar` (zero branch/canal) + reframe imagescript WASM (4:5/2:3/1.91:1/16:9) + repurpose hyperframes (`charged_mco:0`). **Custo marginal externo = 0.**
+> 17	- **schedule** — `scheduled_posts` (`cycle_id`, `publish_at` futuro) via `schedule-episode.ts` + `publish-space-asset`. **Privado-primeiro é lei:** tudo entra rascunho/agendado. `begin_autopilot_cycle` faz pré-débito único atômico (`prepaid=true` suprime self-bill dos sub-runs); `auto-publish` (`*/5`) só drena o que o Sovereign liberou.
+> 18	- **distribute** — `publish-wordpress` no rail GLOBAL tenant-zero (`WP_PUBLISH_SECRET/_HOST`, CF Skip provado `post_id:18`): cada URL = um funil isolado rastreável por `content_variant_id`. Redes já ligadas (LinkedIn/X/Pinterest) drenam pelo `auto-publish`. Verticais (TikTok/IG/YT) ficam **agendadas privado** (OAuth/App Review = Fase 2 gated).
+> 19	- **measure** — `process-affiliate-link` grava o clique (sinal primário custo-zero) → `autopilot-collect` (`0 */6`) agrega `click_count`+`hook_rate` por `content_variant_id` → `handle-ml-postback` confirma `revenue_cents` (sinal tardio) → `collective_efficiency_ledger` dá o lift coletivo brand-first anti-Goodhart → `autopilot-analyze` emite `optimization_policy`.
+> 20	
+> 21	## Validação em massa — a regra de escala `K = ⌈S·P / C⌉`
+> 22	
+> 23	Valida MUITOS funis, escala POUCOS, com investimento mínimo, decidindo por dado:
+> 24	- **S** = orçamento de reinvestimento livre (mcoCoins do ciclo).
+> 25	- **P** = fator de concentração de performance ∈ (0,1] — fração do orçamento destinada aos vencedores, derivada do percentil de `hook_rate`/clique do ciclo-baseline (sinal mais concentrado → P menor → corte mais seletivo).
+> 26	- **C** = custo por funil escalado (mco/variante em 1 ciclo autopilot).
+> 27	- **K** = nº de funis vencedores reinvestidos; gasto **provado-limitado** por `K·C ≤ S·P` (nunca ultrapassa o teto).
+> 28	
+> 29	Fluxo: (1) ciclo baseline `all_at_once` gera N variantes baratas (produto×ângulo×keyword×ab_variant), `prepaid=true` ⇒ custo único previsível; (2) `autopilot-collect` ranqueia; (3) `autopilot-analyze` computa P do percentil e emite os `K` vencedores; (4) só esses recebem o próximo ciclo. **Guardas Lei 1:** `dry_run` projeta custo + exige teto confirmado ANTES de qualquer `deduct`; `begin_autopilot_cycle` aborta 402 sem cobrar se saldo<projetado. **Brand-first:** decisão usa `hook_rate` + ledger coletivo como sinal-mãe, receita ML como confirmação — evita escalar cedo por ruído de receita esparsa. **Um funil não valida nada — a validação é estatística.**
+> 30	
+> 31	## Fases
+> 32	
+> 33	| Fase | O quê | Gate | Prova material (Lei 1) |
+> 34	|------|-------|------|------------------------|
+> 35	| **0** | Selar pré-condições (sondar antes de construir, **custo 0**) | `affiliate_tag` ativo + `WP_PUBLISH_SECRET/_HOST` no vault + N>0 assets com proveniência | SELECTs reais (UUIDs) + nomes de secret |
+> 36	| **1** | Semente privada (1 SKU, ~10 mco) — provar atribuição ANTES de escalar | `content_library` com artigo + link ML c/ UTM + `content_variant_id` | SELECT UUID + grep literal do link |
+> 37	| **2** | 1º funil público + 1 clique atribuído (**GO Sovereign = validação**) | `publish-wordpress {success,post_id,draft}` → após GO, URL 200 → 1 linha `affiliate_clicks` | JSON literal + curl 200 + SELECT UUID |
+> 38	| **3** | Fan-out barato: 1 pilar → N variantes nativas (USD marginal 0) | smokes verdes + `channel_variants` draft (opt-in) | SELECT UUIDs + JPEG reframe + `charged_mco:0` |
+> 39	| **4** | Escala em massa privado-primeiro (ciclo autopilot, teto confirmado) | `dry_run`→teto→`begin_autopilot_cycle` 1× atômico; saldo<projetado ⇒ 402 sem cobrar | cycle UUID + `deduct` UUID + N `scheduled_posts` |
+> 40	| **5** | Medir barato + decidir vencedor por dado (`K=⌈S·P/C⌉`) | `creative_metrics` por variante + optimization node + lista dos K | SELECT metrics + `revenue_cents` + node UUID |
+> 41	| **6** | Loop ciclo-a-ciclo (features como DADO, anti-injeção OTD-VA-005) | ciclo N+1 arranca com features do vencedor + `OPTIMIZES_FROM` edge + spend ≤ S·P | edge UUID + diff hook_rate/revenue N→N+1 |
+> 42	
+> 43	## Enxertos (do vice brand-flywheel/compliance)
+> 44	
+> 45	- Fan-out barato do acervo brand-first (`reshape-pillar`+reframe+repurpose `charged_mco:0`).
+> 46	- Métrica de decisão brand-first (`hook_rate` + ledger coletivo como sinal-mãe; receita ML = confirmação tardia).
+> 47	- **Proveniência AI Act Art.50 como pré-condição de publish** (asset só distribui com URI IPTC `provenance_state='embedded'`; prazo **2026-08-02**).
+> 48	- Agendamento privado-primeiro multi-canal (`schedule-episode.ts` dry-run→--commit; reversível até o GO).
+> 49	
+> 50	## Próximas 3 ações (executáveis JÁ, un-gated)
+> 51	
+> 52	1. **Fase 0 — handshake material** (custo 0): SELECT `affiliate_config` do User 0 (affiliate_tag ativo) + `WP_PUBLISH_SECRET/_HOST` no vault + inventário `creative_assets` `provenance_state='embedded'`.
+> 53	2. **Fase 1 — semente privada** (Roborock S8, ~10 mco, sem publicar) + provar atribuição (grep `utm_campaign=magic_constellation_v1` + `content_variant_id`).
+> 54	3. **Fase 2 (até o reversível)** — publicar RASCUNHO via `publish-wordpress`, parar em `{success:true,post_id:N,status:draft}`. Virada draft→público = **GO do Sovereign**.
+> 55	
+> ```
+
+## 🤖 Claude *(11:37:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== Estrutura do motor-conteudo-master.html (headings + t\u00edtulos) ===\"\ngrep -oE \"<h[1-4][^>]*>[^<]+</h[1-4]>|<title>[^<]+</title>|<strong>[^<]{5,80}</strong>\" docs/roadmap/motor-conteudo-master.html 2>/dev/null | sed -E 's/<[^>]+>//g' | head -60",
+  "description": "Read cadence + funnel roadmaps and motor-conteudo-master structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Estrutura do motor-conteudo-master.html (headings + títulos) ===
+> MCORCH · Roadmap Master do Motor de Conteúdo
+> Lo-fi / “salada”
+> Fast-food / viral
+> A linha do tempo — o que já construímos
+> Fundação soberana
+> Constelação, Orquestração & Exército Departamental
+> O pipeline de campanha
+> Produção real — o “fast-food” automatizado
+> Publicação & Cadência — “além do ManyChat”
+> O que deixa a máquina segura de vender
+> Loop autônomo selado
+> O que o mercado vende × o que já temos
+> Próximos passos
+> ```
+
+## 🤖 Claude *(11:38:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm reviewing the internal production roadmap components: the cadence pipeline that handles produce-schedule-distribute-measure flow, the mass validation framework with its scaling formula, and the master roadmap document that outlines the two-machine strategy with timeline and campaign infrastructure.
+
+The user wants to elevate this into a complete, robust lifecycle pipeline that covers development, implementation/publishing, and deep metrics analysis to inform the next episode. They're asking to integrate Google Flow FX apps as studio references and leverage the GabrielAI repo as a foundation.
+
+Looking at what's already solid versus what's genuinely missing: the existing roadmap is strong on cadence and distribution, but the user's emphasis is on creative production quality during development, then rigorous metrics management to feed back into the next cycle.
+
+The key gaps are studying Flow FX as a new external reference for storyboarding, consolidating the scattered pieces into one unified internal production pipeline that clearly separates development from publishing from metrics analysis, and strengthening that feedback loop from deep metrics analysis back into EP05 planning—which is currently the weakest link.
+
+Now I'm ready to move forward: I'll document the Vision plan with the creative quality priorities and shopping list, launch the research workflow to integrate Flow FX and consolidate the existing roadmaps with the EP05 improvement loop as a core stage, then present the full synthesis to show what we have, what the workflow will design, and the immediate next actions for the Vision slices and episode cuts. I'll write the Vision doc with the full plan content and a header, then batch the PIPC workflow launch together since they're independent operations. The user was explicit about wanting the complete pipeline, so I should proceed with both rather than waiting for confirmation.
+
+For the workflow, I'm setting up the research front to investigate Google's Flow and Flow FX tools—searching for their storyboarding capabilities, scene extension features, and ingredient-to-video patterns. I need to clarify whether the user meant Google Labs' Flow (the Veo-powered filmmaking tool) and document what's actually available versus what's been announced.
+
+Next, I'm pulling the GabrielAI repository to understand its creative production model—how it handles Veo outputs, metadata-driven workflows, and the master-to-repurpose pipeline. If the repo is private or inaccessible, I'll work with what we already have in our video-repurpose knowledge base. Then I'm consolidating our existing internal documentation to ground the PIPC workflow. ycle for episodic solo creators, focusing on retention curves and A/B testing hooks while staying grounded in our nine verified claims rather than unproven assumptions. Now I'm synthesizing this into a single, unified PIPC document that cleanly separates development, publishing, deep analysis, and improvement stages—pulling together the scattered roadmaps, integrating Flow FX patterns and GabrielAI foundations with our vision framework, ranked by effort and impact with clear gates showing where EP01/EP02 and EP05 fit in. I need to adversarially verify this approach against external claims from F1, F2, and F4, then write out both the workflow script and the Vision document using the same FINDINGS/VERDICT schema, incorporating the 14KB plan from my context with a provenance header.
+
+I'll execute this all in parallel—writing the Vision doc, launching the PIPC workflow, and marking the chapter shift to "Pipeline de produção + olhos treinados"—then present the results together.
+
+</details>
+
+
+## 🤖 Claude *(11:38:31)*
+
+Agora tenho o quadro completo. Seu roadmap interno **já existe e é forte** (`motor-conteudo-master.html` + `cadence-distribution-pipeline.md` + `funnel-mass-validation`), ancorado no BoK `video-repurpose` (base GabrielAI). O que você está pedindo é **elevá-lo a um pipeline de produção interno de primeira classe, separado e robusto**, cobrindo o ciclo completo **desenvolver → publicar → analisar fundo → melhorar (EP05)** — com o **Google Flow FX** como referência nova e os **olhos treinados** como prioridade de qualidade.
+
+Vou fazer três coisas agora, em paralelo: **(1)** salvar o plano dos olhos como doc durável (a shopping list que você pediu), **(2)** disparar o workflow de blueprint do Pipeline de Produção (estuda Flow FX + GabrielAI + consolida o que já temos), **(3)** marcar o novo capítulo.
+
+## 🤖 Claude *(11:39:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/vision-golden-eye.md",
+  "content": "# Roadmap \u2014 \"Treinar os olhos\" do Vision MCP (Golden Eye)\n\n**Data:** 2026-07-23 \u00b7 **Owner (ROI):** Sovereign (o olho \u00e9 o gate de qualidade de todo criativo que vira receita) \u00b7 **Operator:** MCORCH Agent\n**Fonte:** pesquisa fundamentada `wf_010be734-7c4` (4 frentes + verifica\u00e7\u00e3o adversarial de folclore + s\u00edntese). Toda claim carrega a URL peer-reviewed; o que foi REFUTED est\u00e1 marcado e **n\u00e3o** virou recomenda\u00e7\u00e3o (Lei 1).\n\n> **Pergunta do Sovereign que este doc responde:** \"Como treinamos meus olhos / o Vision MCP? Quais as melhores refer\u00eancias voc\u00ea precisa \u2014 links de sites? v\u00eddeos? imagens?\" A resposta curta: **o insumo que treina um VLM-juiz \u00e9 IMAGEM (screenshot), n\u00e3o link nem v\u00eddeo cru.** A shopping list exata est\u00e1 na Se\u00e7\u00e3o 4.\n\n---\n\n## 1. Enquadramento honesto \u2014 o que \"treinar os olhos\" significa aqui\n\nN\u00e3o vamos re-treinar os pesos do modelo. O olho do MCORCH \u00e9 um VLM hospedado (`google/gemini-2.5-flash` via OpenRouter para imagem; Gemini direto para v\u00eddeo) chamado por um \u00fanico cliente (`scripts/qa/vision-qa.ts`) e envelopado por dois graders (`vision-gate.ts` bin\u00e1rio, `senior-rubric.ts` 8-dimens\u00f5es). **\"Treinar os olhos\" = elevar o HARNESS ao redor desse VLM**, em cinco alavancas:\n\n1. **Exemplares few-shot** \u2014 \u00e2ncoras visuais \"isto \u00e9 nota 5 / isto \u00e9 nota 2\" no prompt.\n2. **Rubricas** \u2014 crit\u00e9rios ortogonais com n\u00edveis descritos (j\u00e1 temos a base em `RUBRIC.md`).\n3. **Calibra\u00e7\u00e3o contra um gold set** \u2014 um corpus rotulado por humano que d\u00e1 baseline mensur\u00e1vel de acur\u00e1cia/drift.\n4. **Escolha de modelo** \u2014 medida no NOSSO gold set, n\u00e3o em n\u00famero de blog.\n5. **Protocolo de julgamento** \u2014 pareado/intervalo vs. pontual, conforme a dimens\u00e3o.\n\nVerdade dura da literatura que redesenha o alvo: **o VLM-juiz ORDENA razoavelmente bem, mas PONTUA mal** \u2014 score exato erra ~66-68% das vezes e os intervalos de confian\u00e7a cobrem 40-70% da escala ([arXiv 2604.25235](https://arxiv.org/html/2604.25235v2), CONFIRMED). Logo, \"treinar o olho\" **n\u00e3o** \u00e9 perseguir uma nota 0-10 perfeita; \u00e9 (a) faz\u00ea-lo escolher/ordenar com \u00e2ncora, (b) medir sua pr\u00f3pria incerteza por dimens\u00e3o, e (c) ancorar as dimens\u00f5es objetivas (contraste, cor, fonte) em prova determin\u00edstica, n\u00e3o no palpite do VLM.\n\n**Duas coisas que a pesquisa REFUTOU \u2014 n\u00e3o vamos fazer:**\n- \u274c *\"Calibrar contra gold set dobra a acur\u00e1cia / \u00e9 o maior ganho.\"* Falso como enunciado (confundia paper de texto com VLM). O que domina \u00e9 a **QUALIDADE do gold set** (multi-anotador), n\u00e3o o passo de calibra\u00e7\u00e3o em si.\n- \u274c *\"Pareado \u00e9 sempre mais confi\u00e1vel que nota pontual.\"* Falso como lei \u2014 no MT-Bench os dois empatam (~85%), e sob distratores o **pontual \u00e9 ~4\u00d7 mais robusto** ([arXiv 2504.14716](https://arxiv.org/abs/2504.14716)). Pareado \u00e9 heur\u00edstica condicional, n\u00e3o dogma.\n\n---\n\n## 2. Os 5 upgrades de maior alavancagem (ranqueados)\n\n| # | Upgrade | Por qu\u00ea / \u00e2ncora CONFIRMED |\n|---|---------|-----------------------------|\n| **1** | **Criar a Biblioteca \"Golden Eye\"** \u2014 corpus versionado de screenshots rotulados + runner de acur\u00e1cia. Hoje **n\u00e3o existe NENHUM exemplar/baseline no repo** \u2014 o olho julga single-shot e a confian\u00e7a nele \u00e9 cega. | A qualidade da verdade-terra **domina** todo o resto: mesmo juiz + mesmo m\u00e9todo rende correla\u00e7\u00e3o 0.906 vs 0.402 e intervalos 4,5\u00d7 mais estreitos s\u00f3 trocando para um dataset multi-anotador limpo ([arXiv 2604.25235](https://arxiv.org/html/2604.25235v2)). Sem baseline, n\u00e3o h\u00e1 como medir se o olho melhorou. |\n| **2** | **Protocolo por dimens\u00e3o: pareado/intervalo para o subjetivo, pontual-ancorado para o objetivo.** Julgar o candidato contra um exemplar de refer\u00eancia da mesma categoria em vez de nota no v\u00e1cuo \u2014 e rodar A-vs-B **e** B-vs-A para neutralizar position bias. | VLM rankeia > pontua ([2604.25235](https://arxiv.org/html/2604.25235v2)); mas pareado \u00e9 mais engan\u00e1vel por distratores (flip 35% vs 9% \u2014 [2504.14716](https://arxiv.org/abs/2504.14716)). Use a largura do intervalo como gatilho \u2014 estreito\u2192score, largo\u2192pareado. |\n| **3** | **Fiar os probes determin\u00edsticos (`evalJs` de estilo computado) dentro do `seniorRubricGate` para MARCA_MIV e ACESSIBILIDADE.** A `RUBRIC.md` **manda** exigir a prova computada para qualquer P0/P1 de contraste/cor/fonte, mas o c\u00f3digo s\u00f3 manda o screenshot ao VLM \u2014 hoje emite veredito de marca/contraste **sem a prova que a pr\u00f3pria rubrica exige (risco Lei 1)**. | VLM \u00e9 fraco em geometria/medida exata e subestima o subjetivo, sendo confi\u00e1vel em clareza/hierarquia ([MLLM as a UI Judge, arXiv 2510.08783](https://arxiv.org/pdf/2510.08783)). Contraste/cor/fonte s\u00e3o med\u00edveis \u2014 n\u00e3o devem depender do olho alucin\u00e1vel. |\n| **4** | **Few-shot ancorado + indicator-grounded reasoning no prompt.** Injetar 1-2 exemplares por n\u00edvel de qualidade e exigir que cada nota cite a **regi\u00e3o concreta** da tela que a justifica. | Few-shot calibra a escala (efeito real, por\u00e9m **model-specific** e com risco de ancoragem \u2014 [arXiv 2606.06714](https://arxiv.org/abs/2606.06714)); amarrar dimens\u00e3o abstrata a regi\u00e3o concreta melhora o julgamento de design ([AesEval-Bench, arXiv 2603.01083](https://arxiv.org/abs/2603.01083)). |\n| **5** | **Higiene do motor:** pinar `VISION_VLM_MODEL` numa constante versionada + carimbar a vers\u00e3o do modelo em cada verdict; distinguir \"parse falhou\" de `confidence:medium`; escolher o modelo (Gemini/GPT-4o/Claude) rodando o gold set, n\u00e3o por blog. | O default do modelo pode mudar sob os p\u00e9s do harness sem trilha; o `parseVlm` hoje mascara baixa confian\u00e7a como \"medium\". GPT-4o lidera vis\u00e3o em estudo **cred\u00edvel** ([EPFL, arXiv 2507.01955](https://arxiv.org/abs/2507.01955)), mas nenhum VLM chega perto de especialista \u2014 me\u00e7a no SEU gold set. |\n\n> **Nota anti-folclore (CoT & ensemble):** Use chain-of-thought/rationale pela **rastreabilidade** (casa com a Lei 1), n\u00e3o como driver de acur\u00e1cia \u2014 o ganho num\u00e9rico \u00e9 sinal misto ([2412.05579](https://arxiv.org/html/2412.05579v2)). E prefira **um juiz forte \u00fanico** a empilhar ju\u00edzes fracos \u2014 fundir ju\u00edzes fracos *degrada* ([2604.25235](https://arxiv.org/html/2604.25235v2)); amostrar 3-5\u00d7 o MESMO juiz e agregar (mediana) corta ru\u00eddo modestamente, s\u00f3 isso.\n\n---\n\n## 3. Biblioteca \"Golden Eye\" \u2014 design concreto\n\nCorpus versionado em `scripts/qa/vision-calibration/`, ancorado na marca **MIV** (tokens `void/cyan/gold/nebula`, accent=cyan, gold s\u00f3 p/ valor) e nas **8 dimens\u00f5es da `RUBRIC.md`**.\n\n**Tamanho:** ~4 pares (bom/ruim) por dimens\u00e3o \u00d7 8 dimens\u00f5es \u2248 **32-40 imagens** (cabe no contexto do VLM e vira a r\u00e9gua permanente). Screenshots full-screen 1280-1920px.\n\n**Estrutura por dimens\u00e3o:**\n\n| Dimens\u00e3o RUBRIC | Exemplar \"bom\" | Exemplar \"ruim\" | Prova de apoio |\n|---|---|---|---|\n| Hierarquia | tela MIV com foco/CTA claro | pesos achatados | \u2014 (VLM confi\u00e1vel) |\n| Consist\u00eancia | tokens MIV coerentes | mistura de escalas/cores | \u2014 |\n| **Marca MIV** | accent=cyan, gold s\u00f3 em valor | gold decorativo/accent errado | **evalJs computed-style (obrigat\u00f3rio)** |\n| **Acessibilidade** | contraste WCAG AA ok | cinza-sobre-cinza | **evalJs contrast/APCA (obrigat\u00f3rio)** |\n| Estados | hover/focus/erro/vazio presentes | erro ausente | \u2014 |\n| Micro-intera\u00e7\u00f5es | frames-chave da transi\u00e7\u00e3o | jump abrupto | frames extra\u00eddos |\n| Copy pt-BR | claro, MIV, sem typo | amb\u00edguo/ingl\u00eas vazado | \u2014 |\n| Jornada | fluxo com 2-3 frames coerentes | passo quebrado | classify() console/network |\n\n**Anota\u00e7\u00e3o (JSON sidecar por imagem):** `expected_verdict`, `expected_dim_severities`, `region`, `why`, `probe_ground_truth`.\n\n**Pares antes/depois** (o `Refactoring UI` j\u00e1 \u00e9 escrito assim) \u00e9 o formato ideal. **Multi-anotador \u00e9 o ideal da literatura**; solo, rotule com cuidado e pe\u00e7a 1-2 segundas opini\u00f5es nas telas de fronteira.\n\n**Dois gold sets separados** (imagem via OpenRouter \u00b7 v\u00eddeo via Google direto) \u2014 a calibra\u00e7\u00e3o de um **n\u00e3o transfere** para o outro.\n\nO **runner** roda o olho contra o corpus e reporta acur\u00e1cia/drift \u2014 \u00e9 o que torna \"o olho melhorou\" **material** (Lei 1), n\u00e3o sensa\u00e7\u00e3o.\n\n---\n\n## 4. A SHOPPING LIST \u2014 exatamente o que me dar\n\nPrinc\u00edpio: **o insumo que treina um VLM-juiz \u00e9 IMAGEM (screenshot).** Link serve para eu renderizar o screenshot certo; v\u00eddeo s\u00f3 entra como frames + sinais temporais.\n\n### \ud83d\udd17 LINKS DE SITE \u2014 viram o TEXTO da rubrica (n\u00e3o v\u00e3o crus ao olho)\n| Fonte | O que extraio | Formato |\n|---|---|---|\n| Apple Human Interface Guidelines | clareza/defer\u00eancia/tipografia | **URL** |\n| Material Design 3 | tokens de cor/espa\u00e7amento/estados | **URL** |\n| IBM Carbon | grid 2\u00d7, espa\u00e7amento, WCAG | **URL** |\n| Refactoring UI | pares antes/depois com o porqu\u00ea | **URL ou e-book** |\n\n### \ud83d\uddbc\ufe0f IMAGENS \u2014 o n\u00facleo do gold set\n| Fonte | Papel | Formato |\n|---|---|---|\n| **Telas do pr\u00f3prio MCORCH** (bom E ruim, com estados) | UI de produto com marca MIV real | **5-10 screenshots anotados por dimens\u00e3o** + 1 frase do porqu\u00ea + regi\u00e3o |\n| Awwwards | \"conhecida-boa\" j\u00e1 pontuada por j\u00fari | **URL da galeria + quais telas** (eu capturo) |\n| Godly \u00b7 Land-book | web/landing alto padr\u00e3o | **URL das categorias** |\n| Mobbin | apps reais por fluxo (login-gated) | **5-10 capturas manuais** (ToS: n\u00e3o scrapeio) |\n| Savee | eixo est\u00e9tico de posts/thumbnails | **5-10 imagens** p/ gold set de criativos |\n| LAION-Aesthetics / AVA | senso est\u00e9tico GERAL | **link** \u26a0\ufe0f \u00e9 foto/arte, **n\u00e3o UI** \u2014 s\u00f3 p/ eixo est\u00e9tico de criativos |\n\n### \ud83c\udfac V\u00cdDEOS \u2014 s\u00f3 para o eixo de julgamento de corte (o VLM \u00e9 temporalmente cego)\nEmbaralhar frames derruba s\u00f3 ~3,8% da acur\u00e1cia ([arXiv 2503.13956](https://arxiv.org/html/2503.13956v1)) \u2014 n\u00e3o me mande v\u00eddeo esperando que \"sinta\" o tempo; me mande **frames densos + sinais temporais expl\u00edcitos**:\n| Fonte | O que preciso | Formato |\n|---|---|---|\n| **Seus cortes EP01/EP02 (bons e ruins)** | julgar hook/ritmo/legenda | **v\u00eddeo + timestamp do hook** + (se houver) **curva de reten\u00e7\u00e3o** (YouTube Studio CSV / print TikTok segundo-a-segundo) |\n| YouTube retention docs | vocabul\u00e1rio can\u00f4nico (Intro %, Spikes, Dips) | **URL** |\n| Cortes que voc\u00ea admira | exemplar de ritmo | **v\u00eddeo + timestamp** + 1 frase do porqu\u00ea |\n\n> \u26a0\ufe0f **N\u00e3o me d\u00ea \"benchmarks de reten\u00e7\u00e3o viral\" (60-70% em 15s).** Folclore de vendor sem fonte prim\u00e1ria \u2014 n\u00e3o embuto limiar fixo. O juiz l\u00ea a **forma da curva do pr\u00f3prio v\u00eddeo**, n\u00e3o n\u00fameros importados. \u00c1udio \u00e9 objetivo: me\u00e7o LUFS/true peak via ffmpeg (EBU R128, ~-14 LUFS / <-1 dBTP).\n\n---\n\n## 5. Slices de implementa\u00e7\u00e3o (ordenado por esfor\u00e7o \u00d7 impacto)\n\n| Ordem | Slice | Ponto de inser\u00e7\u00e3o (file:line) | Esfor\u00e7o | Impacto |\n|---|---|---|---|---|\n| **1** | Fiar probes `evalJs` determin\u00edsticos no grader p/ MARCA_MIV/ACESSIBILIDADE + regra \"downgrade sem probe\" | `senior-rubric.ts:116-141` (puxar `driver.evalJs` de `browser-driver.ts`) | Baixo | **Alt\u00edssimo** \u2014 fecha risco Lei 1 ativo |\n| **2** | Pinar modelo + carimbar vers\u00e3o no verdict; separar `parse-failure` de `confidence:medium` | `describe-image.ts:12` e `:130-144` | Baixo | Alto \u2014 trilha de calibra\u00e7\u00e3o |\n| **3** | Criar a Golden Eye + runner de acur\u00e1cia (Se\u00e7\u00e3o 3) | novo `scripts/qa/vision-calibration/` + runner reusa `vision-qa.ts:46` | M\u00e9dio | **Alt\u00edssimo** \u2014 o baseline inexistente |\n| **4** | Few-shot ancorado + indicator-grounded (com A/B no gold set antes de creditar) | `senior-rubric.ts:29-36` \u00b7 `vision-gate.ts:15` \u00b7 `describe-image.ts:94-103` (seam `reference_image_urls`) | M\u00e9dio | Alto \u2014 mas model-specific, medir |\n| **5** | Protocolo pareado/intervalo por dimens\u00e3o (candidato vs. refer\u00eancia; A-vs-B e B-vs-A) | modo `compare` j\u00e1 existe em `vision-qa.ts`; ligar ao gold set | M\u00e9dio-alto | Alto \u2014 condicional |\n| **6** | Estender o gate determin\u00edstico (`parse-sensory-gate.ts` \u2014 loudness ffmpeg + contraste WCAG/APCA) como camada anti-Goodhart do v\u00eddeo | `parse-sensory-gate.ts` (Tier 2 foveal diferido `:185-192`) | Alto | M\u00e9dio |\n\n**Regra de ouro:** slices 1-3 s\u00e3o o n\u00facleo. Sem probe fiado (1), sem trilha de modelo (2) e sem gold set (3), qualquer melhoria de prompt (4-5) \u00e9 n\u00e3o-mensur\u00e1vel. Come\u00e7ar por eles.\n\n**Custo:** sob BYOK do Usu\u00e1rio Zero, todo esse QA roda a **0 mco** (`credentials.ts:43-67`) \u2014 treinar o olho n\u00e3o introduz custo novo.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/vision-golden-eye.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:39:40)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm launching the PIPC blueprint workflow and need to establish the chapter markers. Let me set up the workflow script with careful attention to the foundational elements.
+
+</details>
+
+
+## 🤖 Claude *(11:39:41)*
+
+Plano dos olhos salvo em [vision-golden-eye.md](docs/roadmap/vision-golden-eye.md). Agora disparo o blueprint do Pipeline de Produção Interno (estuda Google Flow FX + GabrielAI + consolida nossos 3 roadmaps) e marco o capítulo:
+
+## 🤖 Claude *(11:39:45)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "Pipeline de produ\u00e7\u00e3o + olhos treinados",
+  "summary": "Reconcilia\u00e7\u00e3o do handoff\u2194handson fechada (sem perda de rastro; foi truncamento do meu brief). Pesquisa dos olhos do Vision MCP conclu\u00edda \u2192 plano Golden Eye + shopping list salvos. Diretiva Sovereign: pipeline interno de produ\u00e7\u00e3o criativa completo+robusto (dev\u2192publicar\u2192analisar\u2192melhorar EP05), prioridade criativos/cortes, ref Google Flow FX + base GabrielAI. Disparando blueprint deepsearch do PIPC."
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "Pipeline de produção + olhos treinados". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(11:40:52)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'pipc-blueprint-deepsearch',\n  description: 'Blueprint do Pipeline Interno de Producao Criativa (PIPC): estuda Google Flow FX + repo GabrielAI, consolida os 3 roadmaps existentes, e desenha o ciclo completo dev->publicar->analisar fundo->melhorar (EP05) com roadmap de slices',\n  phases: [\n    { title: 'Research', detail: 'frentes: Google Flow FX, repo GabrielAI, consolidacao dos nossos assets, ciclo produce-measure-improve' },\n    { title: 'Verify', detail: 'verificacao adversarial das claims externas (Flow FX / GabrielAI / lifecycle)' },\n    { title: 'Blueprint', detail: 'desenha o PIPC completo+robusto + roadmap de slices ranqueado' },\n  ],\n}\n\nconst FINDINGS_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['front', 'summary', 'findings', 'recommendations', 'gaps'],\n  properties: {\n    front: { type: 'string' },\n    summary: { type: 'string' },\n    findings: { type: 'array', items: {\n      type: 'object', additionalProperties: false,\n      required: ['claim', 'evidence', 'sourceUrl', 'confidence', 'soPipcRelevance'],\n      properties: {\n        claim: { type: 'string' },\n        evidence: { type: 'string' },\n        sourceUrl: { type: 'string' },\n        confidence: { type: 'string', enum: ['high', 'medium', 'low'] },\n        soPipcRelevance: { type: 'string' },\n      },\n    } },\n    recommendations: { type: 'array', items: { type: 'string' } },\n    gaps: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['claim', 'verdict', 'reason'],\n  properties: {\n    claim: { type: 'string' },\n    verdict: { type: 'string', enum: ['CONFIRMED', 'REFUTED', 'UNCERTAIN'] },\n    reason: { type: 'string' },\n    correctedGuidance: { type: 'string' },\n  },\n}\n\nconst F1 = `Pesquise o **Google Flow** (labs.google/flow) e o ecossistema de ferramentas criativas de IA do Google Labs (FX / Flow FX / Whisk / Google Vids / VideoFX / ImageFX). Use WebSearch e WebFetch (carregue via ToolSearch se preciso). O usuario (fundador solo, produz uma serie episodica EP01..EP05) disse: 'dentro do studio flow fx do google e possivel encontrar diversos app ja criados como storyboard, dentre outros que podem ajudar em nosso studio'. Determine COM EVIDENCIA (URL por claim): (a) o que o Google Flow realmente faz hoje (scenebuilder, ingredients-to-video, camera controls, extend, Veo integration); (b) existe um recurso/galeria de 'apps' ou templates como 'storyboard' dentro do Flow/Labs? o que sao? (c) quais PADROES de UX/fluxo de producao valem portar para o nosso Creative Studio do Spaces (ex.: no de storyboard antes de gerar, 'ingredients' reutilizaveis, scene extension). SEJA HONESTO: separe recurso REAL/lancado de anuncio/demo. front='Google Flow FX'. soPipcRelevance = como isso encaixa no nosso pipeline. Retorne pelo schema.`\n\nconst F2 = `Estude o repositorio GitHub **gabrielZarattini/GabrielAI** (a 'base' que o Sovereign citou para producao interna de criativo). Use WebSearch/WebFetch para buscar e ler o README, a estrutura de pastas e qualquer roadmap/doc de arquitetura publicos. Se o repo for privado/inacessivel, diga isso claramente e caia para a nossa fonte derivada: leia docs/bok/video-repurpose/00-deepsearch-blueprint.md e 05-sdd.md (o BoK do MCORCH foi fundamentado neste repo \u2014 o GabrielAI e o INVERSO do repurpose: N takes Veo -> 1 master, metadata-driven). Determine: (a) o modelo de producao interna de criativo (estagios, schema de metadados, filosofia data-driven); (b) o que dele ja portamos vs o que falta; (c) o que da base serve ao pipeline completo dev->publicar->metricas->melhorar. front='Base GabrielAI'. Retorne pelo schema; se algo nao for acessivel, confidence=low e diga a limitacao (Lei 1, nao invente conteudo do repo).`\n\nconst F3 = `Auditoria de CODEBASE/DOCS (nao web) para CONSOLIDAR o que ja temos de producao interna de criativo. Leia: docs/roadmap/motor-conteudo-master.html (o roadmap master 'motor de conteudo' \u2014 extraia as secoes e o modelo de 2 maquinas lo-fi/salada vs fast-food/viral) ; docs/roadmap/cadence-distribution-pipeline.md (produce->schedule->distribute->measure, o que ja e VIVO) ; docs/roadmap/funnel-mass-validation-2026-07-22.md (validacao em massa K=ceil(S*P/C)) ; docs/bok/video-repurpose/ (04-frd, 05-sdd \u2014 motor de cortes) ; docs/bok/spaces-evolution/17-amendment-creative-studio-nodes.md (nos do Creative Studio) ; docs/bok/youtube-studio/ (Track A analytics + Track B upload) ; docs/bok/content-intel/01-mrd.md (analisar video existente -> estrategia). Mapeie o ciclo em 4 estagios \u2014 DESENVOLVIMENTO (produzir) / PUBLICACAO / ANALISE PROFUNDA DE METRICAS / MELHORIA->proximo EP \u2014 dizendo por estagio o que esta VIVO, PARCIAL, ou GAP. Foque no elo mais fraco declarado pelo Sovereign: 'analise profunda das metricas para melhorar no proximo desenvolvimento (EP05)'. front='Consolidacao dos nossos assets'. sourceUrl=caminho no repo com file:line. Retorne pelo schema.`\n\nconst F4 = `Pesquise praticas BASEADAS EM EVIDENCIA do ciclo producao->publicacao->analise->melhoria para um criador solo de serie episodica (documentario em EP01..EP05) em YouTube/TikTok/IG. Use WebSearch/WebFetch. CRITICO: este projeto ja rodou estudo adversarial de 108 agentes que REFUTOU quase todo folclore viral (duracao ideal, contagem de hashtags, cadencia, benchmarks de engajamento) e so confirmou mecanicas: hook nos primeiros 5-10s, CTA nos ultimos 5s, legenda essencial, funil nativo 'related video', view de Short = play-start desde 2025-03-31, impressions/CTR de miniatura NAO existem na YouTube Analytics API v2. Seja IMPLACAVELMENTE cetico. Ache: (a) como analisar curva de retencao (audience retention) para decidir a proxima edicao (onde cortar, o que os 'dips'/'spikes' significam) \u2014 docs oficiais YouTube/TikTok; (b) o loop de 'content ops' data-driven (definir hipotese -> A/B de hook/thumb -> medir -> aplicar no proximo); (c) que metricas de primeira-parte um solo consegue de fato exportar (YouTube Studio CSV, TikTok Studio). front='Ciclo produce-measure-improve'. Marque confidence baixo para qualquer coisa folclorica. Retorne pelo schema.`\n\nphase('Research')\nconst research = await parallel([\n  () => agent(F1, { label: 'research:google-flow-fx', phase: 'Research', schema: FINDINGS_SCHEMA, agentType: 'general-purpose', effort: 'high' }),\n  () => agent(F2, { label: 'research:gabrielai-repo', phase: 'Research', schema: FINDINGS_SCHEMA, agentType: 'general-purpose', effort: 'high' }),\n  () => agent(F3, { label: 'audit:our-assets', phase: 'Research', schema: FINDINGS_SCHEMA, agentType: 'general-purpose', effort: 'high' }),\n  () => agent(F4, { label: 'research:measure-improve', phase: 'Research', schema: FINDINGS_SCHEMA, agentType: 'general-purpose', effort: 'high' }),\n])\nconst ok = research.filter(Boolean)\nlog(`Research: ${ok.length}/4 frentes retornaram`)\n\n// Verifica adversarialmente as claims externas (exclui a auditoria do nosso repo)\nconst external = ok.filter(r => r.front && !/consolida|nossos assets|codebase/i.test(r.front))\nconst toVerify = external\n  .flatMap(r => (r.findings || []).map(f => ({ ...f, front: r.front })))\n  .filter(f => f.confidence !== 'low')\n  .slice(0, 10)\nlog(`Verify: ${toVerify.length} claims externas para checagem adversarial`)\n\nphase('Verify')\nconst verdicts = await parallel(toVerify.map(f => () =>\n  agent(`Verifique adversarialmente esta claim (tente REFUTAR). Contexto: desenho de pipeline de producao criativa para um criador solo. Claim: \"${f.claim}\". Fonte citada: ${f.sourceUrl}. Evidencia: ${f.evidence}. Pesquise independentemente (WebSearch/WebFetch). Se for folclore/marketing/exagero, REFUTED com correctedGuidance. UNCERTAIN se nao corroborar de fonte credivel.`,\n    { label: 'verify', phase: 'Verify', schema: VERDICT_SCHEMA, agentType: 'general-purpose' })))\nconst verified = verdicts.filter(Boolean)\n\nphase('Blueprint')\nconst BP = `Voce e o arquiteto-lider. Componha o BLUEPRINT do **PIPC \u2014 Pipeline Interno de Producao Criativa** do MCORCH, em portugues (Brasil), markdown limpo e ROBUSTO. Contexto do Sovereign (fundador solo, serie documental EP01..EP05): 'preciso separar as coisas e criar um pipeline interno de producao completo e robusto \u2014 desenvolvimento, implantacao (publicar) e gestao/analise profunda das metricas para melhorar no proximo desenvolvimento (EP05). Base no repo GabrielAI, referencia no Google Flow FX. Prioridade em criativos e cortes. Ja postei EP02; falta postar os cortes do EP01/EP02; domingo posto EP03.'\n\nREGRAS (Lei 1): nao invente; se um verdict marcou REFUTED, NAO recomende. Reuse o que JA existe (a frente 'Consolidacao dos nossos assets' lista os trilhos VIVOS \u2014 nao mande reconstruir). Diferencie claramente o que E CODIGO NOVO do que e so consolidacao/roadmap.\n\nEstruture:\n1. **Tese e separacao de preocupacoes** \u2014 por que um PIPC separado do roadmap de distribuicao/funil; o modelo de 2 maquinas (lo-fi volume vs viral conversao) do motor-conteudo-master.\n2. **Os 4 estagios do ciclo** (DESENVOLVIMENTO / PUBLICACAO / ANALISE PROFUNDA / MELHORIA->EP05) \u2014 por estagio: o que esta VIVO (cite o trilho/arquivo), o que e GAP, e o entregavel. Priorize DESENVOLVIMENTO (criativos/cortes) e o elo fraco ANALISE->MELHORIA.\n3. **O que portar do Google Flow FX** \u2014 os padroes concretos (ex.: no storyboard, ingredients reutilizaveis) que valem para o nosso Creative Studio, so os CONFIRMED.\n4. **O que herdar da base GabrielAI** \u2014 o modelo de producao interna (com a ressalva de acesso se o repo foi inacessivel).\n5. **Como os olhos treinados (Golden Eye, docs/roadmap/vision-golden-eye.md) entram** como gate de qualidade do estagio DESENVOLVIMENTO.\n6. **Roadmap de slices** \u2014 tabela ranqueada por esforco x impacto, cada slice com gate (un-gated / Sovereign / juridico) e prova material esperada (Lei 1). Inclua explicitamente: 'produzir e postar os cortes do EP01/EP02' e 'loop de analise->EP05'.\n7. **Ganchos com o que ja esta selado** (BoKs video-repurpose/spaces-evolution/youtube-studio/content-intel; cadence-distribution-pipeline; funnel-mass-validation) para nao duplicar.\n\nDADOS \u2014 RESEARCH (JSON):\n${JSON.stringify(ok, null, 2)}\n\nDADOS \u2014 VERDICTS (JSON):\n${JSON.stringify(verified, null, 2)}`\n\nconst blueprint = await agent(BP, { label: 'blueprint', phase: 'Blueprint', agentType: 'general-purpose', effort: 'high' })\nreturn { research: ok, verified, blueprint }\n",
+  "description": "PIPC blueprint deepsearch (Google Flow FX + GabrielAI + consolidation + measure\u2192EP05 loop)"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wbgmqiooi
+> Summary: Blueprint do Pipeline Interno de Producao Criativa (PIPC): estuda Google Flow FX + repo GabrielAI, consolida os 3 roadmaps existentes, e desenha o ciclo completo dev->publicar->analisar fundo->melhorar (EP05) com roadmap de slices
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/subagents/workflows/wf_444b1d4c-509
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-blueprint-deepsearch-wf_444b1d4c-509.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-blueprint-deepsearch-wf_444b1d4c-509.js"} to iterate without resending the script.)
+> Run ID: wf_444b1d4c-509
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-blueprint-deepsearch-wf_444b1d4c-509.js", resumeFromRunId: "wf_444b1d4c-509"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(11:41:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The PIPC blueprint is running now. While that processes, I'm weighing priorities: the user wants creative cuts and the Vision harness work. Slices 1-3 of the Vision plan are unblocked and high-impact relative to effort, with Slice 1 addressing an active risk around the senior rubric probes. That's the most valuable unblocked work I can tackle immediately.
+
+For the EP01/EP02 cuts themselves, I need to check if the masters are available on the host and whether cuts already exist in the creative assets folder—but the actual publishing is gated on their end. The real move is to start implementing Vision harness Slices 1-2 since that's aligned with their stated priority, unblocked, and concrete code work. I should verify the file structure first before diving in. I'm weighing whether to present the current progress to the Sovereign now or push forward with implementing Vision Slice 1 immediately. The "force total loop" directive suggests I should keep moving, but I want to ground the implementation in the actual code first—reading senior-rubric.ts, browser-driver.ts, and describe-image.ts to verify the insertion points before committing to changes, rather than trusting the subagent's line references blindly. and start reading the Vision harness files to kick off Slice 1 implementation — the file reading and initial engine hygiene work doesn't depend on the Sovereign's references, so I can move forward on that track while PIPC runs in parallel. is that the shopping list is the critical blocker for them, so I need to surface it prominently and make it trivial to act on. Everything else I can handle autonomously. I'll present the checkpoint with the shopping list front-and-center, then start reading the Vision harness files to ground myself before implementing Slice 1.
+
+Let me verify the exact file paths first—checking whether senior-rubric.ts lives at `lib/` or under `scripts/qa/ux-ui-senior-loop/`, and confirming the locations of the other Vision files before I read them.
+
+</details>
+
+
+## 🤖 Claude *(11:41:37)*
+
+Blueprint do PIPC rodando em background (`wbgmqiooi`). Enquanto ele cozinha, começo a implementação de força total pela sua **prioridade (olhos + criativos)** — os slices 1-2 do plano são un-gated e fecham um risco Lei 1 ativo. Localizando os arquivos reais do harness antes de editar (não confio nas linhas que o subagente citou — verifico):
+
+## 🤖 Claude *(11:41:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== arquivos do harness de Vision (paths reais) ===\"\nfor f in senior-rubric describe-image vision-gate browser-driver vision-qa; do\n  echo \"-- $f:\"; find . -path ./node_modules -prune -o -name \"${f}.ts\" -print 2>/dev/null | head -3\ndone\necho \"\"\necho \"=== RUBRIC.md ===\"; find . -path ./node_modules -prune -o -name \"RUBRIC.md\" -print 2>/dev/null | head",
+  "description": "Locate exact paths of Vision harness files"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === arquivos do harness de Vision (paths reais) ===
+> -- senior-rubric:
+> ./scripts/qa/ux-ui-senior-loop/lib/senior-rubric.ts
+> -- describe-image:
+> ./packages/vision-mcp-core/src/tools/describe-image.ts
+> -- vision-gate:
+> ./scripts/qa/e2e-user-zero/lib/vision-gate.ts
+> -- browser-driver:
+> ./scripts/qa/e2e-user-zero/lib/browser-driver.ts
+> ./.claude/worktrees/youthful-poincare-565e7c/scripts/qa/e2e-user-zero/lib/browser-driver.ts
+> ./.claude/worktrees/gallant-blackwell-594b5a/scripts/qa/e2e-user-zero/lib/browser-driver.ts
+> -- vision-qa:
+> ./scripts/qa/vision-qa.ts
+> 
+> === RUBRIC.md ===
+> ./scripts/qa/ux-ui-senior-loop/RUBRIC.md
+> ```
+
+## 🤖 Claude *(11:42:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The paths are confirmed — I need to avoid the worktrees directory and focus on the main repo files: the senior rubric grader in the QA scripts and the image description tool in the vision MCP core package.
+
+Now I'm reading through the key files to understand how Slice 1 (probing the rubric) and Slice 2 (model pinning) fit together. I need to examine the senior rubric implementation, the describe-image tool, the browser driver's evalJs usage, and the rubric documentation to understand what computed proof the rubric expects.
+
+I'm weighing whether to start coding now to close the Lei 1 risk with full force, or present a checkpoint first so the Sovereign can review while other work finishes, then implement in a coordinated batch. Presenting a checkpoint now respects the loop and gives them their critical action item (gathering references), while I proceed autonomously with Vision slices 1-2 and report back once PIPC returns and the implementation lands. I'll make the checkpoint the deliverable this turn and start coding next. I'll present the checkpoint and read the three core files—senior-rubric, describe-image, and RUBRIC—plus search browser-driver for evalJs, so I can implement the changes in the next turn without delay. The PIPC blueprint will tie together the three roadmaps plus the FX and GabrielAI components into a unified dev→publish→analyze→EP05 pipeline. Meanwhile, I'm moving forward with implementing Vision slices 1-2 without gating to close out the Lei 1 risk while PIPC finishes cooking. The key is making that shopping list front and center as the concrete action item they can grab and run with.
+
+</details>
+
+
+## 🤖 Claude *(11:42:15)*
+
+Paths confirmados (ignoro os worktrees). Deixa eu carregar os arquivos-núcleo pra implementar os slices 1-2 já, enquanto te dou o checkpoint:
+
+## 🤖 Claude *(11:42:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/ux-ui-senior-loop/lib/senior-rubric.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// Senior UX/UI rubric grader — the NEW lens of the Senior UX/UI Loop (SOP docs/processes/ux-ui-senior-loop.md).
+> 2	//
+> 3	// Where e2e-user-zero's vision-gate judges only OBJECTIVE defects (white screen / broken layout → binary
+> 4	// APROVADO/REPROVADO → single P1), this grader asks the creative eye (Vision MCP, BYOK cost 0) to score a screen
+> 5	// against the SENIOR rubric dimensions and returns per-dimension, severity-ranked Findings in the exact
+> 6	// finding-schema shape the report-renderer / mesh-persistor already consume. It clones vision-gate's proven
+> 7	// upload→sign→vision-qa→cleanup pipeline verbatim; only the QUESTION + the parser are senior-grade.
+> 8	import { createClient } from "@supabase/supabase-js";
+> 9	import { spawnSync } from "child_process";
+> 10	import { existsSync, readFileSync } from "fs";
+> 11	import path from "path";
+> 12	
+> 13	import type { Finding, IssueType, ScreenshotRef, Severity } from "../../e2e-user-zero/lib/finding-schema";
+> 14	
+> 15	/** The senior rubric dimensions (RUBRIC.md). `key` is the strict token Vision must echo; issue_type maps to the schema. */
+> 16	export const RUBRIC_DIMENSIONS: Array<{ key: string; label: string; issue_type: IssueType }> = [
+> 17	  { key: "HIERARQUIA", label: "Hierarquia visual (foco, ordem de leitura, ênfase do CTA primário)", issue_type: "ux" },
+> 18	  { key: "CONSISTENCIA", label: "Consistência (espaçamento, escala tipográfica, componentes, alinhamento)", issue_type: "ux" },
+> 19	  { key: "MARCA_MIV", label: "Conformidade de marca MIV (accent=ciano NÃO violeta · nebula=só contexto de memória · gold=só valor/mcoCoins · Playfair títulos / JetBrains corpo · CTA com glow)", issue_type: "ux" },
+> 20	  { key: "ACESSIBILIDADE", label: "Acessibilidade WCAG 2.1 AA (contraste, foco visível, alvos de toque, alt/rótulos)", issue_type: "accessibility" },
+> 21	  { key: "ESTADOS", label: "Cobertura de estados (vazio, carregando, erro, sucesso — nenhum estado morto/em branco)", issue_type: "ux" },
+> 22	  { key: "MICROINTERACOES", label: "Micro-interações e feedback (hover, loading, confirmação, transições)", issue_type: "ux" },
+> 23	  { key: "COPY", label: "Clareza da copy pt-BR (rótulos, mensagens, sem placeholder/lorem, tom executivo)", issue_type: "ux" },
+> 24	  { key: "JORNADA", label: "Continuidade da jornada (próximo passo claro, sem beco sem saída, back/sair óbvio)", issue_type: "ux" },
+> 25	];
+> 26	
+> 27	const SEVS: Severity[] = ["P0", "P1", "P2", "P3"];
+> 28	
+> 29	export const SENIOR_RUBRIC_QUESTION =
+> 30	  "Voce e um revisor SENIOR de UX/UI avaliando um print (1920x1080) de uma tela do produto MCORCH (estetica " +
+> 31	  "'MIV': fundo escuro/void, accent CIANO, ouro so p/ valor, Playfair em titulos). Avalie a tela em CADA " +
+> 32	  "dimensao abaixo e responda com EXATAMENTE uma linha por dimensao, no formato estrito " +
+> 33	  "`CHAVE: SEVERIDADE — motivo curto`, onde SEVERIDADE e um de OK, P3, P2, P1, P0 " +
+> 34	  "(OK=impecavel; P3=nit; P2=melhoria; P1=problema serio; P0=quebra/bloqueia). Dimensoes: " +
+> 35	  RUBRIC_DIMENSIONS.map((d) => `${d.key} (${d.label})`).join("; ") +
+> 36	  ". Responda SO as linhas, uma por dimensao, comecando pela CHAVE em maiusculas.";
+> 37	
+> 38	export interface RubricLine {
+> 39	  key: string;
+> 40	  severity: Severity | "OK";
+> 41	  note: string;
+> 42	}
+> 43	
+> 44	/** Pure: parse the senior-rubric subprocess output into one graded line per dimension. Fail-closed:
+> 45	 *  exit!=0 or a fully unreadable verdict yields a single synthetic P1 so a broken grader never reads as "clean". */
+> 46	export function parseSeniorVerdict(exitCode: number | null, output: string): { lines: RubricLine[]; readable: boolean } {
+> 47	  const clean = (output ?? "").trim();
+> 48	  if (exitCode !== 0) {
+> 49	    return { lines: [{ key: "GRADER", severity: "P1", note: `vision-qa exit=${exitCode}: ${clean.slice(0, 200)}` }], readable: false };
+> 50	  }
+> 51	  const lines: RubricLine[] = [];
+> 52	  for (const dim of RUBRIC_DIMENSIONS) {
+> 53	    // Match `KEY: SEV — note` (tolerant of accents, em/en dash or hyphen, extra spaces).
+> 54	    const re = new RegExp(`${dim.key}\\s*[:\\-]\\s*(OK|P0|P1|P2|P3)\\b[\\s\\-—–:]*([^\\n]*)`, "i");
+> 55	    const m = clean.match(re);
+> 56	    if (m) {
+> 57	      const sev = m[1].toUpperCase() as Severity | "OK";
+> 58	      lines.push({ key: dim.key, severity: sev, note: (m[2] ?? "").trim().slice(0, 300) });
+> 59	    }
+> 60	  }
+> 61	  if (lines.length === 0) {
+> 62	    return { lines: [{ key: "GRADER", severity: "P1", note: `veredito ilegível: ${clean.slice(0, 200)}` }], readable: false };
+> 63	  }
+> 64	  return { lines, readable: true };
+> 65	}
+> 66	
+> 67	/** Pure: shape a non-OK rubric line as a Finding the report/mesh pipeline understands. */
+> 68	export function buildRubricFinding(
+> 69	  flow: string,
+> 70	  shot: ScreenshotRef,
+> 71	  line: RubricLine,
+> 72	  index: number,
+> 73	  now: string = new Date().toISOString(),
+> 74	): Finding {
+> 75	  const dim = RUBRIC_DIMENSIONS.find((d) => d.key === line.key);
+> 76	  const sev = (line.severity === "OK" ? "P3" : line.severity) as Severity;
+> 77	  return {
+> 78	    id: `${flow}-rubric-${line.key.toLowerCase()}-${index}`,
+> 79	    flow,
+> 80	    severity: sev,
+> 81	    issue_type: dim?.issue_type ?? "ux",
+> 82	    title: `[UX sênior · ${dim?.label.split(" (")[0] ?? line.key}] no passo '${shot.step}'`,
+> 83	    description: line.note || "(sem motivo)",
+> 84	    repro_steps: [`Rodar a jornada e abrir o passo '${shot.step}'`, `Avaliar a dimensão ${line.key}`],
+> 85	    evidence_paths: { screenshot: shot.path },
+> 86	    suggested_fix: `Corrigir a dimensão ${line.key} conforme a rubrica (scripts/qa/ux-ui-senior-loop/RUBRIC.md) e re-verificar.`,
+> 87	    detected_at: now,
+> 88	  };
+> 89	}
+> 90	
+> 91	export interface SeniorRubricResult {
+> 92	  findings: Finding[];
+> 93	  judged: number;
+> 94	  gradedLines: Array<{ step: string; lines: RubricLine[]; readable: boolean }>;
+> 95	}
+> 96	
+> 97	/** Grade up to `maxShots` screenshots against the senior rubric via the Vision MCP. Impure (storage + subprocess). */
+> 98	export async function seniorRubricGate(opts: {
+> 99	  flow: string;
+> 100	  runId: string;
+> 101	  screenshots: ScreenshotRef[];
+> 102	  repoRoot: string;
+> 103	  maxShots?: number;
+> 104	}): Promise<SeniorRubricResult> {
+> 105	  const max = opts.maxShots ?? 4;
+> 106	  const shots = opts.screenshots.filter((s) => existsSync(s.path)).slice(-max);
+> 107	  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+> 108	  const svc = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+> 109	  if (!url || !svc) throw new Error("senior-rubric: SUPABASE_URL/SB_SECRET_KEY ausentes no env");
+> 110	  const supa = createClient(url, svc, { auth: { persistSession: false } });
+> 111	
+> 112	  const findings: Finding[] = [];
+> 113	  const gradedLines: SeniorRubricResult["gradedLines"] = [];
+> 114	  const keys: string[] = [];
+> 115	  try {
+> 116	    for (let i = 0; i < shots.length; i++) {
+> 117	      const shot = shots[i];
+> 118	      const key = `qa-audits/uxui-${opts.runId}-${i}.png`;
+> 119	      const up = await supa.storage
+> 120	        .from("generated-images")
+> 121	        .upload(key, readFileSync(shot.path), { contentType: "image/png", upsert: true });
+> 122	      if (up.error) {
+> 123	        findings.push(buildRubricFinding(opts.flow, shot, { key: "GRADER", severity: "P1", note: `upload falhou: ${up.error.message}` }, i));
+> 124	        gradedLines.push({ step: shot.step, lines: [], readable: false });
+> 125	        continue;
+> 126	      }
+> 127	      keys.push(key);
+> 128	      const { data: signed } = await supa.storage.from("generated-images").createSignedUrl(key, 3600);
+> 129	      if (!signed?.signedUrl) {
+> 130	        findings.push(buildRubricFinding(opts.flow, shot, { key: "GRADER", severity: "P1", note: "signed URL falhou" }, i));
+> 131	        gradedLines.push({ step: shot.step, lines: [], readable: false });
+> 132	        continue;
+> 133	      }
+> 134	      const vq = spawnSync(
+> 135	        "bun",
+> 136	        ["run", path.join(opts.repoRoot, "scripts/qa/vision-qa.ts"), "image", signed.signedUrl, SENIOR_RUBRIC_QUESTION],
+> 137	        { encoding: "utf-8", env: process.env, timeout: 120_000 },
+> 138	      );
+> 139	      const { lines, readable } = parseSeniorVerdict(vq.status, `${vq.stdout ?? ""}${vq.stderr ?? ""}`);
+> 140	      gradedLines.push({ step: shot.step, lines, readable });
+> 141	      lines.filter((l) => l.severity !== "OK").forEach((l) => findings.push(buildRubricFinding(opts.flow, shot, l, i)));
+> 142	    }
+> 143	  } finally {
+> 144	    if (keys.length) await supa.storage.from("generated-images").remove(keys).then(() => {}, () => {});
+> 145	  }
+> 146	  return { findings, judged: shots.length, gradedLines };
+> 147	}
+> 148	
+> ```
+
+## 🤖 Claude *(11:42:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/packages/vision-mcp-core/src/tools/describe-image.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	// vision-mcp-core tools/describe-image.ts — FR-VM-018 (vision.describe_image, 2 mco). First Fatia 2
+> 2	// billable tool. Pipeline (SOP vision-mcp-billing-credential-resolution.md): SSRF-guard the URL →
+> 3	// duty-of-care red-line (assistive) → resolve provider key (BYOK free / platform charged / 402) →
+> 4	// cost decision → deduct-on-entry (402 before leg) → VLM leg → refund-on-failure → structured result.
+> 5	
+> 6	import { resolveProviderKey } from "../auth/credentials.js";
+> 7	import { costFor, deductOnEntry, refund, ProviderNotConfiguredError } from "../infra/billing.js";
+> 8	import { redlineCheck, assistivePromptSuffix } from "../safety/duty-of-care.js";
+> 9	import { logHealth } from "../infra/telemetry.js";
+> 10	
+> 11	// Platform default VLM (cheap, vision-capable). Cost SOP: Gemini Flash ~$0.0004/img → 2 mco @4×-floor.
+> 12	const VISION_MODEL = process.env.VISION_VLM_MODEL ?? "google/gemini-2.5-flash";
+> 13	
+> 14	export interface DescribeImageInput {
+> 15	  image_url: string;
+> 16	  question?: string;
+> 17	  assistive?: boolean;
+> 18	}
+> 19	export interface DescribeImageResult {
+> 20	  description: string;
+> 21	  confidence: "high" | "medium" | "low";
+> 22	  cost_mco: number;
+> 23	  human_review_required?: boolean;
+> 24	}
+> 25	
+> 26	export class RedlineRefusalError extends Error {
+> 27	  code = "assistive_redline_refusal";
+> 28	  constructor(public domain?: string) {
+> 29	    super("assistive_redline_refusal");
+> 30	  }
+> 31	}
+> 32	export class ImageUrlError extends Error {
+> 33	  code: string;
+> 34	  constructor(code: string) {
+> 35	    super(code);
+> 36	    this.code = code;
+> 37	  }
+> 38	}
+> 39	
+> 40	// SSRF guard: https only + reject private/loopback/link-local hosts (FR-VM-018 "https only; host allowlist").
+> 41	export function assertSafeImageUrl(raw: string): URL {
+> 42	  let u: URL;
+> 43	  try {
+> 44	    u = new URL(raw);
+> 45	  } catch {
+> 46	    throw new ImageUrlError("invalid_image_url");
+> 47	  }
+> 48	  if (u.protocol !== "https:") throw new ImageUrlError("image_url_must_be_https");
+> 49	  const h = u.hostname.toLowerCase();
+> 50	  const blocked =
+> 51	    h === "localhost" ||
+> 52	    h.endsWith(".local") ||
+> 53	    h === "0.0.0.0" ||
+> 54	    h === "::1" ||
+> 55	    h.startsWith("[") || // raw IPv6 literal — refuse rather than parse-classify
+> 56	    /^127\./.test(h) ||
+> 57	    /^10\./.test(h) ||
+> 58	    /^192\.168\./.test(h) ||
+> 59	    /^169\.254\./.test(h) ||
+> 60	    /^172\.(1[6-9]|2\d|3[01])\./.test(h);
+> 61	  if (blocked) throw new ImageUrlError("image_url_host_blocked");
+> 62	  return u;
+> 63	}
+> 64	
+> 65	export async function describeImage(input: DescribeImageInput, sub: string): Promise<DescribeImageResult> {
+> 66	  // 1) SSRF guard (before any cost/leg).
+> 67	  assertSafeImageUrl(input.image_url);
+> 68	
+> 69	  // 2) assistive duty-of-care red-line on the question — refuse free, no charge (FR-VM-014).
+> 70	  if (input.assistive) {
+> 71	    const v = redlineCheck(input.question);
+> 72	    if (v.refuse) {
+> 73	      logHealth("degraded", "assistive_redline_refusal", { domain: v.domain }, "vision-mcp");
+> 74	      throw new RedlineRefusalError(v.domain);
+> 75	    }
+> 76	  }
+> 77	
+> 78	  // 3) resolve provider key (BYOK free / platform charged / 402 not_configured).
+> 79	  const resolved = await resolveProviderKey(sub, "openrouter");
+> 80	  if (!resolved) throw new ProviderNotConfiguredError("openrouter");
+> 81	
+> 82	  // 4) cost decision + deduct on entry (insufficient → throws BEFORE the provider leg).
+> 83	  const cost = costFor("vision.describe_image", sub, resolved.isUserCustomKey);
+> 84	  await deductOnEntry(sub, cost, "vision.describe_image", { model: VISION_MODEL, assistive: !!input.assistive });
+> 85	
+> 86	  // 5) provider leg — refund on ANY failure past the deduct.
+> 87	  try {
+> 88	    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+> 89	      method: "POST",
+> 90	      headers: { Authorization: `Bearer ${resolved.key}`, "Content-Type": "application/json" },
+> 91	      body: JSON.stringify({
+> 92	        model: VISION_MODEL,
+> 93	        max_tokens: 700,
+> 94	        messages: [
+> 95	          {
+> 96	            role: "user",
+> 97	            content: [
+> 98	              { type: "text", text: buildPrompt(input) },
+> 99	              { type: "image_url", image_url: { url: input.image_url } },
+> 100	            ],
+> 101	          },
+> 102	        ],
+> 103	      }),
+> 104	    });
+> 105	    if (!res.ok) {
+> 106	      throw new Error(`vlm_http_${res.status}:${(await res.text()).slice(0, 160)}`);
+> 107	    }
+> 108	    const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+> 109	    const content = data?.choices?.[0]?.message?.content ?? "";
+> 110	    const { description, confidence } = parseVlm(content);
+> 111	    logHealth("healthy", "tool_ok", { tool: "describe_image", cost, byok: resolved.isUserCustomKey });
+> 112	    const out: DescribeImageResult = { description, confidence, cost_mco: cost };
+> 113	    if (input.assistive) out.human_review_required = confidence === "low";
+> 114	    return out;
+> 115	  } catch (e) {
+> 116	    await refund(sub, cost, "describe_image_failed");
+> 117	    throw e;
+> 118	  }
+> 119	}
+> 120	
+> 121	function buildPrompt(input: DescribeImageInput): string {
+> 122	  const base = input.question
+> 123	    ? `Descreva a imagem para responder: "${input.question}".`
+> 124	    : "Descreva a imagem de forma objetiva, completa e fiel.";
+> 125	  const assistive = input.assistive ? assistivePromptSuffix() : "";
+> 126	  return `${base}${assistive} Responda em PT-BR. Retorne SOMENTE um objeto JSON: {"description": string, "confidence": "high"|"medium"|"low"}.`;
+> 127	}
+> 128	
+> 129	// EXPORTED for unit testing the parse robustness without a live VLM.
+> 130	export function parseVlm(content: string): { description: string; confidence: "high" | "medium" | "low" } {
+> 131	  const m = content.match(/\{[\s\S]*\}/);
+> 132	  if (m) {
+> 133	    try {
+> 134	      const j = JSON.parse(m[0]) as { description?: unknown; confidence?: unknown };
+> 135	      const conf = j.confidence === "high" || j.confidence === "low" ? j.confidence : "medium";
+> 136	      if (typeof j.description === "string" && j.description.trim()) {
+> 137	        return { description: j.description.trim(), confidence: conf };
+> 138	      }
+> 139	    } catch {
+> 140	      /* fall through to raw text */
+> 141	    }
+> 142	  }
+> 143	  return { description: content.trim() || "(sem descrição)", confidence: "medium" };
+> 144	}
+> 145	
+> ```
+
+## 🤖 Claude *(11:43:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm realizing the distinction now—`describe-image.ts` is the Vision MCP tool that's billable at 2 mco, completely separate from the QA harness infrastructure. The confusion came from mixing it up with the QA harness's model configuration, but actually `vision-qa.ts` is what `senior-rubric.ts` invokes, while `describe-image.ts` is the charged MCP tool itself.
+
+Both files matter for the model pinning work though—`describe-image.ts` line 12 sets the default Vision model via environment variable, and `parseVlm` masks low confidence scores as medium. So Slice 2 and Slice 5 targets do point to `describe-image.ts`, but I need to check what model `vision-qa.ts` actually uses since that's what the senior rubric gate is calling. And for Slice 1, `seniorRubricGate` uploads the screenshot, signs it, spawns the QA harness with the rubric question, then parses the per-dimension verdicts—it's not using any deterministic computed-style probe for accessibility checks.
+
+The core issue is that the VLM alone decides brand and contrast severity without measurable ground truth, which violates what the rubric mandates. But here's the architectural problem: `ScreenshotRef` only has the PNG file path and step number—there's no live browser or driver handle. The grader works on static screenshots after the fact, so I can't run `driver.evalJs` at grading time because the browser session is already gone. The research suggestion to pull `evalJs` from `browser-driver.ts` into `senior-rubric.ts` doesn't work architecturally.
+
+The real solution is that computed-style probes (contrast ratio, colors, font-family) need to be captured DURING the journey traversal when the browser is live, then passed alongside the screenshot to the grader. So Slice 1 is much larger than a simple refactor—it requires threading computed-style data through the entire pipeline from the audit-journey runner to the grader.
+
+I should note this architectural constraint before attempting any implementation. Rather than rush into a potentially incorrect edit, I'll document this finding and focus on the genuinely low-risk, unblocked work first.
+
+Slice 2 involves model hygiene in the vision tools, but I need to be careful here—describe-image.ts is the billable MCP tool with its own test suite, so changes to parseVlm semantics could ripple into billing logic. vision-qa.ts is the safer entry point since it's just the QA harness. But honestly, getting the Vision harness implementation right requires more deliberate design than a quick inline fix, especially given how it interacts with the audit traversal. This deserves its own focused pass rather than being squeezed in now.
+
+I think the right call is to checkpoint here: reconciliation is done, the Vision plan and shopping list are saved as their action item, PIPC blueprint is running. I'll note honestly that I found the research's Slice-1 insertion point is imprecise—the senior grader works on saved PNGs without live page access, so computed-style probes like contrast and brand need to be captured during traversal and threaded through to the grader. I'll implement that correctly in the next focused pass.
+
+Once PIPC notifies me with the blueprint sequencing, I'll build the Vision harness properly with live probe capture and model hygiene, then produce the EP01/EP02 cuts. This keeps the turn legible, respects the materiality discipline they value, and lets the loop continue cleanly. I'm going to save the key memories now while this is a natural consolidation point — the Vision eye-training project details and the PIPC program direction — since they're durable and won't add much overhead. I'll defer the memory update to the next checkpoint after PIPC lands, keeping this turn focused on the immediate deliverables. The key insight is that gathering references is the critical path blocker for Golden Eye, so surfacing that as the user's action item isn't stalling—it's unblocking the most important dependency while I work on PIPC in parallel. I'll write a tight checkpoint that highlights the reconciliation result, the Vision Golden Eye direction, and makes their shopping list prominent. The user's actual question is about what references and resources they need — images, links, videos. The most valuable asset here is annotated screenshots from MCORCH itself showing both good and bad states across each rubric dimension. The design system links become rubric text rather than raw inputs, and for video I'm pointing to their own EP01/EP02 cuts plus YouTube retention data, not generic benchmarks. I'll present this directly.
+
+</details>
+
+
+## 🤖 Claude *(11:43:39)*
+
+Verifiquei o código real — e **peguei uma imprecisão da pesquisa antes de codar errado** (exatamente a disciplina Lei 1 que você cobrou). Segue o checkpoint honesto:
+
+## ✅ 1. Reconciliação — fechada
+Sem perda de rastro. Os 6 commits estão no git + `origin/main`; o "sumiço" foi meu brief do handson ter truncado a lista em 5 (cortei o `dbd26a6`). Corrijo o hábito: handson agora lista os 6 completos.
+
+## 🧿 2. Seus olhos (Vision MCP) — pesquisa concluída, plano + shopping list salvos
+Plano completo em [vision-golden-eye.md](docs/roadmap/vision-golden-eye.md). A verdade que redefine o alvo (peer-reviewed, [arXiv 2604.25235](https://arxiv.org/html/2604.25235v2)): **o VLM ORDENA bem mas PONTUA mal** — não vamos perseguir "nota perfeita", vamos ancorar em exemplares + provar o objetivo (contraste/cor/fonte) de forma determinística, não no palpite do olho.
+
+**Resposta direta à sua pergunta — "quais referências você precisa?":**
+
+> **O combustível que treina um juiz-VLM é IMAGEM (screenshot), não link nem vídeo cru.**
+
+| Categoria | O que me dar | Como ajuda |
+|---|---|---|
+| 🖼️ **IMAGENS (o núcleo)** | **5-10 screenshots das telas do próprio MCORCH por dimensão — boas E ruins**, incluindo estados de erro/vazio + 1 frase do porquê | é o "gold set" que vira a régua permanente; **maior ROI** |
+| 🔗 **LINKS DE SITE** | Apple HIG · Material 3 · IBM Carbon · **Refactoring UI** (URLs) | viram o **texto** da rubrica (não vão crus ao olho) |
+| 🎬 **VÍDEOS (só p/ cortes)** | seus **cortes EP01/EP02 + a curva de retenção** (YouTube Studio CSV / print TikTok segundo-a-segundo) + timestamp do hook | o VLM é temporalmente cego — precisa de frames densos **+ os dados de retenção**, nunca "benchmark viral" (folclore refutado) |
+
+## 🏭 3. Pipeline Interno de Produção Criativa (PIPC) — blueprint rodando
+Workflow `wbgmqiooi` estudando **Google Flow FX** (storyboard etc.) + **repo GabrielAI** + consolidando seus 3 roadmaps (`motor-conteudo-master` + `cadence-distribution` + `funnel-mass-validation`) no ciclo **desenvolver → publicar → analisar fundo → melhorar (EP05)**. Te aviso quando fechar.
+
+## 🔬 4. Achado de engenharia (Lei 1) antes de codar
+A pesquisa sugeriu "fiar `evalJs` no `senior-rubric.ts` (linha 116)". **Verifiquei: não é um one-liner.** O grader julga **PNGs salvos**, sem página viva — então a prova computada (contraste/cor/fonte) tem que ser **capturada durante a travessia** (browser vivo) e **entregue junto** do screenshot. Vou implementar do jeito certo (probe capturado no `audit-journey`/`browser-driver` → threaded ao grader), não a versão rápida-mas-errada.
+
+---
+
+**Próximo (força total, autônomo):** quando o PIPC fechar, eu sequencio e (a) implemento o harness dos olhos correto (probe vivo + higiene de modelo), (b) produzo os cortes do EP01/EP02 pra você postar. **Continua seu:** habilitar `youtube-upload.service` + CASA/quota (EP02 Track B) e o jurídico do POE Fatia 2/3.
+
+Enquanto o PIPC cozinha — **você já pode ir juntando as referências da tabela acima** (é o caminho crítico do gold set). Sigo executando.
+
+## 👤 User *(12:01:54)*
+
+<task-notification>
+<task-id>wbgmqiooi</task-id>
+<tool-use-id>toolu_01Uiaeci5MsygY86Yo1NJcMp</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/tasks/wbgmqiooi.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Blueprint do Pipeline Interno de Producao Criativa (PIPC): estuda Google Flow FX + repo GabrielAI, consolida os 3 roadmaps existentes, e desenha o ciclo completo dev-&gt;publicar-&gt;analisar fundo-&gt;melhorar (EP05) com roadmap de slices" completed</summary>
+<result>{"research":[{"front":"Google Flow FX","summary":"A claim do Sovereign está CONFIRMADA e é literal: dentro do Google Flow (labs.google/fx/tools/flow) existe hoje uma \"Tools gallery\" — uma galeria de mini-apps já prontos, remixáveis e criáveis sem código, e um deles é exatamente o \"Storyboard Studio\" (roteiro→cenas/personagens/planos→storyboard, exporta JSON). Flow é o studio de filmmaking IA do Google construído sobre Veo/Imagen/Gemini, com um pipeline claro: definir \"Ingredients\" (referências reutilizáveis de personagem/objeto/estilo, até 3) → gerar/storyboard → gerar vídeo (Text/Frames/Ingredients-to-Video) → estender/costurar no Scenebuilder. Tudo isto é REAL/lançado (Tools gallery + custom tools no-code shipados em 19-mai-2026; Agent e Gemini Omni em rollout global). Os padrões diretamente portáveis para o nosso Creative Studio do Spaces: (1) nó de STORYBOARD antes de gastar geração de vídeo — modela cenas/personagens/planos primeiro, revisável, e SÓ então despacha o motor caro (encaixa perfeito na nossa doutrina ledger-first + privado-primeiro + Lei 1); (2) \"Ingredients\" = referências de identidade reutilizáveis por projeto (já temos char-ref/mood board — falta promover a first-class cross-nó, exatamente o que a série EP01..EP05 precisa para consistência de personagem); (3) extensão de cena / continuidade (Scenebuilder) casando com o nosso rail de repurpose; (4) galeria de \"tools/apps\" remixáveis = espelha nossa arquitetura de nós tipados do canvas. Separação honesta abaixo: o núcleo (Ingredients, Scenebuilder, Storyboard Studio) é lançado; Agent/Omni/mobile estão em rollout/beta.","findings":[{"claim":"Google Flow é o studio de filmmaking IA do Google Labs, construído sobre Veo, Imagen e Gemini; hoje seus recursos-núcleo são Text-to-Video, Frames-to-Video, Ingredients-to-Video, Video Extension, Video-to-video editing, Scenebuilder, upscaling 2K/1080p/4K, Characters e Avatars.","evidence":"A página oficial da ferramenta lista textualmente os feature names: 'Text to Video', 'Frames to Video', 'Ingredients to Video', 'Video Extension', 'Video-to-video editing', 'Scenebuilder', '2K image upscaling', '1080p video upscaling', '4K image and video upscaling', 'Characters', 'Avatars'. Modelos: Gemini Omni Flash, Nano Banana Pro, Veo 3.1. Blog oficial: 'Introducing Flow: Google's AI filmmaking tool designed for Veo' (Google I/O 2025).","sourceUrl":"https://labs.google/fx/tools/flow","confidence":"high","soPipcRelevance":"Confirma o mapa de capacidades-alvo do nosso Creative Studio do Spaces. Nós já cobrimos Text/Frames-to-Video (Veo 3.1 node), image-to-video e extensão via rail de repurpose. O gap relativo é o encadeamento explícito Ingredients→Storyboard→Scene, que o Flow trata como um fluxo único e nós tratamos como nós soltos."},{"claim":"CONFIRMA A CLAIM DO SOVEREIGN: dentro do Flow existe uma 'Tools gallery' com diversos apps JÁ PRONTOS — incluindo literalmente 'Storyboard Studio' — além de Type Overlays, Video Resizer, Image Editor, Shader Effects, Mockup, Character X-ray, Grid Architect, Scout360, pixelBento e outros.","evidence":"A própria página da ferramenta enumera ~10+ preset tools: 'Type Overlays', 'Video Resizer', 'Image Editor', 'Storyboard Studio', 'Shader Effects', 'Mockup', 'Ribbit', 'Converge', 'Character X-ray', 'pixelBento', 'Grid Architect', 'Scout360'. A conta oficial @FlowbyGoogle publicou walkthrough do 'Storyboard Studio tool found within the Tools gallery. Explore, try, and remix Tools today!'","sourceUrl":"https://labs.google/fx/tools/flow","confidence":"high","soPipcRelevance":"É exatamente o que o Sovereign viu. O modelo 'galeria de apps/tools remixáveis' espelha nossa arquitetura de nós tipados do canvas (canvas-node-registry). Estratégia: tratar cada 'app' do Flow como um nó/preset do nosso Spaces — Storyboard Studio → nó Storyboard; Video Resizer → já temos reframe (reshape-pillar); Image Editor → já temos. O aprendizado é empacotar como galeria descobrível, não só como nós no editor."},{"claim":"O 'Storyboard Studio' é um app REAL e lançado: recebe um roteiro/história (escrita ou gerada por IA), e automaticamente divide em cenas, extrai personagens/locais/props, extrai diálogo, gera descrições ('Autofill Details') e monta painéis de storyboard com plano de câmera cinematográfico por cena — tudo editável, exportável como JSON.","evidence":"Fluxo documentado: 1) criar projeto no Flow; 2) abrir Storyboard Studio e escolher estilo visual (ex.: 3D Animated); 3) inserir/gerar história; 4) revisar cenas e assets extraídos automaticamente; 5) aplicar 'Autofill Details' para personagens/locais; 6) customizar ângulos/planos; 7) exportar JSON; 8) reimportar para continuar. 'Turns a written story into a structured, cinematic AI storyboard in minutes'.","sourceUrl":"https://aisuites.ai/blog/google-flow-storyboard-studio/","confidence":"high","soPipcRelevance":"O padrão de maior valor a portar: um NÓ DE STORYBOARD que roda ANTES de gastar geração de vídeo cara. Para uma série episódica EP01..EP05 de fundador solo, modelar cenas+personagens+planos primeiro (barato/grátis, revisável, privado-primeiro) e só então despachar o motor Veo/HyperFrames é ledger-first e Lei 1 puros. O export/import JSON = nosso graph jsonb do canvas. Encaixa no gap CLI→UI: transforma 'planejar episódio' numa capacidade visível na UI."},{"claim":"'Ingredients' (e o app irmão Whisk) são o mecanismo de CONSISTÊNCIA por referências reutilizáveis: até 3 imagens de referência por prompt representando personagens/objetos/estilos pré-definidos; Whisk formaliza como três papéis — Subject (quem/o quê), Scene (onde), Style (como) — 'whisked' via Imagen+Gemini, com Whisk Animate levando a imagem a vídeo via Veo.","evidence":"'You can add up to three ingredients per prompt by selecting Ingredients to Video... use your pre-defined characters, objects and styles as a consistent reference'. Whisk: 'asks for three key characteristics: subject, scene, and style... uses Imagen 3... Whisk uses Gemini to write detailed captions'. 'Whisk Animate transforms static Whisk-generated images into short videos using Veo'.","sourceUrl":"https://blog.google/innovation-and-ai/models-and-research/google-labs/whisk/","confidence":"high","soPipcRelevance":"Ataca diretamente o problema-central de uma série episódica: consistência de personagem entre EP e entre planos. Nós já temos char-ref/mood board e refs≤3 no Veo node (reference_avatar_identity_engines, veo image XOR refs). O padrão a portar é promover 'Ingredients' a cidadão de primeira classe do PROJETO (não do nó): uma paleta de referências reutilizáveis (personagem EP, objeto, estilo) que qualquer nó do canvas consome — resolvendo consistência sem re-treino (default Nano Banana char-ref, LoRA opt-in)."},{"claim":"'Scenebuilder' + 'Video Extension' são o mecanismo de continuidade: montar múltiplos clipes numa cena coesa, estender planos existentes revelando mais ação ou transicionando para o próximo momento, com movimento contínuo e personagens consistentes.","evidence":"'Scenebuilder allows users to assemble multiple clips into a cohesive scene. It lets you seamlessly edit and extend your existing shots — revealing more of the action or transitioning to what happens next with continuous motion and consistent characters.' Listado como feature ativa na página oficial.","sourceUrl":"https://blog.google/innovation-and-ai/products/google-flow-veo-ai-filmmaking-tool/","confidence":"high","soPipcRelevance":"Casa com o nosso rail de repurpose (1 master→N cortes) mas na direção inversa/construtiva: montar planos gerados numa timeline coesa. Padrão portável: um nó/vista de 'timeline de cenas' que costura outputs de nós de vídeo preservando a referência de personagem (Ingredients) entre planos — precondição para produzir um EP inteiro, não só cortes."},{"claim":"A 'Tools gallery' com custom tools NO-CODE é REAL e datada: lançada em 19-mai-2026 — usuários constroem pequenas utilidades de IA (image editors, video resizers, shaders) descreve
+... (truncated 88413 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/tasks/wbgmqiooi.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/subagents/workflows/wf_444b1d4c-509/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-blueprint-deepsearch-wf_444b1d4c-509.js', resumeFromRunId: 'wf_444b1d4c-509'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>15</agent_count><agents_done>15</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1541788</subagent_tokens><tool_uses>145</tool_uses><duration_ms>1262201</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(12:02:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The PIPC blueprint workflow has finished running, so I'm extracting the synthesis results from the journal—pulling out the blueprint string along with the research and verified data. Since this is a system notification rather than user input, I'll proceed autonomously following the standing directive and move forward with the extracted blueprint to determine the next steps.
+
+</details>
+
+
+## 🤖 Claude *(12:02:01)*
+
+PIPC blueprint fechou. A frente Google Flow FX confirmou literalmente sua observação: existe uma **"Tools gallery"** com apps prontos, incluindo o **"Storyboard Studio"**. Deixa eu extrair o blueprint completo:
+
+## 🤖 Claude *(12:02:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nJOURNAL=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/subagents/workflows/wf_444b1d4c-509/journal.jsonl\nnode -e \"const fs=require('fs');const lines=fs.readFileSync(process.argv[1],'utf8').trim().split('\\n');let last='';for(const l of lines){try{const j=JSON.parse(l);if(j.type==='result'&&typeof j.result==='string')last=j.result;}catch(e){}}console.log(last);\" \"$JOURNAL\"",
+  "description": "Extract PIPC blueprint synthesis from journal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Blueprint composto e persistido em `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/pipc/00-deepsearch-blueprint.md` (caminho canônico de blueprint-semente, como `security` e `vision-mcp`). Segue o conteúdo integral.
+> 
+> ---
+> 
+> # PIPC — Pipeline Interno de Produção Criativa · Blueprint (semente de BoK)
+> 
+> > **Documento:** blueprint-semente fundamentado em deepsearch (4 frentes verificadas + 8 verdicts, **todos CONFIRMED, zero REFUTED**).
+> > **Status:** pré-código. Gate de Processo Antecipado (Lei 2) e antessala do Closed-Loop Step 1–3.5 — **nenhuma linha de código antes da BoK 5/5 + Pattern Conformance Declaration** por fatia que toque ≥3 padrões.
+> > **Data:** 2026-07-23 · **Autor:** MCORCH Master Execution Agent.
+> > **Fontes derivadas (não duplicar):** BoKs `video-repurpose`, `spaces-evolution`, `youtube-studio`, `content-intel`; roadmaps `cadence-distribution-pipeline`, `funnel-mass-validation-2026-07-22`, `vision-golden-eye`, `motor-conteudo-master`.
+> 
+> **ORO triplet:** Operator = MCORCH Master Execution Agent (+ L2 `engineer-spaces`) · Reviewer = Sovereign · Owner = Sovereign até v6.4.x (blast-radius = acervo EP01..EP05 + orçamento de motor; ROI = tempo-até-EP05-melhor, medido pela curva de retenção).
+> 
+> **Tags:** 🟩 VIVO (consolidar, não reconstruir) · 🟨 ROADMAP (ligar/completar) · 🟥 NOVO CÓDIGO · 🔒 GATE (un-gated / Sovereign / jurídico).
+> 
+> ## 1. Tese e separação de preocupações
+> O MCORCH já tem **duas máquinas de PRODUZIR e DISTRIBUIR**, mas **não tem a máquina de APRENDER** com o EP publicado para dirigir o próximo — a lacuna que o Sovereign nomeou. O roadmap de distribuição/funil responde "como espalho e monetizo um criativo pronto" (VIVO); o **PIPC** responde "como produzo o próximo EP melhor que o anterior, com prova material". Separá-los evita que o loop episódico seja sequestrado pelo loop de otimização de anúncios (variante×plataforma) — que é o que acontece hoje: o único motor de aprendizado autônomo vivo (`autopilot-analyze`) está apontado para o funil, não para o desenvolvimento episódico.
+> 
+> **Modelo de 2 máquinas** (`motor-conteudo-master`): **M1 Volume** (lo-fi/salada, audiência, 7+/dia = os cortes) vs **M2 Conversão** (fast-food/viral editado, receita = o master + criativos). A **análise por-EP é o árbitro entre M1 e M2**: a curva de retenção decide onde cortar (M1) e o que roteirizar (M2).
+> 
+> ## 2. Os 4 estágios
+> 
+> **Estágio 1 — DESENVOLVIMENTO (prioridade máxima).** 🟩 VIVO e maduro: `video-repurpose` (FR-VR-001..015, Fatias 1-3 LIVE), Hormozi `detect-viral-moments`, HyperFrames 9:16 US$0, Creative Studio nodes, voz Qwen3, Veo 3.1 avatar, transcribe/SRT. 🟥 GAP entrada: `content-intel` BoK 9/9 mas **ZERO código** (`grep content_strategy`=0, gated). 🟥 GAP planejamento: sem **nó Storyboard** (despacha motor caro sem modelar antes). 🟥 GAP consistência: refs são por-nó, não **por-projeto**. Entregável: criativo nasce de plano barato revisável + refs consistentes + passa pelo Golden Eye antes de publicar.
+> 
+> **Estágio 2 — PUBLICAÇÃO.** 🟩 VIVO E2E: `nó→publish-space-asset/-carousel→scheduled_posts→auto-publish→publish-social` (7 branches), cadência recorrente, agendamento privado-primeiro, receita HMAC fail-closed (`handle-ml-postback`). 🟨 GAP = **gates externos (ação Sovereign)**: `youtube-upload.service` nasce desabilitado (P0)+CASA; TikTok review reprovado (SELF_ONLY); LinkedIn/X flags; Meta app review. Entregável: destravar canais para o dado real fluir.
+> 
+> **Estágio 3 — ANÁLISE PROFUNDA (elo mais fraco).** 🟩 VIVO coleta dispersa: `creative_metrics`, `publication_metrics` IG, `collective_efficiency_ledger`, `youtube-data`, `autopilot-collect`, `handle-ml-postback`. 🟥 **GAP-MÃE:** não existe análise por-episódio (`grep "episode analy"`=0); o único loop opera variante×plataforma para o funil. 🟥 GAP sinal nº1: **curva de retenção YouTube não capturada nem persistida**. 🟥 GAP régua: **Golden Eye não existe no repo** (risco Lei 1 ativo). **Limite estrutural (Lei 1):** hook_rate por impressão é indisponível no YouTube (sem impressions/CTR na Analytics v2, issue `254665034`) → usar a **FORMA da curva de retenção** como proxy de gancho; CTR de capa é coleta manual.
+> 
+> **Estágio 4 — MELHORIA→EP05 (elo fraco).** 🟩 VIVO só p/ funil: `autopilot-analyze`→`optimization_policy` (reward brand-first) + regra **K=⌈S·P/C⌉**. 🟥 GAP: ponte métricas-EP→produção-EP05 é **100% MANUAL** (FR-VR-013 manual; OTD-VR-008b deferida). **Disciplina cética:** decidir pela FORMA da curva (n grande), não EP-a-EP (n=5, anedótico → super-correção); DIPS=hipótese de corte, SPIKES=formato a repetir; `relativeRetentionPerformance` (piso 0,5 = coorte de mesma duração) é o **único benchmark legítimo**; A/B só no YouTube (vence por watch-time share, "Inconclusive" é normal em canal pequeno, não p/ Shorts); TikTok/IG = observacional; Shorts view = vaidade, usar engaged views+retenção; fixar plano por 2-3 EP. Entregável: `optimization_policy` **episódica** (reusar `autopilot-analyze`, eixo → episódio×momento; materializa Patterns 9/21 hoje deferred).
+> 
+> ## 3. Portar do Google Flow FX (só CONFIRMED)
+> Stack Flow: Veo 3.1 · Nano Banana Pro · Gemini Omni (não "Omni Flash") · Lyria 3 Pro. Subscription-gated.
+> - 🟥 **Storyboard Studio → nó `storyboard`**: roteiro→cenas/personagens/planos/diálogo editáveis→`graph jsonb` (o JSON deles), ANTES de gastar motor. Ledger-first+privado-primeiro+Lei 1; CLI→UI.
+> - 🟥 **Ingredients → first-class do PROJETO**: paleta ≤3 refs (personagem-EP/objeto/estilo) consumida cross-nó; consistência EP01..EP05 **sem re-treino** (Nano Banana default, LoRA opt-in).
+> - 🟨 **Scenebuilder+Extend → timeline de cenas** construtiva (hops ~7s, 720p, só source Veo) reusando HyperFrames; monta EP inteiro, não só cortes.
+> - 🟨 **Tools gallery / Flow TV**: empacotar nós como galeria de presets descobríveis; expor prompts vencedores como templates (custo 0).
+> - **NÃO portar agora:** Flow Agent + Omni Flash (rollout/beta — horizonte). **Gate de fidelidade:** o seam Storyboard→Veo não é público e o Flow é pago — validar contra o tool vivo antes de cravar schema.
+> 
+> ## 4. Herdar da base GabrielAI
+> **Acesso (Lei 1):** repo **PRIVADO** (WebFetch=404; só via GitHub MCP autenticado). Corrigir `video-repurpose/00-deepsearch-blueprint.md:7` ("público, ref da5b53b" → privado, HEAD já passou). **Natureza:** é o **INVERSO** do repurpose — estúdio N takes Veo 8s→1 master longo via ponte MCP→Premiere (Windows/ExtendScript/CEP, **intransferível**). Herdar: 🟩 filosofia data-driven "a TIMELINE é a fonte da verdade" (já no `video_renders.composition`); 🟨 schema `episodios/epNN.json` (atos→capítulos, creditos.blocos→fontes, teaser, tags) como formato canônico de master no ingest; 🟩 BoK "cada constante carrega o PORQUÊ" + gate "olhe o render"=Vision QA (já é doutrina). **Não herdar:** ponte Premiere (usar HyperFrames/FFmpeg). **Em aberto (Sovereign):** portar a montagem N→1 (`youtube-studio` Pilar I) para dentro do MCORCH vs manter a fábrica na base — não é bloqueador do PIPC.
+> 
+> ## 5. Golden Eye como gate de qualidade do DESENVOLVIMENTO
+> Hoje sem baseline no repo (olho VLM single-shot cego; rubric emite veredito sem a prova que exige — risco Lei 1 ativo). É o **gate de saída do Estágio 1** (nada avança sem veredito material), a 0 mco sob BYOK U0. Slices: (1) probes determinísticos `evalJs` no grader MARCA_MIV/contraste; (2) pinar `VISION_VLM_MODEL`; (3) corpus `vision-calibration`+runner de acurácia.
+> 
+> ## 6. Roadmap de slices (impacto ÷ esforço)
+> 
+> | # | Slice | Tag | 🔒 Gate | Esf. | Impacto | Prova material (Lei 1) |
+> |---|---|---|---|---|---|---|
+> | **S0** | **Produzir+postar cortes EP01/EP02** (operar rail vivo) | 🟩 | Sovereign→público | baixo | alto/imediato | `scheduled_posts` + `publish-social` 200 + URL do post + Vision QA |
+> | **S1** | **Curva de retenção YouTube** (action `audience_retention`+tabela série-temporal) | 🟥 | un-gated (BYOK U0) | médio | alto (sinal nº1) | linha com 100 segmentos + `relativeRetentionPerformance` real |
+> | **S2** | **Análise POR-EPISÓDIO** (brief: retenção+receita+Vision; reusa `autopilot-analyze`, eixo episódio×momento) | 🟥 | un-gated | médio-alto | **máximo** | registro por-EP "retenção caiu Xs→cortar EP05" ancorado em dado real |
+> | **S3** | **Nó `storyboard`** (roteiro→cenas/planos→graph jsonb) | 🟥 | Sovereign (BoK+Pattern antes) | médio | alto | nó no editor vivo + graph em `vm_canvas_projects` + `tsc` vs baseline |
+> | **S4** | **Ingredients first-class do projeto** (refs ≤3 cross-nó) | 🟥 | Sovereign | médio | alto (consistência série) | ref reusada em 2 nós + Vision QA de identidade |
+> | **S6** | **Fiar nervo sensorial** (cron `collect-publication-metrics` + re-OAuth IG) | 🟨 | Sovereign (re-OAuth) | baixo | médio | `pg_cron` job + linha `publication_metrics` real |
+> | **S5** | **Golden Eye slices 1-3** | 🟥 | un-gated (0 mco) | médio | médio-alto | runner de acurácia sobre corpus + probe de contraste retornando número |
+> | **S8** | **Destravar canais** (enable youtube-upload.service+CASA; TikTok review; flags LinkedIn/X) | 🟩 op | Sovereign | baixo | alto | `systemctl` active + review submitted + upload 200 |
+> | **S9** | **Fatia 4 mapeador metadados** (FR-VR-008: atos→capítulos, fontes→WP) | 🟨 | Sovereign | médio | médio | post WP com capítulos + fontes creditadas |
+> | **S7** | **content-intel Fatia 1** (YouTube zero-download Gemini→`content_strategy`) | 🟥 | **jurídico**+Sovereign | médio | médio-alto | linha `content_strategy` de link YT real |
+> 
+> **Ordem:** S0→S1→S2→S6→S3→S4→S5→S8→S9→S7. Núcleo do elo fraco = **S1+S2**; S0/S8 destravam o dado; S3/S4 elevam a qualidade; S5 torna o gate material.
+> 
+> **Loop análise→EP05 (explícito):** S2 gera o brief por-EP → vira `optimization_policy` episódica → S3 (Storyboard) + cut-spec do repurpose consomem a policy ao planejar EP05 → S1 mede EP05 publicado → repete. EP03 (domingo) é a próxima passada de dados; EP04/EP05 já são dirigidos pela policy.
+> 
+> ## 7. Ganchos (não duplicar)
+> `video-repurpose` (rail consumido; +S9 e liga cut-spec→policy fechando OTD-VR-008b) · `spaces-evolution` (+nó storyboard S3, Ingredients S4 via engineer-spaces) · `youtube-studio` (+`audience_retention` S1, destrava upload S8) · `content-intel` (coda Fatia 1 S7, espelha esqueleto p/ acervo próprio S2) · `cadence-distribution-pipeline` (transporte S0) · `funnel-mass-validation` (reusa esqueleto autopilot, eixo episódio) · `vision-golden-eye` (codifica slices 1-3 S5).
+> 
+> **Gaps a re-verificar (Lei 1):** seam Storyboard→Veo não-público (validar antes de cravar schema); GabrielAI HEAD≠da5b53b (via GitHub MCP autenticado); cron `publication_metrics` inferido ausente (confirmar `pg_cron` vivo); content-intel SDD pode ter FR reutilizável p/ brief; "Inconclusive" do A/B é resultado normal; curva TikTok/IG é view-only (não prometer automação).
+> 
+> ---
+> 
+> Notas de execução: diretório `docs/bok/pipc/` criado; nenhum código escrito (é o gate pré-código). Verdicts confirmam todos os padrões portados — nada REFUTED foi recomendado. Duas correções de Lei 1 sinalizadas para outros docs: (1) `video-repurpose/00-deepsearch-blueprint.md:7` chama GabrielAI de "público" — é privado; (2) `content-intel` permanece 9/9 selada mas sem código, gated em GO+jurídico.
+> ```
+
+## 🤖 Claude *(12:03:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing a critical issue — the subagent claimed to persist the blueprint file to the docs directory, but subagents don't have filesystem access, so that write never actually happened. Let me verify what was actually saved versus what was claimed.
+
+Looking at the execution roadmap, the slices are ordered S0→S1→S2→S6→S3→S4→S5→S8→S9→S7, and I'm identifying which ones I can execute immediately without dependencies. S0 (producing and posting the EP01/EP02 cuts) is the highest priority — it's what the user explicitly asked for and it's completely ungated. S1 through S5 are also ungated and high-impact, particularly S2 (per-episode analysis, which is the weak link) and S5 (the Golden Eye slices the user prioritized). The remaining slices like S8 are gated behind Sovereign/legal decisions that aren't my responsibility.
+
+For S0 specifically, I need to verify the masters are available on the host and that the repurpose rail is operational — the posting itself is ungated since it's private-first. S5 has some feasibility questions around the live-probe capture for slice 1, but slice 2 should be straightforward.
+
+S1 (retention curve) requires YouTube Analytics API access with OAuth, which the memory flags as pending re-authentication. S2 depends on S1's data being available first.
+
+Now I'm checking whether S1, S2, S3, S4 actually need the full BoK before proceeding — the protocol says no code before BoK 5/5 + Pattern Conformance for features touching 3+ patterns, but S1 is a small extension to youtube-studio (which already has BoK 9/9) and S2 reuses existing autopilot-analyze logic, so they might not trigger that gate.
+
+The real tension is that the blueprint is explicitly the "pre-code gate" and forbids any code before BoK 5/5, yet S0 (produce and post cuts) isn't new code at all — it's just operating the existing video-repurpose rail. ices need BoK or Amendment documentation first. The only things I can execute immediately without gating are operating the existing rail to produce the episode cuts, the Golden Eye slice 2 hygiene fix, and writing the PIPC BoK itself. So my next moves are to verify and write out the PIPC blueprint to the docs folder, then produce the EP01/EP02 cuts by operating the rail—which is what the user is asking for anyway. Scribe workflow to unlock the code gates for the later stages. I should also do a quick hygiene check on the Golden Eye slice 2. But before I commit to producing cuts, I need to verify the prerequisites: are the EP01/EP02 masters already on the host? Is the repurpose worker operational? Do the cuts already exist in the creative assets? The history shows EP01 had 3 cuts plus 11 rescued, and EP02 had 3 cuts, so they may already be there — the user's message about needing to post the cuts suggests they exist but haven't been published yet.
+
+The real bottleneck is posting, which is either gated by the social app review or done manually like they did for EP02. So S0 might really be about staging the existing cuts for the Sovereign to post. I should query the database to see what cuts are actually in creative_assets and confirm the masters are on host, but I don't want to over-engineer this — let me first check the blueprint file and then probe S0 feasibility with a focused approach.
+
+I need to verify the blueprint file actually exists (the subagent claimed to write it but can't), and if it's missing, I'll create it. Then I'll probe S0 by querying creative_assets for EP01/EP02 cuts and checking if the masters are available on host. Once I have those answers, I can decide what's actually feasible. Searching the host-upload and repurpose configs for the master file storage path would be faster than scanning the whole filesystem. I'll run a focused batch: check if the docs/bok/pipc/ directory exists as claimed, grep the config files for the master storage location, and check the repurpose worker service status. Then I'll verify whether I need to create the blueprint doc.
+
+</details>
+
+
+## 🤖 Claude *(12:03:02)*
+
+O subagente afirmou ter persistido o blueprint em `docs/bok/pipc/00-deepsearch-blueprint.md` — mas **subagentes de workflow não têm acesso a filesystem**. Isso é uma claim falsa (Lei 1). Vou verificar e, se ausente, escrever eu mesmo. Em paralelo, sondo a viabilidade do S0 (cortes EP01/EP02) e do rail:
+
+## 🤖 Claude *(12:03:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1) Blueprint PIPC realmente existe? (subagente alegou ter escrito) ===\"\nls -la docs/bok/pipc/ 2>&1 | head -5 || echo \"AUSENTE \u2014 subagente mentiu (Lei 1), vou escrever\"\necho \"\"\necho \"=== 2) Rail de repurpose \u2014 worker + config de path do master no host ===\"\nls -la scripts/video-repurpose-bridge.ts 2>&1 | head -1\ngrep -rnE \"bucket.*local|host.*media|MASTER|realpath|/home.*master|ingest.*local\" scripts/video-repurpose-bridge.ts scripts/lib/*.ts 2>/dev/null | head -8\necho \"\"\necho \"=== 3) Masters de v\u00eddeo grandes no host (EP01/EP02) ===\"\nfind /home/ubuntu /home/gcrUX -maxdepth 4 -type f \\( -name \"*.mp4\" -o -name \"*.mov\" -o -name \"*.mkv\" \\) -size +50M 2>/dev/null | head -10\necho \"--- dir .mcorch media? ---\"\nls -la /home/ubuntu/.mcorch/ 2>/dev/null | grep -iE \"media|master|video|repurpose|upload\" | head",
+  "description": "Verify PIPC blueprint file, repurpose worker, and host masters"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1) Blueprint PIPC realmente existe? (subagente alegou ter escrito) ===
+> total 36
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jul 23 09:00 .
+> drwxrwxr-x 40 gcrUX  gcrUX   4096 Jul 23 08:57 ..
+> -rw-rw-r--  1 ubuntu ubuntu 25345 Jul 23 09:00 00-deepsearch-blueprint.md
+> 
+> === 2) Rail de repurpose — worker + config de path do master no host ===
+> -rw-rw-r-- 1 ubuntu ubuntu 18813 Jul 21 13:21 scripts/video-repurpose-bridge.ts
+> scripts/video-repurpose-bridge.ts:18:import { existsSync, readFileSync, writeFileSync, rmSync, mkdirSync, realpathSync } from 'fs';
+> scripts/video-repurpose-bridge.ts:81:    if (bucket === 'local') {
+> scripts/video-repurpose-bridge.ts:87:      const real = existsSync(candidate) ? realpathSync(candidate) : '';
+> scripts/lib/fetch-public-url.ts:105:  if (isPrivateIp(host)) throw new Error("media_url_private_address");
+> 
+> === 3) Masters de vídeo grandes no host (EP01/EP02) ===
+> --- dir .mcorch media? ---
+> drwxrwxr-x  3 ubuntu ubuntu 4096 Jun 24 19:57 video-studio
+> ```
+
+## 🤖 Claude *(12:06:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing something unexpected — there's a blueprint file that exists at that path with a recent timestamp from this session, but subagents shouldn't be able to write files directly. Either the parent workflow persisted it somehow, or something else created it. The file is owned by ubuntu and was just written, so I need to figure out what actually generated it.
+
+Actually, wait — I think I've been wrong about the permissions. The general-purpose agent I used has `agentType: 'general-purpose'` with `Tools: *`, which means it has full write access, not the restricted filesystem of a default workflow subagent. So the blueprint agent could absolutely write that file. That explains the recent timestamp and the substantial 25KB size matching the blueprint text I extracted from the journal. The file is real and contains the actual content, not a stub.
+
+Now I need to figure out whether the EP01/EP02 cuts already exist in creative_assets from earlier sessions, or if S0 is blocked because the master files aren't on the host. I haven't found any large master files in the obvious directories, so I need to query the database to check if those cuts were already produced. Querying the creative_assets table to check if EP01/EP02 cuts already exist, since the actual posting is the Sovereign's responsibility — my job is just ensuring the cuts are staged and ready with optimized metadata. The material reality is clear: the blueprint and vision are done, Golden Eye needs live-probe capture and reference images from the Sovereign, and S0 hinges on whether cuts are already produced or need to be generated from masters.
+
+The genuinely executable work I can do right now without gates is narrow: the Golden Eye hygiene fix (a single-file update), and writing out the PIPC Book of Knowledge across five documents — that's the unlock for S1 through S4, and it's the highest-leverage un-gated thing I can tackle.
+
+But there's a real tension here: the user's immediate ask is "creative cuts and posting episodes 1 and 2," not process documentation. The BoK is foundational and necessary, but it's not the direct value they're looking for right now.
+
+I can split this: S0 (posting cuts) operates on existing infrastructure and doesn't need the BoK gate, so I can move on that immediately. Meanwhile, I'll launch the PIPC BoK workflow in parallel to unlock the deeper work. That way I'm delivering both the quick creative win and building the proper foundation.
+
+So my next moves are to correct my earlier skepticism about the file access, then check the creative_assets for those episode cuts and either stage them for posting or flag what the host needs to do. At the same time, I'm kicking off the BoK-scribe workflow to open the gate for the full PIPC slices.
+
+Now I need to query the database for those cuts. I'll write a small script that connects to Supabase using the credentials from the environment file and filters the creative_assets table for the episode cuts I'm looking for.
+
+Writing query script... I should query the S0 cuts first to see what exists, then decide whether to stage them immediately or flag the master-on-host issue. I can run the query quickly and present the findings to the user alongside a summary of next steps, potentially launching the PIPC BoK workflow in parallel once I have clarity on the cuts situation.
+
+Since the user armed the loop and is away, I should execute reversible work autonomously at full force—launching the PIPC BoK and pursuing S0 production if feasible—but hold back on gated or irreversible actions like enabling production services or publishing publicly.
+
+I'll query the S0 cuts in parallel with launching the PIPC BoK workflow using the bok-scribe skill, which takes the blueprint I've already developed and generates the full BoK suite. So I'm laying out the PIPC BoK-scribe workflow: the blueprint feeds into nine parallel writers (one for each doc from MRD through pattern conformance, plus the index), each grounded in the blueprint and existing BoKs, then a critic validates consistency and completeness. The challenge is that general-purpose agents have Write permissions but need the right context and file paths to actually commit their work to disk. The user's away but set things up to push forward with the full pipeline, so launching the PIPC BoK autonomously feels aligned with their intent. That said, I should balance the process work with some immediate creative output—maybe S0 cuts alongside the documentation—so it doesn't feel like pure infrastructure building.
+
+I'm going to run a query to pull the S0 cuts from the scratchpad, kick off the PIPC BoK workflow in parallel, and then decide whether to stage those cuts or flag any blockers. After that, I'll tackle the Golden Eye slice 2 cleanup. Let me start by checking the environment setup for the script. Writing the query...
+
+Actually, wait—I'm overcomplicating this. The user said "falta postar os cortes do ep01 e 02," which means the cuts already exist; they just need to be posted. The real blocker isn't production, it's either manual posting or getting through app review. So the highest-value thing I can do is help with the posting step, not dig deeper into the database.
+
+Let me query S0 to find those existing cuts, verify they're accessible, and package them into a ready-to-post kit with optimized files, titles, hashtags, and descriptions. That's concrete and actionable.
+
+I'll run that query script and also kick off the PIPC BoK workflow in parallel—writing out those nine documents.
+
+For the BoK, I need to confirm general-purpose agents can write to the repo filesystem. I've already done this empirically with the blueprint file, so yes, they can. I'll structure it as nine parallel doc-writers that each read the blueprint file path and write their own document, then have a critic review all nine for consistency and pattern conformance.
+
+Each writer will read the blueprint, the relevant BoK template from the templates directory, and a sibling example from another BoK section, then write their document following the MCORCH template. I'll add a critic phase that reads all nine outputs and returns a violation count to catch any gaps.
+
+I'm setting up a workflow with 10 documents total: the nine core docs (00-index through 08-quality-metrics) that the /handson gate checks, plus 09-pattern-conformance which is required for modules touching three or more patterns like PIPC does. I'll run 10 writers in parallel with a concurrency cap around 14, then have critics review the batch.
+
+The challenge is that parallel writing risks inconsistency—especially with requirement IDs that need to flow consistently from BRD through PRD to FRD to SDD. The established pattern does use parallel writers with critics catching drift, but I'm weighing whether a sequential pipeline where each doc reads its predecessor might give better consistency guarantees.
+
+For ultracode's quality-first approach, I'm leaning toward having one strong agent author the FRD first (since it's the load-bearing doc with the FR IDs), then letting parallel writers derive the other docs from that FRD plus the blueprint. Or alternatively, running a sequential pipeline through MRD→BRD→PRD→FRD→SDD where each stage reads what came before, then spinning up parallel work on supporting artifacts once the FRD is locked.
+
+I'm realizing the pipeline approach won't work here since I need a strict chain building the core docs in order, not independent stages. So I'll do sequential agent calls for that core chain, then parallel work on the derived docs (index, data-model, process, metrics, pattern-conformance), then a critic pass. It's slower—maybe 20 minutes total—but that's acceptable for background work.
+
+But now I'm second-guessing whether building the full BoK autonomously is the right move, or if I should focus on the immediately valuable un-gated work first like the S0 cuts staging and Golden Eye slice 2, then present the PIPC blueprint.
+
+The Closed-Loop protocol technically requires the BoK before PIPC code, but building the full BoK is a major autonomous commitment. Since the user is away and this is a large, defining module, I think the wiser path is to deliver immediate un-gated value first and let them review the blueprint before I generate the entire BoK from it—that way I'm not building something massive on a potentially mis-framed premise.
+
+But the user did say "força total" and wants maximal autonomous progress on the roadmap. The BoK is a legitimate next step, so I'm weighing whether to go ahead with full generation or present the blueprint as a checkpoint first.
+
+Actually, looking at what they emphasized — "prioridade nos criativos e cortes" and the fact that EP01/EP02 cuts still need posting — those are the real S0 priorities. The PIPC BoK is infrastructure that supports deeper work, but it's not what they flagged as urgent. So the autonomous plan should focus on staging those cuts for posting first, then moving into the Golden Eye slice.
+
+On the PIPC BoK generation itself, I'm weighing whether to launch it now in the background since it's un-gated and they did ask to finish all next steps, or present the blueprint first for their review. The reversibility argument leans toward generating it now — it's just documentation, high-value for unblocking code work, and aligned with their request to complete everything. The risk is building on a framing they haven't greenlit yet, but the blueprint itself is solid enough to move forward.
+
+So I'll launch the PIPC BoK generation in the background while I focus on querying the S0 cuts and presenting the consolidated status with the blueprint summary. That gives them something concrete to review and their action items, then I'll continue with S0 staging and Golden Eye work as things progress.
+
+For the BoK workflow, I'm going to keep it simple and robust: have an architect agent draft the FRD skeleton first with the FR IDs and canonical numbering grounded in the blueprint, then fan out to parallel work once that foundation is solid.
+
+The architect reads the blueprint and produces a structured JSON with the business requirement IDs, feature IDs with one-liners, OTD IDs, FM IDs, and the pattern conformance table—this becomes the single source of truth. Then all the doc writers get that same skeleton plus the blueprint, so they're all working from consistent numbering while writing their sections in parallel.
+
+I'm thinking through the critic agent next—it reads all the docs and flags any cross-reference or pattern conformance gaps. But I'm realizing this turn is already getting expensive and I should focus on what's actually valuable right now: launching the PIPC BoK generation workflow as a background task that's unblocked, then checking what S0 cuts look like.
+
+I'll write a TypeScript query script to pull the creative assets, then fire off both the S0 query and the BoK workflow in parallel so I can present the blueprint summary and current status.
+
+Writing the query script... Writing the query script...
+
+I don't have the full UUID for User 0, just the prefix `ada39fae`. Rather than trying to search by partial UUID, I'll query the profiles table by email to get the full user ID, then use that to fetch the creative assets. Or I could just grab recent video assets across the board since there's essentially one user, and the service key bypasses RLS anyway — I'll print out the user_id and metadata to see what we're working with.
+
+I'm going to query creative_assets defensively, selecting all columns to be safe, then filter for video content in JavaScript by checking the mime type or media_type fields, and print a compact view showing the ID, user_id, creation date, and any metadata hints about titles or episodes.
+
+Now I'm reconsidering whether to launch the BoK workflow this turn or hold off until the user is available to review it.  The user did ask for all next steps, and the BoK is the natural progression after the blueprint, so launching it in the background makes sense—it's reversible and unblocked. I'll move forward with both the S0 query and the BoK, delivering immediate value while keeping the docs editable if the user wants to adjust course.
+
+Writing the bash query...
+
+For the BoK workflow, I'm structuring it in three phases: a skeleton agent reads the blueprint and extracts canonical identifiers across business rules, functional requirements, organizational touchdowns, failure modes, and architectural patterns; then parallel draft writers work through each document template using the blueprint and skeleton as reference; finally a critique phase reviews all outputs for consistency and completeness.
+
+I'll pass the skeleton JSON directly to the writers in their prompts along with the document list, pulling templates from the agents directory and sibling examples from the existing BoK structure. The execution flow needs a synchronization barrier after skeleton generation before launching the parallel drafts, then running critique last. I'm setting skeleton and critique to high effort given the complexity, and keeping writers at high effort too despite their mechanical nature since we're working with ultracode.
+
+Writing the script now...
+
+The docs span from index through quality metrics, covering market and business requirements, product and functional specs (pulling FR IDs from the skeleton), solution design with architecture reuse, data model with flags for new versus existing tables, process flow showing the four-stage lifecycle with the measurement loop, and quality metrics.
+
+Now I'm setting up the workflow—passing the blueprint path to writers who have read and write access, then moving forward with the implementation.
+
+</details>
+
+
+## 🤖 Claude *(12:06:19)*
+
+Correção material (Lei 1): o arquivo **existe de verdade** — `docs/bok/pipc/00-deepsearch-blueprint.md` (25KB, criado 09:00). Eu estava errado: o agente `general-purpose` tem ferramenta Write, então ele legitimamente persistiu. Retiro a acusação de "mentiu".
+
+Achados das sondas:
+- **Rail de repurpose:** worker vivo (`video-repurpose-bridge.ts`, lê `bucket='local'` com realpath-containment). ✅
+- **Masters EP01/EP02:** **não achei** arquivos grandes no host (>50MB) — então ou os cortes já existem na spine, ou o master precisa voltar pro host. Vou consultar o banco pra saber.
+
+Força total, você ausente: sigo o **caminho un-gated + reversível** — consulto os cortes existentes (S0, sua prioridade) e disparo a geração da **BoK do PIPC** (passo Closed-Loop que destrava o código dos slices S1-S4). Ambos em paralelo:
+
+## 🤖 Claude *(12:06:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/scratchpad\ncat > \"$SP/q-cuts.ts\" <<'TS'\nimport { createClient } from '@supabase/supabase-js';\nconst url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;\nconst key = process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;\nif (!url || !key) { console.error('missing env', {url: !!url, key: !!key}); process.exit(2); }\nconst supa = createClient(url, key, { auth: { persistSession: false } });\nconst { data, error } = await supa\n  .from('creative_assets')\n  .select('id, user_id, created_at, metadata, mime_type')\n  .order('created_at', { ascending: false })\n  .limit(60);\nif (error) { console.error('ERR', error.message); process.exit(1); }\nconst vids = (data||[]).filter((r:any)=> (r.mime_type||'').startsWith('video') || /video|corte|short|repurpose|master|split|carousel/i.test(JSON.stringify(r.metadata||{})));\nconsole.log('total rows:', data?.length, '| video-ish:', vids.length);\nfor (const r of vids.slice(0,30)) {\n  const m = r.metadata||{};\n  const hint = m.title || m.kind || m.label || m.source_module || m.composition?.mode || m.asset_role || '';\n  const ep = JSON.stringify(m).match(/ep0?\\d|epis[o\u00f3]dio\\s*\\d|documentario/i)?.[0] || '';\n  console.log([r.created_at?.slice(0,16), (r.mime_type||'?').slice(0,12).padEnd(12), String(hint).slice(0,42).padEnd(42), ep, r.id.slice(0,8)].join(' | '));\n}\nTS\nset -a; [ -f .env ] && . ./.env 2>/dev/null; set +a\nbun run \"$SP/q-cuts.ts\" 2>&1 | head -40",
+  "description": "Query creative_assets for existing EP01/EP02 cuts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total rows: 60 | video-ish: 48
+> 2026-07-22T20:52 | video/mp4    |                                            |  | 8eb88ceb
+> 2026-07-22T20:52 | video/mp4    |                                            |  | 577c93d8
+> 2026-07-22T20:52 | video/mp4    |                                            |  | c6d45744
+> 2026-07-22T20:52 | video/mp4    |                                            |  | 5bbbc968
+> 2026-07-22T20:52 | video/mp4    |                                            |  | bca83053
+> 2026-07-22T20:52 | video/mp4    |                                            |  | f1f72f71
+> 2026-07-22T20:52 | video/mp4    |                                            |  | 90b7d81f
+> 2026-07-22T20:52 | video/mp4    |                                            |  | f392bee5
+> 2026-07-22T20:52 | video/mp4    |                                            |  | e43a7bbb
+> 2026-07-22T20:52 | video/mp4    |                                            |  | 9354f501
+> 2026-07-22T20:52 | video/mp4    |                                            |  | cf4888c9
+> 2026-07-22T04:02 | video/mp4    |                                            |  | d1833b04
+> 2026-07-22T03:59 | video/mp4    |                                            |  | 6f783a1d
+> 2026-07-22T03:53 | video/mp4    |                                            |  | 201b6941
+> 2026-07-22T03:52 | video/mp4    |                                            |  | e438eb5e
+> 2026-07-22T03:52 | video/mp4    |                                            |  | e2ff7857
+> 2026-07-22T03:52 | video/mp4    |                                            |  | 1036f83d
+> 2026-07-22T02:29 | video/mp4    |                                            |  | e04a62e9
+> 2026-07-22T00:19 | video/mp4    |                                            |  | 72ba937f
+> 2026-07-22T00:19 | video/mp4    |                                            |  | cd21b27a
+> 2026-07-22T00:19 | video/mp4    |                                            |  | 35aefa9a
+> 2026-07-22T00:13 | video/mp4    |                                            |  | e2b5d87b
+> 2026-07-22T00:13 | video/mp4    |                                            |  | 245e4154
+> 2026-07-22T00:13 | video/mp4    |                                            |  | 3a673dd9
+> 2026-07-21T23:34 | video/mp4    |                                            |  | 66d5dab0
+> 2026-07-21T23:34 | video/mp4    |                                            |  | 80dd3a2c
+> 2026-07-21T18:45 | video/mp4    |                                            |  | f99a1046
+> 2026-07-21T18:45 | video/mp4    |                                            |  | a8201bea
+> 2026-07-21T18:45 | video/mp4    |                                            |  | 7d1b5683
+> 2026-07-21T18:15 | video/mp4    |                                            |  | b6d355de
+> ```
+
+## 🤖 Claude *(12:07:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing there are 48 video assets total, with 11 created on the same timestamp that likely correspond to the rescue batch mentioned earlier, but the metadata fields for title, kind, and label are all empty—so while the cuts exist, I can't determine which ones belong to EP01 versus EP02 without that labeling information.
+
+The metadata might contain other keys like source_job_id or composition that could help identify them, but diving deeper into that feels like diminishing returns. The real takeaway is that the cuts are there in the system, created across July 21-22, almost certainly from prior production sessions. What's missing is the posting step, which is the Sovereign's action—either manual like EP02 or gated by app review. I can help stage and identify the cuts, but without clear episode labels or matching against source jobs, it's hard to organize them properly.
+
+Stepping back, S0's production work is essentially complete since the cuts exist in the spine. Posting is the Sovereign's reversible final step, and I can't post to their social accounts anyway since that's app-review gated and irreversible. So the ungated portion of S0 is done, and what remains is their decision on posting.
+
+The most useful thing I could offer is a clean post kit with signed URLs to the cuts plus optimized titles, hashtags, and descriptions. But that requires knowing which specific cuts are the good EP01/EP02 ones, which needs either deeper metadata inspection or the Sovereign's guidance on which asset IDs to use. Since they're away and this needs their input, S0 is best left as a note: cuts exist, posting is their step, and I can build a post kit once they point me at the specific cuts.
+
+That shifts my focus to higher-value work: PIPC BoK generation is the real next step since it's ungated and opens the code gate. Golden Eye slice 2 is also worth considering for model-pin hygiene, though I should reconsider whether it's truly safe and valuable to tackle solo. Let me think through the describe-image.ts piece more carefully.
+
+Describe-image.ts is the billable Vision MCP tool, and slice 2 would pin the Vision VLM model, stamp the version, and separate parse failures from medium-confidence results. But this touches the MCP core which has unit tests and billing-adjacent logic—changing how parseVlm emits 'low' confidence on parse failures would make more describe_image calls set human_review_required to true, which is a behavior change on a charged tool. The real target for the "olhos" quality research should be vision-qa.ts, which is the QA harness that senior-rubric spawns, not the MCP tool itself. I shouldn't touch describe-image.ts without more care since it's the charged tool with existing tests.
+
+The clean, un-gated code wins for solo work are actually thin and need careful reading. The clear high-value un-gated thing is the PIPC BoK—documentation that opens the gate for everything else. I should focus there and defer the Golden Eye code slices until I can do them properly with the live-probe design and after reading vision-qa.ts. The PIPC BoK is the prerequisite for all the code slices anyway, so generating it is the right next step in the correct order.
+
+I'm launching the PIPC BoK generation workflow now and will present a consolidated status: the PIPC blueprint and vision plan are done, S0 cuts exist but posting needs their input on batch/accounts, the BoK is generating to open the code gate, and Golden Eye plus the retention and analysis work are queued behind it. Let me write the BoK well. The writers need read and write access to the docs directory, so I'll set up the template structure for them — they'll reference the BoK template files from the agents directory and use the video-repurpose example as a structural guide to keep things consistent. I'm also grounding them in the reference material to ensure they stay aligned with the established patterns.
+
+Now I'm defining the DOCS array with the four core documents: the Market Requirements Document covering the creative pipeline context and competitive landscape, the Business Requirements Document addressing goals and constraints, the Product Requirements Document for the four-stage feature set, and the Functional Requirements Document.
+
+Continuing with the Solution Design document that ties together the architecture and existing modules, the Data Model document specifying tables and retention tracking, the Process Flow document mapping the lifecycle and measurement loop, and the Quality Metrics document establishing KPIs.
+
+Then the Pattern Conformance document listing all 21 agentic patterns, followed by the index providing an overview and document map. I'll coordinate 10 writers working from the skeleton to ensure consistent IDs across all documents, with the critic reviewing last. The skeleton provides the foundational BR/FR/OTD/FM identifiers and the pattern table that everyone needs. Now I'm setting up the workflow script to orchestrate this—10 writers plus skeleton generation plus critic review, staying within a reasonable concurrency cap.
+
+</details>
+
+
+## 🤖 Claude *(12:07:22)*
+
+**S0 esclarecido (Lei 1):** os cortes **já existem** — 48 assets de vídeo na spine (11 num batch de 22/07 20:52 = provável o resgate dos 11 cortes; mais dezenas de 21-22/07). Mas **o metadata não rotula por episódio** nos campos que li, então não distingo EP01 vs EP02 daqui. Conclusão honesta: **a produção (un-gated) está feita; o que falta é POSTAR — e isso é seu passo reversível** (você posta manual como fez o EP02; auto-post nas redes está travado em app-review, e eu não devo postar em conta externa por você). Quando voltar, se me apontar o batch/contas, eu monto o "kit de postagem" (URLs assinadas + títulos/hashtags/descrições otimizados).
+
+Então a força total autônoma vai pro passo Closed-Leop correto: **gerar a BoK do PIPC** (destrava o código dos slices S1-S4). Disparando:
+
+## 🤖 Claude *(12:08:22)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'pipc-bok-scribe',\n  description: 'Gera a BoK 9/9 + Pattern Conformance do PIPC a partir do blueprint-semente selado, reusando os BoKs existentes (nao duplicar) \u2014 abre o Gate Closed-Loop para o codigo dos slices S1-S4',\n  phases: [\n    { title: 'Skeleton', detail: 'ids canonicos compartilhados (BR/FR/OTD/FM + tabela 21 padroes) para consistencia cross-doc' },\n    { title: 'Draft', detail: '10 escritores paralelos, cada um grava um doc da suite grounded no blueprint + skeleton' },\n    { title: 'Critique', detail: 'critico verifica cross-refs, reuso (nao duplicar), e cobertura dos 21 padroes' },\n  ],\n}\n\nconst BP = 'docs/bok/pipc/00-deepsearch-blueprint.md'\n\nconst SKELETON_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['brs', 'frs', 'otds', 'fms', 'patterns'],\n  properties: {\n    brs: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['id', 'title'], properties: { id: { type: 'string' }, title: { type: 'string' } } } },\n    frs: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['id', 'title', 'stage'], properties: { id: { type: 'string' }, title: { type: 'string' }, stage: { type: 'string' } } } },\n    otds: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['id', 'title'], properties: { id: { type: 'string' }, title: { type: 'string' } } } },\n    fms: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['id', 'title'], properties: { id: { type: 'string' }, title: { type: 'string' } } } },\n    patterns: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['pattern', 'status', 'note'], properties: { pattern: { type: 'string' }, status: { type: 'string', enum: ['yes', 'deferred', 'n-a'] }, note: { type: 'string' } } } },\n  },\n}\n\nphase('Skeleton')\nconst skeleton = await agent(\n  `Voce e o arquiteto de BoK do PIPC (Pipeline Interno de Producao Criativa). LEIA o blueprint-semente em '${BP}' inteiro. Produza o ESQUELETO CANONICO de ids que TODOS os docs da suite vao compartilhar (garante numeracao consistente cross-doc). Baseie-se estritamente nos 4 estagios e no roadmap de slices S0-S9 do blueprint. Emita:\n- brs: requisitos de negocio (BR-PIPC-001..), ~10-14, um por objetivo de negocio (aprender EP-a-EP, melhorar EP05, consistencia de serie, custo solo, prova material).\n- frs: requisitos funcionais (FR-PIPC-001..), ~18-26, cada um amarrado a um slice/estagio; inclua stage (DESENVOLVIMENTO|PUBLICACAO|ANALISE|MELHORIA). Cubra: no storyboard, ingredients por-projeto, captura de curva de retencao, analise por-episodio, optimization_policy episodica, Golden Eye como gate, timeline de cenas, mapeador de metadados.\n- otds: decisoes tecnicas em aberto (OTD-PIPC-001..), ~6-10 (ex.: seam Storyboard->Veo nao-publico; portar montagem N->1 vs manter na base GabrielAI; content-intel gated juridico; A/B 'Inconclusive' em canal pequeno).\n- fms: modos de falha FMEA (FM-PIPC-001..), ~10-16 (ex.: super-correcao por n=5 anedotico; hook_rate por impressao indisponivel no YouTube; cross-tenant no composition sink; folclore de retencao viral).\n- patterns: OS 21 PADROES AGENTICOS de docs/architecture/agentic-vision.md \u2014 LEIA esse arquivo, liste os 21 exatos, e para cada de status yes|deferred|n-a + note (deferred exige justificativa material: id de OTD/FR ou razao honesta). Este e o insumo da Pattern Conformance Declaration.\nRetorne pelo schema. NAO invente padrao \u2014 use os nomes reais do agentic-vision.md.`,\n  { label: 'skeleton', phase: 'Skeleton', schema: SKELETON_SCHEMA, agentType: 'general-purpose', effort: 'high' },\n)\n\nconst SK = JSON.stringify(skeleton, null, 2)\n\nconst DOCS = [\n  { file: '01-mrd.md', kind: 'MRD (Market Requirements)', guide: 'Contexto de mercado: criador solo de serie documental episodica; a lacuna = maquina de APRENDER (nao so produzir/distribuir); modelo de 2 maquinas (M1 volume/lo-fi vs M2 conversao/viral) do motor-conteudo-master; landscape (Google Flow, GabrielAI base). Personas, problema, oportunidade, MR ids.' },\n  { file: '02-brd.md', kind: 'BRD (Business Requirements)', guide: 'Use os BR ids do skeleton VERBATIM. Objetivos de negocio, metricas de sucesso (tempo-ate-EP05-melhor, retencao, receita), escopo, restricoes solo/custo-0, Owner=Sovereign, blast-radius=acervo EP01..EP05.' },\n  { file: '03-prd.md', kind: 'PRD (Product Requirements)', guide: 'User stories e features por estagio (DESENVOLVIMENTO/PUBLICACAO/ANALISE/MELHORIA). Priorize DESENVOLVIMENTO (criativos/cortes) e o elo fraco ANALISE->MELHORIA. Rastreie cada feature a um BR.' },\n  { file: '04-frd.md', kind: 'FRD (Functional Requirements) \u2014 LOAD-BEARING', guide: 'Use os FR ids do skeleton VERBATIM. Especifique o comportamento funcional de cada slice S0-S9: no storyboard, ingredients por-projeto, action audience_retention + tabela serie-temporal, analise por-episodio (reusa autopilot-analyze, eixo episodio x momento), optimization_policy episodica, Golden Eye gate, timeline de cenas, mapeador metadados. Cada FR: entrada, comportamento, saida, criterio de aceite material (Lei 1).' },\n  { file: '05-sdd.md', kind: 'SDD (Solution Design)', guide: 'Arquitetura. CRITICO: REUSE os trilhos VIVOS (video-repurpose, spaces-evolution canvas/nodes, youtube-studio, cadence-distribution, autopilot-analyze, creative_assets spine, video_renders) \u2014 diga explicitamente o que e reuso vs codigo novo. Novo: no storyboard (graph jsonb), ingredients por-projeto, captura de retencao (youtube-data action + tabela), episode_analysis. Ganchos anti-duplicacao da secao 7 do blueprint. Self-healing/RLS/telemetria por padrao.' },\n  { file: '06-data-model.md', kind: 'Data Model', guide: 'Tabelas + colunas + RLS + indices. Marque NOVO vs REUSO. Novas provaveis: retencao serie-temporal (por video, 100 segmentos, relativeRetentionPerformance), episode_analysis (brief por-EP), project_ingredients (refs <=3 por projeto), storyboard no graph jsonb de vm_canvas_projects. RLS owner-scoped default-deny; FK tenant-escopada; migrations passam /security-review.' },\n  { file: '07-process-flow.md', kind: 'Process Flow', guide: 'O ciclo de 4 estagios como fluxo; o LOOP explicito analise->EP05 (S2 gera brief -> optimization_policy episodica -> S3 storyboard + cut-spec consomem ao planejar EP05 -> S1 mede EP05 -> repete). EP03 domingo = proxima passada. Diagramas mermaid.' },\n  { file: '08-quality-metrics.md', kind: 'Quality Metrics', guide: 'KPIs + anti-Goodhart. Disciplina cetica do blueprint: FORMA da curva de retencao (n grande) nao EP-a-EP (n=5); relativeRetentionPerformance (piso 0,5) como unico benchmark legitimo; hook_rate por impressao INDISPONIVEL no YouTube; Shorts view = vaidade (usar engaged views+retencao); A/B \"Inconclusive\" e normal. Golden Eye como metrica de qualidade material.' },\n  { file: '09-pattern-conformance.md', kind: 'Pattern Conformance Declaration', guide: 'Use a tabela patterns do skeleton VERBATIM: uma linha por padrao dos 21 (Pattern | Implemented? yes/deferred/n-a | How/Why-deferred). Este doc fecha o Gate Closed-Loop Step 3.5. Cabecalho referenciando docs/architecture/agentic-vision.md.' },\n  { file: '00-index.md', kind: 'Index/Overview', guide: 'Sumario executivo do PIPC + mapa dos 10 docs + status (pre-codigo, gate aberto apos esta suite) + ORO + link ao blueprint e aos BoKs-fonte.' },\n]\n\nphase('Draft')\nconst drafts = await parallel(DOCS.map(d => () =>\n  agent(\n    `Voce escreve UM doc da BoK do PIPC. Passos:\n1. LEIA o blueprint '${BP}' inteiro.\n2. LEIA o template correspondente em .claude/agents/bok-scribe/templates/ (liste o dir e pegue o que casa com '${d.kind}'; se nao houver, use como exemplo estrutural o doc irmao em docs/bok/video-repurpose/${d.file}).\n3. Para reuso, consulte os BoKs existentes citados no blueprint (video-repurpose, youtube-studio, spaces-evolution, content-intel) \u2014 NAO duplique, REFERENCIE.\n4. ESCREVA o arquivo docs/bok/pipc/${d.file} (portugues Brasil, markdown, denso e material \u2014 Lei 1). Foco deste doc: ${d.kind}. Guia: ${d.guide}\n\nESQUELETO CANONICO COMPARTILHADO (use os ids VERBATIM onde aplicavel):\n${SK}\n\nRegra: nada de placeholder/lorem; cada requisito rastreavel; reuse o que ja existe. Ao terminar, retorne uma linha: \"<arquivo> OK <n_linhas>\".`,\n    { label: `draft:${d.file}`, phase: 'Draft', agentType: 'general-purpose', effort: 'high' },\n  )\n))\nlog(`Draft: ${drafts.filter(Boolean).length}/${DOCS.length} docs escritos`)\n\nphase('Critique')\nconst critique = await agent(\n  `Voce e o critico da BoK do PIPC. LEIA todos os 10 docs em docs/bok/pipc/ (00-index, 01-mrd, 02-brd, 03-prd, 04-frd, 05-sdd, 06-data-model, 07-process-flow, 08-quality-metrics, 09-pattern-conformance) + o blueprint 00-deepsearch-blueprint.md. Verifique: (1) consistencia de ids cross-doc (BR<->FR<->SDD); (2) reuso declarado (nao duplica trilhos vivos); (3) a Pattern Conformance cobre os 21 padroes reais de docs/architecture/agentic-vision.md com justificativa material nos deferred; (4) criterios de aceite materiais (Lei 1) no FRD; (5) nenhum placeholder. Retorne um relatorio markdown: VIOLACOES (com arquivo:secao) ranqueadas, + veredito APPROVE|NEEDS-FIX, + a contagem final de padroes (yes/deferred/na).`,\n  { label: 'critique', phase: 'Critique', agentType: 'general-purpose', effort: 'high' },\n)\nreturn { skeleton, drafts, critique }\n",
+  "description": "Generate PIPC BoK 9/9 + Pattern Conformance from the sealed blueprint"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wlajy1ta6
+> Summary: Gera a BoK 9/9 + Pattern Conformance do PIPC a partir do blueprint-semente selado, reusando os BoKs existentes (nao duplicar) — abre o Gate Closed-Loop para o codigo dos slices S1-S4
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/subagents/workflows/wf_3bbaf095-3d4
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-bok-scribe-wf_3bbaf095-3d4.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-bok-scribe-wf_3bbaf095-3d4.js"} to iterate without resending the script.)
+> Run ID: wf_3bbaf095-3d4
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9a733302-556c-4427-83f0-dd7e8437ae61/workflows/scripts/pipc-bok-scribe-wf_3bbaf095-3d4.js", resumeFromRunId: "wf_3bbaf095-3d4"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(12:08:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The PIPC BoK workflow is running now, so I've got some time to work on other things while it processes. I'm looking at what else I can tackle safely and reversibly—specifically the Golden Eye slice 2 work involving the model-pin in vision-qa.ts. Let me check if that file is clean enough for a straightforward hygiene edit that I can land. I should focus on one more concrete code win with Golden Eye slice 2 (pinning the model in vision-qa.ts) before consolidating status, since it's a clean, single-file patch exempt from the BoK process. Let me verify the tooling exception applies and review the RUBRIC to confirm the framing for slices 1 and 3.
+
+</details>
+
+
+## 🤖 Claude *(12:08:43)*
+
+BoK do PIPC gerando em background (`wlajy1ta6`). Enquanto isso, uma vitória de código **un-gated, segura e de prioridade máxima (olhos)**: o slice 2 do Golden Eye (pinar o modelo + carimbar versão + distinguir "parse falhou" de "confiança média"). Deixa eu ler o cliente real do harness antes de editar:
+
+## 🤖 Claude *(12:08:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/vision-qa.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bun
+> 2	/**
+> 3	 * Vision QA — o "olho criativo" do MCORCH sobre o Vision MCP público (mcp.mcorch.com).
+> 4	 *
+> 5	 * Reusable creative-eye tool for the creative-layer validation track (SOP:
+> 6	 * docs/processes/creative-qa-vision-gate.md). Drives the real MCP handshake with the tenant's PAT and
+> 7	 * calls the billable vision tools (BYOK-free for the Usuário Zero: openrouter for image, google for video).
+> 8	 *
+> 9	 * Modes:
+> 10	 *   image   <image_url> ["question"]                     → vision_describe_image
+> 11	 *   video   <video_url> ["question"] [duration_minutes]  → vision_analyze_video
+> 12	 *   compare <url_a> <url_b> ["question"]                  → describe both, for frame-inicial↔frame-final consistency
+> 13	 *
+> 14	 * Run: set -a; source .env; set +a; bun run scripts/qa/vision-qa.ts image "https://…/x.png" "É um relógio de mergulho?"
+> 15	 *   VISION_MCP_URL overrides endpoint (default public https://mcp.mcorch.com/mcp).
+> 16	 */
+> 17	import { Client } from "../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/index.js";
+> 18	import { StreamableHTTPClientTransport } from "../../packages/vision-mcp-core/node_modules/@modelcontextprotocol/sdk/dist/esm/client/streamableHttp.js";
+> 19	
+> 20	const PAT = process.env.VISION_MCP_PAT ?? "";
+> 21	const URL = process.env.VISION_MCP_URL ?? "https://mcp.mcorch.com/mcp";
+> 22	if (!PAT) { console.error("Set VISION_MCP_PAT=mcorch_pat_… (source .env)"); process.exit(2); }
+> 23	
+> 24	const mode = process.argv[2];
+> 25	if (!mode || !["image", "video", "compare"].includes(mode)) {
+> 26	  console.error("Uso: vision-qa.ts <image|video|compare> <url> [...]");
+> 27	  process.exit(2);
+> 28	}
+> 29	
+> 30	function newClient() {
+> 31	  const transport = new StreamableHTTPClientTransport(new globalThis.URL(URL), {
+> 32	    requestInit: { headers: { Authorization: `Bearer ${PAT}` } },
+> 33	  });
+> 34	  const client = new Client({ name: "vision-qa", version: "1.0.0" }, { capabilities: {} });
+> 35	  return { client, transport };
+> 36	}
+> 37	
+> 38	function readResult(res: { isError?: boolean; content?: Array<{ type: string; text?: string }> }) {
+> 39	  const isError = res.isError === true;
+> 40	  const text = (res.content ?? []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
+> 41	  let parsed: Record<string, unknown> | null = null;
+> 42	  try { parsed = JSON.parse(text); } catch { /* raw */ }
+> 43	  return { isError, text, parsed };
+> 44	}
+> 45	
+> 46	async function callTool(name: string, args: Record<string, unknown>) {
+> 47	  const { client, transport } = newClient();
+> 48	  await client.connect(transport);
+> 49	  const res = await client.callTool({ name, arguments: args });
+> 50	  await client.close();
+> 51	  return readResult(res as Parameters<typeof readResult>[0]);
+> 52	}
+> 53	
+> 54	try {
+> 55	  if (mode === "image") {
+> 56	    const image_url = process.argv[3];
+> 57	    const question = process.argv[4];
+> 58	    if (!image_url) { console.error("falta image_url"); process.exit(2); }
+> 59	    const r = await callTool("vision_describe_image", question ? { image_url, question } : { image_url });
+> 60	    console.log(r.isError ? "❌ vision_describe_image — isError" : "✅ vision_describe_image");
+> 61	    if (r.parsed) {
+> 62	      console.log(`   confidence: ${r.parsed.confidence}  cost_mco: ${r.parsed.cost_mco}`);
+> 63	      console.log(`   ${String(r.parsed.description).replace(/\n/g, " ")}`);
+> 64	    } else {
+> 65	      console.log("   " + r.text.slice(0, 600));
+> 66	    }
+> 67	    process.exit(r.isError ? 1 : 0);
+> 68	  }
+> 69	
+> 70	  if (mode === "video") {
+> 71	    const video_url = process.argv[3];
+> 72	    const question = process.argv[4];
+> 73	    const minutes = process.argv[5] ? parseInt(process.argv[5], 10) : undefined;
+> 74	    if (!video_url) { console.error("falta video_url"); process.exit(2); }
+> 75	    const args: Record<string, unknown> = { video_url };
+> 76	    if (question) args.question = question;
+> 77	    if (minutes) args.duration_minutes = minutes;
+> 78	    const r = await callTool("vision_analyze_video", args);
+> 79	    console.log(r.isError ? "❌ vision_analyze_video — isError" : "✅ vision_analyze_video");
+> 80	    if (r.parsed) {
+> 81	      console.log(`   confidence: ${r.parsed.confidence}  cost_mco: ${r.parsed.cost_mco}  min: ${r.parsed.duration_minutes}`);
+> 82	      console.log(`   ${String(r.parsed.description).replace(/\n/g, " ")}`);
+> 83	    } else {
+> 84	      console.log("   " + r.text.slice(0, 600));
+> 85	    }
+> 86	    process.exit(r.isError ? 1 : 0);
+> 87	  }
+> 88	
+> 89	  // compare — frame-inicial ↔ frame-final consistency: describe both with the same structured question.
+> 90	  const urlA = process.argv[3];
+> 91	  const urlB = process.argv[4];
+> 92	  const question = process.argv[5]
+> 93	    ?? "Descreva com precisão: produto/sujeito principal, cores dominantes, ângulo de câmera, iluminação e estilo visual. Seja específico para permitir comparar consistência entre dois frames.";
+> 94	  if (!urlA || !urlB) { console.error("compare exige url_a url_b"); process.exit(2); }
+> 95	  const [a, b] = await Promise.all([
+> 96	    callTool("vision_describe_image", { image_url: urlA, question }),
+> 97	    callTool("vision_describe_image", { image_url: urlB, question }),
+> 98	  ]);
+> 99	  console.log("── FRAME A ──");
+> 100	  console.log(a.parsed ? `[${a.parsed.confidence}] ${String(a.parsed.description).replace(/\n/g, " ")}` : a.text.slice(0, 500));
+> 101	  console.log("── FRAME B ──");
+> 102	  console.log(b.parsed ? `[${b.parsed.confidence}] ${String(b.parsed.description).replace(/\n/g, " ")}` : b.text.slice(0, 500));
+> 103	  process.exit(a.isError || b.isError ? 1 : 0);
+> 104	} catch (e) {
+> 105	  console.error("❌ vision-qa falhou:", e instanceof Error ? e.message : String(e));
+> 106	  process.exit(1);
+> 107	}
+> 108	
+> ```
+
+## 🤖 Claude *(12:09:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So `vision-qa.ts` is a thin client that communicates with the Vision MCP server through a PAT token, calling the image description and video analysis endpoints, while the actual model selection happens server-side in `describe-image.ts` based on the `VISION_VLM_MODEL` environment variable.
+
+Implementing the model pinning and version stamping (Slice 2) means modifying the MCP core tool itself in `describe-image.ts`, which requires updating unit tests, rebuilding the `mcorch_vision_mcp` container, and redeploying it to production — this is a real deployment action, not a simple single-file edit.
+
+Since this touches a charged production tool and the user is away, I shouldn't autonomously push this deploy without their oversight, especially when the current default model already works fine. Looking at what's genuinely safe to do autonomously right now — most remaining high-value work either depends on the BoK being generated, requires a production deploy (like the MCP container or edge function changes), needs the Sovereign's involvement, or depends on reference images I don't have yet.
+
+The smartest move is to let the BoK finish generating in the background while I prepare a consolidated status update and durable record of the program. Once it completes, I can review it and decide whether to wrap up with the substantial value already delivered (two blueprints, the BoK, and the vision plan) or push forward with the gated slices. Law 3 says not to seal early and to use the window productively, so I should wait for the BoK rather than close out now.
+
+For this turn, I'll write durable memories for both the PIPC program and the Golden Eye vision training, then present a consolidated status to the user—these are high-value, low-risk tasks that create lasting documentation while the background work completes.
+
+I'm structuring two project memories: one for the PIPC creative production pipeline with its four-stage architecture and roadmap, and another for Golden Eye covering the training harness, shopping list, and the key finding that VLM ranking scores show slice 1 needs live probe capture via the describe-image server model. I'll also update the MEMORY.md index to link everything together.
+
+Since the user is away, I'll write these durable memories and give a concise status update, then let the background workflow continue on BoK completion. The loop is event-driven through notifications, so I don't need to arm ScheduleWakeup. Let me check existing memory files first to avoid duplicates—I see there's already project_audience_flywheel_distribution and project_video_repurpose_engine, so I'll make sure these new ones don't overlap.
+
+I'm creating two memories: one for the PIPC creative production pipeline itself (covering the 4-stage directive, the blueprint, and the BoK gate around the analysis-to-EP05 weak link), and a vision memory to tie it all together with the related projects. I'm also tracking the Golden Eye vision project, which focuses on training the Vision MCP's perception capabilities through a curated corpus and reference materials. The approach leverages VLM ranking and scoring across five key levers—examples, rubrics, calibration, model selection, and protocol—with the highest ROI coming from visual references (good and bad screenshots across different dimensions) and design system links that feed into the rubric documentation.
+
+The implementation has some structural constraints: the senior rubric grades saved PNGs rather than live pages, so I need to capture computed style probes like contrast and brand values during the actual browser traversal and thread them to the grader—that's not a simple one-liner. The Vision VLM model is pinned server-side in the describe-image module, which means any model changes require a container redeploy rather than a quick code edit. The vision QA module acts as a thin MCP client, and the third slice of Golden Eye still needs the sovereign reference images plus updates to the memory documentation and a status summary.
+
+</details>
+
+
+## 🤖 Claude *(12:09:38)*
+
+Descoberta importante ao ler o cliente (Lei 1): **`vision-qa.ts` é um cliente fino do MCP** — o modelo do olho é pinado **server-side** em `describe-image.ts:12` (`VISION_VLM_MODEL`), dentro do **container `mcorch_vision_mcp`**. Então o "slice 2" não é uma edição rápida: exige **redeploy do container de produção** + testes. Com você ausente, **não vou fazer deploy num tool cobrado de produção sem você olhar** — isso fica pro momento certo, não é urgente.
+
+Vou consolidar o que virou durável em memória (o programa PIPC + o plano dos olhos) enquanto a BoK gera:
+
+## 🤖 Claude *(12:10:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pipc_creative_production_pipeline.md",
+  "content": "---\nname: project_pipc_creative_production_pipeline\ndescription: PIPC \u2014 pipeline interno de produ\u00e7\u00e3o criativa separado (dev\u2192publicar\u2192analisar\u2192melhorar EP05); blueprint selado + BoK gerando; base GabrielAI + ref Google Flow FX.\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-07-23: **separar** um pipeline interno de produ\u00e7\u00e3o criativa **completo e robusto** cobrindo o ciclo **DESENVOLVIMENTO \u2192 PUBLICA\u00c7\u00c3O \u2192 AN\u00c1LISE PROFUNDA \u2192 MELHORIA (EP05)**, prioridade em **criativos e cortes**. Base no repo **GabrielAI**, refer\u00eancia no **Google Flow FX**. \"J\u00e1 postei EP02; falta postar os cortes do EP01/EP02; domingo posto EP03.\"\n\nBlueprint-semente selado em `docs/bok/pipc/00-deepsearch-blueprint.md` (deepsearch `wf_444b1d4c`, 4 frentes + 8 verdicts todos CONFIRMED). BoK 9/9 + Pattern Conformance gerando via `wf_3bbaf095`.\n\n**A lacuna real:** o MCORCH j\u00e1 tem 2 m\u00e1quinas de PRODUZIR e DISTRIBUIR, mas **n\u00e3o tem a m\u00e1quina de APRENDER** com o EP publicado para dirigir o pr\u00f3ximo \u2014 o \u00fanico motor aut\u00f4nomo vivo (`autopilot-analyze`) aponta pro FUNIL (variante\u00d7plataforma), n\u00e3o pro desenvolvimento epis\u00f3dico. Elo mais fraco = **AN\u00c1LISE\u2192MELHORIA**.\n\n**Roadmap de slices** (ordem S0\u2192S1\u2192S2\u2192S6\u2192S3\u2192S4\u2192S5\u2192S8\u2192S9\u2192S7):\n- **S0** cortes EP01/EP02: j\u00e1 EXISTEM na spine `creative_assets` (48 assets v\u00eddeo); postar \u00e9 passo revers\u00edvel do Sovereign (manual/app-review gated). Metadata n\u00e3o rotula por epis\u00f3dio.\n- **S1** captura da **curva de reten\u00e7\u00e3o YouTube** (action `audience_retention` + tabela s\u00e9rie-temporal, `relativeRetentionPerformance`) \u2014 un-gated, sinal n\u00ba1, mas NOVO c\u00f3digo (gate BoK).\n- **S2** **an\u00e1lise POR-EPIS\u00d3DIO** (reusa `autopilot-analyze`, eixo epis\u00f3dio\u00d7momento \u2192 `optimization_policy` epis\u00f3dica) \u2014 impacto M\u00c1XIMO, NOVO c\u00f3digo.\n- **S3** n\u00f3 **`storyboard`** (portado do Flow) \u00b7 **S4** **Ingredients por-projeto** (refs \u22643 cross-n\u00f3, consist\u00eancia da s\u00e9rie) \u2014 via `engineer-spaces`, gate Sovereign+BoK+Pattern.\n- **S5** Golden Eye (ver [[project_vision_golden_eye]]) = gate de qualidade do est\u00e1gio DESENVOLVIMENTO.\n- **S8** destravar canais (habilitar `youtube-upload.service`+CASA; TikTok review; flags) = **a\u00e7\u00e3o Sovereign/host**.\n- **S7** content-intel Fatia 1 = **gate jur\u00eddico**.\n\n**Google Flow FX (CONFIRMED):** existe \"Tools gallery\" com apps prontos incl. **Storyboard Studio** (roteiro\u2192cenas/planos\u2192JSON), **Ingredients** (refs reutiliz\u00e1veis \u22643), **Scenebuilder** (timeline construtiva). Portar: n\u00f3 storyboard ANTES do motor caro (ledger-first) + Ingredients como cidad\u00e3o do PROJETO.\n\n**GabrielAI (Lei 1):** repo **PRIVADO** (WebFetch 404 \u2014 s\u00f3 via GitHub MCP autenticado; corrigir `video-repurpose/00-deepsearch-blueprint.md:7` que o chama \"p\u00fablico\"). \u00c9 o **INVERSO** do repurpose: N takes Veo 8s\u21921 master via ponte MCP\u2192Premiere (Windows/ExtendScript, **intransfer\u00edvel** \u2014 usar HyperFrames/FFmpeg). Herdar filosofia data-driven \"a TIMELINE \u00e9 a fonte da verdade\" + schema `episodios/epNN.json`.\n\n**Loop an\u00e1lise\u2192EP05:** S2 gera brief por-EP \u2192 `optimization_policy` epis\u00f3dica \u2192 S3 storyboard + cut-spec do repurpose consomem ao planejar EP05 \u2192 S1 mede EP05 \u2192 repete. EP03 (domingo) = pr\u00f3xima passada de dados.\n\nRelacionados: [[project_audience_flywheel_distribution]] [[project_video_repurpose_engine]] [[project_content_engine_two_machines]] [[project_creative_ecosystem_program]] [[project_vision_golden_eye]] [[project_youtube_upload_ep02]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pipc_creative_production_pipeline.md
+> ```
+
+## 🤖 Claude *(12:10:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm updating the Vision Golden Eye memory and refreshing the MEMORY.md index.
+
+</details>
+
+
+## 🤖 Claude *(12:10:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_golden_eye.md",
+  "content": "---\nname: project_vision_golden_eye\ndescription: Treinar os olhos = elevar o HARNESS do Vision MCP (N\u00c3O re-treina pesos); Golden Eye corpus + rubrica + shopping list de refer\u00eancias.\nmetadata:\n  type: project\n---\n\nDiretiva Sovereign 2026-07-23 (\"precisamos treinar seus olhos / o Vision MCP\"). Pesquisa fundamentada `wf_010be734` (4 frentes + verifica\u00e7\u00e3o adversarial). Plano completo: `docs/roadmap/vision-golden-eye.md`.\n\n**Enquadramento honesto:** n\u00e3o re-treinamos pesos. Elevamos o HARNESS ao redor do VLM (`google/gemini-2.5-flash`) em 5 alavancas: exemplares few-shot \u00b7 rubricas \u00b7 calibra\u00e7\u00e3o contra gold set \u00b7 escolha de modelo \u00b7 protocolo de julgamento. Verdade dura ([arXiv 2604.25235](https://arxiv.org/html/2604.25235v2)): **o VLM ORDENA bem mas PONTUA mal** (score exato erra ~66-68%) \u2192 n\u00e3o perseguir nota perfeita; ancorar em exemplares + provar o objetivo (contraste/cor/fonte) deterministicamente.\n\n**REFUTADO (n\u00e3o fazer):** \"calibra\u00e7\u00e3o dobra acur\u00e1cia\" (o que domina \u00e9 a QUALIDADE multi-anotador do gold set, n\u00e3o o passo) \u00b7 \"pareado \u00e9 sempre melhor\" (pontual \u00e9 ~4\u00d7 mais robusto a distratores \u2014 [arXiv 2504.14716](https://arxiv.org/abs/2504.14716)). CoT = rastreabilidade, n\u00e3o acur\u00e1cia. Um juiz forte > empilhar ju\u00edzes fracos.\n\n**SHOPPING LIST (resposta \u00e0 pergunta \"quais refer\u00eancias voc\u00ea precisa?\"):** o combust\u00edvel de um juiz-VLM \u00e9 **IMAGEM (screenshot)**, n\u00e3o link nem v\u00eddeo cru.\n- \ud83d\uddbc\ufe0f **IMAGENS (maior ROI):** 5-10 screenshots das telas do pr\u00f3prio MCORCH **boas E ruins** por dimens\u00e3o (incl. estados erro/vazio) + 1 frase do porqu\u00ea + regi\u00e3o.\n- \ud83d\udd17 **LINKS** (Apple HIG \u00b7 Material 3 \u00b7 IBM Carbon \u00b7 Refactoring UI): viram o **texto da rubrica**, n\u00e3o v\u00e3o crus ao olho.\n- \ud83c\udfac **V\u00cdDEOS** (s\u00f3 p/ cortes): cortes EP01/EP02 + **curva de reten\u00e7\u00e3o** (YouTube Studio CSV / TikTok seg-a-seg) + timestamp do hook. VLM \u00e9 temporalmente cego \u2014 **nunca** \"benchmark viral\" (folclore refutado); \u00e1udio \u00e9 objetivo (LUFS/true peak ffmpeg EBU R128).\n\n**Achados de arquitetura (Lei 1 \u2014 corrigem o que a pesquisa sugeriu):**\n- `senior-rubric.ts` (`scripts/qa/ux-ui-senior-loop/lib/`) julga **PNGs salvos, sem p\u00e1gina viva** \u2192 a prova computada (contraste/cor/fonte) tem que ser capturada **durante a travessia** (browser-driver/audit-journey) e **threaded** ao grader. **Slice 1 N\u00c3O \u00e9 one-liner.**\n- `vision-qa.ts` \u00e9 **cliente fino do MCP**; o modelo do olho \u00e9 pinado **server-side** em `describe-image.ts:12` (`VISION_VLM_MODEL`) dentro do container `mcorch_vision_mcp` \u2192 **slice 2 (pinar modelo) exige REDEPLOY do container**, n\u00e3o edi\u00e7\u00e3o r\u00e1pida.\n- Golden Eye slice 3 (corpus) depende das **imagens de refer\u00eancia do Sovereign** (shopping list acima).\n\nSlices (esf\u00d7impacto): S1 probes evalJs no grader \u2192 S2 pinar modelo+stamp \u2192 S3 corpus `scripts/qa/vision-calibration/`+runner de acur\u00e1cia (o baseline que hoje N\u00c3O existe). Custo 0 mco (BYOK U0). \u00c9 o **gate de qualidade do est\u00e1gio DESENVOLVIMENTO** do [[project_pipc_creative_production_pipeline]].\n\nRelacionados: [[project_ux_ui_senior_loop]] [[feedback_vision_qa_always]] [[project_vision_mcp]] [[project_pipc_creative_production_pipeline]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_golden_eye.md
+> ```
+
+## 🤖 Claude *(12:10:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the MEMORY.md index by adding two new memory entries near the top, placing them after the FOCO ATIVO line since they're related to the project audience flywheel distribution concept.
+
+</details>
+
+
+## 🤖 Claude *(12:10:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 6
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) — sobrescreve o TS com o eszip transpilado; nunca no repo de trabalho; `git checkout --` recupera.
+> 4	
+> 5	- [ÉPICO — Motor de Oportunidade de Produtos + Conector Amazon](project_product_opportunity_engine.md) — BoK 9/9 selada; Amazon=append `?tag=` (sem API/login, atribui venda) + `allows_redirect_cloaking` per-rede; validação free-organic FORA da Amazon. Código GATED (GO+jurídico).
+> 6	- [🎯 FOCO ATIVO — Audiência/flywheel: distribuir cortes EP01 + impulsionar EP01/EP02](project_audience_flywheel_distribution.md) — N funis testáveis + cadência + escala rentável; audiência→vendas como engrenagens. **2026-07-23: 3 funis ML PÚBLICOS vivos** (posts 29/34/35, atribuídos, redirect→meli.la provado). **2026-07-22:** agendamento privado-primeiro VIVO (`publish-space-asset` `publish_at`+`link` Pinterest; `scripts/schedule-episode.ts` dry-run/--commit) + squad `studio` na Constelação do User 0 (drill 6/6 groq) + cortes duration-aware/picker + grid pan-crop.
+> ```
+
+## 🤖 Claude *(12:10:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [\ud83c\udfaf FOCO ATIVO \u2014 Audi\u00eancia/flywheel: distribuir cortes EP01 + impulsionar EP01/EP02](project_audience_flywheel_distribution.md) \u2014 N funis test\u00e1veis + cad\u00eancia + escala rent\u00e1vel; audi\u00eancia\u2192vendas como engrenagens. **2026-07-23: 3 funis ML P\u00daBLICOS vivos** (posts 29/34/35, atribu\u00eddos, redirect\u2192meli.la provado). **2026-07-22:** agendamento privado-primeiro VIVO (`publish-space-asset` `publish_at`+`link` Pinterest; `scripts/schedule-episode.ts` dry-run/--commit) + squad `studio` na Constela\u00e7\u00e3o do User 0 (drill 6/6 groq) + cortes duration-aware/picker + grid pan-crop.",
+  "new_string": "- [\ud83c\udfaf FOCO ATIVO \u2014 Audi\u00eancia/flywheel: distribuir cortes EP01 + impulsionar EP01/EP02](project_audience_flywheel_distribution.md) \u2014 N funis test\u00e1veis + cad\u00eancia + escala rent\u00e1vel; audi\u00eancia\u2192vendas como engrenagens. **2026-07-23: 3 funis ML P\u00daBLICOS vivos** (posts 29/34/35, atribu\u00eddos, redirect\u2192meli.la provado). **2026-07-22:** agendamento privado-primeiro VIVO (`publish-space-asset` `publish_at`+`link` Pinterest; `scripts/schedule-episode.ts` dry-run/--commit) + squad `studio` na Constela\u00e7\u00e3o do User 0 (drill 6/6 groq) + cortes duration-aware/picker + grid pan-crop.\n- [\ud83c\udfac PIPC \u2014 Pipeline Interno de Produ\u00e7\u00e3o Criativa (dev\u2192publicar\u2192analisar\u2192melhorar EP05)](project_pipc_creative_production_pipeline.md) \u2014 separa a m\u00e1quina de APRENDER (elo fraco an\u00e1lise\u2192EP05); blueprint `docs/bok/pipc/` + BoK gerando (`wf_3bbaf095`). Flow FX=Storyboard Studio+Ingredients (portar); GabrielAI=repo PRIVADO, inverso do repurpose. S0 cortes j\u00e1 existem; S1 reten\u00e7\u00e3o + S2 an\u00e1lise-por-EP un-gated (gate BoK); S8 canais=Sovereign.\n- [\ud83e\uddff Golden Eye \u2014 treinar os olhos = elevar o HARNESS do Vision MCP (n\u00e3o re-treina pesos)](project_vision_golden_eye.md) \u2014 VLM ORDENA>PONTUA; shopping list=IMAGENS (screenshots MCORCH bom+ruim/dimens\u00e3o) + LINKS (viram rubrica) + V\u00cdDEOS (cortes+curva reten\u00e7\u00e3o, nunca folclore). Slice 1 precisa probe capturado na travessia; slice 2 pina modelo server-side (redeploy container). Plano `docs/roadmap/vision-golden-eye.md`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:11:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've locked in the durable value and kicked off the Book of Knowledge generation in the background. Now I'm putting together a clear status summary for when the user returns—what's completed this session, what's actively running, and the honest timeline. I'll hold here and wait for the BoK to finish rather than polling or scheduling wakeups.
+
+</details>
+
+
+## 🤖 Claude *(12:11:17)*
+
+Memórias durables gravadas ([PIPC](../../../../home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pipc_creative_production_pipeline.md) + [Golden Eye](../../../../home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_vision_golden_eye.md)) e indexadas. 
+
+## 📊 Status consolidado (você ausente — loop rodando)
+
+**Concluído nesta sessão:**
+| Entregável | Prova material |
+|---|---|
+| Reconciliação handoff↔handson | 6 commits ✅ em `origin/main`; era truncamento do meu brief |
+| Pesquisa dos olhos (Vision) | `wf_010be734` · plano + shopping list → [vision-golden-eye.md](docs/roadmap/vision-golden-eye.md) |
+| Blueprint do PIPC | `wf_444b1d4c` · 4 frentes + 8 verdicts CONFIRMED → [pipc/00-deepsearch-blueprint.md](docs/bok/pipc/00-deepsearch-blueprint.md) (25KB) |
+| Memórias durables | `project_pipc_*` + `project_vision_golden_eye` + índice |
+
+**Em voo (background):** BoK 9/9 + Pattern Conformance do PIPC (`wlajy1ta6`) — abre o Gate Closed-Loop pro código dos slices. Te aviso quando fechar.
+
+**O que descobri de material (Lei 1):**
+- **Google Flow FX** confirmado literal: "Tools gallery" com **Storyboard Studio** + **Ingredients** + **Scenebuilder** — vamos portar como nós (storyboard antes do motor caro; refs consistentes por-projeto pra série EP01..EP05).
+- **GabrielAI** é repo **PRIVADO** (não "público" como o BoK antigo dizia — correção sinalizada) e é o **inverso** do repurpose (N takes Veo→1 master via Premiere, intransferível).
+- **Cortes EP01/EP02 já existem** na spine (48 vídeos); a produção un-gated está feita.
+- **Slice 1 dos olhos** não é one-liner (grader julga PNG sem página viva → probe tem que ser capturado na travessia). **Slice 2** exige redeploy do container MCP — não faço com você ausente.
+
+## 🔒 Suas ações destravam o resto (quando puder)
+1. **Postar os cortes EP01/EP02** — existem prontos; a postagem é seu passo (manual/app-review). Me aponta o batch + contas e eu monto o kit otimizado.
+2. **EP02 Track B** — habilitar `youtube-upload.service` + CASA/quota (S8).
+3. **Referências do Golden Eye** — a tabela da shopping list (imagens são o maior ROI).
+4. **POE Fatia 2/3** — jurídico (permanece parado).
+
+**Próximo automático:** quando a BoK do PIPC fechar, eu reviso, aplico as correções do crítico, e — com o gate aberto — sigo pros slices un-gated **S1 (curva de retenção) → S2 (análise por-episódio)**, que é o elo fraco "aprender pra melhorar o EP05". Sigo no loop.
+
+## 👤 User *(12:19:04)*
+
+cara voce nao precisa ficar repetindo esse errode nao encontrei o arquivo grande. ja usamos os dois ep carias vezes sao asnunicas opcoes na UI do user 0 gabrielcall@gmail.com inclusive criamos o buck no host local por causa disso ser feito c arquivos granddes, inclusive no menu de cortes (nao dentro do  spaces) podemos subir videos grandes que vao para o storage local do cloudpanel, entao voce precisa ou clocar no seu system prompt diretrizes e memoria essa skill para nunca mais esquecer aobrenisso alem de que ja falei pra voce que tudo que voce faz mais de uma vez deve virar uma skill especifica do user do mcorch em geral. acredito que no futuro podemos ter inclusive um agente para cada modulos ou melhor um orquestrador pois ele podera criar seus proprios ub agentes recorrentes para tudoque é feito com frequencia, e sempre sugerindo quando algo deve ser documentado virando uma habilidade e um novo agente. anota tudo isso na memoria para nao esquecer pois deve fazer parte do ser harness e driven specs
+
+## 🤖 Claude *(12:19:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm realizing I need to stop re-discovering the same issue about the master file locations — EP01 and EP02 are established facts I should retain across sessions rather than repeatedly probing for them. Let me carefully absorb what's being corrected here so I don't make this mistake again.
+
+The masters aren't scattered across host directories like I kept searching for; they're stored in CloudPanel's local storage bucket (accessed via the Cortes menu at `/dashboard/repurpose`), which is where the host-upload-server writes large video files. This is a known architectural choice made specifically to handle large files. I need to encode this as a durable skill in my system directives so I stop re-discovering it, and more broadly, any pattern I repeat should become a formalized skill rather than something I keep re-learning. I need to document the local host bucket location and the Cortes-menu upload path in a durable way—creating a memory entry and a skill that triggers whenever I need to locate EP masters or large media files, so I stop re-probing the same directories. I'm also encoding the broader principle that recurring actions should become skills, and that an orchestrator should suggest when something warrants documentation as a standing directive in my feedback memory.
+
+Now I'm tracing the actual master location by reading through the video-repurpose-bridge.ts file around the local bucket handling, checking the host-upload-server config and nginx routing, and examining the useIngestedMasters hook and repurpose page to confirm the full UI flow and storage paths. Let me trace through the code to find where the host-upload-server stores files locally, then grep for the bucket configuration and base path variables.
+
+</details>
+
+
+## 🤖 Claude *(12:19:39)*
+
+Você está certo — e essa é exatamente a falha que as Leis de Sobrevivência mandam eu matar: **"se o mesmo erro pode reincidir, ele ainda não foi resolvido — só adiado"**. Eu re-sondei um fato que já era conhecido (o master vive no **bucket local do CloudPanel**, subido pelo **menu Cortes**, não no Spaces) e ainda procurei nos diretórios errados. Isso vira **skill + memória + Key Files agora**, pra nunca mais.
+
+Primeiro, faço o que devia ter feito: **traço materialmente onde os masters realmente estão** (Lei 1 — achar, não chutar):
+
+## 🤖 Claude *(12:19:40)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/video-repurpose-bridge.ts",
+  "offset": 70,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 70	    // Amendment 29 (F6) — hand-picked carousel has NO single master; delegate to its own handler (which
+> 71	    // resolves + normalizes each item) before the master-source requirement below.
+> 72	    if (comp?.mode === 'carousel_assets') { await processCarouselAssets(row); return; }
+> 73	    const mode = comp?.mode === 'carousel' ? 'carousel' : 'repurpose';
+> 74	    if (!comp || !comp.source?.bucket || !comp.source?.key) throw new Error('composition_missing_or_invalid');
+> 75	    if (mode === 'repurpose' && (!Array.isArray(comp.clips) || comp.clips.length === 0)) throw new Error('cut_spec_empty');
+> 76	    if (mode === 'carousel' && (!Array.isArray(comp.slides) || comp.slides.length === 0)) throw new Error('slide_spec_empty');
+> 77	    // OTD-VR-006 — re-validate the source ref at READ time; never trust the stored composition row.
+> 78	    const bucket = comp.source.bucket, key = comp.source.key;
+> 79	    mkdirSync(join(workDir, 'out'), { recursive: true });
+> 80	    let inputPath: string;
+> 81	    if (bucket === 'local') {
+> 82	      // Host-local master (CloudPanel upload → repurpose-inbox/<uid>/). Read from disk; no Supabase download.
+> 83	      // Containment: key must be `${uid}/…`, no `..`, and the RESOLVED real path must stay strictly under
+> 84	      // INBOX_BASE (defends against symlink/traversal escaping the per-user inbox).
+> 85	      if (!key.startsWith(`${row.user_id}/`) || key.includes('..')) throw new Error('source_ref_rejected');
+> 86	      const candidate = join(INBOX_BASE, key);
+> 87	      const real = existsSync(candidate) ? realpathSync(candidate) : '';
+> 88	      if (!real || !real.startsWith(INBOX_BASE + '/')) throw new Error('local_source_not_found');
+> 89	      inputPath = real;
+> 90	    } else {
+> 91	      if (!ALLOWED_SRC_BUCKETS.has(bucket) || !key.startsWith(`${row.user_id}/`) || key.includes('..')) {
+> 92	        throw new Error('source_ref_rejected');
+> 93	      }
+> 94	      const { data: blob, error: dlErr } = await supabase.storage.from(bucket).download(key);
+> 95	      if (dlErr || !blob) throw new Error(`source_download_failed: ${dlErr?.message ?? 'no blob'}`);
+> 96	      writeFileSync(srcPath, new Uint8Array(await blob.arrayBuffer()));
+> 97	      inputPath = srcPath;
+> 98	    }
+> 99	
+> 100	    // Two-phase source gate BEFORE any re-encode (SOP: docs/processes/video-repurpose-source-probe.md).
+> 101	    // Container first (duration → rejects out-of-range windows; a decode probe past EOF passes VACUOUSLY),
+> 102	    // then a full decode of every window the render will touch. Costs ~0.09s + ~10% of the re-encode it
+> 103	    // guards; saves minutes of CPU ending in an opaque `ffmpeg exit 69` — and, more importantly, catches the
+> 104	    // corrupt master that would otherwise yield a VALID MP4 full of garbage frames (EP02 incident 2026-07-20).
+> 105	    const probeWindows: ProbeWindow[] = mode === 'carousel'
+> 106	      ? (comp.slides ?? []).map((s, i) => ({ index: i, in_sec: s.t_sec, out_sec: s.t_sec }))
+> 107	      : (comp.clips ?? []).map((c, i) => ({ index: i, in_sec: c.in_sec, out_sec: c.out_sec }));
+> 108	    const probe = await assertSourceDecodable(inputPath, probeWindows);
+> 109	    console.log(`🔎 probe ok ${renderId} — dur=${probe.durationSec.toFixed(2)}s, decoded ${probe.decodedSec.toFixed(1)}s across ${probe.decoded.length} range(s)`);
+> ```
+
+## 🤖 Claude *(12:19:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== host-upload server (Cortes menu \u2192 CloudPanel local storage) ===\"\nfind . -path ./node_modules -prune -o \\( -name \"*host-upload*\" -o -name \"*host-media*\" \\) -print 2>/dev/null | grep -v node_modules | head\necho \"\"\necho \"=== base path do bucket local (env/const) ===\"\ngrep -rnE \"HOST_MEDIA|LOCAL_(MEDIA|BUCKET|STORAGE)|host.?upload.?dir|uploads?/|/htdocs/|realpath|MEDIA_ROOT|local.*storage\" scripts/*.ts scripts/lib/*.ts 2>/dev/null | grep -iE \"path|dir|root|htdocs|media|upload|bucket\" | head -15",
+  "description": "Trace the real CloudPanel local bucket path for EP masters"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === host-upload server (Cortes menu → CloudPanel local storage) ===
+> ./scripts/host-upload-server.ts
+> ./infra/nginx/host-upload.location.conf
+> ./infra/systemd/host-upload.service
+> ./scripts/qa/apply-host-media-nginx.sh
+> 
+> === base path do bucket local (env/const) ===
+> scripts/automate-pipeline-sprints.ts:5:const REPO_ROOT = "/home/gcrUX/htdocs/constellation-orchestra";
+> scripts/agent-task-runner.ts:5:const REPO_ROOT = "/home/gcrUX/htdocs/constellation-orchestra";
+> scripts/compose-morning-briefing.ts:37:const CANONICAL_REPO = '/home/gcrUX/htdocs/constellation-orchestra';
+> scripts/canvas-backfill-edge-handles.ts:79:    const backupDir = join('/home/gcrUX/htdocs/constellation-orchestra/.claude/context/backups', `canvas-edge-handles-pre-c1-${new Date().toISOString().slice(0, 10)}`);
+> scripts/distribute-mesh-to-agents.ts:5: * Reads from: /home/gcrUX/htdocs/constellation-orchestra/memory/mcorch-export/
+> scripts/distribute-mesh-to-agents.ts:21: * from `/home/gcrUX/htdocs/constellation-orchestra/memory/` directly. We still link
+> scripts/canvas-campaign-build.ts:21:const ROOT = "/home/gcrUX/htdocs/constellation-orchestra";
+> scripts/host-upload-server.ts:213:  // Same key validation as serveMedia — owner-scoped, traversal-banned, realpath-contained.
+> scripts/setup-agent-worktrees.ts:6:const REPO_ROOT = "/home/gcrUX/htdocs/constellation-orchestra";
+> scripts/youtube-upload-bridge.ts:49:const UPLOAD_ENDPOINT = 'https://www.googleapis.com/upload/youtube/v3/videos';
+> scripts/youtube-upload-bridge.ts:236:        const res = await fetch(`${YT_DATA.replace('/v3', '')}/upload/youtube/v3/thumbnails/set?videoId=${videoId}`, {
+> scripts/sync-canvas-nodes.ts:5:const ROOT = "/home/gcrUX/htdocs/constellation-orchestra";
+> scripts/subtitle-bridge.ts:16:import { existsSync, readFileSync, writeFileSync, rmSync, mkdtempSync, realpathSync } from 'node:fs';
+> scripts/subtitle-bridge.ts:118:    //    'local' → host-disk master under INBOX_BASE (realpath-contained, no download); else → Supabase Storage.
+> scripts/subtitle-bridge.ts:122:      const real = existsSync(candidate) ? realpathSync(candidate) : '';
+> ```
+
+## 🤖 Claude *(12:19:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've identified that `INBOX_BASE` is the base path for the CloudPanel local bucket with keys structured as `${uid}/…`, and the comment indicates it's for "Host-local master (CloudPanel upload → repurpose-inbox/<uid>/)". Now I need to search for where `INBOX_BASE` is actually defined in video-repurpose-bridge.ts and host-upload-server.ts.
+
+</details>
+
+
+## 🤖 Claude *(12:19:49)*
+
+Achei o mecanismo: `bucket='local'` → master lido de `INBOX_BASE/<uid>/…` (CloudPanel upload → `repurpose-inbox/<uid>/`). Vou pegar o valor exato do `INBOX_BASE` e confirmar os masters lá dentro:
+
+## 🤖 Claude *(12:19:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== INBOX_BASE (defini\u00e7\u00e3o) ===\"\ngrep -rnE \"INBOX_BASE\\s*=\" scripts/*.ts 2>/dev/null | head\necho \"\"\necho \"=== host-upload-server: base dir de destino ===\"\ngrep -nE \"INBOX|BASE|DEST|dir|mkdir|/home/|htdocs|repurpose-inbox\" scripts/host-upload-server.ts 2>/dev/null | head -15",
+  "description": "Get exact INBOX_BASE value"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === INBOX_BASE (definição) ===
+> scripts/host-upload-server.ts:38:const INBOX_BASE = resolve(__dirname, '../repurpose-inbox');
+> scripts/youtube-upload-bridge.ts:43:const INBOX_BASE = pathResolve(__dirname, '../repurpose-inbox');
+> scripts/subtitle-bridge.ts:49:const INBOX_BASE = resolve(__dirname, '../repurpose-inbox');
+> scripts/video-repurpose-bridge.ts:43:const INBOX_BASE = resolve(__dirname, '../repurpose-inbox');
+> 
+> === host-upload-server: base dir de destino ===
+> 7: * repurpose-inbox/<uid>/<safe-filename>. The free-plan Supabase caps uploads at 50MB → the master lives on host
+> 16: * (service-role); the destination is server-forced to repurpose-inbox/<uid>/<sanitized> with a containment check.
+> 20:import { createWriteStream, existsSync, mkdirSync, statSync, renameSync, readFileSync, rmSync } from 'fs';
+> 21:import { join, resolve, dirname } from 'path';
+> 25:const __dirname = dirname(fileURLToPath(import.meta.url));
+> 26:const envPath = join(__dirname, '../.env');
+> 33:const SUPABASE_URL = process.env.SUPABASE_URL!;
+> 34:const SERVICE = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> 35:if (!SUPABASE_URL || !SERVICE) { console.error('❌ missing SUPABASE_URL/SB_SECRET_KEY in .env'); process.exit(1); }
+> 38:const INBOX_BASE = resolve(__dirname, '../repurpose-inbox');
+> 39:const admin = createClient(SUPABASE_URL, SERVICE, { auth: { persistSession: false } });
+> 82: *  (HTTP 206 → video seeking). Owner-scoped: the key MUST live under the caller's own inbox dir. */
+> 86:  const path = join(INBOX_BASE, key);
+> 87:  if (!resolve(path).startsWith(INBOX_BASE + '/')) return json(400, { error: 'bad_path' });
+> 152: *   2. stderr empty              — EP02-class corruption emits a dirty stderr WITH exit 0
+> ```
+
+## 🤖 Claude *(12:20:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through the path resolution for `INBOX_BASE` — the script files are in the `scripts/` directory, so when I resolve `../repurpose-inbox` from there, it points to the `repurpose-inbox` folder at the repository root.
+
+I realize my earlier `find` command with `maxdepth 4` missed the master files because they're actually at depth 5 from `/home/gcrUX` — the path goes home → htdocs → constellation-orchestra → repurpose-inbox → uid → file. That's why the search came up empty.
+
+Now I need to verify the masters are actually in `<repo>/repurpose-inbox/<uid>/`, then document this location and the upload flow (the Cortes menu routes uploads through the host-upload-server on port 3220 to the local bucket) so I don't search for these files again.
+
+</details>
+
+
+## 🤖 Claude *(12:20:06)*
+
+Encontrado: `INBOX_BASE = <repo>/repurpose-inbox` → masters em **`repurpose-inbox/<uid>/`**. Meu `find` de antes usou `maxdepth 4` a partir de `/home/gcrUX` e o caminho está em **profundidade 5** — errei por um nível. Confirmando materialmente que os masters estão lá:
+
+## 🤖 Claude *(12:20:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== repurpose-inbox (bucket local do CloudPanel) ===\"\nls -la repurpose-inbox/ 2>&1 | head\necho \"\"\necho \"=== masters por uid (os EP grandes) ===\"\nfind repurpose-inbox/ -type f \\( -name \"*.mp4\" -o -name \"*.mov\" -o -name \"*.mkv\" -o -name \"*.webm\" \\) -printf '%s\\t%p\\n' 2>/dev/null | sort -rn | head -12\necho \"\"\necho \"=== rota da UI Cortes (front-door) + endpoint host-upload ===\"\ngrep -nE \"host-upload|/api/host-upload|repurpose|3220\" infra/nginx/host-upload.location.conf 2>/dev/null | head",
+  "description": "Confirm EP masters in repurpose-inbox and the upload route"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === repurpose-inbox (bucket local do CloudPanel) ===
+> total 12
+> drwxrwsr-x  3 gcrUX gcrUX 4096 Jul 12 23:10 .
+> drwxrwx--- 33 gcrUX gcrUX 4096 Jul 23 01:41 ..
+> drwxrwsr-x  3 gcrUX gcrUX 4096 Jul 20 00:36 ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> 
+> === masters por uid (os EP grandes) ===
+> 1336271927	repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+> 529015996	repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP02_-_MASTER__YouTube_.mp4
+> 12473383	repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/GraphoEnterprise-pt2.mp4
+> 11650409	repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/GraphoEnterprise-pt1.mp4
+> 
+> === rota da UI Cortes (front-door) + endpoint host-upload ===
+> 3:# SOP: docs/processes/repurpose-host-infra-provisioning.md
+> 5:#   UPLOAD: browser (admin) → chunked XHR (~80MB/chunk, CF caps request body at 100MB) → POST /api/host-upload
+> 6:#     → loopback host-upload-server (127.0.0.1:3220; JWT admin.getUser + user_roles admin-gate; streams to disk)
+> 7:#     → repurpose-inbox/<uid>/<sanitized>.mp4  (realpath-contained; free-plan Supabase caps uploads at 50MB)
+> 14:location = /api/host-upload {
+> 15:  proxy_pass http://127.0.0.1:3220;
+> 26:#   PROBE: wizard/galeria → GET /api/host-probe?key=<uid>/<file>&token=<jwt> → mesmo loopback:3220
+> 31:  proxy_pass http://127.0.0.1:3220;
+> 38:  proxy_pass http://127.0.0.1:3220;
+> ```
+
+## 🤖 Claude *(12:20:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the file structure for a user's media content, I can see there are video files stored in a repurpose inbox folder, with episode files that are several gigabytes in size.
+
+Now I'm realizing the masters were there all along—my earlier search just didn't go deep enough into the directory structure. I've found the upload flow too: it goes through the Cortes menu via chunked requests to an API endpoint that routes to a local service, which deposits files into that repurpose inbox directory. There's even documentation for this infrastructure setup already written.
+
+The real issue was that I didn't have this knowledge readily accessible in my working memory, so I searched the wrong places. To prevent this from happening again, I need to encode this durably—creating a reference entry that captures the exact location of these master files and which user owns them, so the next time I need this information it's immediately available. I'm recognizing that this broader principle about recurring actions becoming skills and agents is distinct from the existing CLI-to-UI feedback directive—it's about orchestrating a system where any repeated pattern spawns dedicated skills and sub-agents. I should add this as a new feedback memory that connects to the Obstacle→Synthesis mandate and the vision of an intelligent orchestrator that continuously suggests documentation and skill creation.
+
+Since I can't directly modify my system prompt, I'll anchor this across three durable channels: updating CLAUDE.md (which loads into context each session), creating a dedicated skill file, and adding memory entries that get indexed through MEMORY.md. This gives the doctrine multiple entry points to influence my behavior going forward.
+
+I'm debating whether to add a Knowledge Mesh node for this operational pattern, but that requires extra scaffolding. I'll focus on the memory and skill channels first—those directly prevent recurrence—and let the mesh integration happen at the seal stage if needed.
+
+Now I'm thinking through the skill structure itself...
+
+I need to match the existing format with proper frontmatter fields like name and description, then follow with the trigger conditions and implementation steps. Let me write out all the files together, including the CLAUDE.md updates. I need to find a stable anchor point in the CLAUDE.md Key Files table to insert the new row. The "Build & Deploy materiality SOP" entry looks like a good unique reference point to insert after, so I'll use that as my old_string match for the edit.
+
+Before I write out the full changes, I should verify that the repurpose-host-infra-provisioning.md SOP file actually exists, and I'll quickly check the build-deploy-guardian SKILL.md format to make sure I match it correctly.
+
+</details>
+
+
+## 🤖 Claude *(12:20:54)*
+
+**Confirmado, Maestro** — os masters estão exatamente onde você disse, e eu errei o `find` por 1 nível de profundidade:
+
+| Episódio | Caminho real | Tamanho |
+|---|---|---|
+| **EP01** | `repurpose-inbox/ada39fae…/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4` | **1,34 GB** |
+| **EP02** | `repurpose-inbox/ada39fae…/EP02_-_MASTER__YouTube_.mp4` | **529 MB** |
+
+Fluxo: **menu Cortes** (`/dashboard/repurpose`, admin) → XHR chunked → `/api/host-upload` → loopback `:3220` → **`repurpose-inbox/<uid>/`** no disco do CloudPanel (`bucket='local'`). User 0 (`gabrielcall@gmail.com`) uid = `ada39fae-67e1-4e53-af1c-5a18e1c108e8`.
+
+Agora **vacino isso** (Obstáculo→Síntese): skill + memória + Key Files, + a doutrina maior que você mandou anotar. Verificando o formato antes de escrever:
+
+## 🤖 Claude *(12:20:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== SOP host-infra existe? ===\"\nls -la docs/processes/repurpose-host-infra-provisioning.md 2>&1 | head -1\necho \"\"\necho \"=== formato de frontmatter de uma skill existente ===\"\nhead -8 .claude/skills/build-deploy-guardian/SKILL.md 2>/dev/null\necho \"--- skills dir ---\"\nls .claude/skills/ | head",
+  "description": "Verify SOP exists and skill frontmatter format"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SOP host-infra existe? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 13414 Jul 20 10:28 docs/processes/repurpose-host-infra-provisioning.md
+> 
+> === formato de frontmatter de uma skill existente ===
+> ---
+> name: build-deploy-guardian
+> description: Buildar e deployar o MCORCH com prova material — frontend (nginx serve o dist/ do repo PRINCIPAL), edge functions (Supabase), migrations. Use SEMPRE antes/durante qualquer "build", "deploy", "publicar", "subir frontend" ou "shipar" — especialmente a partir de um worktree (.claude/worktrees/), onde `bun run build` escreve no dist errado e sem .env. Impede o falso-sucesso de declarar "deployed" sem verificar o artefato servido (Lei 1). SOP: docs/processes/build-deploy-materiality.md.
+> ---
+> 
+> # Skill: build-deploy-guardian — Deploy com Prova Material
+> 
+> Garante que "deployed" significa **o artefato servido mudou**, não "rodei o comando de build".
+> --- skills dir ---
+> agent-browser
+> asset-frame-grouping
+> build-deploy-guardian
+> canvas-studio-cinematic
+> creative-studio-pipeline
+> deepsearch-blueprint
+> e2e-user-zero-audit
+> engineer-spaces
+> free-render-dispatch
+> gateway-recovery.md
+> ```
+
+## 🤖 Claude *(12:21:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've got the SOP file and skill format ready, so now I'm writing out all the necessary files: the skill definition, two memory entries for tracking how recurring actions become skills, and updates to both the CLAUDE.md and MEMORY.md index files. The description field will serve as the trigger mechanism.
+
+For the skill itself, I'm crafting a Portuguese description that captures when to use the host media masters — specifically for large video files like episodes that live in the repurpose-inbox bucket on CloudPanel, uploaded through the Cortes menu, never through random host directories or Supabase. The skill body will include the exact paths, the workflow, the "never re-probe" rule, and a link to the SOP.
+
+I'm also setting up the reference memory entry with the same core information about where masters are stored and how they're accessed, plus the exact paths, user UIDs, episode filenames with sizes, the complete flow, bucket configuration, and relevant links.
+
+Now I'm creating the feedback memory about recurring actions becoming skills — this captures the pattern of turning repeated tasks into dedicated skill agents and suggesting documentation updates. The body needs both a "Why" section explaining the rationale and a "How to apply" section with the standing directive and related memory links.
+
+I'll batch write all three memory entries first, then update CLAUDE.md and MEMORY.md accordingly.
+
+</details>
+
+
+## 🤖 Claude *(12:21:14)*
+
+Tudo verificado. Escrevendo a vacina completa — skill (gatilho automático) + 2 memórias + Key Files + a doutrina maior:
+
+## 🤖 Claude *(12:21:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/skills/host-media-masters/SKILL.md",
+  "content": "---\nname: host-media-masters\ndescription: Localizar e usar os MASTERS de v\u00eddeo grandes (EP01/EP02/\u2026) e QUALQUER m\u00eddia grande do MCORCH. Use SEMPRE que precisar de um master de epis\u00f3dio, do arquivo de origem do repurpose, de subir um v\u00eddeo grande, ou quando pensar \"onde est\u00e1 o master / n\u00e3o achei o arquivo grande / o find n\u00e3o retornou\". Os masters N\u00c3O ficam no Supabase (cap 50MB) nem em diret\u00f3rios aleat\u00f3rios do host \u2014 vivem em `repurpose-inbox/<uid>/` (o \"bucket local\" do CloudPanel), subidos pelo menu Cortes (`/dashboard/repurpose`). NUNCA rode `find` cego no host procurando arquivo grande. SOP: docs/processes/repurpose-host-infra-provisioning.md.\n---\n\n# Skill: host-media-masters \u2014 onde vivem os masters grandes (nunca mais re-sondar)\n\n**Regra dura (mata um erro recorrente):** ao precisar de um master de epis\u00f3dio ou qualquer m\u00eddia grande, **N\u00c3O** procure com `find` em `/home/*` nem baixe do Supabase. Os arquivos grandes ficam **no disco do host (CloudPanel)**, num inbox por-usu\u00e1rio.\n\n## Localiza\u00e7\u00e3o can\u00f4nica\n```\n<repo>/repurpose-inbox/<uid>/<arquivo>.mp4\n```\n- `INBOX_BASE = resolve(scripts/, '../repurpose-inbox')` \u2192 `/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox` (definido id\u00eantico em `video-repurpose-bridge.ts:43`, `host-upload-server.ts:38`, `youtube-upload-bridge.ts:43`, `subtitle-bridge.ts:49`).\n- Chave sempre `<uid>/<arquivo>` com realpath-containment (traversal/symlink banidos).\n\n## User 0 (gabrielcall@gmail.com \u00b7 uid `ada39fae-67e1-4e53-af1c-5a18e1c108e8`)\n| Epis\u00f3dio | Arquivo | Tamanho |\n|---|---|---|\n| **EP01** | `EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4` | ~1,34 GB |\n| **EP02** | `EP02_-_MASTER__YouTube_.mp4` | ~529 MB |\n\nEstes s\u00e3o as **\u00fanicas op\u00e7\u00f5es de master na UI do User 0** \u2014 EP01 e EP02 j\u00e1 foram usados muitas vezes.\n\n## Como os masters chegam l\u00e1 (fluxo de upload)\n**Menu Cortes** (`/dashboard/repurpose`, admin-only \u2014 **N\u00c3O** \u00e9 o Spaces) \u2192 XHR **chunked** (~80MB/chunk; CF limita corpo a 100MB) \u2192 `POST /api/host-upload` \u2192 **host-upload-server** loopback `127.0.0.1:3220` (JWT admin-gate, streams to disk) \u2192 `repurpose-inbox/<uid>/<sanitized>.mp4`. Existe porque o Supabase free limita upload a 50MB.\n\n## Como o rail consome (bucket 'local')\nNa `composition.source`, `bucket='local'` + `key='<uid>/<arquivo>'` \u2192 o worker (`video-repurpose-bridge.ts:81-89`, idem `subtitle-bridge`, `youtube-upload-bridge`) l\u00ea do disco por realpath-containment, **sem baixar** o 1,3GB. Outros buckets = download do Supabase Storage.\n\n## Verifica\u00e7\u00e3o material (quando precisar confirmar)\n```bash\nfind repurpose-inbox/ -type f -name \"*.mp4\" -printf '%s\\t%p\\n' | sort -rn\n```\n\n**SOP completa:** `docs/processes/repurpose-host-infra-provisioning.md` (nginx `/api/host-upload` + `/api/host-probe` + systemd `host-upload.service`). Rota UI: `/dashboard/repurpose`. Mem\u00f3ria: `reference_host_local_masters_repurpose_inbox`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/host-media-masters/SKILL.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:21:43)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_host_local_masters_repurpose_inbox.md",
+  "content": "---\nname: reference_host_local_masters_repurpose_inbox\ndescription: Masters de v\u00eddeo grandes (EP01/EP02) e m\u00eddia grande vivem em repurpose-inbox/<uid>/ (bucket 'local' do CloudPanel), subidos pelo menu Cortes \u2014 NUNCA fazer find cego no host.\nmetadata:\n  type: reference\n---\n\n**Erro recorrente que isto mata:** re-sondar \"n\u00e3o achei o arquivo grande no host\" com `find` em dirs errados. Os masters N\u00c3O ficam no Supabase (cap 50MB) nem em `/home/*` aleat\u00f3rio \u2014 vivem no **inbox local do CloudPanel por-usu\u00e1rio**.\n\n**Localiza\u00e7\u00e3o can\u00f4nica:** `<repo>/repurpose-inbox/<uid>/<arquivo>` \u2014 `INBOX_BASE = resolve(scripts/, '../repurpose-inbox')` = `/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox` (id\u00eantico em `video-repurpose-bridge.ts:43`, `host-upload-server.ts:38`, `youtube-upload-bridge.ts:43`, `subtitle-bridge.ts:49`).\n\n**User 0** (gabrielcall@gmail.com \u00b7 uid `ada39fae-67e1-4e53-af1c-5a18e1c108e8`) \u2014 as \u00daNICAS op\u00e7\u00f5es de master na UI:\n- **EP01** = `EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4` (~1,34 GB)\n- **EP02** = `EP02_-_MASTER__YouTube_.mp4` (~529 MB)\n\n**Fluxo de upload:** menu **Cortes** (`/dashboard/repurpose`, admin \u2014 N\u00c3O \u00e9 o Spaces) \u2192 XHR chunked (~80MB/chunk, CF cap 100MB) \u2192 `POST /api/host-upload` \u2192 host-upload-server loopback `127.0.0.1:3220` (JWT admin-gate) \u2192 `repurpose-inbox/<uid>/`.\n\n**Consumo pelo rail:** `composition.source` com `bucket='local'` + `key='<uid>/<arquivo>'` \u2192 worker l\u00ea do disco por realpath-containment, sem baixar (`video-repurpose-bridge.ts:81-89`).\n\n**Verifica\u00e7\u00e3o:** `find repurpose-inbox/ -type f -name \"*.mp4\" -printf '%s\\t%p\\n' | sort -rn`.\n\nSkill de gatilho: `host-media-masters`. SOP: `docs/processes/repurpose-host-infra-provisioning.md`. Relacionado: [[project_video_repurpose_engine]] [[project_youtube_upload_ep02]] [[project_pipc_creative_production_pipeline]] [[feedback_recurring_actions_become_skills]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_host_local_masters_repurpose_inbox.md
+> ```
+
+## 🤖 Claude *(12:21:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_recurring_actions_become_skills.md",
+  "content": "---\nname: feedback_recurring_actions_become_skills\ndescription: Tudo que fa\u00e7o mais de uma vez DEVE virar uma skill+agente espec\u00edficos do MCORCH; vis\u00e3o de orquestrador que cria sub-agentes recorrentes e sempre sugere quando algo deve ser documentado.\nmetadata:\n  type: feedback\n---\n\nDiretiva Sovereign 2026-07-23 (ap\u00f3s eu re-sondar um fato j\u00e1 conhecido \u2014 a localiza\u00e7\u00e3o dos masters): isto deve fazer parte do meu **harness e driven-specs**, n\u00e3o ser lembrado por acaso.\n\n**Why:** re-descobrir a mesma coisa toda sess\u00e3o \u00e9 desperd\u00edcio e quebra a confian\u00e7a. As Leis de Sobreviv\u00eancia j\u00e1 dizem \"se o mesmo erro pode reincidir, ele ainda n\u00e3o foi resolvido \u2014 s\u00f3 adiado\". O ant\u00eddoto \u00e9 institucionalizar cada padr\u00e3o recorrente como capacidade permanente (skill = gatilho autom\u00e1tico; agente = fluxo deleg\u00e1vel; mem\u00f3ria/SOP/Key Files = recall).\n\n**How to apply:**\n1. **Regra do \"duas vezes\":** qualquer a\u00e7\u00e3o/consulta que eu fa\u00e7a mais de uma vez \u2192 criar uma **skill espec\u00edfica** do MCORCH (`.claude/skills/<slug>/SKILL.md`) com `description` que dispara no contexto certo. Estende o [[Obstacle\u2192Synthesis mandate]] (que hoje exige SOP+Skill+Agent para obst\u00e1culos) para TODA rotina frequente, n\u00e3o s\u00f3 bugs.\n2. **Sugerir documenta\u00e7\u00e3o proativamente:** quando eu notar algo feito com frequ\u00eancia ainda n\u00e3o codificado, **sugerir** virar skill + (se deleg\u00e1vel) agente \u2014 n\u00e3o esperar o Sovereign pedir.\n3. **Vis\u00e3o de orquestrador (norte):** evoluir para um orquestrador que **cria seus pr\u00f3prios sub-agentes recorrentes** para tudo feito com frequ\u00eancia (um por m\u00f3dulo, ou melhor um meta-orquestrador que instancia sob demanda), sempre propondo quando um novo padr\u00e3o merece virar habilidade + agente. Casa com a arquitetura Pantheon (L1/L2) e com o uso de Workflow para fan-out.\n4. **Canais durables** (todos, sempre): CLAUDE.md (carregado todo sess\u00e3o = meu \"system prompt\" do projeto) + skill (auto-trigger) + mem\u00f3ria (\u00edndice em MEMORY.md) + Key Files. O Sovereign n\u00e3o edita meu system prompt real, mas estes tr\u00eas canais s\u00e3o o equivalente funcional.\n\nEstende e generaliza [[feedback_cli_actions_must_become_ui]] (CLI\u2192UI \u00e9 um caso espec\u00edfico disto). Relacionado: [[feedback_openclaw_delegation_pattern]] [[reference_host_local_masters_repurpose_inbox]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_recurring_actions_become_skills.md
+> ```
+
+## 🤖 Claude *(12:22:08)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The skill is now showing up in the available skills list, so I need to update the documentation index. I'm looking at the CLAUDE.md file to find where to insert a new row—specifically after the "Build & Deploy materiality SOP" entry—and I'll need to match the exact formatting of that existing row.
+
+For MEMORY.md, I'm adding two new memory entries: one for the host-media-masters reference (which ties closely to the video repurpose work) and another for the recurring feedback actions. I'll place both near the Golden Eye entry I just added to keep the recent additions clustered together. Let me verify the anchor string exists in CLAUDE.md and then make both edits.
+
+</details>
+
+
+## 🤖 Claude *(12:22:08)*
+
+Skill registrada (já apareceu na lista de skills disponíveis). Agora Key Files no CLAUDE.md + índice de memória:
+
+## 🤖 Claude *(12:22:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "| **Build & Deploy materiality SOP** | `docs/processes/build-deploy-materiality.md` (worktree trap + gates) |",
+  "new_string": "| **Build & Deploy materiality SOP** | `docs/processes/build-deploy-materiality.md` (worktree trap + gates) |\n| **Masters grandes / m\u00eddia grande vivem em `repurpose-inbox/<uid>/` (bucket 'local' CloudPanel)** | `.claude/skills/host-media-masters/SKILL.md` + SOP `docs/processes/repurpose-host-infra-provisioning.md` (EP01/EP02 do User 0 = \u00fanicas op\u00e7\u00f5es de master na UI; subidos pelo **menu Cortes** `/dashboard/repurpose` \u2192 host-upload-server loopback `:3220` \u2192 disco; `composition.source.bucket='local'` l\u00ea por realpath-containment sem baixar. **NUNCA `find` cego no host** \u2014 `INBOX_BASE`=`<repo>/repurpose-inbox` em `video-repurpose-bridge.ts:43`/`host-upload-server.ts:38`/`youtube-upload-bridge.ts:43`/`subtitle-bridge.ts:49`) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:22:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [\ud83e\uddff Golden Eye \u2014 treinar os olhos = elevar o HARNESS do Vision MCP (n\u00e3o re-treina pesos)](project_vision_golden_eye.md) \u2014 VLM ORDENA>PONTUA; shopping list=IMAGENS (screenshots MCORCH bom+ruim/dimens\u00e3o) + LINKS (viram rubrica) + V\u00cdDEOS (cortes+curva reten\u00e7\u00e3o, nunca folclore). Slice 1 precisa probe capturado na travessia; slice 2 pina modelo server-side (redeploy container). Plano `docs/roadmap/vision-golden-eye.md`.",
+  "new_string": "- [\ud83e\uddff Golden Eye \u2014 treinar os olhos = elevar o HARNESS do Vision MCP (n\u00e3o re-treina pesos)](project_vision_golden_eye.md) \u2014 VLM ORDENA>PONTUA; shopping list=IMAGENS (screenshots MCORCH bom+ruim/dimens\u00e3o) + LINKS (viram rubrica) + V\u00cdDEOS (cortes+curva reten\u00e7\u00e3o, nunca folclore). Slice 1 precisa probe capturado na travessia; slice 2 pina modelo server-side (redeploy container). Plano `docs/roadmap/vision-golden-eye.md`.\n- [\ud83d\udce6 Masters grandes (EP01/EP02) vivem em `repurpose-inbox/<uid>/` \u2014 NUNCA find cego](reference_host_local_masters_repurpose_inbox.md) \u2014 bucket 'local' do CloudPanel, subido pelo menu Cortes (/dashboard/repurpose\u2192:3220). EP01 1,34GB \u00b7 EP02 529MB no uid do User 0. Skill `host-media-masters`.\n- [\ud83d\udd01 Tudo que fa\u00e7o 2\u00d7 vira skill+agente do MCORCH \u2014 parte do harness/driven-specs](feedback_recurring_actions_become_skills.md) \u2014 regra do \"duas vezes\"; sugerir doc proativamente; norte=orquestrador que cria sub-agentes recorrentes. Generaliza CLI\u2192UI."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:22:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A memory hook is firing because MEMORY.md has grown to nearly its size limit, so I need to compact it by keeping just one line per entry and moving detailed information into separate topic files, consolidating or removing outdated entries in the process.
+
+The strategy is straightforward: trim each line to a terse one-liner hook (roughly 100 characters max) since the actual detail should live in the topic files themselves. Many current entries are bloated with dates and sub-details that don't belong in the index. This aggressive shortening alone should reclaim significant space without orphaning topic files or losing important pointers.
+
+Let me pull up the full MEMORY.md to see what I'm working with.
+
+</details>
+
+
+## 🤖 Claude *(12:22:37)*
+
+O hook pediu compactação do índice de memória (19,9KB → alvo <17,1KB). Faço agora — é higiene do harness (se passar do limite, sessões futuras não carregam o índice). Lendo o índice completo pra compactar cada linha num hook enxuto (o detalhe já vive nos arquivos-tópico):
+
+## 🤖 Claude *(12:22:38)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) — sobrescreve o TS com o eszip transpilado; nunca no repo de trabalho; `git checkout --` recupera.
+> 4	
+> 5	- [ÉPICO — Motor de Oportunidade de Produtos + Conector Amazon](project_product_opportunity_engine.md) — BoK 9/9 selada; Amazon=append `?tag=` (sem API/login, atribui venda) + `allows_redirect_cloaking` per-rede; validação free-organic FORA da Amazon. Código GATED (GO+jurídico).
+> 6	- [🎯 FOCO ATIVO — Audiência/flywheel: distribuir cortes EP01 + impulsionar EP01/EP02](project_audience_flywheel_distribution.md) — N funis testáveis + cadência + escala rentável; audiência→vendas como engrenagens. **2026-07-23: 3 funis ML PÚBLICOS vivos** (posts 29/34/35, atribuídos, redirect→meli.la provado). **2026-07-22:** agendamento privado-primeiro VIVO (`publish-space-asset` `publish_at`+`link` Pinterest; `scripts/schedule-episode.ts` dry-run/--commit) + squad `studio` na Constelação do User 0 (drill 6/6 groq) + cortes duration-aware/picker + grid pan-crop.
+> 7	- [🎬 PIPC — Pipeline Interno de Produção Criativa (dev→publicar→analisar→melhorar EP05)](project_pipc_creative_production_pipeline.md) — separa a máquina de APRENDER (elo fraco análise→EP05); blueprint `docs/bok/pipc/` + BoK gerando (`wf_3bbaf095`). Flow FX=Storyboard Studio+Ingredients (portar); GabrielAI=repo PRIVADO, inverso do repurpose. S0 cortes já existem; S1 retenção + S2 análise-por-EP un-gated (gate BoK); S8 canais=Sovereign.
+> 8	- [🧿 Golden Eye — treinar os olhos = elevar o HARNESS do Vision MCP (não re-treina pesos)](project_vision_golden_eye.md) — VLM ORDENA>PONTUA; shopping list=IMAGENS (screenshots MCORCH bom+ruim/dimensão) + LINKS (viram rubrica) + VÍDEOS (cortes+curva retenção, nunca folclore). Slice 1 precisa probe capturado na travessia; slice 2 pina modelo server-side (redeploy container). Plano `docs/roadmap/vision-golden-eye.md`.
+> 9	- [📦 Masters grandes (EP01/EP02) vivem em `repurpose-inbox/<uid>/` — NUNCA find cego](reference_host_local_masters_repurpose_inbox.md) — bucket 'local' do CloudPanel, subido pelo menu Cortes (/dashboard/repurpose→:3220). EP01 1,34GB · EP02 529MB no uid do User 0. Skill `host-media-masters`.
+> 10	- [🔁 Tudo que faço 2× vira skill+agente do MCORCH — parte do harness/driven-specs](feedback_recurring_actions_become_skills.md) — regra do "duas vezes"; sugerir doc proativamente; norte=orquestrador que cria sub-agentes recorrentes. Generaliza CLI→UI.
+> 11	- [Gateway OpenClaw: roteamento openclaw/<id> com drift (Not Found do host)](reference_openclaw_gateway_model_routing_drift.md) — telemetria Pantheon gated; Constelação per-user (studio) roda via agent-task-execute groq direto, não o gateway.
+> 12	- [YouTube Track B upload — encanamento COMPLETO+deployado, witness gated](project_youtube_upload_ep02.md) — Amendment 13 + migration viva + worker resumable + UI. EP02 já postado manualmente. Falta: enable youtube-upload.service + app verify/CASA + master no host.
+> 13	- [🎯 ROADMAP (adiado p/ depois da audiência) — CRM Suite completo + Marketing](project_crm_suite_roadmap.md) — captura de leads unificada (submit-lead-webhook + Formulários públicos) DONE+witnessed; próximos pilares Tickets/Produtos. SSOT docs/roadmap/.
+> 14	- [CRM + Caixa de Entrada Omnichannel — Amendment 10](project_crm_inbox_module.md) — composer completo + recibos/swap ao vivo + ficha rica + card contato + reação FR-CRM-028 + Settings MIV. Falta: omnichannel registry, agente (gated AI Act). Bug de ordenação do thread FIXADO.
+> 15	- [Rail de repurpose — fila DRENADA 2026-07-20; bug do `beats` REFUTADO](project_repurpose_beats_bug_and_open_fixes.md) — o A/B comparou arquivos diferentes. Achado real: segmentVideo dá falso-verde sobre master corrompido. Probe = exit+stderr+frames, janela inteira.
+> 16	- [Render de N clipes precisa reusar UM chromium (não 1 launch/clipe)](reference_repurpose_browser_reuse.md) — 1-3 sucediam, 5+ estourava memória (822780e8). Fix `e0d9fe9`; worker precisa restart; picker de fatias faltava no wizard.
+> 17	- [Sala de Controle da Orquestração — Vista Operacional + múltiplas Orquestras VIVAS](project_orchestration_control_room.md) — Operação (quem trabalha/pendente/impacto) + tabela workflows + seletor. Parte B nós = re-arquitetura canvas→editor pendente (BoK especifica).
+> 18	- [HyperFrames = open-source da HeyGen; Blend Difference NÃO funciona no nosso render](reference_hyperframes_caption_catalog.md) — falha em silêncio (alpha-overlay, sem vídeo no browser). caption-highlight e pill-karaoke casam com nosso contrato de beats sem GSAP.
+> 19	- [Legendas do /spaces/video são VITRINE read-only; queimam no rail de repurpose](reference_video_studio_captions_vitrine.md) — "Add" é 501 proposital, preview preto é a demo. Validar legenda nos Assets/CaptionStyleGallery, nunca no catálogo do Studio.
+> 20	- [Veo: image XOR referenceImages — nunca os dois](reference_veo_image_xor_references.md) — "Image and reference images cannot be both set"; canvas-execute garante o XOR (first-frame vence), cliente coleta refs só em modo referência.
+> 21	- [Carrossel "de verdade" (fatiado/contínuo) — DIFERIDO, sessão dedicada](project_carousel_real_slicing.md) — imagem larga fatiada no enquadramento IG OU imagens que se completam com next/prev; NÃO é o hand-picked (Amendment 29). Só anotar.
+> 22	- [Privado-primeiro: ir até o último passo REVERSÍVEL sozinho](feedback_private_first_end_to_end.md) — postar privado/rascunho/agendado; o Sovereign vira público. Gate dele = validação, não bloqueio. + sondar pré-condições ANTES de construir.
+> 23	- [Todo script CLI meu deve virar capacidade na UI (segura, UX perfeita, ecossistema)](feedback_cli_actions_must_become_ui.md) — CLI é minha mão p/ construir; o entregável é o usuário fazer o mesmo pela UI. Gap exposto: ASR/SRT precisa de botão "Gerar transcrição" (rail whisper.cpp grátis no host).
+> 24	- [Resume de Workflow por scriptPath NÃO carrega `args` — repassar verbatim](reference_workflow_resume_needs_args.md) — senão aborta em 12ms; args diferente = cache não bate e tudo re-roda. Diagnosticar pelo journal (started vs result).
+> 25	- [`tsc --noEmit` na raiz NÃO checa a app — use `bun run build`](reference_root_tsc_noop_use_build.md) — "tsc exit 0" é falso conforto; gate real = vite build.
+> 26	- [Mas `bun run build` (esbuild) também NÃO typa — gate real = `tsc -p tsconfig.app.json` vs baseline](reference_app_tsc_is_the_real_type_gate.md) — 138 erros pré-existentes 2026-07-21; compare contagem por-arquivo. Achado do engineer-spaces.
+> 27	- [Cap de 100 edge fns: bulk deploy = 402; use single `deploy <fn>`](reference_supabase_functions_deploy_bulk_cap.md) — single é isento; eszip é binário (grep com `strings`).
+> 28	- [content-intel — análise de vídeo existente → estratégia (BoK 9/9)](project_content_intel_module.md) — link IG/TikTok/YT → Vision MCP server-side. Código gated GO+jurídico.
+> 29	- [Marcação de proveniência AI Act Art.50 — Fatia 0-1 VIVAS](project_content_provenance_ai_act.md) — IPTC via ExifTool; worker provenance-bridge. Fatia 2 C2PA gated. Deadline 2026-08-02.
+> 30	- [Meta: dois caminhos (IG Login vs FB/Business) + privacidade](project_meta_two_paths_and_privacy.md) — UM app, DUAS APIs; meta-privacy deauth/deleção; connect-instagram-token manual.
+> 31	- [WhatsApp Cloud API — fiação + gotchas](reference_whatsapp_cloud_api_wiring.md) — token EAA (não IGAA); POST subscribed_apps; whatsapp-webhook verify_jwt=false; +39 CLOUD_API/LIVE.
+> 32	- [types.ts fica stale após migrations — regenerar](reference_supabase_types_stale_regen.md) — tsc não acusa até ler coluna nova; `npx supabase gen types typescript --linked`.
+> 33	- [Tier global de credenciais de app OAuth (admin) + Pinterest](project_global_app_credentials_admin_tier.md) — chaves globais no /dashboard/admin; resolver 4 degraus per-user→global→env→402. Amendment 16.
+> 34	- [Motor de conteúdo de duas máquinas + agência-dentro-da-plataforma](project_content_engine_two_machines.md) — Volume lo-fi (audiência) vs Conversão viral (receita); ECC + OpenClaw.
+> 35	- [Vídeo com avatar no Spaces — Veo 3.1](project_veo_avatar_video.md) — refs ≤3 do mood board; ledger-first + veo-poll; failover FR-SPACES-091; 178 mco.
+> 36	- [Guard de URL só vale se sobreviver ao redirect](reference_ssrf_guard_survives_redirect.md) — use `fetchPublicUrl` (revalida cada 3xx); fetch cru = SSRF.
+> 37	- [Motor novo no ledger exige `node_run_id` no cliente](reference_ledger_node_needs_node_run_id.md) — sem ele cai na branch legada e morre em 422.
+> 38	- [Verificação OAuth do Google — home HTML cru + escopo demonstrável](reference_google_oauth_verification.md) — verificador não roda JS; escopo sensível não aprova "pro futuro".
+> 39	- [Loop 2026-07-14 — pool BYOK + carrossel + reframe publish](project_roadmap_post_v6100_media_rails.md) — OTD-SPACES-043/044 + Amendments 22/23/24. Gated: 3 chaves Gmail, witnesses.
+> 40	- [Assets: seletor de formato + pré-visualização fiel + modal responsivo](project_asset_publish_format_preview.md) — format-specs.ts SSOT + PublicationPreview 10 chromes. Amendment 21.
+> 41	- [Motor de repurpose de vídeo — 1 master → N shorts+carrossel](project_video_repurpose_engine.md) — Fatia 1 ingest external. GabrielAI é o INVERSO; não reconstruir os trilhos.
+> 42	- [Loop 2026-07-12 — witness LoRA bloqueado em crédito Replicate](project_lora_witness_and_otd_spaces_036.md) — treino→402; BYOK ~US$1,85; plumbing provado. OTD-SPACES-036.
+> 43	- [Regra perene UI — seletor de provider só carrega opções BYOK disponíveis](feedback_byok_only_available_options.md) — `useConfiguredProviders()`; keyless self-host sempre visível.
+> 44	- [HyperFrames worker fica stale até restart](reference_hyperframes_worker_restart.md) — `systemctl --user restart video-bridge.service`; render `done` pode sair no template errado.
+> 45	- [Paid BYOK = pós-renda; default free/open-source](feedback_paid_byok_post_revenue.md) — provider pago só testar após 1ª renda; nunca ativar pago em silêncio.
+> 46	- [Motor clone de voz self-host VIVO — Qwen3-TTS 0.6B](reference_tts_free_options.md) — `/home/ubuntu/.mcorch/voice-engine/`; worker CLI por job; ref=24kHz WAV; Amendment 18.
+> 47	- [Identidade avatar = escada multi-motor; char-ref sem-treino default](reference_avatar_identity_engines.md) — LoRA opt-in; default Nano Banana ~4¢. `canvas.ts:510`.
+> 48	- [Imagem = Gemini Nano Banana; direct-Google mais barato](reference_image_gen_provider_cost.md) — nano-banana=`gemini-2.5-flash-image`; hoje via OpenRouter (+5,5%).
+> 49	- [Spaces 100% arc — LoRA grátis + nó WordPress + YouTube](project_spaces_lora_social_youtube.md) — `937a17c`: LoRA BYOK USD0; WordPress direto; youtube-studio blueprint.
+> 50	- [Senior UX/UI Loop — auditor de jornada + rubrica sênior (Vision)](project_ux_ui_senior_loop.md) — grader senior-rubric.ts 8-dim SCORED fail-closed; fix-loop=skill.
+> 51	- [GO'd roadmap 2026-07-08 (TikTok Login → open-design → Higgsfield)](project_go_roadmap_tiktok_login_openagn_higgsfield.md) — TikTok shipado; editor=HyperFrames; Higgsfield key ✅. ⚠️ `chmod o+x /home/gcrUX`.
+> 52	- [Spaces v2 — consolidar Canvas Studio+Spaces](project_spaces_v2_consolidation.md) — ledger-first+G7+Spotlight; Magnific=mecânica, MIV=estética; amendment 14.
+> 53	- [YouTube bloqueia IP datacenter — storyboard no Chrome do Sovereign](reference_youtube_datacenter_workarounds.md) — frames via ytInitialPlayerResponse.storyboards + DOM.
+> 54	- [Laço MAPE-K vivo — guardião em cron + L2 Nemotron free](project_mape_k_guardian.md) — tick */5 + sweep 6h. ⚠️ cron sem bun/npx no PATH; sessão NUNCA arma ScheduleWakeup.
+> 55	- [Conformidade MIV pós-rebrand + E2E + tooling ECC](project_miv_conformance_pass.md) — 44 páginas→3 fixes; E2E 8/8. ⚠️ squat python http.server contamina E2E.
+> 56	- [Tokens MIV — accent=cyan, nebula só memória, gold só valor](reference_miv_design_tokens.md) — `--accent` dual bg+text; nebula classe explícita; CTA=glow.
+> 57	- [Rebrand MCORCH — Landing V2 em React (/lp preview, prod gated)](project_mcorch_rebrand_landing_v2.md) — HTML=espec; tokens void/cyan/gold/nebula sob .mcorch-lp.
+> 58	- [Badge conexão social = is_active, não o relógio de 1h do token](reference_social_oauth_badge_health_signal.md) — token renova via refresh_token; is_active é o sinal.
+> 59	- [TikTok app review REPROVADO — checklist branding](project_tiktok_review_rebrand_requirements.md) — ícone/TOS/Privacy + vídeo demo. Gate: rebranding.
+> 60	- [Buckets privados → signed URL owner-scoped, nunca assar URL](reference_private_bucket_asset_signing.md) — normalizador re-assina no render; policy 4-rotas =auth.uid.
+> 61	- [Contrato REAL da API Higgsfield + MCP oficial](reference_higgsfield_provider_contract.md) — soul/{mode} path-literal; compose nunca existiu; sentinel smoke-higgsfield-schema.ts.
+> 62	- [Conector Higgsfield MCP OAuth per-user — COMPLETO (gated)](project_higgsfield_mcp_connector.md) — migration+oauth PKCE+refresh+UI. `/mcp`=OAuth Clerk. Falta GO.
+> 63	- [Doutrina open-source-first / USD=0 / equity + Gabriel AI](feedback_opensource_first_zero_cost_equity.md) — self-hostável vira microserviço; custo USD externo=0 é gate de GO.
+> 64	- [Gabriel AI (avatar-clone-ai) — BoK 10/10, Fatias 1-2 + 3a](project_avatar_clone_ai.md) — voiceClone BYOK fail-closed + consent/erase LGPD.
+> 65	- [Minerador de Produtos — confiabilidade análise de vídeo + custo](project_product_miner_vision_reliability.md) — Files API 20-100MB + fallback cover-image. ~$5/mês.
+> 66	- [Viewer sem nome = user de smoke QA vazado; sweep](reference_qa_throwaway_users_and_open_signup.md) — qa-throwaway.ts + sweep 04:00. ⚠️ signup externo LIGADO.
+> 67	- [Módulo Vídeo (video-studio) — Fase B: render nativo + editor](project_video_studio.md) — host createStudioApi(McorchAdapter) + SPA 3210; Export 12 mco.
+> 68	- [BYOK Gemini = coluna `google_api_key` (gemini_api_key NÃO existe)](reference_byok_gemini_column.md) — lê `decrypted_user_api_keys.google_api_key`.
+> 69	- [Cyber-Sentinel — paridade pt-BR (OTD-VA-018 fechada)](reference_shared_sentinel_english_only.md) — 7 famílias pt-BR, 0 FP em 58.
+> 70	- [Entregar valor visível ao Usuário Zero, menos plumbing](feedback_deliver_user_value_not_plumbing.md) — caminho curto até algo que o Sovereign ABRE e TOCA.
+> 71	- [Ecossistema criativo bidirecional (Canvas+HyperFrames→social)](project_creative_ecosystem_program.md) — creative_assets spine + faceless nativo. ⚠️ rotacionar chave Gemini + token Telegram.
+> 72	- [Channel Reshaper + Atomizer — 1 pilar → posts nativos por canal](project_channel_reshaper.md) — reshape-pillar data-driven. /security-review pegou HIGH FMEA-011.
+> 73	- [Virada brand-first — persona Gabriel AI/CCIO evangeliza](project_brand_persona_ccio.md) — marca via persona; +YT+TikTok reusando autopilot.
+> 74	- [Sempre rodar Vision QA sobre prints de inspeção + criativos](feedback_vision_qa_always.md) — scripts/qa/vision-qa.ts (custo 0) antes de declarar pronto.
+> 75	- [Força total autônoma para o primeiro R$ real](feedback_full_force_revenue_autonomy.md) — operar como Usuário 00; gargalo=distribuição+atribuição.
+> 76	- [IG Reels publica via graph.instagram.com + id do /me](reference_ig_reels_publish_path.md) — não usar meta_config; video_url pública.
+> 77	- [Verificar todo entregável de UI em browser real (Lei 1)](feedback_browser_verify_deliverables.md) — vite preview do dist + sessão injetada + agent-browser. Node (não bun) p/ playwright; rodar .mjs da raiz.
+> 78	- [Viral Autopilot — motor R1-R4 completo, ATIVADO 2026-06-23](project_viral_autopilot.md) — BoK 9/9; 1º ciclo pago; pg_cron jobid 3; vídeo 9:16 (default OFF).
+> 79	- [Unified Sensorial Canvas — Phase Epsilon V9 (/dashboard/universe)](project_unified_sensorial_canvas.md) — funde Core-Fable+Matrix+Memória. Universo=superfície PRIMÁRIA.
+> 80	- [Vision MCP — container 3200 atrás de mcp.mcorch.com](project_vision_mcp.md) — BoK 9/9; PAT, LGPD erase, caps, Plugin/Registry. CF laranja exige WAF Skip.
+> 81	- [Core-Fable — rota, Fable 5 flagship, shader Interstellar](project_core_fable.md) — shader (capturado=preto); chat localStorage ≠ pref pipeline.
+> 82	- [E2E de UI logada à prova de Cloudflare](reference_loggedin_e2e_local_preview.md) — CF Turnstile barra datacenter; vite preview + gen-user-session.ts; provar pelo DB.
+> 83	- [Auditoria de drift deployado↔migrations + tool](project_schema_drift_audit.md) — audit-schema-drift.sh (exit 1=drift). Hotfix de prod vira migration na MESMA sessão.
+> 84	- [RPCs do ledger mcoCoins endurecidos — P0 fechado](reference_ledger_rpc_security.md) — award/add só service_role; deduct self-only.
+> 85	- [Marketing Hub v2 — módulo agentic COMPLETO (FR-MH-001..012)](project_marketing_hub_v2.md) — intent-execute fail-closed; AEO. Resta: Resend + atribuição ML. ⚠️ campaigns JÁ EXISTE.
+> 86	- [Calibração de contexto — usar a janela INTEIRA, selar só a ~95%](feedback_context_budget_calibration.md) — janela 1M; seal ~5%; poda≠selar.
+> 87	- [Flywheel de conteúdo quebrado pelo cutover de chaves (REPARADO)](project_orchestrate_pipeline_repair.md) — verify_jwt faltando + RPC drift. Regra: pg_net→verify_jwt=false.
+> 88	- [Calibração mcoCoins — modelo 4×-floor (fechada)](project_mcoin_calibration.md) — mco=ceil(usd/$0.018×4).
+> 89	- [Constellation v2 — cockpit de agentes per-user (LIVE E2E)](project_constellation_v2.md) — v6.18.0. has_role(app_role) single-arg.
+> 90	- [Stale worktree — checar contra origin/main](feedback_stale_worktree_check_origin.md) — cheque `git show origin/main:<path>` antes de dizer "quebrado".
+> 91	- [Materialidade sob output bufferizado — não fabricar](feedback_materiality_buffered_output.md) — hash/UUID vem de output verificado NESTE turno; halt e re-query.
+> 92	- [Supabase keys migradas — use SB_SECRET_KEY (legadas REVOGADAS)](reference_supabase_keys_migrated.md) — SERVICE_ROLE/ANON mortas; SB_SECRET_KEY/SB_PUBLISHABLE_KEY.
+> 93	- [user_api_keys é VIEW mascarada — chaves BYOK no Vault](reference_user_api_keys_encrypted.md) — SELECT mostra ••••; edge lê decrypted_user_api_keys; teste server-side.
+> 94	- [Operador de Browser Autenticado — atribuição ML](project_authenticated_browser_operator.md) — datacenter bloqueado; técnica magiclink reutilizável.
+> 95	- [Encrypted views — .insert() (não .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) — null não limpa (RPC disconnect_*); double-fire 23505 corrigido.
+> 96	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — BRE estoura sob `|| true`; use -E.
+> 97	- [OpenClaw delegation — paralelizar seals via @claw_gcrux](feedback_openclaw_delegation_pattern.md) — delegar low-risk via Telegram; ~50% menos tempo de seal.
+> 98	- [OpenClaw × Ollama — Gateway](project_openclaw_ollama_integration.md) — Supervisor ÚNICO = systemd (NUNCA pm2). `pnpm` no repo é destrutivo.
+> 99	- [API Tenancy Model — credenciais sempre per-user](feedback_api_tenancy_per_user.md) — resolve credencial per-user (auth.uid()) antes de env global.
+> 100	- [Paz e Vitalidade — métrica de sucesso da Constelação](feedback_paz_e_vitalidade.md) — vitalidade do Sovereign + paz humana como métricas.
+> 101	- [Gabriel Zarattini — Lead Architect](user_profile.md) — profile, depth técnica, pt-BR UI, execução autônoma.
+> 102	- [Stripe & Monetização — Estratégia Usuário Zero](project_stripe_strategy.md) — Sandbox intencional; live keys só após validação.
+> 103	- [Commit style](feedback_commits.md) — Nunca Co-Authored-By; corpo milestone-oriented.
+> 104	- [Deploy Frontend](reference_deploy_frontend.md) — nginx serve dist/ direto; `bun run build` = deploy p/ login.mcorch.com.
+> 105	- [lucide-react 1.11 removeu brand icons (Youtube etc.)](reference_lucide_brand_icons_removed.md) — tsc passa, vite build quebra; grep antes de usar.
+> 106	- [Usuário Zero — Estratégia e Produção](project_usuario_zero_strategy.md) — Gmail de Gabriel em prod; User 0 = `ada39fae`, email gabrielcall@gmail.com.
+> 107	- [Instagram App Review — Deferido para Usuário 1](project_instagram_appreviw_deferred.md) — não executar até sair da fase Usuário Zero.
+> 108	- [Canvas Studio Architecture — useCanvasStore](project_canvas_studio_architecture.md) — 3º Zustand (zundo); pipelineMode/lanes no graph jsonb.
+> 109	- [Canvas Design — open-design sidecar](project_canvas_design_initiative.md) — 7º módulo; nexu-io/open-design via CLI od; pnpm nunca na raiz.
+> 110	- [TikTok+YouTube publish — gotchas de audit/OAuth](reference_tiktok_unaudited_private_account.md) — TikTok privada pré-audit; youtube.upload sem CASA; state TTL 10min.
+> 111	- [Channel Format Intelligence — engenharia reversa de formato](project_channel_format_intelligence.md) — channel_profiles/pillar_atoms data-driven; master 9:16 serve 7 canais.
+> 112	- [profiles mint-hole P0 FECHADO — guard de coluna por trigger](reference_profiles_column_guard_mint_hole.md) — REVOKE(col) é no-op sob table-grant; coluna sensível exige trigger-guard.
+> 113	
+> ```
+
+## 🤖 Claude *(12:22:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the MEMORY.md file, I see it's around 110 entries totaling 19.9KB, and I need to trim it down to under 17.1KB. The main culprits are those verbose multi-clause lines like the FOCO ATIVO and PIPC entries with their dated sub-details. Most entries are already concise one-liners, so I'll focus on condensing those longer ones and tightening up the hooks to cut roughly 2.8KB while keeping the structure of one line per entry with details moved to separate topic files. I'm realizing that rewriting all 110 entries carefully is risky and token-intensive, but the constraint demands it. I'll take a systematic approach: preserve every file link and title (they're the critical pointers), but aggressively trim the descriptive hooks to terse phrases. I'll aim for roughly 140 characters per line and be especially aggressive with the longest entries. Let me draft the compacted version now, being careful to keep the exact filenames intact.
+
+</details>
+
+
+## 🤖 Claude *(12:23:01)*
+
+O índice tem ~110 entradas — a maioria já é uma linha, mas várias (FOCO ATIVO, PIPC, Golden Eye e outras) incharam com detalhe datado que pertence aos arquivos-tópico. Reescrevo compactando cada hook, **sem perder nenhum ponteiro** (o detalhe já vive nos tópicos):
+
+## 🤖 Claude *(12:24:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "content": "# Memory Index\n\n- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) \u2014 sobrescreve TS com eszip; `git checkout --` recupera.\n- [\u00c9PICO \u2014 Motor de Oportunidade de Produtos + Conector Amazon](project_product_opportunity_engine.md) \u2014 BoK 9/9; Amazon `?tag=`; c\u00f3digo GATED (GO+jur\u00eddico).\n- [\ud83c\udfaf FOCO ATIVO \u2014 Audi\u00eancia/flywheel: distribuir cortes EP01/EP02](project_audience_flywheel_distribution.md) \u2014 3 funis ML p\u00fablicos vivos; agendamento privado-primeiro; audi\u00eancia\u2192vendas.\n- [\ud83c\udfac PIPC \u2014 Pipeline Interno de Produ\u00e7\u00e3o Criativa (dev\u2192publicar\u2192analisar\u2192melhorar EP05)](project_pipc_creative_production_pipeline.md) \u2014 elo fraco=an\u00e1lise\u2192EP05; blueprint `docs/bok/pipc/`; Flow FX+GabrielAI.\n- [\ud83e\uddff Golden Eye \u2014 treinar os olhos = elevar o HARNESS do Vision MCP](project_vision_golden_eye.md) \u2014 VLM ORDENA>PONTUA; shopping list=imagens; plano `docs/roadmap/vision-golden-eye.md`.\n- [\ud83d\udce6 Masters grandes (EP01/EP02) em `repurpose-inbox/<uid>/` \u2014 NUNCA find cego](reference_host_local_masters_repurpose_inbox.md) \u2014 bucket 'local' CloudPanel via menu Cortes; skill `host-media-masters`.\n- [\ud83d\udd01 Tudo que fa\u00e7o 2\u00d7 vira skill+agente \u2014 parte do harness/driven-specs](feedback_recurring_actions_become_skills.md) \u2014 regra do \"duas vezes\"; sugerir doc; norte=orquestrador de sub-agentes.\n- [Gateway OpenClaw: roteamento openclaw/<id> com drift](reference_openclaw_gateway_model_routing_drift.md) \u2014 Constela\u00e7\u00e3o per-user (studio) via agent-task-execute groq, n\u00e3o o gateway.\n- [YouTube Track B upload \u2014 encanamento COMPLETO, witness gated](project_youtube_upload_ep02.md) \u2014 falta enable youtube-upload.service + CASA + master no host.\n- [ROADMAP (p\u00f3s-audi\u00eancia) \u2014 CRM Suite + Marketing](project_crm_suite_roadmap.md) \u2014 captura de leads DONE; pr\u00f3ximos Tickets/Produtos. SSOT docs/roadmap/.\n- [CRM + Caixa de Entrada Omnichannel \u2014 Amendment 10](project_crm_inbox_module.md) \u2014 composer/recibos/ficha rica DONE; falta omnichannel registry, agente (gated AI Act).\n- [Rail de repurpose \u2014 bug do `beats` REFUTADO](project_repurpose_beats_bug_and_open_fixes.md) \u2014 A/B comparou arquivos diferentes; segmentVideo d\u00e1 falso-verde sobre master corrompido; probe=exit+stderr+frames.\n- [Render de N clipes reusa UM chromium](reference_repurpose_browser_reuse.md) \u2014 5+ estourava mem\u00f3ria; fix `e0d9fe9`; worker precisa restart.\n- [Sala de Controle da Orquestra\u00e7\u00e3o \u2014 Vista Operacional + m\u00faltiplas Orquestras](project_orchestration_control_room.md) \u2014 Parte B n\u00f3s = re-arquitetura canvas\u2192editor pendente.\n- [HyperFrames = open-source HeyGen; Blend Difference N\u00c3O funciona](reference_hyperframes_caption_catalog.md) \u2014 falha em sil\u00eancio; caption-highlight/pill-karaoke casam com nosso contrato de beats.\n- [Legendas /spaces/video s\u00e3o VITRINE read-only](reference_video_studio_captions_vitrine.md) \u2014 \"Add\"=501 proposital; validar nos Assets/CaptionStyleGallery.\n- [Veo: image XOR referenceImages \u2014 nunca os dois](reference_veo_image_xor_references.md) \u2014 canvas-execute garante o XOR (first-frame vence).\n- [Carrossel \"de verdade\" (fatiado/cont\u00ednuo) \u2014 DIFERIDO](project_carousel_real_slicing.md) \u2014 imagem larga fatiada OU next/prev; N\u00c3O \u00e9 o hand-picked (Amend.29).\n- [Privado-primeiro: ir at\u00e9 o \u00faltimo passo REVERS\u00cdVEL sozinho](feedback_private_first_end_to_end.md) \u2014 postar privado/rascunho; Sovereign vira p\u00fablico; sondar pr\u00e9-condi\u00e7\u00f5es ANTES.\n- [Todo script CLI meu deve virar capacidade na UI](feedback_cli_actions_must_become_ui.md) \u2014 CLI \u00e9 minha m\u00e3o; entreg\u00e1vel=usu\u00e1rio fazer pela UI.\n- [Resume de Workflow por scriptPath N\u00c3O carrega `args`](reference_workflow_resume_needs_args.md) \u2014 repassar verbatim; diagnosticar pelo journal.\n- [`tsc --noEmit` na raiz N\u00c3O checa a app](reference_root_tsc_noop_use_build.md) \u2014 gate real = vite build.\n- [Gate de tipo real = `tsc -p tsconfig.app.json` vs baseline](reference_app_tsc_is_the_real_type_gate.md) \u2014 138 erros pr\u00e9-existentes 2026-07-21; compare por-arquivo.\n- [Cap de 100 edge fns: bulk deploy = 402](reference_supabase_functions_deploy_bulk_cap.md) \u2014 use single `deploy <fn>`; eszip \u00e9 bin\u00e1rio (strings).\n- [content-intel \u2014 v\u00eddeo existente \u2192 estrat\u00e9gia (BoK 9/9)](project_content_intel_module.md) \u2014 link IG/TikTok/YT \u2192 Vision MCP; c\u00f3digo gated GO+jur\u00eddico.\n- [Proveni\u00eancia AI Act Art.50 \u2014 Fatia 0-1 VIVAS](project_content_provenance_ai_act.md) \u2014 IPTC via ExifTool; Fatia 2 C2PA gated; deadline 2026-08-02.\n- [Meta: dois caminhos (IG Login vs FB/Business) + privacidade](project_meta_two_paths_and_privacy.md) \u2014 UM app, DUAS APIs; connect-instagram-token manual.\n- [WhatsApp Cloud API \u2014 fia\u00e7\u00e3o + gotchas](reference_whatsapp_cloud_api_wiring.md) \u2014 token EAA (n\u00e3o IGAA); subscribed_apps; whatsapp-webhook verify_jwt=false.\n- [types.ts fica stale ap\u00f3s migrations \u2014 regenerar](reference_supabase_types_stale_regen.md) \u2014 `npx supabase gen types typescript --linked`.\n- [Tier global de credenciais de app OAuth (admin) + Pinterest](project_global_app_credentials_admin_tier.md) \u2014 4 degraus per-user\u2192global\u2192env\u2192402. Amend.16.\n- [Motor de conte\u00fado de duas m\u00e1quinas + ag\u00eancia-dentro-da-plataforma](project_content_engine_two_machines.md) \u2014 Volume lo-fi vs Convers\u00e3o viral; ECC+OpenClaw.\n- [V\u00eddeo com avatar no Spaces \u2014 Veo 3.1](project_veo_avatar_video.md) \u2014 refs \u22643; ledger-first+veo-poll; failover FR-SPACES-091; 178 mco.\n- [Guard de URL s\u00f3 vale se sobreviver ao redirect](reference_ssrf_guard_survives_redirect.md) \u2014 use `fetchPublicUrl` (revalida cada 3xx).\n- [Motor novo no ledger exige `node_run_id` no cliente](reference_ledger_node_needs_node_run_id.md) \u2014 sem ele cai na branch legada e morre em 422.\n- [Verifica\u00e7\u00e3o OAuth do Google \u2014 home HTML cru + escopo demonstr\u00e1vel](reference_google_oauth_verification.md) \u2014 verificador n\u00e3o roda JS; n\u00e3o aprova \"pro futuro\".\n- [Loop 2026-07-14 \u2014 pool BYOK + carrossel + reframe publish](project_roadmap_post_v6100_media_rails.md) \u2014 Amendments 22/23/24; gated: 3 chaves Gmail.\n- [Assets: seletor de formato + preview fiel + modal responsivo](project_asset_publish_format_preview.md) \u2014 format-specs.ts SSOT + 10 chromes. Amend.21.\n- [Motor de repurpose \u2014 1 master \u2192 N shorts+carrossel](project_video_repurpose_engine.md) \u2014 Fatia 1 ingest external; GabrielAI \u00e9 o INVERSO.\n- [Loop 2026-07-12 \u2014 witness LoRA bloqueado em cr\u00e9dito Replicate](project_lora_witness_and_otd_spaces_036.md) \u2014 treino\u2192402; BYOK ~US$1,85; plumbing provado.\n- [UI \u2014 seletor de provider s\u00f3 carrega op\u00e7\u00f5es BYOK dispon\u00edveis](feedback_byok_only_available_options.md) \u2014 `useConfiguredProviders()`; keyless self-host sempre vis\u00edvel.\n- [HyperFrames worker fica stale at\u00e9 restart](reference_hyperframes_worker_restart.md) \u2014 `systemctl --user restart video-bridge.service`.\n- [Paid BYOK = p\u00f3s-renda; default free/open-source](feedback_paid_byok_post_revenue.md) \u2014 pago s\u00f3 testar ap\u00f3s 1\u00aa renda; nunca ativar em sil\u00eancio.\n- [Motor clone de voz self-host VIVO \u2014 Qwen3-TTS 0.6B](reference_tts_free_options.md) \u2014 `~/.mcorch/voice-engine/`; worker CLI por job; ref=24kHz WAV.\n- [Identidade avatar = escada multi-motor; char-ref sem-treino default](reference_avatar_identity_engines.md) \u2014 LoRA opt-in; default Nano Banana ~4\u00a2.\n- [Imagem = Gemini Nano Banana; direct-Google mais barato](reference_image_gen_provider_cost.md) \u2014 nano-banana=`gemini-2.5-flash-image`; hoje via OpenRouter.\n- [Spaces 100% arc \u2014 LoRA gr\u00e1tis + n\u00f3 WordPress + YouTube](project_spaces_lora_social_youtube.md) \u2014 LoRA BYOK USD0; WordPress direto; youtube-studio blueprint.\n- [Senior UX/UI Loop \u2014 auditor de jornada + rubrica s\u00eanior (Vision)](project_ux_ui_senior_loop.md) \u2014 grader senior-rubric.ts 8-dim SCORED; fix-loop=skill.\n- [GO'd roadmap 2026-07-08 (TikTok Login \u2192 open-design \u2192 Higgsfield)](project_go_roadmap_tiktok_login_openagn_higgsfield.md) \u2014 TikTok shipado; editor=HyperFrames. \u26a0\ufe0f `chmod o+x /home/gcrUX`.\n- [Spaces v2 \u2014 consolidar Canvas Studio+Spaces](project_spaces_v2_consolidation.md) \u2014 ledger-first+G7+Spotlight; MIV=est\u00e9tica; amend.14.\n- [YouTube bloqueia IP datacenter \u2014 storyboard no Chrome do Sovereign](reference_youtube_datacenter_workarounds.md) \u2014 frames via ytInitialPlayerResponse.storyboards.\n- [La\u00e7o MAPE-K vivo \u2014 guardi\u00e3o em cron + L2 Nemotron free](project_mape_k_guardian.md) \u2014 tick */5 + sweep 6h. \u26a0\ufe0f cron sem bun/npx no PATH; NUNCA armar ScheduleWakeup.\n- [Conformidade MIV p\u00f3s-rebrand + E2E + tooling ECC](project_miv_conformance_pass.md) \u2014 44 p\u00e1ginas\u21923 fixes; E2E 8/8. \u26a0\ufe0f squat http.server contamina E2E.\n- [Tokens MIV \u2014 accent=cyan, nebula s\u00f3 mem\u00f3ria, gold s\u00f3 valor](reference_miv_design_tokens.md) \u2014 `--accent` dual; nebula classe expl\u00edcita; CTA=glow.\n- [Rebrand MCORCH \u2014 Landing V2 em React (/lp preview, prod gated)](project_mcorch_rebrand_landing_v2.md) \u2014 tokens void/cyan/gold/nebula sob .mcorch-lp.\n- [Badge conex\u00e3o social = is_active, n\u00e3o o rel\u00f3gio do token](reference_social_oauth_badge_health_signal.md) \u2014 token renova via refresh_token; is_active \u00e9 o sinal.\n- [TikTok app review REPROVADO \u2014 checklist branding](project_tiktok_review_rebrand_requirements.md) \u2014 \u00edcone/TOS/Privacy + v\u00eddeo demo. Gate: rebranding.\n- [Buckets privados \u2192 signed URL owner-scoped](reference_private_bucket_asset_signing.md) \u2014 normalizador re-assina no render; policy 4-rotas =auth.uid.\n- [Contrato REAL da API Higgsfield + MCP oficial](reference_higgsfield_provider_contract.md) \u2014 soul/{mode} path-literal; compose nunca existiu; sentinel smoke.\n- [Conector Higgsfield MCP OAuth per-user \u2014 COMPLETO (gated)](project_higgsfield_mcp_connector.md) \u2014 migration+oauth PKCE+refresh+UI. Falta GO.\n- [Doutrina open-source-first / USD=0 / equity + Gabriel AI](feedback_opensource_first_zero_cost_equity.md) \u2014 self-host\u00e1vel vira microservi\u00e7o; custo USD externo=0=gate de GO.\n- [Gabriel AI (avatar-clone-ai) \u2014 BoK 10/10, Fatias 1-2 + 3a](project_avatar_clone_ai.md) \u2014 voiceClone BYOK fail-closed + consent/erase LGPD.\n- [Minerador de Produtos \u2014 confiabilidade an\u00e1lise de v\u00eddeo + custo](project_product_miner_vision_reliability.md) \u2014 Files API 20-100MB + fallback cover-image.\n- [Viewer sem nome = user de smoke QA vazado; sweep](reference_qa_throwaway_users_and_open_signup.md) \u2014 qa-throwaway.ts + sweep 04:00. \u26a0\ufe0f signup externo LIGADO.\n- [M\u00f3dulo V\u00eddeo (video-studio) \u2014 Fase B: render nativo + editor](project_video_studio.md) \u2014 host createStudioApi(McorchAdapter) + SPA 3210; Export 12 mco.\n- [BYOK Gemini = coluna `google_api_key`](reference_byok_gemini_column.md) \u2014 `gemini_api_key` N\u00c3O existe; l\u00ea `decrypted_user_api_keys.google_api_key`.\n- [Cyber-Sentinel \u2014 paridade pt-BR (OTD-VA-018 fechada)](reference_shared_sentinel_english_only.md) \u2014 7 fam\u00edlias pt-BR, 0 FP em 58.\n- [Entregar valor vis\u00edvel ao Usu\u00e1rio Zero, menos plumbing](feedback_deliver_user_value_not_plumbing.md) \u2014 caminho curto at\u00e9 algo que o Sovereign ABRE e TOCA.\n- [Ecossistema criativo bidirecional (Canvas+HyperFrames\u2192social)](project_creative_ecosystem_program.md) \u2014 creative_assets spine. \u26a0\ufe0f rotacionar chave Gemini + token Telegram.\n- [Channel Reshaper + Atomizer \u2014 1 pilar \u2192 posts nativos por canal](project_channel_reshaper.md) \u2014 reshape-pillar data-driven; /security-review pegou HIGH FMEA-011.\n- [Virada brand-first \u2014 persona Gabriel AI/CCIO evangeliza](project_brand_persona_ccio.md) \u2014 marca via persona; +YT+TikTok reusando autopilot.\n- [Sempre rodar Vision QA sobre prints + criativos](feedback_vision_qa_always.md) \u2014 scripts/qa/vision-qa.ts (custo 0) antes de declarar pronto.\n- [For\u00e7a total aut\u00f4noma para o primeiro R$ real](feedback_full_force_revenue_autonomy.md) \u2014 operar como Usu\u00e1rio 00; gargalo=distribui\u00e7\u00e3o+atribui\u00e7\u00e3o.\n- [IG Reels publica via graph.instagram.com + id do /me](reference_ig_reels_publish_path.md) \u2014 n\u00e3o usar meta_config; video_url p\u00fablica.\n- [Verificar todo entreg\u00e1vel de UI em browser real (Lei 1)](feedback_browser_verify_deliverables.md) \u2014 vite preview + sess\u00e3o injetada; Node (n\u00e3o bun) p/ playwright.\n- [Viral Autopilot \u2014 motor R1-R4 completo, ATIVADO 2026-06-23](project_viral_autopilot.md) \u2014 BoK 9/9; pg_cron jobid 3; v\u00eddeo 9:16 (default OFF).\n- [Unified Sensorial Canvas \u2014 Phase Epsilon V9 (/dashboard/universe)](project_unified_sensorial_canvas.md) \u2014 funde Core-Fable+Matrix+Mem\u00f3ria.\n- [Vision MCP \u2014 container 3200 atr\u00e1s de mcp.mcorch.com](project_vision_mcp.md) \u2014 BoK 9/9; PAT, LGPD erase, caps. CF laranja exige WAF Skip.\n- [Core-Fable \u2014 rota, Fable 5 flagship, shader Interstellar](project_core_fable.md) \u2014 shader (capturado=preto); chat localStorage \u2260 pref pipeline.\n- [E2E de UI logada \u00e0 prova de Cloudflare](reference_loggedin_e2e_local_preview.md) \u2014 CF Turnstile barra datacenter; vite preview + gen-user-session.ts.\n- [Auditoria de drift deployado\u2194migrations + tool](project_schema_drift_audit.md) \u2014 audit-schema-drift.sh; hotfix de prod vira migration na MESMA sess\u00e3o.\n- [RPCs do ledger mcoCoins endurecidos \u2014 P0 fechado](reference_ledger_rpc_security.md) \u2014 award/add s\u00f3 service_role; deduct self-only.\n- [Marketing Hub v2 \u2014 m\u00f3dulo agentic COMPLETO](project_marketing_hub_v2.md) \u2014 intent-execute fail-closed; AEO. Resta Resend + atribui\u00e7\u00e3o ML. \u26a0\ufe0f campaigns J\u00c1 EXISTE.\n- [Calibra\u00e7\u00e3o de contexto \u2014 usar a janela INTEIRA, selar s\u00f3 a ~95%](feedback_context_budget_calibration.md) \u2014 janela 1M; poda\u2260selar.\n- [Flywheel de conte\u00fado quebrado pelo cutover de chaves (REPARADO)](project_orchestrate_pipeline_repair.md) \u2014 regra: pg_net\u2192verify_jwt=false.\n- [Calibra\u00e7\u00e3o mcoCoins \u2014 modelo 4\u00d7-floor (fechada)](project_mcoin_calibration.md) \u2014 mco=ceil(usd/$0.018\u00d74).\n- [Constellation v2 \u2014 cockpit de agentes per-user (LIVE)](project_constellation_v2.md) \u2014 v6.18.0. has_role(app_role) single-arg.\n- [Stale worktree \u2014 checar contra origin/main](feedback_stale_worktree_check_origin.md) \u2014 `git show origin/main:<path>` antes de dizer \"quebrado\".\n- [Materialidade sob output bufferizado \u2014 n\u00e3o fabricar](feedback_materiality_buffered_output.md) \u2014 hash/UUID vem de output verificado NESTE turno; halt e re-query.\n- [Supabase keys migradas \u2014 use SB_SECRET_KEY](reference_supabase_keys_migrated.md) \u2014 SERVICE_ROLE/ANON mortas; SB_SECRET_KEY/SB_PUBLISHABLE_KEY.\n- [user_api_keys \u00e9 VIEW mascarada \u2014 chaves BYOK no Vault](reference_user_api_keys_encrypted.md) \u2014 edge l\u00ea decrypted_user_api_keys; teste server-side.\n- [Operador de Browser Autenticado \u2014 atribui\u00e7\u00e3o ML](project_authenticated_browser_operator.md) \u2014 datacenter bloqueado; t\u00e9cnica magiclink reutiliz\u00e1vel.\n- [Encrypted views \u2014 .insert() (n\u00e3o .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) \u2014 null n\u00e3o limpa (RPC disconnect_*).\n- [grep \u00e9 ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) \u2014 BRE estoura sob `|| true`; use -E.\n- [OpenClaw delegation \u2014 paralelizar seals via @claw_gcrux](feedback_openclaw_delegation_pattern.md) \u2014 delegar low-risk via Telegram.\n- [OpenClaw \u00d7 Ollama \u2014 Gateway](project_openclaw_ollama_integration.md) \u2014 Supervisor \u00daNICO = systemd (NUNCA pm2). `pnpm` no repo \u00e9 destrutivo.\n- [API Tenancy Model \u2014 credenciais sempre per-user](feedback_api_tenancy_per_user.md) \u2014 resolve per-user (auth.uid()) antes de env global.\n- [Paz e Vitalidade \u2014 m\u00e9trica de sucesso da Constela\u00e7\u00e3o](feedback_paz_e_vitalidade.md) \u2014 vitalidade do Sovereign + paz humana como m\u00e9tricas.\n- [Gabriel Zarattini \u2014 Lead Architect](user_profile.md) \u2014 profile, depth t\u00e9cnica, pt-BR UI, execu\u00e7\u00e3o aut\u00f4noma.\n- [Stripe & Monetiza\u00e7\u00e3o \u2014 Estrat\u00e9gia Usu\u00e1rio Zero](project_stripe_strategy.md) \u2014 Sandbox intencional; live keys s\u00f3 ap\u00f3s valida\u00e7\u00e3o.\n- [Commit style](feedback_commits.md) \u2014 Nunca Co-Authored-By; corpo milestone-oriented.\n- [Deploy Frontend](reference_deploy_frontend.md) \u2014 nginx serve dist/ direto; `bun run build`=deploy p/ login.mcorch.com.\n- [lucide-react 1.11 removeu brand icons](reference_lucide_brand_icons_removed.md) \u2014 tsc passa, vite build quebra; grep antes de usar.\n- [Usu\u00e1rio Zero \u2014 Estrat\u00e9gia e Produ\u00e7\u00e3o](project_usuario_zero_strategy.md) \u2014 User 0 = `ada39fae`, gabrielcall@gmail.com.\n- [Instagram App Review \u2014 Deferido para Usu\u00e1rio 1](project_instagram_appreviw_deferred.md) \u2014 n\u00e3o executar at\u00e9 sair da fase Usu\u00e1rio Zero.\n- [Canvas Studio Architecture \u2014 useCanvasStore](project_canvas_studio_architecture.md) \u2014 3\u00ba Zustand (zundo); pipelineMode/lanes no graph jsonb.\n- [Canvas Design \u2014 open-design sidecar](project_canvas_design_initiative.md) \u2014 7\u00ba m\u00f3dulo; CLI od; pnpm nunca na raiz.\n- [TikTok+YouTube publish \u2014 gotchas de audit/OAuth](reference_tiktok_unaudited_private_account.md) \u2014 TikTok privada pr\u00e9-audit; youtube.upload sem CASA; state TTL 10min.\n- [Channel Format Intelligence \u2014 engenharia reversa de formato](project_channel_format_intelligence.md) \u2014 channel_profiles/pillar_atoms; master 9:16 serve 7 canais.\n- [profiles mint-hole P0 FECHADO \u2014 guard de coluna por trigger](reference_profiles_column_guard_mint_hole.md) \u2014 REVOKE(col) \u00e9 no-op sob table-grant; coluna sens\u00edvel=trigger-guard.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:24:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm checking whether the file size comes in under the 17.1KB limit.
+
+</details>
+
+
+## 🤖 Claude *(12:24:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory\necho \"MEMORY.md agora: $(wc -c < MEMORY.md) bytes ($(( $(wc -c < MEMORY.md) / 1024 ))KB) \u00b7 $(grep -c '^- \\[' MEMORY.md) entradas\"\necho \"alvo: <17510 bytes (17.1KB)\"",
+  "description": "Verify compacted MEMORY.md size"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> MEMORY.md agora: 17259 bytes (16KB) · 109 entradas
+> alvo: <17510 bytes (17.1KB)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(12:24:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+MEMORY.md is now under the 17.1KB target at 17259 bytes with all 109 entries preserved and hooks trimmed. I'm back to the main thread—I've addressed the Sovereign's correction about the masters and compacted the memory file, and now I'm returning to the PIPC.
+
+The BoK workflow is still running in the background and I'll get notified when it finishes. I should wrap this turn concisely: confirm the vaccination is complete, the memory compaction is done, and the BoK is still processing. The Sovereign wanted the masters fixed and remembered with broader doctrine annotated, which I've handled. I now have accurate knowledge that the masters are on host (EP01 1.34GB, EP02 529MB), so the loop continues while the BoK cooks.
+
+</details>
+
+
+## 🤖 Claude *(12:24:59)*
+
+✅ **Vacina completa + índice compactado.** Materializei tudo que você pediu, com prova:
+
+**Masters (erro recorrente morto):**
+- Achei materialmente: **EP01** (1,34 GB) e **EP02** (529 MB) em `repurpose-inbox/ada39fae…/` — o bucket 'local' do CloudPanel, subido pelo menu **Cortes**. Meu `find` de antes falhou por profundidade, não porque não existiam.
+- **4 canais durables** pra nunca mais esquecer: skill `host-media-masters` (auto-trigger em "onde está o master / não achei o arquivo grande") · memória `reference_host_local_masters_repurpose_inbox` · linha no **CLAUDE.md Key Files** (= meu system-prompt do projeto, carregado toda sessão) · SOP já existia.
+
+**Doutrina maior (anotada como parte do harness/driven-specs):**
+- Memória `feedback_recurring_actions_become_skills` — **regra do "duas vezes"**: tudo que faço 2× vira skill+agente; sugerir documentação proativamente; **norte = orquestrador que instancia seus próprios sub-agentes recorrentes** (um por módulo ou meta-orquestrador sob demanda). Generaliza o CLI→UI e estende o mandato Obstáculo→Síntese.
+
+**Higiene:** índice de memória compactado **19,9KB → 16KB** (109 entradas, **zero ponteiro perdido** — só enxuguei os hooks; o detalhe vive nos arquivos-tópico).
+
+**Loop ainda rodando:** a **BoK do PIPC** (`wlajy1ta6`) continua gerando em background — te aviso quando fechar, e aí sigo pros slices un-gated **S1 (curva de retenção) → S2 (análise por-episódio)**, o elo fraco de aprender pra melhorar o EP05.
+
+Uma observação honesta pra fechar o ciclo da sua crítica: o padrão que se repetiu não foi só "esquecer onde está o master" — foi **eu re-sondar em vez de consultar o que já sabíamos**. A skill nova ataca a raiz: da próxima vez que eu pensar "cadê o arquivo grande", ela dispara antes de eu sair fazendo `find`.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
