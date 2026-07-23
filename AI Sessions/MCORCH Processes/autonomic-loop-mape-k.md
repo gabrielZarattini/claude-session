@@ -6,6 +6,8 @@
 > alarme 21:07 (check inline leu objeto de erro PostgREST como "4 erros") e a fragilidade sessão-morta =
 > vigilância-morta. Referência: IBM Autonomic Computing (MAPE-K) — **M+A mecânicos e perpétuos (cron);
 > LLM só em P+E**; monitor quebrado é sintoma de primeira classe; todo estado em Knowledge auditável.
+>
+> **Irmão distinto (NÃO confundir):** há um segundo laço MAPE-K no harness — o **`pmo-curator`** (`docs/processes/pmo-curator.md`), o loop de **PROGRESSO/roadmap**, que é **plan-only** (emite `NEXT-STEPS.md`; NÃO executa nem remedia). Este SOP aqui é o loop de **CONFIABILIDADE** (M+A mecânicos + P+E de self-heal). Zero sobreposição: infra/UX quebrada = incidente **daqui** (o pmo só a referencia via `--list-incidents` como contexto); próximo passo de roadmap = plano **de lá**.
 
 ## ORO
 - **Operator (humano):** Sovereign — instala/valida crontab, recebe Telegram, arma/desarma L2 (`--arm`/`--disarm`), abre a sessão /loop v3 (L3).

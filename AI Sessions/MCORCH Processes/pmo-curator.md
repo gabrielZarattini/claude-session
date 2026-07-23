@@ -22,13 +22,13 @@ O `pmo-curator` é o **loop de PROGRESSO** — altitude diferente, responsabilid
 | Saída | Incidentes + Telegram + self-heal | **`NEXT-STEPS.md`** (plano tático priorizado) |
 | Executa? | Sim (L2/L3 self-heal gated) | **Não** — só planeja e entrega o plano |
 
-**Regra de não-duplicação:** infra quebrada NÃO é item de plano do PMO — é incidente do guardião. Se o `pmo-curator` detectar um sintoma de saúde (container down, RED de sweep), ele **aponta para o guardião** (`--list-incidents`), não o transforma em ação de roadmap. E o guardião nunca reordena o roadmap — isso é PMO.
+**Regra de não-duplicação:** qualquer incidente de **propriedade do guardião** — infra quebrada (container down, sweep RED) OU **backlog de produto** (`UX_FINDING` P1/P2/P3 do `ux-explorer-cron.sh`, `autonomic-loop-mape-k.md:26`) — NÃO é item de plano do PMO; ele é **executado pelo próprio guardião** (L2/L3). O `pmo-curator` lê `guardian-tick.ts --list-incidents` (read-only) só como **contexto** e, no máximo, **referencia** os P1 abertos como ponteiro — nunca vira ação de código sua. E o guardião nunca reordena o roadmap — isso é PMO.
 
 ---
 
 ## ORO
 
-- **Operator (máquina):** o subagente `pmo-curator` (`.claude/agents/pmo-curator.md`), invocado pela skill `pmo-curator` — puramente **plan-only** (sem tool `Edit`; sem shell mutante).
+- **Operator (máquina):** o subagente `pmo-curator` (`.claude/agents/pmo-curator.md`), invocado pela skill `pmo-curator` — **plan-only por contrato de POLÍTICA**, não por barreira de tool. O grant é `tools: Bash, Read, Write, Grep, Glob` (Bash **é** shell mutante, Write sobrescreve qualquer path — logo a garantia é disciplina): **Bash usado read-only** só para verificação material (`ls`/`git log`/`systemctl --user status`); **Write escopado somente ao `NEXT-STEPS.md`**.
 - **Operator (humano/orquestrador):** o loop principal (main-loop) que dispara a skill após o `/handson` e consome o `NEXT-STEPS.md`.
 - **Reviewer:** Sovereign (aprova/ajusta o plano); o próprio agente roda um auto-check de materialidade antes de emitir.
 - **Owner:** Sovereign (blast radius: um plano mal-priorizado desvia o esforço do loop; um item marcado "un-gated" que na verdade era gated pode disparar uma ação prematura).
@@ -47,17 +47,18 @@ Cada passo tem um **critério de sucesso material** (Lei 1). O agente NUNCA conf
 - Ler `HANDOFF.md` (topo: FIRST ACTION + 1ª linha do Task State) — via janelas ≤150 linhas (token-cap guard).
 - Ler `.claude/context/sprint-priorities.md` (a **FILA SOVEREIGN** é a autoridade de ordenação).
 - Amostrar `docs/roadmap/` (SSOTs vivos) e o estado dos gates em `docs/bok/`.
+- Ler `guardian-tick.ts --list-incidents` (read-only) → **contexto** dos incidentes abertos do guardião (infra/UX); só ponteiro, nunca ação.
 - **Verificação material:** conferir se o que o HANDOFF afirma bate com a fonte — ex.: se diz "BoK X 9/9", rodar o gate check (`ls docs/bok/X/`); se diz "worker pronto", `ls -la` o script. Contradição fonte↔HANDOFF → **flag explícita**, não papel-por-cima.
 - **Critério de sucesso:** todas as seções esperadas do HANDOFF presentes + zero contradição não-sinalizada.
 
 ### 2. ANALYZE (cruzar, achar dependências, riscos, criticidade)
 - Para cada candidato a próximo passo, determinar:
   - **Tipo:** `un-gated` (executável já, sem mão humana) vs `gated` (precisa GO/revisão/ação externa).
-  - **Dependências:** o que precisa estar pronto antes (ex.: *revisar BoK do PIPC* → destrava *slices S1–S4*).
+  - **Dependências:** o que precisa estar pronto antes (ex.: *revisar BoK do PIPC* → destrava **só os slices Sovereign-gated do `00-index`** — verificar quais, nunca presumir "todos"; um slice que o roadmap já marca un-gated não espera revisão).
   - **Deadlines externos:** ex.: **AI Act Art.50 — 2026-08-02** (multa Art.99).
   - **Criticidade / posição na FILA SOVEREIGN** (AGORA > 0 > 1 …). **Nunca reordenar a FILA sem GO** — o PMO respeita a ordem declarada; pode *recomendar* reordenar, com justificativa.
   - **Gate Closed-Loop:** se o passo é "construir módulo novo", ele SÓ pode ser planejado como código-pronto se a BoK estiver 9/9 + Pattern Conformance; senão o plano roteia para `bok-scribe`/`bok-curator`, não para código (Master Execution Protocol §1).
-  - **Fronteira com o guardião:** sintoma de saúde → aponta incidentes, não vira ação de roadmap.
+  - **Fronteira com o guardião:** incidente de propriedade do guardião (infra OU `UX_FINDING`) → aponta `--list-incidents` como contexto, não vira ação de roadmap.
 - **Critério de sucesso:** cada item classificado com dependências e tipo materialmente justificados; nenhum "un-gated" sem a pré-condição verificada.
 
 ### 3. PLAN (gerar o `NEXT-STEPS.md`)
@@ -65,11 +66,11 @@ Produzir o artefato **`NEXT-STEPS.md`** (raiz do repo, irmão do `HANDOFF.md`) c
 1. **Resumo executivo** — 3 linhas (onde estamos · a bifurcação · a recomendação #1).
 2. **Tabela de ações priorizada** (schema abaixo) — TODOS os próximos passos, gated e un-gated.
 3. **Sequência recomendada** — o que atacar 1º/2º/3º e por quê (dependências + criticidade + deadline).
-4. **Comandos exatos** para os itens un-gated (ex.: `systemctl --user enable --now youtube-upload.service`).
+4. **Comandos exatos** para os itens un-gated — o comando REAL (verifique o header do unit / o script antes; ex.: um systemd `--user` costuma exigir `cp scripts/systemd/<svc>.service ~/.config/systemd/user/ && systemctl --user daemon-reload && systemctl --user enable --now <svc>`, não `enable --now` cru sobre um unit não-linkado).
 5. **Rodapé de materialidade** — o que foi verificado vs. o que ficou como "ANÁLISE INSUFICIENTE".
 
 ### 4. EXECUTE (fora do escopo do PMO — por design)
-O `pmo-curator` **entrega o plano e para**. A execução fica no main-loop ou nos agentes específicos (`build-deploy-guardian`, `engineer-spaces`, `bok-curator`, …). Evolução futura opcional (GO Sovereign): um executor que consome os itens `un-gated` do `NEXT-STEPS.md` e despacha para o agente certo — **fora do MVP**.
+O `pmo-curator` **entrega o plano e para**. A execução fica no main-loop ou nos agentes específicos (`build-deploy-guardian`, `engineer-spaces`, `bok-curator`, …). Evolução futura opcional (GO Sovereign): um executor que consome os itens `un-gated` do `NEXT-STEPS.md` e despacha para o agente certo — **fora do MVP**, e mesmo então **restrito a trabalho de roadmap/feature un-gated**; remediar confiabilidade/incidentes permanece **proibido** (isso é do guardião L2/L3), para nunca colidir com o self-heal.
 
 ### 5. KNOWLEDGE (persistir para o próximo ciclo)
 - O `NEXT-STEPS.md` é o artefato durável (supersede a cada run — Lei 3, não acumula).
@@ -116,14 +117,14 @@ Um `NEXT-STEPS.md` fresco na raiz do repo que, para o estado atual, (a) lista to
 - ❌ Confiar na síntese do `HANDOFF.md` sem verificar a fonte (o HANDOFF pode estar stale — Lei 1).
 - ❌ Marcar um passo como `un-gated` sem verificar materialmente a pré-condição.
 - ❌ Reordenar a FILA SOVEREIGN sem GO (só *recomendar*, explicitamente).
-- ❌ Transformar sintoma de saúde de infra em item de roadmap (é incidente do guardião — [[project_mape_k_guardian]]).
+- ❌ Transformar incidente de propriedade do guardião (infra OU `UX_FINDING`) em item de roadmap (é dele — [[project_mape_k_guardian]]).
 - ❌ Planejar código para módulo sem BoK 9/9 (fura o gate Closed-Loop).
-- ❌ Deixar o `pmo-curator` **executar** (ele é plan-only; sem tool `Edit`).
+- ❌ Deixar o `pmo-curator` **executar** — ele é plan-only por **política** (tem `Bash`/`Write`, mas restritos a verificação read-only e à escrita do `NEXT-STEPS.md`), não por falta de tool.
 - ❌ Acumular planos velhos no `NEXT-STEPS.md` (supersede a cada run — Lei 3).
 
 ---
 
-**Skill:** `.claude/skills/pmo-curator/SKILL.md` · **Agent:** `.claude/agents/pmo-curator.md` · **Irmãos:** [[autonomic-loop-mape-k]] (guardião de confiabilidade) · `docs-curator`/`bok-curator` (governança de docs). Doutrina: [[feedback_recurring_actions_become_skills]].
+**Skill:** `.claude/skills/pmo-curator/SKILL.md` · **Agent:** `.claude/agents/pmo-curator.md` · **Irmão de confiabilidade:** o guardião — **laço em cron** `scripts/qa/guardian-tick.ts` + SOP [[autonomic-loop-mape-k]] (não é subagente) · **Curadores:** `docs-curator`/`bok-curator` (governança de docs). Doutrina: [[feedback_recurring_actions_become_skills]].
 
 ---
 
