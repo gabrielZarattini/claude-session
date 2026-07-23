@@ -14069,5 +14069,6 @@ Tudo verificado com Vision QA logado ($0), commitado, pushado e selado. Bom desc
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-23 - 4a90ca62-9ccb-4ca7-95d6-e6f242145e65]]
+> * **Sessão Anterior**: [[2026-07-23 - Estruturar roadmap e pipeline de campanhas]]
+> * **Próxima Sessão**: [[2026-07-23 - agent-a04cf7e091b40cdd1]]
 %% --- TIMELINE END --- %%

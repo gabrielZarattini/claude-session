@@ -1,4 +1,4 @@
-# Session 4a90ca62-9ccb-4ca7-95d6-e6f242145e65
+# Estruturar roadmap e pipeline de campanhas
 **Date:** 2026-07-23 | **Session ID:** `4a90ca62-9ccb-4ca7-95d6-e6f242145e65`
 
 ---
@@ -575,6 +575,14 @@ Nenhum bloqueador ✅ — infra 100% healthy, worktree limpo, tsc-app abaixo da 
 
 O caminho un-gated mais óbvio é fechar o **output-flow do nó Publicar** (item 1) — destrava publicação real a partir da Sala de Controle sem esperar GO. Os itens 2 e 3 são gated e precisam do teu GO. Qual sigo?
 
+## 👤 User *(00:47:45)*
+
+continue entao com os proximos passos arme o loop mas agora quem decide o caminho é voce. verifique o rosdmap e o que temos para criar um roadmap desenhar o pipeline e publicar criando conteudo. Distribua para os agentes vakidar algo completo qque consegue entregar tudo, decidir se as camapanhas estao boas em pouco tempo e investimento para calidar em massa os milhares de funil de vendas distrivuidos pela intente.
+
+## 👤 User *(00:47:50)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -584,6 +592,6 @@ O caminho un-gated mais óbvio é fechar o **output-flow do nó Publicar** (item
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-22 - eb5f8f68-8fd6-43ef-bfe3-8d76aa95ca4d]]
-> * **Próxima Sessão**: [[2026-07-23 - Estruturar roadmap e pipeline de campanhas]]
+> * **Sessão Anterior**: [[2026-07-23 - 4a90ca62-9ccb-4ca7-95d6-e6f242145e65]]
+> * **Próxima Sessão**: [[2026-07-23 - Verificar contexto de cortes e otimizar UI da plataforma]]
 %% --- TIMELINE END --- %%

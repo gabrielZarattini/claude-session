@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 98
-> * **Total de Sessões**: 2928
+> * **Total de Sessões**: 2959
 
 ---
 
@@ -121,7 +121,38 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-23 - agent-ae7942b07b45458aa]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ae60624e7e6107342]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ace1afa59904a23a0]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ac83b9e3477d19ad9]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ac4e4ae225ac5af1d]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ac21b89d2bde40064]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-abcf62aeace3abdca]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-aba69cc8f428ea9ed]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ab74bdecc23e6d877]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-ab16798f4c8acafe1]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-aa77353cb79e27d5c]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-aa5fb904d76e54a23]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-aa3321bfa01928b03]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a95c37457963536b9]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a88d9eb01319353c4]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a88bc1acd2bd8b601]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a883d173a99aafdc6]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a83df72eb882e3598]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a643bb4bc7b44c470]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a468de479f1382eca]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a45f45f36a3a5d058]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a41ac716820b34551]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a411519a945520e58]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a40bc7ccd416ae742]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a2d2cf1b8410843f4]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a2a61745ca38ed82e]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a186771f4c3f62762]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a155bc9e28a82b7a7]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a114489c3dfff8636]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - agent-a04cf7e091b40cdd1]]` (ClaudeSessions) - *2026-07-23*
 *   `[[2026-07-23 - Verificar contexto de cortes e otimizar UI da plataforma]]` (ClaudeSessions) - *2026-07-23*
+*   `[[2026-07-23 - Estruturar roadmap e pipeline de campanhas]]` (ClaudeSessions) - *2026-07-23*
 *   `[[2026-07-23 - 4a90ca62-9ccb-4ca7-95d6-e6f242145e65]]` (ClaudeSessions) - *2026-07-23*
 *   `[[2026-07-22 - eb5f8f68-8fd6-43ef-bfe3-8d76aa95ca4d]]` (ClaudeSessions) - *2026-07-22*
 *   `[[2026-07-22 - db9b9f6b-501f-42ba-ba65-252fc72f22d3]]` (ClaudeSessions) - *2026-07-22*
