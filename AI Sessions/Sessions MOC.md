@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3045
-> * **Sessões do Claude**: 2998
+> * **Total de Sessões Registradas**: 3046
+> * **Sessões do Claude**: 2999
 > * **Sessões do Gemini**: 47
 
 ---
@@ -87,7 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-23 - agent-ae36ba8b03b3cadf3]]` - *2026-07-23*
 *   `[[2026-07-23 - agent-ae0a45908e405f6f5]]` - *2026-07-23*
 *   `[[2026-07-23 - agent-adc14c3923d00e312]]` - *2026-07-23*
-*   *... e mais 2987 sessões nessa categoria.*
+*   *... e mais 2988 sessões nessa categoria.*
 
 ---
 
@@ -1853,6 +1853,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-23 - agent-a068a986e860a9849]]` (ClaudeSessions)
 *   `[[2026-07-23 - agent-a04cf7e091b40cdd1]]` (ClaudeSessions)
 *   `[[2026-07-23 - agent-a029c248857f9ed07]]` (ClaudeSessions)
+*   `[[2026-07-23 - Visualizar roadmap com passos realizados e próximos]]` (ClaudeSessions)
 *   `[[2026-07-23 - Verificar contexto de cortes e otimizar UI da plataforma]]` (ClaudeSessions)
 *   `[[2026-07-23 - Seal handoff e treinar visão MCP para roadmap]]` (ClaudeSessions)
 *   `[[2026-07-23 - Estruturar roadmap e pipeline de campanhas]]` (ClaudeSessions)

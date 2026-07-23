@@ -14070,5 +14070,5 @@ Tudo verificado com Vision QA logado ($0), commitado, pushado e selado. Bom desc
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-23 - Seal handoff e treinar visão MCP para roadmap]]
-> * **Próxima Sessão**: [[2026-07-23 - agent-a029c248857f9ed07]]
+> * **Próxima Sessão**: [[2026-07-23 - Visualizar roadmap com passos realizados e próximos]]
 %% --- TIMELINE END --- %%
