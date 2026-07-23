@@ -10352,5 +10352,5 @@ Janela em 68% ainda dá para **uma Fatia 2 fresca** se você GO'ar (+ estou cien
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-23 - 4a90ca62-9ccb-4ca7-95d6-e6f242145e65]]
-> * **Próxima Sessão**: [[2026-07-23 - Verificar contexto de cortes e otimizar UI da plataforma]]
+> * **Próxima Sessão**: [[2026-07-23 - Seal handoff e treinar visão MCP para roadmap]]
 %% --- TIMELINE END --- %%
