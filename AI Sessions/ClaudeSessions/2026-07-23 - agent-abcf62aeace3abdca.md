@@ -49,5 +49,5 @@ Porém, a métrica final (alcance × hook_rate × lift de eficiência coletiva) 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-23 - agent-aba69cc8f428ea9ed]]
-> * **Próxima Sessão**: [[2026-07-23 - agent-ac21b89d2bde40064]]
+> * **Próxima Sessão**: [[2026-07-23 - agent-ac12a931edf4cb031]]
 %% --- TIMELINE END --- %%
