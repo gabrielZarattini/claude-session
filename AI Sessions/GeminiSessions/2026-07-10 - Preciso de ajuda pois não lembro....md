@@ -361,4 +361,5 @@ I'm trying to remember the exact command to access "claude" through the OpenRout
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-03 - handson]]
+> * **Próxima Sessão**: [[2026-07-24 - Denovo não estou conseguindo acessar a...]]
 %% --- TIMELINE END --- %%
