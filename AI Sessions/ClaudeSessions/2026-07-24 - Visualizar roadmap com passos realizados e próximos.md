@@ -9727,6 +9727,2746 @@ S1+S2 selados e pushed (`ef8b8c9..a9f6154`). Agora **A4 — CRM Contatos**. Prim
 > docs/bok/crm-suite/00-index.md:157:5. **OTD-CS-001** — decidir Contato ≡ `leads` **antes** da Fase 1 de Contatos, enquanto migrar ainda é barato.
 > ```
 
+## 🤖 Claude *(10:29:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing a critical constraint in the crm-suite's design: there's an open decision (OTD-CS-001) to merge the Contato concept with the existing `leads` table from marketing-hub rather than creating a separate contacts table, which keeps the migration simpler and cheaper during the early phases.
+
+But the Sovereign's directive explicitly asks me to create a new `contacts` table with its own schema, which directly contradicts this architectural decision — it would duplicate the leads entity, create two sources of truth for contact information, and potentially confuse the CRM associations that reference contact types. This is a genuine conflict between the explicit instruction and the BoK's flagged design decision that was supposed to be resolved before moving forward.
+
+The tension is that the Sovereign has full autonomy and gave a clear schema directive, but OTD-CS-001 is exactly the kind of architectural choice with real downstream consequences — creating a separate contacts table now makes it expensive to reverse later if they actually want contacts to be leads. The responsible move is to flag this rather than blindly duplicate the entity, even though they're the Owner and Reviewer. The Sovereign's explicit request for a `contacts` table is clear, but I need to weigh that against the architectural risk. The real tension is whether to create a separate person-entity table or treat contacts as a view over the existing leads data. Either way, I can honor the CRUD pillar they want while being intentional about which approach avoids duplication and debt.
+
+Looking at the `crm_associations` schema, it already has `contact` as an enum type in the from/to relationship model — so the system architecture actually expects a contacts entity to exist. That's a strong signal that creating the `contacts` table isn't just following instructions, it's aligning with what the data model already assumes.
+
+The real tension is that OTD-CS-001 flags this exact decision as expensive to reverse, and conflating contacts with leads creates fragmentation. But the spine was designed expecting `contact` as a first-class type, so leaving it undefined means associations reference a type that doesn't actually exist yet. Given that architectural ambiguity is explicitly called out as a Sovereign decision point, I'm leaning toward creating the table to satisfy what the schema already implies. I see the path forward: instead of creating a duplicate `contacts` table, I'll implement a `crm-contacts` CRUD edge function that uses the existing `leads` table as its backing store. This resolves the BoK's conflation concern (Contato ≡ leads), delivers what the Sovereign asked for, and avoids the architectural debt of maintaining two person-entity tables with identical schemas.
+
+But the Sovereign explicitly asked me to create a `contacts` migration, which deviates from that approach. I'm facing a genuine architectural decision that the BoK flags as needing resolution—one the Sovereign may not have considered. The honest move is to acknowledge this fork rather than silently pick a path that contradicts their explicit instruction.
+
+I'll implement what they asked for—the `contacts` table and CRUD operations—but I need to think through whether they want a truly separate entity from leads or if this is meant to unify person data. Let me clarify that intent before proceeding. canonical contact entity directly fulfills the Sovereign's explicit directive and gives the spine's contact association a real target. The tension is whether resolving OTD-CS-001 autonomously (by establishing leads and contacts as separate entities) respects the principle of deciding architectural questions WITH the Sovereign rather than by fiat. But given the full autonomy granted and the exact schema provided, I think I can make this call: create the `contacts` table and document it as the resolution to OTD-CS-001, noting the leads-to-contact relationship pattern for future refinement. The distinction here is that OTD-CS-001 is a data modeling choice I can actually reason through competently, unlike A10's legal question, and the Sovereign's schema spec points toward treating contacts as a separate entity—so I'm justified in proceeding with the additive approach while flagging the decision clearly for potential override.
+
+I've confirmed there's no existing `contacts` table, so this is genuinely new. Now I need to build out the CRUD operations for the edge function—create, read, update, delete—all gated by JWT and scoped to the user's own records.
+
+For the database layer, I'm designing a migration that creates the contacts table with row-level security policies allowing users full CRUD access to their own contact records. The edge function can either use the user's JWT token directly (letting RLS enforce ownership) or use service-role credentials with explicit user_id filtering—both approaches work, but I'll go with the JWT path since it's cleaner for user-owned data.
+
+Writing the contacts table schema... Setting up row-level security policies so users can only access their own contacts, with full CRUD permissions restricted by user ID.
+
+Now I'm adding a unique index on the user_id and email combination to prevent duplicate emails per user, plus another index on user_id with creation date for efficient querying. For the updated_at timestamp, I'm deciding whether to use a trigger or handle it directly in the edge function on updates.
+
+I'm realizing that relying on DEFAULT auth.uid() for user_id could be problematic if the edge function uses service-role credentials, since auth.uid() would return null and violate the NOT NULL constraint. Instead, I should have the edge function explicitly set user_id from the authenticated user's ID rather than depending on the database default, which is safer and clearer.
+
+Now I'm sketching out the crm-contacts edge function structure: it'll be JWT-gated with CORS support, extract the user from the Bearer token, and handle CRUD operations based on an action parameter — create will insert a new contact with the user's ID, list will fetch all contacts for that user with RLS enforcing ownership.
+
+I'm thinking through the implementation approach: I could reference an existing edge function pattern for consistency, but I'll write this one self-contained to keep it straightforward. The scope is getting large, so I'm planning to break this into three parts: the database migration, the edge function itself, and a security review.
+
+For the schema details, I'm deciding on the `updated_at` field—I'll handle that in the function logic rather than at the database level. For the `status` column, I'm weighing whether to add a CHECK constraint with common CRM values like 'active', 'archived', 'lead', 'customer', or keep it flexible without constraints. A CHECK provides good data hygiene, but I want to avoid being too restrictive if new statuses are needed later.
+
+I'll go with a minimal CHECK constraint on sensible values and default to 'active', which keeps the test straightforward. Now I'm ready to write the migration with a comment documenting how this resolves the Sovereign's request—creating a dedicated `contacts` entity separate from `leads`, with the two linked through `crm_associations`, while keeping the existing `leads` table untouched.
+
+</details>
+
+
+## 🤖 Claude *(10:30:04)*
+
+**Achado arquitetural material (Lei 1):** a `crm-suite` **deliberadamente não tem tabela `contacts`** — o `00-index:73-74` diz "Contatos via conflação com `leads`" e a **OTD-CS-001 está ABERTA**: "decidir Contato ≡ `leads` antes da Fase 1 de Contatos, enquanto migrar ainda é barato." A `leads` já tem email/name/source/status. Além disso, o spine `crm_associations` já tem `contact` como tipo de entidade.
+
+Diferente da OTD jurídica do A10 (que eu não posso decidir), **esta é uma decisão de modelagem dentro da minha competência** e o seu schema explícito aponta para "entidade separada". Vou **resolver a OTD-CS-001 rumo a entidades separadas** (padrão HubSpot: `lead` = registro de funil, `contact` = pessoa no CRM, linkáveis via `crm_associations`), **aditivo e reversível** (não toco em `leads`), e sinalizo para você vetar se quis conflação. Escrevo o schema + o CRUD:
+
+## 🤖 Claude *(10:30:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260724120200_crm_contacts.sql",
+  "content": "-- Migration: CRM Suite \u2014 pilar CONTATOS (A4). Tabela `contacts` = a pessoa no CRM.\n--\n-- OTD-CS-001 RESOLUTION (documented, non-destructive): resolves toward SEPARATE entities (HubSpot-style):\n--   `contacts` = a person in the CRM (dedicated, first-class \u2014 the spine's `crm_associations.contact` type\n--   finally has a real home); `leads` (marketing-hub) remains the FUNNEL record. The two link via\n--   crm_associations (contact <-> lead). Additive + reversible: `leads` is untouched, no data migrated.\n--   Flagged to the Sovereign \u2014 veto to `contact \u2261 leads` migrates cheaply while contacts is empty.\n--\n-- RLS: owner full CRUD (user-owned data; edge fn `crm-contacts` operates under the user's JWT so RLS enforces).\n\nCREATE TABLE IF NOT EXISTS public.contacts (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,\n  email text,\n  name text,\n  source text,\n  status text NOT NULL DEFAULT 'active',\n  created_at timestamptz NOT NULL DEFAULT now(),\n  updated_at timestamptz NOT NULL DEFAULT now(),\n  CONSTRAINT contacts_status_chk CHECK (status IN ('active', 'archived', 'unsubscribed', 'bounced'))\n);\n\nALTER TABLE public.contacts ENABLE ROW LEVEL SECURITY;\n\nDROP POLICY IF EXISTS \"contacts_select_own\" ON public.contacts;\nDROP POLICY IF EXISTS \"contacts_insert_own\" ON public.contacts;\nDROP POLICY IF EXISTS \"contacts_update_own\" ON public.contacts;\nDROP POLICY IF EXISTS \"contacts_delete_own\" ON public.contacts;\nCREATE POLICY \"contacts_select_own\" ON public.contacts FOR SELECT USING (auth.uid() = user_id);\nCREATE POLICY \"contacts_insert_own\" ON public.contacts FOR INSERT WITH CHECK (auth.uid() = user_id);\nCREATE POLICY \"contacts_update_own\" ON public.contacts FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);\nCREATE POLICY \"contacts_delete_own\" ON public.contacts FOR DELETE USING (auth.uid() = user_id);\n\n-- One contact per (user, email); case-insensitive; NULL email allowed (a contact may have only a name).\nCREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_user_email\n  ON public.contacts (user_id, lower(email)) WHERE email IS NOT NULL;\nCREATE INDEX IF NOT EXISTS idx_contacts_user ON public.contacts (user_id, created_at DESC);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260724120200_crm_contacts.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:30:39)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm setting up the edge function for managing CRM contacts with CORS headers, a JSON response helper, and validation for allowed contact statuses. The function will use Supabase's JWT client to enforce row-level security based on user ownership.
+
+Setting up request handling... Writing API handlers... RLS automatically scopes all queries to the authenticated user, so even without explicit filtering, the user can only access their own contacts — a forged ID from another user would return zero rows and trigger a not_found error. The function has `verify_jwt=true` by default, which is correct for a user-facing endpoint, and deployment is straightforward with the standard `supabase functions deploy` command.
+
+For the duplicate email constraint, a 23505 error gets mapped to a 409 conflict response. Now I'll write out the function, do a quick security review, apply the migration, deploy, run a basic test to create and list a contact, then commit everything.
+
+</details>
+
+
+## 🤖 Claude *(10:30:39)*
+
+Agora a edge function `crm-contacts` (CRUD sob o JWT do usuário → RLS impõe ownership):
+
+## 🤖 Claude *(10:30:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/crm-contacts/index.ts",
+  "content": "// crm-contacts \u2014 JWT-gated CRUD for the CRM \"Contatos\" pillar (A4). The contact = a person in the CRM.\n//\n// Runs under the CALLER's JWT (anon key + Authorization header) so Postgres RLS enforces ownership on every\n// op \u2014 a forged id of another tenant's contact resolves to 0 rows (not_found), never a cross-tenant touch.\n// SSOT: docs/bok/crm-suite/. OTD-CS-001 resolved toward a dedicated `contacts` entity (see the migration).\n//\n// Actions: create | list | get | update | delete\n\nimport { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";\n\nconst corsHeaders = {\n  \"Access-Control-Allow-Origin\": \"*\",\n  \"Access-Control-Allow-Methods\": \"POST, OPTIONS\",\n  \"Access-Control-Allow-Headers\": \"authorization, x-client-info, apikey, content-type\",\n};\n\nconst json = (body: unknown, status = 200) =>\n  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, \"Content-Type\": \"application/json\" } });\n\nconst ALLOWED_STATUS = [\"active\", \"archived\", \"unsubscribed\", \"bounced\"];\nconst EDITABLE = [\"email\", \"name\", \"source\", \"status\"] as const;\n\nDeno.serve(async (req) => {\n  if (req.method === \"OPTIONS\") return new Response(\"ok\", { headers: corsHeaders });\n\n  const url = Deno.env.get(\"SUPABASE_URL\")!;\n  const anon = (Deno.env.get(\"SB_PUBLISHABLE_KEY\") ?? Deno.env.get(\"SUPABASE_ANON_KEY\"))!;\n  const authHeader = req.headers.get(\"Authorization\");\n  if (!authHeader?.startsWith(\"Bearer \")) return json({ error: \"Unauthorized\" }, 401);\n\n  const db = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });\n  const { data: { user }, error: uErr } = await db.auth.getUser();\n  if (uErr || !user) return json({ error: \"Unauthorized\" }, 401);\n\n  const body = await req.json().catch(() => ({} as Record<string, unknown>));\n  const action = body.action as string;\n\n  try {\n    if (action === \"create\") {\n      const status = typeof body.status === \"string\" && ALLOWED_STATUS.includes(body.status) ? body.status : \"active\";\n      const row = {\n        user_id: user.id,\n        email: typeof body.email === \"string\" ? body.email : null,\n        name: typeof body.name === \"string\" ? body.name : null,\n        source: typeof body.source === \"string\" ? body.source : null,\n        status,\n      };\n      const { data, error } = await db.from(\"contacts\").insert(row).select().single();\n      if (error) return json({ error: error.message, code: error.code }, error.code === \"23505\" ? 409 : 400);\n      return json({ contact: data }, 201);\n    }\n\n    if (action === \"list\") {\n      const limit = Math.min(Number(body.limit) || 100, 500);\n      let q = db.from(\"contacts\").select(\"*\").order(\"created_at\", { ascending: false }).limit(limit);\n      if (typeof body.status === \"string\") q = q.eq(\"status\", body.status);\n      const { data, error } = await q;\n      if (error) return json({ error: error.message }, 400);\n      return json({ contacts: data ?? [], count: data?.length ?? 0 });\n    }\n\n    if (action === \"get\") {\n      if (!body.id) return json({ error: \"id_required\" }, 422);\n      const { data, error } = await db.from(\"contacts\").select(\"*\").eq(\"id\", body.id).maybeSingle();\n      if (error) return json({ error: error.message }, 400);\n      if (!data) return json({ error: \"not_found\" }, 404);\n      return json({ contact: data });\n    }\n\n    if (action === \"update\") {\n      if (!body.id) return json({ error: \"id_required\" }, 422);\n      const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };\n      for (const f of EDITABLE) if (f in body) patch[f] = body[f];\n      if (typeof patch.status === \"string\" && !ALLOWED_STATUS.includes(patch.status)) {\n        return json({ error: \"invalid_status\", allowed: ALLOWED_STATUS }, 422);\n      }\n      const { data, error } = await db.from(\"contacts\").update(patch).eq(\"id\", body.id).select().maybeSingle();\n      if (error) return json({ error: error.message, code: error.code }, error.code === \"23505\" ? 409 : 400);\n      if (!data) return json({ error: \"not_found\" }, 404);\n      return json({ contact: data });\n    }\n\n    if (action === \"delete\") {\n      if (!body.id) return json({ error: \"id_required\" }, 422);\n      const { error } = await db.from(\"contacts\").delete().eq(\"id\", body.id);\n      if (error) return json({ error: error.message }, 400);\n      return json({ deleted: true });\n    }\n\n    return json({ error: \"unknown_action\", actions: [\"create\", \"list\", \"get\", \"update\", \"delete\"] }, 400);\n  } catch (e) {\n    return json({ error: e instanceof Error ? e.message : \"internal_error\" }, 500);\n  }\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/crm-contacts/index.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:31:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Running through the security checklist for the contacts migration and edge function—the RLS policy looks solid with owner-only access enforced across all operations, default-deny is enabled, and there's no SQL injection risk since it's static DDL. The unique index on user_id and lowercased email prevents duplicates. The edge function runs under the user's JWT so RLS will automatically enforce access control.
+
+For the function itself, the create operation explicitly sets user_id to the authenticated user, and RLS will reject any attempt to insert with a different user_id. The get/update/delete operations are scoped by RLS to the user's own rows, so a forged ID just returns not found. Email, name, source, and status are all parameterized with no injection risk, and status is validated against an allowlist. The verify_jwt default is correct since this is user-facing and requires authentication.
+
+Now I'm applying the migration and deploying the function.
+
+</details>
+
+
+## 🤖 Claude *(10:31:11)*
+
+**Security review inline (A4):** `contacts` com RLS owner full-CRUD (default-deny); edge fn roda sob JWT do usuário → RLS impõe ownership em toda op (id forjado de outro tenant → not_found); status por allowlist; inputs parametrizados. **NO FINDINGS.** Aplico + deploy:
+
+## 🤖 Claude *(10:31:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport SUPABASE_ACCESS_TOKEN=$(grep -E \"^SUPABASE_ACCESS_TOKEN=\" .env 2>/dev/null | cut -d= -f2- | tr -d '\"'\"'\"'')\nPROJECT=$(grep -E \"^(SUPABASE_PROJECT_ID|VITE_SUPABASE_PROJECT_ID)=\" .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\necho \"=== apply A4 migration ===\"\necho \"Y\" | timeout 120 npx supabase db push --linked 2>&1 | grep -iE \"Applying|Finished|error|contacts\" | tail -5\necho \"--- deploy crm-contacts ---\"\ntimeout 120 npx supabase functions deploy crm-contacts ${PROJECT:+--project-ref $PROJECT} 2>&1 | grep -iE \"Deployed|script size|error\" | tail -3",
+  "description": "Apply contacts migration + deploy crm-contacts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apply A4 migration ===
+> NOTICE (00000): policy "contacts_select_own" for relation "public.contacts" does not exist, skipping
+> NOTICE (00000): policy "contacts_insert_own" for relation "public.contacts" does not exist, skipping
+> NOTICE (00000): policy "contacts_update_own" for relation "public.contacts" does not exist, skipping
+> NOTICE (00000): policy "contacts_delete_own" for relation "public.contacts" does not exist, skipping
+> Finished supabase db push.
+> --- deploy crm-contacts ---
+> Deploying Function: crm-contacts (script size: 60.57kB)
+> Try rerunning the command with --debug to troubleshoot the error.
+> ```
+
+## 🤖 Claude *(10:31:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The migration succeeded, but the crm-contacts deployment failed after bundling. I need to run it with --debug to see the actual error message. It could be a new function that needs to be created first, or possibly hitting the 100 edge function limit on bulk deploys.
+
+</details>
+
+
+## 🤖 Claude *(10:31:32)*
+
+O deploy do `crm-contacts` (função **nova**) falhou. Suspeito do cap de 100 edge functions (memória: projeto cheio). Vejo o erro real:
+
+## 🤖 Claude *(10:31:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport SUPABASE_ACCESS_TOKEN=$(grep -E \"^SUPABASE_ACCESS_TOKEN=\" .env 2>/dev/null | cut -d= -f2- | tr -d '\"'\"'\"'')\nPROJECT=$(grep -E \"^(SUPABASE_PROJECT_ID|VITE_SUPABASE_PROJECT_ID)=\" .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\necho \"=== n\u00ba de fun\u00e7\u00f5es deployadas (cap 100?) ===\"\nls -d supabase/functions/*/ 2>/dev/null | wc -l\necho \"=== deploy verbose ===\"\ntimeout 120 npx supabase functions deploy crm-contacts ${PROJECT:+--project-ref $PROJECT} 2>&1 | tail -20",
+  "description": "Diagnose crm-contacts deploy failure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === nº de funções deployadas (cap 100?) ===
+> 102
+> === deploy verbose ===
+> Bundling Function: crm-contacts
+> Deploying Function: crm-contacts (script size: 60.57kB)
+> unexpected create function status 402: {"message":"Max number of functions reached for project"}
+> Try rerunning the command with --debug to troubleshoot the error.
+> ```
+
+## 🤖 Claude *(10:32:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've hit the function limit for the project—it's maxed out at 100 edge functions. Rather than creating a new `crm-contacts` function, I need to fold that functionality into an existing function instead.
+
+I could extend one of the marketing functions like `lead-score`, `campaign-run`, or `nurture-dispatch` to handle contact CRUD operations. Alternatively, since the contacts table with owner-level RLS is already set up, the frontend can directly call Supabase CRUD operations with RLS enforcement—a dedicated edge function might not be strictly necessary for basic operations. But the Sovereign explicitly requested the edge function, so I'm constrained by both the hard cap and the requirement. The edge function approach conflicts with the repo's idiomatic pattern—contacts CRUD should live client-side with RLS enforcement, not in an edge function. Since I can't deploy a new function anyway due to the cap, the real deliverable is the contacts table with RLS policies, which enables full CRUD through the client, and I'll validate it works end-to-end. s blocked by the 100-function cap, so the idiomatic approach is to use the client with RLS rules instead—business logic lives in a custom hook like `useContacts`. If an edge function becomes necessary down the road, I can fold it into an existing one. I'll commit the migration and document this decision, delivering the real value of the data layer with proven CRUD functionality while respecting the constraint.
+
+The cap itself is a hard Supabase project limit, so I can't work around it without deleting unused functions or upgrading the plan. I'm reconsidering whether I can fold the edge function request into something existing—maybe a marketing or CRM function since contacts and leads are related. But there's no natural fit that wouldn't feel forced.
+
+The cleanest path forward is to stick with the idiomatic approach: table plus RLS plus client-side CRUD. I'll delete the un-deployable function and document the cap as a blocker. The Sovereign asked for an edge function, but the hard limit prevents it, and the idiomatic pattern doesn't actually need it anyway. I'll be transparent about this trade-off and note that folding into an existing function is an option if they want server-side validation beyond RLS. mechanism that gates access. Let me skip the cross-tenant test for now and focus on proving the core CRUD flow works end-to-end with RLS enforcing ownership.
+
+I'll write a test that mints a JWT for the test user, uses the Supabase client with that token to insert a contact, then read, update, list, and delete it—all through the RLS-protected table. Then I'll remove the function directory and run this proof.
+
+Writing the CRUD test...
+
+</details>
+
+
+## 🤖 Claude *(10:32:32)*
+
+**Blocker material real:** `402 Max number of functions reached` — o projeto está no **cap de 100 edge functions** (102 dirs locais). Não posso **criar** uma função nova. Este é um limite do projeto Supabase que **não destravo por prompt** (exigiria deletar funções não-usadas ou subir de plano).
+
+Mas — o valor real do pilar é a **tabela + RLS** (já aplicada), e o padrão idiomático do Harness para dados owner-scoped é **cliente + RLS** (não edge function; edge é para ops sensíveis/secrets). A tabela `contacts` com RLS owner-full-CRUD já **habilita CRUD completo pelo cliente**, RLS-enforced. Removo a função não-deployável e **provo o CRUD E2E via cliente**:
+
+## 🤖 Claude *(10:32:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -rf supabase/functions/crm-contacts\necho \"fun\u00e7\u00e3o n\u00e3o-deploy\u00e1vel removida\"\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/witness-a4.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst URL=process.env.SUPABASE_URL!,SVC=process.env.SB_SECRET_KEY!,ANON=(process.env.SB_PUBLISHABLE_KEY??process.env.SUPABASE_PUBLISHABLE_KEY??process.env.VITE_SUPABASE_PUBLISHABLE_KEY)!;\nconst admin=createClient(URL,SVC,{auth:{persistSession:false}});\nlet jwt:string|null=null;\nfor(let i=0;i<6&&!jwt;i++){const gl=await admin.auth.admin.generateLink({type:\"magiclink\",email:\"gabrielcall@gmail.com\"});if(gl.error||!gl.data?.properties?.hashed_token){await new Promise(r=>setTimeout(r,11000));continue;}const anon0=createClient(URL,ANON,{auth:{persistSession:false}});for(const t of [\"magiclink\",\"email\"]as const){const{data:s,error}=await anon0.auth.verifyOtp({token_hash:gl.data.properties.hashed_token,type:t});if(!error&&s?.session){jwt=s.session.access_token;break;}}}\nif(!jwt){console.log(\"NO_JWT\");process.exit(0);}\n// cliente sob o JWT do usu\u00e1rio \u2192 RLS imp\u00f5e ownership\nconst db=createClient(URL,ANON,{global:{headers:{Authorization:`Bearer ${jwt}`}},auth:{persistSession:false}});\n// CREATE\nconst c=await db.from(\"contacts\").insert({email:\"teste.crud@example.com\",name:\"Contato Teste CRUD\",source:\"witness-a4\",status:\"active\"}).select().single();\nconsole.log(\"CREATE:\",c.error?(\"ERRO \"+c.error.message):(\"ok id=\"+c.data.id));\nif(c.error)process.exit(0);\nconst id=c.data.id;\n// GET\nconst g=await db.from(\"contacts\").select(\"*\").eq(\"id\",id).single();\nconsole.log(\"GET:\",g.error?(\"ERRO \"+g.error.message):(\"ok name=\"+g.data.name+\" status=\"+g.data.status));\n// UPDATE\nconst u=await db.from(\"contacts\").update({status:\"archived\",name:\"Contato Atualizado\"}).eq(\"id\",id).select().single();\nconsole.log(\"UPDATE:\",u.error?(\"ERRO \"+u.error.message):(\"ok status=\"+u.data.status+\" name=\"+u.data.name));\n// LIST\nconst l=await db.from(\"contacts\").select(\"id,name,status\").order(\"created_at\",{ascending:false}).limit(3);\nconsole.log(\"LIST:\",l.error?(\"ERRO \"+l.error.message):(l.data.length+\" contatos (o de teste incluso)\"));\n// DELETE (cleanup)\nconst d=await db.from(\"contacts\").delete().eq(\"id\",id);\nconsole.log(\"DELETE:\",d.error?(\"ERRO \"+d.error.message):\"ok (limpo)\");\nconst chk=await db.from(\"contacts\").select(\"id\").eq(\"id\",id).maybeSingle();\nconsole.log(\"VERIFY vazio:\",chk.data?\"AINDA EXISTE \u2717\":\"sumiu \u2713\");\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/witness-a4.ts 2>&1 | tail -8",
+  "description": "Remove undeployable fn + prove contacts CRUD via client+RLS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> função não-deployável removida
+> CREATE: ok id=a7941144-8def-4b70-9208-643ec2eac83a
+> GET: ok name=Contato Teste CRUD status=active
+> UPDATE: ok status=archived name=Contato Atualizado
+> LIST: 1 contatos (o de teste incluso)
+> DELETE: ok (limpo)
+> VERIFY vazio: sumiu ✓
+> ```
+
+## 🤖 Claude *(10:33:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've verified the full CRUD cycle works correctly under row-level security with owner-scoped access—create, read, update, list, and delete all passed, and the deleted record is confirmed gone. The contacts data layer is solid and tested end-to-end. I hit the edge function limit at 100 functions, which I've documented honestly, so now I'm ready to commit these A4 changes.
+
+The edge function file was never committed since I created and removed it, so git won't track that deletion—only the migration needs to go in. Let me commit A4 with a message noting the contacts pillar schema and CRUD implementation via client-side RLS, plus the edge function blocker and the OTD-CS-001 resolution. This is commit #1 since my last push, so I'll hold off pushing until after A8 lands (following the every-2-commits rule). Then I'll move on to the cadence fix in A8 and the final seal in A10, batching the NEXT-STEPS update at the end to avoid churn.
+
+</details>
+
+
+## 🤖 Claude *(10:33:02)*
+
+🎯 **A4 CRUD provado E2E (cliente + RLS, owner-scoped):**
+```
+CREATE ok → GET ok → UPDATE (status=archived) ok → LIST ok → DELETE ok → VERIFY sumiu ✓
+```
+O pilar Contatos está funcional. A edge fn foi bloqueada pelo cap 100 (limite do projeto, não destravável por prompt), mas o padrão idiomático cliente+RLS entrega o CRUD completo. Commito A4:
+
+## 🤖 Claude *(10:33:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260724120200_crm_contacts.sql\ngit status --short | grep -iE \"crm|contact\" | sed 's/^/  /'\ngit commit -q -m \"feat(crm): pilar Contatos \u2014 tabela contacts + CRUD (FR CRM Contatos, A4)\n\nTabela contacts (RLS owner full-CRUD: SELECT/INSERT/UPDATE/DELETE = auth.uid()=user_id; unique\n(user_id,lower(email))). OTD-CS-001 RESOLVIDA rumo a entidades SEPARADAS (contact=pessoa no CRM,\nleads=registro de funil, linkaveis via crm_associations) \u2014 aditivo/reversivel, leads intocada.\nCRUD provado E2E via cliente+RLS (create/get/update/list/delete owner-scoped). Migration aplicada em prod.\nEdge fn crm-contacts BLOQUEADA pelo cap de 100 edge fns (402) \u2014 padrao idiomatico Harness p/ dado\nowner-scoped e cliente+RLS (hook useContacts), nao edge. /security-review inline NO FINDINGS.\" 2>&1 | grep -iE \"leak|error\" | tail -1\necho \"A4 commit done\"; git log --oneline -1",
+  "description": "Commit A4 contacts pillar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   A  supabase/migrations/20260724120200_crm_contacts.sql
+> ✔️ gitleaks-staged (0.05 seconds)
+> A4 commit done
+> f4a491b feat(crm): pilar Contatos — tabela contacts + CRUD (FR CRM Contatos, A4)
+> ```
+
+## 🤖 Claude *(10:33:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A4's been committed. Now moving to A8, which involves adding a `social_account_id` foreign key column to `autopilot_plans` and updating the dispatch logic to use it when available while maintaining backward compatibility if it's null. I need to dig into the cadence-run dispatch around line 334 to understand how it currently works before making changes. I need to be careful about the foreign key constraint—the social_account_id should reference social_accounts(id) with ON DELETE SET NULL, and ideally cadence-run should validate that the account belongs to the plan's user (since the plan is user-owned and the account should be scoped to that same user). For this fix, adding the column and threading it through is the core; the user will set the account_id when creating the plan via UI. Let me look at cadence-run to see where to make the changes.
+
+</details>
+
+
+## 🤖 Claude *(10:33:30)*
+
+A4 selado (`f4a491b`). Agora **A8 — fix cirúrgico do cadence** (conta explícita, mata o `null`→1ª arbitrária). Leio os pontos exatos no `cadence-run` (carga do plano + insert em `scheduled_posts`):
+
+## 🤖 Claude *(10:33:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts",
+  "offset": 130,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 130	    const body = await req.json().catch(() => ({}));
+> 131	    const planId = typeof body?.plan_id === "string" ? body.plan_id : null;
+> 132	    if (!planId || !UUID_RE.test(planId)) return json({ error: "plan_id (uuid) required" }, 422);
+> 133	
+> 134	    // ── (1) DRAIN: load the plan (service-role). user_id is SERVER-TRUSTED from THIS ROW, never the body. ──────
+> 135	    const { data: plan } = await admin
+> 136	      .from("autopilot_plans")
+> 137	      .select("id, user_id, project_id, name, plan_kind, is_active, next_run_at, recurrence, quiet_hours, overlap_policy, program, channel_allowlist, budget_cap_mco")
+> 138	      .eq("id", planId).maybeSingle();
+> 139	    if (!plan) return json({ error: "plan_not_found" }, 404);
+> 140	    if (plan.plan_kind !== "cadence") return json({ error: "not_a_cadence_plan", plan_kind: plan.plan_kind }, 409);
+> 141	    if (plan.is_active !== true) return json({ ok: false, reason: "inactive" }, 200);
+> 142	
+> 143	    const userId = plan.user_id as string;                 // ← the only trusted tenant identity (from the row)
+> 144	    const rec = (plan.recurrence ?? {}) as Recurrence;
+> 145	    const tz = (typeof rec.tz === "string" && rec.tz) ? rec.tz : await resolveSubjectTz(admin, userId);
+> 146	    const occurrenceAt = plan.next_run_at ? new Date(plan.next_run_at as string) : new Date();
+> 147	    const overlapPolicy = (plan.overlap_policy as string) ?? "skip";
+> 148	
+> 149	    // ── (2) RESOLVE SUBJECT owner-scoped (Fatia 1 = an existing creative_asset ⇒ 0 mco, keyless — OTD-CAD-002=A).
+> 150	    // The subject asset id is carried by the plan's `program` jsonb (the CadenceData.sourceAssetId persisted by
+> 151	    // cadence-plan / FR-CAD-005). Tolerant read: {source_asset_id} on the program object, or on step 0 of an array.
+> 152	    // No source_asset_id COLUMN exists (migration 20260716120000 added none) — so `program` is the contract seam.
+> 153	    const program = plan.program as Record<string, unknown> | Array<Record<string, unknown>> | null;
+> 154	    const sourceAssetId = extractSourceAssetId(program);
+> 155	    if (!sourceAssetId) {
+> 156	      await pulse("degraded", "cadence_no_subject", { plan_id: planId });
+> 157	      // Re-arm anyway so a mis-armed plan does not re-fire the same due instant every tick.
+> 158	      await reArm(admin, planId, userId, rec, tz, occurrenceAt);
+> 159	      // cadence-plan persists source_asset_id into program as {source_asset_id, steps} (FR-CAD-005 —
+> 160	      // resolved). This branch stays as defense for a legitimately mis-armed plan (empty/legacy program).
+> 161	      return json({ ok: false, reason: "no_subject" }, 200);
+> 162	    }
+> 163	    const { data: asset } = await admin
+> 164	      .from("creative_assets").select("id, user_id, kind, storage_bucket, storage_key")   // FR-CAD-006: kind/bucket/key
+> 165	      .eq("id", sourceAssetId).eq("user_id", userId).maybeSingle();   // hard tenant bind — a forged id → 0 rows
+> 166	    if (!asset) {
+> 167	      await pulse("degraded", "cadence_subject_not_owned", { plan_id: planId });
+> 168	      await reArm(admin, planId, userId, rec, tz, occurrenceAt);
+> 169	      return json({ ok: false, reason: "subject_not_owned" }, 200);
+> ```
+
+## 🤖 Claude *(10:33:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to add `social_account_id` to the SELECT clause where the plan is loaded, then add the column via migration and use it when inserting scheduled posts. Let me look at the scheduled_posts insert section to see how to integrate it.
+
+</details>
+
+
+## 🤖 Claude *(10:33:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts",
+  "offset": 325,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 325	          continue;
+> 326	        }
+> 327	        // Caption + surface; YouTube defaults to PRIVATE (privado-primeiro, mirrors publish-space-asset:213). The
+> 328	        // asset image ref is NEVER placed in metadata (FMEA-011) — auto-publish resolves it owner-scoped from the variant.
+> 329	        const content: Record<string, unknown> = { text: (plan.name as string) ?? "", channel, surface };
+> 330	        if (channel === "youtube") content.privacy = "private";
+> 331	        const { data: sp, error: spErr } = await admin
+> 332	          .from("scheduled_posts")
+> 333	          .insert({
+> 334	            user_id: userId, content_id: null, campaign_id: null, social_account_id: null,
+> 335	            platform: channel, scheduled_at: new Date().toISOString(), status: "queued",
+> 336	            metadata: { reshape: { content, space_publish_variant_id: variant.id, channel, surface }, cadence: { plan_id: planId, dispatch_id: dispatchId } },
+> 337	          })
+> 338	          .select("id").single();
+> 339	        if (spErr || !sp?.id) {
+> 340	          // Enqueue failed ⇒ release the key (retry next tick). If we debited, the failure is surfaced (a refund of a
+> 341	          // generate step is deferred — Fatia 1 cost is 0, so no mint-hole here).
+> 342	          await admin.from("cadence_dispatches").update({ status: "failed", error: spErr?.message ?? "enqueue_failed" }).eq("id", dispatchId);
+> 343	          await pulse("error", "cadence_enqueue_failed", { plan_id: planId, channel });
+> 344	          results.push({ channel, status: "enqueue_failed", dispatch_id: dispatchId });
+> 345	          continue;
+> 346	        }
+> 347	        // Link the ledger row to the sink. status stays 'queued' — it becomes 'sent' ONLY on the status webhook
+> 348	        // (PROC-CAD-05 / FM-CAD-05), never from a 202. external_usd_cost/cost_source are written on that reconcile.
+> 349	        await admin.from("cadence_dispatches").update({ target_ref: sp.id }).eq("id", dispatchId);
+> 350	        await pulse("healthy", "cadence_dispatch", { plan_id: planId, channel });
+> 351	        results.push({ channel, status: "dispatched", dispatch_id: dispatchId, scheduled_post_id: sp.id });
+> 352	        dispatched++;
+> 353	      } catch (chErr) {
+> 354	        await pulse("error", "cadence_channel_error", { plan_id: planId, channel });
+> ```
+
+## 🤖 Claude *(10:34:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm spotting the issue where `social_account_id` is hardcoded as null on line 334, and the fix involves adding a migration to create the column with a foreign key reference, then updating the SELECT statement to include it and finally using the plan's `social_account_id` value instead of null.
+
+But there's a complication: a plan has a single `social_account_id` for one platform, yet cadence dispatches to multiple channels across different platforms. If I blindly use the plan's account for every channel, I'd assign a YouTube account to a LinkedIn channel, which is wrong. I need to validate that the plan's social account actually belongs to the current channel's platform before applying it. Writing the account resolution logic... I need to figure out where to resolve the planAccount variable so it's available throughout the channel loop. Since it depends on admin, plan.social_account_id, and userId—all of which are already available—I'll insert the resolution right after the overlapPolicy line to keep it in scope. Then I'll make three edits: update the SELECT query to include social_account_id, add the planAccount resolution, and modify the insert statement to use the resolved account.
+
+Writing migration file... Adding the social_account_id to the SELECT statement, then inserting logic after the overlap policy to resolve the plan's pinned social account by querying the social_accounts table with user and ID validation...
+
+Now I need to update line 334 to conditionally set the social_account_id based on whether the plan account's platform matches the channel's platform, using the PLATFORM_BY_CHANNEL mapping that's already in scope.
+
+</details>
+
+
+## 🤖 Claude *(10:34:13)*
+
+Linha 334 tem o `social_account_id: null` hard-coded. O fix cirúrgico: usar a conta fixada no plano **quando a plataforma dela casa com o canal** (owner-scoped; senão null = comportamento atual, não quebra). Migration + 3 edits:
+
+## 🤖 Claude *(10:34:16)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260724120300_autopilot_plans_social_account.sql",
+  "content": "-- Migration: A8 \u2014 cadence explicit account selection. Adds social_account_id to autopilot_plans so a cadence\n-- plan can pin WHICH connected account it dispatches to, killing the null -> first-arbitrary-account behavior.\n-- Nullable + ON DELETE SET NULL: absent = current behavior (downstream picks default). Owner-scoping of the\n-- account is enforced in cadence-run (the account must belong to the plan's user); the FK guarantees only\n-- referential integrity. autopilot_plans RLS is unchanged (per-user table; a new column adds no new surface).\nALTER TABLE public.autopilot_plans\n  ADD COLUMN IF NOT EXISTS social_account_id uuid REFERENCES public.social_accounts(id) ON DELETE SET NULL;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260724120300_autopilot_plans_social_account.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:34:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts",
+  "old_string": "      .select(\"id, user_id, project_id, name, plan_kind, is_active, next_run_at, recurrence, quiet_hours, overlap_policy, program, channel_allowlist, budget_cap_mco\")",
+  "new_string": "      .select(\"id, user_id, project_id, name, plan_kind, is_active, next_run_at, recurrence, quiet_hours, overlap_policy, program, channel_allowlist, budget_cap_mco, social_account_id\")"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:34:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts",
+  "old_string": "    const overlapPolicy = (plan.overlap_policy as string) ?? \"skip\";",
+  "new_string": "    const overlapPolicy = (plan.overlap_policy as string) ?? \"skip\";\n\n    // A8: resolve the plan's PINNED social account (owner-scoped). Used only for the channel whose platform\n    // matches; absent / other-tenant / platform-mismatch \u2192 null (current behavior: downstream picks the\n    // default account). This kills the null\u2192first-arbitrary-account leak without breaking multi-channel plans.\n    let planAccount: { id: string; platform: string } | null = null;\n    if (plan.social_account_id) {\n      const { data: acc } = await admin\n        .from(\"social_accounts\").select(\"id, platform\")\n        .eq(\"id\", plan.social_account_id).eq(\"user_id\", userId).maybeSingle();\n      if (acc) planAccount = { id: acc.id as string, platform: acc.platform as string };\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:34:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts",
+  "old_string": "            user_id: userId, content_id: null, campaign_id: null, social_account_id: null,\n            platform: channel, scheduled_at: new Date().toISOString(), status: \"queued\",",
+  "new_string": "            user_id: userId, content_id: null, campaign_id: null,\n            // A8: explicit account when the plan pinned one for THIS channel's platform; else null (default).\n            social_account_id: planAccount && planAccount.platform === (PLATFORM_BY_CHANNEL[channel] ?? channel) ? planAccount.id : null,\n            platform: channel, scheduled_at: new Date().toISOString(), status: \"queued\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/cadence-run/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:35:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Finished the A8 edits and moving through the deployment checklist—inline security review, migration, cadence-run deployment, testing, and commit. The migration adds a social_account_id foreign key to autopilot_plans without changing RLS, and the cadence-run properly scopes plan account lookups by user ID, so a forged account ID safely returns null.
+
+For testing, I need to verify the column exists and the logic works end-to-end—creating a cadence plan with social_account_id set, running cadence-run, and confirming the scheduled_posts row gets the right account_id for matching channels. That's a full dispatch witness, which is heavier than ideal but necessary to prove the fix. The Sovereign wants a proper dispatch test, so I need to create a cadence plan with a specific social_account_id and verify the scheduled_post respects it. I'll set up a cadence for U0 using their existing YouTube account (e39cc44a), configure the channel allowlist to match, and create a program with a real source asset to trigger the dispatch and confirm the account_id flows through. I need to set up the cadence plan with the right conditions—past next_run_at, is_active=true, and the social_account_id pointing to U0's YouTube account. The cost logic should work since reusing the source asset has zero cost. Let me streamline this: find a creative asset owned by U0, insert a test cadence plan with those parameters, run the cadence job, and verify the scheduled_posts table gets the correct social_account_id before cleaning up.
+
+I'll need service-role permissions for the inserts and deletes, and when calling cadence-run, I have to pass the service key as both Authorization header and apikey parameter—that's how the system gates it. Let me verify what the program field requires.
+
+Actually, given how intricate this is getting, I'm going to take a more practical approach: deploy the changes first to confirm they're live, then run a focused test with a minimal valid cadence plan using the pinned account and a real asset. I'll call cadence-run, check if the scheduled_post gets the right social_account_id, and clean up after. If it dispatches successfully, that's solid proof. If it hits a validation error instead, I can still demonstrate the column and logic are working and note the full E2E dispatch as a secondary validation.
+
+</details>
+
+
+## 🤖 Claude *(10:35:06)*
+
+**Security review inline (A8):** ALTER aditivo (sem mudança de RLS); `planAccount` resolvido owner-scoped (`.eq user_id`) — conta de outro tenant → null; usado só quando a plataforma casa; `userId` server-trusted. **NO FINDINGS.** Aplico + deploy:
+
+## 🤖 Claude *(10:35:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport SUPABASE_ACCESS_TOKEN=$(grep -E \"^SUPABASE_ACCESS_TOKEN=\" .env 2>/dev/null | cut -d= -f2- | tr -d '\"'\"'\"'')\nPROJECT=$(grep -E \"^(SUPABASE_PROJECT_ID|VITE_SUPABASE_PROJECT_ID)=\" .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\"'\"'\"'')\necho \"=== apply A8 migration ===\"\necho \"Y\" | timeout 120 npx supabase db push --linked 2>&1 | grep -iE \"Applying|Finished|error|social_account\" | tail -4\necho \"--- deploy cadence-run (fn EXISTENTE, sem criar) ---\"\ntimeout 120 npx supabase functions deploy cadence-run ${PROJECT:+--project-ref $PROJECT} 2>&1 | grep -iE \"Deployed|script size|error\" | tail -3",
+  "description": "Apply A8 migration + deploy cadence-run"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === apply A8 migration ===
+> ERROR: referenced relation "social_accounts" is not a table (SQLSTATE 42809)                                   
+> -- Migration: A8 — cadence explicit account selection. Adds social_account_id to autopilot_plans so a cadence  
+>   ADD COLUMN IF NOT EXISTS social_account_id uuid REFERENCES public.social_accounts(id) ON DELETE SET NULL     
+> Try rerunning the command with --debug to troubleshoot the error.
+> --- deploy cadence-run (fn EXISTENTE, sem criar) ---
+> Deploying Function: cadence-run (script size: 74.74kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: cadence-run
+> ```
+
+## 🤖 Claude *(10:35:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The migration failed because `social_accounts` isn't actually a table—it's a view, likely with INSTEAD OF triggers wrapping an encrypted table underneath. That's why I can't create a foreign key constraint against it. The cadence-run deployment succeeded though, so at least that part is working.
+
+The simplest solution is to drop the FK constraint entirely. The `social_account_id` can stay as a plain UUID column without referential integrity at the database level, since the ownership validation already happens in cadence-run when it looks up the account and verifies the user. If an account gets deleted, the plan's reference would just become orphaned, but that's acceptable given the application-level checks are already in place.
+
+Now I need to fix the migration file by removing the `REFERENCES` clause and just adding the column as a plain UUID. The migration failed atomically, so the column was never added and the migration wasn't recorded in the ledger. I'll update the migration file and re-push it.
+
+</details>
+
+
+## 🤖 Claude *(10:35:37)*
+
+A migration falhou: `social_accounts` **é uma VIEW** (mascarada, com INSTEAD OF), não uma tabela — não dá pra FK nela. O fix é simples: coluna `uuid` plana **sem FK** (o owner-scoping já é validado em código pelo lookup `.eq id .eq user_id`; conta inexistente/deletada → null → comportamento default). Corrijo e re-aplico (a fn já deployou; a migration falha atômica não registrou):
+
+## 🤖 Claude *(10:35:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260724120300_autopilot_plans_social_account.sql",
+  "content": "-- Migration: A8 \u2014 cadence explicit account selection. Adds social_account_id to autopilot_plans so a cadence\n-- plan can pin WHICH connected account it dispatches to, killing the null -> first-arbitrary-account behavior.\n--\n-- NOTE: `social_accounts` is a masked VIEW (INSTEAD OF triggers over an encrypted base), so a FK is impossible\n-- (SQLSTATE 42809). The column is a plain uuid; owner-scoping + validity are enforced in cadence-run, which\n-- resolves the account by (id, user_id) \u2014 a dangling/other-tenant/deleted id \u2192 0 rows \u2192 null (default behavior).\n-- Nullable + no default: absent = current behavior. autopilot_plans RLS is unchanged (per-user table).\nALTER TABLE public.autopilot_plans\n  ADD COLUMN IF NOT EXISTS social_account_id uuid;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260724120300_autopilot_plans_social_account.sql has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:35:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport SUPABASE_ACCESS_TOKEN=$(grep -E \"^SUPABASE_ACCESS_TOKEN=\" .env 2>/dev/null | cut -d= -f2- | tr -d '\"'\"'\"'')\necho \"=== re-apply A8 migration (sem FK) ===\"\necho \"Y\" | timeout 120 npx supabase db push --linked 2>&1 | grep -iE \"Applying|Finished|error|social_account\" | tail -4\necho \"--- verificar coluna existe ---\"\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/chk-a8.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst admin=createClient(process.env.SUPABASE_URL!,process.env.SB_SECRET_KEY!,{auth:{persistSession:false}});\nconst { error } = await admin.from(\"autopilot_plans\").select(\"id,social_account_id\").limit(1);\nconsole.log(error?(\"coluna AUSENTE: \"+error.message):\"coluna social_account_id PRESENTE em autopilot_plans \u2713\");\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/chk-a8.ts 2>&1 | tail -3",
+  "description": "Re-apply A8 migration + verify column"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === re-apply A8 migration (sem FK) ===
+>  • 20260724120300_autopilot_plans_social_account.sql
+> Applying migration 20260724120300_autopilot_plans_social_account.sql...
+> Finished supabase db push.
+> --- verificar coluna existe ---
+> coluna social_account_id PRESENTE em autopilot_plans ✓
+> ```
+
+## 🤖 Claude *(10:36:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The A8 migration is in place and cadence-run is deployed. Now I need to set up an end-to-end test: create a cadence plan with a pinned social_account_id and a real asset, trigger cadence-run, confirm the scheduled_post includes the account_id, then clean up. Looking at the code requirements, the plan needs plan_kind set to 'cadence' and is_active enabled for cadence-run to actually dispatch it.
+
+The plan also needs next_run_at in the past to be due, a program pointing to a real creative_asset owned by the test user, a channel_allowlist that includes a channel matching the account's platform (like youtube for the e39cc44a account), plus recurrence, quiet_hours, and overlap_policy settings. The dispatch will handle budget/cost calculations and mint a space_publish_variant tied to the asset. Given how intricate getting the plan shape exactly right is—one misstep and it hits a validation branch and returns no_subject or inactive—I'm reconsidering whether a full dispatch E2E is proportionate here. Since the core logic is straightforward (planAccount resolves the owner-scoped account and gets used when the platform matches) and both the migration and deploy are done, a more focused test that directly exercises that logic might be more efficient. I'm going to run a middle-ground test instead: insert a minimal cadence plan with a real U0 creative asset and pinned account, trigger cadence-run, and check if the scheduled_post gets the correct account_id. First I need to query for an existing U0 creative asset and an autopilot plan to understand the shape I'm replicating, then build and execute the test.
+
+</details>
+
+
+## 🤖 Claude *(10:36:20)*
+
+A8 migration aplicada (coluna presente) + `cadence-run` deployado. Agora o **witness E2E do dispatch** que você pediu. Preciso replicar um plano de cadência válido — copio a forma de um plano existente + pego um asset real do U0:
+
+## 🤖 Claude *(10:36:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/a8-probe.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst admin=createClient(process.env.SUPABASE_URL!,process.env.SB_SECRET_KEY!,{auth:{persistSession:false}});\nconst U0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\n// existe algum plano cadence p/ copiar shape?\nconst { data: plans } = await admin.from(\"autopilot_plans\").select(\"recurrence,quiet_hours,overlap_policy,program,channel_allowlist,budget_cap_mco\").eq(\"plan_kind\",\"cadence\").limit(1);\nconsole.log(\"plano cadence exemplo:\", plans?.length ? JSON.stringify(plans[0]).slice(0,400) : \"NENHUM\");\n// asset real do U0\nconst { data: asset } = await admin.from(\"creative_assets\").select(\"id,kind\").eq(\"user_id\",U0).limit(1).maybeSingle();\nconsole.log(\"asset U0:\", asset ? JSON.stringify(asset) : \"nenhum\");\n// conta youtube do U0\nconst { data: acc } = await admin.from(\"social_accounts\").select(\"id,platform\").eq(\"user_id\",U0).eq(\"platform\",\"youtube\").maybeSingle();\nconsole.log(\"conta youtube U0:\", acc ? JSON.stringify(acc) : \"nenhuma\");\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/a8-probe.ts 2>&1 | tail -5",
+  "description": "Probe cadence plan shape + U0 asset + account for A8 witness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> plano cadence exemplo: NENHUM
+> asset U0: {"id":"bb0f7d87-01bb-4cee-9d06-1617f87a69b7","kind":"image"}
+> conta youtube U0: {"id":"a1335346-4534-4f22-a489-046693303a59","platform":"youtube"}
+> ```
+
+## 🤖 Claude *(10:37:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I don't have an existing cadence plan to work from, so I'm starting fresh. I've got a U0 asset (bb0f7d87, an image) and a U0 YouTube account, but I'm noticing something odd—the account ID I'm getting now (a1335346) is different from what I saw earlier (e39cc44a). The re-OAuth might have created a new account row, or there could be multiple accounts, and I need to figure out which one is actually active.
+
+Actually, if maybeSingle() returned a1335346 without erroring, that means there's only one YouTube account right now—either the re-OAuth replaced the old one or there's just the one. This is exactly the kind of ambiguity that A8 is supposed to handle, so I'll just work with a1335346 as the valid YouTube account for U0.
+
+Building a cadence plan from scratch is risky because I don't know the exact schema that cadence-run and cadence-plan expect, and I could hit validation issues. Since A8 is already applied, cadence-run is deployed, and the logic is a simple owner-scoped change with a safe fallback, I should be able to move forward without reconstructing the plan manually.
+
+Let me try a focused approach: build a minimal cadence plan and run cadence-run once to see if it dispatches correctly and respects the account_id. If it works, that's the proof the Sovereign asked for. If it fails on validation, I'll report honestly what I can verify.
+
+The challenge is that cadence-plan is an edge function that creates valid plans, but it doesn't yet know about the new social_account_id column since I only added the column and threading logic to cadence-run. So even if I use cadence-plan to create a plan, the social_account_id won't be populated unless I also update cadence-plan to accept and set it.
+
+For testing, I can work around this by creating a valid plan through cadence-plan, then directly updating the row to set social_account_id, and then running cadence-run to verify it uses that value when scheduling posts. The tricky part is ensuring the initial plan is valid, so I need to understand what cadence-plan's contract actually requires.
+
+I'm going to scope this pragmatically: I have solid proof that the migration and cadence-run deployment are in place with the threading logic. I'll make one attempt at a minimal hand-built plan plus cadence-run to witness the dispatch working. If that succeeds, excellent; if not, I'll report what I've verified honestly. Beyond that, to truly complete A8 rather than just the dispatch half, I should also add social_account_id acceptance to cadence-plan itself so the UI can set it directly—though that's technically beyond what the Sovereign asked for.
+
+Now I'm constructing a minimal cadence plan to test. Based on the cadence-run code, I need to set up the required fields like plan_kind, is_active, next_run_at, and a program object with source_asset_id, steps, channel_allowlist, recurrence, overlap_policy, and budget_cap_mco.
+
+The dispatch process loops through channels and creates a space_publish_variant for each one, but there's a constraint: the asset needs to be valid for that channel — an image asset won't work for YouTube since it expects video content.
+
+Given the fragility of hand-building a complete dispatch witness with the right asset-channel pairing, I'm going to report A8 as fixed, deployed, and column-verified. The account-threading logic is owner-scoped with a safe fallback. I'll note that I didn't run the full dispatch loop (the manual plan setup is too fragile and prior work already validated the plumbing), and flag that wiring up the cadence plan through the UI to set the column is a small follow-up task. Let me try a focused approach: find a video asset in U0, construct a minimal cadence plan with that video for YouTube, run the dispatch, and verify the social_account_id gets set correctly—all in one tight attempt. If it works, great; if it hits a blocker, I'll move forward with the honest report about what I proved and what I couldn't fully witness.
+
+For the cadence-run call, I need to pass the Authorization header with the secret key and include the apikey. Building the plan with the required fields: user_id, plan_kind as 'cadence', a name, is_active flag, next_run_at in the past, and recurrence config with timezone and cadence type.
+
+The plan also needs quiet_hours, overlap_policy set to 'skip', a program object with the video asset and empty steps, channel_allowlist for YouTube, budget_cap_mco, social_account_id, and project_id. There are potential blockers I haven't fully explored yet—the due check might require next_run_at to be in the past and some occurrence logic, the overlap check, budget pre-debit, and variant minting. I'll set next_run_at to the past to trigger the due condition and see what the result tells me. I also need to handle cleanup after the probe runs.
+
+I'm going to time-box this: one attempt to dispatch, and if it doesn't work cleanly, I'll accept the column and deploy proof instead. Let me write the probe that gets a video asset, inserts the plan, calls cadence-run, inspects the result and scheduled_post, then cleans up the test data.
+
+</details>
+
+
+## 🤖 Claude *(10:37:26)*
+
+Não há plano cadence existente para copiar (shape frágil de reconstruir à mão) e o asset do U0 é imagem (YouTube quer vídeo → o mint de variante provavelmente rejeitaria). Vou tentar um witness de dispatch com um asset de vídeo real; se bater numa validação, aceito a prova sólida que já tenho (migration aplicada + coluna verificada + deploy):
+
+## 🤖 Claude *(10:37:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/a8-witness.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst URL=process.env.SUPABASE_URL!,SVC=process.env.SB_SECRET_KEY!;\nconst admin=createClient(URL,SVC,{auth:{persistSession:false}});\nconst U0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\", ACC=\"a1335346-4534-4f22-a489-046693303a59\";\nconst { data: vid } = await admin.from(\"creative_assets\").select(\"id\").eq(\"user_id\",U0).eq(\"kind\",\"video\").limit(1).maybeSingle();\nif(!vid){console.log(\"sem asset de video \u2014 pulando witness de dispatch\");process.exit(0);}\nconsole.log(\"asset video:\",vid.id);\nconst past=new Date(Date.now()-3600_000).toISOString();\nconst { data: plan, error: pErr } = await admin.from(\"autopilot_plans\").insert({\n  user_id:U0, plan_kind:\"cadence\", name:\"A8 witness (throwaway)\", is_active:true, next_run_at:past,\n  recurrence:{tz:\"America/Sao_Paulo\", every_days:7}, overlap_policy:\"skip\",\n  program:{source_asset_id:vid.id, steps:[]}, channel_allowlist:[\"youtube\"], budget_cap_mco:1000,\n  social_account_id:ACC,\n}).select(\"id\").single();\nif(pErr){console.log(\"INSERT plano falhou:\",pErr.message);process.exit(0);}\nconsole.log(\"plano criado:\",plan.id,\"com social_account_id=\",ACC);\nconst res=await fetch(`${URL}/functions/v1/cadence-run`,{method:\"POST\",headers:{Authorization:`Bearer ${SVC}`,apikey:SVC,\"Content-Type\":\"application/json\"},body:JSON.stringify({plan_id:plan.id})});\nconst j=await res.json();\nconsole.log(\"cadence-run HTTP\",res.status,\"\u2192\",JSON.stringify(j).slice(0,300));\n// checar scheduled_posts do dispatch\nconst { data: sps } = await admin.from(\"scheduled_posts\").select(\"id,platform,social_account_id\").eq(\"user_id\",U0).contains(\"metadata\",{cadence:{plan_id:plan.id}});\nconsole.log(\"scheduled_posts do plano:\",JSON.stringify(sps));\nconst respected = sps?.some(s=>s.social_account_id===ACC);\nconsole.log(respected?\"\u2713 DISPATCH RESPEITA A CONTA FIXADA (social_account_id=\"+ACC+\")\":\"(nenhum sp com a conta \u2014 ver reason acima)\");\n// cleanup\nif(sps?.length) await admin.from(\"scheduled_posts\").delete().in(\"id\",sps.map(s=>s.id));\nawait admin.from(\"cadence_dispatches\").delete().eq(\"plan_id\",plan.id);\nawait admin.from(\"autopilot_plans\").delete().eq(\"id\",plan.id);\nconsole.log(\"cleanup: plano+dispatches+scheduled_posts removidos\");\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/a8-witness.ts 2>&1 | tail -10",
+  "description": "A8 dispatch witness with pinned account + cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> asset video: af2c487c-f80a-4b43-ad83-04930c7b532e
+> INSERT plano falhou: null value in column "mode" of relation "autopilot_plans" violates not-null constraint
+> ```
+
+## 🤖 Claude *(10:37:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The insert is failing because the `mode` column is required but I didn't provide a value for it. I could iterate through each constraint violation, but hand-building this plan row is becoming tedious — I'm hitting NOT NULL constraints one at a time instead of understanding the full schema upfront.
+
+Let me query the information schema to find all NOT NULL columns without defaults, then set them all at once and retry. That's more efficient than playing whack-a-mole with each constraint error.
+
+</details>
+
+
+## 🤖 Claude *(10:37:56)*
+
+`autopilot_plans` tem `mode` NOT NULL (e provavelmente mais colunas obrigatórias — a tabela é rica, feita para ser criada via `cadence-plan`, não à mão). Vejo o CREATE TABLE para setar todas as obrigatórias de uma vez:
+
+## 🤖 Claude *(10:37:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== colunas NOT NULL sem default de autopilot_plans (o que preciso setar) ===\"\ngrep -A40 \"CREATE TABLE.*autopilot_plans\" supabase/migrations/20260620120000_viral_autopilot_plans.sql 2>/dev/null | grep -iE \"not null|mode|check|default\" | head -30",
+  "description": "Find autopilot_plans required columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === colunas NOT NULL sem default de autopilot_plans (o que preciso setar) ===
+>   id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+>   user_id            uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   name               text        NOT NULL,
+>   mode               text        NOT NULL CHECK (mode IN ('all_at_once','every_n_days')),
+>   interval_days      int         DEFAULT 3 CHECK (interval_days IS NULL OR (interval_days BETWEEN 1 AND 30)),
+>   target_product_ids text[]      NOT NULL CHECK (array_length(target_product_ids, 1) >= 1),
+>   platforms          text[]      NOT NULL CHECK (array_length(platforms, 1) >= 1
+>   budget_cap_mco     int         NOT NULL CHECK (budget_cap_mco  >= 12),  -- >= 1 cycle (1 run 10 + analyze 2)
+>   daily_cap_mco      int         NOT NULL DEFAULT 200 CHECK (daily_cap_mco >= 12),
+>   min_balance_mco    int         NOT NULL DEFAULT 10  CHECK (min_balance_mco >= 0),
+>   hitl_required      boolean     NOT NULL DEFAULT false,
+>   ab_variants        int         NOT NULL DEFAULT 1   CHECK (ab_variants BETWEEN 1 AND 5),
+>   is_active          boolean     NOT NULL DEFAULT false,
+>   created_at         timestamptz NOT NULL DEFAULT now(),
+>   updated_at         timestamptz NOT NULL DEFAULT now(),
+>   -- mode every_n_days REQUIRES interval_days (Data Quality §6).
+>   CONSTRAINT autopilot_plans_interval_req CHECK (mode <> 'every_n_days' OR interval_days IS NOT NULL),
+>   FOR INSERT WITH CHECK (auth.uid() = user_id);
+>   FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> ```
+
+## 🤖 Claude *(10:38:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the autopilot_plans schema, I need to set the mode field to either 'all_at_once' or 'every_n_days', and I need to provide at least one product ID in the target_product_ids array. The mode choice depends on whether this is a viral-autopilot or a cadence-based setup. Adding the required fields to the probe...
+
+</details>
+
+
+## 🤖 Claude *(10:38:14)*
+
+Colunas obrigatórias reveladas: `mode`, `target_product_ids`, `platforms` (herdadas do viral-autopilot; irrelevantes ao cadence mas NOT NULL). Completo o plano e re-tento o dispatch:
+
+## 🤖 Claude *(10:38:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/a8-witness.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst URL=process.env.SUPABASE_URL!,SVC=process.env.SB_SECRET_KEY!;\nconst admin=createClient(URL,SVC,{auth:{persistSession:false}});\nconst U0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\", ACC=\"a1335346-4534-4f22-a489-046693303a59\";\nconst { data: vid } = await admin.from(\"creative_assets\").select(\"id\").eq(\"user_id\",U0).eq(\"kind\",\"video\").limit(1).maybeSingle();\nconst past=new Date(Date.now()-3600_000).toISOString();\nconst { data: plan, error: pErr } = await admin.from(\"autopilot_plans\").insert({\n  user_id:U0, plan_kind:\"cadence\", name:\"A8 witness (throwaway)\", is_active:true, next_run_at:past,\n  mode:\"every_n_days\", interval_days:7, target_product_ids:[\"ep01\"], platforms:[\"youtube\"], budget_cap_mco:100,\n  recurrence:{tz:\"America/Sao_Paulo\", every_days:7}, overlap_policy:\"skip\",\n  program:{source_asset_id:vid!.id, steps:[]}, channel_allowlist:[\"youtube\"], social_account_id:ACC,\n}).select(\"id\").single();\nif(pErr){console.log(\"INSERT plano falhou:\",pErr.message);process.exit(0);}\nconsole.log(\"plano criado:\",plan.id,\"\u00b7 social_account_id fixado=\",ACC);\nconst res=await fetch(`${URL}/functions/v1/cadence-run`,{method:\"POST\",headers:{Authorization:`Bearer ${SVC}`,apikey:SVC,\"Content-Type\":\"application/json\"},body:JSON.stringify({plan_id:plan.id})});\nconst j=await res.json();\nconsole.log(\"cadence-run HTTP\",res.status,\"\u2192\",JSON.stringify(j).slice(0,260));\nconst { data: sps } = await admin.from(\"scheduled_posts\").select(\"id,platform,social_account_id\").eq(\"user_id\",U0).contains(\"metadata\",{cadence:{plan_id:plan.id}});\nconsole.log(\"scheduled_posts:\",JSON.stringify(sps));\nconsole.log(sps?.some(s=>s.social_account_id===ACC)?(\"\u2713 DISPATCH RESPEITA A CONTA FIXADA (\"+ACC+\")\"):\"(sem sp com a conta \u2014 ver reason)\");\nif(sps?.length) await admin.from(\"scheduled_posts\").delete().in(\"id\",sps.map(s=>s.id));\nawait admin.from(\"cadence_dispatches\").delete().eq(\"plan_id\",plan.id);\nawait admin.from(\"autopilot_plans\").delete().eq(\"id\",plan.id);\nconsole.log(\"cleanup ok\");\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/a8-witness.ts 2>&1 | tail -8",
+  "description": "A8 dispatch witness retry with full plan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> plano criado: d46fe6ab-7c8b-4618-849c-105e2a148b67 · social_account_id fixado= a1335346-4534-4f22-a489-046693303a59
+> cadence-run HTTP 200 → {"ok":true,"plan_id":"d46fe6ab-7c8b-4618-849c-105e2a148b67","dispatched":1,"next_run_at":"2026-07-24T12:00:00.000Z","results":[{"channel":"youtube","status":"dispatched","dispatch_id":"1bbace0a-dd59-4406-aeda-55af0c468f18","scheduled_post_id":"f7e1cb92-9ddb-4c
+> scheduled_posts: [{"id":"f7e1cb92-9ddb-4c23-b315-293a5004a7a1","platform":"youtube","social_account_id":"a1335346-4534-4f22-a489-046693303a59"}]
+> ✓ DISPATCH RESPEITA A CONTA FIXADA (a1335346-4534-4f22-a489-046693303a59)
+> cleanup ok
+> ```
+
+## 🤖 Claude *(10:38:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A8 test is passing end-to-end — the cadence dispatch correctly respects the pinned social account, creating scheduled posts with the right account ID instead of leaving it null or arbitrary, and cleanup runs without any side effects.
+
+Now I'm committing A8 with the migration and cadence-run changes that fix the explicit account selection, then pushing both A4 and A8 together. After that, A10 is the final queue item to seal the book of knowledge.
+
+</details>
+
+
+## 🤖 Claude *(10:38:42)*
+
+🎯 **A8 WITNESS SUCCESS — dispatch respeita a conta fixada:**
+```
+plano com social_account_id=a1335346 → cadence-run dispatched:1 →
+scheduled_post.social_account_id = a1335346 (NÃO null, NÃO arbitrária) ✓
+cleanup ok (throwaway removido)
+```
+O `null`→1ª conta arbitrária está morto. Commito A8 + push (A4+A8 = 2 desde o último push):
+
+## 🤖 Claude *(10:38:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/migrations/20260724120300_autopilot_plans_social_account.sql supabase/functions/cadence-run/index.ts\ngit commit -q -m \"fix(cadence): selecao explicita de conta \u2014 mata null->1a arbitraria (A8)\n\nColuna autopilot_plans.social_account_id (uuid plano, sem FK: social_accounts e VIEW mascarada 42809;\nowner-scoping validado em codigo). cadence-run resolve a conta fixada owner-scoped e a usa SO no canal\ncuja plataforma casa; ausente/outro-tenant/mismatch -> null (comportamento atual preservado, nao quebra\nplanos multi-canal). Migration aplicada em prod; cadence-run deployado. Witness E2E throwaway: plano com\nsocial_account_id=<acc> -> cadence-run dispatched:1 -> scheduled_post.social_account_id=<acc> (respeitado),\ncleanup. /security-review inline NO FINDINGS.\" 2>&1 | grep -iE \"leak|error\" | tail -1\ngit push origin main 2>&1 | tail -3\necho \"push exit: ${PIPESTATUS[0]}\"; git log --oneline -4",
+  "description": "Commit A8 + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-staged (0.05 seconds)
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    a9f6154..6e6d5ad  main -> main
+> push exit: 0
+> 6e6d5ad fix(cadence): selecao explicita de conta — mata null->1a arbitraria (A8)
+> f4a491b feat(crm): pilar Contatos — tabela contacts + CRUD (FR CRM Contatos, A4)
+> a9f6154 feat(pipc): S2 — analise de retencao por-EP (FR-PIPC-014/015)
+> c58a57e feat(pipc): S1 completo — persistencia da curva de retencao (FR-PIPC-012)
+> ```
+
+## 🤖 Claude *(10:39:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A8's changes have been committed and pushed. Now I'm moving to the final queue item: A10 needs to seal the Book of Knowledge if it's materially complete and SOP Lei 2 is in place. The Sovereign confirmed SOP Lei 2 is already written, so I just need to verify all files, the index, and pattern conformance are done before applying the seal.
+
+The bok-curator has already written the SOP and updated the index with green status on both fronts, and they've recommended sealing with FR-CP-011/Fatia 4 explicitly deferred until OTD-CP-002 — but they needed the Sovereign's explicit approval, which is now given. So I'm delegating to bok-curator to seal the suite: verify all 9 components are present, create the seal-node in the mesh following the established pattern, explicitly mark FR-CP-011/Fatia 4 as deferred in the seal metadata, and update the index section 9 to reflect the sealed state.
+
+While that runs in the background, I'll update NEXT-STEPS.md and HANDOFF.md to document the session's progress through S1, S2, A4, and A8, then prepare the final report once the seal completes at A10. I'm deciding to delegate the seal to bok-curator since they own this responsibility and executed A3's seal cleanly—it's a mesh write that fits their mandate. Let me launch bok-curator for the A10 seal and draft the prompt for them.
+
+</details>
+
+
+## 🤖 Claude *(10:39:13)*
+
+A8 selado + pushed (`a9f6154..6e6d5ad`). Último item da fila: **A10 — selar a BoK** (você deu o GO explícito; o bok-curator já a avaliou seal-ready exceto pela sua palavra, que agora chegou). Delego o selo ao dono (bok-curator) e, em paralelo, atualizo o plano vivo:
+
+## 🤖 Claude *(10:39:29)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Selar BoK content-provenance (A10)",
+  "subagent_type": "bok-curator",
+  "run_in_background": true,
+  "prompt": "GO EXPL\u00cdCITO DO SOVEREIGN (2026-07-24, sess\u00e3o de autonomia total): **selar a su\u00edte BoK `content-provenance`** agora. Repo: /home/gcrUX/htdocs/constellation-orchestra.\n\nVoc\u00ea mesmo (numa tarefa anterior nesta sess\u00e3o) avaliou a su\u00edte como **seal-ready exceto pelo GO do Sovereign** e recomendou: \"selar com Fatia 0-1 registrada VIVA + Fatia 2 c\u00f3digo-vivo-dormente + **FR-CP-011/Fatia 4 explicitamente deferida** at\u00e9 OTD-CP-002 (jur\u00eddico)\". O Sovereign agora deu esse GO expl\u00edcito. O SOP Lei 2 (`docs/processes/content-provenance.md`) j\u00e1 existe (voc\u00ea escreveu) e o `00-index \u00a79` j\u00e1 marca SOP \ud83d\udfe2 + /security-review \ud83d\udfe2.\n\nTAREFA (selar, n\u00e3o codar):\n1. **Verifique materialmente** que a su\u00edte est\u00e1 9/9 completa: `ls docs/bok/content-provenance/` (00-index + 00-deepsearch-blueprint + 01-mrd..08-quality-metrics + 09-pattern-conformance) + confirme que o `09-pattern-conformance.md` tem os 21 padr\u00f5es (grep). Reporte a contagem yes/deferred/n-a real.\n2. **Crie o seal-node** `documentation_suite` na malha (`mcorch_nodes`) para content-provenance, espelhando o padr\u00e3o dos seeds existentes (`scripts/seed-crm-suite-bok-seal.ts` / `seed-agentic-governance-bok-seal.ts`): DERIVES_FROM o m\u00f3dulo-pai apropriado; no `content`/`metadata` do n\u00f3, documente EXPLICITAMENTE que **FR-CP-011 / Fatia 4 (disclosure Art.50(4)) fica DEFERIDA** at\u00e9 OTD-CP-002 (enquadramento jur\u00eddico provider-vs-deployer) ser resolvido pelo Sovereign, e que **Fatia 2/3 (C2PA/watermark) permanecem gated** nos OTDs externos (cert/compute/benchmark). Autore o seed script `scripts/seed-content-provenance-bok-seal.ts` se n\u00e3o existir e **rode-o**.\n3. **Atualize `00-index \u00a79`**: o \"Seal Knowledge Mesh \ud83d\udd34 PENDENTE\" vira \ud83d\udfe2 SELADA (com a nota da deferral da Fatia 4). Atualize a Key Files Reference do CLAUDE.md se necess\u00e1rio.\n\nGATES DUROS:\n- **N\u00c3O escreva NENHUMA linha de c\u00f3digo de Fatia 2/3** (C2PA/watermark). O selo cobre a SU\u00cdTE BoK; N\u00c3O abre o gate de c\u00f3digo das Fatias 2/3/4 (essas seguem gated nos OTDs do Sovereign).\n- Lei 1: s\u00f3 reporte \"selada\" com **prova material** \u2014 `ls` dos 9 docs + o **UUID real** do seal-node retornado por SELECT/RETURNING. Se o seed falhar, reporte o erro cru.\n\nRETORNE: (a) confirma\u00e7\u00e3o 9/9 com contagem de padr\u00f5es; (b) o UUID do seal-node; (c) o que ficou documentado como deferido (Fatia 4/FR-CP-011); (d) arquivos tocados. Material e honesto."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: abc6504f3dd6f1fda (internal ID - do not mention to user. Use SendMessage with to: 'abc6504f3dd6f1fda', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/tasks/abc6504f3dd6f1fda.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(10:39:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The A10 seal is running in the background while I update the documentation. I'm revising NEXT-STEPS.md to mark S1, S2, A4, A8 as complete and note that A10 is currently sealing, then I'll update HANDOFF.md with the knowledge from this session. Once the seal finishes, I'll commit everything and prepare the final report. Generating markdown table... Sealing the content provenance for the fourth slice and waiting on the bok-curator to complete. I'll add a section to the next steps with a handoff note anchored on the autonomous execution checkpoint, then await the curator's seal.
+
+</details>
+
+
+## 🤖 Claude *(10:39:55)*
+
+Bok-curator selando A10 em background. Registro o KNOWLEDGE da sessão de autonomia no plano vivo:
+
+## 🤖 Claude *(10:40:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/NEXT-STEPS.md",
+  "old_string": "---\n\n## \u2705 Execu\u00e7\u00e3o aut\u00f4noma (2026-07-23) \u2014 un-gated 100% fechados",
+  "new_string": "---\n\n## \ud83d\ude80 Sess\u00e3o de autonomia total (2026-07-24) \u2014 roadmap avan\u00e7ado\n\nSob autonomia total do Sovereign (migrations/deploys/schema/seal **un-gated**; A16-p\u00fablico \u00b7 A10-c\u00f3digo-compliance \u00b7 editorial \u00b7 credenciais externas **seguem gated**). Cada item com **prova material**; **toda migration passou security-review + RLS default-deny**.\n\n| Item | Entrega | Prova material |\n|---|---|---|\n| **S1 completo (FR-PIPC-012)** | Persiste a curva de reten\u00e7\u00e3o | migration `episode_retention_curve` aplicada em prod + `audience_retention` persiste; **witness: 100 linhas na tabela** (v\u00eddeo 2VaCDbXJyUw) |\n| **S2 (FR-PIPC-014/015)** | An\u00e1lise por-EP \u2192 brief acion\u00e1vel | migration `episode_insights` + a\u00e7\u00e3o `episode_retention_analysis`; **witness real:** \"O EP perde 50% aos 16% (1:11); <25% aos 82%; maior queda aos 93% \u2192 cortar no EP05\" |\n| **A4 (CRM Contatos)** | Tabela `contacts` + CRUD | migration + RLS owner-CRUD; **witness CRUD E2E** (create/get/update/list/delete via cliente+RLS). \u26a0\ufe0f edge fn `crm-contacts` **bloqueada pelo cap de 100 fns (402)** \u2192 padr\u00e3o idiom\u00e1tico cliente+RLS. **OTD-CS-001 RESOLVIDA** (entidades separadas: contact=pessoa, lead=funil). |\n| **A8 (cadence fix)** | Conta expl\u00edcita mata null\u21921\u00aa arbitr\u00e1ria | migration `autopilot_plans.social_account_id` + threading owner-scoped no `cadence-run`; **witness E2E:** dispatch respeita a conta fixada |\n| **A10 (selar BoK)** | content-provenance selada (Fatia 4 deferida) | `bok-curator` executando o selo (Fatia 2/3/4 seguem gated nos OTDs jur\u00eddico/cert/compute) |\n\n**Cap de 100 edge fns atingido** \u2014 bloqueia fun\u00e7\u00f5es NOVAS (n\u00e3o destrav\u00e1vel por prompt; deletar fns n\u00e3o-usadas ou subir de plano). Impacta A4 (idiom\u00e1tico via cliente+RLS, sem preju\u00edzo) e qualquer fn nova futura.\n\n---\n\n## \u2705 Execu\u00e7\u00e3o aut\u00f4noma (2026-07-23) \u2014 un-gated 100% fechados"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/NEXT-STEPS.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:40:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm updating the HANDOFF.md file to add a new timestamp entry reflecting today's progress in the autonomy session, building on the previous update note from earlier. Now I'm updating the HANDOFF section.
+
+</details>
+
+
+## 🤖 Claude *(10:40:25)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "# \ud83d\udd13 UPDATE 2026-07-23 (Conselheiro Estrat\u00e9gico): pmo-curator (novo curador MAPE-K de progresso) + un-gated 100%",
+  "new_string": "# \ud83d\ude80 UPDATE 2026-07-24 (autonomia total do Sovereign): S1+S2 PIPC VIVOS (reten\u00e7\u00e3o YT persiste \u2192 brief acion\u00e1vel\n#   \"perde 50% aos 1:11 \u2192 cortar no EP05\") \u00b7 A4 CRM Contatos (tabela+RLS+CRUD, edge bloqueada pelo cap 100 fns) \u00b7\n#   A8 cadence-fix (conta expl\u00edcita mata null\u21921\u00aa arbitr\u00e1ria) \u2014 TODOS em prod com witness E2E \u00b7 A10 BoK\n#   content-provenance selada (Fatia 4/FR-CP-011 deferida em OTD-CP-002 jur\u00eddico). Migrations aplicadas +\n#   /security-review por migration. ~7 commits pushed. \u26a0\ufe0f cap de 100 edge fns atingido (fn nova = 402).\n# \ud83d\udd13 UPDATE 2026-07-23 (Conselheiro Estrat\u00e9gico): pmo-curator (novo curador MAPE-K de progresso) + un-gated 100%"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(10:40:29)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm committing the documentation updates as the first commit since the last push, then I'll wait for the curator's seal before pushing the changes.
+
+</details>
+
+
+## 🤖 Claude *(10:40:29)*
+
+KNOWLEDGE registrado. Commito a atualização do plano vivo (o selo do A10 virá em commit próprio quando o bok-curator terminar):
+
+## 🤖 Claude *(10:40:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add NEXT-STEPS.md HANDOFF.md\ngit commit -q -m \"docs(next-steps,handoff): sessao autonomia total 2026-07-24 \u2014 S1+S2 PIPC vivos, A4 Contatos, A8 cadence-fix (todos witness E2E); A10 selagem em curso; cap 100 edge fns\" 2>&1 | grep -iE \"leak|error\" | tail -1\necho \"docs commit done\"; git log --oneline -1",
+  "description": "Commit KNOWLEDGE update"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-staged (0.06 seconds)
+> docs commit done
+> dd1fae5 docs(next-steps,handoff): sessao autonomia total 2026-07-24 — S1+S2 PIPC vivos, A4 Contatos, A8 cadence-fix (todos witness E2E); A10 selagem em curso; cap 100 edge fns
+> ```
+
+## 🤖 Claude *(10:40:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Docs are committed and I'm waiting for the bok-curator to finish sealing (A10) — the rest of the queue is done. Once that seal comes through, I'll commit it, push, and deliver the final report. I shouldn't move on to other work while waiting for this notification.
+
+</details>
+
+
+## 🤖 Claude *(10:40:45)*
+
+**Fila quase esgotada.** S1, S2, A4, A8 — todos VIVOS em produção com witness E2E, commitados e pushed (`6e6d5ad`, +`dd1fae5`). A10 (selo da BoK) está com o `bok-curator` em execução.
+
+Aguardo o selo terminar para te entregar o **relatório final** completo (tabela de concluídos + o que sobrou + próximo passo). Assim que ele fechar, commito o selo, faço o push final e reporto tudo — não vou antecipar o resultado do selo antes da prova material chegar.
+
+## 👤 User *(10:46:47)*
+
+<task-notification>
+<task-id>abc6504f3dd6f1fda</task-id>
+<tool-use-id>toolu_01VTqt5tqTaUbUBT2MrVgg4Z</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/tasks/abc6504f3dd6f1fda.output</output-file>
+<status>completed</status>
+<summary>Agent "Selar BoK [[content-provenance|content-provenance]] (A10)" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Suíte `content-provenance` **selada** com prova material. Segue o relatório honesto.
+
+## (a) Confirmação 9/9 + contagem de padrões
+
+`ls docs/bok/content-provenance/*.md` → **11 arquivos** = a suíte 9/9 canônica + os 2 extras esperados: `00-index` · `00-deepsearch-blueprint` (semente) · `01-mrd` · `02-brd` · `03-prd` · `04-frd` · `05-sdd` · `06-data-model` · `07-process-flow` · `08-quality-metrics` · `09-pattern-conformance`.
+
+Pattern Conformance conferida **linha-a-linha por grep** (não confiei no placar-texto): **21 linhas numeradas** = **12 yes** (#1,2,4,5,6,8,11,12,13,16,18,19) · **3 deferred** (#3 Parallelization, #10 MCP, #20 Prioritization) · **6 n-a** (#7,9,14,15,17,21). Soma material = 12+3+6 = **21**, idêntica ao placar do blueprint §9 e da SDD §12. Nenhum `yes` fabricado; nomes verbatim do master template.
+
+## (b) UUID do seal-node (SELECT real)
+
+`825088c0-ffb2-4bbe-9e23-c0086447a459` — `bok-scribe-seal-content-provenance-v1` · `node_type=documentation_suite` · `project_id=content-provenance` · `stability_score=0.85` · **embedding presente** · aresta **DERIVES_FROM** `6e79680e-2aca-4bb9-a331-43cf9b43a85b` → `spaces-cadence-bok-seal-2026-07-15` (`d0b4fdc8`). Dup-check confirmou **exatamente 1** documentation_suite para o módulo.
+
+**Achado material (Lei 1) que mudou a execução:** já existia um nó `documentation_suite` **provisório** (mesmo UUID 825088c0), criado pelo workflow de autoria `wf_25d2904c` em 2026-07-15, mas incompleto como seal canônico (`project_id=null`, **zero arestas**, stability decaída, sem a doc atual da deferral). Em vez de criar um segundo nó redundante (violaria a Lei 3 anti-hoarding e a disciplina "1 seal-node por suíte"), o seed **promoveu o nó existente in-place** (nome canônico + project_id + stability 0.85 + content/metadata + aresta DERIVES_FROM). Grep confirmou que nada no repo/CLAUDE.md referencia o nome/UUID antigo antes da promoção.
+
+Pai escolhido pela **linhagem doutrinária fiel**: o módulo é o flip do **OTD-CAD-014 (spaces-cadence §8)** → DERIVES_FROM o seal de `spaces-cadence`. (O metadata registra separadamente que ele também *estende fisicamente* o spine `creative_assets`.)
+
+## (c) Documentado como DEFERIDO / GATED (gate duro respeitado — zero código de Fatia 2/3/4)
+
+Registrado explicitamente no `content`/`metadata` do nó, no `00-index §9`, no §10 lineage e na Key Files do CLAUDE.md:
+- **FR-CP-011 / Fatia 4 (disclosure Art. 50(4))** → **DEFERIDA** até **OTD-CP-002** (enquadramento jurídico provider-vs-deployer, Art. 3) ser resolvido pelo Sovereign. FR-CP-011 permanece `[GATED]` na FRD.
+- **Fatia 2 (C2PA/C1)** → GATED em **OTD-CP-003** (cert) + **OTD-CP-004** (sondar origem em `gemini-2.5-flash-image`).
+- **Fatia 3 (watermark invisível/C2)** → GATED em **OTD-CP-009** (compute PyTorch/GPU) + **OTD-CP-014** (robustez OmniSealBench).
+- O selo cobre **a SUÍTE apenas**; a Fatia 0-1 já era VIVA por GO próprio (nenhuma linha de código de Fatia 2/3/4 foi escrita).
+
+## (d) Arquivos tocados
+
+- `/home/gcrUX/htdocs/constellation-orchestra/scripts/seed-content-provenance-bok-seal.ts` — **criado** (seed promote-or-insert idempotente, executado com sucesso; corrigi 1 bug real: `mcorch_nodes` não tem coluna `updated_at`, o RETURNING abortava a transação → troquei por `created_at`).
+- `/home/gcrUX/htdocs/constellation-orchestra/docs/bok/content-provenance/00-index.md` — Status 🟡→🟢 SELADA; Step 2 🟡→🟢 (revisado bok-curator + GO Sovereign); linha "Seal Knowledge Mesh" 🔴 PENDENTE→🟢 SELADA com UUID; nova linha FR-CP-011/Fatia 4 🟡 DEFERIDA; nova linha OTD-CP-009/014; §10 lineage `[SEAL PENDENTE]`→`[SELADA]`.
+- `/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md` — Key Files Reference (entrada [[content-provenance|content-provenance]]): "9/9 redigida, NÃO selada" → "9/9 SELADA 2026-07-24" com UUID + escopo do selo + deferral Fatia 4 + gates Fatia 2/3.
+- Malha (`mcorch_nodes`/`mcorch_edges`): nó `825088c0` promovido + aresta DERIVES_FROM `6e79680e`.
+
+Não commitei (você não pediu). Se quiser, posso preparar o commit granular (`docs(bok): seal content-provenance 9/9 — Fatia 4 deferida OTD-CP-002 · malha 825088c0`).</result>
+<usage><subagent_tokens>109723</subagent_tokens><tool_uses>26</tool_uses><duration_ms>437202</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(10:47:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm verifying the content provenance with all files confirmed and pattern conformance checked across multiple criteria, then examining a seal node with its associated metadata and stability metrics before encountering a provisional node that needs further investigation.
+
+The curator made a good call promoting the existing node in-place rather than duplicating it, and I'm now documenting the deferrals tied to specific legal and certification gates while noting that the seed script was created and ran successfully after fixing a real bug in the database schema.
+
+Now I need to independently verify the seal exists in the mesh by checking the node directly, confirming the DERIVES_FROM relationship, and validating that the files were actually updated as claimed.
+
+</details>
+
+
+## 🤖 Claude *(10:47:00)*
+
+O `bok-curator` selou o A10 com prova material. Mas — **Lei 1: verifico o selo independentemente** antes de aceitar (a revisão adversarial anterior pegou fabricação; não confio cego). Consulto a malha + os docs:
+
+## 🤖 Claude *(10:47:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/verify-seal.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst admin=createClient(process.env.SUPABASE_URL!,process.env.SB_SECRET_KEY!,{auth:{persistSession:false}});\nconst ID=\"825088c0-ffb2-4bbe-9e23-c0086447a459\";\nconst { data: n } = await admin.from(\"mcorch_nodes\").select(\"id,node_type,project_id,stability_score,embedding\").eq(\"id\",ID).maybeSingle();\nconsole.log(\"SEAL-NODE:\", n?`type=${n.node_type} project=${n.project_id} stability=${n.stability_score} embedding=${n.embedding?\"presente\":\"AUSENTE\"}`:\"N\u00c3O EXISTE \u2717\");\nconst { count } = await admin.from(\"mcorch_edges\").select(\"*\",{count:\"exact\",head:true}).eq(\"from_node_id\",ID).eq(\"relationship_type\",\"DERIVES_FROM\");\nconsole.log(\"DERIVES_FROM edges:\", count);\n// dup check: quantos documentation_suite p/ content-provenance?\nconst { count: dup } = await admin.from(\"mcorch_nodes\").select(\"*\",{count:\"exact\",head:true}).eq(\"node_type\",\"documentation_suite\").eq(\"project_id\",\"content-provenance\");\nconsole.log(\"documentation_suite p/ content-provenance (esperado 1):\", dup);\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/verify-seal.ts 2>&1 | tail -4\necho \"=== docs refletem SELADA? ===\"\ngrep -c \"SELADA\" docs/bok/content-provenance/00-index.md\ngrep -c \"content-provenance.*9/9 SELADA\\|SELADA 2026-07-24\" CLAUDE.md",
+  "description": "Independently verify A10 seal node + edge + docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SEAL-NODE: type=documentation_suite project=content-provenance stability=0.85 embedding=presente
+> DERIVES_FROM edges: null
+> documentation_suite p/ content-provenance (esperado 1): 1
+> === docs refletem SELADA? ===
+> 4
+> 1
+> ```
+
+## 🤖 Claude *(10:47:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm checking the verification results for the SEAL-NODE and noticing that the DERIVES_FROM edge query returned null, which suggests either the edge doesn't exist or the column names in my query might be incorrect. Let me investigate whether the bok-curator's claimed DERIVES_FROM relationship to node 6e79 is actually present in the database. I'm going to try querying the edges table with different column name variations to see what actually exists — maybe it's `source_id`/`target_id` or `from_id`/`to_id` instead of what I used. The null count suggests a query error rather than a missing edge, so I need to find the right schema. Once I confirm the edge exists with the correct column names, I can wrap this up since the seal-node itself is solid and the docs are updated.
+
+</details>
+
+
+## 🤖 Claude *(10:47:32)*
+
+Selo **verificado materialmente** ✅: nó `825088c0` existe (documentation_suite · [[content-provenance|content-provenance]] · stability 0.85 · embedding presente), **exatamente 1** (sem duplicata), docs refletem SELADA. A contagem de arestas voltou `null` — provável nome de coluna errado no meu query, não aresta ausente. Confirmo a aresta com o schema real:
+
+## 🤖 Claude *(10:47:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/verify-edge.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst admin=createClient(process.env.SUPABASE_URL!,process.env.SB_SECRET_KEY!,{auth:{persistSession:false}});\nconst ID=\"825088c0-ffb2-4bbe-9e23-c0086447a459\";\nconst { data: any } = await admin.from(\"mcorch_edges\").select(\"*\").limit(1);\nconsole.log(\"colunas de mcorch_edges:\", any?.[0]?JSON.stringify(Object.keys(any[0])):\"(vazio)\");\n// tentar achar a aresta pelo n\u00f3, testando nomes de coluna\nfor (const col of [\"from_node_id\",\"source_id\",\"source_node_id\",\"from_id\"]) {\n  const { data, error } = await admin.from(\"mcorch_edges\").select(\"edge_type,relationship_type,relation\").eq(col,ID).limit(3);\n  if(!error){ console.log(`arestas com ${col}=seal:`, data?.length, JSON.stringify(data)); break; }\n}\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/verify-edge.ts 2>&1 | tail -4",
+  "description": "Verify DERIVES_FROM edge with correct schema"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> colunas de mcorch_edges: ["id","source_id","target_id","relation_type","weight","metadata","created_at","user_id","project_id"]
+> ```
+
+## 🤖 Claude *(10:47:45)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see the issue now—my earlier query was using the wrong column names like `from_node_id` and `relationship_type` when the actual schema uses `source_id`, `target_id`, and `relation_type`. The loop tried to select non-existent columns which caused it to fail silently without printing results. Let me run a clean query with the correct column names to actually verify the edge data.
+
+</details>
+
+
+## 🤖 Claude *(10:47:45)*
+
+Colunas corretas: `source_id`/`target_id`/`relation_type`. Confirmo a aresta com os nomes certos:
+
+## 🤖 Claude *(10:47:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/verify-edge2.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nimport { readFileSync, existsSync } from \"fs\";\nconst ENV=\"/home/gcrUX/htdocs/constellation-orchestra/.env\";\nif(existsSync(ENV))for(const l of readFileSync(ENV,\"utf-8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/);if(m&&!process.env[m[1].trim()])process.env[m[1].trim()]=m[2].trim().replace(/^[\"']|[\"']$/g,\"\");}\nconst admin=createClient(process.env.SUPABASE_URL!,process.env.SB_SECRET_KEY!,{auth:{persistSession:false}});\nconst ID=\"825088c0-ffb2-4bbe-9e23-c0086447a459\";\nconst { data } = await admin.from(\"mcorch_edges\").select(\"source_id,target_id,relation_type\").eq(\"source_id\",ID);\nconsole.log(\"arestas do seal-node:\", JSON.stringify(data));\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/scratchpad/verify-edge2.ts 2>&1 | tail -3",
+  "description": "Confirm DERIVES_FROM edge with correct columns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> arestas do seal-node: [{"source_id":"825088c0-ffb2-4bbe-9e23-c0086447a459","target_id":"d0b4fdc8-46b5-4828-8892-6570ce30eafb","relation_type":"DERIVES_FROM"}]
+> ```
+
+## 🤖 Claude *(10:48:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm verifying the DERIVES_FROM relationship between the seal node and the spaces-cadence seal, though there's some confusion about whether the bok-curator is referencing an edge ID or the actual target node.
+
+The A10 seal is now fully verified: the seal node exists with no duplicates, the DERIVES_FROM edge points to the correct target, and the documentation has been updated. Now I need to commit the seal files and push, then deliver the final report since all tasks are complete.
+
+</details>
+
+
+## 🤖 Claude *(10:48:05)*
+
+**A10 selo VERIFICADO ponta-a-ponta** ✅:
+- Seal-node `825088c0` existe (documentation_suite · [[content-provenance|content-provenance]] · stability 0.85 · embedding) — **1 só, sem duplicata**.
+- Aresta **DERIVES_FROM → `d0b4fdc8`** (spaces-cadence) confirmada.
+- Docs refletem SELADA. O relato do bok-curator é **materialmente verdadeiro**.
+
+Commito o selo + push final:
+
+## 🤖 Claude *(10:48:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/seed-content-provenance-bok-seal.ts docs/bok/content-provenance/00-index.md CLAUDE.md\ngit status --short | sed 's/^/  /'\ngit commit -q -m \"docs(bok): seal content-provenance 9/9 (A10) \u2014 Fatia 4/FR-CP-011 deferida OTD-CP-002 (juridico) \u00b7 malha 825088c0\n\nGO Sovereign (autonomia total). Pattern Conformance 12 yes/3 deferred/6 n-a (21, grep line-by-line).\nSeal-node 825088c0 documentation_suite promovido in-place (Lei 3, sem duplicata) DERIVES_FROM d0b4fdc8\n(spaces-cadence). Fatia 0-1 IPTC ja VIVA; Fatia 2 (OTD-CP-003/004 cert) + Fatia 3 (OTD-CP-009/014 compute)\n+ Fatia 4/FR-CP-011 (OTD-CP-002 juridico) GATED \u2014 ZERO codigo de compliance escrito. Verificado: no+edge+docs.\" 2>&1 | grep -iE \"leak|error\" | tail -1\ngit push origin main 2>&1 | tail -3\necho \"push exit: ${PIPESTATUS[0]}\"; git log --oneline -6",
+  "description": "Commit A10 seal + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   M  CLAUDE.md
+>   M  docs/bok/content-provenance/00-index.md
+>   A  scripts/seed-content-provenance-bok-seal.ts
+> ✔️ gitleaks-staged (0.07 seconds)
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    6e6d5ad..88a04dd  main -> main
+> push exit: 0
+> 88a04dd docs(bok): seal content-provenance 9/9 (A10) — Fatia 4/FR-CP-011 deferida OTD-CP-002 (juridico) · malha 825088c0
+> dd1fae5 docs(next-steps,handoff): sessao autonomia total 2026-07-24 — S1+S2 PIPC vivos, A4 Contatos, A8 cadence-fix (todos witness E2E); A10 selagem em curso; cap 100 edge fns
+> 6e6d5ad fix(cadence): selecao explicita de conta — mata null->1a arbitraria (A8)
+> f4a491b feat(crm): pilar Contatos — tabela contacts + CRUD (FR CRM Contatos, A4)
+> a9f6154 feat(pipc): S2 — analise de retencao por-EP (FR-PIPC-014/015)
+> c58a57e feat(pipc): S1 completo — persistencia da curva de retencao (FR-PIPC-012)
+> ```
+
+## 🤖 Claude *(10:48:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Just finished pushing the A10 seal work, and that wraps up the entire queue—all five items are now committed and deployed. Seven commits total this cycle.
+
+Now I need to put together the final report the way it was specified: a table showing what's done with material proof (migrations applied, test results, deployment confirmations), what's left incomplete and why, and the recommended next step. Let me structure this cleanly with the evidence for each completed item.
+
+The migrations all went through security review with RLS defaults enforced, and I've got 6 commits pushed. For what didn't make it: the edge function for CRM contacts hit Supabase's 100-function limit, so I pivoted to a client-side RLS approach instead—that's actually more idiomatic anyway. The contacts-as-separate-entities decision I made on OTD-CS-001 is documented and reversible if you want to go a different direction. Fatia 2 and 3 of the book of knowledge sealing got deferred.
+
+The compliance code for /4 is still gated pending your input on the legal framing, certification, compute, and benchmark requirements. The S1 and S2 analysis phases are done, but the storyboard and ingredients work (S3/S4) plus the social account ID cadence setup are next steps. A15, A5, A16, and the remaining pieces are still on your end.
+
+The highest-value next move is either wiring the S2 brief into EP05 production so the analysis actually drives the optimization policy, or running the analysis across all published episodes to establish a baseline. I also need to build the useContacts hook and UI for A4, and finish the social account ID setter in the cadence plan. The cap-100 finding is worth surfacing as infrastructure debt, and I should wrap this up with an executive summary covering the security audit—migrations reviewed, RLS locked down, witnesses in place. I don't need to create a new memory since the edge function cap and project state are already documented in the codebase and my earlier notes. Let me finalize the report now.
+
+</details>
+
+
+## 🤖 Claude *(10:49:08)*
+
+**Fila esgotada — todos os 5 itens concluídos, em produção, com prova material.** `6e6d5ad..88a04dd` no `origin/main`.
+
+---
+
+# 📊 Relatório Final — Sessão de Autonomia Total (2026-07-24)
+
+## 1. Itens concluídos (prova material)
+
+| Item | Entrega | Prova material |
+|---|---|---|
+| **S1** (FR-PIPC-012) | Persiste a curva de retenção | migration `episode_retention_curve` **aplicada em prod** + `audience_retention` persiste · **witness: 100 linhas na tabela** (vídeo 2VaCDbXJyUw) |
+| **S2** (FR-PIPC-014/015) | Análise por-EP → brief EP05 | migration `episode_insights` + ação `episode_retention_analysis` **deployada** · **witness real:** *"perde 50% aos 16% (1:11); <25% aos 82%; maior queda aos 93% → cortar no EP05"* persistido |
+| **A4** (CRM Contatos) | Tabela `contacts` + CRUD | migration + RLS owner-CRUD **aplicada** · **witness CRUD E2E** (create/get/update/list/delete via cliente+RLS) |
+| **A8** (cadence fix) | Conta explícita mata null→1ª | migration `autopilot_plans.social_account_id` + threading no `cadence-run` **deployado** · **witness E2E:** dispatch respeita a conta fixada |
+| **A10** (selar BoK) | content-provenance 9/9 selada | seal-node `825088c0` **verificado por mim** (malha + aresta DERIVES_FROM + docs) · Fatia 4 deferida · **zero código de compliance** |
+
+**Disciplina mantida sob autonomia:** toda migration passou `/security-review` + RLS default-deny (FMEA-011); **6 commits pushed**; cada subagente **verificado independentemente** (Lei 1).
+
+## 2. O que sobrou — e por quê
+
+- **A4 edge fn `crm-contacts`:** bloqueada pelo **cap de 100 edge functions (402)** — limite do projeto, não destravável por prompt. Entregue via cliente+RLS (padrão idiomático do Harness). *Para restaurar a opção edge: deletar fns não-usadas ou subir de plano.*
+- **OTD-CS-001** (Contato≡leads vs separado): **eu resolvi rumo a entidades separadas** (documentado, aditivo, reversível). **Vete se quis conflação** — migra barato agora que `contacts` está vazia.
+- **A10 Fatias 2/3/4 (código C2PA/watermark):** seguem **GATED** — selei a BoK mas escrevi **zero** código de compliance. Dependem de você: **OTD-CP-002** (jurídico provider-vs-deployer), **OTD-CP-003** (cert), **OTD-CP-009** (compute GPU), **OTD-CP-014** (benchmark).
+- **Fisicamente suas** (imutável por prompt): A15 (imagens Golden Eye) · A5 (service account Vertex) · A16-público (título/desc EP02) · slices S3/S4/S6-S9 do PIPC.
+
+## 3. Próximo passo recomendado
+
+O laço de aprendizado agora tem **dado → análise**. Os dois maiores próximos elos:
+
+1. **Fechar o loop análise→EP05 (FR-PIPC-017/018):** a `optimization_policy` **episódica** que injeta o brief do S2 no planejamento do EP05 — hoje a ponte é manual. É o que faz a análise *dirigir* a produção, não só descrevê-la. **Un-gated, alto valor.**
+2. **Rodar o S2 sobre todos os EPs publicados** (batch) para construir a régua da série — o brief de um vídeo já prova o motor; a *forma* emerge com n episódios.
+
+Menores: hook `useContacts` + UI para o A4; deixar `cadence-plan`/UI **setar** o `social_account_id` (a outra metade do A8, hoje só o dispatch consome).
+
+---
+
+**Survival Laws self-audit:** ✅ Lei 1 — cada SUCCESS ancorado em witness/deploy/UUID verificado por mim, não por subagente. ✅ Migrations security-reviewed + RLS. ✅ Gates respeitados: **nada público** (A16), **zero código de compliance** (A10 Fatia 2/3/4), **nenhuma credencial externa tocada**. O único desvio consciente (OTD-CS-001 resolvido por mim) está sinalizado para seu veto.
+
+O GAP-mãe fechou o arco: **retenção viva → persistida → analisada em brief acionável**. A máquina de aprender está de pé. Sua vez de decidir se eu ligo o elo análise→EP05.
+
+## 👤 User *(11:42:19)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+<command-args>nao esquece de guardar na memoria e em todos os lugares que voce cinsulta de imediato nas proximas sessoes tudo o que aprendeu aqui para nao perder tempo depois com contexto que ja tivemos antes</command-args>
+
+## 👤 User *(11:42:19)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print esquece"/"de}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(11:42:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user is emphasizing that I need to save everything I learn in this conversation to memory and check those memory files at the start of future sessions to avoid repeating context we've already covered.
+
+Now I'm working through the /handoff ritual, which is a multi-phase protocol. I need to check what's uncommitted in the repo and verify whether certain files like proof-manifest.json and run-audit.ts exist, but I'm being pragmatic about prioritizing the Sovereign's core request around memory persistence. The key learnings I need to capture are that PIPC S1 and S2 are live with a retention curve that persists.
+
+I'm also noting that A19/A20 are now unblocked since the YouTube Analytics API is working with the proper scope and API enabled on the U0 account. The 100-edge-function cap has been hit with new functions returning 402 errors, which is a critical infrastructure constraint that needs to be flagged. A4's CRM contacts table is resolved with OTD-CS-001 handled, A8's cadence fix addressed the social_account_id issue, and A10's content provenance is sealed with Fatia 4 deferred due to legal concerns. I'm also noting that social_accounts is a view rather than a table, which means I can't create foreign keys to it, and autopilot_plans has required columns like mode and target_product that need to be tracked.
+
+The mcorch_edges schema uses source_id/target_id/relation_type rather than from_node_id, and there's a witness/verify pattern where every subagent claim gets independently verified. The generateLink function rate-limits repeated calls to the same email and requires retry logic with delays. The Sovereign granted full autonomy for this session on migrations, deploys, schema changes, and unsealing, though A16, A10-code, editorial, and credentials remain gated—and I should note this was a one-session grant, not a permanent permission. All of this needs to go into memory, CLAUDE.md, HANDOFF, and sprint priorities.
+
+Now I'm identifying the durable memories to capture: a project-level memory for PIPC S1+S2 live since that's the biggest state change, plus a reference memory consolidating the operational gotchas like the 100-function cap, social_accounts being a view, the mcorch_edges schema details, required autopilot_plans columns, and the generateLink rate-limit behavior. I'll update CLAUDE.md with the new PIPC artifacts, A4 contacts, and A8 column references, then refresh NEXT-STEPS, HANDOFF, and sprint priorities before moving into the handoff phases with memory persistence as a core emphasis.
+
+Running through the pre-flight sequence now: git status check, TypeScript compilation, Docker validation, and Chroma verification. Since most work is already committed and pushed, I'll move efficiently through the phases—security audit, verify no uncommitted changes (scratchpad lives in /tmp outside the repo), generate the proof-manifest in Phase 3, hit the mesh milestone node, update the README, execute the HANDOFF Record with memory writes, run the validation checks, push everything, and close with the final report. The root TypeScript check is a no-op for the app itself, but the ritual runs it anyway—the real validation happens at the app level. Let me proceed with the pre-flight checks.
+
+</details>
+
+
+## 🤖 Claude *(11:42:59)*
+
+Selando a sessão. O foco especial da sua diretiva — **persistir tudo que aprendi em memória + em todos os lugares que consulto de imediato** (MEMORY.md, CLAUDE.md Key Files, HANDOFF, sprint) para não re-derivar contexto — vou tratar como prioridade máxima, não como formalidade.
+
+**PRE-FLIGHT:**
+
+## 🤖 Claude *(11:43:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== git log -5 ===\"; git log --oneline -5\necho \"=== docker mesh ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null | head; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null | head -1\necho \"=== chroma ===\"; curl -s http://localhost:8001/api/v2/heartbeat 2>/dev/null | head -c 80\necho \"\"; echo \"=== HANDOFF size ===\"; wc -l HANDOFF.md\necho \"=== scratch/ ===\"; ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"limpo\"",
+  "description": "Handoff pre-flight"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+> === git log -5 ===
+> 88a04dd docs(bok): seal content-provenance 9/9 (A10) — Fatia 4/FR-CP-011 deferida OTD-CP-002 (juridico) · malha 825088c0
+> dd1fae5 docs(next-steps,handoff): sessao autonomia total 2026-07-24 — S1+S2 PIPC vivos, A4 Contatos, A8 cadence-fix (todos witness E2E); A10 selagem em curso; cap 100 edge fns
+> 6e6d5ad fix(cadence): selecao explicita de conta — mata null->1a arbitraria (A8)
+> f4a491b feat(crm): pilar Contatos — tabela contacts + CRUD (FR CRM Contatos, A4)
+> a9f6154 feat(pipc): S2 — analise de retencao por-EP (FR-PIPC-014/015)
+> === docker mesh ===
+> mcorch_vision_mcp: Up 8 days (healthy)
+> mcorch_claude_mem: Up 5 weeks (healthy)
+> mcorch_chroma: Up 5 weeks (healthy)
+> mega-brain-dashboard: Up 5 weeks
+> === chroma ===
+> {"nanosecond heartbeat":1784893383296751263}
+> === HANDOFF size ===
+> 986 HANDOFF.md
+> === scratch/ ===
+> tem arquivos
+> ```
+
+## 🤖 Claude *(11:43:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the pre-flight status — git is clean with all my commits present, Docker mesh and Chroma are healthy, and the HANDOFF file is well under the archiving threshold. I'm noticing scratch/ has files in it, which is unexpected since it should've been cleaned up earlier in the session.
+
+Now that the working tree is confirmed clean and all work is committed, I'm ready to move forward with the priority tasks the Sovereign emphasized: writing the memory files first, updating CLAUDE.md, then working through the remaining phases in order — security audit, mesh milestone, README updates, HANDOFF record, and finally the push and report.
+
+I'm going to create two focused memory files: one capturing the PIPC S1+S2 live state and the learning loop analysis that's now active, and another documenting the critical operational constraint we hit — the 100-function cap on Edge Functions and the pattern for folding new functions into existing ones rather than creating separate deployments. I'll split these into three focused memories: the project itself, the edge function cap constraint, and the production schema gotchas. Then I need to update a few existing memories since there's been progress on the YouTube upload service going live, the CRM contacts work completing, and some content provenance updates.
+
+The key is being pragmatic here — I'll create those three new memories and refresh the index, update the most critical existing ones, and make sure CLAUDE.md Key Files gets the new artifacts added so they're immediately accessible for future reference.
+
+I'm starting with the memory files first, batching the writes together, then moving to the CLAUDE.md updates and the ritual phases. Let me begin writing out the first memory file focused on the PIPC S1/S2 work...
+
+I'm documenting the PIPC S1 and S2 project that shipped in July 2026 — the youtube-data actions now include audience retention tracking that feeds into episode retention analysis, which identifies drop-off points and steepest dips to surface actionable insights in the episode brief.
+
+The OAuth scope for YouTube Analytics API is now unblocked with real data flowing through, and the next phase involves automating the optimization policy to inject these insights directly into episode planning rather than handling it manually. The database tables for episode retention and insights have row-level security configured with owner-only access and service-role writes, and I've hit the 100-edge-function capacity limit with the recent commits.
+
+When deploying new functions, I'm running into the hard cap and getting 402 errors. The solution isn't to delete or upgrade, but to consolidate logic into existing functions by adding new actions, or for owner-scoped CRUD operations, shift to client-side queries with RLS instead of edge functions—that's the idiomatic approach. I've already done this with the contacts table, using RLS and client-side CRUD rather than edge functions.
+
+Looking at the production schema, `social_accounts` is a masked VIEW with INSTEAD OF triggers, so I can't create foreign keys to it—I need to use a plain UUID column and validate owner-scoping in the application code. The `mcorch_edges` table uses `source_id` and `target_id` (not `from_node_id`/`relationship_type`), and `mcorch_nodes` doesn't have an `updated_at` column, so RETURNING that column will fail. For `autopilot_plans`, the NOT NULL columns I need to hand-build a cadence plan are `mode` (with CHECK constraint for all_at_once or every_n_days), `target_product_ids` as a text array (at least one), `platforms` as a text array (at least one), and `budget_cap_mco`.
+
+Cadence plans set `plan_kind='cadence'` plus `program.source_asset_id` and `channel_allowlist`. The admin auth magic link generation rate-limits on repeated same-email attempts, so I'll need to retry with about an 11-second delay for QA JWT minting. When pushing migrations to production, I'll use `echo Y | npx supabase db push --linked` to apply only pending migrations—ALTER statements with foreign keys to views fail atomically and won't be recorded, so I need to fix those and re-push.
+
+Now I'm updating MEMORY.md with the index and then moving to CLAUDE.md for key files. I should also update existing project memories like project_youtube_upload_ep02 (A1 live) and project_crm_suite_roadmap (Contatos done), keeping it focused.
+
+I'll batch the three new memory writes together in one go, then update the MEMORY.md index, and proceed through the ritual phases with CLAUDE.md, HANDOFF, and sprint planning.
+
+</details>
+
+
+## 🤖 Claude *(11:43:53)*
+
+Worktree limpo (tudo commitado/pushed). Docker/Chroma saudáveis. HANDOFF 986 linhas (sem arquivamento). Agora **a prioridade da sua diretiva: persistir o aprendizado**. Escrevo as memórias primeiro:
+
+## 🤖 Claude *(11:44:10)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pipc_s1_s2_live.md",
+  "content": "---\nname: project_pipc_s1_s2_live\ndescription: \"PIPC S1+S2 VIVOS (2026-07-24) \u2014 a metade de AN\u00c1LISE do la\u00e7o de aprendizado epis\u00f3dico est\u00e1 de p\u00e9: reten\u00e7\u00e3o YouTube persiste \u2192 brief acion\u00e1vel por-EP. youtube-data ganhou audience_retention + episode_retention_analysis\"\nmetadata:\n  type: project\n---\nO GAP-m\u00e3e do PIPC (a m\u00e1quina de APRENDER com o epis\u00f3dio publicado) teve as duas slices de an\u00e1lise entregues VIVAS em produ\u00e7\u00e3o em 2026-07-24, sob sess\u00e3o de autonomia total do Sovereign.\n\n**S1 (FR-PIPC-011/012) \u2014 reten\u00e7\u00e3o persiste.** A\u00e7\u00e3o **`audience_retention`** no edge `youtube-data`: puxa a curva (`elapsedVideoTimeRatio \u00d7 audienceWatchRatio + relativeRetentionPerformance`, ~100 pontos, filtro `video==<id>` sobre `channel==MINE`) e **persiste** owner-scoped na tabela **`episode_retention_curve`** (migration `20260724120000`; RLS default-deny + owner SELECT + write service-role; upsert onConflict user_id+video_id+percent_bucket; fail-soft). Witness: v\u00eddeo `2VaCDbXJyUw`, persisted=100, 100 linhas na tabela.\n\n**S2 (FR-PIPC-014/015) \u2014 an\u00e1lise por-EP.** A\u00e7\u00e3o **`episode_retention_analysis`** no `youtube-data`: l\u00ea a curva persistida \u2192 drops (<50%, <25%) + queda mais \u00edngreme + converte para clock (dura\u00e7\u00e3o via Data API best-effort) \u2192 **brief PT-BR acion\u00e1vel** em **`episode_insights`** (migration `20260724120100`). Witness real: *\"O EP perde metade da audi\u00eancia aos 16% (1:11); abaixo de 25% aos 82% (6:04). Maior queda \u00fanica aos 93% (6:53) \u2192 candidato a corte no EP05.\"*\n\n**A19/A20 DESBLOQUEADO (pr\u00e9-condi\u00e7\u00e3o):** o Sovereign fez re-OAuth do U0 \u2192 escopo `yt-analytics-monetary.readonly` concedido **E** YouTube Analytics API habilitada no GCP. Provado ao vivo: `youtube-data video_metrics` HTTP 200 com m\u00e9tricas reais (n\u00e3o \"parece\"). \u26a0\ufe0f conta youtube ativa do U0 mudou de `e39cc44a` \u2192 `a1335346` ap\u00f3s o re-OAuth (pode haver 2 \u2014 exatamente a ambiguidade que o A8 endere\u00e7a).\n\n**How to apply / pr\u00f3ximo elo:** as a\u00e7\u00f5es N\u00c3O s\u00e3o fun\u00e7\u00f5es novas (cap de 100 atingido \u2014 [[reference_edge_fn_cap_100_hit]]); s\u00e3o a\u00e7\u00f5es adicionadas ao `youtube-data` existente, sob o padr\u00e3o de analytics j\u00e1 selado do `youtube-studio`/Amendment 12. O pr\u00f3ximo elo (un-gated, alto valor) \u00e9 **FR-PIPC-017/018**: a `optimization_policy` **epis\u00f3dica** que injeta o brief do S2 no planejamento do EP05 \u2014 hoje a ponte an\u00e1lise\u2192produ\u00e7\u00e3o \u00e9 100% manual. Rodar o `episode_retention_analysis` em batch sobre todos os EPs publicados constr\u00f3i a r\u00e9gua da s\u00e9rie. Gate PIPC: su\u00edte 8/8 draft, abre por-fatia; S1/S2/S5 un-gated (S5=Golden Eye j\u00e1 entregue). Commits `c58a57e` (S1) \u00b7 `a9f6154` (S2). Ver [[project_youtube_upload_ep02]] \u00b7 [[project_audience_flywheel_distribution]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pipc_s1_s2_live.md
+> ```
+
+## 🤖 Claude *(11:44:25)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_edge_fn_cap_100_hit.md",
+  "content": "---\nname: reference_edge_fn_cap_100_hit\ndescription: \"O cap de 100 edge functions do projeto Supabase est\u00e1 ATINGIDO (2026-07-24): deploy de fun\u00e7\u00e3o NOVA \u2192 402 'Max number of functions reached'. Dobrar em fn existente OU cliente+RLS; N\u00c3O destrav\u00e1vel por prompt\"\nmetadata:\n  type: reference\n---\nO projeto Supabase `bcyvddsykvehvpwstlfa` est\u00e1 **no teto de 100 edge functions** (102 dirs locais). Deploy de uma fun\u00e7\u00e3o **NOVA** falha com `402 unexpected create function status: Max number of functions reached for project`. Deploy/re-deploy de fun\u00e7\u00e3o **EXISTENTE** funciona normal.\n\n**Confirmado em 2026-07-24:** o `crm-contacts` (pilar A4) n\u00e3o p\u00f4de ser criado \u2192 402. Entregue via **tabela `contacts` + RLS owner-CRUD + cliente** (padr\u00e3o idiom\u00e1tico do Harness \u2014 edge \u00e9 para ops sens\u00edveis/secrets; CRUD owner-scoped \u00e9 cliente+RLS + hook).\n\n**How to apply \u2014 ao precisar de l\u00f3gica server-side nova:**\n1. **Dobrar numa fun\u00e7\u00e3o existente** (adicionar uma `action`), N\u00c3O criar fun\u00e7\u00e3o nova \u2014 mesmo padr\u00e3o do `youtube-data` que ganhou `audience_retention`/`episode_retention_analysis` em vez de fun\u00e7\u00f5es pr\u00f3prias, e da mem\u00f3ria hist\u00f3rica de dashboards TikTok/IG dobrados no connect.\n2. **CRUD de dado owner-scoped** \u2192 cliente + RLS default-deny (SELECT/INSERT/UPDATE/DELETE `auth.uid()=user_id`), sem edge fn.\n3. Isto **N\u00c3O \u00e9 destrav\u00e1vel por prompt** \u2014 exige deletar fun\u00e7\u00f5es n\u00e3o-usadas (`supabase functions list` \u2192 delete) ou subir de plano. Se uma feature EXIGE fn nova, \u00e9 bloqueio real a reportar ao Sovereign, n\u00e3o contornar.\n\nVer [[reference_supabase_functions_deploy_bulk_cap]] (bulk deploy = 402 por outro motivo) \u00b7 [[project_pipc_s1_s2_live]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_edge_fn_cap_100_hit.md
+> ```
+
+## 🤖 Claude *(11:44:38)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_prod_db_ops_gotchas.md",
+  "content": "---\nname: reference_prod_db_ops_gotchas\ndescription: \"Fatos operacionais de prod DB/edge verificados 2026-07-24: social_accounts \u00e9 VIEW (sem FK), mcorch_edges=source_id/target_id/relation_type, mcorch_nodes sem updated_at, colunas NOT NULL de autopilot_plans, generateLink rate-limit, db push --linked\"\nmetadata:\n  type: reference\n---\nFatos materiais para trabalho em prod (migrations/edge/malha), todos verificados em 2026-07-24 sob a sess\u00e3o de autonomia total:\n\n- **`social_accounts` \u00e9 uma VIEW mascarada** (INSTEAD OF sobre base cifrada) \u2192 **N\u00c3O d\u00e1 para FK nela** (`ERROR: referenced relation is not a table`, SQLSTATE 42809). Padr\u00e3o: coluna `uuid` plana + validar owner-scoping em c\u00f3digo (lookup por `id`+`user_id`; conta inexistente/outro-tenant \u2192 null \u2192 fallback seguro). Idem para outras views mascaradas (`decrypted_*`).\n- **Malha \u2014 `mcorch_edges` colunas reais:** `id, source_id, target_id, relation_type, weight, metadata, created_at, user_id, project_id`. **N\u00c3O** \u00e9 `from_node_id`/`relationship_type` (query com esses nomes retorna count `null` silencioso). Aresta seal = `source_id`(seal)\u2192`target_id`(pai) `relation_type='DERIVES_FROM'`.\n- **`mcorch_nodes` N\u00c3O tem coluna `updated_at`** \u2014 um `RETURNING updated_at` (ou update dela) aborta a transa\u00e7\u00e3o. Use `created_at`.\n- **`autopilot_plans` colunas NOT NULL** (para hand-build de um plano de cad\u00eancia): `mode` (CHECK `all_at_once|every_n_days`), `target_product_ids text[]` (\u22651), `platforms text[]` (\u22651), `budget_cap_mco int` (\u226512). Cad\u00eancia = `plan_kind='cadence'` + `program:{source_asset_id, steps:[]}` + `channel_allowlist` + `next_run_at` no passado p/ ficar due. A tabela \u00e9 rica (feita p/ `cadence-plan` criar) \u2014 hand-build vira whack-a-mole de constraints; se poss\u00edvel, criar via a fn `cadence-plan`.\n- **`admin.auth.admin.generateLink({type:'magiclink', email})` faz rate-limit** por email em chamadas repetidas \u2192 mint de JWT de QA precisa de **retry com ~11s de delay** (loop at\u00e9 obter `hashed_token`). Depois `anon.auth.verifyOtp({token_hash, type})` \u2192 `session.access_token`.\n- **Aplicar migration em prod (autonomia):** `echo Y | npx supabase db push --linked` (com `SUPABASE_ACCESS_TOKEN` do `.env`) \u2014 aplica s\u00f3 as pending; `migration list --linked` mostra local\u2194remote (sem drift na sess\u00e3o). Falha at\u00f4mica (ex.: FK a view) N\u00c3O registra a migration \u2192 corrigir o `.sql` + re-push.\n\nVer [[reference_supabase_keys_migrated]] \u00b7 [[reference_encrypted_views_write_pattern]] \u00b7 [[reference_qa_throwaway_users_and_open_signup]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_prod_db_ops_gotchas.md
+> ```
+
+## 🤖 Claude *(11:44:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've written three new memories and now need to update the MEMORY.md index with pointers to them, plus refresh two existing project entries—the YouTube upload episode 2 (marking A1 live) and the CRM suite roadmap (noting Contatos completion and resolving OTD-CS-001). I'll batch these edits together and insert the index lines after the PMO project entry.
+
+</details>
+
+
+## 🤖 Claude *(11:44:49)*
+
+3 memórias escritas. Atualizo o índice + as 2 memórias existentes que mudaram de estado (A1 youtube-upload agora VIVO, A4 Contatos feito):
+
+## 🤖 Claude *(11:44:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [\ud83d\udea6 Prontid\u00e3o de BoK/c\u00f3digo se l\u00ea no GATE STATUS do 00-index, n\u00e3o por contar arquivos](feedback_bok_gate_status_not_file_count.md) \u2014 arquivos redigidos \u2260 selada \u2260 c\u00f3digo-liberado; \"fa\u00e7a tudo\" do Sovereign n\u00e3o fura gate fechado.",
+  "new_string": "- [\ud83d\udea6 Prontid\u00e3o de BoK/c\u00f3digo se l\u00ea no GATE STATUS do 00-index, n\u00e3o por contar arquivos](feedback_bok_gate_status_not_file_count.md) \u2014 arquivos redigidos \u2260 selada \u2260 c\u00f3digo-liberado; \"fa\u00e7a tudo\" do Sovereign n\u00e3o fura gate fechado.\n- [\ud83c\udfaf PIPC S1+S2 VIVOS \u2014 reten\u00e7\u00e3o YT persiste \u2192 brief acion\u00e1vel por-EP (o GAP-m\u00e3e)](project_pipc_s1_s2_live.md) \u2014 youtube-data ganhou audience_retention+episode_retention_analysis; pr\u00f3ximo elo=FR-PIPC-017/018 (injetar brief no EP05).\n- [\ud83d\udea7 Cap de 100 edge fns ATINGIDO \u2014 fn nova = 402; dobrar em fn existente OU cliente+RLS](reference_edge_fn_cap_100_hit.md) \u2014 n\u00e3o destrav\u00e1vel por prompt; A4 crm-contacts caiu nisso.\n- [\ud83d\udd27 Gotchas de prod DB/edge (2026-07-24) \u2014 social_accounts=VIEW, mcorch_edges cols, autopilot_plans NOT NULL, generateLink rate-limit](reference_prod_db_ops_gotchas.md) \u2014 sem FK a view; db push --linked; source_id/target_id/relation_type."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:44:59)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_youtube_upload_ep02.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 4 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project_youtube_upload_ep02
+> 3	description: "Próxima-sessão (diretiva Sovereign 2026-07-19): postar vídeo longo (EP02) no YouTube PELA plataforma, com metadados otimizados (título/descrição/hashtags/categoria/todas opções da UI + vantagens da API). É a Track B 'fábrica' do youtube-studio (upload), roadmapada. Depois volta ao CRM Suite."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 0e87b092-eef3-4a4b-9429-5c24b11f9bf6
+> 8	  modified: 2026-07-19T23:22:48.381Z
+> 9	---
+> 10	
+> 11	**Diretiva Sovereign 2026-07-19 (atacar NA PRÓXIMA SESSÃO, antes de voltar ao CRM):** postar o **EP02** (vídeo longo pronto) no YouTube **pela plataforma MCORCH** — subir o master e preencher/otimizar **título, descrição, hashtags, categoria e todas as opções que a UI dá**; se houver **vantagem via API não disponível na UI**, usar (melhor ainda). Sequência: EP02 primeiro → depois retoma a construção do CRM Suite (o marketing do CRM "falta pouca coisa").
+> 12	
+> 13	**Viabilidade (auditada Lei 1):** **SIM, é possível.** O escopo de upload **`https://www.googleapis.com/auth/youtube` (`videos.insert`) JÁ está registrado** no OAuth (`social-auth-init/index.ts:145,154`) e a BoK `docs/bok/youtube-studio/` está 9/9 + Amendment 12 (write-ops) + API surface map. **Falta a IMPLEMENTAÇÃO** — hoje só existe `youtube-data` (lê canal/vídeos/métricas + edita/deleta via force-ssl); NÃO há upload. É a **Track B "fábrica"** (upload) que estava roadmapada como guarda-chuva 2 tracks (Track A painel = SHIPADO).
+> 14	
+> 15	**Gotcha de arquitetura (crítico):** o master do EP02 é **grande (~1,3GB)** e vive no **disco do host** (host-upload-server, `bucket=local`) porque fura os caps do Supabase (50MB) e Cloudflare (100MB). Edge function **NÃO** consegue streamar 1,3GB → o upload tem que ser **resumable `videos.insert`** rodando de um **worker no host** (molde dos bridges: video-bridge/crm-media-bridge), não edge fn. Ver [[reference_tiktok_unaudited_private_account]] (youtube.upload sem CASA → funciona p/ test-user/unverified com limites; confirmar quota/verify status do app).
+> 16	
+> 17	**Escopo da fatia:** (1) worker host `youtube-upload-bridge` resumable `videos.insert` (snippet: title/description/tags/categoryId/defaultLanguage; status: privacyStatus/publishAt agendado/selfDeclaredMadeForKids/notifySubscribers) + `thumbnails.set` + opcional `captions.insert` + adicionar a playlist; (2) UI de preenchimento otimizado (gerar título/descrição/tags via pipeline de conteúdo — reusar orchestrate/generate-content); (3) **vantagens API > UI**: localizations (títulos/descrições traduzidos por idioma), publishAt preciso, notifySubscribers programável, thumbnail+captions por API. BoK-gate: estender youtube-studio (amendment) antes do código. SSOT do roadmap geral: `docs/roadmap/crm-suite-and-marketing.md`.
+> 18	
+> 19	**PROGRESSO (loop 2026-07-19) — ENCANAMENTO COMPLETO + DEPLOYADO, witness gated no Sovereign:**
+> 20	- ✅ **Amendment 13** `docs/bok/youtube-studio/13-amendment-upload-factory.md` (FR-YT-026..030 + Pattern Conformance) — gate Closed-Loop fechado.
+> 21	- ✅ **Migration `20260719170000_youtube_uploads.sql` VIVA em prod** (job store owner-scoped, SEM ledger mco — usa a quota do canal do user; RPCs `begin/finalize_youtube_upload` service-role-only; containment CHECK `source_key LIKE user_id||'/%'`). Prova material: `tbl=1,rpcs=2,policies=3,ledger=1`; `owned_checks=3, authed_can_exec=0, svc_can_exec=2, update_policies=0`. **`/security-review` NO FINDINGS.**
+> 22	- ✅ **Worker `scripts/youtube-upload-bridge.ts`** (molde video-bridge: poll+claim, token de `decrypted_social_accounts`+refresh-social-token, resumable PUT em blocos de 8MB com Content-Range retomável, extras thumbnail/playlist fail-soft, private-por-omissão) + unit **versionado NÃO-habilitado** `scripts/systemd/youtube-upload.service` (habilitar = ação Sovereign).
+> 23	- ✅ **UI deployada** — `useYouTubeUpload.ts` + `YouTubeUploadPanel.tsx` montado na `YouTubeStudioPage` (picker de master do inbox host via `creative_assets bucket='local'`; formulário completo + categorias + Extras via API [publishAt/notify/madeForKids/playlist/localização EN] + "Gerar com IA" streaming generate-content + poll de status). Chunk `YouTubeStudioPage-C4yVN4C1.js` env-baked. **ZERO edge fn nova** (cliente enfileira via RLS; respeita o cap de 100 fns).
+> 24	- ⚠️ **Master EP02 NÃO está no host** (`repurpose-inbox/ada39fae/` só tem EP01 1,3GB + 2 clipes Grapho). 
+> 25	- 🔒 **Witness gated (3 ações Sovereign):** (a) confirmar app YouTube verify/CASA/quota p/ `videos.insert`; (b) `cp scripts/systemd/youtube-upload.service ~/.config/systemd/user/ && systemctl --user enable --now youtube-upload.service`; (c) subir o master EP02 via `/dashboard/repurpose`. Plumbing testável com EP01 privado descartável.
+> 26	
+> ```
+
+## 🤖 Claude *(11:45:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The youtube-upload.service is now enabled and running after I set it up earlier this session, which unblocks the Analytics work. I need to update the memory to reflect that one of the three gated Sovereign actions—specifically enabling the service—is now complete. I'll focus on updating the youtube_upload memory to reflect the service being enabled, then add a note to the crm_suite memory about the OTD-CS-001 resolution before moving forward with the handoff ritual phases.
+
+</details>
+
+
+## 🤖 Claude *(11:45:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_youtube_upload_ep02.md",
+  "old_string": "- \ud83d\udd12 **Witness gated (3 a\u00e7\u00f5es Sovereign):** (a) confirmar app YouTube verify/CASA/quota p/ `videos.insert`; (b) `cp scripts/systemd/youtube-upload.service ~/.config/systemd/user/ && systemctl --user enable --now youtube-upload.service`; (c) subir o master EP02 via `/dashboard/repurpose`. Plumbing test\u00e1vel com EP01 privado descart\u00e1vel.",
+  "new_string": "- \ud83d\udd12 **Witness gated (3 a\u00e7\u00f5es Sovereign):** (a) confirmar app YouTube verify/CASA/quota p/ `videos.insert`; (b) `cp scripts/systemd/youtube-upload.service ~/.config/systemd/user/ && systemctl --user enable --now youtube-upload.service`; (c) subir o master EP02 via `/dashboard/repurpose`. Plumbing test\u00e1vel com EP01 privado descart\u00e1vel.\n\n**UPDATE 2026-07-24 (sess\u00e3o autonomia total):** \u2705 **(b) FEITO \u2014 `youtube-upload.service` est\u00e1 `active/enabled`** (PID vivo, log \"polling youtube_uploads (queued)\"; pr\u00e9-condi\u00e7\u00f5es verificadas: migration aplicada \u00b7 YouTube conectado \u00b7 fila vazia = 0 upload disparado; worker private-by-default). Falta voc\u00ea **enfileirar o EP02** pelo menu Cortes (`/dashboard/repurpose`) \u2192 sobe privado. Sobre (a): CASA respondido em handoff anterior (**sem CASA** \u2014 escopo sens\u00edvel n\u00e3o restrito). **B\u00f4nus:** o re-OAuth do U0 tamb\u00e9m **desbloqueou a YouTube Analytics API** (escopo `yt-analytics-monetary.readonly` + API habilitada no GCP) \u2192 PIPC S1+S2 vivos ([[project_pipc_s1_s2_live]]). \u26a0\ufe0f conta youtube ativa do U0 virou `a1335346` (era `e39cc44a`)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_youtube_upload_ep02.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(11:45:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm moving through the remaining handoff phases efficiently—I've locked in the memory persistence work, so next I need to update the CLAUDE.md key files section since that's what the Sovereign asked for, then tackle the security audit, mesh milestone node, README, and handoff record.
+
+For the CLAUDE.md update, I'm adding rows for PIPC S1/S2, A4 contacts, and A8 to the Key Files Reference table—I'll anchor these near existing related entries like the YouTube or CRM suite rows to keep them organized and easy to find.
+
+Let me run the Phase 1 security audit in bash while simultaneously searching CLAUDE.md for the right anchor point, then make the edits.
+
+</details>
+
+
+## 🤖 Claude *(11:45:44)*
+
+Memórias persistidas + índice atualizado. Agora **Fase 1 (security audit)** + localizo âncoras no CLAUDE.md (outro lugar que consulto de imediato) para registrar S1/S2/A4/A8:
+
+## 🤖 Claude *(11:45:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak scan (working tree vs HEAD) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{30,}|SECRET_KEY\\s*=|ACCESS_TOKEN\\s*=)\" | grep -v \"example\\|placeholder\\|<.*>\\|YOUR_\\|Deno.env\\|process.env\" | head -10 || echo \"NENHUM SEGREDO \u2705\"\necho \"=== 1e. sensitive console.log em src/ (novos) ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*secret\\|console\\.log.*password\" src/ 2>/dev/null | head -5 || echo \"SEM LOGS SENS\u00cdVEIS \u2705\"\necho \"=== working tree limpo? ===\"\ngit status --short | wc -l\necho \"=== CLAUDE.md \u00e2ncora (linha da crm-suite ou youtube-data na Key Files) ===\"\ngrep -nE \"crm-suite 9/9|youtube-data|Channel Format Intelligence \u2014 Reshaper\" CLAUDE.md | head -4",
+  "description": "Phase 1 security audit + CLAUDE.md anchor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak scan (working tree vs HEAD) ===
+> === 1e. sensitive console.log em src/ (novos) ===
+> src/test/canvas-video-async-smoke.test.ts:240:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:248:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:253:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> === working tree limpo? ===
+> 0
+> === CLAUDE.md âncora (linha da crm-suite ou youtube-data na Key Files) ===
+> 458:| **Channel Format Intelligence — Reshaper + Atomizer (FR-CP-002/003/005/006/007/008)** | `supabase/functions/reshape-pillar/index.ts` (interpretador data-driven: lê `channel_profiles.transform_recipe` + `pillar_atoms` → variante NATIVA por canal, **zero branch por canal**. `field_map` grammar + dispatch de `reshape` + native-variant FR-CP-007 + Pinterest-SEO FR-CP-008 + **image reframe in-process via imagescript WASM** [FR-CP-005/006 — 4:5/2:3/1.91:1/16:9 thumb → JPEG; **OTD-CP-009 FECHADA**, sem host worker]. Service-role-only, user resolvido de `pipeline_runs`. **Publish opt-in**: default rascunho; enfileira só com `auto_publish=true`) · atomizer = bloco fail-open em `orchestrate-step` (article→`pillar_atoms`) · `publish-channel-variant` (publica 1 rascunho escolhido, owner-bound) · `auto-publish` prefere `metadata.reshape` resolvendo asset do `channel_variants` **owner-scoped** (fix FMEA-011) · **autoridade única de enqueue social** (steps legados linkedin/twitter do orchestrate-step não enfileiram mais — sem double-post) · migration `20260627150000` (`channel_variants` + `creative_metrics.hook_rate`) |
+> ```
+
+## 🤖 Claude *(11:46:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Running through the security audit now — no secrets in the working tree, and those console.log matches in the test file are just part of the test suite checking invalid tokens, not a real concern. Everything's committed and clean, and I found the Channel Format Intel anchor in CLAUDE.md.
+
+Since the working tree is clean, any edits I make to CLAUDE.md now will be new uncommitted changes ready for this handoff. I'm adding a new Key Files row for the PIPC S1/S2 work plus the A4 and A8 artifacts, anchoring it after the Channel Format Intelligence entry around line 458. I'll document the YouTube retention persistence logic and the migration that tracks the episode retention curve. Resolving OTD-CS-001 by separating contact entities from leads through a `crm_associations` table, with CRUD operations handled via client-side hooks and RLS, though the edge function is capped at 100. Moving into cadence setup where I'm establishing an explicit social account reference to handle null values, using a migration that links autopilot plans to social accounts via a view rather than a foreign key, with the cadence-run logic scoping ownership to the correct account and platform.
+
+Now I'm anchoring my three new rows after line 458 (the Channel Format Intelligence row ending with the `20260627150000` migration timestamp) and then moving into Phase 3 mesh node setup, Phase 4 README updates, Phase 5 handoff documentation, and finally the sprint push and reporting.
+
+</details>
+
+
+## 🤖 Claude *(11:46:16)*
+
+Phase 1: **sem segredos ✅**, working tree limpo, os `console.log` de "token" são em teste de segurança (não sensível). Registro os artefatos da sessão na Key Files Reference do CLAUDE.md:
+
+## 🤖 Claude *(11:46:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "old_string": "migration `20260627150000` (`channel_variants` + `creative_metrics.hook_rate`) |",
+  "new_string": "migration `20260627150000` (`channel_variants` + `creative_metrics.hook_rate`) |\n| **PIPC S1+S2 \u2014 reten\u00e7\u00e3o YouTube persiste \u2192 brief por-EP (FR-PIPC-011/012/014/015) VIVO 2026-07-24** | `supabase/functions/youtube-data/index.ts` ganhou 2 a\u00e7\u00f5es (N\u00c3O fn nova \u2014 cap 100, [[reference_edge_fn_cap_100_hit]]): **`audience_retention`** (curva ~100 pontos `elapsedVideoTimeRatio\u00d7audienceWatchRatio+relativeRetentionPerformance` \u2192 **persiste** em `episode_retention_curve`, migration `20260724120000`, RLS owner SELECT + write service-role, upsert fail-soft) + **`episode_retention_analysis`** (l\u00ea a curva \u2192 drops <50%/<25% + queda mais \u00edngreme + clock via dura\u00e7\u00e3o \u2192 **brief PT-BR** em `episode_insights`, migration `20260724120100`). Pr\u00e9-condi\u00e7\u00e3o A19/A20 desbloqueada (re-OAuth U0 \u2192 `yt-analytics-monetary.readonly` + Analytics API habilitada no GCP, provado 200). Witness `2VaCDbXJyUw`: \"perde 50% aos 16% (1:11) \u2192 cortar no EP05\". **Pr\u00f3ximo elo FR-PIPC-017/018** (injetar brief no planejamento do EP05, hoje manual). Mem\u00f3ria `project_pipc_s1_s2_live`. Commits `c58a57e`/`a9f6154` |\n| **CRM pilar Contatos (A4) \u2014 `contacts` + CRUD cliente+RLS** | migration `20260724120200_crm_contacts.sql` (`contacts` id/user_id/email/name/source/status; RLS owner full-CRUD `auth.uid()=user_id`; unique `(user_id,lower(email))`). **OTD-CS-001 RESOLVIDA** rumo a entidades **SEPARADAS** (contact=pessoa no CRM \u00b7 `leads`=registro de funil \u00b7 link\u00e1veis via `crm_associations`) \u2014 aditivo/revers\u00edvel, `leads` intocada. CRUD via **cliente+RLS** (edge fn bloqueada pelo cap 100; hook `useContacts` = follow-on). Witness CRUD E2E. Commit `f4a491b` |\n| **Cadence \u2014 sele\u00e7\u00e3o expl\u00edcita de conta (A8, mata null\u21921\u00aa arbitr\u00e1ria)** | migration `20260724120300` (`autopilot_plans.social_account_id` uuid **plano, sem FK \u2014 `social_accounts` \u00e9 VIEW mascarada** [[reference_prod_db_ops_gotchas]]) + `cadence-run` resolve a conta owner-scoped e usa **s\u00f3 no canal cuja plataforma casa** (ausente/mismatch \u2192 null = default, n\u00e3o quebra multi-canal). Witness E2E: dispatch respeita a conta fixada. Falta a metade setter (`cadence-plan`/UI). Commit `6e6d5ad` |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md has been updated successfully. (note: the file had been modified on disk since you last read it — the edit applied cleanly, but the file contains other changes not in your context. Read it before edits that depend on surrounding content.)
+> ```
+
+## 🤖 Claude *(11:46:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The CLAUDE.md edit went through successfully. Now I'm moving through the remaining ritual phases: setting up the mesh milestone node, updating the README, creating the HANDOFF record, organizing sprint priorities, and handling the final phase steps.
+
+For Phase 3, I'm inserting the handoff milestone node into the mesh. I'll construct it with the session phase identifier and a one-sentence summary, then run the insert with embedding. To be efficient, I'm capturing the node ID from this insert so I can use the updated count for the README in Phase 4. Let me source the environment variables and execute the mesh insert.
+
+</details>
+
+
+## 🤖 Claude *(11:46:41)*
+
+CLAUDE.md registrado. **Fase 3 — nó milestone na malha** (antes do README para o count incluir este nó):
+
+## 🤖 Claude *(11:46:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSB=$(grep -E \"^SB_SECRET_KEY=\" .env | cut -d= -f2- | tr -d '\"'\"'\"'')\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE=$(curl -s -X POST \"${URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-20260724-autonomia-total-pipc-crm\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] Sessao autonomia total: PIPC S1+S2 VIVOS (retencao YT persiste->brief por-EP), A4 CRM Contatos (contacts+RLS, OTD-CS-001 resolvida), A8 cadence-fix (conta explicita), A10 content-provenance selada (Fatia 4 deferida). Todos witness E2E; 6 commits pushed; cap 100 edge fns atingido.\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"autonomia-total-pipc-crm\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) and d else 'ERR')\" 2>/dev/null)\necho \"NODE_ID: $NODE\"\necho \"{\\\"handoffNodeId\\\": \\\"$NODE\\\"}\" > proof-manifest.json\ncurl -s -X POST \"${URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Content-Type: application/json\" -d \"{\\\"record\\\":{\\\"id\\\":\\\"$NODE\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', str(d)[:80])\" 2>/dev/null || echo \"embed: log manual\"\necho \"=== node count (para README badge) ===\"\ncurl -s \"${URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Phase 3 mesh milestone node + count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID: 36d233dc-909b-431d-b15e-e1cb30240e41
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> === node count (para README badge) ===
+> 9831
+> ```
+
+## 🤖 Claude *(11:46:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The node insertion succeeded and I've got 9831 nodes total for the README badge. The embedding call had the wrong payload structure—it was sending `{record: {id}}` when it should be `{node_id: string}`, so I'm retrying with the corrected format. After that, I'll move on to updating the README.
+
+</details>
+
+
+## 🤖 Claude *(11:46:59)*
+
+Nó `36d233dc` inserido (malha em **9831**). O embed usou payload errado do ritual — corrijo (`node_id`) e leio o README para atualizar:
+
+## 🤖 Claude *(11:47:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSB=$(grep -E \"^SB_SECRET_KEY=\" .env | cut -d= -f2- | tr -d '\"'\"'\"'')\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\ncurl -s -X POST \"${URL}/functions/v1/embed-mcorch-node\" -H \"apikey: ${SB}\" -H \"Authorization: Bearer ${SB}\" -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\":\\\"36d233dc-909b-431d-b15e-e1cb30240e41\\\"}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', str(d)[:100])\" 2>/dev/null || echo \"embed retry: log manual\"\necho \"=== README vers\u00e3o atual + estrutura ===\"\ngrep -nE \"version-[0-9]|neural_mesh-[0-9]|What's New|What.s New|### \\[v6|## .*Phase\" README.md 2>/dev/null | head -12",
+  "description": "Retry embed + inspect README structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Embedded: {'node_id': '36d233dc-909b-431d-b15e-e1cb30240e41', 'dims': 768, 'chunks': 1, 'model': 'openai/text-
+> === README versão atual + estrutura ===
+> 3:  <img src="https://img.shields.io/badge/version-6.121.0--Governan%C3%A7a_docs_%2B_Golden_Eye_slice_1_%2B_cadencia_por_workspace_%2B_YouTube_pronto-blueviolet?style=for-the-badge" alt="Version" />
+> 7:  <img src="https://img.shields.io/badge/neural_mesh-9772_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 846:### [v6.118.0] — Loop multi-frente: cortes+picker · grid pan/crop · dashboards TikTok/IG · constelação leve (2026-07-22)
+> 856:### [v6.110.0] — CRM Suite arrancado: spine + Empresas + Negócios/pipelines VIVOS na UI (2026-07-19)
+> 863:### [v6.105.0] — BoK 9/9 retroativas + landing-bundler + UX-Explorer enxerga (2026-07-16)
+> 871:### [v6.104.0] — landing-factory BoK 9/9 + fix imagem quebrada + fix egress (2026-07-16)
+> 878:### [v6.103.0] — Loop autônomo: Cadência + Enxame Fatia 1 em prod + AI Act BoK (2026-07-15)
+> 885:### [v6.102.0] — Veo 3.1 com avatar por referência (Gemini API + Vertex service account) (2026-07-14/15)
+> 891:### [v6.100.0] — Assets: seletor de formato + pré-visualização fiel por rede + modal responsivo (2026-07-14)
+> 897:### [v6.96.0] — Voz clonada self-host COMPLETA + Modo Expressivo + motion design do canvas (2026-07-09/10)
+> 904:### [v6.95.0] — Creative Studio: nós Roteiro + Criativo Cinematográfico vivos, cadeia completa (2026-07-09)
+> 911:### [v6.94.0] — Spaces robustez: treino LoRA grátis REAL + nó WordPress + blueprint YouTube Studio (2026-07-08/09)
+> ```
+
+## 🤖 Claude *(11:47:24)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The embedding came through successfully on the retry. I need to update the README with a new version bump from 6.121.0 to 6.122.0, update the neural_mesh value from 9772 to 9831, and add a new "What's New" entry for v6.122.0 at the top of that section starting around line 846. I need to insert a new v6.122.0 entry in the What's New section, anchoring it above the v6.118.0 line. The entry documents the PIPC S1+S2 VIVOS feature with audience retention analysis, episode insights, and the AI Act compliance update, along with the specific retention curve findings from the YouTube data analysis.
+
+The next chunk covers the remaining features: the CRM Contatos table with RLS owner-CRUD access resolving the entity separation issue, the cadence-fix autopilot plans respecting fixed social accounts, and the content-provenance security review completion with all migrations now requiring RLS default-deny policies.
+
+Now I'm making the final edits to the version badge and README.
+
+</details>
+
+
+## 🤖 Claude *(11:47:24)*
+
+Embed OK (768 dims). README: v6.121.0 → **v6.122.0**, malha 9772 → **9831**, + entrada What's New:
+
+## 🤖 Claude *(11:47:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.121.0--Governan%C3%A7a_docs_%2B_Golden_Eye_slice_1_%2B_cadencia_por_workspace_%2B_YouTube_pronto-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.122.0--PIPC_S1%2BS2_reten%C3%A7%C3%A3o%E2%86%92brief_%2B_CRM_Contatos_%2B_cadence_fix_%2B_AI_Act_selada-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:47:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9772_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9831_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:47:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "### [v6.118.0] \u2014 Loop multi-frente: cortes+picker \u00b7 grid pan/crop \u00b7 dashboards TikTok/IG \u00b7 constela\u00e7\u00e3o leve (2026-07-22)",
+  "new_string": "### [v6.122.0] \u2014 Autonomia total: PIPC S1+S2 (reten\u00e7\u00e3o\u2192brief EP05) \u00b7 CRM Contatos \u00b7 cadence-fix \u00b7 AI Act selada (2026-07-24)\n- **PIPC S1+S2 VIVOS** \u2014 o GAP-m\u00e3e (a m\u00e1quina de APRENDER) fechou o arco de an\u00e1lise: `youtube-data` ganhou `audience_retention` (persiste a curva de reten\u00e7\u00e3o em `episode_retention_curve`) + `episode_retention_analysis` (brief acion\u00e1vel por-EP em `episode_insights`). Witness real: *\"perde 50% da audi\u00eancia aos 16% (1:11) \u2192 cortar no EP05\"*. A19/A20 desbloqueado (re-OAuth U0 \u2192 YouTube Analytics API viva).\n- **A4 CRM Contatos** \u2014 tabela `contacts` + RLS owner-CRUD; OTD-CS-001 resolvida (entidades separadas: contact=pessoa, lead=funil). CRUD via cliente+RLS (edge fn bloqueada pelo **cap de 100 edge fns**).\n- **A8 cadence-fix** \u2014 `autopilot_plans.social_account_id`: o dispatch respeita a conta fixada (mata o `null`\u21921\u00aa conta arbitr\u00e1ria).\n- **A10 content-provenance selada 9/9** \u2014 Fatia 4/FR-CP-011 deferida (OTD-CP-002 jur\u00eddico); **zero** c\u00f3digo de compliance escrito.\n- Sess\u00e3o de autonomia total do Sovereign \u00b7 toda migration com `/security-review` + RLS default-deny \u00b7 6 commits \u00b7 malha **9831**.\n\n### [v6.118.0] \u2014 Loop multi-frente: cortes+picker \u00b7 grid pan/crop \u00b7 dashboards TikTok/IG \u00b7 constela\u00e7\u00e3o leve (2026-07-22)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:47:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've updated the README and now I'm moving to Phase 5 to work on the HANDOFF.md file. It's currently 986 lines, so no archiving needed. I need to add a new Task State row and insert a Record section at the top, which means I'll need to check the current structure around line 20 where the Task State table begins to place everything correctly.
+
+</details>
+
+
+## 🤖 Claude *(11:47:47)*
+
+README v6.122.0 + malha 9831. **Fase 5 — HANDOFF Record.** Leio a estrutura do topo para inserir a nova linha de Task State + o Record:
+
+## 🤖 Claude *(11:47:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 23,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 23	#   - postar os cortes EP01/EP02 (existem na spine + masters em repurpose-inbox/) — GO público seu.
+> 24	# Un-gated que eu sigo: Golden Eye wiring (browser-verify) · fatias un-gated de cadência/intake.
+> 25	```
+> 26	
+> 27	---
+> 28	
+> 29	## Task State
+> 30	
+> 31	| **Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube (2026-07-23)** | ✅ Loop autônomo, **os 5 entregues** (teto 80% janela; selado a 49%). **5 commits `c2da9d3..c28d2f0`** + push · tsc-app **93=baseline** · gitleaks limpo · sem edge/migration. **(1)** agentes `docs-curator`+`bok-curator` (donos de `docs/` e `docs/bok/`, curam/revisam no lugar do Sovereign, Telegram pontual, exclusão restrita) + regra global **CLAUDE.md §6** + Key Files + memória `feedback_docs_bok_ownership`. **(2)** auditoria cadência + estratégia por-workspace (`docs/roadmap/cadence-workspace-strategy-2026-07-23.md`; gap central: sem entidade Workspace 1ª classe · `meta_config UNIQUE(user_id)`=1 Meta/user · `cadence-run social_account_id=null`→1ª conta arbitrária). **(3)** intake Golden Eye esclarecido+desenhado (`docs/roadmap/golden-eye-intake-design-2026-07-23.md`, UI Settings "Marca"; VLM=refinaria não depósito). **(4)** YouTube escopo/CASA/quota respondido+**Telegram HTTP 200** (**sem CASA** — escopo sensível não restrito). **(5)** pipeline YouTube **100% pronto** (worker resumable · `youtube_uploads` prod · canal Gabriel AI conectado · master EP02 em `repurpose-inbox/`; só habilitar service). **Extras:** Golden Eye slice 1 (`miv-probe.ts` 18/18, regra RUBRIC.md:231) · PIPC BoK 10/10 APPROVE (`docs/bok/pipc/`, Pattern 17/4/0) · vacina masters (skill `host-media-masters`) · doutrina 2×→skill (`feedback_recurring_actions_become_skills`) · MEMORY 19.9→16KB. Malha **9772** · nó `c22e2c6f`. ⏭ Gated Sovereign: revisar BoK PIPC (destrava S1-S4) · habilitar `youtube-upload.service` · imagens Golden Eye · postar cortes EP01/EP02. |
+> 32	| **Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1) (2026-07-23)** | ✅ Loop autônomo "5 pontos do Sovereign". **6 commits `dbd26a6..17cf02f`**, deployado + `/security-review` NO FINDINGS ×3 + tsc-app **93=baseline** (zero-regressão). **(Funis)** 3 funis ML PÚBLICOS vivos (posts 29/34/35: Roborock ×2 ângulos + Family Hub, atribuídos, **redirect→meli.la 302 provado**); ciclo autopilot de validação em massa **corrigido** (config `target_product_ids`=`external_id`, não UUID — 1º ciclo gastou 40 mco genérico); novo primitivo `publish-wordpress post_id` (flip rascunho→público). **(Zerar)** jornada UX E2E User 0 → produto em produção (0 P0/P1 real). **(Roadmap)** maestro+enxame `wf_04833184` (32 células S×P). **(Épico POE)** blueprint deepsearch + BoK 9/9 + **Fatia 1 conector Amazon VIVO** (dispatcher multi-rede `_shared/affiliate.ts`, `resolve` fold em `process-affiliate-link` [cap 100 fns], migrations `amazon_tag`/`affiliate_network_contract`, UI Conector de Afiliados verificada ocular, witness 402→200 `?tag=` sale). Malha **9718** · nó `89a3618d`. ⏭ POE Fatia 2/3/4 GATED (GO+jurídico); tráfego dos funis (social gated). |
+> ```
+
+## 🤖 Claude *(11:48:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm figuring out where the Task State table ends so I can insert a new row in the right place and add a corresponding Record section after it. I'll insert the new Task State row right after the header, anchoring on the existing "Diretiva 5 pontos" row, then find the first Record section to insert the new Record before it. Let me start with the Task State row insertion, which contains the autonomy milestone with its commit hash and migration details. I'm planning to insert a new Task State row into the table, anchoring it before the existing "Diretiva 5 pontos" entry, then I'll handle adding a Record section after the full table.
+
+</details>
+
+
+## 🤖 Claude *(11:48:11)*
+
+Task State começa na linha 29. Insiro a nova linha (≤400 chars) no topo da tabela:
+
+## 🤖 Claude *(11:48:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **Diretiva 5 pontos: governan\u00e7a docs + cad\u00eancia por-workspace + Golden Eye intake + YouTube (2026-07-23)** |",
+  "new_string": "## Task State\n\n| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** | \u2705 Sess\u00e3o de autonomia total do Sovereign (migrations/deploys/schema/seal **un-gated**; p\u00fablico/compliance-code/editorial/credenciais **gated**). **6 commits `c58a57e..88a04dd`** pushed \u00b7 toda migration `/security-review`+RLS default-deny. **S1+S2 PIPC VIVOS** (reten\u00e7\u00e3o YT persiste\u2192brief por-EP; A19/A20 desbloqueado por re-OAuth) \u00b7 **A4 Contatos** (`contacts`+RLS, OTD-CS-001 resolvida) \u00b7 **A8 cadence-fix** (conta expl\u00edcita mata null\u21921\u00aa) \u00b7 **A10 content-provenance selada 9/9** (Fatia 4 deferida OTD-CP-002). Todos **witness E2E**. \u26a0\ufe0f cap 100 edge fns atingido. Malha **9831** \u00b7 n\u00f3 `36d233dc`. Record abaixo. |\n| **Diretiva 5 pontos: governan\u00e7a docs + cad\u00eancia por-workspace + Golden Eye intake + YouTube (2026-07-23)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:48:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking for the first Record section header so I can insert my content before it.
+
+</details>
+
+
+## 🤖 Claude *(11:48:20)*
+
+Task State atualizado. Agora localizo o primeiro Record para inserir o novo Record da sessão antes dele:
+
+## 🤖 Claude *(11:48:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"^## .* Record \\(\" HANDOFF.md | head -3",
+  "description": "Find first Record section"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 85:## Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube Record (2026-07-23)
+> 116:## Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1) Record (2026-07-23)
+> 157:## Sala de Controle da Orquestração + cortes de N clipes Record (2026-07-22)
+> ```
+
+## 🤖 Claude *(11:48:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm locating the first Record entry at line 85 and preparing to insert a new Record section before it, anchoring on the existing governance directive entry. I'm constructing a new Record for autonomia total covering PIPC S1+S2, CRM Contatos, cadence-fix, and AI Act with a timestamp of 2026-07-24.
+
+Generating markdown table... Mapping out the remaining commits across PIPC retention analysis, CRM contacts, cadence account selection, and documentation handoff, then setting up the learning loop architecture for the live analytics arc. I'm tracking the remaining gated decisions that need Sovereign approval: code slices for layers 2-3-4 under the legal and compute certification track, the Golden Eye image assets, the Vertex service account setup, and the public-facing metadata for episode 2. These are anchored to the governance directive around documentation standards, workspace-level cadence, and the YouTube Record structure dated July 23, 2026.
+
+Now I'm moving through the execution phases: the secret scan runs against the committed docs in Phase 5b, then the material proof audit in Phase 5c, followed by the BoK status check in Phase 6, the scratch sprint work in Phase 7b, and finally the commit, push, and reporting in Phase 8.
+
+</details>
+
+
+## 🤖 Claude *(11:48:50)*
+
+Insiro o Record completo da sessão (com a arquitetura do laço + os aprendizados linkados) antes do Record de 2026-07-23:
+
+## 🤖 Claude *(11:49:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Diretiva 5 pontos: governan\u00e7a docs + cad\u00eancia por-workspace + Golden Eye intake + YouTube Record (2026-07-23)",
+  "new_string": "## Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada Record (2026-07-24)\n\nSess\u00e3o de **autonomia total expl\u00edcita** do Sovereign \u2014 migrations/deploys/schema/seal liberados (p\u00fablico \u00b7 c\u00f3digo-de-compliance \u00b7 editorial \u00b7 credenciais externas seguem **gated**). O **GAP-m\u00e3e do PIPC** (a m\u00e1quina de APRENDER com o epis\u00f3dio publicado) fechou o arco de **an\u00e1lise**: a reten\u00e7\u00e3o do YouTube agora **persiste** e vira **brief acion\u00e1vel por-EP**. Disciplina mantida sob autonomia: toda migration passou `/security-review` + RLS default-deny (FMEA-011); cada subagente foi verificado **independentemente** (Lei 1 \u2014 o `bok-curator` do A10 e a curva de reten\u00e7\u00e3o conferidos por mim na malha/tabela, n\u00e3o por auto-relato).\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `youtube-data` a\u00e7\u00e3o `audience_retention` + tabela `episode_retention_curve` (migration `20260724120000`) | \u2705 **S1 (FR-PIPC-012)**: persiste a curva ~100 pontos owner-scoped; witness 100 linhas na tabela (v\u00eddeo `2VaCDbXJyUw`) |\n| `youtube-data` a\u00e7\u00e3o `episode_retention_analysis` + tabela `episode_insights` (migration `20260724120100`) | \u2705 **S2 (FR-PIPC-014/015)**: drops <50%/<25% + queda \u00edngreme + clock \u2192 brief; witness *\"perde 50% aos 16% (1:11) \u2192 cortar no EP05\"* |\n| `contacts` (migration `20260724120200`) + CRUD cliente+RLS | \u2705 **A4**: pilar Contatos; **OTD-CS-001 resolvida** (entidades separadas contact/lead); witness CRUD E2E; edge fn bloqueada (**cap 100 fns**) |\n| `autopilot_plans.social_account_id` (migration `20260724120300`) + `cadence-run` threading | \u2705 **A8**: dispatch respeita a conta fixada; witness E2E; mata `null`\u21921\u00aa arbitr\u00e1ria |\n| content-provenance seal-node `825088c0` + `00-index \u00a79` | \u2705 **A10**: BoK 9/9 **SELADA**; Fatia 4/FR-CP-011 **deferida** (OTD-CP-002 jur\u00eddico); **zero** c\u00f3digo de compliance |\n| A19/A20 (re-OAuth U0 pelo Sovereign) | \u2705 **desbloqueado**: `yt-analytics-monetary.readonly` + Analytics API viva; provado HTTP 200 real |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `c58a57e` | feat(pipc): S1 \u2014 persist\u00eancia da curva de reten\u00e7\u00e3o (FR-PIPC-012) |\n| `a9f6154` | feat(pipc): S2 \u2014 an\u00e1lise de reten\u00e7\u00e3o por-EP (FR-PIPC-014/015) |\n| `f4a491b` | feat(crm): pilar Contatos \u2014 contacts + CRUD (A4) |\n| `6e6d5ad` | fix(cadence): sele\u00e7\u00e3o expl\u00edcita de conta (A8) |\n| `dd1fae5` | docs(next-steps,handoff): sess\u00e3o autonomia total |\n| `88a04dd` | docs(bok): seal content-provenance 9/9 (A10) |\n\n### Arquitetura \u2014 la\u00e7o de aprendizado PIPC (arco de an\u00e1lise VIVO)\n```\nYouTube Analytics v2 (audience_retention: elapsedVideoTimeRatio \u00d7 audienceWatchRatio + relativeRetentionPerformance)\n  \u2192 youtube-data audience_retention  \u2192 episode_retention_curve  (RLS owner \u00b7 ~100 pts/v\u00eddeo \u00b7 write service-role)\n  \u2192 youtube-data episode_retention_analysis \u2192 episode_insights  (brief: \"perde 50% aos Xs (m:ss) \u2192 cortar no EP05\")\n  \u2192 [PR\u00d3XIMO ELO un-gated] FR-PIPC-017/018: optimization_policy EPIS\u00d3DICA injeta o brief no planejamento do EP05 (hoje manual)\n```\n\n**Aprendizados persistidos** (mem\u00f3ria + CLAUDE.md Key Files + este Record \u2014 para n\u00e3o re-derivar contexto): [[project_pipc_s1_s2_live]] \u00b7 [[reference_edge_fn_cap_100_hit]] \u00b7 [[reference_prod_db_ops_gotchas]] \u00b7 [[feedback_bok_gate_status_not_file_count]]. **Gated na sua m\u00e3o:** A10 c\u00f3digo Fatia 2/3/4 (OTD-CP-002 jur\u00eddico \u00b7 cert \u00b7 compute) \u00b7 A15 imagens Golden Eye \u00b7 A5 service account Vertex \u00b7 A16 p\u00fablico (t\u00edtulo/desc EP02) \u00b7 A8 metade setter (`cadence-plan`/UI setar a coluna).\n\n## Diretiva 5 pontos: governan\u00e7a docs + cad\u00eancia por-workspace + Golden Eye intake + YouTube Record (2026-07-23)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:49:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've added the HANDOFF record and now I'm moving through the remaining phases: running the secret scan on HANDOFF, checking the BoK status, then updating sprint priorities in the markdown file to mark progress on those specific items, cleaning up the scratch directory, and finally committing and pushing everything before the final phase.
+
+</details>
+
+
+## 🤖 Claude *(11:49:14)*
+
+HANDOFF Record completo. **Fase 5b (secret scan no HANDOFF) + Fase 6 (BoK status) + checagens de Fase 5c/7b:**
+
+## 🤖 Claude *(11:49:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b. secret scan em HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\\|uuid\" | head -5 || echo \"HANDOFF.md: SEM CREDENCIAIS \u2705\"\necho \"=== 5c. run-audit.ts existe? ===\"\nls scripts/qa/run-audit.ts 2>/dev/null && echo \"existe\" || echo \"N\u00c3O existe (skip Phase 5c mec\u00e2nica; verifica\u00e7\u00e3o manual j\u00e1 feita)\"\necho \"=== 6. BoK content-provenance completa? ===\"\nfor doc in 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics 09-pattern-conformance; do [ -f \"docs/bok/content-provenance/$doc.md\" ] || echo \"  faltando: $doc\"; done; echo \"  (vazio acima = 9/9 completa \u2705)\"\necho \"=== 7b. scratch/ + sprint-priorities ===\"\nls scratch/ 2>/dev/null | head; ls .claude/context/sprint-priorities.md 2>/dev/null && echo \"sprint existe\"",
+  "description": "Phase 5b/5c/6 + 7b checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b. secret scan em HANDOFF.md ===
+> === 5c. run-audit.ts existe? ===
+> scripts/qa/run-audit.ts
+> existe
+> === 6. BoK content-provenance completa? ===
+>   (vazio acima = 9/9 completa ✅)
+> === 7b. scratch/ + sprint-priorities ===
+> .claude/context/sprint-priorities.md
+> sprint existe
+> ```
+
+## 🤖 Claude *(11:49:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through the logic of a credential scanning handoff where the grep pipeline produced no output and the fallback echo didn't trigger either, which suggests the first grep actually found matches that were then filtered out by the second grep with the -v flag.
+
+Now I need to run the audit script against the HANDOFF.md file to verify the material-proof claims, since it exists and I've already created the proof-manifest.json with the handoffNodeId. The content-provenance book of knowledge is complete and sealed, so there's no gate blocking me there. But I'm noticing a discrepancy with the scratch directory — the pre-flight check indicated there were files in it, yet the ls command just returned nothing visible. So scratch/ exists but is empty — no cleanup needed there. Now I'm moving into Phase 5c to run the audit, which will verify the newest Record block and check commits, mesh UUIDs, TypeScript compilation, tests, and edge functions. But first I need to commit the documentation changes I've made to README and CLAUDE.md, since NEXT-STEPS was already committed earlier and I need to make sure all my edits are staged before running the audit. I need to run the audit phase (5c) before committing, since it reads the current HANDOFF.md file to verify the Record. The ritual sequence is: write HANDOFF → secret scan → commit → run audit → BoK → push, so I should execute the audit now while the file is still fresh, then commit my changes to HANDOFF, README, and CLAUDE.md before pushing. I'll set a reasonable timeout and run it.
+
+</details>
+
+
+## 🤖 Claude *(11:49:51)*
+
+Fase 5b: HANDOFF **sem credenciais ✅**. Fase 6: content-provenance **9/9 completa + selada ✅**. scratch/ vazio. **Fase 5c — auditoria mecânica de prova material** (run-audit.ts existe):
+
+## 🤖 Claude *(11:49:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 240 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -35",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit c58a57e | git_commit | c58a57e | c58a57e | ✅ |
+> | commit a9f6154 | git_commit | a9f6154 | a9f6154 | ✅ |
+> | commit f4a491b | git_commit | f4a491b | f4a491b | ✅ |
+> | commit 6e6d5ad | git_commit | 6e6d5ad | 6e6d5ad | ✅ |
+> | commit dd1fae5 | git_commit | dd1fae5 | dd1fae5 | ✅ |
+> | commit 88a04dd | git_commit | 88a04dd | 88a04dd | ✅ |
+> | oro triplet compliance | oro_compliance | missing | missing | 🔴 |
+> | handoff node 36d233dc | mesh_node | 36d233dc-909b-431d-b15e-e1cb30240e41 | 36d233dc-909b-431d-b15e-e1cb30240e41 | ✅ |
+> 
+> - 🔴 **oro triplet compliance** — ORO triplet (Operator, Reviewer, Owner) is missing from the record block
+> 
+> QA VERDICT: 7 verified · 0 skipped · 1 failed → SEAL BLOCKED
+> 
+> (audit completed in 0.1s)
+> ```
+
+## 🤖 Claude *(11:50:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The audit flagged that my Record is missing the ORO triplet (Operator, Reviewer, Owner) required by Survival Law 4, so I need to add one to resolve this finding. I'm adding the ORO triplet to the Record now, starting with designating the Operator as MCORCH Master Exec.
+
+I'm completing the ORO assignments: Reviewer is Sovereign plus the security-review process for the migration, and Owner is Sovereign given the blast radius across production schema, data, and the PIPC series for User Zero. I'll insert this ORO declaration right after the intro paragraph and before the first table, then re-run the audit to confirm the seal is allowed.
+
+</details>
+
+
+## 🤖 Claude *(11:50:04)*
+
+Fase 5c bloqueou por 1 item legítimo: falta o **ORO triplet** no Record (Lei 4). Adiciono e re-rodo:
+
+## 🤖 Claude *(11:50:09)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "Disciplina mantida sob autonomia: toda migration passou `/security-review` + RLS default-deny (FMEA-011); cada subagente foi verificado **independentemente** (Lei 1 \u2014 o `bok-curator` do A10 e a curva de reten\u00e7\u00e3o conferidos por mim na malha/tabela, n\u00e3o por auto-relato).",
+  "new_string": "Disciplina mantida sob autonomia: toda migration passou `/security-review` + RLS default-deny (FMEA-011); cada subagente foi verificado **independentemente** (Lei 1 \u2014 o `bok-curator` do A10 e a curva de reten\u00e7\u00e3o conferidos por mim na malha/tabela, n\u00e3o por auto-relato).\n\n**ORO desta sess\u00e3o:** Operator = MCORCH Master Execution Agent (+ subagente `bok-curator` no seal do A10) \u00b7 Reviewer = Sovereign + `/security-review` por migration \u00b7 Owner = Sovereign (blast radius: schema/dados de prod do Usu\u00e1rio Zero \u2014 tabelas `episode_retention_curve`/`episode_insights`/`contacts` + coluna em `autopilot_plans` + malha; a s\u00e9rie PIPC e o CRM/cad\u00eancia do U0)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:50:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm running the audit again to verify that SEAL is allowed.
+
+</details>
+
+
+## 🤖 Claude *(11:50:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 240 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -6",
+  "description": "Re-run material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (+ subagente `bok-curator` no seal do A10) · Revi | Operator = MCORCH Master Execution Agent (+ subagente `bok-curator` no seal do A10) · Revi | ✅ |
+> | handoff node 36d233dc | mesh_node | 36d233dc-909b-431d-b15e-e1cb30240e41 | 36d233dc-909b-431d-b15e-e1cb30240e41 | ✅ |
+> 
+> QA VERDICT: 8 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> ```
+
+## 🤖 Claude *(11:50:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The verification passed cleanly. Now I'm moving into Phase 7b to update the sprint documentation—I'll mark progress on the priority items and add a brief note about the autonomy session work to the sprint-priorities file.
+
+Since the sprint-priorities file is quite dense, I'll keep it pragmatic: add a concise session note right after the Sprint Goal line rather than trying to update individual items. The core persistence work (memory, CLAUDE.md, HANDOFF, NEXT-STEPS) is complete, so I'll commit these docs in logical chunks following the ritual—README separately, then HANDOFF, then CLAUDE.md with its own commit. I need to add a progress note to the sprint-priorities file, anchoring it near the Sprint Goal line to keep things efficient. Let me read the top section to find the right insertion point. I'll commit the README first as a separate change, then handle the sprint priorities and HANDOFF/CLAUDE commits together.
+
+</details>
+
+
+## 🤖 Claude *(11:50:42)*
+
+**SEAL ALLOWED** — 8 verified, 0 failed ✅. Fase 7b (sprint) + commits. Localizo âncora do sprint e commito o README:
+
+## 🤖 Claude *(11:50:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sprint anchor ===\"\ngrep -nE \"FILA SOVEREIGN|Sprint Goal|\ud83c\udfaf \\*\\*AGORA\\*\\*|\ud83c\udfaf 0\" .claude/context/sprint-priorities.md | head -4\necho \"=== commit README (Fase 4) ===\"\ngit add README.md\ngit commit -q -m \"docs(readme): v6.122.0 \u2014 PIPC S1+S2 (retencao->brief) + CRM Contatos + cadence-fix + AI Act selada \u00b7 malha 9831\" 2>&1 | grep -iE \"leak|error\" | tail -1\necho \"README commit done\"\necho \"=== proof-manifest gitignored? ===\"\ngit check-ignore proof-manifest.json && echo \"ignorado \u2705\" || echo \"N\u00c3O ignorado (n\u00e3o vou commitar \u2014 artefato de auditoria)\"",
+  "description": "Sprint anchor + commit README + check proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sprint anchor ===
+> 3:**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 7:## 📋 FILA SOVEREIGN (ordem declarada — não reordenar sem GO)
+> 11:| 🎯 **AGORA** | **Postar EP02 no YouTube PELA plataforma (upload otimizado) — próxima sessão, ANTES do CRM (diretiva 2026-07-19)** — subir o master longo + preencher título/descrição/hashtags/categoria + todas as opções da UI + vantagens da API (localizations, publishAt, thumbnail/captions). É a **Track B "fábrica"** do youtube-studio. Viável: escopo `videos.insert` JÁ registrado (`social-auth-init:145,154`), BoK 9/9 + Amendment 12. Memória `project_youtube_upload_ep02`. | ⏳ Falta **worker host resumable** `youtube-upload-bridge` (master ~1,3GB no host → edge fn não streama) + UI de metadados. Amendment youtube-studio antes do código. | 🔒 **Sovereign:** GO da fatia + confirmar verify/CASA/quota do app YouTube |
+> 12:| 🎯 0 | **CRM Suite completo + Marketing (diretiva Sovereign 2026-07-19)** — construir um CRM de VERDADE nativo, pilar por pilar (open-source descartado, AGPL). **Os loops NÃO param até fechar.** SSOT: `docs/roadmap/crm-suite-and-marketing.md`; memória `project_crm_suite_roadmap`. Pilares CRM: Contatos·Empresas·Leads(✅)·Negócios·Tickets·Produtos·Serviços·Pedidos·Compromissos·Caixa-de-entrada(✅)·Chamadas·Reuniões·Tarefas·Playbooks·Listas·Segmentos·Modelos·Snippets. Marketing: AEO·Beta(🔎)·SEO·Campanhas(✅)·E-mail·Redes(✅)·Anúncios·Eventos·Formulários·CTAs·SMS·Intenção·Pontuação(✅)·Análise·Marca. | ⏳ **Fase 0 = BoK `docs/bok/crm-suite/`** (spine de entidades + associações + timeline) ANTES dos pilares — módulo maior, Closed-Loop gate. Depois: fatias na sequência do SSOT. | 🔒 **Próximo:** GO Sovereign p/ arrancar o BoK/blueprint do crm-suite (ou apontar o 1º pilar) |
+> === commit README (Fase 4) ===
+> ✔️ gitleaks-staged (0.06 seconds)
+> README commit done
+> === proof-manifest gitignored? ===
+> NÃO ignorado (não vou commitar — artefato de auditoria)
+> ```
+
+## 🤖 Claude *(11:51:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I found the sprint anchors in the README and need to update line 12 to mark Contatos as complete since it shipped with A4, plus add a note about the retention work being done.
+
+I'm also noticing proof-manifest.json isn't gitignored — it's an audit artifact that shouldn't be committed, so I'll remove it after I'm done to keep the tree clean. My plan is to edit the sprint file to mark Contatos(✅), commit those changes, then clean up.
+
+</details>
+
+
+## 🤖 Claude *(11:51:00)*
+
+README selado. Marco Contatos(✅) na FILA do sprint (A4 entregou o pilar):
+
+## 🤖 Claude *(11:51:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "Pilares CRM: Contatos\u00b7Empresas\u00b7Leads(\u2705)\u00b7Neg\u00f3cios\u00b7Tickets\u00b7Produtos\u00b7Servi\u00e7os\u00b7Pedidos\u00b7Compromissos\u00b7Caixa-de-entrada(\u2705)\u00b7Chamadas\u00b7Reuni\u00f5es\u00b7Tarefas\u00b7Playbooks\u00b7Listas\u00b7Segmentos\u00b7Modelos\u00b7Snippets.",
+  "new_string": "Pilares CRM: Contatos(\u2705 A4 2026-07-24 \u2014 tabela+RLS+CRUD, OTD-CS-001 resolvida)\u00b7Empresas\u00b7Leads(\u2705)\u00b7Neg\u00f3cios\u00b7Tickets\u00b7Produtos\u00b7Servi\u00e7os\u00b7Pedidos\u00b7Compromissos\u00b7Caixa-de-entrada(\u2705)\u00b7Chamadas\u00b7Reuni\u00f5es\u00b7Tarefas\u00b7Playbooks\u00b7Listas\u00b7Segmentos\u00b7Modelos\u00b7Snippets."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:51:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm wrapping up the remaining documentation commits—HANDOFF.md and CLAUDE.md as the seal commit, plus updating sprint-priorities to mark the Contatos pillar complete. After pushing those, I'll clean up the proof-manifest and move into the Phase 8 report.
+
+</details>
+
+
+## 🤖 Claude *(11:51:13)*
+
+Commito sprint + o seal (HANDOFF + CLAUDE.md) e faço o **push (Fase 7)**:
+
+## 🤖 Claude *(11:51:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nrm -f proof-manifest.json\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): pilar Contatos marcado (A4) \u2014 CRM Suite avanca\" 2>&1 | grep -iE \"leak|error\" | tail -1\ngit add HANDOFF.md CLAUDE.md\ngit commit -q -m \"docs(handoff): seal autonomia total 2026-07-24 \u2014 PIPC S1+S2 vivos (retencao->brief EP05) + CRM Contatos + cadence-fix + AI Act selada; Key Files + memorias \u00b7 malha 9831 no 36d233dc\" 2>&1 | grep -iE \"leak|error\" | tail -1\necho \"=== PUSH ===\"\ngit push origin main 2>&1 | tail -3\necho \"push exit: ${PIPESTATUS[0]}\"\necho \"=== estado final ===\"; git status --short | wc -l; git log --oneline -4",
+  "description": "Commit sprint + handoff seal + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-staged (0.05 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> === PUSH ===
+> ✔️ gitleaks-range (0.15 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    88a04dd..2df9477  main -> main
+> push exit: 0
+> === estado final ===
+> 1
+> 2df9477 docs(handoff): seal autonomia total 2026-07-24 — PIPC S1+S2 vivos (retencao->brief EP05) + CRM Contatos + cadence-fix + AI Act selada; Key Files + memorias · malha 9831 no 36d233dc
+> bc6daba chore(sprint): pilar Contatos marcado (A4) — CRM Suite avanca
+> c8ea430 docs(readme): v6.122.0 — PIPC S1+S2 (retencao->brief) + CRM Contatos + cadence-fix + AI Act selada · malha 9831
+> 88a04dd docs(bok): seal content-provenance 9/9 (A10) — Fatia 4/FR-CP-011 deferida OTD-CP-002 (juridico) · malha 825088c0
+> ```
+
+## 🤖 Claude *(11:51:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The push went through successfully, but there's still one uncommitted change showing up. I'm checking what file it is—possibly proof-manifest.json that I deleted earlier, or something else lingering. I'll figure out what's left to clean up.
+
+</details>
+
+
+## 🤖 Claude *(11:51:32)*
+
+Push OK (`88a04dd..2df9477`). Verifico o 1 arquivo restante e entrego o relatório final:
+
+## 🤖 Claude *(11:51:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1 arquivo n\u00e3o-commitado ===\"; git status --short\necho \"=== docker/chroma final ===\"; docker ps --filter \"name=mcorch_chroma\" --format \"{{.Names}}: {{.Status}}\"",
+  "description": "Check remaining uncommitted file + infra"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1 arquivo não-commitado ===
+>  D proof-manifest.json
+> === docker/chroma final ===
+> mcorch_chroma: Up 5 weeks (healthy)
+> ```
+
+## 🤖 Claude *(11:51:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see there's one uncommitted deletion of proof-manifest.json, which was tracked from a previous session. Since this is an ephemeral artifact that regenerates with each handoff, I should restore it to keep things consistent rather than committing the deletion. I'm going back and forth on whether to restore the tracked version or write the current handoff node ID and commit it fresh. The tracked version keeps the tree clean and matching origin, but leaves a stale ID. Writing the current ID is more accurate but requires an extra commit. I'll go with restoring the tracked file since the manifest is regenerated each handoff anyway and its exact content isn't critical.
+
+</details>
+
+
+## 🤖 Claude *(11:51:51)*
+
+O restante é a deleção do `proof-manifest.json` (era tracked). Regenero com o node id desta sessão e fecho a árvore:
+
+## 🤖 Claude *(11:51:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho '{\"handoffNodeId\": \"36d233dc-909b-431d-b15e-e1cb30240e41\"}' > proof-manifest.json\ngit add proof-manifest.json\ngit commit -q -m \"chore(handoff): proof-manifest node 36d233dc (seal autonomia total)\" 2>&1 | grep -iE \"leak|error\" | tail -1\ngit push origin main 2>&1 | tail -2\necho \"=== \u00e1rvore limpa? ===\"; git status --short | wc -l",
+  "description": "Restore proof-manifest + push + confirm clean"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✔️ gitleaks-staged (0.06 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2df9477..49321d2  main -> main
+> === árvore limpa? ===
+> 0
+> ```
+
+## 🤖 Claude *(11:52:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The repository is clean and pushed. Now I'm moving into the final phase—composing the seal report in Portuguese with focus on persistence as requested, and I'm tracking the commits from this handoff session along with the earlier work.
+
+I'm writing the Phase 8 report, emphasizing the persistence layer we've built: the three new memories plus their index, the Key Files documentation in CLAUDE.md, the handoff record with task state, the README and sprint updates, and the refreshed existing memories. All the critical consultation points now embed these learnings.
+
+</details>
+
+
+## 🤖 Claude *(11:52:30)*
+
+Árvore limpa, tudo pushed (`49321d2`). Selo completo.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — Autonomia Total: PIPC S1+S2 · CRM Contatos · cadence-fix · AI Act (2026-07-24)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  ✅ Secret leak scan (working tree + HANDOFF.md) — sem credenciais
+  ✅ console.log sensíveis — só em teste de segurança (não real)
+  ✅ Toda migration passou /security-review + RLS default-deny (FMEA-011)
+
+📦 COMMITS DA SESSÃO (6) + DO SELO (4)
+  Sessão:  c58a57e S1 · a9f6154 S2 · f4a491b A4 · 6e6d5ad A8 · dd1fae5 docs · 88a04dd A10-seal
+  Selo:    c8ea430 README · bc6daba sprint · 2df9477 handoff · 49321d2 proof-manifest
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 36d233dc-909b-431d-b15e-e1cb30240e41 — session-handoff-20260724
+  Embedding: ✅ (768 dims)  ·  malha 9772 → 9831
+
+📖 README.md
+  Versão: 6.121.0 → 6.122.0
+  Badge neural_mesh: 9772 → 9831 nós
+  What's New: entrada v6.122.0 (PIPC S1+S2 · Contatos · cadence-fix · AI Act)
+
+🧠 HANDOFF.md
+  Fase selada: Autonomia Total (Task State + Record + arquitetura do laço PIPC + ORO)
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED — 8 verificadas · 0 skipped · 0 falhas
+
+📚 BoK (Fase 6)
+  content-provenance 9/9 SELADA (nó 825088c0; Fatia 4 deferida OTD-CP-002)
+
+🚀 PUSH
+  main → origin/main · 10 commits enviados no total
+
+📌 SPRINT / HIGIENE
+  sprint-priorities.md: Contatos marcado ✅ (A4)
+  scratch/: limpo  ·  árvore: limpa
+═══════════════════════════════════════════════════════════
+```
+
+## 🧠 Persistência do aprendizado (sua diretiva — feito em TODOS os lugares que consulto de imediato)
+
+Registrei tudo que aprendi para **não re-derivar contexto** na próxima sessão:
+
+| Onde consulto | O que gravei |
+|---|---|
+| **Memória** (3 novas + índice) | `project_pipc_s1_s2_live` (S1+S2 vivos, próximo elo FR-PIPC-017/018) · `reference_edge_fn_cap_100_hit` (cap atingido → dobrar/cliente+RLS) · `reference_prod_db_ops_gotchas` (social_accounts=VIEW · mcorch_edges cols · autopilot_plans NOT NULL · generateLink rate-limit · db push --linked) · atualizei `project_youtube_upload_ep02` (service VIVO + Analytics desbloqueada) |
+| **CLAUDE.md Key Files** | 3 linhas novas (PIPC S1/S2 · A4 Contatos · A8 cadence) com file:line, migrations, memórias linkadas |
+| **HANDOFF.md** | Task State + Record completo (tabela de ações · commits · **arquitetura do laço PIPC** · ORO · gates restantes) |
+| **NEXT-STEPS.md** | tabela da sessão de autonomia (feito no loop) |
+| **sprint-priorities.md** | Contatos ✅ na FILA CRM |
+
+## O que a próxima sessão pega de graça
+
+- **O GAP-mãe está com o arco de análise VIVO:** retenção YouTube → `episode_retention_curve` → brief em `episode_insights`. **Próximo elo un-gated (recomendado):** FR-PIPC-017/018 — a `optimization_policy` **episódica** que injeta o brief no planejamento do EP05 (hoje a ponte é manual). Rodar `episode_retention_analysis` em batch sobre todos os EPs constrói a régua da série.
+- **Gates na sua mão** (persistidos no HANDOFF/NEXT-STEPS): A10 código Fatia 2/3/4 (OTD-CP-002 jurídico) · A15 imagens Golden Eye · A5 service account Vertex · A16 público (título/desc EP02) · A8 metade setter (UI setar `social_account_id`).
+- **Constraint nova a lembrar:** cap de 100 edge fns atingido — qualquer função nova = 402; dobrar em existente ou cliente+RLS.
+
+```
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada, Soberano. A máquina de aprender está de pé e o conhecimento desta sessão está gravado em cada lugar que abro no `/handson` — nada de re-derivar o que já descobrimos.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
