@@ -1,5 +1,5 @@
-# [[2026-07-24 - Visualizar roadmap com passos realizados e próximos|Visualizar roadmap com passos realizados e próximos]]
-**Date:** 2026-07-23 | **Session ID:** `ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d`
+# [[2026-07-23 - Visualizar roadmap com passos realizados e próximos|Visualizar roadmap com passos realizados e próximos]]
+**Date:** 2026-07-24 | **Session ID:** `ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d`
 
 ---
 
@@ -6760,6 +6760,845 @@ BoK `crm-suite` **9/9 selada** (gate de código preservado). **Podemos começar 
 
 **Sua vez, Soberano.** Responda em bloco (ex.: *"A10=S, A4=S Contatos, A8=cirúrgico, landing todos=A, A16=prepara privado, A19 faço agora"*) e eu executo tudo que for meu na sequência.
 
+## 👤 User *(23:48:07)*
+
+Soberano respondendo ao Conselheiro. Aqui estão minhas decisões em bloco.
+
+## 🚨 Prazo Legal
+- A10 (AI Act Fatia 2/3): [S / N]
+  → Se S: "Implemente já, com /security-review em qualquer migration."
+
+## 🎯 Alto Valor
+- A15 (Gold set): [(b) mando as imagens + rótulos em texto / (a) eu monto os sidecars / aguardar]
+  → Se (b): "Vou te mandar [N] imagens até [data/hora]."
+
+- A19/A20 (Retenção YouTube):
+  - API habilitada no GCP? [Sim, já habilitei / Ainda não, vou habilitar agora / Farei até (data)]
+  - U0 re-OAuth feito? [Sim / Farei agora / Farei até (data)]
+
+- A16 (Postar cortes EP01/EP02): [Prepara fila privado / Joga público direto / Aguardar]
+
+## 🏗️ Arquitetural
+- A14 (Revisar BoK PIPC): [Faz a pré-revisão você / Eu mesmo reviso / Aguardar]
+  → Se "Faz a pré-revisão você": "Me entregue um veredito com os pontos que exigem meu OK."
+
+- A4 (1º pilar CRM): [S / N]
+  → Se S: "Comece pelo pilar [Contatos / Pipeline / Outro]."
+
+- A8 (Workspace): [cirúrgico agora / workspace completo agora / adiar / cirúrgico agora + workspace como BoK futura]
+  → Recomendação do agente foi "cirúrgico agora + workspace como BoK futura".
+
+- A5 (Veo Vertex): [Criarei a service account até (data) / Aguardar / Use credencial existente em (path)]
+
+## 🧩 Micro-decisões (landing-bundler)
+- OTD-LF-001 (remote-only): [A / B]  → Recomendação: A
+- OTD-LF-003 (injeção head): [A / B]  → Recomendação: A
+- Entrega HTML: [A / B / C]           → Recomendação: A
+- PostHog: [A / B]                     → Recomendação: A
+- srcset: [A / B]                      → Recomendação: A
+
+## 📦 Higiene
+- Commit 48b29ab: [push / não push]
+- Próximo passo geral: [Foco total no A10 / Paralelo A10+A19+A15 / Deixo o agente decidir]
+
+## 🤖 Claude *(23:48:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign sent back a template with all the bracketed options still unfilled—`[S / N]`, `[Sim / Farei agora / ...]`—rather than actual selections. This is just the blank form echoed back, not a real set of decisions.
+
+The key issue is that I cannot treat unfilled brackets as implicit approval or assume they're endorsing my recommendations. The system has been clear: no human input means no approval, and this is a genuine ambiguity. For high-impact, irreversible actions like implementing the AI Act code, starting the CRM pillar, or making public announcements, an unfilled template is absolutely not authorization. Proceeding on those would be fabricating consent.
+
+The honest approach is to point out that the form came back blank and ask them to explicitly fill in their choices, while clarifying whether echoing my recommendations counts as acceptance. I need to structure a clear response that flags the unselected options honestly, then offer a streamlined path forward—presenting my recommended defaults with explicit confirmation checkpoints for the high-stakes items like the legal module, public visibility, and outreach decisions. I'm confirming the template is completely unfilled — all the brackets like `[S / N]` and `[A / B]` have no selections marked in. I shouldn't guess at what the user wants, especially on irreversible decisions like the legal module or deployment. Instead, I'll send back a pre-filled version with my recommended defaults clearly shown, so they can either confirm everything at once or override specific items. I need to be explicit about which decisions require explicit approval versus which ones are safer recommendations. so that's reversible and safe to default. I'm flagging the four decisions that absolutely need their explicit sign-off—A10, A4, and push are high-impact and irreversible, while A16 only needs confirmation if they're going public. I'll present a compact pre-filled template they can quickly confirm or adjust, keeping the friction minimal while protecting against accidental overcommitment.
+
+</details>
+
+
+## 🤖 Claude *(23:49:16)*
+
+Pare — antes de eu executar qualquer coisa, um ponto de materialidade (Lei 1): **o bloco voltou com os menus de opção intactos.** Cada linha ainda está como `[S / N]`, `[A / B]`, `[Sim / Farei agora / …]` — **nenhuma seleção foi preenchida**. As linhas `→ Recomendação: A` são as *minhas* recomendações que você repetiu, não a sua escolha marcada.
+
+Não vou **inferir suas decisões de um formulário em branco** — sobretudo nos itens irreversíveis (A10 = codar um módulo legal, A16 público, `git push`). Adivinhar "S" aqui seria fabricar seu consentimento, e é exatamente o erro que o protocolo me proíbe.
+
+Para zerar o atrito: abaixo está o **mesmo bloco já pré-preenchido com a minha recomendação** em cada linha. **Responda "confirmo os defaults"** (aí executo tudo que for meu) **ou edite só as linhas que quer mudar.**
+
+```
+🚨 A10 AI Act .............. ⚠️ SEM DEFAULT — preciso de S ou N explícito (é código de compliance)
+🎯 A15 Gold set ............ (b) você manda imagens+rótulos, eu monto os sidecars
+   A19 GCP API ............. ? — me diga o estado real (Sim já / vou agora / até <data>)
+   A20 U0 re-OAuth ......... ? — idem (não dá pra default: é ação sua no console)
+   A16 Cortes ............. "prepara fila PRIVADO" (reversível; público só com seu OK depois)
+🏗️ A14 PIPC .............. "faz a pré-revisão você" (eu entrego veredito, você só ratifica S3-S4)
+   A4 CRM ................. ⚠️ SEM DEFAULT — preciso de S/N explícito; se S, pilar = Contatos
+   A8 Workspace .......... "cirúrgico agora + Workspace como BoK futura"
+   A5 Veo Vertex ......... "aguardar" (depende de você criar a service account)
+🧩 landing µ (×5) ......... todos = A
+📦 push 48b29ab .......... ⚠️ SEM DEFAULT — push é outward-facing, preciso do seu ok
+   Próximo passo ......... "paralelo A10+A19+A15"
+```
+
+### Os 4 que exigem palavra explícita (não tenho default seguro):
+1. **A10 (S/N)** — implementar as Fatias C2PA + watermark. Alto impacto/legal. Só arranco com **S**.
+2. **A4 (S/N)** — iniciar o 1º pilar CRM (código de módulo grande). Só arranco com **S**.
+3. **A16 público** — se quiser **público direto** em vez de fila privada, tem que dizer (o default que sugiro é privado-primeiro).
+4. **push** — subir o `48b29ab` pro remoto. Diga **push** ou **não push**.
+
+### O que faço no instante que você confirmar (sem novos gates):
+- **A15(b):** te digo o formato exato e monto os sidecars quando as imagens chegarem.
+- **A19/A20:** assim que você marcar "API habilitada ✅ + re-OAuth ✅", escrevo a captura de retenção.
+- **A16 privado / A14 pré-revisão / A8 cirúrgico / landing µ todos A:** un-gated após seu OK — executo em sequência.
+
+Uma linha só resolve: por exemplo — **"confirmo os defaults; A10=S, A4=S Contatos, push, A19 habilito agora"** — e eu disparo tudo.
+
+## 👤 User *(00:23:31)*
+
+otimo tente fazer tudo agora
+
+## 🤖 Claude *(00:26:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user is saying "great, try to do everything now" in Portuguese, which is ambiguous given the context. I laid out default options and asked them to either confirm or edit, but they're responding with something that could mean they want me to proceed with the defaults or take some other action. I need to figure out what "fazer tudo" means in this specific situation.
+
+I'm weighing whether this counts as explicit approval for the four gated items I flagged earlier — the AI Act compliance code, CRM pillar, public/private decision, and push — since I said I needed explicit confirmation for those. The user has now pushed twice to execute ("tente fazer tudo agora"), and they did mention earlier that if the answer was yes, I should implement immediately. But these are legally sensitive and irreversible decisions, so I'm trying to determine if "faça tudo agora" actually constitutes clear enough approval for the high-impact items, especially A10 with the AI Act compliance module. The CRM pillar is substantial and requires Sovereign review per the BoK curator, so starting Contatos is a major commitment. For A16, "faça tudo" means executing the plan I outlined, which defaults to a private queue — I won't go public without explicit confirmation since private is the safer, reversible choice. Push is outward-facing and needs explicit authorization, so I'm holding on that unless told otherwise. ants maximum progress. "Faça tudo" means execute everything I can, but some items are genuinely blocked on the user's end — the gold set needs images from them, A19/A20 require GCP API enablement and re-OAuth that I can't do, and A5 needs them to create a service account. So "faça tudo" realistically applies to what I can actually execute: the C2PA and watermark implementation, and other code-level work, though the migration itself still needs their involvement.
+
+For the remaining items, I'm looking at implementing the CRM Contatos pillar, preparing the private queue, pre-reviewing the PIPC knowledge base, fixing the cadence-run issue, and then handling the landing page decisions — most of which are configuration choices that either keep the current behavior or confirm existing documentation, so they don't require code changes.
+
+The real challenge is that A10 and A4 are both substantial module implementations with migrations and security considerations. The user asked me to "try to do everything now," which acknowledges the scope might be too much. I need to be honest about what I can handle autonomously versus what's blocked on their side, and whether attempting both large features in one go is realistic or if I should prioritize. can deliver a verdict through pure analysis with no implementation risk. For A8, I can fix the cadence-run account selection with a scoped code change and tests—it's reversible enough. A16 involves queuing EP02 as private, which is also reversible; the question is whether I can script the youtube_uploads row insertion to trigger the worker, or if it requires manual UI interaction through the Cortes menu.
+
+The core tension here is that a private YouTube upload is technically reversible (videos can be deleted), and it's content the Sovereign wants to push forward, but I need to be careful constructing a valid job with the correct snippet and master reference—so I'm leaning toward preparing the queue setup while holding the actual enqueue until I can confirm the job structure is sound. A private upload is reversible and within my authority, so I should enqueue it — but I'm realizing I don't have the episode metadata like title, description, and tags. A private draft with placeholder information isn't very useful, so maybe the better move is to set up a solid draft first rather than rush into an incomplete upload.
+
+Actually, I shouldn't be inventing YouTube metadata for their content — that's a branding decision that belongs to them. For A16, I'll prepare everything (verify the enqueue path works and provide the exact command they need) but hold off on actually uploading EP02, since it requires their input on title and description. I'll be transparent about what's ready and what needs their attention.
+
+A10 is a substantial legal module, and given the deadline pressure and the sealed book of knowledge, I should implement it.  I'll read through what Fatia 2/3 concretely require, code out the complete part, run it through security review for the migrations, and gate the actual migration apply (the classifier already does this for DDL anyway). It's real work but doable.
+
+A4 is another big module, and doing both A10 and A4 fully in one pass is a lot to take on. For the landing page, it's mostly about documenting the decisions I've made — minimal or no new code needed. And for the push, since they clearly want everything done and the commits are already made, I'll go ahead and push their work to their remote.
+
+Pushing just syncs the local commits up — it's low risk and easily reversible if needed. I'll do it.
+
+Given how much is on the table and with ultracode enabled, the smart move is to use orchestration for the heavy lifting on A10 and A4, while I handle the smaller, safer items directly: the A14 pre-review, the surgical A8 work, documenting the landing page decisions, and pushing. But I need to stay within the Closed-Loop Protocol and Survival Laws even with "faça tudo" — A10 opens once the BoK is sealed, code is allowed, but migrations need security review before commit, and the actual migration apply to prod is the irreversible step that the classifier historically gates, so I shouldn't apply migrations autonomously without explicit sign-off.
+
+For A10, I'll write the code, generate the migration file, run security review, but hand off the apply step. Same approach for A4. A8 is just a code change to the cadence-run edge function with no migration — reversible, so I can do it and test. A14 is pure analysis, and the landing page work is mostly documentation.
+
+I need to be honest about scope though — A10 involves integrating C2PA with watermarking libraries like TrustMark, VideoSeal, and AudioSeal, which are non-trivial external dependencies and tools.  A4 requires migrations, hooks, UI, and edge functions. Doing both properly with tests in one go is ambitious. My best move is to handle the quick wins first — A14 analysis, landing page decisions, A8 implementation and testing — then push those. For A10 and A4, I'll start them with a proper security review, but I should be transparent about what I can realistically complete versus what needs follow-up.
+
+Looking at the A10 scope more carefully through the book of knowledge: the IPTC layer is already live, C2PA with voice support is the next phase, and watermarking comes after. The infrastructure backbone exists with the provenance bridge worker and registration system.
+
+For Fatia 2, I need to extend the provenance bridge to embed C2PA manifests using the CLI/library, and the database column for the sidecar key is already there—so this might just be a worker extension plus a script rather than a full migration. Before committing to implementing this now, I should read through the BoK to understand the actual scope, then check the cadence run for A8 to see what's realistic.
+
+My approach: read the provenance BoK first to scope Fatia 2 and 3, then handle the immediate items (A14 pre-review, A8 work, landing page decisions, and pushing changes). For A10, I'll scope it from the BoK—if it's a bounded worker/motor extension like the earlier Fatia work, I'll code it completely and send for security review; if it requires a major migration, I'll write the code plus migration file and gate the application. For A4, I'm going to be honest about the scope: either start it BoK-driven but flag it as a large module and scope just the first slice (schema and migration for Contatos) to code-complete with gated application, or acknowledge that doing both A10 and A4 now would compromise quality, so I'm prioritizing A10 (it has a deadline) plus the safe items, and will tackle A4 next.
+
+I'm considering using a workflow with ultracode enabled to parallelize the big work: delegate the A4 CRM Contatos slice to one builder agent and the A10 provenance Fatia 2 to another while I handle the safe items and review afterward. This is reasonable since I can verify the work materially afterward, like I did with A11. But I need to be careful about the irreversible nature of migrations and legal changes—I should only delegate if I'm confident in the verification process.
+
+The user has consistently pushed for maximum autonomous execution across recent turns, and their standing preference is for aggressive autonomy. This is a genuine directive to execute maximally, so I should honor it while keeping the Survival Laws intact: no fabrication, no risky autonomous module-building on vague instructions, and gating any migration-apply or public-post actions. My plan is to execute immediately with these constraints in place. But I'm realizing that implementing both the C2PA/watermark module and the CRM Contatos pillar fully in one pass is too ambitious — even with parallel workflows. Instead, I should scope each to just the first high-value, production-ready slice that can be gated and applied, rather than trying to deliver the entire modules.
+
+For the C2PA work, that means embedding the provenance logic in the worker and motor script using the existing IPTC pattern from earlier phases, with smoke tests and any necessary migrations. For Contatos, I need to first check whether the CRM suite already has a spine structure with entities and associations in place — if it does, the work might be mostly UI and hooks over that existing table, or it might need a dedicated table. I should start by reading through the relevant BoKs to understand what's already there.
+
+I'm going to take a parallel approach: read the content-provenance and CRM suite documentation to scope out A10 and A4 properly, while simultaneously tackling the safer items like the landing page updates, the cadence-run edge function fix for the null social_account_id issue, and the local commits. Then I'll push everything together once all the local changes are ready. I'll delegate A10 and A4 to agents who can read the specs and implement the code, while I handle the lighter tasks myself. The key safety boundary is that migrations require security review and sovereign approval before applying — the agents will produce the code and migration files plus run the security checks, but I won't apply schema changes autonomously. That keeps the risk contained while parallelizing the heavy work.
+
+For A10 specifically (legal compliance), having agents build it autonomously from the BoK is the same pattern I've used before and is acceptable as long as I verify the output.
+
+So I'm moving forward: I'll start by reading the content-provenance BoK index and the CRM suite spine, while simultaneously delegating the agent work.
+
+Actually, I need to read first to scope the work properly before launching agents — I can't parallelize reads and agent launches cleanly without understanding what I'm delegating. Once I have the context, I'll launch A10 (deadline priority) and A4 as delegated builds, then handle the safe items myself (A14, A8, landing microservice, push) while they run, and verify everything before deploying.
+
+Let me start with the targeted reads: the content-provenance index to understand A10's scope, the CRM suite spine to map A4's Contatos pillar, and the cadence-run function to locate that social_account_id=null issue. I'll batch these reads efficiently since they're substantial files.
+
+For the A8 fix on cadence-run, the core problem is that it's arbitrarily picking the first account when social_account_id is null. The surgical solution is to make account selection explicit—the cadence plan itself should carry the social_account_id, and cadence-run should use it directly rather than defaulting. This likely requires either adding a field to the cadence_plans schema (which triggers a migration gate) or leveraging an existing field if one's already there.
+
+Before committing to the big autonomous builds for A10 and A4, I should be honest about scope—shipping two major compliance and CRM modules flawlessly in one go is risky. The safer approach is to execute the straightforward items first, then tackle A10 (the deadline-critical one) with full focus.
+
+Let me read the index to understand what's actually in Fatia 2 and 3, and whether there are any amendments I need to account for before deciding whether to launch A4 alongside A10 or defer it.
+
+</details>
+
+
+## 🤖 Claude *(00:26:05)*
+
+Entendido — força total. Mas "tudo" tem uma verdade material que preciso ser honesto sobre: **quatro itens são fisicamente impossíveis para mim** por mais que eu tente — A15 (só você tem as imagens), A19/A20 (só você clica "Enable API" no GCP + re-OAuth), A5 (só você cria a service account). Esses ficam com você, ponto.
+
+O que **é meu**, eu faço agora. E mantenho as duas travas de segurança inegociáveis mesmo sob "faça tudo": **não aplico migration em prod sozinho** (só escrevo + `/security-review`; o apply é seu) e **não posto nada público** sem sua palavra (A16 = privado).
+
+Começo pelo MONITOR para escopar A10/A4/A8 corretamente:
+
+## 🤖 Claude *(00:26:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/content-provenance/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# BoK Index — content-provenance
+> 2	
+> 3	**Project:** content-provenance — Proveniência de Conteúdo Sintético (Synthetic Content Provenance)
+> 4	**Version:** v0.1 | **Date:** 2026-07-15
+> 5	**BoK Scribe:** MCORCH BoK Scribe Agent v1.0.0
+> 6	**Status:** 🟡 **Suíte redigida (01→08 draft) · `09-pattern-conformance.md` PRESENTE (promoção verbatim da SDD §12 — 12 yes · 3 deferred · 6 n-a · Gate Step 3.5 fechado) · seal na Knowledge Mesh PENDENTE.** Este `00-index` é o gesto que amarra a suíte antes do seal.
+> 7	**Source of Truth:** [`00-deepsearch-blueprint.md`](00-deepsearch-blueprint.md) (semente, verificado 2026-07-15) — todo ID/OTD/FM/ferramenta/superfície deste índice deriva do blueprint; ambiguidade vira OTD, nunca improvisação (Lei 1). Toda afirmação externa carrega URL; o não-verificável está isolado em §10 do blueprint e **proibido de ser citado como fato** até fechar.
+> 8	
+> 9	> **ORO triplet:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign · Owner = **Sovereign** — blast-radius material: **sanção AI Act Art. 99 até €15.000.000 ou 3% do faturamento anual mundial**, o que for maior (https://artificialintelligenceact.eu/article/99/) **e** o falso-sucesso de declarar "marcado" um asset que na verdade saiu **sem manifest/watermark** (FM-CP-01, RPN 378). O consumidor último é o Usuário Zero, cujo conteúdo sintético (imagem/vídeo/voz) precisa ser **detectável como IA-gerado** pelas plataformas e pelos reguladores da UE.
+> 10	>
+> 11	> **Diretiva-fonte:** flip do **OTD-CAD-014** (spaces-cadence §8) — "AI Act Art. 50(2) alcança Nano Banana / HyperFrames / Qwen3-TTS — módulo próprio, maior que este". **Este é esse módulo.**
+> 12	>
+> 13	> **Nota de fidelidade (Lei 1).** O blueprint carrega **OTDs + FMEA + Guardrails**, não FRs numerados. A numeração `FR-CP-001..013` foi **selada pela FRD** (`04-frd.md`), derivando cada FR **1:1** de §5/§7 do blueprint com o par **embed → verify** material. `FR-CP-011` (disclosure Art. 50(4)) permanece **`[GATED]`** até o enquadramento jurídico provider-vs-deployer fechar (OTD-CP-002). Convenção MCORCH: **identificadores/lógica/tooling/logs em inglês** (`c2patool`, `register_creative_asset`, `provenance_status`, `trainedAlgorithmicMedia`); **texto de UI/disclosure/validação em PT-BR** ("Conteúdo gerado por IA").
+> 14	
+> 15	---
+> 16	
+> 17	## 1. Project Manifest
+> 18	
+> 19	| Field | Value |
+> 20	|-------|-------|
+> 21	| Business idea | Um **pós-processador de proveniência** que marca **MACHINE-READABLE** todo conteúdo **sintético** que o MCORCH gera e publica — imagem (Nano Banana / `gemini-2.5-flash-image`), vídeo (HyperFrames determinístico + Veo 3.1) e voz (clone Qwen3-TTS self-host) — para conformidade com o **EU AI Act Art. 50(2)/(4)** (Reg. (UE) 2024/1689). A marcação acontece **no momento da geração**, no spine `creative_assets` (passo pós-render / pré-`register_creative_asset`), em **3 camadas de defesa-em-profundidade** — **não reconstrói distribuição**. |
+> 22	| Market segment | **interno-primeiro → herança multi-tenant** — Usuário Zero (piloto enterprise interno, 1 tenant) na largada; tenants BYOK herdam a marca por construção (a marca vive no spine e viaja a todo enqueue social/reshape; payload = uuid opaco, nunca PII). |
+> 23	| Monetization | **Nenhuma cobrança direta** — módulo é **guardrail de compliance interno**, não produto. ROI = **risco evitado** (multa Art. 99 até €15M/3%). Tooling **USD=0** (só MIT/Apache/Artistic). Custo residual = compute de watermarker PyTorch (OTD-CP-009) + estratégia de cert C2PA (OTD-CP-003) — processo, não licença. |
+> 24	| Regulatory profile | **ELEVADO — driver do módulo** — EU AI Act Art. 50(2) machine-readable (PROVIDER) + Art. 50(4) disclosure legível a humano (DEPLOYER) · vigência **2026-08-02** · multa Art. 99 até **€15M/3%** · LGPD (payload sem PII + consent Art. 11 do clone ≠ marking) · IPTC DigitalSourceType (standard aberto). |
+> 25	| Integration surface | **extends-mcorch** — encaixa no spine vivo `creative_assets` + `register_creative_asset` (único writer service-role) + os 3 host-workers de geração (`video-bridge`/`voice-bridge` já são systemd host-workers; só imagem nasce em edge Deno sem host — OTD-CP-006). **Zero tabela nova · zero refundação de pipeline.** |
+> 26	| Slug | `content-provenance` |
+> 27	
+> 28	> **O que o módulo NÃO promete (honestidade — Lei 1):** **NÃO** garante marcação indelével (as 3 camadas são todas removíveis por adversário determinado — https://research.adobe.com/publication/trustmark-robust-watermarking-and-watermark-removal-for-arbitrary-resolution-images/); a promessa é **redundância defensável** ("as far as technically feasible", a linguagem literal do Art. 50(2)). **NÃO** usa SynthID como embedder (imagem/áudio/vídeo é proprietário, sem SDK — FM-CP-10). **NÃO** cobre voz na camada de metadata (IPTC não cobre áudio — OTD-CP-007). **NÃO** declara "marcado" sem output de `c2patool verify` (FM-CP-01).
+> 29	
+> 30	---
+> 31	
+> 32	## 2. File Registry
+> 33	
+> 34	| File | Phase | BoK Lens | Status | Purpose · ID range |
+> 35	|------|-------|----------|--------|--------------------|
+> 36	| [00-index.md](00-index.md) | 0 | — | [x] este doc | Manifesto + registro + ID space + master traceability + gate status + seal pendente |
+> 37	| [00-deepsearch-blueprint.md](00-deepsearch-blueprint.md) | seed | DeepSearch | [x] semente | Fonte da Verdade honesta (3 camadas × 3 modalidades · fundamentação regulatória c/ URL · **16 OTD · 15 FMEA · 10 Guardrails G1–G10** · Pattern Conformance §9 · 11 folclores could_not_verify §10). **NÃO autoriza código.** |
+> 38	| [01-mrd.md](01-mrd.md) | 1 | BABOK v3 | [x] draft | Mercado: gap real (grep `c2pa\|provenance`=0), driver regulatório, licença por camada, "o que NÃO promete" — **MR-CP-001..013** · KPIs de cobertura/verificação material |
+> 39	| [02-brd.md](02-brd.md) | 1 | BABOK v3 + ProdBOK | [x] draft | Negócio: **BO-CP-001..003** (SMART) · **BR-CP-001..013** · ROI = **risco evitado** (não-quantificado, honesto) · **RISK-CP-001..009** · **BAC-CP-001..009** |
+> 40	| [03-prd.md](03-prd.md) | 2 | ProdBOK + CXBOK | [x] draft | Produto: **5 personas** (Gabriel · Sovereign-jurídico · Provenance Worker · Plataforma/Regulador UE · Tenant BYOK) · **5 journeys** (marcar/preservar/fail-soft/disclosure GATED/voz-sem-C3) · MoSCoW por Fatia · disclosure copy PT-BR · **Gherkin ↔ FR-CP** |
+> 41	| [04-frd.md](04-frd.md) | 3 | SWEBOK v4 | [x] draft | **Funcional — SELA a numeração:** **FR-CP-001..013** (011 `[GATED]`; 012/013 = Fatia 0) — cada FR carrega o par **embed → verify** · **NFR-CP-001..011** · **AT-CP-001..013** (1:1 com FR) · contratos do worker |
+> 42	| [05-sdd.md](05-sdd.md) | 3 | SWEBOK v4 + CISSP CBK | [x] draft | Design: **DG-1..10** · component catalog NET-NEW (`provenance-bridge` + `packages/provenance-core`) + toolchain travado por licença + STRIDE + RLS + migration stub + **§10 sela 4 OTD** + **§12 Pattern Conformance (21 padrões)** |
+> 43	| [06-data-model.md](06-data-model.md) | 4 | DMBOK v2 | [x] draft | Dados: **zero tabela nova** — 5 colunas aditivas em `creative_assets` (`provenance_*` + `c2pa_sidecar_key`) · migration `<ts>_content_provenance_columns.sql` (ADD COLUMN IF NOT EXISTS) · nós `observation` · tenant isolation · retention LGPD |
+> 44	| [07-process-flow.md](07-process-flow.md) | 4 | BPM CBOK v4 | [x] draft | Processos: **PROC-CP-001..005** BPMN-lite (mark → verify → status · re-embed pós-reshape · preserve-and-attach · disclosure GATED · orphan sweep) · error/retry por step · cron `provenance-orphan-sweep` |
+> 45	| [08-quality-metrics.md](08-quality-metrics.md) | 5 | CMQ/OE BOK | [x] draft | Qualidade: **QO-001..008** · **KPI-001..012** (fórmulas materiais) · FMEA (**FM-CP-01..15**) · **SOL-001..006** (self-heal) · SLO/SLI/SLA · **§9 Anti-Teatro de Conformidade** (a seção-mãe — Lei 1) |
+> 46	| [09-pattern-conformance.md](09-pattern-conformance.md) | 3.5 | 21 Agentic Patterns | [x] **presente** | Promoção **verbatim** da §12 da SDD (21 padrões · **12 yes · 3 deferred · 6 n-a**) — **fecha o Gate Closed-Loop Step 3.5**. SSOT `docs/architecture/agentic-vision.md`. |
+> 47	
+> 48	> Doutrina-fonte (load-bearing, fora da suíte): `docs/architecture/agentic-vision.md` (21 padrões × Pattern Maturity Ledger — puxado pelo Pattern Conformance Gate de toda SDD). Precedentes de módulo: `security` (Cyber-Sentinel) · `vision-mcp` · `predictive-swarm` · `spaces-cadence`.
+> 49	
+> 50	---
+> 51	
+> 52	## 3. ID Space Summary
+> 53	
+> 54	| Prefix | Range | Count | Defined in | Semântica |
+> 55	|--------|-------|-------|------------|-----------|
+> 56	| MR-CP | 001..013 | 13 | 01-mrd | Market requirements |
+> 57	| BO-CP | 001..003 | 3 | 02-brd | Business objectives (SMART) |
+> 58	| BR-CP | 001..013 | 13 | 02-brd | Business requirements |
+> 59	| RISK-CP | 001..009 | 9 | 02-brd | Business risk register (Prob×Impact — espelha a FMEA técnica) |
+> 60	| BAC-CP | 001..009 | 9 | 02-brd | Business acceptance criteria |
+> 61	| **FR-CP** | **001..013** | **13** | **04-frd (SELADA)** — 011 `[GATED]`; 012/013 = Fatia 0 | Functional requirements (par embed → verify) |
+> 62	| NFR-CP | 001..011 | 11 | 04-frd | Non-functional requirements |
+> 63	| AT-CP | 001..013 | 13 | 04-frd (1:1 com FR-CP) | Acceptance tests |
+> 64	| DG | 1..10 | 10 | 05-sdd §1 | Design goals / constraints |
+> 65	| G (guardrails) | G1..G10 | 10 | 00-blueprint §6 → SDD/08 | Garantias estruturais de compliance (o que o sistema IMPEDE por construção) |
+> 66	| **OTD-CP** | **001..016** | **16** | 00-blueprint §8 → **05-sdd §10 sela 4** (005/006/007/016); restantes abertos/gated | Open technical decisions |
+> 67	| **FM-CP** | **01..15** | **15** | 00-blueprint §8 → 05-sdd §7.1 (STRIDE) → 08 §3 (FMEA) | Failure modes (RPN = S×O×D) |
+> 68	| PROC-CP | 001..005 | 5 | 07-process-flow | Processos BPMN-lite |
+> 69	| QO | 001..008 | 8 | 08-quality-metrics | Quality objectives (↔ BO/blueprint §1) |
+> 70	| KPI | 001..012 | 12 | 08-quality-metrics | KPIs materiais (fórmula SQL/smoke) |
+> 71	| SOL | 001..006 | 6 | 08-quality-metrics | Self-optimization / self-heal loops |
+> 72	| Pattern | P1..P21 | 21 | 05-sdd §12 (**12 yes · 3 deferred · 6 n-a**) | Pattern Conformance Declaration |
+> 73	
+> 74	> **Nota de namespace (Lei 1):** o `03-prd.md` **não numera** features com `PR-CP-xxx` — usa **5 personas + 5 journeys + Feature Inventory MoSCoW + Gherkin** rastreados diretamente a `FR-CP`. O `08-quality-metrics.md` usa `QO-NNN`/`KPI-NNN`/`SOL-NNN` **sem** o infixo `-CP` (fidelidade ao doc como escrito). Nenhum ID renumerado ou inventado.
+> 75	
+> 76	**FMEA RPN ≥ 100 (13 dos 15):** FM-CP-01 (**378**, falso-sucesso da marcação — a métrica-mãe) · FM-CP-03 (294, XMP dropado por reshape) · FM-CP-02 (240, dupla-assinatura destrutiva) · FM-CP-04 (240, vídeo só C1+C3 sem watermark) · FM-CP-09 (192, enquadramento provider/deployer errado) · FM-CP-06 (175, voz sub-marcada) · FM-CP-11 (168, invisible-watermark como primária) · FM-CP-14 (168, metadata strip por plataforma) · FM-CP-05 (162, PII no payload) · FM-CP-12 (150, vocabulário IPTC mentido) · FM-CP-08 (144, compute bloqueia render) · FM-CP-07 (120, cert self-signed) · FM-CP-13 (100, valor divergente por consumidor). **Abaixo de 100:** FM-CP-15 (64, license trap) · FM-CP-10 (63, SynthID assumido como embedder). Cada um com mitigação **estrutural** selada em 04/05/06/08 — nenhuma depende de "cuidado do operador".
+> 77	
+> 78	**Pattern Conformance Declaration (SDD §12, verbatim do blueprint §9 — 21 padrões `agentic-vision.md`):** yes **12** · deferred **3** (#3 Parallelization, #10 MCP, #20 Prioritization) · n-a **6** (#7, #9, #14, #15, #17, #21). Soma material das 21 linhas = **21** (contagem por-linha, IDs conferidos, nenhum `yes` fabricado). Padrões load-bearing: **#4 Reflection** (verify-after-mark Generator×Critic fail-closed — FR-CP-005), **#12 Exception Handling & Recovery** (fail-soft — FR-CP-009), **#5 Tool Use** (c2patool/ExifTool/TrustMark/VideoSeal/AudioSeal), **#18 Guardrails/Safety** (o módulo **É** o guardrail de compliance AI Act), **#13 Human-in-the-Loop** (disclosure 50(4) com exceção editorial — FR-CP-011), **#8 Memory Management** (colunas `provenance_*` + nó `observation`).
+> 79	
+> 80	---
+> 81	
+> 82	## 4. New Objects (host-worker + schema + toolchain USD=0)
+> 83	
+> 84	**New host-worker (NET-NEW — molde `video-bridge`/`voice-bridge`, systemd-user, 1-job/vez, claim atômico):**
+> 85	
+> 86	| Objeto | Path | Papel | FR |
+> 87	|--------|------|-------|----|
+> 88	| `provenance-bridge.ts` | `scripts/provenance-bridge.ts` | Worker principal: claim atômico → detect-origin → embed C1/C2/C3 (roteado por modalidade×origem) → **verify** → escreve `provenance_*` via `register_creative_asset` → nó `observation`. Fail-soft, telemetria por camada/tool | 001–005, 009 |
+> 89	| `provenance-bridge.service` | `~/.config/systemd/user/provenance-bridge.service` | Supervisor **systemd-user** (NUNCA pm2 — precedente gateway); restart-on-failure; host com binários instalados | 013 |
+> 90	| `packages/provenance-core/` | `packages/provenance-core/src/{layers,verify,detect,route}.ts` | Wrappers tipados dos binários (c2patool/ExifTool) + bindings PyTorch (TrustMark/VideoSeal/AudioSeal); `detectOriginSignature()` · `routeLayers(kind, origin)` · `verifyEmbed()` puro fail-closed | 001–005 |
+> 91	| cron `provenance-orphan-sweep` | (periódico, ex. `*/30 * * * *`) | PROC-CP-005 — re-enfileira/marca `failed` jobs `pending` além do budget; fail-open, **nunca** promove a `embedded` sem verify | 009 (SOL-002) |
+> 92	
+> 93	**Toolchain host — USD=0, licença travada (§4 blueprint · NFR-CP-005/G8):**
+> 94	
+> 95	| Camada | Modalidade | Ferramenta | Licença | Fonte |
+> 96	|--------|-----------|-----------|:-------:|-------|
+> 97	| **C1** C2PA | imagem+vídeo+voz | `c2pa-rs` / `c2patool` (CLI shell-out; `c2pa-node` a confirmar — OTD-CP-015) | Apache-2.0 OR MIT | https://github.com/contentauth/c2pa-rs |
+> 98	| **C2** watermark | imagem | Adobe **TrustMark** (~100-bit, soft-binding C2PA nativo) | MIT | https://github.com/adobe/trustmark |
+> 99	| **C2** watermark | imagem+vídeo | Meta **VideoSeal** (temporal, 256/1024b) ⚠️ **compute-gated** PyTorch/GPU | MIT | https://github.com/facebookresearch/videoseal |
+> 100	| **C2** watermark | voz/áudio | Meta **AudioSeal** (fala SOTA, robusto a re-encode) | MIT | https://github.com/facebookresearch/audioseal |
+> 101	| **C3** metadata | imagem+vídeo | **ExifTool** (`XMP-iptcExt:DigitalSourceType`) — **NÃO cobre áudio** | Artistic-1.0-Perl OR GPL-1.0+ | https://exiftool.org/ |
+> 102	| Validação | todas | **OmniSealBench** (robustez antes de qualquer SLA) | MIT | https://github.com/facebookresearch/omnisealbench |
+> 103	
+> 104	**Rejeitados por licença/robustez (gate de GO):** SynthID imagem/áudio/vídeo (proprietário, sem SDK — FM-CP-10) · `invisible-watermark`/ShieldMnt (não robusto a crop/resize — FM-CP-11) · classifier non-commercial DeepGaze-style (trava de licença — G8/FM-CP-15).
+> 105	
+> 106	**New DB objects (Fatia 0 — `/security-review` OBRIGATÓRIO por migration, FMEA-011):**
+> 107	- **Zero tabela nova.** Migration **aditiva** `<ts>_content_provenance_columns.sql`: `ALTER TABLE public.creative_assets ADD COLUMN IF NOT EXISTS` → `provenance_status text NOT NULL DEFAULT 'pending' CHECK (IN pending|embedded|failed|preserved)` · `provenance_layers text[]` (subconjunto `{c2pa,watermark,iptc}`; áudio **nunca** inclui `iptc`) · `provenance_source_type text` (enum das URIs IPTC) · `provenance_embedded_at timestamptz` (só quando status ∈ {embedded, preserved} — verify-before-claim) · `c2pa_sidecar_key text` (o `.c2pa` externo em bucket privado). RLS permanece **default-deny**; `register_creative_asset` (SECURITY DEFINER, service-role) segue o **único** writer (DG-8) — ganha params `p_provenance_*` OU aceita via `p_metadata` merge não-destrutivo (`:147`).
+> 108	- Enum **IPTC DigitalSourceType** materializado do SKOS (https://cv.iptc.org/newscodes/digitalsourcetype/) — `trainedAlgorithmicMedia` (100% IA) vs `compositeWithTrainedAlgorithmicMedia` (AI-editado).
+> 109	- Knowledge Mesh: nó `observation` por asset marcado (#8 Memory Management) — sem PII bruta.
+> 110	- Telemetria: `infra_health_logs` `service='content-provenance'` (event + metadata allowlisted — REUSA `20260615170000`).
+> 111	
+> 112	**New Edge Functions:** **0** para marcação (o worker host marca). **New tables:** **0** (colunas aditivas). **Modificação GATED (Fatia 4):** disclosure Art. 50(4) server-side em `orchestrate-content` + hook opcional `useProvenanceStatus` (badge de auditoria em Canvas/Assets).
+> 113	
+> 114	---
+> 115	
+> 116	## 5. Master Traceability Matrix (FR ↔ BR ↔ MR ↔ NFR ↔ OTD/FM ↔ RISK ↔ Fatia)
+> 117	
+> 118	> Cadeia **MR-CP → BR-CP → FR-CP → (coluna | worker | processo)**, com o par de risco (OTD/FM/RISK) e o NFR que a governa. Consolida as matrizes de 01 §9 · 02 §10 · 04 §7 · 06 §8 · 07 §8 · 08 §11. Todo FR carrega o contrato **embed → verify** (Lei 1).
+> 119	
+> 120	| FR-CP | Title (curto) | Priority | MR-CP | BR-CP | NFR-CP | OTD-CP | FM-CP | RISK-CP | Fatia |
+> 121	|-------|---------------|----------|-------|-------|--------|--------|-------|---------|-------|
+> 122	| **001** | Marcar **imagem** 3 camadas (C1+C2+C3) via host-worker | Critical | 001 | 001 | 001, 007, 008 | 006, 005 | — | 001 | 0/1/2/3 |
+> 123	| **002** | Marcar **vídeo** (HyperFrames/Veo) C1+C2 VideoSeal+C3 | Critical | 002 | 002 | 003, 004 | 001, 009, 008 | 04 | 008 | 1/2/3 |
+> 124	| **003** | Marcar **voz** (Qwen3) C1+C2, **SEM C3** | Critical | 003 | 003 | 004 | 007, 016 | 06 | — | 2/3 |
+> 125	| **004** | **Preservar-e-anexar** em origem já-assinada | Critical | 004 | 004 | 010 | 004 | 02 | 004 | 2 |
+> 126	| **005** | **Verify-before-claim** (gate anti-falso-sucesso) | Critical | 005 | 005 | 001 | — | **01 (378)** | 001 | 1/2/3 |
+> 127	| **006** ⭐ | **Fatia 1** — C3 metadata IPTC/XMP (imagem+vídeo) | Critical | 006 | 006 | 005, 011 | 005, 008 | — | 005 | 1 |
+> 128	| **007** | **Re-embutir C3** após cada transformação | High | 007 | 007 | 001 | 008 | 03 (294) | 003 | 1 |
+> 129	| **008** | **Payload = uuid opaco** (zero PII) | Critical | 008 | 008 | 006 | 013 | 05 | 006 | 3 |
+> 130	| **009** | **Fail-soft** — falha de marca não bloqueia asset | Critical | 009 | 009 | 002, 009 | — | 08 | 008 | 1 |
+> 131	| **010** | **Vocabulário IPTC honesto** por origem | High | 010 | 010 | — | — | 12 (G5) | — | 1 |
+> 132	| **011** `[GATED]` | **Disclosure humano Art. 50(4)** server-side | High · GATED | 011 | 011 | — | 002, 011 | 09 | 002 | 4 |
+> 133	| **012** | **Persistir colunas `provenance_*`** em `creative_assets` | Critical | 012 | 012 | 007 | 005 | — | 001 | 0 |
+> 134	| **013** | **Pré-requisitos Fatia 0** (colunas + host-worker + enum IPTC) | Critical | 013 | 013 | 008 | 005, 006 | — | 005 | 0 |
+> 135	
+> 136	`[GATED]` = não gera código antes do enquadramento jurídico provider-vs-deployer fechar (OTD-CP-002).
+> 137	
+> 138	**Invariantes de rastreabilidade (regra do BoK Gate):** todo FR-CP rastreia ≥1 BR-CP e ≥1 MR-CP (04 §7) ✅ · todo objeto de dado (`provenance_*`) rastreia ≥1 FR-CP (06 §8) ✅ · toda coluna/worker aparece em ≥1 PROC-CP (07 §8) ✅ · todo FM-CP com RPN>100 tem mitigação estrutural selada (08 §3) ✅ · cada feature mapeada aos 21 padrões (05 §12) ✅ · todo FR de marcação declara o par **embed → verify** (04 §2) ✅.
+> 139	
+> 140	> **Honestidade Lei 1:** a prova aqui é **a nível de documento**. A execução real (migration aplicada + `/security-review` SAFE, `verify_pass_rate=100%`, `false_embedded_count=0`, deltas OmniSealBench coletados, upload-teste material provando o rótulo em Meta/LinkedIn/X) só na fase de **Execução do módulo**, gated por GO Sovereign.
+> 141	
+> 142	---
+> 143	
+> 144	## 6. Open Technical Decisions — status (SDD §10)
+> 145	
+> 146	> 4 OTDs **recomendados/selados** pela SDD §10.1; os demais **permanecem abertos** (bloqueiam fatias / ações Sovereign). Nenhum é improviso.
+> 147	
+> 148	| OTD-CP | Assunto | Status | Decisão / gate |
+> 149	|--------|---------|--------|----------------|
+> 150	| 005 | Colunas dedicadas vs `metadata jsonb` | **Selado (SDD §10.1)** | Colunas dedicadas (auditável, indexável, `/security-review`-able) — Fatia 0 |
+> 151	| 006 | Host-worker dedicado vs passo no `render-core` | **Selado (SDD §10.1)** | Worker dedicado `provenance-bridge` (molde video-bridge) — isolamento/fail-soft — Fatia 0 |
+> 152	| 007 | Voz sem C3 | **Selado (SDD §10.1)** | Aceitar voz = C1+C2 (`layers={c2pa,watermark}`); IPTC não cobre áudio — sem alternativa |
+> 153	| 016 | Consent LGPD vs marking | **Selado (SDD §10.1)** | Schema separa consent (Art. 11 do clone) de proveniência (Art. 50); obrigações distintas (G9) |
+> 154	| **002** | Enquadramento **provider vs deployer** (Art. 3) | **Aberto — bloqueia BRD/FR-CP-011** | Revisão jurídica do Sovereign; erro = obrigação errada (FM-CP-09) |
+> 155	| **003** | Estratégia de **cert C2PA** (test cert = "unknown issuer") | **Aberto — bloqueia Fatia 2** | Self-signed → trust list C2PA (ação Sovereign) |
+> 156	| **004** | Sondar se `gemini-2.5-flash-image` traz **C2PA/SynthID de origem** | **Aberto — P0 de integridade** | Detectar assinatura antes de tocar bytes; preservar-e-anexar (FM-CP-02) |
+> 157	| 001 | Watermark de vídeo (VideoSeal vs TrustMark-per-frame) | **Aberto (P1)** | VideoSeal self-host recomendado; validar OmniSealBench — Fatia 3 |
+> 158	| 008 | XMP dropado por reshape/roundtrip | **Aberto** | Re-embed C3 após cada transformação (FR-CP-007) — Fatia 1 |
+> 159	| **009** | Orçamento de **compute** dos watermarkers PyTorch (VideoSeal GPU) | **Aberto (Sovereign)** | Budget de compute; fail-soft assíncrono — Fatia 3 |
+> 160	| 010 | Timeline Digital Omnibus provisória | **Perene** | Núcleo 2-ago-2026 vale; **não** desenhar assumindo delay |
+> 161	| 011 | Disclosure humano Art. 50(4) server-side | **Aberto (GATED)** | Depende de OTD-CP-002 — Fatia 4 |
+> 162	| **012** | Verbatim EUR-Lex Art. 50(2)/(4) | **Aberto (síntese)** | Confirmar contra Reg. (UE) 2024/1689 antes de citar como fato |
+> 163	| 013 | Payload = uuid opaco, nunca PII | **Aberto** | Smoke de recusa — Fatia 3 |
+> 164	| **014** | Robustez sem benchmark | **Aberto — antes de SLA** | Validar OmniSealBench antes de prometer robustez |
+> 165	| 015 | Nome/versão/licença de `c2pa-node` | **Aberto** | Verificar repo antes de pinar — antes do código Fatia 2 |
+> 166	
+> 167	---
+> 168	
+> 169	## 7. Compliance Guardrails (G1–G10 — o que o sistema IMPEDE/GARANTE por construção)
+> 170	
+> 171	`G1` marcação **machine-readable + detectável** "robust as far as technically feasible" (Art. 50(2)) — 3 camadas por asset, nenhuma isolada aceita como suficiente · `G2` `provenance_layers` exige **≥2** camadas p/ `embedded` na modalidade coberta (voz aceita C1+C2, C3 impossível) · `G3` disclosure Art. 50(4) montado **server-side**, nunca via prompt (OTD-CP-011) · `G4` **preservar-e-anexar** proveniência de origem (Nano Banana Pro/Veo), nunca re-encodar cego (FM-CP-02) · `G5` vocabulário IPTC correto por origem (`trainedAlgorithmicMedia` vs `compositeWith…`; enum no schema — FM-CP-12) · `G6` payload **sem PII** (uuid opaco; smoke de recusa falha o build — FM-CP-05) · `G7` **Materialidade (Lei 1)** — `c2patool verify` + decode obrigatórios antes de `embedded` (FM-CP-01) · `G8` licença **comercial-safe** — só MIT/Apache/Artistic; GO recusa non-commercial (FM-CP-15) · `G9` consent LGPD Art. 11 (clone de voz) **≠** marking AI Act — obrigações separadas no schema (OTD-CP-016) · `G10` **fail-soft** de compliance — falha não bloqueia o asset mas registra `failed` + telemetria e **não** reporta sucesso (FM-CP-08). **Todos estruturais — nunca via LLM.**
+> 172	
+> 173	---
+> 174	
+> 175	## 8. Fatiamento (roadmap de execução — a camada mais barata/alto-valor primeiro)
+> 176	
+> 177	| Fatia | Nome | Gate externo | Entrega (FR-CP) |
+> 178	|-------|------|--------------|-----------------|
+> 179	| **0** | Pré-requisitos P0 | Nenhum (migration + worker) | **FR-CP-012** (colunas `provenance_*` + `/security-review`) · **FR-CP-013** (host-worker `provenance-bridge` molde video-bridge + enum IPTC materializado do SKOS). Sem os 3 P0, tudo é falso-sucesso (OTD-CP-005/006) |
+> 180	| **1** ⭐ | **Camada 3 — metadata IPTC/XMP** (imagem+vídeo) | **ZERO cert · ZERO modelo · USD=0** | **FR-CP-006** (C3 ExifTool `DigitalSourceType`) + **FR-CP-005** (verify) + **FR-CP-007** (re-embed pós-transformação) + **FR-CP-009** (fail-soft) + **FR-CP-010** (vocabulário honesto). A camada mais barata **e** a que as plataformas LEEM e exibem (Meta/Google/Pinterest/LinkedIn) ⇒ entrega o "detectável" do Art. 50 **imediatamente**. Voz fica de fora (C3 não cobre áudio). Rótulo comprovado por **upload-teste** material |
+> 181	| **2** | **Camada 1 — C2PA** (as 3 modalidades) | **Gate: cert C2PA (OTD-CP-003)** | **FR-CP-001/002/003** (c2patool assina manifesto em imagem/vídeo/voz — **cobre a voz** que a Fatia 1 não cobre) + **FR-CP-004** (preservar-e-anexar em origem já-assinada). Prova por `c2patool verify` retornando o manifest (Lei 1) |
+> 182	| **3** | **Camada 2 — watermark invisível** (por modalidade) | **Compute (OTD-CP-009) + benchmark (OTD-CP-014)** | **FR-CP-008** (payload uuid opaco) + C2: imagem **TrustMark** · voz **AudioSeal** · vídeo **VideoSeal** ⚠️ compute-gated. Validar robustez via **OmniSealBench** antes de qualquer SLA |
+> 183	| **4** | **GATED (não prometer)** | **Enquadramento jurídico (OTD-CP-002)** | **FR-CP-011** (disclosure humano Art. 50(4) server-side em `orchestrate-content`, com exceção obra artística/revisão editorial humana) · watermark de vídeo em produção com throughput (GPU) · verificação de SynthID-de-origem (insondável sem o Detector em waitlist) |
+> 184	
+> 185	**Deferido explicitamente (fora de escopo declarado):** marcação de **texto** por watermark estatístico (SynthID-Text = modalidade distinta; só disclosure visível) · verificação/auditoria de conteúdo de **terceiros** (marca só o que o MCORCH gera) · reconstrução do pipeline de distribuição (gate do Sovereign) · promessa de indelebilidade (as 3 camadas são removíveis).
+> 186	
+> 187	---
+> 188	
+> 189	## 9. Gate Status (Closed-Loop Protocol) & Seal Pendente
+> 190	
+> 191	| Gate | Requisito | Status |
+> 192	|------|-----------|--------|
+> 193	| **Step 2 — BoK 01→05** | MRD · BRD · PRD · FRD · SDD consolidados | 🟡 **redigidos (draft v0.1)** — revisão Sovereign pendente |
+> 194	| **Step 3.5 — Pattern Conformance** | 21 padrões declarados (`09-pattern-conformance.md`) | 🟢 **FECHADO** — `09-pattern-conformance.md` promovido verbatim da SDD §12 (12 yes · 3 deferred · 6 n-a · soma=21) |
+> 195	| **Lei 2 — SOP** | `docs/processes/content-provenance.md` (Operator/Sequence/Verification/Recovery/Success) | 🔴 **ABERTO** — pré-requisito antes de qualquer código |
+> 196	| **/security-review** | Migration aditiva `<ts>_content_provenance_columns.sql` (FMEA-011) | 🔴 **pendente** |
+> 197	| **OTD-CP-002 (jurídico)** | Enquadramento provider-vs-deployer (Art. 3) | 🔴 **ABERTO** — bloqueia selagem de FR-CP-011 (Fatia 4) |
+> 198	| **OTD-CP-004 (P0 integridade)** | Sondar C2PA/SynthID de origem em `gemini-2.5-flash-image` | 🔴 **ABERTO** — bloqueia preservar-e-anexar seguro |
+> 199	| **OTD-CP-003 (cert)** | Estratégia de cert C2PA (self-signed → trust list) | 🔴 **ABERTO** — bloqueia a Fatia 2 |
+> 200	| **Seal Knowledge Mesh** | Nó `documentation_suite` selando a suíte | 🔴 **PENDENTE** — este `00-index` amarra a suíte antes do seal |
+> 201	
+> 202	> **Nenhuma linha de código antes de:** Step 2 aprovado + `09-pattern-conformance.md` promovido + SOP Lei 2 escrito + `/security-review` da migration. A **Fatia 0** (P0) fecha primeiro; a **Fatia 1** (C3 IPTC, USD=0, zero cert/modelo) é o único entregável sem gate externo; **FR-CP-011** só após o enquadramento jurídico (OTD-CP-002). Sem a Declaration selada + SOP → **Refusal Mode** (CLAUDE.md §4). **Deadline regulatório material: Art. 50 vigora 2026-08-02; multa Art. 99 até €15M/3%.**
+> 203	
+> 204	---
+> 205	
+> 206	## 10. Documentation Lineage
+> 207	
+> 208	```
+> 209	Diretiva Sovereign — flip do OTD-CAD-014 (spaces-cadence §8): "AI Act Art. 50(2) alcança
+> 210	Nano Banana / HyperFrames / Qwen3-TTS — módulo próprio, maior que este"
+> 211	  └─▶ /deepsearch-blueprint content-provenance → docs/bok/content-provenance/00-deepsearch-blueprint.md (verificado 2026-07-15)
+> 212	       └─▶ /bok-scribe content-provenance → suíte 01-mrd → 08-quality-metrics (v0.1 draft, esta família)
+> 213	            ├─▶ encaixa no spine: creative_assets (registry) + register_creative_asset (único writer)
+> 214	            │     + video-bridge / voice-bridge (host-workers de geração) — NÃO reconstrói distribuição
+> 215	            ├─▶ Pattern Conformance ← docs/architecture/agentic-vision.md (21 padrões) → SDD §12 (12/3/6)
+> 216	            └─▶ [SEAL PENDENTE] documentation_suite + 09-pattern-conformance.md verbatim
+> 217	```
+> 218	
+> 219	**Referências externas (fundamentação com URL — Lei 1):** EU AI Act Art. 50 (https://artificialintelligenceact.eu/article/50/) · Art. 99 penalidade (https://artificialintelligenceact.eu/article/99/) · AI Act Service Desk oficial EC (https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-50) · Código de Prática "nenhuma técnica isolada é suficiente" (https://compliancehub.wiki/eu-ai-act-marking-labelling-code-of-practice-article-50-2026/) · IPTC DigitalSourceType (https://cv.iptc.org/newscodes/digitalsourcetype/) · CAI Durable Content Credentials (https://opensource.contentauthenticity.org/docs/durable-cr/). **Caveats could_not_verify (§10 do blueprint — proibido citar como fato até fechar):** `gemini-2.5-flash-image` traz SynthID/C2PA de origem = **plausível não confirmado** (OTD-CP-004) · exibição de rótulo IPTC = confidence **MEDIUM**, Meta re-encoda e pode strip (validar por upload-teste) · verbatim Art. 50 lido via agregador (confirmar EUR-Lex — OTD-CP-012) · C2PA é ISO/DIS **22144** DRAFT (não 21694) · `c2pa-node` não confirmado (OTD-CP-015) · Digital Omnibus provisório, núcleo 2-ago-2026 permanece (OTD-CP-010).
+> 220	
+> 221	---
+> 222	
+> 223	_Generated by MCORCH BoK Scribe Agent v1.0.0 — fiel a `00-deepsearch-blueprint.md` + `01-mrd.md` → `08-quality-metrics.md` (Lei 1: nenhum FR/NFR/OTD/FM/entidade/pattern/ferramenta inventado além do blueprint; `FR-CP-011` sob `[GATED]`; caveats do §10 sinalizados, nunca citados como fato; toda afirmação externa carrega URL). Convenções MCORCH: identificadores/lógica/tooling/logs em inglês (`c2patool`, `register_creative_asset`, `provenance_status`, `trainedAlgorithmicMedia`), texto de UI/disclosure/validação em PT-BR ("Conteúdo gerado por IA"). O módulo marca no ponto onde o asset nasce (spine `creative_assets`), sem reconstruir distribuição; fail-soft (falha ≠ bloqueio, mas `status='failed'`); verify-before-claim (uma marca que não sobrevive ao `verify` é folclore — o manifest que o `c2patool verify` devolve é o árbitro). Placar Pattern Conformance 12/3/6; a versão autoritativa é `09-pattern-conformance.md` (pendente). **Nenhuma linha de código antes da BoK 9/9 selada + SOP Lei 2 + `/security-review` + GO Sovereign.**_
+> 224	
+> ```
+
+## 🤖 Claude *(00:27:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm reviewing the project status and seeing that A10 isn't ready to move forward with code yet—there are still pending approvals on the content provenance documentation and a security review that needs to be completed first. The pmo-curator mistakenly claimed the BoK was sealed based on file presence alone, without checking the actual gate status in the index — the files exist but the suite remains unsealed with the SOP still open. So the correct move is to refuse writing A10 code until the gate requirements are actually met.
+
+But there's a wrinkle: Fatia 1 (C3 IPTC) is described as the only deliverable without external gate dependencies, and Fatia 0-1 are already live according to the Key Files.  So Fatia 0 and 1 are implemented; A10 is actually Fatia 2 (C2PA) and Fatia 3 (watermark). Fatia 2's gate hinges on the C2PA cert strategy (OTD-CP-003 is open and needs Sovereign action), plus OTD-CP-015 blocks the code until the c2pa-node naming and licensing are confirmed, and OTD-CP-004 (origin detection for C2PA) is a P0 integrity blocker for the preserve-and-attest flow.
+
+Fatia 3's gate depends on compute budget (OTD-CP-009) and benchmark requirements (OTD-CP-014)—both open and waiting on Sovereign and infrastructure decisions. Since both Fatia 2 and 3 have unresolvable external gates, the SOP isn't written, and the suite isn't sealed, A10 genuinely cannot move forward with code implementation right now. This is the correct call, not a workaround—my earlier claim that the BoK was fully sealed was an overstatement.
+
+What I can do instead is advance A10's process: correct the record, offer to write the Lei 2 SOP for content provenance, and get Step 2 reviewed, though that legal module itself needs Sovereign review since OTD-CP-002 (legal framing) requires their judgment. I can offer to draft the SOP and seal the BoK through the bok-curator path, but no code work on Fatia 2/3 until the gates clear. This is a critical correction — I almost delegated a major A10 build that would've violated the Closed-Loop gate, which is exactly why monitoring before executing matters. Now I need to check the crm-suite gate status for A4 the same way before assuming I can build it.
+
+The bok-curator sealed crm-suite 9/9 this session and I verified the seal-node and pattern conformance, but the code gate isn't open — the bok-curator explicitly kept it gated under GO Sovereign per the Master Execution Protocol §6 since CRM is a big module requiring Sovereign review. So A4 code is also gated. But the Sovereign's template shows "A4: [S/N] → Se S: comece pelo pilar [Contatos]" and now says "faça tudo agora" — is that the Sovereign declaring the gate open, or is it still pending the Sovereign's explicit GO on the first pillar? So A4 needs explicit Sovereign review backing before I can proceed, and even then it's a gated migration. Given the "faça tudo agora" request, I could start the Contatos migration and schema work with the apply gated, but I should verify the crm-suite code-gate is actually open first—the content-provenance situation taught me not to over-claim readiness. For A10, the gate is clearly closed due to missing SOP and pending seal, so I need to refuse the code request, correct the record, and offer to help unblock the process.
+
+Let me reconsider the whole situation with fresh eyes.
+
+The Sovereign keeps pushing "faça tudo," but the reality is that both A10 and A4 are blocked behind closed gates—A10 needs the SOP, seal, and external OTDs; A4 needs the big-module review. The survival laws and execution protocol are clear: code doesn't move forward on unsealed or ungated items, and even the Sovereign's directive doesn't override a closed gate without proper closure first. Refusal Mode applies even to the Sovereign.
+
+So the right move is to execute what's actually unblocked—A14 pre-review, A8 surgical work, the landing page, push those—while refusing to start code on A10 and A4 until the gates are legitimately open. Now I'm mapping out the immediate actions: handle A8 with its cadence-run scope (scoped fix + test, checking if it needs a migration), deliver the A14 pre-review verdict, record the landing decisions, then correct A10 with the refusal and real blockers while offering the legitimate path forward. I'll also note that A4 is gated pending the §6 review and restate which items are structurally blocked. Before I finalize, I need to verify A8's scope against the cadence-run and check the crm-suite gate status. For the A8 fix, I need to determine whether the cadence plan already has a field to store the selected social account, or if I need to add a schema migration first. Let me check the cadence-run function and the plan schema to understand what's already available.
+
+</details>
+
+
+## 🤖 Claude *(00:27:25)*
+
+**Achado material decisivo (Lei 1) — corrijo o registro antes de agir.** Li a BoK do A10 e ela **NÃO está selada**. O `00-index §9` é explícito:
+
+- **Lei 2 SOP** (`docs/processes/content-provenance.md`): 🔴 **ABERTO** — "pré-requisito antes de qualquer código".
+- **Seal na Knowledge Mesh:** 🔴 **PENDENTE** (suíte ainda em draft v0.1, Step 2 = revisão Sovereign pendente).
+- **Fatia 2/3 têm gates externos ABERTOS que só você resolve:** OTD-CP-003 (estratégia de cert C2PA), OTD-CP-002 (enquadramento jurídico provider-vs-deployer), OTD-CP-009 (orçamento de compute GPU), OTD-CP-014 (benchmark OmniSealBench antes de SLA), OTD-CP-015 (`c2pa-node` não confirmado).
+
+E a própria BoK, linha 202: *"Nenhuma linha de código antes de: Step 2 aprovado + SOP Lei 2 escrito + /security-review... Sem a Declaration selada + SOP → **Refusal Mode**."*
+
+Meu "A10 BoK 9/9 selada ✅" anterior estava **errado** — herdei do witness do pmo-curator que contou 11 arquivos e concluiu "completa", sem checar o *gate status* dentro do índice. Corrijo agora. **Não vou codar o A10** — seria violar o Closed-Loop e o exato modo de falha FM-CP-01 (declarar "marcado" sem base) que a BoK inteira existe para prevenir. Isso protege você do risco de €15M.
+
+Deixa eu verificar o A8 (cirúrgico) e o gate real do A4 antes de prosseguir:
+
+## 🤖 Claude *(00:27:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== A8: como cadence-run resolve a conta social (o bug do null\u21921a arbitraria) ===\"\ngrep -nE \"social_account_id|social_accounts|platform|\\.eq\\(|first|\\[0\\]|order|limit\" supabase/functions/cadence-run/index.ts 2>/dev/null | head -25\necho \"\"\necho \"=== A8: cadence_plans tem coluna de conta? (schema) ===\"\ngrep -rnE \"social_account_id|account_id|cadence_plans\" supabase/migrations/*cadence* 2>/dev/null | grep -iE \"add column|social_account|account_id|create table\" | head -12\necho \"\"\necho \"=== A4: gate REAL do crm-suite (Closed-Loop / GATED / codigo) no indice ===\"\ngrep -niE \"closed-loop|gate|GATED|codigo dos pilares|GO Sovereign|nao autoriza|revis\u00e3o do Sovereign|A4\" docs/bok/crm-suite/00-index.md 2>/dev/null | head -15",
+  "description": "Scope A8 cadence-run fix + verify A4 crm-suite gate status"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A8: como cadence-run resolve a conta social (o bug do null→1a arbitraria) ===
+> 38:// social_platform enum. Surfaces mirror publish-space-asset / format-specs (youtube short, tiktok video, ig reels).
+> 81:  // Walk up to ~14 months of candidate calendar days; the first whose UTC instant > after and whose day matches.
+> 138:      .eq("id", planId).maybeSingle();
+> 165:      .eq("id", sourceAssetId).eq("user_id", userId).maybeSingle();   // hard tenant bind — a forged id → 0 rows
+> 177:        .eq("plan_id", planId).eq("user_id", userId)
+> 214:    // First-ever dispatch for this plan? (Mesh Connection Mandate — observation node on the first successful cycle.)
+> 217:      .eq("plan_id", planId).eq("user_id", userId);
+> 233:            .eq("user_id", userId).eq("channel", channel)
+> 247:          .eq("user_id", userId).eq("channel", channel)
+> 264:        // ── (5→4 ordering) LEDGER-FIRST claim of the idempotency key, THEN enqueue the sink. Claiming BEFORE the
+> 293:            await admin.from("cadence_dispatches").update({ status: "failed", error: "insufficient_balance" }).eq("id", dispatchId);
+> 315:            platform: PLATFORM_BY_CHANNEL[channel] ?? null,
+> 322:          await admin.from("cadence_dispatches").update({ status: "failed", error: varErr?.message ?? "variant_mint_failed" }).eq("id", dispatchId);
+> 334:            user_id: userId, content_id: null, campaign_id: null, social_account_id: null,
+> 335:            platform: channel, scheduled_at: new Date().toISOString(), status: "queued",
+> 342:          await admin.from("cadence_dispatches").update({ status: "failed", error: spErr?.message ?? "enqueue_failed" }).eq("id", dispatchId);
+> 349:        await admin.from("cadence_dispatches").update({ target_ref: sp.id }).eq("id", dispatchId);
+> 396:// the default rather than throwing. TODO(FR-CAD-007): add profiles.timezone (dead-data first-reader per SDD §2.5).
+> 400:    const { data } = await admin.from("profiles").select("timezone").eq("id", userId).maybeSingle();
+> 414:  if (Array.isArray(program)) return pick(program[0] as Record<string, unknown>);
+> 424:    let q = admin.from("channel_profiles").select("cadence").eq("channel", channel);
+> 425:    q = scopeOwn ? q.eq("user_id", userId) : q.is("user_id", null);
+> 455:    await admin.from("autopilot_plans").update({ next_run_at: next.toISOString() }).eq("id", planId).eq("user_id", userId);
+> 458:  await admin.from("autopilot_plans").update({ is_active: false }).eq("id", planId).eq("user_id", userId);
+> 
+> === A8: cadence_plans tem coluna de conta? (schema) ===
+> 
+> === A4: gate REAL do crm-suite (Closed-Loop / GATED / codigo) no indice ===
+> 26:| [`00-spine-blueprint.md`](00-spine-blueprint.md) | — | Modelagem (gate *lean* da Fase 0) | 79 | [x] pré-existente — **preservado** |
+> 44:O código da Fase 0 **foi shipado antes da suíte 9/9**. O gate Closed-Loop da fundação foi cumprido pela via *lean*
+> 45:(GO Sovereign 2026-07-19, opção 1: o `00-spine-blueprint.md` valeu como gate — `00-spine-blueprint.md:3-5`), e esta
+> 49:Marketing) passa pelo gate completo, **incluindo a Pattern Conformance Declaration**. Rastreado como risco de
+> 154:2. **OTD-CS-004** — `scripts/qa/smoke-crm-tenancy.ts`, 8 gates especificados em `08-quality-metrics.md` §7; integrar ao `guard-sweep.sh`.
+> 173:> ⚠️ **O selo cobre APENAS a suíte BoK (9/9 + Pattern Conformance).** Ele **não abre** o gate Closed-Loop para o
+> 174:> **código dos pilares CRM** — o CRM é módulo grande e o código dos pilares novos permanece **GATED em GO Sovereign**
+> 175:> (Master Execution Protocol §6). Cada pilar novo passa pelo gate completo, incluindo Pattern Conformance (FM-CS-18).
+> ```
+
+## 🤖 Claude *(00:28:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So the CRM Contatos module (A4) has explicit documentation stating that the seal only covers the BoK suite itself—it doesn't unlock the Closed-Loop gate for the pillar code. The CRM is a large module, and new pillar code stays gated under GO Sovereign with the Master Execution Protocol, meaning each new pillar goes through the complete gate including Pattern Conformance checks.
+
+Starting Contatos isn't something to rush under a vague "do everything now"—it needs an explicit, informed GO for a big module that includes Sovereign review. I'm reconsidering whether the combination of "do everything now" plus the earlier conditional "if Sovereign approves, start with Contatos" actually constitutes an aware GO, or if I should wait for clearer authorization before moving forward. So I'm holding both A10 and A4 as gate-blocked — they're big modules that need proper governance, not a blanket "do everything now" — and I can offer to start smaller, scoped work like the Contatos schema once they confirm they want to proceed. For A8, I'm looking at how the cadence-run handles the scheduled_posts insertion, particularly the social_account_id and platform fields.
+
+The real issue is that cadence-run inserts with `social_account_id: null`, meaning the actual account resolution happens downstream in the publish-social/auto-publish layer, which just grabs the first account when a user has multiple for the same platform. The surgical fix would require threading an explicit `social_account_id` through the cadence plan itself, but the cadence_plans table doesn't have an account column at all — so this isn't a one-file fix, it's a schema migration plus threading the change through multiple layers.
+
+Given that A8 needs a migration and touches the live cadence/publish dispatch path, it's riskier than I'd prefer to ship right now, even though I could write it code-complete with the migration gated. The Sovereign recommended the surgical approach, but the actual scope and risk profile make me want to reconsider whether it's worth doing immediately.
+
+Let me think about whether there's a smaller surgical fix that avoids the migration entirely — maybe I could store the chosen social account ID directly in the autopilot_plans config JSON rather than adding a new column, which would let me thread the account through without any DDL changes.
+
+I need to make a strategic call here to keep this bounded. A10 is a hard refuse and I should correct that record. A4 is gated pending awareness. For A8, I'll quickly check if a no-migration approach is viable using the jsonb config; if it needs a migration anyway, I'll either write it code-complete and gate the apply, or defer with a clear plan. A14 is pre-review and straightforward.
+
+Now I'm deciding on the immediate next steps: document the five key decisions (mostly keeping current state) and push the committed work. For A16, I've decided to prepare and verify the private job enqueue but hold on auto-uploading since it needs their metadata and content decisions—I'll keep it ready pending their title and description. A15, A19, A20, and A5 are structurally blocked and need restating. The real integrity move this turn is recognizing where I can add genuine value without overcommitting. I'm realizing the BoK seal might actually be gated behind Sovereign review since content-provenance is legally sensitive and architectural. So delegating that to bok-curator won't bypass the constraint—I need to check whether routine slices can proceed independently or if this escalates to Sovereign.
+
+Instead, I'll have bok-curator draft the Lei 2 SOP (the missing prerequisite doc) and prepare the seal for Sovereign ratification, flagging what needs legal review. That's legitimate un-gated authoring that moves A10 forward.
+
+For A14, I need to read the PIPC index myself and deliver the pre-review verdict. And for A8, I'll check if autopilot_plans has a jsonb migration path—if not, I'll implement one; otherwise I'll document the constraint.
+
+I'll also record the five landing decisions in the bundler SOP, push the changes, hold A4 pending awareness from GO, and be explicit about what's blocked (A15, A19, A20, A5, A16). This keeps scope tight and honest about what I can actually move forward.
+
+For A8, I need to check the autopilot_plans schema first—if it's a clean jsonb change with no migration, I'll write it complete; otherwise I'm delivering the exact plan and holding since I can't verify a live-path change. Let me batch the work: launch the bok-curator for the A10 SOP draft, read the PIPC index for A14, and check the autopilot_plans schema for A8 all at once.
+
+Actually, I'm second-guessing whether drafting the full content-provenance SOP right now is the best move, or if I should stay focused on reporting honestly, handling A14, landing, and pushing instead.
+
+I'll delegate the bok-curator to draft A10's SOP—that's real, ungated progress I can constrain properly without it overreaching into code or falsely sealing anything. Then I'll read the PIPC 00-index (focusing on the gate/slice section for A14), grep the autopilot_plans for A8, and launch the curator. Let me keep this lean and targeted.
+
+</details>
+
+
+## 🤖 Claude *(00:28:41)*
+
+Agora o A4 está igualmente claro: o `crm-suite 00-index` (linhas 173-175) diz **explicitamente** que o selo **não abre** o gate de código dos pilares — "o CRM é módulo grande e o código dos pilares permanece **GATED em GO Sovereign (§6)**, cada pilar passa pelo gate completo". E o A8 "cirúrgico" na verdade toca o caminho vivo de dispatch e provavelmente precisa de migration (a `cadence_plans` não tem coluna de conta).
+
+Então a verdade material de "faça tudo": **os dois grandes (A10, A4) estão atrás de gates fechados que nem você nem eu devemos furar às cegas** — é o protocolo funcionando, não obstrução. Mas há trabalho **legítimo e un-gated** que avança A10 sem código. Executo o que é meu e seguro:
+
+## 🤖 Claude *(00:29:01)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Draft content-provenance Lei 2 SOP",
+  "subagent_type": "bok-curator",
+  "run_in_background": true,
+  "prompt": "Trabalho un-gated que AVAN\u00c7A o m\u00f3dulo content-provenance (A10) SEM escrever c\u00f3digo de Fatia 2/3. Repo: /home/gcrUX/htdocs/constellation-orchestra.\n\nCONTEXTO (verifique voc\u00ea mesmo): a su\u00edte `docs/bok/content-provenance/` est\u00e1 redigida (01\u219208 draft) mas o `00-index \u00a79` lista dois bloqueios de PROCESSO que travam QUALQUER c\u00f3digo: (a) **Lei 2 SOP `docs/processes/content-provenance.md` est\u00e1 ABERTO** (n\u00e3o existe) e \u00e9 \"pr\u00e9-requisito antes de qualquer c\u00f3digo\"; (b) seal na Knowledge Mesh PENDENTE. A Fatia 0-1 (IPTC) j\u00e1 est\u00e1 VIVA em produ\u00e7\u00e3o (ver Key Files \"Content-provenance \u2014 Fatia 0-1 VIVAS\"; motor `scripts/provenance/embed-iptc-core.ts`, worker `scripts/provenance-bridge.ts`, migration `20260716230000`). A Fatia 2 (C2PA) e Fatia 3 (watermark) t\u00eam gates EXTERNOS abertos que s\u00f3 o Sovereign resolve (OTD-CP-002 jur\u00eddico, OTD-CP-003 cert, OTD-CP-009 compute, OTD-CP-014 benchmark, OTD-CP-015 c2pa-node).\n\nTAREFA (s\u00f3 isto):\n1. **Escreva `docs/processes/content-provenance.md`** \u2014 o SOP Lei 2 que falta, no molde dos outros SOPs de `docs/processes/` (Operator \u00b7 Sequence com crit\u00e9rio material por step \u00b7 Verification gates \u00b7 Recovery paths \u00b7 Success signal + ORO). Cubra o pipeline REAL de marca\u00e7\u00e3o (detect-origin \u2192 embed C1/C2/C3 roteado por modalidade\u00d7origem \u2192 **verify-before-claim** \u2192 `register_creative_asset` \u2192 n\u00f3 observation \u2192 fail-soft), fundamentado nos FR-CP-001..013 e nos processos PROC-CP-001..005 da su\u00edte. Documente honestamente o que j\u00e1 est\u00e1 VIVO (Fatia 0-1 IPTC) vs o que est\u00e1 GATED (Fatia 2/3 + os OTDs externos). Ligue \u00e0 Key Files Reference do CLAUDE.md.\n2. **Avalie a prontid\u00e3o de seal** e REPORTE (n\u00e3o force): a su\u00edte pode ser selada 9/9 agora, ou o Step 2 (revis\u00e3o Sovereign) + OTD-CP-002 (jur\u00eddico provider-vs-deployer) exigem a m\u00e3o do Sovereign antes do seal? Content-provenance \u00e9 legalmente sens\u00edvel (multa \u20ac15M) \u2192 se a decis\u00e3o for arquitetural/jur\u00eddica, ESCALE ao Sovereign, n\u00e3o sele sozinho.\n\nGATES DUROS:\n- **N\u00c3O escreva NENHUMA linha de c\u00f3digo de Fatia 2/3** (C2PA/watermark) \u2014 o gate de c\u00f3digo est\u00e1 fechado; voc\u00ea s\u00f3 est\u00e1 escrevendo o SOP-processo que \u00e9 pr\u00e9-requisito.\n- Lei 1: s\u00f3 reporte \"SOP escrito\" com `ls -la docs/processes/content-provenance.md` + `wc -l`. Se algo exigir julgamento jur\u00eddico do Sovereign (OTD-CP-002), diga explicitamente e pare \u2014 n\u00e3o invente o enquadramento.\n\nRETORNE: (a) caminho + wc -l do SOP; (b) veredito de prontid\u00e3o de seal (pode selar agora / precisa revis\u00e3o Sovereign \u2014 e por qu\u00ea); (c) a lista exata do que ainda trava o c\u00f3digo da Fatia 2/3 (os OTDs do Sovereign). Honesto e material."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: a51aeb75938ba9ecc (internal ID - do not mention to user. Use SendMessage with to: 'a51aeb75938ba9ecc', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d/tasks/a51aeb75938ba9ecc.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(00:29:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/pipc/00-index.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# PIPC — Índice da Família BoK
+> 2	
+> 3	**Project:** PIPC — Pipeline Interno de Produção Criativa (o ciclo fechado de aprendizado episódico: **DESENVOLVIMENTO → PUBLICAÇÃO → ANÁLISE PROFUNDA → MELHORIA→EP05**)
+> 4	**Version:** v0.1 | **Date:** 2026-07-23
+> 5	**Agent:** MCORCH Master Execution Agent (arquiteto-líder) · lente BoK Scribe
+> 6	**Status:** **Família DRAFT 8/8 (documentação) + este índice** — **pré-código**. O gate de código (Closed-Loop Step 3/3.5) permanece **FECHADO** e **ABRE por fatia** somente após esta suíte estar consolidada **e** a Pattern Conformance Declaration da SDD carregar para toda fatia que toque ≥3 padrões.
+> 7	
+> 8	> **A lacuna que o PIPC fecha (blueprint §1.1):** o MCORCH já tem **duas máquinas de PRODUZIR e DISTRIBUIR** (rails `video-repurpose` + `cadence-distribution-pipeline`, VIVOS E2E), mas **não tem a máquina de APRENDER** com o episódio publicado para dirigir o próximo. O PIPC é essa máquina — um **ciclo fechado sobre o NOSSO próprio acervo EP01..EP05** que **reusa** os trilhos existentes e **constrói só o elo faltante**: análise por-episódio (S2) + curva de retenção persistida (S1) + régua de qualidade Golden Eye (S5) + planejamento barato (Storyboard S3) + consistência de série (Ingredients S4).
+> 9	
+> 10	> **Diferença estrutural do irmão retroativo** [`../video-repurpose/00-index.md`](../video-repurpose/00-index.md): aquela família **selou código JÁ SHIPADO** (ground truth = código vivo). Esta família é **PRÉ-implementação** — o ground truth é o **blueprint deepsearch** (`00-deepsearch-blueprint.md`, 4 frentes verificadas, 8 verdicts **CONFIRMED, zero REFUTED**) e as fontes derivadas seladas. Nenhuma linha de código nasceu ainda; a matéria material aqui é a **prova de reuso** (o que já existe VIVO) e a **delimitação honesta do gap** (o que não existe, provado por ausência).
+> 11	
+> 12	> **ORO triplet da suíte:**
+> 13	> - **Operator:** MCORCH Master Execution Agent (+ L2 `engineer-spaces` nas fatias de nó S3/S4).
+> 14	> - **Reviewer:** Sovereign (Gabriel) + `/security-review` por migration/seam (gate-mãe `count cross-tenant = 0`) + Vision QA ocular por criativo (Lei 1) + **revisão jurídica no ingest de terceiro** (S7).
+> 15	> - **Owner:** Sovereign até v6.4.x. **Blast-radius material:** o próprio **acervo EP01..EP05** e o **orçamento de motor** (Veo/mcoCoins) — sem tenants de terceiros no caminho crítico; o dano de uma decisão errada recai sobre a série da persona Gabriel AI. **ROI = tempo-até-EP05-melhor-que-EP04**, medido pela **curva de retenção persistida** (não por contador de topo).
+> 16	
+> 17	> **Convenção de status (herda o blueprint):** 🟩 **VIVO** (roda em produção — consome-se, não reconstrói) · 🟨 **ROADMAP/LIGAR** (parcial — ligar/completar) · 🟥 **NOVO** (não existe — nasce de BoK+SOP+código) · 🔒 **GATE** (`un-gated` BYOK U0 custo 0 · `Sovereign` GO/enable/ação humana · `jurídico` revisão de compliance).
+> 18	
+> 19	---
+> 20	
+> 21	## 1. Sumário executivo (uma tela)
+> 22	
+> 23	O PIPC é um **ciclo de 4 estágios** ortogonal ao loop de distribuição/funil. Ele responde a **"como produzo o próximo episódio melhor que o anterior, com prova material"** — não a "como espalho e monetizo um criativo pronto" (isso já é VIVO). Misturar os dois deixa o loop de aprendizado episódico ser **sequestrado** pelo loop de otimização de anúncios (variante×plataforma), que é o estado atual: o único motor de aprendizado autônomo vivo (`autopilot-analyze`) está apontado para o funil de afiliados, **não** para o desenvolvimento episódico (BR-PIPC-009, FR-PIPC-016, FM-PIPC-011).
+> 24	
+> 25	| Estágio | Veredito material do blueprint | Superfície PIPC |
+> 26	|---|---|---|
+> 27	| **1 — DESENVOLVIMENTO** | rail **mais maduro** (repurpose + HyperFrames + Creative Studio + voz/Veo/transcribe VIVOS) — não é aqui que o loop trava | consolidar rail; **construir** nó Storyboard (S3) + Ingredients de projeto (S4) + gate Golden Eye (S5) |
+> 28	| **2 — PUBLICAÇÃO** | transporte **fiado E2E e VIVO** (7 branches); gargalo é **gate externo**, não código | operar (S0); **destravar canais** (S8, ação Sovereign); mapeador de metadados (S9) |
+> 29	| **3 — ANÁLISE PROFUNDA** | **elo mais fraco** — existe **coleta**, não existe **síntese por-episódio** (GAP-MÃE) | **capturar+persistir curva de retenção YT (S1)** + **motor de análise por-EP (S2)** + fiar nervo sensorial (S6) |
+> 30	| **4 — MELHORIA→EP05** | o **mecanismo** de decidir-por-dado existe (`optimization_policy` do autopilot); falta **apontá-lo** ao episódico | `optimization_policy` **episódica** (eixo variante×plataforma → **episódio×momento**); ponte hoje 100% MANUAL |
+> 31	
+> 32	**Núcleo do PIPC = S1 + S2** (fecha o elo fraco). **S0 e S8** destravam o dado real que os alimenta. **S3 + S4** elevam a qualidade do próximo desenvolvimento. **S5** torna material o gate de qualidade.
+> 33	
+> 34	**Limite estrutural assumido (Lei 1):** no YouTube **hook_rate por impressão é estruturalmente indisponível** — `impressions`/CTR de miniatura **não existem** na Analytics API v2 (issue oficial `254665034`). O PIPC usa a **FORMA da curva de retenção** como proxy de gancho e trata CTR de capa como **coleta manual** do Studio (OTD-PIPC-005, FM-PIPC-002).
+> 35	
+> 36	---
+> 37	
+> 38	## 2. Mapa da família (10 documentos)
+> 39	
+> 40	**Autoridade em conflito:** `04-frd` (status/FR) > `05-sdd` (arquitetura/seams) > `03-prd`/`02-brd`/`01-mrd` (produto/negócio/mercado) > `00-deepsearch-blueprint` (semente histórica). **Desempate por domínio:** `06-data-model` vence em **schema físico/DDL** (foi o critério que resolveu a decisão da tabela DEDICADA `episode_optimization_policy` vs reuso da `optimization_policy` do funil), `07-process-flow` em **sequência/fluxo**, `08-quality-metrics` em **métricas**. O blueprint é **fundamentação**, não estado atual — em divergência, valem os docs derivados.
+> 41	
+> 42	| # | Doc | Papel | BoK lens |
+> 43	|---|---|---|---|
+> 44	| — | [`00-deepsearch-blueprint.md`](00-deepsearch-blueprint.md) | **Semente** (Closed-Loop Step 0) — 4 frentes verificadas, 8 verdicts CONFIRMED; tese das 4 estágios, o que portar do Flow (§3), o que herdar do GabrielAI (§4), Golden Eye (§5), roadmap S0-S9 (§6), ganchos anti-duplicação (§7) | deepsearch |
+> 45	| 0 | [`00-index.md`](00-index.md) | **Este índice** — sumário executivo, mapa dos 10 docs, registros BR/FR/OTD/FM, Pattern Conformance resumida, estado do gate, ORO | — |
+> 46	| 1 | [`01-mrd.md`](01-mrd.md) | Layer de **mercado** — problema (a máquina de aprender que falta), estado histórico vs. entregue, delimitação do elo faltante como única superfície de negócio nova | BABOK v3 (Strategy Analysis) |
+> 47	| 2 | [`02-brd.md`](02-brd.md) | Layer de **negócio** — objetivos SMART, os **14 BR-PIPC-001..014**, separação de preocupações (aprendizado episódico vs. funil) | BABOK v3 (Requirements Analysis) |
+> 48	| 3 | [`03-prd.md`](03-prd.md) | Layer de **produto** — personas/jornadas, feature inventory, release phasing dos slices S0-S9 | ProdBOK + CXBOK |
+> 49	| 4 | [`04-frd.md`](04-frd.md) | Layer **funcional** — os **26 FR-PIPC-001..026** com stage/slice, NFRs, estratégia de teste, **Ledger de OTDs** e Traceability Matrix. **Autoridade de status de FR** | SWEBOK v4 + CISSP CBK |
+> 50	| 5 | [`05-sdd.md`](05-sdd.md) | Layer de **arquitetura** — desenho seam-por-seam do elo faltante (**REUSO de trilho VIVO vs CÓDIGO NOVO**) + **Pattern Conformance Declaration** (21 padrões) | SWEBOK v4 + CISSP CBK |
+> 51	| 6 | [`06-data-model.md`](06-data-model.md) | Layer de **dados** — tabela série-temporal de retenção, brief por-EP, `optimization_policy` episódica, `graph jsonb` do storyboard, Ingredients de projeto; RLS default-deny, `security_invoker` per-tenant, rollup service-role-only | DMBOK v2 |
+> 52	| 7 | [`07-process-flow.md`](07-process-flow.md) | Layer de **processo** — o ciclo de 4 estágios como fluxo, o **LOOP análise→EP05 explícito**, gates materiais e recovery paths | BPM CBOK v4 |
+> 53	| 8 | [`08-quality-metrics.md`](08-quality-metrics.md) | Layer de **qualidade** — anti-Goodhart como doutrina, `relativeRetentionPerformance` como único benchmark legítimo, anti-super-correção, métricas de auto-otimização | CMQ/OE BOK |
+> 54	
+> 55	---
+> 56	
+> 57	## 3. Roadmap de slices (ordem de execução)
+> 58	
+> 59	Ranqueado por **impacto ÷ esforço** (blueprint §6). **Ordem recomendada: S0 → S1 → S2 → S6 → S3 → S4 → S5 → S8 → S9 → S7.**
+> 60	
+> 61	| # | Slice | Tag | 🔒 Gate | Prova material esperada (Lei 1) |
+> 62	|---|---|---|---|---|
+> 63	| **S0** | Produzir+postar cortes EP01/EP02 (operar rail VIVO repurpose→Golden Eye→schedule→publish) | 🟩 op | Sovereign vira público | linha `scheduled_posts` + `publish-social` HTTP 200 + **URL do post** + Vision QA aprovado |
+> 64	| **S1** | Capturar+persistir **curva de retenção YouTube** (action `audience_retention`; tabela série-temporal por vídeo) | 🟥 | un-gated (BYOK U0) | linha real com ~100 segmentos de 3s de um EP + `relativeRetentionPerformance` retornado |
+> 65	| **S2** | **Motor de ANÁLISE POR-EPISÓDIO** (brief por-EP; reusa esqueleto `autopilot-analyze`, eixo → episódio×momento) | 🟥 | un-gated | registro por-EP "retenção caiu em Xs → cortar no EP05" **ancorado em dados reais persistidos** |
+> 66	| **S6** | Fiar o **nervo sensorial** (agendar `collect-publication-metrics` em cron via migration + re-OAuth IG insights) | 🟨 | Sovereign (re-OAuth) | `pg_cron` job listado + linha `publication_metrics` série-temporal real (não fail-soft skip) |
+> 67	| **S3** | Nó **`storyboard`** no Spaces (porta Flow Storyboard Studio; roteiro grátis → cenas/planos → `graph jsonb` antes do motor caro) | 🟥 | Sovereign (BoK+SOP+Pattern Conformance antes) | nó no editor VIVO; `graph` persistido em `vm_canvas_projects`; `tsc -p tsconfig.app.json` vs baseline |
+> 68	| **S4** | **Ingredients first-class do PROJETO** (refs ≤3 personagem-EP/objeto/estilo, cross-nó; Nano Banana char-ref default, LoRA opt-in) | 🟥 | Sovereign | mesma ref reusada em 2 nós gerando plano consistente + Vision QA aprovando identidade |
+> 69	| **S5** | **Golden Eye slices 1-3** (probes `evalJs` MARCA_MIV/ACESSIBILIDADE; pinar `VISION_VLM_MODEL`; corpus `vision-calibration` + runner de acurácia) | 🟥 | un-gated (0 mco BYOK) | runner de acurácia sobre corpus rotulado + probe de contraste retornando número real |
+> 70	| **S8** | **Destravar canais** (não-código): enable `youtube-upload.service` + CASA/verify; re-submeter TikTok review; flags LinkedIn/X preview→real | 🟩 op | Sovereign | `systemctl status` active + review submitted + upload HTTP 200 |
+> 71	| **S9** | **Mapeador de metadados** (FR-VR-008: `epNN.json` `atos→capítulos` + `creditos.blocos→fontes` → legenda nativa + corpo WordPress creditado) | 🟨 | Sovereign | post WP com capítulos + fontes creditadas (atribuição AI Act) |
+> 72	| **S7** | **content-intel Fatia 1** (YouTube zero-download via Gemini `fileData.fileUri` → `content_strategy`; IG/TikTok mantêm gated OTD-CI-002) | 🟥 | **jurídico** + Sovereign GO | linha `content_strategy` de um link YT real |
+> 73	
+> 74	**Loop análise→EP05 (explícito):** **S2** produz o brief por-EP → o brief vira `optimization_policy` episódica → **S3** (Storyboard) e o cut-spec do repurpose consomem a policy ao planejar o EP05 → **S1** mede o EP05 publicado → **repete**. EP03 (domingo) é a próxima passada de dados; EP04/EP05 são as passadas onde a policy episódica já dirige a produção.
+> 75	
+> 76	---
+> 77	
+> 78	## 4. Registro de Business Requirements (BR-PIPC-001..014)
+> 79	
+> 80	Autoridade em [`02-brd.md`](02-brd.md). Cada BR é rastreável até FRs no `04-frd`.
+> 81	
+> 82	| BR | Objetivo de negócio |
+> 83	|---|---|
+> 84	| **BR-PIPC-001** | Fechar o loop de aprendizado episódico — produzir o próximo EP melhor que o anterior com prova material (**a máquina de APRENDER que falta**) |
+> 85	| **BR-PIPC-002** | Melhorar EP05 sobre EP04 medido pela **curva de retenção** (ROI = tempo-até-EP05-melhor-que-EP04) |
+> 86	| **BR-PIPC-003** | **Consistência de série EP01..EP05** — identidade visual/personagem reusável cross-episódio sem re-treino |
+> 87	| **BR-PIPC-004** | **Custo de produção solo** — operador único, motores US$0/BYOK Usuário Zero, planejar-antes-de-gastar motor caro |
+> 88	| **BR-PIPC-005** | **Prova material** (Lei 1) em cada estágio — nenhum SUCCESS sem artefato físico ancorado |
+> 89	| **BR-PIPC-006** | **Régua de qualidade objetiva** antes de publicar — Golden Eye como gate de saída do desenvolvimento |
+> 90	| **BR-PIPC-007** | **Decidir por dado, não por anedota** — FORMA da curva (n grande) sobre comparação EP-a-EP de contadores (n=5) |
+> 91	| **BR-PIPC-008** | **Reusar trilhos** de produção e distribuição existentes — construir só o elo faltante (análise por-episódio), não reconstruir |
+> 92	| **BR-PIPC-009** | **Separar** o aprendizado episódico do loop de otimização de funil/anúncio (não deixar variante×plataforma sequestrar episódio×momento) |
+> 93	| **BR-PIPC-010** | **Atribuição de receita honesta** por episódio (HMAC fail-closed, receita real ancorada ao EP) |
+> 94	| **BR-PIPC-011** | **Destravar dado real** — canais publicando para alimentar a análise (operacional, não código) |
+> 95	| **BR-PIPC-012** | **Realocar volume↔conversão** (M1 audiência / M2 receita) por dado de retenção, não por intuição |
+> 96	| **BR-PIPC-013** | **Ledger-first e privado-primeiro** — modelar cenas/planos barato e reversível antes de gastar motor e publicar |
+> 97	| **BR-PIPC-014** | **Compliance de produção creditada** (AI Act) — capítulos + fontes atribuídas na entrega |
+> 98	
+> 99	---
+> 100	
+> 101	## 5. Registro de Functional Requirements (FR-PIPC-001..026)
+> 102	
+> 103	Autoridade e status em [`04-frd.md`](04-frd.md). Organizado pelos 4 estágios do ciclo; cada FR referencia sua slice (Sx).
+> 104	
+> 105	### Estágio 1 — DESENVOLVIMENTO
+> 106	
+> 107	| FR | O quê | Slice |
+> 108	|---|---|---|
+> 109	| **FR-PIPC-001** | Produzir cortes 9:16 do master EP via rail repurpose VIVO (segment/reframe/Hormozi/carrossel) | S0 |
+> 110	| **FR-PIPC-003** | Golden Eye como **gate de saída do Estágio 1** — nenhum corte avança sem veredito material | S5 |
+> 111	| **FR-PIPC-004** | Fiar **probes determinísticos `evalJs`** (MARCA_MIV, ACESSIBILIDADE/contraste) no grader — número de medição, não opinião do VLM | S5 |
+> 112	| **FR-PIPC-005** | Pinar `VISION_VLM_MODEL` versionado + corpus `vision-calibration` rotulado + runner de acurácia | S5 |
+> 113	| **FR-PIPC-006** | Nó **`storyboard`** no Spaces — roteiro grátis → auto-split cenas + extrai personagens/locais/props/diálogo (porta Flow Storyboard Studio) | S3 |
+> 114	| **FR-PIPC-007** | Storyboard persiste `graph jsonb` em `vm_canvas_projects`, editável/reimportável, **ANTES de despachar motor caro** | S3 |
+> 115	| **FR-PIPC-008** | Timeline de cenas + planos de câmera por cena no storyboard (base construtiva para montar EP inteiro) | S3 |
+> 116	| **FR-PIPC-009** | **Ingredients first-class do PROJETO** — paleta de refs reusáveis ≤3 (personagem-EP/objeto/estilo) | S4 |
+> 117	| **FR-PIPC-010** | Refs de projeto consumidas cross-nó (Nano Banana char-ref default, LoRA opt-in pós-renda) — consistência EP01..EP05 | S4 |
+> 118	| **FR-PIPC-026** | content-intel Fatia 1 — YouTube zero-download via Gemini `fileData.fileUri` → `content_strategy` (entrada estudar→modelar) | S7 |
+> 119	
+> 120	### Estágio 2 — PUBLICAÇÃO
+> 121	
+> 122	| FR | O quê | Slice |
+> 123	|---|---|---|
+> 124	| **FR-PIPC-002** | Publicar cortes via `schedule`→`publish-social` com **URL do post como prova material** | S0 |
+> 125	| **FR-PIPC-022** | Destravar canais — enable `youtube-upload.service` (nasce P0 desabilitado) + CASA/verify | S8 |
+> 126	| **FR-PIPC-023** | Re-submeter TikTok app review (branding/TOS/vídeo demo); flags LinkedIn/X preview→real; Meta app review | S8 |
+> 127	| **FR-PIPC-024** | Mapeador de metadados `epNN.json` — `atos→capítulos` + `creditos.blocos→fontes` → legenda nativa + corpo WordPress (FR-VR-008) | S9 |
+> 128	| **FR-PIPC-025** | Corpo WordPress com capítulos + fontes creditadas (**atribuição AI Act**) | S9 |
+> 129	
+> 130	### Estágio 3 — ANÁLISE PROFUNDA
+> 131	
+> 132	| FR | O quê | Slice |
+> 133	|---|---|---|
+> 134	| **FR-PIPC-011** | `youtube-data` action `audience_retention` — `elapsedVideoTimeRatio` + `audienceWatchRatio` + `relativeRetentionPerformance` | S1 |
+> 135	| **FR-PIPC-012** | Persistir a **curva de retenção YouTube** em tabela série-temporal por vídeo (sinal nº1, hoje não capturado) | S1 |
+> 136	| **FR-PIPC-013** | Fiar o nervo sensorial — agendar `collect-publication-metrics` em cron (`pg_cron` via migration) + re-OAuth IG insights | S6 |
+> 137	| **FR-PIPC-014** | **Motor de análise POR-EPISÓDIO** — funde retenção YT + retenção-segmento IG + cliques/receita + veredito Vision num brief | S2 |
+> 138	| **FR-PIPC-015** | Brief por-EP **persistido e acionável** ("retenção caiu em Xs → cortar no EP05") ancorado em dados reais | S2 |
+> 139	| **FR-PIPC-016** | Reusar o esqueleto de `autopilot-analyze` mudando o eixo de variante×plataforma para **episódio×momento** | S2 |
+> 140	
+> 141	### Estágio 4 — MELHORIA→EP05
+> 142	
+> 143	| FR | O quê | Slice |
+> 144	|---|---|---|
+> 145	| **FR-PIPC-017** | `optimization_policy` **EPISÓDICA** — reward multi-métrica brand-first (reach/eng/brand/rev; clicks só proxy anti-Goodhart) | S2/S4 |
+> 146	| **FR-PIPC-018** | Injetar a `optimization_policy` episódica no **planejamento do EP05** (storyboard + cut-spec do repurpose consomem a policy) | S3 |
+> 147	| **FR-PIPC-019** | **DIPS/SPIKES** — derivar cut-specs da FORMA da curva (queda=cortar/reordenar; spike=formato a repetir), não de contadores de topo | S2 |
+> 148	| **FR-PIPC-020** | **Anti-super-correção** — fixar o plano de edição por 2-3 episódios antes de mudar de rota; só reagir a padrões multi-vídeo | S2 |
+> 149	| **FR-PIPC-021** | A/B via **YouTube Test & Compare** (vence por share de watch time); "Inconclusive" tratado como resultado normal em canal pequeno | S8 |
+> 150	
+> 151	---
+> 152	
+> 153	## 6. Ledger de OTDs (OTD-PIPC-001..010)
+> 154	
+> 155	Autoridade em [`04-frd.md`](04-frd.md) §5. Todas **abertas** (pré-código).
+> 156	
+> 157	| OTD | Débito técnico em aberto |
+> 158	|---|---|
+> 159	| **OTD-PIPC-001** | Seam Storyboard→despacho-Veo **não-público** (Flow subscription-gated) — validar contra tool vivo/walkthrough oficial antes de cravar schema JSON; não hard-codar assumindo o schema deles |
+> 160	| **OTD-PIPC-002** | Portar a montagem **N→1** (fábrica do master; `youtube-studio` Pilar I) para dentro do MCORCH vs manter na base GabrielAI e só ingerir master pronto — **não é bloqueador do PIPC** |
+> 161	| **OTD-PIPC-003** | content-intel **gated jurídico** — revisão de compliance no ingest de vídeo de terceiro; IG/TikTok exigem resolver mp4 server-side (OTD-CI-002), YouTube aceita URL direto zero-download |
+> 162	| **OTD-PIPC-004** | A/B **"Inconclusive"** em canal pequeno — nº de impressões para conclusão não é publicado; tratar como resultado esperado, não regredir; A/B não vale para Shorts |
+> 163	| **OTD-PIPC-005** | **hook_rate por impressão estruturalmente indisponível** no YouTube (Analytics API v2 sem impressions/CTR de miniatura) — usar FORMA da curva como proxy; CTR de capa = coleta manual do Studio |
+> 164	| **OTD-PIPC-006** | Ingredients consistência — **Nano Banana char-ref default** (sem treino) vs **LoRA opt-in** por-projeto (custo pós-renda); nível first-class do projeto vs do nó |
+> 165	| **OTD-PIPC-007** | Ligar o loop **métricas→cut-specs** (herda OTD-VR-008b DEFERIDA / FR-VR-013 MANUAL) — quando abrir sem super-correção, gated na 1ª métrica real e anti-Goodhart |
+> 166	| **OTD-PIPC-008** | `epNN.json` como contrato canônico de metadados do master (herdado do GabrielAI) — re-verificar contra **HEAD vivo** via GitHub MCP autenticado, nunca contra `da5b53b` |
+> 167	| **OTD-PIPC-009** | Retenção **TikTok/IG é view-only** sem API pública orgânica — coleta manual/periódica vs prometer automação de curva na UI |
+> 168	| **OTD-PIPC-010** | Reusar o esqueleto de `autopilot-analyze` (acoplado ao funil de anúncio) vs motor de análise por-episódio dedicado — evitar que o eixo variante×plataforma sequestre episódio×momento |
+> 169	
+> 170	---
+> 171	
+> 172	## 7. Registro de Failure Modes (FM-PIPC-001..016)
+> 173	
+> 174	Autoridade em [`08-quality-metrics.md`](08-quality-metrics.md) (FMEA). Cada FM tem anticorpo mapeado em FR/OTD.
+> 175	
+> 176	| FM | Modo de falha | Anticorpo |
+> 177	|---|---|---|
+> 178	| **FM-PIPC-001** | Super-correção por n=5 anedótico — decidir a próxima edição por contadores de topo em vez da FORMA da curva (n grande) | FR-PIPC-019/020, BR-PIPC-007 |
+> 179	| **FM-PIPC-002** | hook_rate por impressão indisponível reintroduzido como métrica-fantasma (impressions/CTR não existem na API v2) | OTD-PIPC-005 |
+> 180	| **FM-PIPC-003** | Cross-tenant leak no composition sink / brief por-EP — agregado deve ser `security_invoker` per-tenant + rollup service-role-only | 06-data-model, gate `/security-review` |
+> 181	| **FM-PIPC-004** | Folclore de retenção viral ("40-70% é bom") em vez de `relativeRetentionPerformance` (piso 0,5) como único benchmark legítimo | FR-PIPC-011, 08-quality-metrics |
+> 182	| **FM-PIPC-005** | Golden Eye julga single-shot alucinado — VLM pontua mal sem probes determinísticos (~66-68% erro no score); **risco Lei 1 ativo** | FR-PIPC-004/005 |
+> 183	| **FM-PIPC-006** | Despachar motor Veo/mco caro **sem storyboard** — gasto sem plano barato revisável, viola ledger-first na prática | FR-PIPC-006/007, BR-PIPC-013 |
+> 184	| **FM-PIPC-007** | Inconsistência de identidade EP01..EP05 — refs por-nó em vez de first-class do projeto quebram a consistência de série | FR-PIPC-009/010, BR-PIPC-003 |
+> 185	| **FM-PIPC-008** | Shorts "views" (play/replay-start desde 2025-03-31) tratados como sinal — número de vaidade em vez de engaged views + retenção | 08-quality-metrics, OTD-PIPC-009 |
+> 186	| **FM-PIPC-009** | A/B observacional TikTok/IG tratado como prova — diferença de views entre dois cortes = ruído, não evidência | OTD-PIPC-004/009, FR-PIPC-021 |
+> 187	| **FM-PIPC-010** | `publication_metrics` fail-soft skip silencioso — cron não agendado (S6) → sem série-temporal, S2 fica cego sem sinalizar | FR-PIPC-013 |
+> 188	| **FM-PIPC-011** | Loop de aprendizado sequestrado pelo funil — `autopilot-analyze` click/reward-driven dirigindo conteúdo em vez de episódio×momento | BR-PIPC-009, FR-PIPC-016, OTD-PIPC-010 |
+> 189	| **FM-PIPC-012** | Reward de métrica única (Goodhart) na `optimization_policy` episódica — otimizar clicks em vez de brand/reach/receita | FR-PIPC-017 |
+> 190	| **FM-PIPC-013** | Schema Flow hard-coded errado — seam Storyboard→Veo assumido sem validar contra tool vivo (subscription-gated) | OTD-PIPC-001 |
+> 191	| **FM-PIPC-014** | GabrielAI lido contra `da5b53b` stale em vez de HEAD vivo — afirmação de implementação desatualizada (repo privado, HEAD já avançou) | OTD-PIPC-008 |
+> 192	| **FM-PIPC-015** | Curva de retenção não persistida → orientação por leitura MANUAL do Studio — não reprodutível, viola Lei 1 e não escala | FR-PIPC-012 |
+> 193	| **FM-PIPC-016** | content-intel ingest sem revisão jurídica — compliance de vídeo de terceiro ignorada; IP datacenter bloqueado assumido em vez de sondado | OTD-PIPC-003 |
+> 194	
+> 195	---
+> 196	
+> 197	## 8. Pattern Conformance Declaration (resumo — 21 padrões)
+> 198	
+> 199	Declaração completa por fatia na SDD [`05-sdd.md`](05-sdd.md); doutrina em [`docs/architecture/agentic-vision.md`](../../architecture/agentic-vision.md). **17 `yes` · 4 `deferred` · 0 `n-a`.** O `deferred` carrega justificativa material (nunca "sem benefício" vazio).
+> 200	
+> 201	| Padrão | Status | Como / Por-que-deferido |
+> 202	|---|---|---|
+> 203	| Prompt Chaining | **yes** | Cadeia storyboard→imagem→vídeo (Spaces/repurpose) + análise multi-step do brief (retenção+receita+Vision → veredito) — FR-PIPC-006/014 |
+> 204	| Routing | **deferred** | Reusa `llm-cascading-fallback` + BYOK-only; sem routing semântico por embedding neste escopo (herda OTD-AG-007) — sem benefício material p/ operador solo |
+> 205	| Parallelization | **yes** | Fan-out de coleta multi-sinal (YT + IG + cliques/receita) + repurpose 1 master→N cortes concorrentes (Workflow `parallel()`) |
+> 206	| Reflection | **yes** | Golden Eye/Vision-QA como gate de saída do Estágio 1 (generator→critic) com probes determinísticos — FR-PIPC-003/004/005 |
+> 207	| Tool Use | **yes** | `youtube-data audience_retention`, `collect-publication-metrics`, Vision MCP como ferramentas do ciclo — FR-PIPC-011/013/026 |
+> 208	| Planning | **yes** | Nó storyboard planeja cenas/planos ANTES de gastar motor (ledger-first) + policy episódica dirige o EP05 — FR-PIPC-006/007/018 |
+> 209	| Multi-Agent | **deferred** | Produção solo; fatias de nó delegam ao L2 `engineer-spaces` sob a Via 4 existente — nenhum protocolo inter-agente novo é material no escopo |
+> 210	| Memory Management | **yes** | Brief por-EP + `content_strategy` como memória de série + observation nodes na Knowledge Mesh a cada run — FR-PIPC-015 |
+> 211	| Learning & Adaptation | **yes** | **CORAÇÃO do PIPC** — loop fechado métricas→`optimization_policy` episódica→planejamento EP05→mede→repete (FR-PIPC-016/017/018). Materializa o Pattern 9 hoje 🔴 e OTD-AG-002 |
+> 212	| Model Context Protocol | **yes** | content-intel Fatia 1 consome Vision MCP (`vision_analyze_video`); S2 espelha o esqueleto p/ o próprio acervo — FR-PIPC-026 (S7 gated jurídico) |
+> 213	| Goal Setting & Monitoring | **yes** | Goal = EP05 melhor que EP04 pela curva persistida; o brief por-EP é o monitor→feedback — BR-PIPC-002, FR-PIPC-012/015 |
+> 214	| Exception Handling & Recovery | **yes** | Coleta fail-soft/fail-closed, HMAC fail-closed na receita, refund atômico + retry idempotente herdados dos rails — FR-PIPC-013 (anti FM-PIPC-010) |
+> 215	| Human-in-the-Loop | **yes** | ORO/GO Sovereign + privado-primeiro + gate jurídico content-intel; o storyboard barato é o ponto de revisão humana antes do gasto — BR-PIPC-013 |
+> 216	| Knowledge Retrieval (RAG) | **yes** | Knowledge Mesh (`mesh.search`/`match_mcorch_nodes`) + `content_strategy` como corpus de série consultado pelo brief e pelo planejamento — FR-PIPC-014/026 |
+> 217	| Inter-Agent Comm. (A2A) | **deferred** | Operação solo sem Agent Card/discovery; comunicação inter-agente permanece a bridge de malha existente (herda OTD-AG-006) |
+> 218	| Resource-Aware Optimization | **yes** | Motores US$0/BYOK U0, ledger-first via storyboard, mcoCoins atômico + Collective Efficiency Ledger (mco/resultado) — BR-PIPC-004/013 |
+> 219	| Reasoning Techniques | **yes** | DIPS/SPIKES sobre a FORMA da curva (n grande) + veredito acionável do brief; deepsearch grounding — FR-PIPC-019 |
+> 220	| Guardrails / Safety | **yes** | Survival Laws + Sentinel + RLS default-deny + gate jurídico + anti-super-correção + anti-Goodhart + `relativeRetentionPerformance` único benchmark — FR-PIPC-020 (anti FM-PIPC-001/004/012) |
+> 221	| Evaluation & Monitoring | **yes** | Golden Eye slices 1-3 (probes + VLM pinado + corpus rotulado + runner de acurácia) + brief por-EP como avaliação contínua — FR-PIPC-005 (OTD-AG-004) |
+> 222	| Prioritization | **yes** | Roadmap S0-S9 ranqueado por impacto÷esforço com ordem explícita + realocação volume↔conversão (M1/M2) — BR-PIPC-012 (§3) |
+> 223	| Exploration & Discovery | **deferred** | Sem torneio Elo/debate multi-agente; exploração reativa via A/B YouTube Test & Compare, limitada por "Inconclusive" em canal pequeno — FR-PIPC-021, OTD-PIPC-004 (herda OTD-AG-008) |
+> 224	
+> 225	---
+> 226	
+> 227	## 9. Estado do gate & ganchos anti-duplicação
+> 228	
+> 229	**Gate de código (Closed-Loop Step 3/3.5):** **FECHADO** enquanto esta suíte estava em Draft. Com a família 8/8 + este índice consolidados, o gate **ABRE por fatia** — cada fatia que toque ≥3 padrões exige a Pattern Conformance Declaration da SDD (§8) antes de codar, e cada slice carrega seu 🔒 Gate (§3). Slices `un-gated` (S1, S2, S5) podem arrancar sob GO Sovereign; S3/S4/S6/S8/S9 exigem ação Sovereign; **S7 exige revisão jurídica** (OTD-PIPC-003).
+> 230	
+> 231	**Ganchos com o que já está selado (blueprint §7 — o PIPC consome, não refaz):**
+> 232	
+> 233	| Fonte selada | O que já cobre | O PIPC… |
+> 234	|---|---|---|
+> 235	| [`../video-repurpose/`](../video-repurpose/) (FR-VR-001..015; Fatias 1-3 LIVE) | ingest external, segment/reframe 16:9→9:16, carrossel IG, Hormozi | …**consome** o rail; adiciona só S9 (mapeador) e liga o cut-spec à policy episódica (fecha OTD-VR-008b/FR-VR-013) |
+> 236	| [`../spaces-evolution/`](../spaces-evolution/) (Amendments 17/18/25/30/31) | nós tipados, motores, voz/Veo/transcribe, Ingredients embrionário | …**adiciona** o nó `storyboard` (S3) e **promove** Ingredients a first-class de projeto (S4) via `engineer-spaces` |
+> 237	| [`../youtube-studio/`](../youtube-studio/) (Track A/B; Pilar I) | read-proxy `youtube-data`, upload worker, montagem N→1 | …**estende** `youtube-data` com `audience_retention` (S1) e destrava o upload service (S8); decisão N→1 fica em aberto (OTD-PIPC-002) |
+> 238	| [`../content-intel/`](../content-intel/) (9/9 selada, uncoded) | sensor de entrada estudar→modelar (vídeo de terceiro) | …**coda** Fatia 1 YT-only (S7) e espelha o esqueleto p/ o NOSSO acervo em S2 |
+> 239	| Roadmap `cadence-distribution-pipeline` (VIVO) | despacho recorrente, agendamento privado-primeiro | …**usa** como transporte (S0); assume "retenção como proxy de gancho no YouTube" |
+> 240	| Roadmap `funnel-mass-validation` (K=⌈S·P/C⌉, autopilot) | escala provada-limitada, `optimization_policy` variante-level | …**reusa o esqueleto** de `autopilot-analyze`, mudando o eixo p/ episódio×momento (S2) |
+> 241	| Roadmap `vision-golden-eye` | régua de qualidade especificada (não codada) | …**codifica** os slices 1-3 como gate de saída do Estágio 1 (S5) |
+> 242	
+> 243	**Fundamentação:** [`00-deepsearch-blueprint.md`](00-deepsearch-blueprint.md) (semente, Closed-Loop Step 0). **Fontes derivadas (não duplicar):** BoKs `video-repurpose`, `spaces-evolution`, `youtube-studio`, `content-intel`; roadmaps `cadence-distribution-pipeline`, `funnel-mass-validation-2026-07-22`, `vision-golden-eye`, `motor-conteudo-master`.
+> 244	
+> 245	---
+> 246	
+> 247	_Índice da família PIPC gerado em 2026-07-23 (Closed-Loop Step 1, layer de manifesto). Suíte 8/8 em Draft pré-código; gate abre por fatia após consolidação. Em conflito de status: **04-frd (FR/status) > 05-sdd (arquitetura) > 03/02/01 (produto/negócio/mercado) > 00-deepsearch-blueprint (semente)**; desempate por domínio: **06-data-model vence em schema físico/DDL, 07-process-flow em sequência, 08-quality-metrics em métricas**._
+> 248	
+> ```
+
+## 🤖 Claude *(00:29:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== A8: autopilot_plans tem coluna jsonb (config/metadata) p/ threading sem migration? ===\"\ngrep -rnE \"autopilot_plans\" supabase/migrations/*.sql 2>/dev/null | grep -iE \"add column|create table|jsonb|config|metadata|reward_weights|plan_kind\" | head -15",
+  "description": "Read PIPC index (A14) + probe autopilot_plans schema (A8)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === A8: autopilot_plans tem coluna jsonb (config/metadata) p/ threading sem migration? ===
+> supabase/migrations/20260620120000_viral_autopilot_plans.sql:1:-- Migration: viral-autopilot autopilot_plans — per-user cadence config (FR-VA-001 / FR-VA-005).
+> supabase/migrations/20260620120000_viral_autopilot_plans.sql:18:CREATE TABLE IF NOT EXISTS public.autopilot_plans (
+> supabase/migrations/20260702150000_autopilot_reward_weights.sql:14:ALTER TABLE public.autopilot_plans
+> supabase/migrations/20260702150000_autopilot_reward_weights.sql:16:  CONSTRAINT autopilot_plans_reward_weights_is_object
+> supabase/migrations/20260702150000_autopilot_reward_weights.sql:19:COMMENT ON COLUMN public.autopilot_plans.reward_weights IS
+> supabase/migrations/20260716120000_cadence_recurrence.sql:8:--   * autopilot_plans is EXTENDED (plan_kind='cadence') — NO parallel plan table, NO 3rd driver (OTD-CAD-003).
+> supabase/migrations/20260716120000_cadence_recurrence.sql:76:COMMENT ON COLUMN public.autopilot_plans.plan_kind IS
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -6769,6 +7608,6 @@ BoK `crm-suite` **9/9 selada** (gate de código preservado). **Podemos começar 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-23 - Verificar contexto de cortes e otimizar UI da plataforma]]
-> * **Próxima Sessão**: [[2026-07-23 - agent-a029c248857f9ed07]]
+> * **Sessão Anterior**: [[2026-07-23 - ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d]]
+> * **Próxima Sessão**: [[2026-07-24 - agent-a51aeb75938ba9ecc]]
 %% --- TIMELINE END --- %%
