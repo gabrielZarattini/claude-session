@@ -1720,6 +1720,929 @@ Os 12 autores estão escrevendo os 29 arquivos restantes: 7 gates executáveis, 
 
 Aviso quando fechar, com o caminho do arquivo e o veredito da conformidade.
 
+## 👤 User *(19:07:23)*
+
+<task-notification>
+<task-id>witeum1vg</task-id>
+<tool-use-id>toolu_01SMr8WfQHt1aPuvwkfpscdB</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/tasks/witeum1vg.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Escreve os 35 arquivos do Harness Kit v1.0.0 (gates executáveis, skills, agentes curadores, templates) contra o contrato da espinha" completed</summary>
+<result>{"conform":{"files_found":45,"syntax_ok":true,"dead_pointers":[],"contract_violations":[],"missing_files":[],"selftest_results":["secret-scan.sh --selftest → EXIT=0. 8/8 PASS: PROBE_A exit1 (segredo nu detectado), PROBE_B exit1 (MESMO segredo + comentário `test-only` na linha — regressão D1 coberta), PROBE_C exit0 (placeholder), PROBE_D exit1 (marcador sobre token real não desarma), PROBE_E exit0 (marcador sobre placeholder aceito), PROBE_F exit0 (código limpo), PROBE_G exit0 (scanner não acusa o próprio fonte), PROBE_H exit1 (connection string com senha+JWT).","spec-gate.sh --selftest → EXIT=0. 13/13 PASS. Bloco A (marcador): open→0, sealed→0, draft→1, review→1, marcador ausente→1 (NÃO é open), suíte inexistente→2, suíte incompleta (falta 05-sdd)→2. Bloco B (diff): gate-draft/**→1, gate-open/**→0, *.md isento→0. Bloco C: --list→0, --explain→0, argumento desconhecido→3."],"verdict":"READY","fix_list":["Nenhuma correção obrigatória. Observações não-bloqueantes registradas para transparência (Lei 1): (1) Os 3 caminhos que um scan ingênuo marcaria como ponteiros mortos — `docs/knowledge/observations.md` (START-HERE.md via config sink), `docs/processes/` (START-HERE.md:119/122 Gate D), `.harness/baseline.json` (START-HERE.md:92 Fase B) — NÃO são ponteiros mortos: são artefatos criados no repo-ALVO durante o ritual de instalação (install.sh:147 semeia observations.md; Gate D cria docs/processes/; baseline.json gravado na entrevista da Fase B). Corretos como forward-references, não como refs a arquivos do kit. (2) O único match de nome-de-produto (08-quality-metrics.md:43 'vite') é substring da palavra portuguesa 'conVITE' — falso-positivo, não é referência à stack. (3) Os 2 matches de comando presumido (START-HERE.md:50, harness-init/SKILL.md:85) são ilustrações ROTULADAS de anti-pattern ('npx tsc --noEmit... é exatamente o falso-verde que a Lei 1 mata'), didaticamente corretas. (4) Os matches de 'v0.9.0' (install.sh:169) e 'v1.0.0' (README/START-HERE títulos) são fixture sintético de selftest e versão-do-próprio-kit — nenhum é pin de runtime."]}}</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/subagents/workflows/wf_055db22b-bcf/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/workflows/scripts/harness-kit-authoring-wf_055db22b-bcf.js', resumeFromRunId: 'wf_055db22b-bcf'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>13</agent_count><agents_done>13</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>2170967</subagent_tokens><tool_uses>355</tool_uses><duration_ms>4930551</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(19:07:29)*
+
+Autoria concluída, veredito **READY**. Mas o verificador é parte interessada — vou provar de forma independente antes de empacotar. A conformidade só vale se eu vir os selftests ficarem vermelhos de verdade.
+
+## 🤖 Claude *(19:07:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit\necho \"=== INVENT\u00c1RIO REAL ===\" && find . -type f | sort && echo \"TOTAL: $(find . -type f | wc -l)\"\necho\necho \"=== SINTAXE de todos os .sh (bash -n) ===\"\nbad=0; for f in $(find . -name '*.sh'); do bash -n \"$f\" 2>&1 | sed \"s|^|$f: |\" && chmod +x \"$f\" || bad=1; done\n[ $bad -eq 0 ] && echo \"todos OK\" || echo \"H\u00c1 ERRO DE SINTAXE\"",
+  "description": "Invent\u00e1rio e sintaxe independentes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === INVENTÁRIO REAL ===
+> ./.claude/agents/deepsearch-blueprint.md
+> ./.claude/agents/docs-curator.md
+> ./.claude/agents/pmo-curator.md
+> ./.claude/agents/spec-curator.md
+> ./.claude/agents/spec-scribe.md
+> ./.claude/rules/00-laws.md
+> ./.claude/rules/01-closed-loop.md
+> ./.claude/rules/02-governance.md
+> ./.claude/skills/four-cs-audit/SKILL.md
+> ./.claude/skills/handoff/SKILL.md
+> ./.claude/skills/handson/SKILL.md
+> ./.claude/skills/harness-init/SKILL.md
+> ./.claude/skills/level-up/SKILL.md
+> ./.claude/skills/mape-k-loop/SKILL.md
+> ./.claude/skills/obstacle-to-synthesis/SKILL.md
+> ./.claude/skills/proof-audit/SKILL.md
+> ./.claude/skills/spec-gate/SKILL.md
+> ./.claude/skills/spec-scribe/SKILL.md
+> ./.harness/bin/doctor.sh
+> ./.harness/bin/install-hooks.sh
+> ./.harness/bin/install.sh
+> ./.harness/bin/proof-audit.sh
+> ./.harness/bin/secret-scan.sh
+> ./.harness/bin/sop-gate.sh
+> ./.harness/bin/spec-gate.sh
+> ./.harness/harness.config.json
+> ./.harness/lib/harness-lib.sh
+> ./.harness/templates/ADR.md
+> ./.harness/templates/architecture-patterns.md
+> ./.harness/templates/CLAUDE-block.md
+> ./.harness/templates/HANDOFF.md
+> ./.harness/templates/HANDOFF-record.md
+> ./.harness/templates/SOP.md
+> ./.harness/templates/spec-suite/00-index.md
+> ./.harness/templates/spec-suite/01-mrd.md
+> ./.harness/templates/spec-suite/02-brd.md
+> ./.harness/templates/spec-suite/03-prd.md
+> ./.harness/templates/spec-suite/04-frd.md
+> ./.harness/templates/spec-suite/05-sdd.md
+> ./.harness/templates/spec-suite/06-data-model.md
+> ./.harness/templates/spec-suite/07-process-flow.md
+> ./.harness/templates/spec-suite/08-quality-metrics.md
+> ./.harness/templates/spec-suite/09-pattern-conformance.md
+> ./README.md
+> ./START-HERE.md
+> TOTAL: 45
+> 
+> === SINTAXE de todos os .sh (bash -n) ===
+> todos OK
+> ```
+
+## 🤖 Claude *(19:07:48)*
+
+45 arquivos, todos os scripts com sintaxe válida. Agora a prova que importa — os selftests que provam que os gates ficam **vermelhos** de fato, mais o teste de ponta-a-ponta do gate central:
+
+## 🤖 Claude *(19:07:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 SELFTEST: secret-scan.sh (regress\u00e3o do defeito D1) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\nbash .harness/bin/secret-scan.sh --selftest; echo \"exit=$?\"\necho\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 SELFTEST: spec-gate.sh (gate visto vermelho e verde) \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\nbash .harness/bin/spec-gate.sh --selftest; echo \"exit=$?\"",
+  "description": "Rodar os selftests dos dois gates cr\u00edticos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════════ SELFTEST: secret-scan.sh (regressão do defeito D1) ════════
+> secret-scan --selftest · árvore sintética em /tmp/harness-secret-selftest.3R8Hg2
+> marcador de supressão em vigor: harness-scan:allow
+> 
+> Probes obrigatórios (a regressão do defeito D1 é o PROBE_B)
+>   [PASS] exit 1 (esperado 1) — PROBE_A — segredo nu deve ser detectado
+>   [PASS] exit 1 (esperado 1) — PROBE_B — MESMO segredo + comentário `test-only` na linha (D1)
+>   [PASS] exit 0 (esperado 0) — PROBE_C — placeholder óbvio não é achado
+> 
+> Probes complementares (semântica do marcador e auto-imunidade)
+>   [PASS] exit 1 (esperado 1) — PROBE_D — marcador sobre token REAL não desarma
+>   [PASS] exit 0 (esperado 0) — PROBE_E — marcador sobre placeholder é aceito
+>   [PASS] exit 0 (esperado 0) — PROBE_F — código limpo sai 0
+>   [PASS] exit 0 (esperado 0) — PROBE_G — o scanner não acusa o próprio código-fonte
+>   [PASS] exit 1 (esperado 1) — PROBE_H — string de conexão com senha e JWT
+> 
+> selftest: TODOS OS PROBES PASSARAM — o scanner foi visto vermelho e verde,
+>           e o caso que derrubou o scanner de origem (D1) está coberto.
+> exit=0
+> 
+> ════════ SELFTEST: spec-gate.sh (gate visto vermelho e verde) ════════
+> spec-gate --selftest · árvore sintética em /tmp/harness-spec-gate-selftest.1D3ACw
+> 
+> A. veredito por estado do marcador (modo --module)
+>   [PASS] exit 0 (esperado 0) — GATE: open autoriza
+>   [PASS] exit 0 (esperado 0) — GATE: sealed autoriza (só emendas)
+>   [PASS] exit 1 (esperado 1) — GATE: draft bloqueia
+>   [PASS] exit 1 (esperado 1) — GATE: review bloqueia
+>   [PASS] exit 1 (esperado 1) — marcador ausente NÃO é open
+>   [PASS] exit 2 (esperado 2) — suíte inexistente
+>   [PASS] exit 2 (esperado 2) — suíte incompleta (open, mas falta 05-sdd)
+> 
+> B. modo diff (derivação de slug a partir do gatilho)
+>   [PASS] exit 1 (esperado 1) — diff toca src/modules/gate-draft/** → bloqueia
+>   [PASS] exit 0 (esperado 0) — diff toca src/modules/gate-open/** → autoriza
+>   [PASS] exit 0 (esperado 0) — arquivo isento (*.md) não dispara o gate
+> 
+> C. modos informativos
+>   [PASS] exit 0 (esperado 0) — --list não julga
+>   [PASS] exit 0 (esperado 0) — --explain não julga
+>   [PASS] exit 3 (esperado 3) — argumento desconhecido → erro de uso
+> 
+> selftest: TODOS OS CASOS PASSARAM — o gate foi visto vermelho e verde.
+> exit=0
+> ```
+
+## 🤖 Claude *(19:08:01)*
+
+Os dois gates críticos foram vistos vermelhos e verdes — não é o autor afirmando, é o output. O `secret-scan` mata o defeito D1 (segredo real com `// test-only` continua sendo `exit 1`), e o `spec-gate` prova que "arquivo existe" não é "gate aberto". Agora um teste que o verificador **não** rodou: o gate disparando ponta-a-ponta contra um repo simulado, mais o doctor:
+
+## 🤖 Claude *(19:08:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -e\nSB=/home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo\nrm -rf \"$SB\"; mkdir -p \"$SB\"; cd \"$SB\"\ngit init -q; git config user.email t@t; git config user.name t\nKIT=/home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit\n\necho \"\u2550\u2550\u2550\u2550 CEN\u00c1RIO: repo novo, agente instala o kit \u2550\u2550\u2550\u2550\"\ncp -r \"$KIT\" ./harness-kit-tmp\n# simula um projeto Go (stack DIFERENTE de React/Supabase \u2014 prova de neutralidade)\ncat > go.mod <<'EOF'\nmodule example.com/demo\ngo 1.22\nEOF\necho 'package main' > main.go\ngit add -A; git commit -qm \"seed go project\"\n\necho; echo \"\u2500\u2500 install.sh --dry-run (n\u00e3o pode escrever nada) \u2500\u2500\"\nbash ./harness-kit-tmp/.harness/bin/install.sh --dry-run 2>&1 | head -25 || echo \"[dry-run retornou $?]\"\n\necho; echo \"\u2500\u2500 ARQUIVOS DO REPO ap\u00f3s dry-run (deve ser s\u00f3 go + kit-tmp) \u2500\u2500\"\nls -a | grep -vE '^\\.$|^\\.\\.$|^\\.git$'",
+  "description": "Testar install dry-run em repo Go simulado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ CENÁRIO: repo novo, agente instala o kit ════
+> 
+> ── install.sh --dry-run (não pode escrever nada) ──
+> 
+> ══ Harness Kit v1.0.0 — instalação ═══════════════════════════════════════
+>   kit     : /home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo/harness-kit-tmp
+>   destino : /home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo
+>   contrato: kit (instalação nova)
+>   modo    : DRY-RUN — nenhum byte será escrito
+> 
+> 1. Árvores
+> [dry] criado    .claude/rules/00-laws.md
+> [dry] criado    .claude/rules/01-closed-loop.md
+> [dry] criado    .claude/rules/02-governance.md
+> [dry] criado    .claude/skills/four-cs-audit/SKILL.md
+> [dry] criado    .claude/skills/handoff/SKILL.md
+> [dry] criado    .claude/skills/handson/SKILL.md
+> [dry] criado    .claude/skills/harness-init/SKILL.md
+> [dry] criado    .claude/skills/level-up/SKILL.md
+> [dry] criado    .claude/skills/mape-k-loop/SKILL.md
+> [dry] criado    .claude/skills/obstacle-to-synthesis/SKILL.md
+> [dry] criado    .claude/skills/proof-audit/SKILL.md
+> [dry] criado    .claude/skills/spec-gate/SKILL.md
+> [dry] criado    .claude/skills/spec-scribe/SKILL.md
+> [dry] criado    .claude/agents/deepsearch-blueprint.md
+> [dry] criado    .claude/agents/docs-curator.md
+> [dry] criado    .claude/agents/pmo-curator.md
+> [dry] criado    .claude/agents/spec-curator.md
+> 
+> ── ARQUIVOS DO REPO após dry-run (deve ser só go + kit-tmp) ──
+> go.mod
+> harness-kit-tmp
+> main.go
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(19:08:13)*
+
+Dry-run respeitou o contrato — anunciou tudo, não escreveu nada. Agora a instalação real e o gate disparando:
+
+## 🤖 Claude *(19:08:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SB=/home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo\ncd \"$SB\"\necho \"\u2550\u2550\u2550\u2550 INSTALA\u00c7\u00c3O REAL \u2550\u2550\u2550\u2550\"\nbash ./harness-kit-tmp/.harness/bin/install.sh ./harness-kit-tmp 2>&1 | tail -30 || echo \"[install exit $?]\"\necho\necho \"\u2500\u2500 .gitignore protege settings.local.json? (o vazamento das 159 entradas) \u2500\u2500\"\ngrep -nE 'settings.local.json|proof' .gitignore 2>/dev/null || echo \"AUSENTE \u2014 FALHA\"\necho\necho \"\u2500\u2500 CLAUDE.md ganhou o bloco delimitado? \u2500\u2500\"\ngrep -nE 'HARNESS-KIT:(BEGIN|END)' CLAUDE.md 2>/dev/null || echo \"sem bloco\"",
+  "description": "Instala\u00e7\u00e3o real no repo Go"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ INSTALAÇÃO REAL ════
+> EXIT CODES (contrato firme)
+>   0  instalação concluída sem conflito
+>   1  instalação concluída COM conflito(s) — há `.harness-new` esperando revisão humana
+>   2  erro fatal (kit inválido, destino inválido, instalação sobre si mesmo)
+>   3  erro de uso
+>   9  --selftest falhou (o instalador está quebrado)
+> 
+>   O exit code do `doctor.sh` NÃO vira o exit code deste script, e isso é deliberado:
+>   logo após a instalação o doctor DEVE falhar (a entrevista da Fase B ainda não
+>   aconteceu, `project.name` e `roles.*` estão vazios). Confundir os dois faria o
+>   instalador reportar fracasso no exato momento em que trabalhou corretamente.
+> 
+> O QUE ELE FAZ
+>   1. Copia .claude/rules, .claude/skills, .claude/agents e .harness (bin com +x).
+>   2. CLAUDE.md: cria a partir do molde, ou ACRESCENTA no topo um bloco delimitado
+>      por marcadores; em reinstalação troca apenas o miolo entre os marcadores.
+>   3. Cria os diretórios de `paths.*` com `.gitkeep` e um `README` de uma linha
+>      (sem extensão, de propósito — ver o comentário na seção 3), e semeia o
+>      registro de conhecimento prometido pela doutrina.
+>   4. Garante no .gitignore as linhas `.claude/settings.local.json` e `.harness/proof/`.
+>   5. Imprime os próximos passos (a entrevista da Fase B) e roda o doctor.
+> 
+> POR QUE O PASSO 4 EXISTE (razão medida, não preventiva)
+>   No harness de origem essa proteção vinha de um arquivo de ignore GLOBAL da
+>   máquina — inexistente em qualquer outro computador. O primeiro `git add -A` de
+>   um clone teria versionado 159 entradas de permissão contendo dezenas de caminhos
+>   do host. Configuração de uma pessoa não é configuração do projeto.
+> 
+> DEPENDÊNCIAS
+>   bash, coreutils (cp, mkdir, cmp, find, sort), sed, awk, grep. git é opcional.
+> 
+> ── .gitignore protege settings.local.json? (o vazamento das 159 entradas) ──
+> AUSENTE — FALHA
+> 
+> ── CLAUDE.md ganhou o bloco delimitado? ──
+> sem bloco
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(19:08:24)*
+
+Achei um bug real — e é exatamente o tipo que a Lei 1 existe para pegar. O `install.sh` sem `--dry-run` imprimiu o **cabeçalho de ajuda** e não instalou nada (`.gitignore` ausente, CLAUDE.md sem bloco). O parser de argumentos está tratando o caminho posicional do kit como pedido de help, ou exigindo uma flag. Vou ver o começo do script:
+
+## 🤖 Claude *(19:08:25)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit/.harness/bin/install.sh",
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	#!/usr/bin/env bash
+> 2	#
+> 3	# install.sh — instalador do Harness Kit: idempotente e NÃO-DESTRUTIVO.
+> 4	#
+> 5	# PURPOSE
+> 6	#   Colocar a doutrina, os gates e o contrato dentro de um repositório destino sem
+> 7	#   nunca sobrescrever trabalho de quem já estava lá. Se um arquivo existe e difere,
+> 8	#   o instalador escreve `<alvo>.harness-new` ao lado e reporta o conflito — a decisão
+> 9	#   de mesclar é humana. Nada é apagado, nada é truncado, nada é "atualizado" em
+> 10	#   silêncio. Um instalador que sobrescreve é um instalador que ninguém roda duas vezes.
+> 11	#
+> 12	# USAGE
+> 13	#   # a partir da raiz do repositório destino, com o kit descompactado ao lado:
+> 14	#   bash harness-kit-tmp/.harness/bin/install.sh
+> 15	#
+> 16	#   install.sh [--kit <dir>] [--target <dir>] [--dry-run] [--no-doctor] [--selftest]
+> 17	#     --kit <dir>     raiz do kit descompactado (padrão: dois níveis acima deste script)
+> 18	#     --target <dir>  repositório destino (padrão: raiz do git a partir do cwd, ou o cwd)
+> 19	#     --dry-run       lista tudo que faria, sem escrever um único byte
+> 20	#     --no-doctor     não executa o diagnóstico ao final
+> 21	#     --selftest      instala numa árvore sintética e prova as invariantes
+> 22	#
+> 23	# EXIT CODES (contrato firme)
+> 24	#   0  instalação concluída sem conflito
+> 25	#   1  instalação concluída COM conflito(s) — há `.harness-new` esperando revisão humana
+> 26	#   2  erro fatal (kit inválido, destino inválido, instalação sobre si mesmo)
+> 27	#   3  erro de uso
+> 28	#   9  --selftest falhou (o instalador está quebrado)
+> 29	#
+> 30	#   O exit code do `doctor.sh` NÃO vira o exit code deste script, e isso é deliberado:
+> 31	#   logo após a instalação o doctor DEVE falhar (a entrevista da Fase B ainda não
+> 32	#   aconteceu, `project.name` e `roles.*` estão vazios). Confundir os dois faria o
+> 33	#   instalador reportar fracasso no exato momento em que trabalhou corretamente.
+> 34	#
+> 35	# O QUE ELE FAZ
+> 36	#   1. Copia .claude/rules, .claude/skills, .claude/agents e .harness (bin com +x).
+> 37	#   2. CLAUDE.md: cria a partir do molde, ou ACRESCENTA no topo um bloco delimitado
+> 38	#      por marcadores; em reinstalação troca apenas o miolo entre os marcadores.
+> 39	#   3. Cria os diretórios de `paths.*` com `.gitkeep` e um `README` de uma linha
+> 40	#      (sem extensão, de propósito — ver o comentário na seção 3), e semeia o
+> 41	#      registro de conhecimento prometido pela doutrina.
+> 42	#   4. Garante no .gitignore as linhas `.claude/settings.local.json` e `.harness/proof/`.
+> 43	#   5. Imprime os próximos passos (a entrevista da Fase B) e roda o doctor.
+> 44	#
+> 45	# POR QUE O PASSO 4 EXISTE (razão medida, não preventiva)
+> 46	#   No harness de origem essa proteção vinha de um arquivo de ignore GLOBAL da
+> 47	#   máquina — inexistente em qualquer outro computador. O primeiro `git add -A` de
+> 48	#   um clone teria versionado 159 entradas de permissão contendo dezenas de caminhos
+> 49	#   do host. Configuração de uma pessoa não é configuração do projeto.
+> 50	#
+> 51	# DEPENDÊNCIAS
+> 52	#   bash, coreutils (cp, mkdir, cmp, find, sort), sed, awk, grep. git é opcional.
+> 53	
+> 54	set -uo pipefail
+> 55	
+> 56	KIT_VERSION_FALLBACK='1.0.0'
+> 57	BEGIN_PREFIX='<!-- HARNESS-KIT:BEGIN'
+> 58	END_MARK='<!-- HARNESS-KIT:END -->'
+> 59	
+> 60	SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+> 61	SELF="$SCRIPT_DIR/$(basename -- "${BASH_SOURCE[0]}")"
+> 62	
+> 63	usage() { sed -n '3,52p' "$SELF" | sed -e 's/^# \{0,1\}//'; }
+> 64	
+> 65	# ── argumentos ────────────────────────────────────────────────────────────────
+> 66	KIT_SRC=''
+> 67	TARGET=''
+> 68	DRY=0
+> 69	RUN_DOCTOR=1
+> 70	SELFTEST=0
+> ```
+
+## 🤖 Claude *(19:08:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit/.harness/bin/install.sh",
+  "offset": 70,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 70	SELFTEST=0
+> 71	
+> 72	while [ $# -gt 0 ]; do
+> 73	  case "$1" in
+> 74	    --kit)      shift; [ $# -gt 0 ] || { printf 'install: --kit exige um caminho.\n' >&2; exit 3; }; KIT_SRC="$1" ;;
+> 75	    --kit=*)    KIT_SRC="${1#*=}" ;;
+> 76	    --target)   shift; [ $# -gt 0 ] || { printf 'install: --target exige um caminho.\n' >&2; exit 3; }; TARGET="$1" ;;
+> 77	    --target=*) TARGET="${1#*=}" ;;
+> 78	    --dry-run)  DRY=1 ;;
+> 79	    --no-doctor) RUN_DOCTOR=0 ;;
+> 80	    --selftest) SELFTEST=1 ;;
+> 81	    -h|--help)  usage; exit 0 ;;
+> 82	    *) printf 'install: argumento desconhecido: %s\n\n' "$1" >&2; usage >&2; exit 3 ;;
+> 83	  esac
+> 84	  shift
+> 85	done
+> 86	
+> 87	# ── resolução de kit e destino ────────────────────────────────────────────────
+> 88	if [ -z "$KIT_SRC" ]; then
+> 89	  KIT_SRC="$(cd -- "$SCRIPT_DIR/../.." && pwd -P)"
+> 90	fi
+> 91	if [ ! -d "$KIT_SRC" ]; then
+> 92	  printf 'install: kit inexistente em %s\n' "$KIT_SRC" >&2
+> 93	  exit 2
+> 94	fi
+> 95	KIT_SRC="$(cd -- "$KIT_SRC" && pwd -P)"
+> 96	
+> 97	if [ ! -r "$KIT_SRC/.harness/lib/harness-lib.sh" ] || [ ! -r "$KIT_SRC/.claude/rules/00-laws.md" ]; then
+> 98	  printf 'install: %s não parece o kit (faltam .harness/lib/harness-lib.sh e/ou .claude/rules/00-laws.md).\n' "$KIT_SRC" >&2
+> 99	  printf '         Descompacte o .zip e aponte --kit para a pasta que contém START-HERE.md.\n' >&2
+> 100	  exit 2
+> 101	fi
+> 102	
+> 103	# ── selftest ──────────────────────────────────────────────────────────────────
+> 104	# Prova as invariantes que, se quebrarem, destroem trabalho alheio em silêncio:
+> 105	# não sobrescrever, não duplicar o bloco, não comer texto do usuário, e recusar
+> 106	# um bloco aberto sem fechamento em vez de "consertar" comendo o resto do arquivo.
+> 107	SELFTEST_ROOT=''
+> 108	selftest_cleanup() {
+> 109	  [ -n "${SELFTEST_ROOT:-}" ] && [ -d "${SELFTEST_ROOT:-}" ] && rm -rf "$SELFTEST_ROOT"
+> ```
+
+## 🤖 Claude *(19:08:41)*
+
+
+## 🤖 Claude *(19:08:44)*
+
+O bug é meu no teste, mas revela uma armadilha real: chamei `install.sh ./harness-kit-tmp` (posicional), e o parser só aceita `--kit <dir>` → tratou como argumento desconhecido → exit 3 + ajuda. A chamada correta é sem posicional (o kit se auto-resolve). Vou confirmar que a forma documentada funciona e então tornar o posicional aceito, porque um agente naturalmente vai passar o diretório assim:
+
+## 🤖 Claude *(19:08:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SB=/home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo\ncd \"$SB\"\necho \"\u2550\u2550\u2550\u2550 forma DOCUMENTADA (sem posicional, kit auto-resolvido) \u2550\u2550\u2550\u2550\"\nbash ./harness-kit-tmp/.harness/bin/install.sh --no-doctor 2>&1 | tail -20\necho \"exit=$?\"\necho\necho \"\u2500\u2500 .gitignore protegido? \u2500\u2500\"; grep -nE 'settings.local.json|proof' .gitignore 2>/dev/null || echo \"AUSENTE\"\necho \"\u2500\u2500 bloco no CLAUDE.md? \u2500\u2500\"; grep -nE 'HARNESS-KIT:(BEGIN|END)' CLAUDE.md 2>/dev/null || echo \"sem bloco\"\necho \"\u2500\u2500 estrutura instalada \u2500\u2500\"; find .claude .harness docs -maxdepth 2 -type d 2>/dev/null | sort | head -20",
+  "description": "Testar forma documentada do install"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ forma DOCUMENTADA (sem posicional, kit auto-resolvido) ════
+>   probes.install.cmd              Comando que instala as dependências.
+>   spec_gate.trigger_paths         Globs que significam "código de módulo novo" AQUI.
+>   law2_process.sop_map            Quando exigir processo escrito antes do código.
+> 
+> REGRA DE OURO DOS PROBES: rode cada comando ANTES de gravá-lo, e registre o exit
+> code observado em `expect_exit`. Um probe não executado não é um probe. Se a
+> capacidade não existe neste stack, grave `null` — string vazia significa "não
+> entrevistado" e o doctor falha nela de propósito.
+> 
+> Depois:
+> 
+>   bash .harness/bin/doctor.sh --deep      # Gate C: precisa sair 0
+>   bash .harness/bin/spec-gate.sh --explain # Gate D: confirme que um gatilho casa
+>   bash .harness/bin/install-hooks.sh      # opcional: gates no pre-commit
+>   bash .harness/bin/secret-scan.sh --selftest
+> 
+> E a Fase E (prova de ingestão), em sessão limpa: peça ao modelo para imprimir
+> verbatim o canário do harness. Se ele não devolver a string, a doutrina não está
+> sendo carregada e nenhum gate deste harness é confiável.
+> 
+> exit=0
+> 
+> ── .gitignore protegido? ──
+> 3:.claude/settings.local.json
+> 4:.harness/proof/
+> ── bloco no CLAUDE.md? ──
+> 1:<!-- HARNESS-KIT:BEGIN v1.0.0 -->
+> 37:`HARNESS-KIT:BEGIN` e `HARNESS-KIT:END` é substituído na próxima reinstalação.
+> 38:<!-- HARNESS-KIT:END -->
+> ── estrutura instalada ──
+> .claude
+> .claude/agents
+> .claude/rules
+> .claude/skills
+> .claude/skills/four-cs-audit
+> .claude/skills/handoff
+> .claude/skills/handson
+> .claude/skills/harness-init
+> .claude/skills/level-up
+> .claude/skills/mape-k-loop
+> .claude/skills/obstacle-to-synthesis
+> .claude/skills/proof-audit
+> .claude/skills/spec-gate
+> .claude/skills/spec-scribe
+> docs
+> docs/architecture
+> docs/handoff-archive
+> docs/knowledge
+> docs/processes
+> docs/specs
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(19:08:55)*
+
+A instalação real funciona: `.gitignore` protegido, bloco delimitado no topo do CLAUDE.md, estrutura completa. Vou eliminar a armadilha ergonômica — aceitar o diretório do kit como posicional, já que é o que qualquer um digita naturalmente:
+
+## 🤖 Claude *(19:09:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit/.harness/bin/install.sh",
+  "old_string": "    -h|--help)  usage; exit 0 ;;\n    *) printf 'install: argumento desconhecido: %s\\n\\n' \"$1\" >&2; usage >&2; exit 3 ;;",
+  "new_string": "    -h|--help)  usage; exit 0 ;;\n    --*) printf 'install: argumento desconhecido: %s\\n\\n' \"$1\" >&2; usage >&2; exit 3 ;;\n    *)\n      # Positional convenience: a bare path is taken as the kit dir (the natural\n      # `install.sh harness-kit-tmp` call), or as the target if it looks like the\n      # repo root. Kit wins when unset, since that is the ambiguous common case.\n      if [ -z \"$KIT_SRC\" ] && [ -d \"$1/.harness/lib\" ]; then KIT_SRC=\"$1\"\n      elif [ -z \"$KIT_SRC\" ] && [ -d \"$1\" ]; then KIT_SRC=\"$1\"\n      elif [ -z \"$TARGET\" ] && [ -d \"$1\" ]; then TARGET=\"$1\"\n      else printf 'install: caminho posicional inesperado: %s\\n\\n' \"$1\" >&2; usage >&2; exit 3\n      fi ;;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit/.harness/bin/install.sh has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:09:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit\nbash -n .harness/bin/install.sh && echo \"sintaxe OK\"\necho\necho \"\u2550\u2550\u2550\u2550 re-teste: posicional agora aceito + idempot\u00eancia (2\u00aa instala\u00e7\u00e3o n\u00e3o duplica) \u2550\u2550\u2550\u2550\"\nSB=/home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo2\nrm -rf \"$SB\"; mkdir -p \"$SB\"; cd \"$SB\"; git init -q; git config user.email t@t; git config user.name t\ncp -r /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit ./harness-kit-tmp\necho 'module x' > go.mod\necho \"-- 1\u00aa instala\u00e7\u00e3o (POSICIONAL, a chamada natural) --\"\nbash ./harness-kit-tmp/.harness/bin/install.sh ./harness-kit-tmp --no-doctor >/dev/null 2>&1; echo \"exit=$?\"\ngrep -c 'HARNESS-KIT:BEGIN' CLAUDE.md | sed 's/^/blocos BEGIN no CLAUDE.md: /'\necho \"-- 2\u00aa instala\u00e7\u00e3o (idempot\u00eancia: N\u00c3O pode duplicar bloco nem gitignore) --\"\nbash ./harness-kit-tmp/.harness/bin/install.sh ./harness-kit-tmp --no-doctor >/dev/null 2>&1; echo \"exit=$?\"\ngrep -c 'HARNESS-KIT:BEGIN' CLAUDE.md | sed 's/^/blocos BEGIN no CLAUDE.md: /'\ngrep -c 'settings.local.json' .gitignore | sed 's/^/linhas settings.local no gitignore: /'",
+  "description": "Re-testar posicional e idempot\u00eancia"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sintaxe OK
+> 
+> ════ re-teste: posicional agora aceito + idempotência (2ª instalação não duplica) ════
+> -- 1ª instalação (POSICIONAL, a chamada natural) --
+> exit=0
+> blocos BEGIN no CLAUDE.md: 2
+> -- 2ª instalação (idempotência: NÃO pode duplicar bloco nem gitignore) --
+> exit=0
+> blocos BEGIN no CLAUDE.md: 2
+> linhas settings.local no gitignore: 1
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(19:09:20)*
+
+
+## 🤖 Claude *(19:09:21)*
+
+Idempotência confirmada — a 2ª instalação não duplicou (ficou em 2 ocorrências porque o próprio texto do bloco menciona `HARNESS-KIT:BEGIN` entre crases; o marcador real é 1). Vou confirmar isso e rodar o doctor no repo instalado, que **deve** falhar de propósito (entrevista da Fase B ainda não feita):
+
+## 🤖 Claude *(19:09:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SB=/home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo2; cd \"$SB\"\necho \"\u2500\u2500 marcadores REAIS (in\u00edcio de linha) no CLAUDE.md \u2500\u2500\"\ngrep -cE '^<!-- HARNESS-KIT:BEGIN' CLAUDE.md | sed 's/^/BEGIN reais: /'\ngrep -cE '^<!-- HARNESS-KIT:END' CLAUDE.md | sed 's/^/END reais: /'\necho\necho \"\u2550\u2550\u2550\u2550 doctor.sh no repo rec\u00e9m-instalado (DEVE falhar: Fase B pendente) \u2550\u2550\u2550\u2550\"\nbash .harness/bin/doctor.sh 2>&1 | tail -35\necho \"exit(=n\u00ba de FAILs)=${PIPESTATUS:-?}\"",
+  "description": "Verificar marcadores e rodar doctor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── marcadores REAIS (início de linha) no CLAUDE.md ──
+> BEGIN reais: 1
+> END reais: 1
+> 
+> ════ doctor.sh no repo recém-instalado (DEVE falhar: Fase B pendente) ════
+> 
+> 5. Spec gate (Closed-Loop)
+>   [ PASS ] spec_gate.enabled         true
+>   [ FAIL ] spec_gate.trigger_paths   VAZIO — o gate está ligado e nunca vai disparar
+>            Fase D: preencha com os globs de código de módulo novo DESTE repo (ex.: um diretório de páginas,
+>            de comandos, de pacotes). Gate ligado sem gatilho é a forma mais cara de teatro: custa a crença.
+>   [ WARN ] suítes                    nenhuma suíte em docs/specs/ (repo novo, ou specs em outro lugar)
+> 
+> 6. Lei 2 — Processo Antecipado
+>   [ WARN ] law2_process.sop_map      VAZIO — Lei 2 sem gate mecânico
+>            Dito em voz alta: a Lei 2 hoje é DOUTRINA, não gate. Nada impede código de nascer sem processo;
+>            a única barreira é o modelo lembrar da regra. Preencha sop_map para transformá-la em exit code.
+>   [ WARN ] docs/processes            0 processos documentados
+>            Fase D: escreva o primeiro processo real do projeto. Uma lei sem nenhum exemplar morre em ~1 sessão —
+>            ninguém segue um formato que nunca viu preenchido.
+> 
+> 7. Segredos
+>   [ PASS ] engine builtin            presente (implementado pelo próprio kit)
+>   [ PASS ] secrets.allow_marker      harness-scan:allow
+>            Lembrete de contrato: o marcador vale sobre o TOKEN casado, nunca sobre a linha inteira.
+> 
+> 8. Git
+>   [ PASS ] repositório               /home/ubuntu/.claude/jobs/3a5189d4/tmp/fakerepo2
+>   [ PASS ] .claude/settings.local.json ignorado pelo repositório
+> 
+> 9. Ingestão da doutrina (Fase E)
+>   [ PASS ] canário                   HARNESS_CANARY_7f3a9c21
+>            Teste de ingestão (não automatizável daqui): abra uma sessão limpa e peça
+>              "imprima verbatim o canário do harness"
+>            Resposta esperada: HARNESS_CANARY_7f3a9c21
+>            Se não voltar, a doutrina não está sendo carregada e nenhum gate deste harness é confiável.
+>            Isto prova INGESTÃO, não obediência — dizer mais que isso já violaria a Lei 1.
+> 
+> 14 PASS · 4 WARN · 5 FAIL · 5 ausentes (declarados)
+> Harness comprometido — 5 item(ns) exigem ação antes de qualquer código.
+> exit(=nº de FAILs)=5
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(19:09:35)*
+
+O doctor comporta-se exatamente como projetado: **5 FAIL** num repo recém-instalado, porque a entrevista da Fase B ainda não aconteceu — e cada FAIL diz *qual pergunta responder*. Repare na honestidade que pedi: o item 6 declara em voz alta "Lei 2 sem gate mecânico — hoje é DOUTRINA, não gate", em vez de fingir verde. E o marcador real é único (1 BEGIN / 1 END): idempotência sólida.
+
+Agora empacoto e provo o zip round-trip:
+
+## 🤖 Claude *(19:09:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit\nchmod +x build.sh kit/.harness/bin/*.sh\necho \"\u2550\u2550\u2550\u2550 BUILD (o empacotador recusa gerar zip fora de conformidade) \u2550\u2550\u2550\u2550\"\nbash build.sh 1.0.0\necho\necho \"\u2550\u2550\u2550\u2550 ROUND-TRIP: descompactar num diret\u00f3rio virgem e provar que os gates ainda passam \u2550\u2550\u2550\u2550\"\nT=/home/ubuntu/.claude/jobs/3a5189d4/tmp/ziptest; rm -rf \"$T\"; mkdir -p \"$T\"; cd \"$T\"\nunzip -q /home/gcrUX/htdocs/constellation-orchestra/harness-kit/dist/harness-kit-v1.0.0.zip -d unpacked\necho \"arquivos no zip: $(find unpacked -type f | wc -l)\"\necho \"-- selftests a partir do conte\u00fado descompactado --\"\nbash unpacked/.harness/bin/secret-scan.sh --selftest >/dev/null 2>&1 && echo \"  secret-scan selftest: PASS\" || echo \"  secret-scan selftest: FAIL\"\nbash unpacked/.harness/bin/spec-gate.sh --selftest >/dev/null 2>&1 && echo \"  spec-gate selftest:   PASS\" || echo \"  spec-gate selftest:   FAIL\"\necho \"-- permiss\u00f5es de execu\u00e7\u00e3o preservadas? --\"\nls -l unpacked/.harness/bin/*.sh | awk '{print $1, $NF}' | head -3",
+  "description": "Empacotar e testar round-trip do zip"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ BUILD (o empacotador recusa gerar zip fora de conformidade) ════
+> → Harness Kit v1.0.0
+>   · caminhos absolutos ......... ok
+>   · sintaxe dos scripts ........ ok
+>   · harness.config.json válido . ok
+>   · canário presente ........... ok
+> 
+> ✓ /home/gcrUX/htdocs/constellation-orchestra/harness-kit/dist/harness-kit-v1.0.0.zip
+>   arquivos : 66
+>   tamanho  : 224K
+>   sha256   : ed3ca71ff52770f1452ee6d93426512c5678faf21ac2776e8f8ed3ef5657422c
+> 
+> ════ ROUND-TRIP: descompactar num diretório virgem e provar que os gates ainda passam ════
+> arquivos no zip: 45
+> -- selftests a partir do conteúdo descompactado --
+>   secret-scan selftest: PASS
+>   spec-gate selftest:   PASS
+> -- permissões de execução preservadas? --
+> -rwxrwxr-x unpacked/.harness/bin/doctor.sh
+> -rwxrwxr-x unpacked/.harness/bin/install-hooks.sh
+> -rwxrwxr-x unpacked/.harness/bin/install.sh
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(19:09:52)*
+
+
+## 🤖 Claude *(19:09:53)*
+
+O kit está pronto e provado ponta-a-ponta. Deixa eu confirmar o artefato final e fechar:
+
+## 🤖 Claude *(19:09:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit\necho \"\u2550\u2550\u2550\u2550 ARTEFATO ENTREGUE \u2550\u2550\u2550\u2550\"\nls -lh dist/\necho\necho \"sha256:\"; cat dist/harness-kit-v1.0.0.sha256\necho\necho \"\u2550\u2550\u2550\u2550 CONTE\u00daDO (45 arquivos) \u2550\u2550\u2550\u2550\"\nunzip -Z1 dist/harness-kit-v1.0.0.zip | sort | awk '{printf \"  %s\\n\",$0}' | head -50",
+  "description": "Confirmar artefato final"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ ARTEFATO ENTREGUE ════
+> total 228K
+> -rw-rw-r-- 1 ubuntu ubuntu   89 Jul 24 16:09 harness-kit-v1.0.0.sha256
+> -rw-rw-r-- 1 ubuntu ubuntu 221K Jul 24 16:09 harness-kit-v1.0.0.zip
+> 
+> sha256:
+> ed3ca71ff52770f1452ee6d93426512c5678faf21ac2776e8f8ed3ef5657422c  harness-kit-v1.0.0.zip
+> 
+> ════ CONTEÚDO (45 arquivos) ════
+>   .claude/
+>   .claude/agents/
+>   .claude/agents/deepsearch-blueprint.md
+>   .claude/agents/docs-curator.md
+>   .claude/agents/pmo-curator.md
+>   .claude/agents/spec-curator.md
+>   .claude/agents/spec-scribe.md
+>   .claude/rules/
+>   .claude/rules/00-laws.md
+>   .claude/rules/01-closed-loop.md
+>   .claude/rules/02-governance.md
+>   .claude/skills/
+>   .claude/skills/four-cs-audit/
+>   .claude/skills/four-cs-audit/SKILL.md
+>   .claude/skills/handoff/
+>   .claude/skills/handoff/SKILL.md
+>   .claude/skills/handson/
+>   .claude/skills/handson/SKILL.md
+>   .claude/skills/harness-init/
+>   .claude/skills/harness-init/SKILL.md
+>   .claude/skills/level-up/
+>   .claude/skills/level-up/SKILL.md
+>   .claude/skills/mape-k-loop/
+>   .claude/skills/mape-k-loop/SKILL.md
+>   .claude/skills/obstacle-to-synthesis/
+>   .claude/skills/obstacle-to-synthesis/SKILL.md
+>   .claude/skills/proof-audit/
+>   .claude/skills/proof-audit/SKILL.md
+>   .claude/skills/spec-gate/
+>   .claude/skills/spec-gate/SKILL.md
+>   .claude/skills/spec-scribe/
+>   .claude/skills/spec-scribe/SKILL.md
+>   docs/
+>   .harness/
+>   .harness/bin/
+>   .harness/bin/doctor.sh
+>   .harness/bin/install-hooks.sh
+>   .harness/bin/install.sh
+>   .harness/bin/proof-audit.sh
+>   .harness/bin/secret-scan.sh
+>   .harness/bin/sop-gate.sh
+>   .harness/bin/spec-gate.sh
+>   .harness/harness.config.json
+>   .harness/lib/
+>   .harness/lib/harness-lib.sh
+>   .harness/schema/
+>   .harness/templates/
+>   .harness/templates/ADR.md
+>   .harness/templates/architecture-patterns.md
+>   .harness/templates/CLAUDE-block.md
+> ```
+
+## 🤖 Claude *(19:10:22)*
+
+Pronto. O kit está construído, testado ponta-a-ponta e empacotado.
+
+## Entregue
+
+**`harness-kit/dist/harness-kit-v1.0.0.zip`** (221 KB · 45 arquivos · sha256 `ed3ca71f…`)
+
+Um `.zip` genérico e stack-neutral. Você o descompacta na raiz de qualquer repositório novo e diz ao modelo:
+
+> *"Preciso iniciar um novo desenvolvimento. Configure toda a base com o kit em `harness-kit-tmp/`."*
+
+O agente lê o `START-HERE.md`, executa o ritual de instalação e deixa o repo com o harness ativo.
+
+## O que ele carrega
+
+| Camada | Conteúdo |
+|---|---|
+| **Doutrina** (auto-carregada) | `.claude/rules/` — as 4 Leis, o Spec Gate, a governança de docs, e Obstáculo→Síntese |
+| **Rituais** | 10 skills — `handson`, `handoff`, `spec-gate`, `harness-init`, `proof-audit`, `mape-k-loop`, `four-cs-audit`, `level-up`, `spec-scribe`, `obstacle-to-synthesis` |
+| **Curadores** | 5 subagentes — spec-curator, docs-curator, pmo-curator, spec-scribe, deepsearch-blueprint |
+| **Gates executáveis** | 7 scripts bash com **exit code** — `spec-gate`, `sop-gate`, `secret-scan`, `proof-audit`, `doctor`, `install`, `install-hooks` |
+| **Moldes** | suíte de spec `00→09` (incluindo o `09-pattern-conformance` com o catálogo de padrões), SOP, ADR, HANDOFF |
+
+## O que o distingue de um `cp -r`
+
+Você perguntou se `cp -r` bastaria. A verificação mostrou que **não** — e o kit corrige três defeitos que a cópia teria propagado:
+
+1. **O gate que você descreveu virou mecanismo.** Seu exemplo — "novo menu de Marketing dispara o gate de BoK sozinho" — no original vive só como texto no CLAUDE.md. Aqui é três camadas: a regra auto-carrega, a skill `spec-gate` dispara pela *intenção*, e o `spec-gate.sh` sai `exit 1`. **Provado**: 13/13 casos, gate visto vermelho (draft/review/ausente) e verde (open/sealed).
+2. **Segredo com `// test-only` não passa mais.** O scanner original tinha um kill-switch de uma palavra. **Provado**: 8/8, o caso que derrubava o original agora é `exit 1`.
+3. **Nenhum comando é presumido.** Todo probe vem da entrevista da Fase B, executado antes de gravado. `cmd: null` reporta "ausente", nunca verde falso.
+
+**Prova de neutralidade**: instalei num repo Go simulado — `.gitignore` protegido, bloco delimitado no topo do CLAUDE.md, idempotente na 2ª rodada, e o `doctor` falhou **de propósito** com 5 FALHAS acionáveis (a entrevista não foi feita). Round-trip do zip: selftests passam a partir do conteúdo descompactado, permissões de execução preservadas.
+
+## Uma armadilha que corrigi no caminho
+
+Meu próprio teste pegou um bug de ergonomia: `install.sh <dir>` (a chamada natural) dava erro de argumento. Corrigido — o posicional agora é aceito.
+
+## Para publicar como repo Git (opcional)
+
+O host não tem `gh`, mas o `origin` já usa sua chave SSH. Quando quiser a variante "repositório GitHub" além do zip, é `git init` na pasta `harness-kit/` e push — aí você poderia até adicioná-lo como marketplace de plugins (`enabledPlugins` no `.claude/settings.json`). Mas isso é um passo com a sua mão; o zip já é auto-suficiente e é o que você pediu.
+
+Quer que eu **abra o zip e revise o conteúdo de algum arquivo específico** com você (por exemplo o `00-laws.md` ou o `spec-gate.sh`), ou prefere levar o `.zip` como está para um primeiro projeto real?
+
+## 👤 User *(19:15:14)*
+
+ótimo então agora terminou?  O que precisa de mim? Onde esta o zip e preciso tambem de um passo a passo de Setup/Init/instalação como usar tudo na verdade
+
+## 🤖 Claude *(19:15:50)*
+
+
+## 🤖 Claude *(19:15:51)*
+
+Terminou o kit em si — está construído, testado e empacotado. Falta a peça que você pediu agora: um guia humano de ponta a ponta. Vou escrevê-lo e colocá-lo dentro do próprio zip, para viajar junto. Primeiro confirmo os detalhes exatos dos comandos para o guia não mentir:
+
+## 🤖 Claude *(19:15:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit\necho \"=== descri\u00e7\u00f5es (gatilhos) de cada skill ===\"\nfor f in .claude/skills/*/SKILL.md; do\n  n=$(basename $(dirname \"$f\"))\n  d=$(awk '/^description:/{sub(/^description: */,\"\");print;exit}' \"$f\")\n  printf \"  %-22s %s\\n\" \"$n\" \"$(echo \"$d\" | cut -c1-90)\"\ndone\necho\necho \"=== usage de cada gate (linha USAGE do cabe\u00e7alho) ===\"\nfor f in .harness/bin/*.sh; do\n  n=$(basename \"$f\")\n  printf \"  %-18s\\n\" \"$n\"\ndone",
+  "description": "Confirmar gatilhos das skills e comandos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === descrições (gatilhos) de cada skill ===
+>   four-cs-audit          "Dispara em 'audita o harness', 'auditoria dos 4 Cs', 'como está o harness', 'o ambiente 
+>   handoff                Protocolo de SELO de sessão com prova material. Dispare em "/handoff", "selar", "sela a s
+>   handson                Protocolo de PEGA de sessão em repositório com harness instalado. Dispare em "/handson",
+>   harness-init           "Dispara quando o pedido é montar, instalar ou configurar a base de engenharia do reposit
+>   level-up               "Dispara em 'o que automatizar', 'level up', 'estou repetindo isso', 'de novo essa tarefa'
+>   mape-k-loop            "Laço autonômico de CONFIABILIDADE. Dispara em 'algo quebrou', 'está falhando', 'o buil
+>   obstacle-to-synthesis  "Dispara no instante em que um obstáculo é vencido e a causa NÃO era óbvia — bug que
+>   proof-audit            "Dispara ao selar a sessão, ao declarar qualquer entrega concluída, e sempre que uma afi
+>   spec-gate              "Dispara ANTES de escrever qualquer código sempre que o pedido cria ou altera superfície
+>   spec-scribe            "Dispara quando o Spec Gate bloqueou (spec-gate.sh saiu 1 ou 2) e quando o pedido é escre
+> 
+> === usage de cada gate (linha USAGE do cabeçalho) ===
+>   doctor.sh         
+>   install-hooks.sh  
+>   install.sh        
+>   proof-audit.sh    
+>   secret-scan.sh    
+>   sop-gate.sh       
+>   spec-gate.sh
+> ```
+
+## 🤖 Claude *(19:15:59)*
+
+Skills e gatilhos confirmados. Escrevendo o guia:
+
+## 🤖 Claude *(19:17:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit/GUIA-DE-USO.md",
+  "content": "# Guia de Uso \u2014 Harness Kit v1.0.0\n\nGuia humano, do zero ao dia a dia. Para o guia que o **agente** segue na instala\u00e7\u00e3o,\nveja `START-HERE.md`. Este aqui \u00e9 para **voc\u00ea**.\n\n---\n\n## Parte 0 \u2014 O que voc\u00ea tem em m\u00e3os\n\n- **O artefato:** `harness-kit-v1.0.0.zip` (~221 KB).\n- **O que ele precisa da m\u00e1quina:** `bash`, `git`, `grep`, `sed`, `awk`. Nada mais \u00e9 obrigat\u00f3rio.\n  (Se houver `python3` ou `jq`, a leitura de config fica mais robusta \u2014 mas o kit funciona sem.)\n- **O que ele N\u00c3O precisa:** nenhuma linguagem, framework, banco ou servi\u00e7o. Ele \u00e9 stack-neutral.\n\n---\n\n## Parte 1 \u2014 Instala\u00e7\u00e3o (duas formas)\n\n### Forma A \u2014 deixe o agente fazer (recomendada)\n\n1. Coloque o `.zip` na raiz do reposit\u00f3rio onde vai trabalhar e descompacte:\n\n   ```bash\n   unzip harness-kit-v1.0.0.zip -d harness-kit-tmp\n   ```\n\n2. Na sess\u00e3o do Claude Code (ou outro agente), diga:\n\n   > *\"Preciso iniciar um novo desenvolvimento. Configure toda a base com o kit em `harness-kit-tmp/`.\"*\n\n   O agente l\u00ea `harness-kit-tmp/START-HERE.md` e executa o ritual de 5 fases sozinho \u2014\n   inclusive a **entrevista** da Parte 2, que \u00e9 o passo que ele n\u00e3o pode pular.\n\n3. Ao final, quando tudo estiver verde, apague a pasta tempor\u00e1ria:\n\n   ```bash\n   rm -rf harness-kit-tmp\n   ```\n\n### Forma B \u2014 instale voc\u00ea mesmo (manual)\n\n```bash\nunzip harness-kit-v1.0.0.zip -d harness-kit-tmp\nbash harness-kit-tmp/.harness/bin/install.sh harness-kit-tmp\n```\n\nO instalador \u00e9 **idempotente e n\u00e3o-destrutivo**: nunca sobrescreve um arquivo seu \u2014 se\nhouver conflito, escreve `<arquivo>.harness-new` ao lado e avisa. Rodar duas vezes n\u00e3o duplica nada.\n\nDepois de instalar, voc\u00ea ainda precisa fazer a **entrevista** (Parte 2), sen\u00e3o o `doctor`\nvai reprovar de prop\u00f3sito.\n\n> **O que o instalador cria no seu repo:**\n> `.claude/rules/` (a doutrina) \u00b7 `.claude/skills/` \u00b7 `.claude/agents/` \u00b7 `.harness/` (gates e\n> contrato) \u00b7 `docs/{specs,processes,architecture,knowledge,handoff-archive}/` \u00b7 um bloco no topo\n> do `CLAUDE.md` \u00b7 e duas linhas no `.gitignore` (`.claude/settings.local.json` e `.harness/proof/`).\n\n---\n\n## Parte 2 \u2014 A entrevista (o passo que n\u00e3o pode ser pulado)\n\nO harness n\u00e3o sabe qual \u00e9 o **seu** stack. Ele precisa aprender quais comandos provam que o\nc\u00f3digo est\u00e1 s\u00e3o **neste** projeto. Isso vive em `.harness/harness.config.json`.\n\nOu voc\u00ea responde ao agente quando ele perguntar, ou edita o arquivo \u00e0 m\u00e3o. As chaves essenciais:\n\n```jsonc\n{\n  \"project\": {\n    \"name\": \"Meu Projeto\",           // preencha\n    \"slug\": \"meu-projeto\",           // preencha\n    \"response_language\": \"pt-BR\",    // idioma das respostas ao humano\n    \"code_language\": \"en\"            // idioma de c\u00f3digo/coment\u00e1rios\n  },\n  \"roles\": {\n    \"reviewer\": \"Voc\u00ea\",              // quem aprova antes de merge\n    \"owner\": \"Voc\u00ea\"                  // quem absorve o preju\u00edzo se quebrar em produ\u00e7\u00e3o\n  },\n  \"probes\": {\n    // Preencha o \"cmd\" de cada um com o comando REAL do seu stack.\n    // REGRA DE OURO: rode o comando uma vez ANTES de grav\u00e1-lo. Um probe n\u00e3o testado \u00e9 uma esperan\u00e7a.\n    \"typecheck\": { \"cmd\": \"npx tsc --noEmit\", \"expect_exit\": 0 },   // ou: go vet ./...  |  mypy .  |  cargo check\n    \"test\":      { \"cmd\": \"npm test\",          \"expect_exit\": 0 },   // ou: go test ./... |  pytest  |  cargo test\n    \"lint\":      { \"cmd\": \"npm run lint\",      \"expect_exit\": 0 },\n    \"build\":     { \"cmd\": \"npm run build\",     \"expect_exit\": 0 },\n    \"install\":   { \"cmd\": \"npm ci\",            \"expect_exit\": 0 }\n  },\n  \"spec_gate\": {\n    \"trigger_paths\": [\"src/pages/**\", \"src/modules/**\"]  // onde \"c\u00f3digo de m\u00f3dulo novo\" vive NO SEU repo\n  }\n}\n```\n\n- `cmd: null` = \"essa capacidade n\u00e3o existe aqui\" \u2192 o doctor reporta **ausente**, n\u00e3o erro.\n- `cmd: \"\"` (vazio) = \"ainda n\u00e3o entrevistei\" \u2192 o doctor **falha** de prop\u00f3sito.\n- `trigger_paths` vazio = o Spec Gate **nunca dispara**. O doctor avisa em voz alta.\n\n**Feche a entrevista rodando o diagn\u00f3stico:**\n\n```bash\nbash .harness/bin/doctor.sh\n```\n\nEle precisa sair **0**. Cada FALHA diz exatamente qual campo preencher.\n\n---\n\n## Parte 3 \u2014 Como usar no dia a dia\n\nVoc\u00ea quase nunca chama os scripts direto \u2014 as **skills disparam sozinhas** pela sua inten\u00e7\u00e3o.\nEst\u00e3o aqui pelos nomes s\u00f3 para voc\u00ea saber que existem.\n\n| Quando voc\u00ea\u2026 | O que dispara | O que acontece |\n|---|---|---|\n| pede um **m\u00f3dulo/feature/menu/rota/integra\u00e7\u00e3o nova** | skill `spec-gate` | PARA antes de codar, checa se h\u00e1 especifica\u00e7\u00e3o revisada |\n| come\u00e7a a sess\u00e3o / \"onde paramos?\" | skill `handson` | l\u00ea o estado, o handoff, as su\u00edtes por status, e prop\u00f5e a 1\u00aa a\u00e7\u00e3o |\n| \"selar\" / \"encerrar\" / fim do dia | skill `handoff` | varre segredos, commita, escreve o registro, audita a prova |\n| resolve um **bug n\u00e3o-\u00f3bvio** | skill `obstacle-to-synthesis` | te lembra de virar aquilo em processo/skill antes de esquecer |\n| \"estou repetindo isso\" | skill `level-up` | prioriza o que vale automatizar |\n| \"algo quebrou\" | skill `mape-k-loop` | la\u00e7o de confiabilidade (Monitor\u2192Analyze\u2192Plan\u2192Execute\u2192Knowledge) |\n| \"audita o harness\" | skill `four-cs-audit` | nota 0-100 nos 4 Cs (Contexto, Conex\u00f5es, Capacidades, Cad\u00eancia) |\n| \"prove que funcionou\" | skill `proof-audit` | verifica cada alega\u00e7\u00e3o de sucesso contra artefato material |\n\nOs gates execut\u00e1veis por tr\u00e1s delas, se quiser rodar \u00e0 m\u00e3o:\n\n```bash\nbash .harness/bin/spec-gate.sh            # posso codar? exit 0=sim, 1=gate fechado, 2=sem spec\nbash .harness/bin/spec-gate.sh --list     # tabela de todas as su\u00edtes e seu GATE STATUS\nbash .harness/bin/doctor.sh               # sa\u00fade do harness (exit = n\u00ba de falhas)\nbash .harness/bin/secret-scan.sh          # varre segredos no diff staged\nbash .harness/bin/install-hooks.sh        # (opcional) pluga os gates no git pre-commit\n```\n\n---\n\n## Parte 4 \u2014 O fluxo de um m\u00f3dulo novo (o exemplo do \"menu de Marketing\")\n\n\u00c9 este comportamento que voc\u00ea quis levar. Passo a passo real:\n\n1. Voc\u00ea diz: *\"adiciona um menu principal de Marketing\"* ou *\"preciso de um m\u00f3dulo de billing\"*.\n2. A skill `spec-gate` reconhece a **inten\u00e7\u00e3o** e para: n\u00e3o escreve c\u00f3digo ainda.\n3. Ela roda `spec-gate.sh --module marketing`. Como n\u00e3o existe `docs/specs/marketing/`, sai `exit 2`.\n4. O agente responde com o Modo de Recusa e oferece escrever a especifica\u00e7\u00e3o:\n   *\"posso acionar o spec-scribe agora?\"*\n5. Voc\u00ea aprova. O subagente `spec-scribe` (ou voc\u00ea) escreve a su\u00edte `docs/specs/marketing/`\n   (`00-index` \u2026 `05-sdd`), com IDs rastre\u00e1veis (`FR-MKT-001`\u2026). O `00-index` nasce com\n   `<!-- GATE: draft -->`.\n6. **Voc\u00ea revisa** e, satisfeito, move o marcador para `<!-- GATE: open -->`.\n   *(Quem abre \u00e9 o Revisor \u2014 nunca quem escreveu a spec. Isso \u00e9 de prop\u00f3sito.)*\n7. Agora `spec-gate.sh --module marketing` sai `exit 0`. O c\u00f3digo pode nascer \u2014 e cada commit\n   de implementa\u00e7\u00e3o cita um `FR-MKT-\u2026`.\n\nPara pular tudo isso s\u00f3 em casos leg\u00edtimos (corre\u00e7\u00e3o de typo, bump de depend\u00eancia, bug em\narquivo \u00fanico de feature j\u00e1 especificada), o gate tem exce\u00e7\u00f5es documentadas em\n`.claude/rules/01-closed-loop.md \u00a75`.\n\n---\n\n## Parte 5 \u2014 Fechando a sess\u00e3o\n\nQuando parar de trabalhar, diga **\"selar a sess\u00e3o\"** (ou `/handoff`). A skill `handoff`:\n\n1. varre segredos (bloqueia o selo se achar credencial real);\n2. gera commits granulares na conven\u00e7\u00e3o do projeto;\n3. escreve um Registro em `HANDOFF.md` (o que foi feito, com prova material);\n4. varre segredos de novo \u2014 agora incluindo o texto que acabou de escrever;\n5. roda a auditoria de prova (`proof-audit.sh`) \u2014 veredito independente, n\u00e3o auto-declarado;\n6. registra o aprendizado em `docs/knowledge/observations.md`;\n7. preenche a auto-auditoria das 4 Leis.\n\nA pr\u00f3xima sess\u00e3o come\u00e7a com **\"onde paramos?\"** e a skill `handson` reconstr\u00f3i o contexto a\npartir desse registro. \u00c9 esse par que faz cada sess\u00e3o continuar a anterior em vez de recome\u00e7ar.\n\n---\n\n## Parte 6 \u2014 Verifica\u00e7\u00e3o de sa\u00fade (a qualquer momento)\n\n```bash\nbash .harness/bin/doctor.sh          # r\u00e1pido: estrutura, config, ponteiros mortos\nbash .harness/bin/doctor.sh --deep   # completo: executa os probes de verdade\n```\n\n`--deep` roda os comandos de `probes.*` e compara com o baseline. \u00c9 o que voc\u00ea roda quando\nsuspeita que algo do ambiente mudou.\n\n---\n\n## Parte 7 \u2014 Opcional: transformar o kit num repo Git pr\u00f3prio\n\nSe quiser versionar o kit e evolu\u00ed-lo (em vez de reenviar o zip a cada projeto):\n\n```bash\ncd harness-kit\ngit init && git add . && git commit -m \"chore: harness kit v1.0.0\"\ngit remote add origin git@github.com:<voce>/<harness-kit>.git\ngit push -u origin main\n```\n\nA partir da\u00ed, novos projetos podem consumir o kit por clone, e melhorias no harness chegam por\n`git pull` em vez de c\u00f3pia manual. (Publicar como *marketplace de plugins* do Claude Code \u00e9 um\npasso a mais, opcional \u2014 o zip sozinho j\u00e1 \u00e9 auto-suficiente.)\n\n---\n\n## O que este kit honestamente N\u00c3O garante\n\nEst\u00e1 escrito com todas as letras em `START-HERE.md \u00a73`, mas em resumo:\n\n- **A doutrina entrar no contexto n\u00e3o garante obedi\u00eancia.** Por isso os gates que precisam\n  sobreviver \u00e0 sua aus\u00eancia s\u00e3o scripts com `exit 1`, n\u00e3o par\u00e1grafos.\n- **Ele n\u00e3o traz mem\u00f3ria** de outros projetos \u2014 cada repo tem a sua.\n- **Ele n\u00e3o sabe seu stack** at\u00e9 voc\u00ea fazer a entrevista. Um probe presumido \u00e9 a falha n\u00ba 1.\n\nSe algum gate nunca ficou vermelho na sua frente, ele ainda n\u00e3o \u00e9 um gate. Rode os `--selftest`\n(`secret-scan.sh --selftest`, `spec-gate.sh --selftest`) para v\u00ea-los reprovar de prop\u00f3sito.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/harness-kit/kit/GUIA-DE-USO.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:17:03)*
+
+Agora reconstruo o zip para incluir o guia e confirmo o artefato final:
+
+## 🤖 Claude *(19:17:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/harness-kit\nbash build.sh 1.0.0\necho\necho \"\u2550\u2550\u2550\u2550 VERIFICA\u00c7\u00c3O FINAL DO ARTEFATO \u2550\u2550\u2550\u2550\"\nls -lh dist/harness-kit-v1.0.0.zip\necho\necho \"caminho absoluto:\"\nrealpath dist/harness-kit-v1.0.0.zip\necho\necho \"guia inclu\u00eddo no zip?\"\nunzip -Z1 dist/harness-kit-v1.0.0.zip | grep -E 'GUIA|START|README' | sed 's/^/  /'\necho\necho \"arquivos no zip: $(unzip -Z1 dist/harness-kit-v1.0.0.zip | grep -vE '/$' | wc -l)\"",
+  "description": "Rebuild e verifica\u00e7\u00e3o final do zip"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> → Harness Kit v1.0.0
+>   · caminhos absolutos ......... ok
+>   · sintaxe dos scripts ........ ok
+>   · harness.config.json válido . ok
+>   · canário presente ........... ok
+> 
+> ✓ /home/gcrUX/htdocs/constellation-orchestra/harness-kit/dist/harness-kit-v1.0.0.zip
+>   arquivos : 67
+>   tamanho  : 228K
+>   sha256   : efd7db0627eb5a96e03c1e4cf3a782c48ac79c5d42c9d0aeaa192f376279bf49
+> 
+> ════ VERIFICAÇÃO FINAL DO ARTEFATO ════
+> -rw-rw-r-- 1 ubuntu ubuntu 226K Jul 24 16:17 dist/harness-kit-v1.0.0.zip
+> 
+> caminho absoluto:
+> /home/gcrUX/htdocs/constellation-orchestra/harness-kit/dist/harness-kit-v1.0.0.zip
+> 
+> guia incluído no zip?
+>   README.md
+>   START-HERE.md
+>   GUIA-DE-USO.md
+> 
+> arquivos no zip: 46
+> ```
+
+## 🤖 Claude *(19:17:27)*
+
+Terminou. Sim.
+
+## Onde está o zip
+
+```
+/home/gcrUX/htdocs/constellation-orchestra/harness-kit/dist/harness-kit-v1.0.0.zip
+```
+
+226 KB · 46 arquivos · sha256 `efd7db06…` · agora com o `GUIA-DE-USO.md` dentro.
+
+## O que precisa de você
+
+**Para o zip funcionar: nada.** Ele é auto-suficiente e passou por todos os testes (gates vistos vermelhos e verdes, instalação num repo Go virgem, round-trip do zip).
+
+**Só quando você for usar num projeto real**, uma coisa é obrigatória — a **entrevista da Fase B**: dizer ao harness quais são os comandos de *typecheck / test / lint / build* daquele stack. É o único passo que ele não consegue adivinhar, e é exatamente o que impede o falso-verde. O agente vai te perguntar; você responde 4-5 comandos.
+
+Opcional (só se quiser): transformar o kit num repo Git seu, para evoluí-lo sem reenviar o zip. Instruções na Parte 7 do guia.
+
+## Passo a passo — resumo do fluxo completo
+
+**1. Instalar** (na raiz do projeto novo):
+```bash
+unzip harness-kit-v1.0.0.zip -d harness-kit-tmp
+```
+Depois, na sessão do agente:
+> *"Preciso iniciar um novo desenvolvimento. Configure toda a base com o kit em `harness-kit-tmp/`."*
+
+Ele faz o resto sozinho. (Ou manualmente: `bash harness-kit-tmp/.harness/bin/install.sh harness-kit-tmp`.)
+
+**2. Entrevista** — responder os comandos do seu stack quando ele perguntar, e fechar com:
+```bash
+bash .harness/bin/doctor.sh   # tem que sair 0
+```
+
+**3. Usar** — no dia a dia você não chama nada; as skills disparam pela intenção. Você pede *"adiciona um menu de Marketing"* → o gate para, exige a especificação, você revisa e abre o gate, aí o código nasce. Fecha o dia com *"selar a sessão"*, retoma com *"onde paramos?"*.
+
+**4. Limpar**: `rm -rf harness-kit-tmp`.
+
+O guia dentro do zip (`GUIA-DE-USO.md`) tem isso tudo detalhado em 7 partes — incluindo o fluxo completo do "menu de Marketing" passo a passo (Parte 4), que é o comportamento que você queria levar.
+
+Um detalhe honesto para fechar: o kit **está no seu working dir mas ainda não foi commitado** — é uma pasta nova (`harness-kit/`) fora do controle de versão. Quer que eu **faça o commit dele** neste repo, ou prefere que ele fique solto (ou até que eu o mova para fora, já que o destino é outro projeto)?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
