@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3058
-> * **Sessões do Claude**: 3010
+> * **Total de Sessões Registradas**: 3074
+> * **Sessões do Claude**: 3026
 > * **Sessões do Gemini**: 48
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-ae19f50f11f0a3aac]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-ada878595e81dc6a9]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-acc37fcc7dd114758]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-ac1a39b4ec7b9e9e4]]` - *2026-07-24*
 *   `[[2026-07-24 - agent-abc6504f3dd6f1fda]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-abad1e8dd94e77f3e]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-aa6c2f329609fde86]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-a86e34ea52683f8ce]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-a742e7388f8695437]]` - *2026-07-24*
+*   `[[2026-07-24 - agent-a6b9f4ff3d4e2f0f2]]` - *2026-07-24*
 *   `[[2026-07-24 - agent-a51aeb75938ba9ecc]]` - *2026-07-24*
-*   `[[2026-07-24 - Visualizar roadmap com passos realizados e próximos]]` - *2026-07-24*
-*   `[[2026-07-24 - Denovo não estou conseguindo acessar a...]]` - *2026-07-24*
-*   `[[2026-07-24 - Copiar engenharia de harness e shakehands para outro repositório]]` - *2026-07-24*
-*   `[[2026-07-23 - ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d]]` - *2026-07-23*
-*   `[[2026-07-23 - agent-af699c6f1ce8664ba]]` - *2026-07-23*
-*   `[[2026-07-23 - agent-af5d6342a02598c8e]]` - *2026-07-23*
-*   `[[2026-07-23 - agent-af5a4e4689b99fd66]]` - *2026-07-23*
-*   `[[2026-07-23 - agent-af29bc40215b7f4c2]]` - *2026-07-23*
-*   `[[2026-07-23 - agent-aeff25524688415ba]]` - *2026-07-23*
-*   `[[2026-07-23 - agent-aeecb8d17c8c21cf3]]` - *2026-07-23*
-*   *... e mais 3000 sessões nessa categoria.*
+*   *... e mais 3016 sessões nessa categoria.*
 
 ---
 
@@ -1743,8 +1743,24 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-ae19f50f11f0a3aac]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-ada878595e81dc6a9]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-acc37fcc7dd114758]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-ac1a39b4ec7b9e9e4]]` (ClaudeSessions)
 *   `[[2026-07-24 - agent-abc6504f3dd6f1fda]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-abad1e8dd94e77f3e]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-aa6c2f329609fde86]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a86e34ea52683f8ce]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a742e7388f8695437]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a6b9f4ff3d4e2f0f2]]` (ClaudeSessions)
 *   `[[2026-07-24 - agent-a51aeb75938ba9ecc]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a4fceb28c732ca85d]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a48025ccbeb35310d]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a29ad47f1041222de]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a23895fef5006f264]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a21fba83be1c4edc6]]` (ClaudeSessions)
+*   `[[2026-07-24 - agent-a1f6af33dcbb3e267]]` (ClaudeSessions)
 *   `[[2026-07-24 - Visualizar roadmap com passos realizados e próximos]]` (ClaudeSessions)
 *   `[[2026-07-24 - Denovo não estou conseguindo acessar a...]]` (GeminiSessions)
 *   `[[2026-07-24 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions)

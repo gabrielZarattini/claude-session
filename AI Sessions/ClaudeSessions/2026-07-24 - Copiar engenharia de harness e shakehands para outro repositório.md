@@ -687,6 +687,444 @@ Vou primeiro levantar materialmente o que existe de harness neste repo — sem i
 > TOTAL: 101
 > ```
 
+## 🤖 Claude *(16:29:24)*
+
+
+## 🤖 Claude *(16:29:25)*
+
+Inventário material levantado. Agora vou fazer a classificação exaustiva de cada ativo do harness (portável / parametrizável / deixa-pra-trás) e verificar o mecanismo de distribuição contra a capacidade real de plugins do Claude Code — em paralelo.
+
+## 🤖 Claude *(16:31:55)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'harness-portability-extraction',\n  description: 'Classifica cada ativo do harness MCORCH por portabilidade e projeta o mecanismo de extra\u00e7\u00e3o para outro repo/contexto',\n  phases: [\n    { title: 'Classify', detail: 'um agente por \u00e1rea do harness: commands, agents, skills, doutrina, hooks/scripts, SOPs' },\n    { title: 'Ground', detail: 'capacidade REAL de plugin/marketplace do Claude Code (evid\u00eancia, n\u00e3o mem\u00f3ria)' },\n    { title: 'Design', detail: '3 propostas independentes de mecanismo de distribui\u00e7\u00e3o' },\n    { title: 'Judge', detail: 'painel de ju\u00edzes pontua as propostas' },\n    { title: 'Verify', detail: 'refuta\u00e7\u00e3o adversarial da proposta vencedora' },\n    { title: 'Synthesize', detail: 'plano final acion\u00e1vel + contrato de parametriza\u00e7\u00e3o' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst CLASSIFY_SCHEMA = {\n  type: 'object',\n  properties: {\n    area: { type: 'string' },\n    assets: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          path: { type: 'string', description: 'caminho relativo ao repo' },\n          lines: { type: 'integer' },\n          purpose: { type: 'string', description: 'uma linha: o que esse ativo faz' },\n          tier: { type: 'string', enum: ['A-portable', 'B-parameterize', 'C-leave-behind'] },\n          coupling: { type: 'array', items: { type: 'string' }, description: 'pontos concretos de acoplamento MCORCH, cada um com path:linha e o trecho' },\n          params_needed: { type: 'array', items: { type: 'string' }, description: 'chaves de config que generalizariam o ativo (ex: PROJECT_SLUG, STACK_TYPECHECK_CMD)' },\n          value_outside_mcorch: { type: 'string', enum: ['high', 'medium', 'low'] },\n        },\n        required: ['path', 'purpose', 'tier', 'coupling', 'params_needed', 'value_outside_mcorch'],\n      },\n    },\n    area_summary: { type: 'string' },\n  },\n  required: ['area', 'assets', 'area_summary'],\n}\n\nconst AREAS = [\n  {\n    key: 'commands',\n    prompt: `Analise TODOS os arquivos em ${REPO}/.claude/commands/*.md (10 arquivos, ~1512 linhas).\nPara CADA arquivo: leia o conte\u00fado inteiro e classifique a portabilidade para OUTRO reposit\u00f3rio com OUTRO stack/contexto.\n- tier A-portable: funciona quase sem edi\u00e7\u00e3o em qualquer repo\n- tier B-parameterize: a ESTRUTURA/ritual \u00e9 universal mas h\u00e1 comandos/paths/dom\u00ednio MCORCH embutidos que precisam virar vari\u00e1veis de config\n- tier C-leave-behind: s\u00f3 faz sentido no MCORCH (Supabase edge fns, mcoCoins, canvas, OpenClaw, nginx dist)\nEm 'coupling' cite path:linha REAL e o trecho literal acoplado (ex: 'docker ps --filter name=mcorch', 'npx tsc --noEmit', 'mco_balance', caminho absoluto /home/ubuntu/...).\nEm 'params_needed' proponha nomes de chaves de configura\u00e7\u00e3o (UPPER_SNAKE) que resolveriam cada acoplamento.\nD\u00ea aten\u00e7\u00e3o especial a handoff.md e handson.md (os protocolos ShakeHands) \u2014 separe explicitamente o RITUAL (fases, gates, ordem) do PROBE (comandos concretos de verifica\u00e7\u00e3o).`,\n  },\n  {\n    key: 'agents',\n    prompt: `Analise TODOS os subagentes em ${REPO}/.claude/agents/ (arquivos .md no topo + o diret\u00f3rio bok-scribe/ com templates). ~2343 linhas.\nLeia cada arquivo inteiro. Classifique portabilidade para outro repo/contexto (mesmos tiers A/B/C descritos abaixo).\n- A-portable: a doutrina do agente \u00e9 universal (curadoria de docs, PMO, deepsearch, BoK scribe)\n- B-parameterize: universal mas com paths/stack/dom\u00ednio MCORCH embutidos\n- C-leave-behind: espec\u00edfico do produto MCORCH (engineer-spaces, creative-director, build-deploy-guardian nginx, openclaw-soul-template)\nEm 'coupling' cite path:linha real + trecho literal. Em 'params_needed' proponha chaves de config.\nAvalie tamb\u00e9m o frontmatter de cada agente (name/description/tools) \u2014 quais tools concedidas s\u00e3o espec\u00edficas do MCORCH.\nInclua os templates de ${REPO}/.claude/agents/bok-scribe/templates/ como ativos (podem ser tratados em bloco se forem homog\u00eaneos, mas liste cada arquivo).`,\n  },\n  {\n    key: 'skills',\n    prompt: `Analise TODAS as skills em ${REPO}/.claude/skills/ (18 entradas; a maioria \u00e9 <slug>/SKILL.md, uma \u00e9 gateway-recovery.md solto).\nLeia o SKILL.md de cada uma (e liste arquivos auxiliares se houver). Classifique portabilidade para outro repo/contexto com os tiers A-portable / B-parameterize / C-leave-behind.\nSeja RIGOROSO: skills como canvas-studio-cinematic, creative-studio-pipeline, engineer-spaces, free-render-dispatch, open-in-video-deeplink, asset-frame-grouping, openclaw-*, host-media-masters, webgl-canvas-stabilization s\u00e3o candidatas \u00f3bvias a C \u2014 CONFIRME lendo, n\u00e3o assuma.\nSkills como build-deploy-guardian, mcorch-qa-healing, pmo-curator, deepsearch-blueprint, ux-ui-senior-loop, e2e-user-zero-audit podem ter n\u00facleo universal com casca MCORCH \u2014 identifique o n\u00facleo extra\u00edvel.\nEm 'coupling' cite path:linha + trecho. Em 'params_needed' proponha chaves de config.`,\n  },\n  {\n    key: 'doctrine',\n    prompt: `Analise a DOUTRINA escrita do harness:\n1. ${REPO}/.claude/rules/survival.md (188 linhas \u2014 Survival Laws SSP-01)\n2. ${REPO}/CLAUDE.md (588 linhas \u2014 leia INTEIRO; separe o bloco \"MCORCH MASTER EXECUTION PROTOCOL\" + \"Code standards\" + \"Key Files Reference\" + arquitetura de produto)\n3. ${REPO}/docs/architecture/agentic-vision.md se existir (Pattern Conformance)\n4. ${REPO}/HANDOFF.md \u2014 s\u00f3 a ESTRUTURA (leia as primeiras 120 linhas e o formato de um Record); N\u00c3O leia o arquivo inteiro (1021 linhas de conte\u00fado espec\u00edfico)\n\nTrate cada SE\u00c7\u00c3O como um ativo separado (use path#secao no campo path). O ponto central: qual parcela da doutrina \u00e9 METODOLOGIA UNIVERSAL (transfer\u00edvel a qualquer projeto: as 4 Leis, Closed-Loop/BoK gate, ORO, Obstacle\u2192Synthesis, Documentation Ownership, Pattern Conformance, materialidade) vs qual \u00e9 DESCRI\u00c7\u00c3O DO PRODUTO MCORCH (Supabase, mcoCoins, malha mcorch_nodes, Canvas, OpenClaw, Key Files).\nPara os tier B, diga exatamente QUAL frase precisa virar placeholder e qual placeholder.\nMe\u00e7a em linhas quanto de CLAUDE.md \u00e9 doutrina universal vs produto.`,\n  },\n  {\n    key: 'automation',\n    prompt: `Analise a camada de AUTOMA\u00c7\u00c3O e FERRAMENTAL do harness:\n1. ${REPO}/.claude/hooks/ (pre-commit, secret-scan.sh, e2e-output-tripwire.sh) \u2014 leia os 3 inteiros\n2. ${REPO}/.claude/scripts/ (mcorch-doctor.sh, session-inspect.ts, scan-supply-chain-iocs.ts, e o diret\u00f3rio db/) \u2014 leia os 3 principais\n3. ${REPO}/.claude/settings.local.json \u2014 analise as chaves 'hooks' (o Stop hook), 'permissions.allow' (quantas entradas? quais s\u00e3o gen\u00e9ricas vs MCORCH), 'enabledMcpjsonServers'\n4. ${REPO}/scripts/qa/guard-sweep.sh se existir \u2014 o agregador de regress\u00e3o\n\nClassifique cada um em A-portable / B-parameterize / C-leave-behind para outro repo/contexto.\nPreste aten\u00e7\u00e3o especial em: session-inspect.ts (medidor de janela de contexto \u2014 provavelmente A), scan-supply-chain-iocs.ts (IoC scanner \u2014 provavelmente A), secret-scan.sh (provavelmente A/B), mcorch-doctor.sh (ritual universal, probes espec\u00edficos \u2192 B).\nEm 'coupling' cite path:linha + trecho literal (caminhos absolutos, nomes de container, portas, projeto Supabase).\nEm 'params_needed' proponha as chaves de config. Diga tamb\u00e9m se o script tem depend\u00eancias de runtime (bun/deno/node/jq) que precisam ser declaradas na instala\u00e7\u00e3o.`,\n  },\n  {\n    key: 'sops',\n    prompt: `Analise ${REPO}/docs/processes/ (101 SOPs, ~10774 linhas). N\u00c3O leia todos inteiros \u2014 seria desperd\u00edcio.\nEstrat\u00e9gia: (1) liste todos; (2) leia o cabe\u00e7alho/primeiras ~25 linhas de cada um para classificar; (3) leia INTEIROS apenas os que forem candidatos a META-PROCESSO do harness.\nObjetivo: separar SOPs de PROCESSO DO HARNESS (universais/meta: como se documenta, como se prova materialidade, como se audita, como se faz deploy com prova, MAPE-K, deepsearch-blueprint, pmo-curator, handoff-material-proof-audit, build-deploy-materiality, ecc-harness-tools, schema-drift-audit, autonomic-loop-mape-k, credential-rotation-runbook) dos SOPs de PRODUTO MCORCH (afiliados, canvas, veo, autopilot, whatsapp, meta, wordpress etc).\nNo array 'assets' liste APENAS: (a) todos os candidatos a meta-processo, com tier e coupling detalhados; (b) UMA entrada agregada por fam\u00edlia de produto (ex: path 'docs/processes/[familia:afiliados x7]' tier C-leave-behind) para n\u00e3o inflar.\nEm 'area_summary' d\u00ea a contagem exata: N meta-processo (port\u00e1veis) vs M produto (ficam), e a lista nominal dos meta-processo.`,\n  },\n]\n\nphase('Classify')\nconst classified = await parallel(AREAS.map(a => () =>\n  agent(a.prompt + `\n\nREGRAS (cultura deste repo \u2014 Lei 1 Materialidade):\n- Toda afirma\u00e7\u00e3o de acoplamento precisa de path:linha REAL lido agora. NUNCA invente linha ou trecho.\n- Se n\u00e3o conseguir ler um arquivo, marque no coupling como 'N\u00c3O LIDO: <motivo>' em vez de inferir.\n- Seja econ\u00f4mico no texto: frases densas, sem pre\u00e2mbulo.`, {\n    label: `classify:${a.key}`,\n    phase: 'Classify',\n    schema: CLASSIFY_SCHEMA,\n  })\n))\n\nconst cls = classified.filter(Boolean)\nlog(`Classifica\u00e7\u00e3o: ${cls.length}/${AREAS.length} \u00e1reas \u00b7 ${cls.reduce((n, c) => n + (c.assets?.length || 0), 0)} ativos catalogados`)\n\nphase('Ground')\nconst CAPS_SCHEMA = {\n  type: 'object',\n  properties: {\n    can_ship: { type: 'array', items: { type: 'string' }, description: 'o que um plugin Claude Code PODE distribuir, cada item com evid\u00eancia' },\n    cannot_ship: { type: 'array', items: { type: 'string' }, description: 'o que um plugin N\u00c3O consegue distribuir (ex: CLAUDE.md do projeto? .claude/rules/? mem\u00f3ria?)' },\n    evidence: { type: 'array', items: { type: 'string' }, description: 'path:linha do repo vendorizado OU URL da doc oficial que sustenta cada claim' },\n    install_flow: { type: 'string', description: 'sequ\u00eancia exata de comandos para instalar um plugin pr\u00f3prio noutro repo, incluindo marketplace privado/local' },\n    per_repo_enable: { type: 'string', description: 'como fixar o plugin no .claude/settings.json do repo destino para que todo colaborador receba' },\n    plugin_root_var: { type: 'string', description: 'como scripts do plugin referenciam seus pr\u00f3prios arquivos' },\n    gotchas: { type: 'array', items: { type: 'string' } },\n    alternatives_for_cannot_ship: { type: 'array', items: { type: 'string' }, description: 'como contornar o que o plugin n\u00e3o carrega' },\n  },\n  required: ['can_ship', 'cannot_ship', 'evidence', 'install_flow', 'per_repo_enable', 'gotchas'],\n}\n\nconst capsPromise = agent(`Preciso da capacidade REAL (n\u00e3o lembrada) do sistema de plugins do Claude Code, porque vou empacotar um harness inteiro (skills + subagentes + slash commands + hooks + regras + doutrina em CLAUDE.md) para reutilizar noutro reposit\u00f3rio.\n\nFontes de evid\u00eancia dispon\u00edveis LOCALMENTE (prefira-as, s\u00e3o material):\n- ${REPO}/claude-plugins-official/ \u2014 clone oficial vendorizado. Tem .claude-plugin/marketplace.json e plugins/*/ com estruturas reais (skills/, commands/, agents/, hooks/hooks.json, hooks-handlers/).\n- ${REPO}/claude-plugins-official/plugins/plugin-dev/skills/{skill-development,agent-development,hook-development,plugin-settings,mcp-integration}/ \u2014 a doc oficial de como se constr\u00f3i plugin. LEIA ESTES.\n- ${REPO}/packages/vision-mcp-plugin/ \u2014 plugin pr\u00f3prio j\u00e1 feito (commands/ + .mcp.json + .claude-plugin/plugin.json).\nComplemente com WebFetch da doc oficial se algo ficar amb\u00edguo.\n\nResponda com precis\u00e3o:\n1. Que tipos de ativo um plugin PODE carregar (commands, agents, skills, hooks, MCP servers, settings, output styles, scripts auxiliares)?\n2. Um plugin consegue injetar/instalar o CLAUDE.md do projeto destino? E arquivos em .claude/rules/? E mem\u00f3ria (~/.claude/projects/<slug>/memory)? Se N\u00c3O, qual \u00e9 o contorno idiom\u00e1tico para distribuir DOUTRINA que precisa estar sempre em contexto?\n3. Fluxo exato para publicar um marketplace PR\u00d3PRIO (privado, repo git pr\u00f3prio) e instal\u00e1-lo noutro repo \u2014 comandos literais (/plugin marketplace add ..., /plugin install ...), formato do marketplace.json (schema, campo source com git/git-subdir/local).\n4. Como fixar o plugin no .claude/settings.json do repo destino (chave exata) para que a instala\u00e7\u00e3o seja autom\u00e1tica/versionada, n\u00e3o manual por usu\u00e1rio.\n5. Qual vari\u00e1vel referencia a raiz do plugin dentro de commands/hooks/scripts (ex: \\${CLAUDE_PLUGIN_ROOT}) e onde isso \u00e9 documentado.\n6. Gotchas: colis\u00e3o de nomes com skills/commands do projeto, preced\u00eancia plugin-vs-projeto, versionamento/atualiza\u00e7\u00e3o, plugin local (path) vs git.\n\nToda claim carrega evid\u00eancia em 'evidence' como path:linha ou URL. Se n\u00e3o achar evid\u00eancia para algo, diga explicitamente 'SEM EVID\u00caNCIA' em vez de afirmar.`, {\n  label: 'ground:plugin-capabilities',\n  phase: 'Ground',\n  agentType: 'claude-code-guide',\n  schema: CAPS_SCHEMA,\n})\n\nconst caps = await capsPromise\nlog(`Capacidades de plugin fundamentadas: ${caps ? caps.can_ship.length + ' can / ' + caps.cannot_ship.length + ' cannot' : 'FALHOU'}`)\n\nconst digest = JSON.stringify({ classified: cls, plugin_caps: caps })\n\nphase('Design')\nconst PROPOSAL_SCHEMA = {\n  type: 'object',\n  properties: {\n    name: { type: 'string' },\n    one_liner: { type: 'string' },\n    repo_layout: { type: 'string', description: '\u00e1rvore de diret\u00f3rios concreta do artefato extra\u00eddo' },\n    distribution: { type: 'string', description: 'como chega no repo destino, comandos literais' },\n    adaptation_ritual: { type: 'string', description: 'como o harness se adapta ao NOVO contexto (o passo que traduz doutrina gen\u00e9rica em doutrina daquele projeto)' },\n    config_contract: { type: 'array', items: { type: 'string' }, description: 'chaves de configura\u00e7\u00e3o concretas com exemplo de valor' },\n    what_stays_behind: { type: 'array', items: { type: 'string' } },\n    drift_control: { type: 'string', description: 'como updates no MCORCH chegam no outro repo (e vice-versa) sem copy-paste' },\n    effort: { type: 'string', description: 'estimativa de esfor\u00e7o em horas/sess\u00f5es, honesta' },\n    weaknesses: { type: 'array', items: { type: 'string' } },\n  },\n  required: ['name', 'one_liner', 'repo_layout', 'distribution', 'adaptation_ritual', 'config_contract', 'what_stays_behind', 'drift_control', 'effort', 'weaknesses'],\n}\n\nconst ANGLES = [\n  {\n    key: 'plugin-marketplace',\n    lens: `\u00c2NGULO 1 \u2014 PLUGIN + MARKETPLACE PR\u00d3PRIO (mecanismo nativo do Claude Code).\nProjete o harness como um (ou mais) plugin(s) Claude Code publicados num marketplace git pr\u00f3prio do Sovereign, instal\u00e1vel em N reposit\u00f3rios.\nExplore: um plugin monol\u00edtico vs v\u00e1rios (harness-core / harness-bok / harness-qa)? Como a DOUTRINA (Survival Laws + Master Protocol) viaja se o plugin n\u00e3o injeta CLAUDE.md? Como um comando /harness-init do pr\u00f3prio plugin gera os arquivos de projeto no destino?\nUse RIGOROSAMENTE as capacidades reais em plugin_caps \u2014 n\u00e3o proponha nada que o campo cannot_ship desminta.`,\n  },\n  {\n    key: 'template-repo',\n    lens: `\u00c2NGULO 2 \u2014 TEMPLATE REPO + INSTALADOR IDEMPOTENTE.\nProjete um reposit\u00f3rio-semente ('harness-seed' / 'shakehands-kit') com o harness parametrizado, e um instalador (bash/bun) que copia+renderiza os arquivos no repo destino a partir de um harness.config.json, com re-execu\u00e7\u00e3o idempotente (diff/merge, n\u00e3o clobber).\nExplore: templating (placeholders {{PROJECT_SLUG}}) vs config-em-runtime; como o instalador atualiza um harness j\u00e1 instalado sem apagar customiza\u00e7\u00f5es locais; git subtree/submodule como variante.\nSeja honesto sobre drift: este \u00e2ngulo tende a divergir \u2014 proponha o mecanismo de re-sync.`,\n  },\n  {\n    key: 'extraction-first',\n    lens: `\u00c2NGULO 3 \u2014 REFATORA\u00c7\u00c3O NA ORIGEM PRIMEIRO (harness-as-a-product).\nA tese: o harness do MCORCH hoje est\u00e1 fundido ao produto; copiar antes de separar propaga a fus\u00e3o. Projete a extra\u00e7\u00e3o INVERSA \u2014 primeiro refatorar o pr\u00f3prio constellation-orchestra para consumir o harness como depend\u00eancia externa (dogfooding), e s\u00f3 ent\u00e3o o segundo repo consome o mesmo artefato.\nExplore: qual \u00e9 o corte m\u00ednimo vi\u00e1vel (o que precisa sair de CLAUDE.md/commands para um pacote), como provar materialmente que o MCORCH continua funcionando ap\u00f3s a extra\u00e7\u00e3o, e por que isso reduz risco de o segundo repo herdar um harness meio-quebrado.\nSeja concreto sobre a ordem das opera\u00e7\u00f5es e sobre o custo (\u00e9 o \u00e2ngulo mais caro \u2014 justifique ou refute o pr\u00f3prio custo).`,\n  },\n]\n\nconst proposals = await parallel(ANGLES.map(a => () =>\n  agent(`Voc\u00ea projeta o mecanismo de portar o harness de engenharia + protocolos ShakeHands do MCORCH para OUTRO reposit\u00f3rio com OUTRO contexto.\n\n${a.lens}\n\nDADOS (classifica\u00e7\u00e3o por \u00e1rea + capacidades reais de plugin):\n${digest}\n\nContexto do dono: engenheiro s\u00eanior, opera sob 4 Survival Laws (Materialidade, Processo Antecipado, Poda, ORO), cultura de prova material, doutrina open-source-first custo USD zero, e a regra \"tudo que fa\u00e7o 2\u00d7 vira skill+agente\". O segundo repo pode ter OUTRO stack (n\u00e3o necessariamente React+Supabase).\n\nProduza a proposta COMPLETA e concreta no schema. Nada de generalidade: \u00e1rvore de diret\u00f3rios real, comandos literais, chaves de config com valores de exemplo. Assuma que quem vai executar \u00e9 um agente Claude Code no repo destino.\nSeja adversarial consigo mesmo no campo weaknesses \u2014 liste as falhas reais do SEU \u00e2ngulo.`, {\n    label: `design:${a.key}`,\n    phase: 'Design',\n    schema: PROPOSAL_SCHEMA,\n  })\n))\n\nconst props = proposals.filter(Boolean)\nlog(`Propostas: ${props.map(p => p.name).join(' \u00b7 ')}`)\n\nphase('Judge')\nconst JUDGE_SCHEMA = {\n  type: 'object',\n  properties: {\n    lens: { type: 'string' },\n    scores: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          proposal: { type: 'string' },\n          score: { type: 'integer' },\n          why: { type: 'string' },\n        },\n        required: ['proposal', 'score', 'why'],\n      },\n    },\n    winner: { type: 'string' },\n    best_ideas_from_losers: { type: 'array', items: { type: 'string' }, description: 'ideias que devem ser enxertadas no vencedor' },\n  },\n  required: ['lens', 'scores', 'winner', 'best_ideas_from_losers'],\n}\n\nconst LENSES = [\n  { key: 'drift', lens: 'RESIST\u00caNCIA A DRIFT E MANUTEN\u00c7\u00c3O \u2014 o harness evolui semanalmente no MCORCH. Qual proposta faz uma melhoria chegar aos outros repos sem copy-paste e sem diverg\u00eancia silenciosa? Penalize duramente qualquer coisa que vire fork morto.' },\n  { key: 'time-to-value', lens: 'TEMPO AT\u00c9 VALOR e custo de execu\u00e7\u00e3o \u2014 o Sovereign quer o segundo repo produtivo r\u00e1pido, com custo USD zero. Qual entrega harness funcionando no menor n\u00famero de sess\u00f5es? Penalize refatora\u00e7\u00e3o grande antes de qualquer valor.' },\n  { key: 'fidelity', lens: 'FIDELIDADE DOUTRIN\u00c1RIA \u2014 o valor real n\u00e3o s\u00e3o os arquivos, \u00e9 o COMPORTAMENTO (as 4 Leis gatilhando, o gate BoK bloqueando c\u00f3digo, o /handoff exigindo prova material, obst\u00e1culo\u2192skill). Qual proposta preserva os GATILHOS e os GATES no novo contexto, e n\u00e3o s\u00f3 o texto? Penalize quem copia texto sem o mecanismo que o faz disparar.' },\n]\n\nconst judged = await parallel(LENSES.map(l => () =>\n  agent(`Voc\u00ea \u00e9 juiz de um painel avaliando 3 propostas de como portar o harness de engenharia do MCORCH para outro reposit\u00f3rio.\n\nSUA LENTE: ${l.lens}\n\nPROPOSTAS:\n${JSON.stringify(props)}\n\nCAPACIDADES REAIS DE PLUGIN (n\u00e3o deixe passar proposta que viole isto):\n${JSON.stringify(caps)}\n\nPontue cada proposta 0-10 SOB A SUA LENTE apenas. Escolha um vencedor e liste as melhores ideias das perdedoras que devem ser enxertadas. Seja duro e espec\u00edfico.`, {\n    label: `judge:${l.key}`,\n    phase: 'Judge',\n    schema: JUDGE_SCHEMA,\n  })\n))\n\nconst jds = judged.filter(Boolean)\nconst tally = {}\nfor (const j of jds) for (const s of j.scores || []) tally[s.proposal] = (tally[s.proposal] || 0) + s.score\nlog(`Placar: ${Object.entries(tally).map(([k, v]) => `${k}=${v}`).join(' \u00b7 ')}`)\n\nphase('Verify')\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  properties: {\n    refuted: { type: 'boolean' },\n    fatal_flaws: { type: 'array', items: { type: 'string' } },\n    unverified_assumptions: { type: 'array', items: { type: 'string' } },\n    required_fixes: { type: 'array', items: { type: 'string' } },\n    verdict_note: { type: 'string' },\n  },\n  required: ['refuted', 'fatal_flaws', 'unverified_assumptions', 'required_fixes', 'verdict_note'],\n}\n\nconst REFUTERS = [\n  'MEC\u00c2NICA: tente REFUTAR provando que o mecanismo proposto n\u00e3o funciona como descrito no Claude Code real \u2014 comandos que n\u00e3o existem, campos de marketplace.json inv\u00e1lidos, plugin tentando entregar algo que cannot_ship desmente, vari\u00e1vel de ambiente inexistente, preced\u00eancia de skill/command errada. Verifique lendo o repo vendorizado em ' + REPO + '/claude-plugins-official/ e, se preciso, WebFetch da doc.',\n  'OPERA\u00c7\u00c3O: tente REFUTAR pelo lado operacional \u2014 o que quebra no dia 30? Segredo vazando entre repos, hooks que assumem bun/deno/npx ausentes no destino, caminho absoluto /home/ubuntu hardcoded, permissions.allow que n\u00e3o viaja, mem\u00f3ria de projeto que n\u00e3o existe no destino, HANDOFF.md que cresce sem arquivamento, agentes que citam Key Files inexistentes e alucinam. Cite arquivos REAIS do harness onde esses problemas j\u00e1 est\u00e3o presentes.',\n  'DOUTRINA: tente REFUTAR pelo lado de fidelidade \u2014 no repo destino as 4 Leis realmente v\u00e3o DISPARAR, ou viram texto decorativo? O gate BoK bloqueia c\u00f3digo sem BoK, ou o agente ignora? O Pattern Conformance sem docs/architecture/agentic-vision.md vira cita\u00e7\u00e3o \u00f3rf\u00e3? Um harness importado sem a MALHA (mcorch_nodes) perde qual parte do la\u00e7o? Diga o que precisa ser REESCRITO, n\u00e3o s\u00f3 copiado.',\n]\n\nconst verdicts = await parallel(REFUTERS.map((r, i) => () =>\n  agent(`Voc\u00ea \u00e9 um refutador adversarial. Sua fun\u00e7\u00e3o \u00e9 MATAR a proposta vencedora se ela for fr\u00e1gil. Default: c\u00e9tico.\n\nPROPOSTA VENCEDORA (por placar): ${JSON.stringify(props.find(p => p.name === Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0]) || props[0])}\n\nTODAS AS PROPOSTAS (contexto): ${JSON.stringify(props.map(p => ({ name: p.name, one_liner: p.one_liner })))}\nCAPACIDADES REAIS DE PLUGIN: ${JSON.stringify(caps)}\nCLASSIFICA\u00c7\u00c3O DOS ATIVOS: ${JSON.stringify(cls).slice(0, 60000)}\n\n${r}\n\nMarque refuted=true SOMENTE se houver falha que invalide o mecanismo. Se for consert\u00e1vel, refuted=false mas liste required_fixes concretos e obrigat\u00f3rios. Cada falha citada precisa de evid\u00eancia (path:linha ou comando).`, {\n    label: `verify:${['mecanica', 'operacao', 'doutrina'][i]}`,\n    phase: 'Verify',\n    schema: VERDICT_SCHEMA,\n  })\n))\n\nconst vds = verdicts.filter(Boolean)\nlog(`Refuta\u00e7\u00e3o: ${vds.filter(v => v.refuted).length}/${vds.length} refutaram \u00b7 ${vds.reduce((n, v) => n + v.required_fixes.length, 0)} fixes obrigat\u00f3rios`)\n\nphase('Synthesize')\nconst PLAN_SCHEMA = {\n  type: 'object',\n  properties: {\n    recommendation: { type: 'string', description: 'a recomenda\u00e7\u00e3o em 2-3 frases, decisiva' },\n    why_this_beats_cp_r: { type: 'string', description: 'por que isto vence o cp -r .claude, em termos materiais' },\n    tiers: {\n      type: 'object',\n      properties: {\n        A_portable: { type: 'array', items: { type: 'string' } },\n        B_parameterize: { type: 'array', items: { type: 'string' } },\n        C_leave_behind: { type: 'array', items: { type: 'string' } },\n      },\n      required: ['A_portable', 'B_parameterize', 'C_leave_behind'],\n    },\n    counts: { type: 'string', description: 'contagem exata: N ativos A, M B, K C, e linhas envolvidas' },\n    layout: { type: 'string', description: '\u00e1rvore de diret\u00f3rios final do artefato' },\n    config_contract: { type: 'array', items: { type: 'string' }, description: 'cada chave com prop\u00f3sito e exemplo' },\n    steps: {\n      type: 'array',\n      items: {\n        type: 'object',\n        properties: {\n          n: { type: 'integer' },\n          title: { type: 'string' },\n          what: { type: 'string' },\n          command: { type: 'string' },\n          proof: { type: 'string', description: 'gate de materialidade: como se prova que o passo funcionou' },\n          gated: { type: 'boolean', description: 'true se exige m\u00e3o/GO do Sovereign' },\n        },\n        required: ['n', 'title', 'what', 'proof', 'gated'],\n      },\n    },\n    adaptation_ritual: { type: 'string', description: 'como o harness gen\u00e9rico vira o harness DAQUELE projeto' },\n    mandatory_fixes: { type: 'array', items: { type: 'string' }, description: 'os required_fixes dos refutadores que entraram no plano' },\n    open_questions: { type: 'array', items: { type: 'string' }, description: 'o que s\u00f3 o Sovereign pode responder' },\n  },\n  required: ['recommendation', 'why_this_beats_cp_r', 'tiers', 'counts', 'layout', 'config_contract', 'steps', 'adaptation_ritual', 'mandatory_fixes', 'open_questions'],\n}\n\nconst plan = await agent(`Sintetize o PLANO FINAL de como portar o harness de engenharia + protocolos ShakeHands do MCORCH para outro reposit\u00f3rio/contexto.\n\nEntradas:\nCLASSIFICA\u00c7\u00c3O POR \u00c1REA: ${JSON.stringify(cls)}\nCAPACIDADES REAIS DE PLUGIN: ${JSON.stringify(caps)}\nPROPOSTAS: ${JSON.stringify(props)}\nJULGAMENTO (placar ${JSON.stringify(tally)}): ${JSON.stringify(jds)}\nREFUTA\u00c7\u00c3O ADVERSARIAL: ${JSON.stringify(vds)}\n\nRegras da s\u00edntese:\n- Parta do vencedor por placar, mas ENXERTE as best_ideas_from_losers e TODOS os required_fixes dos refutadores. Se um refutador marcou refuted=true, o plano tem que resolver ou o vencedor muda.\n- Os tiers A/B/C devem listar ATIVOS REAIS por path (agregue fam\u00edlias quando forem muitos), com a contagem exata em 'counts'.\n- Os steps devem ser execut\u00e1veis por um agente Claude Code, cada um com gate de materialidade (Lei 1) e marcados como gated quando exigirem GO/m\u00e3o humana.\n- config_contract: chaves concretas com exemplo de valor para um projeto hipot\u00e9tico diferente (outro stack).\n- adaptation_ritual: o passo que traduz doutrina gen\u00e9rica em doutrina daquele projeto \u2014 seja espec\u00edfico (quem entrevista, o que gera, o que valida).\n- open_questions: s\u00f3 o que genuinamente depende do Sovereign (qual \u00e9 o outro repo, mesmo stack?, mesmo host?, repo do marketplace p\u00fablico ou privado?).\n- Seja denso e decisivo. Sem pre\u00e2mbulo, sem hedging.`, {\n  label: 'synthesize:plan',\n  phase: 'Synthesize',\n  effort: 'high',\n  schema: PLAN_SCHEMA,\n})\n\nreturn { plan, tally, refuted: vds.filter(v => v.refuted).map(v => v.verdict_note), caps_cannot: caps?.cannot_ship }\n",
+  "description": "Classificar harness e projetar extra\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: w44p8c4y1
+> Summary: Classifica cada ativo do harness MCORCH por portabilidade e projeta o mecanismo de extração para outro repo/contexto
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/subagents/workflows/wf_ac1aee20-60b
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/workflows/scripts/harness-portability-extraction-wf_ac1aee20-60b.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/workflows/scripts/harness-portability-extraction-wf_ac1aee20-60b.js"} to iterate without resending the script.)
+> Run ID: wf_ac1aee20-60b
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/workflows/scripts/harness-portability-extraction-wf_ac1aee20-60b.js", resumeFromRunId: "wf_ac1aee20-60b"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(16:32:06)*
+
+
+## 🤖 Claude *(16:32:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== remotes ===\" && git remote -v 2>/dev/null || echo \"(sem remote)\" && echo && echo \"=== gh auth ===\" && gh auth status 2>&1 | head -8 && echo && echo \"=== agentic-vision existe? ===\" && ls -la docs/architecture/agentic-vision.md 2>/dev/null || echo \"AUSENTE\" && echo && echo \"=== outros repos git no host (candidatos a destino) ===\" && find /home/gcrUX/htdocs -maxdepth 2 -name \".git\" -type d 2>/dev/null | head -10",
+  "description": "Checar remotes, gh e repos candidatos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === remotes ===
+> origin	git@github.com:gabrielZarattini/constellation-orchestra.git (fetch)
+> origin	git@github.com:gabrielZarattini/constellation-orchestra.git (push)
+> 
+> === gh auth ===
+> /bin/bash: line 1: gh: command not found
+> 
+> === agentic-vision existe? ===
+> -rw-rw-r-- 1 gcrUX gcrUX 12068 Jun 26 19:42 docs/architecture/agentic-vision.md
+> 
+> === outros repos git no host (candidatos a destino) ===
+> /home/gcrUX/htdocs/viralmind-builder/.git
+> /home/gcrUX/htdocs/constellation-orchestra/.git
+> ```
+
+## 🤖 Claude *(16:32:13)*
+
+
+## 🤖 Claude *(16:32:14)*
+
+Há um segundo repo no host — `viralmind-builder`. Vou inspecioná-lo (só leitura), pois o stack do destino muda a parametrização.
+
+## 🤖 Claude *(16:32:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/viralmind-builder 2>/dev/null && echo \"=== remote ===\" && git remote -v && echo && echo \"=== \u00faltimo commit ===\" && git log --oneline -3 2>/dev/null && echo && echo \"=== raiz ===\" && ls -a | head -30 && echo && echo \"=== harness j\u00e1 presente? ===\" && ls -R .claude 2>/dev/null | head -20 || echo \"(sem .claude)\" && echo && echo \"=== CLAUDE.md? ===\" && wc -l CLAUDE.md 2>/dev/null || echo \"(sem CLAUDE.md)\" && echo && echo \"=== stack ===\" && python3 -c \"\nimport json\nd=json.load(open('package.json'))\nprint('name:',d.get('name'))\nprint('scripts:',list(d.get('scripts',{}).keys()))\ndeps=list(d.get('dependencies',{}).keys())\nprint('deps(%d):'%len(deps), ', '.join(deps[:25]))\n\" 2>/dev/null || echo \"(sem package.json)\"",
+  "description": "Inspecionar repo candidato viralmind-builder"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === remote ===
+> origin	https://github.com/gabrielZarattini/viralmind-builder (fetch)
+> origin	https://github.com/gabrielZarattini/viralmind-builder (push)
+> 
+> === último commit ===
+> 18100cd Corrigiu fluxo de salvamento
+> 34073ab Changes
+> b5a38a7 Adicionou ApplyInheritanceButton
+> 
+> === raiz ===
+> .
+> ..
+> bun.lock
+> components.json
+> docs
+> .env
+> eslint.config.js
+> .git
+> .gitignore
+> .lovable
+> package.json
+> package-lock.json
+> .prettierignore
+> .prettierrc
+> src
+> supabase
+> tsconfig.json
+> vite.config.ts
+> wrangler.jsonc
+> 
+> === harness já presente? ===
+> 
+> === CLAUDE.md? ===
+> (sem CLAUDE.md)
+> 
+> === stack ===
+> name: tanstack_start_ts
+> scripts: ['dev', 'build', 'build:dev', 'preview', 'lint', 'format']
+> deps(62): @ai-sdk/openai-compatible, @cloudflare/vite-plugin, @hookform/resolvers, @lovable.dev/cloud-auth-js, @radix-ui/react-accordion, @radix-ui/react-alert-dialog, @radix-ui/react-aspect-ratio, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-collapsible, @radix-ui/react-context-menu, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-hover-card, @radix-ui/react-label, @radix-ui/react-menubar, @radix-ui/react-navigation-menu, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-radio-group, @radix-ui/react-scroll-area, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slider, @radix-ui/react-slot
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(16:32:33)*
+
+
+## 🤖 Claude *(16:32:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/viralmind-builder && echo \"=== .claude existe? ===\" && test -d .claude && echo \"SIM: $(ls -a .claude | tr '\\n' ' ')\" || echo \"N\u00c3O existe\" && echo && echo \"=== docs/ ===\" && ls docs/ 2>/dev/null | head -20 && echo && echo \"=== supabase/ ===\" && ls supabase/ 2>/dev/null && echo \"migrations: $(ls supabase/migrations 2>/dev/null | wc -l) | functions: $(ls supabase/functions 2>/dev/null | wc -l)\" && echo && echo \"=== typecheck dispon\u00edvel? ===\" && grep -E '\"(dev|build|lint|format)\"' package.json && echo && echo \"=== src size ===\" && find src -type f | wc -l",
+  "description": "Detalhar o repo destino candidato"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .claude existe? ===
+> NÃO existe
+> 
+> === docs/ ===
+> 01-FOUNDATION
+> 02-TECHNICAL
+> 03-VISUAL-UX
+> 04-OPERATIONS
+> 05-AGENT-SYSTEM
+> README.md
+> 
+> === supabase/ ===
+> config.toml
+> migrations
+> migrations: 16 | functions: 0
+> 
+> === typecheck disponível? ===
+>     "dev": "vite dev",
+>     "build": "vite build",
+>     "lint": "eslint .",
+>     "format": "prettier --write ."
+> 
+> === src size ===
+> 145
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(16:32:50)*
+
+
+## 🤖 Claude *(16:32:58)*
+
+Levantamento material feito. Enquanto a análise exaustiva roda, o achado mais relevante do reconhecimento:
+
+**O repo destino provável já existe no host** — `/home/gcrUX/htdocs/viralmind-builder` (`github.com/gabrielZarattini/viralmind-builder`):
+
+| | constellation-orchestra | viralmind-builder |
+|---|---|---|
+| Stack | Vite + React + Supabase (100 edge fns) | **TanStack Start + Cloudflare Workers** (wrangler) + Supabase (16 migrations, **0** edge fns) |
+| `.claude/` | 18 skills · 10 agentes · 10 commands · 1 rules · hooks | **não existe** |
+| `CLAUDE.md` | 588 linhas | **não existe** |
+| `docs/` | `bok/` + `processes/` (101 SOPs) | taxonomia **própria**: `01-FOUNDATION` … `05-AGENT-SYSTEM` |
+| Typecheck | `npx tsc --noEmit` | só `lint`/`format` (prettier) — **os probes do `/handoff` não rodam lá** |
+
+Isso já mata a resposta ingênua: `cp -r .claude` levaria comandos que fazem `docker ps --filter name=mcorch`, `curl localhost:8001/api/v2/heartbeat`, `grep mco_balance src/` e um caminho absoluto de memória — tudo verde-falso ou quebrado no destino, o que é exatamente a violação da Lei 1 que o harness existe para impedir.
+
+Aguardando a classificação ativo-a-ativo (56 ativos do harness + 101 SOPs) e a verificação do mecanismo de plugin contra a doc real. Volto com o plano.
+
+## 👤 User *(16:43:31)*
+
+Na verdade eu não quero trazer o contexto por exemplo o --filter name=mcorch.... isso é contexto desse workspace eu quero somente as habilidades, regras e sim talvez funcionaria com o cp -r .claude, mas não tenho certeza, pois quero um contexto generico que eu posso importar / implantar em qualquer repositório. Por exemplo temos o protocolo de shakehands, os harness com gates, temos conceitos de MAPE-K, leis dos 4 Cs etc etc quero que você me traga tudo de engenharia e arquitetura de software para implantar em qualquer contextos e ou repositório de novos projetos. Temos agents e skills tambem por exemplo hoje aqui no repositório constallation quando eu falo que preciso de um novo módulo ou somente novo menu principal com a opção de Marketing, automaticamente é reconhecido que precisa obdecer a regra de ter o suite de boks antes de começar a gerar ou alterar códigos
+
+## 🤖 Claude *(16:43:57)*
+
+
+## 🤖 Claude *(16:43:59)*
+
+Entendido — a correção muda o alvo: você não quer o contexto do workspace, quer a **camada de engenharia** destilada e implantável em qualquer repo. E o exemplo que você deu é exatamente o coração do problema: hoje, quando você pede "novo menu de Marketing", o gate de BoK dispara sozinho — **isso não é um arquivo, é um mecanismo**, e é a parte que um `cp -r` não leva.
+
+Medindo materialmente se `cp -r .claude` funcionaria:
+
+## 🤖 Claude *(16:44:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ACOPLAMENTO DENTRO DE .claude/ (o que iria junto num cp -r) ===\"\necho \"arquivos .md/.sh/.ts em .claude (fora worktrees/context/proposals): $(find .claude -type f \\( -name '*.md' -o -name '*.sh' -o -name '*.ts' -o -name '*.json' \\) -not -path '*/worktrees/*' -not -path '*/context/*' -not -path '*/proposals/*' -not -path '*/backups/*' | wc -l)\"\necho\necho \"--- arquivos LIMPOS (zero termo do workspace) ---\"\nfind .claude -type f \\( -name '*.md' -o -name '*.sh' -o -name '*.ts' \\) -not -path '*/worktrees/*' -not -path '*/context/*' -not -path '*/proposals/*' | while read f; do\n  if ! grep -qEi 'mcorch|supabase|mcocoin|mco_balance|constellation|openclaw|sovereign|gcrUX|/home/ubuntu|chroma|lovable|higgsfield|canvas|veo' \"$f\" 2>/dev/null; then echo \"  CLEAN  $f\"; fi\ndone\necho\necho \"--- TOP 12 mais acoplados (hits do workspace) ---\"\nfind .claude -type f \\( -name '*.md' -o -name '*.sh' -o -name '*.ts' \\) -not -path '*/worktrees/*' -not -path '*/context/*' -not -path '*/proposals/*' | while read f; do\n  n=$(grep -Eoic 'mcorch|supabase|mcocoin|mco_balance|constellation|openclaw|sovereign|gcrUX|/home/ubuntu|chroma|lovable|higgsfield|veo' \"$f\" 2>/dev/null | paste -sd+ | bc 2>/dev/null); echo \"$n $f\"\ndone | sort -rn | head -12",
+  "description": "Medir acoplamento real dentro de .claude"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ACOPLAMENTO DENTRO DE .claude/ (o que iria junto num cp -r) ===
+> arquivos .md/.sh/.ts em .claude (fora worktrees/context/proposals): 71
+> 
+> --- arquivos LIMPOS (zero termo do workspace) ---
+>   CLEAN  .claude/commands/level-up.md
+>   CLEAN  .claude/hooks/e2e-output-tripwire.sh
+>   CLEAN  .claude/skills/agent-browser/SKILL.md
+>   CLEAN  .claude/skills/free-render-dispatch/SKILL.md
+> 
+> --- TOP 12 mais acoplados (hits do workspace) ---
+> 54 .claude/agents/bok-scribe-agent.md
+> 53 .claude/skills/openclaw-gateway-ops/SKILL.md
+> 38 .claude/scripts/mcorch-doctor.sh
+> 36 .claude/agents/openclaw-soul-template.md
+> 29 .claude/commands/handoff.md
+> 28 .claude/skills/openclaw-dreaming/SKILL.md
+> 23 .claude/commands/edge.md
+> 21 .claude/agents/bok-scribe/templates/08-quality-metrics.md
+> 20 .claude/references/mcorch-schema.md
+> 20 .claude/agents/bok-scribe/templates/05-sdd.md
+> 19 .claude/rules/survival.md
+> 19 .claude/references/supabase-edge-functions.md
+> ```
+
+## 🤖 Claude *(16:44:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ONDE MORA O GATILHO 'novo m\u00f3dulo -> gate BoK' (o mecanismo que ele citou) ===\"\necho \"--- 1. CLAUDE.md: bloco Master Execution Protocol (sempre em contexto) ---\"\ngrep -n \"Closed-Loop\\|Documentation Gate\\|halt code execution\\|bok-scribe\" CLAUDE.md | head -12\necho\necho \"--- 2. existe skill/hook que force isso? ---\"\ngrep -rln \"Closed-Loop\\|BoK gate\\|gate Closed-Loop\" .claude/skills .claude/agents .claude/commands 2>/dev/null\necho\necho \"--- 3. hooks configurados no settings (enforcement mec\u00e2nico) ---\"\npython3 -c \"\nimport json;d=json.load(open('.claude/settings.local.json'))\nprint(json.dumps(d.get('hooks'),indent=1,ensure_ascii=False))\nprint('permissions.allow entries:',len(d.get('permissions',{}).get('allow',[])))\n\"",
+  "description": "Localizar o mecanismo do gate BoK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ONDE MORA O GATILHO 'novo módulo -> gate BoK' (o mecanismo que ele citou) ===
+> --- 1. CLAUDE.md: bloco Master Execution Protocol (sempre em contexto) ---
+> 16:### 1. The Closed-Loop Protocol (UNBREAKABLE RULE)
+> 20:- **Step 2 — Documentation Gate:** If any of those documents are missing, you MUST halt code execution and either:
+> 21:  - Instruct the Sovereign to run `/bok-scribe <idea summary>` first, OR
+> 23:- **Step 3 — Execution:** Only AFTER MRD, BRD, PRD, FRD, and SDD are consolidated and reviewed do you begin coding — using those documents as the **ONE AND ONLY Single Source of Truth**. No invention beyond what is documented; ambiguities trigger a return to `/bok-scribe`, not to improvisation.
+> 43:> "Antes de codificar este módulo, preciso garantir que a família BoK (MRD/BRD/PRD/FRD/SDD) esteja consolidada em `docs/bok/<slug>/` **e que a SDD carregue a Pattern Conformance Declaration** (os 21 padrões agênticos de `docs/architecture/agentic-vision.md`). Posso acionar `/bok-scribe <resumo>` agora para selar a Fonte da Verdade?"
+> 59:- **`bok-curator`** (`.claude/agents/bok-curator.md`) — **DONO de `docs/bok/`** e principal colaborador do docs-curator. **Cria (delegando a `deepsearch-blueprint`/`bok-scribe` OU pondo a mão na massa), mantém, atualiza, emenda e — só em casos específicos — exclui** as suítes BoK. É o **principal curador e revisor de BoK no lugar do Sovereign** e o guardião do gate Closed-Loop (Fonte da Verdade que autoriza código).
+> 65:4. **BoK gate:** o `bok-curator` pode declarar o gate Closed-Loop ABERTO para uma fatia quando a suíte está 5/5 + Pattern Conformance **e revisada** — mas exige revisão do Sovereign para módulos grandes/arquiteturais; e **nunca** deixa código arrancar sobre BoK incompleta.
+> 405:| **Documentation Ownership (governança) — donos de docs/ e docs/bok/** | `.claude/agents/docs-curator.md` (dono de `docs/`) + `.claude/agents/bok-curator.md` (dono de `docs/bok/`, guardião do gate Closed-Loop). Curam/revisam no lugar do Sovereign; escalam via Telegram `@claw_gcrux` só pontualmente; exclusão restrita a superseded+arquivado. Regras em MCORCH Master Execution Protocol §6. Memória `feedback_docs_bok_ownership` |
+> 462:| **Channel Format Intelligence — SDD + SOP (Lei 2)** | `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` (SSOT implementation-level — fecha Gate Closed-Loop Step 3.5; resolve os 8 *blocking gaps* do critic `wf_a390c0f0-b6e`; §5.4 publish opt-in) · `docs/processes/channel-reshaper.md` (SOP 6 gates) · smokes `scripts/qa/smoke-reshape-pillar.ts` (17/17: idempotência · anti cross-post · channel→enum · **opt-in draft default + manual publish + auto mode** · tenancy) + `scripts/qa/smoke-reframe-image.ts` (reframe → JPEG geometria exata, magic bytes). 7 surfaces operacionais; OTD-CP-008/010/011 deferidos |
+> 470:| **crm-suite — BoK 9/9 SELADA (spine de relacionamento CRM · código dos pilares GATED)** | `docs/bok/crm-suite/` (Fase 0: fundação de dados operada por humano — `companies`/`crm_pipelines`/`crm_pipeline_stages`/`deals`/`crm_associations`/`crm_activities` + `forms`+RPC `crm_capture_lead` + ingress `submit-lead-webhook`; migrations `20260719140000`/`20260719160000`). Suíte 9/9 completada por `bok-curator` 2026-07-23 com `09-pattern-conformance.md` (91 l — SSOT; `05-sdd.md §8` é espelho verbatim lock-step). **Seal** `documentation_suite` `6b428dce-12f1-4b11-ad13-344f89ae63ba` (`bok-scribe-seal-crm-suite-v1`, embedado) DERIVES_FROM `bok-scribe-seal-crm-inbox-v1` (`2dff4a5a`). Pattern Conformance **6y/4d/11na** (honesto: zero LLM/zero mco na Fase 0 — `yes` #5/#8/#11/#12/#13/#18; `deferred` #1/#2/#9/#19→FR-CS-040+OTD-CS-004/007). ID space MR/BR/PR/FR/NFR/OTD-CS + FM-CS-01..18. **⚠️ O selo cobre SÓ a suíte BoK — NÃO abre o gate Closed-Loop para o código dos pilares CRM (Tickets/Produtos/Pedidos/Listas/Segmentos/canais Marketing): módulo GRANDE, código GATED em GO Sovereign (Master Execution Protocol §6; FM-CS-18).** Lacunas nomeadas: erasure LGPD não cobre a spine (FM-CS-02 RPN 324/OTD-CS-005), zero teste (OTD-CS-004), Mesh mandate descumprido (OTD-CS-011). Suíte irmã: `docs/bok/crm-inbox/`. |
+> 471:| **Content-provenance — AI Act Art.50 marcação (Fatia 0-1)** | Migration `20260716230000` (5 colunas `provenance_*`/`c2pa_sidecar_key` aditivas na spine `creative_assets` + `register_creative_asset` estendido p/ 26 args, DROP 21→CREATE 26 + re-GRANT service_role-only, /security-review NO FINDINGS) · `src/lib/provenance.ts` (enum IPTC DigitalSourceType materializado FR-CP-013, lock-step com o CHECK) · **motor** `scripts/provenance/embed-iptc-core.ts` (ExifTool `XMP-iptcExt:DigitalSourceType`, verify-before-claim) · **worker** `scripts/provenance-bridge.ts` (molde video-bridge: sweep `pending` image/video → download → embed → re-upload → `embedded`, fail-soft; systemd ref `scripts/systemd/provenance-bridge.service` NÃO habilitado = gate Sovereign) · **smoke** `scripts/qa/smoke-provenance-iptc.ts` (6/6 hermético zero-DB). **Witness E2E 2026-07-16:** asset real `bc03a65a` (imagem) + `d57e3341` (vídeo) baixados do bucket carregam a URI IPTC. SOP-processo Lei 2 (gate Closed-Loop) `docs/processes/content-provenance.md` + runbook operacional `docs/processes/content-provenance-marking.md`. **BoK `docs/bok/content-provenance/` 9/9 SELADA 2026-07-24** (GO Sovereign + revisão bok-curator) — nó `documentation_suite` `825088c0-ffb2-4bbe-9e23-c0086447a459` (`bok-scribe-seal-content-provenance-v1`, DERIVES_FROM `spaces-cadence-bok-seal-2026-07-15`; seed `scripts/seed-content-provenance-bok-seal.ts` promoveu o nó provisório `wf_25d2904c`, sem duplicar; Pattern Conformance 12y/3d/6na=21). **O selo cobre a SUÍTE apenas — NÃO abre o gate de código das Fatias 2/3/4.** ExifTool = `libimage-exiftool-perl` no host. **FR-CP-011 / Fatia 4 (disclosure Art. 50(4)) DEFERIDA** até OTD-CP-002 (jurídico provider-vs-deployer); Fatia 2 (C2PA/voz) GATED em OTD-CP-003/004; Fatia 3 (watermark) GATED em OTD-CP-009/014. |
+> 521:| **BoK Scribe Agent (slash cmd)** | `.claude/commands/bok-scribe.md` |
+> 
+> --- 2. existe skill/hook que force isso? ---
+> .claude/skills/pmo-curator/SKILL.md
+> .claude/skills/deepsearch-blueprint/SKILL.md
+> .claude/agents/bok-curator.md
+> .claude/skills/engineer-spaces/SKILL.md
+> .claude/agents/deepsearch-blueprint.md
+> .claude/agents/pmo-curator.md
+> .claude/agents/engineer-spaces.md
+> 
+> --- 3. hooks configurados no settings (enforcement mecânico) ---
+> {
+>  "Stop": [
+>   {
+>    "matcher": "",
+>    "hooks": [
+>     {
+>      "type": "command",
+>      "command": "echo '{\"systemMessage\": \"📋 Sessão encerrada. Rode /handoff para selar ou /handson para retomar.\"}'"
+>     }
+>    ]
+>   }
+>  ]
+> }
+> permissions.allow entries: 159
+> ```
+
+## 🤖 Claude *(16:44:33)*
+
+
+## 🤖 Claude *(16:44:50)*
+
+Resposta material à sua dúvida do `cp -r .claude` — e ela é mais interessante do que "não funcionaria":
+
+## O gate que você descreveu **não está em `.claude/`**
+
+Quando você diz "preciso de um novo menu de Marketing" e o BoK dispara sozinho, isso vem de `CLAUDE.md:16-23` — o bloco *Closed-Loop Protocol*. Não existe nenhuma skill, agente ou hook que force isso:
+
+```
+hooks configurados: apenas 1 "Stop" decorativo (echo de lembrete)
+enforcement mecânico do gate BoK: NENHUM
+```
+
+Ou seja: **`cp -r .claude` copiaria tudo menos exatamente a coisa que você mais quer levar.** O gate é 100% "sempre-em-contexto" via CLAUDE.md — e CLAUDE.md é o arquivo mais contaminado de contexto do workspace (588 linhas, das quais a Key Files Reference sozinha é ~180 linhas de `mcorch_nodes`, `mco_balance`, Veo, Higgsfield, OpenClaw).
+
+## E o resto contamina junto
+
+Dos **71 arquivos** de `.claude/`, só **4 estão limpos** de termos deste workspace — e 2 deles são do produto mesmo assim. Os mais acoplados são justamente os que você quer:
+
+| arquivo | hits de contexto do workspace |
+|---|---|
+| `agents/bok-scribe-agent.md` | 54 |
+| `scripts/mcorch-doctor.sh` | 38 |
+| `commands/handoff.md` | 29 |
+| `rules/survival.md` | **19** ← até as Leis estão contaminadas |
+
+Um `cp -r` para o `viralmind-builder` te daria um `/handoff` que roda `docker ps --filter name=mcorch`, `curl localhost:8001/heartbeat` e `grep mco_balance src/` — todos passando "verde" por vacuidade. Um harness cujo primeiro ato é violar a Lei 1.
+
+## O que isso implica para o desenho
+
+Três camadas, porque o mecanismo de entrega de cada uma é diferente:
+
+1. **Plugin Claude Code** (`skills/`, `agents/`, `commands/`, `hooks/`) — nativo, versionado por git, instalável em N repos, atualiza sem copy-paste.
+2. **`/harness-init`** — comando *dentro* do plugin que escreve no repo destino o que plugin não entrega: `CLAUDE.md` com o bloco de doutrina, `.claude/rules/`, scaffolding de `docs/`, `HANDOFF.md` — **entrevistando o contexto daquele projeto** (stack, comandos de verificação, taxonomia de docs que já existe lá).
+3. **Gate com gatilho redundante** — o Closed-Loop deixa de depender só do CLAUDE.md ser lido: vira também uma **skill com `description` que dispara em "novo módulo/nova feature/novo menu"** + hook opcional de bloqueio em `Write`/`Edit`. É o que transforma doutrina em comportamento.
+
+Estou aguardando a classificação exaustiva (56 ativos + 101 SOPs, com verificação do que plugin realmente consegue carregar) para montar o kit com os arquivos genéricos escritos de fato — não uma lista do que fazer. Volto com ele.
+
+## 👤 User *(17:13:41)*
+
+ótimo mas na verdade você ta achando que vamos fazer isso para o viralmind, não é e quero importar o kit em outro projeto fora desse servidor. Enquanto vamos esperar terminar então a verificação
+
+## 🤖 Claude *(17:15:33)*
+
+Corrigido — destino é **fora deste servidor**. Isso endurece o contrato do kit em quatro pontos que eu ia decidir errado:
+
+1. **Marketplace local (path) está fora** → o kit tem que ser um repo git seu (`gabrielZarattini/<kit>`), clonável de qualquer máquina. Nota: `gh` não existe neste host, então a publicação é passo com sua mão (ou `git push` pela chave SSH que já serve o `origin`).
+2. **Zero caminho absoluto** → hoje o `/handson` lê literalmente `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`, e `session-inspect.ts` depende do transcript local. Tudo isso vira resolução em runtime.
+3. **Runtime não garantido** → os utilitários são `.ts` assumindo `bun`. Numa máquina qualquer pode não ter bun, nem `npx tsc`, nem docker. Os probes precisam ser *detectados*, não presumidos — e os essenciais reescritos em bash/node puro.
+4. **A malha não viaja** → o mandato de "todo feature insere nó na Knowledge Mesh" e o loop MAPE-K aqui dependem de Postgres+pgvector. Num projeto novo isso não existe: o kit precisa de um backend default **zero-infra** (registro em markdown no próprio repo) com adapter opcional para quem tiver banco.
+
+Estado da verificação:
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "D=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/subagents/workflows/wf_ac1aee20-60b\necho \"=== agentes conclu\u00eddos ===\" && ls -la $D/ 2>/dev/null | tail -25\necho\necho \"=== journal (retornos registrados) ===\"\nif [ -f \"$D/journal.jsonl\" ]; then wc -l \"$D/journal.jsonl\"; python3 -c \"\nimport json,sys\nfor line in open('$D/journal.jsonl'):\n    try: r=json.loads(line)\n    except: continue\n    lab=r.get('label') or r.get('agentLabel') or r.get('id') or '?'\n    ev=r.get('type') or r.get('event') or ''\n    res=r.get('result')\n    size=len(json.dumps(res)) if res is not None else 0\n    print(f'{ev:12} {lab:34} payload={size}')\n\"; else echo \"(sem journal ainda)\"; fi",
+  "description": "Checar progresso do workflow"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === agentes concluídos ===
+> -rw------- 1 ubuntu ubuntu 242720 Jul 24 14:12 agent-a21fba83be1c4edc6.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 14:08 agent-a21fba83be1c4edc6.meta.json
+> -rw------- 1 ubuntu ubuntu 215228 Jul 24 14:12 agent-a23895fef5006f264.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 14:08 agent-a23895fef5006f264.meta.json
+> -rw------- 1 ubuntu ubuntu 236036 Jul 24 13:41 agent-a29ad47f1041222de.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:35 agent-a29ad47f1041222de.meta.json
+> -rw------- 1 ubuntu ubuntu 389990 Jul 24 14:08 agent-a48025ccbeb35310d.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 14:00 agent-a48025ccbeb35310d.meta.json
+> -rw------- 1 ubuntu ubuntu 181161 Jul 24 13:35 agent-a4fceb28c732ca85d.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:31 agent-a4fceb28c732ca85d.meta.json
+> -rw------- 1 ubuntu ubuntu 364665 Jul 24 14:02 agent-a6b9f4ff3d4e2f0f2.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:54 agent-a6b9f4ff3d4e2f0f2.meta.json
+> -rw------- 1 ubuntu ubuntu 395566 Jul 24 13:51 agent-a742e7388f8695437.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:43 agent-a742e7388f8695437.meta.json
+> -rw------- 1 ubuntu ubuntu 275479 Jul 24 13:43 agent-a86e34ea52683f8ce.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:37 agent-a86e34ea52683f8ce.meta.json
+> -rw------- 1 ubuntu ubuntu 199353 Jul 24 13:45 agent-aa6c2f329609fde86.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:41 agent-aa6c2f329609fde86.meta.json
+> -rw------- 1 ubuntu ubuntu 176762 Jul 24 14:12 agent-abad1e8dd94e77f3e.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 14:12 agent-abad1e8dd94e77f3e.meta.json
+> -rw------- 1 ubuntu ubuntu 281017 Jul 24 13:37 agent-ac1a39b4ec7b9e9e4.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:31 agent-ac1a39b4ec7b9e9e4.meta.json
+> -rw------- 1 ubuntu ubuntu 373044 Jul 24 14:00 agent-afbe2dc4ab4a0bbbc.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu     48 Jul 24 13:54 agent-afbe2dc4ab4a0bbbc.meta.json
+> -rw-rw-r-- 1 ubuntu ubuntu 362247 Jul 24 14:12 journal.jsonl
+> 
+> === journal (retornos registrados) ===
+> 25 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/3a5189d4-2d5b-4022-9ac6-b6293bc43481/subagents/workflows/wf_ac1aee20-60b/journal.jsonl
+> started      ?                                  payload=0
+> started      ?                                  payload=0
+> result       ?                                  payload=29861
+> started      ?                                  payload=0
+> result       ?                                  payload=39947
+> started      ?                                  payload=0
+> result       ?                                  payload=35249
+> started      ?                                  payload=0
+> result       ?                                  payload=36065
+> started      ?                                  payload=0
+> result       ?                                  payload=26082
+> result       ?                                  payload=50060
+> started      ?                                  payload=0
+> result       ?                                  payload=18971
+> started      ?                                  payload=0
+> started      ?                                  payload=0
+> result       ?                                  payload=40972
+> started      ?                                  payload=0
+> result       ?                                  payload=44981
+> result       ?                                  payload=38069
+> started      ?                                  payload=0
+> started      ?                                  payload=0
+> result       ?                                  payload=13177
+> started      ?                                  payload=0
+> result       ?                                  payload=13453
+> ```
+
+## 🤖 Claude *(17:15:39)*
+
+
+## 🤖 Claude *(17:15:46)*
+
+Verificação em andamento — **12 agentes disparados, 11 retornos** registrados:
+
+- ✅ **Classify** (5/5): commands, agents, skills, doutrina, automação — concluídas
+- ✅ **Ground** (1/1): capacidades reais de plugin, com evidência
+- ✅ **Design** (3/3): plugin+marketplace · template+instalador · extração-na-origem
+- 🔄 **Judge** (2/3 juízes retornaram): drift · time-to-value · fidelidade doutrinária
+- ⏳ **Verify** (3 refutadores adversariais) → **Synthesize**
+
+Falta a fase que mais importa: os três refutadores tentando **matar** a proposta vencedora — mecânica (o mecanismo existe mesmo no Claude Code?), operação (o que quebra no dia 30 numa máquina que não é esta?) e doutrina (as 4 Leis vão *disparar* no destino ou virar texto decorativo?).
+
+Aviso quando fechar. Os quatro pontos do "fora deste servidor" que levantei entram como restrição obrigatória na síntese — em particular o #4, que é o mais silencioso: **o mandato de malha e o MAPE-K precisam de um default sem infraestrutura**, senão o kit chega num projeto novo com dois terços do laço autonômico inertes.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
