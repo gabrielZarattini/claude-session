@@ -10,7 +10,7 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 100
+> * **Total de Processos**: 101
 > * **Total de Sessões**: 3050
 
 ---
@@ -45,6 +45,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[constellation-economic-activation]]` - *Processo*
 *   `[[content-asset-history]]` - *Processo*
 *   `[[content-cadence-strategy]]` - *Processo*
+*   `[[content-provenance]]` - *Processo*
 *   `[[content-provenance-marking]]` - *Processo*
 *   `[[creative-assets-registry]]` - *Processo*
 *   `[[creative-qa-vision-gate]]` - *Processo*

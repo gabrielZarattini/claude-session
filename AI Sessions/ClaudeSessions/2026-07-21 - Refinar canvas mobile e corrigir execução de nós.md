@@ -596,7 +596,7 @@ Contexto reunido. Tudo verde no pre-flight. Segue o brief.
   Zero erros ✅ (`tsc --noEmit` limpo — lembrando: o gate real da app é `bun run build`, o tsc da raiz é no-op)
 
 📚 **BoK SUITES**
-  36 famílias em `docs/bok/`. Todos os módulos da fila ativa estão **selados 9/9** (crm-suite, spaces-cadence, predictive-swarm, content-provenance, landing-factory, content-intel, video-repurpose, youtube-studio). **Nenhum gate BoK bloqueando os próximos passos.**
+  36 famílias em `docs/bok/`. Todos os módulos da fila ativa estão **selados 9/9** (crm-suite, spaces-cadence, predictive-swarm, [[content-provenance|content-provenance]], landing-factory, content-intel, video-repurpose, youtube-studio). **Nenhum gate BoK bloqueando os próximos passos.**
 
 📌 **SPRINT**
   Goal: Distribuição social autônoma + **foco ativo: audiência/flywheel** (distribuir cortes EP01, impulsionar EP01/EP02).

@@ -2512,7 +2512,7 @@ Recon completo (2 agentes, 0 erros). O blueprint CRM veio truncado na notificaç
 > 83	      ]
 > 84	    },
 > 85	    "aiact": {
-> 86	      "module": "content-provenance — Fatia 2 (C1 C2PA para imagem+vídeo+voz + preservar-e-anexar; FR-CP-001/003/004/005). Deadline AI Act Art.50 = 2026-08-02.",
+> 86	      "module": "[[content-provenance|content-provenance]] — Fatia 2 (C1 C2PA para imagem+vídeo+voz + preservar-e-anexar; FR-CP-001/003/004/005). Deadline AI Act Art.50 = 2026-08-02.",
 > 87	      "currentState": "VERIFICADO MATERIALMENTE nesta sessão:\n\n• Host: `uname -m` = **aarch64** (NÃO x64 — a premissa da task estava errada). `which rustc cargo rustup` = **NO Rust toolchain**. `which exiftool` = /usr/bin/exiftool (12.76). `which c2patool` = **MISSING**.\n• Fatia 0-1 VIVA e é o molde exato: `scripts/provenance/embed-iptc-core.ts` (motor ExifTool, verify-before-claim linhas 54-69), `scripts/provenance-bridge.ts` (host-worker sweep: download bucket→embed→re-upload→flip 'embedded'/'failed' fail-soft, linhas 107-154), systemd unit `scripts/systemd/provenance-bridge.service` (INSTALADO+HABILITADO 2026-07-16 conforme comentário linha 1).\n• Colunas de proveniência JÁ EXISTEM (migration `20260716230000_content_provenance_columns.sql:19-29`): `provenance_status`, `provenance_layers text[]`, `provenance_source_type`, `provenance_embedded_at`, `c2pa_sidecar_key`. `register_creative_asset` JÁ é 26-arg com `p_c2pa_sidecar_key`/`p_provenance_layers` (linhas 51-145), service-role-only, /security-review passou.\n• Vocabulário de camadas JÁ inclui 'c2pa' (`src/lib/provenance.ts:33` ProvenanceLayer, :44-48 label PT-BR \"Credenciais C2PA\").\n• `provenance-bridge` HOJE EXCLUI áudio: `.in(\"kind\",[\"image\",\"video\"])` (linha 161) + guard linha 183 — comentário \"IPTC does not cover audio (OTD-CP-007)\".\n• Voz: motor Qwen3-TTS vivo em `/home/ubuntu/.mcorch/voice-engine/` (saída WAV 24kHz — `ref_pt_24k.wav`). `scripts/voice-bridge.ts:358` chama `register_creative_asset` p_kind:'audio', storageKey `.wav`.\n• `packages/provenance-core/` (planejado na SDD §92) NÃO existe — a Fatia 1 optou por `scripts/provenance/` flat. Fatia 2 segue o mesmo padrão flat (não criar o package).\n• PRONTO: toda a infra Fatia 0 + camada C3. FALTA para Fatia 2: o binário c2patool (host), o motor C1, a fiação C1 no worker (incl. voz), cert de assinatura, smoke.",
 > 88	      "designDecision": "Recomendação: **estender o `provenance-bridge` existente** (sweep post-hoc, host-worker, molde já vivo) — NÃO um worker novo, NÃO inline no voice-bridge. Razão material: register_creative_asset já default `provenance_status='pending'` para TODO asset (incl. voz kind='audio'), então o sweep já vê as linhas de voz — basta remover a exclusão de áudio e rotear as camadas por modalidade. Isso mantém marcação desacoplada da geração (DG-9), 1-job/vez, fail-soft, um único worker (single-tenant Usuário Zero).\n\nCadeia de marcação por modalidade (SDD §4.2, linhas 135-137):\n• image → [C1 c2patool, C3 ExifTool]  (C2 TrustMark = Fatia 3)\n• video → [C1 c2patool, C3 ExifTool]  (C2 VideoSeal = Fatia 3, GPU-gated)\n• audio(voz) → [C1 c2patool]  — C3 IMPOSSÍVEL (IPTC não cobre áudio, OTD-CP-007); C2 AudioSeal = Fatia 3.\n\n**Voz = qual camada:** a Fatia 2 dá à voz sua PRIMEIRA e (até Fatia 3) ÚNICA camada machine-readable = **C1 C2PA embutido no WAV**. AudioSeal (watermark) é Fatia 3, PyTorch compute-gated (OTD-CP-009). IPTC nunca. Portanto para tornar a voz \"detectável\" até 02-08, C1 é o único caminho.\n\n**Embedded-manifest vs sidecar — CONFIRMADO embed IN-PLACE é primário, a coluna c2pa_sidecar_key NÃO significa sidecar-primário.** c2pa-rs/c2patool embute o manifesto DENTRO do arquivo para JPEG, PNG, MP4, MOV, **WAV, MP3, M4A**. Sidecar (.c2pa via `--sidecar`) só é obrigatório para FLAC/OGG — formatos que o MCORCH NÃO produz. A coluna `c2pa_sidecar_key` é um FALLBACK defensivo (SDD:115/223 \"quando embed in-place impossível\"), ficará NULL para todos os formatos atuais. Ou seja: PNG/JPEG/MP4/WAV → embed in-place, `c2pa_sidecar_key=NULL`.\n\n**Instalação c2patool no aarch64 (achado decisivo):** contentauth publica prebuilt SÓ para `x86_64-unknown-linux-gnu` — NÃO há binário aarch64. Logo o caminho limpo neste host é `rustup` + `cargo install c2patool` (build-from-source; Apache-2.0 OR MIT, comercial-safe; v0.9.12 atual). `cargo binstall` cairia em build-from-source de qualquer forma (sem prebuilt aarch64). ExifTool foi instalado no host antes; c2patool segue a mesma classe de provisão (USD=0).",
 > 89	      "seam": "Ponto de integração EXATO (reusa 100% o trilho vivo, zero seam novo de fila):\n\n1. NOVO motor `scripts/provenance/embed-c2pa-core.ts` — espelho de `embed-iptc-core.ts`: `embedC2paMarker(filePath, sourceType, {assetId})` → `execFile('c2patool', [file, '--manifest', <manifest.json>, '--output', file, '--force'])` com manifesto {claim_generator:'MCORCH', assertions:[c2pa.actions=created, digitalSourceType=<URI IPTC>]}; **verify-before-claim** = `execFile('c2patool', [file])` (lê o manifesto de volta) e confirma que a assertion digitalSourceType == a URI esperada. Retorna {ok, layers:['c2pa'], verifyOutput, sidecarPath?}. Reusa `iptcSourceTypeUri()` de src/lib/provenance.ts (as 3 camadas compartilham o MESMO vocabulário — SDD:166).\n\n2. EDITAR `scripts/provenance-bridge.ts::markAsset` (linhas 107-154): antes do passo IPTC (linha 118), inserir o passo C1 `embedC2paMarker` para image/video; para audio, rodar SÓ C1. `provenance_layers` vira a UNIÃO real das camadas que verificaram (ex.: ['c2pa','iptc'] p/ imagem, ['c2pa'] p/ voz). Escrever `c2pa_sidecar_key` só se o motor devolver sidecarPath.\n\n3. EDITAR `fetchPending` (linha 156-176): trocar `.in(\"kind\",[\"image\",\"video\"])` por `.in(\"kind\",[\"image\",\"video\",\"audio\"])` e o guard da linha 183, roteando camadas por kind (audio nunca recebe IPTC). Manter a exclusão de `source_module='external'` (linha 164) e `storage_bucket='local'` (linha 166) — invariantes de honestidade (Lei 1).\n\nAssim as linhas de voz que o `voice-bridge.ts:358` já registra como pending são varridas pelo MESMO worker — nenhum enqueue novo, nenhuma edge fn, nenhuma migration.",
@@ -2617,13 +2617,13 @@ Recon completo (2 agentes, 0 erros). O blueprint CRM veio truncado na notificaç
 > 188	      "queuedAt": 1784418004526,
 > 189	      "attempt": 1,
 > 190	      "lastToolName": "StructuredOutput",
-> 191	      "lastToolSummary": "content-provenance — Fatia 2 (C1 C2PA para imagem+vídeo+voz…",
+> 191	      "lastToolSummary": "[[content-provenance|content-provenance]] — Fatia 2 (C1 C2PA para imagem+vídeo+voz…",
 > 192	      "promptPreview": "Você é engenheiro sênior do MCORCH mapeando o seam EXATO para **AI Act Art.50 Fatia 2 — C2PA + marcação de voz** (deadline legal 2026-08-02, multa €15M/3%).\n\nCONTEXTO DECISIVO (já verificado materialmente):\n- c2patool está MISSING no host (which c2patool = nada). exiftool ESTÁ presente (/usr/bin/exiftool) e já é usado na Fatia 0-1 (IPTC).\n- Fatia 0-1 (IPTC XMP-iptcExt:DigitalSourceType) JÁ está VI…",
 > 193	      "lastProgressAt": 1784418273158,
 > 194	      "tokens": 118028,
 > 195	      "toolCalls": 17,
 > 196	      "durationMs": 268585,
-> 197	      "resultPreview": "{\"module\":\"content-provenance — Fatia 2 (C1 C2PA para imagem+vídeo+voz + preservar-e-anexar; FR-CP-001/003/004/005). Deadline AI Act Art.50 = 2026-08-02.\",\"currentState\":\"VERIFICADO MATERIALMENTE nesta sessão:\\n\\n• Host: `uname -m` = **aarch64** (NÃO x64 — a premissa da task estava errada). `which rustc cargo rustup` = **NO Rust toolchain**. `which exiftool` = /usr/bin/exiftool (12.76). `which c2p…"
+> 197	      "resultPreview": "{\"module\":\"[[content-provenance|content-provenance]] — Fatia 2 (C1 C2PA para imagem+vídeo+voz + preservar-e-anexar; FR-CP-001/003/004/005). Deadline AI Act Art.50 = 2026-08-02.\",\"currentState\":\"VERIFICADO MATERIALMENTE nesta sessão:\\n\\n• Host: `uname -m` = **aarch64** (NÃO x64 — a premissa da task estava errada). `which rustc cargo rustup` = **NO Rust toolchain**. `which exiftool` = /usr/bin/exiftool (12.76). `which c2p…"
 > 198	    }
 > 199	  ],
 > 200	  "totalTokens": 266770,
@@ -3965,7 +3965,7 @@ AI Act Fatia 2 retornou com todos os gates verdes e prod intocada. **Verifico ma
 >
 > ```
 > 1	/**
-> 2	 * scripts/provenance/embed-c2pa-core.ts — content-provenance Fatia 2, layer C1 (C2PA Content Credentials).
+> 2	 * scripts/provenance/embed-c2pa-core.ts — [[content-provenance|content-provenance]] Fatia 2, layer C1 (C2PA Content Credentials).
 > 3	 *
 > 4	 * Embeds the AI Act Art. 50(2) machine-readable "generated by AI" marker as a cryptographically SIGNED C2PA
 > 5	 * manifest (the CAI standard Adobe/LinkedIn/TikTok/cameras read) into an image/video/audio file via `c2patool`.
@@ -3985,7 +3985,7 @@ AI Act Fatia 2 retornou com todos os gates verdes e prod intocada. **Verifico ma
 > 19	 * NO PII travels here. digitalSourceType is a fixed IPTC vocabulary URI (shared SSOT: iptcSourceTypeUri).
 > 20	 * The only identifier embedded is the opaque `assetId` (creative_assets.id, a uuid) — NEVER user_id/email/project.
 > 21	 *
-> 22	 * BoK SSOT: docs/processes/[[content-provenance-marking|content-provenance-marking]].md §Fatia 2 · docs/bok/content-provenance/. FR-CP-004/006/010.
+> 22	 * BoK SSOT: docs/processes/[[content-provenance-marking|content-provenance-marking]].md §Fatia 2 · docs/bok/[[content-provenance|content-provenance]]/. FR-CP-004/006/010.
 > 23	 * c2patool is invoked via execFile with an arg ARRAY (no shell); paths are controlled temp/host paths.
 > 24	 */
 > 25	import { execFile } from "node:child_process";
@@ -4888,7 +4888,7 @@ Now I need to write the commit message for the AI Act changes and then stage bot
 ```json
 {
   "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7f443be2-2db5-4f97-9268-2e3a6b324a75/scratchpad/msg-aiact.txt",
-  "content": "feat(content-provenance): Fatia 2 \u2014 camada C1 C2PA (imagem/v\u00eddeo/voz) cert-gated\n\nSegunda camada machine-readable do Art.50(2) do AI Act (deadline 2026-08-02): manifesto\nC2PA assinado (Content Credentials \u2014 o padr\u00e3o que Adobe/LinkedIn/TikTok/c\u00e2meras leem),\ncomplementando o IPTC. \u00c9 tamper-evident, carrega a cadeia de proveni\u00eancia (parent/ingredient),\ne ALCAN\u00c7A \u00e1udio/voz, onde o IPTC n\u00e3o vai (OTD-CP-007). Motor c2patool 0.27 no host (aarch64).\n\n- Motor embed-c2pa-core via execFile com array (sem shell): sign para output temp + verify.\n- SAFE-BY-DEFAULT (cert-gated): sem C2PA_SIGN_CERT/C2PA_PRIVATE_KEY o motor pula C1 e n\u00e3o\n  faz nada \u2014 prod (que roda s\u00f3 IPTC hoje) fica byte-id\u00eantica. Um restart acidental do daemon\n  n\u00e3o liga marca\u00e7\u00e3o C2PA. C1 s\u00f3 acende quando o Sovereign provisiona o cert.\n- Verify-before-claim: rel\u00ea o manifesto do output assinado e s\u00f3 promove (rename sobre o\n  original) se o digitalSourceType round-trips.\n- Preservar-e-anexar: detecta manifesto de origem ANTES de tocar bytes; se existir, passa o\n  original como parent (sobrevive como ingredient), nunca sobrescreve destrutivamente.\n- Sem PII: a assertion carrega s\u00f3 o uuid opaco do asset (provado por smoke pii-reject).\n- provenance-bridge estende a cadeia por modalidade (voz ganha C1; provenance_layers = uni\u00e3o\n  real das camadas que verificaram; nunca 'embedded' falso). Exclus\u00f5es external/local mantidas.\n- Zero migration (colunas provenance_*/c2pa_sidecar_key j\u00e1 existiam da Fatia 0-1).\n- SOP Lei 2 + smoke C2PA 10 gates + pii-reject 4 gates; regress\u00e3o IPTC 6/6 intacta.\n\n/security-review NO FINDINGS. Cert real na trust list + habilitar o daemon a marcar prod +\nrevis\u00e3o jur\u00eddica do self-signed = gates Sovereign (OTD-CP-003/004/012).\n"
+  "content": "feat([[content-provenance|content-provenance]]): Fatia 2 \u2014 camada C1 C2PA (imagem/v\u00eddeo/voz) cert-gated\n\nSegunda camada machine-readable do Art.50(2) do AI Act (deadline 2026-08-02): manifesto\nC2PA assinado (Content Credentials \u2014 o padr\u00e3o que Adobe/LinkedIn/TikTok/c\u00e2meras leem),\ncomplementando o IPTC. \u00c9 tamper-evident, carrega a cadeia de proveni\u00eancia (parent/ingredient),\ne ALCAN\u00c7A \u00e1udio/voz, onde o IPTC n\u00e3o vai (OTD-CP-007). Motor c2patool 0.27 no host (aarch64).\n\n- Motor embed-c2pa-core via execFile com array (sem shell): sign para output temp + verify.\n- SAFE-BY-DEFAULT (cert-gated): sem C2PA_SIGN_CERT/C2PA_PRIVATE_KEY o motor pula C1 e n\u00e3o\n  faz nada \u2014 prod (que roda s\u00f3 IPTC hoje) fica byte-id\u00eantica. Um restart acidental do daemon\n  n\u00e3o liga marca\u00e7\u00e3o C2PA. C1 s\u00f3 acende quando o Sovereign provisiona o cert.\n- Verify-before-claim: rel\u00ea o manifesto do output assinado e s\u00f3 promove (rename sobre o\n  original) se o digitalSourceType round-trips.\n- Preservar-e-anexar: detecta manifesto de origem ANTES de tocar bytes; se existir, passa o\n  original como parent (sobrevive como ingredient), nunca sobrescreve destrutivamente.\n- Sem PII: a assertion carrega s\u00f3 o uuid opaco do asset (provado por smoke pii-reject).\n- provenance-bridge estende a cadeia por modalidade (voz ganha C1; provenance_layers = uni\u00e3o\n  real das camadas que verificaram; nunca 'embedded' falso). Exclus\u00f5es external/local mantidas.\n- Zero migration (colunas provenance_*/c2pa_sidecar_key j\u00e1 existiam da Fatia 0-1).\n- SOP Lei 2 + smoke C2PA 10 gates + pii-reject 4 gates; regress\u00e3o IPTC 6/6 intacta.\n\n/security-review NO FINDINGS. Cert real na trust list + habilitar o daemon a marcar prod +\nrevis\u00e3o jur\u00eddica do self-signed = gates Sovereign (OTD-CP-003/004/012).\n"
 }
 ```
 
@@ -4940,14 +4940,14 @@ Committando os dois tracks por caminhos separados:
 > [38;2;56;56;56m  ────────────────────────────────────[m
 > summary: (done in 0.00 seconds)
 > ✔️ mesh-reingest (0.00 seconds)
-> [main ca7bffd] feat(content-provenance): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
+> [main ca7bffd] feat([[content-provenance|content-provenance]]): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
 >  6 files changed, 567 insertions(+), 34 deletions(-)
 >  create mode 100644 scripts/provenance/embed-c2pa-core.ts
 >  create mode 100644 scripts/qa/smoke-provenance-c2pa.ts
 >  create mode 100644 scripts/qa/smoke-provenance-pii-reject.ts
 > 
 > ===== git log + status =====
-> ca7bffd feat(content-provenance): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
+> ca7bffd feat([[content-provenance|content-provenance]]): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
 > ab86778 feat(crm-inbox): Fatia A — ingest de mídia inbound do WhatsApp (worker + enqueue + render)
 > 99fbc11 docs(handoff): seal CRM Inbox Fatia 1/2 + witness E2E WhatsApp ✓ + Amendment 10 + Fatia A/B fundação (fork, malha 9165)
 > 5f7f441 docs(readme): v6.108.0 — CRM Inbox WhatsApp E2E ✓ + BoK 9/9 + rich-media foundation (malha 9165)
@@ -5048,7 +5048,7 @@ Faço o push (verificados + `/security-review` limpo) e fecho a fila.
 >    99fbc11..ca7bffd  main -> main
 > 
 > ===== estado =====
-> ca7bffd feat(content-provenance): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
+> ca7bffd feat([[content-provenance|content-provenance]]): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
 > ab86778 feat(crm-inbox): Fatia A — ingest de mídia inbound do WhatsApp (worker + enqueue + render)
 > 99fbc11 docs(handoff): seal CRM Inbox Fatia 1/2 + witness E2E WhatsApp ✓ + Amendment 10 + Fatia A/B fundação (fork, malha 9165)
 > ## main...origin/main
@@ -6080,7 +6080,7 @@ Agora fio o cert no daemon. Leio a unit exata (o agente já deixou as linhas de 
 > ```
 > 1	# INSTALADO E HABILITADO 2026-07-16 (systemd --user do ubuntu). Cópia fiel do unit vivo — Lei 1.
 > 2	[Unit]
-> 3	Description=MCORCH content-provenance bridge (IPTC marking, AI Act Art. 50)
+> 3	Description=MCORCH [[content-provenance|content-provenance]] bridge (IPTC marking, AI Act Art. 50)
 > 4	After=network-online.target
 > 5	Wants=network-online.target
 > 6	StartLimitBurst=5
@@ -6168,7 +6168,7 @@ A unit foi projetada para o cert vir **de fora do repo** ("DO NOT set here in a 
 > == sincroniza unit committada (traz ~/.cargo/bin no PATH) ==
 > == drop-in host-only com o cert (não commitado, molde .env) ==
 > == status + env do cert carregado ==
-> ● provenance-bridge.service - MCORCH content-provenance bridge (IPTC marking, AI Act Art. 50)
+> ● provenance-bridge.service - MCORCH [[content-provenance|content-provenance]] bridge (IPTC marking, AI Act Art. 50)
 >      Loaded: loaded (/home/ubuntu/.config/systemd/user/provenance-bridge.service; enabled; preset: enabled)
 >     Drop-In: /home/ubuntu/.config/systemd/user/provenance-bridge.service.d
 >              └─c2pa-cert.conf
@@ -8921,7 +8921,7 @@ Estou em ~61% — dentro do teto. Vou **commitar essa frente de UI** e então ro
 >  create mode 100644 src/components/inbox/ContactPanel.tsx
 > == log ==
 > 65b48b5 feat(crm-inbox): UI WhatsApp × MIV — balões/recibos/avatares + painel de contato do lead
-> ca7bffd feat(content-provenance): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
+> ca7bffd feat([[content-provenance|content-provenance]]): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
 > ab86778 feat(crm-inbox): Fatia A — ingest de mídia inbound do WhatsApp (worker + enqueue + render)
 > ```
 
@@ -9442,7 +9442,7 @@ Executando o seal. **PRE-FLIGHT + Fase 1 (Segurança)** — batch enxuto (estou 
 > (limpo se vazio)
 > == git log -5 ==
 > 65b48b5 feat(crm-inbox): UI WhatsApp × MIV — balões/recibos/avatares + painel de contato do lead
-> ca7bffd feat(content-provenance): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
+> ca7bffd feat([[content-provenance|content-provenance]]): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated
 > ab86778 feat(crm-inbox): Fatia A — ingest de mídia inbound do WhatsApp (worker + enqueue + render)
 > 99fbc11 docs(handoff): seal CRM Inbox Fatia 1/2 + witness E2E WhatsApp ✓ + Amendment 10 + Fatia A/B fundação (fork, malha 9165)
 > 5f7f441 docs(readme): v6.108.0 — CRM Inbox WhatsApp E2E ✓ + BoK 9/9 + rich-media foundation (malha 9165)
@@ -9631,7 +9631,7 @@ I'm going to tackle both the Record block edit and the GraphRAG edit next.
   "replace_all": false,
   "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
   "old_string": "## CRM Inbox Fatia 1/2 + witness E2E + rich-media foundation Record (2026-07-18, FORK)",
-  "new_string": "## CRM Fatia A + AI Act Fatia 2 + Inbox WhatsApp\u00d7MIV \u2014 ATIVADOS & WITNESSED Record (2026-07-18)\n\n**ORO:** Operator = MCORCH Master Execution Agent (+subagents) \u00b7 Reviewer = `/security-review` (NO FINDINGS \u00d72) + Sovereign (witness ao vivo + GO do cert) \u00b7 Owner = Sovereign (blast radius: n\u00famero WhatsApp LIVE +39, PII/LGPD, deadline AI Act, marca\u00e7\u00e3o legal em prod).\n\nSess\u00e3o-loop GO'd pelo Sovereign para atacar a fila (alertas + pr\u00f3ximos passos) e depois evoluir a UI. Probe-first fechou 3 itens j\u00e1-prontos sem retrabalho (swarm:read j\u00e1 em prod, witness Cad\u00eancia j\u00e1 selado no `885fa77`, UI de rota\u00e7\u00e3o j\u00e1 fiada). Os 2 grandes \u2014 CRM ingest de m\u00eddia e AI Act C2PA \u2014 foram levados de c\u00f3digo a **produ\u00e7\u00e3o ATIVA + witnessed** junto com o Sovereign. A Fatia 2 do C2PA foi ligada com cert self-signed (beachhead aceito, OTD-CP-012), dando \u00e0 **voz seu primeiro marcador machine-readable do AI Act**. Fechou com a UI do inbox re-skinada ao MIV no esp\u00edrito WhatsApp + painel de perfil do lead. Disciplina de materialidade pegou 2 falsos-sucessos (o \"No change found\" do deploy do webhook, provado pelo eszip; e o cert, provado com sign+verify antes de fiar no daemon).\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `scripts/crm-media-bridge.ts` + `scripts/lib/fetch-public-url.ts` + webhook enqueue + migration `20260718240000` | \u2705 CRM Fatia A: worker host, SSRF-safe Bearer-s\u00f3-Meta, ATIVADO (systemd) + witness real (image/video/audio `\u2192 stored`, 0 falhas) |\n| `scripts/provenance/embed-c2pa-core.ts` + `scripts/provenance-bridge.ts` + cert self-signed + drop-in systemd | \u2705 AI Act Fatia 2 C1 C2PA ATIVADO cert-gated; 3 assets de voz `embedded layers=[c2pa]`; WAV real c2patool `validation_state=Valid` |\n| `src/components/inbox/{ThreadView,ConversationList,ContactPanel}.tsx` + `InboxPage` + `MessageComposer` | \u2705 Inbox WhatsApp\u00d7MIV (bal\u00f5es/recibos/avatares/malha, tokens MIV) + painel de contato (nome edit\u00e1vel, funil, galeria de m\u00eddias) |\n| Alertas: branches OpenClaw \u00b7 swarm:read \u00b7 lembrete rota\u00e7\u00e3o \u00b7 witness Cad\u00eancia | \u2705 deletadas \u00b7 j\u00e1 em prod \u00b7 `admin_reminders` critical semeado \u00b7 smoke 7/7 |\n| `public/brand/inbox-mockup.png` | \u2705 mockup de refer\u00eancia gerado via BYOK Nano Banana + prompt reus\u00e1vel entregue |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `ab86778` | feat(crm-inbox): Fatia A \u2014 ingest de m\u00eddia inbound do WhatsApp (worker + enqueue + render) |\n| `ca7bffd` | feat(content-provenance): Fatia 2 \u2014 camada C1 C2PA (imagem/v\u00eddeo/voz) cert-gated |\n| `65b48b5` | feat(crm-inbox): UI WhatsApp \u00d7 MIV \u2014 bal\u00f5es/recibos/avatares + painel de contato do lead |\n\n**Prova material:** eszip do `whatsapp-webhook` deployado cont\u00e9m `wa_media`/`media_status` (`strings|grep`); worker log `\u2192 stored` (image/jpeg 111KB \u00b7 video/mp4 4.3MB \u00b7 audio/ogg); C2PA smokes 10/10 + pii-reject 4/4 + IPTC regress\u00e3o 6/6; WAV de voz real `6ca26b59` \u2192 c2patool `validation_state=Valid` digitalSourceType=trainedAlgorithmicMedia; build inbox env-baked + `Dados do contato`/`ContactPanel` no bundle. milestone `e29f0f52` embedado 768d \u00b7 malha 9185.\n\n## CRM Inbox Fatia 1/2 + witness E2E + rich-media foundation Record (2026-07-18, FORK)"
+  "new_string": "## CRM Fatia A + AI Act Fatia 2 + Inbox WhatsApp\u00d7MIV \u2014 ATIVADOS & WITNESSED Record (2026-07-18)\n\n**ORO:** Operator = MCORCH Master Execution Agent (+subagents) \u00b7 Reviewer = `/security-review` (NO FINDINGS \u00d72) + Sovereign (witness ao vivo + GO do cert) \u00b7 Owner = Sovereign (blast radius: n\u00famero WhatsApp LIVE +39, PII/LGPD, deadline AI Act, marca\u00e7\u00e3o legal em prod).\n\nSess\u00e3o-loop GO'd pelo Sovereign para atacar a fila (alertas + pr\u00f3ximos passos) e depois evoluir a UI. Probe-first fechou 3 itens j\u00e1-prontos sem retrabalho (swarm:read j\u00e1 em prod, witness Cad\u00eancia j\u00e1 selado no `885fa77`, UI de rota\u00e7\u00e3o j\u00e1 fiada). Os 2 grandes \u2014 CRM ingest de m\u00eddia e AI Act C2PA \u2014 foram levados de c\u00f3digo a **produ\u00e7\u00e3o ATIVA + witnessed** junto com o Sovereign. A Fatia 2 do C2PA foi ligada com cert self-signed (beachhead aceito, OTD-CP-012), dando \u00e0 **voz seu primeiro marcador machine-readable do AI Act**. Fechou com a UI do inbox re-skinada ao MIV no esp\u00edrito WhatsApp + painel de perfil do lead. Disciplina de materialidade pegou 2 falsos-sucessos (o \"No change found\" do deploy do webhook, provado pelo eszip; e o cert, provado com sign+verify antes de fiar no daemon).\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `scripts/crm-media-bridge.ts` + `scripts/lib/fetch-public-url.ts` + webhook enqueue + migration `20260718240000` | \u2705 CRM Fatia A: worker host, SSRF-safe Bearer-s\u00f3-Meta, ATIVADO (systemd) + witness real (image/video/audio `\u2192 stored`, 0 falhas) |\n| `scripts/provenance/embed-c2pa-core.ts` + `scripts/provenance-bridge.ts` + cert self-signed + drop-in systemd | \u2705 AI Act Fatia 2 C1 C2PA ATIVADO cert-gated; 3 assets de voz `embedded layers=[c2pa]`; WAV real c2patool `validation_state=Valid` |\n| `src/components/inbox/{ThreadView,ConversationList,ContactPanel}.tsx` + `InboxPage` + `MessageComposer` | \u2705 Inbox WhatsApp\u00d7MIV (bal\u00f5es/recibos/avatares/malha, tokens MIV) + painel de contato (nome edit\u00e1vel, funil, galeria de m\u00eddias) |\n| Alertas: branches OpenClaw \u00b7 swarm:read \u00b7 lembrete rota\u00e7\u00e3o \u00b7 witness Cad\u00eancia | \u2705 deletadas \u00b7 j\u00e1 em prod \u00b7 `admin_reminders` critical semeado \u00b7 smoke 7/7 |\n| `public/brand/inbox-mockup.png` | \u2705 mockup de refer\u00eancia gerado via BYOK Nano Banana + prompt reus\u00e1vel entregue |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `ab86778` | feat(crm-inbox): Fatia A \u2014 ingest de m\u00eddia inbound do WhatsApp (worker + enqueue + render) |\n| `ca7bffd` | feat([[content-provenance|content-provenance]]): Fatia 2 \u2014 camada C1 C2PA (imagem/v\u00eddeo/voz) cert-gated |\n| `65b48b5` | feat(crm-inbox): UI WhatsApp \u00d7 MIV \u2014 bal\u00f5es/recibos/avatares + painel de contato do lead |\n\n**Prova material:** eszip do `whatsapp-webhook` deployado cont\u00e9m `wa_media`/`media_status` (`strings|grep`); worker log `\u2192 stored` (image/jpeg 111KB \u00b7 video/mp4 4.3MB \u00b7 audio/ogg); C2PA smokes 10/10 + pii-reject 4/4 + IPTC regress\u00e3o 6/6; WAV de voz real `6ca26b59` \u2192 c2patool `validation_state=Valid` digitalSourceType=trainedAlgorithmicMedia; build inbox env-baked + `Dados do contato`/`ContactPanel` no bundle. milestone `e29f0f52` embedado 768d \u00b7 malha 9185.\n\n## CRM Inbox Fatia 1/2 + witness E2E + rich-media foundation Record (2026-07-18, FORK)"
 }
 ```
 
@@ -9745,7 +9745,7 @@ Both modules have sealed BoK entries, and the UI work plus ContactPanel are prop
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"== BoK dos m\u00f3dulos tocados (crm-inbox, content-provenance) ==\"\nfor slug in crm-inbox content-provenance; do\n  n=$(ls docs/bok/$slug/ 2>/dev/null | grep -cE \"^0[1-9]-|^09-\")\n  echo \"  $slug: $(ls docs/bok/$slug/*.md 2>/dev/null | wc -l) docs\"\ndone\necho \"(ambos selados em sess\u00f5es anteriores \u2014 UI/painel s\u00e3o evolu\u00e7\u00e3o de crm-inbox, sem m\u00f3dulo novo)\"\necho \"\"\necho \"== scratch ==\"; ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"limpo \u2705\"\necho \"\"\necho \"== PUSH ==\"\ngit push origin main 2>&1 | tail -6",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"== BoK dos m\u00f3dulos tocados (crm-inbox, [[content-provenance|content-provenance]]) ==\"\nfor slug in crm-inbox [[content-provenance|content-provenance]]; do\n  n=$(ls docs/bok/$slug/ 2>/dev/null | grep -cE \"^0[1-9]-|^09-\")\n  echo \"  $slug: $(ls docs/bok/$slug/*.md 2>/dev/null | wc -l) docs\"\ndone\necho \"(ambos selados em sess\u00f5es anteriores \u2014 UI/painel s\u00e3o evolu\u00e7\u00e3o de crm-inbox, sem m\u00f3dulo novo)\"\necho \"\"\necho \"== scratch ==\"; ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"limpo \u2705\"\necho \"\"\necho \"== PUSH ==\"\ngit push origin main 2>&1 | tail -6",
   "description": "BoK check + scratch + push"
 }
 ```
@@ -9753,9 +9753,9 @@ Both modules have sealed BoK entries, and the UI work plus ContactPanel are prop
 > **Tool Result (Bash)** - ✅ Success
 >
 > ```
-> == BoK dos módulos tocados (crm-inbox, content-provenance) ==
+> == BoK dos módulos tocados (crm-inbox, [[content-provenance|content-provenance]]) ==
 >   crm-inbox: 11 docs
->   content-provenance: 11 docs
+>   [[content-provenance|content-provenance]]: 11 docs
 > (ambos selados em sessões anteriores — UI/painel são evolução de crm-inbox, sem módulo novo)
 > 
 > == scratch ==
