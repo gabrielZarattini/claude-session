@@ -10025,6 +10025,2008 @@ Assim que voltar (me avisa ou eu re-testo), eu **completo o move dos masters** (
 
 Quer que eu **re-teste a saúde do DB agora** (caso já tenha voltado), ou você reinicia o projeto primeiro e me avisa?
 
+## 👤 User *(20:44:24)*
+
+<!-- attach: Terminal 1 | tab:0 -->
+> ubuntu@panel:/home/gcrUX/htdocs/constellation-orchestra$ bun run scripts/migrate-local-masters-to-storage.ts
+> bucket video-studio-assets: file_size_limit=null public=false
+>   ↑ raised file_size_limit → 2GB
+> 
+> 2 local master(s) to migrate:
+> 
+> → [7935a2e5] EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2 | 1336MB → video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2.mp4
+>   ✓ verified in Storage (1336271927 bytes, HTTP 200)
+>   ✓ creative_assets row repointed → video-studio-assets (size fixed 1336271927)
+>   ✓ host copy deleted
+> → [e49af674] EP02-Robôs-e-IAs-Fisicas-raciocínando | 529MB → video-studio-assets/ada39fae-67e1-4e53-af1c-5a18e1c108e8/EP02_-_MASTER__YouTube_.mp4
+>   ✓ verified in Storage (529015996 bytes, HTTP 200)
+>   ✓ creative_assets row repointed → video-studio-assets (size fixed 529015996)
+>   ✓ host copy deleted
+> 
+> 🏁 migrated+deleted: 2 · kept-on-host: 0
+
+Agora foi e eu alterei para 5gb não 2gb como saiu no log terminal
+
+## 🤖 Claude *(20:45:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The masters migration completed successfully—both EP01 and EP02 transferred and verified, with their host copies cleaned up. The database recovered properly after the restart, and the script executed without issues this time. I'm noting that the 2GB bucket limit increase in my script is intentional and working as expected.
+
+Regarding the limits: my script sets a per-bucket limit of 2GB (which accommodates both masters at 1.3G and 505M), while the Sovereign configured a global project limit of 5GB—these are independent settings and there's no conflict. The database dashboard shows the project is now healthy with reasonable resource usage across memory, CPU, and disk, so the Micro compute tier is handling things fine.
+
+Now I need to verify the migration is truly complete by checking the disk space freed on the host, confirming the creative_assets table shows both masters pointing to the video-studio-assets bucket with no remaining local entries, and optionally testing that workers and the UI can still retrieve them correctly. Once I've confirmed the post-migration state materially, I can proceed with the handoff. I'm checking the repurpose-inbox directory to confirm the masters are gone, and verifying the creative_assets bucket now shows 2 masters in video-studio-assets with 0 local copies. Before invoking /handoff, I need to update the roadmap to mark W2.1 as DONE and document the bucket migration details, since the /handoff skill will commit these changes as part of the milestone seal.
+
+The host-upload infrastructure stays in place for future uploads even though the EP01/EP02 masters have moved to Storage — retiring that comes later once the flow is validated. I should update the memory reference that currently points to repurpose-inbox as the master home to reflect they're now in Storage, then keep the scope tight: verify the migration completed, mark the roadmap DONE, update the memory, and proceed with /handoff.
+
+On the storage concern — the bucket-level limit I set to 2GB is separate from the Sovereign's 5GB project cap, and both masters fit comfortably under 2GB, so everything worked as intended. If future masters exceed that bucket threshold, I'd need to adjust it upward.
+
+Let me align the bucket limit to 5GB to match his global setting for consistency and avoid any future headaches, then run the verification and update the roadmap before handing off.
+
+</details>
+
+
+## 🤖 Claude *(20:45:04)*
+
+🎉 **Deu certo — masters migrados e verificados:**
+- EP01 (1.336.271.927 bytes) → Storage HTTP 200 · linha repointada · host apagado ✅
+- EP02 (529.015.996 bytes) → Storage HTTP 200 · linha repointada · host apagado ✅
+- **2 migrados, 0 falhos.** O DB voltou (o restart resolveu o 522).
+
+Sobre o **2GB no log:** aquilo é o limite **por-bucket** que meu script setou (ambos os masters cabem em 2GB, por isso passou); o **5GB que você setou é o limite GLOBAL** do projeto — coisas diferentes e ambas corretas. Vou **alinhar o bucket para 5GB** também (evita confusão + futuro master maior). Verifico tudo materialmente antes do seal:
+
+## 🤖 Claude *(20:45:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== disco do host (masters sa\u00edram) ===\"; df -h / | tail -1\necho \"=== repurpose-inbox agora (masters devem ter sumido; sobra Grapho 24M) ===\"; du -sh repurpose-inbox 2>/dev/null; ls -lah repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/*.mp4 2>/dev/null | awk '{print $5,$9}'\necho \"=== creative_assets: masters agora em Storage? (0 local esperado) ===\"\nbun -e \"\nimport{createClient}from'@supabase/supabase-js';\nconst db=createClient(process.env.SUPABASE_URL,process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\nconst {data}=await db.from('creative_assets').select('title,storage_bucket,file_size_bytes').eq('source_module','external');\nfor(const r of data||[]) console.log(\\`  [\\${r.storage_bucket}] \\${(r.title||'').slice(0,34)} | \\${((r.file_size_bytes||0)/1e6).toFixed(0)}MB\\`);\nconst localLeft=(data||[]).filter(r=>r.storage_bucket==='local').length; console.log('  \u2192 ainda local:',localLeft);\n// alinhar bucket a 5GB (match global)\nconst {error}=await db.storage.updateBucket('video-studio-assets',{fileSizeLimit:5*1024*1024*1024});\nconsole.log(error?('  \u26a0\ufe0f bucket 5GB: '+error.message):'  \u2713 bucket video-studio-assets limit \u2192 5GB');\n\" 2>&1 | grep -vE \"^\\s*$\"",
+  "description": "Verificar migra\u00e7\u00e3o + alinhar bucket a 5GB"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === disco do host (masters saíram) ===
+> /dev/sda1       193G  136G   58G  71% /
+> === repurpose-inbox agora (masters devem ter sumido; sobra Grapho 24M) ===
+> 24M	repurpose-inbox
+> 12M repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/GraphoEnterprise-pt1.mp4
+> 12M repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/GraphoEnterprise-pt2.mp4
+> === creative_assets: masters agora em Storage? (0 local esperado) ===
+>   [video-studio-assets] EP02-Robôs-e-IAs-Fisicas-raciocína | 529MB
+>   [canvas-assets] Roadmap Master — Motor de Conteúdo | 2MB
+>   [video-studio-assets] EP01_-_GabrielAI_-_A_Revolucao_Fis | 1336MB
+>   → ainda local: 0
+>   ✓ bucket video-studio-assets limit → 5GB
+> ```
+
+## 🤖 Claude *(20:45:43)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The disk space checks are coming back consistent — repurpose-inbox is down to just 24M with the Grapho files remaining, and the masters have been removed from the host. Though there's something odd: the df output still shows 136G used at 71%, which is the same as before the 1.8G deletion, so either the filesystem cache hasn't updated yet or the deletion is still processing.
+
+Regardless, the important part is confirmed: the masters are off the host and in Storage now, with 58G free remaining. For creative_assets, both EP01 and EP02 are now pointing to video-studio-assets with the correct file sizes (1336MB and 529MB), and that file_size_bytes=0 bug has been fixed too.
+
+W2.1 is complete and verified. The Cortes feature will read masters from Storage going forward, and the workers already support dual-sourcing. I should update the roadmap to mark W2.1 as done with the migration noted, then invoke /handoff. The signed-URL verification already proved the objects are readable from Storage, and the workers use the same service role download pattern, so I'm confident the read path works without needing a full end-to-end render test. I'll update the memory to reflect that the masters have migrated to video-studio-assets Storage, while noting that the local upload path remains available for future uploads. Then I'll make the roadmap edit to mark W2.1 as DONE and invoke /handoff, which will handle the commits, HANDOFF.md, and milestone node insertion.
+
+</details>
+
+
+## 🤖 Claude *(20:45:46)*
+
+**Tudo verificado — W2.1 COMPLETO:**
+- Host: `repurpose-inbox` **1.8G → 24M** (só sobram os Grapho de 12M; masters saíram do host).
+- `creative_assets`: EP01 + EP02 agora em **`video-studio-assets`** com os tamanhos corretos (**o bug `file_size_bytes=0` também foi corrigido**), **0 ainda em `local`**.
+- Bucket alinhado a **5GB** (match do global).
+
+O Cortes lerá os masters do Storage (workers já dual-source; URL assinada provada 200). Migração segura, reversível, sem perda.
+
+Atualizo o roadmap (W2.1 → feito) e a memória, e então faço o `/handoff` oficial que você pediu:
+
+## 🤖 Claude *(20:45:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/supabase-pro-optimization.md",
+  "old_string": "- **STATUS 2026-07-25 (material):** ferramenta pronta \u2014 **`scripts/migrate-local-masters-to-storage.ts`**",
+  "new_string": "- **\u2705 CONCLU\u00cdDO 2026-07-25:** move E2E provado \u2014 EP01 (1.3G) + EP02 (505M) migrados p/ `video-studio-assets` (URL assinada HTTP 200 + tamanho conferido + `file_size_bytes=0` corrigido); `creative_assets` repointado (0 rows `local`); host copies deletadas (`repurpose-inbox` 1.8G\u219224M). Limite global de Storage subido p/ 5GB (Sovereign) + bucket alinhado a 5GB. Pr\u00e9-condi\u00e7\u00e3o encontrada: o 522 transit\u00f3rio do compute Micro exigiu restart do projeto (prova viva de W3.3). **Falta (pr\u00f3xima sess\u00e3o):** aposentar host-upload-server/systemd/nginx (s\u00f3 a superf\u00edcie de upload; os masters j\u00e1 est\u00e3o no Storage) + re-cut E2E de confirma\u00e7\u00e3o do Cortes lendo do Storage.\n- **STATUS 2026-07-25 (material):** ferramenta pronta \u2014 **`scripts/migrate-local-masters-to-storage.ts`**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/supabase-pro-optimization.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:46:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update a couple of memories — marking the masters migration as complete in the main project memory and noting the 522 restart lesson, then I'll do the same for the reference memory before invoking the handoff.
+
+</details>
+
+
+## 🤖 Claude *(20:46:01)*
+
+Atualizo as memórias (masters migrados + lição do 522/restart) e disparo o `/handoff`:
+
+## 🤖 Claude *(20:46:13)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_supabase_pro_optimization.md",
+  "old_string": "**Primeiro passo:** habilitar **spend cap** na org (billing \u00e9 por ORG). Sequ\u00eancia un-gated: W1.2 statement_timeout \u00b7 W3.1 alerta de falha silenciosa (aproveita 7d de log \u2014 o 401 do ingest ficou invis\u00edvel no Free) \u00b7 W2.1 POC TUS >100MB \u2192 aposentar a infra host de m\u00eddia (`repurpose-inbox`/host-upload-server) S\u00d3 ap\u00f3s provado. Ver [[reference_edge_fn_cap_100_hit]] (agora obsoleto no Pro), [[reference_host_local_masters_repurpose_inbox]]. \u26a0\ufe0f `CLAUDE.md:239` stale (mesh 8239 \u2192 real ~14633).",
+  "new_string": "**Primeiro passo:** habilitar **spend cap** na org (billing \u00e9 por ORG). Sequ\u00eancia un-gated: W1.2 statement_timeout \u00b7 W3.1 alerta de falha silenciosa (aproveita 7d de log \u2014 o 401 do ingest ficou invis\u00edvel no Free). Ver [[reference_edge_fn_cap_100_hit]] (agora obsoleto no Pro), [[reference_host_local_masters_repurpose_inbox]]. \u26a0\ufe0f `CLAUDE.md:239` stale (mesh 8239 \u2192 real ~14633).\n\n**\u2705 FEITO nesta sess\u00e3o (2026-07-25):** limpeza de host **~16GB** (disco 79%\u219271%: docker builder/image prune + npm cache + build caches; ms-playwright/canvas-design preservados). **Masters EP01(1.3G)+EP02(505M) MIGRADOS p/ Supabase Storage** (`video-studio-assets`) via `scripts/migrate-local-masters-to-storage.ts` (upload\u2192verifica\u2192repointa `creative_assets`\u2192apaga host; `repurpose-inbox` 1.8G\u219224M; 0 rows `local`; bug `file_size_bytes=0` corrigido). Pr\u00e9-condi\u00e7\u00f5es: limite global de Storage 50MB\u21925GB (Sovereign, no painel) + o bucket per-limit \u00e9 separado do global. **\u26a0\ufe0f Gotcha vivo:** mudar o limite de Storage + carga no **compute Micro** disparou um **522 transit\u00f3rio** (origem Supabase fora) \u2014 resolvido com **Restart project** no painel; prova viva de que o Micro \u00e9 subdimensionado (W3.3). Falta aposentar host-upload-server/systemd (s\u00f3 a superf\u00edcie de upload)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_supabase_pro_optimization.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(20:46:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to invoke the handoff skill to process the granular commits, update the documentation, insert the milestone node, and run the self-audit checks.
+
+</details>
+
+
+## 🤖 Claude *(20:46:22)*
+
+Masters no Storage, host limpo, roadmap e memórias atualizados. Disparando o `/handoff` oficial que você pediu:
+
+## 🤖 Claude *(20:46:22)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(20:46:22)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(20:46:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm executing the handoff protocol and checking what needs to be committed—the roadmap documentation is ready but uncommitted, so I need to verify the full git status. Running the type-checking in parallel, though the real bottleneck is the app-level compilation which has a baseline of 93.
+
+Let me kick off the pre-flight checks: git status, diffs, logs, type-checking, Docker, and Chroma. I've already reviewed the handoff and memory docs this session, so I just need the line count from HANDOFF.md for the archiving guard before running everything.
+
+</details>
+
+
+## 🤖 Claude *(20:46:34)*
+
+Executando o Seal Protocol v4. PRE-FLIGHT em paralelo:
+
+## 🤖 Claude *(20:46:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status ===\"; git status --short\necho \"=== git log -7 ===\"; git log --oneline -7\necho \"=== HANDOFF.md line count (archiving guard) ===\"; wc -l HANDOFF.md",
+  "description": "Pre-flight: git state + HANDOFF size"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status ===
+>  M docs/roadmap/supabase-pro-optimization.md
+> === git log -7 ===
+> 56017da feat(infra): ferramenta de migração de masters→Storage (W2.1) + host cleanup ~16GB
+> b74a756 docs(roadmap): Wave 0 host-infra (disco) + snapshot Pro confirmado
+> 54ab3df docs(roadmap): plano de otimização Supabase Pro p/ a próxima sessão
+> 4001e38 feat(mesh,nav): ingest durável (src+supabase+packages, fix 401) + move Orquestra p/ Constelação
+> cb18729 fix(aios): grounding do chat Core-Fable — mata a confabulação de arquitetura
+> 49321d2 chore(handoff): proof-manifest node 36d233dc (seal autonomia total)
+> 2df9477 docs(handoff): seal autonomia total 2026-07-24 — PIPC S1+S2 vivos (retencao->brief EP05) + CRM Contatos + cadence-fix + AI Act selada; Key Files + memorias · malha 9831 no 36d233dc
+> === HANDOFF.md line count (archiving guard) ===
+> 1021 HANDOFF.md
+> ```
+
+## 🤖 Claude *(20:46:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== tsc-app (gate real; baseline 93) ===\"; timeout 200 npx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -cE \"error TS\"\necho \"=== docker mesh ===\"; docker ps --filter \"name=mcorch\" --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho \"=== chroma ===\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat && echo \" OK\"",
+  "description": "Pre-flight: tsc + infra"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === tsc-app (gate real; baseline 93) ===
+> 93
+> === docker mesh ===
+> mcorch_vision_mcp: Up 10 days (healthy)
+> mcorch_claude_mem: Up 5 weeks (healthy)
+> mcorch_chroma: Up 5 weeks (healthy)
+> mega-brain-dashboard: Up 5 weeks
+> mega-brain-webhook: Up 5 weeks (healthy)
+> mega-brain-daemon: Up 5 weeks (healthy)
+> === chroma ===
+> {"nanosecond heartbeat":1785012433603926468} OK
+> ```
+
+## 🤖 Claude *(20:47:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the current state: only the roadmap doc has uncommitted changes from the W2.1 update, I've got 5 commits this session, the handoff file is well under the archiving threshold, TypeScript baseline is clean, and infrastructure is healthy. Now moving into the security audit phase.
+
+</details>
+
+
+## 🤖 Claude *(20:47:23)*
+
+PRE-FLIGHT ✅: só o roadmap `.md` uncommitado · 5 commits na sessão · HANDOFF 1021 linhas (sem arquivamento) · **tsc-app 93=baseline** · infra healthy · chroma OK.
+
+**PHASE 1 — Security audit:**
+
+## 🤖 Claude *(20:47:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. secret leak no diff (inclui roadmap uncommitado) ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|SUPABASE_SERVICE_ROLE_KEY\\|SB_SECRET_KEY\" | head -10 || echo \"  NENHUM SEGREDO \u2705\"\necho \"=== 1e. logs sens\u00edveis nos scripts novos ===\"\ngrep -rnE \"console\\.log.*(token|secret|password)|console\\.log.*[Kk]ey\" scripts/migrate-local-masters-to-storage.ts scripts/ingest-codebase.ts 2>/dev/null | head || echo \"  SEM LOGS SENS\u00cdVEIS \u2705\"\necho \"=== migrate script vaza chave? (usa SB_SECRET_KEY do env, n\u00e3o hardcoded) ===\"\ngrep -nE \"SB_SECRET_KEY|SUPABASE_SERVICE\" scripts/migrate-local-masters-to-storage.ts | head -3",
+  "description": "Phase 1 security scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. secret leak no diff (inclui roadmap uncommitado) ===
+> === 1e. logs sensíveis nos scripts novos ===
+> scripts/migrate-local-masters-to-storage.ts:65:    console.log(`→ ${tag} | ${(size / 1e6).toFixed(0)}MB → ${TARGET_BUCKET}/${r.storage_key}`);
+> === migrate script vaza chave? (usa SB_SECRET_KEY do env, não hardcoded) ===
+> 32:const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> ```
+
+## 🤖 Claude *(20:47:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the security findings: no secrets exposed in the diff, the "sensitive log" match is a false positive from grep picking up "Key" in a variable name rather than an actual credential, and the migration script properly reads the secret from environment variables rather than hardcoding it. Overall security assessment is clear.
+
+The migrate script was already committed in the earlier commit, so the only uncommitted change is the roadmap edit. The memory files I modified are stored outside the git repo in the auto-memory system, so they're not tracked by git. Now I'm moving to phase 2 to commit the roadmap change, then phase 3 to insert the knowledge mesh milestone node once I verify the database is responsive after recovery.
+
+</details>
+
+
+## 🤖 Claude *(20:47:45)*
+
+**Segurança ✅ PASS:** sem segredos no diff; o "match" em `storage_key` é falso-positivo (grep pegou "key"); script usa `SB_SECRET_KEY` do env, não hardcoded. Sem BLOCK.
+
+**PHASE 2 — Commit** (só o roadmap W2.1→DONE resta; o script já foi em `56017da`):
+
+## 🤖 Claude *(20:47:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/roadmap/supabase-pro-optimization.md\ngit commit -q -F - <<'EOF'\ndocs(roadmap): W2.1 masters\u2192Storage CONCLU\u00cdDO + Wave 0 host cleanup\n\nEP01(1.3G)+EP02(505M) migrados p/ video-studio-assets (verificado HTTP 200 +\ntamanho + file_size_bytes=0 corrigido; creative_assets repointado; host copies\ndeletadas, repurpose-inbox 1.8G\u219224M). Limite global Storage 50MB\u21925GB (Sovereign) +\nbucket alinhado 5GB. Pr\u00e9-condi\u00e7\u00e3o: 522 transit\u00f3rio do compute Micro \u2192 Restart\nproject (prova viva de W3.3). Host disk 79%\u219271% (~16GB docker/npm/build caches).\nEOF\ngit log --oneline -1",
+  "description": "Commit roadmap W2.1 done"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:47PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:47PM[0m [32mINF[0m scan completed in 7.86ms
+> [90m5:47PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 6426c7f docs(roadmap): W2.1 masters→Storage CONCLUÍDO + Wave 0 host cleanup
+> ```
+
+## 🤖 Claude *(20:48:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've committed the changes and now have six commits in this session. The database has recovered, so I'm moving into phase 3 to insert the knowledge mesh milestone node, embed it, and write out the proof manifest. I'll pull the secret key from the environment variables and continue with the aios-grounding-fix-supabase-pro phase.
+
+Now I'm inserting the handoff node and documenting the session's accomplishments.
+
+</details>
+
+
+## 🤖 Claude *(20:48:04)*
+
+**PHASE 3 — Knowledge Mesh milestone** (DB recuperado do 522):
+
+## 🤖 Claude *(20:48:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nSESSION_PHASE=\"aios-grounding-supabase-pro\"\nSESSION_SUMMARY=\"Conserto do grounding do chat AIOS Core-Fable (E prompt anti-confabulacao + A RAG query-aware + threshold 0.45->0.3, search 0->20; F1 voz; F2 ingest duravel de supabase+packages no mesh 14633 + fix do 401 silencioso do auto-ingest). Menu Orquestra movido p/ Constelacao. Roadmap Supabase Pro (cap 100 fns destravado provado) + Wave 0 host cleanup ~16GB + masters EP01/EP02 migrados p/ Storage.\"\nNODE=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"${SESSION_PHASE}\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -6 | tr '\\n' '|')\\\"}}\")\nNODE_ID=$(echo \"$NODE\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>/dev/null)\necho \"Node ID: $NODE_ID\"\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho \"=== embedding ===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded dims:', d.get('dims'), '| provider:', d.get('provider'))\" 2>/dev/null || echo \"embed: (ass\u00edncrono via trigger)\"",
+  "description": "Inserir n\u00f3 de milestone + embed + proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 88030445-274e-480d-a664-ff9781f2192c
+> === embedding ===
+> Embedded dims: None | provider: None
+> ```
+
+## 🤖 Claude *(20:48:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A node was successfully inserted and the manifest file was written, though the embedding response didn't include the expected dimensions or provider information—but that's fine since embedding happens asynchronously anyway. Let me check if the node actually got embedded.
+
+</details>
+
+
+## 🤖 Claude *(20:48:30)*
+
+Nó inserido: `88030445-274e-480d-a664-ff9781f2192c`. O embed manual retornou shape vazio — confirmo se o trigger on-insert embedou (não-bloqueante):
+
+## 🤖 Claude *(20:48:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\nURL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\ncurl -s \"$URL/rest/v1/mcorch_nodes?id=eq.88030445-274e-480d-a664-ff9781f2192c&select=id,node_type,embedding\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); r=d[0] if d else {}; e=r.get('embedding'); print('node:', r.get('id','?')[:8], '| type:', r.get('node_type'), '| embedding:', ('present '+str(len(e))+'d' if e else 'NULL (trigger pendente/ass\u00edncrono)'))\" 2>/dev/null || echo \"check falhou\"",
+  "description": "Verificar embedding do n\u00f3 de handoff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> node: 88030445 | type: handoff | embedding: present 9480d
+> ```
+
+## 🤖 Claude *(20:48:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The embedding is actually there — the REST API returns it as a string representation of the vector (like "[0.1,0.2,...]"), so when I check its length, I'm getting the character count of that string (~9480 chars) rather than the dimension count. The "9480d" refers to the string length, not the vector dimensions, which means the on-insert trigger successfully embedded the data.
+
+Now I'm moving to Phase 4 to update the README with current metrics. I need to fetch the live node count from the mesh, then update the badges, phase table, and what's new section with targeted edits.
+
+</details>
+
+
+## 🤖 Claude *(20:48:44)*
+
+Embedding presente (o "9480d" é o comprimento da string do vetor via REST, não as dims — o trigger on-insert embedou ✅). Nó `88030445` selado.
+
+**PHASE 4 — README.md** (contagem viva do mesh inclui o nó novo):
+
+## 🤖 Claude *(20:48:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== contagem viva do mesh (p/ badge) ===\"\ncurl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'\necho \"=== README: badges + vers\u00e3o atual ===\"\ngrep -nE \"neural_mesh-[0-9]|version-[0-9]|nodes\" README.md | head -6",
+  "description": "Contagem viva + estado do README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === contagem viva do mesh (p/ badge) ===
+> 18324
+> 
+> 
+> === README: badges + versão atual ===
+> 3:  <img src="https://img.shields.io/badge/version-6.122.0--PIPC_S1%2BS2_reten%C3%A7%C3%A3o%E2%86%92brief_%2B_CRM_Contatos_%2B_cadence_fix_%2B_AI_Act_selada-blueviolet?style=for-the-badge" alt="Version" />
+> 7:  <img src="https://img.shields.io/badge/neural_mesh-9831_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 59:  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 555:**Material proofs:** 2 granular commits (`c4be815` BoK · `ff81c4f` migration) · `tsc --noEmit` 0 errors · BoK gate 9/9 · mesh seal `d5163fed` embedded 768d · migration `20260603000000` applied via `db push` + tenant-FK adversarial test proven · handoff node `a48d8ff4-1069-4ca0-8764-f01922e2e12f` embedded 768d · mesh **8755 nodes**. **Next:** MVP-2 Campaign Core (absorb existing `campaigns`) · MVP-3 edge fns `lead-score`/`campaign-run` · MVP-4 hooks+UI `/dashboard/marketing` · MVP-5 attribution+tests+deploy.
+> 568:**Material proofs:** zero production code touched (knowledge seal) · `tsc --noEmit` 0 errors · 5 containers healthy (10d) · Chroma v2 OK · `agent-browser` 0.27.0 logged-in flow proven (screenshots `/tmp/settings-logged.png`, `/tmp/social-accounts.png`, `/tmp/ml-afiliados-portal.png`) · handoff node `af6bffa2-bce8-4c43-952e-67c0db9c3d23` embedded 768d · mesh **8753 nodes**.
+> 581:**Material proofs:** 2 granular commits (`76bb9e3`·`610e1f3`) · migration `20260602160000` applied + recorded in `schema_migrations` · **both Part A and Part B `/security-review` SAFE (9/10)** · `tsc --noEmit` 0 errors · 238 tests pass · RPC suite 5/5 in `BEGIN…ROLLBACK` (happy meta+social, foreign-id no-op, planted-ref name-binding holds, unauth `28000`) · post-apply 12→0 Meta orphans / 3 live social secrets + rows intact · served bundle contains both RPC calls + baked env · handoff node `f7805e20-bebd-4a30-8533-09806238f135` embedded 768d · mesh **8752 nodes**.
+> ```
+
+## 🤖 Claude *(20:49:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The mesh node count jumped significantly to 18,324 from the initial 9,831 anchor — the F2 ingest added around 4,657 nodes from Supabase functions and packages, plus the durable ingest re-ran the src directory after it had stalled due to a 401 error, bringing in new nodes, and each commit's post-commit mesh reingest contributed to the growth. So the actual progression was closer to 9,976 up to 14,633, then further to 18,324. The re-ingest is additive and deduped by astId, so unchanged files don't create duplicates—only the new or modified files from those weeks of commits plus my edits this session add new nodes. The 18324 count is legitimate: it's the original 9976 plus the F2 ingest (4657) plus the resurrected src/ auto-ingest catching up on all the accumulated changes (~3700). That's a massive jump, but it makes sense given the 401 had frozen the src/ ingestion for weeks. Let me verify this isn't somehow double-counting before I use it for the badge. The jump from 14633 to 18324 nodes represents about 3691 new entries from this session's re-ingests. The source directory alone has 441 files that generated 9170 graph nodes according to the durable ingest log, but the mesh only had around 2637 AST nodes for src/ before. Since re-ingesting inserted only the syncable node kinds (file, function, arrow_function, interface, class, variable, enum, type_alias), the actual insert count for that run wasn't captured, so I'm working with incomplete data on how many of those 9170 nodes actually made it into the mesh.
+
+The 18324 total is legitimate though. I'm updating the README badge to reflect this and bumping the version from 6.122.0 to 6.123.0 since this session shipped meaningful features—the AIOS grounding fix and ingest durability improvements warrant a minor version increment.
+
+Now I need to update the badges and add a What's New entry. Let me scan the README structure to find where the phase table and What's New section are located so I can make targeted edits.
+
+</details>
+
+
+## 🤖 Claude *(20:49:23)*
+
+Contagem viva: **18324 nós** (o fix do 401 ressuscitou o auto-ingest morto → src/ se atualizou + F2 supabase/packages; 9831→18324). Leio o topo do README p/ editar badges + seção:
+
+## 🤖 Claude *(20:49:24)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.122.0--PIPC_S1%2BS2_reten%C3%A7%C3%A3o%E2%86%92brief_%2B_CRM_Contatos_%2B_cadence_fix_%2B_AI_Act_selada-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/crm--inbox-Amendment_10_composer_(m%C3%ADdia%2Femoji%2Frecibos)_%2B_swap_ao_vivo-brightgreen?style=for-the-badge" alt="CRM Inbox" />
+> 5	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 6	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 7	  <img src="https://img.shields.io/badge/neural_mesh-9831_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 8	  <img src="https://img.shields.io/badge/BoK-33%2F33_fam%C3%ADlias_seladas-brightgreen?style=for-the-badge" alt="BoK Suites" />
+> 9	  <img src="https://img.shields.io/badge/veo--3.1-avatar_por_refer%C3%AAncia_(Gemini_API_%2B_Vertex_SA)-cyan?style=for-the-badge" alt="Veo Avatar" />
+> 10	  <img src="https://img.shields.io/badge/asset_publish-format_picker_%2B_preview_fiel_(IG%2FYT%2FTikTok)-cyan?style=for-the-badge" alt="Asset Publish Format Preview" />
+> 11	  <img src="https://img.shields.io/badge/video--repurpose-1_master_%E2%86%92_N_shorts_%2B_carrossel_(FFmpeg%2C_gr%C3%A1tis)-brightgreen?style=for-the-badge" alt="Video Repurpose" />
+> 12	  <img src="https://img.shields.io/badge/MAPE--K_guardian-cron_%2B_Nemotron_free_L2-darkgreen?style=for-the-badge" alt="MAPE-K Guardian" />
+> 13	  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 14	  <img src="https://img.shields.io/badge/free_LoRA_training-avatar--identity--train_(Replicate_BYOK%2C_USD_0)-brightgreen?style=for-the-badge" alt="Free LoRA Training" />
+> 15	  <img src="https://img.shields.io/badge/Spaces_publish-WordPress_node_(Post%2FLanding)-cyan?style=for-the-badge" alt="Spaces Publish WordPress" />
+> 16	  <img src="https://img.shields.io/badge/BoK_youtube--studio-deepsearch_blueprint_seed-fuchsia?style=for-the-badge" alt="BoK youtube-studio blueprint" />
+> 17	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 18	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 19	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 20	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 21	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 22	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 23	  <img src="https://img.shields.io/badge/social--connect-TikTok%2FYouTube_proven_E2E_%C2%B7_in_review-brightgreen?style=for-the-badge" alt="Social Connect" />
+> 24	  <img src="https://img.shields.io/badge/channel--format-FR--CP--001_live_(8_canais)-brightgreen?style=for-the-badge" alt="Channel Format Intelligence" />
+> 25	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.9_cutover_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 26	  <img src="https://img.shields.io/badge/higgsfield--mcp-OAuth_connector_server--side_(gated)-cyan?style=for-the-badge" alt="Higgsfield MCP Connector" />
+> 27	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 28	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 29	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 30	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 31	  <img src="https://img.shields.io/badge/BoK_Suites-25%2F25_sealed-fuchsia?style=for-the-badge" alt="BoK Suites" />
+> 32	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 33	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 34	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 35	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 36	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 37	  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 38	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 39	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 40	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 41	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 42	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 43	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 44	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 45	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 46	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 47	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 48	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 49	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 50	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 51	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 52	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 53	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 54	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 55	  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 56	  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 57	  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 58	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 59	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 60	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 61	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 62	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 63	  <img src="https://img.shields.io/badge/ML_Affiliate-no_official_API_(probe--first)-red?style=for-the-badge" alt="ML Affiliate Probe" />
+> 64	  <img src="https://img.shields.io/badge/Browser_Operator-runtime_blocked_at_datacenter-darkred?style=for-the-badge" alt="Browser Operator Probe" />
+> 65	  <img src="https://img.shields.io/badge/Pantheon-7_agents_BoK_full-orange?style=for-the-badge" alt="Pantheon" />
+> 66	  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 67	  <img src="https://img.shields.io/badge/Admin_Panel-user_management_live-brightgreen?style=for-the-badge" alt="Admin Panel" />
+> 68	  <img src="https://img.shields.io/badge/Great_Reset-Sovereign_soft--reset_live-darkred?style=for-the-badge" alt="Great Reset" />
+> 69	  <img src="https://img.shields.io/badge/Constellation_Economic_Activation-agents_billable-gold?style=for-the-badge" alt="CEA" />
+> 70	  <img src="https://img.shields.io/badge/Hybrid_Billing-Sovereign_free_others_charged-teal?style=for-the-badge" alt="Hybrid Billing" />
+> 71	  <img src="https://img.shields.io/badge/Agent_Pricing-7_models_seeded-fuchsia?style=for-the-badge" alt="Agent Pricing" />
+> 72	  <img src="https://img.shields.io/badge/Daily_Pulse_Cron-04:00_BRT-violet?style=for-the-badge" alt="Daily Pulse" />
+> 73	  <img src="https://img.shields.io/badge/BoK_marketing--hub-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK marketing-hub" />
+> 74	  <img src="https://img.shields.io/badge/BoK_viral--autopilot-9_of_9_sealed_(4--round_validated)-fuchsia?style=for-the-badge" alt="BoK viral-autopilot" />
+> 75	  <img src="https://img.shields.io/badge/BoK_authenticated--browser--operator-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK authenticated-browser-operator" />
+> ```
+
+## 🤖 Claude *(20:49:39)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update a couple of badges in the README—bumping the version from 6.122.0 to 6.123.0 and updating the neural mesh count from 9831 to 18324. I'll do targeted replacements on those specific lines to keep the changes minimal.
+
+</details>
+
+
+## 🤖 Claude *(20:49:39)*
+
+**PHASE 4** — atualizo os 2 badges dinâmicos:
+
+## 🤖 Claude *(20:49:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.122.0--PIPC_S1%2BS2_reten%C3%A7%C3%A3o%E2%86%92brief_%2B_CRM_Contatos_%2B_cadence_fix_%2B_AI_Act_selada-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.123.0--AIOS_grounding_fix_(anti--confabula%C3%A7%C3%A3o)_%2B_Supabase_Pro_optimization-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:49:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-9831_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-18324_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:49:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to locate the "What's New" or version history section in the document so I can add a new entry at the top. Let me search for the recent version headers to find where the latest changes are documented.
+
+</details>
+
+
+## 🤖 Claude *(20:49:56)*
+
+Acho a seção "What's New" para prepender a entrada da sessão:
+
+## 🤖 Claude *(20:49:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"What's New|What.s New|## .*Recent|### \\[v6\\.12|### v6\\.12|Sprint v6\\.12\" README.md | head -8\necho \"=== primeira entrada de hist\u00f3rico recente ===\"\ngrep -nE \"^### |^#### |^## \" README.md | grep -iE \"6\\.12[0-9]|PIPC|reten|autopilot|CRM Contatos\" | head -5",
+  "description": "Localizar se\u00e7\u00e3o What's New"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 846:### [v6.122.0] — Autonomia total: PIPC S1+S2 (retenção→brief EP05) · CRM Contatos · cadence-fix · AI Act selada (2026-07-24)
+> === primeira entrada de histórico recente ===
+> 89:## 🆕 What's new in v6.121.0 (2026-07-23) — Governança de docs + Golden Eye slice 1 + cadência por-workspace + YouTube pronto
+> 96:## 🆕 What's new in v6.120.0 (2026-07-23) — Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1)
+> 846:### [v6.122.0] — Autonomia total: PIPC S1+S2 (retenção→brief EP05) · CRM Contatos · cadence-fix · AI Act selada (2026-07-24)
+> 990:### [v6.48.0] — Viral Autopilot ATIVADO (1º ciclo pago + pg_cron) + FR-VA-018 + segurança social-auth + paridade sentinel pt-BR (2026-06-23)
+> 1009:### [v6.42.0] — Viral Autopilot BoK 9/9 (motor de conteúdo viral autônomo, R1-R4) (2026-06-17)
+> ```
+
+## 🤖 Claude *(20:50:08)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing a version mismatch in the README—the top "What's new" section shows v6.121.0, but the version history list further down includes v6.122.0, which seems inconsistent since the history should reflect the most recent release.
+
+I'll add the new v6.123.0 entry to the top "What's new" section (before the v6.121.0 block) since that's the most prominent location, and I need to check the exact formatting around line 89 to insert it correctly.
+
+</details>
+
+
+## 🤖 Claude *(20:50:08)*
+
+Leio o bloco "What's new" do topo para prepender no formato certo:
+
+## 🤖 Claude *(20:50:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 86,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 86	  <img src="https://img.shields.io/badge/vision--mcp_agents-8_BoK_%2B_Pantheon_reconciled-orange?style=for-the-badge" alt="vision-mcp agents" />
+> 87	</p>
+> 88	
+> 89	## 🆕 What's new in v6.121.0 (2026-07-23) — Governança de docs + Golden Eye slice 1 + cadência por-workspace + YouTube pronto
+> 90	
+> 91	- **Diretiva 5 pontos (loop autônomo, todos entregues):** **(1)** Governança de docs — agentes **`docs-curator`** (dono de `docs/`) + **`bok-curator`** (dono de `docs/bok/`, guardião do gate Closed-Loop); curam e **revisam no lugar do Sovereign**, escalando via Telegram só pontualmente; regra global em **CLAUDE.md Master Execution Protocol §6**. **(2)** Auditoria da cadência + estratégia **por-workspace** (`docs/roadmap/cadence-workspace-strategy-2026-07-23.md`) — gap central: sem entidade Workspace de 1ª classe, `meta_config UNIQUE(user_id)`=1 Meta/user, `cadence-run social_account_id=null`→1ª conta arbitrária; desenho p/ escalar a 50 canais YT/IG/TikTok. **(3)** Esclarecimento + design do **intake do Golden Eye** (`docs/roadmap/golden-eye-intake-design-2026-07-23.md`) — UI Settings "Marca": PDF MIV→texto da rubrica, moodboard/design-system→exemplares, vídeos→frames+análise Vision. **(4)** YouTube escopo/CASA/quota respondido (**sem CASA** — escopo sensível, não restrito) + entregue no Telegram. **(5)** Pipeline YouTube **100% pronto** (worker resumable, `youtube_uploads` em prod, canal conectado, master EP02 no host) — só falta habilitar o service.
+> 92	- **Golden Eye slice 1 (core)** — `scripts/qa/ux-ui-senior-loop/lib/miv-probe.ts`: prova determinística (contraste WCAG reusando `tier1/contrast.ts` + classe de cor MIV + fonte) que implementa a regra `RUBRIC.md:231` (veredito objetivo P0/P1 do VLM **sem prova computada → downgrade P2**). Fecha o risco Lei 1 do grader julgar no palpite. **18/18 testes**, tsc-app 93=baseline. Plano+shopping-list em `docs/roadmap/vision-golden-eye.md`.
+> 93	- **PIPC — Pipeline Interno de Produção Criativa** — blueprint deepsearch (Google Flow FX Storyboard Studio+Ingredients + base GabrielAI) + **BoK 10/10 APPROVE** (`docs/bok/pipc/`, Pattern Conformance 17/4/0). Separa a máquina de APRENDER (dev→publicar→analisar→melhorar EP05). Gate Closed-Loop pendente de revisão do Sovereign antes do código.
+> 94	- **Vacina anti-recorrência** — skill `host-media-masters` (os masters EP01/EP02 vivem em `repurpose-inbox/<uid>/`, nunca `find` cego) + doutrina **"tudo que faço 2× vira skill+agente"** (harness/driven-specs). Malha **9772**.
+> 95	
+> 96	## 🆕 What's new in v6.120.0 (2026-07-23) — Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1)
+> 97	
+> ```
+
+## 🤖 Claude *(20:50:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm inserting a new release notes section for v6.123.0 before the existing v6.121.0 entry, documenting the AIOS grounding fix and other updates from this session.
+
+</details>
+
+
+## 🤖 Claude *(20:50:18)*
+
+**PHASE 4** — prependo a entrada v6.123.0 no "What's new":
+
+## 🤖 Claude *(20:50:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.121.0 (2026-07-23) \u2014 Governan\u00e7a de docs + Golden Eye slice 1 + cad\u00eancia por-workspace + YouTube pronto",
+  "new_string": "## \ud83c\udd95 What's new in v6.123.0 (2026-07-25) \u2014 Conserto do grounding do AIOS (anti-confabula\u00e7\u00e3o) + otimiza\u00e7\u00e3o Supabase Pro\n\n- **Grounding do chat AIOS Core-Fable consertado (a raiz de \"algo errado no ecossistema\"):** o AIOS confabulava arquitetura inexistente (monorepo/tabelas/`ffmpeg.wasm`) com confian\u00e7a de autoridade. Diagn\u00f3stico por workflows de verifica\u00e7\u00e3o material: grounding fraco **+** a busca sem\u00e2ntica do mesh **morta em produ\u00e7\u00e3o** (threshold 0.45 acima da banda real do `text-embedding-3-small`). Fix (`cb18729`): **E** `DEFAULT_SYSTEM`+`LIVE_SYSTEM` anti-confabula\u00e7\u00e3o (pro\u00edbem inventar arquivo/tabela/package; mandam dizer \"n\u00e3o tenho no contexto\"); **A** RAG query-aware (`buildQueryContext` liga o `searchContext` que era dead-code, inclui AST); **threshold** `search-constellation` 0.45\u21920.3 configur\u00e1vel. **Prova E2E: search 0 \u2192 20 matches** (controle @0.45=0). **F1** modo voz (Gemini Live) tinha a mesma falha \u2014 corrigido.\n- **Auto-ingest do mesh ressuscitado (bug oculto):** o `mesh-reingest` do post-commit morria com **401 silencioso desde a rota\u00e7\u00e3o de chaves** (lia `SUPABASE_SERVICE_ROLE_KEY` stale) \u2014 o corpus `src/` parou de atualizar em sil\u00eancio. Fix + amplia\u00e7\u00e3o (`4001e38`): `ingest-codebase.ts` for\u00e7a `SB_SECRET_KEY` e varre `src/`+`supabase/functions/`+`packages/` (aditivo). Malha **9831\u219218324** n\u00f3s.\n- **Menu:** `Marketing > Orquestra\u00e7\u00e3o` \u2192 **`Constela\u00e7\u00e3o > Orquestra`**.\n- **Supabase Pro \u2014 otimiza\u00e7\u00e3o:** roadmap `docs/roadmap/supabase-pro-optimization.md` (cap de 100 edge fns **destravado, provado** \u2014 101\u00aa fn deployou; upload 50MB\u2192500GB; sem auto-pause; logs 7d). **Host cleanup ~16GB** (disco 79%\u219271%: docker/npm/build caches). **Masters EP01/EP02 migrados p/ Supabase Storage** (`scripts/migrate-local-masters-to-storage.ts`, verificado + host liberado).\n\n## \ud83c\udd95 What's new in v6.121.0 (2026-07-23) \u2014 Governan\u00e7a de docs + Golden Eye slice 1 + cad\u00eancia por-workspace + YouTube pronto"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:50:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Time to commit the README changes, then move on to updating the HANDOFF.md file in the next phase.
+
+</details>
+
+
+## 🤖 Claude *(20:50:38)*
+
+**PHASE 4 commit:**
+
+## 🤖 Claude *(20:50:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -F - <<'EOF'\ndocs(readme): v6.123.0 \u2014 AIOS grounding fix + Supabase Pro optimization \u00b7 malha 18324\n\nBadges version 6.122\u21926.123, neural_mesh 9831\u219218324. What's-new: conserto do\ngrounding do Core-Fable (E+A+F1+threshold, search 0\u219220), auto-ingest ressuscitado\n(fix 401 silencioso), menu Orquestra\u2192Constela\u00e7\u00e3o, roadmap Supabase Pro + host\ncleanup ~16GB + masters\u2192Storage.\nEOF\ngit log --oneline -1",
+  "description": "Commit README v6.123.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:50PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:50PM[0m [32mINF[0m scan completed in 9.07ms
+> [90m5:50PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 00f5295 docs(readme): v6.123.0 — AIOS grounding fix + Supabase Pro optimization · malha 18324
+> ```
+
+## 🤖 Claude *(20:51:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm moving into the handoff phase, updating the HANDOFF.md file with this session's progress. I need to refresh the FIRST ACTION block at the top with a summary of what was accomplished, add a new row to the Task State table, and create a new record entry. The file is over 1000 lines with newest entries first. I'm trying to pinpoint the exact line numbers and current text in the HANDOFF file so I can make precise edits — replacing the FIRST ACTION bash block, inserting a new Task State row, and adding a new Record section. Let me re-read the top portion to confirm the exact strings I'm working with before making the changes.
+
+</details>
+
+
+## 🤖 Claude *(20:51:00)*
+
+**PHASE 5 — HANDOFF.md.** Leio o topo atual para editar com precisão:
+
+## 🤖 Claude *(20:51:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 1,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -6
+> 7	# 🚀 UPDATE 2026-07-24 (autonomia total do Sovereign): S1+S2 PIPC VIVOS (retenção YT persiste → brief acionável
+> 8	#   "perde 50% aos 1:11 → cortar no EP05") · A4 CRM Contatos (tabela+RLS+CRUD, edge bloqueada pelo cap 100 fns) ·
+> 9	#   A8 cadence-fix (conta explícita mata null→1ª arbitrária) — TODOS em prod com witness E2E · A10 BoK
+> 10	#   content-provenance selada (Fatia 4/FR-CP-011 deferida em OTD-CP-002 jurídico). Migrations aplicadas +
+> 11	#   /security-review por migration. ~7 commits pushed. ⚠️ cap de 100 edge fns atingido (fn nova = 402).
+> 12	# 🔓 UPDATE 2026-07-23 (Conselheiro Estratégico): pmo-curator (novo curador MAPE-K de progresso) + un-gated 100%
+> 13	#   (Golden Eye slices 1-3 · BoK crm-suite 9/9 selada · landing-bundler) + A1 youtube-upload.service LIVE
+> 14	#   (active/enabled, fila vazia). Plano vivo em NEXT-STEPS.md. Gated pendentes: A10 (GO, deadline AI Act 02-Ago),
+> 15	#   A19/A20 (OAuth+YT Analytics API), A14/A4/A8 (arquitetural), A15 (imagens Golden Eye).
+> 16	# ✅ Diretiva 5 pontos ENTREGUE: (1) agentes docs-curator+bok-curator donos de docs/ e docs/bok/ (CLAUDE.md §6);
+> 17	#   (2) auditoria cadência + estratégia por-workspace; (3) intake Golden Eye desenhado (UI Settings Marca);
+> 18	#   (4) YouTube escopo/CASA respondido (SEM CASA)+Telegram; (5) pipeline YouTube 100% pronto.
+> 19	# ⚠️ Sovereign p/ destravar (tudo gated na sua mão):
+> 20	#   - REVISAR a BoK do PIPC (docs/bok/pipc/, 10/10 APPROVE) antes do código dos slices S1-S4.
+> 21	#   - habilitar o daemon: systemctl --user enable --now youtube-upload.service (publica no SEU canal).
+> 22	#   - mandar as IMAGENS de referência do Golden Eye (docs/roadmap/vision-golden-eye.md shopping-list) p/ o corpus.
+> 23	#   - postar os cortes EP01/EP02 (existem na spine + masters em repurpose-inbox/) — GO público seu.
+> 24	# Un-gated que eu sigo: Golden Eye wiring (browser-verify) · fatias un-gated de cadência/intake.
+> 25	```
+> 26	
+> 27	---
+> 28	
+> 29	## Task State
+> 30	
+> 31	| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** | ✅ Sessão de autonomia total do Sovereign (migrations/deploys/schema/seal **un-gated**; público/compliance-code/editorial/credenciais **gated**). **6 commits `c58a57e..88a04dd`** pushed · toda migration `/security-review`+RLS default-deny. **S1+S2 PIPC VIVOS** (retenção YT persiste→brief por-EP; A19/A20 desbloqueado por re-OAuth) · **A4 Contatos** (`contacts`+RLS, OTD-CS-001 resolvida) · **A8 cadence-fix** (conta explícita mata null→1ª) · **A10 content-provenance selada 9/9** (Fatia 4 deferida OTD-CP-002). Todos **witness E2E**. ⚠️ cap 100 edge fns atingido. Malha **9831** · nó `36d233dc`. Record abaixo. |
+> 32	| **Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube (2026-07-23)** | ✅ Loop autônomo, **os 5 entregues** (teto 80% janela; selado a 49%). **5 commits `c2da9d3..c28d2f0`** + push · tsc-app **93=baseline** · gitleaks limpo · sem edge/migration. **(1)** agentes `docs-curator`+`bok-curator` (donos de `docs/` e `docs/bok/`, curam/revisam no lugar do Sovereign, Telegram pontual, exclusão restrita) + regra global **CLAUDE.md §6** + Key Files + memória `feedback_docs_bok_ownership`. **(2)** auditoria cadência + estratégia por-workspace (`docs/roadmap/cadence-workspace-strategy-2026-07-23.md`; gap central: sem entidade Workspace 1ª classe · `meta_config UNIQUE(user_id)`=1 Meta/user · `cadence-run social_account_id=null`→1ª conta arbitrária). **(3)** intake Golden Eye esclarecido+desenhado (`docs/roadmap/golden-eye-intake-design-2026-07-23.md`, UI Settings "Marca"; VLM=refinaria não depósito). **(4)** YouTube escopo/CASA/quota respondido+**Telegram HTTP 200** (**sem CASA** — escopo sensível não restrito). **(5)** pipeline YouTube **100% pronto** (worker resumable · `youtube_uploads` prod · canal Gabriel AI conectado · master EP02 em `repurpose-inbox/`; só habilitar service). **Extras:** Golden Eye slice 1 (`miv-probe.ts` 18/18, regra RUBRIC.md:231) · PIPC BoK 10/10 APPROVE (`docs/bok/pipc/`, Pattern 17/4/0) · vacina masters (skill `host-media-masters`) · doutrina 2×→skill (`feedback_recurring_actions_become_skills`) · MEMORY 19.9→16KB. Malha **9772** · nó `c22e2c6f`. ⏭ Gated Sovereign: revisar BoK PIPC (destrava S1-S4) · habilitar `youtube-upload.service` · imagens Golden Eye · postar cortes EP01/EP02. |
+> ```
+
+## 🤖 Claude *(20:51:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the HANDOFF.md file with the next agent's instructions. I'm replacing the FIRST ACTION block with a new one that summarizes this session and outlines what the next agent should focus on, then adding a Task State row and a new Record section to track progress.
+
+</details>
+
+
+## 🤖 Claude *(20:51:09)*
+
+Atualizo o bloco FIRST ACTION:
+
+## 🤖 Claude *(20:51:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "```bash\ngit log --oneline -6\n# \ud83d\ude80 UPDATE 2026-07-24 (autonomia total do Sovereign): S1+S2 PIPC VIVOS (reten\u00e7\u00e3o YT persiste \u2192 brief acion\u00e1vel\n#   \"perde 50% aos 1:11 \u2192 cortar no EP05\") \u00b7 A4 CRM Contatos (tabela+RLS+CRUD, edge bloqueada pelo cap 100 fns) \u00b7\n#   A8 cadence-fix (conta expl\u00edcita mata null\u21921\u00aa arbitr\u00e1ria) \u2014 TODOS em prod com witness E2E \u00b7 A10 BoK\n#   content-provenance selada (Fatia 4/FR-CP-011 deferida em OTD-CP-002 jur\u00eddico). Migrations aplicadas +\n#   /security-review por migration. ~7 commits pushed. \u26a0\ufe0f cap de 100 edge fns atingido (fn nova = 402).\n# \ud83d\udd13 UPDATE 2026-07-23 (Conselheiro Estrat\u00e9gico): pmo-curator (novo curador MAPE-K de progresso) + un-gated 100%\n#   (Golden Eye slices 1-3 \u00b7 BoK crm-suite 9/9 selada \u00b7 landing-bundler) + A1 youtube-upload.service LIVE\n#   (active/enabled, fila vazia). Plano vivo em NEXT-STEPS.md. Gated pendentes: A10 (GO, deadline AI Act 02-Ago),\n#   A19/A20 (OAuth+YT Analytics API), A14/A4/A8 (arquitetural), A15 (imagens Golden Eye).\n# \u2705 Diretiva 5 pontos ENTREGUE: (1) agentes docs-curator+bok-curator donos de docs/ e docs/bok/ (CLAUDE.md \u00a76);\n#   (2) auditoria cad\u00eancia + estrat\u00e9gia por-workspace; (3) intake Golden Eye desenhado (UI Settings Marca);\n#   (4) YouTube escopo/CASA respondido (SEM CASA)+Telegram; (5) pipeline YouTube 100% pronto.\n# \u26a0\ufe0f Sovereign p/ destravar (tudo gated na sua m\u00e3o):\n#   - REVISAR a BoK do PIPC (docs/bok/pipc/, 10/10 APPROVE) antes do c\u00f3digo dos slices S1-S4.\n#   - habilitar o daemon: systemctl --user enable --now youtube-upload.service (publica no SEU canal).\n#   - mandar as IMAGENS de refer\u00eancia do Golden Eye (docs/roadmap/vision-golden-eye.md shopping-list) p/ o corpus.\n#   - postar os cortes EP01/EP02 (existem na spine + masters em repurpose-inbox/) \u2014 GO p\u00fablico seu.\n# Un-gated que eu sigo: Golden Eye wiring (browser-verify) \u00b7 fatias un-gated de cad\u00eancia/intake.\n```",
+  "new_string": "```bash\ngit log --oneline -8\n# \ud83d\ude80 UPDATE 2026-07-25 (grounding do AIOS + Supabase Pro): CONSERTADA a raiz de \"algo errado no ecossistema\" \u2014\n#   o chat AIOS Core-Fable confabulava arquitetura inexistente. Fix E+A+F1+threshold (search 0\u219220 provado),\n#   + auto-ingest do mesh RESSUSCITADO (morria com 401 silencioso desde a rota\u00e7\u00e3o de chaves) \u2192 malha 9831\u219218324.\n#   Menu Orquestra movido p/ Constela\u00e7\u00e3o. Supabase virou PRO \u2192 roadmap docs/roadmap/supabase-pro-optimization.md\n#   (cap 100 fns DESTRAVADO provado; host cleanup ~16GB; masters EP01/EP02 migrados p/ Storage). 8 commits pushed.\n# \u23ed PR\u00d3XIMA SESS\u00c3O \u2014 roadmap Supabase Pro (docs/roadmap/supabase-pro-optimization.md) \u00e9 o ponto de entrada:\n#   UN-GATED (execut\u00e1vel j\u00e1): W1.2 statement_timeout via ALTER ROLE (mata a dor de timeout do backfill/count);\n#     W3.1 alerta de falha silenciosa (aproveita os 7d de log do Pro \u2014 o 401 do ingest ficou invis\u00edvel no Free);\n#     W1.3 criar edge fns antes bloqueadas pelo cap (crm-contacts CRUD, send-whatsapp-message) conforme cada gate.\n#   GATED (m\u00e3o do Sovereign): habilitar spend cap na org (billing por ORG); W3.3 compute add-on Small (o 522 desta\n#     sess\u00e3o provou que o Micro \u00e9 subdimensionado); aposentar host-upload-server/systemd (masters j\u00e1 no Storage);\n#     A10 AI Act Fatia 2/3 c\u00f3digo (deadline 02-Ago); revisar BoK PIPC; postar cortes EP01/EP02.\n# \u26a0\ufe0f Gotchas vivos: sync-to-mesh l\u00ea SUPABASE_SERVICE_ROLE_KEY (for\u00e7a SB_SECRET_KEY); limite GLOBAL de Storage\n#   subido p/ 5GB no painel; mudar Storage + carga no Micro dispara 522 transit\u00f3rio (Restart project resolve).\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:51:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to insert a new Task State row before the autonomy total line and add the corresponding record.
+
+</details>
+
+
+## 🤖 Claude *(20:51:42)*
+
+Adiciono a linha no Task State + o Record:
+
+## 🤖 Claude *(20:51:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** |",
+  "new_string": "## Task State\n\n| **Grounding do AIOS (anti-confabula\u00e7\u00e3o) + otimiza\u00e7\u00e3o Supabase Pro (2026-07-25)** | \u2705 Sess\u00e3o interativa longa. **8 commits `cb18729..00f5295`** pushed \u00b7 tsc-app **93=baseline** \u00b7 gitleaks limpo. **Raiz de \"algo errado no ecossistema\" achada+corrigida:** o chat AIOS Core-Fable confabulava arquitetura inexistente (monorepo/tabelas/`ffmpeg.wasm`) \u2014 diagn\u00f3stico por 2 workflows de verifica\u00e7\u00e3o material. Fix (`cb18729`): **E** prompt anti-confabula\u00e7\u00e3o (`DEFAULT_SYSTEM`+`LIVE_SYSTEM`) + **A** RAG query-aware (`buildQueryContext` liga o `searchContext` que era dead-code) + **threshold** `search-constellation` 0.45\u21920.3 (**search prod 0\u219220 provado**) + **F1** modo voz. **Auto-ingest RESSUSCITADO** (`4001e38`): morria com 401 silencioso desde a rota\u00e7\u00e3o de chaves \u2192 for\u00e7a `SB_SECRET_KEY` + varre `src`+`supabase/functions`+`packages`; malha **9831\u219218324**. Menu **Orquestra\u2192Constela\u00e7\u00e3o**. **Supabase Pro:** roadmap `docs/roadmap/supabase-pro-optimization.md` (cap 100 fns **destravado provado**; upload 50MB\u2192500GB; no-pause; logs 7d) + host cleanup **~16GB** (disco 79%\u219271%) + **masters EP01/EP02 migrados p/ Storage** (`scripts/migrate-local-masters-to-storage.ts`, verificado, host liberado 1.8G\u219224M). Malha **18324** \u00b7 n\u00f3 `88030445`. Record abaixo. |\n| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:52:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to locate where the Record sections begin in the document so I can insert the new Record section at the right place—after the Task State table ends and before the existing Record blocks start.
+
+</details>
+
+
+## 🤖 Claude *(20:52:02)*
+
+Localizo onde começam os Records para inserir o novo:
+
+## 🤖 Claude *(20:52:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"^## .*Record \\(2026|^\\*\\*Sprint v6\" HANDOFF.md | head -4",
+  "description": "Achar in\u00edcio da se\u00e7\u00e3o de Records"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 82:## Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada Record (2026-07-24)
+> 116:## Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube Record (2026-07-23)
+> 147:## Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1) Record (2026-07-23)
+> 188:## Sala de Controle da Orquestração + cortes de N clipes Record (2026-07-22)
+> ```
+
+## 🤖 Claude *(20:52:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to find line 82 where the next Record starts and insert my new Record block before it. Let me position this at the right anchor point and structure it with a prose summary, action table, commit table, and architecture note.
+
+</details>
+
+
+## 🤖 Claude *(20:52:10)*
+
+Insiro o Record antes do mais recente (linha 82):
+
+## 🤖 Claude *(20:52:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada Record (2026-07-24)",
+  "new_string": "## Grounding do AIOS (anti-confabula\u00e7\u00e3o) + otimiza\u00e7\u00e3o Supabase Pro Record (2026-07-25)\n\nO Sovereign trouxe um prompt \"AI Act Fatia 2/3\" gerado pelo chat AIOS (Core-Fable, `nemotron` via gateway) e mandou executar. Verifica\u00e7\u00e3o material (workflow) provou que o prompt descrevia **outro projeto** (monorepo `packages/chat`/`whatsapp`, tabelas `embeddings`/`knowledge_edges`, `ffmpeg.wasm`, Slack \u2014 nada existe) e violava o gate Closed-Loop da `content-provenance`. Recusa fundamentada. O Sovereign ent\u00e3o perguntou \"o que h\u00e1 de errado no ecossistema?\" \u2014 2\u00ba workflow rastreou o chat AIOS e achou a **raiz dupla**: (1) grounding fraco (prompt promete autoridade sem dar material; RAG query-aware existia como dead-code; n\u00f3s AST exclu\u00eddos); (2) **a busca sem\u00e2ntica do mesh estava MORTA em produ\u00e7\u00e3o** \u2014 `search-constellation` usava threshold 0.45, acima da banda real do `text-embedding-3-small` (query-curta topa ~0.43-0.52) \u2192 `count:0` para toda query. Fix E+A+F1+threshold provado E2E (search 0\u219220). Ao tornar o F2 (ingerir `supabase/`+`packages/`) dur\u00e1vel, descobri que o **auto-ingest do post-commit morria com 401 silencioso desde a rota\u00e7\u00e3o de chaves** (lia `SUPABASE_SERVICE_ROLE_KEY` stale) \u2014 corpus `src/` congelado; corrigido. Depois: menu Orquestra\u2192Constela\u00e7\u00e3o; e com o Supabase virando Pro, roadmap de otimiza\u00e7\u00e3o + host cleanup + migra\u00e7\u00e3o dos masters p/ Storage.\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `useAiosTerminalChat.ts` DEFAULT_SYSTEM + `AIOSTerminal.tsx` LIVE_SYSTEM | \u2705 regras anti-confabula\u00e7\u00e3o (pro\u00edbem inventar arquivo/tabela/package; \"n\u00e3o tenho no contexto\"); voz tamb\u00e9m |\n| `useKnowledgeMesh.ts` `buildQueryContext` | \u2705 RAG query-aware por-mensagem (liga o `searchContext` que era dead-code; inclui AST) |\n| `search-constellation/index.ts` | \u2705 `match_threshold` configur\u00e1vel, default 0.45\u21920.3 (prod search **0\u219220**; controle @0.45=0) |\n| `ingest-codebase.ts` | \u2705 varre `src`+`supabase/functions`+`packages` (aditivo) + for\u00e7a `SB_SECRET_KEY` (mata o 401 silencioso do auto-ingest) |\n| `DashboardSidebar.tsx` | \u2705 item Orquestra\u00e7\u00e3o movido de Marketing \u2192 Constela\u00e7\u00e3o > Orquestra |\n| `docs/roadmap/supabase-pro-optimization.md` | \u2705 roadmap Pro (cap fns destravado provado \u00b7 Wave 0 host disco \u00b7 W2.1 masters\u2192Storage) |\n| `scripts/migrate-local-masters-to-storage.ts` | \u2705 move seguro por-arquivo (upload\u2192verifica\u2192repointa\u2192apaga); EP01+EP02 \u2192 `video-studio-assets` |\n| Host disk | \u2705 79%\u219271% (~16GB: docker/npm/build caches; ms-playwright/canvas-design preservados) |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `cb18729` | fix(aios): grounding Core-Fable \u2014 E+A+F1+threshold (search 0\u219220) |\n| `4001e38` | feat(mesh,nav): ingest dur\u00e1vel (src+supabase+packages, fix 401) + Orquestra\u2192Constela\u00e7\u00e3o |\n| `54ab3df` | docs(roadmap): plano Supabase Pro |\n| `b74a756` | docs(roadmap): Wave 0 host-infra + snapshot Pro |\n| `56017da` | feat(infra): migra\u00e7\u00e3o masters\u2192Storage + host cleanup ~16GB |\n| `6426c7f` | docs(roadmap): W2.1 masters\u2192Storage CONCLU\u00cdDO |\n| `00f5295` | docs(readme): v6.123.0 \u00b7 malha 18324 |\n\n### Arquitetura do fix de grounding\n```\nChat AIOS (Core-Fable) \u2192 useAiosTerminalChat.sendMessage\n  E: DEFAULT_SYSTEM/LIVE_SYSTEM = \"ground ONLY in <KNOWLEDGE_CONTEXT>; nunca invente\"\n  A: buildQueryContext(msg) \u2192 searchContext \u2192 search-constellation (embed query)\n       \u2192 match_mcorch_nodes (threshold 0.3, inclui AST) \u2192 top-8 relevantes\n  \u2192 aios-chat-stream (system + messages) \u2192 modelo\nCorpus: ingest-codebase.ts (src+supabase/functions+packages, SB_SECRET_KEY) \u2192 mcorch_nodes (18324)\n```\n\n## Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada Record (2026-07-24)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:52:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Running a secret scan on HANDOFF.md to check for any sensitive information before committing it.
+
+</details>
+
+
+## 🤖 Claude *(20:52:46)*
+
+**PHASE 5b — secret scan no HANDOFF.md:**
+
+## 🤖 Claude *(20:52:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credenciais no HANDOFF.md ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\\|hash\" | head || echo \"  NO CREDENTIALS \u2705\"\necho \"=== 5b-2 Google keys ===\"; grep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head || echo \"  NO GOOGLE KEYS \u2705\"\necho \"=== 5b-3 inline assignments suspeitos ===\"; grep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|hash\\|uuid\\|[0-9a-f-]\\{36\\}\" | head || echo \"  NO INLINE ASSIGNMENTS \u2705\"",
+  "description": "Phase 5b HANDOFF secret scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credenciais no HANDOFF.md ===
+> === 5b-2 Google keys ===
+> === 5b-3 inline assignments suspeitos ===
+> ```
+
+## 🤖 Claude *(20:53:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through why all three credential checks returned empty results — the grep commands should have triggered the fallback echo statements when they found no matches, but those messages never printed either. There's something odd happening with how the pipe is handling the exit codes, possibly related to how `head` behaves in the pipeline.
+
+Actually, I think I've got it now. When grep finds nothing, it exits with 1, but `head` exits 0 even on empty input, so the `||` operator never fires because the overall pipeline succeeds. The empty output itself is the signal that no credentials were found — Phase 5b is clean. Now I need to commit the HANDOFF.md file.
+
+</details>
+
+
+## 🤖 Claude *(20:53:02)*
+
+Phase 5b ✅ (saída vazia = zero matches; sem credenciais). Commit do HANDOFF.md:
+
+## 🤖 Claude *(20:53:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -F - <<'EOF'\ndocs(handoff): seal grounding do AIOS + Supabase Pro (2026-07-25) \u2014 search 0\u219220 \u00b7 malha 18324 \u00b7 masters\u2192Storage\n\nRaiz de \"algo errado no ecossistema\" corrigida: chat AIOS Core-Fable confabulava\narquitetura inexistente (grounding fraco + busca sem\u00e2ntica morta por threshold 0.45).\nFix E+A+F1+threshold (search 0\u219220 provado) + auto-ingest ressuscitado (401 silencioso).\nMenu Orquestra\u2192Constela\u00e7\u00e3o. Supabase Pro: roadmap + host cleanup ~16GB + masters\u2192Storage.\nTask State + Record + FIRST ACTION atualizados. n\u00f3 88030445.\nEOF\ngit log --oneline -1",
+  "description": "Commit HANDOFF.md seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:53PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:53PM[0m [32mINF[0m scan completed in 12.7ms
+> [90m5:53PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 86fc38c docs(handoff): seal grounding do AIOS + Supabase Pro (2026-07-25) — search 0→20 · malha 18324 · masters→Storage
+> ```
+
+## 🤖 Claude *(20:53:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've committed the HANDOFF.md file and now I'm moving into the Material Proof Audit phase. I need to run the audit script to verify the newest Record's claims—checking commit hashes, mesh UUID, TypeScript compilation, and other details. The proof-manifest.json contains the handoff node ID that the audit will reference, so let me execute it.
+
+</details>
+
+
+## 🤖 Claude *(20:53:15)*
+
+HANDOFF.md selado (`86fc38c`). **PHASE 5c — Material Proof Audit:**
+
+## 🤖 Claude *(20:53:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ntimeout 300 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -45; echo \"=== audit exit ${PIPESTATUS[0]} ===\"",
+  "description": "Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit cb18729 | git_commit | cb18729 | cb18729 | ✅ |
+> | commit 4001e38 | git_commit | 4001e38 | 4001e38 | ✅ |
+> | commit 54ab3df | git_commit | 54ab3df | 54ab3df | ✅ |
+> | commit b74a756 | git_commit | b74a756 | b74a756 | ✅ |
+> | commit 56017da | git_commit | 56017da | 56017da | ✅ |
+> | commit 6426c7f | git_commit | 6426c7f | 6426c7f | ✅ |
+> | commit 00f5295 | git_commit | 00f5295 | 00f5295 | ✅ |
+> | file search-constellation/index.ts | file_exists | search-constellation/index.ts | absent | 🔴 |
+> | file docs/roadmap/supabase-pro-optimization.md | file_exists | docs/roadmap/supabase-pro-optimization.md | docs/roadmap/supabase-pro-optimization.md | ✅ |
+> | file scripts/migrate-local-masters-to-storage.ts | file_exists | scripts/migrate-local-masters-to-storage.ts | scripts/migrate-local-masters-to-storage.ts | ✅ |
+> | oro triplet compliance | oro_compliance | missing | missing | 🔴 |
+> | handoff node 88030445 | mesh_node | 88030445-274e-480d-a664-ff9781f2192c | 88030445-274e-480d-a664-ff9781f2192c | ✅ |
+> 
+> - 🔴 **file search-constellation/index.ts** — file not found: search-constellation/index.ts
+> - 🔴 **oro triplet compliance** — ORO triplet (Operator, Reviewer, Owner) is missing from the record block
+> 
+> QA VERDICT: 10 verified · 0 skipped · 2 failed → SEAL BLOCKED
+> 
+> (audit completed in 0.1s)
+> === audit exit 1 ===
+> ```
+
+## 🤖 Claude *(20:53:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The audit failed because it's looking for `search-constellation/index.ts` as a literal path, but the actual file is nested at `supabase/functions/search-constellation/index.ts`. The Record used shorthand notation in the action table, so the audit's file-path extractor couldn't locate it — this is a false positive from the path mismatch.
+
+The second failure is that the Record is missing an ORO triplet (Operator/Reviewer/Owner), which Survival Law 4 requires. I need to update the HANDOFF.md Record with the full file path and add the ORO block, then re-run the audit.
+
+</details>
+
+
+## 🤖 Claude *(20:53:34)*
+
+Audit **BLOCKED** — 2 achados, ambos corrigíveis no Record (a prova real existe):
+1. `search-constellation/index.ts` marcado absent → escrevi o path curto; o arquivo existe em `supabase/functions/...`. Corrijo o path.
+2. Falta o **ORO triplet** (Lei 4) no Record. Adiciono.
+
+## 🤖 Claude *(20:53:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Grounding do AIOS (anti-confabula\u00e7\u00e3o) + otimiza\u00e7\u00e3o Supabase Pro Record (2026-07-25)\n\nO Sovereign trouxe um prompt",
+  "new_string": "## Grounding do AIOS (anti-confabula\u00e7\u00e3o) + otimiza\u00e7\u00e3o Supabase Pro Record (2026-07-25)\n\n**ORO triplet desta sess\u00e3o:** Operator: main-loop (MCORCH Master Execution Agent) \u00b7 Reviewer: Sovereign (Gabriel) \u00b7 Owner: Sovereign (grounding do produto AIOS + custo/muta\u00e7\u00e3o do mesh, do Storage e do compute Pro).\n\nO Sovereign trouxe um prompt"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:53:46)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| `search-constellation/index.ts` | \u2705 `match_threshold` configur\u00e1vel, default 0.45\u21920.3 (prod search **0\u219220**; controle @0.45=0) |",
+  "new_string": "| `supabase/functions/search-constellation/index.ts` | \u2705 `match_threshold` configur\u00e1vel, default 0.45\u21920.3 (prod search **0\u219220**; controle @0.45=0) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:53:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the HANDOFF.md commit that hasn't been pushed yet and then run the audit again to see the results.
+
+</details>
+
+
+## 🤖 Claude *(20:53:52)*
+
+Amendo o commit do HANDOFF (não foi pushado ainda) e re-rodo o audit:
+
+## 🤖 Claude *(20:53:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ngit add HANDOFF.md && git commit -q --amend --no-edit\necho \"=== re-audit ===\"\ntimeout 300 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -20; echo \"=== exit ${PIPESTATUS[0]} ===\"",
+  "description": "Amend HANDOFF + re-rodar audit 5c"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:53PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:53PM[0m [32mINF[0m scan completed in 7.33ms
+> [90m5:53PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.04 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> === re-audit ===
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit cb18729 | git_commit | cb18729 | cb18729 | ✅ |
+> | commit 4001e38 | git_commit | 4001e38 | 4001e38 | ✅ |
+> | commit 54ab3df | git_commit | 54ab3df | 54ab3df | ✅ |
+> | commit b74a756 | git_commit | b74a756 | b74a756 | ✅ |
+> | commit 56017da | git_commit | 56017da | 56017da | ✅ |
+> | commit 6426c7f | git_commit | 6426c7f | 6426c7f | ✅ |
+> | commit 00f5295 | git_commit | 00f5295 | 00f5295 | ✅ |
+> | file supabase/functions/search-constellation/index.ts | file_exists | supabase/functions/search-constellation/index.ts | supabase/functions/search-constellation/index.ts | ✅ |
+> | file docs/roadmap/supabase-pro-optimization.md | file_exists | docs/roadmap/supabase-pro-optimization.md | docs/roadmap/supabase-pro-optimization.md | ✅ |
+> | file scripts/migrate-local-masters-to-storage.ts | file_exists | scripts/migrate-local-masters-to-storage.ts | scripts/migrate-local-masters-to-storage.ts | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = main-loop (MCORCH Master Execution Agent) · Reviewer: Sovereign (Gabriel) · Own | Operator = main-loop (MCORCH Master Execution Agent) · Reviewer: Sovereign (Gabriel) · Own | ✅ |
+> | handoff node 88030445 | mesh_node | 88030445-274e-480d-a664-ff9781f2192c | 88030445-274e-480d-a664-ff9781f2192c | ✅ |
+> 
+> QA VERDICT: 12 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> === exit 0 ===
+> ```
+
+## 🤖 Claude *(20:54:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The audit passed with all 12 checks verified and no failures, so the seal is allowed. I'm now moving into phase 6 to assess the Book of Knowledge seal status—this session involved code changes but only to existing documented features like the AIOS chat grounding, search constellation, and knowledge mesh utilities, with no new modules or pages added.
+
+</details>
+
+
+## 🤖 Claude *(20:54:06)*
+
+**SEAL ALLOWED** (12 verified · 0 failed). **PHASE 6 — BoK gate** (esta sessão foram bug-fixes/tooling em features documentadas, sem módulo novo):
+
+## 🤖 Claude *(20:54:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== m\u00f3dulos novos nesta sess\u00e3o (src/pages ou supabase/functions novos)? ===\"\ngit diff --name-only HEAD~8..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/)\" | grep -vE \"\\.test\\.\" || echo \"  NENHUM m\u00f3dulo/page/edge-fn novo \u2014 s\u00f3 edi\u00e7\u00f5es em existentes + scripts/docs (exento do BoK gate) \u2705\"\necho \"=== BoK completude (amostra) ===\"\nc=0; for slug in $(ls docs/bok/ 2>/dev/null); do miss=(); for doc in 00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics; do [ -f \"docs/bok/$slug/$doc.md\" ] || { [ \"$slug\" = \"security\" ] || miss+=(\"$doc\"); }; done; [ ${#miss[@]} -eq 0 ] && c=$((c+1)); done; echo \"  su\u00edtes 9/9 completas: $c\"",
+  "description": "Phase 6 BoK gate check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === módulos novos nesta sessão (src/pages ou supabase/functions novos)? ===
+> supabase/functions/search-constellation/index.ts
+> === BoK completude (amostra) ===
+>   suítes 9/9 completas: 38
+> ```
+
+## 🤖 Claude *(20:54:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The grep flagged an existing edge function I modified with a threshold change, but that's a bug fix rather than a new module, so it doesn't require BoK approval. Phase 6 passes with all 38 BoK suites complete and no new modules introduced.
+
+Now moving to Phase 7 — pushing to origin main. But first I need to check whether proof-manifest.json should be committed or if it's gitignored, since the protocol treats it as a transient artifact. Let me verify the git status before pushing.
+
+</details>
+
+
+## 🤖 Claude *(20:54:22)*
+
+Phase 6 ✅ — `search-constellation` é edge fn **existente** que editei (threshold), não módulo novo → exento (bug-fix em feature documentada). 38 suítes BoK 9/9. Sem gate disparado.
+
+**PHASE 7 — Push** (checo git status antes):
+
+## 🤖 Claude *(20:54:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git status (proof-manifest.json?) ===\"; git status --short\necho \"=== push ===\"; git push origin main 2>&1 | tail -6\necho \"=== commits enviados nesta sess\u00e3o ===\"; git log --oneline origin/main -8 2>/dev/null | head -8",
+  "description": "Push para origin/main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git status (proof-manifest.json?) ===
+>  M proof-manifest.json
+> === push ===
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    49321d2..f5438a0  main -> main
+> === commits enviados nesta sessão ===
+> f5438a0 docs(handoff): seal grounding do AIOS + Supabase Pro (2026-07-25) — search 0→20 · malha 18324 · masters→Storage
+> 00f5295 docs(readme): v6.123.0 — AIOS grounding fix + Supabase Pro optimization · malha 18324
+> 6426c7f docs(roadmap): W2.1 masters→Storage CONCLUÍDO + Wave 0 host cleanup
+> 56017da feat(infra): ferramenta de migração de masters→Storage (W2.1) + host cleanup ~16GB
+> b74a756 docs(roadmap): Wave 0 host-infra (disco) + snapshot Pro confirmado
+> 54ab3df docs(roadmap): plano de otimização Supabase Pro p/ a próxima sessão
+> 4001e38 feat(mesh,nav): ingest durável (src+supabase+packages, fix 401) + move Orquestra p/ Constelação
+> cb18729 fix(aios): grounding do chat Core-Fable — mata a confabulação de arquitetura
+> ```
+
+## 🤖 Claude *(20:54:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The push went through successfully with 8 commits, but I'm noticing that proof-manifest.json is still showing as modified locally even though it was part of the committed changes. It seems the file got updated with the new node ID but didn't get properly staged before the push completed.
+
+Since this file follows a convention of being committed with chore messages (matching the earlier "chore(handoff): proof-manifest node 36d233dc" pattern), I should commit this change and push it to keep things consistent.
+
+</details>
+
+
+## 🤖 Claude *(20:54:38)*
+
+Push OK: **8 commits** `49321d2..f5438a0` → origin/main. O `proof-manifest.json` (rastreado) ficou modificado — commito na convenção da sessão anterior + push:
+
+## 🤖 Claude *(20:54:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add proof-manifest.json\ngit commit -q -m \"chore(handoff): proof-manifest node 88030445 (seal grounding AIOS + Supabase Pro)\" 2>&1 | tail -2\ngit push origin main 2>&1 | tail -3\necho \"=== estado final ===\"; git status --short && echo \"(worktree limpo)\"; git log --oneline -1",
+  "description": "Commit proof-manifest + push final"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✔️ gitleaks-range (0.08 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    f5438a0..c4ef1c8  main -> main
+> === estado final ===
+> (worktree limpo)
+> c4ef1c8 chore(handoff): proof-manifest node 88030445 (seal grounding AIOS + Supabase Pro)
+> ```
+
+## 🤖 Claude *(20:54:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Everything's pushed and the worktree is clean at commit c4ef1c8. Now I'm moving into phase 7b to handle sprint and connections hygiene along with cleaning up the scratch directories. I need to verify what's actually in the repo's scratch folder versus what I used in the isolated scratchpad for probes, then consider what to add to sprint-priorities.
+
+Since the FILA protocol says not to reorder without explicit go-ahead, and my session was really a grounding fix plus optimization rather than completing a declared FILA item, I'll skip making structural changes to sprint-priorities. The roadmap document and handoff notes already capture what the next session needs to focus on. Let me just quickly verify the repo's scratch directory is clean, then move into the final report phase.
+
+</details>
+
+
+## 🤖 Claude *(20:54:57)*
+
+**PHASE 7b — hygiene:**
+
+## 🤖 Claude *(20:54:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== repo scratch/ ===\"; ls scratch/ 2>/dev/null | head && echo \"(tem arquivos)\" || echo \"scratch/ limpo \u2705 (probes ficaram no scratchpad isolado /tmp, fora do repo)\"",
+  "description": "Verificar scratch limpo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === repo scratch/ ===
+> (tem arquivos)
+> ```
+
+## 🤖 Claude *(20:55:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see the issue now — the `ls scratch/` command succeeded with exit code 0, which triggered the `&& echo "(tem arquivos)"` even though the directory appears empty. This is the same false positive I ran into earlier with /handson. I need to use `ls -la` to get a clearer picture of what's actually in there.
+
+</details>
+
+
+## 🤖 Claude *(20:55:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls -la scratch/ 2>/dev/null | grep -vE \"^\\s*$|^total|^d.* \\.\\.?$\" || echo \"vazio\"; echo \"--- contagem de arquivos ---\"; find scratch/ -type f 2>/dev/null | wc -l",
+  "description": "Confirmar conte\u00fado real de scratch/"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> vazio
+> --- contagem de arquivos ---
+> 0
+> ```
+
+## 🤖 Claude *(20:55:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The scratch directory is empty as expected—those test probes were isolated to /tmp, not the repo. For sprint priorities, the roadmap document is the artifact for the next session, so I'm marking this as no structural change to the FILA and letting the roadmap and handoff notes carry forward.
+
+Now moving into the final report. I'm compiling the security verification (no secrets exposed, JWT handling clean, no coin deduction issues), tallying the 9 commits pushed to main, confirming the Knowledge Mesh node is embedded, and documenting the version bump and badge updates. The handoff is sealed with task state and first action recorded, material proof shows 12 verified checks with zero failures, and the sprint summary notes no structural changes with the roadmap as the next entry point. The upcoming priorities from the roadmap are statement timeout handling, silent-failure alerts, spend cap implementation, compute add-on decision, retiring legacy host infrastructure, and the AI Act Fatia phases 2 and 3.
+
+</details>
+
+
+## 🤖 Claude *(20:55:43)*
+
+scratch/ **vazio** (0 arquivos — probes ficaram no scratchpad isolado). sprint-priorities sem mudança estrutural (nenhum item da FILA alterado; o roadmap Pro é o ponto de entrada da próxima sessão). Nenhum MCP novo adicionado. **Seal completo.**
+
+═══════════════════════════════════════════════════════════
+## 🔒 HANDOFF SELADO — Grounding do AIOS + Otimização Supabase Pro (2026-07-25)
+═══════════════════════════════════════════════════════════
+
+**🔐 SEGURANÇA**
+- Secret scan (diff + HANDOFF.md 5b): ✅ sem credenciais · gitleaks limpo em todos os commits
+- JWT/edge: ✅ (edições em fns existentes, sem novo surface) · coin-deduction client-side: ✅ N/A · logs sensíveis: ✅ (falso-positivo `storage_key`)
+
+**📦 COMMITS (9 · `cb18729..c4ef1c8` → pushed)**
+- `cb18729` fix(aios): grounding Core-Fable (E+A+F1+threshold, search 0→20)
+- `4001e38` feat(mesh,nav): ingest durável + fix 401 silencioso + Orquestra→Constelação
+- `54ab3df`·`b74a756`·`6426c7f` docs(roadmap): Supabase Pro + Wave 0 host + W2.1 done
+- `56017da` feat(infra): migração masters→Storage + host cleanup ~16GB
+- `00f5295` docs(readme): v6.123.0 · malha 18324
+- `f5438a0` docs(handoff): seal · `c4ef1c8` chore: proof-manifest
+
+**⬡ KNOWLEDGE MESH** — nó `88030445` (handoff) inserido + embedado ✅ · malha **9831 → 18324** (auto-ingest ressuscitado)
+
+**📖 README.md** — v6.122.0 → **6.123.0** · badge neural_mesh 9831 → **18324** · What's new prependido
+
+**🧠 HANDOFF.md** — FIRST ACTION + Task State + Record + GraphRAG atualizados (1021→1085 linhas, sem arquivamento)
+
+**📋 PROVA MATERIAL (Fase 5c)** — **SEAL ALLOWED** · 12 verificadas · 0 skipped · 0 falhas (7 commits + 3 arquivos + ORO + nó de malha)
+
+**🚀 PUSH** — `main → origin/main` · 9 commits · github.com:gabrielZarattini/constellation-orchestra
+
+**📌 HYGIENE** — sprint-priorities: sem mudança estrutural (roadmap Pro = entrada da próxima sessão) · scratch/ limpo ✅ · MCP: sem novos
+
+**⚖️ SURVIVAL LAWS** — L1: toda claim com prova (search 0→20, deploy exit 0, du/df, REST counts, audit SEAL ALLOWED) · L2: ferramenta nova (`migrate-local-masters`) com SOP no roadmap · L3: janela usada até o seal · L4: ORO declarado no Record
+
+**⏭ PRÓXIMOS PASSOS (roadmap `docs/roadmap/supabase-pro-optimization.md`)**
+1. **Un-gated:** migration `statement_timeout` (ALTER ROLE) · alerta de falha silenciosa (aproveita 7d de log)
+2. **Sua mão:** habilitar spend cap na org · decidir compute add-on Small (o 522 provou o Micro no limite)
+3. **Gated:** aposentar host-upload-server (masters já no Storage) · AI Act Fatia 2/3 (deadline 02-Ago) · revisar BoK PIPC · postar cortes EP01/EP02
+
+═══════════════════════════════════════════════════════════
+Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
+Maestro, o problema que você levantou — o AIOS confabulando — está **resolvido, provado em produção, e vacinado** (anticorpos em memória + roadmap). De quebra, ressuscitei o auto-ingest do mesh que estava morto em silêncio há semanas, aproveitamos o Supabase Pro (cap de fns destravado, ~16 GB de disco liberados, masters no Storage), e deixei o roadmap de otimização pronto para a próxima sessão puxar. Sessão selada. 🫡
+
 ---
 
 %% --- PROJECT METADATA START --- %%

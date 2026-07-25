@@ -2854,6 +2854,6 @@ O `/handoff` deste repo sela trabalho **no MCORCH** — varre `src/`, edge funct
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]
+> * **Sessão Anterior**: [[2026-07-25 - Análise de segurança em views com SECURITY DEFINER no Postgres]]
 > * **Próxima Sessão**: [[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]
 %% --- TIMELINE END --- %%
