@@ -1,5 +1,5 @@
-# [[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório|Copiar engenharia de harness e shakehands para outro repositório]]
-**Date:** 2026-07-24 | **Session ID:** `3a5189d4-2d5b-4022-9ac6-b6293bc43481`
+# [[2026-07-24 - Copiar engenharia de harness e shakehands para outro repositório|Copiar engenharia de harness e shakehands para outro repositório]]
+**Date:** 2026-07-25 | **Session ID:** `3a5189d4-2d5b-4022-9ac6-b6293bc43481`
 
 ---
 
@@ -2643,6 +2643,208 @@ O guia dentro do zip (`GUIA-DE-USO.md`) tem isso tudo detalhado em 7 partes — 
 
 Um detalhe honesto para fechar: o kit **está no seu working dir mas ainda não foi commitado** — é uma pasta nova (`harness-kit/`) fora do controle de versão. Quer que eu **faça o commit dele** neste repo, ou prefere que ele fique solto (ou até que eu o mova para fora, já que o destino é outro projeto)?
 
+## 👤 User *(16:11:04)*
+
+ótimo ótimo precisamos fazer o /handoff aqui ?
+
+## 🤖 Claude *(16:11:34)*
+
+
+## 🤖 Claude *(16:11:43)*
+
+Resposta honesta: **o `/handoff` completo deste repo é overkill para o que fizemos** — e vou te dizer por quê antes de você gastar o ritual.
+
+O `/handoff` do MCORCH é feito para selar trabalho **no produto**: ele varre `src/` e edge functions por segredos e JWT, checa `mco_balance`, insere nó na malha de conhecimento e emenda o `HANDOFF.md` monolítico (já com 1021 linhas). Nós não tocamos em nada disso — criamos um **artefato isolado e auto-contido** (`harness-kit/`) que nem pertence a este produto; ele é feito para ser exportado para outro repo. Rodar o ritual inteiro geraria um registro de malha e um Record de handoff sobre algo que não é MCORCH.
+
+O que **realmente** importa preservar é material e pequeno:
+
+1. **O kit não está commitado** — está solto no working dir. Esse é o risco real, não a falta de selo.
+2. Estamos na `main`, e a regra do harness é: commit só quando você pedir, e se estiver na branch default, **cria branch antes**.
+
+Minha recomendação — o mínimo que fecha a sessão sem teatro:
+
+- criar uma branch (`chore/harness-kit`), commitar o `harness-kit/` lá, e salvar **uma** memória curta apontando onde o kit vive e o sha do zip. Sem `/handoff` pesado.
+
+Duas perguntas antes de eu agir, porque a resposta muda o comando:
+
+## 🤖 Claude *(16:11:50)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Como quer preservar o harness-kit? (ele n\u00e3o est\u00e1 commitado)",
+      "header": "Destino do kit",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Branch + commit aqui",
+          "description": "Cria branch chore/harness-kit e commita o kit neste repo como fonte/build. Revers\u00edvel, n\u00e3o polui a main."
+        },
+        {
+          "label": "Commit direto na main",
+          "description": "Commita o kit na main mesmo. Mais simples, mas mistura um artefato de exporta\u00e7\u00e3o com o hist\u00f3rico do produto."
+        },
+        {
+          "label": "N\u00e3o commitar",
+          "description": "Deixo o kit solto no working dir. S\u00f3 o zip importa; voc\u00ea leva pra fora e n\u00e3o versiona aqui."
+        },
+        {
+          "label": "Mover pra fora do repo",
+          "description": "Movo harness-kit/ para um diret\u00f3rio fora do constellation-orchestra, para virar repo pr\u00f3prio depois."
+        }
+      ]
+    },
+    {
+      "question": "Quer o /handoff ritual completo mesmo assim?",
+      "header": "Handoff formal",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "N\u00e3o, s\u00f3 o essencial (Recomendado)",
+          "description": "Commit do kit + 1 mem\u00f3ria curta. Sem varredura de produto nem n\u00f3 de malha \u2014 n\u00e3o tocamos no MCORCH."
+        },
+        {
+          "label": "Sim, rodar o /handoff",
+          "description": "Executo o protocolo completo do repo (seguran\u00e7a, commits, HANDOFF.md, malha, auto-auditoria das 4 Leis)."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Como quer preservar o harness-kit? (ele não está commitado)"="Mover pra fora do repo", "Quer o /handoff ritual completo mesmo assim?"="Não, só o essencial (Recomendado)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:26:03)*
+
+
+## 🤖 Claude *(16:26:04)*
+
+Perfeito — mover pra fora e só o essencial. Executando:
+
+## 🤖 Claude *(16:26:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SRC=/home/gcrUX/htdocs/constellation-orchestra/harness-kit\nDST=/home/gcrUX/htdocs/harness-kit\nif [ -e \"$DST\" ]; then echo \"ALERTA: $DST j\u00e1 existe \u2014 n\u00e3o sobrescrevo\"; else\n  mv \"$SRC\" \"$DST\" && echo \"movido: $SRC -> $DST\"\nfi\necho\necho \"\u2500\u2500 conte\u00fado no novo lar \u2500\u2500\"\nls -la \"$DST\"\necho\necho \"\u2500\u2500 o zip sobreviveu \u00e0 mudan\u00e7a? \u2500\u2500\"\nls -lh \"$DST/dist/harness-kit-v1.0.0.zip\" 2>/dev/null && sha256sum \"$DST/dist/harness-kit-v1.0.0.zip\" | cut -d' ' -f1\necho\necho \"\u2500\u2500 git status do constellation-orchestra deve estar limpo do kit agora \u2500\u2500\"\ngit status --short | head",
+  "description": "Mover kit para fora do repo e verificar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> movido: /home/gcrUX/htdocs/constellation-orchestra/harness-kit -> /home/gcrUX/htdocs/harness-kit
+> 
+> ── conteúdo no novo lar ──
+> total 20
+> drwxrwxr-x 4 ubuntu ubuntu 4096 Jul 24 14:46 .
+> drwxrwxr-x 7 gcrUX  gcrUX  4096 Jul 25 13:26 ..
+> -rwxrwxr-x 1 ubuntu ubuntu 2616 Jul 24 14:46 build.sh
+> drwxrwxr-x 2 ubuntu ubuntu 4096 Jul 24 16:17 dist
+> drwxrwxr-x 5 ubuntu ubuntu 4096 Jul 24 16:17 kit
+> 
+> ── o zip sobreviveu à mudança? ──
+> -rw-rw-r-- 1 ubuntu ubuntu 226K Jul 24 16:17 /home/gcrUX/htdocs/harness-kit/dist/harness-kit-v1.0.0.zip
+> efd7db0627eb5a96e03c1e4cf3a782c48ac79c5d42c9d0aeaa192f376279bf49
+> 
+> ── git status do constellation-orchestra deve estar limpo do kit agora ──
+> ```
+
+## 🤖 Claude *(16:26:15)*
+
+Movido, zip intacto (sha `efd7db06…`), e o `git status` do constellation-orchestra voltou a ficar **limpo** — nenhum resíduo do kit poluindo o repo do produto. Agora a memória curta (o único registro que faz sentido preservar):
+
+## 🤖 Claude *(16:26:34)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_harness_kit_export.md",
+  "content": "---\nname: reference_harness_kit_export\ndescription: Harness Kit v1.0.0 \u2014 a camada de engenharia (4 Leis + Spec Gate + ShakeHands) destilada como .zip gen\u00e9rico para novos projetos; vive FORA deste repo.\nmetadata:\n  type: reference\n---\n\nO **Harness Kit v1.0.0** \u00e9 a engenharia/arquitetura deste harness destilada em kit GEN\u00c9RICO,\nstack-neutral, para implantar em QUALQUER reposit\u00f3rio novo (destino \u00e9 OUTRO servidor/projeto).\n\n**Onde vive (movido pra FORA do constellation-orchestra em 2026-07-25):**\n`/home/gcrUX/htdocs/harness-kit/` \u2014 irm\u00e3o do constellation-orchestra, para virar repo pr\u00f3prio depois.\n- Fonte: `harness-kit/kit/` (46 arquivos) \u00b7 empacotador: `harness-kit/build.sh`\n- Artefato: `harness-kit/dist/harness-kit-v1.0.0.zip` (226 KB \u00b7 sha256 `efd7db06\u2026`)\n- **N\u00c3O commitado no constellation-orchestra** (git status ficou limpo; sem /handoff pesado \u2014 n\u00e3o tocamos no produto).\n\n**O que o kit cont\u00e9m (gen\u00e9rico, zero MCORCH/Supabase/Docker/paths absolutos):**\n- `.claude/rules/` \u2014 as 4 Leis (Materialidade/Processo/Poda/ORO), o **Spec Gate** Closed-Loop, governan\u00e7a de docs. Auto-carregam (mesma prioridade do CLAUDE.md \u2014 foi o achado que venceu o plugin).\n- `.claude/skills/` (10) \u2014 spec-gate, harness-init, handson, handoff, proof-audit, obstacle-to-synthesis, level-up, four-cs-audit, mape-k-loop, spec-scribe.\n- `.claude/agents/` (5) \u2014 spec-curator, docs-curator, pmo-curator, spec-scribe, deepsearch-blueprint.\n- `.harness/bin/` (7 gates com EXIT CODE, n\u00e3o prosa) + `harness.config.json` (o contrato) + templates de spec-suite 00\u219209.\n\n**As 3 corre\u00e7\u00f5es que o diferenciam de `cp -r .claude`** (achados dos refutadores adversariais):\n1. Spec Gate l\u00ea marcador `<!-- GATE: open -->` leg\u00edvel por m\u00e1quina, n\u00e3o `[[ -f arquivo ]]` (contagem de arquivo autoriza c\u00f3digo sobre rascunho).\n2. secret-scan aplica allowlist ao TOKEN casado, nunca \u00e0 linha (segredo real + `// test-only` PASSAVA no original \u2014 D1).\n3. Nenhum comando presumido: probes v\u00eam da **entrevista da Fase B** do `/harness-init`, executados antes de gravados (`npx tsc --noEmit` na raiz = no-op falso-verde no original).\n\n**Uso:** descompacta na raiz do projeto novo \u2192 \"configure a base com o kit em harness-kit-tmp/\" \u2192 agente roda o ritual 5-fases. Guia humano completo em `kit/GUIA-DE-USO.md`; guia do agente em `kit/START-HERE.md`. Can\u00e1rio de ingest\u00e3o: `HARNESS_CANARY_7f3a9c21`.\n\nVer [[feedback_recurring_actions_become_skills]] \u00b7 [[feedback_bok_gate_status_not_file_count]] (o kit resolve o gate-por-contagem que aquela mem\u00f3ria critica).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_harness_kit_export.md
+> ```
+
+## 🤖 Claude *(16:26:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "offset": 1,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) — sobrescreve TS com eszip; `git checkout --` recupera.
+> 4	- [ÉPICO — Motor de Oportunidade de Produtos + Conector Amazon](project_product_opportunity_engine.md) — BoK 9/9; Amazon `?tag=`; código GATED (GO+jurídico).
+> ```
+
+## 🤖 Claude *(16:26:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) \u2014 sobrescreve TS com eszip; `git checkout --` recupera.",
+  "new_string": "# Memory Index\n\n- [\ud83e\uddf0 Harness Kit v1.0.0 \u2014 engenharia destilada em .zip gen\u00e9rico p/ novos projetos](reference_harness_kit_export.md) \u2014 vive FORA do repo em `/home/gcrUX/htdocs/harness-kit/`; 4 Leis+Spec Gate+ShakeHands; n\u00e3o \u00e9 `cp -r`.\n- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) \u2014 sobrescreve TS com eszip; `git checkout --` recupera."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:26:55)*
+
+Fechado. Sessão selada da forma enxuta que você escolheu — sem `/handoff` pesado, porque não tocamos no produto.
+
+## O que ficou
+
+**O kit, fora do repo do produto:**
+```
+/home/gcrUX/htdocs/harness-kit/
+├── kit/                              fonte (46 arquivos)
+├── build.sh                          empacotador
+└── dist/harness-kit-v1.0.0.zip       226 KB · sha256 efd7db06…
+```
+
+- Irmão do `constellation-orchestra` e do `viralmind-builder` — pronto para virar repo próprio quando você quiser (`git init` na pasta, instruções na Parte 7 do guia).
+- O `git status` do constellation-orchestra voltou a ficar **limpo**: nenhum resíduo do kit no histórico do produto.
+- Uma memória curta gravada (`reference_harness_kit_export`) apontando onde o kit vive e o que o diferencia — para eu (ou outra sessão) reencontrá-lo sem re-derivar tudo.
+
+## Por que isto bastou (e o `/handoff` não era necessário)
+
+O `/handoff` deste repo sela trabalho **no MCORCH** — varre `src/`, edge functions, malha, `HANDOFF.md`. Nós produzimos um artefato **isolado e exportável** que nem pertence a este produto. O que importava preservar era material e pequeno: o artefato num lugar seguro + um ponteiro de memória. Feito ambos.
+
+**Nada mais pende.** Quando for usar num projeto real, o único passo obrigatório é a entrevista da Fase B (os comandos do stack daquele projeto) — está tudo no `GUIA-DE-USO.md` dentro do zip.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -2652,6 +2854,6 @@ Um detalhe honesto para fechar: o kit **está no seu working dir mas ainda não 
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-07-23 - ce3f6c82-79f9-4d9c-83e4-0b55ca0aa49d]]
-> * **Próxima Sessão**: [[2026-07-24 - Visualizar roadmap com passos realizados e próximos]]
+> * **Sessão Anterior**: [[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]
+> * **Próxima Sessão**: [[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]
 %% --- TIMELINE END --- %%

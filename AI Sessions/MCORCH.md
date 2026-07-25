@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 101
-> * **Total de Sessões**: 3083
+> * **Total de Sessões**: 3091
 
 ---
 
@@ -124,6 +124,14 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-25 - agent-acc5edbe0829978f5]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a6b9e6526819a6d72]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a4146066a72f17d6f]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a39e531c3cf5f8e11]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a327ccaec1e24fc6d]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a01abefe4e42f1fd4]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` (ClaudeSessions) - *2026-07-24*
 *   `[[2026-07-24 - agent-af410f604e92a8461]]` (ClaudeSessions) - *2026-07-24*
 *   `[[2026-07-24 - agent-ae19f50f11f0a3aac]]` (ClaudeSessions) - *2026-07-24*

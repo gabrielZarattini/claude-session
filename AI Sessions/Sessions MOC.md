@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3088
-> * **Sessões do Claude**: 3040
+> * **Total de Sessões Registradas**: 3096
+> * **Sessões do Claude**: 3048
 > * **Sessões do Gemini**: 48
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-25 - agent-acc5edbe0829978f5]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-a6b9e6526819a6d72]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-a4146066a72f17d6f]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-a39e531c3cf5f8e11]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-a327ccaec1e24fc6d]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-a01abefe4e42f1fd4]]` - *2026-07-25*
+*   `[[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]` - *2026-07-25*
+*   `[[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório]]` - *2026-07-25*
 *   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` - *2026-07-24*
 *   `[[2026-07-24 - agent-af410f604e92a8461]]` - *2026-07-24*
 *   `[[2026-07-24 - agent-ae19f50f11f0a3aac]]` - *2026-07-24*
 *   `[[2026-07-24 - agent-ada878595e81dc6a9]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-acc37fcc7dd114758]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-acb8164604e3b286e]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-ac1a39b4ec7b9e9e4]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-abc6504f3dd6f1fda]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-abad1e8dd94e77f3e]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-ab4ad56fe70e3230a]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-aa6c2f329609fde86]]` - *2026-07-24*
-*   `[[2026-07-24 - agent-aa10ba09c55badc90]]` - *2026-07-24*
-*   *... e mais 3030 sessões nessa categoria.*
+*   *... e mais 3038 sessões nessa categoria.*
 
 ---
 
@@ -1743,6 +1743,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-25 - agent-acc5edbe0829978f5]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a6b9e6526819a6d72]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a4146066a72f17d6f]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a39e531c3cf5f8e11]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a327ccaec1e24fc6d]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a01abefe4e42f1fd4]]` (ClaudeSessions)
+*   `[[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]` (ClaudeSessions)
+*   `[[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions)
 *   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` (ClaudeSessions)
 *   `[[2026-07-24 - agent-af410f604e92a8461]]` (ClaudeSessions)
 *   `[[2026-07-24 - agent-ae19f50f11f0a3aac]]` (ClaudeSessions)

@@ -556,4 +556,5 @@ Confirmed the decisive precedent: Anthropic's own `claude-md-management` plugin 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-24 - agent-af410f604e92a8461]]
+> * **Próxima Sessão**: [[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório]]
 %% --- TIMELINE END --- %%
