@@ -6374,7 +6374,7 @@ Ambos os commits selados (`e47dc93` fix + `d6e21a3` seal). A Fatia 1/2 está **c
 🛠️ **Tool Call**: `Bash`
 ```json
 {
-  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== c2patool dispon\u00edvel no host? (gate da AI Act Fatia 2) ===\"\nwhich c2patool 2>/dev/null && c2patool --version 2>/dev/null || echo \"c2patool AUSENTE (gate externo \u2014 precisa instalar)\"\necho \"\"\necho \"=== content-provenance BoK \u2014 escopo da Fatia 2 (C2PA/voz) ===\"\ngrep -rnE \"Fatia 2|Slice 2|C2PA|c2patool\" docs/bok/content-provenance/*.md 2>/dev/null | grep -iE \"fatia 2|slice 2\" | head -5\necho \"\"\necho \"=== estado geral p\u00f3s-sess\u00e3o: git + malha ===\"\ngit log --oneline -4\necho \"malha node do seal: 2dff4a5a (crm-inbox) \u00b7 DERIVES_FROM marketing-hub\"",
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== c2patool dispon\u00edvel no host? (gate da AI Act Fatia 2) ===\"\nwhich c2patool 2>/dev/null && c2patool --version 2>/dev/null || echo \"c2patool AUSENTE (gate externo \u2014 precisa instalar)\"\necho \"\"\necho \"=== [[content-provenance|content-provenance]] BoK \u2014 escopo da Fatia 2 (C2PA/voz) ===\"\ngrep -rnE \"Fatia 2|Slice 2|C2PA|c2patool\" docs/bok/[[content-provenance|content-provenance]]/*.md 2>/dev/null | grep -iE \"fatia 2|slice 2\" | head -5\necho \"\"\necho \"=== estado geral p\u00f3s-sess\u00e3o: git + malha ===\"\ngit log --oneline -4\necho \"malha node do seal: 2dff4a5a (crm-inbox) \u00b7 DERIVES_FROM marketing-hub\"",
   "description": "Probe AI Act Fatia 2 readiness + estado final"
 }
 ```
@@ -6385,12 +6385,12 @@ Ambos os commits selados (`e47dc93` fix + `d6e21a3` seal). A Fatia 1/2 está **c
 > === c2patool disponível no host? (gate da AI Act Fatia 2) ===
 > c2patool AUSENTE (gate externo — precisa instalar)
 > 
-> === content-provenance BoK — escopo da Fatia 2 (C2PA/voz) ===
-> docs/bok/content-provenance/00-index.md:155:| **003** | Estratégia de **cert C2PA** (test cert = "unknown issuer") | **Aberto — bloqueia Fatia 2** | Self-signed → trust list C2PA (ação Sovereign) |
-> docs/bok/content-provenance/00-index.md:165:| 015 | Nome/versão/licença de `c2pa-node` | **Aberto** | Verificar repo antes de pinar — antes do código Fatia 2 |
-> docs/bok/content-provenance/00-index.md:199:| **OTD-CP-003 (cert)** | Estratégia de cert C2PA (self-signed → trust list) | 🔴 **ABERTO** — bloqueia a Fatia 2 |
-> docs/bok/content-provenance/00-[[deepsearch-blueprint|deepsearch-blueprint]].md:209:**Fatia 2 — Camada 1 (C2PA), as 3 modalidades:**
-> docs/bok/content-provenance/00-[[deepsearch-blueprint|deepsearch-blueprint]].md:232:| **OTD-CP-003** | **Cert/chave C2PA**: test cert = "unknown issuer" em prod | Estratégia self-signed → trust list C2PA; ler getting-started/signing do c2pa-rs | Bloqueante da Fatia 2 |
+> === [[content-provenance|content-provenance]] BoK — escopo da Fatia 2 (C2PA/voz) ===
+> docs/bok/[[content-provenance|content-provenance]]/00-index.md:155:| **003** | Estratégia de **cert C2PA** (test cert = "unknown issuer") | **Aberto — bloqueia Fatia 2** | Self-signed → trust list C2PA (ação Sovereign) |
+> docs/bok/[[content-provenance|content-provenance]]/00-index.md:165:| 015 | Nome/versão/licença de `c2pa-node` | **Aberto** | Verificar repo antes de pinar — antes do código Fatia 2 |
+> docs/bok/[[content-provenance|content-provenance]]/00-index.md:199:| **OTD-CP-003 (cert)** | Estratégia de cert C2PA (self-signed → trust list) | 🔴 **ABERTO** — bloqueia a Fatia 2 |
+> docs/bok/[[content-provenance|content-provenance]]/00-[[deepsearch-blueprint|deepsearch-blueprint]].md:209:**Fatia 2 — Camada 1 (C2PA), as 3 modalidades:**
+> docs/bok/[[content-provenance|content-provenance]]/00-[[deepsearch-blueprint|deepsearch-blueprint]].md:232:| **OTD-CP-003** | **Cert/chave C2PA**: test cert = "unknown issuer" em prod | Estratégia self-signed → trust list C2PA; ler getting-started/signing do c2pa-rs | Bloqueante da Fatia 2 |
 > 
 > === estado geral pós-sessão: git + malha ===
 > d6e21a3 chore(crm-inbox): seal BoK 9/9 na malha (Phase 7)

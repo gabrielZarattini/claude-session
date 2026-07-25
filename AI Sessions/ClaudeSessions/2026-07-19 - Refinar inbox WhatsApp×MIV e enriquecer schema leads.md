@@ -702,7 +702,7 @@ A cauda é o apêndice estático. As seções GraphRAG State / Pending Actions f
 > 138:### Arquitetura — WhatsApp Cloud API rail (Caminho 2)
 > 149:## Credenciais globais de app + AI Act Fatia 0-1 + content-intel BoK 9/9 + wildcard gcrux.com Record (2026-07-17)
 > 164:### Arquitetura — resolver 4 degraus de credencial de app (Amendment 16)
-> 175:### Arquitetura — AI Act marcação (content-provenance Fatia 0-1)
+> 175:### Arquitetura — AI Act marcação ([[content-provenance|content-provenance]] Fatia 0-1)
 > 184:## Loop MAPE-K: UX-Explorer + [[landing-bundler|landing-bundler]] + BoKs 9/9 retroativas + swarm:read PAT Record (2026-07-16)
 > 213:### Arquitetura [[landing-bundler|landing-bundler]] (Fatia 1)
 > 254:### Arquitetura landing-factory (Fatia 1)
@@ -802,7 +802,7 @@ O HANDOFF é monolítico newest-first — as pendências ficam embutidas no reco
 > 66	| Commit | Conteúdo |
 > 67	|--------|----------|
 > 68	| `ab86778` | feat(crm-inbox): Fatia A — ingest de mídia inbound do WhatsApp (worker + enqueue + render) |
-> 69	| `ca7bffd` | feat(content-provenance): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated |
+> 69	| `ca7bffd` | feat([[content-provenance|content-provenance]]): Fatia 2 — camada C1 C2PA (imagem/vídeo/voz) cert-gated |
 > 70	| `65b48b5` | feat(crm-inbox): UI WhatsApp × MIV — balões/recibos/avatares + painel de contato do lead |
 > 71	
 > 72	**Prova material:** eszip do `whatsapp-webhook` deployado contém `wa_media`/`media_status` (`strings|grep`); worker log `→ stored` (image/jpeg 111KB · video/mp4 4.3MB · audio/ogg); C2PA smokes 10/10 + pii-reject 4/4 + IPTC regressão 6/6; WAV de voz real `6ca26b59` → c2patool `validation_state=Valid` digitalSourceType=trainedAlgorithmicMedia; build inbox env-baked + `Dados do contato`/`ContactPanel` no bundle. milestone `e29f0f52` embedado 768d · malha 9185.
