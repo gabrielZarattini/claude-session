@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3107
-> * **Sessões do Claude**: 3059
+> * **Total de Sessões Registradas**: 3122
+> * **Sessões do Claude**: 3074
 > * **Sessões do Gemini**: 48
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-25 - agent-af5b8a3be60c951f9]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-af0102ab02815a3c7]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-aeea2cb9a88814523]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-aec0a888106722ce4]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-ae933299c2ec5f87b]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-ae699d94ba7b5d068]]` - *2026-07-25*
+*   `[[2026-07-25 - agent-ae568186fb61c741a]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-add104ea7319711cb]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-acc5edbe0829978f5]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-ac28b432c8ffe95ef]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-abecc18e54e087b14]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-abba74fa08957cf12]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-aba899aec51fd954c]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-a6b9e6526819a6d72]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-a593f1f30787595fc]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-a4146066a72f17d6f]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-a39e531c3cf5f8e11]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-a3870391c45ac2bb8]]` - *2026-07-25*
-*   *... e mais 3049 sessões nessa categoria.*
+*   *... e mais 3064 sessões nessa categoria.*
 
 ---
 
@@ -1743,20 +1743,35 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-25 - agent-af5b8a3be60c951f9]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-af0102ab02815a3c7]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-aeea2cb9a88814523]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-aec0a888106722ce4]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-ae933299c2ec5f87b]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-ae699d94ba7b5d068]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-ae568186fb61c741a]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-add104ea7319711cb]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-acc5edbe0829978f5]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-ac28b432c8ffe95ef]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-abecc18e54e087b14]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-abba74fa08957cf12]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-aba899aec51fd954c]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a743c2f64a7e30b49]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a6bca962f65af218f]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a6b9e6526819a6d72]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a68b944cb80a2306e]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a593f1f30787595fc]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a4146066a72f17d6f]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a39e531c3cf5f8e11]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a3870391c45ac2bb8]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a327ccaec1e24fc6d]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a318678291b606231]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a2317364a621cbeb9]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a1da5514c9f2bd98e]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a13e5bba3f642217d]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a10f6d92d4549f668]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a05a3a57726e848da]]` (ClaudeSessions)
+*   `[[2026-07-25 - agent-a02ace0eb100aadb3]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a02267c6f4c65a0dc]]` (ClaudeSessions)
 *   `[[2026-07-25 - agent-a01abefe4e42f1fd4]]` (ClaudeSessions)
 *   `[[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]` (ClaudeSessions)
