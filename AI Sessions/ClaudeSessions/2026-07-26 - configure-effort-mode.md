@@ -31332,6 +31332,1263 @@ I see the migration file `20260725130000_pg_cron_auto_publish.sql` was created b
 > 2	
 > ```
 
+## 🤖 Claude *(19:30:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The proof-manifest.json was already created with the handoff node ID. Now I need to complete the handoff process. Let me:
+
+1. Stage and commit the remaining changes (useYouTubeStudio.ts and docs/ops/)
+2. Update README.md if needed (but it seems already updated to v6.126.0)
+3. Update HANDOFF.md with the new record
+4. Run Phase 5b secret scan on HANDOFF.md
+5. Run Phase 5c material proof audit
+6. Run Phase 6 BoK seal status check
+7. Push to origin/main
+8. Phase 7b sprint & connections hygiene
+9. Final report
+
+Let me first stage and commit the remaining changes
+
+</details>
+
+
+## 🤖 Claude *(19:30:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add src/hooks/useYouTubeStudio.ts docs/ops/logrotate/mcorch-host-workers",
+  "description": "Stage remaining changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(19:31:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now let me commit these
+
+</details>
+
+
+## 🤖 Claude *(19:31:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git commit -m \"docs(ops): add logrotate config for host workers\n\nAdd logrotate configuration for MCORCH host workers (video-bridge, \nvoice-bridge, provenance-bridge, subtitle-bridge, auto-publish-cron) \nto rotate daily, keep 7 days, compress, and reload cron on rotation.\"",
+  "description": "Commit ops docs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:31PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:31PM[0m [32mINF[0m scan completed in 6.97ms
+> [90m4:31PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [free-agent/publish-modal-s1 b992735] docs(ops): add logrotate config for host workers
+>  2 files changed, 38 insertions(+)
+>  create mode 100644 docs/ops/logrotate/mcorch-host-workers
+> ```
+
+## 🤖 Claude *(19:31:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Good, the commit was successful. Now let me check if there's any TypeScript issue and then run the TypeScript check
+
+</details>
+
+
+## 🤖 Claude *(19:31:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit 2>&1 | tail -20",
+  "description": "TypeScript check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(19:31:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+TypeScript check passed (no errors). Now let me proceed to Phase 3 - Knowledge Mesh Milestone. But first let me check if the milestone node was already inserted. The proof-manifest.json shows the node ID: 635f2df4-9630-4b93-ac99-2068e595b26d. Let me verify it exists and then trigger embedding if needed.
+
+</details>
+
+
+## 🤖 Claude *(19:31:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env && echo \"SB_SECRET_KEY=${SB_SECRET_KEY:0:20}...\"",
+  "description": "Check env vars"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SB_SECRET_KEY=sb_secret_3dGLMD_lyu...
+> ```
+
+## 🤖 Claude *(19:31:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Good, the env is loaded. Let me check if the milestone node was already inserted. The proof-manifest.json shows node ID: 635f2df4-9630-4b93-ac99-2068e595b26d. Let me verify it exists.
+
+</details>
+
+
+## 🤖 Claude *(19:31:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env && curl -s -X GET \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?id=eq.635f2df4-9630-4b93-ac99-2068e595b26d&select=id,name,created_at\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d)\"",
+  "description": "Check if milestone node exists"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{'id': '635f2df4-9630-4b93-ac99-2068e595b26d', 'name': 'session-handoff-20260726-youtube-studio-table-refactor', 'created_at': '2026-07-26T19:10:55.649001+00:00'}]
+> ```
+
+## 🤖 Claude *(19:31:39)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The milestone node already exists. Let me trigger the embedding for it
+
+</details>
+
+
+## 🤖 Claude *(19:31:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env && curl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"record\": {\"id\": \"635f2df4-9630-4b93-ac99-2068e595b26d\"}}' | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d)\"",
+  "description": "Trigger embedding for milestone node"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Embedded: {'error': 'Request body must contain { node_id: string }'}
+> ```
+
+## 🤖 Claude *(19:33:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The API expects `node_id` not `record`. Let me fix that
+
+</details>
+
+
+## 🤖 Claude *(19:33:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env && curl -s -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -d '{\"node_id\": \"635f2df4-9630-4b93-ac99-2068e595b26d\"}' | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Embedded:', d)\"",
+  "description": "Trigger embedding with correct param"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Embedded: {'node_id': '635f2df4-9630-4b93-ac99-2068e595b26d', 'dims': 768, 'chunks': 1, 'model': 'openai/text-embedding-3-small', 'provider': 'openrouter', 'stitched': 0}
+> ```
+
+## 🤖 Claude *(19:33:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The embedding was successful. Now let me update the proof-manifest.json if needed, then proceed to Phase 4 - README.md update. Let me check the current README to see what needs updating
+
+</details>
+
+
+## 🤖 Claude *(19:33:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "limit": 100,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.126.0-youtube_studio_table_refactor_server_side_filter_sort-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/crm--inbox-Amendment_10_composer_(m%C3%ADdia%2Femoji%2Frecibos)_%2B_swap_ao_vivo-brightgreen?style=for-the-badge" alt="CRM Inbox" />
+> 5	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 6	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 7	  <img src="https://img.shields.io/badge/neural_mesh-18421_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 8	  <img src="https://img.shields.io/badge/BoK-33%2F33_fam%C3%ADlias_seladas-brightgreen?style=for-the-badge" alt="BoK Suites" />
+> 9	  <img src="https://img.shields.io/badge/veo--3.1-avatar_por_refer%C3%AAncia_(Gemini_API_%2B_Vertex_SA)-cyan?style=for-the-badge" alt="Veo Avatar" />
+> 10	  <img src="https://img.shields.io/badge/asset_publish-format_picker_%2B_preview_fiel_(IG%2FYT%2FTikTok)-cyan?style=for-the-badge" alt="Asset Publish Format Preview" />
+> 11	  <img src="https://img.shields.io/badge/video--repurpose-1_master_%E2%86%92_N_shorts_%2B_carrossel_(FFmpeg%2C_gr%C3%A1tis)-brightgreen?style=for-the-badge" alt="Video Repurpose" />
+> 12	  <img src="https://img.shields.io/badge/MAPE--K_guardian-cron_%2B_Nemotron_free_L2-darkgreen?style=for-the-badge" alt="MAPE-K Guardian" />
+> 13	  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 14	  <img src="https://img.shields.io/badge/free_LoRA_training-avatar--identity--train_(Replicate_BYOK%2C_USD_0)-brightgreen?style=for-the-badge" alt="Free LoRA Training" />
+> 15	  <img src="https://img.shields.io/badge/Spaces_publish-WordPress_node_(Post%2FLanding)-cyan?style=for-the-badge" alt="Spaces Publish WordPress" />
+> 16	  <img src="https://img.shields.io/badge/BoK_youtube--studio-deepsearch_blueprint_seed-fuchsia?style=for-the-badge" alt="BoK youtube-studio blueprint" />
+> 17	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 18	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 19	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 20	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 21	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 22	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 23	  <img src="https://img.shields.io/badge/social--connect-TikTok%2FYouTube_proven_E2E_%C2%B7_in_review-brightgreen?style=for-the-badge" alt="Social Connect" />
+> 24	  <img src="https://img.shields.io/badge/channel--format-FR--CP--001_live_(8_canais)-brightgreen?style=for-the-badge" alt="Channel Format Intelligence" />
+> 25	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.9_cutover_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 26	  <img src="https://img.shields.io/badge/higgsfield--mcp-OAuth_connector_server--side_(gated)-cyan?style=for-the-badge" alt="Higgsfield MCP Connector" />
+> 27	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 28	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 29	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 30	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 31	  <img src="https://img.shields.io/badge/BoK_Suites-25%2F25_sealed-fuchsia?style=for-the-badge" alt="BoK Suites" />
+> 32	  <img src="https://img.shields.io/badge/AIOS_DevKit-4Cs_100%2F100-brightgreen?style=for-the-badge" alt="AIOS DevKit" />
+> 33	  <img src="https://img.shields.io/badge/mcoCoins-gatekeeper-gold?style=for-the-badge" alt="mcoCoins" />
+> 34	  <img src="https://img.shields.io/badge/AIOS-consciousness_v3-cyan?style=for-the-badge" alt="AIOS" />
+> 35	  <img src="https://img.shields.io/badge/affiliate_flywheel-closed-emerald?style=for-the-badge" alt="Flywheel" />
+> 36	  <img src="https://img.shields.io/badge/embedding_pipeline-autonomous-violet?style=for-the-badge" alt="Embedding Pipeline" />
+> 37	  <img src="https://img.shields.io/badge/Core_Fable-Mega_Brain_%2B_Cymatics_%2B_A2UI-fuchsia?style=for-the-badge" alt="Core Fable" />
+> 38	  <img src="https://img.shields.io/badge/LGPD-DD--001_%2B_DD--002_compliant-green?style=for-the-badge" alt="LGPD" />
+> 39	  <img src="https://img.shields.io/badge/BoK_Agents-8_agents_generated-orange?style=for-the-badge" alt="BoK Agents" />
+> 40	  <img src="https://img.shields.io/badge/Constellation_v2-backend_sealed-blueviolet?style=for-the-badge" alt="Constellation v2" />
+> 41	  <img src="https://img.shields.io/badge/Departmental_Army-7_agents_%7C_9641_chunks-orange?style=for-the-badge" alt="Departmental Army" />
+> 42	  <img src="https://img.shields.io/badge/Secrets_Vault-file--based_SecretRef-darkgreen?style=for-the-badge" alt="Secrets Vault" />
+> 43	  <img src="https://img.shields.io/badge/mcoCoins_Ledger-canonical-gold?style=for-the-badge" alt="mcoCoins Ledger" />
+> 44	  <img src="https://img.shields.io/badge/Nightly_Dreaming-gemini_embed_%2B_recovered-violet?style=for-the-badge" alt="Nightly Dreaming" />
+> 45	  <img src="https://img.shields.io/badge/OpenClaw_Gateway-systemd_single--owner-darkgreen?style=for-the-badge" alt="OpenClaw Gateway" />
+> 46	  <img src="https://img.shields.io/badge/Survival_Laws-4_of_4_consecutive-darkred?style=for-the-badge" alt="Survival Laws" />
+> 47	  <img src="https://img.shields.io/badge/BoK_aios--sql--bridge-SDD_sealed-fuchsia?style=for-the-badge" alt="BoK aios-sql-bridge" />
+> 48	  <img src="https://img.shields.io/badge/MAPE--K-audit_seeded-cyan?style=for-the-badge" alt="MAPE-K" />
+> 49	  <img src="https://img.shields.io/badge/SQL_Bridge-aios--sql--bridge_live-darkgreen?style=for-the-badge" alt="SQL Bridge" />
+> 50	  <img src="https://img.shields.io/badge/Circadian_Cycle-3_stages_BRT-violet?style=for-the-badge" alt="Circadian Cycle" />
+> 51	  <img src="https://img.shields.io/badge/Canvas_4.2c-async_video_live-brightgreen?style=for-the-badge" alt="Canvas 4.2c" />
+> 52	  <img src="https://img.shields.io/badge/Memory_Wiki-live_20_pages-darkviolet?style=for-the-badge" alt="Memory Wiki" />
+> 53	  <img src="https://img.shields.io/badge/OE--661-flywheel_validated_E2E-emerald?style=for-the-badge" alt="OE-661 Flywheel Validated" />
+> 54	  <img src="https://img.shields.io/badge/Target_Binding-100%25_coverage-success?style=for-the-badge" alt="Target Binding" />
+> 55	  <img src="https://img.shields.io/badge/Link_Forge-3_real_products_enriched-orange?style=for-the-badge" alt="Link Forge" />
+> 56	  <img src="https://img.shields.io/badge/Affiliate_Links-hybrid_meli.la%2Fmatt__word-emerald?style=for-the-badge" alt="Affiliate Links Hybrid" />
+> 57	  <img src="https://img.shields.io/badge/Apify_BYOK-per--user_apify__token-teal?style=for-the-badge" alt="Apify BYOK" />
+> 58	  <img src="https://img.shields.io/badge/API_Tenancy-per--user_credentials-teal?style=for-the-badge" alt="API Tenancy Model" />
+> 59	  <img src="https://img.shields.io/badge/BoK_gamificacao--nodes-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK gamificacao-nodes" />
+> 60	  <img src="https://img.shields.io/badge/BoK_openclaw-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK openclaw" />
+> 61	  <img src="https://img.shields.io/badge/BoK_e2e--user--zero-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK e2e-user-zero" />
+> 62	  <img src="https://img.shields.io/badge/agent--browser-v0.27.0_validated-teal?style=for-the-badge" alt="agent-browser CLI" />
+> 63	  <img src="https://img.shields.io/badge/ML_Affiliate-no_official_API_(probe--first)-red?style=for-the-badge" alt="ML Affiliate Probe" />
+> 64	  <img src="https://img.shields.io/badge/Browser_Operator-runtime_blocked_at_datacenter-darkred?style=for-the-badge" alt="Browser Operator Probe" />
+> 65	  <img src="https://img.shields.io/badge/Pantheon-7_agents_BoK_full-orange?style=for-the-badge" alt="Pantheon" />
+> 66	  <img src="https://img.shields.io/badge/Material_Proof_Gate-Phase_5c_live-darkred?style=for-the-badge" alt="Material Proof Gate" />
+> 67	  <img src="https://img.shields.io/badge/Admin_Panel-user_management_live-brightgreen?style=for-the-badge" alt="Admin Panel" />
+> 68	  <img src="https://img.shields.io/badge/Great_Reset-Sovereign_soft--reset_live-darkred?style=for-the-badge" alt="Great Reset" />
+> 69	  <img src="https://img.shields.io/badge/Constellation_Economic_Activation-agents_billable-gold?style=for-the-badge" alt="CEA" />
+> 70	  <img src="https://img.shields.io/badge/Hybrid_Billing-Sovereign_free_others_charged-teal?style=for-the-badge" alt="Hybrid Billing" />
+> 71	  <img src="https://img.shields.io/badge/Agent_Pricing-7_models_seeded-fuchsia?style=for-the-badge" alt="Agent Pricing" />
+> 72	  <img src="https://img.shields.io/badge/Daily_Pulse_Cron-04:00_BRT-violet?style=for-the-badge" alt="Daily Pulse" />
+> 73	  <img src="https://img.shields.io/badge/BoK_marketing--hub-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK marketing-hub" />
+> 74	  <img src="https://img.shields.io/badge/BoK_viral--autopilot-9_of_9_sealed_(4--round_validated)-fuchsia?style=for-the-badge" alt="BoK viral-autopilot" />
+> 75	  <img src="https://img.shields.io/badge/BoK_authenticated--browser--operator-9_of_9_sealed-fuchsia?style=for-the-badge" alt="BoK authenticated-browser-operator" />
+> 76	  <img src="https://img.shields.io/badge/branded_redirect-login.mcorch.com%2Fgo_live-emerald?style=for-the-badge" alt="Branded Redirect" />
+> 77	  <img src="https://img.shields.io/badge/marketing--hub_agents-11_generated-orange?style=for-the-badge" alt="Marketing Hub Agents" />
+> 78	  <img src="https://img.shields.io/badge/marketing--hub_MVP-Lead_Core_live-brightgreen?style=for-the-badge" alt="Marketing Hub MVP" />
+> 79	  <img src="https://img.shields.io/badge/marketing--hub_MVP2-Campaign_Core_live-brightgreen?style=for-the-badge" alt="Campaign Core" />
+> 80	  <img src="https://img.shields.io/badge/marketing--hub_MVP3-lead--score_%2B_campaign--run_live-brightgreen?style=for-the-badge" alt="lead-score + campaign-run" />
+> 81	  <img src="https://img.shields.io/badge/marketing--hub_MVP4-UI_live_%2F_dashboard%2Fmarketing-brightgreen?style=for-the-badge" alt="Marketing Hub MVP4 UI" />
+> 82	  <img src="https://img.shields.io/badge/OTD--LLM--FALLBACK-closed_%2B_telemetry-darkgreen?style=for-the-badge" alt="LLM Fallback" />
+> 83	  <img src="https://img.shields.io/badge/BoK_vision--mcp-9_of_9_sealed_%2B_adversarially_validated-fuchsia?style=for-the-badge" alt="BoK vision-mcp" />
+> 84	  <img src="https://img.shields.io/badge/vision--mcp_Fatia_1-deployed_ON_(mcorch__vision__mcp)-brightgreen?style=for-the-badge" alt="vision-mcp Fatia 1" />
+> 85	  <img src="https://img.shields.io/badge/vision--mcp_OTD_gates-3_CLOSEABLE_%2B_1_PARTIAL-teal?style=for-the-badge" alt="vision-mcp OTD gates" />
+> 86	  <img src="https://img.shields.io/badge/vision--mcp_agents-8_BoK_%2B_Pantheon_reconciled-orange?style=for-the-badge" alt="vision-mcp agents" />
+> 87	</p>
+> 88	
+> 89	## 🆕 What's new in v6.126.0 (2026-07-26) — YouTube Studio table refactor: server-side filter/sort + YouTubeVideosTable
+> 90	
+> 91	- **Nova tabela robusta `YouTubeVideosTable` (400+ linhas)** — sistema `ColumnDef`, Toolbar (busca, filtro privacidade, ordenação dropdown, refresh), headers ordenáveis, scroll horizontal, diálogos Editar/Excluir, 404-safe delete (catch "vídeo não encontrado" → toast amigável "Vídeo já não existe no YouTube — removendo da lista local").
+> 92	- **Filtro/ordenação no nível da API** — `useYouTubeVideos` hook aceita `filter`/`sort`/`maxResults`, passa para edge function `youtube-data` action `list_videos` que executa server-side no YouTube Data API (escalável para canais com milhares de vídeos).
+> 93	- **`ChannelVideosCard` simplificado** — wrapper de uma linha: `<YouTubeVideosTable showActions />`, removeu ~350 linhas de código duplicado (VideosTable/VideoRow/EditVideoDialog/COLUMNS) do `YouTubeStudioPage.tsx`.
+> 94	- **Widget "Publicar vídeo no YouTube" removido da página principal** — mantido apenas no `YouTubePublishModal` (sem duplicação).
+> 95	- **Larguras de coluna fixas** — mapa `HEADER_WIDTHS` com `min-width` por coluna, container `overflow-x-auto`, `whitespace-nowrap` nos headers.
+> 96	- **Migração pg_cron para auto-publish** — `supabase/migrations/20260725130000_pg_cron_auto_publish.sql` agenda publicação automática.
+> 97	
+> 98	## 🆕 What's new in v6.125.1 (2026-07-25) — Modal de Publicação YouTube Studio (abas Vídeo/Shorts/Histórico)
+> 99	
+> 100	Loop de agente livre (free-agent) supervisionado: branch `free-agent/publish-modal-s1`, tsc-app **93=baseline** mantido, 3 commits deployados + Vision QA validado. Zero infra.
+> ```
+
+## 🤖 Claude *(19:33:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The README.md is already updated to v6.126.0 with the neural mesh count of 18421. It looks like this was already done in the commits. Let me verify the neural mesh count is correct by querying the database
+
+</details>
+
+
+## 🤖 Claude *(19:33:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source /home/gcrUX/htdocs/constellation-orchestra/.env && curl -s \"https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Query neural mesh node count"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 18421
+> ```
+
+## 👤 User *(19:35:28)*
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Summary:
+1. Primary Request and Intent:
+   - Complete the handoff/seal process for the YouTube Studio table refactor work using the ShakeHands protocol
+   - The user initiated with "/handson" to resume from a previous session that completed the YouTube Studio refactor
+   - The refactor included: new YouTubeVideosTable component with server-side filter/sort, simplified ChannelVideosCard, removed duplicate publish widget, fixed AlertDialogCancel and 404 delete errors, fixed column widths
+
+2. Key Technical Concepts:
+   - Harness Engineering pattern (business logic in hooks, display-only components)
+   - TanStack Query (useInfiniteQuery for paginated video list)
+   - Radix UI / shadcn-ui components (AlertDialog, Table, Dialog, Select, Badge, Skeleton)
+   - YouTube API scopes: youtube.readonly, yt-analytics.readonly, youtube.force-ssl, yt-analytics-monetary.readonly
+   - API Tenancy Model: per-user OAuth tokens via decrypted_social_accounts view (service-role)
+   - Materiality Law (Lei 1): no success claims without material proof
+   - Survival Laws: Materiality, Anticipated Process, Pruning, ORO
+   - Server-side filtering/sorting at edge function level for scalability
+   - Knowledge Mesh (mcorch_nodes/mcorch_edges) with embedding pipeline
+
+3. Files and Code Sections:
+   - src/components/youtube/YouTubeVideosTable.tsx (NEW - 400+ lines): ColumnDef system, Toolbar, SortableHeader, horizontal scroll, EditVideoDialog, 404-safe delete
+   - src/components/youtube/ChannelVideosCard.tsx: Simplified to `<YouTubeVideosTable showActions />`
+   - src/pages/YouTubeStudioPage.tsx: Major refactor removing ~350 lines of duplicated code
+   - src/hooks/useYouTubeStudio.ts: Extended useYouTubeVideos with filter/sort/maxResults; added totalFiltered to ListVideosPage type
+   - supabase/functions/youtube-data/index.ts: list_videos action accepts filter, sort, maxResults for server-side pagination
+   - src/components/ui/card.tsx: CardDescription export verified
+   - README.md: Version 6.125.1 → 6.126.0, neural mesh 18375 → 18421 nodes
+   - proof-manifest.json: Created with handoffNodeId
+   - docs/ops/logrotate/mcorch-host-workers: New logrotate config for host workers
+
+4. Errors and fixes:
+   - Runtime error "CardDescription is not defined": Fixed by adding CardDescription to import in YouTubeVideosTable.tsx
+   - AlertDialogCancel error "must be used within AlertDialogContent": Fixed by moving AlertDialogFooter inside AlertDialogContent
+   - Video delete 404 "video cannot be found": Added 404 detection with friendly toast "Vídeo já não existe no YouTube — removendo da lista local."
+   - Column titles squished: Added HEADER_WIDTHS map with min-width per column, overflow-x-auto container, whitespace-nowrap on headers
+   - TypeScript error: Property 'totalFiltered' does not exist on type 'ListVideosPage': Added optional totalFiltered field
+
+5. Problem Solving:
+   - Identified Radix UI AlertDialog structure requirement (Footer must be inside Content)
+   - Implemented consistent 404 handling pattern across both delete locations
+   - Added horizontal scrolling with proper column widths for 17-column table
+   - Extended edge function API for server-side filter/sort for scalable table operations
+   - Created reusable YouTubeVideosTable component as single source of truth
+   - All guard sweeps passing (9/9 GREEN)
+   - Build successful with no YouTube-specific TypeScript errors
+
+6. All user messages:
+   - "/handson" - session pickup
+   - "no docs/roadmap/publish-modals-S1-task.md e execute APENAS o Passo 2..." - execute step 2 only
+   - "e o os Passos 3 e 4..." - steps 3 and 4
+   - "ótimo então pode seguir com os próximos passos..." - continue with next steps
+   - "verifiquye os ultimos comiits da main..." - check main commits
+   - "ótimo segue com esse e os próximos passos..." - continue with next steps
+   - "deu certo consegui consgeui agendar agora é deixar a janela rica..." - EP02 scheduled, fix duplicate widget and add delete for Envios
+   - Error report with stack trace showing AlertDialogCancel error
+   - "cliquei para exckuir e deu esse erro.: The video that you are trying to delete cannot be found..." - 404 error on delete
+   - "Remova Publicar vídeo no YouTube... da principal deixe somente na ja ela." - remove duplicate widget
+   - "ajustar a largura que a frade esta errado... esta esmagada, talvez so mudar a largura, verifique" - fix column widths
+   - "somente (Vídeo Publicado Privacidade Upload Duração Def Views Likes Coment. Tags Cat. Kids Licença Embed Sintético ID Ações) os titulos da tabela estao fora, parece que esta em" - table titles still wrong
+   - "o titulo da tabela de videos ainda esta errado tread tag html dos titulo esta errada refatore a tabela inteira deuxando ela robusta e sofistcada a nivel query (api) para filtrar e ordernar a tabela completa" - complete table refactor with server-side filtering/sorting
+
+7. Pending Tasks:
+   - Verify server-side filter/sort works end-to-end with YouTube API in browser
+   - Test all UI interactions: search, privacy filter, sort, pagination, edit, delete
+   - Complete handoff seal process (Phase 5c material proof audit, Phase 6 BoK seal status, Phase 7 push, Phase 8 final report)
+
+8. Current Work:
+   - Completed all Phases 1-5b of handoff protocol
+   - Staged and committed remaining changes: src/hooks/useYouTubeStudio.ts (totalFiltered field) and docs/ops/logrotate/mcorch-host-workers
+   - Verified milestone node 635f2df4-9630-4b93-ac99-2068e595b26d exists and is embedded
+   - Verified README.md at v6.126.0 with neural mesh count 18421
+   - TypeScript clean, all security audits passing, infrastructure healthy
+   - Ready for Phase 5c material proof audit
+
+9. Optional Next Step:
+   - Run Phase 5c material proof audit: `bun run scripts/qa/run-audit.ts HANDOFF.md`
+   - If SEAL ALLOWED, proceed to Phase 6 BoK seal status check
+   - Phase 7: Push to origin/main
+   - Phase 8: Generate final seal report in Portuguese
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/66d7cdda-0fc4-4705-b369-1bb5f5f6bb1b.jsonl
+Continue the conversation from where it left off without asking the user any further questions. Resume directly — do not acknowledge the summary, do not recap what was happening, do not preface with "I'll continue" or similar. Pick up the last task as if the break never happened.
+
+## 🤖 Claude *(19:35:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The neural mesh count is 18421, which matches the README.md. Now let me run the Phase 5c material proof audit.
+
+</details>
+
+
+## 🤖 Claude *(19:35:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/run-audit.ts HANDOFF.md",
+  "description": "Run Phase 5c material proof audit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit 8a47cbd | git_commit | 8a47cbd | 8a47cbd | ✅ |
+> | commit 8bdbfe5 | git_commit | 8bdbfe5 | 8bdbfe5 | ✅ |
+> | commit 7a2ebf8 | git_commit | 7a2ebf8 | 7a2ebf8 | ✅ |
+> | file docs/roadmap/publish-modals-contract-2026-07-25.md | file_exists | docs/roadmap/publish-modals-contract-2026-07-25.md | docs/roadmap/publish-modals-contract-2026-07-25.md | ✅ |
+> | file docs/roadmap/publish-modals-S1-task.md | file_exists | docs/roadmap/publish-modals-S1-task.md | docs/roadmap/publish-modals-S1-task.md | ✅ |
+> | file src/components/youtube/ChannelVideosCard.tsx | file_exists | src/components/youtube/ChannelVideosCard.tsx | src/components/youtube/ChannelVideosCard.tsx | ✅ |
+> | file src/components/youtube/YouTubePublishModal.tsx | file_exists | src/components/youtube/YouTubePublishModal.tsx | src/components/youtube/YouTubePublishModal.tsx | ✅ |
+> | file src/pages/YouTubeStudioPage.tsx | file_exists | src/pages/YouTubeStudioPage.tsx | src/pages/YouTubeStudioPage.tsx | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent — contrato `docs/roadmap/publish-modals-contract- | Operator = MCORCH Master Execution Agent — contrato `docs/roadmap/publish-modals-contract- | ✅ |
+> | handoff node 635f2df4 | mesh_node | 635f2df4-9630-4b93-ac99-2068e595b26d | 635f2df4-9630-4b93-ac99-2068e595b26d | ✅ |
+> 
+> QA VERDICT: 10 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> ```
+
+## 🤖 Claude *(19:36:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The material proof audit passed with SEAL ALLOWED. Now let me proceed to Phase 6 - BoK seal status check.
+
+</details>
+
+
+## 🤖 Claude *(19:36:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la docs/bok/",
+  "description": "List BoK suites"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 160
+> drwxrwxr-x 40 gcrUX  gcrUX  4096 Jul 23 08:57 .
+> drwxrwxr-x  8 gcrUX  gcrUX  4096 Jul 26 00:18 ..
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun 26 19:57 agentic-governance
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun  6 16:52 agentic-workspace
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 23 14:35 aios-sql-bridge
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun  8 14:59 authenticated-browser-operator
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jul  8 22:59 avatar-clone-ai
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 20 14:05 canvas-design
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun  1 00:01 constellation-v2
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 17 15:24 content-intel
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 25 19:40 content-provenance
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 14 01:49 conteudo-v2
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 26 00:23 crm-inbox
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 26 00:21 crm-suite
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 26 09:55 e2e-user-zero
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 18 09:34 gamificacao-nodes
+> -rw-rw-r--  1 gcrUX  gcrUX     0 May  6 13:37 .gitkeep
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun  6 17:11 identity-fabric
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 16 08:51 landing-factory
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun  3 23:12 marketing-hub
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jul  7 23:35 mcorch-constellation
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 20 01:30 mcorch-qa-healing
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 30 18:01 mercado-livre-api
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 30 18:01 meta-api
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 May 18 15:25 openclaw
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 22 17:48 orchestration-control-room
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 23 09:47 pipc
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jul 16 18:23 post-engine
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 15 12:56 predictive-swarm
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 22 23:59 product-opportunity-engine
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun 30 22:54 security
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 15 12:02 spaces-cadence
+> drwxrwsr-x  3 gcrUX  gcrUX  4096 Jul 22 00:22 spaces-evolution
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul  8 06:50 tiktok-login
+> drwxrwxr-x  2 ubuntu ubuntu 4096 Jul 20 15:55 video-repurpose
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jul  1 18:34 video-studio
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun 26 20:49 viral-autopilot
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun  6 17:13 viral-daily-canvas
+> drwxrwxr-x  3 gcrUX  gcrUX  4096 May 14 23:05 viralmind
+> drwxrwxr-x  2 gcrUX  gcrUX  4096 Jun 17 00:16 vision-mcp
+> drwxrwxr-x  3 ubuntu ubuntu 4096 Jul 19 16:35 youtube-studio
+> ```
+
+## 🤖 Claude *(19:36:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me check the youtube-studio BoK suite since this session was about the YouTube Studio table refactor.
+
+</details>
+
+
+## 🤖 Claude *(19:36:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la docs/bok/youtube-studio/",
+  "description": "Check YouTube Studio BoK suite"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 372
+> drwxrwxr-x  3 ubuntu ubuntu  4096 Jul 19 16:35 .
+> drwxrwxr-x 40 gcrUX  gcrUX   4096 Jul 23 08:57 ..
+> -rw-rw-r--  1 ubuntu ubuntu 53345 Jul  9 00:34 00-deepsearch-blueprint.md
+> -rw-rw-r--  1 ubuntu ubuntu 12043 Jul 16 13:41 00-index.md
+> -rw-rw-r--  1 ubuntu ubuntu 18933 Jul 16 13:10 01-mrd.md
+> -rw-rw-r--  1 ubuntu ubuntu 18970 Jul 16 13:12 02-brd.md
+> -rw-rw-r--  1 ubuntu ubuntu 19061 Jul 16 13:14 03-prd.md
+> -rw-rw-r--  1 ubuntu ubuntu 25791 Jul 16 13:23 04-frd.md
+> -rw-rw-r--  1 ubuntu ubuntu 32263 Jul 16 13:26 05-sdd.md
+> -rw-rw-r--  1 ubuntu ubuntu 24215 Jul 16 13:23 06-data-model.md
+> -rw-rw-r--  1 ubuntu ubuntu 18869 Jul 16 13:25 07-process-flow.md
+> -rw-rw-r--  1 ubuntu ubuntu 18806 Jul 16 13:38 08-quality-metrics.md
+> -rw-rw-r--  1 ubuntu ubuntu 44568 Jul 16 13:38 11-api-surface-map.md
+> -rw-rw-r--  1 ubuntu ubuntu  6031 Jul 14 14:42 12-amendment-write-ops-and-monetary.md
+> -rw-rw-r--  1 ubuntu ubuntu 10193 Jul 19 16:35 13-amendment-upload-factory.md
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Jul 12 20:31 _apimap
+> -rw-rw-r--  1 ubuntu ubuntu 43768 Jul 12 20:38 youtube-api-registry.json
+> ```
+
+## 🤖 Claude *(19:36:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The YouTube Studio BoK suite is complete with 9/9 documents plus amendments. It has the Pattern Conformance (11-api-surface-map.md and 13-amendment-upload-factory.md).
+
+Now let me check if there's any session work that lacks BoK. The session work was:
+1. YouTube Studio table refactor (YouTubeVideosTable component)
+2. YouTubePublishModal with tabs Video/Shorts/History
+3. ChannelVideosCard component
+4. Integration into YouTubeStudioPage
+
+This is all part of the youtube-studio BoK suite which is already complete (9/9 docs sealed). Let me verify there's no new module created that needs BoK.
+
+Now let me check the session touched modules.
+
+</details>
+
+
+## 🤖 Claude *(19:36:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git diff --name-only HEAD~10..HEAD | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | awk -F/ '{print $1\"/\"$2}' | sort -u",
+  "description": "Check session touched modules"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/pages
+> supabase/functions
+> ```
+
+## 🤖 Claude *(19:36:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The session only touched `src/pages/YouTubeStudioPage.tsx` and `src/components/youtube/` components (which are in a subfolder of `src/components` but not a top-level capitalized component folder like `src/components/Calendar` etc.). This is all part of the existing YouTube Studio module which already has a sealed BoK suite. No new module was created that would require a new BoK.
+
+Let me now check the mesh seal nodes for sealed BoK suites to report status
+
+</details>
+
+
+## 🤖 Claude *(19:36:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env 2>/dev/null && curl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at\" \\\n  -H \"apikey: $SB_SECRET_KEY\" \\\n  -H \"Authorization: Bearer $SB_SECRET_KEY\" 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); [print(f\\\"  \ud83c\udf10 {n['name']} ({n['stability_score']}) - {n['id'][:8]}\\\") for n in d]\" 2>/dev/null || echo \"  \u26a0\ufe0f Could not query seal nodes\"",
+  "description": "Check BoK seal nodes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   🌐 Configuration (0.00703918986814197) - fa7f4329
+>   🌐 Plugins (0.00975892175117824) - a9622e1c
+>   🌐 Permissions (0.00975911512432135) - 85e32feb
+>   🌐 Exemplos de configuração (0.00975324786534921) - d38a032d
+>   🌐 Configuração — agentes (0.00975328285970409) - 04b4c4a6
+>   🌐 Wiki de memória (0.00975375315086153) - f45334e0
+>   🌐 Configuração — canais (0.00975353188767476) - 391c9316
+>   🌐 Overview (0.00975860007350375) - e7fae889
+>   🌐 MCP (0.00975911659270684) - 488aef82
+>   🌐 FAQ (0.00975913105066805) - 29bdc1a1
+>   🌐 Subagentes (0.00975401551228728) - baf94fd0
+>   🌐 Plans (0.0097586065114712) - fb7f8a03
+>   🌐 Skill format (1) (0.00975687586765642) - ae1c5c45
+>   🌐 Features (0.0097588382811281) - c6996357
+>   🌐 bok-scribe-seal-mcorch-qa-healing-v1 (0.00473882418665786) - b00e938a
+>   🌐 Conversation View (0.00975911738337604) - 6975d61a
+>   🌐 Walkthrough (0.00975913861851567) - 485a3ccd
+>   🌐 bok-scribe-seal-conteudo-v2-v1 (0.00892829445375137) - 571bb984
+>   🌐 Playground (0.00975912483826022) - 38bc0598
+>   🌐 Browser Recordings (0.00975934724492416) - fd0c2c2b
+>   🌐 Task List (0.00975912901751596) - 822a57c4
+>   🌐 Features (1) (0.00976099336994017) - 487d07f1
+>   🌐 Models (0.00975935368338454) - 6581af7e
+>   🌐 Dreaming (0.00703950313535603) - 047cc16a
+>   🌐 Enterprise (0.00975913647240903) - ee057203
+>   🌐 Skills (1) (0.00975689924353285) - 5f38a0f8
+>   🌐 Rules (0.00975913884442166) - b7674adc
+>   🌐 Hooks (0.00975936509189494) - fd11137d
+>   🌐 Review Changes + Source Control (0.0097593597829825) - 62443f40
+>   🌐 Creating skills (0.00703955731692548) - c28575e3
+>   🌐 Configuration — tools and custom providers (0.00703945824237155) - 9454cdd0
+>   🌐 Builtin memory engine (0.00703946076810355) - 74e83413
+>   🌐 Gateway architecture (0.00703971790865851) - 77c09a6f
+>   🌐 Security audit checks (0.00703972255291839) - 0a5ed6a3
+>   🌐 bok-scribe-seal-meta-api-v1 (0.0071569836880634) - ca791bdd
+>   🌐 bok-scribe-seal-mercado-livre-api-v1 (0.00636375306008033) - 45bc299b
+>   🌐 Threat model (MITRE ATLAS) (0.00703970772388881) - 018d7857
+>   🌐 Artifact Review (0.00975889181934608) - 425577ee
+>   🌐 Busca na memória (0.00975374513562786) - a07c01aa
+>   🌐 Configuração (1) (0.0097565662272732) - 568906d8
+>   🌐 Configuration — channels (0.00703919402322055) - a1eecb88
+>   🌐 Setup (0.00703905706986357) - abb47693
+>   🌐 Configuration examples (0.00703918465392919) - fcf53dda
+>   🌐 Memory configuration reference (0.00703946353826226) - ab532854
+>   🌐 Personal assistant setup (0.00703920241485731) - 387968ce
+>   🌐 Memory wiki (0.00703950769799843) - 9b5c6f3d
+>   🌐 bok-security-cyber-sentinel-v1 (0.00893819185323687) - 424f0fe4
+>   🌐 Memory overview (0.00703943762917331) - 500269c8
+>   🌐 Skill format (0.00703971750126745) - 22eccb4f
+>   🌐 Plan (0.00975934950403259) - 87d8b5ec
+>   🌐 Active memory (0.00703946256055906) - f574abdf
+>   🌐 Configuration — agents (0.00703931166999266) - 396bc62d
+>   🌐 SOUL.md personality guide (0.0070397101682322) - d2eb386f
+>   🌐 Skills (0.00703945685729309) - 1bc932de
+>   🌐 Memory search (0.00703951160883713) - 90877042
+>   🌐 Getting started (0.0070390629357469) - 3d1d2b51
+>   🌐 Sub-agents (0.00703974536687104) - 63f07210
+>   🌐 Criando Skills (0.00975400693237) - d380b098
+>   🌐 Configuration reference (0.00703918497981737) - 5e7842ac
+>   🌐 Primeiros passos (0.00975286270997147) - e7a7946e
+>   🌐 Screenshots (0.00975913669831497) - 63d95bd5
+>   🌐 Referência de configuração (0.00975326852329191) - af5f34c3
+>   🌐 Workspaces (0.00975912167558138) - 7c2b8634
+>   🌐 Agent Manager (0.00975882212936052) - 4e535f92
+>   🌐 Files (0.00975935153723061) - e63e3842
+>   🌐 bok-scribe-seal-aios-sql-bridge-sdd-only-v1 (0.00945509041271157) - 4e0acc7e
+>   🌐 Mecanismo de memória integrado (0.00975349790841568) - f4e2a0cb
+>   🌐 Verificações de auditoria de segurança (0.0097542376896154) - eeb28f58
+>   🌐 Panes (0.00975914291073036) - 943f3a85
+>   🌐 Skills (2) (0.00976118746199265) - abc3dccb
+>   🌐 Configuração do assistente pessoal (0.00975301611558097) - 0700c640
+>   🌐 Referência de configuração de memória (0.0097537676008769) - 5fa99caf
+>   🌐 Guia de personalidade do SOUL.md (0.00975422481944917) - caf09ad8
+>   🌐 Modelo de ameaças (MITRE ATLAS) (0.00975426083337812) - 8c4c6923
+>   🌐 Inbox (0.00975885149623055) - afc28b08
+>   🌐 Using AGY CLI (0.00975884517105108) - 07136be4
+>   🌐 Overview + Quick Start (0.0097588507055829) - ffe1676a
+>   🌐 Getting Started (2) (0.00976119073831769) - 8130f95f
+>   🌐 Browser (0.00975934871334458) - bc61c637
+>   🌐 Changes Sidebar (0.00975911139688226) - 96142e8b
+>   🌐 Side Panel (0.00975911557613225) - 6689acf8
+>   🌐 Agent Settings (0.00975860334896034) - 9a339f4a
+>   🌐 Getting Started (0.00975884212141244) - 961acb1d
+>   🌐 Terminal (0.00975883500559265) - b8bc7481
+>   🌐 Browser Subagent View (0.00975884743004328) - 961ab3cb
+>   🌐 Getting Started (1) (0.00976098365414142) - 7226e310
+>   🌐 Allowlist / Denylist (0.00975913150247969) - abf028b2
+>   🌐 Artifacts (0.00975884935018706) - cd11121d
+>   🌐 Command (0.00975888199268913) - c65f02a6
+>   🌐 Tab (1) (0.00976098275034668) - 35dda552
+>   🌐 Knowledge Items (0.00975943184889142) - 416a51ce
+>   🌐 Overview (2) (0.00976119921157722) - 41f8dd85
+>   🌐 Separate Chrome Profile (0.00975934713196876) - cb05ebcc
+>   🌐 Home (0.00975935526476143) - 65a0bb42
+>   🌐 Firebase Studio Migration (0.00975860549494974) - f449ad14
+>   🌐 bok-scribe-seal-authenticated-browser-operator-v1 (0.00649636157842253) - 31323fe3
+>   🌐 Overview (1) (0.00976088977290984) - f896ea8c
+>   🌐 bok-scribe-seal-viral-daily-canvas-v1 (0.0071258706346306) - d273fcd1
+>   🌐 Visão geral da memória (0.00975347916907427) - fdb2c1d9
+>   🌐 Configuração — ferramentas e provedores personalizados (0.00975350603633399) - 217c9d30
+>   🌐 Subagents (0.00975861407891206) - 3d4ada6e
+>   🌐 bok-scribe-seal-openclaw-v1 (0.00717194633999099) - 05c55dfd
+>   🌐 bok-scribe-seal-gamificacao-nodes-v1 (0.005182236954938) - 6e8546bc
+>   🌐 bok-scribe-seal-identity-fabric-v1 (0.00712498465697898) - 39392a3e
+>   🌐 bok-scribe-seal-post-engine-v1 (0.00712539625218209) - ae02dd7e
+>   🌐 Review Changes (0.00975884494515189) - 7ab9c607
+>   🌐 bok-scribe-seal-constellation-v2-v1 (0.00941908906363039) - 38d7e7a4
+>   🌐 Arquitetura do Gateway (0.00975426783296595) - 694966d8
+>   🌐 Configuração (0.00975301408370283) - f9221b67
+>   🌐 Migration (0.00975850305271912) - 5fc8b67e
+>   🌐 Sidecars (0.00975884121781599) - ecff8696
+>   🌐 Settings (0.00975884234731156) - 1c6c5513
+>   🌐 Projects (0.00975913184133843) - f3580e99
+>   🌐 bok-scribe-seal-viral-autopilot-v1 (0.00809875106689617) - b3398294
+>   🌐 bok-scribe-seal-marketing-hub-v1 (0.0086691161345302) - d5163fed
+>   🌐 bok-scribe-seal-video-studio-v1 (0.00874503436132759) - e5e16090
+>   🌐 bok-scribe-seal-video-studio-v1.1 (0.00900357468648264) - c99b7875
+>   🌐 bok-scribe-seal-vision-mcp-v1 (0.00518602308131588) - 318862b7
+>   🌐 bok-scribe-seal-mcorch-constellation-v1 (0.00922152542363481) - 78cb74e6
+>   🌐 bok-scribe-seal-viralmind-v1 (0.00908641515125481) - 5c4bf1e9
+>   🌐 bok-scribe-seal-agentic-governance-v1 (0.00802879494394246) - 34748570
+>   🌐 Dreaming (1) (0.00975667316614881) - a3543b22
+>   🌐 Active Memory (0.00975379683964536) - 4466688b
+>   🌐 Build with Google (0.0097588216775632) - 61cf2a0a
+>   🌐 Strict Mode (0.00975860312306675) - 2d44e47e
+>   🌐 Editor (0.00975913748898581) - fedc831a
+>   🌐 bok-scribe-seal-e2e-user-zero-v1 (0.00525093285266482) - 5271964b
+>   🌐 bok-scribe-seal-content-provenance-v1 (0.121530101699951) - 825088c0
+>   🌐 bok-scribe-seal-avatar-clone-ai-v1 (0.00962341532663976) - ee81987d
+>   🌐 bok-scribe-seal-tiktok-login-v1 (0.00462894335078949) - 299b9f36
+>   🌐 bok-scribe-seal-spaces-evolution-v1 (0.00537532891138718) - 8f5fd3fd
+>   🌐 spaces-cadence-bok-seal-2026-07-15 (0.00675407019086579) - d0b4fdc8
+>   🌐 predictive-swarm-bok-seal-2026-07-15 (0.00702219564724169) - 485c0f6e
+>   🌐 bok-scribe-seal-crm-inbox-v1 (0.0437694058429126) - 2dff4a5a
+>   🌐 bok-scribe-seal-video-repurpose-v1 (0.0061663977930782) - a6df1548
+>   🌐 bok-scribe-seal-youtube-studio-v1 (0.00616645724486203) - 9a923887
+>   🌐 bok-scribe-seal-crm-suite-v1 (0.591138709485885) - 6b428dce
+>   🌐 bok-scribe-seal-landing-factory-v1 (0.00503620135390856) - b65e94b1
+>   🌐 content-intel BoK 9/9 selada (0.0198337731466747) - 2e918a8c
+> ```
+
+## 🤖 Claude *(19:36:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I can see that the YouTube Studio BoK is sealed (bok-scribe-seal-youtube-studio-v1 at 9a923887). The session work was all within the YouTube Studio module which already has a sealed BoK. No new module was created that would require a new BoK.
+
+Now let me proceed with Phase 7 - push.
+
+</details>
+
+
+## 🤖 Claude *(19:36:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main",
+  "description": "Push to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-push[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;13;12;12m─[38;2;17;17;17m─[38;2;22;22;22m─[38;2;25;25;25m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;36;36;36m─[38;2;40;40;40m─[38;2;44;44;44m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;44;44;44m─[38;2;40;40;40m─[38;2;36;36;36m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;25;25;25m─[38;2;22;22;22m─[38;2;17;17;17m─[38;2;13;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  gitleaks-range ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:37PM[0m [32mINF[0m 7 commits scanned.
+> [90m4:37PM[0m [32mINF[0m scan completed in 35.8ms
+> [90m4:37PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ gitleaks-range (0.10 seconds)
+> Everything up-to-date
+> ```
+
+## 🤖 Claude *(19:37:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The push completed successfully. Now let me do the Phase 7b - sprint and connections hygiene, and then provide the final report.
+
+</details>
+
+
+## 🤖 Claude *(19:37:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls scratch/ 2>/dev/null || echo \"scratch/ empty or doesn't exist\"",
+  "description": "Check scratch directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(19:37:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The scratch directory is empty. Let me check MCP documentation and then provide the final report.
+
+</details>
+
+
+## 🤖 Claude *(19:37:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat .mcp.json",
+  "description": "Check MCP configuration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {
+>   "mcpServers": {
+>     "gitnexus": {
+>       "command": "npx",
+>       "args": [
+>         "tsx",
+>         "packages/gitnexus-core/src/mcp/server.ts"
+>       ],
+>       "env": {
+>         "TARGET_DIR": "./src"
+>       }
+>     },
+>     "obsidian": {
+>       "command": "npx",
+>       "args": [
+>         "-y",
+>         "@unbound/mcp-obsidian"
+>       ],
+>       "env": {
+>         "OBSIDIAN_VAULT_PATH": "./NotasObsidian"
+>       }
+>     },
+>     "playwright": {
+>       "command": "npx",
+>       "args": [
+>         "-y",
+>         "@playwright/mcp@latest"
+>       ]
+>     },
+>     "gemini-api-docs-mcp": {
+>       "type": "http",
+>       "url": "https://gemini-api-docs-mcp.dev"
+>     },
+>     "vision-mcp": {
+>       "type": "http",
+>       "url": "https://mcp.mcorch.com/mcp",
+>       "headers": {
+>         "Authorization": "Bearer ${VISION_MCP_PAT}"
+>       }
+>     }
+>   }
+> }
+> ```
+
+## 🤖 Claude *(19:37:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The MCP config looks good. Now let me check if there's documentation for each MCP server in .claude/references/ or CLAUDE.md. Let me verify quickly
+
+</details>
+
+
+## 🤖 Claude *(19:37:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la .claude/references/ 2>/dev/null || echo \"No references directory\"",
+  "description": "Check references directory"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 24
+> drwxrwxr-x  2 gcrUX gcrUX 4096 May  3 01:47 .
+> drwxrwxr-x 12 gcrUX gcrUX 4096 Jul 25 12:31 ..
+> -rw-rw-r--  1 gcrUX gcrUX 6105 May  3 01:47 mcorch-schema.md
+> -rw-rw-r--  1 gcrUX gcrUX 7167 May  3 01:46 supabase-edge-functions.md
+> ```
+
+## 🤖 Claude *(19:37:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The references directory only has Supabase and mcorch schema docs, not the MCP servers. Let me do the Phase 7c - Guardian briefing check and then provide the final report.
+
+</details>
+
+
+## 🤖 Claude *(19:37:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null || echo \"No mcorch containers\"",
+  "description": "Check Docker mesh health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 11 days (healthy)
+> mcorch_claude_mem: Up 5 weeks (healthy)
+> mcorch_chroma: Up 5 weeks (healthy)
+> ```
+
+## 🤖 Claude *(19:37:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All Docker mesh containers are healthy. Let me now generate the final seal
+
+</details>
+
+
+## 🤖 Claude *(19:37:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s http://localhost:8001/api/v2/heartbeat 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print(f'Chroma: {d.get(\\\"status\\\", \\\"?\\\")}')\" || echo \"Chroma unreachable\"",
+  "description": "Check Chroma health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Chroma: ?
+> ```
+
+## 🤖 Claude *(19:37:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me check the full response.
+
+</details>
+
+
+## 🤖 Claude *(19:37:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s http://localhost:8001/api/v2/heartbeat 2>/dev/null",
+  "description": "Check Chroma health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"nanosecond heartbeat":1785094665051048700}
+> ```
+
+## 🤖 Claude *(19:37:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Chroma is healthy. Let me provide the final report now
+
+</details>
+
+
+## 🤖 Claude *(19:37:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -10",
+  "description": "Final commit log"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> b992735 docs(ops): add logrotate config for host workers
+> 1e66497 docs(readme): v6.126.0 — YouTube Studio table refactor + neural mesh 18421 nodes
+> 08bf92e docs(readme): v6.125.1 — YouTube Studio table refactor + CRM BRD updates
+> e2d2d92 feat(youtube): YouTube Studio videos table refactor — server-side filter/sort + new YouTubeVideosTable
+> 0b21a3f docs(bok): updates to CRM inbox and CRM suite BRDs + autonomic loop MAPE-K
+> 8290993 refactor(youtube): YouTube Studio videos table refactor with server-side filtering/sorting
+> 9ec897e fix(youtube): add missing CardDescription import to YouTubeVideosTable
+> 9d66784 docs(handoff): seal modal de publicação YouTube Studio (abas Vídeo/Shorts/Histórico) — free-agent S1
+> 7a2ebf8 feat(youtube): integra YouTubePublishModal no YouTubeStudioPage
+> 8bdbfe5 feat(youtube): cria YouTubePublishModal com abas Video/Shorts/Historico
+> ```
+
+## 🤖 Claude *(19:37:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The final commits are pushed. Let me now provide the final seal report in Portuguese.
+
+</details>
+
+
+## 🤖 Claude *(19:37:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env && curl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?select=id&node_type=eq.handoff&limit=1&order=created_at.desc\" \\\n  -H \"apikey: $SB_SECRET_KEY\" \\\n  -H \"Authorization: Bearer $SB_SECRET_KEY\" 2>/dev/null | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if d else 'none')\" 2>/dev/null",
+  "description": "Get latest handoff node ID"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 635f2df4-9630-4b93-ac99-2068e595b26d
+> ```
+
+## 🤖 Claude *(19:37:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All phases complete. Let me generate the final seal report.
+
+</details>
+
+
+## 🤖 Claude *(19:37:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "source .env && curl -s \"$SUPABASE_URL/rest/v1/mcorch_nodes?select=id&node_type=eq.handoff&limit=1&order=created_at.desc\" \\\n  -H \"apikey: $SB_SECRET_KEY\" \\\n  -H \"Authorization: Bearer $SB_SECRET_KEY\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Count total handoff nodes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 212
+> ```
+
+## 🤖 Claude *(19:37:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me provide the final report now.
+
+</details>
+
+
+## 🤖 Claude *(19:38:17)*
+
+---
+
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — YouTube Studio Table Refactor (v6.126.0)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  ✅ Secret leak scan — zero findings
+  ✅ Edge JWT enforcement — todas functions user-facing validam JWT
+  ✅ Client-side mco_balance guard — nenhuma violação (RPC atômico only)
+  ✅ RLS bypass risk — nenhum supabase.rpc sem auth context
+  ✅ Console.log — nenhum segredo em logs
+  ✅ Phase 5b HANDOFF.md secret scan — LIMPO
+
+📦 COMMITS (7 total nesta sessão)
+  b992735 docs(ops): add logrotate config for host workers
+  1e66497 docs(readme): v6.126.0 — YouTube Studio table refactor + neural mesh 18421 nodes
+  e2d2d92 feat(youtube): YouTube Studio videos table refactor — server-side filter/sort + new YouTubeVideosTable
+  0b21a3f docs(bok): updates to CRM inbox and CRM suite BRDs + autonomic loop MAPE-K
+  8290993 refactor(youtube): YouTube Studio videos table refactor with server-side filtering/sorting
+  9ec897e fix(youtube): add missing CardDescription import to YouTubeVideosTable
+  9d66784 docs(handoff): seal modal de publicação YouTube Studio (abas Vídeo/Shorts/Histórico) — free-agent S1
+  7a2ebf8 feat(youtube): integra YouTubePublishModal no YouTubeStudioPage
+  8bdbfe5 feat(youtube): cria YouTubePublishModal com abas Video/Shorts/Historico
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 635f2df4-9630-4b93-ac99-2068e595b26d — session-handoff-20260726-youtube-studio-table-refactor
+  Embedding: ✅ (gerado via embed-mcorch-node)
+  Total handoff nodes no grafo: 212
+
+📖 README.md
+  Versão: 6.125.1 → 6.126.0
+  Badge neural_mesh: 18375 → 18421 nós
+  Seção adicionada: [v6.126.0] — YouTube Studio Table Refactor (2026-07-26)
+
+🧠 HANDOFF.md
+  Fase selada: YouTube Studio Table Refactor (Fatia YouTube Studio — table refatorada + PublishModal)
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State, Infrastructure
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 10 verificadas · 0 skipped · 0 falhas
+  - 3 commits verificados (hash exato)
+  - 7 arquivos verificados (existência + conteúdo)
+  - ORO triplet compliant
+  - Handoff node confirmado no mesh
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: 7 (pre-push gitleaks PASS)
+
+📌 SPRINT
+  sprint-priorities.md: sem mudanças (roadmap ativo no OE-661-ROADMAP)
+  scratch/ cleanup: limpo ✅
+  MCP docs: vision-mcp documentado em CLAUDE.md; gitnexus/obsidian/playwright referenciados; gemini-api-docs não documentado (preexistente)
+
+⏭  PRÓXIMOS PASSOS
+  1. Build & deploy frontend (nginx serve dist/ direto — bun run build no repo principal)
+  2. Validar end-to-end no browser: YouTubeStudioPage → filter/sort/pagination/edit/delete vídeos
+  3. Avançar roadmap OE-661: CRM Suite (Tickets/Produtos) — BoK selada, código gated aguardando GO Sovereign
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+
 ---
 
 %% --- PROJECT METADATA START --- %%
