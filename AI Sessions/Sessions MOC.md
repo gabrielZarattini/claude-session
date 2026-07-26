@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3130
-> * **Sessões do Claude**: 3082
+> * **Total de Sessões Registradas**: 3131
+> * **Sessões do Claude**: 3083
 > * **Sessões do Gemini**: 48
 
 ---
@@ -77,6 +77,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-07-26 - pmo-curator next-steps]]` - *2026-07-26*
 *   `[[2026-07-26 - configure-effort-mode]]` - *2026-07-26*
+*   `[[2026-07-26 - agent-a37e3f470d931cd93]]` - *2026-07-26*
 *   `[[2026-07-26 - Criar modal de publicação para YouTube, TikTok e Instagram]]` - *2026-07-26*
 *   `[[2026-07-26 - Copiar engenharia de harness e shakehands para outro repositório]]` - *2026-07-26*
 *   `[[2026-07-26 - 63f7e01c-957d-42bc-93d4-90dc11ab6ad2]]` - *2026-07-26*
@@ -86,8 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-25 - agent-af0102ab02815a3c7]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-aeea2cb9a88814523]]` - *2026-07-25*
 *   `[[2026-07-25 - agent-aec0a888106722ce4]]` - *2026-07-25*
-*   `[[2026-07-25 - agent-ae933299c2ec5f87b]]` - *2026-07-25*
-*   *... e mais 3072 sessões nessa categoria.*
+*   *... e mais 3073 sessões nessa categoria.*
 
 ---
 
@@ -1745,6 +1745,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Julho 2026
 *   `[[2026-07-26 - pmo-curator next-steps]]` (ClaudeSessions)
 *   `[[2026-07-26 - configure-effort-mode]]` (ClaudeSessions)
+*   `[[2026-07-26 - agent-a37e3f470d931cd93]]` (ClaudeSessions)
 *   `[[2026-07-26 - Criar modal de publicação para YouTube, TikTok e Instagram]]` (ClaudeSessions)
 *   `[[2026-07-26 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions)
 *   `[[2026-07-26 - 63f7e01c-957d-42bc-93d4-90dc11ab6ad2]]` (ClaudeSessions)

@@ -4385,5 +4385,5 @@ Pode fazer o `/handson` — o brief vai puxar exatamente este estado (FIRST ACTI
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-26 - Copiar engenharia de harness e shakehands para outro repositório]]
-> * **Próxima Sessão**: [[2026-07-26 - configure-effort-mode]]
+> * **Próxima Sessão**: [[2026-07-26 - agent-a37e3f470d931cd93]]
 %% --- TIMELINE END --- %%

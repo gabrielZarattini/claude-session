@@ -60,7 +60,7 @@ State ilegível/corrompido → tick trata como `{}` e reconstrói (fail-safe já
 
 ## Sequence (fluxo normal)
 1. Cron */5 → wrapper (flock, timeout, env) → `guardian-tick.ts --cron`.
-2. Tick: T1 git sync · T2 erros infra 3h (`last_seen_at`, `neq.guardian`) · T3 `autopilot_cycles` (`started_at`) · T4 cadência sweep · T5 frescor da telemetria do watchdog (>20min = RED).
+2. Tick: T1 git sync · T2 erros infra 3h (`last_seen_at`, `neq.guardian`) · T3 `autopilot_cycles` (`started_at`) · T4 cadência sweep · T5 frescor da telemetria do watchdog (>20min = RED) · **T6 falhas silenciosas cron/ingest (W3.1): varre `cron.job_run_details` status≠succeeded 3h + grep exit codes nos logs de host crons conhecidos; se achar → incidente `CRON_INGEST_SILENT`**.
 3. Tick grava heartbeat; classifica sintomas; abre/refresca/auto-resolve incidentes (dedup+cooldown); alerta L1; se `mode=auto-remediate` e gates ok → dispara L2 destacado.
 4. Exit 10 → wrapper dispara `guardian-sweep-runner.sh` destacado (heartbeats continuam durante o sweep).
 5. Nightly → UX-Explorer gera achados → mesmo pipeline de incidentes.
@@ -87,6 +87,7 @@ State ilegível/corrompido → tick trata como `{}` e reconstrói (fail-safe já
 
 ## Recovery paths (runbooks)
 - **HEARTBEAT MISSING (alerta do watchdog):** `crontab -l | grep guardian` (linha existe/ativa?) → `tail -50 ~/logs/mcorch-guardian.log` → rodar wrapper manual e observar exit → se o tick quebrou, o traceback está no log; corrigir e o próximo tick auto-resolve o incidente.
+- **SILENT CRON/INGEST FAILURE (falha silenciosa de cron/ingest — W3.1):** o tick T2 já varre `infra_health_logs` últimos 3h (`service=neq.guardian`). Para catchar falhas de ingest/cron que não emitem telemetria (ex.: exit≠0 sem row): (1) T6 no tick = `SELECT COUNT(*) FROM cron.job_run_details WHERE status != 'succeeded' AND end_time > now() - interval '3 hours' LIMIT 1;` (pg_cron jobs) + `grep -c 'exit [1-9]' /tmp/mcorch-ingest.log /home/ubuntu/logs/mcorch-auto-publish.log` (host crons). Se >0 → incidente `NEW_STATE` classe `CRON_INGEST_SILENT` com `symptom_hash` estável (ex.: `cron:auto-publish:exit1`). Cooldown 6h, dedup por hash. Resolve quando próxima varredura zera.
 - **Sweep RED repetido:** cada RED refresca o incidente (count++); consertar a guarda apontada; próximo sweep verde zera `sweep_consecutive_red` e auto-resolve.
 - **State corrompido:** tick reconstrói de `{}`; incidentes órfãos re-listados por `--list-incidents` (fonte = dir, não o state).
 - **Telegram fora:** notify exit≠0 fica no log do cron; incidentes/telemetria continuam (alerta é degradado, não perdido — inbox durável).
