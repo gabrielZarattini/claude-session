@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 102
-> * **Total de Sessões**: 3117
+> * **Total de Sessões**: 3118
 
 ---
 
@@ -157,6 +157,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-25 - agent-a02267c6f4c65a0dc]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a01abefe4e42f1fd4]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - Criar modal de publicação para YouTube, TikTok e Instagram]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - Análise de segurança em views com SECURITY DEFINER no Postgres]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` (ClaudeSessions) - *2026-07-24*
