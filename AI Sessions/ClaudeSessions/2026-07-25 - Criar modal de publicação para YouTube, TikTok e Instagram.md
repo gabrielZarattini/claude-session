@@ -1,4 +1,4 @@
-# Criar modal de publicação para YouTube, TikTok e Instagram
+# [[2026-07-26 - Criar modal de publicação para YouTube, TikTok e Instagram|Criar modal de publicação para YouTube, TikTok e Instagram]]
 **Date:** 2026-07-25 | **Session ID:** `cc89bc6a-d122-4b01-a4bd-2cd2276d1893`
 
 ---
