@@ -194,4 +194,5 @@ Testamos a listagem dos diretórios diretamente com o usuário `ubuntu` (sem `su
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-10 - Preciso de ajuda pois não lembro...]]
+> * **Próxima Sessão**: [[2026-07-26 - handson]]
 %% --- TIMELINE END --- %%
