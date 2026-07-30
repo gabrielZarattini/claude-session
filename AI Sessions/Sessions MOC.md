@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3147
-> * **Sessões do Claude**: 3097
+> * **Total de Sessões Registradas**: 3153
+> * **Sessões do Claude**: 3103
 > * **Sessões do Gemini**: 50
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-07-30 - agent-aa82018296f272a8a]]` - *2026-07-30*
+*   `[[2026-07-30 - agent-a994148df4f4b18f4]]` - *2026-07-30*
+*   `[[2026-07-30 - agent-a9112535380ce2c73]]` - *2026-07-30*
+*   `[[2026-07-30 - agent-a6a32d3e53a54d91e]]` - *2026-07-30*
+*   `[[2026-07-30 - agent-a1044843029730bdb]]` - *2026-07-30*
+*   `[[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` - *2026-07-30*
 *   `[[2026-07-29 - agent-af6351738d1c8d840]]` - *2026-07-29*
 *   `[[2026-07-29 - agent-aea230efd23f8f527]]` - *2026-07-29*
 *   `[[2026-07-29 - agent-ae49d659842e3ab0e]]` - *2026-07-29*
 *   `[[2026-07-29 - agent-ada86f8b83e56b028]]` - *2026-07-29*
 *   `[[2026-07-29 - agent-a8d72129d7a5b86d8]]` - *2026-07-29*
 *   `[[2026-07-29 - agent-a79ed1aad9a42e9c1]]` - *2026-07-29*
-*   `[[2026-07-29 - agent-a67c165e85724d0dc]]` - *2026-07-29*
-*   `[[2026-07-29 - agent-a395af2c35333ed78]]` - *2026-07-29*
-*   `[[2026-07-29 - agent-a2da9826f0bd4e06c]]` - *2026-07-29*
-*   `[[2026-07-29 - agent-a192c55023c43280b]]` - *2026-07-29*
-*   `[[2026-07-29 - agent-a1429a4f6a000ea2e]]` - *2026-07-29*
-*   `[[2026-07-29 - agent-a01d5790f26706897]]` - *2026-07-29*
-*   *... e mais 3089 sessões nessa categoria.*
+*   *... e mais 3095 sessões nessa categoria.*
 
 ---
 
@@ -1743,6 +1743,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-30 - agent-aa82018296f272a8a]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a994148df4f4b18f4]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a9112535380ce2c73]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a6a32d3e53a54d91e]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a1044843029730bdb]]` (ClaudeSessions)
+*   `[[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions)
 *   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions)
 *   `[[2026-07-29 - agent-aea230efd23f8f527]]` (ClaudeSessions)
 *   `[[2026-07-29 - agent-ae49d659842e3ab0e]]` (ClaudeSessions)
