@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3166
-> * **Sessões do Claude**: 3116
+> * **Total de Sessões Registradas**: 3172
+> * **Sessões do Claude**: 3122
 > * **Sessões do Gemini**: 50
 
 ---
@@ -79,15 +79,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-30 - agent-ae1a40968d7805668]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-acf858577fa218656]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-acb6cf594c0f75c0e]]` - *2026-07-30*
+*   `[[2026-07-30 - agent-aaa2a1ec4d02f1e5c]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-aa82018296f272a8a]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-a994148df4f4b18f4]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-a9112535380ce2c73]]` - *2026-07-30*
+*   `[[2026-07-30 - agent-a85d3c9cb316d97f1]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-a781a9e7a2c28884a]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-a6a32d3e53a54d91e]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-a69267a670df946bf]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-a66d594ec5c04b118]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-a5fc1fc5f3938cdc3]]` - *2026-07-30*
-*   *... e mais 3108 sessões nessa categoria.*
+*   *... e mais 3114 sessões nessa categoria.*
 
 ---
 
@@ -1747,19 +1747,25 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-30 - agent-ae1a40968d7805668]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-acf858577fa218656]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-acb6cf594c0f75c0e]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-aaa2a1ec4d02f1e5c]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-aa82018296f272a8a]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a994148df4f4b18f4]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a9112535380ce2c73]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a85d3c9cb316d97f1]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a781a9e7a2c28884a]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a6a32d3e53a54d91e]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a69267a670df946bf]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a66d594ec5c04b118]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a5fc1fc5f3938cdc3]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a5378666232230cff]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a4c6fb7ce99524175]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a2be415a227dff69b]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a21bd0cfaac5410a7]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a20b40a5b57a75365]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a197ca7a91ef627a6]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a189d8d75c472c0e7]]` (ClaudeSessions)
 *   `[[2026-07-30 - agent-a1044843029730bdb]]` (ClaudeSessions)
+*   `[[2026-07-30 - agent-a0dfcd864d9acd938]]` (ClaudeSessions)
 *   `[[2026-07-30 - Resolver rejeição TikTok API com credenciais de teste]]` (ClaudeSessions)
 *   `[[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions)
 *   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions)

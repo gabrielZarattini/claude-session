@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 105
-> * **Total de Sessões**: 3161
+> * **Total de Processos**: 106
+> * **Total de Sessões**: 3167
 
 ---
 
@@ -84,6 +84,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[pmo-curator]]` - *Processo*
 *   `[[predictive-swarm-tier1-gates]]` - *Processo*
 *   `[[private-bucket-asset-signing]]` - *Processo*
+*   `[[public-auth-visibility-flags]]` - *Processo*
 *   `[[publication-metrics-collection]]` - *Processo*
 *   `[[repurpose-host-infra-provisioning]]` - *Processo*
 *   `[[revenue-opportunity-pauta]]` - *Processo*
@@ -132,19 +133,25 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-30 - agent-ae1a40968d7805668]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-acf858577fa218656]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-acb6cf594c0f75c0e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aaa2a1ec4d02f1e5c]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-aa82018296f272a8a]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a994148df4f4b18f4]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a9112535380ce2c73]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a85d3c9cb316d97f1]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a781a9e7a2c28884a]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a6a32d3e53a54d91e]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a69267a670df946bf]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a66d594ec5c04b118]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a5fc1fc5f3938cdc3]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a5378666232230cff]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a4c6fb7ce99524175]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a2be415a227dff69b]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a21bd0cfaac5410a7]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a20b40a5b57a75365]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a197ca7a91ef627a6]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a189d8d75c472c0e7]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a1044843029730bdb]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a0dfcd864d9acd938]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - Resolver rejeição TikTok API com credenciais de teste]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions) - *2026-07-29*

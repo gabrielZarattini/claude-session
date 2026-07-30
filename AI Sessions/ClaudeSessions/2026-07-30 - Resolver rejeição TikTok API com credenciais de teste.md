@@ -1922,6 +1922,2043 @@ Depois da aprovação, me avise que eu revogo a conta.
 
 Capturas enviadas — feitas contra o site público real, não em preview local, então é exatamente o que o revisor vai ver.
 
+## 👤 User *(14:05:39)*
+
+ok então vamos fazer o seguinte para evitar qualquer problema nessa próxima tentativa. Adicione uma opção de desativar / ativar o /auth?devLogin nas configurações de administrador em /dashboard/admin
+
+## 🤖 Claude *(14:06:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O usuário quer adicionar uma configuração no painel de administrador para ativar ou desativar o `?devLogin`, transformando o controle dos botões OAuth (Google e TikTok) em uma flag global gerenciável pelo admin, em vez de depender apenas do query param. Isso envolve criar uma nova feature que toca na página admin, um lugar para persistir essa configuração, e a página pública de autenticação.
+
+O ponto crítico é que `/auth` é anônimo — sem sessão — então a flag precisa ser legível por usuários não autenticados, o que significa usar RLS com SELECT público numa tabela específica ou um endpoint dedicado, enquanto apenas admins podem atualizar. Preciso verificar se já existe uma tabela de feature flags ou configurações globais antes de criar algo novo, e também revisar o AdminPage.tsx para entender a estrutura atual.
+
+Quanto ao BoK gate, isso é uma feature pequena — apenas uma flag de configuração em superfícies existentes (página de admin, página de auth) — então não dispara o Master Protocol. Mas a Lei 2 (Processo Antecipado) sugere documentar um SOP mínimo, já que a flag controla a exposição de botões OAuth e tem implicações de segurança; um SOP curto em docs/processes/ seria coerente com a cultura do repositório.
+
+Sobre usar Workflow: há uma tensão entre o system prompt base ("não use workflows a menos que solicitado") e o ultracode reminder ("opt-in permanente"). O ultracode é uma diretiva mais recente e específica, então vou usar Workflow para a fase de design — preciso mapear onde persistir a config global, como a página pública lê sem autenticação, e outros detalhes arquiteturais.
+
+Na verdade, essa é uma tarefa moderadamente substantiva (migration + RLS + UI + página pública), então faz sentido fazer um recon rápido inline primeiro para mapear o terreno, depois usar Workflow para revisão adversarial multi-lente (segurança RLS, correção, regressão) antes de deployar.
+
+Meu plano: explorar AdminPage.tsx, as tabelas de config existentes, o helper RLS has_role, Auth.tsx e os hooks admin; desenhar uma tabela `app_settings` com um flag `public_oauth_login_enabled`; criar uma migration com RLS que permite SELECT anon apenas nas linhas marcadas como públicas, e UPDATE/INSERT só para admin; implementar um hook `usePublicAuthSettings`; e depois integrar tudo em Auth.tsx.
+
+Vou começar o recon agora, checando em paralelo os arquivos principais — AdminPage.tsx fica em `/dashboard/admin`, e preciso lembrar que essa mudança afeta a superfície de aquisição da tela de login pública, então vai precisar de review de segurança e aprovação do Sovereign.
+
+</details>
+
+
+## 🤖 Claude *(14:06:15)*
+
+**ORO triplet desta task:**
+- **Operator:** MCORCH Master Execution Agent
+- **Reviewer:** Sovereign (Gabriel) + `/security-review` independente (a migration toca RLS numa superfície lida por anônimo)
+- **Owner:** Sovereign — a flag controla o que o mundo vê na tela de login pública (superfície de aquisição + o review do TikTok)
+
+Recon primeiro: preciso saber onde já existe config global, como a AdminPage é montada, e — o ponto crítico — **como uma página anônima lê a flag** (o `/auth` não tem sessão).
+
+## 🤖 Claude *(14:06:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== ADMIN PAGE ===\" && wc -l src/pages/AdminPage.tsx && grep -nE \"^import|<Card|<Tabs|TabsTrigger|has_role|useAdmin|function |const .* = \\(\\)\" src/pages/AdminPage.tsx | head -50",
+  "description": "Mapa da AdminPage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ADMIN PAGE ===
+> 196 src/pages/AdminPage.tsx
+> 1:import { useAdminData, useIsAdmin } from '@/hooks/useAdminData';
+> 2:import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+> 3:import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+> 4:import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+> 5:import { Badge } from '@/components/ui/badge';
+> 6:import { Skeleton } from '@/components/ui/skeleton';
+> 7:import { Shield, Users, FileText, BarChart3, Cpu, KeyRound } from 'lucide-react';
+> 8:import { format, parseISO } from 'date-fns';
+> 9:import { ptBR } from 'date-fns/locale';
+> 10:import { Navigate } from 'react-router-dom';
+> 11:import { useAuth } from '@/hooks/useAuth';
+> 12:import { UserActionsMenu } from '@/components/admin/UserActionsMenu';
+> 13:import { SovereignBalancePanel } from '@/components/admin/SovereignBalancePanel';
+> 14:import { PantheonAdminPanel } from '@/components/admin/PantheonAdminPanel';
+> 15:import { AdminRemindersBanner } from '@/components/admin/AdminRemindersBanner';
+> 16:import { GlobalAppKeysPanel } from '@/components/admin/GlobalAppKeysPanel';
+> 18:function fmt(d: string) {
+> 22:export default function AdminPage() {
+> 24:  const { profiles, roles, subscriptions, auditLogs, usageTracking, loading } = useAdminData(isAdmin);
+> 49:      <Tabs defaultValue="users">
+> 50:        <TabsList>
+> 51:          <TabsTrigger value="users"><Users className="h-4 w-4 mr-1" />Usuários</TabsTrigger>
+> 52:          <TabsTrigger value="pantheon"><Cpu className="h-4 w-4 mr-1" />Pantheon</TabsTrigger>
+> 53:          <TabsTrigger value="keys"><KeyRound className="h-4 w-4 mr-1" />Chaves</TabsTrigger>
+> 54:          <TabsTrigger value="audit"><FileText className="h-4 w-4 mr-1" />Auditoria</TabsTrigger>
+> 55:          <TabsTrigger value="usage"><BarChart3 className="h-4 w-4 mr-1" />Uso</TabsTrigger>
+> 58:        <TabsContent value="users">
+> 59:          <Card>
+> 60:            <CardHeader><CardTitle>Usuários ({profiles.length})</CardTitle></CardHeader>
+> 61:            <CardContent>
+> 116:        <TabsContent value="audit">
+> 117:          <Card>
+> 118:            <CardHeader><CardTitle>Logs de Auditoria ({auditLogs.length})</CardTitle></CardHeader>
+> 119:            <CardContent>
+> 151:        <TabsContent value="usage">
+> 152:          <Card>
+> 153:            <CardHeader><CardTitle>Rastreamento de Uso ({usageTracking.length})</CardTitle></CardHeader>
+> 154:            <CardContent>
+> 186:        <TabsContent value="pantheon">
+> 190:        <TabsContent value="keys">
+> ```
+
+## 🤖 Claude *(14:06:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== TABELAS DE CONFIG GLOBAL CANDIDATAS ===\" && grep -rlnE \"CREATE TABLE.*(app_settings|system_settings|feature_flags|global_settings|platform_settings|admin_settings)\" supabase/migrations/ | head; echo \"--- grep amplo ---\"; grep -rnE \"CREATE TABLE (IF NOT EXISTS )?(public\\.)?[a-z_]*(setting|flag|config)[a-z_]*\" supabase/migrations/*.sql | head -20",
+  "description": "Procurar tabela de configura\u00e7\u00e3o global existente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === TABELAS DE CONFIG GLOBAL CANDIDATAS ===
+> --- grep amplo ---
+> supabase/migrations/20260415201855_59f77a3a-3611-478f-9e5f-a6f85690f270.sql:5:CREATE TABLE public.affiliate_config (
+> supabase/migrations/20260530210000_meta_api_foundation.sql:27:CREATE TABLE IF NOT EXISTS public.meta_config (
+> supabase/migrations/20260606210000_pantheon_admin_crud.sql:5:CREATE TABLE IF NOT EXISTS public.pantheon_global_configs (
+> supabase/migrations/20260627120000_social_app_config.sql:30:CREATE TABLE IF NOT EXISTS public.social_app_config_table (
+> ```
+
+## 🤖 Claude *(14:06:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== has_role ===\" && grep -rn \"CREATE OR REPLACE FUNCTION public.has_role\" supabase/migrations/*.sql | tail -3; echo \"=== hooks admin ===\"; ls src/hooks/ | grep -iE \"admin|setting|flag|config\" ; echo \"=== Auth.tsx head ===\"; sed -n '1,40p' src/pages/Auth.tsx",
+  "description": "has_role, hooks de admin/config e topo do Auth.tsx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === has_role ===
+> supabase/migrations/20260414154016_a94ffdfc-62ba-4d55-94dd-48c1d316d19b.sql:14:CREATE OR REPLACE FUNCTION public.has_role(_role public.app_role)
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:237:CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+> === hooks admin ===
+> useAccessConfig.ts
+> useAdminData.ts
+> useAdminReminders.ts
+> useAdminUserActions.ts
+> useAffiliateConfig.ts
+> useConfiguredProviders.ts
+> useGlobalAppConfig.ts
+> useMetaConfig.ts
+> useSocialAppConfig.ts
+> === Auth.tsx head ===
+> import { useEffect, useState } from 'react';
+> import { useNavigate, useSearchParams } from 'react-router-dom';
+> import { safeReturnTo } from '@/lib/sso-cookie';
+> import { createTikTokBinding } from '@/lib/tiktok-login-binding';
+> import { supabase } from '@/integrations/supabase/client';
+> import { Button } from '@/components/ui/button';
+> import { Input } from '@/components/ui/input';
+> import { Label } from '@/components/ui/label';
+> import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+> import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+> import { useToast } from '@/hooks/use-toast';
+> import { Loader2 } from 'lucide-react';
+> import { Separator } from '@/components/ui/separator';
+> import { SigilMark } from '@/components/landing-v2/Brand';
+> 
+> const Auth = () => {
+>   const [loading, setLoading] = useState(false);
+>   const [email, setEmail] = useState('');
+>   const [password, setPassword] = useState('');
+>   const [fullName, setFullName] = useState('');
+>   const navigate = useNavigate();
+>   const { toast } = useToast();
+>   // Social logins (Google/Apple) are hidden by default in production. The Sovereign keeps testing via the
+>   // `?devLogin` URL param, which re-shows the Google button (gabrielcall@gmail.com = Usuário Zero). Apple
+>   // stays removed for now. Temporary gate — remove when social login is re-enabled for all users.
+>   const [searchParams] = useSearchParams();
+>   const devLogin = searchParams.has('devLogin');
+> 
+>   const handleLogin = async (e: React.FormEvent) => {
+>     e.preventDefault();
+>     setLoading(true);
+>     const { error } = await supabase.auth.signInWithPassword({ email, password });
+>     setLoading(false);
+>     if (error) {
+>       toast({ title: 'Erro ao entrar', description: error.message, variant: 'destructive' });
+>     } else {
+>       // SSO loop: if we arrived from an isolated app (design/video.mcorch.com) via ?return_to, bounce back.
+>       const rt = safeReturnTo();
+>       if (rt) { window.location.href = rt; } else { navigate('/dashboard'); }
+>     }
+> ```
+
+## 🤖 Claude *(14:06:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei `useAccessConfig.ts` — parece ser exatamente a interface pública para configuração de acesso. Vou investigar esse hook junto com a migration que o suporta para entender como funciona.
+
+</details>
+
+
+## 🤖 Claude *(14:06:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAccessConfig.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useMemo } from 'react';
+> 2	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import { useAuth } from '@/hooks/useAuth';
+> 5	
+> 6	// constellation-v2 (FR-CV2-023): per-user consumption caps (agent_consumption_caps).
+> 7	// A cap bounds the daily mcoCoin spend for a (provider/API, optional agent) pair; the router
+> 8	// (FR-CV2-021) returns HTTP 402 once the day's spend would exceed it. agent_id = null is a per-API
+> 9	// global cap for the user; daily_mcoin_cap = 0 means unlimited (Sovereign freebie). The BYOK keys
+> 10	// themselves live in user_api_keys (see useUserApiKeys) — this hook owns the caps layer only.
+> 11	
+> 12	export interface ConsumptionCap {
+> 13	  id: string;
+> 14	  apiKeyRef: string;
+> 15	  agentId: string | null;
+> 16	  dailyMcoinCap: number;
+> 17	}
+> 18	
+> 19	export interface SetCapInput {
+> 20	  apiKeyRef: string;
+> 21	  agentId?: string | null;
+> 22	  dailyMcoinCap: number;
+> 23	}
+> 24	
+> 25	// Stable composite key for the lookup map; '*' stands in for the per-API global (agent_id null).
+> 26	const capId = (agentId: string | null, apiKeyRef: string) => `${agentId ?? '*'}::${apiKeyRef}`;
+> 27	
+> 28	export function useAccessConfig() {
+> 29	  const { user } = useAuth();
+> 30	  const queryClient = useQueryClient();
+> 31	  const queryKey = ['agent_consumption_caps', user?.id] as const;
+> 32	
+> 33	  const query = useQuery({
+> 34	    queryKey,
+> 35	    queryFn: async (): Promise<ConsumptionCap[]> => {
+> 36	      // RLS scopes to auth.uid(); no explicit user filter needed for the read.
+> 37	      const { data, error } = await supabase
+> 38	        .from('agent_consumption_caps')
+> 39	        .select('id, api_key_ref, agent_id, daily_mcoin_cap')
+> 40	        .order('api_key_ref');
+> 41	      if (error) throw error;
+> 42	
+> 43	      return (data ?? []).map((c): ConsumptionCap => ({
+> 44	        id: c.id,
+> 45	        apiKeyRef: c.api_key_ref,
+> 46	        agentId: c.agent_id ?? null,
+> 47	        dailyMcoinCap: Number(c.daily_mcoin_cap ?? 0),
+> 48	      }));
+> 49	    },
+> 50	    enabled: !!user?.id,
+> 51	  });
+> 52	
+> 53	  const caps = useMemo(() => query.data ?? [], [query.data]);
+> 54	
+> 55	  const capLookup = useMemo(
+> 56	    () => new Map(caps.map((c) => [capId(c.agentId, c.apiKeyRef), c] as const)),
+> 57	    [caps],
+> 58	  );
+> 59	
+> 60	  const setCap = useMutation({
+> 61	    mutationFn: async ({ apiKeyRef, agentId = null, dailyMcoinCap }: SetCapInput) => {
+> 62	      if (!user?.id) throw new Error('User not authenticated');
+> 63	      if (dailyMcoinCap < 0) throw new Error('Cap deve ser não-negativo');
+> 64	
+> 65	      // UNIQUE (user_id, api_key_ref, agent_id), but a NULL agent_id defeats ON CONFLICT dedupe
+> 66	      // (NULL != NULL), so resolve the existing row by hand — mirrors useMetaConfig's find-then-write.
+> 67	      let lookup = supabase
+> 68	        .from('agent_consumption_caps')
+> 69	        .select('id')
+> 70	        .eq('user_id', user.id)
+> 71	        .eq('api_key_ref', apiKeyRef);
+> 72	      lookup = agentId === null ? lookup.is('agent_id', null) : lookup.eq('agent_id', agentId);
+> 73	      const { data: existing, error: findErr } = await lookup.maybeSingle();
+> 74	      if (findErr) throw findErr;
+> 75	
+> 76	      if (existing?.id) {
+> 77	        const { error } = await supabase
+> 78	          .from('agent_consumption_caps')
+> 79	          .update({ daily_mcoin_cap: dailyMcoinCap, updated_at: new Date().toISOString() })
+> 80	          .eq('id', existing.id);
+> 81	        if (error) throw error;
+> 82	      } else {
+> 83	        const { error } = await supabase.from('agent_consumption_caps').insert({
+> 84	          user_id: user.id,
+> 85	          api_key_ref: apiKeyRef,
+> 86	          agent_id: agentId,
+> 87	          daily_mcoin_cap: dailyMcoinCap,
+> 88	        });
+> 89	        if (error) throw error;
+> 90	      }
+> 91	    },
+> 92	    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+> 93	  });
+> 94	
+> 95	  const removeCap = useMutation({
+> 96	    mutationFn: async (id: string) => {
+> 97	      const { error } = await supabase.from('agent_consumption_caps').delete().eq('id', id);
+> 98	      if (error) throw error;
+> 99	    },
+> 100	    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+> 101	  });
+> 102	
+> 103	  return {
+> 104	    caps,
+> 105	    capLookup,
+> 106	    capFor: (agentId: string | null, apiKeyRef: string) => capLookup.get(capId(agentId, apiKeyRef)) ?? null,
+> 107	    isLoading: query.isLoading,
+> 108	    error: query.error,
+> 109	    setCap,
+> 110	    removeCap,
+> 111	  };
+> 112	}
+> 113	
+> ```
+
+## 🤖 Claude *(14:06:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"access_config\\|useAccessConfig\" --include=*.ts --include=*.tsx --include=*.sql -l src/ supabase/ | head -20",
+  "description": "Onde access_config \u00e9 usado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/components/panels/AccessConfigCard.tsx
+> src/hooks/useAccessConfig.ts
+> ```
+
+## 🤖 Claude *(14:06:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+`useAccessConfig` não é o que preciso — é sobre limites de consumo. Vou examinar a tabela `social_app_config_table` da migration para entender como as credenciais OAuth globais são estruturadas no nível de administrador, e depois ver se consigo estender esse padrão ou encontrar algo em `useGlobalAppConfig.ts` que me ajude.
+
+</details>
+
+
+## 🤖 Claude *(14:06:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260627120000_social_app_config.sql"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	-- Migration: social_app_config — per-user OAuth APP credentials for TikTok / YouTube / Pinterest
+> 2	--            (client_id + Vault-encrypted client_secret), keyed UNIQUE(user_id, platform).
+> 3	-- ─────────────────────────────────────────────────────────────────────────────
+> 4	-- BoK SSOT: docs/bok/post-engine/06-data-model.md (social_app_config) + 10-amendment-social-connect-*.md (FR-PE-005).
+> 5	-- SOPs (Lei 2, written before this migration): docs/processes/{tiktok,youtube,pinterest}-publish-credential-resolution.md.
+> 6	-- API Tenancy Model (CLAUDE.md): per-user credentials, RLS-isolated, Vault-encrypted secret, tenant-guarded writes.
+> 7	-- Resolution order in edge functions: (1) social_app_config per-user (is_active) → (2) env fallback
+> 8	--   (TIKTOK_CLIENT_KEY/SECRET, GOOGLE_CLIENT_ID/SECRET, PINTEREST_CLIENT_ID/SECRET — Sovereign-only onboarding
+> 9	--   default, OTD-PE-SOCIAL-APPCREDS) → (3) hard fail 402/501 {error:"<platform>_not_configured"}.
+> 10	--
+> 11	-- This MIRRORS the canonical credential pattern of social_accounts (migrations 20260601000000 +
+> 12	-- 20260602140000 idempotent vault_upsert_secret + 20260602150000 tenant guard), reproduced for a NEW
+> 13	-- table that is born Vault-encrypted (no plaintext-then-backfill phase):
+> 14	--   * client_id is a semi-public OAuth identifier → stored plaintext, readable.
+> 15	--   * client_secret is a secret → encrypted at-rest in Vault by a BEFORE INSERT/UPDATE trigger; the base
+> 16	--     column holds only the Vault secret UUID. Even a direct read of the base table never yields plaintext.
+> 17	--   * Masked public VIEW returns '••••••••••••' for client_secret (security_invoker → RLS applies).
+> 18	--   * decrypted_social_app_config exposes the real secret to service_role ONLY (edge functions).
+> 19	--   * INSTEAD OF trigger maps view writes to the base table with the tenant guard (auth.uid()=user_id;
+> 20	--     service_role exempt) + mask-preservation, closing the cross-tenant injection that a view's WHERE
+> 21	--     does not constrain for INSERT.
+> 22	--
+> 23	-- Security posture: HARDENS. NO new SECURITY DEFINER RPC reachable by clients. MANDATORY /security-review
+> 24	-- (credential layer, FMEA-011). Orphaned-secret revocation on disconnect is a follow-up RPC
+> 25	-- (disconnect_social_app_config, mirroring 20260602160000) — deferred to the Settings-UI slice.
+> 26	
+> 27	-- ─────────────────────────────────────────────────────────────────────────────
+> 28	-- 1. BASE TABLE — social_app_config_table (one row per user × platform)
+> 29	-- ─────────────────────────────────────────────────────────────────────────────
+> 30	CREATE TABLE IF NOT EXISTS public.social_app_config_table (
+> 31	    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> 32	    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> 33	    platform public.social_platform NOT NULL,
+> 34	    client_id TEXT,                                        -- OAuth client_id / TikTok client_key (semi-public)
+> 35	    client_secret TEXT,                                    -- secret → Vault UUID after trg_encrypt_social_app_config
+> 36	    scopes TEXT[] NOT NULL DEFAULT '{}',
+> 37	    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,           -- platform extras: youtube channel_id, pinterest board_id, redirect_uri override
+> 38	    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+> 39	    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+> 40	    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+> 41	    CONSTRAINT unique_user_platform_app_config UNIQUE (user_id, platform)
+> 42	);
+> 43	
+> 44	ALTER TABLE public.social_app_config_table ENABLE ROW LEVEL SECURITY;
+> 45	
+> 46	-- Default-deny: only the owner tenant can touch their row (base-table RLS; service_role bypasses).
+> 47	CREATE POLICY "Users manage their own social app config" ON public.social_app_config_table
+> 48	    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+> 49	
+> 50	CREATE TRIGGER tr_update_social_app_config_updated_at
+> 51	    BEFORE UPDATE ON public.social_app_config_table
+> 52	    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 53	
+> 54	CREATE INDEX IF NOT EXISTS idx_social_app_config_user ON public.social_app_config_table (user_id);
+> 55	
+> 56	-- Column-level hardening: the secret column is WRITE-ONLY for clients (BYOK paste via the masked view),
+> 57	-- never returned via PostgREST. service_role (edge functions) reads it through decrypted_social_app_config.
+> 58	-- Mirrors meta_config.long_lived_token (20260530210000) — proven compatible with the security_invoker view.
+> 59	REVOKE SELECT (client_secret) ON public.social_app_config_table FROM anon, authenticated;
+> 60	
+> 61	-- ─────────────────────────────────────────────────────────────────────────────
+> 62	-- 2. ENCRYPTION TRIGGER — client_secret → Vault (idempotent vault_upsert_secret, keyed by row id)
+> 63	-- ─────────────────────────────────────────────────────────────────────────────
+> 64	CREATE OR REPLACE FUNCTION public.trg_encrypt_social_app_config()
+> 65	RETURNS TRIGGER
+> 66	LANGUAGE plpgsql
+> 67	SECURITY DEFINER
+> 68	SET search_path = ''
+> 69	AS $$
+> 70	DECLARE
+> 71	  v_secret_id UUID;
+> 72	BEGIN
+> 73	  IF NEW.id IS NULL THEN
+> 74	    NEW.id := gen_random_uuid();
+> 75	  END IF;
+> 76	
+> 77	  IF NEW.client_secret IS NOT NULL AND (TG_OP = 'INSERT' OR NEW.client_secret IS DISTINCT FROM OLD.client_secret) THEN
+> 78	    IF NEW.client_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+> 79	      -- already a Vault UUID reference → keep
+> 80	    ELSE
+> 81	      v_secret_id := public.vault_upsert_secret(
+> 82	        NEW.client_secret,
+> 83	        'social_app_config_client_secret_' || NEW.id::text,
+> 84	        'Social app OAuth client secret'
+> 85	      );
+> 86	      NEW.client_secret = v_secret_id::text;
+> 87	    END IF;
+> 88	  END IF;
+> 89	
+> 90	  RETURN NEW;
+> 91	END;
+> 92	$$;
+> 93	
+> 94	CREATE OR REPLACE TRIGGER tr_encrypt_social_app_config
+> 95	  BEFORE INSERT OR UPDATE ON public.social_app_config_table
+> 96	  FOR EACH ROW EXECUTE FUNCTION public.trg_encrypt_social_app_config();
+> 97	
+> 98	-- ─────────────────────────────────────────────────────────────────────────────
+> 99	-- 3. PUBLIC MASKED VIEW — security_invoker (RLS applies); client_secret hidden
+> 100	-- ─────────────────────────────────────────────────────────────────────────────
+> 101	CREATE OR REPLACE VIEW public.social_app_config WITH (security_invoker = true) AS
+> 102	SELECT
+> 103	  id,
+> 104	  user_id,
+> 105	  platform,
+> 106	  client_id,
+> 107	  CASE WHEN client_secret IS NOT NULL THEN '••••••••••••' ELSE NULL END AS client_secret,
+> 108	  scopes,
+> 109	  metadata,
+> 110	  is_active,
+> 111	  created_at,
+> 112	  updated_at
+> 113	FROM public.social_app_config_table;
+> 114	
+> 115	-- ─────────────────────────────────────────────────────────────────────────────
+> 116	-- 4. INSTEAD OF TRIGGER — map view writes to base table (tenant guard + mask preservation)
+> 117	-- ─────────────────────────────────────────────────────────────────────────────
+> 118	CREATE OR REPLACE FUNCTION public.trg_instead_of_social_app_config()
+> 119	RETURNS TRIGGER
+> 120	LANGUAGE plpgsql
+> 121	SECURITY DEFINER
+> 122	SET search_path = ''
+> 123	AS $$
+> 124	BEGIN
+> 125	  IF TG_OP = 'DELETE' THEN
+> 126	    DELETE FROM public.social_app_config_table WHERE id = OLD.id;
+> 127	    RETURN OLD;
+> 128	  ELSIF TG_OP = 'INSERT' THEN
+> 129	    -- Tenant guard (mirrors 20260602150000): a non-service-role caller may only write its OWN row.
+> 130	    -- Closes the cross-tenant injection (spoofed user_id + fresh id) a view's WHERE does not constrain
+> 131	    -- for INSERT. service_role (OAuth callbacks / cron) is exempt.
+> 132	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 133	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 134	    END IF;
+> 135	    INSERT INTO public.social_app_config_table (
+> 136	      id, user_id, platform, client_id, client_secret, scopes, metadata, is_active
+> 137	    ) VALUES (
+> 138	      COALESCE(NEW.id, gen_random_uuid()), NEW.user_id, NEW.platform, NEW.client_id, NEW.client_secret,
+> 139	      COALESCE(NEW.scopes, '{}'), COALESCE(NEW.metadata, '{}'::jsonb), COALESCE(NEW.is_active, TRUE)
+> 140	    );
+> 141	    RETURN NEW;
+> 142	  ELSIF TG_OP = 'UPDATE' THEN
+> 143	    IF auth.role() IS DISTINCT FROM 'service_role' AND NEW.user_id IS DISTINCT FROM auth.uid() THEN
+> 144	      RAISE EXCEPTION 'cannot write credentials for another user' USING errcode = '42501';
+> 145	    END IF;
+> 146	    UPDATE public.social_app_config_table SET
+> 147	      user_id = NEW.user_id,
+> 148	      platform = NEW.platform,
+> 149	      client_id = NEW.client_id,
+> 150	      -- preserve the stored secret when the client writes back the mask sentinel
+> 151	      client_secret = COALESCE(NULLIF(NEW.client_secret, '••••••••••••'), public.social_app_config_table.client_secret),
+> 152	      scopes = COALESCE(NEW.scopes, public.social_app_config_table.scopes),
+> 153	      metadata = COALESCE(NEW.metadata, public.social_app_config_table.metadata),
+> 154	      is_active = COALESCE(NEW.is_active, public.social_app_config_table.is_active),
+> 155	      updated_at = now()
+> 156	    WHERE id = OLD.id;
+> 157	    RETURN NEW;
+> 158	  END IF;
+> 159	  RETURN NULL;
+> 160	END;
+> 161	$$;
+> 162	
+> 163	CREATE TRIGGER trg_instead_of_social_app_config
+> 164	  INSTEAD OF INSERT OR UPDATE OR DELETE ON public.social_app_config
+> 165	  FOR EACH ROW EXECUTE FUNCTION public.trg_instead_of_social_app_config();
+> 166	
+> 167	-- ─────────────────────────────────────────────────────────────────────────────
+> 168	-- 5. PRIVATE DECRYPTED VIEW — real client_secret for service_role ONLY (edge functions)
+> 169	-- ─────────────────────────────────────────────────────────────────────────────
+> 170	CREATE OR REPLACE VIEW public.decrypted_social_app_config AS
+> 171	SELECT
+> 172	  sac.id,
+> 173	  sac.user_id,
+> 174	  sac.platform,
+> 175	  sac.client_id,
+> 176	  COALESCE(s_secret.decrypted_secret, sac.client_secret) AS client_secret,
+> 177	  sac.scopes,
+> 178	  sac.metadata,
+> 179	  sac.is_active,
+> 180	  sac.created_at,
+> 181	  sac.updated_at
+> 182	FROM public.social_app_config_table sac
+> 183	LEFT JOIN vault.decrypted_secrets s_secret
+> 184	  ON sac.client_secret ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+> 185	  AND s_secret.id = sac.client_secret::uuid;
+> 186	
+> 187	REVOKE ALL ON public.decrypted_social_app_config FROM PUBLIC, anon, authenticated;
+> 188	GRANT SELECT ON public.decrypted_social_app_config TO service_role;
+> 189	
+> ```
+
+## 🤖 Claude *(14:06:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Essa é uma configuração por usuário, não global. Estou olhando para `useGlobalAppConfig.ts` e `GlobalAppKeysPanel.tsx` — a estrutura segue um padrão de credenciais OAuth em nível global (administrado por admin) com Pinterest como exemplo, passando por quatro camadas: per-user → global → env → 402. Essa tabela global é o modelo perfeito para seguir.
+
+</details>
+
+
+## 🤖 Claude *(14:06:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useGlobalAppConfig.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+> 2	import type { SupabaseClient } from '@supabase/supabase-js';
+> 3	import { supabase } from '@/integrations/supabase/client';
+> 4	import {
+> 5	  SOCIAL_APP_SAFE_COLUMNS,
+> 6	  SOCIAL_SECRET_MASK,
+> 7	  isSocialAppConfigured,
+> 8	  type GlobalAppConfigRow,
+> 9	  type GlobalAppConfigInput,
+> 10	  type GlobalAppPlatform,
+> 11	} from '@/lib/social-app-config';
+> 12	
+> 13	/**
+> 14	 * GLOBAL (admin-tier) social app credentials — rows with `user_id IS NULL` in social_app_config
+> 15	 * (Amendment 16, FR-PE-017/019). Adapted clone of useSocialAppConfig: read from the Vault-masked
+> 16	 * VIEW (client_secret reads back as the sentinel mask), then INSERT or UPDATE by natural key
+> 17	 * (NULL user_id, platform). NEVER `.upsert()` (400 on these views) and NEVER write the mask back
+> 18	 * as a real value. RLS + the INSTEAD OF trigger admin exemption gate the writes server-side.
+> 19	 * SSOT: docs/bok/post-engine/16-amendment-global-app-credentials-admin-tier.md.
+> 20	 */
+> 21	export function useGlobalAppConfig() {
+> 22	  const queryClient = useQueryClient();
+> 23	  // social_app_config is not in the generated Database types yet (added by the backend migration);
+> 24	  // use an untyped client view for it (lint-clean, no explicit `any`). Mirrors useSocialAppConfig.
+> 25	  const db = supabase as unknown as SupabaseClient;
+> 26	
+> 27	  const { data: rows, isLoading } = useQuery({
+> 28	    queryKey: ['social_app_config', 'global'],
+> 29	    queryFn: async () => {
+> 30	      const { data, error } = await db
+> 31	        .from('social_app_config')
+> 32	        .select(SOCIAL_APP_SAFE_COLUMNS)
+> 33	        .is('user_id', null);
+> 34	      if (error) throw error;
+> 35	      return (data ?? []) as GlobalAppConfigRow[];
+> 36	    },
+> 37	    // Always enabled — the consuming page (AdminPage) is already admin-gated, and RLS
+> 38	    // returns zero global rows to non-admins anyway.
+> 39	  });
+> 40	
+> 41	  /** Map keyed by platform for O(1) per-platform lookup in the panel. */
+> 42	  const byPlatform = (rows ?? []).reduce<Partial<Record<GlobalAppPlatform, GlobalAppConfigRow>>>(
+> 43	    (acc, row) => {
+> 44	      acc[row.platform] = row;
+> 45	      return acc;
+> 46	    },
+> 47	    {},
+> 48	  );
+> 49	
+> 50	  const saveConfig = useMutation({
+> 51	    mutationFn: async (values: GlobalAppConfigInput) => {
+> 52	      const existing = byPlatform[values.platform];
+> 53	
+> 54	      // Build the writable payload. Re-saving without a fresh secret leaves the stored one untouched:
+> 55	      // we simply omit client_secret rather than sending the mask back (which would corrupt the Vault).
+> 56	      const writable: Record<string, unknown> = {
+> 57	        client_id: values.client_id,
+> 58	        is_active: true,
+> 59	      };
+> 60	      const secret = values.client_secret?.trim();
+> 61	      // Guard against ever round-tripping the masked sentinel as a real value.
+> 62	      if (secret && secret !== SOCIAL_SECRET_MASK) {
+> 63	        writable.client_secret = secret;
+> 64	      }
+> 65	
+> 66	      if (existing?.id) {
+> 67	        const { error } = await db
+> 68	          .from('social_app_config')
+> 69	          .update(writable)
+> 70	          .eq('id', existing.id);
+> 71	        if (error) throw error;
+> 72	      } else {
+> 73	        const { error } = await db
+> 74	          .from('social_app_config')
+> 75	          .insert({ user_id: null, platform: values.platform, ...writable });
+> 76	        if (error) throw error;
+> 77	      }
+> 78	    },
+> 79	    onSuccess: () => {
+> 80	      queryClient.invalidateQueries({ queryKey: ['social_app_config', 'global'] });
+> 81	    },
+> 82	  });
+> 83	
+> 84	  /** Per-platform "configured" predicate (client_id present AND secret stored AND active). */
+> 85	  const isConfigured = (platform: GlobalAppPlatform): boolean =>
+> 86	    isSocialAppConfigured(byPlatform[platform]);
+> 87	
+> 88	  return {
+> 89	    rows: rows ?? [],
+> 90	    byPlatform,
+> 91	    isLoading,
+> 92	    saveConfig,
+> 93	    isConfigured,
+> 94	  };
+> 95	}
+> 96	
+> ```
+
+## 🤖 Claude *(14:06:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"global_app_config\" supabase/migrations/*.sql | head -20",
+  "description": "Migration da tabela global de config de admin"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(14:07:24)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preciso verificar a migration que implementou o padrão de admin-exemption no RLS para o tier global com `user_id IS NULL`, e depois examinar o componente `GlobalAppKeysPanel.tsx` como referência de UI. O ponto crítico agora é entender como funciona a leitura anônima nesse contexto.
+
+Estou considerando três arquiteturas: uma tabela `public_app_settings` com RLS que permite SELECT irrestrito para anon/authenticated mas UPDATE/INSERT apenas para admin (simples e robusto), uma edge function pública (mais complexa mas flexível), ou baked no build com env vars (não configurável). A primeira opção é claramente superior — a tabela seria pública por design, contendo apenas flags de UI, então nada sensível vaza. Para hardening, vou adicionar um CHECK constraint com allowlist de chaves conhecidas, prevenindo que a tabela seja usada indevidamente como depósito de segredos.
+
+Agora preciso decidir sobre a granularidade das flags: um único toggle `oauth_login_enabled` ou controles separados para Google, TikTok e signup? O `devLogin` atual controla três coisas simultaneamente (aba Cadastrar, botão Google, botão TikTok), e o signup via API já está habilitado no Supabase mesmo com a aba escondida na UI. Dar controle granular é mais seguro e flexível do que um único toggle que replica o comportamento do devLogin. Mas preciso pensar no risco real: se o toggle ativa tanto os botões sociais quanto o cadastro público, ele pode acabar recebendo inscrições indesejadas ao ligar só para o review do TikTok. Talvez valha oferecer dois switches separados — um para os botões de login social e outro para a aba de cadastro — é uma granularidade mínima que resolve o problema sem complicar demais.
+
+Vou implementar isso: o toggle principal mantém paridade com `devLogin` como ele pediu, mas separo o cadastro público num segundo switch, porque ativar isso é um efeito colateral que ele não solicitou. O `?devLogin` continua funcionando como override para o Sovereign.
+
+Para a implementação, o Auth.tsx vai ler essas configurações via `useQuery` na tabela `public_app_settings` com o cliente anônimo — precisa ser rápido e não bloquear a renderização.
+
+Enquanto a query carrega, o estado padrão fica fechado (fail-closed). Agora preciso configurar o RLS: habilitar segurança em nível de linha na tabela, criar uma policy SELECT que permite acesso anônimo e autenticado (a tabela é pública por design, mas com validação de chaves), e uma policy para admin com verificação de role.
+
+Tenho que resolver qual assinatura de `has_role` está ativa em produção — se é a versão single-arg ou a que recebe user_id — e verificar o schema de `audit_logs` para registrar mudanças com `updated_by` e talvez um trigger genérico. Vou investigar essas assinaturas, a tabela de auditoria, o painel UI existente e o padrão de exemption para admin da migration anterior.
+
+Também preciso considerar que a flag afeta o site já buildado em dist, mas como é lida em runtime do Supabase, muda sem rebuild — isso é bom. Vou fazer o reconhecimento final antes de implementar.
+
+</details>
+
+
+## 🤖 Claude *(14:07:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== has_role assinaturas ===\" && grep -rn \"FUNCTION public.has_role\" supabase/migrations/*.sql; echo; echo \"=== uso em policies recentes ===\" && grep -rn \"has_role(\" supabase/migrations/*.sql | grep -i policy -A0 | tail -8; echo \"--- amostra de policies usando has_role ---\"; grep -rn \"has_role(\" supabase/migrations/2026062*.sql supabase/migrations/202607*.sql | head -10",
+  "description": "Assinaturas de has_role e uso can\u00f4nico"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === has_role assinaturas ===
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:237:CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+> supabase/migrations/20260414154016_a94ffdfc-62ba-4d55-94dd-48c1d316d19b.sql:14:CREATE OR REPLACE FUNCTION public.has_role(_role public.app_role)
+> supabase/migrations/20260414154016_a94ffdfc-62ba-4d55-94dd-48c1d316d19b.sql:29:REVOKE ALL ON FUNCTION public.has_role(public.app_role) FROM PUBLIC;
+> supabase/migrations/20260414154016_a94ffdfc-62ba-4d55-94dd-48c1d316d19b.sql:30:GRANT EXECUTE ON FUNCTION public.has_role(public.app_role) TO authenticated;
+> 
+> === uso em policies recentes ===
+> supabase/migrations/20260601031300_constellation_v2_foundation.sql:90:-- authenticated admin-read policy can be added later once the canonical has_role()
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:261:CREATE POLICY "Admins can manage roles" ON public.user_roles FOR ALL USING (public.has_role(auth.uid(), 'admin'));
+> --- amostra de policies usando has_role ---
+> supabase/migrations/20260622030000_video_studio_org_tenancy.sql:7:-- CLAUDE.md mandates the has_role() definer pattern for exactly this. Org creation goes through the
+> supabase/migrations/20260622030000_video_studio_org_tenancy.sql:63:-- Anti-recursion membership helpers (SECURITY DEFINER — mirror public.has_role())
+> supabase/migrations/20260701000000_security_events_ledger.sql:35:  FOR SELECT TO authenticated USING (public.has_role('admin'::public.app_role));
+> supabase/migrations/20260701040000_infra_health_logs_admin_only_read.sql:19:  USING (public.has_role('admin'::public.app_role));
+> supabase/migrations/20260701010000_fr_sec_014_pt2_economic_freeze.sql:148:  IF auth.role() IS DISTINCT FROM 'service_role' AND NOT public.has_role('admin'::public.app_role) THEN
+> supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql:37:  USING (user_id IS NULL AND public.has_role('admin'::public.app_role))
+> supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql:38:  WITH CHECK (user_id IS NULL AND public.has_role('admin'::public.app_role));
+> supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql:64:       AND NOT (NEW.user_id IS NULL AND public.has_role('admin'::public.app_role)) THEN
+> supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql:77:       AND NOT (NEW.user_id IS NULL AND public.has_role('admin'::public.app_role)) THEN
+> supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql:117:  USING (public.has_role('admin'::public.app_role))
+> ```
+
+## 🤖 Claude *(14:07:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== audit_logs schema ===\" && grep -rn -A14 \"CREATE TABLE.*audit_logs\" supabase/migrations/*.sql | head -25",
+  "description": "Schema de audit_logs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === audit_logs schema ===
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql:208:CREATE TABLE public.audit_logs (
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-209-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-210-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-211-  action TEXT NOT NULL,
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-212-  resource_type TEXT NOT NULL,
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-213-  resource_id UUID,
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-214-  details JSONB DEFAULT '{}',
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-215-  ip_address TEXT,
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-216-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-217-);
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-218-ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-219-
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-220--- 15. NOTIFICATIONS
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-221-CREATE TABLE public.notifications (
+> supabase/migrations/20260402014040_b141fb0f-a65a-4020-a00e-1770dcf2ccfb.sql-222-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+> ```
+
+## 🤖 Claude *(14:07:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '1,60p' src/components/admin/GlobalAppKeysPanel.tsx",
+  "description": "Molde de painel admin existente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> import { useState, useEffect } from "react";
+> import { useGlobalAppConfig } from "@/hooks/useGlobalAppConfig";
+> import {
+>   GLOBAL_APP_PLATFORMS,
+>   GLOBAL_APP_PLATFORM_META,
+>   SOCIAL_OAUTH_REDIRECT_URI,
+>   SOCIAL_SECRET_MASK,
+>   type GlobalAppPlatform,
+> } from "@/lib/social-app-config";
+> import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+> import { Input } from "@/components/ui/input";
+> import { Button } from "@/components/ui/button";
+> import { Label } from "@/components/ui/label";
+> import { toast } from "sonner";
+> import { KeyRound, Save, Loader2, CheckCircle2, Copy } from "lucide-react";
+> import { LinkedIn, Instagram, XTwitter, TikTok, YouTube, Pinterest } from "@/components/icons/brand-icons";
+> 
+> /**
+>  * Global app credentials panel (admin tier — Amendment 16, FR-PE-019). Display-only: all
+>  * state/mutations live in useGlobalAppConfig. Mirrors the per-user SocialAppConfigCard anatomy:
+>  * client_id prefilled, client_secret write-only (Vault-masked), secret required only on first save,
+>  * one bordered section per platform. Global rows = user_id IS NULL, admin-writable via RLS + trigger.
+>  * SSOT: docs/bok/post-engine/16-amendment-global-app-credentials-admin-tier.md.
+>  */
+> 
+> const PLATFORM_ICON: Record<GlobalAppPlatform, React.ComponentType<{ className?: string }>> = {
+>   linkedin: LinkedIn,
+>   instagram: Instagram,
+>   twitter: XTwitter,
+>   tiktok: TikTok,
+>   youtube: YouTube,
+>   pinterest: Pinterest,
+> };
+> 
+> const PLATFORM_ICON_COLOR: Record<GlobalAppPlatform, string> = {
+>   linkedin: "text-sky-500",
+>   instagram: "text-pink-500",
+>   twitter: "text-foreground",
+>   tiktok: "text-foreground",
+>   youtube: "text-red-500",
+>   pinterest: "text-red-600",
+> };
+> 
+> interface PlatformSectionProps {
+>   platform: GlobalAppPlatform;
+> }
+> 
+> function PlatformSection({ platform }: PlatformSectionProps) {
+>   const { byPlatform, saveConfig, isConfigured } = useGlobalAppConfig();
+>   const meta = GLOBAL_APP_PLATFORM_META[platform];
+>   const row = byPlatform[platform];
+>   const configured = isConfigured(platform);
+>   const Icon = PLATFORM_ICON[platform];
+> 
+>   const [clientId, setClientId] = useState("");
+>   const [clientSecret, setClientSecret] = useState("");
+>   const [saving, setSaving] = useState(false);
+> 
+>   // Populate the non-secret client_id from the stored row (secret stays empty — write-only).
+>   useEffect(() => {
+> ```
+
+## 🤖 Claude *(14:07:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tenho o padrão canônico da função: `public.has_role('admin'::public.app_role)` com um único argumento para usuários autenticados. O ponto crítico é que essa versão single-arg tem permissões restritas — `GRANT EXECUTE` apenas para `authenticated` e `REVOKE` do `PUBLIC` — então usuários anônimos não conseguem executá-la, o que causa erro de permissão se a policy de SELECT tentar usá-la. Preciso ajustar a policy para anon de forma diferente.
+
+Meu plano é implementar a solução completa em fases: primeiro, escrever inline o SOP, a migration, a biblioteca, o hook, o painel admin, a integração no Auth.tsx e os testes; depois, usar um workflow de revisão adversarial com múltiplas perspectivas (segurança, RLS, leitura anônima, fail-closed, regressão de UI, conformidade) para validar o design antes de finalizar.
+
+Agora preciso examinar o Auth.tsx completo para entender onde fazer a integração com precisão, e verificar se preciso regenerar os types após as migrations ou se posso usar o padrão de cast que o código existente já segue.
+
+</details>
+
+
+## 🤖 Claude *(14:07:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l src/pages/Auth.tsx src/pages/AdminPage.tsx src/lib/social-app-config.ts 2>/dev/null; echo \"=== migration 20260716210000 (admin tier) primeiras 60 linhas ===\"; sed -n '1,45p' supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql",
+  "description": "Tamanhos e o molde de RLS admin-tier"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   289 src/pages/Auth.tsx
+>   196 src/pages/AdminPage.tsx
+>   155 src/lib/social-app-config.ts
+>   640 total
+> === migration 20260716210000 (admin tier) primeiras 60 linhas ===
+> -- 20260716210000_global_app_credentials_admin_tier.sql
+> -- Global App Credentials (Admin Tier) + admin_reminders — FR-PE-017 / FR-PE-020.
+> -- BoK SSOT: docs/bok/post-engine/16-amendment-global-app-credentials-admin-tier.md
+> -- SOP (Lei 2, written first): docs/processes/admin-global-app-credentials.md
+> --
+> -- WHY: the global fallback for OAuth app credentials is Deno.env (CLI-only), the deferral recorded in
+> -- OTD-PE-SOCIAL-APPCREDS ("SLA: before the 2nd tenant"). This migration closes it by design: global
+> -- credentials become EXPLICIT rows (user_id IS NULL — the same convention as mcorch_nodes system nodes),
+> -- Vault-encrypted by the EXISTING trigger, masked by the EXISTING view, manageable by admins from
+> -- /dashboard/admin with zero CLI. Resolution order becomes: per-user → global → env → 402.
+> --
+> -- Security posture: HARDENS overall (env shared-key stops being the operational path). New surfaces are
+> -- admin-gated twice: RLS policy on the base table (reads) + composite guard in the INSTEAD OF trigger
+> -- (writes through the view). has_role is the deployed SINGLE-ARG canonical (migration 20260414154016,
+> -- reads auth.uid() internally). /security-review MANDATORY before commit (FMEA-011 — credential layer).
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 1. Allow global rows: user_id becomes nullable (FK still validates non-NULL values)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> ALTER TABLE public.social_app_config_table
+>   ALTER COLUMN user_id DROP NOT NULL;
+> 
+> -- UNIQUE(user_id, platform) does not dedupe NULLs — enforce ONE global row per platform explicitly.
+> CREATE UNIQUE INDEX IF NOT EXISTS uniq_social_app_config_global_platform
+>   ON public.social_app_config_table (platform)
+>   WHERE user_id IS NULL;
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 2. RLS: admins manage GLOBAL rows (per-user policy untouched; default-deny for everyone else)
+> --    Note: reads through the masked security_invoker view apply this policy to the invoker, so an
+> --    admin sees global rows MASKED ('••••••••••••'); plaintext stays service-role-only via
+> --    decrypted_social_app_config. Base-table client_secret keeps its column REVOKE.
+> -- ─────────────────────────────────────────────────────────────────────────────
+> DROP POLICY IF EXISTS "Admins manage global social app config" ON public.social_app_config_table;
+> CREATE POLICY "Admins manage global social app config" ON public.social_app_config_table
+>   FOR ALL
+>   USING (user_id IS NULL AND public.has_role('admin'::public.app_role))
+>   WITH CHECK (user_id IS NULL AND public.has_role('admin'::public.app_role));
+> 
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- 3. INSTEAD OF trigger: admin exemption for global-row writes through the view.
+> --    Original guard raised 42501 whenever NEW.user_id IS DISTINCT FROM auth.uid() (non-service_role) —
+> --    which blocks user_id NULL for EVERYONE. New composite predicate: a NULL-user write is allowed
+> --    ONLY for admins; a non-admin writing user_id NULL still hits the original 42501; an admin writing
+> --    ANOTHER user's row still hits the original 42501 (unchanged).
+> ```
+
+## 🤖 Claude *(14:07:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Entendi o padrão — SOP-first com a Lei 2 e a exigência de `/security-review`. Agora vou examinar as seções críticas do Auth.tsx, começando pelos handlers entre as linhas 40 e 150.
+
+</details>
+
+
+## 🤖 Claude *(14:07:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "offset": 40,
+  "limit": 110
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	    }
+> 41	  };
+> 42	
+> 43	  const handleSignup = async (e: React.FormEvent) => {
+> 44	    e.preventDefault();
+> 45	    setLoading(true);
+> 46	    const { error } = await supabase.auth.signUp({
+> 47	      email,
+> 48	      password,
+> 49	      options: {
+> 50	        data: { full_name: fullName },
+> 51	        emailRedirectTo: window.location.origin,
+> 52	      },
+> 53	    });
+> 54	    setLoading(false);
+> 55	    if (error) {
+> 56	      toast({ title: 'Erro ao cadastrar', description: error.message, variant: 'destructive' });
+> 57	    } else {
+> 58	      toast({
+> 59	        title: 'Cadastro realizado!',
+> 60	        description: 'Verifique seu email para confirmar a conta.',
+> 61	      });
+> 62	    }
+> 63	  };
+> 64	
+> 65	  const handleForgotPassword = async () => {
+> 66	    if (!email) {
+> 67	      toast({ title: 'Informe seu email', variant: 'destructive' });
+> 68	      return;
+> 69	    }
+> 70	    setLoading(true);
+> 71	    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+> 72	      redirectTo: `${window.location.origin}/reset-password`,
+> 73	    });
+> 74	    setLoading(false);
+> 75	    if (error) {
+> 76	      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+> 77	    } else {
+> 78	      toast({ title: 'Email enviado', description: 'Verifique sua caixa de entrada.' });
+> 79	    }
+> 80	  };
+> 81	
+> 82	  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
+> 83	    setLoading(true);
+> 84	    const { error } = await supabase.auth.signInWithOAuth({
+> 85	      provider,
+> 86	      options: {
+> 87	        redirectTo: `${window.location.origin}/dashboard`,
+> 88	      },
+> 89	    });
+> 90	    if (error) {
+> 91	      toast({ title: `Erro ao entrar com ${provider}`, description: error.message, variant: 'destructive' });
+> 92	      setLoading(false);
+> 93	    }
+> 94	  };
+> 95	
+> 96	  // TikTok is NOT a native Supabase provider — custom OAuth (Login Kit v2). We mint a per-attempt browser-binding
+> 97	  // secret (sessionStorage) and send its hash so only THIS browser can complete the login (anti login-CSRF).
+> 98	  // tiktok-login-init signs the state server-side and returns the authorize URL; completion lands at /auth/tiktok/callback.
+> 99	  const handleTikTokLogin = async () => {
+> 100	    setLoading(true);
+> 101	    try {
+> 102	      const bindingHash = await createTikTokBinding();
+> 103	      const { data, error } = await supabase.functions.invoke('tiktok-login-init', { body: { binding_hash: bindingHash } });
+> 104	      if (error || !data?.url) throw error ?? new Error('no_url');
+> 105	      window.location.href = data.url;
+> 106	    } catch {
+> 107	      setLoading(false);
+> 108	      toast({
+> 109	        title: 'Erro ao entrar com TikTok',
+> 110	        description: 'Não foi possível iniciar o login com TikTok. Tente novamente.',
+> 111	        variant: 'destructive',
+> 112	      });
+> 113	    }
+> 114	  };
+> 115	
+> 116	  // Surface a returned ?tiktok_error (from the callback fail-closed redirects) as a PT-BR toast.
+> 117	  useEffect(() => {
+> 118	    const err = searchParams.get('tiktok_error');
+> 119	    if (!err) return;
+> 120	    const messages: Record<string, string> = {
+> 121	      state_expired: 'Sua sessão de login com TikTok expirou. Tente novamente.',
+> 122	      not_authorized: 'Autorização negada no TikTok. Em modo sandbox, sua conta precisa estar registrada como usuário de teste.',
+> 123	      exchange_failed: 'Falha ao validar o login com TikTok. Verifique a configuração do app.',
+> 124	      expired: 'O código de login expirou. Tente novamente.',
+> 125	      server_error: 'Erro ao concluir o login com TikTok. Tente novamente.',
+> 126	    };
+> 127	    toast({ title: 'Login com TikTok', description: messages[err] ?? 'Não foi possível concluir o login.', variant: 'destructive' });
+> 128	  }, [searchParams, toast]);
+> 129	
+> 130	  return (
+> 131	    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+> 132	      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+> 133	        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+> 134	        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-accent/5 blur-3xl" />
+> 135	      </div>
+> 136	
+> 137	      <Card className="w-full max-w-md glass-panel border-border/50 relative z-10">
+> 138	        <CardHeader className="text-center space-y-2">
+> 139	          <div className="flex items-center justify-center gap-2 mb-2">
+> 140	            <SigilMark size={26} />
+> 141	            <CardTitle className="text-3xl font-bold text-gradient-primary" style={{ fontFamily: 'var(--font-heading)', letterSpacing: '-0.01em' }}>
+> 142	              MCORCH
+> 143	            </CardTitle>
+> 144	          </div>
+> 145	          <CardDescription className="text-muted-foreground" style={{ letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: 11 }}>
+> 146	            A agência autônoma · Operada por IA
+> 147	          </CardDescription>
+> 148	        </CardHeader>
+> 149	        <CardContent>
+> ```
+
+## 🤖 Claude *(14:08:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora vou estruturar a implementação com um documento de processo para as flags de visibilidade, uma migração de banco de dados para as configurações públicas, uma biblioteca TypeScript que centraliza as chaves e valores padrão com falha segura, e um hook customizado...
+
+Vou criar um único arquivo de hook que exporta tanto a leitura anônima quanto a escrita de admin, mantendo tudo coeso. Depois vou adicionar o painel de administração, uma nova aba na página de admin, integrar as flags derivadas no componente de autenticação, e escrever os testes.
+
+Para o design, a tabela terá uma restrição de chaves permitidas para evitar que vire um depósito de dados sensíveis — isso exige migração para novas chaves, mas é o endurecimento correto já que a tabela é legível publicamente. As políticas de RLS vão permitir leitura anônima...
+
+Agora preciso verificar uma migration crítica que revogou grants de anon no schema public — se isso foi aplicado em produção, minha política de SELECT para anon não vai funcionar sem um GRANT SELECT explícito. Vou checar essa migration de revoga-anon primeiro.
+
+Para o trigger de auditoria, estou pensando em como lidar com o fato de que `audit_logs` exige um `user_id` NOT NULL, mas service-role não tem `auth.uid()` — vou fazer o trigger falhar graciosamente se não conseguir capturar o usuário.
+
+Vou usar `SECURITY DEFINER` no trigger para contornar restrições de RLS ao inserir em `audit_logs`, e na seed vou inserir as duas linhas com `false` para manter o comportamento atual de esconder essas configurações.
+
+</details>
+
+
+## 🤖 Claude *(14:08:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rln \"REVOKE.*anon\" supabase/migrations/202607*.sql | tail -5; echo \"=== conte\u00fado relevante ===\"; grep -rn \"REVOKE\" supabase/migrations/20260725*.sql 2>/dev/null | head -20",
+  "description": "Verificar a migration W1.2 revoga-anon"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/migrations/20260714030000_user_provider_keys_pool.sql
+> supabase/migrations/20260722120000_fix_erase_lead_crm_spine.sql
+> supabase/migrations/20260717120000_meta_privacy_deauth_deletion.sql
+> supabase/migrations/20260725120100_revoke_anon_credential_view_writes.sql
+> supabase/migrations/20260719170000_youtube_uploads.sql
+> === conteúdo relevante ===
+> supabase/migrations/20260725120100_revoke_anon_credential_view_writes.sql:20:REVOKE INSERT, UPDATE, DELETE ON public.meta_config     FROM anon;
+> supabase/migrations/20260725120100_revoke_anon_credential_view_writes.sql:21:REVOKE INSERT, UPDATE, DELETE ON public.social_accounts FROM anon;
+> supabase/migrations/20260725120100_revoke_anon_credential_view_writes.sql:22:REVOKE INSERT, UPDATE, DELETE ON public.user_api_keys   FROM anon;
+> ```
+
+## 🤖 Claude *(14:08:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A revogação foi apenas sobre credenciais, não global, então os privilégios padrão do Supabase para o usuário anon em tabelas públicas devem continuar valendo. Mesmo assim, vou adicionar explicitamente na migration um grant de SELECT para essas tabelas e revogar INSERT, UPDATE, DELETE do anon — é mais seguro que depender só dos defaults.
+
+Agora vou estruturar tudo seguindo a ordem: SOP primeiro, depois migration, lib, hooks, painel, Auth.tsx, e testes.
+
+</details>
+
+
+## 🤖 Claude *(14:08:20)*
+
+Terreno mapeado. Agora o SOP primeiro (Lei 2), depois o código.
+
+## 🤖 Claude *(14:09:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/public-auth-visibility-flags.md",
+  "content": "# SOP \u2014 Visibilidade p\u00fablica da tela de login (flags de admin)\n\n> **Lei 2 (Processo Antecipado).** Escrito ANTES do c\u00f3digo. Descreve como um humano faria\n> manualmente aquilo que a flag automatiza, com gates materiais em cada passo.\n>\n> **Origem (2026-07-30):** o app do TikTok foi reprovado 4\u00d7 no App Review. Na 4\u00aa, o revisor escreveu\n> *\"Your externally facing website must be fully developed and cannot be a landing or login page.\n> If it is a login page, you must provide a test account and password.\"* Ao provisionar a conta de\n> teste, o `agent-browser` mediu a tela p\u00fablica e achou o problema real: em `https://login.mcorch.com/auth`\n> os \u00fanicos controles vis\u00edveis s\u00e3o `Entrar` / `Esqueceu a senha?`. Os bot\u00f5es **\"Entrar com TikTok\"** e\n> **\"Continuar com Google\"** \u2014 e a aba **Cadastrar** \u2014 estavam atr\u00e1s do query param `?devLogin`\n> (`src/pages/Auth.tsx`, gate tempor\u00e1rio de 2026-06). **O revisor do TikTok nunca viu o Login Kit**,\n> porque ele n\u00e3o existia na URL que consta no formul\u00e1rio do app.\n\n---\n\n## 1. O problema que a flag resolve\n\nO gate `?devLogin` \u00e9 **invis\u00edvel e n\u00e3o-descobr\u00edvel**: s\u00f3 quem sabe do param consegue ver os bot\u00f5es.\nIsso \u00e9 adequado para um teste do Sovereign, e **inadequado** para:\n\n- um revisor externo (TikTok / Meta / Google) que abre a URL cadastrada e precisa ver o produto;\n- qualquer decis\u00e3o de produto do tipo \"hoje eu quero login social ligado para todo mundo\".\n\nA flag troca \"param secreto na URL\" por **estado expl\u00edcito, auditado e revers\u00edvel em 1 clique** em\n`/dashboard/admin` \u2192 aba **Acesso**.\n\n## 2. Operator \u2014 quem executa manualmente hoje?\n\n| Papel | O que faz hoje (sem a flag) |\n|-------|------------------------------|\n| **Sovereign (admin)** | Abre `https://login.mcorch.com/auth?devLogin` na pr\u00f3pria m\u00e1quina para ver Google/TikTok/Cadastrar. Para expor isso a um terceiro, teria de **editar `Auth.tsx` + `bun run build`** (deploy) e reverter depois. |\n| **Revisor externo** | Abre `https://login.mcorch.com/auth` e v\u00ea **apenas** e-mail/senha. N\u00e3o descobre o param. |\n\nCom a flag, o Operator continua sendo o **Sovereign (papel `admin`)** \u2014 mas o ato vira um toggle de UI,\nsem build e sem deploy.\n\n## 3. Sequence \u2014 a ordem exata (cada passo com crit\u00e9rio material)\n\n| # | Passo | Crit\u00e9rio de sucesso material |\n|---|-------|------------------------------|\n| 1 | Entrar em `/dashboard/admin` com uma conta `admin` | A p\u00e1gina renderiza (n\u00e3o redireciona para `/dashboard`) \u2014 `useIsAdmin` verdadeiro |\n| 2 | Abrir a aba **Acesso** | O card \"Visibilidade da tela de login\" lista os 2 switches com o estado ATUAL vindo do banco |\n| 3 | Ligar **\"Bot\u00f5es de login social (Google \u00b7 TikTok)\"** | O toast confirma; o `useQuery` reinvalida e o switch persiste ligado ap\u00f3s F5 |\n| 4 | (opcional) Ligar **\"Aba de cadastro\"** | Idem. Este \u00e9 um switch SEPARADO de prop\u00f3sito \u2014 ver \u00a77 |\n| 5 | Abrir `https://login.mcorch.com/auth` em **janela an\u00f4nima** (sem sess\u00e3o, sem o param) | Os bot\u00f5es \"Continuar com Google\" e \"Entrar com TikTok\" aparecem para um visitante an\u00f4nimo |\n| 6 | Desligar o switch e repetir o passo 5 | Os bot\u00f5es somem \u2014 **sem rebuild**, s\u00f3 um refresh |\n\n## 4. Verification gates\n\n| Gate | Comando / observa\u00e7\u00e3o | Esperado |\n|------|----------------------|----------|\n| **G1 \u2014 leitura an\u00f4nima funciona** | `curl` PostgREST sem JWT (s\u00f3 apikey publishable) em `public_app_settings` | HTTP 200 com as linhas de flag. Se der `401/permission denied`, a policy/GRANT de `anon` est\u00e1 errada e a tela de login volta ao default fechado |\n| **G2 \u2014 escrita an\u00f4nima bloqueada** | mesmo `curl`, agora `PATCH` | HTTP 401/403. **Nunca** 200 |\n| **G3 \u2014 escrita de usu\u00e1rio comum bloqueada** | JWT de um `viewer` (`scripts/qa/gen-user-jwt.ts`) fazendo `PATCH` | 0 linhas afetadas / erro de RLS |\n| **G4 \u2014 escrita de admin permitida** | JWT de admin fazendo `PATCH` | 1 linha afetada, `updated_by` = uid do admin |\n| **G5 \u2014 allowlist de chaves** | `INSERT` de uma chave fora da allowlist como admin | viola\u00e7\u00e3o do CHECK (`23514`). A tabela \u00e9 **world-readable**: s\u00f3 chaves declaradas podem existir nela |\n| **G6 \u2014 fail-closed** | Simular falha da query (rede ca\u00edda / RLS negando) | A tela de login renderiza **escondendo** os bot\u00f5es. O default nunca \u00e9 \"expor\" |\n| **G7 \u2014 o param continua vivo** | Abrir `/auth?devLogin` com a flag **desligada** | Bot\u00f5es aparecem. O override do Sovereign n\u00e3o regride |\n| **G8 \u2014 auditoria** | Ap\u00f3s um toggle, ler `audit_logs` | 1 linha `action='update_public_app_setting'` com `details.key`, `details.old`, `details.new` |\n\n## 5. Recovery path \u2014 falha no passo N\n\n| Falha | Recupera\u00e7\u00e3o exata |\n|-------|-------------------|\n| A tela de login **n\u00e3o muda** depois do toggle | \u00c9 cache do TanStack Query no browser do visitante ou do Cloudflare no `index.html`. Hard-refresh (`Ctrl+Shift+R`). A flag \u00e9 lida em runtime \u2014 **n\u00e3o** exige `bun run build` |\n| G1 falha (anon n\u00e3o l\u00ea) | A tela cai no default fechado (nada quebra). Reaplicar o `GRANT SELECT ... TO anon` + a policy `FOR SELECT USING (true)` da migration `20260730120000` |\n| Toggle n\u00e3o persiste | Verificar `has_role('admin')` do usu\u00e1rio em `user_roles`. Sem o papel, a policy de escrita nega em sil\u00eancio (0 linhas) \u2014 o painel mostra erro no toast |\n| Ligou por engano e exp\u00f4s cadastro p\u00fablico | Desligar o switch **\"Aba de cadastro\"**. Contas criadas nesse intervalo: varrer com `scripts/qa/sweep-smoke-users.ts` (dry-run primeiro) e/ou `/dashboard/admin` \u2192 Usu\u00e1rios |\n| Precisa reverter TUDO sem UI | `UPDATE public.public_app_settings SET value='false'::jsonb WHERE key LIKE 'auth_%';` com a service key |\n\n## 6. Success signal\n\nUm visitante **an\u00f4nimo**, em janela privada, em `https://login.mcorch.com/auth` **sem query params**,\nv\u00ea os bot\u00f5es de login social \u2014 e o admin consegue tir\u00e1-los do ar em 1 clique, sem deploy, com\no evento registrado em `audit_logs`.\n\n## 7. Por que DOIS switches e n\u00e3o um\n\nO `?devLogin` liga tr\u00eas coisas de uma vez: bot\u00e3o Google, bot\u00e3o TikTok **e a aba \"Cadastrar\"**.\nElas t\u00eam consequ\u00eancias diferentes:\n\n- **Login social** \u2014 superf\u00edcie de *autentica\u00e7\u00e3o* de quem j\u00e1 existe. Ligar = o que o revisor precisa ver.\n- **Cadastro** \u2014 superf\u00edcie de *cria\u00e7\u00e3o de conta*. Ligar = abrir a porta para qualquer pessoa criar conta\n  na plataforma (spam, contas descart\u00e1veis, ru\u00eddo no `/dashboard/admin`).\n\nFundir as duas num toggle s\u00f3 significaria que ligar o Login Kit para o revisor do TikTok **abre cadastro\np\u00fablico como efeito colateral silencioso**. Os switches s\u00e3o separados para que essa decis\u00e3o seja\ndeliberada. O param `?devLogin` continua ligando ambos (comportamento legado preservado).\n\n## 8. Superf\u00edcies\n\n| Camada | Arquivo |\n|--------|---------|\n| Migration (tabela + RLS + allowlist + auditoria) | `supabase/migrations/20260730120000_public_app_settings.sql` |\n| SSOT de chaves e defaults (fail-closed) | `src/lib/public-app-settings.ts` |\n| Leitura an\u00f4nima (`/auth`) + leitura/escrita admin | `src/hooks/usePublicAppSettings.ts` |\n| Painel de admin | `src/components/admin/AuthVisibilityPanel.tsx` |\n| Aba \"Acesso\" | `src/pages/AdminPage.tsx` |\n| Consumo na tela p\u00fablica | `src/pages/Auth.tsx` |\n| Testes | `src/test/public-app-settings.test.ts` |\n\n## 9. Regra permanente\n\n`public_app_settings` \u00e9 **leg\u00edvel pelo mundo inteiro por design**. Nunca colocar segredo, chave, token,\nendpoint interno ou PII nela. A allowlist do `CHECK` existe justamente para tornar isso imposs\u00edvel por\nacidente: uma chave nova exige uma migration \u2014 e a migration exige `/security-review`.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/public-auth-visibility-flags.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260730120000_public_app_settings.sql",
+  "content": "-- 20260730120000_public_app_settings.sql\n-- Public app settings \u2014 admin-controlled, world-readable UI flags for surfaces that render\n-- BEFORE authentication (today: the /auth screen).\n--\n-- SOP (Lei 2, written first): docs/processes/public-auth-visibility-flags.md\n--\n-- WHY: src/pages/Auth.tsx hides the Google + TikTok login buttons (and the \"Cadastrar\" tab) behind the\n-- `?devLogin` query param \u2014 an invisible, non-discoverable gate from 2026-06. It cost us the TikTok App\n-- Review 4\u00d7: the reviewer opens the URL registered in the app form, sees only e-mail/password, and\n-- reports \"your website is a login page / we cannot find the Login Kit\". Flipping that visibility must\n-- be an ADMIN DECISION (one click, audited, reversible), not a code edit + rebuild + deploy.\n--\n-- Security posture: this table is READABLE BY ANYONE (anon), on purpose \u2014 /auth has no session, so the\n-- flag must be fetchable without a JWT. Three guards keep that safe:\n--   1. CHECK allowlist on `key` \u2014 only declared UI flags can ever exist here. A new key needs a\n--      migration, and a migration needs /security-review. The table can never become a secret store.\n--   2. `value` is jsonb but every allowed key is a boolean flag; the client coerces with `=== true`\n--      (fail-closed) so a malformed value hides the surface instead of exposing it.\n--   3. Writes are admin-only, enforced twice: RLS policy (has_role, the deployed SINGLE-ARG canonical\n--      of migration 20260414154016) + explicit REVOKE of INSERT/UPDATE/DELETE from anon.\n-- NOTE: has_role(app_role) is granted to `authenticated` only (REVOKEd from PUBLIC in 20260414154016),\n-- so the anon-facing SELECT policy must NOT call it \u2014 it is a plain `USING (true)`.\n--\n-- No SECURITY DEFINER RPC reachable by clients. The only definer function added is the audit trigger,\n-- which writes to audit_logs (RLS-protected) and never reads caller-supplied SQL.\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 1. TABLE\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE TABLE IF NOT EXISTS public.public_app_settings (\n    key         TEXT PRIMARY KEY,\n    value       JSONB NOT NULL DEFAULT 'false'::jsonb,\n    description TEXT,\n    updated_at  TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),\n    updated_by  UUID REFERENCES auth.users(id) ON DELETE SET NULL,\n    -- Allowlist: the ONLY keys that may exist in a world-readable table. Extend via migration only.\n    CONSTRAINT public_app_settings_key_allowlist CHECK (\n      key IN ('auth_social_login_visible', 'auth_signup_visible')\n    )\n);\n\nCOMMENT ON TABLE public.public_app_settings IS\n  'Admin-controlled UI flags readable WITHOUT auth (pre-login surfaces). World-readable by design \u2014 '\n  'never store secrets/tokens/PII here. Keys are locked by CHECK allowlist. SOP: docs/processes/public-auth-visibility-flags.md';\n\nALTER TABLE public.public_app_settings ENABLE ROW LEVEL SECURITY;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 2. RLS \u2014 read by anyone (including anon), write by admins only\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nDROP POLICY IF EXISTS \"Public app settings are world-readable\" ON public.public_app_settings;\nCREATE POLICY \"Public app settings are world-readable\" ON public.public_app_settings\n  FOR SELECT\n  TO anon, authenticated\n  USING (true);\n\nDROP POLICY IF EXISTS \"Admins manage public app settings\" ON public.public_app_settings;\nCREATE POLICY \"Admins manage public app settings\" ON public.public_app_settings\n  FOR ALL\n  TO authenticated\n  USING (public.has_role('admin'::public.app_role))\n  WITH CHECK (public.has_role('admin'::public.app_role));\n\n-- Grants are explicit rather than inherited from Supabase default privileges: a read-only anon and a\n-- write path that only RLS (admin) can satisfy.\nGRANT SELECT ON public.public_app_settings TO anon, authenticated;\nGRANT INSERT, UPDATE, DELETE ON public.public_app_settings TO authenticated;\nREVOKE INSERT, UPDATE, DELETE ON public.public_app_settings FROM anon;\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 3. AUDIT \u2014 every flip lands in audit_logs (who / what / from \u2192 to)\n--    SECURITY DEFINER because audit_logs is RLS-protected and the writer is the admin's own session.\n--    Fail-soft on a NULL uid (service_role / cron): audit_logs.user_id is NOT NULL, so we skip rather\n--    than abort the legitimate write.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nCREATE OR REPLACE FUNCTION public.trg_audit_public_app_settings()\nRETURNS TRIGGER\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nDECLARE\n  v_uid UUID := auth.uid();\nBEGIN\n  IF v_uid IS NULL THEN\n    RETURN NEW;\n  END IF;\n\n  INSERT INTO public.audit_logs (user_id, action, resource_type, details)\n  VALUES (\n    v_uid,\n    'update_public_app_setting',\n    'public_app_settings',\n    jsonb_build_object(\n      'key', NEW.key,\n      'old', CASE WHEN TG_OP = 'UPDATE' THEN OLD.value ELSE NULL END,\n      'new', NEW.value\n    )\n  );\n\n  RETURN NEW;\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.trg_audit_public_app_settings() FROM PUBLIC, anon, authenticated;\n\nDROP TRIGGER IF EXISTS tr_audit_public_app_settings ON public.public_app_settings;\nCREATE TRIGGER tr_audit_public_app_settings\n  AFTER INSERT OR UPDATE ON public.public_app_settings\n  FOR EACH ROW EXECUTE FUNCTION public.trg_audit_public_app_settings();\n\n-- updated_at maintenance (reuses the house-wide helper)\nDROP TRIGGER IF EXISTS tr_update_public_app_settings_updated_at ON public.public_app_settings;\nCREATE TRIGGER tr_update_public_app_settings_updated_at\n  BEFORE UPDATE ON public.public_app_settings\n  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();\n\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n-- 4. SEED \u2014 both flags start FALSE, i.e. today's exact production behaviour.\n--    Turning them on is a deliberate admin act; the migration changes nothing visible on its own.\n-- \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nINSERT INTO public.public_app_settings (key, value, description) VALUES\n  ('auth_social_login_visible', 'false'::jsonb,\n   'Mostra os bot\u00f5es \"Continuar com Google\" e \"Entrar com TikTok\" na tela de login p\u00fablica (/auth). Equivale ao ?devLogin, mas para todos os visitantes.'),\n  ('auth_signup_visible', 'false'::jsonb,\n   'Mostra a aba \"Cadastrar\" na tela de login p\u00fablica (/auth). Ligar = qualquer visitante pode criar conta.')\nON CONFLICT (key) DO NOTHING;\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260730120000_public_app_settings.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:09:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirming that the `update_updated_at_column` trigger exists and is being used by another migration. Now moving on to work on the lib and hooks.
+
+</details>
+
+
+## 🤖 Claude *(14:10:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/public-app-settings.ts",
+  "content": "/**\n * SSOT for `public_app_settings` \u2014 admin-controlled UI flags that pre-login surfaces read WITHOUT a JWT.\n *\n * Migration: supabase/migrations/20260730120000_public_app_settings.sql (CHECK allowlist mirrors PUBLIC_APP_SETTING_KEYS).\n * SOP: docs/processes/public-auth-visibility-flags.md\n *\n * Every flag is FAIL-CLOSED: an absent row, a network error, a malformed value or a denied read all\n * resolve to `false` (surface hidden). Exposure is only ever the result of an explicit `true`.\n */\n\nexport const PUBLIC_APP_SETTING_KEYS = ['auth_social_login_visible', 'auth_signup_visible'] as const;\n\nexport type PublicAppSettingKey = (typeof PUBLIC_APP_SETTING_KEYS)[number];\n\nexport interface PublicAppSettingRow {\n  key: PublicAppSettingKey;\n  value: unknown;\n  description: string | null;\n  updated_at?: string;\n}\n\nexport type PublicAppFlags = Record<PublicAppSettingKey, boolean>;\n\n/** Fail-closed defaults \u2014 also the value rendered while the query is still in flight. */\nexport const PUBLIC_APP_FLAG_DEFAULTS: PublicAppFlags = {\n  auth_social_login_visible: false,\n  auth_signup_visible: false,\n};\n\n/** PT-BR copy for the admin panel. One entry per allowlisted key. */\nexport const PUBLIC_APP_FLAG_META: Record<\n  PublicAppSettingKey,\n  { label: string; help: string; warning?: string }\n> = {\n  auth_social_login_visible: {\n    label: 'Bot\u00f5es de login social (Google \u00b7 TikTok)',\n    help: 'Mostra \"Continuar com Google\" e \"Entrar com TikTok\" na tela de login para qualquer visitante \u2014 o mesmo que o par\u00e2metro ?devLogin fazia s\u00f3 para voc\u00ea.',\n    warning: 'Necess\u00e1rio para que revisores externos (TikTok, Meta, Google) consigam ver e testar o fluxo de login social na URL p\u00fablica do app.',\n  },\n  auth_signup_visible: {\n    label: 'Aba de cadastro (\"Cadastrar\")',\n    help: 'Mostra a aba de cria\u00e7\u00e3o de conta na tela de login.',\n    warning: 'Ligar abre o cadastro para qualquer visitante. Mantenha desligado se voc\u00ea s\u00f3 precisa demonstrar o login social.',\n  },\n};\n\n/**\n * Coerce a raw jsonb `value` into a boolean, fail-closed.\n * Only a real boolean `true` (or the JSON string \"true\") enables a surface \u2014 anything else hides it.\n */\nexport function coerceFlag(value: unknown): boolean {\n  if (value === true) return true;\n  if (typeof value === 'string') return value.trim().toLowerCase() === 'true';\n  return false;\n}\n\n/** Fold rows returned by PostgREST into a complete, fail-closed flag map. */\nexport function foldFlags(rows: readonly PublicAppSettingRow[] | null | undefined): PublicAppFlags {\n  const flags: PublicAppFlags = { ...PUBLIC_APP_FLAG_DEFAULTS };\n  for (const row of rows ?? []) {\n    if ((PUBLIC_APP_SETTING_KEYS as readonly string[]).includes(row.key)) {\n      flags[row.key] = coerceFlag(row.value);\n    }\n  }\n  return flags;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/public-app-settings.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:10:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/usePublicAppSettings.ts",
+  "content": "import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport type { SupabaseClient } from '@supabase/supabase-js';\nimport { supabase } from '@/integrations/supabase/client';\nimport {\n  PUBLIC_APP_FLAG_DEFAULTS,\n  foldFlags,\n  type PublicAppFlags,\n  type PublicAppSettingKey,\n  type PublicAppSettingRow,\n} from '@/lib/public-app-settings';\n\n/**\n * `public_app_settings` \u2014 admin-controlled UI flags for surfaces that render BEFORE authentication.\n *\n * SOP: docs/processes/public-auth-visibility-flags.md\n * Migration: supabase/migrations/20260730120000_public_app_settings.sql\n *\n * Two consumers, one table:\n *   \u2022 usePublicAppFlags()  \u2014 anonymous read from /auth (no session). RLS: SELECT USING (true).\n *   \u2022 useAdminAppSettings() \u2014 read + write from /dashboard/admin. RLS: admin-only writes.\n *\n * The table is not in the generated Database types yet, so we go through an untyped view of the\n * client \u2014 same pattern as useGlobalAppConfig (lint-clean, no explicit `any`).\n */\nconst db = supabase as unknown as SupabaseClient;\n\nconst QUERY_KEY = ['public_app_settings'] as const;\nconst SELECT_COLUMNS = 'key, value, description, updated_at';\n\nasync function fetchRows(): Promise<PublicAppSettingRow[]> {\n  const { data, error } = await db.from('public_app_settings').select(SELECT_COLUMNS);\n  if (error) throw error;\n  return (data ?? []) as PublicAppSettingRow[];\n}\n\n/**\n * Anonymous-safe flag read for pre-login surfaces.\n *\n * FAIL-CLOSED by construction: while loading, on error, and on a denied read, `flags` is the\n * all-false default. A surface is only ever exposed by an explicit `true` that actually arrived.\n */\nexport function usePublicAppFlags(): { flags: PublicAppFlags; isLoading: boolean } {\n  const query = useQuery({\n    queryKey: QUERY_KEY,\n    queryFn: fetchRows,\n    staleTime: 60_000,\n    retry: 1,\n    // Never surface the error to the user on the login screen \u2014 hiding the buttons IS the safe outcome.\n    meta: { silent: true },\n  });\n\n  return {\n    flags: query.data ? foldFlags(query.data) : PUBLIC_APP_FLAG_DEFAULTS,\n    isLoading: query.isLoading,\n  };\n}\n\n/** Admin read + write. Writes are gated server-side by RLS (has_role('admin')) \u2014 never trust the UI. */\nexport function useAdminAppSettings() {\n  const queryClient = useQueryClient();\n\n  const query = useQuery({ queryKey: QUERY_KEY, queryFn: fetchRows, staleTime: 60_000 });\n\n  const rows = query.data ?? [];\n  const flags = query.data ? foldFlags(query.data) : PUBLIC_APP_FLAG_DEFAULTS;\n\n  const setFlag = useMutation({\n    mutationFn: async ({ key, enabled }: { key: PublicAppSettingKey; enabled: boolean }) => {\n      const { data: userData } = await supabase.auth.getUser();\n      // The seed migration guarantees the row exists; UPDATE (never upsert) keeps the write inside the\n      // CHECK allowlist and inside the admin RLS policy.\n      const { data, error } = await db\n        .from('public_app_settings')\n        .update({ value: enabled, updated_by: userData.user?.id ?? null })\n        .eq('key', key)\n        .select('key');\n      if (error) throw error;\n      // RLS denies silently with 0 rows \u2014 treat that as the failure it is, not as success.\n      if (!data || data.length === 0) {\n        throw new Error('Sem permiss\u00e3o para alterar esta configura\u00e7\u00e3o (requer papel admin).');\n      }\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEY }),\n  });\n\n  const descriptionFor = (key: PublicAppSettingKey): string | null =>\n    rows.find((r) => r.key === key)?.description ?? null;\n\n  const updatedAtFor = (key: PublicAppSettingKey): string | null =>\n    rows.find((r) => r.key === key)?.updated_at ?? null;\n\n  return {\n    flags,\n    rows,\n    isLoading: query.isLoading,\n    error: query.error,\n    setFlag,\n    descriptionFor,\n    updatedAtFor,\n  };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/usePublicAppSettings.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:10:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso verificar o painel de admin e checar se existe um componente `Switch` disponível na UI. Vou também confirmar qual padrão de toast está sendo usado — o GlobalAppKeysPanel utiliza `sonner`, então vou seguir esse mesmo padrão.
+
+</details>
+
+
+## 🤖 Claude *(14:10:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls src/components/ui/ | grep -iE \"^switch|^badge|^alert\"; echo \"---AdminPage 20-58---\"; sed -n '20,58p' src/pages/AdminPage.tsx; echo \"--- 186-196 ---\"; sed -n '186,196p' src/pages/AdminPage.tsx",
+  "description": "Componentes UI e estrutura da AdminPage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> alert-dialog.tsx
+> alert.tsx
+> badge.tsx
+> switch.tsx
+> ---AdminPage 20-58---
+> }
+> 
+> export default function AdminPage() {
+>   const { isAdmin, loading: roleLoading } = useIsAdmin();
+>   const { profiles, roles, subscriptions, auditLogs, usageTracking, loading } = useAdminData(isAdmin);
+>   const { user: currentUser } = useAuth();
+> 
+>   if (roleLoading) return <div className="flex justify-center py-20"><Skeleton className="h-8 w-48" /></div>;
+>   if (!isAdmin) return <Navigate to="/dashboard" replace />;
+> 
+>   const getRoles = (userId: string) => roles.filter((r) => r.user_id === userId).map((r) => r.role);
+>   const getSub = (userId: string) => subscriptions.find((s) => s.user_id === userId);
+> 
+>   return (
+>     <div className="space-y-6">
+>       <div className="flex items-center gap-3">
+>         <Shield className="h-6 w-6 text-primary" />
+>         <h1 className="text-2xl font-heading font-bold text-foreground">Administração</h1>
+>       </div>
+> 
+>       {currentUser && (
+>         <SovereignBalancePanel
+>           userId={currentUser.id}
+>           balance={profiles.find((p) => p.id === currentUser.id)?.mco_balance ?? 0}
+>         />
+>       )}
+> 
+>       <AdminRemindersBanner />
+> 
+>       <Tabs defaultValue="users">
+>         <TabsList>
+>           <TabsTrigger value="users"><Users className="h-4 w-4 mr-1" />Usuários</TabsTrigger>
+>           <TabsTrigger value="pantheon"><Cpu className="h-4 w-4 mr-1" />Pantheon</TabsTrigger>
+>           <TabsTrigger value="keys"><KeyRound className="h-4 w-4 mr-1" />Chaves</TabsTrigger>
+>           <TabsTrigger value="audit"><FileText className="h-4 w-4 mr-1" />Auditoria</TabsTrigger>
+>           <TabsTrigger value="usage"><BarChart3 className="h-4 w-4 mr-1" />Uso</TabsTrigger>
+>         </TabsList>
+> 
+>         <TabsContent value="users">
+> --- 186-196 ---
+>         <TabsContent value="pantheon">
+>           <PantheonAdminPanel />
+>         </TabsContent>
+> 
+>         <TabsContent value="keys">
+>           <GlobalAppKeysPanel />
+>         </TabsContent>
+>       </Tabs>
+>     </div>
+>   );
+> }
+> ```
+
+## 🤖 Claude *(14:10:49)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/admin/AuthVisibilityPanel.tsx",
+  "content": "import { useState } from 'react';\nimport { useAdminAppSettings } from '@/hooks/usePublicAppSettings';\nimport {\n  PUBLIC_APP_SETTING_KEYS,\n  PUBLIC_APP_FLAG_META,\n  type PublicAppSettingKey,\n} from '@/lib/public-app-settings';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Switch } from '@/components/ui/switch';\nimport { Label } from '@/components/ui/label';\nimport { Badge } from '@/components/ui/badge';\nimport { Skeleton } from '@/components/ui/skeleton';\nimport { toast } from 'sonner';\nimport { DoorOpen, ExternalLink, Info, Loader2 } from 'lucide-react';\nimport { format, parseISO } from 'date-fns';\nimport { ptBR } from 'date-fns/locale';\n\n/**\n * Visibilidade da tela de login (/auth) \u2014 admin tier.\n *\n * Display-only: all state/mutations live in useAdminAppSettings. Replaces the invisible `?devLogin`\n * query param with an explicit, audited, one-click toggle. The param keeps working as a Sovereign\n * override even with the flags off.\n *\n * SOP: docs/processes/public-auth-visibility-flags.md\n */\nexport function AuthVisibilityPanel() {\n  const { flags, isLoading, setFlag, updatedAtFor } = useAdminAppSettings();\n  const [pending, setPending] = useState<PublicAppSettingKey | null>(null);\n\n  const handleToggle = async (key: PublicAppSettingKey, enabled: boolean) => {\n    setPending(key);\n    try {\n      await setFlag.mutateAsync({ key, enabled });\n      toast.success(\n        enabled\n          ? `${PUBLIC_APP_FLAG_META[key].label}: vis\u00edvel na tela de login`\n          : `${PUBLIC_APP_FLAG_META[key].label}: oculto na tela de login`,\n        { description: 'Vale para novos acessos \u2014 pe\u00e7a um refresh (Ctrl+Shift+R) para ver na hora.' },\n      );\n    } catch (err) {\n      toast.error('N\u00e3o foi poss\u00edvel alterar', {\n        description: err instanceof Error ? err.message : 'Erro desconhecido',\n      });\n    } finally {\n      setPending(null);\n    }\n  };\n\n  return (\n    <Card>\n      <CardHeader>\n        <CardTitle className=\"flex items-center gap-2\">\n          <DoorOpen className=\"h-5 w-5 text-primary\" />\n          Visibilidade da tela de login\n        </CardTitle>\n        <CardDescription>\n          Controla o que um visitante <strong>an\u00f4nimo</strong> v\u00ea em{' '}\n          <code className=\"text-xs\">login.mcorch.com/auth</code>. Substitui o par\u00e2metro{' '}\n          <code className=\"text-xs\">?devLogin</code> \u2014 que continua funcionando como atalho s\u00f3 seu.\n          Muda em tempo real, sem novo build.\n        </CardDescription>\n      </CardHeader>\n\n      <CardContent className=\"space-y-4\">\n        {isLoading ? (\n          <>\n            <Skeleton className=\"h-16 w-full\" />\n            <Skeleton className=\"h-16 w-full\" />\n          </>\n        ) : (\n          PUBLIC_APP_SETTING_KEYS.map((key) => {\n            const meta = PUBLIC_APP_FLAG_META[key];\n            const enabled = flags[key];\n            const updatedAt = updatedAtFor(key);\n            const busy = pending === key;\n\n            return (\n              <div\n                key={key}\n                className=\"flex items-start justify-between gap-4 rounded-lg border border-border/60 p-4\"\n              >\n                <div className=\"space-y-1.5\">\n                  <div className=\"flex items-center gap-2\">\n                    <Label htmlFor={`flag-${key}`} className=\"text-sm font-medium\">\n                      {meta.label}\n                    </Label>\n                    <Badge variant={enabled ? 'default' : 'secondary'} className=\"text-[10px]\">\n                      {enabled ? 'Vis\u00edvel' : 'Oculto'}\n                    </Badge>\n                  </div>\n                  <p className=\"text-xs text-muted-foreground\">{meta.help}</p>\n                  {meta.warning && (\n                    <p className=\"flex items-start gap-1.5 text-xs text-muted-foreground/80\">\n                      <Info className=\"mt-0.5 h-3 w-3 shrink-0\" />\n                      <span>{meta.warning}</span>\n                    </p>\n                  )}\n                  {updatedAt && (\n                    <p className=\"text-[11px] text-muted-foreground/60\">\n                      Alterado em {format(parseISO(updatedAt), \"dd/MM/yyyy '\u00e0s' HH:mm\", { locale: ptBR })}\n                    </p>\n                  )}\n                </div>\n\n                <div className=\"flex items-center gap-2 pt-1\">\n                  {busy && <Loader2 className=\"h-4 w-4 animate-spin text-muted-foreground\" />}\n                  <Switch\n                    id={`flag-${key}`}\n                    checked={enabled}\n                    disabled={busy}\n                    onCheckedChange={(checked) => handleToggle(key, checked)}\n                  />\n                </div>\n              </div>\n            );\n          })\n        )}\n\n        <a\n          href=\"/auth\"\n          target=\"_blank\"\n          rel=\"noopener noreferrer\"\n          className=\"inline-flex items-center gap-1.5 text-xs text-primary hover:underline\"\n        >\n          <ExternalLink className=\"h-3 w-3\" />\n          Abrir a tela de login numa aba nova (confira numa janela an\u00f4nima para ver como o visitante v\u00ea)\n        </a>\n      </CardContent>\n    </Card>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/admin/AuthVisibilityPanel.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:10:51)*
+
+Agora ligo o painel na AdminPage e o consumo na tela pública.
+
+## 🤖 Claude *(14:10:53)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx",
+  "old_string": "import { GlobalAppKeysPanel } from '@/components/admin/GlobalAppKeysPanel';",
+  "new_string": "import { GlobalAppKeysPanel } from '@/components/admin/GlobalAppKeysPanel';\nimport { AuthVisibilityPanel } from '@/components/admin/AuthVisibilityPanel';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:10:57)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx",
+  "old_string": "import { Shield, Users, FileText, BarChart3, Cpu, KeyRound } from 'lucide-react';",
+  "new_string": "import { Shield, Users, FileText, BarChart3, Cpu, KeyRound, DoorOpen } from 'lucide-react';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx",
+  "old_string": "          <TabsTrigger value=\"keys\"><KeyRound className=\"h-4 w-4 mr-1\" />Chaves</TabsTrigger>",
+  "new_string": "          <TabsTrigger value=\"keys\"><KeyRound className=\"h-4 w-4 mr-1\" />Chaves</TabsTrigger>\n          <TabsTrigger value=\"access\"><DoorOpen className=\"h-4 w-4 mr-1\" />Acesso</TabsTrigger>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx",
+  "old_string": "        <TabsContent value=\"keys\">\n          <GlobalAppKeysPanel />\n        </TabsContent>",
+  "new_string": "        <TabsContent value=\"keys\">\n          <GlobalAppKeysPanel />\n        </TabsContent>\n\n        <TabsContent value=\"access\">\n          <AuthVisibilityPanel />\n        </TabsContent>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/AdminPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:10)*
+
+Agora a tela pública — o ponto que decide o review do TikTok:
+
+## 🤖 Claude *(14:11:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "  // Social logins (Google/Apple) are hidden by default in production. The Sovereign keeps testing via the\n  // `?devLogin` URL param, which re-shows the Google button (gabrielcall@gmail.com = Usu\u00e1rio Zero). Apple\n  // stays removed for now. Temporary gate \u2014 remove when social login is re-enabled for all users.\n  const [searchParams] = useSearchParams();\n  const devLogin = searchParams.has('devLogin');",
+  "new_string": "  // Visibility of the social-login buttons and of the signup tab is an ADMIN DECISION, stored in\n  // public_app_settings and readable without a session (RLS: SELECT USING (true)). The legacy\n  // `?devLogin` URL param stays as the Sovereign's personal override, so either one opens the surface.\n  // Fail-closed: while the flags load \u2014 or if the read fails \u2014 both stay hidden.\n  // Admin UI: /dashboard/admin \u2192 aba \"Acesso\". SOP: docs/processes/public-auth-visibility-flags.md\n  const [searchParams] = useSearchParams();\n  const devLogin = searchParams.has('devLogin');\n  const { flags } = usePublicAppFlags();\n  const showSocialLogin = devLogin || flags.auth_social_login_visible;\n  const showSignup = devLogin || flags.auth_signup_visible;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "import { SigilMark } from '@/components/landing-v2/Brand';",
+  "new_string": "import { SigilMark } from '@/components/landing-v2/Brand';\nimport { usePublicAppFlags } from '@/hooks/usePublicAppSettings';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso atualizar os quatro usos de `devLogin` no JSX: o grid de colunas por volta da linha 151, o trigger da aba de cadastro na linha 153, o bloco de login social na linha 156, e o conteúdo da aba de cadastro na linha 238. Vou mapear cada um para sua variável correspondente — `showSignup` para o grid e o trigger, `showSocialLogin` para o bloco de Google e TikTok.
+
+</details>
+
+
+## 🤖 Claude *(14:11:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "            <TabsList className={`grid w-full ${devLogin ? 'grid-cols-2' : 'grid-cols-1'} bg-secondary`}>\n              <TabsTrigger value=\"login\">Entrar</TabsTrigger>\n              {devLogin && <TabsTrigger value=\"signup\">Cadastrar</TabsTrigger>}\n            </TabsList>\n\n            {devLogin && (",
+  "new_string": "            <TabsList className={`grid w-full ${showSignup ? 'grid-cols-2' : 'grid-cols-1'} bg-secondary`}>\n              <TabsTrigger value=\"login\">Entrar</TabsTrigger>\n              {showSignup && <TabsTrigger value=\"signup\">Cadastrar</TabsTrigger>}\n            </TabsList>\n\n            {showSocialLogin && ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "offset": 236,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 236	                  onClick={handleForgotPassword}
+> 237	                  className="text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center"
+> 238	                >
+> 239	                  Esqueceu a senha?
+> 240	                </button>
+> 241	              </form>
+> 242	            </TabsContent>
+> 243	
+> 244	            {devLogin && (
+> 245	            <TabsContent value="signup">
+> 246	              <form onSubmit={handleSignup} className="space-y-4 mt-4">
+> 247	                <div className="space-y-2">
+> 248	                  <Label htmlFor="signup-name">Nome completo</Label>
+> 249	                  <Input
+> 250	                    id="signup-name"
+> 251	                    type="text"
+> ```
+
+## 🤖 Claude *(14:11:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx",
+  "old_string": "            {devLogin && (\n            <TabsContent value=\"signup\">",
+  "new_string": "            {showSignup && (\n            <TabsContent value=\"signup\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/Auth.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"devLogin\\|showSignup\\|showSocialLogin\" src/pages/Auth.tsx",
+  "description": "Conferir que todos os usos foram migrados"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 26:  // `?devLogin` URL param stays as the Sovereign's personal override, so either one opens the surface.
+> 30:  const devLogin = searchParams.has('devLogin');
+> 32:  const showSocialLogin = devLogin || flags.auth_social_login_visible;
+> 33:  const showSignup = devLogin || flags.auth_signup_visible;
+> 157:            <TabsList className={`grid w-full ${showSignup ? 'grid-cols-2' : 'grid-cols-1'} bg-secondary`}>
+> 159:              {showSignup && <TabsTrigger value="signup">Cadastrar</TabsTrigger>}
+> 162:            {showSocialLogin && (
+> 244:            {showSignup && (
+> ```
+
+## 🤖 Claude *(14:11:38)*
+
+Agora os testes, e a bateria de gates:
+
+## 🤖 Claude *(14:11:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/public-app-settings.test.ts",
+  "content": "import { describe, it, expect } from 'vitest';\nimport {\n  PUBLIC_APP_SETTING_KEYS,\n  PUBLIC_APP_FLAG_DEFAULTS,\n  PUBLIC_APP_FLAG_META,\n  coerceFlag,\n  foldFlags,\n  type PublicAppSettingRow,\n} from '@/lib/public-app-settings';\n\n// SOP: docs/processes/public-auth-visibility-flags.md\n// The invariant under test is the one that protects the public login screen: EXPOSURE REQUIRES AN\n// EXPLICIT `true`. Everything else \u2014 missing row, null, garbage, denied read \u2014 must hide the surface.\n\ndescribe('public-app-settings \u2014 fail-closed coercion', () => {\n  it('only a real boolean true (or the string \"true\") enables a surface', () => {\n    expect(coerceFlag(true)).toBe(true);\n    expect(coerceFlag('true')).toBe(true);\n    expect(coerceFlag('TRUE')).toBe(true);\n    expect(coerceFlag(' true ')).toBe(true);\n  });\n\n  it('hides the surface for every non-true value', () => {\n    for (const value of [false, 'false', null, undefined, 0, 1, '1', 'yes', 'sim', {}, [], 'trueish', '']) {\n      expect(coerceFlag(value)).toBe(false);\n    }\n  });\n});\n\ndescribe('public-app-settings \u2014 folding rows into flags', () => {\n  it('defaults to all-false when there are no rows', () => {\n    expect(foldFlags([])).toEqual(PUBLIC_APP_FLAG_DEFAULTS);\n    expect(foldFlags(null)).toEqual(PUBLIC_APP_FLAG_DEFAULTS);\n    expect(foldFlags(undefined)).toEqual(PUBLIC_APP_FLAG_DEFAULTS);\n  });\n\n  it('applies a true row and leaves the untouched key false', () => {\n    const rows = [\n      { key: 'auth_social_login_visible', value: true, description: null },\n    ] as PublicAppSettingRow[];\n    expect(foldFlags(rows)).toEqual({ auth_social_login_visible: true, auth_signup_visible: false });\n  });\n\n  it('ignores keys outside the allowlist (defence in depth vs the DB CHECK)', () => {\n    const rows = [\n      { key: 'is_admin', value: true, description: null },\n      { key: 'auth_signup_visible', value: true, description: null },\n    ] as unknown as PublicAppSettingRow[];\n    const flags = foldFlags(rows);\n    expect(flags).toEqual({ auth_social_login_visible: false, auth_signup_visible: true });\n    expect('is_admin' in flags).toBe(false);\n  });\n\n  it('a malformed value hides rather than exposes', () => {\n    const rows = [\n      { key: 'auth_social_login_visible', value: 'maybe', description: null },\n      { key: 'auth_signup_visible', value: { enabled: true }, description: null },\n    ] as PublicAppSettingRow[];\n    expect(foldFlags(rows)).toEqual(PUBLIC_APP_FLAG_DEFAULTS);\n  });\n});\n\ndescribe('public-app-settings \u2014 contract with the migration and the admin UI', () => {\n  it('every allowlisted key has a default and PT-BR copy', () => {\n    for (const key of PUBLIC_APP_SETTING_KEYS) {\n      expect(PUBLIC_APP_FLAG_DEFAULTS[key]).toBe(false);\n      expect(PUBLIC_APP_FLAG_META[key].label.length).toBeGreaterThan(0);\n      expect(PUBLIC_APP_FLAG_META[key].help.length).toBeGreaterThan(0);\n    }\n  });\n\n  it('ships exactly the two keys the CHECK allowlist declares', () => {\n    expect([...PUBLIC_APP_SETTING_KEYS]).toEqual(['auth_social_login_visible', 'auth_signup_visible']);\n  });\n\n  it('defaults keep production behaviour unchanged until an admin acts', () => {\n    expect(Object.values(PUBLIC_APP_FLAG_DEFAULTS).every((v) => v === false)).toBe(true);\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/test/public-app-settings.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:11:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -15; echo \"TSC_EXIT=$?\"",
+  "description": "Gate de tipos real",
+  "timeout": 300000
+}
+```
+
+## 🤖 Claude *(14:11:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test src/test/public-app-settings.test.ts 2>&1 | tail -20",
+  "description": "Rodar os testes novos",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC_EXIT=0
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> $ vitest run src/test/public-app-settings.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ src/test/public-app-settings.test.ts (9 tests) 9ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  9 passed (9)
+>    Start at  11:12:32
+>    Duration  1.17s (transform 62ms, setup 90ms, collect 39ms, tests 9ms, environment 414ms, prepare 99ms)
+> ```
+
+## 🤖 Claude *(14:12:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+TypeScript compilation passed all tests, so now I'm moving on to linting with eslint. After that, I need to apply the database migration to production—the Sovereign has autonomy over migrations and deployments from a previous session, but I should still run a security review first as required by the guidelines.
+
+My plan is to run the security review and an adversarial workflow in parallel with eslint to cover different angles: the formal security review handles the standard checks, while the adversarial workflow examines UI regressions, fail-closed behavior, and internal compliance patterns. I'll launch the workflow in the background and start linting immediately.
+
+For the adversarial review, I'm focusing on the most critical lens first—RLS and anonymous read policies—checking the `USING(true)` clause, admin write permissions, the security definer trigger, and the allowlist configuration.
+
+</details>
+
+
+## 🤖 Claude *(14:12:54)*
+
+tsc **0** · testes **9/9**. Agora as lentes adversariais em paralelo com o lint — a migration toca RLS numa tabela que **anônimos leem**, então isso merece verificação independente.
+
+## 🤖 Claude *(14:13:57)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'review-public-app-settings',\n  description: 'Revis\u00e3o adversarial da fatia public_app_settings (flag de admin p/ visibilidade do /auth)',\n  phases: [\n    { title: 'Lentes', detail: 'seguran\u00e7a RLS/anon \u00b7 corre\u00e7\u00e3o fail-closed \u00b7 conformidade da casa \u00b7 regress\u00e3o' },\n    { title: 'Refuta\u00e7\u00e3o', detail: 'cada achado enfrenta 2 c\u00e9ticos independentes' },\n  ],\n}\n\nconst FILES = `\n  supabase/migrations/20260730120000_public_app_settings.sql\n  src/lib/public-app-settings.ts\n  src/hooks/usePublicAppSettings.ts\n  src/components/admin/AuthVisibilityPanel.tsx\n  src/pages/Auth.tsx\n  src/pages/AdminPage.tsx\n  src/test/public-app-settings.test.ts\n  docs/processes/public-auth-visibility-flags.md\n`\n\nconst CONTEXT = `\nRepo: /home/gcrUX/htdocs/constellation-orchestra (MCORCH, React+Vite+Supabase).\nFatia nova, N\u00c3O commitada ainda. Arquivos tocados:\n${FILES}\n\nO QUE FAZ: os bot\u00f5es de login social (Google/TikTok) e a aba \"Cadastrar\" na tela P\u00daBLICA /auth\nestavam atr\u00e1s do query param ?devLogin. Agora tamb\u00e9m podem ser ligados por flags em\npublic_app_settings, controladas em /dashboard/admin -> aba \"Acesso\".\n\nINVARIANTE CENTRAL: a tela /auth N\u00c3O tem sess\u00e3o -> a flag precisa ser lida por anon.\nA tabela \u00e9 world-readable de prop\u00f3sito. Exposi\u00e7\u00e3o S\u00d3 pode acontecer com um true expl\u00edcito\n(fail-closed em todo o resto).\n\nPadr\u00f5es da casa que valem como lei:\n- has_role tem DUAS assinaturas; a can\u00f4nica deployada \u00e9 a SINGLE-ARG public.has_role('admin'::public.app_role),\n  com GRANT EXECUTE s\u00f3 para authenticated e REVOKE de PUBLIC (migration 20260414154016).\n- Toda migration precisa passar /security-review (FMEA-011, risco de vazamento cross-tenant).\n- RLS default-deny; nada de SECURITY DEFINER alcan\u00e7\u00e1vel pelo cliente.\n- C\u00f3digo/coment\u00e1rios em ingl\u00eas; texto de UI em pt-BR.\n- Molde de refer\u00eancia: supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql\n  e src/hooks/useGlobalAppConfig.ts.\n\nLeia os arquivos DE VERDADE antes de afirmar qualquer coisa. N\u00e3o invente linha nem comportamento.\n`\n\nconst FINDINGS_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['findings'],\n  properties: {\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['title', 'file', 'line', 'severity', 'why_it_breaks', 'fix'],\n        properties: {\n          title: { type: 'string' },\n          file: { type: 'string' },\n          line: { type: 'number' },\n          severity: { type: 'string', enum: ['P0', 'P1', 'P2', 'P3'] },\n          why_it_breaks: { type: 'string', description: 'Cen\u00e1rio concreto: entradas/estado -> resultado errado' },\n          fix: { type: 'string' },\n        },\n      },\n    },\n  },\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['refuted', 'reason'],\n  properties: {\n    refuted: { type: 'boolean', description: 'true = o achado N\u00c3O se sustenta' },\n    reason: { type: 'string' },\n  },\n}\n\nconst LENSES = [\n  {\n    key: 'security-rls',\n    prompt: `${CONTEXT}\n\nLENTE: SEGURAN\u00c7A (RLS, grants, superf\u00edcie an\u00f4nima). Seja implac\u00e1vel e espec\u00edfico.\nInvestigue de verdade, lendo os arquivos e comparando com o molde da casa:\n1. A policy de SELECT \u00e9 TO anon,authenticated USING(true). Isso \u00e9 seguro DADO o conte\u00fado? A allowlist\n   do CHECK realmente impede que a tabela vire dep\u00f3sito de segredo? Existe caminho para um admin\n   gravar algo sens\u00edvel numa das 2 chaves permitidas (o valor \u00e9 jsonb livre!)?\n2. A policy de escrita chama has_role dentro de USING/WITH CHECK com TO authenticated. Um anon\n   avaliaria essa fun\u00e7\u00e3o (que ele n\u00e3o tem GRANT para executar) em ALGUM caminho? PostgREST avalia\n   policies de outras roles? Isso poderia gerar erro que quebre a leitura p\u00fablica?\n3. GRANT INSERT,UPDATE,DELETE TO authenticated + REVOKE de anon: um usu\u00e1rio 'viewer' autenticado\n   consegue escrever? A RLS realmente barra? H\u00e1 caminho de bypass (upsert, retorno de linhas)?\n4. O trigger SECURITY DEFINER de auditoria: search_path travado? Pode ser abusado? O INSERT em\n   audit_logs pode falhar e abortar o UPDATE leg\u00edtimo? user_id \u00e9 NOT NULL \u2014 o guard de uid NULL cobre?\n5. Ligar auth_signup_visible exp\u00f5e cadastro p\u00fablico. Existe risco de abuso n\u00e3o mitigado (rate limit,\n   confirma\u00e7\u00e3o de e-mail)? Verifique o que handleSignup realmente faz.\n6. Qualquer vetor de exfiltra\u00e7\u00e3o ou escalonamento que a fatia introduza.\nS\u00f3 reporte o que voc\u00ea PROVAR lendo o c\u00f3digo. Zero achado \u00e9 uma resposta v\u00e1lida.`,\n  },\n  {\n    key: 'correctness',\n    prompt: `${CONTEXT}\n\nLENTE: CORRE\u00c7\u00c3O FUNCIONAL / FAIL-CLOSED. A pergunta que importa: existe QUALQUER estado em que a\ntela p\u00fablica exponha os bot\u00f5es sem um admin ter ligado \u2014 ou em que um admin ligue e nada aconte\u00e7a?\n1. src/pages/Auth.tsx: showSocialLogin/showSignup. Enquanto usePublicAppFlags carrega, o que renderiza?\n   H\u00e1 flicker (bot\u00e3o aparece e some)? Isso importa para um revisor gravando v\u00eddeo?\n2. usePublicAppSettings: staleTime 60s + retry 1. Um admin liga a flag \u2014 quanto tempo at\u00e9 um visitante\n   novo ver? E um visitante que j\u00e1 tem a aba aberta? O SOP promete \"sem rebuild\" \u2014 \u00e9 verdade?\n3. A mutation faz UPDATE ... .select('key') e trata 0 linhas como erro. Est\u00e1 certo? RLS nega com 0\n   linhas ou com erro? E se a linha n\u00e3o existir (seed n\u00e3o aplicado)?\n4. foldFlags/coerceFlag: algum input plaus\u00edvel do PostgREST (jsonb boolean vem como boolean JS?)\n   que fa\u00e7a um `true` leg\u00edtimo virar false \u2014 quebrando a feature em sil\u00eancio?\n5. O painel de admin: o Switch reflete o estado real ap\u00f3s erro? Fica dessincronizado?\n6. Intera\u00e7\u00e3o com o ?devLogin legado: continua funcionando com as flags off?\nS\u00f3 reporte o que voc\u00ea PROVAR lendo o c\u00f3digo.`,\n  },\n  {\n    key: 'house-conformance',\n    prompt: `${CONTEXT}\n\nLENTE: CONFORMIDADE COM OS PADR\u00d5ES DA CASA + verifica\u00e7\u00e3o factual contra o banco/repo.\n1. A migration referencia public.update_updated_at_column() e public.audit_logs(user_id, action,\n   resource_type, details). Essas assinaturas EXISTEM exatamente assim? Confirme por grep nas\n   migrations. Um erro aqui faz o apply falhar em produ\u00e7\u00e3o.\n2. public.has_role('admin'::public.app_role) single-arg: confirme que \u00e9 a assinatura deployada e que\n   o tipo app_role tem o valor 'admin'.\n3. A migration \u00e9 idempotente/re-execut\u00e1vel (IF NOT EXISTS, DROP POLICY IF EXISTS, ON CONFLICT)?\n4. Conven\u00e7\u00f5es: nome/timestamp do arquivo, coment\u00e1rio-cabe\u00e7alho com SOP, c\u00f3digo em ingl\u00eas, UI pt-BR.\n5. src/lib + src/hooks + component seguem o Harness Engineering Pattern (l\u00f3gica no hook, componente\n   display-only)? Compare com useGlobalAppConfig/GlobalAppKeysPanel.\n6. O SOP em docs/processes/ cumpre a Lei 2 (Operator/Sequence/Verification/Recovery/Success)? Alguma\n   promessa no SOP que o c\u00f3digo N\u00c3O cumpre? Isso seria um falso-sucesso documentado.\nUse bash/grep para VERIFICAR, n\u00e3o deduza.`,\n  },\n  {\n    key: 'regression',\n    prompt: `${CONTEXT}\n\nLENTE: REGRESS\u00c3O. O que esta fatia quebra que hoje funciona?\n1. src/pages/AdminPage.tsx ganhou uma aba. Quebra layout/testes existentes? H\u00e1 teste que conte abas?\n2. src/pages/Auth.tsx: o hook novo adiciona uma query na tela de login. Se o Supabase estiver fora do\n   ar / a tabela n\u00e3o existir ainda (migration n\u00e3o aplicada), a tela de login ainda FUNCIONA? Isso \u00e9\n   cr\u00edtico: um erro n\u00e3o tratado aqui derruba o login de todo mundo. Rastreie o caminho do erro do\n   useQuery \u2014 existe ErrorBoundary global? O `meta:{silent:true}` realmente suprime algo, ou \u00e9\n   decorativo (h\u00e1 algum handler global de erro do QueryClient que o leia)? Verifique no\n   src/App.tsx / onde o QueryClient \u00e9 criado.\n3. A tabela ainda N\u00c3O existe em produ\u00e7\u00e3o no momento do deploy do frontend. Qual a ordem segura de\n   deploy (migration antes do build)? O c\u00f3digo aguenta a ordem inversa?\n4. Rode 'bun run lint' e 'npx tsc -p tsconfig.app.json --noEmit' e reporte QUALQUER erro novo.\nUse bash de verdade. Reporte o que observar.`,\n  },\n]\n\nphase('Lentes')\n\nconst results = await pipeline(\n  LENSES,\n  (lens) => agent(lens.prompt, { label: `lente:${lens.key}`, phase: 'Lentes', schema: FINDINGS_SCHEMA }),\n  (review, lens) =>\n    parallel(\n      (review?.findings ?? []).map((f) => () =>\n        parallel([\n          () =>\n            agent(\n              `${CONTEXT}\\n\\nTENTE REFUTAR este achado. Leia o c\u00f3digo e prove que ele N\u00c3O se sustenta.\\n` +\n                `Achado: \"${f.title}\" em ${f.file}:${f.line} (${f.severity})\\n` +\n                `Alega\u00e7\u00e3o: ${f.why_it_breaks}\\n\\n` +\n                `Se o achado descreve algo que o c\u00f3digo j\u00e1 trata, ou depende de premissa falsa, marque refuted=true. ` +\n                `Na d\u00favida sobre se \u00e9 real, prefira refuted=true \u2014 s\u00f3 sobrevive o que for demonstr\u00e1vel.`,\n              { label: `refuta-A:${f.title.slice(0, 28)}`, phase: 'Refuta\u00e7\u00e3o', schema: VERDICT_SCHEMA },\n            ),\n          () =>\n            agent(\n              `${CONTEXT}\\n\\nVoc\u00ea \u00e9 o C\u00c9TICO DE IMPACTO. O achado abaixo pode ser tecnicamente correto mas irrelevante.\\n` +\n                `Achado: \"${f.title}\" em ${f.file}:${f.line} (${f.severity})\\n` +\n                `Alega\u00e7\u00e3o: ${f.why_it_breaks}\\n\\n` +\n                `Pergunte: isso MACHUCA algu\u00e9m de verdade nesta fatia? Qual usu\u00e1rio, em que cen\u00e1rio plaus\u00edvel? ` +\n                `Se o impacto \u00e9 te\u00f3rico/estil\u00edstico, ou se a severidade est\u00e1 inflada em 2+ n\u00edveis, marque refuted=true. ` +\n                `Se machuca de verdade (login quebrado, exposi\u00e7\u00e3o indevida, migration que n\u00e3o aplica), refuted=false.`,\n              { label: `refuta-B:${f.title.slice(0, 28)}`, phase: 'Refuta\u00e7\u00e3o', schema: VERDICT_SCHEMA },\n            ),\n        ]).then((votes) => {\n          const valid = votes.filter(Boolean)\n          const refutedCount = valid.filter((v) => v.refuted).length\n          return { ...f, lens: lens.key, survives: valid.length > 0 && refutedCount < 2, votes: valid }\n        }),\n      ),\n    ),\n)\n\nconst all = results.flat().filter(Boolean)\nconst survivors = all.filter((f) => f.survives)\nconst killed = all.filter((f) => !f.survives)\n\nlog(`${all.length} achados brutos \u00b7 ${survivors.length} sobreviveram \u00e0 refuta\u00e7\u00e3o dupla \u00b7 ${killed.length} mortos`)\n\nreturn {\n  survivors: survivors.sort((a, b) => a.severity.localeCompare(b.severity)),\n  killed: killed.map((f) => ({ title: f.title, severity: f.severity, why_killed: f.votes.map((v) => v.reason) })),\n}\n",
+  "description": "Revis\u00e3o adversarial da fatia"
+}
+```
+
+> **Tool Result (Workflow)** - ❌ Error
+>
+> ```
+> <tool_use_error>Invalid workflow script: Script parse error: Unexpected token (115:16)
+> 
+>    que faça um `true` legítimo virar false — quebrando a feature em silêncio?
+>                 ^
+> 
+> Workflow scripts must be plain JavaScript — common causes are TypeScript syntax (type annotations, interfaces, generics) and broken string quoting or escaping.</tool_use_error>
+> ```
+
+## 🤖 Claude *(14:14:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to escape the backticks inside the template literal to fix the syntax error.
+
+</details>
+
+
+## 🤖 Claude *(14:14:52)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'review-public-app-settings',\n  description: 'Revis\u00e3o adversarial da fatia public_app_settings (flag de admin p/ visibilidade do /auth)',\n  phases: [\n    { title: 'Lentes', detail: 'seguran\u00e7a RLS/anon \u00b7 corre\u00e7\u00e3o fail-closed \u00b7 conformidade da casa \u00b7 regress\u00e3o' },\n    { title: 'Refuta\u00e7\u00e3o', detail: 'cada achado enfrenta 2 c\u00e9ticos independentes' },\n  ],\n}\n\nconst FILES = [\n  'supabase/migrations/20260730120000_public_app_settings.sql',\n  'src/lib/public-app-settings.ts',\n  'src/hooks/usePublicAppSettings.ts',\n  'src/components/admin/AuthVisibilityPanel.tsx',\n  'src/pages/Auth.tsx',\n  'src/pages/AdminPage.tsx',\n  'src/test/public-app-settings.test.ts',\n  'docs/processes/public-auth-visibility-flags.md',\n].join('\\n  ')\n\nconst CONTEXT = [\n  'Repo: /home/gcrUX/htdocs/constellation-orchestra (MCORCH, React+Vite+Supabase).',\n  'Fatia nova, NAO commitada ainda. Arquivos tocados:',\n  '  ' + FILES,\n  '',\n  'O QUE FAZ: os botoes de login social (Google/TikTok) e a aba \"Cadastrar\" na tela PUBLICA /auth',\n  'estavam atras do query param ?devLogin. Agora tambem podem ser ligados por flags em',\n  'public_app_settings, controladas em /dashboard/admin -> aba \"Acesso\".',\n  '',\n  'INVARIANTE CENTRAL: a tela /auth NAO tem sessao -> a flag precisa ser lida por anon.',\n  'A tabela e world-readable de proposito. Exposicao SO pode acontecer com um true explicito',\n  '(fail-closed em todo o resto).',\n  '',\n  'Padroes da casa que valem como lei:',\n  '- has_role tem DUAS assinaturas; a canonica deployada e a SINGLE-ARG',\n  \"  public.has_role('admin'::public.app_role), com GRANT EXECUTE so para authenticated e REVOKE de\",\n  '  PUBLIC (migration 20260414154016).',\n  '- Toda migration precisa passar /security-review (FMEA-011, risco de vazamento cross-tenant).',\n  '- RLS default-deny; nada de SECURITY DEFINER alcancavel pelo cliente.',\n  '- Codigo/comentarios em ingles; texto de UI em pt-BR.',\n  '- Molde de referencia: supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql',\n  '  e src/hooks/useGlobalAppConfig.ts.',\n  '',\n  'Leia os arquivos DE VERDADE antes de afirmar qualquer coisa. Nao invente linha nem comportamento.',\n].join('\\n')\n\nconst FINDINGS_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['findings'],\n  properties: {\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['title', 'file', 'line', 'severity', 'why_it_breaks', 'fix'],\n        properties: {\n          title: { type: 'string' },\n          file: { type: 'string' },\n          line: { type: 'number' },\n          severity: { type: 'string', enum: ['P0', 'P1', 'P2', 'P3'] },\n          why_it_breaks: { type: 'string', description: 'Cenario concreto: entradas/estado -> resultado errado' },\n          fix: { type: 'string' },\n        },\n      },\n    },\n  },\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['refuted', 'reason'],\n  properties: {\n    refuted: { type: 'boolean', description: 'true = o achado NAO se sustenta' },\n    reason: { type: 'string' },\n  },\n}\n\nconst LENSES = [\n  {\n    key: 'security-rls',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: SEGURANCA (RLS, grants, superficie anonima). Seja implacavel e especifico.',\n      'Investigue de verdade, lendo os arquivos e comparando com o molde da casa:',\n      '1. A policy de SELECT e TO anon,authenticated USING(true). Isso e seguro DADO o conteudo? A',\n      '   allowlist do CHECK realmente impede que a tabela vire deposito de segredo? Existe caminho',\n      '   para um admin gravar algo sensivel numa das 2 chaves permitidas (o valor e jsonb livre!)?',\n      '2. A policy de escrita chama has_role dentro de USING/WITH CHECK com TO authenticated. Um anon',\n      '   avaliaria essa funcao (que ele nao tem GRANT para executar) em ALGUM caminho? PostgREST',\n      '   avalia policies de outras roles? Isso poderia gerar erro que quebre a leitura publica?',\n      '3. GRANT INSERT,UPDATE,DELETE TO authenticated + REVOKE de anon: um usuario viewer autenticado',\n      '   consegue escrever? A RLS realmente barra? Ha caminho de bypass (upsert, retorno de linhas)?',\n      '4. O trigger SECURITY DEFINER de auditoria: search_path travado? Pode ser abusado? O INSERT em',\n      '   audit_logs pode falhar e abortar o UPDATE legitimo? user_id e NOT NULL \u2014 o guard de uid NULL cobre?',\n      '5. Ligar auth_signup_visible expoe cadastro publico. Existe risco de abuso nao mitigado (rate',\n      '   limit, confirmacao de e-mail)? Verifique o que handleSignup realmente faz.',\n      '6. Qualquer vetor de exfiltracao ou escalonamento que a fatia introduza.',\n      'So reporte o que voce PROVAR lendo o codigo. Zero achado e uma resposta valida.',\n    ].join('\\n'),\n  },\n  {\n    key: 'correctness',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: CORRECAO FUNCIONAL / FAIL-CLOSED. A pergunta que importa: existe QUALQUER estado em que',\n      'a tela publica exponha os botoes sem um admin ter ligado \u2014 ou em que um admin ligue e nada aconteca?',\n      '1. src/pages/Auth.tsx: showSocialLogin/showSignup. Enquanto usePublicAppFlags carrega, o que',\n      '   renderiza? Ha flicker (botao aparece e some)? Isso importa para um revisor gravando video?',\n      '2. usePublicAppSettings: staleTime 60s + retry 1. Um admin liga a flag \u2014 quanto tempo ate um',\n      '   visitante novo ver? E um visitante que ja tem a aba aberta? O SOP promete \"sem rebuild\" \u2014 e verdade?',\n      '3. A mutation faz UPDATE e depois .select(key), tratando 0 linhas como erro. Esta certo? RLS nega',\n      '   com 0 linhas ou com erro? E se a linha nao existir (seed nao aplicado)?',\n      '4. foldFlags/coerceFlag: algum input plausivel do PostgREST (jsonb boolean chega como boolean JS?)',\n      '   que faca um true legitimo virar false \u2014 quebrando a feature em silencio?',\n      '5. O painel de admin: o Switch reflete o estado real apos erro? Fica dessincronizado?',\n      '6. Interacao com o ?devLogin legado: continua funcionando com as flags off?',\n      'So reporte o que voce PROVAR lendo o codigo.',\n    ].join('\\n'),\n  },\n  {\n    key: 'house-conformance',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: CONFORMIDADE COM OS PADROES DA CASA + verificacao factual contra o repo.',\n      '1. A migration referencia public.update_updated_at_column() e public.audit_logs(user_id, action,',\n      '   resource_type, details). Essas assinaturas EXISTEM exatamente assim? Confirme por grep nas',\n      '   migrations. Um erro aqui faz o apply falhar em producao.',\n      \"2. public.has_role('admin'::public.app_role) single-arg: confirme que e a assinatura deployada e\",\n      \"   que o tipo app_role tem o valor 'admin'.\",\n      '3. A migration e idempotente/re-executavel (IF NOT EXISTS, DROP POLICY IF EXISTS, ON CONFLICT)?',\n      '4. Convencoes: nome/timestamp do arquivo, comentario-cabecalho com SOP, codigo em ingles, UI pt-BR.',\n      '5. src/lib + src/hooks + component seguem o Harness Engineering Pattern (logica no hook,',\n      '   componente display-only)? Compare com useGlobalAppConfig/GlobalAppKeysPanel.',\n      '6. O SOP em docs/processes/ cumpre a Lei 2 (Operator/Sequence/Verification/Recovery/Success)?',\n      '   Alguma promessa no SOP que o codigo NAO cumpre? Isso seria um falso-sucesso documentado.',\n      'Use bash/grep para VERIFICAR, nao deduza.',\n    ].join('\\n'),\n  },\n  {\n    key: 'regression',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: REGRESSAO. O que esta fatia quebra que hoje funciona?',\n      '1. src/pages/AdminPage.tsx ganhou uma aba. Quebra layout/testes existentes? Ha teste que conte abas?',\n      '2. src/pages/Auth.tsx: o hook novo adiciona uma query na tela de login. Se o Supabase estiver fora',\n      '   do ar / a tabela nao existir ainda (migration nao aplicada), a tela de login ainda FUNCIONA?',\n      '   Isso e critico: um erro nao tratado aqui derruba o login de todo mundo. Rastreie o caminho do',\n      '   erro do useQuery \u2014 existe ErrorBoundary global? O meta:{silent:true} realmente suprime algo, ou',\n      '   e decorativo (ha algum handler global de erro no QueryClient que o leia)? Verifique onde o',\n      '   QueryClient e criado (src/App.tsx ou main).',\n      '3. A tabela ainda NAO existe em producao no momento do deploy do frontend. Qual a ordem segura de',\n      '   deploy (migration antes do build)? O codigo aguenta a ordem inversa?',\n      '4. Rode: bun run lint   e   npx tsc -p tsconfig.app.json --noEmit   e reporte QUALQUER erro novo.',\n      'Use bash de verdade. Reporte o que observar.',\n    ].join('\\n'),\n  },\n]\n\nphase('Lentes')\n\nconst results = await pipeline(\n  LENSES,\n  (lens) => agent(lens.prompt, { label: 'lente:' + lens.key, phase: 'Lentes', schema: FINDINGS_SCHEMA }),\n  (review, lens) =>\n    parallel(\n      ((review && review.findings) || []).map((f) => () =>\n        parallel([\n          () =>\n            agent(\n              [\n                CONTEXT,\n                '',\n                'TENTE REFUTAR este achado. Leia o codigo e prove que ele NAO se sustenta.',\n                'Achado: \"' + f.title + '\" em ' + f.file + ':' + f.line + ' (' + f.severity + ')',\n                'Alegacao: ' + f.why_it_breaks,\n                '',\n                'Se o achado descreve algo que o codigo ja trata, ou depende de premissa falsa, marque',\n                'refuted=true. Na duvida sobre se e real, prefira refuted=true \u2014 so sobrevive o demonstravel.',\n              ].join('\\n'),\n              { label: 'refuta-A:' + f.title.slice(0, 28), phase: 'Refuta\u00e7\u00e3o', schema: VERDICT_SCHEMA },\n            ),\n          () =>\n            agent(\n              [\n                CONTEXT,\n                '',\n                'Voce e o CETICO DE IMPACTO. O achado abaixo pode ser tecnicamente correto mas irrelevante.',\n                'Achado: \"' + f.title + '\" em ' + f.file + ':' + f.line + ' (' + f.severity + ')',\n                'Alegacao: ' + f.why_it_breaks,\n                '',\n                'Pergunte: isso MACHUCA alguem de verdade nesta fatia? Qual usuario, em que cenario plausivel?',\n                'Se o impacto e teorico/estilistico, ou se a severidade esta inflada em 2+ niveis,',\n                'marque refuted=true. Se machuca de verdade (login quebrado, exposicao indevida, migration',\n                'que nao aplica), refuted=false.',\n              ].join('\\n'),\n              { label: 'refuta-B:' + f.title.slice(0, 28), phase: 'Refuta\u00e7\u00e3o', schema: VERDICT_SCHEMA },\n            ),\n        ]).then((votes) => {\n          const valid = votes.filter(Boolean)\n          const refutedCount = valid.filter((v) => v.refuted).length\n          return Object.assign({}, f, {\n            lens: lens.key,\n            survives: valid.length > 0 && refutedCount < 2,\n            votes: valid,\n          })\n        }),\n      ),\n    ),\n)\n\nconst all = results.flat().filter(Boolean)\nconst survivors = all.filter((f) => f.survives)\nconst killed = all.filter((f) => !f.survives)\n\nlog(all.length + ' achados brutos \u00b7 ' + survivors.length + ' sobreviveram \u00b7 ' + killed.length + ' mortos')\n\nreturn {\n  survivors: survivors.sort((a, b) => a.severity.localeCompare(b.severity)),\n  killed: killed.map((f) => ({\n    title: f.title,\n    severity: f.severity,\n    why_killed: f.votes.map((v) => v.reason),\n  })),\n}\n",
+  "description": "Revis\u00e3o adversarial da fatia"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: why8jbwbk
+> Summary: Revisão adversarial da fatia public_app_settings (flag de admin p/ visibilidade do /auth)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a58b108c-7265-46a8-97f6-41f72f104558/subagents/workflows/wf_f65d55c0-e96
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a58b108c-7265-46a8-97f6-41f72f104558/workflows/scripts/review-public-app-settings-wf_f65d55c0-e96.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a58b108c-7265-46a8-97f6-41f72f104558/workflows/scripts/review-public-app-settings-wf_f65d55c0-e96.js"} to iterate without resending the script.)
+> Run ID: wf_f65d55c0-e96
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a58b108c-7265-46a8-97f6-41f72f104558/workflows/scripts/review-public-app-settings-wf_f65d55c0-e96.js", resumeFromRunId: "wf_f65d55c0-e96"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(14:14:55)*
+
+Enquanto as lentes rodam, o lint e o `/security-review`:
+
+## 🤖 Claude *(14:14:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run lint 2>&1 | tail -15",
+  "description": "ESLint",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   75:6  warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+> 
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/CalendarPage.tsx
+>   244:87   warning  React Hook useMemo has missing dependencies: 'rangeEnd' and 'rangeStart'. Either include them or remove the dependency array            react-hooks/exhaustive-deps
+>   244:88   warning  React Hook useMemo has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+>   244:110  warning  React Hook useMemo has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked  react-hooks/exhaustive-deps
+> 
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/ChatPage.tsx
+>   62:6  warning  React Hook useEffect has a missing dependency: 'activeThreadId'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+> 
+> /home/gcrUX/htdocs/constellation-orchestra/src/pages/VideoEditorPage.tsx
+>   341:6  warning  React Hook useEffect has missing dependencies: 'startWatcher', 'stopWatcher', 'videoRendering', and 'videoUrl'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+> 
+> ✖ 28 problems (0 errors, 28 warnings)
+> ```
+
+## 🤖 Claude *(14:15:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+ESLint is showing no errors in my files, though there are 28 pre-existing warnings elsewhere. Now I'm looking at the /security-review, which is a Harness skill.
+
+</details>
+
+
+## 🤖 Claude *(14:15:16)*
+
+ESLint **0 erros** (28 warnings, todos pré-existentes em outros arquivos). Agora o gate obrigatório de toda migration:
+
+## 🤖 Claude *(14:15:16)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(14:15:16)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/pages/AdminPage.tsx
+	modified:   src/pages/Auth.tsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/public-auth-visibility-flags.md
+	src/components/admin/AuthVisibilityPanel.tsx
+	src/hooks/usePublicAppSettings.ts
+	src/lib/public-app-settings.ts
+	src/test/public-app-settings.test.ts
+	supabase/migrations/20260730120000_public_app_settings.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(14:15:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The diff came back empty since the files are untracked, so I need to read them directly and pass the content to sub-tasks. I'm following the plan: first launching a sub-task to identify vulnerabilities with the file list, then running parallel sub-tasks to filter false positives, and finally filtering out anything below confidence level 8.
+
+</details>
+
+
+## 🤖 Claude *(14:15:52)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "run_in_background": false,
+  "description": "Identify security vulns in branch changes",
+  "prompt": "You are a senior security engineer conducting a focused security review of uncommitted changes in the repository /home/gcrUX/htdocs/constellation-orchestra.\n\nThe `git diff` was empty because most files are UNTRACKED. You must READ the files directly.\n\nFILES CHANGED IN THIS PR (read every one of them in full):\n- NEW: supabase/migrations/20260730120000_public_app_settings.sql\n- NEW: src/lib/public-app-settings.ts\n- NEW: src/hooks/usePublicAppSettings.ts\n- NEW: src/components/admin/AuthVisibilityPanel.tsx\n- NEW: src/test/public-app-settings.test.ts (test-only file \u2014 excluded from findings)\n- NEW: docs/processes/public-auth-visibility-flags.md (documentation \u2014 excluded from findings)\n- MODIFIED: src/pages/Auth.tsx  (see `git diff src/pages/Auth.tsx`)\n- MODIFIED: src/pages/AdminPage.tsx (see `git diff src/pages/AdminPage.tsx`)\n\nWHAT THE CHANGE DOES: The public login screen (/auth, no session) previously hid the Google/TikTok social login buttons and the \"Cadastrar\" (signup) tab behind a `?devLogin` URL query param. Now they can ALSO be enabled by boolean flags stored in a new table `public_app_settings`, toggled by admins at /dashboard/admin. Because /auth has no session, the flags must be readable by the `anon` Postgres role.\n\nOBJECTIVE:\nPerform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.\n\nCRITICAL INSTRUCTIONS:\n1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability\n2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings\n3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise\n4. EXCLUSIONS: Do NOT report the following issue types:\n   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption\n   - Secrets or sensitive data stored on disk (these are handled by other processes)\n   - Rate limiting or resource exhaustion issues\n\nSECURITY CATEGORIES TO EXAMINE:\n\n**Input Validation Vulnerabilities:**\n- SQL injection via unsanitized user input\n- Command injection in system calls or subprocesses\n- XXE injection in XML parsing\n- Template injection in templating engines\n- NoSQL injection in database queries\n- Path traversal in file operations\n\n**Authentication & Authorization Issues:**\n- Authentication bypass logic\n- Privilege escalation paths\n- Session management flaws\n- JWT token vulnerabilities\n- Authorization logic bypasses\n\n**Crypto & Secrets Management:**\n- Hardcoded API keys, passwords, or tokens\n- Weak cryptographic algorithms or implementations\n- Improper key storage or management\n- Cryptographic randomness issues\n- Certificate validation bypasses\n\n**Injection & Code Execution:**\n- Remote code execution via deseralization\n- Pickle injection in Python\n- YAML deserialization vulnerabilities\n- Eval injection in dynamic code execution\n- XSS vulnerabilities in web applications (reflected, stored, DOM-based)\n\n**Data Exposure:**\n- Sensitive data logging or storage\n- PII handling violations\n- API endpoint data leakage\n- Debug information exposure\n\nAdditional notes:\n- Even if something is only exploitable from the local network, it can still be a HIGH severity issue\n\nANALYSIS METHODOLOGY:\n\nPhase 1 - Repository Context Research (Use file search tools):\n- Identify existing security frameworks and libraries in use\n- Look for established secure coding patterns in the codebase. In particular compare against the reference migration `supabase/migrations/20260716210000_global_app_credentials_admin_tier.sql` and `supabase/migrations/20260414154016_a94ffdfc-62ba-4d55-94dd-48c1d316d19b.sql` (which defines the canonical single-arg `public.has_role(app_role)` and its GRANTs).\n- Examine existing sanitization and validation patterns\n- Understand the project's security model and threat model (RLS-first, default-deny, multi-tenant via auth.uid())\n\nPhase 2 - Comparative Analysis:\n- Compare new code changes against existing security patterns\n- Identify deviations from established secure practices\n- Look for inconsistent security implementations\n- Flag code that introduces new attack surfaces\n\nPhase 3 - Vulnerability Assessment:\n- Examine each modified file for security implications\n- Trace data flow from user inputs to sensitive operations\n- Look for privilege boundaries being crossed unsafely\n- Identify injection points and unsafe deserialization\n\nSpecific things worth checking carefully (do not limit yourself to these):\n- The RLS policies on the new table: `FOR SELECT TO anon, authenticated USING (true)` and `FOR ALL TO authenticated USING (public.has_role('admin'::public.app_role))`. Can a non-admin authenticated user write? Can anon write? Does the FOR ALL policy interact badly with the permissive SELECT policy (Postgres RLS policies are OR'ed within the same command)?\n- The GRANT/REVOKE statements and whether they match the intended privilege model.\n- The `SECURITY DEFINER` audit trigger `public.trg_audit_public_app_settings()` \u2014 is `search_path` locked? Can a caller influence what it writes? Does it enable privilege escalation? Can a non-admin cause writes to `audit_logs` with a forged user_id?\n- The CHECK allowlist constraint on `key` \u2014 is it a real control?\n- The `value` column is free-form jsonb, world-readable. Is there any way a lower-privileged user writes to it?\n- Whether enabling `auth_signup_visible` creates a new authentication/authorization risk in `src/pages/Auth.tsx` handleSignup.\n- Client-side flag handling in src/hooks/usePublicAppSettings.ts and src/lib/public-app-settings.ts \u2014 fail-open vs fail-closed. Note that per the review precedents, a lack of permission checking in CLIENT-side code is NOT a vulnerability (server-side RLS is the control).\n\nREQUIRED OUTPUT FORMAT:\n\nOutput your findings in markdown. Each finding must contain the file, line number, severity, category, description, exploit scenario, and fix recommendation.\n\nFor example:\n\n# Vuln 1: XSS: `foo.py:42`\n\n* Severity: High\n* Description: ...\n* Exploit Scenario: ...\n* Recommendation: ...\n\nSEVERITY GUIDELINES:\n- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass\n- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact\n- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities\n\nCONFIDENCE SCORING:\n- 0.9-1.0: Certain exploit path identified\n- 0.8-0.9: Clear vulnerability pattern with known exploitation methods\n- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit\n- Below 0.7: Don't report (too speculative)\n\nFocus on HIGH and MEDIUM findings only. If you find nothing that meets the bar, say so explicitly \u2014 reporting zero findings is a valid and expected outcome. Do NOT invent findings to appear thorough.\n\nReport each candidate finding with its file:line, severity, category, description, exploit scenario, recommendation, and your confidence score."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'I read every changed file, the canonical `has_role` migration (`20260414154016`), the reference admin-tier migration (`20260716210000`), the `audit_logs` schema/policies, the reused `update_updated_at_column()` function, and the `handle_new_user()` signup trigger.\n\n# Security Review: `public_app_settings` (public auth-visibility flags)\n\n## Verdict: no HIGH or MEDIUM findings\n\nThe write path is correctly closed. Below is the verification of each hypothesis raised, then the one LOW-severity item.\n\n---\n\n## Verified as NOT vulnerable\n\n**1. RLS policy interaction (`FOR SELECT USING (true)` vs `FOR ALL` admin) — `20260730120000_public_app_settings.sql:52-62`**\nPermissive policies are OR\'ed *within the same command*, but the world-readable policy is `FOR SELECT` only, so it is not in the applicable set for `UPDATE`/`DELETE` (USING) or `INSERT` (WITH CHECK). Those commands are gated exclusively by the `FOR ALL` admin policy. An authenticated non-admin issuing `PATCH /public_app_settings?key=eq.auth_signup_visible` gets 0 rows affected — and `useAdminAppSettings.setFlag` (`src/hooks/usePublicAppSettings.ts:79-81`) correctly treats a silent 0-row result as failure rather than success. No bypass.\n\n**2. Anon write path — line 66-68**\n`GRANT SELECT ... TO anon` plus an explicit `REVOKE INSERT, UPDATE, DELETE ... FROM anon` neutralizes Supabase\'s `ALTER DEFAULT PRIVILEGES ... GRANT ALL ... TO anon`. Anon writes fail at the grant layer before RLS is even consulted.\n\n**3. `has_role` reachability — line 22, 61**\nThe migration comment is correct and load-bearing: `has_role(app_role)` is `REVOKE ALL ... FROM PUBLIC` / `GRANT EXECUTE ... TO authenticated` (`20260414154016:29-30`). Because the anon-facing SELECT policy is a plain `USING (true)` and the `has_role` policy is scoped `TO authenticated`, anon never evaluates a function it cannot execute. No permission-denied fail-open, no fail-closed lockout.\n\n**4. `SECURITY DEFINER` audit trigger — lines 76-110**\n`SET search_path = \'\'` is present and every reference is schema-qualified (`public.audit_logs`, `auth.uid()`, `jsonb_build_object` from `pg_catalog`). `user_id` comes from `auth.uid()`, never from a caller-supplied column, so a forged `user_id` in `audit_logs` is impossible. Non-admins cannot reach the trigger at all (the RLS write gate rejects them before the AFTER trigger fires). The `REVOKE ALL ON FUNCTION` is harmless: PostgreSQL checks `EXECUTE` on a trigger function at `CREATE TRIGGER` time, not at fire time. Matches the hardening of `trg_instead_of_social_app_config` in the reference migration.\n\n**5. CHECK allowlist on `key` — lines 37-39**\nA real server-side control, not cosmetic: it is a table constraint enforced on every `INSERT`/`UPDATE` regardless of role, including `service_role`. Even a compromised admin cannot turn this world-readable table into a secret store under a new key without a migration. `foldFlags` (`src/lib/public-app-settings.ts:61`) re-filters client-side as defense in depth — the test at `src/test/public-app-settings.test.ts:44` proves an injected `is_admin` key is dropped.\n\n**6. Free-form `value` jsonb + world-read**\nOnly admins can write it, and `coerceFlag` (`src/lib/public-app-settings.ts:51-55`) is genuinely fail-closed (`=== true` or the literal string `"true"`). No `dangerouslySetInnerHTML` anywhere in `AuthVisibilityPanel.tsx`; the DB-sourced `description` is fetched but never rendered (the panel renders the hardcoded `PUBLIC_APP_FLAG_META` instead). No stored XSS.\n\n**7. `auth_signup_visible` and `handleSignup` — `src/pages/Auth.tsx:49-69, 244`**\nThe flag is UI-only. It does not touch GoTrue\'s `disable_signup` setting, so it does not bypass any server-side control — external signup is already enabled at the API level, and `supabase.auth.signUp` is reachable via the public anon key with or without the tab rendered. `handle_new_user()` (`20260402014040:356`) assigns role `viewer`, not an elevated role, so there is no privilege-escalation-by-registration path. This is a discoverability/product decision, not a new vulnerability.\n\n**8. Client fail-open**\n`usePublicAppFlags` (`src/hooks/usePublicAppSettings.ts:53`) returns `PUBLIC_APP_FLAG_DEFAULTS` (all false) while loading, on error, and on a denied read. Correctly fail-closed, and per review precedent, client-side gating is not the control anyway.\n\n---\n\n## LOW (below the HIGH/MEDIUM reporting bar — noted, not a blocker)\n\n# Vuln 1: Anonymous exposure of an admin\'s `auth.users` UUID via `updated_by`: `supabase/migrations/20260730120000_public_app_settings.sql:66`\n\n* Severity: Low\n* Category: Data Exposure\n* Confidence: 0.85 (exposure certain; meaningful downstream impact not demonstrated)\n* Description: `GRANT SELECT ON public.public_app_settings TO anon` is table-wide, and the RLS policy is `USING (true)`. The table carries `updated_by UUID REFERENCES auth.users(id)` (line 35). After the first admin toggle, that column holds a real admin user id and becomes readable by unauthenticated clients. This deviates from the house pattern for anon-reachable relations containing sensitive columns, which uses **column-level** grants — see `20260414150946:14` (`GRANT SELECT (id, user_id, plan, ...) ON public.subscriptions TO authenticated, anon`) and `20260531193000:24` (`meta_config`). The application only ever selects `key, value, description, updated_at` (`src/hooks/usePublicAppSettings.ts:28`), so `updated_by` is exposed without being needed. The SOP\'s G4 gate (`docs/processes/public-auth-visibility-flags.md:56`) asserts `updated_by` is written but does not note it is world-readable.\n* Exploit Scenario: An unauthenticated attacker with the publishable anon key (present in the shipped frontend bundle) issues `GET /rest/v1/public_app_settings?select=updated_by` and recovers the internal UUID of the admin account. This does not by itself grant access — every RLS policy in the codebase keys off `auth.uid()` rather than a client-supplied id — but it hands an attacker a confirmed high-value account identifier for targeted follow-on attacks and removes any guessing cost.\n* Recommendation: Replace the table-wide grant with a column-level one, matching the existing precedent:\n  ```sql\n  REVOKE SELECT ON public.public_app_settings FROM anon, authenticated;\n  GRANT SELECT (key, value, description, updated_at) ON public.public_app_settings TO anon, authenticated;\n  GRANT SELECT (updated_by) ON public.public_app_settings TO authenticated; -- if the admin UI ever needs it\n  ```\n  No client change is required — the hook already selects only the four safe columns. Optionally add a `COMMENT` noting that any future column on this table is world-readable by default.\n\n---\n\nTwo smaller observations, not vulnerabilities: the audit trigger is `AFTER INSERT OR UPDATE` only, so an admin `DELETE` (permitted by the `FOR ALL` policy) leaves no audit trail — though the result is fail-closed, since a missing row folds to `false`. And `update_updated_at_column()` (`20260530210000:16-22`) is `SECURITY INVOKER`, so attaching it to this table introduces no definer surface.'}, {'type': 'text', 'text': "agentId: a4c6fb7ce99524175 (use SendMessage with to: 'a4c6fb7ce99524175', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 142086\ntool_uses: 16\nduration_ms: 230616</usage>"}]
+> ```
+
+## 🤖 Claude *(14:19:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The identification phase found only one LOW severity issue with a confidence score of 8.5 out of 10, but since the instructions prioritize HIGH and MEDIUM findings, I'll still run the false-positive filter on it to be thorough before making a final decision. I'm launching a parallel sub-task to validate this finding.
+
+</details>
+
+
+## 🤖 Claude *(14:20:13)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "run_in_background": false,
+  "description": "False-positive filter: updated_by exposure",
+  "prompt": "You are filtering a candidate security finding for false positives. Repository: /home/gcrUX/htdocs/constellation-orchestra\n\nCANDIDATE FINDING:\n# Anonymous exposure of an admin's `auth.users` UUID via `updated_by`: `supabase/migrations/20260730120000_public_app_settings.sql:66`\n* Severity claimed: Low\n* Category: Data Exposure\n* Description: `GRANT SELECT ON public.public_app_settings TO anon` is table-wide and the RLS policy is `USING (true)`. The table has a column `updated_by UUID REFERENCES auth.users(id)`. After the first admin toggle, that column holds a real admin user id and is readable by unauthenticated clients via PostgREST (`GET /rest/v1/public_app_settings?select=updated_by`) using the publishable anon key that ships in the frontend bundle.\n* Claimed impact: leaks the internal UUID of an admin account to unauthenticated attackers, useful for targeted follow-on attacks.\n* Recommended fix: use column-level grants (`GRANT SELECT (key, value, description, updated_at) ... TO anon`), matching the existing house precedent in migrations 20260414150946 and 20260531193000.\n\nYOUR TASK: read the relevant files and determine whether this is a real, actionable vulnerability or a false positive / noise.\n\nRead at minimum:\n- supabase/migrations/20260730120000_public_app_settings.sql\n- src/hooks/usePublicAppSettings.ts\n- Check whether user UUIDs are already exposed to anon or to other users elsewhere in this codebase (e.g. grep for other tables readable by anon that contain user_id columns, public views, public form endpoints such as `src/pages/PublicFormPage.tsx`, or any place a user id is rendered/exposed publicly).\n- Consider whether knowing an admin's auth.users UUID enables any concrete attack in this system, given that RLS policies key off `auth.uid()` (server-derived from the JWT) rather than any client-supplied id.\n\nFALSE POSITIVE FILTERING INSTRUCTIONS:\n\n> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not write to any files.\n>\n> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:\n> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.\n> 2. Secrets or credentials stored on disk if they are otherwise secured.\n> 3. Rate limiting concerns or service overload scenarios.\n> 4. Memory consumption or CPU exhaustion issues.\n> 5. Lack of input validation on non-security-critical fields without proven security impact.\n> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.\n> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.\n> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.\n> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.\n> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.\n> 11. Files that are only unit tests or only used as part of running tests.\n> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.\n> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.\n> 14. Including user-controlled content in AI system prompts is not a vulnerability.\n> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.\n> 16. Regex DOS concerns.\n> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.\n> 17. A lack of audit logs is not a vulnerability.\n>\n> PRECEDENTS -\n> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.\n> 2. UUIDs can be assumed to be unguessable and do not need to be validated.\n> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.\n> 4. Resource management issues such as memory or file descriptor leaks are not valid.\n> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.\n> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.\n> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.\n> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.\n> 9. Only include MEDIUM findings if they are obvious and concrete issues.\n> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice.\n> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive.\n> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice.\n>\n> SIGNAL QUALITY CRITERIA - For remaining findings, assess:\n> 1. Is there a concrete, exploitable vulnerability with a clear attack path?\n> 2. Does this represent a real security risk vs theoretical best practice?\n> 3. Are there specific code locations and reproduction steps?\n> 4. Would this finding be actionable for a security team?\n>\n> Assign a confidence score from 1-10:\n> - 1-3: Low confidence, likely false positive or noise\n> - 4-6: Medium confidence, needs investigation\n> - 7-10: High confidence, likely true vulnerability\n\nPay particular attention to exclusion #7 (a lack of hardening measures is not a concrete vulnerability) and precedent #2 (UUIDs are unguessable identifiers, not secrets) when judging this finding.\n\nOutput: a short verdict (REAL VULNERABILITY or FALSE POSITIVE/NOISE), your confidence score 1-10, and a 2-4 sentence justification grounded in what you actually read."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': '## Verdict: FALSE POSITIVE / NOISE\n\n**Confidence: 2/10** (i.e. high confidence this is *not* an actionable vulnerability)\n\n**Justification:**\n\nThe technical description is accurate — `GRANT SELECT ON public.public_app_settings TO anon` is table-wide and the policy is `USING (true)`, so after the first admin toggle `updated_by` would be readable via `?select=updated_by`. But there is no attack it enables. Every authorization path in this system derives identity server-side: `public.has_role(app_role)` (`supabase/migrations/20260414154016_...sql:14-27`) is `SECURITY DEFINER` keyed on `auth.uid()` with no caller-supplied id, and the only edge functions that accept `body.user_id` (`generate-voice/index.ts:96-110`, `generate-subtitles`, `publish-meta`, `nurture-dispatch`) gate that path behind `authHeader === Bearer ${serviceKey}` — an anon holder of the publishable key can\'t reach it. A user UUID here is an unguessable identifier, not a credential (precedent #2).\n\nTwo further points undercut the claimed severity. First, the cited "house precedent" migration `20260414150946_...sql:14` actually does the opposite of what the finding implies: it explicitly grants `SELECT (id, user_id, ...) ON public.subscriptions TO authenticated, anon` — this codebase demonstrably does not treat user UUIDs as secrets, and the Sovereign\'s own User Zero id is recorded in plain project docs. Second, the seeded rows carry `updated_by = NULL`, and the client only ever selects `key, value, description, updated_at` (`src/hooks/usePublicAppSettings.ts:28`), so nothing is leaked until an admin flips a flag, and even then it is one UUID on a deliberately world-readable, CHECK-allowlisted, two-row flag table whose comment already forbids storing PII.\n\nNarrowing to a column grant is a reasonable ~1-line defense-in-depth tidy-up, but it is a hardening preference with no demonstrated impact — exactly the class covered by exclusion #7.'}, {'type': 'text', 'text': "agentId: aaa2a1ec4d02f1e5c (use SendMessage with to: 'aaa2a1ec4d02f1e5c', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 113168\ntool_uses: 11\nduration_ms: 73325</usage>"}]
+> ```
+
+## 🤖 Claude *(14:21:44)*
+
+# Security Review — `public_app_settings` (public auth-visibility flags)
+
+## No security findings
+
+The identification pass examined the full change set (new migration, lib, hook, admin panel, and the modified `Auth.tsx` / `AdminPage.tsx`) against the repository's established RLS-first, default-deny security model. One candidate finding was raised and eliminated in false-positive filtering (confidence 2/10 — a hardening preference with no demonstrated attack path, covered by exclusion #7 and precedent #2).
+
+### Write path verified closed
+
+* **RLS policy interaction** (`20260730120000_public_app_settings.sql:52-62`) — the world-readable policy is `FOR SELECT` only, so it is not in the applicable policy set for `INSERT`/`UPDATE`/`DELETE`. Those commands are gated exclusively by the `FOR ALL` admin policy. An authenticated non-admin `PATCH` affects 0 rows, and `setFlag` (`src/hooks/usePublicAppSettings.ts:79-81`) correctly treats a silent 0-row result as failure rather than success.
+* **Anon writes** (`:66-68`) — the explicit `REVOKE INSERT, UPDATE, DELETE ... FROM anon` neutralizes Supabase's default `GRANT ALL` to `anon`; writes fail at the grant layer before RLS is consulted.
+* **`has_role` reachability** (`:22, :61`) — `has_role(app_role)` is `REVOKE ALL FROM PUBLIC` / `GRANT EXECUTE TO authenticated` (`20260414154016:29-30`). Because the anon-facing SELECT policy is a plain `USING (true)` and the admin policy is scoped `TO authenticated`, anon never evaluates a function it cannot execute — no permission-denied fail-open and no lockout of the public read.
+* **`SECURITY DEFINER` audit trigger** (`:76-110`) — `SET search_path = ''` is present with every reference schema-qualified. `user_id` is taken from `auth.uid()`, never from a caller-supplied column, so forged `audit_logs` attribution is impossible; non-admins never reach the trigger, since the RLS write gate rejects them before it fires.
+* **CHECK allowlist on `key`** (`:37-39`) — a genuine server-side control, enforced on every write regardless of role including `service_role`, so the world-readable table cannot become a secret store under a new key without a migration. `foldFlags` re-filters client-side as defense in depth.
+* **Stored XSS** — the DB-sourced `description` is fetched but never rendered; `AuthVisibilityPanel.tsx` renders the hardcoded `PUBLIC_APP_FLAG_META` and uses no `dangerouslySetInnerHTML`.
+* **`auth_signup_visible` / `handleSignup`** (`src/pages/Auth.tsx:49-69, 244`) — the flag is UI-only and does not touch GoTrue's `disable_signup`; `supabase.auth.signUp` was already reachable with the public anon key regardless of whether the tab renders. `handle_new_user()` assigns role `viewer`, so there is no privilege-escalation-by-registration path. This is a product/discoverability decision, not a new vulnerability.
+* **Client flag handling** (`src/hooks/usePublicAppSettings.ts:53`, `src/lib/public-app-settings.ts:51-55`) — fail-closed on loading, error, and denied read; `coerceFlag` requires an explicit `true`.
+
+### Non-security observations (not blockers)
+
+The audit trigger fires `AFTER INSERT OR UPDATE` only, so an admin `DELETE` (permitted by the `FOR ALL` policy) leaves no audit trail — the outcome is still fail-closed, since a missing row folds to `false`. Narrowing the anon grant to `SELECT (key, value, description, updated_at)` would keep `updated_by` out of an anon-readable relation; the hook already selects only those four columns, so it would require no client change.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -1932,5 +3969,5 @@ Capturas enviadas — feitas contra o site público real, não em preview local,
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]
-> * **Próxima Sessão**: [[2026-07-30 - agent-a1044843029730bdb]]
+> * **Próxima Sessão**: [[2026-07-30 - agent-a0dfcd864d9acd938]]
 %% --- TIMELINE END --- %%
