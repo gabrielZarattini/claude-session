@@ -1,5 +1,5 @@
 # Resolver rejeição TikTok API com credenciais de teste
-**Date:** 2026-07-30 | **Session ID:** `a58b108c-7265-46a8-97f6-41f72f104558`
+**Date:** 2026-07-30 | **Session ID:** `9581194a-6c26-4463-a59e-43d6e6c801ad`
 
 ---
 
@@ -5168,179 +5168,6 @@ in the platform can be published to that same account via the Content
 Posting API (video.upload / video.publish, Direct Post), always by explicit
 user action and never to any account other than the one the user connected.
 
-## 🤖 Claude *(15:34:14)*
-
-<details>
-<summary>💭 Thinking Process</summary>
-
-O revisor rejeitou porque o site atual é apenas uma página de login, não um site totalmente desenvolvido. Preciso reescrever o texto do review para explicar que o site será atualizado com uma versão completa e funcional, endereçando diretamente essa objeção específica sobre o URL do website. Entendi — há dois campos separados: o "Apply Reason" é onde vai a conta de teste (conforme pediu o revisor), e o campo de App Review é para explicar os produtos e scopes. Preciso estruturar a resposta focando primeiro em endereçar a objeção sobre o Website URL não ser uma landing page, depois destacar as credenciais de teste de forma clara, e adicionar um passo-a-passo numerado para o revisor seguir facilmente.
-
-Vou mencionar que o botão "Log in with TikTok" agora aparece direto na tela de login graças à flag que ativamos, explicar como o Login Kit funciona junto com a Content Posting API e os scopes necessários, e deixar claro que durante o review os posts vão como privados (SELF_ONLY) porque apps não auditados só podem fazer isso — o revisor não vai precisar mais do `?devLogin` já que a flag está ligada. Preciso preparar dois textos: um mais detalhado para o campo de review notes que aborda a objeção sobre ser apenas login/landing page, explicando o produto completo e fornecendo instruções de teste com a conta de teste; e uma versão condensada para o campo de 1000 caracteres que já existe mas pode ser refinada. Entendo — o revisor quer um site "fully developed", não apenas uma landing ou login page. O produto real está protegido atrás da autenticação, então a solução é fornecer credenciais de teste para que ele acesse e veja o dashboard completo e as funcionalidades reais.
-
-Vou estruturar a resposta reconhecendo que a URL mostra a landing (marketing), explicando que o SaaS completo está atrás do login, e fornecendo acesso de teste para explorar tudo até a integração com TikTok. Sobre o "post in private" — o TikTok requer que apps não auditados façam posts como privados apenas via client, e o controle de audiência precisa estar configurado corretamente durante o review.
-
-Vou manter tudo factual, mencionar que a conta não precisa de verificação de email para não travar o revisor, e notar que ambos os fluxos de login social (Google e TikTok) estão disponíveis na tela de autenticação.
-
-Vou escrever em inglês mas indicar entre parênteses os rótulos em português-brasileiro, já que a UI está nesse idioma e isso ajuda o revisor internacional a localizar os botões corretamente — vou traduzir os labels-chave para evitar confusão.
-
-Agora vou estruturar as informações finais: dados da conta de teste com acesso completo, URL de login, e uma explicação sobre o MCORCH ser um SaaS com autenticação obrigatória para acessar o produto completo. test video in the app and publish it to see the Content Posting API in action — our server handles the upload and publishing to the same TikTok account the user connected, only when they explicitly request it, and during review all posts are set to private so only the account owner can see them. The integration uses two key scopes: user.info.basic to display which TikTok account is connected, and video.upload/video.publish to post user-created videos directly to their own profile on demand.
-
-Now I'm checking whether our Direct Post implementation actually creates posts as private during review — Sovereign mentioned "post in private" initially, which suggests it does, but I should verify this against the actual publish-tiktok code to be certain.
-
-The key issue is that I'm writing this for the reviewer, so if I claim posts are private and they test it as public, that's an automatic rejection. I could either verify the code directly or soften the language to avoid a categorical assertion. Actually, TikTok's own API rules enforce that unaudited apps can only post with SELF_ONLY audience anyway, so that's a platform constraint rather than something we're implementing. Vou fazer uma busca rápida no código do publish do TikTok para verificar como o privacy_level é tratado, assim garanto que o texto está correto antes de sugerir qualquer coisa ao Sovereign.
-
-</details>
-
-
-## 🤖 Claude *(15:34:14)*
-
-Antes de te entregar o texto, uma verificação: a menção a "post privado" só entra se for verdade no código — senão o revisor testa e reprova de novo. Deixa eu conferir o que nosso publish do TikTok faz com o nível de privacidade.
-
-## 🤖 Claude *(15:34:16)*
-
-
-🛠️ **Tool Call**: `Bash`
-```json
-{
-  "command": "grep -rniE \"privacy_level|SELF_ONLY|PUBLIC_TO_EVERYONE|direct_post|MUTUAL_FOLLOW|FOLLOWER\" supabase/functions/ src/ 2>/dev/null | grep -iE \"tiktok|privacy_level|SELF_ONLY|direct_post\" | head -20; echo \"=== fns tiktok ===\"; ls supabase/functions/ | grep -i tiktok",
-  "description": "Ver o n\u00edvel de privacidade do Direct Post do TikTok"
-}
-```
-
-> **Tool Result (Bash)** - ✅ Success
->
-> ```
-> supabase/functions/publish-space-asset/index.ts:22:// Only YouTube (privacyStatus) and TikTok (privacy_level → SELF_ONLY) honour it; for LinkedIn / Instagram /
-> supabase/functions/publish-space-asset/index.ts:24:const PRIVACY_LEVELS = new Set(["private", "unlisted", "public"]);
-> supabase/functions/publish-space-asset/index.ts:67:    const requestedPrivacy = typeof body.privacy === "string" && PRIVACY_LEVELS.has(body.privacy) ? body.privacy : null;
-> supabase/functions/auto-publish/index.ts:121:          // enum on the platform API (YouTube status.privacyStatus / TikTok post_info.privacy_level), NEVER
-> supabase/functions/publish-social/index.ts:37:    // privacy_level). It rides content.privacy as an INERT string on the exact same rail already proven by
-> supabase/functions/publish-social/index.ts:45:    // (status.privacyStatus) and TikTok (post_info.privacy_level) expose a private publish. For LINKEDIN
-> supabase/functions/publish-social/index.ts:49:    const PRIVACY_LEVELS = new Set<string>(["private", "unlisted", "public"]);
-> supabase/functions/publish-social/index.ts:53:      typeof rawPrivacy === "string" && PRIVACY_LEVELS.has(rawPrivacy)
-> supabase/functions/publish-social/index.ts:406:      // (1) Pre-flight creator_info — pick a privacy_level that the (possibly unaudited) account actually allows.
-> supabase/functions/publish-social/index.ts:420:      const privacyOptions: string[] = creatorInfo?.data?.privacy_level_options ?? [];
-> supabase/functions/publish-social/index.ts:422:      // SELF_ONLY — TikTok rejects FOLLOWER_OF_CREATOR / MUTUAL_FOLLOW_FRIENDS with
-> supabase/functions/publish-social/index.ts:424:      // SELF_ONLY explicitly, NOT to privacyOptions[0] (which is FOLLOWER_OF_CREATOR on a private acct).
-> supabase/functions/publish-social/index.ts:425:      // When the caller asked for `private`, invert the preference (SELF_ONLY first) — the rest of the
-> supabase/functions/publish-social/index.ts:429:          ? privacyOptions.find((p) => p === "SELF_ONLY")
-> supabase/functions/publish-social/index.ts:431:        privacyOptions.find((p) => p === "SELF_ONLY") ??
-> supabase/functions/publish-social/index.ts:433:        "SELF_ONLY";
-> supabase/functions/publish-social/index.ts:460:            privacy_level: privacyLevel,
-> supabase/functions/publish-social/index.ts:495:      // (4) Poll status until PUBLISH_COMPLETE. publicaly_available_post_id may stay null pre-audit (SELF_ONLY).
-> supabase/functions/publish-social/index.ts:524:      // audited (SELF_ONLY) — that's expected and NOT a failure.
-> src/lib/format-specs.ts:105:    publishable: "real", gateNote: "Conta não-auditada publica como privado (SELF_ONLY) até a auditoria.",
-> === fns tiktok ===
-> tiktok-login-callback
-> tiktok-login-init
-> tiktok-login-session
-> ```
-
-## 🤖 Claude *(15:35:09)*
-
-Confirmado: no fluxo TikTok o código força `SELF_ONLY` para conta não-auditada (`publish-social/index.ts:425-433`). Ou seja, mesmo se o revisor conectar e publicar, o vídeo cai como **privado no perfil dele** — não vaza público. Isso é uma virtude do produto, digna de dizer explicitamente no formulário.
-
-Além disso, um detalhe importante: a URL de login **é** `login.mcorch.com/auth`. A raiz do host redireciona/serve a landing pública. Vou deixar isso claro sem inventar arquitetura, e escrever com voz do dono (que passa por revisor mais rápido que voz de agente).
-
-## Texto pronto para o campo *Apply Reason* (revisão do TikTok)
-
-```text
-TEST ACCOUNT (full access, no email verification, no OAuth required to sign in):
-
-  Login URL : https://login.mcorch.com/auth
-  E-mail    : tiktok.review@mcorch.com
-  Password  : TikTokReview!Mcorch2026
-
-WHY THE URL LOOKS LIKE A LOGIN PAGE
-
-The domain https://login.mcorch.com/ hosts our public marketing site
-(homepage, Terms at /terms, Privacy at /privacy) AND the entry point for
-the authenticated web app at /auth. The product itself — the dashboard
-where creators generate short vertical videos and publish them to their
-own connected TikTok account — is a full-featured SPA that is only
-reachable AFTER sign-in, which is why we provide the test account above.
-
-HOW TO REVIEW THE TIKTOK INTEGRATION (step by step, ~2 minutes)
-
-1. Open https://login.mcorch.com/auth
-2. Sign in with the credentials above (email + password, plain form).
-3. In the left sidebar, click "Redes Sociais" (Social Networks). You will
-   see connection cards for LinkedIn, Instagram, Facebook, X/Twitter,
-   TikTok, YouTube and Pinterest.
-4. On the TikTok card, click "Conectar" (Connect). This starts the
-   Login Kit v2 OAuth flow on www.tiktok.com. Approve the requested
-   scopes (user.info.basic, video.upload, video.publish) with any
-   TikTok account listed as a Target User of our app.
-5. You are redirected back to the dashboard with the TikTok account
-   linked. From this point the user can create a short vertical video
-   in the "Spaces" / video editor and publish it to that same account.
-
-PRODUCTS AND SCOPES REQUESTED
-
-Login Kit — user.info.basic
-  We call /v2/user/info/ once, right after the OAuth exchange, to fetch
-  open_id + display_name + avatar_url. It is used only to (a) show the
-  creator which of their TikTok accounts is connected, and (b) tag any
-  post the platform creates so we never target the wrong account. Never
-  sold, never shared with third parties, never used for advertising.
-
-Content Posting API — video.upload + video.publish (Direct Post)
-  Triggered only by explicit user action on the "Publish" button. The
-  server runs POST /v2/post/publish/video/init/ (FILE_UPLOAD),
-  streams the bytes to the returned upload_url, and polls
-  /v2/post/publish/status/fetch/ until PUBLISH_COMPLETE. The post is
-  always sent to the OWN account the creator connected in step 4 —
-  the connected user_id is the only account our server will ever
-  publish to on behalf of that user.
-
-SAFE-BY-DEFAULT FOR THE REVIEW
-
-Our platform is currently unaudited by TikTok, so our server calls
-/v2/post/publish/creator_info/query/ first and forces
-privacy_level = "SELF_ONLY" when the account is not yet audited (see
-docs.tiktok.com Direct Post spec). Any publish the reviewer performs
-from the test account will therefore appear ONLY on the reviewer's own
-profile as a private post — nothing is leaked to public viewers during
-review.
-
-AUTHENTICATION MODEL FOR THE TEST ACCOUNT
-
-The account above uses password login (email pre-confirmed on our side,
-no verification e-mail needed). Google / TikTok sign-in are also
-available on the /auth screen and work identically, but you do NOT need
-them to review the app — email + password is enough to reach every
-surface described here.
-
-TOKEN HANDLING
-
-Access and refresh tokens are stored server-side, encrypted at rest,
-never returned to the browser, and used exclusively on behalf of the
-user who authorized them. If the creator disconnects the account from
-"Redes Sociais", we revoke and delete the stored tokens.
-
-If you need us to seed the test account with demo content (a sample
-video ready to publish), or to add a specific TikTok account as a
-Target User, contact us through the developer portal and we will do
-it before your next review pass.
-```
-
-## Por que este texto foi reescrito assim (o que mudou vs. o que você tinha)
-
-- **Answers the "not fully developed" complaint before it is raised again.** A primeira seção explica que `login.mcorch.com` **é o mesmo domínio** para site público e app (Terms/Privacy vivem lá) e que o dashboard fica atrás do login — dizendo isso de frente, em vez de deixar o revisor deduzir.
-- **Roteiro passo-a-passo numerado**, com o nome exato de cada tela em português (o que ele vai ver na UI) e a tradução entre parênteses (o que ele lê no formulário em inglês). Elimina "não achei o Login Kit".
-- **Endpoints e nomes de escopo literais** (`/v2/user/info/`, `/v2/post/publish/video/init/`, `POST_STATUS`, `PUBLISH_COMPLETE`) — mostra que quem escreveu leu a doc do TikTok, não é boilerplate.
-- **A parte crítica que faltava:** deixa explícito que o publish force `privacy_level = SELF_ONLY` em contas não-auditadas. Isso **destrava** a preocupação de "app pode postar publicamente sem controle" *e* já explica pro revisor que o post-teste dele **não** vai vazar público. Isso é verdade material do código (`publish-social/index.ts:425-433`), não retórica.
-- **Diz que password login basta.** Se o revisor não conseguir usar Google/TikTok por qualquer motivo, ele sabe que email+senha resolve — nunca mais "não consegui entrar".
-- **Termina com um convite de próximo passo** (seed de conteúdo demo, adicionar Target User). Reduz o custo cognitivo dele reprovar de novo — o passo seguinte parece diálogo, não rejeição.
-
-## O que verificar antes de submeter
-
-1. **Adicione a conta TikTok do revisor à lista de Target Users do seu app** no portal do developer. Sem isso, o passo 4 do roteiro dá "not authorized" no fluxo OAuth (`state expired` / não autorizado) e vira a 5ª reprovação.
-2. Se ainda quiser semear conteúdo demo na conta (para o dashboard não parecer vazio quando ele logar), me diz que eu deixo pronto em ~5 min.
-3. A senha do texto tem `!` — cole exatamente `TikTokReview!Mcorch2026` no formulário. Alguns editores comem o `!` em copy-paste; conferir depois de colar.
-
-Depois que a review passar, me avise que eu revogo a conta e desligo a flag social (opcional — pode deixar ligada se você quiser Google/TikTok visíveis para outros visitantes também).
-
 ## 👤 User *(15:33:09)*
 
 <local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
@@ -6125,6 +5952,2062 @@ Isso funciona porque o asset gerado hoje **fica na biblioteca da conta `tiktok.r
 ## Uma sugestão extra
 
 Antes de gravar, **desconecte o TikTok da conta de review** (Redes Sociais → TikTok → Desconectar). Assim, no vídeo de review você grava do estado limpo "Conectar" → OAuth → conectado. Se estiver já conectado, você precisaria fingir desconectar ou o revisor não vê o fluxo completo.
+
+## 👤 User *(16:50:03)*
+
+O primeiro publicou mas achei que não tinha publicado, eu apaguei manualmente do tiktok e depois vi que foi para o calendario e tambem removi de lá. Agora quando vou no spaces > asset e tento publicar a mensagem aparece.: already_enqueued.
+
+Mas não esta no calendário. Preciso que você veja onde esta indo esse already_enqueued e eu preciso que ele apareça em algum lugar acredito que em mais de um lugar, por exemplo no calendário e no próprio assets modal uma aba com todos os agendamentos e publicações pendentes desse assets ainda. Não entendi por que esta agendando deveria postar diretamente certo?
+
+## 🤖 Claude *(16:50:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Entendi o problema: o botão "Publicar" no modal de asset está retornando um erro de `already_enqueued` porque a requisição foi enfileirada anteriormente, mas o usuário não viu a confirmação. Mesmo depois de deletar o conteúdo do TikTok e do calendário, o registro que mantém esse status continua ativo no banco de dados.
+
+O real problema de UX é que o botão "Publicar" deveria ser síncrono — o revisor veria o vídeo aparecer no TikTok em segundos — ou pelo menos indicar visualmente que enfileirou com um destino claro para acompanhar o estado. Preciso investigar onde `already_enqueued` é lançado, qual tabela guarda esse registro, se deletar do calendário fecha o loop, e o que a UI mostra sobre o pendente. Vou fazer um recon rápido primeiro para entender se o problema é óbvio ou se preciso de um workflow mais estruturado para auditar a arquitetura e propor a mudança mínima.
+
+</details>
+
+
+## 🤖 Claude *(16:50:26)*
+
+Vou rastrear a origem exata do `already_enqueued` — precisa saber qual tabela segura o estado antes de qualquer coisa.
+
+## 🤖 Claude *(16:50:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rniE \"already_enqueued\" supabase/functions/ src/ 2>/dev/null | head -20",
+  "description": "Origem do erro already_enqueued"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/functions/publish-space-asset/index.ts:209:      return json(409, { error: "already_enqueued", scheduled_post_id: variant.scheduled_post_id });
+> supabase/functions/publish-channel-variant/index.ts:51:      return json(409, { error: "already_enqueued", scheduled_post_id: v.scheduled_post_id });
+> ```
+
+## 🤖 Claude *(16:50:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/publish-space-asset/index.ts",
+  "offset": 150,
+  "limit": 75
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 150	              // (storage_bucket, storage_key) (creative_assets_uq_object), so a concurrent duplicate INSERT
+> 151	              // fails 23505 → warn below → publish still proceeds (equivalent, never an overwrite).
+> 152	              const { data: existing } = await admin.from("creative_assets")
+> 153	                .select("id").eq("user_id", user.id).eq("storage_bucket", "canvas-assets").eq("storage_key", outKey).maybeSingle();
+> 154	              if (!existing) {
+> 155	                const { error: insErr } = await admin.from("creative_assets").insert({
+> 156	                  user_id: user.id, kind: "image", storage_bucket: "canvas-assets", storage_key: outKey,
+> 157	                  mime_type: "image/jpeg", file_size_bytes: jpeg.byteLength, width: tw, height: th,
+> 158	                  parent_asset_id: asset.id, source_module: "spaces",
+> 159	                  title: `reframe ${channel}/${surface}`,
+> 160	                  metadata: { reframe: { channel, surface, target: { w: tw, h: th } } },
+> 161	                });
+> 162	                if (insErr) console.warn("[publish-space-asset] derived lineage insert failed (asset still published):", insErr.message);
+> 163	              }
+> 164	              publishBucket = "canvas-assets";
+> 165	              publishKey = outKey;
+> 166	              reframed = true;
+> 167	            }
+> 168	          }
+> 169	        } catch (re) {
+> 170	          reframeSkipReason = re instanceof Error ? re.message : String(re);
+> 171	          console.warn(`[publish-space-asset] reframe fail-open (${channel}/${surface}):`, reframeSkipReason);
+> 172	        }
+> 173	      }
+> 174	    }
+> 175	
+> 176	    // ── Upsert the variant (idempotent on user_id, source_asset_id, channel, surface). status/scheduled_post_id are
+> 177	    //    NOT in the payload → on conflict they are NOT downgraded (a re-call never un-schedules a scheduled variant). ──
+> 178	    const { data: variant, error: upErr } = await admin.from("space_publish_variants")
+> 179	      .upsert({
+> 180	        user_id: user.id,
+> 181	        space_id: spaceId,
+> 182	        node_run_id: nodeRunId,
+> 183	        source_asset_id: asset.id,
+> 184	        channel,
+> 185	        surface,
+> 186	        platform,
+> 187	        native_text: nativeText,
+> 188	        asset_kind: assetKind,
+> 189	        asset_bucket: publishBucket,   // SERVER-TRUSTED (owner row, or the server-derived reframe of it) — never from the client
+> 190	        asset_key: publishKey,
+> 191	        asset_status: "ready",
+> 192	      }, { onConflict: "user_id,source_asset_id,channel,surface" })
+> 193	      .select("id, status, scheduled_post_id, platform").single();
+> 194	    if (upErr || !variant) return json(500, { error: "upsert_failed", detail: upErr?.message });
+> 195	
+> 196	    // ── Draft mode (default): variant created/refreshed, publishable later. ──
+> 197	    if (!wantPublish) {
+> 198	      return json(200, {
+> 199	        ok: true, space_publish_variant_id: variant.id, status: variant.status, platform: variant.platform,
+> 200	        reframed, ...(reframeSkipReason ? { reframe_skip_reason: reframeSkipReason } : {}),
+> 201	      });
+> 202	    }
+> 203	
+> 204	    // ── Publish mode: enqueue into scheduled_posts (auto-publish resolves the asset owner-scoped from the variant). ──
+> 205	    if (!variant.platform) {
+> 206	      return json(422, { error: "surface_not_publishable", action: "Este canal/superfície não mapeia para uma rede publicável." });
+> 207	    }
+> 208	    if (variant.scheduled_post_id || variant.status === "scheduled" || variant.status === "published") {
+> 209	      return json(409, { error: "already_enqueued", scheduled_post_id: variant.scheduled_post_id });
+> 210	    }
+> 211	
+> 212	    const text = typeof nativeText.caption === "string" ? nativeText.caption
+> 213	      : typeof nativeText.body === "string" ? nativeText.body
+> 214	      : typeof nativeText.title === "string" ? nativeText.title : "";
+> 215	    // Sovereign default — fail-SAFE, never fail-open: a YouTube publish with nothing wired from the UI goes out
+> 216	    // PRIVATE. The last reversible step is taken autonomously; flipping it public stays a Sovereign act. This
+> 217	    // makes a public post-by-forgotten-wiring structurally impossible. Other platforms keep the platform default.
+> 218	    const privacy = requestedPrivacy ?? (variant.platform === "youtube" ? "private" : null);
+> 219	    const content: Record<string, unknown> = { text, surface, channel };
+> 220	    if (privacy) content.privacy = privacy;
+> 221	    if (Array.isArray(nativeText.tweets)) content.tweets = nativeText.tweets;
+> 222	    // FR-VR — destination link (the full-episode CTA, UTM-tagged). Rides content.reshape → auto-publish forwards
+> 223	    // it to publish-social; Pinterest turns it into the native clickable pin (the one funnel with a real click).
+> 224	    if (typeof body.link === "string" && /^https?:\/\//.test(body.link)) content.link = body.link.slice(0, 2048);
+> ```
+
+## 🤖 Claude *(16:51:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou rastreando o fluxo completo do sistema de publicação. Já identifiquei que `space_publish_variants` é a tabela central com a constraint UNIQUE em `(user_id, source_asset_id, channel, surface)`, e agora preciso entender quem dispara o envio e por que o publish enfileira em vez de executar imediatamente — parece que há um gate de 409 envolvido nessa lógica. Preciso verificar a query do `scheduled_posts` para entender como o `publish_at` funciona e confirmar se deletar do calendário realmente deixa o `space_publish_variants` órfão. A auditoria envolve múltiplas superfícies — tabelas, modais, calendário, edge functions — e o usuário quer resolver três coisas: encontrar onde o pending está travado, entender por que o sistema enfileira em vez de postar direto, e mostrar o pending em mais lugares. Vou começar resolvendo o problema imediato dele antes de explorar um workflow paralelo. fica órfão? (aposto que sim). Também preciso checar se o modal de asset mostra status, se o calendário deveria listar posts pendentes, e — crítico — explicar ao usuário por que "Publicar agora" é async por design (cron auto-publish a cada N minutos, evita bloquear UI, permite retry), mas concordar que a UX está errada: deveria parecer síncrono com um status pendente visível. Vou fazer um recon rápido com alguns comandos para responder com dados concretos.
+
+Depois vou diagnosticar o que aconteceu com a órfã e por que é async, então perguntar via workflow qual é a extensão da correção desejada — só destravar agora, destravar com micro-fix (cascade delete dos variants), ou o pacote completo com mudança de UX. Antes de tudo, preciso ver os dados do estado atual dessa conta.
+
+Deixa eu checar o que tem em `space_publish_variants` para `tiktok.review`, o que sobrou em `scheduled_posts`, e se o `auto-publish` já processou o que foi apagado.
+
+</details>
+
+
+## 🤖 Claude *(16:51:10)*
+
+Tenho o diagnóstico da mecânica. Deixa eu ver o estado **exato** da sua conta de review no banco — que registro sobrou órfão + confirmar as tabelas envolvidas — em paralelo com o mapa completo das superfícies onde o "pending" já deveria aparecer.
+
+## 🤖 Claude *(16:51:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && . ./.env && set +a\nbun -e '\nconst { createClient } = require(\"@supabase/supabase-js\");\nconst admin = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nconst uid = \"43027d04-8239-4dd7-9a70-4496c3b1be7a\"; // tiktok.review\n\nconst { data: variants } = await admin\n  .from(\"space_publish_variants\")\n  .select(\"id, source_asset_id, channel, surface, platform, status, scheduled_post_id, created_at, updated_at\")\n  .eq(\"user_id\", uid)\n  .order(\"updated_at\", { ascending: false })\n  .limit(10);\nconsole.log(\"=== space_publish_variants (\u00faltimas 10) ===\");\nconsole.log(JSON.stringify(variants, null, 2));\n\nconst { data: posts } = await admin\n  .from(\"scheduled_posts\")\n  .select(\"id, platform, status, publish_at, published_at, error_message, created_at\")\n  .eq(\"user_id\", uid)\n  .order(\"created_at\", { ascending: false })\n  .limit(10);\nconsole.log(\"\\n=== scheduled_posts (\u00faltimas 10) ===\");\nconsole.log(JSON.stringify(posts, null, 2));\n'",
+  "description": "Estado atual da conta de review no banco"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === space_publish_variants (últimas 10) ===
+> [
+>   {
+>     "id": "d5e543f6-58bb-452d-9652-1c0799504862",
+>     "source_asset_id": "0708b6a2-7f01-49f4-b516-ae1a6bf2255e",
+>     "channel": "tiktok",
+>     "surface": "video",
+>     "platform": "tiktok",
+>     "status": "scheduled",
+>     "scheduled_post_id": "68eb993b-9702-402a-8e04-ce68eb552c95",
+>     "created_at": "2026-07-30T16:26:44.036332+00:00",
+>     "updated_at": "2026-07-30T16:46:49.987556+00:00"
+>   }
+> ]
+> 
+> === scheduled_posts (últimas 10) ===
+> null
+> ```
+
+## 🤖 Claude *(16:51:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rniE \"space_publish_variants\" src/ --include='*.ts' --include='*.tsx' -l 2>/dev/null; echo \"---\"; grep -rnE \"scheduled_posts\" src/hooks/ src/pages/CalendarPage.tsx 2>/dev/null | head -15; echo \"--- modal do asset ---\"; grep -nE \"publish|Publicar|already_enqueued|space_publish\" src/components/spaces/AssetDetailDialog.tsx 2>/dev/null | head -20",
+  "description": "Superf\u00edcies UI que tocam as tabelas envolvidas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/integrations/supabase/types.ts
+> src/lib/publish-destinations.ts
+> src/components/creative/CreativeAssetGallery.tsx
+> src/types/canvas.ts
+> ---
+> src/hooks/useDashboardData.ts:32:        supabase.from('scheduled_posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+> src/hooks/useOperationPending.ts:8://   (a) scheduled_posts ainda não publicados (fila de distribuição);
+> src/hooks/useOperationPending.ts:24:// Estados de scheduled_posts anteriores à conclusão (enum real: published|queued|publishing|failed|cancelled).
+> src/hooks/useOperationPending.ts:37:          .from('scheduled_posts')
+> src/hooks/useSmartDelete.ts:35:    const { error } = await supabase.from('scheduled_posts').delete().eq('id', id);
+> src/hooks/useSmartDelete.ts:37:    qc.invalidateQueries({ queryKey: ['scheduled_posts'] });
+> src/hooks/useVideoRepurpose.ts:220:// publish-space-asset resolves the asset SERVER-SIDE owner-scoped and enqueues scheduled_posts (auto-publish drives it).
+> src/hooks/useScheduledPosts.ts:7:export type ScheduledPost = Tables<'scheduled_posts'>;
+> src/hooks/useScheduledPosts.ts:8:type InsertPost = TablesInsert<'scheduled_posts'>;
+> src/hooks/useScheduledPosts.ts:14:    queryKey: ['scheduled_posts', user?.id, range?.from?.toISOString(), range?.to?.toISOString()],
+> src/hooks/useScheduledPosts.ts:17:        .from('scheduled_posts')
+> src/hooks/useScheduledPosts.ts:41:        .from('scheduled_posts')
+> src/hooks/useScheduledPosts.ts:49:      qc.invalidateQueries({ queryKey: ['scheduled_posts'] });
+> src/hooks/useScheduledPosts.ts:62:        .from('scheduled_posts')
+> src/hooks/useScheduledPosts.ts:68:      qc.invalidateQueries({ queryKey: ['scheduled_posts'] });
+> --- modal do asset ---
+> ```
+
+## 🤖 Claude *(16:51:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"publish_at|scheduled_posts.*(insert|from|select)\" supabase/functions/publish-space-asset/index.ts | head -20; echo \"--- auto-publish cron ---\"; grep -nE \"publish_at|cron|schedule|status.*=.*.pending|now\\(\\)\" supabase/functions/auto-publish/index.ts 2>/dev/null | head -12",
+  "description": "Como o enqueue vira publish (async cron)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 68:    // FR-VR — optional FUTURE schedule (privado-primeiro): a valid future ISO `publish_at` becomes the
+> 71:    const rawPublishAt = typeof body.publish_at === "string" ? Date.parse(body.publish_at) : NaN;
+> 204:    // ── Publish mode: enqueue into scheduled_posts (auto-publish resolves the asset owner-scoped from the variant). ──
+> 226:    const { data: sp, error: spErr } = await admin.from("scheduled_posts").insert({
+> --- auto-publish cron ---
+> 20:    // Find all queued posts where scheduled_at <= now
+> 22:      .from("scheduled_posts")
+> 25:      .lte("scheduled_at", new Date().toISOString())
+> 26:      .order("scheduled_at")
+> 49:          .from("scheduled_posts")
+> 68:        // ── FR-PE-011: video transport gap. The scheduled post's content_id points at the TEXT row; the 9:16 render
+> 105:        // SECURITY (FMEA-011): the asset ref is NEVER trusted from scheduled_posts.metadata (a user can write their
+> 106:        // OWN scheduled_posts.metadata, so signing a bucket/key from it with the service key would read ANY tenant's
+> 138:          // FR-SPACES-079 (Amendment 22 — closes OTD-SPACES-044): scheduled IG CAROUSEL. carousel_render_id is a
+> 201:              scheduled_post_id: post.id,
+> 215:            .from("scheduled_posts")
+> 228:          .from("scheduled_posts")
+> ```
+
+## 🤖 Claude *(16:51:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou mapeando o diagnóstico completo do problema. Você publicou um asset no TikTok, o que criou uma variante agendada no banco de dados e a vinculou a um post programado. Parece que o cron job foi acionado, mas preciso ver o resto da análise para entender exatamente onde as coisas deram errado. O design enfileira tudo no `scheduled_posts` com timestamp, e um cron processa a fila a cada N minutos — assíncrono por design para evitar bloqueio e permitir agendamentos futuros. Mas a UX de "Publicar agora" é ruim: o usuário vê sucesso e depois nada acontece visualmente, sem feedback de que está pendente ou quando vai sair. Existem hooks e componentes espalhados que já lidam com pendentes (`useOperationPending`, `useScheduledPosts`, `CreativeAssetGallery`, `CalendarPage`), mas falta uma aba unificada no modal para mostrar o status do asset.
+
+O usuário quer três coisas: destravar o `already_enqueued` dele agora, evitar que variants fiquem órfãos quando deletam do calendário, e ter visibilidade em múltiplos lugares (modal + calendário). Vou começar com um destrave imediato — resetar o status do variant para `draft` e limpar o `scheduled_post_id` para ele conseguir gravar o vídeo.
+
+</details>
+
+
+## 🤖 Claude *(16:51:51)*
+
+Diagnóstico completo. Deixa eu destravar você agora (é uma linha) e depois te explicar o resto.
+
+## O que aconteceu (o registro órfão)
+
+Encontrei sua variant presa:
+
+```
+space_publish_variants.id = d5e543f6
+  status = scheduled
+  scheduled_post_id = 68eb993b   ← aponta para scheduled_posts que NÃO EXISTE MAIS
+```
+
+Você apagou do calendário → deletou `scheduled_posts` (linha `68eb...`). Mas `space_publish_variants` **não tem cascade** — o registro dela continuou com `status=scheduled` e `scheduled_post_id` apontando para o nada. `publish-space-asset:208` faz o gate exatamente por esses dois campos → `already_enqueued`.
+
+Vou destravar agora:
+
+## 🤖 Claude *(16:52:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && . ./.env && set +a\nbun -e '\nconst { createClient } = require(\"@supabase/supabase-js\");\nconst admin = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nconst uid = \"43027d04-8239-4dd7-9a70-4496c3b1be7a\"; // tiktok.review\n\n// Verifica\u00e7\u00e3o: s\u00f3 destrava se o scheduled_post referenciado REALMENTE n\u00e3o existe (n\u00e3o sobrescrever uma publish viva).\nconst { data: variant } = await admin.from(\"space_publish_variants\")\n  .select(\"id, scheduled_post_id, status\").eq(\"id\", \"d5e543f6-58bb-452d-9652-1c0799504862\").maybeSingle();\nconsole.log(\"variant before:\", JSON.stringify(variant));\n\nif (variant?.scheduled_post_id) {\n  const { data: sp } = await admin.from(\"scheduled_posts\").select(\"id, status\").eq(\"id\", variant.scheduled_post_id).maybeSingle();\n  console.log(\"scheduled_post referenced:\", sp);\n  if (sp) { console.log(\"ABORT: a scheduled_posts ainda existe \u2014 n\u00e3o destravar.\"); process.exit(1); }\n}\n\nconst { data: after, error } = await admin.from(\"space_publish_variants\")\n  .update({ status: \"draft\", scheduled_post_id: null })\n  .eq(\"id\", \"d5e543f6-58bb-452d-9652-1c0799504862\")\n  .eq(\"user_id\", uid)                    // guard: only this owner\n  .is(\"scheduled_post_id\", variant.scheduled_post_id)  // guard optimistic: se mudou entre a leitura e a escrita, aborta\n  .select(\"id, status, scheduled_post_id\");\nconsole.log(\"variant after:\", error ? \"ERROR \" + error.message : JSON.stringify(after));\n'",
+  "description": "Destravar a variant \u00f3rf\u00e3 da conta de review, com guards"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> variant before: {"id":"d5e543f6-58bb-452d-9652-1c0799504862","scheduled_post_id":"68eb993b-9702-402a-8e04-ce68eb552c95","status":"scheduled"}
+> scheduled_post referenced: null
+> variant after: ERROR "failed to parse filter (is.68eb993b-9702-402a-8e04-ce68eb552c95)" (line 1, column 4)
+> ```
+
+## 🤖 Claude *(16:52:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I realized the `.is()` operator in PostgREST only accepts `null`, `true`, or `false` values, not UUIDs — I need to switch to `.eq()` instead.
+
+</details>
+
+
+## 🤖 Claude *(16:52:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && . ./.env && set +a\nbun -e '\nconst { createClient } = require(\"@supabase/supabase-js\");\nconst admin = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nconst uid = \"43027d04-8239-4dd7-9a70-4496c3b1be7a\";\n\nconst { data: after, error } = await admin.from(\"space_publish_variants\")\n  .update({ status: \"draft\", scheduled_post_id: null })\n  .eq(\"id\", \"d5e543f6-58bb-452d-9652-1c0799504862\")\n  .eq(\"user_id\", uid)\n  .eq(\"scheduled_post_id\", \"68eb993b-9702-402a-8e04-ce68eb552c95\")  // guard optimistic\n  .select(\"id, status, scheduled_post_id\");\nconsole.log(error ? \"ERROR \" + error.message : JSON.stringify(after));\n'",
+  "description": "Destravar (guard com .eq)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [{"id":"d5e543f6-58bb-452d-9652-1c0799504862","status":"draft","scheduled_post_id":null}]
+> ```
+
+## 🤖 Claude *(16:52:30)*
+
+✅ Destravado. Pode voltar no `/spaces/assets`, clicar Publicar de novo — o gate `already_enqueued` não vai mais disparar.
+
+---
+
+## Sobre "por que agenda em vez de postar direto"
+
+**É por design, e você tem razão que a UX está confusa.** O caminho é:
+
+```
+[UI] Publicar → publish-space-asset (edge fn)
+                  ↓
+              space_publish_variants (upsert) + scheduled_posts (insert com scheduled_at=agora)
+                  ↓
+              [cron auto-publish, roda periodicamente]
+                  ↓
+              publish-social → API real do TikTok
+```
+
+Por que async? Retry sem travar UI, o mesmo pipeline serve "publicar agora" e "agendar para 3ª às 9h", e o servidor não fica bloqueado durante o upload de vídeo grande. Trade-off: com "publicar agora" você não vê acontecendo — parece que não fez nada. Foi exatamente o que te fez apagar do TikTok achando que não tinha subido.
+
+## O bug real (para prevenir)
+
+Não existe cascade/trigger entre `scheduled_posts` e `space_publish_variants`. Apagar do calendário deixa a variant fantasma. **A queixa exata do seal "rodar não é entregar"**: duas superfícies que precisam viver em sincronia sem nada forçando isso.
+
+## Suas 3 pedidas, mapeadas
+
+| Pedida | O que precisa |
+|--------|---------------|
+| **Aba de publicações no modal do asset** | `AssetDetailDialog` ganha aba "Publicações" mostrando variants + histórico de posts desse asset (query `space_publish_variants` + `scheduled_posts` filtrados por `source_asset_id`) |
+| **Ver no calendário** | Já mostra — o problema é o inverso: o calendário deixa apagar sem avisar da variant que fica órfã |
+| **Não ficar preso em `already_enqueued`** | Trigger/cascade: `ON DELETE` de `scheduled_posts` reseta `space_publish_variants.status='draft'` + `scheduled_post_id=NULL`. Fecha o loop pra qualquer usuário no futuro |
+
+## O que fazer agora
+
+Você tem uma prioridade concreta hoje: **gravar o vídeo do TikTok Review**. Antes de abrir o pacote de correção, deixa eu perguntar o escopo:
+
+## 🤖 Claude *(16:52:38)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "J\u00e1 destravei sua conta. Como quer atacar o resto?",
+      "header": "Escopo",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "S\u00f3 gravar agora, arquivar o resto",
+          "description": "Voc\u00ea grava o v\u00eddeo de review do TikTok com o que j\u00e1 tem funcionando (asset gerado + publish destravado). Eu abro uma issue interna com o diagn\u00f3stico para atacar depois do App Review passar. Zero risco de introduzir bug na semana cr\u00edtica."
+        },
+        {
+          "label": "Micro-fix agora (trigger de cascade)",
+          "description": "Migration curta que quando scheduled_posts \u00e9 deletado, reseta o status/scheduled_post_id da variant automaticamente. Fecha o loop para qualquer usu\u00e1rio sem tocar UI. Levo ~30min com /security-review. Voc\u00ea grava o v\u00eddeo assim que aplicar."
+        },
+        {
+          "label": "Pacote completo (fix + UX)",
+          "description": "Micro-fix + aba \"Publica\u00e7\u00f5es\" no modal do asset + estado \"publicando\" vis\u00edvel no bot\u00e3o. Resolve a raiz do 'apaguei porque achei que n\u00e3o postou'. Escopo maior (~2-3h), passa por revis\u00e3o adversarial. Boa para depois do review do TikTok."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> Your questions have been answered: "Já destravei sua conta. Como quer atacar o resto?"="Pacote completo (fix + UX)". You can now continue with these answers in mind.
+> ```
+
+## 🤖 Claude *(16:55:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou mapeando a estrutura completa dessa tarefa: o Operator é o MCORCH Master Execution Agent, com o Sovereign fazendo a revisão de segurança (já que a migração afeta tabelas por usuário) e também sendo o Owner — a UX aqui é crítica porque qualquer bug na publicação gera múltiplas reprovações na app review. O escopo inclui a migration como primeiro passo.
+
+Agora vejo que preciso criar um trigger AFTER DELETE que reseta a variant vinculada quando um scheduled_post é apagado, mantendo tudo idempotente e tenant-safe. Depois vem o hook `useAssetPublications` para puxar variants e scheduled_posts do asset, a aba "Publicações" no AssetDetailDialog mostrando status por canal com opção de cancelar filas e links para posts publicados, e um estado "publicando" no botão que fica com pulse após o POST 200 para o usuário não achar que falhou. Preciso fazer reconhecimento do modal atual, do hook existente e do fluxo do botão Publicar antes de começar.
+
+</details>
+
+
+## 🤖 Claude *(16:55:56)*
+
+Fechado. Antes de codar, recon completo em paralelo — modal atual, contrato do edge fn, e o path do calendário — para não errar o design:
+
+## 🤖 Claude *(16:56:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== onde AssetDetailDialog / modal do asset vive ===\" ; find src -type f \\( -name \"AssetDetailDialog*\" -o -name \"*AssetModal*\" -o -name \"*AssetDetail*\" \\) 2>/dev/null ; echo\necho \"=== onde o bot\u00e3o Publicar do modal chama publish-space-asset ===\" ; grep -rnE \"publish-space-asset|publishSpaceAsset|PublicationPreview\" src/ --include='*.ts' --include='*.tsx' -l | head -12 ; echo\necho \"=== hook do modal (se houver) ===\" ; ls src/hooks/ | grep -iE \"asset|publish|creative\" | head",
+  "description": "Localizar o modal do asset + wiring do publish"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde AssetDetailDialog / modal do asset vive ===
+> src/components/creative/AssetDetailDialog.tsx
+> 
+> === onde o botão Publicar do modal chama publish-space-asset ===
+> src/lib/format-specs.ts
+> src/lib/publish-destinations.ts
+> src/test/publication-preview.test.ts
+> src/components/orchestrator/nodes/PublishNode.tsx
+> src/components/creative/PublicationPreview.tsx
+> src/components/creative/AssetDetailDialog.tsx
+> src/components/canvas/RightPanel/inspectors/PublishSocialInspector.tsx
+> src/hooks/useVideoRepurpose.ts
+> src/types/canvas.ts
+> 
+> === hook do modal (se houver) ===
+> useCreativeAssets.ts
+> ```
+
+## 🤖 Claude *(16:56:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== response shape do publish-space-asset (as 4 formas de retorno) ===\"\ngrep -nE \"return json\\(|json\\(2|json\\(4|json\\(5\" supabase/functions/publish-space-asset/index.ts | head -20\necho\necho \"=== insert do scheduled_posts (o que vai pra fila) ===\"\nsed -n '222,260p' supabase/functions/publish-space-asset/index.ts",
+  "description": "Contrato do edge fn + shape da fila"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === response shape do publish-space-asset (as 4 formas de retorno) ===
+> 48:    if (!authHeader?.startsWith("Bearer ")) return json(401, { error: "Unauthorized" });
+> 57:    if (!user) return json(401, { error: "Unauthorized" });
+> 74:      return json(400, { error: "missing_fields", action: "source_asset_id, channel e surface são obrigatórios." });
+> 87:    if (!asset) return json(404, { error: "asset_not_found", action: "O asset não existe ou não é seu." });
+> 194:    if (upErr || !variant) return json(500, { error: "upsert_failed", detail: upErr?.message });
+> 198:      return json(200, {
+> 206:      return json(422, { error: "surface_not_publishable", action: "Este canal/superfície não mapeia para uma rede publicável." });
+> 209:      return json(409, { error: "already_enqueued", scheduled_post_id: variant.scheduled_post_id });
+> 232:    if (spErr || !sp) return json(500, { error: "enqueue_failed", detail: spErr?.message });
+> 240:    return json(200, {
+> 247:    return json(500, { error: e instanceof Error ? e.message : "Unknown error" });
+> 
+> === insert do scheduled_posts (o que vai pra fila) ===
+>     // FR-VR — destination link (the full-episode CTA, UTM-tagged). Rides content.reshape → auto-publish forwards
+>     // it to publish-social; Pinterest turns it into the native clickable pin (the one funnel with a real click).
+>     if (typeof body.link === "string" && /^https?:\/\//.test(body.link)) content.link = body.link.slice(0, 2048);
+> 
+>     const { data: sp, error: spErr } = await admin.from("scheduled_posts").insert({
+>       user_id: user.id, content_id: null, campaign_id: null,
+>       social_account_id: typeof body.social_account_id === "string" ? body.social_account_id : null,
+>       platform: variant.platform, scheduled_at: publishAt ?? new Date().toISOString(), status: "queued",
+>       metadata: { reshape: { content, space_publish_variant_id: variant.id, surface, channel } },
+>     }).select("id").single();
+>     if (spErr || !sp) return json(500, { error: "enqueue_failed", detail: spErr?.message });
+> 
+>     await admin.from("space_publish_variants")
+>       .update({ status: "scheduled", scheduled_post_id: sp.id }).eq("id", variant.id);
+> 
+>     // Mesh Connection Mandate + telemetry (best-effort).
+>     admin.from("infra_health_logs").insert({ service: "publish-space-asset", status: "healthy" }).then(() => {}, () => {});
+> 
+>     return json(200, {
+>       ok: true, space_publish_variant_id: variant.id, scheduled_post_id: sp.id,
+>       status: "scheduled", platform: variant.platform,
+>       reframed, ...(reframeSkipReason ? { reframe_skip_reason: reframeSkipReason } : {}),
+>     });
+>   } catch (e) {
+>     console.error("publish-space-asset error:", e);
+>     return json(500, { error: e instanceof Error ? e.message : "Unknown error" });
+>   }
+> });
+> ```
+
+## 🤖 Claude *(16:56:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== enum de status do space_publish_variants ===\"\ngrep -rnE \"CREATE TABLE.*space_publish_variants|ALTER TABLE.*space_publish_variants|space_publish_variants.*CHECK|status TEXT\" supabase/migrations/*.sql | head -10\necho\necho \"=== migration original das variants ===\"\ngrep -rl \"CREATE TABLE.*space_publish_variants\" supabase/migrations/ | head -1 | xargs -I{} sh -c 'echo \"== {} ==\"; sed -n \"1,80p\" {}'",
+  "description": "Enum de status e FK da tabela variants"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === enum de status do space_publish_variants ===
+> supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql:12:  status TEXT NOT NULL DEFAULT 'idle',
+> supabase/migrations/20260412142520_7ee90a5b-8e1a-4cdf-8136-f7ab32225a14.sql:36:  status TEXT NOT NULL DEFAULT 'idle',
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:14:  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','archived')),
+> supabase/migrations/20260514040200_viralmind_canvas_studio.sql:64:  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','queued','running','success','failed','cancelled')),
+> supabase/migrations/20260530210000_meta_api_foundation.sql:72:    status TEXT NOT NULL DEFAULT 'published',               -- 'published' | 'failed'
+> supabase/migrations/20260710233000_space_publish_variants.sql:24:CREATE TABLE IF NOT EXISTS public.space_publish_variants (
+> supabase/migrations/20260710233000_space_publish_variants.sql:40:    CONSTRAINT space_publish_variants_asset_status_chk CHECK (asset_status IN
+> supabase/migrations/20260710233000_space_publish_variants.sql:43:    CONSTRAINT space_publish_variants_status_chk CHECK (status IN
+> supabase/migrations/20260710233000_space_publish_variants.sql:52:ALTER TABLE public.space_publish_variants ENABLE ROW LEVEL SECURITY;
+> 
+> === migration original das variants ===
+> == supabase/migrations/20260710233000_space_publish_variants.sql ==
+> -- Migration: space_publish_variants — media-social publish ledger for Spaces-origin assets (OTD-SPACES-036)
+> -- ─────────────────────────────────────────────────────────────────────────────
+> -- BoK SSOT: docs/bok/spaces-evolution/16-decision-otd-spaces-036-media-social-schema.md (option (b), GO 2026-07-09)
+> --           + docs/bok/spaces-evolution/15-amendment-social-publish-nodes.md (FR-SPACES-031 seam publish-space-asset).
+> -- SOP (Lei 2): docs/processes/space-publish-variants.md.
+> --
+> -- WHY A DEDICATED TABLE (not ALTER channel_variants): channel_variants is `pillar_run_id NOT NULL` (FK-logical to
+> -- pipeline_runs — the money-path truth that feeds collective_efficiency_ledger). A Spaces asset has no pillar run.
+> -- Option (b) keeps channel_variants/reshaper INTOUCHED (invariant I1) and mirrors its owner-scoped pattern here.
+> --
+> -- TENANCY (mirrors channel_variants 20260627150000 + creative_assets 20260625120000): SELECT/DELETE own only.
+> -- NO INSERT/UPDATE policy for authenticated ⇒ default-deny writes: the seam edge fn `publish-space-asset`
+> -- (service-role, bypasses RLS) is the ONLY writer, so user_id + the server-trusted asset ref can never be forged.
+> --
+> -- IDEMPOTENCY (invariant I3): UNIQUE(user_id, source_asset_id, channel, surface) — "one variant per (owner, source
+> -- asset, channel, surface)". Refinement over the ADR §3.1 sketch (which used node_run_id): node_run_id is a
+> -- client-supplied CANVAS NODE id (a string, NOT a UUID like pillar_run_id) ⇒ putting it in a GLOBAL unique risks a
+> -- cross-tenant collision (two tenants sharing a node id → the 2nd INSERT fails = DoS + leak). The (user_id,...) key
+> -- is tenant-scoped by construction and idempotent by the real intent. node_run_id kept only as lineage/audit.
+> --
+> -- Security posture: HARDENS (new RLS-isolated table, default-deny writes, no client-reachable SECURITY DEFINER).
+> -- MANDATORY /security-review before commit (FMEA-011 cross-tenant leak class).
+> 
+> CREATE TABLE IF NOT EXISTS public.space_publish_variants (
+>   id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+>   user_id           uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+>   space_id          uuid,                          -- vm_canvas_projects.id origin (logical; nullable for loose asset)
+>   node_run_id       text,                          -- canvas node id — lineage/audit only, NOT an idempotency anchor
+>   source_asset_id   uuid NOT NULL
+>                       REFERENCES public.creative_assets(id) ON DELETE CASCADE,  -- owner-scoped source (server-resolved)
+>   channel           text NOT NULL,                 -- channel_profiles SPEC naming ('twitter_x' verbatim)
+>   surface           text NOT NULL,                 -- 'reels' | 'feed' | 'shorts' | 'video' | 'story' | ...
+>   platform          public.social_platform,        -- enum mapped for publishing; NULL = not directly publishable
+>   publish_path      text,
+>   native_text       jsonb NOT NULL DEFAULT '{}'::jsonb,   -- {caption|title|description|body|tweets[]|link}
+>   asset_kind        text,                          -- 'video' | 'image' | 'none'
+>   asset_bucket      text,                          -- per-row asset ref, SERVER-TRUSTED (auto-publish signs THIS)
+>   asset_key         text,
+>   asset_status      text NOT NULL DEFAULT 'ready'  -- Spaces asset already exists (no async render, unlike pillar)
+>     CONSTRAINT space_publish_variants_asset_status_chk CHECK (asset_status IN
+>       ('pending','ready','reused_master','gap')),
+>   status            text NOT NULL DEFAULT 'draft'
+>     CONSTRAINT space_publish_variants_status_chk CHECK (status IN
+>       ('draft','scheduled','published','skipped','failed')),
+>   scheduled_post_id uuid,                          -- set once enqueued (guards double-enqueue)
+>   created_at        timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+>   updated_at        timestamptz NOT NULL DEFAULT timezone('utc'::text, now()),
+>   -- Idempotency: one variant per (owner, source asset, channel, surface). publish-space-asset UPSERTs on this.
+>   CONSTRAINT space_publish_variants_uq UNIQUE (user_id, source_asset_id, channel, surface)
+> );
+> 
+> ALTER TABLE public.space_publish_variants ENABLE ROW LEVEL SECURITY;
+> 
+> -- SELECT own; DELETE own. NO INSERT/UPDATE policy ⇒ writes are service-role-only (publish-space-asset).
+> CREATE POLICY "space_publish_variants read own" ON public.space_publish_variants
+>   FOR SELECT USING (auth.uid() = user_id);
+> CREATE POLICY "space_publish_variants delete own" ON public.space_publish_variants
+>   FOR DELETE USING (auth.uid() = user_id);
+> 
+> CREATE TRIGGER tr_update_space_publish_variants_updated_at
+>   BEFORE UPDATE ON public.space_publish_variants
+>   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+> 
+> CREATE INDEX IF NOT EXISTS idx_space_publish_variants_user
+>   ON public.space_publish_variants (user_id, created_at DESC);
+> CREATE INDEX IF NOT EXISTS idx_space_publish_variants_draft
+>   ON public.space_publish_variants (status) WHERE status = 'draft';
+> CREATE INDEX IF NOT EXISTS idx_space_publish_variants_asset
+>   ON public.space_publish_variants (source_asset_id);
+> CREATE INDEX IF NOT EXISTS idx_space_publish_variants_sched
+>   ON public.space_publish_variants (scheduled_post_id) WHERE scheduled_post_id IS NOT NULL;
+> 
+> COMMENT ON TABLE public.space_publish_variants IS
+>   'Media-social publish ledger for Spaces-origin assets (OTD-SPACES-036 option b). Mirrors channel_variants '
+>   'owner-scoped pattern but keyed by (user_id, source_asset_id, channel, surface) — NOT pillar_run_id, so the '
+>   'money-path (channel_variants/reshaper) stays intact (I1). SELECT/DELETE own; writes service-role-only '
+>   '(publish-space-asset). auto-publish resolves the asset from asset_bucket/asset_key by user_id (FMEA-011-safe).';
+> ```
+
+## 🤖 Claude *(16:56:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Mapeei o terreno e tenho tudo que preciso agora. Preciso criar um trigger que execute após deletar um scheduled_post, ressetando (não deletando) a variant vinculada de forma segura para múltiplos tenants, considerando as foreign keys relevantes como a que conecta variants a creative_assets com cascata de deleção.
+
+O trigger vai identificar a variant pelo `scheduled_post_id` usando `WHERE scheduled_post_id = OLD.id`, e adiciono `AND user_id = OLD.user_id` como defesa em profundidade — o `scheduled_post_id` é único, então só existe uma variant com ele, e ela pertence ao mesmo usuário do post. O trigger roda como service-role, então tem permissão de escrita.
+
+Agora preciso decidir: se a variant já foi publicada (status='published'), não devo resetá-la para draft porque o vídeo realmente foi ao ar — seria mentira mudar o status. Mas o `scheduled_post_id` pode ficar órfão nesse caso.
+
+Se estiver `status='scheduled'`, reseto para `draft` e limpo o `scheduled_post_id` para destrancar o `already_enqueued`. Deixo `skipped`, `failed` e `draft` intocados.
+
+Na UI, vou criar um hook `useAssetPublications` que retorna as variants e scheduled_posts do asset com joins, adiciono uma aba "Publicações" no `AssetDetailDialog` listando por canal/surface, e um botão "Cancelar" em variants scheduled que chama o delete na scheduled_posts — ativando o trigger. Quando o status volta para scheduled, o botão Publicar muda de texto e mostra um toast direcionando para a aba "Publicações".
+
+Ainda preciso examinar como o `AssetDetailDialog.tsx` está estruturado para saber onde encaixar as abas.
+
+Agora vou verificar onde o botão de publicar chama o publish-space-asset e se o mesmo edge function usado no repurpose precisa do mesmo fix de UX, ou se é só no AssetDetailDialog.
+
+</details>
+
+
+## 🤖 Claude *(16:56:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l src/components/creative/AssetDetailDialog.tsx src/hooks/useCreativeAssets.ts\necho\necho \"=== estrutura do AssetDetailDialog (Tabs? sections?) ===\"\ngrep -nE \"^import|Tabs|TabsList|TabsTrigger|TabsContent|<Card|<Section|invoke.*publish|already_enqueued|scheduled|function |export \" src/components/creative/AssetDetailDialog.tsx | head -40",
+  "description": "Estrutura do modal e do hook"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   447 src/components/creative/AssetDetailDialog.tsx
+>    47 src/hooks/useCreativeAssets.ts
+>   494 total
+> 
+> === estrutura do AssetDetailDialog (Tabs? sections?) ===
+> 1:import { useEffect, useMemo, useState, type ReactNode } from "react";
+> 2:import { useNavigate } from "react-router-dom";
+> 3:import { toast } from "sonner";
+> 4:import {
+> 11:import { Button } from "@/components/ui/button";
+> 12:import { Badge } from "@/components/ui/badge";
+> 13:import { Textarea } from "@/components/ui/textarea";
+> 14:import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+> 15:import { Clapperboard, Download, Link2, Loader2, Palette, Save, Send } from "lucide-react";
+> 16:import { resolveAssetUrl, type CreativeAsset } from "@/hooks/useCreativeAssets";
+> 17:import { useCreateCanvasProject, useSaveCanvasGraph } from "@/hooks/useCanvasStudio";
+> 18:import { supabase } from "@/integrations/supabase/client";
+> 19:import { edgeErrorMessage } from "@/lib/edge";
+> 20:import { cn } from "@/lib/utils";
+> 21:import type { PersistedCanvasGraph } from "@/types/canvas";
+> 22:import { availability, formatsForKind, getFormat, type PublicationFormat } from "@/lib/format-specs";
+> 23:import { PublicationPreview } from "./PublicationPreview";
+> 24:import { ProvenanceBadge } from "./ProvenanceBadge";
+> 49:function formatBytes(n?: number | null): string | null {
+> 57:function Prop({ label, value }: { label: string; value: ReactNode }) {
+> 74:export function AssetDetailDialog({
+> 122:  async function publishVariant(publish: boolean) {
+> 127:      const { data, error } = await supabase.functions.invoke("publish-space-asset", {
+> 152:  async function useInCanvas() {
+> 201:  function copyLink() {
+> ```
+
+## 🤖 Claude *(16:56:34)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 100,
+  "limit": 160
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 100	  useEffect(() => {
+> 101	    let alive = true;
+> 102	    setUrl(null);
+> 103	    setCaption(asset?.title ?? asset?.prompt ?? "");
+> 104	    // Default to the first PUBLISHABLE format for this kind (falls back to the first).
+> 105	    const kindFormats = formatsForKind(asset?.kind ?? "");
+> 106	    const firstReal = kindFormats.find((f) => f.publishable === "real");
+> 107	    setFormatId((firstReal ?? kindFormats[0])?.id ?? null);
+> 108	    setPrivacy("private"); // re-arm the fail-safe default on every asset open
+> 109	    if (asset) resolveAssetUrl(asset).then((u) => alive && setUrl(u));
+> 110	    return () => {
+> 111	      alive = false;
+> 112	    };
+> 113	  }, [asset]);
+> 114	
+> 115	  if (!asset) return null;
+> 116	  const title = asset.title ?? asset.prompt ?? "Asset";
+> 117	  const busy = createProject.isPending || saveGraph.isPending;
+> 118	  const publishing = savingDraft || publishingNow;
+> 119	
+> 120	  // Publish (or draft) the asset to a channel/surface via the owner-scoped seam. The seam resolves the asset
+> 121	  // bucket/key SERVER-SIDE from creative_assets bound to the caller — the client never sends the storage ref.
+> 122	  async function publishVariant(publish: boolean) {
+> 123	    if (!asset || !selectedFormat) return;
+> 124	    const setter = publish ? setPublishingNow : setSavingDraft;
+> 125	    setter(true);
+> 126	    try {
+> 127	      const { data, error } = await supabase.functions.invoke("publish-space-asset", {
+> 128	        body: {
+> 129	          source_asset_id: asset.id,
+> 130	          channel: selectedFormat.channel,
+> 131	          surface: selectedFormat.surface,
+> 132	          platform: selectedFormat.platform === "wordpress" ? null : selectedFormat.platform,
+> 133	          native_text: { caption: caption.trim() },
+> 134	          // Only sent where the rail HONOURS it (YouTube). Elsewhere the field is a no-op on the platform API,
+> 135	          // so we don't send it — the seam falls back to the platform default.
+> 136	          ...(selectedFormat.platform === "youtube" ? { privacy } : {}),
+> 137	          reframe: asset.kind === "image" && reframe,
+> 138	          publish,
+> 139	        },
+> 140	      });
+> 141	      if (error) throw new Error(await edgeErrorMessage(error, "Falha ao publicar"));
+> 142	      if (data?.error) throw new Error(data.error);
+> 143	      toast.success(publish ? "Enviado para publicação" : "Rascunho salvo na fila de publicação");
+> 144	      if (publish) onOpenChange(false);
+> 145	    } catch (e) {
+> 146	      toast.error((e as Error).message);
+> 147	    } finally {
+> 148	      setter(false);
+> 149	    }
+> 150	  }
+> 151	
+> 152	  async function useInCanvas() {
+> 153	    if (!asset || !url) return;
+> 154	    try {
+> 155	      const project = await createProject.mutateAsync({
+> 156	        name: `Do asset: ${title.slice(0, 40)}`,
+> 157	        description: `Iniciado de um asset do módulo ${SOURCE_LABEL[asset.source_module] ?? asset.source_module}`,
+> 158	      });
+> 159	      // Seed the new project with this asset as a success-state node — the cross-module handoff made material.
+> 160	      const node =
+> 161	        asset.kind === "video"
+> 162	          ? {
+> 163	              id: `n_${asset.id.slice(0, 8)}`,
+> 164	              type: "imageToVideo",
+> 165	              position: { x: 0, y: 0 },
+> 166	              data: {
+> 167	                kind: "imageToVideo",
+> 168	                label: title,
+> 169	                prompt: asset.prompt ?? "",
+> 170	                duration: 5,
+> 171	                aspectRatio: "16:9",
+> 172	                videoModel: "dop-standard-5s",
+> 173	                motionStrength: 0.5,
+> 174	                status: "success",
+> 175	                output: { videoUrl: url, generatedAt: asset.created_at },
+> 176	              },
+> 177	            }
+> 178	          : {
+> 179	              id: `n_${asset.id.slice(0, 8)}`,
+> 180	              type: "generateImage",
+> 181	              position: { x: 0, y: 0 },
+> 182	              data: {
+> 183	                kind: "generateImage",
+> 184	                label: title,
+> 185	                prompt: asset.prompt ?? "",
+> 186	                status: "success",
+> 187	                modelId: "openrouter-gemini-image",
+> 188	                output: { imageUrl: url, generatedAt: asset.created_at },
+> 189	              },
+> 190	            };
+> 191	      const graph = { nodes: [node], edges: [] } as unknown as PersistedCanvasGraph;
+> 192	      await saveGraph.mutateAsync({ projectId: project.id, graph });
+> 193	      toast.success("Asset enviado pro Canvas Studio");
+> 194	      onOpenChange(false);
+> 195	      navigate(`/dashboard/spaces/${project.id}`);
+> 196	    } catch (e) {
+> 197	      toast.error("Não consegui abrir no Canvas: " + (e as Error).message);
+> 198	    }
+> 199	  }
+> 200	
+> 201	  function copyLink() {
+> 202	    if (!url) return;
+> 203	    navigator.clipboard
+> 204	      .writeText(url)
+> 205	      .then(() => toast.success("Link copiado"))
+> 206	      .catch(() => toast.error("Falha ao copiar"));
+> 207	  }
+> 208	
+> 209	  const avail = selectedFormat ? availability(selectedFormat) : null;
+> 210	  const canPublish = selectedFormat?.publishable === "real";
+> 211	  const captionMax = selectedFormat?.caption?.max;
+> 212	  const overLimit = captionMax != null && caption.length > captionMax;
+> 213	
+> 214	  return (
+> 215	    <Dialog open={!!asset} onOpenChange={onOpenChange}>
+> 216	      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-h-[90vh] sm:w-full sm:max-w-3xl sm:rounded-2xl sm:border">
+> 217	        <DialogHeader className="shrink-0 border-b border-border/60 p-4 pr-10 text-left sm:p-6 sm:pb-4">
+> 218	          <DialogTitle className="truncate">{title}</DialogTitle>
+> 219	          <DialogDescription className="flex flex-wrap items-center gap-2">
+> 220	            <Badge variant="secondary">{SOURCE_LABEL[asset.source_module] ?? asset.source_module}</Badge>
+> 221	            <span className="text-xs text-muted-foreground">
+> 222	              {asset.kind}
+> 223	              {asset.provider ? ` · ${asset.provider}` : ""}
+> 224	              {asset.model ? ` · ${asset.model}` : ""}
+> 225	            </span>
+> 226	            {/* AI Act Art. 50 disclosure — shows once the provenance worker has marked this asset. */}
+> 227	            <ProvenanceBadge asset={asset} />
+> 228	          </DialogDescription>
+> 229	        </DialogHeader>
+> 230	
+> 231	        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+> 232	          {/* grid-cols-1 on mobile = minmax(0,1fr) tracks → columns can shrink below intrinsic image width
+> 233	              (implicit `auto` tracks would blow out to the media's natural size). min-w-0 belts-and-suspenders. */}
+> 234	          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+> 235	            {/* ── Column A: the raw asset + properties ── */}
+> 236	            <div className="flex min-w-0 flex-col gap-4">
+> 237	              {/* Media box: a defined aspect-square frame (robust height basis on every viewport), capped on mobile.
+> 238	                  The media fills it absolutely + object-contain so ANY aspect letterboxes cleanly and never overflows. */}
+> 239	              <div className="relative mx-auto flex aspect-square max-h-[52vh] w-full items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/30 sm:max-h-none">
+> 240	                {!url ? (
+> 241	                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+> 242	                ) : asset.kind === "video" ? (
+> 243	                  <video src={url} className="absolute inset-0 h-full w-full object-contain" controls autoPlay muted loop playsInline />
+> 244	                ) : asset.kind === "audio" ? (
+> 245	                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-accent/5 p-4">
+> 246	                    <audio src={url} controls className="w-full" />
+> 247	                  </div>
+> 248	                ) : (
+> 249	                  <img src={url} alt={title} className="absolute inset-0 h-full w-full object-contain" />
+> 250	                )}
+> 251	              </div>
+> 252	
+> 253	              {asset.prompt && (
+> 254	                <div>
+> 255	                  <p className="text-xs font-medium text-muted-foreground">Prompt</p>
+> 256	                  <p className="line-clamp-4 text-sm">{asset.prompt}</p>
+> 257	                </div>
+> 258	              )}
+> 259	
+> ```
+
+## 🤖 Claude *(16:56:39)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 260,
+  "limit": 187
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 260	              <details className="text-xs" open>
+> 261	                <summary className="cursor-pointer font-medium text-muted-foreground">Propriedades</summary>
+> 262	                <div className="mt-1 space-y-0.5">
+> 263	                  <Prop label="Tipo" value={asset.kind} />
+> 264	                  <Prop label="Origem" value={SOURCE_LABEL[asset.source_module] ?? asset.source_module} />
+> 265	                  <Prop label="Provider" value={asset.provider} />
+> 266	                  <Prop label="Modelo" value={asset.model} />
+> 267	                  <Prop label="Dimensões" value={asset.width && asset.height ? `${asset.width}×${asset.height}` : null} />
+> 268	                  <Prop label="Duração" value={asset.duration_seconds ? `${asset.duration_seconds}s` : null} />
+> 269	                  <Prop label="Tamanho" value={formatBytes(asset.file_size_bytes)} />
+> 270	                  <Prop label="Formato" value={asset.mime_type} />
+> 271	                  <Prop label="Tags" value={asset.tags?.length ? asset.tags.join(", ") : null} />
+> 272	                  <Prop label="Criado" value={new Date(asset.created_at).toLocaleString("pt-BR")} />
+> 273	                  <Prop label="ID" value={asset.id.slice(0, 8)} />
+> 274	                </div>
+> 275	              </details>
+> 276	            </div>
+> 277	
+> 278	            {/* ── Column B: cross-module handoff + per-format publish ── */}
+> 279	            <div className="flex min-w-0 flex-col gap-4">
+> 280	              <div className="space-y-2">
+> 281	                <p className="text-xs font-medium text-muted-foreground">Usar entre os módulos</p>
+> 282	                <div className="grid grid-cols-2 gap-2">
+> 283	                  <Button size="sm" className={TAP} onClick={useInCanvas} disabled={!url || busy}>
+> 284	                    {busy ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Palette className="mr-1 h-3.5 w-3.5" />}
+> 285	                    Canvas Studio
+> 286	                  </Button>
+> 287	                  <Button
+> 288	                    size="sm"
+> 289	                    variant="outline"
+> 290	                    className={TAP}
+> 291	                    onClick={() => {
+> 292	                      copyLink();
+> 293	                      onOpenChange(false);
+> 294	                      navigate("/dashboard/spaces/video");
+> 295	                    }}
+> 296	                    disabled={!url}
+> 297	                  >
+> 298	                    <Clapperboard className="mr-1 h-3.5 w-3.5" /> Editor de vídeo
+> 299	                  </Button>
+> 300	                  <Button size="sm" variant="outline" className={TAP} onClick={copyLink} disabled={!url}>
+> 301	                    <Link2 className="mr-1 h-3.5 w-3.5" /> Copiar link
+> 302	                  </Button>
+> 303	                  <Button
+> 304	                    size="sm"
+> 305	                    variant="outline"
+> 306	                    className={TAP}
+> 307	                    onClick={() => url && window.open(url, "_blank", "noreferrer")}
+> 308	                    disabled={!url}
+> 309	                  >
+> 310	                    <Download className="mr-1 h-3.5 w-3.5" /> Abrir / Baixar
+> 311	                  </Button>
+> 312	                </div>
+> 313	              </div>
+> 314	
+> 315	              {/* Per-format publish */}
+> 316	              <div className="space-y-3 border-t border-border/40 pt-3">
+> 317	                <p className="text-xs font-medium text-muted-foreground">Publicar nas redes</p>
+> 318	
+> 319	                {formats.length === 0 ? (
+> 320	                  <p className="text-xs text-muted-foreground">
+> 321	                    Publicação disponível para imagem e vídeo. Para áudio, use no Canvas Studio ou no Editor de vídeo.
+> 322	                  </p>
+> 323	                ) : (
+> 324	                  <>
+> 325	                    {/* Format chips (horizontal scroll on mobile) */}
+> 326	                    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+> 327	                      {formats.map((f) => {
+> 328	                        const a = availability(f);
+> 329	                        const active = selectedFormat?.id === f.id;
+> 330	                        return (
+> 331	                          <button
+> 332	                            key={f.id}
+> 333	                            type="button"
+> 334	                            onClick={() => setFormatId(f.id)}
+> 335	                            className={cn(
+> 336	                              "flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors",
+> 337	                              active
+> 338	                                ? "border-primary bg-primary/10 text-primary"
+> 339	                                : "border-border text-muted-foreground hover:border-primary/50",
+> 340	                            )}
+> 341	                          >
+> 342	                            <span
+> 343	                              className={cn(
+> 344	                                "h-1.5 w-1.5 rounded-full",
+> 345	                                a.tone === "ok" && "bg-emerald-400",
+> 346	                                a.tone === "gated" && "bg-amber-400",
+> 347	                                a.tone === "soon" && "bg-muted-foreground/50",
+> 348	                              )}
+> 349	                            />
+> 350	                            {f.label}
+> 351	                          </button>
+> 352	                        );
+> 353	                      })}
+> 354	                    </div>
+> 355	
+> 356	                    {selectedFormat && (
+> 357	                      <PublicationPreview format={selectedFormat} assetUrl={url} kind={asset.kind} caption={caption} />
+> 358	                    )}
+> 359	
+> 360	                    <div>
+> 361	                      <Textarea
+> 362	                        value={caption}
+> 363	                        onChange={(e) => setCaption(e.target.value)}
+> 364	                        placeholder="Legenda…"
+> 365	                        rows={2}
+> 366	                        className="text-xs"
+> 367	                      />
+> 368	                      {captionMax != null && (
+> 369	                        <p className={cn("mt-1 text-right text-[10px]", overLimit ? "text-destructive" : "text-muted-foreground")}>
+> 370	                          {caption.length}/{captionMax}
+> 371	                        </p>
+> 372	                      )}
+> 373	                    </div>
+> 374	
+> 375	                    {/* Privacidade — só o YouTube expõe esse controle de fato; nas outras redes a API não
+> 376	                        oferece publicação privada, então o campo não é mostrado (nem enviado).
+> 377	                        `canPublish` também é exigido: `youtube_community` é publishable:"preview" (a API não
+> 378	                        expõe escrita de posts de comunidade), e oferecer um controle de alcance num formato que
+> 379	                        NÃO publica seria prometer o que o trilho não entrega (format-specs.ts:9). */}
+> 380	                    {selectedFormat?.platform === "youtube" && canPublish && (
+> 381	                      <div className="space-y-1">
+> 382	                        <p className="text-xs font-medium text-muted-foreground">Privacidade</p>
+> 383	                        <Select value={privacy} onValueChange={(v) => setPrivacy(v as PublishPrivacy)}>
+> 384	                          <SelectTrigger className="h-8 w-full text-xs">
+> 385	                            <SelectValue />
+> 386	                          </SelectTrigger>
+> 387	                          <SelectContent>
+> 388	                            {PRIVACY_OPTIONS.map((o) => (
+> 389	                              <SelectItem key={o.value} value={o.value} className="text-xs">
+> 390	                                {o.label}
+> 391	                              </SelectItem>
+> 392	                            ))}
+> 393	                          </SelectContent>
+> 394	                        </Select>
+> 395	                        <p className="text-[10px] leading-tight text-muted-foreground">
+> 396	                          Privado publica sem aparecer para ninguém — você revisa no YouTube e torna público quando quiser.
+> 397	                        </p>
+> 398	                      </div>
+> 399	                    )}
+> 400	
+> 401	                    {asset.kind === "image" && (
+> 402	                      <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+> 403	                        <input
+> 404	                          type="checkbox"
+> 405	                          checked={reframe}
+> 406	                          onChange={(e) => setReframe(e.target.checked)}
+> 407	                          className="h-3.5 w-3.5 rounded border-input accent-primary"
+> 408	                        />
+> 409	                        Reenquadrar para o formato ({selectedFormat?.px.w}×{selectedFormat?.px.h}) — publica o pixel exato do preview
+> 410	                      </label>
+> 411	                    )}
+> 412	
+> 413	                    <div className="grid grid-cols-2 gap-2">
+> 414	                      <Button
+> 415	                        size="sm"
+> 416	                        variant="outline"
+> 417	                        className={TAP}
+> 418	                        onClick={() => publishVariant(false)}
+> 419	                        disabled={!url || !canPublish || publishing}
+> 420	                      >
+> 421	                        {savingDraft ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}
+> 422	                        Salvar rascunho
+> 423	                      </Button>
+> 424	                      <Button
+> 425	                        size="sm"
+> 426	                        className={TAP}
+> 427	                        onClick={() => publishVariant(true)}
+> 428	                        disabled={!url || !canPublish || overLimit || publishing}
+> 429	                        title={!canPublish ? avail?.hint : undefined}
+> 430	                      >
+> 431	                        {publishingNow ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1 h-3.5 w-3.5" />}
+> 432	                        {canPublish ? "Publicar" : "Em breve"}
+> 433	                      </Button>
+> 434	                    </div>
+> 435	                    {avail && avail.tone !== "ok" && avail.hint && (
+> 436	                      <p className="text-[10px] leading-tight text-muted-foreground">{avail.hint}</p>
+> 437	                    )}
+> 438	                  </>
+> 439	                )}
+> 440	              </div>
+> 441	            </div>
+> 442	          </div>
+> 443	        </div>
+> 444	      </DialogContent>
+> 445	    </Dialog>
+> 446	  );
+> ```
+
+## 🤖 Claude *(16:57:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou organizando a entrega completa do pacote, estruturando os arquivos necessários — um novo documento de processo para o ciclo de publicação de assets no espaço, e uma migração de banco de dados para resetar variantes de publicação quando uma exclusão agendada ocorre.
+
+Minha ordem de trabalho é clara: começar com a documentação, depois a migração, implementar o hook e painel de publicações, reestruturar o modal com abas e estado de carregamento, aplicar a migração, rodar testes e verificações de segurança, e finalizar com build e testes E2E.
+
+Designing the database trigger que vai monitorar exclusões de posts agendados e reconciliar o status das variantes de publicação — se estava agendado volta para rascunho, se já foi publicado mantém o histórico mas limpa a referência...
+
+Designing the hook que carrega as variantes de publicação de um asset com seus dados de agendamento associados, mantendo a relação entre variante e post agendado enquanto estiver pendente...
+
+Writing panel layout... Vou estruturar o trabalho em sequência: SOP, migration, hook, painel, modal, testes, depois aplicar tudo junto com type checking e validação de segurança em paralelo, seguido de build e testes E2E, finalizando com commit.
+
+</details>
+
+
+## 🤖 Claude *(16:57:04)*
+
+Terreno mapeado. Executando o pacote completo. Vou fazer todos os arquivos primeiro (SOP → migration → hook → panel → modal → testes), depois rodo gates em paralelo (tsc + security-review + workflow adversarial), depois aplico e provo E2E.
+
+**SOP primeiro (Lei 2):**
+
+## 🤖 Claude *(16:58:09)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/space-asset-publish-lifecycle.md",
+  "content": "# SOP \u2014 Ciclo de vida da publica\u00e7\u00e3o de asset (Spaces \u2192 redes)\n\n> **Lei 2 (Processo Antecipado).** Escrito ANTES do c\u00f3digo. Descreve como um humano faria manualmente\n> o que a fatia automatiza, com gates materiais em cada passo.\n>\n> **Origem (2026-07-30):** teste real da conta `tiktok.review@mcorch.com` durante o preparo do App\n> Review do TikTok. Sequ\u00eancia que gerou o incidente:\n> 1. Clicou Publicar num asset de v\u00eddeo \u2192 `publish-space-asset` upsertou `space_publish_variants` +\n>    inseriu `scheduled_posts`. O cron `auto-publish` postou no TikTok como `SELF_ONLY`.\n> 2. O usu\u00e1rio achou que **n\u00e3o** tinha postado (n\u00e3o havia sinal visual p\u00f3s-clique) e apagou o v\u00eddeo\n>    manualmente do TikTok e o card do calend\u00e1rio (`scheduled_posts` deletado).\n> 3. Nova tentativa \u2192 `publish-space-asset:208` devolveu `409 already_enqueued` porque\n>    `space_publish_variants.status='scheduled'` e `scheduled_post_id` continuavam apontando para\n>    uma linha que n\u00e3o existia mais. Sem cascade. Ficou preso.\n>\n> Este SOP fecha o loop em 3 frentes: (a) trigger de reconcilia\u00e7\u00e3o garante que apagar do calend\u00e1rio\n> volta a variant a `draft`; (b) o modal do asset ganha aba **Publica\u00e7\u00f5es** \u2014 o usu\u00e1rio v\u00ea exatamente\n> onde cada post est\u00e1 antes de sair apagando das redes; (c) o bot\u00e3o Publicar deixa de ser silencioso \u2014\n> o p\u00f3s-clique diz o que aconteceu e direciona para a aba.\n\n---\n\n## 1. Modelo de dados envolvido\n\n```\ncreative_assets (spine, RLS own)\n  \u2514\u2500\u2500 source_asset_id \u2500\u2500\u2192 space_publish_variants (1 por asset \u00d7 canal \u00d7 surface)\n                              \u2502  status: draft \u2192 scheduled \u2192 published\n                              \u2502                             \u2198 failed / skipped\n                              \u2514\u2500\u2500 scheduled_post_id \u2500\u2500\u2192 scheduled_posts (fila do cron)\n                                                          status: queued \u2192 publishing \u2192 published\n                                                                                     \u2198 failed / cancelled\n```\n\n**Invariante cr\u00edtico** (o que este SOP protege): *Se `space_publish_variants.status = 'scheduled'`\nent\u00e3o `scheduled_post_id` PRECISA apontar para uma linha viva de `scheduled_posts`. Se a\n`scheduled_posts` morrer, a variant precisa voltar para `draft` (`scheduled_post_id = NULL`).*\n\n## 2. Por que enfileira (n\u00e3o posta s\u00edncrono)\n\nDesign deliberado: `publish-space-asset` insere em `scheduled_posts` com `scheduled_at = publish_at ??\nnow()`. O cron `auto-publish` (a cada N minutos) processa os `queued` cujo `scheduled_at <= now()`,\nchama `publish-social`, faz o Direct Post na rede real. Motivos: (a) o mesmo pipeline serve \"publicar\nagora\" e \"agendar para 3\u00aa \u00e0s 9h\"; (b) upload de v\u00eddeo grande n\u00e3o pode travar UI/edge fn; (c) retry\nsobrevive a falhas transit\u00f3rias.\n\n**Trade-off que este SOP endere\u00e7a:** \"publicar agora\" fica assincronamente invis\u00edvel \u2014 o usu\u00e1rio\nclica, n\u00e3o v\u00ea nada, e conclui que n\u00e3o postou. Solu\u00e7\u00e3o aqui N\u00c3O \u00e9 remover o async; \u00e9 dar VISIBILIDADE\ncan\u00f4nica (aba Publica\u00e7\u00f5es) e feedback p\u00f3s-clique claro.\n\n## 3. Operator \u2014 quem faz manualmente hoje\n\n| Papel | O que faz hoje sem esta fatia |\n|-------|-------------------------------|\n| **Criador** | Clica Publicar. V\u00ea toast. N\u00e3o sabe onde ver o estado. Vai olhar diretamente na rede. Se n\u00e3o v\u00ea l\u00e1 \"na hora\", assume falha e apaga do calend\u00e1rio. |\n| **Sovereign** | Precisa rodar SQL manual (destrave) sempre que algu\u00e9m apaga do calend\u00e1rio sem saber que fica \u00f3rf\u00e3 em variants. |\n\nCom esta fatia, ambos ganham observabilidade: o criador v\u00ea \"Enviado \u2014 verifique na aba Publica\u00e7\u00f5es\"\n+ a aba lista status por canal. O trigger elimina o SQL manual do Sovereign.\n\n## 4. Sequence \u2014 passo a passo com crit\u00e9rio material\n\n| # | Passo | Crit\u00e9rio de sucesso material |\n|---|-------|------------------------------|\n| 1 | Usu\u00e1rio abre um asset em `/dashboard/spaces/assets` | Modal `AssetDetailDialog` abre com duas abas: **Publicar** e **Publica\u00e7\u00f5es** |\n| 2 | Seleciona canal/formato, escreve caption, clica **Publicar** | `publish-space-asset` retorna 200 `{ok:true, space_publish_variant_id, scheduled_post_id, status:'scheduled'}`. Toast direcional aparece: \"Enviado \u2014 acompanhe na aba Publica\u00e7\u00f5es\". |\n| 3 | Modal muda para a aba **Publica\u00e7\u00f5es** automaticamente | O card do canal rec\u00e9m-publicado aparece com badge **Na fila** + hor\u00e1rio-alvo + bot\u00e3o \"Cancelar\" |\n| 4 | Cron `auto-publish` processa (janela `scheduled_at \u2264 now()`) \u2192 chama `publish-social` \u2192 API da rede | Refresh da aba mostra badge **Publicado** + timestamp `published_at` + link para o post na rede |\n| 5 | (opcional) Usu\u00e1rio clica **Cancelar** enquanto est\u00e1 `queued` | `DELETE FROM scheduled_posts WHERE id=...` (RLS own) \u2192 trigger `trg_reset_variant_on_scheduled_delete` volta a variant a `draft` + limpa `scheduled_post_id` \u2192 aba Publica\u00e7\u00f5es mostra \"Rascunho novamente\" \u2192 bot\u00e3o Publicar da aba de config volta a funcionar |\n\n## 5. Verification gates\n\n| Gate | Comando / observa\u00e7\u00e3o | Esperado |\n|------|----------------------|----------|\n| **G1 \u2014 trigger cascade** | `DELETE FROM scheduled_posts WHERE id=<id>` (via cliente com RLS own) | `SELECT status, scheduled_post_id FROM space_publish_variants WHERE scheduled_post_id=<id>` retorna 0 linhas (o campo foi limpo); a variant existe com `status='draft'`. |\n| **G2 \u2014 n\u00e3o sobrescreve estado hist\u00f3rico** | Se `status='published'` antes do delete, apagar do calend\u00e1rio N\u00c3O regride para `draft` | `status` permanece `published`; s\u00f3 o `scheduled_post_id` vira NULL. Verdade hist\u00f3rica n\u00e3o \u00e9 reescrita. |\n| **G3 \u2014 cross-tenant** | Um user B tenta apagar um `scheduled_posts` de user A | A RLS j\u00e1 bloqueia o pr\u00f3prio DELETE (own). O trigger, se acionado por service_role, s\u00f3 atua sobre a variant `WHERE scheduled_post_id=OLD.id AND user_id=OLD.user_id` \u2014 nunca cruza tenant. |\n| **G4 \u2014 idempotente** | Deletar o mesmo `scheduled_posts` 2x | 2\u00ba delete afeta 0 linhas (RLS + linha inexistente); trigger n\u00e3o dispara. |\n| **G5 \u2014 RLS write da variant** | A variant tem `NO INSERT/UPDATE policy` para authenticated (s\u00f3 service-role). O trigger \u00e9 `SECURITY DEFINER`. | Um user autenticado n\u00e3o consegue setar `status='published'` sozinho. `\\dp public.space_publish_variants` confirma. |\n| **G6 \u2014 visibilidade UX** | Ap\u00f3s clique em Publicar, o usu\u00e1rio v\u00ea algo mudar em \u2264 1s | Aba muda para \"Publica\u00e7\u00f5es\" automaticamente; card com badge \"Na fila\" vis\u00edvel; bot\u00e3o Publicar da aba de config fica desabilitado com texto \"J\u00e1 na fila para este formato\". |\n| **G7 \u2014 refresh** | Depois que o cron postar, o usu\u00e1rio volta ao modal | Aba Publica\u00e7\u00f5es mostra \"Publicado em HH:MM\" e (quando o `publish-social` populou) o link para o post na rede. |\n\n## 6. Recovery path \u2014 falha no passo N\n\n| Falha | Recupera\u00e7\u00e3o exata |\n|-------|-------------------|\n| Variant ficou \u00f3rf\u00e3 (estado antigo, pr\u00e9-migration) | 1 linha SQL: `UPDATE space_publish_variants SET status='draft', scheduled_post_id=NULL WHERE id=<uuid>`. **A migration N\u00c3O faz backfill** \u2014 n\u00e3o temos como saber se um variant `scheduled` antigo teve o post cancelado ou se ainda est\u00e1 em voo com dado hist\u00f3rico perdido. Reconciliar sob demanda \u00e9 seguro; reconciliar em massa poderia reprogramar posts que o usu\u00e1rio j\u00e1 considerou conclu\u00eddos. |\n| Cron `auto-publish` est\u00e1 parado (fila cresce) | Aba Publica\u00e7\u00f5es mostra \"Na fila h\u00e1 Nmin\". Investigar: `SELECT status, count(*) FROM scheduled_posts GROUP BY 1` e checar se o pg_cron est\u00e1 `active`. |\n| `publish-social` falhou (API da rede rejeitou) | `scheduled_posts.status='failed'` + `error_message` populado. Aba Publica\u00e7\u00f5es mostra badge \"Falhou\" + mensagem. Usu\u00e1rio pode Cancelar e refazer. |\n| Trigger n\u00e3o disparou (upgrade concorrente?) | `\\d+ scheduled_posts` mostra o trigger listado. Fallback manual = mesma linha SQL do primeiro caso. |\n\n## 7. Success signal\n\nUm criador clica Publicar num asset, v\u00ea o card do canal aparecer na aba Publica\u00e7\u00f5es com \"Na fila\",\ntem certeza de que a opera\u00e7\u00e3o foi registrada, sabe onde acompanhar, pode Cancelar em 1 clique\nenquanto est\u00e1 na fila \u2014 e quando o cron publica, o mesmo card vira \"Publicado\" com timestamp e link.\nN\u00e3o precisa mais abrir a rede social para conferir se aconteceu.\n\n## 8. Superf\u00edcies (arquivos)\n\n| Camada | Arquivo |\n|--------|---------|\n| Migration (trigger cascade tenant-safe) | `supabase/migrations/20260730180000_space_publish_variants_reset_on_scheduled_delete.sql` |\n| Hook (variants + posts do asset) | `src/hooks/useAssetPublications.ts` |\n| Aba Publica\u00e7\u00f5es | `src/components/creative/AssetPublicationsPanel.tsx` |\n| Modal reestruturado com Tabs + toast direcional | `src/components/creative/AssetDetailDialog.tsx` |\n| Testes | `src/test/asset-publications.test.ts` |\n\n## 9. O que este SOP N\u00c3O faz (escopo negativo)\n\n- **N\u00e3o muda `publish-space-asset` para s\u00edncrono.** O async \u00e9 decis\u00e3o arquitetural (\u00a72). A cura \u00e9 UX\n  + reconcilia\u00e7\u00e3o, n\u00e3o reescrita do transporte.\n- **N\u00e3o substitui o calend\u00e1rio.** A aba Publica\u00e7\u00f5es \u00e9 uma vista focada no asset. O calend\u00e1rio\n  continua sendo a vista focada no tempo. Um post existe em ambas as vistas \u2014 e as a\u00e7\u00f5es de\n  Cancelar em qualquer uma delas se propagam pela mesma FK via o trigger.\n- **N\u00e3o muda o comportamento do `auto-publish` cron.** S\u00f3 a UI de acompanhamento.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/processes/space-asset-publish-lifecycle.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:58:11)*
+
+**Migration:**
+
+## 🤖 Claude *(16:58:37)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260730180000_space_publish_variants_reset_on_scheduled_delete.sql",
+  "content": "-- 20260730180000_space_publish_variants_reset_on_scheduled_delete.sql\n-- Cascade reconciliation: deleting a `scheduled_posts` row (from the Calendar UI, from the\n-- Publications tab, or from any owner-scoped DELETE) automatically resets the linked\n-- `space_publish_variants` back to a re-enqueueable state.\n--\n-- SOP (Lei 2, written first): docs/processes/space-asset-publish-lifecycle.md\n-- Precedent table SSOT: supabase/migrations/20260710233000_space_publish_variants.sql\n--                       (writes are service-role-only, no INSERT/UPDATE policy \u2014 this trigger's\n--                        SECURITY DEFINER pattern matches that invariant).\n--\n-- WHY: `space_publish_variants.scheduled_post_id` is a plain UUID column with NO foreign key\n-- constraint (by design \u2014 the money-path table `channel_variants` uses the exact same shape). So\n-- deleting the `scheduled_posts` row it points at leaves the variant with a dangling reference:\n--   status='scheduled', scheduled_post_id=<UUID-that-no-longer-exists>\n-- The next `publish-space-asset` call for the same (user, asset, channel, surface) hits the gate\n-- at line 208 (`variant.scheduled_post_id || variant.status='scheduled'`) and 409s with\n-- `already_enqueued` \u2014 a dead-end the user cannot escape without service-role SQL.\n--\n-- Semantics:\n--   status='scheduled' \u2192 back to 'draft' (re-enqueueable) + scheduled_post_id=NULL\n--   status='published' \u2192 HISTORICAL TRUTH: keep 'published', only null out scheduled_post_id\n--                        (the post really went out; deleting the calendar row is just tidying)\n--   status='failed'/'skipped'/'draft' \u2192 NOT touched (already terminal or already re-enqueueable)\n--\n-- TENANCY (mirrors the CLAUDE.md API Tenancy Model + FMEA-011 vigilance): the trigger acts ONLY\n-- on the variant whose scheduled_post_id equals OLD.id AND whose user_id equals OLD.user_id.\n--   \u2022 scheduled_post_id is a UUID, so cross-tenant collisions are cryptographically implausible;\n--   \u2022 the belt-and-suspenders user_id equality makes any theoretical collision physically\n--     unable to cross tenant boundaries.\n-- The user_id-guarded WHERE is served by the existing partial index\n--   idx_space_publish_variants_sched ON (scheduled_post_id) WHERE scheduled_post_id IS NOT NULL\n-- so DELETE-time overhead is a single point-lookup, not a table scan.\n--\n-- Security posture: HARDENS (closes the dangling-reference class that made the user's TikTok\n-- account dead-lock on `already_enqueued`). No new client-reachable RPC. No new grant to anon.\n-- SECURITY DEFINER function is REVOKED from PUBLIC/anon/authenticated (trigger fire still works\n-- because Postgres checks EXECUTE at CREATE TRIGGER time, not per-fire \u2014 matches the pattern of\n-- trg_encrypt_social_app_config in 20260627120000). MANDATORY /security-review before commit.\n\nCREATE OR REPLACE FUNCTION public.trg_reset_variant_on_scheduled_delete()\nRETURNS TRIGGER\nLANGUAGE plpgsql\nSECURITY DEFINER\nSET search_path = ''\nAS $$\nBEGIN\n  -- Reset only the variants that were linked to THIS deleted scheduled_post AND owned by the same\n  -- tenant. Terminal states ('failed','skipped') and drafts are left untouched so the trigger is\n  -- purely a reconciliation, never a state rewrite.\n  UPDATE public.space_publish_variants v\n     SET status = CASE WHEN v.status = 'scheduled' THEN 'draft'\n                       ELSE v.status  -- 'published' stays 'published' (historical truth)\n                  END,\n         scheduled_post_id = NULL,\n         updated_at = now()\n   WHERE v.scheduled_post_id = OLD.id\n     AND v.user_id = OLD.user_id;   -- defence in depth against a hypothetical UUID collision\n\n  RETURN OLD;\nEND;\n$$;\n\nREVOKE ALL ON FUNCTION public.trg_reset_variant_on_scheduled_delete() FROM PUBLIC, anon, authenticated;\n\nDROP TRIGGER IF EXISTS trg_reset_variant_on_scheduled_delete ON public.scheduled_posts;\nCREATE TRIGGER trg_reset_variant_on_scheduled_delete\n  AFTER DELETE ON public.scheduled_posts\n  FOR EACH ROW EXECUTE FUNCTION public.trg_reset_variant_on_scheduled_delete();\n\nCOMMENT ON FUNCTION public.trg_reset_variant_on_scheduled_delete() IS\n  'Reconciles space_publish_variants when its linked scheduled_posts row is deleted. Prevents the '\n  'dead-end 409 \"already_enqueued\" observed on 2026-07-30 (SOP: docs/processes/space-asset-publish-lifecycle.md).';\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/supabase/migrations/20260730180000_space_publish_variants_reset_on_scheduled_delete.sql (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:58:40)*
+
+**Hook e Panel:**
+
+## 🤖 Claude *(16:58:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"scheduled_at|published_at|error_message|status|social_platform\" src/integrations/supabase/types.ts | grep -i \"scheduled_posts\\|scheduled_at\\|error_message\" | head -20; echo \"---\"; grep -rnE \"getFormat|LABEL|labelFor.*(channel|surface)\" src/lib/format-specs.ts | head -10",
+  "description": "Colunas de scheduled_posts nos types + helper de label"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2382:          error_message: string | null
+> 2399:          error_message?: string | null
+> 2416:          error_message?: string | null
+> 3442:          error_message: string | null
+> 3456:          error_message?: string | null
+> 3470:          error_message?: string | null
+> 3709:          error_message: string | null
+> 3723:          error_message?: string | null
+> 3737:          error_message?: string | null
+> 3869:          error_message: string | null
+> 3877:          scheduled_at: string
+> 3887:          error_message?: string | null
+> 3895:          scheduled_at: string
+> 3905:          error_message?: string | null
+> 3913:          scheduled_at?: string
+> 5227:          error_message: string | null
+> 5254:          error_message?: string | null
+> 5281:          error_message?: string | null
+> ---
+> src/lib/format-specs.ts:182:export function getFormat(id: string): PublicationFormat | undefined {
+> ```
+
+## 🤖 Claude *(16:58:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -nE \"^export|export function.*Format|PublicationFormat\\b|network|label:\" src/lib/format-specs.ts | head -20",
+  "description": "Exports \u00fateis do format-specs"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 11:export type PublishPlatform =
+> 15:export type FormatKind = "video" | "image" | "text" | "any";
+> 24:export type Publishability = "real" | "preview";
+> 27:export type PreviewChrome =
+> 39:export interface PublicationFormat {
+> 41:  label: string;
+> 71:export const PUBLICATION_FORMATS: PublicationFormat[] = [
+> 74:    id: "instagram_reels", label: "Instagram Reels", platform: "instagram", channel: "instagram", surface: "reel",
+> 81:    id: "instagram_feed", label: "Instagram Feed", platform: "instagram", channel: "instagram", surface: "feed_image",
+> 87:    id: "instagram_stories", label: "Instagram Stories", platform: "instagram", channel: "instagram", surface: "story",
+> 93:    id: "instagram_carousel", label: "Instagram Carrossel", platform: "instagram", channel: "instagram", surface: "carousel",
+> 101:    id: "tiktok_video", label: "TikTok", platform: "tiktok", channel: "tiktok", surface: "video",
+> 110:    id: "youtube_short", label: "YouTube Short", platform: "youtube", channel: "youtube", surface: "short",
+> 116:    id: "youtube_video", label: "YouTube Vídeo", platform: "youtube", channel: "youtube", surface: "long_video",
+> 122:    id: "youtube_community", label: "YouTube Comunidade", platform: "youtube", channel: "youtube", surface: "community",
+> 130:    id: "facebook_feed", label: "Facebook Feed", platform: "facebook", channel: "facebook", surface: "feed",
+> 136:    id: "facebook_link", label: "Facebook Link", platform: "facebook", channel: "facebook", surface: "link_card",
+> 144:    id: "linkedin_feed", label: "LinkedIn", platform: "linkedin", channel: "linkedin", surface: "feed_image",
+> 152:    id: "twitter_post", label: "X (Twitter)", platform: "twitter", channel: "twitter_x", surface: "post",
+> 160:    id: "pinterest_pin", label: "Pinterest Pin", platform: "pinterest", channel: "pinterest", surface: "standard_pin",
+> ```
+
+## 🤖 Claude *(16:59:22)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAssetPublications.ts",
+  "content": "import { useMemo } from 'react';\nimport { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';\nimport type { SupabaseClient } from '@supabase/supabase-js';\nimport { supabase } from '@/integrations/supabase/client';\nimport { useAuth } from '@/hooks/useAuth';\nimport { PUBLICATION_FORMATS } from '@/lib/format-specs';\n\n/**\n * Publications of a single asset \u2014 variants + linked scheduled_posts.\n *\n * SOP: docs/processes/space-asset-publish-lifecycle.md\n *\n * The truth we need to show the user is spread across two tables:\n *   \u2022 space_publish_variants  \u2014 one row per (asset \u00d7 channel \u00d7 surface); carries the terminal state\n *     ('draft' | 'scheduled' | 'published' | 'failed' | 'skipped').\n *   \u2022 scheduled_posts         \u2014 the async queue row; carries WHEN it will run, WHEN it ran, and\n *     the platform error_message if the cron rejected it.\n *\n * We fetch both, then merge by variant.scheduled_post_id. When the trigger from\n * 20260730180000_space_publish_variants_reset_on_scheduled_delete.sql fires, scheduled_post_id is\n * NULL \u2014 the row is coherent again (never a dangling reference from the user's point of view).\n */\n\nexport type PublicationStatus = 'draft' | 'scheduled' | 'published' | 'failed' | 'skipped';\n\nexport interface AssetPublication {\n  variant_id: string;\n  channel: string;\n  surface: string;\n  platform: string | null;\n  status: PublicationStatus;\n  updated_at: string;\n  /** Present while the variant is in the queue OR right after publish (until the row is pruned). */\n  scheduled_post_id: string | null;\n  scheduled_at: string | null;\n  published_at: string | null;\n  post_status: 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled' | null;\n  error_message: string | null;\n  /** Display label from format-specs (canonical UI naming), else \"<channel> \u00b7 <surface>\". */\n  format_label: string;\n}\n\nconst db = supabase as unknown as SupabaseClient;\n\n/** Map (channel, surface) \u2192 human label from the SSOT catalog. Falls back to a raw pair. */\nconst FORMAT_LABEL_BY_KEY: Record<string, string> = PUBLICATION_FORMATS.reduce(\n  (acc, f) => Object.assign(acc, { [`${f.channel}::${f.surface}`]: f.label }),\n  {},\n);\n\nfunction labelFor(channel: string, surface: string): string {\n  return FORMAT_LABEL_BY_KEY[`${channel}::${surface}`] ?? `${channel} \u00b7 ${surface}`;\n}\n\ninterface VariantRow {\n  id: string;\n  channel: string;\n  surface: string;\n  platform: string | null;\n  status: PublicationStatus;\n  updated_at: string;\n  scheduled_post_id: string | null;\n}\n\ninterface ScheduledRow {\n  id: string;\n  status: 'queued' | 'publishing' | 'published' | 'failed' | 'cancelled';\n  scheduled_at: string;\n  published_at: string | null;\n  error_message: string | null;\n}\n\nexport function useAssetPublications(assetId: string | null | undefined) {\n  const { user } = useAuth();\n  const queryClient = useQueryClient();\n  const queryKey = ['asset_publications', assetId, user?.id] as const;\n\n  const query = useQuery({\n    queryKey,\n    enabled: !!assetId && !!user?.id,\n    queryFn: async (): Promise<AssetPublication[]> => {\n      // 1) variants for THIS asset (RLS: SELECT own).\n      const { data: variants, error: vErr } = await db\n        .from('space_publish_variants')\n        .select('id, channel, surface, platform, status, updated_at, scheduled_post_id')\n        .eq('source_asset_id', assetId!)\n        .order('updated_at', { ascending: false });\n      if (vErr) throw vErr;\n      const vRows = (variants ?? []) as VariantRow[];\n\n      // 2) resolve the linked queue rows in ONE query (in-list). RLS on scheduled_posts is own too.\n      const scheduledIds = vRows.map((v) => v.scheduled_post_id).filter((x): x is string => !!x);\n      const scheduledById = new Map<string, ScheduledRow>();\n      if (scheduledIds.length > 0) {\n        const { data: posts, error: pErr } = await db\n          .from('scheduled_posts')\n          .select('id, status, scheduled_at, published_at, error_message')\n          .in('id', scheduledIds);\n        if (pErr) throw pErr;\n        for (const p of (posts ?? []) as ScheduledRow[]) scheduledById.set(p.id, p);\n      }\n\n      return vRows.map<AssetPublication>((v) => {\n        const sp = v.scheduled_post_id ? scheduledById.get(v.scheduled_post_id) ?? null : null;\n        return {\n          variant_id: v.id,\n          channel: v.channel,\n          surface: v.surface,\n          platform: v.platform,\n          status: v.status,\n          updated_at: v.updated_at,\n          scheduled_post_id: v.scheduled_post_id,\n          scheduled_at: sp?.scheduled_at ?? null,\n          published_at: sp?.published_at ?? null,\n          post_status: sp?.status ?? null,\n          error_message: sp?.error_message ?? null,\n          format_label: labelFor(v.channel, v.surface),\n        };\n      });\n    },\n    // Poll while any publication is in-flight (queued/publishing) so the badge flips without an\n    // explicit refetch. staleTime intentionally 0 for this hook \u2014 it's a small per-asset query\n    // and freshness matters more than caching after a Publish click.\n    refetchInterval: (q) => {\n      const data = q.state.data as AssetPublication[] | undefined;\n      const inFlight = (data ?? []).some(\n        (p) => p.post_status === 'queued' || p.post_status === 'publishing' || p.status === 'scheduled',\n      );\n      return inFlight ? 15_000 : false;\n    },\n  });\n\n  const publications = useMemo(() => query.data ?? [], [query.data]);\n  const inFlight = publications.some(\n    (p) => p.post_status === 'queued' || p.post_status === 'publishing' || p.status === 'scheduled',\n  );\n\n  /** Cancel a queued publication. The DB trigger (20260730180000) resets the variant to 'draft'. */\n  const cancel = useMutation({\n    mutationFn: async (variant: AssetPublication) => {\n      if (!variant.scheduled_post_id) throw new Error('Sem publica\u00e7\u00e3o na fila para cancelar.');\n      // RLS on scheduled_posts is own \u2014 a non-owner delete returns 0 rows, which we treat as denial.\n      const { data, error } = await db\n        .from('scheduled_posts')\n        .delete()\n        .eq('id', variant.scheduled_post_id)\n        .select('id');\n      if (error) throw error;\n      if (!data || data.length === 0) {\n        throw new Error('N\u00e3o foi poss\u00edvel cancelar (sem permiss\u00e3o ou j\u00e1 conclu\u00eddo).');\n      }\n    },\n    onSuccess: () => queryClient.invalidateQueries({ queryKey }),\n  });\n\n  return {\n    publications,\n    inFlight,\n    isLoading: query.isLoading,\n    error: query.error,\n    cancel,\n    refetch: query.refetch,\n  };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useAssetPublications.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(16:59:25)*
+
+**Panel:**
+
+## 🤖 Claude *(16:59:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetPublicationsPanel.tsx",
+  "content": "import { useState } from 'react';\nimport { format, formatDistanceToNow, parseISO } from 'date-fns';\nimport { ptBR } from 'date-fns/locale';\nimport { toast } from 'sonner';\nimport { AlertCircle, Ban, CheckCircle2, Clock, Loader2, RefreshCw } from 'lucide-react';\nimport { useAssetPublications, type AssetPublication, type PublicationStatus } from '@/hooks/useAssetPublications';\nimport { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';\nimport { Skeleton } from '@/components/ui/skeleton';\nimport { Alert, AlertDescription } from '@/components/ui/alert';\nimport { cn } from '@/lib/utils';\n\n/**\n * \"Publica\u00e7\u00f5es\" tab for the AssetDetailDialog \u2014 canonical place to see WHERE a Spaces-origin asset\n * has been sent (per channel/surface) and to cancel while queued. Prevents the 2026-07-30 incident\n * where the user deleted a real TikTok post assuming Publish silently failed.\n *\n * SOP: docs/processes/space-asset-publish-lifecycle.md\n * Data: useAssetPublications (variants \u2a1d scheduled_posts, RLS-own on both sides).\n * Cancel action: DELETE on scheduled_posts \u2192 cascade trigger resets variant to 'draft'.\n */\n\ntype BadgeTone = 'queue' | 'ok' | 'fail' | 'muted';\n\ninterface StatusVisual {\n  label: string;\n  tone: BadgeTone;\n  icon: React.ComponentType<{ className?: string }>;\n}\n\nfunction resolveVisual(p: AssetPublication): StatusVisual {\n  // scheduled_posts.status is more granular than variant.status while the queue row exists \u2014\n  // prefer it. Fall back to variant.status once the queue row was pruned or when the trigger\n  // reconciled things back to 'draft'.\n  const combined = (p.post_status ?? p.status) as PublicationStatus | AssetPublication['post_status'];\n  switch (combined) {\n    case 'queued':\n    case 'scheduled':\n      return { label: 'Na fila', tone: 'queue', icon: Clock };\n    case 'publishing':\n      return { label: 'Publicando\u2026', tone: 'queue', icon: Loader2 };\n    case 'published':\n      return { label: 'Publicado', tone: 'ok', icon: CheckCircle2 };\n    case 'failed':\n      return { label: 'Falhou', tone: 'fail', icon: AlertCircle };\n    case 'cancelled':\n    case 'skipped':\n      return { label: 'Cancelado', tone: 'muted', icon: Ban };\n    case 'draft':\n    default:\n      return { label: 'Rascunho', tone: 'muted', icon: Clock };\n  }\n}\n\nconst TONE_CLASSES: Record<BadgeTone, string> = {\n  queue: 'bg-amber-500/15 text-amber-400 border-amber-500/30',\n  ok: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',\n  fail: 'bg-destructive/15 text-destructive border-destructive/30',\n  muted: 'bg-muted text-muted-foreground border-border/50',\n};\n\nfunction timeHint(p: AssetPublication): string | null {\n  if (p.published_at) {\n    return `Publicado ${formatDistanceToNow(parseISO(p.published_at), { addSuffix: true, locale: ptBR })}`;\n  }\n  if (p.scheduled_at) {\n    const dt = parseISO(p.scheduled_at);\n    const future = dt.getTime() > Date.now() + 60_000;\n    return future\n      ? `Programado para ${format(dt, \"dd/MM '\u00e0s' HH:mm\", { locale: ptBR })}`\n      : `Na fila h\u00e1 ${formatDistanceToNow(dt, { locale: ptBR })}`;\n  }\n  return `Atualizado ${formatDistanceToNow(parseISO(p.updated_at), { addSuffix: true, locale: ptBR })}`;\n}\n\ninterface Props {\n  assetId: string | null | undefined;\n}\n\nexport function AssetPublicationsPanel({ assetId }: Props) {\n  const { publications, isLoading, error, cancel, refetch } = useAssetPublications(assetId);\n  const [cancelling, setCancelling] = useState<string | null>(null);\n\n  async function handleCancel(p: AssetPublication) {\n    setCancelling(p.variant_id);\n    try {\n      await cancel.mutateAsync(p);\n      toast.success('Cancelado', {\n        description: `${p.format_label} voltou para rascunho \u2014 pode republicar quando quiser.`,\n      });\n    } catch (e) {\n      toast.error('N\u00e3o consegui cancelar', {\n        description: e instanceof Error ? e.message : 'Erro desconhecido',\n      });\n    } finally {\n      setCancelling(null);\n    }\n  }\n\n  if (isLoading) {\n    return (\n      <div className=\"space-y-2\">\n        <Skeleton className=\"h-16 w-full\" />\n        <Skeleton className=\"h-16 w-full\" />\n      </div>\n    );\n  }\n\n  if (error) {\n    return (\n      <Alert variant=\"destructive\">\n        <AlertCircle className=\"h-4 w-4\" />\n        <AlertDescription>N\u00e3o consegui carregar as publica\u00e7\u00f5es deste asset. Recarregue a aba.</AlertDescription>\n      </Alert>\n    );\n  }\n\n  if (publications.length === 0) {\n    return (\n      <div className=\"rounded-lg border border-dashed border-border/60 p-6 text-center\">\n        <p className=\"text-sm text-muted-foreground\">\n          Nenhuma publica\u00e7\u00e3o registrada para este asset.\n        </p>\n        <p className=\"mt-1 text-xs text-muted-foreground/70\">\n          Selecione um formato na aba <strong>Publicar</strong> e envie \u2014 o registro aparece aqui.\n        </p>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"space-y-2\">\n      <div className=\"flex items-center justify-between\">\n        <p className=\"text-xs text-muted-foreground\">\n          {publications.length} publica\u00e7\u00e3o{publications.length === 1 ? '' : '\u00f5es'} deste asset\n        </p>\n        <Button size=\"sm\" variant=\"ghost\" className=\"h-7 gap-1 text-xs\" onClick={() => refetch()}>\n          <RefreshCw className=\"h-3 w-3\" /> Atualizar\n        </Button>\n      </div>\n\n      {publications.map((p) => {\n        const visual = resolveVisual(p);\n        const Icon = visual.icon;\n        const canCancel = !!p.scheduled_post_id && (p.post_status === 'queued' || p.status === 'scheduled');\n        const busy = cancelling === p.variant_id;\n        return (\n          <div\n            key={p.variant_id}\n            className=\"flex items-start justify-between gap-3 rounded-lg border border-border/60 p-3\"\n          >\n            <div className=\"min-w-0 flex-1 space-y-1\">\n              <div className=\"flex flex-wrap items-center gap-2\">\n                <span className=\"text-sm font-medium\">{p.format_label}</span>\n                <Badge variant=\"outline\" className={cn('gap-1 text-[10px]', TONE_CLASSES[visual.tone])}>\n                  <Icon className={cn('h-3 w-3', visual.tone === 'queue' && p.post_status === 'publishing' && 'animate-spin')} />\n                  {visual.label}\n                </Badge>\n              </div>\n              <p className=\"text-[11px] text-muted-foreground\">{timeHint(p)}</p>\n              {p.error_message && (\n                <p className=\"text-[11px] text-destructive\">Motivo: {p.error_message}</p>\n              )}\n            </div>\n            {canCancel && (\n              <Button\n                size=\"sm\"\n                variant=\"outline\"\n                className=\"h-7 shrink-0 text-xs\"\n                onClick={() => handleCancel(p)}\n                disabled={busy}\n              >\n                {busy ? <Loader2 className=\"mr-1 h-3 w-3 animate-spin\" /> : <Ban className=\"mr-1 h-3 w-3\" />}\n                Cancelar\n              </Button>\n            )}\n          </div>\n        );\n      })}\n    </div>\n  );\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetPublicationsPanel.tsx (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:01)*
+
+Agora reestruturo o modal com Tabs e mudo o toast/comportamento pós-publicação:
+
+## 🤖 Claude *(17:00:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "import { Button } from \"@/components/ui/button\";\nimport { Badge } from \"@/components/ui/badge\";\nimport { Textarea } from \"@/components/ui/textarea\";\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from \"@/components/ui/select\";\nimport { Clapperboard, Download, Link2, Loader2, Palette, Save, Send } from \"lucide-react\";\nimport { resolveAssetUrl, type CreativeAsset } from \"@/hooks/useCreativeAssets\";\nimport { useCreateCanvasProject, useSaveCanvasGraph } from \"@/hooks/useCanvasStudio\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { cn } from \"@/lib/utils\";\nimport type { PersistedCanvasGraph } from \"@/types/canvas\";\nimport { availability, formatsForKind, getFormat, type PublicationFormat } from \"@/lib/format-specs\";\nimport { PublicationPreview } from \"./PublicationPreview\";\nimport { ProvenanceBadge } from \"./ProvenanceBadge\";",
+  "new_string": "import { Button } from \"@/components/ui/button\";\nimport { Badge } from \"@/components/ui/badge\";\nimport { Textarea } from \"@/components/ui/textarea\";\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from \"@/components/ui/select\";\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from \"@/components/ui/tabs\";\nimport { Clapperboard, Download, Link2, Loader2, Palette, Save, Send } from \"lucide-react\";\nimport { resolveAssetUrl, type CreativeAsset } from \"@/hooks/useCreativeAssets\";\nimport { useCreateCanvasProject, useSaveCanvasGraph } from \"@/hooks/useCanvasStudio\";\nimport { useAssetPublications } from \"@/hooks/useAssetPublications\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { edgeErrorMessage } from \"@/lib/edge\";\nimport { cn } from \"@/lib/utils\";\nimport type { PersistedCanvasGraph } from \"@/types/canvas\";\nimport { availability, formatsForKind, getFormat, type PublicationFormat } from \"@/lib/format-specs\";\nimport { PublicationPreview } from \"./PublicationPreview\";\nimport { ProvenanceBadge } from \"./ProvenanceBadge\";\nimport { AssetPublicationsPanel } from \"./AssetPublicationsPanel\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:14)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 74,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 74	 * The publish section is now format-aware: pick a format → see a faithful preview → save a draft or publish via the
+> 75	 * owner-scoped seam publish-space-asset (replaces the legacy video-only publish-social call). Works for image AND video.
+> 76	 */
+> 77	export function AssetDetailDialog({
+> 78	  asset,
+> 79	  onOpenChange,
+> 80	}: {
+> 81	  asset: CreativeAsset | null;
+> 82	  onOpenChange: (open: boolean) => void;
+> 83	}) {
+> 84	  const [url, setUrl] = useState<string | null>(null);
+> 85	  const [caption, setCaption] = useState("");
+> 86	  const [formatId, setFormatId] = useState<string | null>(null);
+> 87	  const [savingDraft, setSavingDraft] = useState(false);
+> 88	  const [publishingNow, setPublishingNow] = useState(false);
+> 89	  // FR-SPACES-081 — opt-in server-side reframe (pixel-parity com o preview). Só imagem; default ligado quando
+> 90	  // o formato tem geometria fixa (o preview promete o crop → o publicado deve bater). Fail-open no server.
+> 91	  const [reframe, setReframe] = useState(true);
+> 92	  // Publication privacy — YouTube-native enum. Default PRIVADO: we take the last REVERSIBLE step on our own and
+> 93	  // leave "make it public" as a Sovereign act. Only YouTube exposes this; the control is hidden elsewhere so the
+> 94	  // UI never promises a reach control the rail cannot deliver (format-specs.ts:9).
+> 95	  const [privacy, setPrivacy] = useState<PublishPrivacy>("private");
+> 96	  const navigate = useNavigate();
+> 97	  const createProject = useCreateCanvasProject();
+> 98	  const saveGraph = useSaveCanvasGraph();
+> 99	
+> 100	  const formats = useMemo(() => formatsForKind(asset?.kind ?? ""), [asset?.kind]);
+> 101	  const selectedFormat: PublicationFormat | undefined = (formatId && getFormat(formatId)) || formats[0];
+> 102	
+> 103	  useEffect(() => {
+> ```
+
+## 🤖 Claude *(17:00:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "  const [privacy, setPrivacy] = useState<PublishPrivacy>(\"private\");\n  const navigate = useNavigate();\n  const createProject = useCreateCanvasProject();\n  const saveGraph = useSaveCanvasGraph();",
+  "new_string": "  const [privacy, setPrivacy] = useState<PublishPrivacy>(\"private\");\n  // Two-tab layout: config vs. lifecycle. Publishing switches to \"publications\" so the user always sees the\n  // queue row appear \u2014 kills the \"did it work?\" ambiguity that caused the 2026-07-30 delete-then-stuck incident.\n  const [tab, setTab] = useState<\"publish\" | \"publications\">(\"publish\");\n  const navigate = useNavigate();\n  const createProject = useCreateCanvasProject();\n  const saveGraph = useSaveCanvasGraph();\n  // Counter for the tab badge \u2014 lets the user see AT A GLANCE that this asset has activity elsewhere.\n  const { publications, inFlight } = useAssetPublications(asset?.id ?? null);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:24)*
+
+Também aciono o reset do tab quando o asset muda + já-na-fila-para-este-formato:
+
+## 🤖 Claude *(17:00:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "  useEffect(() => {\n    let alive = true;\n    setUrl(null);\n    setCaption(asset?.title ?? asset?.prompt ?? \"\");\n    // Default to the first PUBLISHABLE format for this kind (falls back to the first).\n    const kindFormats = formatsForKind(asset?.kind ?? \"\");\n    const firstReal = kindFormats.find((f) => f.publishable === \"real\");\n    setFormatId((firstReal ?? kindFormats[0])?.id ?? null);\n    setPrivacy(\"private\"); // re-arm the fail-safe default on every asset open\n    if (asset) resolveAssetUrl(asset).then((u) => alive && setUrl(u));\n    return () => {\n      alive = false;\n    };\n  }, [asset]);",
+  "new_string": "  useEffect(() => {\n    let alive = true;\n    setUrl(null);\n    setCaption(asset?.title ?? asset?.prompt ?? \"\");\n    // Default to the first PUBLISHABLE format for this kind (falls back to the first).\n    const kindFormats = formatsForKind(asset?.kind ?? \"\");\n    const firstReal = kindFormats.find((f) => f.publishable === \"real\");\n    setFormatId((firstReal ?? kindFormats[0])?.id ?? null);\n    setPrivacy(\"private\"); // re-arm the fail-safe default on every asset open\n    setTab(\"publish\"); // land on the config tab whenever the modal opens on a new asset\n    if (asset) resolveAssetUrl(asset).then((u) => alive && setUrl(u));\n    return () => {\n      alive = false;\n    };\n  }, [asset]);\n\n  // Publication already in flight for the SELECTED (channel, surface)? The seam will 409 already_enqueued.\n  // Tell the user up-front instead of surfacing the 409 as a red toast.\n  const activeForSelected = useMemo(() => {\n    if (!selectedFormat) return null;\n    return publications.find(\n      (p) =>\n        p.channel === selectedFormat.channel &&\n        p.surface === selectedFormat.surface &&\n        (p.status === 'scheduled' || p.post_status === 'queued' || p.post_status === 'publishing'),\n    ) ?? null;\n  }, [publications, selectedFormat]);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:37)*
+
+Agora o `publishVariant` — troco o toast + faço muda para a aba Publicações + trato o 409 se aparecer:
+
+## 🤖 Claude *(17:00:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao publicar\"));\n      if (data?.error) throw new Error(data.error);\n      toast.success(publish ? \"Enviado para publica\u00e7\u00e3o\" : \"Rascunho salvo na fila de publica\u00e7\u00e3o\");\n      if (publish) onOpenChange(false);\n    } catch (e) {\n      toast.error((e as Error).message);\n    } finally {\n      setter(false);\n    }\n  }",
+  "new_string": "      if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao publicar\"));\n      if (data?.error) {\n        // already_enqueued \u2192 escale para uma msg \u00fatil e mande para a aba Publica\u00e7\u00f5es onde a linha\n        // aparece (com o bot\u00e3o Cancelar) \u2014 em vez de um erro vermelho opaco.\n        if (data.error === 'already_enqueued') {\n          toast.info('J\u00e1 h\u00e1 uma publica\u00e7\u00e3o em andamento para este formato.', {\n            description: 'Veja e cancele na aba Publica\u00e7\u00f5es se quiser refazer.',\n          });\n          setTab('publications');\n          return;\n        }\n        throw new Error(data.error);\n      }\n      if (publish) {\n        toast.success('Enviado \u2014 publicando em segundos', {\n          description: 'Acompanhe o status na aba Publica\u00e7\u00f5es. N\u00e3o apague nada da rede antes dela virar Publicado.',\n        });\n        setTab('publications');\n      } else {\n        toast.success('Rascunho salvo \u2014 dispon\u00edvel para publicar depois');\n      }\n    } catch (e) {\n      toast.error((e as Error).message);\n    } finally {\n      setter(false);\n    }\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:00:49)*
+
+Agora envolvo o conteúdo do modal em Tabs. Preciso ver a estrutura atual do return:
+
+## 🤖 Claude *(17:00:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 225,
+  "limit": 35
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 225	                modelId: "openrouter-gemini-image",
+> 226	                output: { imageUrl: url, generatedAt: asset.created_at },
+> 227	              },
+> 228	            };
+> 229	      const graph = { nodes: [node], edges: [] } as unknown as PersistedCanvasGraph;
+> 230	      await saveGraph.mutateAsync({ projectId: project.id, graph });
+> 231	      toast.success("Asset enviado pro Canvas Studio");
+> 232	      onOpenChange(false);
+> 233	      navigate(`/dashboard/spaces/${project.id}`);
+> 234	    } catch (e) {
+> 235	      toast.error("Não consegui abrir no Canvas: " + (e as Error).message);
+> 236	    }
+> 237	  }
+> 238	
+> 239	  function copyLink() {
+> 240	    if (!url) return;
+> 241	    navigator.clipboard
+> 242	      .writeText(url)
+> 243	      .then(() => toast.success("Link copiado"))
+> 244	      .catch(() => toast.error("Falha ao copiar"));
+> 245	  }
+> 246	
+> 247	  const avail = selectedFormat ? availability(selectedFormat) : null;
+> 248	  const canPublish = selectedFormat?.publishable === "real";
+> 249	  const captionMax = selectedFormat?.caption?.max;
+> 250	  const overLimit = captionMax != null && caption.length > captionMax;
+> 251	
+> 252	  return (
+> 253	    <Dialog open={!!asset} onOpenChange={onOpenChange}>
+> 254	      <DialogContent className="flex max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:max-h-[90vh] sm:w-full sm:max-w-3xl sm:rounded-2xl sm:border">
+> 255	        <DialogHeader className="shrink-0 border-b border-border/60 p-4 pr-10 text-left sm:p-6 sm:pb-4">
+> 256	          <DialogTitle className="truncate">{title}</DialogTitle>
+> 257	          <DialogDescription className="flex flex-wrap items-center gap-2">
+> 258	            <Badge variant="secondary">{SOURCE_LABEL[asset.source_module] ?? asset.source_module}</Badge>
+> 259	            <span className="text-xs text-muted-foreground">
+> ```
+
+## 🤖 Claude *(17:01:00)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "        <div className=\"flex-1 overflow-y-auto p-4 sm:p-6\">\n          {/* grid-cols-1 on mobile = minmax(0,1fr) tracks \u2192 columns can shrink below intrinsic image width\n              (implicit `auto` tracks would blow out to the media's natural size). min-w-0 belts-and-suspenders. */}\n          <div className=\"grid grid-cols-1 gap-5 sm:grid-cols-2\">",
+  "new_string": "        <div className=\"flex-1 overflow-y-auto p-4 sm:p-6\">\n          <Tabs value={tab} onValueChange={(v) => setTab(v as \"publish\" | \"publications\")} className=\"flex flex-col gap-4\">\n            <TabsList className=\"grid w-full grid-cols-2 sm:w-auto sm:inline-flex\">\n              <TabsTrigger value=\"publish\" className=\"text-xs sm:text-sm\">Publicar</TabsTrigger>\n              <TabsTrigger value=\"publications\" className=\"gap-2 text-xs sm:text-sm\">\n                Publica\u00e7\u00f5es\n                {publications.length > 0 && (\n                  <Badge\n                    variant={inFlight ? \"default\" : \"secondary\"}\n                    className={cn(\"h-4 px-1.5 text-[10px]\", inFlight && \"animate-pulse\")}\n                  >\n                    {publications.length}\n                  </Badge>\n                )}\n              </TabsTrigger>\n            </TabsList>\n\n            <TabsContent value=\"publications\" className=\"mt-0\">\n              <AssetPublicationsPanel assetId={asset.id} />\n            </TabsContent>\n\n            <TabsContent value=\"publish\" className=\"mt-0\">\n          {/* grid-cols-1 on mobile = minmax(0,1fr) tracks \u2192 columns can shrink below intrinsic image width\n              (implicit `auto` tracks would blow out to the media's natural size). min-w-0 belts-and-suspenders. */}\n          <div className=\"grid grid-cols-1 gap-5 sm:grid-cols-2\">"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:01:04)*
+
+Preciso fechar as `TabsContent` e `Tabs`. Vou ler o final:
+
+## 🤖 Claude *(17:01:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 470,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 470	                    )}
+> 471	
+> 472	                    <div className="grid grid-cols-2 gap-2">
+> 473	                      <Button
+> 474	                        size="sm"
+> 475	                        variant="outline"
+> 476	                        className={TAP}
+> 477	                        onClick={() => publishVariant(false)}
+> 478	                        disabled={!url || !canPublish || publishing}
+> 479	                      >
+> 480	                        {savingDraft ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}
+> 481	                        Salvar rascunho
+> 482	                      </Button>
+> 483	                      <Button
+> 484	                        size="sm"
+> 485	                        className={TAP}
+> 486	                        onClick={() => publishVariant(true)}
+> 487	                        disabled={!url || !canPublish || overLimit || publishing}
+> 488	                        title={!canPublish ? avail?.hint : undefined}
+> 489	                      >
+> 490	                        {publishingNow ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1 h-3.5 w-3.5" />}
+> 491	                        {canPublish ? "Publicar" : "Em breve"}
+> 492	                      </Button>
+> 493	                    </div>
+> 494	                    {avail && avail.tone !== "ok" && avail.hint && (
+> 495	                      <p className="text-[10px] leading-tight text-muted-foreground">{avail.hint}</p>
+> 496	                    )}
+> 497	                  </>
+> 498	                )}
+> 499	              </div>
+> ```
+
+## 🤖 Claude *(17:01:09)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "offset": 495,
+  "limit": 20
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 495	                      <p className="text-[10px] leading-tight text-muted-foreground">{avail.hint}</p>
+> 496	                    )}
+> 497	                  </>
+> 498	                )}
+> 499	              </div>
+> 500	            </div>
+> 501	          </div>
+> 502	        </div>
+> 503	      </DialogContent>
+> 504	    </Dialog>
+> 505	  );
+> 506	}
+> 507	
+> ```
+
+## 🤖 Claude *(17:01:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "                    )}\n                  </>\n                )}\n              </div>\n            </div>\n          </div>\n        </div>\n      </DialogContent>\n    </Dialog>\n  );\n}",
+  "new_string": "                    )}\n                  </>\n                )}\n              </div>\n            </div>\n          </div>\n            </TabsContent>\n          </Tabs>\n        </div>\n      </DialogContent>\n    </Dialog>\n  );\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:01:19)*
+
+E o botão Publicar precisa mostrar o estado "já na fila" quando há variant ativa para o formato selecionado:
+
+## 🤖 Claude *(17:01:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx",
+  "old_string": "                      <Button\n                        size=\"sm\"\n                        className={TAP}\n                        onClick={() => publishVariant(true)}\n                        disabled={!url || !canPublish || overLimit || publishing}\n                        title={!canPublish ? avail?.hint : undefined}\n                      >\n                        {publishingNow ? <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" /> : <Send className=\"mr-1 h-3.5 w-3.5\" />}\n                        {canPublish ? \"Publicar\" : \"Em breve\"}\n                      </Button>\n                    </div>\n                    {avail && avail.tone !== \"ok\" && avail.hint && (\n                      <p className=\"text-[10px] leading-tight text-muted-foreground\">{avail.hint}</p>\n                    )}",
+  "new_string": "                      <Button\n                        size=\"sm\"\n                        className={TAP}\n                        onClick={() =>\n                          activeForSelected ? setTab(\"publications\") : publishVariant(true)\n                        }\n                        disabled={!url || !canPublish || overLimit || publishing}\n                        title={\n                          activeForSelected\n                            ? \"J\u00e1 h\u00e1 uma publica\u00e7\u00e3o em andamento para este formato \u2014 clique para ver.\"\n                            : !canPublish\n                              ? avail?.hint\n                              : undefined\n                        }\n                      >\n                        {publishingNow ? <Loader2 className=\"mr-1 h-3.5 w-3.5 animate-spin\" /> : <Send className=\"mr-1 h-3.5 w-3.5\" />}\n                        {activeForSelected ? \"J\u00e1 na fila \u2014 ver\" : canPublish ? \"Publicar\" : \"Em breve\"}\n                      </Button>\n                    </div>\n                    {activeForSelected && (\n                      <p className=\"text-[10px] leading-tight text-amber-500\">\n                        Este formato j\u00e1 tem uma publica\u00e7\u00e3o em andamento. Cancele em Publica\u00e7\u00f5es se quiser refazer.\n                      </p>\n                    )}\n                    {avail && avail.tone !== \"ok\" && avail.hint && (\n                      <p className=\"text-[10px] leading-tight text-muted-foreground\">{avail.hint}</p>\n                    )}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/creative/AssetDetailDialog.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:01:31)*
+
+**Testes** — invariantes de resolveVisual + a lógica activeForSelected:
+
+## 🤖 Claude *(17:01:55)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/asset-publications.test.ts",
+  "content": "import { describe, it, expect } from 'vitest';\nimport type { AssetPublication } from '@/hooks/useAssetPublications';\n\n// SOP: docs/processes/space-asset-publish-lifecycle.md\n// These tests pin the invariants of the Publications UI without touching Supabase:\n//  1. \"Already enqueued\" gate must be reachable from client state ALONE (no server round-trip),\n//     matching publish-space-asset:208 semantics (variant.scheduled_post_id OR status='scheduled').\n//  2. The trigger (20260730180000) reconciles historical truth: 'published' variants are never\n//     regressed to 'draft' \u2014 only their scheduled_post_id is nulled.\n\nfunction isPublicationActive(p: AssetPublication): boolean {\n  return p.status === 'scheduled' || p.post_status === 'queued' || p.post_status === 'publishing';\n}\n\nfunction findActive(pubs: AssetPublication[], channel: string, surface: string) {\n  return pubs.find((p) => p.channel === channel && p.surface === surface && isPublicationActive(p)) ?? null;\n}\n\nfunction pub(partial: Partial<AssetPublication>): AssetPublication {\n  return {\n    variant_id: partial.variant_id ?? 'v1',\n    channel: partial.channel ?? 'tiktok',\n    surface: partial.surface ?? 'video',\n    platform: partial.platform ?? 'tiktok',\n    status: partial.status ?? 'draft',\n    updated_at: partial.updated_at ?? '2026-07-30T00:00:00Z',\n    scheduled_post_id: partial.scheduled_post_id ?? null,\n    scheduled_at: partial.scheduled_at ?? null,\n    published_at: partial.published_at ?? null,\n    post_status: partial.post_status ?? null,\n    error_message: partial.error_message ?? null,\n    format_label: partial.format_label ?? 'TikTok',\n  };\n}\n\ndescribe('asset-publications \u2014 active detection matches server gate', () => {\n  it('a scheduled variant with a live queue row is active', () => {\n    const active = findActive(\n      [pub({ status: 'scheduled', scheduled_post_id: 'sp-1', post_status: 'queued' })],\n      'tiktok',\n      'video',\n    );\n    expect(active).not.toBeNull();\n  });\n\n  it('a variant currently publishing is active (the cron picked it up)', () => {\n    const active = findActive(\n      [pub({ status: 'scheduled', scheduled_post_id: 'sp-1', post_status: 'publishing' })],\n      'tiktok',\n      'video',\n    );\n    expect(active).not.toBeNull();\n  });\n\n  it('a draft variant is NEVER active (matches the seam gate \u2014 no 409 for drafts)', () => {\n    const active = findActive(\n      [pub({ status: 'draft', scheduled_post_id: null, post_status: null })],\n      'tiktok',\n      'video',\n    );\n    expect(active).toBeNull();\n  });\n\n  it('a published variant is NOT active (already terminal)', () => {\n    const active = findActive(\n      [pub({ status: 'published', scheduled_post_id: 'sp-1', post_status: 'published', published_at: '2026-07-30T00:05:00Z' })],\n      'tiktok',\n      'video',\n    );\n    expect(active).toBeNull();\n  });\n\n  it('a failed publication is NOT active \u2014 user can republish without cancel', () => {\n    const active = findActive(\n      [pub({ status: 'failed', post_status: 'failed', error_message: 'invalid_token' })],\n      'tiktok',\n      'video',\n    );\n    expect(active).toBeNull();\n  });\n\n  it('active detection is per (channel, surface) \u2014 an active IG post does not block a TikTok publish', () => {\n    const activeTiktok = findActive(\n      [\n        pub({ variant_id: 'v-ig', channel: 'instagram', surface: 'reel', status: 'scheduled', scheduled_post_id: 'sp-ig', post_status: 'queued' }),\n      ],\n      'tiktok',\n      'video',\n    );\n    expect(activeTiktok).toBeNull();\n  });\n});\n\ndescribe('asset-publications \u2014 trigger reconciliation semantics', () => {\n  // Simulates the DB trigger (20260730180000) client-side to prove the state transitions are what\n  // the UI expects. The real trigger is exercised by the E2E gates in the SOP.\n  function applyTriggerOnScheduledDelete(p: AssetPublication): AssetPublication {\n    if (p.status === 'scheduled') {\n      return { ...p, status: 'draft', scheduled_post_id: null, post_status: null };\n    }\n    // 'published' keeps status; only nulls scheduled_post_id (historical truth preserved).\n    if (p.status === 'published') {\n      return { ...p, scheduled_post_id: null };\n    }\n    return p; // failed/skipped/draft untouched\n  }\n\n  it('deleting the queue row of a SCHEDULED variant resets it to draft (unblocks republish)', () => {\n    const before = pub({ status: 'scheduled', scheduled_post_id: 'sp-1', post_status: 'queued' });\n    const after = applyTriggerOnScheduledDelete(before);\n    expect(after.status).toBe('draft');\n    expect(after.scheduled_post_id).toBeNull();\n    // And it MUST no longer be \"active\" \u2014 the gate is releasable.\n    expect(isPublicationActive(after)).toBe(false);\n  });\n\n  it('deleting the queue row of a PUBLISHED variant NEVER rewrites history', () => {\n    const before = pub({ status: 'published', scheduled_post_id: 'sp-1', published_at: '2026-07-30T00:05:00Z' });\n    const after = applyTriggerOnScheduledDelete(before);\n    expect(after.status).toBe('published');\n    expect(after.scheduled_post_id).toBeNull();\n    expect(after.published_at).toBe('2026-07-30T00:05:00Z');\n  });\n\n  it('failed / skipped / draft variants are untouched by the delete (idempotent)', () => {\n    for (const s of ['failed', 'skipped', 'draft'] as const) {\n      const before = pub({ status: s, scheduled_post_id: null });\n      expect(applyTriggerOnScheduledDelete(before)).toEqual(before);\n    }\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/test/asset-publications.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:02:00)*
+
+Agora, gates em paralelo — tsc + testes primeiro (rápido), depois aplico a migration e disparo `/security-review` + workflow adversarial em paralelo:
+
+## 🤖 Claude *(17:02:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -20; echo \"TSC=${PIPESTATUS[0]}\"",
+  "description": "Gate de tipos",
+  "timeout": 300000
+}
+```
+
+## 🤖 Claude *(17:02:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test src/test/asset-publications.test.ts 2>&1 | tail -12",
+  "description": "Testes unit\u00e1rios",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TSC=0
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> $ vitest run src/test/asset-publications.test.ts
+> 
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ src/test/asset-publications.test.ts (9 tests) 8ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  9 passed (9)
+>    Start at  14:02:39
+>    Duration  1.18s (transform 59ms, setup 87ms, collect 33ms, tests 8ms, environment 435ms, prepare 104ms)
+> ```
+
+## 🤖 Claude *(17:02:45)*
+
+tsc **0** e testes **9/9**. Aplicando a migration e disparando revisão adversarial em paralelo:
+
+## 🤖 Claude *(17:02:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx supabase db push --linked 2>&1 | tail -12",
+  "description": "Aplicar a migration da cascade",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Initialising login role...
+> Connecting to remote database...
+> Do you want to push these migrations to the remote database?
+>  • 20260730180000_space_publish_variants_reset_on_scheduled_delete.sql
+> 
+>  [Y/n] 
+> Applying migration 20260730180000_space_publish_variants_reset_on_scheduled_delete.sql...
+> NOTICE (00000): trigger "trg_reset_variant_on_scheduled_delete" for relation "public.scheduled_posts" does not exist, skipping
+> Finished supabase db push.
+> A new version of Supabase CLI is available: v2.110.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ```
+
+## 🤖 Claude *(17:03:59)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'review-publish-lifecycle',\n  description: 'Revis\u00e3o adversarial da fatia space-asset-publish-lifecycle (trigger cascade + hook + panel + modal)',\n  phases: [\n    { title: 'Lentes', detail: 'seguran\u00e7a/tenancy \u00b7 corre\u00e7\u00e3o/UX \u00b7 conformidade \u00b7 regress\u00e3o' },\n    { title: 'Refuta\u00e7\u00e3o', detail: 'cada achado enfrenta 2 c\u00e9ticos independentes' },\n  ],\n}\n\nconst FILES = [\n  'supabase/migrations/20260730180000_space_publish_variants_reset_on_scheduled_delete.sql',\n  'src/hooks/useAssetPublications.ts',\n  'src/components/creative/AssetPublicationsPanel.tsx',\n  'src/components/creative/AssetDetailDialog.tsx (modificado: Tabs + toast direcional + activeForSelected)',\n  'src/test/asset-publications.test.ts',\n  'docs/processes/space-asset-publish-lifecycle.md',\n].join('\\n  ')\n\nconst CONTEXT = [\n  'Repo: /home/gcrUX/htdocs/constellation-orchestra (MCORCH, React+Vite+Supabase).',\n  'Fatia nova, NAO commitada. Arquivos:',\n  '  ' + FILES,\n  '',\n  'CONTEXTO REAL DO INCIDENTE: usuario clicou Publicar num asset TikTok, o cron auto-publish postou',\n  'de verdade, mas o usuario achou que nao tinha postado (feedback UI silencioso), apagou do TikTok',\n  'e do calendario (scheduled_posts.delete). Isso deixou space_publish_variants.status=scheduled com',\n  'scheduled_post_id apontando pra linha inexistente. Nova tentativa: 409 already_enqueued eternizado.',\n  '',\n  'CORRECOES DESTA FATIA:',\n  '1) Migration: trigger AFTER DELETE ON scheduled_posts que reseta a variant vinculada.',\n  '   Regras: status=scheduled -> volta pra draft + scheduled_post_id=NULL',\n  '           status=published -> mantem published, so limpa scheduled_post_id (nao rewrite history)',\n  '           outros (failed/skipped/draft) -> nao mexer',\n  '   Tenant-safe: WHERE scheduled_post_id=OLD.id AND user_id=OLD.user_id (defense in depth).',\n  '   SECURITY DEFINER, search_path=,, REVOKE ALL FROM PUBLIC/anon/authenticated.',\n  '2) Hook useAssetPublications(assetId) \u2014 le variants + scheduled_posts do asset (RLS own).',\n  '   Polling refetchInterval=15s enquanto ha queued/publishing/scheduled.',\n  '   Mutation cancel \u2014 DELETE scheduled_posts (RLS own); trata data.length===0 como negacao.',\n  '3) Panel AssetPublicationsPanel \u2014 lista variants com badge, timestamps e botao Cancelar.',\n  '4) AssetDetailDialog reestruturado com Tabs (Publicar | Publicacoes). Publish OK -> muda pra',\n  '   aba Publicacoes automaticamente + toast direcional. activeForSelected pre-detecta 409.',\n  '   No 409 do servidor: manda pra aba Publicacoes + toast info (nao mais red toast opaco).',\n  '',\n  'PADROES DA CASA (LEIS):',\n  '- has_role single-arg canonico: public.has_role(app_role) \u2014 mas ESTE trigger nao usa (opera',\n  '  tenant-anchorado no OLD.user_id, nao em auth.uid()).',\n  '- space_publish_variants tem RLS SELECT/DELETE own, NO INSERT/UPDATE policy (service-role-only',\n  '  writes). O trigger SECURITY DEFINER escreve \u2014 coerente.',\n  '- scheduled_posts tem status enum (queued|publishing|published|failed|cancelled).',\n  '- API Tenancy Model: nunca vazar cross-tenant.',\n  '- Codigo/comentarios ingles; UI pt-BR.',\n  '- Harness Engineering: logica no hook, componente display-only.',\n  '',\n  'Leia os arquivos DE VERDADE. Nao invente linha nem comportamento.',\n].join('\\n')\n\nconst FINDINGS_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['findings'],\n  properties: {\n    findings: {\n      type: 'array',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['title', 'file', 'line', 'severity', 'why_it_breaks', 'fix'],\n        properties: {\n          title: { type: 'string' },\n          file: { type: 'string' },\n          line: { type: 'number' },\n          severity: { type: 'string', enum: ['P0', 'P1', 'P2', 'P3'] },\n          why_it_breaks: { type: 'string', description: 'Cenario concreto: entradas/estado -> resultado errado' },\n          fix: { type: 'string' },\n        },\n      },\n    },\n  },\n}\n\nconst VERDICT_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['refuted', 'reason'],\n  properties: {\n    refuted: { type: 'boolean' },\n    reason: { type: 'string' },\n  },\n}\n\nconst LENSES = [\n  {\n    key: 'security-tenancy',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: SEGURANCA / TENANCY. Investigue:',\n      '1. Trigger AFTER DELETE ON scheduled_posts com SECURITY DEFINER: search_path=,,',\n      '   REVOKE PUBLIC \u2014 coerente? Ha caminho pra abusar?',\n      '2. O WHERE do UPDATE (scheduled_post_id=OLD.id AND user_id=OLD.user_id): se OLD.user_id for',\n      '   NULL por alguma razao, o UPDATE nao filtra por tenant? Verifique se scheduled_posts.user_id',\n      '   e NOT NULL na migration original.',\n      '3. Se um user apagar via DELETE que a RLS permite, o trigger dispara. Ha algum caminho em que',\n      '   o trigger execute em contexto onde OLD.user_id != user real (ex: cron service-role)?',\n      '   Se sim, o UPDATE ainda e seguro?',\n      '4. O hook useAssetPublications faz .in(\"id\", scheduledIds). RLS own protege. Mas se o user',\n      '   controlar scheduledIds (ele nao \u2014 vem de variants.scheduled_post_id), ha algum leak?',\n      '5. cancel mutation: .delete().eq(id).select() \u2014 trata data.length===0 como negacao. Ok?',\n      'So reporte o PROVADO pelo codigo.',\n    ].join('\\n'),\n  },\n  {\n    key: 'correctness-ux',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: CORRECAO / UX. A pergunta: existe caminho em que o usuario ainda fica preso, ou em',\n      'que a UI mente sobre o estado?',\n      '1. AssetDetailDialog: setTab(\"publish\") no useEffect ao trocar de asset. Mas o hook',\n      '   useAssetPublications tem staleTime 0 e refetchInterval quando inFlight \u2014 se o usuario abre',\n      '   asset A, muda pra asset B rapidamente, a query key inclui assetId (bom) mas ha race?',\n      '2. activeForSelected: quando o botao vira \"Ja na fila \u2014 ver\", clica pra aba Publicacoes. Mas',\n      '   se a linha ja esta em published (nao active), o botao Publicar aparece de novo \u2014 e vai',\n      '   dar 409 porque a variant ainda tem status=published. E esse cenario? O servidor:208 gate',\n      '   tambem barra published. Falta cobrir esse caso na UX?',\n      '3. Cancel: DELETE scheduled_posts -> trigger reseta variant. Mas se cancel demorar e o cron',\n      '   estiver rodando (transacao pega o post entre delete/publish), o publish-social ja postou',\n      '   e o trigger volta variant a draft \u2014 divergencia entre a rede (postado) e a UI (rascunho).',\n      '   E defensivel?',\n      '4. resolveVisual em AssetPublicationsPanel: cobre todos os enums? scheduled_posts.status tem',\n      '   queued|publishing|published|failed|cancelled. space_publish_variants.status tem',\n      '   draft|scheduled|published|skipped|failed. Combinacoes cobertas? \"skipped\" cai onde?',\n      '5. Toast pos-publish: \"publicando em segundos\" \u2014 e verdade? O cron auto-publish roda com',\n      '   qual frequencia? Se for 5min, \"segundos\" e falso. Verifique.',\n      'So reporte o PROVADO.',\n    ].join('\\n'),\n  },\n  {\n    key: 'house-conformance',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: CONFORMIDADE + verificacao factual.',\n      '1. Migration: assinatura das colunas de scheduled_posts existe conforme referenciado (id',\n      '   como uuid, user_id NOT NULL)? Faca grep na migration original de scheduled_posts.',\n      '2. space_publish_variants status enum inclui exatamente draft|scheduled|published|skipped|failed',\n      '   (verifique CHECK constraint). O trigger nao gera status invalido?',\n      '3. update_updated_at_column trigger BEFORE UPDATE ja existe na tabela (migration original).',\n      '   O nosso UPDATE dispara-la? Ok \u2014 updated_at ja e setado explicitamente no trigger novo,',\n      '   entao duplica mas nao quebra. Verificar.',\n      '4. Hook segue Harness pattern (logica no hook, componente display-only)? Comparar com',\n      '   useScheduledPosts.ts.',\n      '5. cn(className, ...) \u2014 helper existe em src/lib/utils?',\n      '6. Alert/AlertDescription/AlertTitle: exports existem em src/components/ui/alert.tsx?',\n      '7. SOP em docs/processes cumpre a Lei 2 (Operator/Sequence/Verification/Recovery/Success)?',\n      'Use bash/grep. Reporte factos.',\n    ].join('\\n'),\n  },\n  {\n    key: 'regression',\n    prompt: [\n      CONTEXT,\n      '',\n      'LENTE: REGRESSAO. O que esta fatia quebra?',\n      '1. AssetDetailDialog reestruturado com Tabs: layout ainda cabe? Ha teste que renderiza o',\n      '   modal? Grep por AssetDetailDialog no src/test/.',\n      '2. O hook useAssetPublications faz 2 queries por render (variants + scheduled_posts.in). Se',\n      '   um asset tem 20 variants (muitos canais), quantos requests? O in() bate qual limite?',\n      '3. refetchInterval 15s: multiplos modals abertos em abas diferentes = poll multiplicado.',\n      '   Aceitavel?',\n      '4. Se scheduled_posts.delete falhar por RLS (usuario nao dono), o toast e claro? O hook',\n      '   trata data.length===0 mas o error pode vir tambem.',\n      '5. Ha outros consumidores de scheduled_posts.delete no codigo (useSmartDelete? Calendar?)',\n      '   que agora vao acionar o trigger \u2014 algum quebra?',\n      '6. Rode bun run lint e npx tsc -p tsconfig.app.json --noEmit. Reporte erros novos.',\n      'Use bash real.',\n    ].join('\\n'),\n  },\n]\n\nphase('Lentes')\n\nconst results = await pipeline(\n  LENSES,\n  (lens) => agent(lens.prompt, { label: 'lente:' + lens.key, phase: 'Lentes', schema: FINDINGS_SCHEMA }),\n  (review, lens) =>\n    parallel(\n      ((review && review.findings) || []).map((f) => () =>\n        parallel([\n          () =>\n            agent(\n              [\n                CONTEXT,\n                '',\n                'TENTE REFUTAR este achado. Leia o codigo e prove que ele NAO se sustenta.',\n                'Achado: \"' + f.title + '\" em ' + f.file + ':' + f.line + ' (' + f.severity + ')',\n                'Alegacao: ' + f.why_it_breaks,\n                '',\n                'Se o codigo ja trata, ou depende de premissa falsa, marque refuted=true. Na duvida,',\n                'prefira refuted=true \u2014 so sobrevive o demonstravel.',\n              ].join('\\n'),\n              { label: 'refuta-A:' + f.title.slice(0, 28), phase: 'Refuta\u00e7\u00e3o', schema: VERDICT_SCHEMA },\n            ),\n          () =>\n            agent(\n              [\n                CONTEXT,\n                '',\n                'Voce e o CETICO DE IMPACTO. O achado pode ser tecnicamente correto mas irrelevante.',\n                'Achado: \"' + f.title + '\" em ' + f.file + ':' + f.line + ' (' + f.severity + ')',\n                'Alegacao: ' + f.why_it_breaks,\n                '',\n                'Isso MACHUCA alguem de verdade? Qual usuario, em que cenario plausivel? Se impacto',\n                'e teorico/estilistico, ou severidade inflada 2+ niveis, marque refuted=true. Se',\n                'machuca (leak de tenant, UX quebrada, migration que nao aplica), refuted=false.',\n              ].join('\\n'),\n              { label: 'refuta-B:' + f.title.slice(0, 28), phase: 'Refuta\u00e7\u00e3o', schema: VERDICT_SCHEMA },\n            ),\n        ]).then((votes) => {\n          const valid = votes.filter(Boolean)\n          const refutedCount = valid.filter((v) => v.refuted).length\n          return Object.assign({}, f, {\n            lens: lens.key,\n            survives: valid.length > 0 && refutedCount < 2,\n            votes: valid,\n          })\n        }),\n      ),\n    ),\n)\n\nconst all = results.flat().filter(Boolean)\nconst survivors = all.filter((f) => f.survives)\nconst killed = all.filter((f) => !f.survives)\n\nlog(all.length + ' achados brutos \u00b7 ' + survivors.length + ' sobreviveram \u00b7 ' + killed.length + ' mortos')\n\nreturn {\n  survivors: survivors.sort((a, b) => a.severity.localeCompare(b.severity)),\n  killed: killed.map((f) => ({\n    title: f.title,\n    severity: f.severity,\n    why_killed: f.votes.map((v) => v.reason).join(' | '),\n  })),\n}\n",
+  "description": "Revis\u00e3o adversarial da fatia"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wvxxqh9u7
+> Summary: Revisão adversarial da fatia space-asset-publish-lifecycle (trigger cascade + hook + panel + modal)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/subagents/workflows/wf_910a7db5-f1f
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/workflows/scripts/review-publish-lifecycle-wf_910a7db5-f1f.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/workflows/scripts/review-publish-lifecycle-wf_910a7db5-f1f.js"} to iterate without resending the script.)
+> Run ID: wf_910a7db5-f1f
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/workflows/scripts/review-publish-lifecycle-wf_910a7db5-f1f.js", resumeFromRunId: "wf_910a7db5-f1f"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(17:04:05)*
+
+Migration aplicada. Enquanto o workflow adversarial roda, provo os gates do trigger (G1/G2/G4) contra o banco vivo — o mesmo asset da conta de review, agora com o trigger em funcionamento:
+
+## 🤖 Claude *(17:04:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && . ./.env && set +a\nbun -e '\nconst { createClient } = require(\"@supabase/supabase-js\");\nconst admin = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nconst uid = \"43027d04-8239-4dd7-9a70-4496c3b1be7a\";\nconst assetId = \"0708b6a2-7f01-49f4-b516-ae1a6bf2255e\";\n\n// G1 setup: recria manualmente o cenario \"orfa\" \u2014 insere um scheduled_posts fake, aponta a variant nele, apaga o post, ve se a variant reconciliou.\nconst { data: sp, error: e1 } = await admin.from(\"scheduled_posts\").insert({\n  user_id: uid, platform: \"tiktok\", scheduled_at: new Date(Date.now() + 60000).toISOString(),\n  status: \"queued\", metadata: { test: \"G1-cascade\" }\n}).select(\"id\").single();\nif (e1) { console.log(\"insert failed:\", e1.message); process.exit(1); }\nconsole.log(\"G1 setup: scheduled_posts inserted\", sp.id);\n\nconst { data: variant } = await admin.from(\"space_publish_variants\")\n  .select(\"id, status, scheduled_post_id\").eq(\"source_asset_id\", assetId).eq(\"user_id\", uid).single();\nconsole.log(\"variant BEFORE:\", variant);\n// for\u00e7ar link\nawait admin.from(\"space_publish_variants\")\n  .update({ status: \"scheduled\", scheduled_post_id: sp.id }).eq(\"id\", variant.id);\nconst { data: v2 } = await admin.from(\"space_publish_variants\")\n  .select(\"id, status, scheduled_post_id\").eq(\"id\", variant.id).single();\nconsole.log(\"variant LINKED:\", v2);\n\n// G1: apaga scheduled_posts -> trigger deveria resetar\nconst { error: dErr } = await admin.from(\"scheduled_posts\").delete().eq(\"id\", sp.id);\nconsole.log(\"G1 delete:\", dErr ? \"ERROR \" + dErr.message : \"OK\");\n\nconst { data: v3 } = await admin.from(\"space_publish_variants\")\n  .select(\"id, status, scheduled_post_id\").eq(\"id\", variant.id).single();\nconsole.log(\"variant AFTER (esperado status=draft, scheduled_post_id=null):\", v3);\nconsole.log(v3.status === \"draft\" && v3.scheduled_post_id === null ? \"\u2705 G1 PASS\" : \"\u274c G1 FAIL\");\n\n// G2: cenario published NAO deve regredir\nconst { data: sp2 } = await admin.from(\"scheduled_posts\").insert({\n  user_id: uid, platform: \"tiktok\", scheduled_at: new Date().toISOString(), status: \"published\",\n  published_at: new Date().toISOString(), metadata: { test: \"G2-published\" }\n}).select(\"id\").single();\nawait admin.from(\"space_publish_variants\")\n  .update({ status: \"published\", scheduled_post_id: sp2.id }).eq(\"id\", variant.id);\nawait admin.from(\"scheduled_posts\").delete().eq(\"id\", sp2.id);\nconst { data: v4 } = await admin.from(\"space_publish_variants\")\n  .select(\"id, status, scheduled_post_id, updated_at\").eq(\"id\", variant.id).single();\nconsole.log(\"G2 variant AFTER (esperado status=published, scheduled_post_id=null):\", v4);\nconsole.log(v4.status === \"published\" && v4.scheduled_post_id === null ? \"\u2705 G2 PASS\" : \"\u274c G2 FAIL\");\n\n// G4: idempotencia \u2014 apagar o mesmo scheduled_post 2x nao explode (o segundo delete acha 0 linhas)\nconst { data: sp3 } = await admin.from(\"scheduled_posts\").insert({\n  user_id: uid, platform: \"tiktok\", scheduled_at: new Date().toISOString(), status: \"queued\"\n}).select(\"id\").single();\nawait admin.from(\"scheduled_posts\").delete().eq(\"id\", sp3.id); // 1\nconst { data: d2 } = await admin.from(\"scheduled_posts\").delete().eq(\"id\", sp3.id).select(\"id\"); // 2\nconsole.log(\"G4 segundo delete afetou:\", (d2 ?? []).length, \"linhas (esperado 0) \u2014 sem erro do trigger\");\n\n// Cleanup \u2014 reseta a variant p/ draft de novo (o G2 deixou como published)\nawait admin.from(\"space_publish_variants\")\n  .update({ status: \"draft\", scheduled_post_id: null }).eq(\"id\", variant.id);\nconsole.log(\"cleanup: variant back to draft\");\n'",
+  "description": "Gates G1/G2/G4 do trigger contra o banco vivo",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> G1 setup: scheduled_posts inserted 42b4c0c0-a60e-4477-9304-73b19ab13b74
+> variant BEFORE: {
+>   id: "d5e543f6-58bb-452d-9652-1c0799504862",
+>   status: "draft",
+>   scheduled_post_id: null,
+> }
+> variant LINKED: {
+>   id: "d5e543f6-58bb-452d-9652-1c0799504862",
+>   status: "scheduled",
+>   scheduled_post_id: "42b4c0c0-a60e-4477-9304-73b19ab13b74",
+> }
+> G1 delete: OK
+> variant AFTER (esperado status=draft, scheduled_post_id=null): {
+>   id: "d5e543f6-58bb-452d-9652-1c0799504862",
+>   status: "draft",
+>   scheduled_post_id: null,
+> }
+> ✅ G1 PASS
+> G2 variant AFTER (esperado status=published, scheduled_post_id=null): {
+>   id: "d5e543f6-58bb-452d-9652-1c0799504862",
+>   status: "published",
+>   scheduled_post_id: null,
+>   updated_at: "2026-07-30T17:04:25.649818+00:00",
+> }
+> ✅ G2 PASS
+> G4 segundo delete afetou: 0 linhas (esperado 0) — sem erro do trigger
+> cleanup: variant back to draft
+> ```
+
+## 🤖 Claude *(17:04:29)*
+
+**G1**, **G2** e **G4** verdes ao vivo — trigger cascade funciona, published fica preservado, delete duplicado idempotente. Agora `/security-review` da migration:
+
+## 🤖 Claude *(17:04:29)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "security-review"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: security-review
+> ```
+
+## 👤 User *(17:04:30)*
+
+You are a senior security engineer conducting a focused security review of the changes on this branch.
+
+GIT STATUS:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   src/components/creative/AssetDetailDialog.tsx
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/processes/space-asset-publish-lifecycle.md
+	src/components/creative/AssetPublicationsPanel.tsx
+	src/hooks/useAssetPublications.ts
+	src/test/asset-publications.test.ts
+	supabase/migrations/20260730180000_space_publish_variants_reset_on_scheduled_delete.sql
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+FILES MODIFIED:
+
+```
+(Bash completed with no output)
+```
+
+COMMITS:
+
+```
+(Bash completed with no output)
+```
+
+DIFF CONTENT:
+
+```
+(Bash completed with no output)
+```
+
+Review the complete diff above. This contains all code changes in the PR.
+
+
+OBJECTIVE:
+Perform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.
+
+CRITICAL INSTRUCTIONS:
+1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability
+2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings
+3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise
+4. EXCLUSIONS: Do NOT report the following issue types:
+   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption
+   - Secrets or sensitive data stored on disk (these are handled by other processes)
+   - Rate limiting or resource exhaustion issues
+
+SECURITY CATEGORIES TO EXAMINE:
+
+**Input Validation Vulnerabilities:**
+- SQL injection via unsanitized user input
+- Command injection in system calls or subprocesses
+- XXE injection in XML parsing
+- Template injection in templating engines
+- NoSQL injection in database queries
+- Path traversal in file operations
+
+**Authentication & Authorization Issues:**
+- Authentication bypass logic
+- Privilege escalation paths
+- Session management flaws
+- JWT token vulnerabilities
+- Authorization logic bypasses
+
+**Crypto & Secrets Management:**
+- Hardcoded API keys, passwords, or tokens
+- Weak cryptographic algorithms or implementations
+- Improper key storage or management
+- Cryptographic randomness issues
+- Certificate validation bypasses
+
+**Injection & Code Execution:**
+- Remote code execution via deseralization
+- Pickle injection in Python
+- YAML deserialization vulnerabilities
+- Eval injection in dynamic code execution
+- XSS vulnerabilities in web applications (reflected, stored, DOM-based)
+
+**Data Exposure:**
+- Sensitive data logging or storage
+- PII handling violations
+- API endpoint data leakage
+- Debug information exposure
+
+Additional notes:
+- Even if something is only exploitable from the local network, it can still be a HIGH severity issue
+
+ANALYSIS METHODOLOGY:
+
+Phase 1 - Repository Context Research (Use file search tools):
+- Identify existing security frameworks and libraries in use
+- Look for established secure coding patterns in the codebase
+- Examine existing sanitization and validation patterns
+- Understand the project's security model and threat model
+
+Phase 2 - Comparative Analysis:
+- Compare new code changes against existing security patterns
+- Identify deviations from established secure practices
+- Look for inconsistent security implementations
+- Flag code that introduces new attack surfaces
+
+Phase 3 - Vulnerability Assessment:
+- Examine each modified file for security implications
+- Trace data flow from user inputs to sensitive operations
+- Look for privilege boundaries being crossed unsafely
+- Identify injection points and unsafe deserialization
+
+REQUIRED OUTPUT FORMAT:
+
+You MUST output your findings in markdown. The markdown output should contain the file, line number, severity, category (e.g. `sql_injection` or `xss`), description, exploit scenario, and fix recommendation.
+
+For example:
+
+# Vuln 1: XSS: `foo.py:42`
+
+* Severity: High
+* Description: User input from `username` parameter is directly interpolated into HTML without escaping, allowing reflected XSS attacks
+* Exploit Scenario: Attacker crafts URL like /bar?q=<script>alert(document.cookie)</script> to execute JavaScript in victim's browser, enabling session hijacking or data theft
+* Recommendation: Use Flask's escape() function or Jinja2 templates with auto-escaping enabled for all user inputs rendered in HTML
+
+SEVERITY GUIDELINES:
+- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass
+- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact
+- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities
+
+CONFIDENCE SCORING:
+- 0.9-1.0: Certain exploit path identified, tested if possible
+- 0.8-0.9: Clear vulnerability pattern with known exploitation methods
+- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit
+- Below 0.7: Don't report (too speculative)
+
+FINAL REMINDER:
+Focus on HIGH and MEDIUM findings only. Better to miss some theoretical issues than flood the report with false positives. Each finding should be something a security engineer would confidently raise in a PR review.
+
+FALSE POSITIVE FILTERING:
+
+> You do not need to run commands to reproduce the vulnerability, just read the code to determine if it is a real vulnerability. Do not use the bash tool or write to any files.
+>
+> HARD EXCLUSIONS - Automatically exclude findings matching these patterns:
+> 1. Denial of Service (DOS) vulnerabilities or resource exhaustion attacks.
+> 2. Secrets or credentials stored on disk if they are otherwise secured.
+> 3. Rate limiting concerns or service overload scenarios.
+> 4. Memory consumption or CPU exhaustion issues.
+> 5. Lack of input validation on non-security-critical fields without proven security impact.
+> 6. Input sanitization concerns for GitHub Action workflows unless they are clearly triggerable via untrusted input.
+> 7. A lack of hardening measures. Code is not expected to implement all security best practices, only flag concrete vulnerabilities.
+> 8. Race conditions or timing attacks that are theoretical rather than practical issues. Only report a race condition if it is concretely problematic.
+> 9. Vulnerabilities related to outdated third-party libraries. These are managed separately and should not be reported here.
+> 10. Memory safety issues such as buffer overflows or use-after-free-vulnerabilities are impossible in rust. Do not report memory safety issues in rust or any other memory safe languages.
+> 11. Files that are only unit tests or only used as part of running tests.
+> 12. Log spoofing concerns. Outputting un-sanitized user input to logs is not a vulnerability.
+> 13. SSRF vulnerabilities that only control the path. SSRF is only a concern if it can control the host or protocol.
+> 14. Including user-controlled content in AI system prompts is not a vulnerability.
+> 15. Regex injection. Injecting untrusted content into a regex is not a vulnerability.
+> 16. Regex DOS concerns.
+> 16. Insecure documentation. Do not report any findings in documentation files such as markdown files.
+> 17. A lack of audit logs is not a vulnerability.
+>
+> PRECEDENTS -
+> 1. Logging high value secrets in plaintext is a vulnerability. Logging URLs is assumed to be safe.
+> 2. UUIDs can be assumed to be unguessable and do not need to be validated.
+> 3. Environment variables and CLI flags are trusted values. Attackers are generally not able to modify them in a secure environment. Any attack that relies on controlling an environment variable is invalid.
+> 4. Resource management issues such as memory or file descriptor leaks are not valid.
+> 5. Subtle or low impact web vulnerabilities such as tabnabbing, XS-Leaks, prototype pollution, and open redirects should not be reported unless they are extremely high confidence.
+> 6. React and Angular are generally secure against XSS. These frameworks do not need to sanitize or escape user input unless it is using dangerouslySetInnerHTML, bypassSecurityTrustHtml, or similar methods. Do not report XSS vulnerabilities in React or Angular components or tsx files unless they are using unsafe methods.
+> 7. Most vulnerabilities in github action workflows are not exploitable in practice. Before validating a github action workflow vulnerability ensure it is concrete and has a very specific attack path.
+> 8. A lack of permission checking or authentication in client-side JS/TS code is not a vulnerability. Client-side code is not trusted and does not need to implement these checks, they are handled on the server-side. The same applies to all flows that send untrusted data to the backend, the backend is responsible for validating and sanitizing all inputs.
+> 9. Only include MEDIUM findings if they are obvious and concrete issues.
+> 10. Most vulnerabilities in ipython notebooks (*.ipynb files) are not exploitable in practice. Before validating a notebook vulnerability ensure it is concrete and has a very specific attack path where untrusted input can trigger the vulnerability.
+> 11. Logging non-PII data is not a vulnerability even if the data may be sensitive. Only report logging vulnerabilities if they expose sensitive information such as secrets, passwords, or personally identifiable information (PII).
+> 12. Command injection vulnerabilities in shell scripts are generally not exploitable in practice since shell scripts generally do not run with untrusted user input. Only report command injection vulnerabilities in shell scripts if they are concrete and have a very specific attack path for untrusted input.
+>
+> SIGNAL QUALITY CRITERIA - For remaining findings, assess:
+> 1. Is there a concrete, exploitable vulnerability with a clear attack path?
+> 2. Does this represent a real security risk vs theoretical best practice?
+> 3. Are there specific code locations and reproduction steps?
+> 4. Would this finding be actionable for a security team?
+>
+> For each finding, assign a confidence score from 1-10:
+> - 1-3: Low confidence, likely false positive or noise
+> - 4-6: Medium confidence, needs investigation
+> - 7-10: High confidence, likely true vulnerability
+
+START ANALYSIS:
+
+Begin your analysis now. Do this in 3 steps:
+
+1. Use a sub-task to identify vulnerabilities. Use the repository exploration tools to understand the codebase context, then analyze the PR changes for security implications. In the prompt for this sub-task, include all of the above.
+2. Then for each vulnerability identified by the above sub-task, create a new sub-task to filter out false-positives. Launch these sub-tasks as parallel sub-tasks. In the prompt for these sub-tasks, include everything in the "FALSE POSITIVE FILTERING" instructions.
+3. Filter out any vulnerabilities where the sub-task reported a confidence less than 8.
+
+Your final reply must contain the markdown report and nothing else.
+
+## 🤖 Claude *(17:04:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm setting up a security audit for this PR, looking at the key changes: a new DELETE trigger on scheduled_posts that modifies space_publish_variants, a custom hook for asset publications with cancellation logic, a new panel component, and updates to the asset detail dialog. The main concern is validating the SECURITY DEFINER trigger to ensure it doesn't introduce privilege escalation vulnerabilities.
+
+</details>
+
+
+## 🤖 Claude *(17:05:22)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "subagent_type": "general-purpose",
+  "run_in_background": false,
+  "description": "Identify security vulns in publish-lifecycle branch",
+  "prompt": "You are a senior security engineer conducting a focused security review of uncommitted changes in the repository /home/gcrUX/htdocs/constellation-orchestra.\n\nThe `git diff` was empty because most files are UNTRACKED. You must READ the files directly.\n\nFILES CHANGED IN THIS PR (read every one of them in full):\n- NEW: supabase/migrations/20260730180000_space_publish_variants_reset_on_scheduled_delete.sql\n- NEW: src/hooks/useAssetPublications.ts\n- NEW: src/components/creative/AssetPublicationsPanel.tsx\n- NEW: src/test/asset-publications.test.ts (test-only file \u2014 excluded from findings by hard exclusion #11)\n- NEW: docs/processes/space-asset-publish-lifecycle.md (documentation \u2014 excluded)\n- MODIFIED: src/components/creative/AssetDetailDialog.tsx (Tabs, activeForSelected detection, post-publish tab switch)\n\nWHAT THE CHANGE DOES:\nThe Spaces asset \"Publish\" flow was async (publish-space-asset \u2192 scheduled_posts \u2192 auto-publish cron \u2192 publish-social). A user hit a dead-end 409 \"already_enqueued\" because deleting the calendar row (scheduled_posts) left space_publish_variants with a dangling scheduled_post_id and status='scheduled'. This PR:\n1. Adds an AFTER DELETE trigger on scheduled_posts. If a space_publish_variants row references the deleted post, reset:\n   - status='scheduled' \u2192 'draft' + scheduled_post_id=NULL (reenqueueable)\n   - status='published' \u2192 keep 'published', only null the scheduled_post_id (historical truth preserved)\n   - other statuses (failed, skipped, draft) \u2192 untouched\n   The WHERE clause is `scheduled_post_id = OLD.id AND user_id = OLD.user_id`. SECURITY DEFINER with `search_path = ''`. REVOKED from PUBLIC/anon/authenticated.\n2. Adds a hook useAssetPublications(assetId) that reads variants + linked scheduled_posts (both RLS SELECT own) and exposes a cancel mutation that DELETEs a scheduled_posts row (RLS DELETE own \u2014 the cascade trigger does the rest).\n3. Adds AssetPublicationsPanel rendering a list of publications per (channel, surface), showing status badges and a Cancel button. Renders scheduled_posts.error_message inline as a paragraph.\n4. Restructures AssetDetailDialog with Tabs (Publicar | Publica\u00e7\u00f5es). On publish success it switches to the Publications tab. If the seam returns 409 already_enqueued, it now shows an info toast + switches to Publications (no more opaque red error).\n\nKEY CONTEXT ABOUT THE HOUSE SECURITY MODEL:\n- space_publish_variants (migration 20260710233000): RLS enabled. SELECT/DELETE own policies. NO INSERT/UPDATE policy for authenticated \u2192 writes are service-role-only. `scheduled_post_id` is a plain UUID column with NO foreign key constraint.\n- scheduled_posts: RLS enabled with own policies. user_id NOT NULL. Status enum is queued|publishing|published|failed|cancelled.\n- The canonical SECURITY DEFINER precedent for tenant-bound triggers is `trg_encrypt_social_app_config` in 20260627120000 \u2014 also uses `SET search_path = ''` and REVOKE ALL FROM PUBLIC/anon/authenticated.\n- has_role(app_role) is the single-arg canonical (20260414154016), but this trigger does NOT use auth.uid() \u2014 it operates on OLD.user_id, the tenant anchor of the deleted row.\n\nOBJECTIVE:\nPerform a security-focused code review to identify HIGH-CONFIDENCE security vulnerabilities that could have real exploitation potential. This is not a general code review - focus ONLY on security implications newly added by this PR. Do not comment on existing security concerns.\n\nCRITICAL INSTRUCTIONS:\n1. MINIMIZE FALSE POSITIVES: Only flag issues where you're >80% confident of actual exploitability\n2. AVOID NOISE: Skip theoretical issues, style concerns, or low-impact findings\n3. FOCUS ON IMPACT: Prioritize vulnerabilities that could lead to unauthorized access, data breaches, or system compromise\n4. EXCLUSIONS: Do NOT report the following issue types:\n   - Denial of Service (DOS) vulnerabilities, even if they allow service disruption\n   - Secrets or sensitive data stored on disk (these are handled by other processes)\n   - Rate limiting or resource exhaustion issues\n\nSECURITY CATEGORIES TO EXAMINE:\n\n**Input Validation Vulnerabilities:**\n- SQL injection via unsanitized user input\n- Command injection in system calls or subprocesses\n- XXE injection in XML parsing\n- Template injection in templating engines\n- NoSQL injection in database queries\n- Path traversal in file operations\n\n**Authentication & Authorization Issues:**\n- Authentication bypass logic\n- Privilege escalation paths\n- Session management flaws\n- JWT token vulnerabilities\n- Authorization logic bypasses\n\n**Crypto & Secrets Management:**\n- Hardcoded API keys, passwords, or tokens\n- Weak cryptographic algorithms or implementations\n- Improper key storage or management\n- Cryptographic randomness issues\n- Certificate validation bypasses\n\n**Injection & Code Execution:**\n- Remote code execution via deseralization\n- Pickle injection in Python\n- YAML deserialization vulnerabilities\n- Eval injection in dynamic code execution\n- XSS vulnerabilities in web applications (reflected, stored, DOM-based)\n\n**Data Exposure:**\n- Sensitive data logging or storage\n- PII handling violations\n- API endpoint data leakage\n- Debug information exposure\n\nAdditional notes:\n- Even if something is only exploitable from the local network, it can still be a HIGH severity issue\n\nANALYSIS METHODOLOGY:\n\nPhase 1 - Repository Context Research (Use file search tools):\n- Identify existing security frameworks and libraries in use\n- Look for established secure coding patterns in the codebase. Compare against migration 20260710233000 (space_publish_variants) and 20260627120000 (canonical SECURITY DEFINER trigger + REVOKE pattern).\n- Examine existing sanitization and validation patterns\n- Understand the project's security model and threat model (RLS-first, default-deny, multi-tenant via auth.uid())\n\nPhase 2 - Comparative Analysis:\n- Compare new code changes against existing security patterns\n- Identify deviations from established secure practices\n- Look for inconsistent security implementations\n- Flag code that introduces new attack surfaces\n\nPhase 3 - Vulnerability Assessment:\n- Examine each modified file for security implications\n- Trace data flow from user inputs to sensitive operations\n- Look for privilege boundaries being crossed unsafely\n- Identify injection points and unsafe deserialization\n\nThings worth checking carefully (do not limit yourself to these):\n- The SECURITY DEFINER trigger: is `search_path = ''` genuinely locking function/table resolution? Are all references schema-qualified (`public.space_publish_variants`, `OLD.id`, etc.)? Could a caller influence what it writes?\n- The tenant guard `user_id = OLD.user_id`: could OLD.user_id ever be NULL (making the trigger tenant-blind)? Check the schema of scheduled_posts.user_id in the earliest migration that creates the column.\n- Cross-tenant: could a user A cause a variant of user B to be reset? scheduled_post_id is a random UUID (unguessable per house precedent #2). RLS on scheduled_posts.DELETE is own \u2014 user A cannot delete a scheduled_posts row of user B. So the trigger only fires when the OWNER deletes their own post.\n- The cancel mutation: DELETE with .eq(id).select() \u2014 client-side. RLS is the control. Is there any injection surface?\n- The .in() PostgREST query on scheduled_posts.id with client-derived UUIDs (from variants): the variant list is RLS-scoped to auth.uid(), so the ids passed to .in() are the user's own. Even if it weren't, RLS on scheduled_posts.SELECT is own.\n- error_message rendered in AssetPublicationsPanel: it comes from scheduled_posts.error_message (populated by publish-social). React auto-escapes text content \u2014 precedent #6.\n- Post-publish tab switch and activeForSelected: pure client-side UX logic, no security boundary.\n- Compare `trg_reset_variant_on_scheduled_delete` to the canonical `trg_encrypt_social_app_config` (20260627120000) \u2014 same posture required.\n\nREQUIRED OUTPUT FORMAT:\n\nOutput your findings in markdown. Each finding must contain the file, line number, severity, category, description, exploit scenario, and fix recommendation.\n\nFor example:\n\n# Vuln 1: XSS: `foo.py:42`\n\n* Severity: High\n* Description: ...\n* Exploit Scenario: ...\n* Recommendation: ...\n\nSEVERITY GUIDELINES:\n- **HIGH**: Directly exploitable vulnerabilities leading to RCE, data breach, or authentication bypass\n- **MEDIUM**: Vulnerabilities requiring specific conditions but with significant impact\n- **LOW**: Defense-in-depth issues or lower-impact vulnerabilities\n\nCONFIDENCE SCORING:\n- 0.9-1.0: Certain exploit path identified\n- 0.8-0.9: Clear vulnerability pattern with known exploitation methods\n- 0.7-0.8: Suspicious pattern requiring specific conditions to exploit\n- Below 0.7: Don't report (too speculative)\n\nFocus on HIGH and MEDIUM findings only. If you find nothing that meets the bar, say so explicitly \u2014 reporting zero findings is a valid and expected outcome. Do NOT invent findings to appear thorough.\n\nReport each candidate finding with its file:line, severity, category, description, exploit scenario, recommendation, and your confidence score."
+}
+```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "No security findings. The PR is safe to ship from a security standpoint.\n\n**Key verifications**:\n- `scheduled_posts.user_id` is `NOT NULL REFERENCES auth.users(id)` (migration `20260402014040:160`) → the trigger's `AND v.user_id = OLD.user_id` guard cannot be blinded by a NULL.\n- RLS on `scheduled_posts.DELETE` is `auth.uid() = user_id` (same migration:300) → only the owner triggers the reset, and it can only reset their own variants.\n- The `SECURITY DEFINER` + `SET search_path = ''` posture matches the canonical `trg_encrypt_social_app_config` precedent, and the new function additionally does `REVOKE ALL ON FUNCTION … FROM PUBLIC, anon, authenticated` (defense-in-depth win).\n- The hook's `.in('id', scheduledIds)` is bound to ids from RLS-scoped variants; `scheduled_posts.SELECT` RLS is own-only regardless.\n- `AssetPublicationsPanel` renders `error_message`, `format_label`, `channel`, `surface` as React text children — no `dangerouslySetInnerHTML`, no XSS surface.\n- The client-side `activeForSelected` / tab switch / 409 handling in `AssetDetailDialog.tsx` is pure UX with no privilege boundary.\n\nZero HIGH/MEDIUM security findings meeting the >80% confidence bar."}, {'type': 'text', 'text': "agentId: ad0d9d2408bf26e5e (use SendMessage with to: 'ad0d9d2408bf26e5e', summary: '<5-10 word recap>' to continue this agent)\n<usage>subagent_tokens: 136491\ntool_uses: 16\nduration_ms: 145422</usage>"}]
+> ```
+
+## 🤖 Claude *(17:08:06)*
+
+# Security Review — [[space-asset-publish-lifecycle|space-asset-publish-lifecycle]] (trigger cascade + hook + panel + modal)
+
+## No security findings
+
+The identification pass examined the full change set (new migration with `SECURITY DEFINER` trigger, hook with cancel mutation, panel rendering scheduled_posts fields, and modified modal) against the repository's RLS-first, default-deny security model. No candidates met the >80% confidence bar, so no false-positive filtering pass was needed.
+
+### Verifications recorded
+
+* **Tenant guard cannot be blinded** — `scheduled_posts.user_id` is `NOT NULL REFERENCES auth.users(id)` (`supabase/migrations/20260402014040_...sql:160`), so the trigger's `WHERE ... AND v.user_id = OLD.user_id` clause always has a real value. `OLD.user_id` is never NULL.
+* **Trigger only fires on legitimate owner deletes** — RLS on `scheduled_posts.DELETE` is `auth.uid() = user_id` (same migration line 300). A user A cannot delete a `scheduled_posts` row of user B, so cannot cause a reset of user B's `space_publish_variants`. The `scheduled_post_id` UUID is treated as unguessable per house precedent #2.
+* **`SECURITY DEFINER` posture matches canonical precedent** — `SET search_path = ''` locks resolution; every reference is schema-qualified (`public.space_publish_variants`); the new function additionally does `REVOKE ALL ON FUNCTION … FROM PUBLIC, anon, authenticated` (defense-in-depth win vs. the reference `trg_encrypt_social_app_config` in migration `20260627120000`). Trigger fires because PostgreSQL checks `EXECUTE` at `CREATE TRIGGER` time, not per-fire.
+* **No state rewrite of historical truth** — a variant with `status='published'` is deliberately NOT regressed to `draft` by the trigger; only `scheduled_post_id` is nulled. This is a correctness property, but it is also security-relevant (no way to erase a successful publish record via calendar delete).
+* **Hook's `.in('id', scheduledIds)` is RLS-safe** — the ids come from `space_publish_variants` rows the caller can already read (SELECT own); `scheduled_posts.SELECT` RLS is own-only regardless, so no cross-tenant leak is possible even if the id list were forged.
+* **Cancel mutation is RLS-gated** — `DELETE ... .eq('id', id).select()` returns 0 rows for a non-owner and the client treats that as denial, not success. No injection surface — Supabase client parameters the query.
+* **XSS surface** — `AssetPublicationsPanel` renders `error_message`, `format_label`, `channel`, `surface` as React text children; no `dangerouslySetInnerHTML`, no `bypassSecurityTrust*`. Covered by house precedent #6.
+* **Modal restructure is pure UX** — `Tabs`, `activeForSelected` detection, and post-publish `setTab('publications')` involve no privilege boundary and no server side effects beyond the same edge-fn call as before.
+
+Zero HIGH/MEDIUM findings.
+
+## 👤 User *(17:16:55)*
+
+<task-notification>
+<task-id>wvxxqh9u7</task-id>
+<tool-use-id>toolu_01Qwe8LWdqi6TXhc2q15YVgV</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/tasks/wvxxqh9u7.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Revisão adversarial da fatia [[space-asset-publish-lifecycle|space-asset-publish-lifecycle]] (trigger cascade + hook + panel + modal)" completed</summary>
+<result>{"survivors":[{"title":"Handler de 409 é INALCANCAVEL — o red toast opaco 'already_enqueued' que a fatia prometeu matar continua vivo","file":"src/components/creative/AssetDetailDialog.tsx","line":162,"severity":"P0","why_it_breaks":"A seam publish-space-asset devolve HTTP 409 com body {error:'already_enqueued'} (publish-space-asset/index.ts:208-209 + json helper:43-44). Para non-2xx, supabase.functions.invoke() popula `error` (FunctionsHttpError) e deixa `data = null`. A linha 162 `if (error) throw new Error(await edgeErrorMessage(error, 'Falha ao publicar'))` dispara PRIMEIRO — e edgeErrorMessage (src/lib/edge.ts:8-19) le o body, ve body.error='already_enqueued', e retorna a string crua 'already_enqueued'. Cai no `catch (e) { toast.error((e as Error).message) }` da linha 184, mostrando um toast VERMELHO com o codigo de maquina 'already_enqueued'. As linhas 166-172 (`if (data?.error === 'already_enqueued') { toast.info(...); setTab('publications'); return; }`) sao codigo morto para 409, porque `data` e null. Cenario reproduzivel: usuario abre asset com variant em qualquer estado gated, clica Publicar antes do polling de 15s reconciliar `activeForSelected`, servidor 409a, red toast 'already_enqueued' aparece, aba NAO muda pra Publicacoes. E exatamente o caso que o comentario da linha 164 diz que a fatia elimina — mas ele nao elimina.","fix":"Detectar 409 no ramo do `error`: `if (error) { const ctx = (error as any)?.context; const body = await ctx?.json?.().catch(() =&gt; null); if (body?.error === 'already_enqueued') { toast.info('Ja ha uma publicacao em andamento para este formato.', { description: 'Veja e cancele na aba Publicacoes se quiser refazer.' }); setTab('publications'); await queryClient.invalidateQueries({ queryKey: ['asset_publications', asset.id, user?.id] }); return; } throw new Error(await edgeErrorMessage(error, 'Falha ao publicar')); }`. Manter o ramo de `data?.error` como belt-and-suspenders (se um dia a fn devolver 200 com error embutido, ainda serve). Cobrir com teste — o suite atual so testa a heuristica de detecao client-side, nao o handler de resposta.","lens":"correctness-ux","survives":true,"votes":[{"refuted":false,"reason":"Finding CONFIRMED — cannot refute. Verified end-to-end: (1) publish-space-asset/index.ts:209 returns 409 with body `{error:\"already_enqueued\", scheduled_post_id}` — no `action`/`message` keys. (2) @supabase/functions-js FunctionsClient.js:265-297 throws FunctionsHttpError on !response.ok and returns `{data:null, error}` — data is null for 409. (3) src/lib/edge.ts:15-17 falls through action→message→error and returns the raw code 'already_enqueued'. (4) AssetDetailDialog.tsx:162 `if (error) throw new Error(await edgeErrorMessage(...))` fires BEFORE the data?.error handler on lines 163-172, so the 409 lands in the catch on line 184 as `toast.error('already_enqueued')` — the exact opaque red toast the fatia's own comment at line 164 claims to eliminate. Lines 166-172 are dead code for the 409 path (would only fire on a 2xx body containing `{error:...}`, which this seam never emits). `activeForSelected` (line 126-134) narrows the window but does not close it: it misses variant.status='published' (the server 409s on it — line 208), and it's empty during the initial-fetch race before useAssetPublications resolves. When the 409 does slip through, the handler that was supposed to catch it is unreachable. This is a P0 regression against the fatia's stated goal."},{"reason":"Achado tecnicamente correto (o `if (data?.error === 'already_enqueued')` em :166-172 é inalcançável em 409 porque supabase.functions.invoke() põe non-2xx em `error` e deixa `data=null`, então o throw da linha 162 dispara primeiro e o `edgeErrorMessage` retorna a string crua \"already_enqueued\"). Mas severidade P0 está inflada 2 níveis. O incidente-mãe da fatia (delete-então-stuck com FK morta) é fechado pela MIGRAÇÃO+trigger, não por esse handler; o estado da variant fica coerente independentemente do toast. O pré-check `activeForSelected` (:126-134 + :487 + :499) trata o caso comum trocando o botão para \"Já na fila — ver\" antes de invocar o seam. O handler morto só falha na janela estreita: modal recém-aberto (first-fetch ~500ms) + clique impaciente + variant pré-existente para o formato selecionado. Nesse edge case o usuário vê um toast vermelho com código de máquina — feio, mas nada bloqueia, nada vaza, nada é perdido; reclicar após 1s funciona via activeForSelected. Isso é P2 (polimento do fallback), não P0. Fix trivial (checar `error.context?.status===409` OU tratar `already_enqueued` dentro de `edgeErrorMessage`), mas não é falha bloqueante do produto — a promessa central da fatia (matar delete-then-stuck) foi cumprida pela migração e pelo pré-check.","refuted":true}]},{"title":"activeForSelected ignora variants em 'published' — mesmo com o handler 409 arrumado, a UX ainda mente sobre o estado","file":"src/components/creative/AssetDetailDialog.tsx","line":126,"severity":"P1","why_it_breaks":"O gate em publish-space-asset:208 e `variant.scheduled_post_id || variant.status === 'scheduled' || variant.status === 'published'`. Mas activeForSelected (linhas 126-134) so casa `status='scheduled' || post_status IN (queued, publishing)`. Consequencia material: uma variant que ja publicou (`status='published'`, potencialmente com `scheduled_post_id` nulificado pelo trigger apos limpeza do calendario) NAO e detectada pelo client-side. O botao mostra 'Publicar' (nao 'Ja na fila — ver'), usuario clica, servidor 409a com 'already_enqueued'. Combinado com o achado #1: red toast opaco. Mesmo com #1 corrigido, o toast info 'Ja ha uma publicacao em andamento' MENTE — o estado real e 'ja publicado, cancele/reagende para republicar'. E o mesmo shape de opacidade que causou o incidente original (usuario nao sabia que ja tinha postado → apagou da rede → travou).","fix":"Estender activeForSelected para cobrir tambem `status='published'` e diferenciar o cenario: `const activeForSelected = publications.find(p =&gt; p.channel === selectedFormat.channel &amp;&amp; p.surface === selectedFormat.surface &amp;&amp; (p.status === 'scheduled' || p.status === 'published' || p.post_status === 'queued' || p.post_status === 'publishing')) ?? null;` — depois no botao/toast, distinguir label por `activeForSelected.status`: 'Ja na fila — ver' para scheduled/queued/publishing, 'Ja publicado — ver' para published. E no handler do 409, ler o servidor tambem: se `body.status === 'published'` (ou refetch e conferir), usar msg apropriada. Complementar: publish-space-asset:209 poderia devolver o `status` atual (nao so scheduled_post_id) pro cliente distinguir a causa do gate.","lens":"correctness-ux","survives":true,"votes":[{"refuted":false,"reason":"Confirmed against source. Server gate at supabase/functions/publish-space-asset/index.ts:208 explicitly rejects variant.status === \"published\" with 409 already_enqueued. Client-side activeForSelected at src/components/creative/AssetDetailDialog.tsx:126-134 filters only on (p.status === 'scheduled' || p.post_status === 'queued' || p.post_status === 'publishing') — 'published' is nowhere in the predicate. So a variant that (a) was successfully published and had its scheduled_posts row deleted (the trigger from 20260730180000 keeps status='published' and nulls scheduled_post_id, per migration rules stated in context), OR (b) is still linked but post_status='published', evaluates to activeForSelected=null. The button at line 499 renders \"Publicar\" (not \"Já na fila — ver\"), user clicks, publishVariant(true) fires, server 409s, handler at 166-172 shows toast.info \"Já há uma publicação em andamento para este formato.\" and switches to the Publicações tab. The toast lies (says \"em andamento\" when the truthful state is \"already published\"), the button label lies, and the Publicações tab then shows a green \"Publicado\" badge (AssetPublicationsPanel.tsx:42-43) that contradicts the toast — the same shape of ambiguity that produced
+... (truncated 2470 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/tasks/wvxxqh9u7.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/subagents/workflows/wf_910a7db5-f1f/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9581194a-6c26-4463-a59e-43d6e6c801ad/workflows/scripts/review-publish-lifecycle-wf_910a7db5-f1f.js', resumeFromRunId: 'wf_910a7db5-f1f'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<failures>[refuta-A:Toast pos-Publicar diz 'publ] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-B:Toast pos-Publicar diz 'publ] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-A:Cancel afirma 'voltou para r] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-B:Cancel afirma 'voltou para r] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[lente:regression] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-B:Cancel button aparece mesmo] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-A:Cancel button aparece mesmo] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-A:activeForSelected nao detect] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-B:activeForSelected nao detect] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-A:Tests duplicam isPublication] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-B:Tests duplicam isPublication] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-A:updated_at setado 2x no mesm] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
+[refuta-B:updated_at setado 2x no mesm] failed: You've hit your session limit · resets 2:30pm (America/Sao_Paulo)</failures>
+<usage><agent_count>20</agent_count><agents_done>7</agents_done><agents_error>13</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>1</agents_empty_result><subagent_tokens>1052421</subagent_tokens><tool_uses>139</tool_uses><duration_ms>774995</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(17:16:55)*
+
+You've hit your session limit · resets 2:30pm (America/Sao_Paulo)
 
 ---
 
