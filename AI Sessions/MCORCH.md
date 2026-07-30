@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 105
-> * **Total de Sessões**: 3160
+> * **Total de Sessões**: 3161
 
 ---
 
@@ -145,6 +145,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-07-30 - agent-a197ca7a91ef627a6]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a189d8d75c472c0e7]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - agent-a1044843029730bdb]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - Resolver rejeição TikTok API com credenciais de teste]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions) - *2026-07-30*
 *   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions) - *2026-07-29*
 *   `[[2026-07-29 - agent-aea230efd23f8f527]]` (ClaudeSessions) - *2026-07-29*
