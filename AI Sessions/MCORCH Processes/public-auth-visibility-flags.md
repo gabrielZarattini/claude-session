@@ -69,6 +69,28 @@ sem build e sem deploy.
 | Ligou por engano e expôs cadastro público | Desligar o switch **"Aba de cadastro"**. Contas criadas nesse intervalo: varrer com `scripts/qa/sweep-smoke-users.ts` (dry-run primeiro) e/ou `/dashboard/admin` → Usuários |
 | Precisa reverter TUDO sem UI | `UPDATE public.public_app_settings SET value='false'::jsonb WHERE key LIKE 'auth_%';` com a service key |
 
+## 5-bis. Ordem de deploy (migration ANTES do build)
+
+A tela pública `/auth` passa a ler `public_app_settings` em runtime. A ordem segura é:
+
+1. `npx supabase db push --linked` — aplica a migration `20260730120000` (cria a tabela + seed).
+2. Confirmar a leitura anônima (gate **G1** do §4) — o `curl` sem JWT deve devolver as 2 linhas.
+3. **Só então** `bun run build` (no repo principal, build = deploy imediato via nginx).
+
+A ordem inversa (build antes da migration) **não derruba o login** — `fetchRows` lança, o `useQuery`
+captura (não há `throwOnError` nem ErrorBoundary), `flags` cai no default all-false e a tela renderiza
+exatamente como hoje. O único custo é 1 requisição 404 por carregamento do `/auth` enquanto a tabela
+não existir (a query usa `retry: false` justamente para não dobrar esse ruído no console do visitante).
+Aplicar a migration faz o 404 sumir sozinho no próximo carregamento.
+
+## 5-ter. O guard de regressão é consciente da flag
+
+`scripts/qa/verify-tiktok-login-button.ts` (gate G1 da BoK tiktok-login) valida o invariante
+**"o /auth público mostra o botão social ⟺ (`?devLogin` OU a flag ligada)"** — ele lê a flag real de
+`public_app_settings` via anon e ajusta a expectativa. Portanto ele fica **verde tanto com a flag
+desligada quanto ligada**. Se você vir esse guard RED depois de ligar a flag, o bug é no guard (ou no
+env sem anon key), **não** na feature — nunca desligue a flag "para o guard passar".
+
 ## 6. Success signal
 
 Um visitante **anônimo**, em janela privada, em `https://login.mcorch.com/auth` **sem query params**,
@@ -98,7 +120,8 @@ deliberada. O param `?devLogin` continua ligando ambos (comportamento legado pre
 | Painel de admin | `src/components/admin/AuthVisibilityPanel.tsx` |
 | Aba "Acesso" | `src/pages/AdminPage.tsx` |
 | Consumo na tela pública | `src/pages/Auth.tsx` |
-| Testes | `src/test/public-app-settings.test.ts` |
+| Testes unitários | `src/test/public-app-settings.test.ts` |
+| Guard E2E (flag-aware) | `scripts/qa/verify-tiktok-login-button.ts` |
 
 ## 9. Regra permanente
 
