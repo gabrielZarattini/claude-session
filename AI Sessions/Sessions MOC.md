@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3135
-> * **Sessões do Claude**: 3085
+> * **Total de Sessões Registradas**: 3147
+> * **Sessões do Claude**: 3097
 > * **Sessões do Gemini**: 50
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
-*   `[[2026-07-29 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` - *2026-07-29*
-*   `[[2026-07-27 - handson]]` - *2026-07-27*
-*   `[[2026-07-26 - pmo-curator next-steps]]` - *2026-07-26*
-*   `[[2026-07-26 - handson]]` - *2026-07-26*
-*   `[[2026-07-26 - configure-effort-mode]]` - *2026-07-26*
-*   `[[2026-07-26 - agent-a37e3f470d931cd93]]` - *2026-07-26*
-*   `[[2026-07-26 - Criar modal de publicação para YouTube, TikTok e Instagram]]` - *2026-07-26*
-*   `[[2026-07-26 - Copiar engenharia de harness e shakehands para outro repositório]]` - *2026-07-26*
-*   `[[2026-07-26 - 63f7e01c-957d-42bc-93d4-90dc11ab6ad2]]` - *2026-07-26*
-*   `[[2026-07-26 - 6241b4a2-a021-42fd-b450-cf7633b8134c]]` - *2026-07-26*
-*   `[[2026-07-26 - 4f92b00e-068a-4c9e-8194-1f8903f1e14d]]` - *2026-07-26*
-*   `[[2026-07-26 - 4f48ec0f-681d-44f5-a594-9c677e454c31]]` - *2026-07-26*
-*   *... e mais 3077 sessões nessa categoria.*
+*   `[[2026-07-29 - agent-af6351738d1c8d840]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-aea230efd23f8f527]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-ae49d659842e3ab0e]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-ada86f8b83e56b028]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a8d72129d7a5b86d8]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a79ed1aad9a42e9c1]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a67c165e85724d0dc]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a395af2c35333ed78]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a2da9826f0bd4e06c]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a192c55023c43280b]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a1429a4f6a000ea2e]]` - *2026-07-29*
+*   `[[2026-07-29 - agent-a01d5790f26706897]]` - *2026-07-29*
+*   *... e mais 3089 sessões nessa categoria.*
 
 ---
 
@@ -1743,6 +1743,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-06-01 - 2076b3b0-30a8-4607-ba20-3fe1deebc39e]]` (ClaudeSessions)
 
 ### Julho 2026
+*   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-aea230efd23f8f527]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-ae49d659842e3ab0e]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-ada86f8b83e56b028]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a8d72129d7a5b86d8]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a79ed1aad9a42e9c1]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a67c165e85724d0dc]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a395af2c35333ed78]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a2da9826f0bd4e06c]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a192c55023c43280b]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a1429a4f6a000ea2e]]` (ClaudeSessions)
+*   `[[2026-07-29 - agent-a01d5790f26706897]]` (ClaudeSessions)
 *   `[[2026-07-29 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions)
 *   `[[2026-07-27 - handson]]` (GeminiSessions)
 *   `[[2026-07-26 - pmo-curator next-steps]]` (ClaudeSessions)

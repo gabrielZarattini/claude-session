@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 102
-> * **Total de Sessões**: 3130
+> * **Total de Processos**: 104
+> * **Total de Sessões**: 3142
 
 ---
 
@@ -25,6 +25,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[agent-browser-install]]` - *Processo*
 *   `[[amazon-credential-resolution]]` - *Processo*
 *   `[[asr-master-to-srt]]` - *Processo*
+*   `[[audit-delivery-gate]]` - *Processo*
 *   `[[autonomic-loop-mape-k]]` - *Processo*
 *   `[[autopilot-cron-identity]]` - *Processo*
 *   `[[autopilot-video-9x16]]` - *Processo*
@@ -60,6 +61,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[external-video-ingest]]` - *Processo*
 *   `[[great-reset-sovereign]]` - *Processo*
 *   `[[handoff-material-proof-audit]]` - *Processo*
+*   `[[handoff-pruning-gate]]` - *Processo*
 *   `[[intent-plan-execution]]` - *Processo*
 *   `[[kanban-roadmap-reconciler]]` - *Processo*
 *   `[[landing-bundler]]` - *Processo*
@@ -125,6 +127,18 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-aea230efd23f8f527]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-ae49d659842e3ab0e]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-ada86f8b83e56b028]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a8d72129d7a5b86d8]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a79ed1aad9a42e9c1]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a67c165e85724d0dc]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a395af2c35333ed78]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a2da9826f0bd4e06c]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a192c55023c43280b]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a1429a4f6a000ea2e]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a01d5790f26706897]]` (ClaudeSessions) - *2026-07-29*
 *   `[[2026-07-29 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions) - *2026-07-29*
 *   `[[2026-07-27 - handson]]` (GeminiSessions) - *2026-07-27*
 *   `[[2026-07-26 - pmo-curator next-steps]]` (ClaudeSessions) - *2026-07-26*
