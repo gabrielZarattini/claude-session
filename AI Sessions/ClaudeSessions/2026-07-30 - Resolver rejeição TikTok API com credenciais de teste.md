@@ -11051,6 +11051,575 @@ Phase 5 — HANDOFF.md. Vou ler o topo para inserir Task State + Record no forma
 > 30	| **"Rodar não é entregar": 6 superfícies + limpeza total de branches + media_state (2026-07-29)** | ✅ **14 commits na main** (`15c84fe..7533a5a`) · tsc-app **0** · eslint **0 erros** (era 75) · vitest **712** · 3 edge fns deployadas · frontend no ar. Remoto = **só `main`** (20 branches retiradas; backup provado por `git clone` do bundle). **P0**: logrotate criava `/var/log/mcorch-*.log` como gcrUX enquanto o cron roda como ubuntu → **redirect falho = comando NÃO executa** → 4 crons mortos 3 dias (telemetria de saúde em branco). **Gate de ENTREGA** da auditoria 4Cs (worktree detached em `origin/main` + push verificado por grep no destino). **Produção estava À FRENTE da main** (dist de branch nunca mergeada) → reconciliada. **Cortes**: grade do menu era galeria decorativa + edge fn 5 dias velha → grade provada E2E por frame. **media_state** (text+CHECK) separa estado técnico do editorial + aba "Em processamento"; **IDOR MEDIUM** fechado que o próprio fix ativara. Malha **18851** · nó `32897de0`. Record abaixo. |
 > ```
 
+## 🤖 Claude *(19:30:27)*
+
+Vou atualizar o FIRST ACTION, adicionar a linha de Task State e o Record novo:
+
+## 🤖 Claude *(19:30:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "```bash\ngit log --oneline -10\n# \ud83d\ude80 UPDATE 2026-07-29 (\"rodar n\u00e3o \u00e9 entregar\" \u2014 6 superf\u00edcies): 14 commits na main, tudo no ar.\n#   DOUTRINA DA SESS\u00c3O: o sistema funciona e o resultado N\u00c3O CHEGA ao destino. Apareceu em 6 lugares \u2014\n#   auditoria 4Cs em branch \u00f3rf\u00e3 \u00b7 cron do host morto por log n\u00e3o-grav\u00e1vel \u00b7 produ\u00e7\u00e3o \u00c0 FRENTE da main\n#   (dist buildado de branch nunca mergeada) \u00b7 grade do menu = galeria sem onClick \u00b7 edge fn deployada\n#   5 dias mais velha que o campo \u00b7 Protocolo de Resgate de V\u00eddeo quebrado por enum inv\u00e1lido.\n#   ANTICORPOS: gate de ENTREGA da auditoria (worktree detached + push VERIFICADO no destino) \u00b7\n#   ${MCORCH_LOG_DIR:-/home/ubuntu/logs} em todo cron \u00b7 guarda de geometria do overlay (OTD-VR-008).\n#   LIMPEZA: remoto = S\u00d3 main (20 branches retiradas, backup provado por git clone do bundle).\n#   QUALIDADE: eslint 75\u21920 erros (68 `any` trocados por tipo REAL) \u00b7 tsc 0 \u00b7 vitest 712.\n#   NOVO: coluna `media_state` + aba \"Em processamento\" na Biblioteca. Malha 18851, n\u00f3 32897de0.\n# \u23ed PR\u00d3XIMA SESS\u00c3O (foco declarado pelo Sovereign): CORTES E SHORTS ORG\u00c2NICOS.\n#   O EP03 master J\u00c1 est\u00e1 no YouTube. Terreno medido em docs/roadmap/organic-shorts-terrain-2026-07-29.md:\n#   48 cortes existem, TODOS 9:16, todos do EP01; EP02 ingerido com 0 cortes; EP03 nem est\u00e1 na plataforma.\n#   3 gaps p/ cad\u00eancia aut\u00f4noma: ZERO plano de cad\u00eancia armado \u00b7 picker do YouTube n\u00e3o v\u00ea cortes\n#   (filtra source_module='external') \u00b7 reshape s\u00f3 dispara com pillar_run_id.\n#   \u26a0\ufe0f O Sovereign vai enviar 2 PLANOS de deepsearch \u2014 a estrat\u00e9gia sai deles, N\u00c3O invente antes.\n# \u26a0\ufe0f Cl\u00e1usula de gate em doc NUNCA \u00e9 fonte de verdade sobre servi\u00e7o: use systemctl (2 casos nesta semana).\n```",
+  "new_string": "```bash\ngit log --oneline -10\n# \ud83d\ude80 UPDATE 2026-07-30 (TikTok App Review + pipeline de Publica\u00e7\u00f5es do Spaces): 4 commits na main, tudo no ar.\n#   (1) TIKTOK REVIEW (reprovado 4\u00d7) DESTRAVADO: conta de teste tiktok.review@mcorch.com provisionada\n#       (viewer \u00b7 email pr\u00e9-confirmado \u00b7 onboarding pr\u00e9-completo \u00b7 1500 mco) e login PROVADO E2E no /auth\n#       p\u00fablico real. Achado material: bot\u00f5es social login viviam atr\u00e1s de ?devLogin (invis\u00edveis na URL\n#       do formul\u00e1rio). Flag admin `public_app_settings` (aba Acesso em /dashboard/admin) substitui o param.\n#       Sovereign gravou o v\u00eddeo e ENVIOU a re-submiss\u00e3o (aguardando veredito TikTok).\n#   (2) PIPELINE DE PUBLICA\u00c7\u00d5ES: aba Publica\u00e7\u00f5es no modal do asset + trigger cascade fecha o dead-end\n#       409 already_enqueued + sync bidirecional (apagar do calend\u00e1rio SOME de toda superf\u00edcie; bot\u00e3o Remover).\n#   3 migrations (public_app_settings + 2 do trigger cascade) \u00b7 1 edge fn (publish-space-asset) \u00b7\n#   /security-review NO FINDINGS \u00d73 \u00b7 revis\u00e3o adversarial ultracode pegou 2 P0/P1 nascidos-mortos.\n#   tsc-app 0 \u00b7 eslint 0 \u00b7 vitest +20 novos. Malha 18985, n\u00f3 59c4d1c2.\n#   \u26a0\ufe0f Flag auth_social_login_visible est\u00e1 LIGADA em prod (necess\u00e1ria p/ o review). Desligar em Acesso quando aprovar.\n# \u23ed PR\u00d3XIMA SESS\u00c3O (foco declarado, INALTERADO): CORTES E SHORTS ORG\u00c2NICOS.\n#   O EP03 master J\u00c1 est\u00e1 no YouTube. Terreno: docs/roadmap/organic-shorts-terrain-2026-07-29.md.\n#   3 gaps p/ cad\u00eancia aut\u00f4noma: ZERO plano de cad\u00eancia armado \u00b7 picker do YouTube n\u00e3o v\u00ea cortes\n#   (filtra source_module='external') \u00b7 reshape s\u00f3 dispara com pillar_run_id.\n#   \u26a0\ufe0f O Sovereign vai enviar 2 PLANOS de deepsearch \u2014 a estrat\u00e9gia sai deles, N\u00c3O invente antes.\n# \u26a0\ufe0f Cl\u00e1usula de gate em doc NUNCA \u00e9 fonte de verdade sobre servi\u00e7o: use systemctl.\n# \u26a0\ufe0f supabase.functions.invoke() p\u00f5e 4xx/5xx em `error` (data=null) \u2014 ler o body via error.context.json(),\n#    n\u00e3o via data?.error (esse ramo \u00e9 c\u00f3digo morto p/ non-2xx). Pego pela revis\u00e3o adversarial nesta sess\u00e3o.\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:30:53)*
+
+Agora Task State + Record novo:
+
+## 🤖 Claude *(19:31:02)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **\"Rodar n\u00e3o \u00e9 entregar\": 6 superf\u00edcies + limpeza total de branches + media_state (2026-07-29)** | \u2705 **14 commits na main** (`15c84fe..7533a5a`)",
+  "new_string": "## Task State\n\n| **TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces (2026-07-30)** | \u2705 **4 commits na main** (`266d3f0..7d4add3`) \u00b7 tsc-app **0** \u00b7 eslint **0** \u00b7 vitest **+20 novos** (public-app-settings 9 + asset-publications 11) \u00b7 3 migrations aplicadas \u00b7 1 edge fn deployada \u00b7 frontend no ar \u00b7 `/security-review` NO FINDINGS \u00d73. **TikTok (reprovado 4\u00d7)**: conta `tiktok.review@mcorch.com` provisionada (viewer \u00b7 email pr\u00e9-confirmado \u00b7 onboarding pr\u00e9-completo \u00b7 1500 mco) + login **provado E2E** no /auth p\u00fablico. Achado material: bot\u00f5es social login atr\u00e1s de `?devLogin` (invis\u00edveis na URL do formul\u00e1rio) \u2192 flag admin `public_app_settings` (aba **Acesso** em /dashboard/admin, world-readable+CHECK allowlist, RLS admin-write, auditada). Sovereign gravou o v\u00eddeo e **enviou a re-submiss\u00e3o**. **Publica\u00e7\u00f5es**: aba no modal do asset (badge/timestamp/Cancelar/Remover) + trigger cascade fecha o **dead-end 409 `already_enqueued`** + **sync bidirecional** (apagar do calend\u00e1rio SOME de toda superf\u00edcie: `scheduled`\u2192delete, `published`\u2192hist\u00f3rico). Revis\u00e3o adversarial ultracode pegou 2 P0/P1 nascidos-mortos (handler 409 = c\u00f3digo morto; `activeForSelected` sem `published`) \u2192 corrigidos+provados E2E. Malha **18985** \u00b7 n\u00f3 `59c4d1c2`. Record abaixo. |\n| **\"Rodar n\u00e3o \u00e9 entregar\": 6 superf\u00edcies + limpeza total de branches + media_state (2026-07-29)** | \u2705 **14 commits na main** (`15c84fe..7533a5a`)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:31:06)*
+
+Agora o Record completo. Vou inseri-lo logo após a tabela de Task State (antes do primeiro `## … Record`):
+
+## 🤖 Claude *(19:31:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"^## .* Record\\|^> \ud83d\udce6 Linhas de Task State\" HANDOFF.md | head -3",
+  "description": "Achar onde inserir o Record"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 50:> 📦 Linhas de Task State anteriores a 2026-07-20 → [`docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md`](docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md)
+> 52:## "Rodar não é entregar" — 6 superfícies + limpeza de branches + media_state Record (2026-07-29)
+> 117:## Modais de publicação YouTube Studio (abas Vídeo/Shorts/Histórico) — free-agent S1 Record (2026-07-25)
+> ```
+
+## 🤖 Claude *(19:31:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 50,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 50	> 📦 Linhas de Task State anteriores a 2026-07-20 → [`docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md`](docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md)
+> 51	
+> 52	## "Rodar não é entregar" — 6 superfícies + limpeza de branches + media_state Record (2026-07-29)
+> 53	
+> ```
+
+## 🤖 Claude *(19:31:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "> \ud83d\udce6 Linhas de Task State anteriores a 2026-07-20 \u2192 [`docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md`](docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md)\n\n## \"Rodar n\u00e3o \u00e9 entregar\" \u2014 6 superf\u00edcies + limpeza de branches + media_state Record (2026-07-29)",
+  "new_string": "> \ud83d\udce6 Linhas de Task State anteriores a 2026-07-20 \u2192 [`docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md`](docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md)\n\n## TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces Record (2026-07-30)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent \u00b7 Reviewer = Sovereign (Gabriel) + `/security-review` independente \u00b7 Owner = Sovereign (a conta de review vai a um revisor externo; a flag controla o que o mundo v\u00ea no login p\u00fablico).\n\nSess\u00e3o pontual do Sovereign que virou 3 arcos. **(1)** Pedido: \"um login e senha provis\u00f3rio para o TikTok review usar\" \u2014 reprovado 4\u00d7, \u00faltima queixa = *\"Website URL... must provide a test account\"*. Provisionei `tiktok.review@mcorch.com` (script no scratchpad, N\u00c3O throwaway: dom\u00ednio \u2260 `@example.com` e sem tag `qa_throwaway`, ent\u00e3o o sweep das 04:00 n\u00e3o a reapa), email pr\u00e9-confirmado, `viewer`, 1500 mco, onboarding pr\u00e9-completo. **Provei o login no browser real contra `login.mcorch.com/auth`** (n\u00e3o preview local) \u2014 e o `agent-browser` mediu a tela e achou a causa prov\u00e1vel das 4 reprova\u00e7\u00f5es: os bot\u00f5es \"Entrar com TikTok/Google\" viviam atr\u00e1s do query param `?devLogin`, **invis\u00edveis na URL que consta no formul\u00e1rio do app**. O revisor nunca via o Login Kit. **(2)** A pedido do Sovereign, transformei o `?devLogin` numa **flag de admin**: tabela `public_app_settings` (world-readable por design, `CHECK` allowlist trava as 2 chaves, RLS admin-write via `has_role` single-arg, trigger de auditoria SECURITY DEFINER) + aba **Acesso** em `/dashboard/admin` com 2 switches SEPARADOS (login social \u2260 cadastro p\u00fablico). Fail-closed em todo caminho. Revis\u00e3o adversarial (56 agentes) + `/security-review` NO FINDINGS. Provado E2E: `/auth` sem param mostra o bot\u00e3o TikTok com a flag ligada. Montei os textos de submiss\u00e3o (999-char de scopes + 120-char de reason). **Sovereign gravou o v\u00eddeo e enviou a re-submiss\u00e3o.** **(3)** Durante o teste, o Sovereign bateu no `already_enqueued`: publish do asset \u00e9 ass\u00edncrono (fila `scheduled_posts`\u2192cron), ele apagou do TikTok+calend\u00e1rio achando que n\u00e3o postara, e a variant ficou com refer\u00eancia pendurada \u2192 409 eterno. Pacote completo: trigger de cascade (2 migrations \u2014 a 2\u00aa refina a sem\u00e2ntica ap\u00f3s feedback do Sovereign: `scheduled` cancelado \u2192 **DELETE** a variant [some de tudo], `published`\u2192hist\u00f3rico), aba **Publica\u00e7\u00f5es** no modal do asset (`AssetPublicationsPanel` + `useAssetPublications`, badge/timestamp/Cancelar/Remover), e o handler 409 real. **Revis\u00e3o adversarial ultracode** (2 rodadas) pegou 2 bugs **nascidos-mortos** que eram exatamente a promessa quebrada: o `if (data?.error==='already_enqueued')` era c\u00f3digo morto (`supabase.functions.invoke` p\u00f5e non-2xx em `error` com `data=null`), e `activeForSelected` n\u00e3o cobria `status='published'` (o servidor 409a nesse estado). Ambos corrigidos e provados E2E ao vivo. Conta de review limpa (0 variants) para o v\u00eddeo.\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `supabase/migrations/20260730120000_public_app_settings.sql` | \u2705 Flag world-readable + CHECK allowlist (2 chaves) + RLS admin-write + trigger auditoria. Seed FALSE = comportamento atual intocado. |\n| `src/lib/public-app-settings.ts` + `src/hooks/usePublicAppSettings.ts` | \u2705 SSOT fail-closed (`coerceFlag`/`foldFlags`) + hook anon-safe + admin read/write |\n| `src/components/admin/AuthVisibilityPanel.tsx` + aba Acesso em `AdminPage.tsx` | \u2705 2 switches (login social \u00b7 cadastro), l\u00ea `error` do hook (n\u00e3o fabrica \"Oculto\") |\n| `src/pages/Auth.tsx` | \u2705 `showSocialLogin`/`showSignup` = `devLogin \\|\\| flag`; fail-closed no load |\n| `supabase/migrations/20260730180000` + `20260730190000` (trigger cascade) | \u2705 AFTER DELETE em `scheduled_posts`: `scheduled`\u2192DELETE variant \u00b7 `published`/`failed`\u2192hist\u00f3rico (limpa pointer). Tenant-anchored em `OLD.user_id`. |\n| `supabase/functions/publish-space-asset/index.ts` | \u2705 409 retorna `status` da variant p/ o cliente distinguir na-fila \u00d7 publicado. Deployado. |\n| `src/hooks/useAssetPublications.ts` + `src/components/creative/AssetPublicationsPanel.tsx` | \u2705 variants \u2a1d scheduled_posts owner-scoped + Cancelar (fila)/Remover (resto, com guard anti-\u00f3rf\u00e3o) |\n| `src/components/creative/AssetDetailDialog.tsx` | \u2705 Tabs Publicar/Publica\u00e7\u00f5es \u00b7 handler 409 real (l\u00ea `error.context.json()`) \u00b7 labels diferenciados |\n| `docs/processes/public-auth-visibility-flags.md` + `space-asset-publish-lifecycle.md` | \u2705 2 SOPs Lei 2 (Operator/Sequence/Verification/Recovery/Success) |\n| Conta `tiktok.review@mcorch.com` | \u2705 `43027d04` \u00b7 login E2E provado \u00b7 0 variants residuais (limpa p/ o review) |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `266d3f0` | feat(auth): flag de admin p/ visibilidade do login social no /auth p\u00fablico (destrava TikTok App Review) |\n| `168edea` | feat(spaces): aba Publica\u00e7\u00f5es + trigger cascade que fecha o dead-end 409 already_enqueued |\n| `687fd35` | fix(spaces): apagar do calend\u00e1rio SOME de toda superf\u00edcie + bot\u00e3o Remover na aba (sync bidirecional) |\n| `7d4add3` | docs(readme): v6.128.0 \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces |\n\n### Arquitetura do pipeline de Publica\u00e7\u00f5es (async + sync bidirecional)\n```\n[UI] Publicar \u2192 publish-space-asset \u2192 space_publish_variants (upsert) + scheduled_posts (insert queued)\n                                          \u2193 [cron auto-publish, drena a fila]\n                                       publish-social \u2192 API da rede\nReconcilia\u00e7\u00e3o (apagar de qualquer lugar):\n  DELETE scheduled_posts \u2500\u2500trigger AFTER DELETE\u2500\u2500\u25b6 variant.status='scheduled' \u2192 DELETE (some de tudo)\n                                                   variant.status IN (published,failed) \u2192 mant\u00e9m, pointer=NULL\n  aba Publica\u00e7\u00f5es: Cancelar (linha viva \u2192 deleta scheduled_posts) \u00b7 Remover (resto \u2192 deleta a variant)\n```\n\n## \"Rodar n\u00e3o \u00e9 entregar\" \u2014 6 superf\u00edcies + limpeza de branches + media_state Record (2026-07-29)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:31:53)*
+
+Phase 5b + 5b-2 — secret scan e size gate no HANDOFF.md:
+
+## 🤖 Claude *(19:31:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 5b-1 secret scan ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md | grep -v \"example\\|placeholder\\|digest\\|hash\" | head || echo \"SEM CREDENCIAIS \u2705\"\necho; echo \"=== nota: senha da conta de review est\u00e1 no HANDOFF? ===\"\ngrep -c \"TikTokReview!Mcorch2026\" HANDOFF.md\necho; echo \"=== 5b-2 size gate ===\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | tail -8",
+  "description": "Phase 5b secret scan + size gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 secret scan ===
+> 
+> === nota: senha da conta de review está no HANDOFF? ===
+> 0
+> 
+> === 5b-2 size gate ===
+> ── Gate de tamanho do HANDOFF (Lei 3) ──────────────────────────
+> arquivo ........ HANDOFF.md
+> linhas ......... 510
+> bytes .......... 71638
+> tokens (est.) .. ~16660
+> alvo ........... 20000   |   cap de leitura: 25000
+> ────────────────────────────────────────────────────────────────
+> ✅ OK — HANDOFF.md dentro do alvo (~16660 ≤ 20000). Nada a podar.
+> ```
+
+## 🤖 Claude *(19:32:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirming the secret scan passed — no credentials exposed, and the review account password was intentionally kept out of the handoff document. The token count is well within limits at 16,660 out of 25,000, so the size gate check is clear.
+
+</details>
+
+
+## 🤖 Claude *(19:32:05)*
+
+Secret scan limpo — e confirmei que a senha da conta de review **não** está no HANDOFF.md (0 ocorrências, deliberado). Size gate **✅ OK** (16.660 tokens, bem abaixo do cap). Commit do HANDOFF:
+
+## 🤖 Claude *(19:32:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add HANDOFF.md && git commit -q -F - <<'EOF'\ndocs(handoff): seal TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces\n\nConta de review provisionada+provada E2E \u00b7 flag admin de visibilidade do login social \u00b7 aba\nPublica\u00e7\u00f5es + trigger cascade que fecha o 409 already_enqueued + sync bidirecional. FIRST ACTION\natualizado (foco INALTERADO: cortes/shorts org\u00e2nicos). Malha 18985, n\u00f3 59c4d1c2. Record + ORO triplet.\nEOF\ngit log --oneline -1",
+  "description": "Commit HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:32PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:32PM[0m [32mINF[0m scan completed in 14.4ms
+> [90m4:32PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.09 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 2c39bf1 docs(handoff): seal TikTok App Review destravado + pipeline de Publicações do Spaces
+> ```
+
+## 🤖 Claude *(19:32:16)*
+
+Phase 5c — Material Proof Audit:
+
+## 🤖 Claude *(19:32:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -40",
+  "description": "Material proof audit",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | commit 266d3f0 | git_commit | 266d3f0 | 266d3f0 | ✅ |
+> | commit 168edea | git_commit | 168edea | 168edea | ✅ |
+> | commit 687fd35 | git_commit | 687fd35 | 687fd35 | ✅ |
+> | commit 7d4add3 | git_commit | 7d4add3 | 7d4add3 | ✅ |
+> | file supabase/migrations/20260730120000_public_app_settings.sql | file_exists | supabase/migrations/20260730120000_public_app_settings.sql | supabase/migrations/20260730120000_public_app_settings.sql | ✅ |
+> | file src/lib/public-app-settings.ts | file_exists | src/lib/public-app-settings.ts | src/lib/public-app-settings.ts | ✅ |
+> | file src/hooks/usePublicAppSettings.ts | file_exists | src/hooks/usePublicAppSettings.ts | src/hooks/usePublicAppSettings.ts | ✅ |
+> | file src/components/admin/AuthVisibilityPanel.tsx | file_exists | src/components/admin/AuthVisibilityPanel.tsx | src/components/admin/AuthVisibilityPanel.tsx | ✅ |
+> | file src/pages/Auth.tsx | file_exists | src/pages/Auth.tsx | src/pages/Auth.tsx | ✅ |
+> | file supabase/functions/publish-space-asset/index.ts | file_exists | supabase/functions/publish-space-asset/index.ts | supabase/functions/publish-space-asset/index.ts | ✅ |
+> | file src/hooks/useAssetPublications.ts | file_exists | src/hooks/useAssetPublications.ts | src/hooks/useAssetPublications.ts | ✅ |
+> | file src/components/creative/AssetPublicationsPanel.tsx | file_exists | src/components/creative/AssetPublicationsPanel.tsx | src/components/creative/AssetPublicationsPanel.tsx | ✅ |
+> | file src/components/creative/AssetDetailDialog.tsx | file_exists | src/components/creative/AssetDetailDialog.tsx | src/components/creative/AssetDetailDialog.tsx | ✅ |
+> | file docs/processes/public-auth-visibility-flags.md | file_exists | docs/processes/public-auth-visibility-flags.md | docs/processes/public-auth-visibility-flags.md | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) + `/security-rev | Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (Gabriel) + `/security-rev | ✅ |
+> | handoff node 59c4d1c2 | mesh_node | 59c4d1c2-afcd-4b4d-91f0-153db037bfe9 | 59c4d1c2-afcd-4b4d-91f0-153db037bfe9 | ✅ |
+> 
+> QA VERDICT: 16 verified · 0 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> ```
+
+## 🤖 Claude *(19:32:21)*
+
+**SEAL ALLOWED** — 16 claims verificadas, 0 falhas (commits, arquivos, ORO triplet, e o nó de handoff `59c4d1c2` na malha). Phase 6 — BoK seal status:
+
+## 🤖 Claude *(19:32:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== m\u00f3dulos tocados nesta sess\u00e3o ===\"\ngit diff --name-only 04c45bc..HEAD | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | awk -F/ '{print $1\"/\"$2}' | sort -u\necho\necho \"=== avalia\u00e7\u00e3o de gate BoK ===\"\necho \"Nesta sess\u00e3o: sem m\u00f3dulo NOVO. Toca superf\u00edcies documentadas existentes:\"\necho \" - public_app_settings: tabela de flag de UI (n\u00e3o \u00e9 m\u00f3dulo de produto; SOP Lei 2 escrito)\"\necho \" - space_publish_variants/publish-space-asset: j\u00e1 parte do m\u00f3dulo spaces-evolution (BoK selada)\"\necho \" - AssetDetailDialog: componente existente estendido\"\necho \"\u2192 Ambos com SOP em docs/processes/ (Lei 2). Exempto do gate BoK (n\u00e3o \u00e9 novo m\u00f3dulo/feature complexa).\"",
+  "description": "Phase 6 BoK gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === módulos tocados nesta sessão ===
+> src/pages
+> supabase/functions
+> 
+> === avaliação de gate BoK ===
+> Nesta sessão: sem módulo NOVO. Toca superfícies documentadas existentes:
+>  - public_app_settings: tabela de flag de UI (não é módulo de produto; SOP Lei 2 escrito)
+>  - space_publish_variants/publish-space-asset: já parte do módulo spaces-evolution (BoK selada)
+>  - AssetDetailDialog: componente existente estendido
+> → Ambos com SOP em docs/processes/ (Lei 2). Exempto do gate BoK (não é novo módulo/feature complexa).
+> ```
+
+## 🤖 Claude *(19:32:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Verificando a fase 6: os módulos que estou tocando (Auth.tsx, publish-space-asset, AdminPage) são extensões de superfícies existentes, não novos módulos. O `space_publish_variants` e `publish-space-asset` já fazem parte da suíte `spaces-evolution` que está selada no BoK. A flag `public_app_settings` é apenas uma flag de UI, não um módulo de produto — não gera conteúdo, não cobra MCO, não é uma feature complexa.
+
+Ambas as funcionalidades têm SOP Lei 2 documentada em `docs/processes/`, e estão isentas do gate BoK conforme as exemptions do Master Execution Protocol para patches de bug em arquivo único e features documentadas. Tudo certo para prosseguir com o push.
+
+</details>
+
+
+## 🤖 Claude *(19:32:34)*
+
+Phase 6 ✅ — sem módulo novo (superfícies documentadas estendidas + 2 SOPs Lei 2 escritos); exempto do gate BoK. Phase 7 — push:
+
+## 🤖 Claude *(19:32:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git push origin main 2>&1 | tail -4\necho \"=== verifica\u00e7\u00e3o destino ===\"\ngit fetch origin -q\ngit show origin/main:HANDOFF.md | grep -c \"59c4d1c2\" && echo \"\u2705 HANDOFF em origin/main\" || echo \"\u274c\"\ngit rev-parse --short HEAD; git rev-parse --short origin/main",
+  "description": "Push + verifica\u00e7\u00e3o no destino"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> summary: (done in 0.10 seconds)
+> ✔️ gitleaks-range (0.10 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    687fd35..2c39bf1  main -> main
+> === verificação destino ===
+> 2
+> ✅ HANDOFF em origin/main
+> 2c39bf1
+> 2c39bf1
+> ```
+
+## 🤖 Claude *(19:32:43)*
+
+Push verificado — `HEAD == origin/main == 2c39bf1`, HANDOFF com o nó no destino. Phase 7b — sprint hygiene:
+
+## 🤖 Claude *(19:32:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls scratch/ 2>/dev/null && echo \"tem arquivos\" || echo \"scratch limpo \u2705\"\necho \"=== FILA SOVEREIGN topo (foco atual) ===\"\nsed -n '7,12p' .claude/context/sprint-priorities.md",
+  "description": "Scratch + estado da fila sovereign"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tem arquivos
+> === FILA SOVEREIGN topo (foco atual) ===
+> ## 📋 FILA SOVEREIGN (ordem declarada — não reordenar sem GO)
+> 
+> | # | Item | Estado | Gate |
+> |---|------|--------|------|
+> | 🎯 **AGORA** | **Cortes e shorts ORGÂNICOS (foco declarado pelo Sovereign 2026-07-29)** — o **EP03 master JÁ está no YouTube**; a Track B "fábrica" cumpriu. Agora é impulsionamento orgânico. **O Sovereign vai enviar 2 planos de deepsearch — a estratégia sai deles; não inventar antes.** Terreno medido (contagem viva, não claim): `docs/roadmap/organic-shorts-terrain-2026-07-29.md`. | ⏳ **3 gaps p/ cadência autônoma:** (1) **zero plano de cadência armado** (`autopilot_plans plan_kind='cadence'` vazio; tick */15 vivo sem o que despachar); (2) picker do YouTube filtra `source_module='external'` → os 48 cortes são invisíveis; (3) `reshape-pillar` só dispara com `pillar_run_id`. Acervo: 48 cortes TODOS 9:16, todos do EP01; EP02 ingerido com 0 cortes; **EP03 nem está em `creative_assets`** (subir pelo menu Cortes). | 🔒 **Sovereign:** enviar os 2 planos · decidir se OTD-VR-008 (safe-area por formato nos 11 templates) entra, caso algum plano exija legenda cinética em 4:5 |
+> | ✅ ex-AGORA | **EP02/EP03 no YouTube pela plataforma (Track B)** — CUMPRIDO: EP03 master postado (2026-07-29). Encanamento vivo: `youtube-upload.service` active/enabled, worker resumable dual-source. | ✅ | — |
+> ```
+
+## 🤖 Claude *(19:32:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la scratch/",
+  "description": "Ver o que est\u00e1 em scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 8
+> drwxrwxr-x  2 gcrUX gcrUX 4096 Jun 30 01:44 .
+> drwxrwx--- 32 gcrUX gcrUX 4096 Jul 30 16:31 ..
+> ```
+
+## 🤖 Claude *(19:33:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O diretório scratch está realmente vazio — o comando `ls` retornou exit 0 mesmo sem arquivos, o que me levou a uma confirmação falsa, mas agora tenho certeza de que só contém . e ... A fila SOVEREIGN continua focada em "Cortes e shorts orgânicos", e a sessão de hoje com a revisão do TikTok foi apenas um desvio momentâneo que não altera o direcionamento principal.
+
+Estou considerando se devo adicionar uma nota sobre a entrega de hoje no sprint-priorities — fechei um bug de produção (already_enqueued) e desbloqueei a revisão do TikTok, ambos relevantes mas não são itens da fila principal. Vou adicionar uma entrada de sprint curta no histórico de sprints do sprint-priorities.md, mantendo o padrão existente e sem reordenar a fila SOVEREIGN.
+
+</details>
+
+
+## 🤖 Claude *(19:33:02)*
+
+`scratch/` limpo (só `.`/`..` — o `ls` deu exit 0 num dir vazio). A FILA SOVEREIGN topo (cortes orgânicos) está inalterada — a sessão de hoje foi um desvio pontual, não muda o foco. Vou registrar a entrega no histórico de sprints sem reordenar a fila:
+
+## 🤖 Claude *(19:33:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 20,
+  "limit": 4
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 20	
+> 21	**Sprint v6.107.0 — Meta app-review privacidade + WhatsApp rail E2E + AI Act badge/reframe + CRM seed (2026-07-18)** — sessão-maratona interativa (Sovereign ao vivo no console do Meta). **(1)** `meta-privacy` (deauth + data-deletion signed_request HMAC fail-closed) — as 2 URLs de callback prontas p/ submissão do app-review; `/security-review` NO FINDINGS · smoke 4/4. **(2) WhatsApp Cloud API rail E2E:** fix decisivo `whatsapp-webhook verify_jwt=false` (rail inbound estava morto) + `POST subscribed_apps` + `meta_config` fiado (token **EAA**, não IGAA); número CLOUD_API/LIVE. Templates (create/list/delete, E2E provado) + envio (template/texto livre, plumbing provado até o Meta). **(3)** IG token manual (`connect-instagram-token`). **(4)** AI Act Fatia 2: badge "gerado por IA" (WS-C) + reframe re-mark (WS-D, RPN 294). **(5)** CRM/inbox blueprint-semente deepsearch (`docs/bok/crm-inbox/`, licenças + AI Act, gate FECHADO até BoK 9/9). 11 commits `15810be..2de10cb` (→ `b4f57ba` seal) · tsc 0 · vitest 634 · SEAL ALLOWED (16/16) · malha 9135 · nó `aa4ed885`. **Próximo Sovereign:** aprovação Meta do `promo_semana` → testar envio real; `/bok-scribe crm-inbox` + jurídico; rotação de credenciais expostas no chat (EAA/IG); agente de resposta a comentários (YouTube).
+> 22	
+> 23	**Sprint v6.100.0 — Assets: seletor de formato + pré-visualização fiel + modal responsivo (2026-07-14)** — diretiva Sovereign "UI ruim nos assets + previsualização perfeita por tipo". Amendment 21 (FR-SPACES-075..078) + SOP; `format-specs.ts` SSOT (números do seed channel_profiles, paridade 15/15); `PublicationPreview` 10 chromes fiéis (Reels/Stories/Short 9:16 + Feed 4:5/1:1 + Carrossel + Pin 2:3 + link-card + YT vídeo/comunidade + text-post, render 17/17); `AssetDetailDialog` picker + preview publicando imagem+vídeo via publish-space-asset; modal mobile-app-like (Vision QA pegou grid blowout); inspector do canvas reusa o preview. 4 commits `56bf601..0f543af` · tsc 0 · eslint 0 · +32 testes · SEAL ALLOWED (7/7) · malha 9107 · nó `66952b93`. **Próximo:** OTD-SPACES-044 (carrossel IG agendado) · OTD-SPACES-043 (reframe server-side p/ pixel-parity) · trilhos Stories/YT-comunidade (app-audit).
+> ```
+
+## 🤖 Claude *(19:33:06)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 19,
+  "limit": 3
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 19	| 5 | **landing-factory** — fábrica de landing pages AUTO-OTIMIZÁVEIS (loop CRO governado), beachhead do norte "agência dentro da plataforma" (2 vídeos Maestros da IA); build → publish → instrumenta PostHog → reverte-se-piora | ✅ **BoK 9/9 SELADA 2026-07-16** (blueprint deepsearch v0.2 + suite `11a5adb`, seal `b65e94b1`; MR14→BR18→PR18→FR20; Pattern Conformance 15/5/1). Decisões Owner: Open Design **v0.10.0 pinado** (single-file export não existe upstream #368) → **asset-bundler próprio** é o P0; hosting **`gcrux.com`** (domínio separado cookie-isolado, nunca `*.mcorch.com`); WordPress-page-first; PostHog self-host/BYOK. **Gate Closed-Loop ABERTO**. | ⏳ **Fatia 1 = código do `landing-bundler`** (inlina img/fonts/@import → data:); registrar wildcard `*.gcrux.com`; OTD-LF-001/003/014 + gate CRO 95% |
+> 20	
+> 21	**Sprint v6.107.0 — Meta app-review privacidade + WhatsApp rail E2E + AI Act badge/reframe + CRM seed (2026-07-18)** — sessão-maratona interativa (Sovereign ao vivo no console do Meta). **(1)** `meta-privacy` (deauth + data-deletion signed_request HMAC fail-closed) — as 2 URLs de callback prontas p/ submissão do app-review; `/security-review` NO FINDINGS · smoke 4/4. **(2) WhatsApp Cloud API rail E2E:** fix decisivo `whatsapp-webhook verify_jwt=false` (rail inbound estava morto) + `POST subscribed_apps` + `meta_config` fiado (token **EAA**, não IGAA); número CLOUD_API/LIVE. Templates (create/list/delete, E2E provado) + envio (template/texto livre, plumbing provado até o Meta). **(3)** IG token manual (`connect-instagram-token`). **(4)** AI Act Fatia 2: badge "gerado por IA" (WS-C) + reframe re-mark (WS-D, RPN 294). **(5)** CRM/inbox blueprint-semente deepsearch (`docs/bok/crm-inbox/`, licenças + AI Act, gate FECHADO até BoK 9/9). 11 commits `15810be..2de10cb` (→ `b4f57ba` seal) · tsc 0 · vitest 634 · SEAL ALLOWED (16/16) · malha 9135 · nó `aa4ed885`. **Próximo Sovereign:** aprovação Meta do `promo_semana` → testar envio real; `/bok-scribe crm-inbox` + jurídico; rotação de credenciais expostas no chat (EAA/IG); agente de resposta a comentários (YouTube).
+> ```
+
+## 🤖 Claude *(19:33:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.107.0 \u2014 Meta app-review privacidade + WhatsApp rail E2E + AI Act badge/reframe + CRM seed (2026-07-18)**",
+  "new_string": "**Sprint v6.128.0 \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces (2026-07-30)** \u2014 sess\u00e3o pontual do Sovereign, 3 arcos. **(1)** TikTok reprovado 4\u00d7 (\"Website URL = login page; provide test account\"): conta `tiktok.review@mcorch.com` provisionada (viewer \u00b7 email pr\u00e9-confirmado \u00b7 onboarding pr\u00e9-completo \u00b7 1500 mco) + login PROVADO E2E no /auth p\u00fablico real. Achado material via `agent-browser`: bot\u00f5es social login atr\u00e1s de `?devLogin` = invis\u00edveis na URL do formul\u00e1rio. **(2)** Flag admin `public_app_settings` (aba **Acesso** em /dashboard/admin, world-readable+CHECK allowlist, RLS admin-write, auditada, 2 switches: login social \u2260 cadastro) substitui o param. Textos de submiss\u00e3o (999-char scopes + 120-char reason) montados; **Sovereign gravou o v\u00eddeo e enviou a re-submiss\u00e3o**. **(3)** Pipeline de Publica\u00e7\u00f5es: aba **Publica\u00e7\u00f5es** no modal do asset + trigger cascade fecha o dead-end 409 `already_enqueued` + **sync bidirecional** (apagar do calend\u00e1rio SOME de toda superf\u00edcie). Revis\u00e3o adversarial ultracode (56+20 agentes) pegou 2 P0/P1 nascidos-mortos (handler 409 = c\u00f3digo morto pois `functions.invoke` p\u00f5e non-2xx em `error`; `activeForSelected` sem `published`) \u2192 corrigidos+provados E2E. 4 commits `266d3f0..7d4add3` (\u2192 `2c39bf1` seal) \u00b7 3 migrations \u00b7 1 edge fn \u00b7 `/security-review` NO FINDINGS \u00d73 \u00b7 tsc 0 \u00b7 eslint 0 \u00b7 vitest +20 \u00b7 SEAL ALLOWED (16/16) \u00b7 malha **18985** \u00b7 n\u00f3 `59c4d1c2`. **Pr\u00f3ximo Sovereign:** aguardar veredito TikTok (se aprovar, desligar a flag social em /dashboard/admin \u2192 Acesso); foco INALTERADO = cortes/shorts org\u00e2nicos (2 planos de deepsearch pendentes).\n\n**Sprint v6.107.0 \u2014 Meta app-review privacidade + WhatsApp rail E2E + AI Act badge/reframe + CRM seed (2026-07-18)**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:33:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add .claude/context/sprint-priorities.md && git commit -q -F - <<'EOF'\nchore(sprint): registra v6.128.0 \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es (FILA inalterada)\nEOF\ngit push origin main 2>&1 | tail -3\ngit log --oneline -6",
+  "description": "Commit + push sprint hygiene"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:33PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:33PM[0m [32mINF[0m scan completed in 10.3ms
+> [90m4:33PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> ✔️ gitleaks-range (0.07 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2c39bf1..64688bd  main -> main
+> 64688bd chore(sprint): registra v6.128.0 — TikTok App Review destravado + pipeline de Publicações (FILA inalterada)
+> 2c39bf1 docs(handoff): seal TikTok App Review destravado + pipeline de Publicações do Spaces
+> 7d4add3 docs(readme): v6.128.0 — TikTok App Review destravado + pipeline de Publicações do Spaces
+> 687fd35 fix(spaces): apagar do calendário SOME de toda superfície + botão Remover na aba (sync bidirecional)
+> 168edea feat(spaces): aba Publicações + trigger cascade que fecha o dead-end 409 already_enqueued
+> 266d3f0 feat(auth): flag de admin p/ visibilidade do login social no /auth público (destrava TikTok App Review)
+> ```
+
+## 🤖 Claude *(19:33:51)*
+
+Tudo selado e no destino. Phase 8 — relatório final:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — TikTok App Review + Pipeline de Publicações (2026-07-30)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secret leak scan .......... ✅ PASS (0 no range da sessão)
+  1c client-side coin deduction  ✅ PASS
+  1e sensitive console.log ..... ✅ PASS
+  /security-review (3 migrations + edge fn) ✅ NO FINDINGS ×3
+  Phase 5b HANDOFF.md secret scan ✅ (senha da conta de review NÃO está no doc)
+
+📦 COMMITS (6 total nesta sessão)
+  266d3f0 — feat(auth): flag admin de visibilidade do login social (destrava TikTok App Review)
+  168edea — feat(spaces): aba Publicações + trigger cascade que fecha o 409 already_enqueued
+  687fd35 — fix(spaces): apagar do calendário SOME de toda superfície + botão Remover
+  7d4add3 — docs(readme): v6.128.0
+  2c39bf1 — docs(handoff): seal
+  64688bd — chore(sprint): registra v6.128.0
+
+⬡ KNOWLEDGE MESH
+  Milestone node: 59c4d1c2-afcd-4b4d-91f0-153db037bfe9
+  Embedding: ✅ 768 dims (openai/text-embedding-3-small via openrouter)
+  Malha: 18.985 nós
+
+📖 README.md
+  Versão: 6.127.0 → 6.128.0
+  Badge neural_mesh: 18851 → 18985 nós
+  Seção "What's new v6.128.0" adicionada
+
+🧠 HANDOFF.md
+  Fase selada: TikTok App Review + pipeline de Publicações
+  510 linhas · ~16.660 tokens (size gate ✅ OK, cap 25k)
+  Seções: FIRST ACTION, Task State, Record (+ORO triplet), arquitetura
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED
+  Claims: 16 verificadas · 0 skipped · 0 falhas
+
+🚀 PUSH
+  Branch: main → origin/main (HEAD == origin/main == 64688bd)
+  Commits enviados: 6
+
+📌 SPRINT
+  sprint-priorities.md: ✅ v6.128.0 registrado (FILA SOVEREIGN inalterada)
+  scratch/ cleanup: limpo ✅
+  BoK gate: ✅ exempto (superfícies documentadas + 2 SOPs Lei 2)
+
+⏭  PRÓXIMOS PASSOS
+  1. Aguardar veredito do TikTok App Review (Sovereign enviou a re-submissão).
+     → Se aprovar: desligar a flag social em /dashboard/admin → Acesso.
+  2. FOCO DECLARADO (inalterado): cortes e shorts orgânicos.
+     Aguardar os 2 planos de deepsearch do Sovereign — a estratégia sai deles.
+  3. 3 gaps un-gated de cadência: armar autopilot_plans plan_kind='cadence' ·
+     picker YouTube filtra source_module='external' · reshape só com pillar_run_id.
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+Sessão selada. Um aprendizado durável desta sessão que vale gravar para não reincidir: **`supabase.functions.invoke()` põe respostas 4xx/5xx em `error` com `data=null`** — ler o body de erro via `error.context.json()`, nunca via `data?.error` (esse ramo é código morto para non-2xx). Foi o P0 nascido-morto que a revisão adversarial pegou. Já está anotado no FIRST ACTION do HANDOFF; quer que eu grave também como uma memória de referência para pegar isso em qualquer edge fn futura?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
