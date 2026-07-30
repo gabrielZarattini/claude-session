@@ -34,7 +34,21 @@ creative_assets (spine, RLS own)
 
 **Invariante crítico** (o que este SOP protege): *Se `space_publish_variants.status = 'scheduled'`
 então `scheduled_post_id` PRECISA apontar para uma linha viva de `scheduled_posts`. Se a
-`scheduled_posts` morrer, a variant precisa voltar para `draft` (`scheduled_post_id = NULL`).*
+`scheduled_posts` morrer, a variant não pode ficar com referência pendurada.*
+
+**Reconciliação ao apagar do calendário (migration `20260730190000`, revisa a `…180000`):**
+apagar a `scheduled_posts` (calendário OU aba Publicações) reconcilia a variant vinculada por status:
+
+| Status da variant | Ação | Racional |
+|---|---|---|
+| `scheduled` | **DELETE a variant** — some de toda superfície | Era um publish que foi cancelado. A variant nasceu como efeito colateral do "Publicar", não de um "Salvar rascunho" — desfazer o publish deve fazê-la desaparecer. "Apaguei num lugar → sumiu de todos." |
+| `published` / `failed` | **Mantém, limpa `scheduled_post_id`** | Um post realmente foi (ou tentou ir) para a rede — é registro histórico. O usuário remove manualmente pela aba (botão **Remover**) se quiser. |
+| `draft` / `skipped` | Intocado | `draft` intencional ("Salvar rascunho") nunca teve `scheduled_post_id`, então o trigger nunca o casa. |
+
+**Controle bidirecional na aba Publicações:** toda linha tem uma ação para sair da lista —
+**Cancelar** (quando há linha viva na fila: deleta a `scheduled_posts`, o trigger cuida da variant)
+ou **Remover** (qualquer outro estado: deleta a variant diretamente via RLS DELETE own). Assim
+"apagar de um lugar atualiza em todos" vale nas duas direções (calendário ↔ aba).
 
 ## 2. Por que enfileira (não posta síncrono)
 
