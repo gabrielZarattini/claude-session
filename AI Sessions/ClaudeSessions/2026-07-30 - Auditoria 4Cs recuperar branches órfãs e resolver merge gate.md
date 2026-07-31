@@ -15430,5 +15430,5 @@ A segunda é que **o peso do HANDOFF não estava nos Records, estava na tabela T
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-29 - agent-af6351738d1c8d840]]
-> * **Próxima Sessão**: [[2026-07-30 - Resolver rejeição TikTok API com credenciais de teste]]
+> * **Próxima Sessão**: [[2026-07-30 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]
 %% --- TIMELINE END --- %%
