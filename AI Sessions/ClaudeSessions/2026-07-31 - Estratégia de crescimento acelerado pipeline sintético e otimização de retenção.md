@@ -5915,6 +5915,896 @@ Reenviei os dois como **anexo** (acima — talvez o player inline não tenha car
 
 EP03: pode subir quando quiser pelo menu Cortes — o Lote 1 não depende dele; quando chegar, roda o mesmo fluxo (detect → picker → cortes) e entra na semana 3.
 
+## 👤 User *(01:30:58)*
+
+ok agr vi no spaces, o video 9:16 67777a72 parece ok ja o outro Short 1080x1920 #1..8 nao parece com o personagem AI alpha parece um corte normal unico sem grid. Eu postei um shorts esses dias e teve metricas verifique isso se esta aparecendo certinho, quero aproveitar para voltar com o historico/lista tabela de videos de volta bantela principal, mas somente a tabela de videos junto com as metricas o resto pode manter como esta. nao estou conseguindo ver os anexos assim como voce esta enviando aqui mo chat. A minha ideia é criarnum proheto no spaces chamado React Gabriel AI, onde podemos gerar estilo pov olhando pro celular assistindo a tela do celular para colocar na parte inferior do grid e na parte de cima um corte dos EP. Youtube vamos mater somente videos longos ou compensa tamben para impulsionar os longos? 
+
+Feito isso podemos ir para as cadencias planejadas com legendas e otimizacao comoleta SEO AEO etc etc
+
+## 🤖 Claude *(01:32:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the Sovereign's feedback on the video assets — the split-grid format with spaces is working fine, but the EP02 shorts in 1080x1920 format are coming through as standard single cuts rather than the split-grid layout with the AI character that was expected, though that's actually correct since those are meant to be plain cuts.
+
+I need to clarify the distinction: the 8 EP02 cuts are raw material (variante B), while the react format with the AI character is what the witness (67777a72) shows — the Lote 1 proposal would generate those reacts from the raw cuts.
+
+For the recent Short he posted with metrics, I should query the YouTube data to verify it's appearing correctly in the dashboard with its view and engagement numbers.
+
+He wants to restore the videos table with metrics back to the main YouTube dashboard page — it was extracted into the modal's "Histórico" tab earlier, so I need to re-import and render the ChannelVideosCard component in the YouTubeStudioPage body. This is a straightforward UI change that doesn't require backend work, just a rebuild and deploy of the frontend.
+
+Also noting a user environment issue: SendUserFile attachments aren't rendering in his client, so I should deliver files through Spaces assets or UI links instead — worth saving as a memory note for future reference.
+
+He's proposing a new Spaces project called "React Gabriel AI" to generate POV-style video clips of himself looking at his phone screen, which would be used as visual elements in a grid layout. The question is whether I can generate new POV-style clips with Veo given the cost constraints and revenue doctrine. The Sovereign is explicitly requesting this capability, which might override the usual "never activate silently" policy, but I need to verify if there's already a prepaid balance on the BYOK key from earlier usage. This ties back to the OTD-SPACES-046 ticket.
+
+Given the current balance of 486 mco and Veo costing 178 mco per 8-second clip, I have room to generate a few clips. The best approach aligns with the "everything through the UI" doctrine: I'll set up the project structure with the graph ready to go—POV avatar node with the right prompt template wired to the Veo node—so the Sovereign can open it and trigger generation themselves, or I can run one test clip to validate the setup first. The real win here is seeding the project with a properly structured graph so he opens it ready to work, not blank — I need to nail the canvas project storage schema and node shapes per the cinematic guidance to avoid that failure mode. There's also a question about YouTube strategy: should we focus only on long-form content or mix in shorter videos to boost the long-form reach? That was already covered in D2/D6, so I'm affirming it clearly. Now I'm moving into the next phase: armed cadences with captions and full SEO/AEO optimization. For this turn, I need to clarify that EP02 cuts are raw material (not reactions—those come from the React Gabriel AI project), verify the posted Short's metrics through YouTube Data API, restore the ChannelVideosCard with the videos table and metrics to the main dashboard, and create a new Spaces project for "React Gabriel AI" with the armed graph setup.
+
+On the generation question: he asked if we can generate, and I'm weighing whether to run one witness POV generation to validate the prompt and de-risk the setup, or let him handle it entirely through the UI per his "tudo pela UI" directive. Given that attachments aren't working and he's testing in the UI anyway, arming the project and running one witness generation to validate makes sense—then he can replicate in the UI. That leaves budget room to proceed. Rather than trying to verify through the browser, I should directly inspect the code to understand how the canvas editor loads projects and constructs the graph—looking at the node factory functions and project table structure to seed a valid graph. I'll also need to handle Gabriel's attachment rendering issue by delivering materials through the UI instead, answer his YouTube question, and clarify the Lote 1 status since his comment about the AI character suggests he was expecting certain reactions already.
+
+Now I'm seeing he wants to use the React Gabriel AI project as the mechanism for producing those reactions, which means Lote 1 flows into that project. My approach this turn: save the chat memory since attachments aren't rendering for him, query YouTube data to find his recent Shorts and pull metrics, restore the videos table on the main page by reading through the existing YouTube studio component and rebuilding it, then inspect the Spaces project schema to create a new project with the proper graph structure—setting up the POV node configuration for the selfie/vlog watching-the-phone scenario.
+
+For the graph itself, I'm planning two cells: one for the EP cut asset and one for the POV output, though the cuts currently have burned captions so I'll seed it with a clean reference cut for now. Once I respond with the EP02 clarifications and verify the metrics, the next phase is cadences and SEO optimization.
+
+This is a lot of ground to cover—I'm weighing whether to use a Workflow since these tasks are pretty heterogeneous, though most are thin-context and executable. The Spaces project seeding is where the real complexity sits.
+
+I'll split the work: handle the memory, YouTube data query, and UI restore inline myself, while delegating the React Gabriel AI project creation to the engineer-spaces agent since it has the SOP and can handle the database setup via script. I'll kick that off in parallel while I tackle the YouTube metrics and UI restoration.
+
+Starting with the YouTube data query using the edge function with the U0 JWT... Looking at the Page.tsx header section around lines 400-460 to locate where the card should be reinserted.
+
+</details>
+
+
+## 🤖 Claude *(01:32:22)*
+
+Vou executar os 4 itens acionáveis: verificar as métricas do seu Short no painel · restaurar a tabela de vídeos na tela principal · criar o projeto **React Gabriel AI** no Spaces com o grafo armado · e registrar que anexos do chat não chegam até você (entrego sempre via Spaces/UI daqui em diante). Antes, os dois esclarecimentos rápidos:
+
+**Os "Short #1..8" estão certos** — são cortes crus do EP02 (matéria-prima, a variante B da estratégia). O formato react com o Gabriel AI é o outro ("Vídeo 9:16 67777a72"). Os reacts em série nascem exatamente do projeto que você propôs.
+
+**YouTube longos + Shorts: os dois.** Shorts não contam para as 4.000h (Ref#2 correta), mas recrutam inscritos e canalizam para os longos (o algoritmo liga Short→canal→longo, e dá para linkar o vídeo longo relacionado no próprio Short). Estratégia D2/D6: Shorts = laboratório de medição + topo de funil; longos = monetização. Manter ambos no canal.
+
+## 🤖 Claude *(01:32:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n '\"[a-z_]*\"' supabase/functions/youtube-data/index.ts | grep -iE \"action|case\" | head -20",
+  "description": "Lista actions dispon\u00edveis no youtube-data"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 87:  const quota = r.status === 403 && String(reason).toLowerCase().includes("quota");
+> 144:        { error: "youtube_not_connected", action: "Conecte seu canal do YouTube em /dashboard/social" },
+> 153:    if (action === "channel_summary" || action === "list_videos" || action === "video_categories") {
+> 158:    if ((action === "video_metrics" || action === "audience_retention") && !hasAnalytics) {
+> 161:    if (action === "revenue_metrics" && !scopes.includes(SCOPE_ANALYTICS_MONETARY)) {
+> 164:    if ((action === "update_video" || action === "delete_video") && !scopes.includes(SCOPE_FORCE_SSL)) {
+> 181:      return json({ error: "youtube_token_unavailable", action: "Reconecte o YouTube." }, 401);
+> 210:    if (action === "channel_summary") {
+> 238:    if (action === "video_categories") {
+> 245:    if (action === "list_videos") {
+> 313:            case "title":
+> 314:              av = (a.snippet?.title ?? "").toLowerCase();
+> 315:              bv = (b.snippet?.title ?? "").toLowerCase();
+> 317:            case "duration":
+> 339:    if (action === "video_metrics") {
+> 360:    if (action === "audience_retention") {
+> 401:    if (action === "episode_retention_analysis") {
+> 412:        return json({ error: "no_curve", action: "Rode audience_retention para este vídeo primeiro." }, 409);
+> 462:    if (action === "revenue_metrics") {
+> 486:    if (action === "update_video") {
+> ```
+
+## 🤖 Claude *(01:32:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"ChannelVideosCard\" src/pages/YouTubeStudioPage.tsx src/components/youtube/*.tsx | head -8",
+  "description": "Onde a tabela de v\u00eddeos est\u00e1 hoje"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/components/youtube/YouTubePublishModal.tsx:13:import { ChannelVideosCard } from '@/components/youtube/ChannelVideosCard';
+> src/components/youtube/YouTubePublishModal.tsx:58:              <ChannelVideosCard />
+> src/components/youtube/ChannelVideosCard.tsx:3:export function ChannelVideosCard() {
+> src/pages/YouTubeStudioPage.tsx:347:      {/* Histórico do canal vive na aba "Histórico" do modal (S1 selado 9d66784) — o ChannelVideosCard
+> ```
+
+## 🤖 Claude *(01:32:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && TOKEN=$(bun run scripts/qa/gen-user-jwt.ts gabrielcall@gmail.com) && curl -s --max-time 60 -X POST \"$SUPABASE_URL/functions/v1/youtube-data\" \\\n  -H \"Authorization: Bearer $TOKEN\" -H \"apikey: $SB_PUBLISHABLE_KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"action\":\"list_videos\",\"page_size\":10}' | python3 -c \"\nimport json,sys\nd = json.load(sys.stdin)\nif d.get('error'): print(json.dumps(d, ensure_ascii=False)[:300]); sys.exit(0)\nvids = d.get('videos', d.get('items', []))\nprint('videos:', len(vids))\nfor v in vids[:10]:\n    sn = v.get('snippet', {}); st = v.get('statistics', {}); cd = v.get('contentDetails', {})\n    print(f\\\" {v.get('id','?')} | {sn.get('title','')[:45]} | {sn.get('publishedAt','')[:10]} | dur={cd.get('duration','?')} | views={st.get('viewCount','?')} likes={st.get('likeCount','?')} comments={st.get('commentCount','?')} | privacy={v.get('status',{}).get('privacyStatus','?')}\\\")\n\"",
+  "description": "Lista v\u00eddeos do canal com m\u00e9tricas (verifica o Short postado)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> videos: 50
+>  bxGA7QWvH2I | Imagina ter tempo para sua própria evolução,  | 2026-07-27 | dur=PT11S | views=118 likes=2 comments=2 | privacy=public
+>  a-09K6bN61A | A Batalha Código Aberto vs Código Fechado AI | 2026-07-26 | dur=PT7M20S | views=87 likes=7 comments=6 | privacy=public
+>  2VaCDbXJyUw | O cérebro pensante dos robôs e das IAs | 2026-07-19 | dur=PT7M24S | views=72 likes=10 comments=10 | privacy=public
+>  PeL8k4fVeNI | MCORCH   monetary analytics oauth Publish Del | 2026-07-14 | dur=PT11M30S | views=1 likes=0 comments=0 | privacy=unlisted
+>  I0u7dLoCvAg | The Neural Link | A Revolucao Fisica das LLMs | 2026-07-12 | dur=PT8M22S | views=145 likes=21 comments=25 | privacy=public
+>  c7NaE6h2Vbk | The Surprising Truth About AI's Ability to Ma | 2024-12-18 | dur=PT15M40S | views=65 likes=3 comments=3 | privacy=public
+>  y7dG6rfIMNU | Love in 2025: How AI Is Shaping the Future of | 2024-12-16 | dur=PT10M47S | views=28 likes=4 comments=1 | privacy=public
+>  _PRCMxt1clA | Can AI REALLY Help You Find Your Soulmate in  | 2024-12-14 | dur=PT9M53S | views=25 likes=3 comments=1 | privacy=public
+>  PZnSWp5CKpE | Journey of the Soul: Exploring the Unexplaina | 2024-12-10 | dur=PT13M49S | views=53 likes=3 comments=1 | privacy=public
+>  tqjRpxiw1kY | How AI Will Take Us To The Stars | 2024-12-09 | dur=PT9M38S | views=20 likes=2 comments=2 | privacy=public
+> ```
+
+## 🤖 Claude *(01:32:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou verificando as métricas do Short dele que chegaram corretamente pela plataforma — o vídeo de 11 segundos publicado em julho com 118 visualizações, 2 likes e 2 comentários, e os dados estão fluindo normalmente pelo YouTube Data API. Também estou acompanhando o EP03 que parece estar sendo mencionado, mas a informação foi cortada.
+
+Agora vejo que o Short de 11 segundos teve mais visualizações em 3 dias do que o episódio mais longo — isso sugere que os Shorts estão funcionando bem como ferramenta de recrutamento. Preciso restaurar a tabela na interface, então vou voltar ao código da YouTubeStudioPage por volta da linha 347 para recolocar o ChannelVideosCard no corpo mantendo o modal intacto.
+
+</details>
+
+
+## 🤖 Claude *(01:32:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Verifiquei as métricas do seu Short bxGA7QWvH2I: 118 views, 2 likes e 2 comentários em 11 segundos, superando já o EP03 longo — isso confirma o potencial dos Shorts para recrutamento. Agora vou restaurar a tabela de vídeos na tela principal.
+
+</details>
+
+
+## 🤖 Claude *(01:32:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "offset": 330,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 330	                (habilite a YouTube Analytics API no projeto e reconecte).
+> 331	              </p>
+> 332	              <Button variant="outline" size="sm" onClick={conn.reconnect} className="gap-2">
+> 333	                <RefreshCw className="h-4 w-4" /> Ativar métricas
+> 334	              </Button>
+> 335	            </CardContent>
+> 336	          </Card>
+> 337	        )}
+> 338	      </div>
+> 339	
+> 340	      {conn.hasMonetaryScope && (
+> 341	        <div className="space-y-2">
+> 342	          <h2 className="text-sm font-medium text-muted-foreground">Receita (últimos 28 dias)</h2>
+> 343	          <RevenueCard />
+> 344	        </div>
+> 345	      )}
+> 346	
+> 347	      {/* Histórico do canal vive na aba "Histórico" do modal (S1 selado 9d66784) — o ChannelVideosCard
+> 348	          renderiza lá dentro e agora delega para o YouTubeVideosTable (filtro/ordenação server-side). */}
+> 349	      <YouTubePublishModal open={pubOpen} onOpenChange={setPubOpen} defaultTab={pubTab} />
+> 350	    </div>
+> 351	  );
+> 352	}
+> ```
+
+## 🤖 Claude *(01:32:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "      {conn.hasMonetaryScope && (\n        <div className=\"space-y-2\">\n          <h2 className=\"text-sm font-medium text-muted-foreground\">Receita (\u00faltimos 28 dias)</h2>\n          <RevenueCard />\n        </div>\n      )}\n\n      {/* Hist\u00f3rico do canal vive na aba \"Hist\u00f3rico\" do modal (S1 selado 9d66784) \u2014 o ChannelVideosCard\n          renderiza l\u00e1 dentro e agora delega para o YouTubeVideosTable (filtro/ordena\u00e7\u00e3o server-side). */}\n      <YouTubePublishModal open={pubOpen} onOpenChange={setPubOpen} defaultTab={pubTab} />",
+  "new_string": "      {conn.hasMonetaryScope && (\n        <div className=\"space-y-2\">\n          <h2 className=\"text-sm font-medium text-muted-foreground\">Receita (\u00faltimos 28 dias)</h2>\n          <RevenueCard />\n        </div>\n      )}\n\n      {/* Diretiva Sovereign 2026-07-30: a tabela de v\u00eddeos+m\u00e9tricas volta \u00e0 tela principal\n          (somente ela \u2014 o resto do layout fica como est\u00e1). Ela TAMB\u00c9M segue na aba\n          \"Hist\u00f3rico\" do modal; ChannelVideosCard \u00e9 auto-contido, montar 2\u00d7 \u00e9 seguro. */}\n      {conn.isConnected && (\n        <div className=\"space-y-2\">\n          <h2 className=\"text-sm font-medium text-muted-foreground\">V\u00eddeos do canal</h2>\n          <ChannelVideosCard />\n        </div>\n      )}\n\n      <YouTubePublishModal open={pubOpen} onOpenChange={setPubOpen} defaultTab={pubTab} />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:33:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"^import\\|from '@/components/youtube\" src/pages/YouTubeStudioPage.tsx | head -12 && grep -n \"isConnected\" src/pages/YouTubeStudioPage.tsx | head -4",
+  "description": "Confere imports existentes + flag isConnected"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1:import { useMemo, useState } from 'react';
+> 2:import { Link } from 'react-router-dom';
+> 3:import {
+> 17:import { toast } from 'sonner';
+> 18:import { Button } from '@/components/ui/button';
+> 19:import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+> 20:import { Badge } from '@/components/ui/badge';
+> 21:import { Skeleton } from '@/components/ui/skeleton';
+> 22:import {
+> 29:import { YouTubePublishModal } from '@/components/youtube/YouTubePublishModal';
+> 30:import { YouTubeVideosTable } from '@/components/youtube/YouTubeVideosTable';
+> 232:  if (!conn.isConnected) {
+> 350:      {conn.isConnected && (
+> ```
+
+## 🤖 Claude *(01:33:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to add the `ChannelVideosCard` import since it's missing from the page — the modal has it but the main component doesn't. The connection check with `conn.isConnected` is already there, and while `YouTubeVideosTable` is imported, I'm actually using `ChannelVideosCard` which is self-contained, so I'll add that import around line 29-30.
+
+</details>
+
+
+## 🤖 Claude *(01:33:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx",
+  "old_string": "import { YouTubePublishModal } from '@/components/youtube/YouTubePublishModal';",
+  "new_string": "import { YouTubePublishModal } from '@/components/youtube/YouTubePublishModal';\nimport { ChannelVideosCard } from '@/components/youtube/ChannelVideosCard';"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/pages/YouTubeStudioPage.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:33:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Vou fazer a verificação de tipos e build do repositório principal para deploy, enquanto delego a criação do projeto React Gabriel AI ao especialista de nós do Spaces.
+
+</details>
+
+
+## 🤖 Claude *(01:33:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c \"error TS\"; echo \"exit:$?\"",
+  "description": "Gate de tipos (baseline 0)",
+  "timeout": 180000
+}
+```
+
+## 🤖 Claude *(01:33:41)*
+
+
+🛠️ **Tool Call**: `Agent`
+```json
+{
+  "description": "Criar projeto Spaces React Gabriel AI",
+  "subagent_type": "engineer-spaces",
+  "prompt": "Crie o projeto de Spaces \"React Gabriel AI\" para o User 0 (ada39fae-67e1-4e53-af1c-5a18e1c108e8), com o grafo ARMADO e pronto para o Sovereign abrir na UI e rodar \u2014 sem gerar nada pago agora.\n\nCONTEXTO (estrat\u00e9gia definitiva D1/D5 \u2014 docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md):\nO projeto \u00e9 a f\u00e1brica do formato \"split-screen react\": c\u00e9lula de CIMA = corte de epis\u00f3dio (EP01/EP02, creative_assets), c\u00e9lula de BAIXO = Gabriel AI em POV \"olhando para o celular, assistindo \u00e0 tela\" (reagindo). O n\u00f3 \"Tela Dividida (POV) / Grade\" (splitScreen, canvas-node-registry.ts:60) comp\u00f5e via video-render engine=hyperframes mode split_grid layout 2v. O n\u00f3 \"POV (Selfie/Vlog)\" (linha ~121) alimenta a Tela Dividida.\n\nTAREFA:\n1. Descubra ONDE o canvas VIVO persiste projetos (CanvasEditorPage + useCanvasStore \u2014 prov\u00e1vel vm_canvas_projects.graph jsonb; confirme lendo o c\u00f3digo; system VIVO, N\u00c3O o mirror n\u00e3o-roteado SpaceCanvasPage/useSpacesStore).\n2. Monte o graph JSON usando as FACTORIES REAIS do c\u00f3digo (types/canvas.ts \u2014 ex.: makeDefaultSplitScreen, makeDefaultPov ou equivalentes; NUNCA shapes inventados \u2014 projeto abre em branco se o shape divergir). N\u00f3s desejados:\n   a. N\u00f3 POV/avatar configurado com prompt de rea\u00e7\u00e3o \"POV: Gabriel AI olhando para o celular na m\u00e3o, assistindo \u00e0 tela, reagindo com express\u00f5es (surpresa/curiosidade), sem falar\" \u2014 em INGL\u00caS no campo de prompt (c\u00f3digo/prompt em ingl\u00eas; UI pt-BR), 9:16, 8s. Se o n\u00f3 POV do registry for de outra natureza (ex.: s\u00f3 compositor), use o n\u00f3 de v\u00eddeo/avatar correto do registry para gerar o clipe de rea\u00e7\u00e3o (ex.: imageToVideo/Veo com referenceUrls do mood board) \u2014 descubra no c\u00f3digo qual n\u00f3 gera v\u00eddeo de avatar e use o correto. N\u00c3O dispare gera\u00e7\u00e3o; s\u00f3 deixe configurado.\n   b. N\u00f3 Tela Dividida (splitScreen) layout vertical 2 c\u00e9lulas, audio da c\u00e9lula de cima, com a c\u00e9lula de cima apontando para um corte real do EP02 (creative_asset id 9d08c95b-... \u2014 busque o id completo por SELECT em creative_assets do U0 title 'Short 1080x1920 #1' parent e49af674...) e a c\u00e9lula de baixo ligada \u00e0 sa\u00edda do n\u00f3 de rea\u00e7\u00e3o (edge entre eles se o contrato de portas permitir; sen\u00e3o, c\u00e9lula configurada por asset com um dos 12 clipes Veo existentes \u2014 ex.: 6f783a1d-4a12-44f0-971f-0e31f44f54d8 \u2014 como placeholder de rea\u00e7\u00e3o).\n3. Insira o projeto via script bun com service key do .env do repo (/home/gcrUX/htdocs/constellation-orchestra/.env \u2014 set -a; source .env). T\u00edtulo EXATO: \"React Gabriel AI\". user_id = U0. Respeite TODAS as colunas NOT NULL da tabela (leia o schema por migration ou por SELECT de um projeto existente e ESPELHE o shape do graph de um projeto vivo).\n4. PROVA MATERIAL (Lei 1): (a) SELECT do projeto criado retornando id + t\u00edtulo; (b) valida\u00e7\u00e3o de que o graph parseia contra os shapes dos n\u00f3s (compare campo a campo com um projeto existente vivo OU com as factories); (c) liste os ids dos n\u00f3s criados. N\u00c3O declare sucesso sem os 3.\n5. N\u00c3O gere nada pago (nenhum canvas-execute/veo). N\u00c3O toque no mirror. N\u00c3O edite c\u00f3digo de produ\u00e7\u00e3o \u2014 este trabalho \u00e9 s\u00f3 DADOS (projeto+graph). Se descobrir que criar o graph por fora \u00e9 invi\u00e1vel com seguran\u00e7a (shape opaco/varia por vers\u00e3o), PARE e reporte o achado com o caminho UI exato que o Sovereign usaria para criar manualmente (n\u00e3o improvise).\n\nDevolva: tabela usada \u00b7 id do projeto \u00b7 n\u00f3s do graph (tipo+id) \u00b7 asset ids referenciados \u00b7 provas (a)/(b)/(c) \u00b7 quaisquer ressalvas."
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0
+> exit:1
+> ```
+
+> **Tool Result (Agent)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Async agent launched successfully. (This tool result is internal metadata — never quote or paste any part of it, including the agentId below, into a user-facing reply.)\nagentId: abd71c71c3f451c8e (internal ID - do not mention to user. Use SendMessage with to: 'abd71c71c3f451c8e', summary: '<5-10 word recap>' to continue this agent.)\nThe agent is working in the background. You will be notified automatically when it completes. You know nothing about its results until that notification arrives — do not report, assume, or predict them; continue other work or respond to the user in the meantime.\nDo not duplicate this agent's work — avoid working with the same files or topics it is using.\noutput_file: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fec402e3-0895-46ec-bc69-5abd4863c72a/tasks/abd71c71c3f451c8e.output\nDo NOT Read or tail this file via the shell tool — it is the full subagent JSONL transcript and reading it will overflow your context. If the user asks for progress, say the agent is still running; you'll get a completion notification."}]
+> ```
+
+## 🤖 Claude *(01:33:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The TypeScript compilation passed without errors, so the engineer-spaces agent is now running in the background. Next I'm building and deploying the main repository with nginx serving the distribution files, then I'll save the memory state and wait for the agent to complete.
+
+</details>
+
+
+## 🤖 Claude *(01:33:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm starting with the production build from the main repository that deploys directly to nginx, and I'll reference the memory about how attachments were found.
+
+</details>
+
+
+## 🤖 Claude *(01:33:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -4 && ls -la dist/assets/ | head -4 && grep -l \"supabase\" dist/assets/index-*.js >/dev/null 2>&1 && echo \"env baked \u2705\"",
+  "description": "Build de produ\u00e7\u00e3o + prova de env baked",
+  "timeout": 300000
+}
+```
+
+## 🤖 Claude *(01:34:02)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/user_chat_attachments_not_visible.md",
+  "content": "---\nname: user-chat-attachments-not-visible\ndescription: Anexos enviados via SendUserFile no chat N\u00c3O chegam ao Sovereign \u2014 entregar m\u00eddia via Spaces Assets/UI\nmetadata:\n  type: user\n---\n\nO Sovereign (Gabriel) N\u00c3O consegue ver arquivos enviados pelo chat (SendUserFile) \u2014 testado 2026-07-30 com 2 MP4s, em modo `render` E em modo `attach`: \"n\u00e3o estou conseguindo ver os anexos assim como voc\u00ea est\u00e1 enviando aqui no chat\".\n\n**Why:** o cliente dele n\u00e3o renderiza/entrega os anexos do harness; o que ele V\u00ca \u00e9 a UI do MCORCH (Spaces \u2192 Assets ele confirmou ver na hora).\n\n**How to apply:** entreg\u00e1vel de m\u00eddia = registrar em `creative_assets` (aparece em Spaces \u2192 Assets, modal com player) e APONTAR o t\u00edtulo/local na resposta. SendUserFile no m\u00e1ximo como redund\u00e2ncia, nunca como canal prim\u00e1rio. Alinha com [[feedback_cli_actions_must_become_ui]] e [[feedback_deliver_user_value_not_plumbing]].\n"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> - Using dynamic import() to code-split the application
+> - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> ✓ built in 26.32s
+> total 5228
+> drwxrwxr-x  2 ubuntu ubuntu  12288 Jul 30 22:34 .
+> drwxrwxr-x 10 gcrUX  gcrUX    4096 Jul 30 22:34 ..
+> -rw-rw-r--  1 ubuntu ubuntu    406 Jul 30 22:34 activity-BYqPy9-h.js
+> env baked ✅
+> ```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/user_chat_attachments_not_visible.md
+> ```
+
+## 🤖 Claude *(01:34:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "limit": 5
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [🧰 Harness Kit v1.0.0 — engenharia destilada em .zip genérico p/ novos projetos](reference_harness_kit_export.md) — vive FORA do repo em `/home/gcrUX/htdocs/harness-kit/`; 4 Leis+Spec Gate+ShakeHands; não é `cp -r`.
+> 4	- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) — sobrescreve TS com eszip; `git checkout --` recupera.
+> 5	- [ÉPICO — Motor de Oportunidade de Produtos + Conector Amazon](project_product_opportunity_engine.md) — BoK 9/9; Amazon `?tag=`; código GATED (GO+jurídico).
+> ```
+
+## 🤖 Claude *(01:34:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "# Memory Index\n\n- [\ud83e\uddf0 Harness Kit v1.0.0 \u2014 engenharia destilada em .zip gen\u00e9rico p/ novos projetos](reference_harness_kit_export.md) \u2014 vive FORA do repo em `/home/gcrUX/htdocs/harness-kit/`; 4 Leis+Spec Gate+ShakeHands; n\u00e3o \u00e9 `cp -r`.",
+  "new_string": "# Memory Index\n\n- [\ud83d\udcf5 Anexos do chat (SendUserFile) N\u00c3O chegam ao Sovereign](user_chat_attachments_not_visible.md) \u2014 entregar m\u00eddia via Spaces\u2192Assets (creative_assets) + apontar t\u00edtulo; testado render E attach 2026-07-30.\n- [\ud83e\uddf0 Harness Kit v1.0.0 \u2014 engenharia destilada em .zip gen\u00e9rico p/ novos projetos](reference_harness_kit_export.md) \u2014 vive FORA do repo em `/home/gcrUX/htdocs/harness-kit/`; 4 Leis+Spec Gate+ShakeHands; n\u00e3o \u00e9 `cp -r`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:34:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The MEMORY.md file is approaching its size limit, so I need to do a quick compaction pass—trimming the longest entries and merging or dropping anything that's become stale or redundant.
+
+My approach is to shorten the hook descriptions on the longest lines and identify a few clearly superseded entries to drop. The reference_edge_fn_cap_100_hit entry is explicitly marked as superseded by the Pro optimization work, so that's a safe candidate to remove. I'll be conservative with other entries since the rule is to keep what isn't definitively recorded elsewhere, but I can trim the trailing text on most lines to save space without losing the core information.
+
+</details>
+
+
+## 🤖 Claude *(01:34:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou compactando o índice de memória agora, reduzindo de 19,6KB para menos de 17,1KB, e depois volto ao fluxo principal.
+
+</details>
+
+
+## 🤖 Claude *(01:34:53)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# Memory Index
+> 2	
+> 3	- [📵 Anexos do chat (SendUserFile) NÃO chegam ao Sovereign](user_chat_attachments_not_visible.md) — entregar mídia via Spaces→Assets (creative_assets) + apontar título; testado render E attach 2026-07-30.
+> 4	- [🧰 Harness Kit v1.0.0 — engenharia destilada em .zip genérico p/ novos projetos](reference_harness_kit_export.md) — vive FORA do repo em `/home/gcrUX/htdocs/harness-kit/`; 4 Leis+Spec Gate+ShakeHands; não é `cp -r`.
+> 5	- [`supabase functions download` clobbera o source do repo](reference_supabase_functions_download_clobbers_source.md) — sobrescreve TS com eszip; `git checkout --` recupera.
+> 6	- [ÉPICO — Motor de Oportunidade de Produtos + Conector Amazon](project_product_opportunity_engine.md) — BoK 9/9; Amazon `?tag=`; código GATED (GO+jurídico).
+> 7	- [🚚 Rodar não é entregar — todo automatismo precisa de gate de ENTREGA](feedback_running_is_not_delivering.md) — commit local/branch órfã/PR aberto/log ilegível não são entrega; verificar o DESTINO.
+> 8	- [🖼️ Galeria sem onClick é pior que ausência — o usuário 'escolhe' e nada acontece](feedback_gallery_that_looks_like_picker.md) — grade do /repurpose era decorativa; toda vitrine deve se declarar vitrine.
+> 9	- [⏰ Cron morre em silêncio se o log não é gravável (logrotate gcrUX vs cron ubuntu)](reference_cron_log_permission_trap.md) — redirect falho = comando NÃO executa; logs em /home/ubuntu/logs.
+> 10	- [🎯 FOCO ATIVO — cortes/shorts orgânicos (EP03 postado; 2 planos de deepsearch vindo)](project_audience_flywheel_distribution.md) — 48 cortes TODOS 9:16, só do EP01; EP02/EP03 com 0; zero plano de cadência armado; terreno em docs/roadmap/organic-shorts-terrain-2026-07-29.md.
+> 11	- [🎬 PIPC — Pipeline Interno de Produção Criativa (dev→publicar→analisar→melhorar EP05)](project_pipc_creative_production_pipeline.md) — elo fraco=análise→EP05; blueprint `docs/bok/pipc/`; Flow FX+GabrielAI.
+> 12	- [🧿 Golden Eye — treinar os olhos = elevar o HARNESS do Vision MCP](project_vision_golden_eye.md) — VLM ORDENA>PONTUA; shopping list=imagens; plano `docs/roadmap/vision-golden-eye.md`.
+> 13	- [📦 Masters grandes (EP01/EP02) em `repurpose-inbox/<uid>/` — NUNCA find cego](reference_host_local_masters_repurpose_inbox.md) — bucket 'local' CloudPanel via menu Cortes; skill `host-media-masters`.
+> 14	- [🔁 Tudo que faço 2× vira skill+agente — parte do harness/driven-specs](feedback_recurring_actions_become_skills.md) — regra do "duas vezes"; sugerir doc; norte=orquestrador de sub-agentes.
+> 15	- [📚 Governança de docs — docs-curator (docs/) + bok-curator (docs/bok/) curam no meu lugar](feedback_docs_bok_ownership.md) — CLAUDE.md §6; escalam via Telegram pontual; exclusão restrita; bok-curator guarda o gate Closed-Loop.
+> 16	- [🧭 pmo-curator — PMO autônomo (loop MAPE-K de PROGRESSO) gera NEXT-STEPS.md pós-/handson](project_pmo_curator.md) — plan-only por POLÍTICA (não por barreira de tool); irmão≠duplicata do guardião de confiabilidade; estreado com witness+revisão adversarial.
+> 17	- [🚦 Prontidão de BoK/código se lê no GATE STATUS do 00-index, não por contar arquivos](feedback_bok_gate_status_not_file_count.md) — arquivos redigidos ≠ selada ≠ código-liberado; "faça tudo" do Sovereign não fura gate fechado.
+> 18	- [🎯 PIPC S1+S2 VIVOS — retenção YT persiste → brief acionável por-EP (o GAP-mãe)](project_pipc_s1_s2_live.md) — youtube-data ganhou audience_retention+episode_retention_analysis; próximo elo=FR-PIPC-017/018 (injetar brief no EP05).
+> 19	- [🚧 Cap de edge fns — SUPERSEDED: DESTRAVADO pelo Supabase Pro (100→500)](reference_edge_fn_cap_100_hit.md) — fn nova permitida; "dobrar em fn existente" agora é só coesão, não bloqueio.
+> 20	- [🔧 Gotchas de prod DB/edge (2026-07-24) — social_accounts=VIEW, mcorch_edges cols, autopilot_plans NOT NULL, generateLink rate-limit](reference_prod_db_ops_gotchas.md) — sem FK a view; db push --linked; source_id/target_id/relation_type.
+> 21	- [Gateway OpenClaw: roteamento openclaw/<id> com drift](reference_openclaw_gateway_model_routing_drift.md) — Constelação per-user (studio) via agent-task-execute groq, não o gateway.
+> 22	- [YouTube Track B upload — encanamento COMPLETO, witness gated](project_youtube_upload_ep02.md) — falta enable youtube-upload.service + CASA + master no host.
+> 23	- [ROADMAP (pós-audiência) — CRM Suite + Marketing](project_crm_suite_roadmap.md) — captura de leads DONE; próximos Tickets/Produtos. SSOT docs/roadmap/.
+> 24	- [CRM + Caixa de Entrada Omnichannel — Amendment 10](project_crm_inbox_module.md) — composer/recibos/ficha rica DONE; falta omnichannel registry, agente (gated AI Act).
+> 25	- [Rail de repurpose — bug do `beats` REFUTADO](project_repurpose_beats_bug_and_open_fixes.md) — A/B comparou arquivos diferentes; segmentVideo dá falso-verde sobre master corrompido; probe=exit+stderr+frames.
+> 26	- [Render de N clipes reusa UM chromium](reference_repurpose_browser_reuse.md) — 5+ estourava memória; fix `e0d9fe9`; worker precisa restart.
+> 27	- [Sala de Controle da Orquestração — Vista Operacional + múltiplas Orquestras](project_orchestration_control_room.md) — Parte B nós = re-arquitetura canvas→editor pendente.
+> 28	- [HyperFrames = open-source HeyGen; Blend Difference NÃO funciona](reference_hyperframes_caption_catalog.md) — falha em silêncio; caption-highlight/pill-karaoke casam com nosso contrato de beats.
+> 29	- [Legendas /spaces/video são VITRINE read-only](reference_video_studio_captions_vitrine.md) — "Add"=501 proposital; validar nos Assets/CaptionStyleGallery.
+> 30	- [Veo: image XOR referenceImages — nunca os dois](reference_veo_image_xor_references.md) — canvas-execute garante o XOR (first-frame vence).
+> 31	- [Carrossel "de verdade" (fatiado/contínuo) — DIFERIDO](project_carousel_real_slicing.md) — imagem larga fatiada OU next/prev; NÃO é o hand-picked (Amend.29).
+> 32	- [Privado-primeiro: ir até o último passo REVERSÍVEL sozinho](feedback_private_first_end_to_end.md) — postar privado/rascunho; Sovereign vira público; sondar pré-condições ANTES.
+> 33	- [Todo script CLI meu deve virar capacidade na UI](feedback_cli_actions_must_become_ui.md) — CLI é minha mão; entregável=usuário fazer pela UI.
+> 34	- [Resume de Workflow por scriptPath NÃO carrega `args`](reference_workflow_resume_needs_args.md) — repassar verbatim; diagnosticar pelo journal.
+> 35	- [`tsc --noEmit` na raiz NÃO checa a app](reference_root_tsc_noop_use_build.md) — gate real = vite build.
+> 36	- [Gate de tipo real = `tsc -p tsconfig.app.json` vs baseline](reference_app_tsc_is_the_real_type_gate.md) — 138 erros pré-existentes 2026-07-21; compare por-arquivo.
+> 37	- [Cap de 100 edge fns: bulk deploy = 402](reference_supabase_functions_deploy_bulk_cap.md) — use single `deploy <fn>`; eszip é binário (strings).
+> 38	- [content-intel — vídeo existente → estratégia (BoK 9/9)](project_content_intel_module.md) — link IG/TikTok/YT → Vision MCP; código gated GO+jurídico.
+> 39	- [Proveniência AI Act Art.50 — Fatia 0-1 VIVAS](project_content_provenance_ai_act.md) — IPTC via ExifTool; Fatia 2 C2PA gated; deadline 2026-08-02.
+> 40	- [Meta: dois caminhos (IG Login vs FB/Business) + privacidade](project_meta_two_paths_and_privacy.md) — UM app, DUAS APIs; connect-instagram-token manual.
+> 41	- [WhatsApp Cloud API — fiação + gotchas](reference_whatsapp_cloud_api_wiring.md) — token EAA (não IGAA); subscribed_apps; whatsapp-webhook verify_jwt=false.
+> 42	- [types.ts fica stale após migrations — regenerar](reference_supabase_types_stale_regen.md) — `npx supabase gen types typescript --linked`.
+> 43	- [Tier global de credenciais de app OAuth (admin) + Pinterest](project_global_app_credentials_admin_tier.md) — 4 degraus per-user→global→env→402. Amend.16.
+> 44	- [Motor de conteúdo de duas máquinas + agência-dentro-da-plataforma](project_content_engine_two_machines.md) — Volume lo-fi vs Conversão viral; ECC+OpenClaw.
+> 45	- [Vídeo com avatar no Spaces — Veo 3.1](project_veo_avatar_video.md) — refs ≤3; ledger-first+veo-poll; failover FR-SPACES-091; 178 mco.
+> 46	- [Guard de URL só vale se sobreviver ao redirect](reference_ssrf_guard_survives_redirect.md) — use `fetchPublicUrl` (revalida cada 3xx).
+> 47	- [Motor novo no ledger exige `node_run_id` no cliente](reference_ledger_node_needs_node_run_id.md) — sem ele cai na branch legada e morre em 422.
+> 48	- [Verificação OAuth do Google — home HTML cru + escopo demonstrável](reference_google_oauth_verification.md) — verificador não roda JS; não aprova "pro futuro".
+> 49	- [Loop 2026-07-14 — pool BYOK + carrossel + reframe publish](project_roadmap_post_v6100_media_rails.md) — Amendments 22/23/24; gated: 3 chaves Gmail.
+> 50	- [Assets: seletor de formato + preview fiel + modal responsivo](project_asset_publish_format_preview.md) — format-specs.ts SSOT + 10 chromes. Amend.21.
+> 51	- [Motor de repurpose — 1 master → N shorts+carrossel](project_video_repurpose_engine.md) — Fatia 1 ingest external; GabrielAI é o INVERSO.
+> 52	- [Loop 2026-07-12 — witness LoRA bloqueado em crédito Replicate](project_lora_witness_and_otd_spaces_036.md) — treino→402; BYOK ~US$1,85; plumbing provado.
+> 53	- [UI — seletor de provider só carrega opções BYOK disponíveis](feedback_byok_only_available_options.md) — `useConfiguredProviders()`; keyless self-host sempre visível.
+> 54	- [HyperFrames worker fica stale até restart](reference_hyperframes_worker_restart.md) — `systemctl --user restart video-bridge.service`.
+> 55	- [Paid BYOK = pós-renda; default free/open-source](feedback_paid_byok_post_revenue.md) — pago só testar após 1ª renda; nunca ativar em silêncio.
+> 56	- [Motor clone de voz self-host VIVO — Qwen3-TTS 0.6B](reference_tts_free_options.md) — `~/.mcorch/voice-engine/`; worker CLI por job; ref=24kHz WAV.
+> 57	- [Identidade avatar = escada multi-motor; char-ref sem-treino default](reference_avatar_identity_engines.md) — LoRA opt-in; default Nano Banana ~4¢.
+> 58	- [Imagem = Gemini Nano Banana; direct-Google mais barato](reference_image_gen_provider_cost.md) — nano-banana=`gemini-2.5-flash-image`; hoje via OpenRouter.
+> 59	- [Spaces 100% arc — LoRA grátis + nó WordPress + YouTube](project_spaces_lora_social_youtube.md) — LoRA BYOK USD0; WordPress direto; youtube-studio blueprint.
+> 60	- [Senior UX/UI Loop — auditor de jornada + rubrica sênior (Vision)](project_ux_ui_senior_loop.md) — grader senior-rubric.ts 8-dim SCORED; fix-loop=skill.
+> 61	- [GO'd roadmap 2026-07-08 (TikTok Login → open-design → Higgsfield)](project_go_roadmap_tiktok_login_openagn_higgsfield.md) — TikTok shipado; editor=HyperFrames. ⚠️ `chmod o+x /home/gcrUX`.
+> 62	- [Spaces v2 — consolidar Canvas Studio+Spaces](project_spaces_v2_consolidation.md) — ledger-first+G7+Spotlight; MIV=estética; amend.14.
+> 63	- [YouTube bloqueia IP datacenter — storyboard no Chrome do Sovereign](reference_youtube_datacenter_workarounds.md) — frames via ytInitialPlayerResponse.storyboards.
+> 64	- [Laço MAPE-K vivo — guardião em cron + L2 Nemotron free](project_mape_k_guardian.md) — tick */5 + sweep 6h. ⚠️ cron sem bun/npx no PATH; NUNCA armar ScheduleWakeup.
+> 65	- [Conformidade MIV pós-rebrand + E2E + tooling ECC](project_miv_conformance_pass.md) — 44 páginas→3 fixes; E2E 8/8. ⚠️ squat http.server contamina E2E.
+> 66	- [Tokens MIV — accent=cyan, nebula só memória, gold só valor](reference_miv_design_tokens.md) — `--accent` dual; nebula classe explícita; CTA=glow.
+> 67	- [Rebrand MCORCH — Landing V2 em React (/lp preview, prod gated)](project_mcorch_rebrand_landing_v2.md) — tokens void/cyan/gold/nebula sob .mcorch-lp.
+> 68	- [Badge conexão social = is_active, não o relógio do token](reference_social_oauth_badge_health_signal.md) — token renova via refresh_token; is_active é o sinal.
+> 69	- [TikTok app review REPROVADO — checklist branding](project_tiktok_review_rebrand_requirements.md) — ícone/TOS/Privacy + vídeo demo. Gate: rebranding.
+> 70	- [Buckets privados → signed URL owner-scoped](reference_private_bucket_asset_signing.md) — normalizador re-assina no render; policy 4-rotas =auth.uid.
+> 71	- [Contrato REAL da API Higgsfield + MCP oficial](reference_higgsfield_provider_contract.md) — soul/{mode} path-literal; compose nunca existiu; sentinel smoke.
+> 72	- [Conector Higgsfield MCP OAuth per-user — COMPLETO (gated)](project_higgsfield_mcp_connector.md) — migration+oauth PKCE+refresh+UI. Falta GO.
+> 73	- [Doutrina open-source-first / USD=0 / equity + Gabriel AI](feedback_opensource_first_zero_cost_equity.md) — self-hostável vira microserviço; custo USD externo=0=gate de GO.
+> 74	- [Gabriel AI (avatar-clone-ai) — BoK 10/10, Fatias 1-2 + 3a](project_avatar_clone_ai.md) — voiceClone BYOK fail-closed + consent/erase LGPD.
+> 75	- [Minerador de Produtos — confiabilidade análise de vídeo + custo](project_product_miner_vision_reliability.md) — Files API 20-100MB + fallback cover-image.
+> 76	- [Viewer sem nome = user de smoke QA vazado; sweep](reference_qa_throwaway_users_and_open_signup.md) — qa-throwaway.ts + sweep 04:00. ⚠️ signup externo LIGADO.
+> 77	- [Módulo Vídeo (video-studio) — Fase B: render nativo + editor](project_video_studio.md) — host createStudioApi(McorchAdapter) + SPA 3210; Export 12 mco.
+> 78	- [BYOK Gemini = coluna `google_api_key`](reference_byok_gemini_column.md) — `gemini_api_key` NÃO existe; lê `decrypted_user_api_keys.google_api_key`.
+> 79	- [Cyber-Sentinel — paridade pt-BR (OTD-VA-018 fechada)](reference_shared_sentinel_english_only.md) — 7 famílias pt-BR, 0 FP em 58.
+> 80	- [Entregar valor visível ao Usuário Zero, menos plumbing](feedback_deliver_user_value_not_plumbing.md) — caminho curto até algo que o Sovereign ABRE e TOCA.
+> 81	- [Ecossistema criativo bidirecional (Canvas+HyperFrames→social)](project_creative_ecosystem_program.md) — creative_assets spine. ⚠️ rotacionar chave Gemini + token Telegram.
+> 82	- [Channel Reshaper + Atomizer — 1 pilar → posts nativos por canal](project_channel_reshaper.md) — reshape-pillar data-driven; /security-review pegou HIGH FMEA-011.
+> 83	- [Virada brand-first — persona Gabriel AI/CCIO evangeliza](project_brand_persona_ccio.md) — marca via persona; +YT+TikTok reusando autopilot.
+> 84	- [Sempre rodar Vision QA sobre prints + criativos](feedback_vision_qa_always.md) — scripts/qa/vision-qa.ts (custo 0) antes de declarar pronto.
+> 85	- [Força total autônoma para o primeiro R$ real](feedback_full_force_revenue_autonomy.md) — operar como Usuário 00; gargalo=distribuição+atribuição.
+> 86	- [IG Reels publica via graph.instagram.com + id do /me](reference_ig_reels_publish_path.md) — não usar meta_config; video_url pública.
+> 87	- [Verificar todo entregável de UI em browser real (Lei 1)](feedback_browser_verify_deliverables.md) — vite preview + sessão injetada; Node (não bun) p/ playwright.
+> 88	- [Viral Autopilot — motor R1-R4 completo, ATIVADO 2026-06-23](project_viral_autopilot.md) — BoK 9/9; pg_cron jobid 3; vídeo 9:16 (default OFF).
+> 89	- [Unified Sensorial Canvas — Phase Epsilon V9 (/dashboard/universe)](project_unified_sensorial_canvas.md) — funde Core-Fable+Matrix+Memória.
+> 90	- [Vision MCP — container 3200 atrás de mcp.mcorch.com](project_vision_mcp.md) — BoK 9/9; PAT, LGPD erase, caps. CF laranja exige WAF Skip.
+> 91	- [Core-Fable — rota, Fable 5 flagship, shader Interstellar](project_core_fable.md) — shader (capturado=preto); chat localStorage ≠ pref pipeline.
+> 92	- [Saída do AIOS/Core-Fable NÃO é Fonte da Verdade — verificar materialmente](feedback_aios_output_not_ground_truth.md) — confabula arquitetura confiante; ideação ≠ spec; verificar antes de codar.
+> 93	- [Memória recente SEMPRE sobrepõe a antiga — reconciliar a evolução, não reprovar o que já funciona](feedback_recent_memory_supersedes_stale.md) — recência vence; verificar estado atual antes de refutar por memória velha; SUPERSEDED+link. Corolário Lei 1.
+> 94	- [Busca semântica do mesh estava morta — threshold 0.45 zerava tudo](reference_mesh_search_threshold_calibration.md) — text-embedding-3-small topa ~0.43-0.52; use 0.3; nós em espaço OpenRouter; F2 durável DONE, F3 auditado.
+> 95	- [Supabase Pro — roadmap de otimização (cap de 100 edge fns DESTRAVADO)](project_supabase_pro_optimization.md) — docs/roadmap/supabase-pro-optimization.md; fns 100→500 provado; 50MB→500GB; add-ons pagos = pós-renda.
+> 96	- [E2E de UI logada à prova de Cloudflare](reference_loggedin_e2e_local_preview.md) — CF Turnstile barra datacenter; vite preview + gen-user-session.ts.
+> 97	- [Auditoria de drift deployado↔migrations + tool](project_schema_drift_audit.md) — audit-schema-drift.sh; hotfix de prod vira migration na MESMA sessão.
+> 98	- [RPCs do ledger mcoCoins endurecidos — P0 fechado](reference_ledger_rpc_security.md) — award/add só service_role; deduct self-only.
+> 99	- [Marketing Hub v2 — módulo agentic COMPLETO](project_marketing_hub_v2.md) — intent-execute fail-closed; AEO. Resta Resend + atribuição ML. ⚠️ campaigns JÁ EXISTE.
+> 100	- [Calibração de contexto — usar a janela INTEIRA, selar só a ~95%](feedback_context_budget_calibration.md) — janela 1M; poda≠selar.
+> 101	- [Flywheel de conteúdo quebrado pelo cutover de chaves (REPARADO)](project_orchestrate_pipeline_repair.md) — regra: pg_net→verify_jwt=false.
+> 102	- [Calibração mcoCoins — modelo 4×-floor (fechada)](project_mcoin_calibration.md) — mco=ceil(usd/$0.018×4).
+> 103	- [Constellation v2 — cockpit de agentes per-user (LIVE)](project_constellation_v2.md) — v6.18.0. has_role(app_role) single-arg.
+> 104	- [Stale worktree — checar contra origin/main](feedback_stale_worktree_check_origin.md) — `git show origin/main:<path>` antes de dizer "quebrado".
+> 105	- [Materialidade sob output bufferizado — não fabricar](feedback_materiality_buffered_output.md) — hash/UUID vem de output verificado NESTE turno; halt e re-query.
+> 106	- [Supabase keys migradas — use SB_SECRET_KEY](reference_supabase_keys_migrated.md) — SERVICE_ROLE/ANON mortas; SB_SECRET_KEY/SB_PUBLISHABLE_KEY.
+> 107	- [user_api_keys é VIEW mascarada — chaves BYOK no Vault](reference_user_api_keys_encrypted.md) — edge lê decrypted_user_api_keys; teste server-side.
+> 108	- [Operador de Browser Autenticado — atribuição ML](project_authenticated_browser_operator.md) — datacenter bloqueado; técnica magiclink reutilizável.
+> 109	- [Encrypted views — .insert() (não .upsert); INSTEAD OF SEM ON CONFLICT](reference_encrypted_views_write_pattern.md) — null não limpa (RPC disconnect_*).
+> 110	- [grep é ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) — BRE estoura sob `|| true`; use -E.
+> 111	- [OpenClaw delegation — paralelizar seals via @claw_gcrux](feedback_openclaw_delegation_pattern.md) — delegar low-risk via Telegram.
+> 112	- [OpenClaw × Ollama — Gateway](project_openclaw_ollama_integration.md) — Supervisor ÚNICO = systemd (NUNCA pm2). `pnpm` no repo é destrutivo.
+> 113	- [API Tenancy Model — credenciais sempre per-user](feedback_api_tenancy_per_user.md) — resolve per-user (auth.uid()) antes de env global.
+> 114	- [Paz e Vitalidade — métrica de sucesso da Constelação](feedback_paz_e_vitalidade.md) — vitalidade do Sovereign + paz humana como métricas.
+> 115	- [Gabriel Zarattini — Lead Architect](user_profile.md) — profile, depth técnica, pt-BR UI, execução autônoma.
+> 116	- [Stripe & Monetização — Estratégia Usuário Zero](project_stripe_strategy.md) — Sandbox intencional; live keys só após validação.
+> 117	- [Commit style](feedback_commits.md) — Nunca Co-Authored-By; corpo milestone-oriented.
+> 118	- [Deploy Frontend](reference_deploy_frontend.md) — nginx serve dist/ direto; `bun run build`=deploy p/ login.mcorch.com.
+> 119	- [lucide-react 1.11 removeu brand icons](reference_lucide_brand_icons_removed.md) — tsc passa, vite build quebra; grep antes de usar.
+> 120	- [Usuário Zero — Estratégia e Produção](project_usuario_zero_strategy.md) — User 0 = `ada39fae`, gabrielcall@gmail.com.
+> 121	- [Instagram App Review — Deferido para Usuário 1](project_instagram_appreviw_deferred.md) — não executar até sair da fase Usuário Zero.
+> 122	- [Canvas Studio Architecture — useCanvasStore](project_canvas_studio_architecture.md) — 3º Zustand (zundo); pipelineMode/lanes no graph jsonb.
+> 123	- [Canvas Design — open-design sidecar](project_canvas_design_initiative.md) — 7º módulo; CLI od; pnpm nunca na raiz.
+> 124	- [TikTok+YouTube publish — gotchas de audit/OAuth](reference_tiktok_unaudited_private_account.md) — TikTok privada pré-audit; youtube.upload sem CASA; state TTL 10min.
+> 125	- [Channel Format Intelligence — engenharia reversa de formato](project_channel_format_intelligence.md) — channel_profiles/pillar_atoms; master 9:16 serve 7 canais.
+> 126	- [profiles mint-hole P0 FECHADO — guard de coluna por trigger](reference_profiles_column_guard_mint_hole.md) — REVOKE(col) é no-op sob table-grant; coluna sensível=trigger-guard.
+> 127	
+> ```
+
+## 🤖 Claude *(01:35:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to trim this file down from 19.6KB to under 17.1KB by tightening up the hooks and removing redundant index lines. I'm going to rewrite the whole thing with more compact hooks and drop a couple of superseded index entries that are already covered elsewhere in the file. Now I'm calculating the byte savings — dropping one line and trimming roughly 60 lines by about 40 bytes each should get me to the target of 2.5KB+ reduction, so I'll apply broad cuts across the file to tighten everything up.
+
+</details>
+
+
+## 🤖 Claude *(01:36:21)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "content": "# Memory Index\n\n- [\ud83d\udcf5 Anexos do chat (SendUserFile) N\u00c3O chegam ao Sovereign](user_chat_attachments_not_visible.md) \u2014 entregar m\u00eddia via Spaces\u2192Assets + apontar t\u00edtulo; testado render E attach.\n- [\ud83e\uddf0 Harness Kit v1.0.0 \u2014 .zip gen\u00e9rico p/ novos projetos](reference_harness_kit_export.md) \u2014 fora do repo em `/home/gcrUX/htdocs/harness-kit/`; n\u00e3o \u00e9 `cp -r`.\n- [`supabase functions download` clobbera o source](reference_supabase_functions_download_clobbers_source.md) \u2014 sobrescreve TS com eszip; `git checkout --` recupera.\n- [\u00c9PICO \u2014 Motor de Oportunidade de Produtos + Amazon](project_product_opportunity_engine.md) \u2014 BoK 9/9; `?tag=`; c\u00f3digo GATED (GO+jur\u00eddico).\n- [\ud83d\ude9a Rodar n\u00e3o \u00e9 entregar \u2014 gate de ENTREGA](feedback_running_is_not_delivering.md) \u2014 commit local/branch \u00f3rf\u00e3/PR n\u00e3o s\u00e3o entrega; verificar o DESTINO.\n- [\ud83d\uddbc\ufe0f Galeria sem onClick \u00e9 pior que aus\u00eancia](feedback_gallery_that_looks_like_picker.md) \u2014 toda vitrine deve se declarar vitrine.\n- [\u23f0 Cron morre em sil\u00eancio se log n\u00e3o-grav\u00e1vel](reference_cron_log_permission_trap.md) \u2014 redirect falho = comando N\u00c3O executa; logs em /home/ubuntu/logs.\n- [\ud83c\udfaf FOCO ATIVO \u2014 cortes/shorts org\u00e2nicos](project_audience_flywheel_distribution.md) \u2014 estrat\u00e9gia DEFINITIVA v1 selada (docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md); as 6 refs do Sovereign ERAM os deepsearches.\n- [\ud83c\udfac PIPC \u2014 dev\u2192publicar\u2192analisar\u2192melhorar EP05](project_pipc_creative_production_pipeline.md) \u2014 elo fraco=an\u00e1lise\u2192EP05; `docs/bok/pipc/`.\n- [\ud83e\uddff Golden Eye \u2014 treinar os olhos do Vision MCP](project_vision_golden_eye.md) \u2014 VLM ORDENA>PONTUA; plano `docs/roadmap/vision-golden-eye.md`.\n- [\ud83d\udce6 Masters grandes em `repurpose-inbox/<uid>/` \u2014 NUNCA find cego](reference_host_local_masters_repurpose_inbox.md) \u2014 via menu Cortes; skill `host-media-masters`.\n- [\ud83d\udd01 Tudo que fa\u00e7o 2\u00d7 vira skill+agente](feedback_recurring_actions_become_skills.md) \u2014 regra do \"duas vezes\"; norte=orquestrador de sub-agentes.\n- [\ud83d\udcda Governan\u00e7a \u2014 docs-curator + bok-curator curam no meu lugar](feedback_docs_bok_ownership.md) \u2014 CLAUDE.md \u00a76; bok-curator guarda o gate Closed-Loop.\n- [\ud83e\udded pmo-curator \u2014 MAPE-K de PROGRESSO gera NEXT-STEPS.md](project_pmo_curator.md) \u2014 plan-only por POL\u00cdTICA; irm\u00e3o\u2260duplicata do guardi\u00e3o de confiabilidade.\n- [\ud83d\udea6 Prontid\u00e3o se l\u00ea no GATE STATUS do 00-index](feedback_bok_gate_status_not_file_count.md) \u2014 9/9 arquivos \u2260 selada \u2260 c\u00f3digo-liberado; \"fa\u00e7a tudo\" n\u00e3o fura gate.\n- [\ud83c\udfaf PIPC S1+S2 VIVOS \u2014 reten\u00e7\u00e3o YT \u2192 brief por-EP](project_pipc_s1_s2_live.md) \u2014 pr\u00f3ximo elo=FR-PIPC-017/018 (injetar brief no EP05).\n- [\ud83d\udd27 Gotchas prod DB/edge \u2014 social_accounts=VIEW etc.](reference_prod_db_ops_gotchas.md) \u2014 sem FK a view; db push --linked; generateLink rate-limit.\n- [Gateway OpenClaw: roteamento com drift](reference_openclaw_gateway_model_routing_drift.md) \u2014 Constela\u00e7\u00e3o per-user via agent-task-execute groq.\n- [YouTube Track B upload \u2014 CUMPRIDO](project_youtube_upload_ep02.md) \u2014 worker resumable dual-source active/enabled; EP02 no ar via plataforma.\n- [ROADMAP p\u00f3s-audi\u00eancia \u2014 CRM Suite + Marketing](project_crm_suite_roadmap.md) \u2014 leads DONE; SSOT docs/roadmap/.\n- [CRM + Caixa de Entrada \u2014 Amendment 10](project_crm_inbox_module.md) \u2014 composer/recibos DONE; agente gated AI Act.\n- [Rail repurpose \u2014 bug do `beats` REFUTADO](project_repurpose_beats_bug_and_open_fixes.md) \u2014 A/B comparou arquivos diferentes; probe=exit+stderr+frames.\n- [Render de N clipes reusa UM chromium](reference_repurpose_browser_reuse.md) \u2014 worker precisa restart ap\u00f3s fix.\n- [Sala de Controle da Orquestra\u00e7\u00e3o](project_orchestration_control_room.md) \u2014 Parte B n\u00f3s = re-arquitetura pendente.\n- [HyperFrames = open-source HeyGen; Blend Difference N\u00c3O funciona](reference_hyperframes_caption_catalog.md) \u2014 falha em sil\u00eancio.\n- [Legendas /spaces/video s\u00e3o VITRINE read-only](reference_video_studio_captions_vitrine.md) \u2014 \"Add\"=501 proposital.\n- [Veo: image XOR referenceImages](reference_veo_image_xor_references.md) \u2014 canvas-execute garante o XOR.\n- [Carrossel fatiado/cont\u00ednuo \u2014 DIFERIDO](project_carousel_real_slicing.md) \u2014 N\u00c3O \u00e9 o hand-picked (Amend.29).\n- [Privado-primeiro: at\u00e9 o \u00faltimo passo REVERS\u00cdVEL](feedback_private_first_end_to_end.md) \u2014 Sovereign vira p\u00fablico; sondar pr\u00e9-condi\u00e7\u00f5es ANTES.\n- [Todo script CLI meu deve virar capacidade na UI](feedback_cli_actions_must_become_ui.md) \u2014 CLI \u00e9 minha m\u00e3o; entreg\u00e1vel=UI.\n- [Resume de Workflow por scriptPath N\u00c3O carrega `args`](reference_workflow_resume_needs_args.md) \u2014 repassar verbatim.\n- [`tsc --noEmit` na raiz N\u00c3O checa a app](reference_root_tsc_noop_use_build.md) \u2014 gate real = vite build.\n- [Gate de tipo real = `tsc -p tsconfig.app.json` vs baseline](reference_app_tsc_is_the_real_type_gate.md) \u2014 compare por-arquivo.\n- [Bulk deploy de fns = 402; eszip \u00e9 bin\u00e1rio](reference_supabase_functions_deploy_bulk_cap.md) \u2014 use single `deploy <fn>`.\n- [content-intel \u2014 v\u00eddeo existente \u2192 estrat\u00e9gia (BoK 9/9)](project_content_intel_module.md) \u2014 c\u00f3digo gated GO+jur\u00eddico.\n- [Proveni\u00eancia AI Act Art.50 \u2014 Fatia 0-1 VIVAS](project_content_provenance_ai_act.md) \u2014 IPTC/ExifTool; deadline 2026-08-02.\n- [Meta: IG Login vs FB/Business + privacidade](project_meta_two_paths_and_privacy.md) \u2014 UM app, DUAS APIs.\n- [WhatsApp Cloud API \u2014 fia\u00e7\u00e3o](reference_whatsapp_cloud_api_wiring.md) \u2014 token EAA; subscribed_apps; webhook verify_jwt=false.\n- [types.ts stale ap\u00f3s migrations](reference_supabase_types_stale_regen.md) \u2014 `npx supabase gen types typescript --linked`.\n- [Tier global de credenciais OAuth (admin) + Pinterest](project_global_app_credentials_admin_tier.md) \u2014 4 degraus. Amend.16.\n- [Motor de duas m\u00e1quinas + ag\u00eancia-na-plataforma](project_content_engine_two_machines.md) \u2014 Volume lo-fi vs Convers\u00e3o viral.\n- [V\u00eddeo com avatar no Spaces \u2014 Veo 3.1](project_veo_avatar_video.md) \u2014 refs \u22643; failover FR-SPACES-091; 178 mco.\n- [Guard de URL sobrevive ao redirect](reference_ssrf_guard_survives_redirect.md) \u2014 use `fetchPublicUrl`.\n- [Motor novo no ledger exige `node_run_id`](reference_ledger_node_needs_node_run_id.md) \u2014 sem ele cai na branch legada, 422.\n- [Verifica\u00e7\u00e3o OAuth Google \u2014 home HTML cru](reference_google_oauth_verification.md) \u2014 verificador n\u00e3o roda JS.\n- [Loop 2026-07-14 \u2014 pool BYOK + carrossel + reframe](project_roadmap_post_v6100_media_rails.md) \u2014 Amendments 22/23/24.\n- [Assets: formato + preview fiel + modal](project_asset_publish_format_preview.md) \u2014 format-specs.ts SSOT. Amend.21.\n- [Motor de repurpose \u2014 1 master \u2192 N shorts](project_video_repurpose_engine.md) \u2014 GabrielAI \u00e9 o INVERSO.\n- [Loop 2026-07-12 \u2014 LoRA bloqueado em cr\u00e9dito Replicate](project_lora_witness_and_otd_spaces_036.md) \u2014 plumbing provado.\n- [Seletor de provider s\u00f3 carrega BYOK dispon\u00edveis](feedback_byok_only_available_options.md) \u2014 `useConfiguredProviders()`.\n- [HyperFrames worker stale at\u00e9 restart](reference_hyperframes_worker_restart.md) \u2014 `systemctl --user restart video-bridge.service`.\n- [Paid BYOK = p\u00f3s-renda; default free](feedback_paid_byok_post_revenue.md) \u2014 nunca ativar em sil\u00eancio.\n- [Clone de voz self-host \u2014 Qwen3-TTS](reference_tts_free_options.md) \u2014 worker CLI por job; ref=24kHz WAV.\n- [Identidade avatar = escada multi-motor](reference_avatar_identity_engines.md) \u2014 LoRA opt-in; default Nano Banana.\n- [Imagem = Gemini Nano Banana](reference_image_gen_provider_cost.md) \u2014 `gemini-2.5-flash-image`; hoje via OpenRouter.\n- [Spaces 100% arc \u2014 LoRA + WordPress + YouTube](project_spaces_lora_social_youtube.md) \u2014 youtube-studio blueprint.\n- [Senior UX/UI Loop \u2014 rubrica s\u00eanior](project_ux_ui_senior_loop.md) \u2014 senior-rubric.ts 8-dim; fix-loop=skill.\n- [GO'd roadmap 2026-07-08](project_go_roadmap_tiktok_login_openagn_higgsfield.md) \u2014 TikTok shipado. \u26a0\ufe0f `chmod o+x /home/gcrUX`.\n- [Spaces v2 \u2014 consolidar Canvas+Spaces](project_spaces_v2_consolidation.md) \u2014 ledger-first+G7; amend.14.\n- [YouTube bloqueia IP datacenter](reference_youtube_datacenter_workarounds.md) \u2014 storyboard via Chrome do Sovereign.\n- [MAPE-K vivo \u2014 guardi\u00e3o em cron](project_mape_k_guardian.md) \u2014 \u26a0\ufe0f cron sem bun/npx no PATH; NUNCA armar ScheduleWakeup.\n- [Conformidade MIV + E2E + ECC](project_miv_conformance_pass.md) \u2014 \u26a0\ufe0f squat http.server contamina E2E.\n- [Tokens MIV \u2014 accent=cyan, gold s\u00f3 valor](reference_miv_design_tokens.md) \u2014 nebula classe expl\u00edcita; CTA=glow.\n- [Rebrand \u2014 Landing V2 React (/lp preview)](project_mcorch_rebrand_landing_v2.md) \u2014 tokens sob .mcorch-lp.\n- [Badge social = is_active, n\u00e3o rel\u00f3gio do token](reference_social_oauth_badge_health_signal.md) \u2014 renova via refresh_token.\n- [TikTok review \u2014 re-submetido 2026-07-30, aguardando](project_tiktok_review_rebrand_requirements.md) \u2014 se aprovar, desligar flag em Admin\u2192Acesso.\n- [Buckets privados \u2192 signed URL owner-scoped](reference_private_bucket_asset_signing.md) \u2014 normalizador re-assina no render.\n- [Contrato REAL Higgsfield + MCP](reference_higgsfield_provider_contract.md) \u2014 soul/{mode}; compose nunca existiu; sentinel smoke.\n- [Conector Higgsfield MCP per-user \u2014 COMPLETO (gated)](project_higgsfield_mcp_connector.md) \u2014 falta GO.\n- [Doutrina open-source-first / USD=0 / equity](feedback_opensource_first_zero_cost_equity.md) \u2014 custo USD externo=0=gate de GO.\n- [Gabriel AI (avatar-clone-ai) \u2014 BoK 10/10](project_avatar_clone_ai.md) \u2014 voiceClone fail-closed + consent/erase LGPD.\n- [Minerador de Produtos \u2014 v\u00eddeo + custo](project_product_miner_vision_reliability.md) \u2014 Files API 20-100MB + fallback cover.\n- [Viewer sem nome = smoke QA vazado](reference_qa_throwaway_users_and_open_signup.md) \u2014 sweep 04:00. \u26a0\ufe0f signup externo LIGADO.\n- [M\u00f3dulo V\u00eddeo \u2014 Fase B: render nativo + editor](project_video_studio.md) \u2014 McorchAdapter + SPA 3210; Export 12 mco.\n- [BYOK Gemini = coluna `google_api_key`](reference_byok_gemini_column.md) \u2014 `gemini_api_key` N\u00c3O existe.\n- [Cyber-Sentinel \u2014 paridade pt-BR](reference_shared_sentinel_english_only.md) \u2014 7 fam\u00edlias, 0 FP em 58.\n- [Entregar valor vis\u00edvel, menos plumbing](feedback_deliver_user_value_not_plumbing.md) \u2014 algo que o Sovereign ABRE e TOCA.\n- [Ecossistema criativo bidirecional](project_creative_ecosystem_program.md) \u2014 creative_assets spine. \u26a0\ufe0f rotacionar chave Gemini+Telegram.\n- [Channel Reshaper + Atomizer](project_channel_reshaper.md) \u2014 reshape-pillar data-driven; HIGH FMEA-011 pego.\n- [Virada brand-first \u2014 persona Gabriel AI/CCIO](project_brand_persona_ccio.md) \u2014 marca via persona.\n- [Sempre Vision QA sobre prints + criativos](feedback_vision_qa_always.md) \u2014 custo 0, antes de declarar pronto.\n- [For\u00e7a total aut\u00f4noma p/ primeiro R$](feedback_full_force_revenue_autonomy.md) \u2014 gargalo=distribui\u00e7\u00e3o+atribui\u00e7\u00e3o.\n- [IG Reels via graph.instagram.com + /me](reference_ig_reels_publish_path.md) \u2014 n\u00e3o usar meta_config; video_url p\u00fablica.\n- [Verificar UI em browser real (Lei 1)](feedback_browser_verify_deliverables.md) \u2014 vite preview + sess\u00e3o injetada; Node p/ playwright.\n- [Viral Autopilot \u2014 ATIVADO 2026-06-23](project_viral_autopilot.md) \u2014 BoK 9/9; pg_cron jobid 3.\n- [Unified Sensorial Canvas \u2014 /dashboard/universe](project_unified_sensorial_canvas.md) \u2014 funde Core-Fable+Matrix+Mem\u00f3ria.\n- [Vision MCP \u2014 container 3200 \u00b7 mcp.mcorch.com](project_vision_mcp.md) \u2014 PAT, LGPD, caps. CF exige WAF Skip.\n- [Core-Fable \u2014 Fable 5 flagship, shader](project_core_fable.md) \u2014 shader capturado=preto; chat localStorage.\n- [Sa\u00edda do AIOS N\u00c3O \u00e9 Fonte da Verdade](feedback_aios_output_not_ground_truth.md) \u2014 confabula confiante; verificar antes de codar.\n- [Mem\u00f3ria recente SOBREP\u00d5E a antiga](feedback_recent_memory_supersedes_stale.md) \u2014 verificar estado atual antes de refutar; SUPERSEDED+link.\n- [Busca sem\u00e2ntica do mesh \u2014 threshold 0.3](reference_mesh_search_threshold_calibration.md) \u2014 0.45 zerava tudo; n\u00f3s em espa\u00e7o OpenRouter.\n- [Supabase Pro \u2014 cap 100 fns DESTRAVADO (100\u2192500)](project_supabase_pro_optimization.md) \u2014 fn nova permitida; add-ons pagos p\u00f3s-renda.\n- [E2E logado \u00e0 prova de Cloudflare](reference_loggedin_e2e_local_preview.md) \u2014 vite preview + gen-user-session.ts.\n- [Drift deployado\u2194migrations + tool](project_schema_drift_audit.md) \u2014 hotfix de prod vira migration na MESMA sess\u00e3o.\n- [RPCs mcoCoins endurecidos](reference_ledger_rpc_security.md) \u2014 award/add s\u00f3 service_role; deduct self-only.\n- [Marketing Hub v2 \u2014 COMPLETO](project_marketing_hub_v2.md) \u2014 resta Resend + atribui\u00e7\u00e3o ML. \u26a0\ufe0f campaigns J\u00c1 EXISTE.\n- [Contexto \u2014 selar s\u00f3 a ~95%](feedback_context_budget_calibration.md) \u2014 janela 1M; poda\u2260selar.\n- [Flywheel reparado p\u00f3s-cutover de chaves](project_orchestrate_pipeline_repair.md) \u2014 regra: pg_net\u2192verify_jwt=false.\n- [Calibra\u00e7\u00e3o mcoCoins 4\u00d7-floor](project_mcoin_calibration.md) \u2014 mco=ceil(usd/$0.018\u00d74).\n- [Constellation v2 \u2014 cockpit per-user LIVE](project_constellation_v2.md) \u2014 has_role(app_role) single-arg.\n- [Stale worktree \u2014 checar origin/main](feedback_stale_worktree_check_origin.md) \u2014 `git show origin/main:<path>` antes de dizer \"quebrado\".\n- [Materialidade sob output bufferizado](feedback_materiality_buffered_output.md) \u2014 hash/UUID verificado NESTE turno; sen\u00e3o re-query.\n- [Supabase keys \u2014 use SB_SECRET_KEY](reference_supabase_keys_migrated.md) \u2014 SERVICE_ROLE/ANON mortas.\n- [user_api_keys \u00e9 VIEW mascarada](reference_user_api_keys_encrypted.md) \u2014 edge l\u00ea decrypted_user_api_keys.\n- [Operador de Browser Autenticado \u2014 ML](project_authenticated_browser_operator.md) \u2014 t\u00e9cnica magiclink reutiliz\u00e1vel.\n- [Encrypted views \u2014 .insert() sem ON CONFLICT](reference_encrypted_views_write_pattern.md) \u2014 null n\u00e3o limpa (RPC disconnect_*).\n- [grep \u00e9 ugrep-shim no Bash tool](reference_grep_is_ugrep_shim_in_tool.md) \u2014 BRE estoura sob `|| true`; use -E.\n- [OpenClaw delegation via @claw_gcrux](feedback_openclaw_delegation_pattern.md) \u2014 delegar low-risk via Telegram.\n- [OpenClaw \u00d7 Ollama \u2014 Gateway](project_openclaw_ollama_integration.md) \u2014 supervisor \u00daNICO=systemd. `pnpm` no repo \u00e9 destrutivo.\n- [API Tenancy \u2014 credenciais per-user](feedback_api_tenancy_per_user.md) \u2014 per-user (auth.uid()) antes de env global.\n- [Paz e Vitalidade \u2014 m\u00e9trica de sucesso](feedback_paz_e_vitalidade.md) \u2014 vitalidade do Sovereign como m\u00e9trica.\n- [Gabriel Zarattini \u2014 Lead Architect](user_profile.md) \u2014 pt-BR UI, execu\u00e7\u00e3o aut\u00f4noma.\n- [Stripe \u2014 Estrat\u00e9gia Usu\u00e1rio Zero](project_stripe_strategy.md) \u2014 Sandbox intencional; live keys p\u00f3s-valida\u00e7\u00e3o.\n- [Commit style](feedback_commits.md) \u2014 Nunca Co-Authored-By; corpo milestone-oriented.\n- [Deploy Frontend](reference_deploy_frontend.md) \u2014 nginx serve dist/; `bun run build`=deploy.\n- [lucide-react 1.11 sem brand icons](reference_lucide_brand_icons_removed.md) \u2014 tsc passa, vite build quebra.\n- [Usu\u00e1rio Zero \u2014 Estrat\u00e9gia](project_usuario_zero_strategy.md) \u2014 User 0 = `ada39fae`, gabrielcall@gmail.com.\n- [Instagram App Review \u2014 Deferido p/ Usu\u00e1rio 1](project_instagram_appreviw_deferred.md) \u2014 n\u00e3o executar na fase Usu\u00e1rio Zero.\n- [Canvas Studio \u2014 useCanvasStore](project_canvas_studio_architecture.md) \u2014 3\u00ba Zustand (zundo); graph jsonb.\n- [Canvas Design \u2014 open-design sidecar](project_canvas_design_initiative.md) \u2014 CLI od; pnpm nunca na raiz.\n- [TikTok+YouTube publish \u2014 gotchas OAuth](reference_tiktok_unaudited_private_account.md) \u2014 TikTok privada pr\u00e9-audit; state TTL 10min.\n- [Channel Format Intelligence](project_channel_format_intelligence.md) \u2014 channel_profiles/pillar_atoms; master 9:16 serve 7 canais.\n- [profiles mint-hole FECHADO \u2014 trigger-guard](reference_profiles_column_guard_mint_hole.md) \u2014 REVOKE(col) \u00e9 no-op sob table-grant.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(01:36:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -c /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "description": "Confere tamanho p\u00f3s-compacta\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 15895 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md
+> ```
+
+## 🤖 Claude *(01:36:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Consegui reduzir o arquivo para 15,9KB, removendo uma entrada duplicada do cap-100 e atualizando três entradas desatualizadas — o FOCO ATIVO agora aponta para a estratégia correta, a Track B está completa e o TikTok foi resubmetido. Enquanto o agente engineer-spaces continua trabalhando, estou atualizando também o arquivo de memória do FOCO ATIVO.
+
+</details>
+
+
+## 🤖 Claude *(01:36:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Compactei o índice de 19,6KB para 15,9KB removendo entradas superseded e atualizando 3 stale entries no foco ativo. Agora vou atualizar o corpo da memória de foco.
+
+</details>
+
+
+## 🤖 Claude *(01:36:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_audience_flywheel_distribution.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: project_audience_flywheel_distribution
+> 3	description: "Diretiva Sovereign 2026-07-19: distribuir os cortes do EP01 + impulsionar EP01/EP02 mirando AUDIÊNCIA agora, vendas depois — mas como ENGRENAGENS de um flywheel (cada uma impulsiona as outras). Não um playbook: VÁRIOS funis como hipóteses testáveis, com cadência real e o gate de escalar de forma RENTÁVEL. Precede o disparo: engenharia reversa dos formatos virais (deep-research) antes de postar."
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 02e645cd-e9ac-4592-8736-dd3d7be264b4
+> 8	  modified: 2026-07-29T23:32:01.186Z
+> 9	---
+> 10	
+> 11	**🎯 FOCO ATIVO ATUALIZADO (Sovereign, 2026-07-29):** o **EP03 master já está postado no YouTube** (Track B cumprida — [[project_youtube_upload_ep02]] virou histórico). Agora é **foco total em conteúdo de impulsionamento ORGÂNICO: cortes e shorts.** O Sovereign vai **enviar 2 planos** (resultado de deepsearch dele) para ancorar a estratégia — **não inventar estratégia antes de recebê-los**; preparar terreno e esperar.
+> 12	
+> 13	**📍 TERRENO MEDIDO 2026-07-29** (contagem viva no banco, não claim) — SSOT: `docs/roadmap/organic-shorts-terrain-2026-07-29.md`: **48 cortes existem, TODOS 1080×1920**; 42 vêm do master EP01 (`7935a2e5`), 6 órfãos. **EP02** (`e49af674`, ingerido 20-jul) tem **0 cortes**. **EP03 não existe em `creative_assets`** — o master precisa subir pelo menu Cortes antes de qualquer corte dele. **3 gaps travam cadência autônoma:** (1) **zero plano armado** (`autopilot_plans plan_kind='cadence'` = vazio; o tick `*/15` está vivo mas sem o que despachar); (2) picker do YouTube Track B filtra `source_module='external'` → os 48 cortes (`hyperframes`) são invisíveis na UI de upload; (3) `reshape-pillar` só dispara via orchestrate-step/video-bridge com `pillar_run_id` → corte avulso não gera fan-out por canal. **LinkedIn vídeo NÃO publica e falha em silêncio** (branch só trata imagem — defeito nosso). Caminho curto e reversível = YouTube Shorts (private estrutural) ou TikTok (SELF_ONLY); Pinterest é o único com `link` clicável.
+> 14	
+> 15	**⚠️ BLOQUEIO MATERIAL descoberto 2026-07-29 (afeta direto os cortes) — ✅ CORRIGIDO em `842dc47`+`d5ff643`, com 1 resíduo aberto:** o multi-formato estava morto em **3 camadas silenciosas**: (a) o wizard descartava o formato escolhido (`buildSpec` 3 params + `reframe:'9:16'` hardcoded); (b) a edge fn `video-repurpose-run` **deployada era de 21-jul**, anterior ao commit que liberou 16:9/4:5 — coagia tudo para 9:16 (redeployada, v10); (c) **OTD-VR-008 ABERTA** — os 11 templates de legenda fixam `1080×1920` com palco em px da safe-area 9:16, então fora de 9:16 o overlay renderizaria cortado; guarda instalada degrada `caption_mode:'beats'`→`drawtext` **com aviso no log** fora de 9:16. Logo: 9:16 pleno com legenda cinética; 4:5/1:1 cortam certo mas com legenda simples até a OTD fechar.
+> 16	
+> 17	**Histórico do bloqueio (antes do fix):** no `RepurposeWizard`, escolher formato **16:9 / 1:1 / 4:5 não tem efeito** — o estado `reframe` é setado pelos botões mas nunca consumido: `buildSpec` (`src/components/repurpose/RepurposeWizard.tsx:203`) aceita 3 parâmetros e **hardcoda `reframe: '9:16'`** (linha 212), então o 4º argumento passado na linha 465 é descartado em silêncio. Único erro de tipo da branch de produção (TS2554) — e está **vivo no bundle servido**. Todo corte sai 9:16 independentemente do que a UI mostra. Corrigir ANTES de montar cadência multi-canal (4:5 do feed IG e 1:1 do LinkedIn dependem disso).
+> 18	
+> 19	**Diretiva-âncora (2026-07-19):** o Sovereign postou o EP02 manualmente (estamos atrasados) e pivotou o foco para **AUDIÊNCIA**. Precisa: (1) **criar a cadência** de postagem; (2) **vários playbooks/funis diferentes para TESTAR** (não um só) — ver quais **formatos se encaixam** e quais **escalam de forma RENTÁVEL**; (3) por ora o objetivo é **audiência**, depois **juntar com vendas**, mas **cada engrenagem trabalhando para impulsionar as outras** (flywheel: conteúdo→audiência→vendas→mais conteúdo). Non-negotiable: **engenharia reversa dos formatos virais ANTES do disparo** (postar no formato errado queima alcance) — [[feedback_deliver_user_value_not_plumbing]] · [[feedback_full_force_revenue_autonomy]].
+> 20	
+> 21	**Mercado (corrigido pelo Sovereign):** **AMBOS** — global/inglês é o **indicador ANTECEDENTE** (o viral nasce fora, TikTok/Reels/Shorts em inglês), pt-BR é o mercado **PRIMÁRIO de conversão** (adota as tendências globais com atraso, mas tem criadores/achados locais). Estudar a borda global primeiro → depois pt-BR.
+> 22	
+> 23	**Ativos iniciais (3 cortes 9:16 do EP01, prontos — sessão Motor Viral Quality 2026-07-14):**
+> 24	- `6900607a` — "Abertura: o fim da programação" (score 9.0, 35s)
+> 25	- `73dd6fbf` — "Finale: nova forma de inteligência" (score 9.5, 13s)
+> 26	- `b93e4ff6` — "Coincidência? A tecnologia invisível" (score 8.5, 13s)
+> 27	Mais os 2 long-form (EP01 "A Revolução Física" + EP02) no YouTube. Marca = persona **Gabriel AI / CCIO**. Ver [[project_brand_persona_ccio]] · [[project_video_repurpose_engine]].
+> 28	
+> 29	**Deep-research em andamento (2026-07-19):** workflow `wf_5ab47c49-dd5` (deep-research skill) — anatomia do hook 1-3s · criadores globais+BR · mecânica por plataforma 2025-2026 · metadados · aplicação corte-a-corte. Playbook citado, evidência vs especulação, sem promessa de "garante viral".
+> 30	
+> 31	**✅ RESOLVIDO 2026-07-22 (commit `f180373`) — agendamento privado-primeiro via `publish-space-asset`:** o `publish-space-asset` agora aceita **`publish_at` FUTURO** (ISO validado `Date.parse` finito e >now, senão now()) → o seam VIRA dono do fluxo (variant='scheduled' + guard 409 + **default YouTube private ESTRUTURAL** já existente `:213`). **Não é mais preciso INSERT-direto em scheduled_posts** (o caveat do private-bypass do YouTube está fechado: passe `privacy:"private"` no body ou deixe o default do seam agir). Também aceita **`link`** (CTA→episódio completo, validado `^https?://`) que flui p/ `auto-publish`→`publish-social` e vira o **campo `link` nativo do pin do Pinterest** (o único funil clicável nativo das redes). **Ferramenta:** `scripts/schedule-episode.ts` (dry-run por padrão, `--commit` agenda; grade D0/D+2/D+4 como DADO, YouTube 12:15 canônico primeiro, legenda gancho+CTA+UTM, EP02 por esgotamento; **canais default reversíveis youtube+pinterest, IG opt-in pois é irreversível**). **Contrato do body (importante):** passar `platform` explícito (não é derivado do `channel` — sem ele → 422 `surface_not_publishable`). Witness E2E auto-limpante: publish_at 5d → scheduled_post queued/private/link SET, zero resíduo. `agent-task-execute` do squad `studio` (groq) dá os hooks/cadência ([[reference_openclaw_gateway_model_routing_drift]]).
+> 32	
+> 33	**⚠️ ACHADO VERIFICADO 2026-07-20 (contexto histórico — parte superada acima):** o motor `cadence-plan`/`cadence-run` **não anexa mídia** (Fatia 1 enfileira só o caption, `cadence-run:294-297`); por isso o agendamento de shorts usa `publish-space-asset` (com `publish_at`), não o cadence-run. **Estado real:** `ep01-abertura` (6900607a) JÁ foi postado TikTok SELF_ONLY em 2026-07-17 (não duplicar); só existem EP01+EP02 masters (EP03/EP04 NÃO existem — a diretiva diz "4 episódios" mas são 2). **Cortes do EP01:** ~15 shorts children do master `7935a2e5` (dupes de várias runs — escolher os canônicos). O `--yt-id` do episódio (VIDEO_ID do YouTube) é input do Sovereign p/ o CTA clicável.
+> 34	
+> 35	**Infra a REUSAR (não reconstruir):**
+> 36	- **Cadência:** `spaces-cadence` (FR-CAD-001..011, Fatia 1 shipada) — estende `autopilot_plans` (plan_kind/recurrence/quiet_hours) + `cadence_dispatches` → `scheduled_posts`; tick roteado por `plan_kind`, ZERO pg_cron novo. `cadence-plan`/`cadence-run`. **CAVEAT (ver achado acima): hoje NÃO anexa mídia — usar INSERT direto em scheduled_posts até a Fatia 1-de-mídia (F1).**
+> 37	- **Formato nativo por canal:** `reshape-pillar` + `channel_profiles`/`channel_variants` (Channel Format Intelligence) — 1 master → variante nativa por canal, data-driven. Ver [[project_channel_reshaper]] · [[project_channel_format_intelligence]].
+> 38	- **Medição (gate de rentabilidade):** `creative_metrics` (hook_rate, impressions, engagements, revenue_cents) + **`collective_efficiency_ledger`** (mco/resultado anti-Goodhart, deriva da verdade financeira). É como se prova "escala de forma rentável" — cada funil vira um experimento medível.
+> 39	- **Motor autônomo:** `viral-autopilot` (ciclos pagos R1-R4) — pode dirigir os experimentos de funil quando maduro. Ver [[project_viral_autopilot]].
+> 40	- **Duas máquinas:** [[project_content_engine_two_machines]] (Volume lo-fi p/ audiência vs Conversão viral p/ receita) — a moldura das engrenagens.
+> 41	
+> 42	**Forma do deliverable quando a pesquisa cair:** NÃO um playbook — **N hipóteses de funil testáveis** (cada uma = formato+hook+CTA+destino), uma **cadência concreta** dos 3 cortes (via spaces-cadence), e um **desenho de medição** (tag por experimento → creative_metrics/collective ledger → qual funil escala rentável). Audiência primeiro; a engrenagem de vendas pluga depois no mesmo trilho.
+> 43	
+> 44	**✅ SESSÃO 2026-07-22 (loop autônomo maestro+enxame — "zerar + roadmap + publicar + validar em massa"):** Roadmap SSOT publicado `docs/roadmap/funnel-mass-validation-2026-07-22.md` (Workflow `wf_04833184-273`: 4 maestros × 8 params = 32 células `S×P`, verificação adversarial refutou o publish CF per-user = código pendente → funil do User 0 usa rail GLOBAL tenant-zero). **Zerar E2E** (`.claude/context/zerar-journey-map-2026-07-22.md` + tool `scripts/qa/ux-ui-senior-loop/zerar-journey-local.ts`): produto em **estado de produção** (0 P0/P1 real); **gap ≠ produto, é distribuição+atribuição em escala.** **1º FUNIL provado E2E até rascunho (privado):** `orchestrate-content {platforms:['wordpress'],wp_status:'draft'}` → artigo Roborock `content_library 91a2454a` → WP rascunho `mcorch.com/?p=29` → `<a href=process-affiliate-link?link_id=53a66f02>` → `affiliate_links` → **`meli.la/2gh13Sw` (ML assinado, atribuível a VENDA)** → reshaper fan-out **1 pilar → 9 variantes nativas de canal em rascunho** (`charged_mco:0`, LinkedIn/X/IG/FB/Pinterest/YT/WP). Custo 10 mco (saldo 621). **Contrato da validação em massa (autopilot) materialmente provado:** `projected=N_runs×10+2`, `N_runs=produtos×plataformas×ab_variants`; dry_run precisa header `x-autopilot-user-id` (gate OTD-VA-008) E **produtos em `vm_affiliate_products`** (vazia p/ User 0 → 422 `plan_has_no_targets`). **∴ pré-requisito do ciclo em massa = SEMEAR produtos (minerador Apify = custo externo, gated pós-renda).** **Gates restantes (todos do Sovereign / doutrina):** (1) virar rascunho `?p=29` público p/ ativar+medir; (2) autorizar teto p/ ciclo autopilot. **Achados (backlog):** atomizador não disparou no run wordpress-only (mas rodou depois; átomo `99cff598`); `vision-qa.ts` flaky sob rajada (grader sênior precisa retry/backoff); path topic-only não roda `rewriteHomepageCtas` (CTA final → mcorch.com; decisão de marca, não bug claro).
+> 45	
+> ```
+
+## 🤖 Claude *(01:36:40)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the header on line 11 of the memory file to mark the old strategy as superseded, keeping the history intact with a link rather than deleting it outright.
+
+</details>
+
+
+## 🤖 Claude *(01:36:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_audience_flywheel_distribution.md",
+  "old_string": "**\ud83c\udfaf FOCO ATIVO ATUALIZADO (Sovereign, 2026-07-29):** o **EP03 master j\u00e1 est\u00e1 postado no YouTube** (Track B cumprida \u2014 [[project_youtube_upload_ep02]] virou hist\u00f3rico). Agora \u00e9 **foco total em conte\u00fado de impulsionamento ORG\u00c2NICO: cortes e shorts.** O Sovereign vai **enviar 2 planos** (resultado de deepsearch dele) para ancorar a estrat\u00e9gia \u2014 **n\u00e3o inventar estrat\u00e9gia antes de receb\u00ea-los**; preparar terreno e esperar.",
+  "new_string": "**\ud83c\udfaf FOCO ATIVO \u2014 ESTRAT\u00c9GIA DEFINITIVA v1 SELADA (2026-07-30):** as 6 refer\u00eancias que o Sovereign colou na sess\u00e3o de 30-jul **ERAM os deepsearches** (Refs #5/#6 = os 2 deep-research; #1-#4 complementos) \u2014 a cl\u00e1usula \"esperar 2 planos\" est\u00e1 **SUPERSEDED** pela diretiva *\"a estrat\u00e9gia definitiva deveria ter sido feita por voc\u00ea ap\u00f3s analisar tudo que enviei\"*. SSOT: `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md` **\u00a7D** (D1 formato=split-screen react tiled \u00b7 D2 medi\u00e7\u00e3o=YouTube Shorts P\u00daBLICOS+painel /dashboard/youtube \u00b7 D3 cad\u00eancia 1/dia \u00fatil, 3 react+2 cru \u00b7 D4 biblioteca de ganchos v1 `hook-library-seed-2026-07-30.md` \u00b7 D5 roteiro/copy antes do criativo \u00b7 D6 shorts recrutam/master monetiza \u00b7 D7 paridade UI obrigat\u00f3ria). Witness do formato: asset `1a98cef3`. Projeto Spaces \"React Gabriel AI\" = f\u00e1brica dos reacts (POV olhando o celular embaixo + corte do EP em cima). Evolui por DADO, n\u00e3o por documento.\n\n<details><summary>Hist\u00f3rico (2026-07-29, superseded)</summary>\no EP03 master j\u00e1 est\u00e1 postado no YouTube (Track B cumprida \u2014 [[project_youtube_upload_ep02]] virou hist\u00f3rico). Foco total em cortes/shorts org\u00e2nicos. O Sovereign ia \"enviar 2 planos\" de deepsearch \u2014 n\u00e3o inventar estrat\u00e9gia antes; preparar terreno e esperar.\n</details>"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_audience_flywheel_distribution.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(01:36:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The UI change is deployed and live on the main repo with nginx picking it up immediately. I should verify the deployed bundle actually contains the change by checking the dist folder for a marker string like "Vídeos do canal" to confirm it made it through the build process. Meanwhile, I'm waiting to hear back from the engineer-spaces agent about the React Gabriel AI project.
+
+</details>
+
+
+## 🤖 Claude *(01:36:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Vou verificar se a tabela foi efetivamente deployada no bundle servido, confirmando que o novo texto está presente.
+
+</details>
+
+
+## 🤖 Claude *(01:36:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rl \"V\u00eddeos do canal\" dist/assets/*.js | head -2 && echo \"\u2705 no bundle servido\" ; ls -la dist/index.html | awk '{print $6, $7, $8}'",
+  "description": "Confirma string nova no dist servido pelo nginx"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dist/assets/YouTubeStudioPage-Df29O5x2.js
+> ✅ no bundle servido
+> Jul 30 22:34
+> ```
+
+## 🤖 Claude *(01:37:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Deploying the YouTube Studio page component to the dist folder — it's showing the channel videos section correctly as of 22:34. The engineer-spaces agent for the Gabriel AI React project is still running in the background, so I'll send Sovereign the status update on his points now and the agent notification will follow once it completes. So far I've verified the Short metrics for this cycle.
+
+</details>
+
+
+## 🤖 Claude *(01:37:21)*
+
+Tudo entregue menos o projeto (especialista trabalhando em background). Status consolidado:
+
+## ✅ Feito neste turno
+
+1. **Métricas do seu Short — verificadas e fluindo.** `bxGA7QWvH2I` ("Imagina ter tempo…", 27-jul): **118 views · 2 likes · 2 comentários**, público. Detalhe estratégico: o Short de 11s já superou o EP03 longo (87 views) — primeira evidência real do funil Shorts→canal.
+
+2. **Tabela de vídeos de volta à tela principal do `/dashboard/youtube`** — só ela, resto intocado (ela também continua na aba Histórico do modal). Build deployado e provado no bundle servido (`YouTubeStudioPage-Df29O5x2.js`). **Hard-refresh (Ctrl+Shift+R)** para ver.
+
+3. **Anexos do chat**: registrei em memória permanente que eles não chegam até você — de agora em diante toda mídia vai para **Spaces → Assets** e eu te aponto o título exato.
+
+4. **Estratégia atualizada**: YouTube fica com **longos E shorts** (D6 — shorts não contam horas de monetização, mas recrutam inscritos e canalizam pro longo; dá até para linkar o vídeo longo relacionado no próprio Short). E a memória de foco foi selada com a correção: suas 6 referências eram os deepsearches; estratégia é DEFINITIVA v1.
+
+## ⏳ Em curso
+
+**Projeto "React Gabriel AI" no Spaces** — o especialista de nós está criando com o grafo armado: nó de reação POV ("olhando o celular, assistindo à tela") + nó Tela Dividida com corte do EP02 na célula de cima, tudo pronto para você abrir e rodar pela UI. Te aviso com o nome exato assim que estiver de pé.
+
+## ⏭ Na sequência (seu roadmap declarado)
+
+Cadências planejadas com legendas + otimização completa SEO/AEO — com a tabela de métricas de volta e o projeto React de pé, o próximo passo é armar o primeiro plano de cadência real (D3: 1 short/dia útil, 3 reacts + 2 crus/semana) e o passe de SEO/AEO por peça (título/descrição/tags via biblioteca de ganchos). Começo assim que o projeto React estiver validado.
+
+## 👤 User *(01:38:59)*
+
+<task-notification>
+<task-id>abd71c71c3f451c8e</task-id>
+<tool-use-id>toolu_01EpimgsA38vbBWAp1YLWZsr</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/fec402e3-0895-46ec-bc69-5abd4863c72a/tasks/abd71c71c3f451c8e.output</output-file>
+<status>completed</status>
+<summary>Agent "Criar projeto Spaces React Gabriel AI" finished</summary>
+<note>A task-notification fires each time this agent stops with no live background children of its own. The user can send it another message and resume it, so the same task-id may notify more than once.</note>
+<result>Projeto criado e provado. Relatório final:
+
+## Projeto Spaces "React Gabriel AI" — ARMADO, zero geração paga
+
+**Tabela usada:** `public.vm_canvas_projects` (persistência do sistema VIVO — confirmada em `/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasStudio.ts:102/120` via `useCanvasProject`, carregada por `/home/gcrUX/htdocs/constellation-orchestra/src/pages/CanvasEditorPage.tsx:214-234`; mirror `useSpacesStore`/`node-registry.ts` NÃO tocado). Colunas NOT NULL sem default = só `user_id` + `name` (migration `20260514040200_viralmind_canvas_studio.sql:3-20`); `graph`/`viewport`/`status` têm defaults.
+
+**Id do projeto:** `024e1c03-2866-4e38-afc7-ddc515b5a1c7` · título exato "React Gabriel AI" · user_id `ada39fae-67e1-4e53-af1c-5a18e1c108e8` · status `active`.
+
+**Nós do graph (tipo :: id):**
+| Nó | type | id | Config |
+|---|---|---|---|
+| POV reação | `imageToVideo` | `n_povreact` | prompt de reação em inglês ("watching a video and reacting... He does not speak"), 9:16, `veo-3.1-fast`, `veoDuration: 8`, `720p`, `veoUseFirstFrame: false`, `veoGenerateAudio` ausente (default do resolver = MUDO — o topo carrega o áudio), status `idle` |
+| Tela Dividida | `splitScreen` | `n_splitreact` | `layout: "2v"`, `audioSource: "cell0"` (áudio da célula de cima), status `idle` |
+| Aresta | default | `xy-edge__n_povreactoutput_video-n_splitreactinput_cell_1` | `output_video` → `input_cell_1` (contrato provado em `SplitScreenInspector.tsx:77`) |
+
+**Asset ids referenciados:**
+- Célula de CIMA: `9d08c95b-d335-4cc5-b795-297c7f7413f4` — 'Short 1080x1920 #1', corte real do EP02 (`metadata.source_asset_id = e49af674-32b0-4840-a763-1c652022ac3d`), bucket `video-studio-assets`.
+- Célula de BAIXO: `6f783a1d-4a12-44f0-971f-0e31f44f54d8` — clipe Veo existente do U0 como **placeholder de reação** (bucket `canvas-assets`), com a aresta já armada para trocar por "Usar o nó conectado" após o POV rodar.
+
+**Provas (Lei 1):**
+- **(a)** `INSERT ... RETURNING` + SELECT independente devolveram `id 024e1c03-... | React Gabriel AI | ada39fae-... | active` (output acima).
+- **(b)** Validação campo a campo do graph re-buscado do banco contra as factories vivas (`makeDefaultPovVideo` em `src/types/canvas.ts:1192`, `makeDefaultSplitScreen` em `:1418`) + shape do projeto vivo "Gabriel AI" `b57a59f7`: **13/13 PASS** (chaves top-level, tipos, campos obrigatórios, contrato `SplitGridCell`, aresta, ownership dos 2 assets).
+- **(c)** Nós: `imageToVideo :: n_povreact` · `splitScreen :: n_splitreact` · aresta `xy-edge__n_povreactoutput_video-n_splitreactinput_cell_1`.
+
+**Ressalvas:**
+1. **`povVideo` do registry NÃO é um `type` persistível** — a factory delega para `imageToVideo` e o `nodeTypes` da `CanvasEditorPage:74-93` não tem chave `povVideo`; um nó salvo com esse type nasceria morto. Persisti `imageToVideo` (correto).
+2. **Placeholder deliberado na célula 2:** com `__upstream__` + POV nunca executado, o botão de render ficaria bloqueado e o select da célula exibiria valor sem opção correspondente (a opção "Usar o nó conectado" só aparece quando o upstream tem `output`). Com o placeholder, o nó Tela Dividida está renderizável JÁ (12 mco, rail HyperFrames) e a aresta continua lá para a troca pós-POV — instrução no `description` do projeto (pt-BR).
+3. **Rodar o POV custa Veo (~mco conforme `veoCost`)** e exige BYOK Google + chave do pool no inspector (`providerKeyId` fica a escolha do Sovereign na UI) — nada foi disparado: ambos os nós `status: "idle"`, zero linhas em `vm_canvas_executions`/`video_renders`, zero débito.
+4. **Working tree:** meus artefatos ficaram só no scratchpad; os arquivos sujos no `git status` (`proof-manifest.json`, `smoke-cadence-dispatch.ts`, `voice-bridge.ts`, `YouTubeStudioPage.tsx`, 2 docs de roadmap) são de sessões paralelas/anteriores — não os toquei.
+
+**Caminho UI do Sovereign:** `/dashboard/spaces` → abrir "React Gabriel AI" (`spaces/024e1c03-2866-4e38-afc7-ddc515b5a1c7`) → selecionar `POV (Selfie/Vlog)` → escolher chave do pool → Gerar → depois, na Tela Dividida, trocar a célula 2 para "Usar o nó conectado" → Renderizar (12 mco).</result>
+<usage><subagent_tokens>115821</subagent_tokens><tool_uses>38</tool_uses><duration_ms>310248</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(01:39:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The engineer-spaces agent successfully created the "React Gabriel AI" project with a unique ID and active status. The workflow includes an imageToVideo node that generates POV reaction content using Veo 3.1 in fast mode, producing an 8-second muted video in portrait format, plus a splitScreen node combining two video streams with audio.
+
+The setup validates cleanly against live factories with no paid generation triggered yet, and the split node is immediately renderable using a placeholder clip while the POV output is queued to swap in after generation completes. I need to report back to the Sovereign with the project readiness status, the UI path to access it, cost breakdown for each step, and outline the next phases including content cadences and SEO optimization.
+
+</details>
+
+
+## 🤖 Claude *(01:39:26)*
+
+# Projeto "React Gabriel AI" está de pé no Spaces ✅
+
+O especialista criou e provou materialmente (13/13 validações contra as factories vivas, zero geração paga disparada, zero débito):
+
+**Abra em: `/dashboard/spaces` → "React Gabriel AI"**
+
+O grafo já vem armado com a fábrica do formato:
+
+| Nó | O que faz | Estado |
+|----|-----------|--------|
+| **POV (reação)** | Gera o Gabriel AI "assistindo a um vídeo e reagindo, sem falar" — 9:16, 8s, mudo (o áudio vem do corte de cima), motor Veo 3.1 fast | Configurado, aguardando você escolher a chave do pool e clicar **Gerar** |
+| **Tela Dividida** | Layout vertical 2 células: **cima = corte real do EP02** ("Short #1 — Máquinas Pensam") com áudio · **baixo = clipe do Gabriel AI** | **Renderizável JÁ** (12 mco, rail grátis HyperFrames) |
+
+Detalhe importante: a célula de baixo está com um clipe Veo **existente** como placeholder (custo zero), e a ligação POV→célula já está armada — assim você pode renderizar um react agora mesmo sem gastar Veo, e quando gerar o POV novo ("olhando pro celular"), é só trocar a célula 2 para "Usar o nó conectado" e renderizar de novo.
+
+**Fluxo completo pela UI (sua diretiva D7):**
+1. Abrir o projeto → (opcional) **Renderizar** a Tela Dividida direto = 1º react por 12 mco
+2. No nó POV: escolher a chave Google do pool → **Gerar** (custo Veo — consome seu BYOK)
+3. Trocar célula 2 → "Usar o nó conectado" → **Renderizar**
+4. O resultado cai em **Spaces → Assets** → aba **Publicar** → agenda no Pipeline
+
+**Custos por peça:** react com clipe existente = 12 mco · react com POV fresco = Veo (~178 mco) + 12 mco do render. A rotação dos 12 clipes Veo que você já tem cobre as primeiras semanas de cadência a custo quase zero.
+
+Com isso os três trilhos do seu pedido estão fechados: métricas verificadas no painel (Short com 118 views), tabela de vídeos de volta na tela principal (hard-refresh), e a fábrica de reacts pronta. **Próxima fase quando você der o sinal: armar a cadência D3 (1/dia útil) com legendas + passe completo de SEO/AEO por peça** — títulos/descrições/tags saindo da biblioteca de ganchos v1.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5925,4 +6815,5 @@ EP03: pode subir quando quiser pelo menu Cortes — o Lote 1 não depende dele; 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-30 - fec402e3-0895-46ec-bc69-5abd4863c72a]]
+> * **Próxima Sessão**: [[2026-07-31 - agent-abd71c71c3f451c8e]]
 %% --- TIMELINE END --- %%
