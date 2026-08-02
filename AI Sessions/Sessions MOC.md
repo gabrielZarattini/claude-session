@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3262
-> * **Sessões do Claude**: 3212
+> * **Total de Sessões Registradas**: 3272
+> * **Sessões do Claude**: 3222
 > * **Sessões do Gemini**: 50
 
 ---
@@ -76,18 +76,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Other Sessions
 *   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-af2ef6b52a6b0a1db]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-abb3c09e146aea34a]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-aaf2c64cbcdf4556e]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-a96bb21d81c3d9c9a]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-a79d2a96989c8f15f]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-a665e7d5157fa4089]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-a51e1720cfa3c85db]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-a2af4f8c082de7125]]` - *2026-08-02*
+*   `[[2026-08-02 - agent-a0d22044fc48c94af]]` - *2026-08-02*
+*   `[[2026-08-02 - Planejar roteiro do EP05 como tutorial]]` - *2026-08-02*
 *   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` - *2026-08-02*
-*   `[[2026-07-31 - agent-abd71c71c3f451c8e]]` - *2026-07-31*
-*   `[[2026-07-31 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` - *2026-07-31*
-*   `[[2026-07-30 - fec402e3-0895-46ec-bc69-5abd4863c72a]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-af98b8c32fe8e108c]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-af7fb84e05c1dd4ce]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-af2e642b694b2d2d2]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-aed0797d02cc03ff6]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-ae45a8c9da7cdb004]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-ae29b00990252aef9]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-ae1a40968d7805668]]` - *2026-07-30*
-*   *... e mais 3204 sessões nessa categoria.*
+*   *... e mais 3214 sessões nessa categoria.*
 
 ---
 
@@ -3315,6 +3315,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 
 ### Agosto 2026
 *   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-af2ef6b52a6b0a1db]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-abb3c09e146aea34a]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-aaf2c64cbcdf4556e]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-a96bb21d81c3d9c9a]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-a79d2a96989c8f15f]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-a665e7d5157fa4089]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-a51e1720cfa3c85db]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-a2af4f8c082de7125]]` (ClaudeSessions)
+*   `[[2026-08-02 - agent-a0d22044fc48c94af]]` (ClaudeSessions)
+*   `[[2026-08-02 - Planejar roteiro do EP05 como tutorial]]` (ClaudeSessions)
 *   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions)
 
 ### Abril 2026

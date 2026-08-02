@@ -8303,5 +8303,5 @@ Sessão selada. Bom teste no React Gabriel AI — quando voltar, começamos pelo
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-07-31 - agent-abd71c71c3f451c8e]]
-> * **Próxima Sessão**: [[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]
+> * **Próxima Sessão**: [[2026-08-02 - Planejar roteiro do EP05 como tutorial]]
 %% --- TIMELINE END --- %%

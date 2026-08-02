@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 107
-> * **Total de Sessões**: 3257
+> * **Total de Sessões**: 3267
 
 ---
 
@@ -131,6 +131,16 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 ## 📂 Sessões do Projeto
 
 *   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-af2ef6b52a6b0a1db]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-abb3c09e146aea34a]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-aaf2c64cbcdf4556e]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a96bb21d81c3d9c9a]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a79d2a96989c8f15f]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a665e7d5157fa4089]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a51e1720cfa3c85db]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a2af4f8c082de7125]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a0d22044fc48c94af]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - Planejar roteiro do EP05 como tutorial]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-07-31 - agent-abd71c71c3f451c8e]]` (ClaudeSessions) - *2026-07-31*
 *   `[[2026-07-31 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions) - *2026-07-31*
