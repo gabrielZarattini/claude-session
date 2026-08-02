@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3260
-> * **Sessões do Claude**: 3210
+> * **Total de Sessões Registradas**: 3262
+> * **Sessões do Claude**: 3212
 > * **Sessões do Gemini**: 50
 
 ---
@@ -75,6 +75,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` - *2026-08-02*
+*   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` - *2026-08-02*
 *   `[[2026-07-31 - agent-abd71c71c3f451c8e]]` - *2026-07-31*
 *   `[[2026-07-31 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` - *2026-07-31*
 *   `[[2026-07-30 - fec402e3-0895-46ec-bc69-5abd4863c72a]]` - *2026-07-30*
@@ -85,9 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-30 - agent-ae45a8c9da7cdb004]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-ae29b00990252aef9]]` - *2026-07-30*
 *   `[[2026-07-30 - agent-ae1a40968d7805668]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-ae199d28d87e571e2]]` - *2026-07-30*
-*   `[[2026-07-30 - agent-ae024139f54422c05]]` - *2026-07-30*
-*   *... e mais 3202 sessões nessa categoria.*
+*   *... e mais 3204 sessões nessa categoria.*
 
 ---
 
@@ -3312,6 +3312,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` (ClaudeSessions)
 *   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` (ClaudeSessions)
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
+
+### Agosto 2026
+*   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` (ClaudeSessions)
+*   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions)
 
 ### Abril 2026
 *   `[[2026-04-26 - ffc7407f-40e6-45ef-a261-ef73cd5bca92]]` (ClaudeSessions)
