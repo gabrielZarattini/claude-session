@@ -1,5 +1,5 @@
 # Estratégia de crescimento acelerado: pipeline sintético e otimização de retenção
-**Date:** 2026-08-02 | **Session ID:** `fec402e3-0895-46ec-bc69-5abd4863c72a`
+**Date:** 2026-08-02 | **Session ID:** `002acae4-180c-4675-a35c-7694e71914d9`
 
 ---
 
@@ -1004,97 +1004,6 @@ Arquitetura de Crescimento Acelerado em Vídeo Curto: Do Método 5-3 à Automaç
 
 lembrando ignore as perguntas finais de algumas referencias pois sao conversas com sessoes externas de IA. Agora quero que voce analise todas, referencia critique e sintetize nossa estrategia, se precisar crie varios ou planos de estrategias para fazer testes A/B/C etc.
 
-## 🤖 Claude *(22:44:06)*
-
-<details>
-<summary>💭 Thinking Process</summary>
-
-I need to orchestrate this analysis across multiple agents—examining each reference critically, comparing against our actual capabilities and gaps, then synthesizing concrete strategic options while keeping the creative format requirements in mind. Agent A will map what we can actually produce today—repurposing, cadence patterns, HyperFrames, Veo, text-to-speech, split-grid layouts, carousel formats, transcription. Then Agent B extracts the core insights and contradictions across those six references, while Agent C reviews the existing terrain map and FILA state to ground everything in current reality. Phase 2 spins up three independent design approaches: a weekly hype-to-documentary hybrid, the 5-3 method with split-screen React as the user envisioned it, and a hook-first volume play. Phase 3 brings in an adversarial critic to stress-test each plan and separate what's actually feasible from what's aspirational.
-
-But here's the key constraint I'm holding: the user was explicit that the real strategy comes from those two pending deepsearches the Sovereign will send, and the FILA is emphatic about not inventing before they arrive. So whatever I synthesize has to be honest about being a preliminary reading—I need to map exactly where the deepsearches are still required and what decisions they'll unlock, rather than pretending I'm producing the final strategy now. The user is asking me to analyze everything and synthesize the strategy now, so I should move forward with building the workflow. I'm structuring this around 9-11 agents organized in phases, starting with three parallel agents in the understanding phase: one to assess MCORCH's current creative capabilities from the knowledge base and code, another to read the terrain across organic-shorts-terrain, roadmap, and FILA, and a third to extract key claims and insights from the first reference.
-
-Next I'm designing three competing approaches that will be evaluated in parallel: Plan A focuses on hook-retention-first volume using the 5-3 framework with reference hooks and weekly validators, Plan B proposes a split-screen React format beachhead combining the user's vision with a repurposing engine and Nano Banana identity, and Plan C explores a hybrid model escalating from weekly hype to documentary format using reference models and PIPC integration. Then I'll have three judge agents critique each plan across key dimensions like materiality and feasibility.
-
-I'm reconsidering the structure — a pipeline approach where each plan flows through design, adversarial verification, and synthesis might work better than rigid barriers, though I'll need one comparison point before final synthesis to cross-evaluate all three approaches. This keeps the workflow efficient while ensuring we can make informed decisions between the options. rics), ungated next moves I can start immediately, and gated items waiting on Sovereign GO or pending searches. I also want the synthesis agent to actively critique the references—flagging contradictions, marketing claims like those valuation and ROI numbers that aren't verified, and separating what's actually actionable from noise. For model selection, I'll let agents inherit since most of this is analytical work that Fable or Sonnet handle well.
-
-</details>
-
-
-## 🤖 Claude *(22:44:07)*
-
-Ultracode on, tarefa substantiva com muitas dimensões (6 referências × contexto MCORCH × visão split-screen do Sovereign × doutrina FILA). Vou orquestrar via `Workflow` — 3 leitores em paralelo → 3 planos independentes em pipeline com crítica adversarial → síntese final com testes A/B/C.
-
-## 🤖 Claude *(22:47:39)*
-
-
-🛠️ **Tool Call**: `Workflow`
-```json
-{
-  "script": "export const meta = {\n  name: 'organic-shorts-strategy-synthesis',\n  description: 'Sintetiza estrat\u00e9gia inicial de cortes/shorts org\u00e2nicos MCORCH a partir de 6 refer\u00eancias externas + contexto vivo do ecossistema, com 3 planos concorrentes verificados adversarialmente e s\u00edntese A/B/C',\n  phases: [\n    { title: 'Understand', detail: 'Ler estado vivo do MCORCH + terreno de shorts + destilar as 6 refer\u00eancias criticamente' },\n    { title: 'Design', detail: '3 planos concorrentes (Hook-Volume \u00b7 Split-Screen React \u00b7 Weekly\u2192Doc Hybrid) desenhados independentes' },\n    { title: 'Verify', detail: 'Cr\u00edtica adversarial por plano \u2014 materialidade \u00d7 alinhamento com FILA \u00d7 ROI honesto' },\n    { title: 'Synthesize', detail: 'Plano definitivo inicial + matriz A/B/C + un-gated vs gated + pr\u00f3ximo passo execut\u00e1vel' },\n  ],\n}\n\n// ============================================================================\n// Shared context \u2014 all agents get this pinned up front\n// ============================================================================\nconst SHARED_CTX = `\nCONTEXTO MCORCH (2026-07-30, sess\u00e3o p\u00f3s-/handson):\n\n- Sovereign: Gabriel Zarattini. Persona p\u00fablica: \"Gabriel AI\" (avatar sint\u00e9tico,\n  cabelo curto escuro, olhos azuis, barba, tom entusiasta t\u00e9cnico).\n- Nicho: IA F\u00edsica, Rob\u00f3tica, Changelogs Hypados, Automa\u00e7\u00e3o, Spatial Computing.\n- Estado atual: EP03 master postado no YouTube (2026-07-29). 48 cortes 9:16\n  todos do EP01, EP02 com 0 cortes, EP03 nem est\u00e1 em creative_assets.\n- FILA SOVEREIGN diz explicitamente que a estrat\u00e9gia DEFINITIVA vem de 2 planos\n  de deepsearch que o Sovereign vai enviar \u2014 as 6 refer\u00eancias deste turno s\u00e3o\n  contexto/estudo (podem ou n\u00e3o ser um dos 2 deepsearches). Um plano INICIAL \u00e9\n  autorizado, mas deve marcar claramente o que fica pendente dos deepsearches.\n\nDoutrinas load-bearing (violar = rejeitar o plano):\n- Lei 1 Materialidade: nenhuma claim sem prova; numbers de valuation/ROI das\n  refer\u00eancias (\u20ac250k, ROI 7 dias) s\u00e3o MARKETING-SPEAK, n\u00e3o fatos verificados.\n- Lei 2 Processo Antecipado: automa\u00e7\u00e3o s\u00f3 depois de SOP humano em docs/processes/.\n- Lei 3 Poda: preservar foco; n\u00e3o inflar escopo.\n- Lei 4 ORO: Operator/Reviewer/Owner declarados.\n- MCORCH Master Execution Protocol: c\u00f3digo de m\u00f3dulo novo exige BoK 9/9 SELADA\n  em docs/bok/<slug>/ + Pattern Conformance Declaration.\n- Doutrina \"prontid\u00e3o se l\u00ea no GATE STATUS\": 9/9 arquivos != selada != c\u00f3digo-liberado.\n- Custo USD externo = 0 \u00e9 gate de GO (pre-revenue); BYOK paid = p\u00f3s-renda.\n- Privado-primeiro: postar draft/privado; Sovereign vira p\u00fablico.\n\nCapacidades j\u00e1 VIVAS (podem sustentar plano SEM novo c\u00f3digo):\n- Motor de repurpose 1 master \u2192 N shorts 9:16 + carrossel (VIVO E2E).\n- ASR whisper.cpp US$0 + reconcilia\u00e7\u00e3o roteiro-autoritativa (VIVO).\n- N\u00f3 Transcri\u00e7\u00e3o/SRT no Spaces (VIVO 2026-07-22).\n- Voz clonada self-host Qwen3-TTS 12Hz US$0 + Modo Expressivo (VIVO).\n- Veo 3.1 avatar/refs no Spaces (BYOK Google, 178 mco). Vertex AI service-account\n  pronto (267 mco). Nano Banana multimodal (10 mco) para composi\u00e7\u00e3o.\n- HyperFrames render determin\u00edstico (frontend 9:16 + legendas kinetic-stack).\n- Amendment 28 split_grid (grade 2\u00d72 v\u00eddeos+fotos) e Amendment 29 Carrossel\n  hand-picked (VIVOS, witness pago).\n- Cad\u00eancia (autopilot_plans plan_kind='cadence') VIVA, TICK vazio.\n- Publica\u00e7\u00f5es: TikTok (aguardando App Review), YouTube (canal Gabriel AI\n  conectado, worker resumable dual-source, service ATIVA), IG/Meta (rail vivo,\n  app-review pendente), pipeline de Publica\u00e7\u00f5es + trigger cascade rec\u00e9m-livre\n  do 409 dead-end (2026-07-30).\n- PIPC S1+S2 VIVOS: reten\u00e7\u00e3o YouTube persiste \u2192 brief acion\u00e1vel por-EP\n  (gap: FR-PIPC-017/018 = injetar o brief no planejamento do pr\u00f3ximo EP).\n\nGaps declarados para \"cad\u00eancia aut\u00f4noma\" (do organic-shorts-terrain-2026-07-29):\n  (1) ZERO plano de cad\u00eancia armado (autopilot_plans plan_kind='cadence' vazio;\n      tick */15 vivo sem o que despachar).\n  (2) Picker do YouTube filtra source_module='external' \u2192 48 cortes invis\u00edveis\n      no picker (nascidos do repurpose interno, n\u00e3o de ingest externo).\n  (3) reshape-pillar s\u00f3 dispara com pillar_run_id (ningu\u00e9m liga o gatilho).\n\nVIS\u00c3O CRIATIVA DO SOVEREIGN (declarada NESTE turno):\n  Formato dominante = tela dividida (\"split-screen\" tipo rea\u00e7\u00e3o), com op\u00e7\u00f5es:\n   (a) Gabriel AI em alpha/greenscreen sobre v\u00eddeo rodando de fundo (\"remix\"\n       tipo IG nativo, avatar em 1\u00aa camada s\u00f3 rosto),\n   (b) Split-screen superior/inferior \u2014 v\u00eddeo real numa metade, Gabriel AI\n       reagindo/observando em express\u00e3o visual na outra.\n  A base visual (grades de cortes) J\u00c1 existe. O gap admitido: alinhar\n  ESTRAT\u00c9GIA + ROTEIRO + COPYWRITE antes de gerar o criativo. \u00c9 aqui que\n  entra a an\u00e1lise das 6 refer\u00eancias.\n\nAS 6 REFER\u00caNCIAS (resumo esqueleto para agentes que n\u00e3o v\u00e3o rel\u00ea-las):\n  #1 Ferramentas de an\u00e1lise de canal YT (OutlierKit/Subscribr para roteiro,\n     Memories.ai/Twelve Labs + Gemini multimodal para visual). Prop\u00f5e pipeline\n     n8n que gera relat\u00f3rio 4-pilares.\n  #2 Meta 3000h YT monetiza\u00e7\u00e3o: lives (30h/dia com 15 simult\u00e2neos), v\u00eddeos\n     10-15min+, evergreen, playlists com telas finais, embeds externos.\n     \u26a0\ufe0f Shorts N\u00c3O contam para 3000h (t\u00eam meta separada de views).\n  #3 Framework universal VFX YAML (System Prompt/Dynamic Template Engine)\n     para produzir tutorial VFX repet\u00edvel. Fluxo: imagem mestre est\u00e1tica\n     (Nano Banana Pro) + motion tracking (Seedance/Veo 3.1 Flash).\n  #4 \"Lei do 1.5 Segundo\" \u2014 10 combos gancho falado + headline visual para o\n     nicho IA F\u00edsica (ex: \"Esque\u00e7a o ChatGPT: a IA saiu da tela e ganhou\n     pernas\"). Corte de quebra de padr\u00e3o em 2.5-3s.\n  #5 Engenharia de conte\u00fado sint\u00e9tico: pipeline Veo 3.1 Flash + MCP Premiere,\n     consist\u00eancia de avatar via Face-Adapter/ControlNet, 0.5s de sil\u00eancio no\n     TTS para n\u00e3o cortar boca, estrat\u00e9gia weekly-hype (validador) \u2192\n     document\u00e1rio atemporal (rent\u00e1vel). Claims financeiros (\u20ac250k valuation,\n     ROI 7 dias) \u2014 MARCAR COMO N\u00c3O-VERIFICADOS. Programas Google/Microsoft/\n     NVIDIA/AWS Activate para cr\u00e9ditos cloud.\n  #6 M\u00e9todo 5-3 (5 perfis refer\u00eancia \u00d7 3 conte\u00fados = 15 roteiros validados\n     + auditoria de sentimento nos coment\u00e1rios). Refor\u00e7a 1.5s + gancho\n     consome 20 dos 30min de produ\u00e7\u00e3o. Sinal algor\u00edtmico cr\u00edtico = envios\n     por alcance (DMs) pesa 3-5\u00d7 curtidas. Republica\u00e7\u00f5es >10/30d = -60/-80%\n     alcance org\u00e2nico (originalidade \u00e9 filtro penalizador). Weekly-hype \u2192\n     document\u00e1rio. Prompt Veo 3.1 estruturado + 7.2-7.8s de fala + 0.5s\n     sil\u00eancio (mesmo insight do #5).\n`.trim()\n\nconst FILE_HINTS = `\nArquivos-chave que agentes de leitura podem consultar (opcional, n\u00e3o obrigat\u00f3rio):\n- CLAUDE.md \u2014 arquitetura completa + Key Files Reference\n- .claude/rules/survival.md \u2014 as 4 Leis (Materiality, Process, Pruning, ORO)\n- HANDOFF.md \u2014 Task State + Records recentes (usar Read com limit \u2264150 linhas)\n- docs/roadmap/organic-shorts-terrain-2026-07-29.md \u2014 terreno vivo dos 3 gaps\n- docs/bok/pipc/ \u2014 10 docs sobre pipeline interno de produ\u00e7\u00e3o criativa\n- docs/bok/video-repurpose/ \u2014 9 docs sobre motor de cortes\n- docs/bok/spaces-cadence/ \u2014 10 docs sobre cad\u00eancia+automa\u00e7\u00e3o conversacional\n- docs/bok/predictive-swarm/ \u2014 enxame sensorial-preditivo (QA sensorial)\n- docs/bok/landing-factory/ \u2014 landing pages auto-otimiz\u00e1veis (beachhead ag\u00eancia)\n- .claude/context/sprint-priorities.md \u2014 FILA SOVEREIGN + sprints recentes\n`.trim()\n\n// ============================================================================\n// PHASE 1 \u2014 Understand (3 parallel readers \u2192 barrier for shared ground truth)\n// ============================================================================\nphase('Understand')\n\nconst STATE_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['capabilities_live', 'capabilities_gaps', 'binding_constraints', 'material_facts'],\n  properties: {\n    capabilities_live: {\n      type: 'array', items: { type: 'string' },\n      description: 'Capacidades MCORCH VIVAS que podem sustentar um plano SEM novo c\u00f3digo. Uma frase cada, factual.',\n    },\n    capabilities_gaps: {\n      type: 'array', items: { type: 'string' },\n      description: '3 gaps declarados p/ cad\u00eancia aut\u00f4noma + outros gaps materiais achados. Uma frase cada.',\n    },\n    binding_constraints: {\n      type: 'array', items: { type: 'string' },\n      description: 'Regras/gates que qualquer plano PRECISA respeitar (BoK gate, FILA, custo USD=0, etc). Uma frase cada.',\n    },\n    material_facts: {\n      type: 'array', items: { type: 'string' },\n      description: 'Fatos materiais verific\u00e1veis do estado atual (EP03 postado, 48 cortes s\u00f3 EP01, TikTok em review, etc.). Uma frase cada.',\n    },\n  },\n}\n\nconst REFERENCES_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['convergences', 'contradictions', 'unverified_claims', 'actionable_extracts', 'red_flags'],\n  properties: {\n    convergences: {\n      type: 'array', items: { type: 'string' },\n      description: 'Pontos onde 2+ refer\u00eancias CONVERGEM (sinal forte). Formato: \"Ref #X+#Y: <claim>\".',\n    },\n    contradictions: {\n      type: 'array', items: { type: 'string' },\n      description: 'Contradi\u00e7\u00f5es entre refer\u00eancias ou com o estado MCORCH. Ex: \"Ref #2 diz Shorts n\u00e3o contam p/ 3000h; nosso foco \u00e9 Shorts\".',\n    },\n    unverified_claims: {\n      type: 'array', items: { type: 'string' },\n      description: 'Claims marketing-speak que N\u00c3O s\u00e3o fatos verificados (\u20ac250k valuation, ROI 7d, 100k seguidores em 30d).',\n    },\n    actionable_extracts: {\n      type: 'array', items: { type: 'string' },\n      description: 'Insights concretos que viram passos/par\u00e2metros. Ex: \"0.5s de sil\u00eancio no TTS\", \"gancho consome 20 dos 30min\", \"envios/alcance pesa 3-5\u00d7 curtidas\".',\n    },\n    red_flags: {\n      type: 'array', items: { type: 'string' },\n      description: 'Armadilhas de recomenda\u00e7\u00e3o: sugest\u00f5es que violam MCORCH doctrine (pnpm no repo, ferramentas pagas pre-revenue, mock/hype n\u00e3o-verificado).',\n    },\n  },\n}\n\nconst TERRAIN_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['fila_state', 'terrain_summary', 'unblocking_moves', 'pending_from_sovereign'],\n  properties: {\n    fila_state: {\n      type: 'string',\n      description: 'O topo da FILA SOVEREIGN e o que ela permite/pro\u00edbe. Deve mencionar os 2 deepsearches pendentes.',\n    },\n    terrain_summary: {\n      type: 'string',\n      description: 'Resumo do docs/roadmap/organic-shorts-terrain-2026-07-29.md: contagens vivas + os 3 gaps + interpreta\u00e7\u00e3o.',\n    },\n    unblocking_moves: {\n      type: 'array', items: { type: 'string' },\n      description: 'Movimentos un-gated que destravariam terreno HOJE sem violar a FILA. Ex: \"subir EP03 pelo menu Cortes\", \"arm 1 plano de cad\u00eancia dry-run\".',\n    },\n    pending_from_sovereign: {\n      type: 'array', items: { type: 'string' },\n      description: 'Itens que EXIGEM decis\u00e3o/entrega do Sovereign antes de arrancar c\u00f3digo. Ex: \"os 2 planos de deepsearch\", \"aprovar formato dominante\", \"GO no picker filter change\".',\n    },\n  },\n}\n\nconst [state, refs, terrain] = await parallel([\n  () => agent(\n    `Voc\u00ea \u00e9 um agente-leitor do MCORCH. Miss\u00e3o: mapear o ESTADO VIVO das capacidades criativas do MCORCH e os gaps declarados, sem alucinar recursos que n\u00e3o existem.\n\n${SHARED_CTX}\n\n${FILE_HINTS}\n\nFoque em:\n- Capacidades VIVAS (leia CLAUDE.md \u2192 se\u00e7\u00e3o \"Key Files Reference\" + procure marca\u00e7\u00f5es \"VIVO\"/\"SELADA\"/\"active\").\n- Gaps para cad\u00eancia aut\u00f4noma (docs/roadmap/organic-shorts-terrain-2026-07-29.md).\n- Regras inviol\u00e1veis (survival.md + MCORCH Master Execution Protocol \u00a76).\n- Fatos materiais (o que \u00e9 FATO comprovado vs claim ainda por provar).\n\nN\u00e3o invente. Se n\u00e3o encontrar um arquivo, marque como \"n\u00e3o verificado\" no lugar. N\u00e3o bata numa RPC ou tabela de que voc\u00ea n\u00e3o tem certeza.`,\n    { label: 'read:mcorch-state', schema: STATE_SCHEMA },\n  ),\n  () => agent(\n    `Voc\u00ea \u00e9 um agente-cr\u00edtico. Miss\u00e3o: destilar CRITICAMENTE as 6 refer\u00eancias que o Sovereign compartilhou como contexto de estudo. N\u00e3o resuma passivamente \u2014 critique, contraste, flagueie hype.\n\n${SHARED_CTX}\n\nAs 6 refer\u00eancias est\u00e3o condensadas no SHARED_CTX acima. Trate-as como INPUTS n\u00e3o-autoridade \u2014 algumas vieram de outras sess\u00f5es de IA e podem carregar marketing-speak.\n\nInstru\u00e7\u00f5es:\n1. Converg\u00eancias: onde 2+ refs concordam (sinal forte que vale absorver).\n2. Contradi\u00e7\u00f5es: onde refs se contradizem OU contradizem estado MCORCH (cr\u00edtica dura).\n3. Claims n\u00e3o-verificadas: n\u00fameros como \"\u20ac250k valuation\", \"ROI 7 dias\", \"100k seguidores em 30 dias\", \"3000h com 15 simult\u00e2neos\" \u2014 marcar. S\u00f3 \u00e9 fato se tem fonte prim\u00e1ria + m\u00e9todo reproduz\u00edvel.\n4. Extra\u00e7\u00f5es acion\u00e1veis: par\u00e2metros t\u00e9cnicos concretos que viram nossa esteira (sil\u00eancio 0.5s, gancho 20min de 30, prompt em ingl\u00eas com fala em pt entre aspas, etc.).\n5. Red flags: sugest\u00f5es que violariam nossa doutrina (ferramentas pagas pre-renda, ferramentas de \"an\u00e1lise\" que n\u00e3o s\u00e3o open-source e comem BYOK, \"gastar 80% em hook\" contradiz nossa esteira automatizada onde hook \u00e9 ITERA\u00c7\u00c3O barata).\n\nSeja duro. As refer\u00eancias carregam ret\u00f3rica; nosso trabalho \u00e9 destilar sinal.`,\n    { label: 'read:critique-refs', schema: REFERENCES_SCHEMA },\n  ),\n  () => agent(\n    `Voc\u00ea \u00e9 um agente-leitor do TERRENO ATUAL do foco declarado (cortes/shorts org\u00e2nicos).\n\n${SHARED_CTX}\n\n${FILE_HINTS}\n\nLeia docs/roadmap/organic-shorts-terrain-2026-07-29.md se existir e extraia contagens vivas. Leia .claude/context/sprint-priorities.md p/ pegar a FILA SOVEREIGN completa e as pend\u00eancias do Sovereign.\n\nFoque em:\n- O estado exato do topo da FILA (o que autoriza / o que pro\u00edbe hoje).\n- Os 3 gaps declarados p/ cad\u00eancia (cadastro do plano cad\u00eancia, picker YouTube, reshape-pillar gate).\n- Movimentos un-gated (o que EU posso executar HOJE sem quebrar a FILA \u2014 inclui ingerir EP03 pelo menu Cortes, cortar EP02, dry-run de cad\u00eancia com throwaway).\n- O que depende do Sovereign (2 planos deepsearch, aprovar formato dominante, GO em qualquer mudan\u00e7a de picker/reshape).`,\n    { label: 'read:terrain-fila', schema: TERRAIN_SCHEMA },\n  ),\n])\n\nlog(`Understand: state=${state ? 'ok' : 'null'} refs=${refs ? 'ok' : 'null'} terrain=${terrain ? 'ok' : 'null'}`)\n\nconst groundTruth = JSON.stringify({ state, refs, terrain }, null, 2)\n\n// ============================================================================\n// PHASE 2 + 3 \u2014 Design 3 approaches, then adversarial critique per plan\n//   (pipeline: each plan verified as soon as it drafts, no barrier)\n// ============================================================================\n\nconst PLAN_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['name', 'thesis', 'creative_format', 'content_cadence', 'hook_engine', 'production_pipeline', 'distribution', 'metrics', 'un_gated_first_moves', 'gated_moves', 'assumptions', 'kill_criteria'],\n  properties: {\n    name: { type: 'string', description: 'Nome curto do plano (ex: \"Plano A \u2014 Hook-Retention Volume\")' },\n    thesis: { type: 'string', description: 'Uma frase que define a aposta central desta abordagem' },\n    creative_format: { type: 'string', description: 'Formato dominante proposto (split-screen com Gabriel AI reagindo? talking-head puro? cortes limpos?), com racional' },\n    content_cadence: { type: 'string', description: 'Frequ\u00eancia e mix de conte\u00fado (weekly hype, docs longos, shorts di\u00e1rios, lives). N\u00fameros concretos.' },\n    hook_engine: { type: 'string', description: 'Como a m\u00e1quina de ganchos opera (5-3 method, banco de hooks Ref#4, teste do mudo). Como o gancho \u00e9 produzido/testado.' },\n    production_pipeline: { type: 'string', description: 'Pipeline t\u00e9cnico: repurpose EP01 \u2192 cortes ou Veo 3.1 avatar \u2192 HyperFrames \u2192 publica\u00e7\u00e3o. Mapeado \u00e0s capacidades VIVAS.' },\n    distribution: { type: 'string', description: 'Estrat\u00e9gia de canais + timing. Precisa respeitar TikTok em review, YouTube CASA, IG app-review.' },\n    metrics: { type: 'string', description: 'M\u00e9tricas de sucesso e onde vivem no MCORCH (creative_metrics, PIPC brief, YouTube Analytics via youtube-data).' },\n    un_gated_first_moves: {\n      type: 'array', items: { type: 'string' },\n      description: '5-8 primeiros movimentos que EU fa\u00e7o sozinho hoje, com comando exato ou pointer de arquivo. N\u00e3o podem violar a FILA.',\n    },\n    gated_moves: {\n      type: 'array', items: { type: 'string' },\n      description: 'Movimentos que EXIGEM Sovereign (c\u00f3digo de m\u00f3dulo novo, cad\u00eancia arm, filter change no picker, decis\u00e3o de deepsearch).',\n    },\n    assumptions: {\n      type: 'array', items: { type: 'string' },\n      description: 'Suposi\u00e7\u00f5es que o plano faz e que se ca\u00edrem, o plano cai. Ser expl\u00edcito.',\n    },\n    kill_criteria: {\n      type: 'array', items: { type: 'string' },\n      description: 'M\u00e9tricas/eventos que matam este plano (ex: \"reten\u00e7\u00e3o 3s < 40% em 3 semanas\", \"TikTok reprovado 5\u00aa vez\", \"Sovereign veta formato split-screen\").',\n    },\n  },\n}\n\nconst CRITIQUE_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['materiality_check', 'fila_alignment', 'roi_reality', 'creative_gap_check', 'verdict'],\n  properties: {\n    materiality_check: {\n      type: 'array', items: { type: 'string' },\n      description: 'Onde o plano recomenda algo N\u00c3O existente / n\u00e3o verificado no MCORCH. Cita o item do plano e por que quebra Lei 1.',\n    },\n    fila_alignment: {\n      type: 'array', items: { type: 'string' },\n      description: 'Onde o plano viola a FILA (inventar antes dos 2 deepsearches, reordenar sem GO, subir tarefa gated como un-gated).',\n    },\n    roi_reality: {\n      type: 'array', items: { type: 'string' },\n      description: 'Onde o plano compra hype das refer\u00eancias sem sustento. N\u00fameros irreais, prazos irreais, ferramentas pagas pre-renda.',\n    },\n    creative_gap_check: {\n      type: 'array', items: { type: 'string' },\n      description: 'O plano atende a vis\u00e3o do Sovereign (split-screen react / Gabriel AI alpha / roteiro-copy antes do criativo)? Onde falha nisso?',\n    },\n    verdict: {\n      type: 'object',\n      additionalProperties: false,\n      required: ['label', 'score', 'why'],\n      properties: {\n        label: { type: 'string', enum: ['ADOPT', 'ADOPT_WITH_FIXES', 'REJECT'] },\n        score: { type: 'number', description: 'Nota 0-100. <40 REJECT, 40-70 ADOPT_WITH_FIXES, >70 ADOPT.' },\n        why: { type: 'string', description: 'Uma frase justificando o verdict.' },\n      },\n    },\n  },\n}\n\nconst APPROACHES = [\n  {\n    key: 'A',\n    label: 'Plano A \u2014 Hook-Retention Volume (5-3 + banco de hooks + weekly-hype validator)',\n    designPrompt: `Desenhe o Plano A: \"Hook-Retention Volume\".\n\nTese: mercado dos primeiros 1.5s \u00e9 decidido; nossa arma \u00e9 banco de ganchos rotacionados + cad\u00eancia alta de cortes/shorts DERIVADOS do master (repurpose j\u00e1 vivo) + valida\u00e7\u00e3o semanal por m\u00e9trica.\n\nAposta central: 15 roteiros/m\u00eas pelo M\u00e9todo 5-3 (Ref #6), cada um com 10 combos de gancho testados (Ref #4), publicados como shorts 9:16 saindo do repurpose engine (VIVO) + Cin\u00e9tica empilhada (kinetic-stack). PIPC S1+S2 (reten\u00e7\u00e3o YT VIVA) alimenta a pr\u00f3xima rodada. Formato criativo default = talking-head puro (Gabriel AI Veo 3.1) OU corte do master, decis\u00e3o A/B por semana. Split-screen fica como VARI\u00c1VEL de teste, n\u00e3o default.\n\nRestri\u00e7\u00f5es HARDLINE:\n- Zero c\u00f3digo novo al\u00e9m de conectores \u00f3bvios das capacidades VIVAS.\n- Custo USD externo = 0 (usa Veo 3.1 BYOK + Nano Banana + Qwen3-TTS).\n- Respeita FILA: a ESTRAT\u00c9GIA final vem dos 2 deepsearches \u2014 este plano \u00e9 INICIAL.\n- Privado-primeiro em toda publica\u00e7\u00e3o.\n\nUse rigorosamente o ground truth abaixo (capacidades / gaps / red flags). N\u00e3o invente.\n\nGROUND TRUTH:\n${groundTruth}`,\n  },\n  {\n    key: 'B',\n    label: 'Plano B \u2014 Split-Screen React Beachhead (vis\u00e3o do Sovereign como default)',\n    designPrompt: `Desenhe o Plano B: \"Split-Screen React Beachhead\".\n\nTese: o formato dominante que o Sovereign declarou (split-screen com Gabriel AI reagindo em alpha/greenscreen ou em metade da tela sobre v\u00eddeo de fundo rodando) \u00e9 o beachhead. \u00c9 diferencia\u00e7\u00e3o \u2014 nem talking-head puro nem rea\u00e7\u00e3o humana. \u00c9 Gabriel AI observando/reagindo com express\u00e3o visual enquanto v\u00eddeo real (Atlas, Nvidia demo, changelog) roda.\n\nAposta central: Amendment 28 split_grid (grade 2\u00d72 VIVA) e Amendment 29 carrossel hand-picked (VIVO) j\u00e1 suportam parte disso; o gap \u00e9 o \"greenscreen alpha\" (avatar composto sobre B-roll com alpha channel) e a l\u00f3gica de rea\u00e7\u00e3o sincronizada (express\u00e3o do avatar reage ao ponto emocional do v\u00eddeo de fundo). Roteiro/copy \u00e9 ESCRITO PRIMEIRO (vis\u00e3o do Sovereign: \"alinhar estrat\u00e9gia + roteiro + copywrite antes de ir pro criativo\"), a partir do banco de hooks (Ref #4) + M\u00e9todo 5-3 (Ref #6).\n\nRestri\u00e7\u00f5es HARDLINE:\n- Split-screen puro (2 v\u00eddeos empilhados/lado-a-lado) \u00e9 ENTREG\u00c1VEL HOJE com Amendment 28.\n- Alpha/greenscreen sobre B-roll: mapear se HyperFrames + Veo 3.1 fazem alpha OU se precisa novo motor (c\u00f3digo = gated). Se precisar c\u00f3digo, cair no plano B-minus (s\u00f3 split_grid).\n- Custo USD externo = 0.\n- Respeita FILA + os 2 deepsearches pendentes.\n- Materialidade: se Amendment 28 n\u00e3o faz o que voc\u00ea acha que faz, admita.\n\nUse rigorosamente o ground truth. Se voc\u00ea recomendar algo, deve estar nas capacidades VIVAS OU listado como gated.\n\nGROUND TRUTH:\n${groundTruth}`,\n  },\n  {\n    key: 'C',\n    label: 'Plano C \u2014 Weekly-Hype \u2192 Documentary Escalation (Ref #5 model + PIPC integration)',\n    designPrompt: `Desenhe o Plano C: \"Weekly-Hype \u2192 Documentary Escalation\".\n\nTese: shorts org\u00e2nicos como funil de VALIDA\u00c7\u00c3O, n\u00e3o como fim. Cada semana rodam changelogs curtos de IA (2-3 shorts/dia) como laborat\u00f3rio de hip\u00f3tese; os temas que ultrapassam 60% reten\u00e7\u00e3o 3s viram document\u00e1rio atemporal 10-15min (EP04+, o master de novo). Ref #2 aponta que Shorts N\u00c3O contam p/ 3000h monetiza\u00e7\u00e3o \u2014 logo esse plano assume que monetiza\u00e7\u00e3o vem do MASTER, shorts s\u00f3 canalizam audi\u00eancia p/ o master.\n\nAposta central: PIPC S1+S2 (reten\u00e7\u00e3o YT VIVA) \u00e9 o c\u00e9rebro do plano \u2014 o brief acion\u00e1vel por-EP (FR-PIPC-011..018) fecha o loop: shorts geram sinal \u2192 PIPC injeta no planejamento do EP master \u2192 master vira monetiza\u00e7\u00e3o. Formato dos shorts pode ser QUALQUER um (talking-head, corte, split-screen), decidido por A/B semanal via PIPC. O norte \u00e9 escala do MASTER, n\u00e3o do short.\n\nRestri\u00e7\u00f5es HARDLINE:\n- Ref #2 \"3000h com lives evergreen\" \u2014 critique se aplica ao nosso caso (n\u00e3o somos canal gen\u00e9rico).\n- Custo USD externo = 0.\n- Respeita FILA (deepsearches pendentes).\n- FR-PIPC-017/018 (inje\u00e7\u00e3o do brief no planejamento) hoje \u00e9 MANUAL \u2014 plano deve dizer se aceita manual ou pede c\u00f3digo novo.\n\nUse rigorosamente o ground truth. Se voc\u00ea recomendar hooks ao PIPC que n\u00e3o existem, marque como gated.\n\nGROUND TRUTH:\n${groundTruth}`,\n  },\n]\n\nconst verifiedPlans = await pipeline(\n  APPROACHES,\n  async (approach) => {\n    const plan = await agent(approach.designPrompt, {\n      label: `design:plan-${approach.key}`,\n      phase: 'Design',\n      schema: PLAN_SCHEMA,\n    })\n    return { approach, plan }\n  },\n  async ({ approach, plan }) => {\n    if (!plan) return { approach, plan: null, critique: null }\n    const critique = await agent(\n      `Voc\u00ea \u00e9 o cr\u00edtico adversarial. Miss\u00e3o: TENTAR REJEITAR o plano abaixo. Assuma que ele falhar\u00e1 em produ\u00e7\u00e3o se voc\u00ea n\u00e3o o desmontar aqui.\n\nContexto MCORCH (regras inviol\u00e1veis):\n${SHARED_CTX}\n\nGround truth (capacidades / gaps / cr\u00edticas de refer\u00eancias):\n${groundTruth}\n\nPLANO A CRITICAR (${approach.label}):\n${JSON.stringify(plan, null, 2)}\n\nAplique 4 lentes:\n1. MATERIALIDADE \u2014 cada item do plano tem lastro em capacidade VIVA ou est\u00e1 claramente marcado como gated? Onde alucina?\n2. ALINHAMENTO FILA \u2014 o plano respeita \"a estrat\u00e9gia definitiva vem dos 2 deepsearches\"? Onde inventa antes deles? Onde reordena a FILA sem GO?\n3. ROI REAL \u2014 n\u00fameros de reten\u00e7\u00e3o/seguidores/monetiza\u00e7\u00e3o v\u00eam das refs marketing-speak (\u20ac250k, 100k em 30d, ROI 7d) ou t\u00eam sustento? Prazos realistas p/ 1 operador (Sovereign)?\n4. GAP CRIATIVO \u2014 o plano atende a vis\u00e3o declarada NESTE turno? (split-screen react com Gabriel AI reagindo/alpha; roteiro+copy ANTES do criativo). Onde ignora?\n\nVerdict: ADOPT / ADOPT_WITH_FIXES / REJECT com nota 0-100.\nDefault para REJECT se ficar em d\u00favida \u2014 a barra \u00e9 o plano SOBREVIVER a produ\u00e7\u00e3o sob as 4 Leis.`,\n      {\n        label: `verify:plan-${approach.key}`,\n        phase: 'Verify',\n        schema: CRITIQUE_SCHEMA,\n      },\n    )\n    return { approach, plan, critique }\n  },\n)\n\nconst survivors = verifiedPlans.filter(v => v && v.plan && v.critique)\nlog(`Verify: ${survivors.length}/3 planos verificados (${survivors.map(s => `${s.approach.key}=${s.critique?.verdict?.label ?? 'null'}/${s.critique?.verdict?.score ?? 'null'}`).join(' \u00b7 ')})`)\n\n// ============================================================================\n// PHASE 4 \u2014 Synthesize (barrier: needs all 3 plans + all 3 critiques)\n// ============================================================================\nphase('Synthesize')\n\nconst SYNTHESIS_SCHEMA = {\n  type: 'object',\n  additionalProperties: false,\n  required: ['executive_summary', 'preliminary_strategy', 'ab_c_test_matrix', 'un_gated_next_move', 'gated_asks_to_sovereign', 'deepsearch_questions', 'kill_switches', 'risks'],\n  properties: {\n    executive_summary: {\n      type: 'string',\n      description: '3-5 frases: o que aprendemos das refs + estado MCORCH + qual \u00e9 a recomenda\u00e7\u00e3o inicial.',\n    },\n    preliminary_strategy: {\n      type: 'object',\n      additionalProperties: false,\n      required: ['convergent_axioms', 'chosen_default_format', 'hook_discipline', 'production_pipeline', 'distribution_privado_primeiro'],\n      properties: {\n        convergent_axioms: { type: 'array', items: { type: 'string' }, description: 'Axiomas em que as 6 refs + MCORCH convergem (ex: \"1.5s decide\", \"TTS +0.5s sil\u00eancio\", \"roteiro/copy antes do criativo\").' },\n        chosen_default_format: { type: 'string', description: 'Formato DEFAULT recomendado como ponto de partida INICIAL, com racional honesto (n\u00e3o confundir com \"vencedor\" \u2014 os testes v\u00e3o dizer).' },\n        hook_discipline: { type: 'string', description: 'Como o banco de hooks vive no MCORCH (arquivo? tabela? esteira). Trigger da revis\u00e3o semanal.' },\n        production_pipeline: { type: 'string', description: 'Pipeline concreto de N est\u00e1gios, cada est\u00e1gio mapeado \u00e0 capacidade VIVA (repurpose / Veo 3.1 / Nano Banana / HyperFrames / Qwen3-TTS / kinetic-stack / cad\u00eancia).' },\n        distribution_privado_primeiro: { type: 'string', description: 'Cad\u00eancia de publica\u00e7\u00e3o privada-primeiro; quem vira o p\u00fablico; onde a m\u00e9trica vive.' },\n      },\n    },\n    ab_c_test_matrix: {\n      type: 'array',\n      description: '3-5 testes A/B/C concretos p/ rodar em paralelo. Cada teste tem hip\u00f3tese, vari\u00e1vel, m\u00e9trica, dura\u00e7\u00e3o, decis\u00e3o.',\n      items: {\n        type: 'object',\n        additionalProperties: false,\n        required: ['name', 'hypothesis', 'variants', 'primary_metric', 'guardrail_metric', 'duration', 'decision_rule'],\n        properties: {\n          name: { type: 'string' },\n          hypothesis: { type: 'string' },\n          variants: { type: 'array', items: { type: 'string' }, description: 'A, B, [C]. Cada uma uma frase concreta.' },\n          primary_metric: { type: 'string', description: 'M\u00e9trica exata + onde vive (creative_metrics.hook_rate, PIPC brief, youtube-data audience_retention).' },\n          guardrail_metric: { type: 'string', description: 'M\u00e9trica secund\u00e1ria que se cair, mata o teste (originalidade filter, custo mco, etc.).' },\n          duration: { type: 'string', description: 'Semanas + N posts por variante p/ signific\u00e2ncia pr\u00e1tica (n\u00e3o p-valor formal \u2014 crit\u00e9rio pragm\u00e1tico).' },\n          decision_rule: { type: 'string', description: 'Regra clara de decis\u00e3o (ex: \"se A ganha 20%+ em hook_rate e n\u00e3o perde em ROI, adota A por 4 semanas\").' },\n        },\n      },\n    },\n    un_gated_next_move: {\n      type: 'object',\n      additionalProperties: false,\n      required: ['label', 'command_or_pointer', 'why_now', 'success_signal'],\n      properties: {\n        label: { type: 'string' },\n        command_or_pointer: { type: 'string', description: 'Comando exato ou arquivo:linha p/ EU (main-loop) come\u00e7ar HOJE sem violar FILA.' },\n        why_now: { type: 'string' },\n        success_signal: { type: 'string' },\n      },\n    },\n    gated_asks_to_sovereign: {\n      type: 'array', items: { type: 'string' },\n      description: 'Decis\u00f5es/entregas do Sovereign p/ destravar o plano. Ordenadas por criticidade.',\n    },\n    deepsearch_questions: {\n      type: 'array', items: { type: 'string' },\n      description: 'Perguntas espec\u00edficas que os 2 deepsearches pendentes IDEALMENTE responderiam p/ este plano evoluir de INICIAL p/ DEFINITIVO. Isto AJUDA o Sovereign a filtrar o que faz sentido investir os deepsearches em explorar.',\n    },\n    kill_switches: {\n      type: 'array', items: { type: 'string' },\n      description: 'Sinais/eventos que matam este plano inteiro (n\u00e3o s\u00f3 uma variante).',\n    },\n    risks: {\n      type: 'array', items: { type: 'string' },\n      description: 'Riscos residuais nomeados que sobrevivem \u00e0 cr\u00edtica adversarial.',\n    },\n  },\n}\n\nconst synthesisContext = {\n  understand: { state, refs, terrain },\n  plans_verified: survivors.map(s => ({\n    key: s.approach.key,\n    label: s.approach.label,\n    plan: s.plan,\n    critique: s.critique,\n  })),\n}\n\nconst finalSynthesis = await agent(\n  `Voc\u00ea \u00e9 o sintetizador FINAL. Miss\u00e3o: produzir o PLANO DEFINITIVO INICIAL para cortes/shorts org\u00e2nicos do MCORCH, honrando 3 for\u00e7as ao mesmo tempo:\n\n(1) O sinal convergente das 6 refer\u00eancias (o que aprendemos de fora).\n(2) O estado material vivo do MCORCH (o que d\u00e1 para arrancar HOJE sem violar Leis).\n(3) A vis\u00e3o criativa que o Sovereign declarou NESTE turno (split-screen react com Gabriel AI, alpha/greenscreen, roteiro+copy ANTES do criativo).\n\nE honrando 1 limite intranspon\u00edvel:\n- A ESTRAT\u00c9GIA FINAL vem dos 2 deepsearches que o Sovereign vai enviar. Seu output \u00e9 INICIAL: hip\u00f3teses armadas + testes A/B/C prontos + pr\u00f3ximo passo execut\u00e1vel \u2014 pronto para PIVOTAR quando os deepsearches chegarem.\n\nContexto MCORCH:\n${SHARED_CTX}\n\n3 planos concorrentes desenhados e criticados adversarialmente:\n${JSON.stringify(synthesisContext, null, 2)}\n\nInstru\u00e7\u00f5es:\n- N\u00c3O escolha \"o vencedor\" cegamente. Sintetize o MELHOR de cada, absorvendo o que sobreviveu \u00e0 cr\u00edtica adversarial de cada um.\n- Se o plano B (split-screen react) foi rejeitado por gaps materiais (ex: alpha/greenscreen precisa c\u00f3digo novo), reconhe\u00e7a e proponha o degrau intermedi\u00e1rio vi\u00e1vel HOJE (split_grid Amendment 28 j\u00e1 VIVO).\n- Ancore CADA recomenda\u00e7\u00e3o numa capacidade VIVA ou marque explicitamente como GATED.\n- A matriz A/B/C deve testar vari\u00e1veis REAIS que o MCORCH consegue variar hoje (formato de gancho, comprimento, formato criativo, canal, hor\u00e1rio, headline visual \u2014 n\u00e3o vari\u00e1veis que exigem c\u00f3digo novo).\n- Perguntas para os deepsearches devem ser ESPEC\u00cdFICAS (ajudam o Sovereign a saber se os deepsearches em curso v\u00e3o mesmo destravar decis\u00f5es).\n- Kill switches concretos: n\u00fameros + eventos, n\u00e3o vibes.\n\nObjetivo do output: em uma leitura, o Sovereign entende (a) o que EU j\u00e1 posso fazer HOJE, (b) o que ele precisa entregar, (c) o que os deepsearches precisam esclarecer, (d) quais testes v\u00e3o gerar sinal, (e) o que mata tudo.`,\n  {\n    label: 'synthesize:final',\n    schema: SYNTHESIS_SCHEMA,\n  },\n)\n\nreturn {\n  understand: { state, refs, terrain },\n  plans: survivors,\n  synthesis: finalSynthesis,\n}\n",
-  "run_in_background": "true"
-}
-```
-
-> **Tool Result (Workflow)** - ❌ Error
->
-> ```
-> <tool_use_error>InputValidationError: Workflow failed due to the following issue:
-> An unexpected parameter `run_in_background` was provided</tool_use_error>
-> ```
-
-## 🤖 Claude *(22:47:44)*
-
-Workflows já rodam em background por padrão — removo o parâmetro.
-
-## 🤖 Claude *(22:49:27)*
-
-
-🛠️ **Tool Call**: `Workflow`
-```json
-{
-  "script": "export const meta = {\n  name: 'organic-shorts-strategy-synthesis',\n  description: 'Sintetiza estrat\u00e9gia inicial de cortes/shorts org\u00e2nicos MCORCH a partir de 6 refer\u00eancias externas + contexto vivo do ecossistema, com 3 planos concorrentes verificados adversarialmente e s\u00edntese A/B/C',\n  phases: [\n    { title: 'Understand', detail: 'Ler estado vivo do MCORCH + terreno de shorts + destilar as 6 refer\u00eancias criticamente' },\n    { title: 'Design', detail: '3 planos concorrentes (Hook-Volume \u00b7 Split-Screen React \u00b7 Weekly\u2192Doc Hybrid) desenhados independentes' },\n    { title: 'Verify', detail: 'Cr\u00edtica adversarial por plano \u2014 materialidade \u00d7 alinhamento com FILA \u00d7 ROI honesto' },\n    { title: 'Synthesize', detail: 'Plano definitivo inicial + matriz A/B/C + un-gated vs gated + pr\u00f3ximo passo execut\u00e1vel' },\n  ],\n}\n\nconst SHARED_CTX = `\nCONTEXTO MCORCH (2026-07-30, sess\u00e3o p\u00f3s-/handson):\n\n- Sovereign: Gabriel Zarattini. Persona p\u00fablica: \"Gabriel AI\" (avatar sint\u00e9tico,\n  cabelo curto escuro, olhos azuis, barba, tom entusiasta t\u00e9cnico).\n- Nicho: IA F\u00edsica, Rob\u00f3tica, Changelogs Hypados, Automa\u00e7\u00e3o, Spatial Computing.\n- Estado atual: EP03 master postado no YouTube (2026-07-29). 48 cortes 9:16\n  todos do EP01, EP02 com 0 cortes, EP03 nem est\u00e1 em creative_assets.\n- FILA SOVEREIGN diz explicitamente que a estrat\u00e9gia DEFINITIVA vem de 2 planos\n  de deepsearch que o Sovereign vai enviar \u2014 as 6 refer\u00eancias deste turno s\u00e3o\n  contexto/estudo (podem ou n\u00e3o ser um dos 2 deepsearches). Um plano INICIAL \u00e9\n  autorizado, mas deve marcar claramente o que fica pendente dos deepsearches.\n\nDoutrinas load-bearing (violar = rejeitar o plano):\n- Lei 1 Materialidade: nenhuma claim sem prova; numbers de valuation/ROI das\n  refer\u00eancias (\u20ac250k, ROI 7 dias) s\u00e3o MARKETING-SPEAK, n\u00e3o fatos verificados.\n- Lei 2 Processo Antecipado: automa\u00e7\u00e3o s\u00f3 depois de SOP humano em docs/processes/.\n- Lei 3 Poda: preservar foco; n\u00e3o inflar escopo.\n- Lei 4 ORO: Operator/Reviewer/Owner declarados.\n- MCORCH Master Execution Protocol: c\u00f3digo de m\u00f3dulo novo exige BoK 9/9 SELADA\n  em docs/bok/<slug>/ + Pattern Conformance Declaration.\n- Doutrina \"prontid\u00e3o se l\u00ea no GATE STATUS\": 9/9 arquivos != selada != c\u00f3digo-liberado.\n- Custo USD externo = 0 \u00e9 gate de GO (pre-revenue); BYOK paid = p\u00f3s-renda.\n- Privado-primeiro: postar draft/privado; Sovereign vira p\u00fablico.\n\nCapacidades j\u00e1 VIVAS (podem sustentar plano SEM novo c\u00f3digo):\n- Motor de repurpose 1 master \u2192 N shorts 9:16 + carrossel (VIVO E2E).\n- ASR whisper.cpp US$0 + reconcilia\u00e7\u00e3o roteiro-autoritativa (VIVO).\n- N\u00f3 Transcri\u00e7\u00e3o/SRT no Spaces (VIVO 2026-07-22).\n- Voz clonada self-host Qwen3-TTS 12Hz US$0 + Modo Expressivo (VIVO).\n- Veo 3.1 avatar/refs no Spaces (BYOK Google, 178 mco). Vertex AI service-account\n  pronto (267 mco). Nano Banana multimodal (10 mco) para composi\u00e7\u00e3o.\n- HyperFrames render determin\u00edstico (frontend 9:16 + legendas kinetic-stack).\n- Amendment 28 split_grid (grade 2x2 videos+fotos) e Amendment 29 Carrossel\n  hand-picked (VIVOS, witness pago).\n- Cad\u00eancia (autopilot_plans plan_kind='cadence') VIVA, TICK vazio.\n- Publica\u00e7\u00f5es: TikTok (aguardando App Review), YouTube (canal Gabriel AI\n  conectado, worker resumable dual-source, service ATIVA), IG/Meta (rail vivo,\n  app-review pendente), pipeline de Publica\u00e7\u00f5es + trigger cascade rec\u00e9m-livre\n  do 409 dead-end (2026-07-30).\n- PIPC S1+S2 VIVOS: reten\u00e7\u00e3o YouTube persiste \u2192 brief acion\u00e1vel por-EP\n  (gap: FR-PIPC-017/018 = injetar o brief no planejamento do pr\u00f3ximo EP).\n\nGaps declarados para \"cad\u00eancia aut\u00f4noma\" (do organic-shorts-terrain-2026-07-29):\n  (1) ZERO plano de cad\u00eancia armado (autopilot_plans plan_kind='cadence' vazio;\n      tick */15 vivo sem o que despachar).\n  (2) Picker do YouTube filtra source_module='external' -> 48 cortes invis\u00edveis\n      no picker (nascidos do repurpose interno, n\u00e3o de ingest externo).\n  (3) reshape-pillar s\u00f3 dispara com pillar_run_id (ningu\u00e9m liga o gatilho).\n\nVIS\u00c3O CRIATIVA DO SOVEREIGN (declarada NESTE turno):\n  Formato dominante = tela dividida (\"split-screen\" tipo rea\u00e7\u00e3o), com op\u00e7\u00f5es:\n   (a) Gabriel AI em alpha/greenscreen sobre v\u00eddeo rodando de fundo (\"remix\"\n       tipo IG nativo, avatar em 1a camada s\u00f3 rosto),\n   (b) Split-screen superior/inferior \u2014 v\u00eddeo real numa metade, Gabriel AI\n       reagindo/observando em express\u00e3o visual na outra.\n  A base visual (grades de cortes) J\u00c1 existe. O gap admitido: alinhar\n  ESTRAT\u00c9GIA + ROTEIRO + COPYWRITE antes de gerar o criativo. \u00c9 aqui que\n  entra a an\u00e1lise das 6 refer\u00eancias.\n\nAS 6 REFER\u00caNCIAS (resumo esqueleto para agentes que n\u00e3o v\u00e3o rel\u00ea-las):\n  #1 Ferramentas de an\u00e1lise de canal YT (OutlierKit/Subscribr para roteiro,\n     Memories.ai/Twelve Labs + Gemini multimodal para visual). Prop\u00f5e pipeline\n     n8n que gera relat\u00f3rio 4-pilares (roteiro/cen\u00e1rio/edi\u00e7\u00e3o/blueprint).\n  #2 Meta 3000h YT monetiza\u00e7\u00e3o: lives (30h/dia com 15 simult\u00e2neos), v\u00eddeos\n     10-15min+, evergreen, playlists com telas finais, embeds externos.\n     Shorts N\u00c3O contam para 3000h (t\u00eam meta separada de views).\n  #3 Framework universal VFX YAML (System Prompt/Dynamic Template Engine)\n     para produzir tutorial VFX repet\u00edvel. Fluxo: imagem mestre est\u00e1tica\n     (Nano Banana Pro) + motion tracking (Seedance/Veo 3.1 Flash).\n  #4 \"Lei do 1.5 Segundo\" \u2014 10 combos gancho falado + headline visual para o\n     nicho IA F\u00edsica (ex: \"Esque\u00e7a o ChatGPT: a IA saiu da tela e ganhou\n     pernas\"). Corte de quebra de padr\u00e3o em 2.5-3s.\n  #5 Engenharia de conte\u00fado sint\u00e9tico: pipeline Veo 3.1 Flash + MCP Premiere,\n     consist\u00eancia de avatar via Face-Adapter/ControlNet, 0.5s de sil\u00eancio no\n     TTS para n\u00e3o cortar boca, estrat\u00e9gia weekly-hype (validador) ->\n     document\u00e1rio atemporal (rent\u00e1vel). Claims financeiros (\u20ac250k valuation,\n     ROI 7 dias) \u2014 MARCAR COMO N\u00c3O-VERIFICADOS. Programas Google/Microsoft/\n     NVIDIA/AWS Activate para cr\u00e9ditos cloud.\n  #6 M\u00e9todo 5-3 (5 perfis refer\u00eancia x 3 conte\u00fados = 15 roteiros validados\n     + auditoria de sentimento nos coment\u00e1rios). Refor\u00e7a 1.5s + gancho\n     consome 20 dos 30min de produ\u00e7\u00e3o. Sinal algor\u00edtmico cr\u00edtico = envios\n     por alcance (DMs) pesa 3-5x curtidas. Republica\u00e7\u00f5es >10/30d = -60/-80%\n     alcance org\u00e2nico (originalidade \u00e9 filtro penalizador). Weekly-hype ->\n     document\u00e1rio. Prompt Veo 3.1 estruturado + 7.2-7.8s de fala + 0.5s\n     sil\u00eancio (mesmo insight do #5).\n`.trim()\n\nconst FILE_HINTS = `\nArquivos-chave que agentes de leitura podem consultar (opcional):\n- CLAUDE.md \u2014 arquitetura completa + Key Files Reference\n- .claude/rules/survival.md \u2014 as 4 Leis\n- HANDOFF.md \u2014 Task State + Records (Read com limit <=150 linhas)\n- docs/roadmap/organic-shorts-terrain-2026-07-29.md \u2014 terreno vivo dos 3 gaps\n- docs/bok/pipc/ \u2014 pipeline interno de produ\u00e7\u00e3o criativa\n- docs/bok/video-repurpose/ \u2014 motor de cortes\n- docs/bok/spaces-cadence/ \u2014 cad\u00eancia+automa\u00e7\u00e3o conversacional\n- .claude/context/sprint-priorities.md \u2014 FILA SOVEREIGN + sprints recentes\n`.trim()\n\nphase('Understand')\n\nconst STATE_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['capabilities_live', 'capabilities_gaps', 'binding_constraints', 'material_facts'],\n  properties: {\n    capabilities_live: { type: 'array', items: { type: 'string' }, description: 'Capacidades MCORCH VIVAS que sustentam plano SEM novo c\u00f3digo. Uma frase cada.' },\n    capabilities_gaps: { type: 'array', items: { type: 'string' }, description: '3 gaps de cad\u00eancia + outros gaps materiais. Uma frase cada.' },\n    binding_constraints: { type: 'array', items: { type: 'string' }, description: 'Gates que qualquer plano precisa respeitar. Uma frase cada.' },\n    material_facts: { type: 'array', items: { type: 'string' }, description: 'Fatos materiais verific\u00e1veis do estado atual. Uma frase cada.' },\n  },\n}\nconst REFERENCES_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['convergences', 'contradictions', 'unverified_claims', 'actionable_extracts', 'red_flags'],\n  properties: {\n    convergences: { type: 'array', items: { type: 'string' }, description: 'Onde 2+ refs convergem. Formato: \"Ref #X+#Y: <claim>\".' },\n    contradictions: { type: 'array', items: { type: 'string' }, description: 'Contradi\u00e7\u00f5es entre refs ou com estado MCORCH.' },\n    unverified_claims: { type: 'array', items: { type: 'string' }, description: 'Claims marketing-speak n\u00e3o verificadas.' },\n    actionable_extracts: { type: 'array', items: { type: 'string' }, description: 'Insights concretos que viram passos/par\u00e2metros.' },\n    red_flags: { type: 'array', items: { type: 'string' }, description: 'Sugest\u00f5es que violam doutrina MCORCH.' },\n  },\n}\nconst TERRAIN_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['fila_state', 'terrain_summary', 'unblocking_moves', 'pending_from_sovereign'],\n  properties: {\n    fila_state: { type: 'string', description: 'Topo da FILA + o que permite/pro\u00edbe. Mencionar os 2 deepsearches.' },\n    terrain_summary: { type: 'string', description: 'Resumo do terrain doc: contagens vivas + 3 gaps + interpreta\u00e7\u00e3o.' },\n    unblocking_moves: { type: 'array', items: { type: 'string' }, description: 'Movimentos un-gated que destravam terreno HOJE sem violar FILA.' },\n    pending_from_sovereign: { type: 'array', items: { type: 'string' }, description: 'Itens que exigem decis\u00e3o/entrega do Sovereign.' },\n  },\n}\n\nconst [state, refs, terrain] = await parallel([\n  () => agent(\n    `Voc\u00ea \u00e9 um agente-leitor do MCORCH. Miss\u00e3o: mapear o ESTADO VIVO das capacidades criativas e os gaps declarados, sem alucinar recursos.\\n\\n${SHARED_CTX}\\n\\n${FILE_HINTS}\\n\\nFoque em capacidades VIVAS (CLAUDE.md Key Files Reference, marca\u00e7\u00f5es VIVO/SELADA/active), gaps de cad\u00eancia (terrain doc), regras inviol\u00e1veis (survival.md + Master Execution Protocol \u00a76), e fatos materiais (FATO comprovado vs claim por provar). N\u00e3o invente; marque \"n\u00e3o verificado\" quando n\u00e3o achar.`,\n    { label: 'read:mcorch-state', schema: STATE_SCHEMA },\n  ),\n  () => agent(\n    `Voc\u00ea \u00e9 um agente-cr\u00edtico. Miss\u00e3o: destilar CRITICAMENTE as 6 refer\u00eancias. N\u00e3o resuma passivamente \u2014 critique, contraste, flagueie hype.\\n\\n${SHARED_CTX}\\n\\nAs 6 refs est\u00e3o no SHARED_CTX. Trate-as como INPUTS n\u00e3o-autoridade (algumas vieram de outras sess\u00f5es de IA).\\n1. Converg\u00eancias (2+ refs concordam). 2. Contradi\u00e7\u00f5es (entre refs ou com MCORCH). 3. Claims n\u00e3o-verificadas (\u20ac250k, ROI 7d, 100k/30d, 3000h). 4. Extra\u00e7\u00f5es acion\u00e1veis (sil\u00eancio 0.5s, gancho 20/30min, prompt ingl\u00eas fala-pt entre aspas). 5. Red flags (ferramentas pagas pre-renda; \"gastar 80% em hook\" contradiz nossa esteira onde hook \u00e9 itera\u00e7\u00e3o barata). Seja duro.`,\n    { label: 'read:critique-refs', schema: REFERENCES_SCHEMA },\n  ),\n  () => agent(\n    `Voc\u00ea \u00e9 um agente-leitor do TERRENO do foco declarado (cortes/shorts org\u00e2nicos).\\n\\n${SHARED_CTX}\\n\\n${FILE_HINTS}\\n\\nLeia docs/roadmap/organic-shorts-terrain-2026-07-29.md e .claude/context/sprint-priorities.md. Extraia: estado exato do topo da FILA (autoriza/pro\u00edbe hoje), os 3 gaps de cad\u00eancia, movimentos un-gated (o que EU posso fazer HOJE \u2014 ingerir EP03 pelo menu Cortes, cortar EP02, dry-run de cad\u00eancia throwaway), e o que depende do Sovereign (2 deepsearches, aprovar formato, GO em picker/reshape).`,\n    { label: 'read:terrain-fila', schema: TERRAIN_SCHEMA },\n  ),\n])\n\nlog(`Understand: state=${state ? 'ok' : 'null'} refs=${refs ? 'ok' : 'null'} terrain=${terrain ? 'ok' : 'null'}`)\nconst groundTruth = JSON.stringify({ state, refs, terrain }, null, 2)\n\nconst PLAN_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['name', 'thesis', 'creative_format', 'content_cadence', 'hook_engine', 'production_pipeline', 'distribution', 'metrics', 'un_gated_first_moves', 'gated_moves', 'assumptions', 'kill_criteria'],\n  properties: {\n    name: { type: 'string' }, thesis: { type: 'string' },\n    creative_format: { type: 'string' }, content_cadence: { type: 'string' },\n    hook_engine: { type: 'string' }, production_pipeline: { type: 'string' },\n    distribution: { type: 'string' }, metrics: { type: 'string' },\n    un_gated_first_moves: { type: 'array', items: { type: 'string' } },\n    gated_moves: { type: 'array', items: { type: 'string' } },\n    assumptions: { type: 'array', items: { type: 'string' } },\n    kill_criteria: { type: 'array', items: { type: 'string' } },\n  },\n}\nconst CRITIQUE_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['materiality_check', 'fila_alignment', 'roi_reality', 'creative_gap_check', 'verdict'],\n  properties: {\n    materiality_check: { type: 'array', items: { type: 'string' } },\n    fila_alignment: { type: 'array', items: { type: 'string' } },\n    roi_reality: { type: 'array', items: { type: 'string' } },\n    creative_gap_check: { type: 'array', items: { type: 'string' } },\n    verdict: {\n      type: 'object', additionalProperties: false,\n      required: ['label', 'score', 'why'],\n      properties: {\n        label: { type: 'string', enum: ['ADOPT', 'ADOPT_WITH_FIXES', 'REJECT'] },\n        score: { type: 'number' }, why: { type: 'string' },\n      },\n    },\n  },\n}\n\nconst APPROACHES = [\n  {\n    key: 'A',\n    label: 'Plano A \u2014 Hook-Retention Volume (5-3 + banco de hooks + weekly-hype validator)',\n    designPrompt: `Desenhe o Plano A \"Hook-Retention Volume\". Tese: os primeiros 1.5s decidem; a arma \u00e9 banco de ganchos rotacionados + cad\u00eancia alta de cortes/shorts DERIVADOS do master (repurpose vivo) + valida\u00e7\u00e3o semanal por m\u00e9trica. 15 roteiros/m\u00eas pelo M\u00e9todo 5-3 (Ref#6), cada um com combos de gancho (Ref#4), shorts 9:16 do repurpose engine + kinetic-stack. PIPC S1+S2 alimenta a pr\u00f3xima rodada. Formato default = talking-head Gabriel AI Veo 3.1 OU corte do master (A/B semanal); split-screen \u00e9 VARI\u00c1VEL de teste, n\u00e3o default. HARDLINE: zero c\u00f3digo novo al\u00e9m de conectores \u00f3bvios; custo USD=0 (Veo BYOK+Nano Banana+Qwen3-TTS); respeita FILA (estrat\u00e9gia final = deepsearches; este \u00e9 INICIAL); privado-primeiro. Use o ground truth. N\u00e3o invente.\\n\\nGROUND TRUTH:\\n${groundTruth}`,\n  },\n  {\n    key: 'B',\n    label: 'Plano B \u2014 Split-Screen React Beachhead (vis\u00e3o do Sovereign como default)',\n    designPrompt: `Desenhe o Plano B \"Split-Screen React Beachhead\". Tese: o formato que o Sovereign declarou (split-screen com Gabriel AI reagindo em alpha/greenscreen OU em metade da tela sobre B-roll rodando) \u00e9 o beachhead \u2014 diferencia\u00e7\u00e3o: Gabriel AI observando/reagindo com express\u00e3o enquanto v\u00eddeo real (Atlas, Nvidia, changelog) roda. Amendment 28 split_grid (grade 2x2 VIVA) + Amendment 29 carrossel (VIVO) j\u00e1 cobrem parte; o gap \u00e9 o \"greenscreen alpha\" (avatar composto sobre B-roll com alpha) + rea\u00e7\u00e3o sincronizada. Roteiro/copy ESCRITO PRIMEIRO (vis\u00e3o do Sovereign) via banco de hooks (Ref#4) + M\u00e9todo 5-3 (Ref#6). HARDLINE: split-screen puro \u00e9 entreg\u00e1vel HOJE via Amendment 28; alpha/greenscreen \u2014 mapear se HyperFrames+Veo fazem alpha OU se \u00e9 c\u00f3digo novo (gated); se precisar c\u00f3digo, caia no B-minus (s\u00f3 split_grid). Custo USD=0; respeita FILA+deepsearches; materialidade honesta. Use o ground truth.\\n\\nGROUND TRUTH:\\n${groundTruth}`,\n  },\n  {\n    key: 'C',\n    label: 'Plano C \u2014 Weekly-Hype -> Documentary Escalation (Ref#5 model + PIPC)',\n    designPrompt: `Desenhe o Plano C \"Weekly-Hype -> Documentary Escalation\". Tese: shorts org\u00e2nicos como funil de VALIDA\u00c7\u00c3O, n\u00e3o fim. Toda semana rodam changelogs curtos de IA (2-3 shorts/dia) como laborat\u00f3rio; temas >60% reten\u00e7\u00e3o 3s viram document\u00e1rio atemporal 10-15min (EP04+, o master). Ref#2: Shorts N\u00c3O contam p/ 3000h monetiza\u00e7\u00e3o \u2014 logo monetiza\u00e7\u00e3o vem do MASTER; shorts canalizam audi\u00eancia p/ o master. PIPC S1+S2 (reten\u00e7\u00e3o YT VIVA) \u00e9 o c\u00e9rebro: brief acion\u00e1vel por-EP (FR-PIPC-011..018) fecha o loop shorts->sinal->planejamento do EP master->monetiza\u00e7\u00e3o. Formato dos shorts = qualquer (A/B semanal via PIPC). Norte = escala do MASTER. HARDLINE: critique se Ref#2 \"3000h com lives evergreen\" aplica ao nosso caso; custo USD=0; respeita FILA; FR-PIPC-017/018 hoje \u00e9 MANUAL \u2014 diga se aceita manual ou pede c\u00f3digo. Use o ground truth.\\n\\nGROUND TRUTH:\\n${groundTruth}`,\n  },\n]\n\nconst verifiedPlans = await pipeline(\n  APPROACHES,\n  async (approach) => {\n    const plan = await agent(approach.designPrompt, { label: `design:plan-${approach.key}`, phase: 'Design', schema: PLAN_SCHEMA })\n    return { approach, plan }\n  },\n  async ({ approach, plan }) => {\n    if (!plan) return { approach, plan: null, critique: null }\n    const critique = await agent(\n      `Voc\u00ea \u00e9 o cr\u00edtico adversarial. Miss\u00e3o: TENTAR REJEITAR o plano abaixo. Assuma que ele falha em produ\u00e7\u00e3o se voc\u00ea n\u00e3o o desmontar aqui.\\n\\nRegras inviol\u00e1veis:\\n${SHARED_CTX}\\n\\nGround truth:\\n${groundTruth}\\n\\nPLANO A CRITICAR (${approach.label}):\\n${JSON.stringify(plan, null, 2)}\\n\\n4 lentes: 1. MATERIALIDADE (cada item tem lastro vivo ou est\u00e1 marcado gated? onde alucina?). 2. ALINHAMENTO FILA (respeita \"estrat\u00e9gia definitiva = 2 deepsearches\"? onde inventa antes? reordena sem GO?). 3. ROI REAL (n\u00fameros v\u00eam de marketing-speak ou t\u00eam sustento? prazos realistas p/ 1 operador?). 4. GAP CRIATIVO (atende split-screen react com Gabriel AI + roteiro/copy ANTES do criativo? onde ignora?). Verdict ADOPT/ADOPT_WITH_FIXES/REJECT + nota 0-100. Default REJECT em d\u00favida.`,\n      { label: `verify:plan-${approach.key}`, phase: 'Verify', schema: CRITIQUE_SCHEMA },\n    )\n    return { approach, plan, critique }\n  },\n)\n\nconst survivors = verifiedPlans.filter(v => v && v.plan && v.critique)\nlog(`Verify: ${survivors.length}/3 planos (${survivors.map(s => `${s.approach.key}=${s.critique?.verdict?.label ?? 'null'}/${s.critique?.verdict?.score ?? 'null'}`).join(' \u00b7 ')})`)\n\nphase('Synthesize')\n\nconst SYNTHESIS_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  required: ['executive_summary', 'preliminary_strategy', 'ab_c_test_matrix', 'un_gated_next_move', 'gated_asks_to_sovereign', 'deepsearch_questions', 'kill_switches', 'risks'],\n  properties: {\n    executive_summary: { type: 'string' },\n    preliminary_strategy: {\n      type: 'object', additionalProperties: false,\n      required: ['convergent_axioms', 'chosen_default_format', 'hook_discipline', 'production_pipeline', 'distribution_privado_primeiro'],\n      properties: {\n        convergent_axioms: { type: 'array', items: { type: 'string' } },\n        chosen_default_format: { type: 'string' },\n        hook_discipline: { type: 'string' },\n        production_pipeline: { type: 'string' },\n        distribution_privado_primeiro: { type: 'string' },\n      },\n    },\n    ab_c_test_matrix: {\n      type: 'array',\n      items: {\n        type: 'object', additionalProperties: false,\n        required: ['name', 'hypothesis', 'variants', 'primary_metric', 'guardrail_metric', 'duration', 'decision_rule'],\n        properties: {\n          name: { type: 'string' }, hypothesis: { type: 'string' },\n          variants: { type: 'array', items: { type: 'string' } },\n          primary_metric: { type: 'string' }, guardrail_metric: { type: 'string' },\n          duration: { type: 'string' }, decision_rule: { type: 'string' },\n        },\n      },\n    },\n    un_gated_next_move: {\n      type: 'object', additionalProperties: false,\n      required: ['label', 'command_or_pointer', 'why_now', 'success_signal'],\n      properties: {\n        label: { type: 'string' }, command_or_pointer: { type: 'string' },\n        why_now: { type: 'string' }, success_signal: { type: 'string' },\n      },\n    },\n    gated_asks_to_sovereign: { type: 'array', items: { type: 'string' } },\n    deepsearch_questions: { type: 'array', items: { type: 'string' } },\n    kill_switches: { type: 'array', items: { type: 'string' } },\n    risks: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst synthesisContext = {\n  understand: { state, refs, terrain },\n  plans_verified: survivors.map(s => ({ key: s.approach.key, label: s.approach.label, plan: s.plan, critique: s.critique })),\n}\n\nconst finalSynthesis = await agent(\n  `Voc\u00ea \u00e9 o sintetizador FINAL. Produza o PLANO DEFINITIVO INICIAL para cortes/shorts org\u00e2nicos do MCORCH, honrando 3 for\u00e7as: (1) sinal convergente das 6 refer\u00eancias; (2) estado material vivo do MCORCH (o que arranca HOJE sem violar Leis); (3) a vis\u00e3o criativa que o Sovereign declarou NESTE turno (split-screen react com Gabriel AI, alpha/greenscreen, roteiro+copy ANTES do criativo). E 1 limite intranspon\u00edvel: a ESTRAT\u00c9GIA FINAL vem dos 2 deepsearches \u2014 seu output \u00e9 INICIAL (hip\u00f3teses armadas + testes A/B/C prontos + pr\u00f3ximo passo execut\u00e1vel, pronto para PIVOTAR).\\n\\nContexto MCORCH:\\n${SHARED_CTX}\\n\\n3 planos concorrentes desenhados e criticados adversarialmente:\\n${JSON.stringify(synthesisContext, null, 2)}\\n\\nInstru\u00e7\u00f5es: N\u00c3O escolha \"o vencedor\" cegamente \u2014 sintetize o melhor de cada que sobreviveu \u00e0 cr\u00edtica. Se B (split-screen react) foi rejeitado por gaps materiais (alpha/greenscreen = c\u00f3digo novo), reconhe\u00e7a e proponha o degrau vi\u00e1vel HOJE (split_grid Amendment 28). Ancore CADA recomenda\u00e7\u00e3o numa capacidade VIVA ou marque GATED. A matriz A/B/C testa vari\u00e1veis REAIS vari\u00e1veis hoje (gancho, comprimento, formato criativo, canal, hor\u00e1rio, headline) \u2014 n\u00e3o vari\u00e1veis que exigem c\u00f3digo. Perguntas para deepsearches ESPEC\u00cdFICAS. Kill switches com n\u00fameros+eventos. Objetivo: numa leitura o Sovereign entende (a) o que EU fa\u00e7o HOJE, (b) o que ele entrega, (c) o que os deepsearches esclarecem, (d) quais testes geram sinal, (e) o que mata tudo.`,\n  { label: 'synthesize:final', schema: SYNTHESIS_SCHEMA },\n)\n\nreturn { understand: { state, refs, terrain }, plans: survivors, synthesis: finalSynthesis }\n"
-}
-```
-
-> **Tool Result (Workflow)** - ✅ Success
->
-> ```
-> Workflow launched in background. Task ID: wqls8ayb0
-> Summary: Sintetiza estratégia inicial de cortes/shorts orgânicos MCORCH a partir de 6 referências externas + contexto vivo do ecossistema, com 3 planos concorrentes verificados adversarialmente e síntese A/B/C
-> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fec402e3-0895-46ec-bc69-5abd4863c72a/subagents/workflows/wf_edbe2bc3-a59
-> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fec402e3-0895-46ec-bc69-5abd4863c72a/workflows/scripts/organic-shorts-strategy-synthesis-wf_edbe2bc3-a59.js
-> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fec402e3-0895-46ec-bc69-5abd4863c72a/workflows/scripts/organic-shorts-strategy-synthesis-wf_edbe2bc3-a59.js"} to iterate without resending the script.)
-> Run ID: wf_edbe2bc3-a59
-> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/fec402e3-0895-46ec-bc69-5abd4863c72a/workflows/scripts/organic-shorts-strategy-synthesis-wf_edbe2bc3-a59.js", resumeFromRunId: "wf_edbe2bc3-a59"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
-> 
-> You will be notified when it completes. Use /workflows to watch live progress.
-> ```
-
-## 🤖 Claude *(22:49:43)*
-
-<details>
-<summary>💭 Thinking Process</summary>
-
-O workflow está rodando em background enquanto aguardo a notificação. Enquanto isso, vou revisar os arquivos-chave do terrain doc para ter contexto próprio, mas preciso ter cuidado para não duplicar o trabalho que os subagentes já estão fazendo. Vou focar em ler o que eles não estão processando para conseguir validar a síntese deles.
-
-Na verdade, a instrução é clara: não devo fazer as mesmas buscas que deleguei aos subagentes. Vou apenas aguardar e informar o usuário do que está acontecendo, sem fabricar resultados.
-
-</details>
-
-
-## 🤖 Claude *(22:49:52)*
-
-Workflow disparado em background (`wf_edbe2bc3-a59`) — 8 agentes em 4 fases: 3 leitores paralelos (estado vivo do MCORCH · crítica das 6 referências · terreno da FILA) → 3 planos concorrentes desenhados e criticados adversarialmente em pipeline → síntese final com matriz A/B/C.
-
-Os 3 planos que estão competindo:
-- **Plano A — Hook-Retention Volume**: banco de ganchos rotacionados + cortes do repurpose (Método 5-3 + Lei do 1.5s), split-screen como variável de teste.
-- **Plano B — Split-Screen React Beachhead**: a sua visão declarada como default (Gabriel AI reagindo em alpha/greenscreen sobre B-roll), com checagem honesta de materialidade — o que Amendment 28 já entrega hoje vs. o que exige código novo.
-- **Plano C — Weekly-Hype → Documentary**: shorts como funil de validação alimentando o master (onde mora a monetização), PIPC como cérebro.
-
-Cada plano passa por um crítico adversarial que tenta rejeitá-lo por 4 lentes: materialidade (não alucinar capacidade), alinhamento com a FILA (não inventar antes dos 2 deepsearches), ROI honesto (marcar o marketing-speak das referências — €250k valuation, ROI 7 dias, 100k/30d), e gap criativo (atende a sua visão?). A síntese absorve só o que sobrevive.
-
-Aviso quando concluir e trago o plano definitivo inicial + a matriz de testes. Fica claro na entrega: **o output é INICIAL e pronto pra pivotar** quando os 2 deepsearches chegarem — a FILA é explícita que a estratégia definitiva sai deles.
-
 ## 👤 User *(22:43:41)*
 
 <local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
@@ -1450,87 +1359,6 @@ Vou pegar os veredictos dos 3 planos e a crítica-chave que reorientou a síntes
 >      - MISS CENTRAL: o Sovereign declarou NESTE turno que o 'Formato DOMINANTE = tela dividida (Gabriel AI reagindo)'. O plano REBAIXA esse formato inteiro a gated/pos-renda, conflando 'split-screen' com 'exige Veo pago'. Mas Amendment 28 split_grid esta VIVO e GRATIS (witness pago no ground truth) -- um witness de split-screen (corte real + camada avatar composta via Nano 10 mco, sem Veo por-short) e construivel JA. O plano nao entrega nem 1 prova concreta do formato que o proprio Sovereign nomeou como dominante.
 >      - O gap admitido pelo Sovereign e 'alinhar ESTRATEGIA+ROTEIRO+COPY ANTES de gerar o criativo -- e aqui que entram as 6 referencias'. O plano EXTRAI as taticas atomicas (0.5s padding, 7.2-7.8s, hook 1.5s, metodo 5-3) mas NAO produz o artefato de roteiro/copy agora -- punta tudo aos deepsearches. Pior: os un-gated moves NEM executam o metodo 5-3 via Vision MCP nem instanciam a biblioteca-semente dos 10 ganchos IA-Fisica do Ref#4 que o proprio hook_engine descreve. Ha um vao entre o que o plano DIZ (5-3 + 10 ganchos) e o que ele AGENDA (so 'redigir o plano com marcadores PENDENTE').
 > ```
-
-## 🤖 Claude *(23:14:35)*
-
-<details>
-<summary>💭 Thinking Process</summary>
-
-I'm ready to save this strategic roadmap to the docs directory, following the established pattern of naming these planning documents with descriptive timestamps and topics. Agora vou estruturar a entrega: começar com o veredicto dos três planos e o achado crítico sobre medição vazia, depois apresentar a estratégia sintetizada com seus eixos principais, a matriz A/B/C para testes, o que fica ungated versus gated no Sovereign, as perguntas que os deepsearches precisam responder, os kill switches, e finalmente escrever o documento na pasta de roadmap.
-
-</details>
-
-
-## 🤖 Claude *(23:14:35)*
-
-Síntese completa e verificada. Vou materializar o plano em `docs/roadmap/` (padrão da casa para docs de estratégia) e entregar o resumo executivo.
-
-## 🤖 Claude *(23:15:40)*
-
-
-🛠️ **Tool Call**: `Write`
-```json
-{
-  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md",
-  "content": "# Estrat\u00e9gia INICIAL \u2014 Cortes/Shorts Org\u00e2nicos (2026-07-30)\n\n> **Status: PLANO INICIAL \u2014 cede aos 2 deepsearches do Sovereign.** A FILA declara que a\n> estrat\u00e9gia DEFINITIVA sai deles; este documento arma hip\u00f3teses, testes A/B/C e terreno,\n> pronto para pivotar. Produzido por workflow multi-agente `wf_edbe2bc3-a59` (10 agentes:\n> 3 leitores \u2192 3 planos concorrentes \u2192 3 cr\u00edticos adversariais \u2192 s\u00edntese).\n> Insumos: 6 refer\u00eancias externas compartilhadas pelo Sovereign (tratadas como estudo,\n> n\u00e3o spec) + estado material vivo do MCORCH + vis\u00e3o criativa declarada no turno\n> (split-screen react com Gabriel AI).\n>\n> **ORO:** Operator = MCORCH Agent (+ engineer-spaces p/ n\u00f3s) \u00b7 Reviewer = Sovereign \u00b7\n> Owner = Sovereign (blast-radius da marca/conta Gabriel AI).\n\n---\n\n## 1. Veredicto dos 3 planos concorrentes\n\n| Plano | Tese | Verdict | Nota |\n|-------|------|---------|------|\n| A \u2014 Hook-Retention Volume | Banco de ganchos + volume de cortes + valida\u00e7\u00e3o semanal por m\u00e9trica | ADOPT_WITH_FIXES | 63 |\n| B \u2014 Split-Screen React Beachhead | A vis\u00e3o do Sovereign como default; tiled split_grid hoje, alpha gated | **ADOPT_WITH_FIXES** | **80** |\n| C \u2014 Weekly-Hype \u2192 Documentary | Shorts como funil de valida\u00e7\u00e3o p/ o master (monetiza\u00e7\u00e3o) | ADOPT_WITH_FIXES | 68 |\n\nO Plano B venceu porque sua espinha material sobreviveu \u00e0 tentativa de refuta\u00e7\u00e3o: o n\u00f3\n\"Tela Dividida (POV) / Grade\" est\u00e1 VIVO no registry roteado (`canvas-node-registry.ts:60`),\n`composeSplitScreen/composeSplitGrid` s\u00e3o reais e despachados pelo `video-bridge`\n(Amendments 27/28), e os dois defeitos que ele flagueia s\u00e3o confirmados (Veo emite\nmp4 yuv420p SEM alpha; LinkedIn v\u00eddeo degrada em sil\u00eancio p/ text-only ugcPost).\n\nO Plano C foi penalizado por furar a FILA (reorientava o Norte p/ \"master = monetiza\u00e7\u00e3o\"\nantes dos deepsearches \u2014 dire\u00e7\u00e3o da Ref #2). O Plano A, por demover o formato declarado\npelo Sovereign a \"vari\u00e1vel de teste\" e por apoiar a tese inteira numa medi\u00e7\u00e3o que n\u00e3o existe.\n\n## 2. O ACHADO MAIS DURO \u2014 a medi\u00e7\u00e3o \u00e9 OCA (bloqueia todo A/B)\n\nO loop \"deixa o dado escolher\" \u2014 espinha dos 3 planos e das 6 refer\u00eancias \u2014 \u00e9 hoje\n**materialmente n\u00e3o-mensur\u00e1vel para shorts**:\n\n- `creative_metrics.hook_rate` \u00e9 **coluna \u00f3rf\u00e3**: grep por escritor nas edge fns = vazio;\n  a migration `20260627150000` prometia populador \"in a later slice (FR-CP-011)\" que\n  nunca foi constru\u00edda. `useAutopilot.ts` s\u00f3 L\u00ca.\n- A curva de reten\u00e7\u00e3o (PIPC S1+S2) \u00e9 **episode-scoped** e exige audi\u00eancia **P\u00daBLICA**\n  (YouTube Analytics `audienceRetention`). Privado-primeiro \u21d2 ~0 views \u21d2 0 sinal.\n- Contradi\u00e7\u00e3o estrutural: privado-primeiro (sem audi\u00eancia) \u00d7 valida\u00e7\u00e3o por m\u00e9trica real\n  (exige audi\u00eancia). **Sem resolver, todo teste da matriz fica ARMADO mas cego.**\n\nOp\u00e7\u00f5es (decis\u00e3o Sovereign, ver \u00a76): (a) janela de postagem p\u00fablica/SELF_ONLY p/ medir \u00b7\n(b) fatia de ingest\u00e3o de m\u00e9trica de Shorts (c\u00f3digo+SOP) \u00b7 (c) leitura manual de view-count.\n\n## 3. Axiomas convergentes absorvidos (o que as 6 refs concordam E cabe na doutrina)\n\n1. **Padding de 0,5s de sil\u00eancio** no in\u00edcio/fim do TTS (Ref#5+#6, converg\u00eancia exata) \u2014\n   ado\u00e7\u00e3o imediata no rail Qwen3-TTS/voice-bridge, US$0. Evita corte de boca no lip-sync.\n2. **Gancho = par\u00e2metro barato e regener\u00e1vel** (headline HyperFrames + linha Qwen3-TTS),\n   n\u00e3o craft artesanal \u2014 reframe honesto do \"80% no gancho\": gerar N variantes baratas e\n   deixar o dado escolher. \"1,5s\" \u00e9 dire\u00e7\u00e3o (abrir forte cedo), n\u00e3o constante literal.\n3. **Minerar refer\u00eancias ANTES de gerar** \u2014 M\u00e9todo 5-3 (5 perfis \u00d7 3 conte\u00fados = 15 \u00e2ngulos)\n   rodado no **Vision MCP VIVO** (free-tier), NUNCA nas ferramentas pagas das refs\n   (OutlierKit/Subscribr/Twelve Labs/MCP Premiere violam USD=0 e duplicam rails vivos).\n4. **~7,2\u20137,8s de fala por clipe** + prompt Veo estruturado (dire\u00e7\u00e3o em ingl\u00eas, fala pt-BR\n   entre aspas) + corte de quebra-de-padr\u00e3o em 2,5\u20133s \u2014 par\u00e2metros de design.\n5. **Duas m\u00e1quinas** (weekly-hype validador \u2192 document\u00e1rio atemporal) \u2014 HIP\u00d3TESE; o Norte\n   operacional permanece \"impulsionamento de cortes org\u00e2nicos\" conforme a FILA.\n6. **Distin\u00e7\u00e3o material por post \u00e9 regra de design**: 48 cortes 100% EP01 \u00e9 o anti-padr\u00e3o\n   de originalidade que a Ref#6 alerta (-60/-80% \u2014 folclore, mas direcionalmente sensato).\n7. **Proveni\u00eancia IPTC/C2PA obrigat\u00f3ria** em todo sint\u00e9tico (provenance-bridge VIVO,\n   AI Act Art.50, prazo 2026-08-02) \u2014 as 6 refs OMITEM isso; segui-las ao p\u00e9 da letra\n   seria gap de compliance.\n8. **N\u00fameros de marketing em quarentena permanente** (Lei 1): \u20ac250k valuation, ROI 7d,\n   100k/30d, \"DMs 3-5\u00d7\", \"-60/-80%\" \u2014 no m\u00e1ximo hip\u00f3tese de A/B, jamais premissa.\n\n## 4. Formato default (candidato, n\u00e3o decreto)\n\n**Tiled split-screen react via split_grid (Amendment 28)** \u2014 o degrau US$0-HOJE da vis\u00e3o:\numa c\u00e9lula = footage real (screen-capture Atlas/Nvidia/changelog \u2014 n\u00e3o-sint\u00e9tico, sem \u00f4nus\nde proveni\u00eancia nessa metade); c\u00e9lula adjacente = Gabriel AI reagindo.\n\n- Variante (a) **alpha/greenscreen \"remix IG\"** = UPGRADE GATED: matting/despill de avatar\n  n\u00e3o existe no repo (grep zero) e Veo emite yuv420p sem alpha. Exige Amendment + SOP +\n  BoK. Fix da cr\u00edtica: o escopo gated \u00e9 S\u00d3 o matting \u2014 a metade overlay-compositing j\u00e1\n  existe (`render-core.ts` omitBackground).\n- **Risco de autenticidade da rea\u00e7\u00e3o** (cr\u00edtica mais forte ao Plano B): o clipe do avatar\n  \u00e9 gerado CEGO ao B-roll; `-shortest` alinha DURA\u00c7\u00c3O, n\u00e3o o MOMENTO. \"Gabriel AI reagindo\n  com express\u00e3o\" exige coreografia de momento (escolher B-roll cujo beat cai onde o emote\n  roteirizado pica) \u2014 hoje manual, \u00e9 passo DIRETORIAL obrigat\u00f3rio do witness.\n- C\u00e9lula de rea\u00e7\u00e3o usa footage real/existente US$0 at\u00e9 Veo BYOK p\u00f3s-primeira-renda.\n\n## 5. Matriz de testes A/B/C (armados; despacho gated na medi\u00e7\u00e3o \u2014 \u00a72)\n\n| # | Teste | Variantes | M\u00e9trica prim\u00e1ria | Guardrail | Decis\u00e3o |\n|---|-------|-----------|------------------|-----------|---------|\n| T1 | Formato: corte cru vs tiled react | A: reframe 9:16 cru \u00b7 B: split_grid (footage real + Gabriel AI) | Reten\u00e7\u00e3o ~3s / view-through | Completude + impress\u00f5es n\u00e3o colapsando | Vantagem material em reten\u00e7\u00e3o E completude vira default; empate \u2192 corte cru (mais barato). Deepsearch VENCE este resultado |\n| T2 | Banco de ganchos: N variantes | 3-5 combos gancho+headline sobre a MESMA pe\u00e7a, variando s\u00f3 gancho | Reten\u00e7\u00e3o 3s / swipe-away por variante | Completude (anti-clickbait/Goodhart) | Vencedora entra no banco; copy definitiva pendente-deepsearch |\n| T3 | Comprimento | A: ~15-20s punchy \u00b7 B: ~35-45s m\u00e9dio | Taxa de completude | Reten\u00e7\u00e3o 3s | Maior completude sem degradar 3s vira default |\n| T4 | Canal \u00d7 hor\u00e1rio | Mesma pe\u00e7a: YT Shorts (PRIVATE) \u00d7 TikTok (SELF_ONLY) \u00d7 Pinterest; 2 janelas | Velocidade views/48h por canal | TikTok SELF_ONLY n\u00e3o conta como alcance real | Prioriza canal com sinal mais r\u00e1pido e revers\u00edvel |\n\n## 6. Un-gated (EU fa\u00e7o HOJE) vs Gated (Sovereign)\n\n### Pr\u00f3ximo movimento un-gated (o n\u00ba 1)\n**Witness US$0 do tiled split-screen**: n\u00f3 \"Tela Dividida (POV) / Grade\"\n(`src/lib/canvas-node-registry.ts:60`) \u2192 `video-render` (engine=hyperframes) \u2192\n`composeSplitGrid` \u2192 `creative_asset` 1080\u00d71920 + Vision QA. Inputs: um corte real EP01 +\nclipe real na c\u00e9lula de rea\u00e7\u00e3o (SEM Veo). Prova o FORMATO/compositor da aposta inteira.\nEm paralelo (terreno, zero estrat\u00e9gia): **ingerir o master EP03** pelo menu Cortes\n(`/dashboard/repurpose`, skill host-media-masters) e **cortar EP02** p/ diversificar a\npilha (re-verificar contagens com SELECT antes \u2014 medidas de 2026-07-29).\nDemais un-gated: dry-run de cad\u00eancia com throwaway \u00b7 padding 0,5s no TTS \u00b7 biblioteca-semente\nde 10 ganchos como DRAFT sobrescriv\u00edvel.\n\n### Gated (decis\u00e3o/entrega do Sovereign, por criticidade)\n1. **Enviar os 2 deepsearches** \u2014 fonte declarada da estrat\u00e9gia definitiva.\n2. **Resolver a superf\u00edcie de medi\u00e7\u00e3o** (\u00a72) \u2014 sem isso todo A/B \u00e9 cego.\n3. **Aprovar o formato**: tiled ship-now vs alpha/greenscreen (c\u00f3digo novo gated).\n4. **GO + SOP nos 3 fixes de cad\u00eancia**: armar plano real (`autopilot_plans` 'cadence' = 0\n   linhas) \u00b7 picker YouTube enxergar `source_module='hyperframes'` (`useYouTubeUpload.ts:82`)\n   \u00b7 gatilho reshape por corte avulso.\n5. Decidir se **OTD-VR-008** entra (safe-area legenda cin\u00e9tica 4:5/1:1).\n6. **GO + SOP no fix LinkedIn v\u00eddeo** (silent-fail confirmado, defeito nosso).\n7. Virar p\u00fablico os cortes privados \u00b7 aguardar veredito TikTok (desligar flag ao aprovar).\n8. P\u00f3s-primeira-renda: autorizar Veo/Vertex p/ clipes de rea\u00e7\u00e3o sint\u00e9ticos frescos.\n\n## 7. Perguntas que os 2 deepsearches idealmente respondem\n\n1. Formato dominante definitivo (tiled vs alpha vs talking-head vs motion-graphic) e peso no mix.\n2. Cad\u00eancia em N\u00daMEROS (shorts/semana, janelas por canal, ritmo hype-vs-doc) p/ armar o plano.\n3. Copy e \u00e2ngulos definitivos dos ganchos IA-F\u00edsica (validar/substituir a semente Ref#4).\n4. **Qual m\u00e9trica-alvo e superf\u00edcie de medi\u00e7\u00e3o a estrat\u00e9gia assume** (resolve \u00a72).\n5. M\u00e9todo 5-3: QUAIS 5 perfis de refer\u00eancia e QUAIS 3 eixos por perfil.\n6. O funil shorts\u2192master afunila neste nicho, ou shorts s\u00e3o fim-em-si?\n7. Distin\u00e7\u00e3o material m\u00ednima por post p/ n\u00e3o saturar alcance (quantas variantes por cluster).\n8. Comprimento-alvo por pe\u00e7a e calibra\u00e7\u00e3o da quebra-de-padr\u00e3o contra dado real.\n9. Pol\u00edtica YPP ATUAL verificada em fonte viva (tiers 500/3000h vs 1000/4000h vs 10M\n   Shorts-views/90d) antes de citar qualquer \"destrava\".\n\n## 8. Kill switches\n\n- Deepsearch mandar outro eixo \u2192 DEFERIR; este plano cede, n\u00e3o briga.\n- Medi\u00e7\u00e3o n\u00e3o-resolvida \u2192 N\u00c3O escalar volume; A/B fica em dry-run/witness. Gerar variantes\n  cegamente sem readout = f\u00e9, n\u00e3o engenharia = HALT.\n- Queda material de impress\u00f5es em pe\u00e7as quase-id\u00eanticas do mesmo cluster \u2192 HALT do volume.\n- Witness split_grid n\u00e3o renderizar materialmente (falha ou <100KB) \u2192 n\u00e3o declarar ship.\n- Sint\u00e9tico n\u00e3o-marc\u00e1vel IPTC/C2PA at\u00e9 2026-08-02 \u2192 HALT do publish sint\u00e9tico; fallback\n  footage real (que s\u00f3 vale porque o footage de changelog \u00c9 real).\n- Custo USD no loop-default \u2192 kill imediato do caminho pago.\n- A/B de ganchos sem lift ap\u00f3s N semanas (com medi\u00e7\u00e3o viva) \u2192 tese falsificada; voltar ao 5-3.\n- Automa\u00e7\u00e3o sem SOP pr\u00e9vio em docs/processes/ \u2192 viola Lei 2; halt. \"Deployed\" \u2260\n  source-on-disk: verificar deploy real antes de confiar no tick.\n\n## 9. Riscos residuais nomeados\n\n- **Medi\u00e7\u00e3o oca** (o maior \u2014 \u00a72). Reclassificada de \"capacidade\" p/ GAP gated.\n- **Penalidade de originalidade** vs motor de volume (48 cortes 100% EP01).\n- **Autenticidade da rea\u00e7\u00e3o** (avatar cego ao B-roll; coreografia de momento manual).\n- Custo BYOK pr\u00e9-renda se rea\u00e7\u00e3o sint\u00e9tica virar default.\n- Prazo proveni\u00eancia 2026-08-02.\n- Contagens de terreno stale (medidas 2026-07-29; re-verificar por SELECT antes de agir).\n- Canais com hist\u00f3rico de falha: Pinterest 0 published/2 failed \u00b7 Twitter 5 failed \u00b7\n  Facebook 2 failed \u00b7 LinkedIn-v\u00eddeo silent-fail \u2014 n\u00e3o contam como via viva sem prova/fix.\n- Sub-claim de deploy: edge fns de cad\u00eancia presentes no DISCO \u2260 deployadas (schema-drift trap).\n\n---\n*Workflow: `wf_edbe2bc3-a59` \u00b7 journal em `subagents/workflows/wf_edbe2bc3-a59/journal.jsonl`\n(dir da sess\u00e3o). Refer\u00eancias #1-#6 arquivadas no transcript da sess\u00e3o 2026-07-30.*\n"
-}
-```
-
-> **Tool Result (Write)** - ✅ Success
->
-> ```
-> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md (file state is current in your context — no need to Read it back)
-> ```
-
-## 🤖 Claude *(23:15:51)*
-
-<details>
-<summary>💭 Thinking Process</summary>
-
-Agora vou preparar o resumo final em português, começando pelo resultado e mantendo um tom executivo, descrevendo apenas o que foi feito sem fazer commits, e mencionando o arquivo gerado.
-
-</details>
-
-
-## 🤖 Claude *(23:16:12)*
-
-# Síntese pronta — Estratégia INICIAL de cortes/shorts orgânicos
-
-Materializada em [organic-shorts-strategy-inicial-2026-07-30.md](docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md) (10 agentes: 3 leitores → 3 planos concorrentes → 3 críticos adversariais que verificaram cada claim contra o repo vivo → síntese). Não commitei — o arquivo está no worktree para sua revisão.
-
-## O veredicto dos 3 planos
-
-| Plano | Nota | Resultado |
-|-------|------|-----------|
-| **B — Split-Screen React** (sua visão como default) | **80** | Venceu — a espinha material sobreviveu à refutação |
-| C — Weekly-Hype → Documentário | 68 | Furava a FILA (reorientava o Norte antes dos deepsearches) |
-| A — Hook-Volume | 63 | Demovia seu formato declarado + apoiava-se em medição inexistente |
-
-**Sua visão de split-screen é materialmente viável HOJE, com um degrau honesto:** o crítico verificou no repo que o nó "Tela Dividida" está VIVO (`canvas-node-registry.ts:60`, compositor FFmpeg real no video-bridge). Mas a variante **alpha/greenscreen "remix IG" é código novo** — não existe matting de avatar no repo e o Veo emite mp4 yuv420p **sem canal alpha**. Então: **tiled split-screen agora** (footage real numa célula + Gabriel AI na outra), alpha como upgrade gated.
-
-## Os 3 achados que mudam o jogo
-
-1. **A medição é OCA — o achado mais duro.** O loop "deixa o dado escolher" (espinha das 6 referências) não é mensurável hoje: `creative_metrics.hook_rate` é coluna órfã (a fatia FR-CP-011 que a popularia nunca foi construída — grep vazio) e a retenção do PIPC é por-episódio e exige audiência **pública** — privado-primeiro = ~0 views = 0 sinal. **Sem resolver isso, todo A/B fica armado mas cego.** Decisão sua: janela pública/SELF_ONLY para medir · fatia de ingestão de métrica de Shorts (código+SOP) · ou leitura manual.
-2. **Autenticidade da reação.** O clipe do avatar Veo é gerado cego ao B-roll — alinhar duração não é alinhar o *momento*. "Gabriel AI reagindo com expressão" exige coreografia diretorial (o beat do footage cair onde o emote pica), hoje manual. Sem isso, degrada para um emote genérico ao lado de footage não-relacionado.
-3. **Filtro de originalidade.** 48 cortes 100% do EP01 é exatamente o anti-padrão que a Ref#6 alerta. Diversificar (EP02/EP03) virou regra de design, não detalhe.
-
-## Das 6 referências: o que absorvemos e o que quarentenamos
-
-**Absorvido** (convergência 2+ refs × doutrina): padding 0,5s no TTS · gancho como parâmetro regenerável barato (N variantes, não craft de 20min) · Método 5-3 rodado no **Vision MCP** (nunca OutlierKit/Subscribr/Twelve Labs — pagas, violam USD=0 e duplicam rails vivos) · 7,2–7,8s de fala + prompt inglês/fala-pt · quebra de padrão 2,5–3s. **Quarentenado permanente (Lei 1):** €250k valuation, ROI 7 dias, 100k/30d, "DMs pesam 3-5×" — folclore sem fonte. **Gap das refs:** todas omitem proveniência AI Act (prazo 02-Ago) — nossa obrigação, não opcional.
-
-## Matriz A/B/C (armada, despacho gated na medição)
-
-**T1** corte cru × tiled react (a pergunta-mãe da sua visão) · **T2** 3-5 ganchos sobre a mesma peça · **T3** ~15-20s × ~35-45s · **T4** YT×TikTok×Pinterest + 2 horários. Regras de decisão e guardrails anti-Goodhart no doc.
-
-## O que eu faço agora vs o que fica com você
-
-**Meu próximo movimento (un-gated, US$0):** witness do tiled split-screen — corte real EP01 + clipe real na célula de reação, sem Veo → prova o compositor da aposta inteira + Vision QA. Em paralelo: ingerir o EP03 pelo menu Cortes, cortar EP02, dry-run de cadência com throwaway, padding 0,5s, biblioteca-semente de 10 ganchos como DRAFT.
-
-**Gated em você (por criticidade):** ① os 2 deepsearches · ② decisão da superfície de medição · ③ aprovar tiled vs alpha · ④ GO+SOP nos 3 fixes de cadência · ⑤ fix do LinkedIn vídeo (silent-fail confirmado — defeito nosso) · ⑥ veredito TikTok.
-
-O doc traz também **9 perguntas específicas** que os deepsearches idealmente respondem (§7) — úteis para você filtrar se os que estão em curso vão mesmo destravar as decisões — e 8 kill switches com números.
-
-**Quer que eu arranque o witness do tiled split-screen agora?** É o passo que de-riska sua visão antes de qualquer decisão de custo ou formato.
 
 ## 👤 User *(23:14:17)*
 
@@ -6805,13 +6633,1665 @@ Detalhe importante: a célula de baixo está com um clipe Veo **existente** como
 
 Com isso os três trilhos do seu pedido estão fechados: métricas verificadas no painel (Short com 118 views), tabela de vídeos de volta na tela principal (hard-refresh), e a fábrica de reacts pronta. **Próxima fase quando você der o sinal: armar a cadência D3 (1/dia útil) com legendas + passe completo de SEO/AEO por peça** — títulos/descrições/tags saindo da biblioteca de ganchos v1.
 
-## 👤 User *(14:52:54)*
+## 👤 User *(14:53:38)*
 
-Pause aqui para focar na criação do próximo EP05 que você precisa me ajudar a lembrar se é ou não a melhor opção. Mudar o formato de documentário para tutorial ensinando a mexer nas ferramentas e elucidando como e o que pode ser feito atualmente. Parece que já falamos bastante sobre estrategias futuras para videos.
+ótimo depois vou testar e voltar aos, cortes, preciso que você rode o /handoff oficialmente pois vamos dar um Pause aqui para focar na criação do próximo EP05 que você precisa me ajudar a lembrar se é ou não a melhor opção. Mudar o formato de documentário para tutorial ensinando a mexer nas ferramentas e elucidando como e o que pode ser feito atualmente. Parece que já falamos bastante sobre estrategias futuras para videos.
 
-## 👤 User *(14:53:03)*
+## 🤖 Claude *(14:54:20)*
 
-[Request interrupted by user]
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign is calling for the official handoff to close out this session, and they're also asking me to revisit the EP05 format question — whether pivoting from a documentary style to a tutorial approach that teaches how to use the tools and demonstrates what's possible today is the right call, since we've already covered a lot of ground on future video strategies.
+
+Looking back at what we've discussed: there's retention data from previous episodes showing where viewers drop off, which should inform EP05's structure. The core strategy has been weekly-hype content feeding into evergreen documentary episodes, but I'm noticing that Ref#3 actually contains a tutorial framework template — a step-by-step VFX workflow guide with AI presenting each phase. So the tutorial format isn't entirely new to our planning; it's already embedded in one of our reference materials. The question is whether EP05 should follow that tutorial template or stick with the documentary approach we've been building toward. The tutorial angle also serves the product funnel directly—it teaches users how to work with MCORCH tools while demonstrating what's currently possible, which aligns with attracting and onboarding users to the platform. The data supports this: Ref#2 emphasizes tutorials as evergreen search assets that drive watch-hours, and the retention brief shows documentaries hemorrhaging audience early, whereas structured tutorials over 10 minutes accumulate viewing time through search discovery.
+
+The two-machine doctrine doesn't contradict this—shorts and hype validate thematic directions, but tutorials are the conversion and authority machine. A hybrid approach makes sense: keep shorts recruiting around themes while building a tutorial with narrative structure that teaches and converts simultaneously. I should also apply the PIPC retention insights directly to EP05's format, using those metrics to inform the tutorial pacing and structure.
+
+So the recommendation is yes to the tutorial format, grounded in the evidence and the PIPC brief. This is exactly the weak-link moment the retention data flagged—planning EP05 from that brief. Now I need to invoke the handoff protocol, which means loading the seal instructions and executing the full ritual: granular commits, updating the handoff manifest, creating the milestone node, and generating the proof artifacts.
+
+Looking at what's staged: the proof manifest is stale from the last seal, plus new files for the smoke test dispatch, voice bridge integration, the YouTube studio page, and two fresh roadmap docs from today. I need granular commits without the co-authored-by footer—the project memory is explicit on that, overriding the system default. I'll invoke the skill now and follow through with the answer to the EP05 question woven into the next-action.
+
+</details>
+
+
+## 🤖 Claude *(14:54:20)*
+
+Dois entregáveis: a resposta sobre o EP05 (com o que já sabemos e medimos) e o selo oficial. Invocando o ritual:
+
+## 🤖 Claude *(14:54:20)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(14:54:20)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+---
+
+## PHASE 5b-2 — HANDOFF.md SIZE GATE (mandatory before commit)
+
+**O HANDOFF.md precisa continuar LEGÍVEL. Acima de ~25k tokens ele não é lido — é erro.**
+
+> ⚠️ Falha silenciosa: nada quebra, mas o `/handson` seguinte arranca **sem o Task State**,
+> achando que tem contexto. Em 2026-07-29 a auditoria 4Cs não conseguiu ler as 80 primeiras
+> linhas do arquivo que auditava (28.756 tokens).
+> Skill: `handoff-pruning-gate` · SOP: `docs/processes/handoff-pruning-gate.md`.
+
+```bash
+bash scripts/qa/check-handoff-size.sh
+```
+
+| Veredito | Ação |
+|----------|------|
+| `✅ OK` (exit 0) | Segue para o commit. |
+| `🟡 WARN` (exit 0) | Pode selar, mas **registrar no Pendente do Record**: "podar HANDOFF na próxima sessão". Dívida agendada, não isenção. |
+| `🔴 FAIL` (exit 1) | 🔴 **NÃO COMMITE.** Podar primeiro (o script imprime a linha de corte), verificar os gates G1-G5 do SOP, re-rodar até exit 0. |
+
+**G5 do SOP é obrigatório antes de declarar podado:** ler ~40 linhas do `HANDOFF.md` com a
+ferramenta de leitura e confirmar que retorna conteúdo, não erro de cap. G1-G4 são estruturais —
+só o G5 prova o objetivo (Lei 1).
+
+---
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(14:54:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm running through the handoff seal protocol with pre-flight checks in parallel—git status, diff stats, logs, TypeScript compilation (the real gate being the app-specific tsconfig), Docker, and Chroma—mostly to confirm what I already know from this session, then I'll read through the handoff documentation and address the EP05 question in my final message.
+
+I've got five granular commit groups lined up: the voice bridge trailing pad, the smoke test assertion update, the strategy and hook library docs, restoring the YouTube videos table, and the proof manifest which will be rewritten during Phase 3 with the new handoff node and committed as part of the seal. Starting pre-flight now.
+
+</details>
+
+
+## 🤖 Claude *(14:54:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm executing the seal ritual now, running pre-flight checks in parallel.
+
+</details>
+
+
+## 🤖 Claude *(14:54:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short && echo \"---\" && git diff HEAD --stat | tail -8 && echo \"---\" && git log --oneline -5",
+  "description": "Invent\u00e1rio de mudan\u00e7as + hist\u00f3rico"
+}
+```
+
+## 🤖 Claude *(14:54:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -c \"error TS\"; echo \"tsc-exit:$?\"",
+  "description": "Gate de tipos real (baseline 0)",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M proof-manifest.json
+>  M scripts/qa/smoke-cadence-dispatch.ts
+>  M scripts/voice-bridge.ts
+>  M src/pages/YouTubeStudioPage.tsx
+> ?? docs/roadmap/hook-library-seed-2026-07-30.md
+> ?? docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md
+> ---
+>  proof-manifest.json                  |  2 +-
+>  scripts/qa/smoke-cadence-dispatch.ts | 14 +++++++++++---
+>  scripts/voice-bridge.ts              | 10 +++++++++-
+>  src/pages/YouTubeStudioPage.tsx      | 13 +++++++++++--
+>  4 files changed, 32 insertions(+), 7 deletions(-)
+> ---
+> 64688bd chore(sprint): registra v6.128.0 — TikTok App Review destravado + pipeline de Publicações (FILA inalterada)
+> 2c39bf1 docs(handoff): seal TikTok App Review destravado + pipeline de Publicações do Spaces
+> 7d4add3 docs(readme): v6.128.0 — TikTok App Review destravado + pipeline de Publicações do Spaces
+> 687fd35 fix(spaces): apagar do calendário SOME de toda superfície + botão Remover na aba (sync bidirecional)
+> 168edea feat(spaces): aba Publicações + trigger cascade que fecha o dead-end 409 already_enqueued
+> ```
+
+## 🤖 Claude *(14:54:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat | head -c 80; echo; wc -l HANDOFF.md",
+  "description": "Infra + heartbeat + tamanho do HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0
+> tsc-exit:1
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 2 weeks (healthy)
+> mcorch_claude_mem: Up 6 weeks (healthy)
+> mcorch_chroma: Up 6 weeks (healthy)
+> mega-brain-dashboard: Up 6 weeks
+> mega-brain-webhook: Up 6 weeks (healthy)
+> mega-brain-daemon: Up 6 weeks (healthy)
+> {"nanosecond heartbeat":1785682513594537776}
+> 510 HANDOFF.md
+> ```
+
+## 🤖 Claude *(14:55:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Everything's ready to go—TypeScript is clean, containers are running, and I've got 510 lines to hand off with 4 modified files and 2 new docs. Now I'm moving into the security audit phase to run through the checks.
+
+</details>
+
+
+## 🤖 Claude *(14:55:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Pre-flight checks passed with all containers healthy and no archive needed. Now I'm moving into the security audit phase.
+
+</details>
+
+
+## 🤖 Claude *(14:55:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 1a secrets no diff ===\" && (git diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\" | head -5 || echo \"LIMPO \u2705\") && echo \"=== 1c coin deduction client ===\" && (grep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5 || echo \"NO VIOLATIONS \u2705\") && echo \"=== 1e sensitive logs ===\" && (grep -rn \"console\\.log.*token\\|console\\.log.*secret\\|console\\.log.*password\" src/ | head -5 || echo \"NO SENSITIVE LOGS \u2705\")",
+  "description": "Security: secrets no diff + coin guard + logs sens\u00edveis"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a secrets no diff ===
+> === 1c coin deduction client ===
+> === 1e sensitive logs ===
+> src/test/canvas-video-async-smoke.test.ts:240:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:248:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:253:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> ```
+
+## 🤖 Claude *(14:55:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the grep and echo command outputs across these test cases — the empty results confirm no sensitive token values are leaking, just benign log strings from the test file itself that mention "invalid token" as part of the test scenario documentation.
+
+Now moving into Phase 2 with four granular commits: adding voice padding to the bridge script, updating the QA smoke test cadence for the contract requirement, documenting the roadmap strategy with the new hook library, and restoring the YouTube video table to the main studio page. The proof manifest will be bundled with the seal commit in Phase 5 after Phase 3 regenerates the artifacts.
+
+</details>
+
+
+## 🤖 Claude *(14:55:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've checked the security items and found no critical issues—semantic secrets and client-side deduction are good, and the test strings mentioning "token" are benign. Moving on to phase 2 with granular commits.
+
+</details>
+
+
+## 🤖 Claude *(14:55:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add scripts/voice-bridge.ts && git commit -m \"feat(voice): 0,5s de sil\u00eancio trailing no WAV sintetizado (lip-sync n\u00e3o corta a boca)\n\nConverg\u00eancia exata das duas refer\u00eancias de deepsearch da estrat\u00e9gia de shorts\n(organic-shorts-strategy \u00a7D): padding de 0,5s no fim do \u00e1udio para o corte do\nclipe nunca ceifar o fechamento da boca do avatar. Trailing-only de prop\u00f3sito \u2014\nsil\u00eancio no IN\u00cdCIO deslocaria o timing de beats/legendas que assume fala em t=0.\nWitness: render 2171af33 termina com 0,633s de sil\u00eancio (silencedetect).\" && git log --oneline -1",
+  "description": "Commit 1: pad TTS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:55AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:55AM[0m [32mINF[0m scan completed in 6.26ms
+> [90m11:55AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 61022c3] feat(voice): 0,5s de silêncio trailing no WAV sintetizado (lip-sync não corta a boca)
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 61022c3 feat(voice): 0,5s de silêncio trailing no WAV sintetizado (lip-sync não corta a boca)
+> ```
+
+## 🤖 Claude *(14:55:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add scripts/qa/smoke-cadence-dispatch.ts && git commit -q -m \"fix(qa): smoke de cad\u00eancia alinhado ao contrato FR-CAD-006 (variant mintada, n\u00e3o asset cru)\n\nO gate W3 asseria metadata.reshape.source_asset_id \u2014 contrato de ANTES de 2026-07-21.\nDesde o FR-CAD-006 o cadence-run minta uma space_publish_variant owner-scoped e o\nmetadata carrega space_publish_variant_id; o v\u00ednculo ao asset se prova ATRAV\u00c9S da\nvariant. O smoke reprovava um rail correto (e melhor \u2014 fix do *_no_video). W3 agora\nresolve a variant e compara variant.source_asset_id; cleanup e W7 cobrem\nspace_publish_variants. Re-provado 7/7 verdes.\" && git add docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md docs/roadmap/hook-library-seed-2026-07-30.md && git commit -q -m \"docs(roadmap): estrat\u00e9gia DEFINITIVA v1 de cortes/shorts org\u00e2nicos + biblioteca de ganchos v1\n\nAs 6 refer\u00eancias do Sovereign ERAM os deepsearches (corre\u00e7\u00e3o 2026-07-30) \u2014 decis\u00f5es\n\u00a7D seladas: D1 formato=split-screen react tiled (witness 1a98cef3) \u00b7 D2 medi\u00e7\u00e3o=\nYouTube Shorts p\u00fablicos+painel \u00b7 D3 cad\u00eancia 1/dia \u00fatil (3 react + 2 cru) \u00b7 D4\nbiblioteca de 10 ganchos IA-F\u00edsica \u00b7 D5 roteiro antes do criativo \u00b7 D6 shorts\nrecrutam/master monetiza \u00b7 D7 paridade UI obrigat\u00f3ria. Inclui ap\u00eandice de execu\u00e7\u00e3o\nprovada (witness split_grid, 8 cortes EP02, dry-run cad\u00eancia 7/7, pad TTS).\" && git add src/pages/YouTubeStudioPage.tsx && git commit -q -m \"feat(youtube): tabela de v\u00eddeos+m\u00e9tricas de volta \u00e0 tela principal\n\nDiretiva Sovereign 2026-07-30: somente a tabela retorna ao corpo do /dashboard/youtube\n(o resto do layout intocado); ela tamb\u00e9m segue na aba Hist\u00f3rico do modal \u2014\nChannelVideosCard \u00e9 auto-contido, montar 2\u00d7 \u00e9 seguro. Verificado no bundle servido\n(YouTubeStudioPage-Df29O5x2.js) com m\u00e9tricas vivas (Short bxGA7QWvH2I: 118 views).\" && git log --oneline -4",
+  "description": "Commits 2-4: smoke + docs estrat\u00e9gia + tabela YouTube"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:55AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:55AM[0m [32mINF[0m scan completed in 8.08ms
+> [90m11:55AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:55AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:55AM[0m [32mINF[0m scan completed in 47.4ms
+> [90m11:55AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.13 seconds)
+> ✔️ e2e-output-tripwire (0.03 seconds)
+> ✔️ secret-scan (0.05 seconds)
+> ✔️ gitleaks-staged (0.11 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:55AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:55AM[0m [32mINF[0m scan completed in 10.5ms
+> [90m11:55AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 6fe1483 feat(youtube): tabela de vídeos+métricas de volta à tela principal
+> 0b32c3f docs(roadmap): estratégia DEFINITIVA v1 de cortes/shorts orgânicos + biblioteca de ganchos v1
+> a030f38 fix(qa): smoke de cadência alinhado ao contrato FR-CAD-006 (variant mintada, não asset cru)
+> 61022c3 feat(voice): 0,5s de silêncio trailing no WAV sintetizado (lip-sync não corta a boca)
+> ```
+
+## 🤖 Claude *(14:55:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've completed four commits with gitleaks cleanup across the board, and now I'm moving into phase 3 to build out the knowledge mesh milestone node with embedding and proof-manifest functionality.
+
+</details>
+
+
+## 🤖 Claude *(14:55:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've confirmed 4 granular commits with gitleaks clean. Now moving to phase 3 to work on the Knowledge Mesh milestone.
+
+</details>
+
+
+## 🤖 Claude *(14:56:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && SESSION_PHASE=\"organic-shorts-estrategia-definitiva-v1\" && SESSION_SUMMARY=\"Estrat\u00e9gia DEFINITIVA v1 de cortes/shorts org\u00e2nicos (6 refs do Sovereign = os deepsearches): D1 formato split-screen react tiled provado (witness 1a98cef3, 12 mco), D2 medi\u00e7\u00e3o = YouTube Shorts p\u00fablicos (Short bxGA7QWvH2I 118 views verificado no painel), D3 cad\u00eancia 1/dia \u00fatil, D4 biblioteca 10 ganchos, projeto Spaces React Gabriel AI armado (024e1c03), 8 cortes EP02, dry-run cad\u00eancia 7/7 + fix contrato FR-CAD-006 no smoke, pad TTS 0,5s provado, tabela de v\u00eddeos restaurada no /dashboard/youtube. Pr\u00f3ximo: EP05 formato tutorial (avaliar) + cad\u00eancias com SEO/AEO.\" && curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\", \\\"node_type\\\": \\\"handoff\\\", \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\", \\\"stability_score\\\": 1.0, \\\"project_id\\\": null, \\\"user_id\\\": null, \\\"metadata\\\": {\\\"session\\\": \\\"${SESSION_PHASE}\\\", \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\", \\\"commits\\\": \\\"$(git log --oneline -4 | tr '\\n' '|')\\\"}}\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))\"",
+  "description": "Insere milestone node do seal na malha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: aa7e1dc9-9f92-4f34-9e01-874a15185ee4
+> ```
+
+## 🤖 Claude *(14:56:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && NODE_ID=\"aa7e1dc9-9f92-4f34-9e01-874a15185ee4\" && curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200 && echo && echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json && cat proof-manifest.json && curl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range",
+  "description": "Embedding do n\u00f3 + proof-manifest + contagem viva da malha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"error":"Request body must contain { node_id: string }"}
+> {"handoffNodeId": "aa7e1dc9-9f92-4f34-9e01-874a15185ee4"}
+> content-range: 0-0/19120
+> ```
+
+## 🤖 Claude *(14:56:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+There's a type mismatch in the embedding function—it's expecting `node_id` as a string but receiving a nested `record` object with an `id` field instead. I need to restructure the data to match the expected format, and I'm working with a mesh that has about 19,120 nodes.
+
+</details>
+
+
+## 🤖 Claude *(14:56:19)*
+
+Contrato do embed mudou — retry com o shape correto (`node_id`):
+
+## 🤖 Claude *(14:56:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && curl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Content-Type: application/json\" \\\n  -d '{\"node_id\": \"aa7e1dc9-9f92-4f34-9e01-874a15185ee4\"}' | head -c 200",
+  "description": "Embedding com contrato node_id"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"node_id":"aa7e1dc9-9f92-4f34-9e01-874a15185ee4","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> ```
+
+## 🤖 Claude *(14:56:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The embedding is complete with 768 dimensions and the mesh has 19,120 nodes. Now I'm moving to phase 4 to update the README—I need to check the top section with badges and version info, bumping from v6.128.0 to v6.129.0 for this minor release with the finalized strategy and new features.
+
+</details>
+
+
+## 🤖 Claude *(14:56:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've embedded a 768-dimensional model with a mesh of 19,120 nodes and am now moving to phase 4 to review the README.
+
+</details>
+
+
+## 🤖 Claude *(14:56:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -30 README.md && grep -n \"What's New\\|Whats New\\|## \\[v6\" README.md | head -5",
+  "description": "Topo do README (badges + vers\u00e3o + What's New)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <p align="center">
+>   <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+>   <img src="https://img.shields.io/badge/version-6.128.0--tiktok_review_%2B_publish_lifecycle-blueviolet?style=for-the-badge" alt="Version" />
+>   <img src="https://img.shields.io/badge/crm--inbox-Amendment_10_composer_(m%C3%ADdia%2Femoji%2Frecibos)_%2B_swap_ao_vivo-brightgreen?style=for-the-badge" alt="CRM Inbox" />
+>   <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+>   <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+>   <img src="https://img.shields.io/badge/neural_mesh-18985_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+>   <img src="https://img.shields.io/badge/BoK-33%2F33_fam%C3%ADlias_seladas-brightgreen?style=for-the-badge" alt="BoK Suites" />
+>   <img src="https://img.shields.io/badge/veo--3.1-avatar_por_refer%C3%AAncia_(Gemini_API_%2B_Vertex_SA)-cyan?style=for-the-badge" alt="Veo Avatar" />
+>   <img src="https://img.shields.io/badge/asset_publish-format_picker_%2B_preview_fiel_(IG%2FYT%2FTikTok)-cyan?style=for-the-badge" alt="Asset Publish Format Preview" />
+>   <img src="https://img.shields.io/badge/video--repurpose-1_master_%E2%86%92_N_shorts_%2B_carrossel_(FFmpeg%2C_gr%C3%A1tis)-brightgreen?style=for-the-badge" alt="Video Repurpose" />
+>   <img src="https://img.shields.io/badge/MAPE--K_guardian-cron_%2B_Nemotron_free_L2-darkgreen?style=for-the-badge" alt="MAPE-K Guardian" />
+>   <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+>   <img src="https://img.shields.io/badge/free_LoRA_training-avatar--identity--train_(Replicate_BYOK%2C_USD_0)-brightgreen?style=for-the-badge" alt="Free LoRA Training" />
+>   <img src="https://img.shields.io/badge/Spaces_publish-WordPress_node_(Post%2FLanding)-cyan?style=for-the-badge" alt="Spaces Publish WordPress" />
+>   <img src="https://img.shields.io/badge/BoK_youtube--studio-deepsearch_blueprint_seed-fuchsia?style=for-the-badge" alt="BoK youtube-studio blueprint" />
+>   <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+>   <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+>   <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+>   <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+>   <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+>   <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+>   <img src="https://img.shields.io/badge/social--connect-TikTok%2FYouTube_proven_E2E_%C2%B7_in_review-brightgreen?style=for-the-badge" alt="Social Connect" />
+>   <img src="https://img.shields.io/badge/channel--format-FR--CP--001_live_(8_canais)-brightgreen?style=for-the-badge" alt="Channel Format Intelligence" />
+>   <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.9_cutover_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+>   <img src="https://img.shields.io/badge/higgsfield--mcp-OAuth_connector_server--side_(gated)-cyan?style=for-the-badge" alt="Higgsfield MCP Connector" />
+>   <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+>   <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+>   <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+>   <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> 870:### [v6.124.0] — AI Act Fatia 4 disclosure (Art. 50(4)) VIVO · P0 YouTube pós-W2.1 · kanban destravado · grounding AIOS (2026-07-25)
+> 878:### [v6.122.0] — Autonomia total: PIPC S1+S2 (retenção→brief EP05) · CRM Contatos · cadence-fix · AI Act selada (2026-07-24)
+> 885:### [v6.118.0] — Loop multi-frente: cortes+picker · grid pan/crop · dashboards TikTok/IG · constelação leve (2026-07-22)
+> 895:### [v6.110.0] — CRM Suite arrancado: spine + Empresas + Negócios/pipelines VIVOS na UI (2026-07-19)
+> 902:### [v6.105.0] — BoK 9/9 retroativas + landing-bundler + UX-Explorer enxerga (2026-07-16)
+> ```
+
+## 🤖 Claude *(14:56:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"What\" README.md | head -3 && sed -n '860,872p' README.md",
+  "description": "Localiza a se\u00e7\u00e3o What's New exata"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 89:## 🆕 What's new in v6.128.0 (2026-07-30) — TikTok App Review destravado + pipeline de Publicações do Spaces
+> 97:## 🆕 What's new in v6.127.0 (2026-07-29) — "Rodar não é entregar": 6 superfícies onde o resultado não chegava
+> 106:## 🆕 What's new in v6.123.0 (2026-07-25) — Conserto do grounding do AIOS (anti-confabulação) + otimização Supabase Pro
+>          + Affiliate Links (Mercado Livre) with per-campaign UTM attribution
+>          + handle-ml-postback → revenue_cents updated on every ML conversion
+>          + ROI Dashboard with real BRL revenue
+>          + GraphRAG Knowledge Node (observation inserted per run)
+>          + Neural HUD telemetry
+>          + Constellation Matrix WebGL (8679 nodes · 8989 edges — paginação completa)
+>          + Visual Orchestration Canvas with Quality Gates
+>          + AIOS — conversational AI consciousness with VAD + Barge-in
+> ```
+> 
+> ### [v6.124.0] — AI Act Fatia 4 disclosure (Art. 50(4)) VIVO · P0 YouTube pós-W2.1 · kanban destravado · grounding AIOS (2026-07-25)
+> - **AI Act Fatia 4 — disclosure Art. 50(4) VIVO** (fecha o deadline **2026-08-02**): rótulo "🤖 Conteúdo gerado por IA" montado **server-side** (constante SSOT, NUNCA via LLM) em `orchestrate-step` (artigo→WordPress) + `reshape-pillar` (texto social LinkedIn/X); exceção HITL via `metadata.ai_disclosure_exempt`; smoke 12/12 · `/security-review` SAFE. OTD-CP-002 resolvida pelo Sovereign ("Provider/Deployer Hybrid Model Accepted"). Fatias 0/1/2 (IPTC+C2PA) já vivas desde 2026-07-18.
+> - **P0 YouTube restaurado** — a W2.1 (masters→Storage) quebrara o EP0x→upload (seletor vazio + worker sem fallback); UI lista por `source_module='external'` + worker `resolveMaster` dual-source (host zero-copy OU stream do Storage, memória-limitada preservada).
+> ```
+
+## 🤖 Claude *(14:56:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '89,97p' README.md",
+  "description": "Bloco What's new mais recente (modelo p/ o novo)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ## 🆕 What's new in v6.128.0 (2026-07-30) — TikTok App Review destravado + pipeline de Publicações do Spaces
+> 
+> - **TikTok App Review (reprovado 4×) atacado na raiz.** A queixa era "seu site é uma login page — dê uma conta de teste". Provisionei a conta de review (email pré-confirmado, `viewer`, saldo, onboarding pré-completo) e **provei o login E2E no site público real** — o `agent-browser` mediu a tela e achou o problema de fundo: os botões "Entrar com TikTok/Google" viviam atrás do query param `?devLogin`, **invisíveis na URL do formulário**. O revisor nunca via o Login Kit.
+> - **Flag de admin de visibilidade do login social.** Tabela `public_app_settings` (world-readable por design, `CHECK` allowlist trava as chaves, RLS admin-only via `has_role`, auditada) + aba **Acesso** em `/dashboard/admin`. Substitui o `?devLogin` por um toggle explícito, auditado, reversível em 1 clique — sem rebuild. Dois switches separados (login social ≠ cadastro público) para que destravar o revisor não abra cadastro por efeito colateral. Provado ao vivo: `/auth` sem param mostra o botão TikTok com a flag ligada.
+> - **Pipeline de Publicações do Spaces — o dead-end 409 `already_enqueued` fechado.** O publish do asset é assíncrono (fila `scheduled_posts` → cron); apagar do calendário deixava a variant com referência pendurada e travava a republicação para sempre. Trigger de cascade + **aba Publicações no modal do asset** (badge de status por canal, timestamps, Cancelar/Remover) + handler 409 real (era código morto — `functions.invoke` põe non-2xx em `error`, não em `data`).
+> - **Sincronização bidirecional.** Apagar de qualquer lugar (calendário OU aba) reconcilia em toda superfície: `scheduled` cancelado **some** (era um publish desfeito), `published` fica como histórico removível. Botão Remover em toda linha — o "apaguei num lugar, some de todos" que o Usuário Zero pediu.
+> - **Rigor:** 3 migrations (todas `/security-review` NO FINDINGS), 1 edge fn, revisão adversarial ultracode (56 + 20 agentes) que pegou 2 bugs P0/P1 nascidos-mortos e cobrou o conserto; tsc-app 0 · eslint 0 · vitest 11/11 novos · tudo provado E2E em produção com Vision QA.
+> 
+> ## 🆕 What's new in v6.127.0 (2026-07-29) — "Rodar não é entregar": 6 superfícies onde o resultado não chegava
+> ```
+
+## 🤖 Claude *(14:56:45)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update the README with new badges showing version 6.129.0 and the updated neural_mesh metrics, plus add a fresh "What's new" section at the top with the release name "organic-shorts-estrategia-definitiva-v1" and corresponding badge styling.
+
+</details>
+
+
+## 🤖 Claude *(14:56:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.128.0--tiktok_review_%2B_publish_lifecycle-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.129.0--organic_shorts_estrategia_definitiva_v1-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:56:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-18985_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-19120_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:57:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.128.0 (2026-07-30) \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces",
+  "new_string": "## \ud83c\udd95 What's new in v6.129.0 (2026-07-30) \u2014 Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica no Spaces\n\n- **Estrat\u00e9gia DEFINITIVA v1 selada** (`docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md` \u00a7D): as 6 refer\u00eancias do Sovereign **eram os deepsearches** \u2014 decis\u00f5es tomadas: formato default = **split-screen react tiled** \u00b7 medi\u00e7\u00e3o = **YouTube Shorts p\u00fablicos** no painel vivo \u00b7 cad\u00eancia 1/dia \u00fatil (3 react + 2 cru) \u00b7 biblioteca de **10 ganchos IA-F\u00edsica** v1 \u00b7 roteiro/copy antes do criativo \u00b7 shorts recrutam, master monetiza \u00b7 **paridade UI obrigat\u00f3ria**.\n- **O formato da vis\u00e3o do Sovereign est\u00e1 VIVO:** witness `split_grid 2v` (corte EP01 em cima, Gabriel AI **reagindo** embaixo) \u2014 asset `1a98cef3`, 1080\u00d71920, 12 mco, Vision QA ocular aprovado. Aprendizado diretorial: c\u00e9lula meio-crop corta legenda queimada \u2192 c\u00e9lulas de split usam cortes limpos.\n- **Projeto Spaces \"React Gabriel AI\"** (`024e1c03`) \u2014 a f\u00e1brica dos reacts, armada pela UI: n\u00f3 POV de rea\u00e7\u00e3o (\"olhando o celular, sem falar\", Veo 3.1, mudo) \u2192 n\u00f3 Tela Dividida (2v, \u00e1udio da c\u00e9lula de cima, corte EP02 + clipe placeholder). Renderiz\u00e1vel j\u00e1 por 12 mco; POV fresco = BYOK Google na escolha do Sovereign. Zero gera\u00e7\u00e3o paga disparada.\n- **EP02 cortado** (8 shorts 12s com beats reais do SRT \u2014 detect duration-aware 3 mco) + **m\u00e9tricas verificadas no painel** (Short `bxGA7QWvH2I`: 118 views \u2014 mais que o EP03 longo, primeira evid\u00eancia do funil) + **tabela de v\u00eddeos+m\u00e9tricas de volta \u00e0 tela principal** do `/dashboard/youtube`.\n- **Rigor de rail:** dry-run de cad\u00eancia **7/7 verdes** com anticorpo (asser\u00e7\u00e3o W3 do smoke estava stale vs contrato FR-CAD-006 \u2014 corrigida; cleanup cobre `space_publish_variants`) \u00b7 pad de **0,5s trailing** no TTS provado por silencedetect (lip-sync nunca corta a boca) \u00b7 EP03 confirmado AUSENTE do ecossistema (upload = a\u00e7\u00e3o Sovereign via menu Cortes).\n\n## \ud83c\udd95 What's new in v6.128.0 (2026-07-30) \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:57:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add README.md && git commit -q -m \"docs(readme): v6.129.0 \u2014 estrat\u00e9gia definitiva de shorts org\u00e2nicos + formato React provado + f\u00e1brica no Spaces\" && git log --oneline -1",
+  "description": "Commit do README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:57AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:57AM[0m [32mINF[0m scan completed in 8.6ms
+> [90m11:57AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> abe2a12 docs(readme): v6.129.0 — estratégia definitiva de shorts orgânicos + formato React provado + fábrica no Spaces
+> ```
+
+## 🤖 Claude *(14:57:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The README is committed, so now I'm moving into phase 5 to update the HANDOFF.md file. I need to revise the FIRST ACTION comment block at the top with the current state, add a new row to the Task State table, and create a fresh Record section documenting this session and noting that the next session will follow an EP05 tutorial format.
+
+</details>
+
+
+## 🤖 Claude *(14:57:16)*
+
+README commitado. **PHASE 5 — HANDOFF.md** (510 linhas, sem archive necessário):
+
+## 🤖 Claude *(14:57:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "```bash\ngit log --oneline -10\n# \ud83d\ude80 UPDATE 2026-07-30 (TikTok App Review + pipeline de Publica\u00e7\u00f5es do Spaces): 4 commits na main, tudo no ar.\n#   (1) TIKTOK REVIEW (reprovado 4\u00d7) DESTRAVADO: conta de teste tiktok.review@mcorch.com provisionada\n#       (viewer \u00b7 email pr\u00e9-confirmado \u00b7 onboarding pr\u00e9-completo \u00b7 1500 mco) e login PROVADO E2E no /auth\n#       p\u00fablico real. Achado material: bot\u00f5es social login viviam atr\u00e1s de ?devLogin (invis\u00edveis na URL\n#       do formul\u00e1rio). Flag admin `public_app_settings` (aba Acesso em /dashboard/admin) substitui o param.\n#       Sovereign gravou o v\u00eddeo e ENVIOU a re-submiss\u00e3o (aguardando veredito TikTok).\n#   (2) PIPELINE DE PUBLICA\u00c7\u00d5ES: aba Publica\u00e7\u00f5es no modal do asset + trigger cascade fecha o dead-end\n#       409 already_enqueued + sync bidirecional (apagar do calend\u00e1rio SOME de toda superf\u00edcie; bot\u00e3o Remover).\n#   3 migrations (public_app_settings + 2 do trigger cascade) \u00b7 1 edge fn (publish-space-asset) \u00b7\n#   /security-review NO FINDINGS \u00d73 \u00b7 revis\u00e3o adversarial ultracode pegou 2 P0/P1 nascidos-mortos.\n#   tsc-app 0 \u00b7 eslint 0 \u00b7 vitest +20 novos. Malha 18985, n\u00f3 59c4d1c2.\n#   \u26a0\ufe0f Flag auth_social_login_visible est\u00e1 LIGADA em prod (necess\u00e1ria p/ o review). Desligar em Acesso quando aprovar.\n# \u23ed PR\u00d3XIMA SESS\u00c3O (foco declarado, INALTERADO): CORTES E SHORTS ORG\u00c2NICOS.\n#   O EP03 master J\u00c1 est\u00e1 no YouTube. Terreno: docs/roadmap/organic-shorts-terrain-2026-07-29.md.\n#   3 gaps p/ cad\u00eancia aut\u00f4noma: ZERO plano de cad\u00eancia armado \u00b7 picker do YouTube n\u00e3o v\u00ea cortes\n#   (filtra source_module='external') \u00b7 reshape s\u00f3 dispara com pillar_run_id.\n#   \u26a0\ufe0f O Sovereign vai enviar 2 PLANOS de deepsearch \u2014 a estrat\u00e9gia sai deles, N\u00c3O invente antes.\n# \u26a0\ufe0f Cl\u00e1usula de gate em doc NUNCA \u00e9 fonte de verdade sobre servi\u00e7o: use systemctl.\n# \u26a0\ufe0f supabase.functions.invoke() p\u00f5e 4xx/5xx em `error` (data=null) \u2014 ler o body via error.context.json(),\n#    n\u00e3o via data?.error (esse ramo \u00e9 c\u00f3digo morto p/ non-2xx). Pego pela revis\u00e3o adversarial nesta sess\u00e3o.\n```",
+  "new_string": "```bash\ngit log --oneline -10\n# \ud83d\ude80 UPDATE 2026-07-30b (Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado): 6 commits na main.\n#   CORRE\u00c7\u00c3O-M\u00c3E: as 6 refer\u00eancias que o Sovereign colou ERAM os deepsearches (Refs #5/#6 = os 2 deep-research).\n#   A cl\u00e1usula \"aguardar 2 planos\" est\u00e1 MORTA. Estrat\u00e9gia DEFINITIVA v1 selada em\n#   docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md \u00a7D (D1..D7): formato=split-screen react tiled \u00b7\n#   medi\u00e7\u00e3o=YouTube Shorts P\u00daBLICOS (painel /dashboard/youtube J\u00c1 mede; falta audi\u00eancia, n\u00e3o c\u00f3digo) \u00b7\n#   cad\u00eancia 1/dia \u00fatil (3 react+2 cru) \u00b7 biblioteca 10 ganchos v1 \u00b7 roteiro antes do criativo \u00b7 paridade UI.\n#   VIVO: witness react asset 1a98cef3 (12 mco, Vision QA) \u00b7 8 cortes EP02 \u00b7 projeto Spaces\n#   \"React Gabriel AI\" 024e1c03 ARMADO (POV+TelaDividida, zero pago) \u00b7 tabela de v\u00eddeos de volta no\n#   /dashboard/youtube (Short bxGA7QWvH2I 118 views verificado) \u00b7 pad TTS 0,5s provado \u00b7 smoke cad\u00eancia 7/7\n#   (anticorpo: W3 estava stale vs FR-CAD-006 \u2014 variant mintada, n\u00e3o source_asset_id cru).\n# \u23ed PR\u00d3XIMA SESS\u00c3O (PAUSE declarado pelo Sovereign): CRIA\u00c7\u00c3O DO EP05.\n#   Decis\u00e3o em aberto: mudar formato document\u00e1rio \u2192 TUTORIAL (ensinar as ferramentas, elucidar o poss\u00edvel).\n#   Parecer do agente REGISTRADO no Record abaixo (\u00a7EP05): tutorial h\u00edbrido RECOMENDADO com evid\u00eancia\n#   (reten\u00e7\u00e3o EP02 perde 50% a 1:11 \u00b7 Ref#2 evergreen/watch-hours \u00b7 Ref#3 \u00e9 literalmente o template de\n#   tutorial VFX \u00b7 funil produto MCORCH). Injetar o brief PIPC no planejamento (FR-PIPC-017/018, elo manual).\n#   Depois do EP05: cad\u00eancias planejadas com legendas + SEO/AEO (roadmap declarado do Sovereign).\n# \u26a0\ufe0f EP03 master AUSENTE do ecossistema (foi ao YouTube por fora) \u2014 upload = a\u00e7\u00e3o Sovereign via menu Cortes.\n# \u26a0\ufe0f Anexos do chat (SendUserFile) N\u00c3O chegam ao Sovereign \u2014 m\u00eddia via Spaces\u2192Assets + apontar t\u00edtulo.\n# \u26a0\ufe0f Flag auth_social_login_visible segue LIGADA (review TikTok pendente). Desligar em Acesso quando aprovar.\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:57:51)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces (2026-07-30)** |",
+  "new_string": "## Task State\n\n| **Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica Spaces (2026-07-30b)** | \u2705 **6 commits na main** (`61022c3..abe2a12`) \u00b7 tsc-app **0** \u00b7 gitleaks limpo. As 6 refs do Sovereign ERAM os deepsearches \u2192 estrat\u00e9gia **DEFINITIVA v1** (\u00a7D1..D7 em `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md`). Witness react `1a98cef3` (split_grid 2v, 12 mco, Vision QA) \u00b7 8 cortes EP02 \u00b7 projeto Spaces **\"React Gabriel AI\"** `024e1c03` armado (zero pago) \u00b7 tabela de v\u00eddeos restaurada no /dashboard/youtube (Short 118 views) \u00b7 pad TTS 0,5s provado \u00b7 smoke cad\u00eancia 7/7 + anticorpo FR-CAD-006. Malha **19120** \u00b7 n\u00f3 `aa7e1dc9`. \u23ed PAUSE \u2192 **EP05 formato tutorial** (parecer no Record). Record abaixo. |\n| **TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces (2026-07-30)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:58:41)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces Record (2026-07-30)",
+  "new_string": "## Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado Record (2026-07-30b)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent (+ engineer-spaces p/ o projeto Spaces) \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (marca/conta Gabriel AI; tudo privado-primeiro, custo USD externo = 0, 15 mco totais).\n\nSess\u00e3o em 3 atos. **(1) Estrat\u00e9gia:** o Sovereign colou 6 refer\u00eancias + a vis\u00e3o criativa (split-screen react: Gabriel AI reagindo/observando enquanto o v\u00eddeo roda na outra c\u00e9lula). Workflow multi-agente `wf_edbe2bc3-a59` (10 agentes: 3 leitores \u2192 3 planos concorrentes \u2192 3 cr\u00edticos adversariais \u2192 s\u00edntese) produziu o plano; **corre\u00e7\u00e3o do Sovereign no meio da sess\u00e3o: as 6 refs ERAM os deepsearches** (\"a estrat\u00e9gia definitiva deveria ter sido feita por voc\u00ea\") \u2192 plano promovido a **DEFINITIVA v1** com decis\u00f5es \u00a7D1..D7 seladas. A cr\u00edtica adversarial derrubou o over-claim central (\"deixar o dado escolher\" era OCO: `hook_rate` \u00e9 coluna \u00f3rf\u00e3 sem populador e reten\u00e7\u00e3o \u00e9 episode-scoped exigindo p\u00fablico) \u2192 resolvido como **D2: YouTube Shorts P\u00daBLICOS = laborat\u00f3rio** (o painel j\u00e1 mede; falta audi\u00eancia, n\u00e3o c\u00f3digo \u2014 Short real `bxGA7QWvH2I` com 118 views verificado via youtube-data, MAIS que o EP03 longo com 87). **(2) Execu\u00e7\u00e3o un-gated (loop GO'd, 7/7 tasks):** witness do formato react (`video-render` split_grid 2v \u2192 asset `1a98cef3`, corte EP01 em cima + clipe Veo `6f783a1d` reagindo embaixo, beats casaram \u2014 surpresa\u2192sorriso); 8 cortes EP02 via detect (8 clips, 58 cues, beats reais do SRT) + run (parent `e49af674` \u2014 ressalva honesta: linha longa do kinetic-stack estoura largura, pend\u00eancia conhecida de 21-jul); EP03 confirmado AUSENTE (Storage/host/youtube_uploads varridos \u2014 foi ao YouTube por fora; ingest = a\u00e7\u00e3o Sovereign); dry-run cad\u00eancia `smoke-cadence-dispatch` **7/7** com **anticorpo**: a asser\u00e7\u00e3o W3 estava stale vs FR-CAD-006 (metadata.reshape carrega `space_publish_variant_id` mintado; o v\u00ednculo ao asset se prova pela variant) \u2014 smoke corrigido + cleanup cobre variants; pad 0,5s trailing no `voice-bridge` (witness `2171af33`: WAV termina com 0,633s de sil\u00eancio \u2014 trailing-only para n\u00e3o deslocar beats); biblioteca de 10 ganchos IA-F\u00edsica v1. **(3) UI-first (diretiva \"tudo pela UI\") :** tabela de v\u00eddeos+m\u00e9tricas de volta \u00e0 tela principal do `/dashboard/youtube` (build deployado, provado no bundle); projeto Spaces **\"React Gabriel AI\"** (`024e1c03-2866-4e38-afc7-ddc515b5a1c7`, `vm_canvas_projects`) criado pelo engineer-spaces com grafo armado e validado 13/13 contra as factories vivas \u2014 n\u00f3 `imageToVideo` POV de rea\u00e7\u00e3o (mudo, 9:16, veo-3.1-fast; `povVideo` N\u00c3O \u00e9 type persist\u00edvel, delega p/ imageToVideo) + n\u00f3 `splitScreen` 2v com corte EP02 na c\u00e9lula 0 e placeholder Veo na c\u00e9lula 1 + aresta armada p/ trocar p\u00f3s-POV; zero gera\u00e7\u00e3o paga. **Mem\u00f3ria nova:** anexos do chat N\u00c3O chegam ao Sovereign (`user_chat_attachments_not_visible`) \u2014 m\u00eddia via Spaces\u2192Assets. MEMORY.md compactado 19,6\u219215,9KB.\n\n### \u00a7EP05 \u2014 Parecer registrado (decis\u00e3o do Sovereign na volta)\n\n**Pergunta:** mudar o formato de document\u00e1rio \u2192 TUTORIAL (ensinar a mexer nas ferramentas, elucidar o que j\u00e1 \u00e9 poss\u00edvel)? **Parecer: SIM, tutorial h\u00edbrido \u2014 a evid\u00eancia aponta a favor.** (a) **Dado nosso:** o brief PIPC do EP02 mostra perda de 50% da audi\u00eancia a ~1:11 (16%) \u2014 o formato document\u00e1rio est\u00e1 sangrando reten\u00e7\u00e3o cedo; (b) **Ref#2 (deepsearch):** tutoriais/guias evergreen s\u00e3o o ativo que acumula watch-hours por BUSCA cont\u00ednua \u2014 exatamente o que as 4.000h de monetiza\u00e7\u00e3o precisam; (c) **Ref#3 (deepsearch) \u00e9 literalmente um template de tutorial** (AI VFX Workflow Engine: Gabriel AI apresentando passo-a-passo com hook, prompts copy-paste e \"por que funciona\") \u2014 o roteiro-motor j\u00e1 existe; (d) **Funil de produto:** tutorial das ferramentas = marketing do MCORCH (audi\u00eancia qualificada \u2192 usu\u00e1rios), alinhado ao norte \"ag\u00eancia dentro da plataforma\". **Ressalvas:** teto de alcance menor que hype-doc (inten\u00e7\u00e3o alta, topo estreito \u2014 os SHORTS continuam sendo o topo de funil, D6); manter storytelling no tutorial (hook forte + open loops \u2014 n\u00e3o virar screencast seco); injetar o brief de reten\u00e7\u00e3o do PIPC no roteiro do EP05 (FR-PIPC-017/018 \u2014 elo hoje manual). **Formato sugerido:** \"tutorial-documentado\" 8-12min \u2014 narrativa de abertura (1min, gancho da biblioteca) \u2192 3-4 blocos de ferramenta com resultado na tela \u2192 fechamento com CTA pro pr\u00f3ximo. Cada bloco vira 1-2 shorts de react (a f\u00e1brica j\u00e1 est\u00e1 de p\u00e9).\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md` | \u2705 Estrat\u00e9gia DEFINITIVA v1 (\u00a7D1..D7 + matriz A/B/C + ap\u00eandice de execu\u00e7\u00e3o provada) |\n| `docs/roadmap/hook-library-seed-2026-07-30.md` | \u2705 Biblioteca de 10 ganchos IA-F\u00edsica v1 oficial (evolui por dado) |\n| Witness react `split_grid` | \u2705 render `67777a72` done \u00b7 asset `1a98cef3` 1080\u00d71920 8s \u00b7 12 mco/0 refund \u00b7 Vision QA ocular |\n| Cortes EP02 | \u2705 detect 8 clips (3 mco) \u2192 render `7ec71a93` done \u2192 8 assets `9d08c95b..e19f6cc6` filhos de `e49af674` |\n| `scripts/voice-bridge.ts` | \u2705 pad 0,5s trailing (apad) \u00b7 service restartado \u00b7 witness silencedetect 0,633s final |\n| `scripts/qa/smoke-cadence-dispatch.ts` | \u2705 W3 alinhado ao contrato FR-CAD-006 (variant) + cleanup variants \u00b7 re-provado 7/7 |\n| `src/pages/YouTubeStudioPage.tsx` | \u2705 ChannelVideosCard de volta ao corpo (s\u00f3 a tabela; resto intocado) \u00b7 bundle provado |\n| Projeto \"React Gabriel AI\" | \u2705 `vm_canvas_projects 024e1c03` \u00b7 grafo 13/13 vs factories \u00b7 POV+TelaDividida armados \u00b7 zero pago |\n| Conta/malha | \u2705 Custo total 15 mco (12+3) \u00b7 malha 19120 \u00b7 n\u00f3 seal `aa7e1dc9` embedado 768d |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `61022c3` | feat(voice): 0,5s de sil\u00eancio trailing no WAV sintetizado |\n| `a030f38` | fix(qa): smoke de cad\u00eancia alinhado ao contrato FR-CAD-006 |\n| `0b32c3f` | docs(roadmap): estrat\u00e9gia DEFINITIVA v1 + biblioteca de ganchos v1 |\n| `6fe1483` | feat(youtube): tabela de v\u00eddeos+m\u00e9tricas de volta \u00e0 tela principal |\n| `abe2a12` | docs(readme): v6.129.0 |\n\n### Arquitetura da f\u00e1brica de reacts (React Gabriel AI)\n```\n[UI Spaces \u2192 projeto 024e1c03]\n  n\u00f3 imageToVideo (POV rea\u00e7\u00e3o, mudo, 9:16) \u2500\u2500output_video\u2500\u2500\u25b6 n\u00f3 splitScreen (2v, audio cell0)\n                                                              c\u00e9lula 0 = corte EP (creative_asset)\n                                                              c\u00e9lula 1 = POV (ou placeholder Veo US$0)\n  Renderizar \u2192 video-render (12 mco) \u2192 video-bridge composeSplitGrid \u2192 creative_asset\n  \u2192 Spaces\u2192Assets \u2192 aba Publicar \u2192 Pipeline (privado \u2192 Sovereign vira p\u00fablico = D2 medi\u00e7\u00e3o)\n```\n\n## TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces Record (2026-07-30)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:58:44)*
+
+**PHASE 5b + 5b-2 — secret scan e gate de tamanho do HANDOFF:**
+
+## 🤖 Claude *(14:58:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 5b-1 ===\" && (grep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|digest\\|sha256\" | head -5 || echo \"NO CREDENTIALS \u2705\") && echo \"=== 5b-2 size gate ===\" && bash scripts/qa/check-handoff-size.sh; echo \"size-exit:$?\"",
+  "description": "Secret scan + gate de tamanho do HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 ===
+> === 5b-2 size gate ===
+> ── Gate de tamanho do HANDOFF (Lei 3) ──────────────────────────
+> arquivo ........ HANDOFF.md
+> linhas ......... 550
+> bytes .......... 79157
+> tokens (est.) .. ~18408
+> alvo ........... 20000   |   cap de leitura: 25000
+> ────────────────────────────────────────────────────────────────
+> ✅ OK — HANDOFF.md dentro do alvo (~18408 ≤ 20000). Nada a podar.
+> size-exit:0
+> ```
+
+## 🤖 Claude *(14:58:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Cleaning up the code without credentials and confirming it's within token limits, then I'll read through about 40 lines to verify readability alongside the commit. After that, moving into Phase 5c to run the audit.
+
+</details>
+
+
+## 🤖 Claude *(14:58:51)*
+
+Scan limpo · tamanho OK (~18,4k ≤ 20k). G5 (prova de legibilidade) + commit do seal:
+
+## 🤖 Claude *(14:58:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 1,
+  "limit": 32
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -10
+> 7	# 🚀 UPDATE 2026-07-30b (Estratégia DEFINITIVA de shorts orgânicos + formato React provado): 6 commits na main.
+> 8	#   CORREÇÃO-MÃE: as 6 referências que o Sovereign colou ERAM os deepsearches (Refs #5/#6 = os 2 deep-research).
+> 9	#   A cláusula "aguardar 2 planos" está MORTA. Estratégia DEFINITIVA v1 selada em
+> 10	#   docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md §D (D1..D7): formato=split-screen react tiled ·
+> 11	#   medição=YouTube Shorts PÚBLICOS (painel /dashboard/youtube JÁ mede; falta audiência, não código) ·
+> 12	#   cadência 1/dia útil (3 react+2 cru) · biblioteca 10 ganchos v1 · roteiro antes do criativo · paridade UI.
+> 13	#   VIVO: witness react asset 1a98cef3 (12 mco, Vision QA) · 8 cortes EP02 · projeto Spaces
+> 14	#   "React Gabriel AI" 024e1c03 ARMADO (POV+TelaDividida, zero pago) · tabela de vídeos de volta no
+> 15	#   /dashboard/youtube (Short bxGA7QWvH2I 118 views verificado) · pad TTS 0,5s provado · smoke cadência 7/7
+> 16	#   (anticorpo: W3 estava stale vs FR-CAD-006 — variant mintada, não source_asset_id cru).
+> 17	# ⏭ PRÓXIMA SESSÃO (PAUSE declarado pelo Sovereign): CRIAÇÃO DO EP05.
+> 18	#   Decisão em aberto: mudar formato documentário → TUTORIAL (ensinar as ferramentas, elucidar o possível).
+> 19	#   Parecer do agente REGISTRADO no Record abaixo (§EP05): tutorial híbrido RECOMENDADO com evidência
+> 20	#   (retenção EP02 perde 50% a 1:11 · Ref#2 evergreen/watch-hours · Ref#3 é literalmente o template de
+> 21	#   tutorial VFX · funil produto MCORCH). Injetar o brief PIPC no planejamento (FR-PIPC-017/018, elo manual).
+> 22	#   Depois do EP05: cadências planejadas com legendas + SEO/AEO (roadmap declarado do Sovereign).
+> 23	# ⚠️ EP03 master AUSENTE do ecossistema (foi ao YouTube por fora) — upload = ação Sovereign via menu Cortes.
+> 24	# ⚠️ Anexos do chat (SendUserFile) NÃO chegam ao Sovereign — mídia via Spaces→Assets + apontar título.
+> 25	# ⚠️ Flag auth_social_login_visible segue LIGADA (review TikTok pendente). Desligar em Acesso quando aprovar.
+> 26	```
+> 27	
+> 28	---
+> 29	
+> 30	## Task State
+> 31	
+> 32	| **Estratégia DEFINITIVA de shorts orgânicos + formato React provado + fábrica Spaces (2026-07-30b)** | ✅ **6 commits na main** (`61022c3..abe2a12`) · tsc-app **0** · gitleaks limpo. As 6 refs do Sovereign ERAM os deepsearches → estratégia **DEFINITIVA v1** (§D1..D7 em `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md`). Witness react `1a98cef3` (split_grid 2v, 12 mco, Vision QA) · 8 cortes EP02 · projeto Spaces **"React Gabriel AI"** `024e1c03` armado (zero pago) · tabela de vídeos restaurada no /dashboard/youtube (Short 118 views) · pad TTS 0,5s provado · smoke cadência 7/7 + anticorpo FR-CAD-006. Malha **19120** · nó `aa7e1dc9`. ⏭ PAUSE → **EP05 formato tutorial** (parecer no Record). Record abaixo. |
+> ```
+
+## 🤖 Claude *(14:58:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+G5 is complete with readable output from the read operation. I'm committing the handoff and proof manifest, then moving into Phase 5c to audit the material proof.
+
+</details>
+
+
+## 🤖 Claude *(14:58:57)*
+
+G5 ✅ legível. Commit do seal + **PHASE 5c — auditoria de prova material:**
+
+## 🤖 Claude *(14:58:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add HANDOFF.md proof-manifest.json && git commit -q -m \"docs(handoff): seal estrat\u00e9gia definitiva de shorts org\u00e2nicos + formato React provado + f\u00e1brica Spaces\" && git log --oneline -1 && set -a && source .env && set +a && bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -25",
+  "description": "Commit HANDOFF + auditoria mec\u00e2nica Phase 5c",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:58AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:58AM[0m [32mINF[0m scan completed in 10.6ms
+> [90m11:58AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 06a49f6 docs(handoff): seal estratégia definitiva de shorts orgânicos + formato React provado + fábrica Spaces
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node 024e1c03 | mesh_node | 024e1c03-2866-4e38-afc7-ddc515b5a1c7 | absent | ⏭ |
+> | commit 61022c3 | git_commit | 61022c3 | 61022c3 | ✅ |
+> | commit a030f38 | git_commit | a030f38 | a030f38 | ✅ |
+> | commit 0b32c3f | git_commit | 0b32c3f | 0b32c3f | ✅ |
+> | commit 6fe1483 | git_commit | 6fe1483 | 6fe1483 | ✅ |
+> | commit abe2a12 | git_commit | abe2a12 | abe2a12 | ✅ |
+> | file docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md | file_exists | docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md | docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md | ✅ |
+> | file docs/roadmap/hook-library-seed-2026-07-30.md | file_exists | docs/roadmap/hook-library-seed-2026-07-30.md | docs/roadmap/hook-library-seed-2026-07-30.md | ✅ |
+> | file scripts/voice-bridge.ts | file_exists | scripts/voice-bridge.ts | scripts/voice-bridge.ts | ✅ |
+> | file scripts/qa/smoke-cadence-dispatch.ts | file_exists | scripts/qa/smoke-cadence-dispatch.ts | scripts/qa/smoke-cadence-dispatch.ts | ✅ |
+> | file src/pages/YouTubeStudioPage.tsx | file_exists | src/pages/YouTubeStudioPage.tsx | src/pages/YouTubeStudioPage.tsx | ✅ |
+> | deploy size 9kB | edge_deploy | 9kB | 9kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (+ engineer-spaces p/ o projeto Spaces) · Reviewe | Operator = MCORCH Master Execution Agent (+ engineer-spaces p/ o projeto Spaces) · Reviewe | ✅ |
+> | handoff node aa7e1dc9 | mesh_node | aa7e1dc9-9f92-4f34-9e01-874a15185ee4 | aa7e1dc9-9f92-4f34-9e01-874a15185ee4 | ✅ |
+> 
+> QA VERDICT: 12 verified · 2 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> ```
+
+## 🤖 Claude *(14:59:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Seal verification passed with 12 confirmed checks and 2 skipped items, no failures. For this phase, no new modules were created—just documentation updates, feature fixes, UI restoration, and data consolidation—so the exemption for single-file patches and docs applies while the gate checks proceed.
+
+No new page functions were added since YouTubeStudioPage already existed, so I'm running the quick verification and moving forward. Next is the push phase, followed by updating sprint priorities to register v6.129.0, seal the queue strategy, and pause for EP05, with the scratch directory remaining empty.
+
+</details>
+
+
+## 🤖 Claude *(14:59:10)*
+
+**SEAL ALLOWED** (12 ✅ · 2 skip · 0 falhas). **PHASE 6 + 7 — BoK status e push:**
+
+## 🤖 Claude *(14:59:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git diff --name-only HEAD~6..HEAD | grep -E \"^(src/pages/|supabase/functions/)\" | sort -u; echo \"--- (nenhum m\u00f3dulo NOVO: YouTubeStudioPage pr\u00e9-existente, zero fn nova \u2014 exemption single-file patch \u2705)\"; git push origin main 2>&1 | tail -3 && git log origin/main --oneline -1",
+  "description": "Check BoK (m\u00f3dulos tocados) + push origin main",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/pages/YouTubeStudioPage.tsx
+> --- (nenhum módulo NOVO: YouTubeStudioPage pré-existente, zero fn nova — exemption single-file patch ✅)
+> ✔️ gitleaks-range (0.15 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    64688bd..06a49f6  main -> main
+> 06a49f6 docs(handoff): seal estratégia definitiva de shorts orgânicos + formato React provado + fábrica Spaces
+> ```
+
+## 🤖 Claude *(14:59:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've pushed the changes and now I'm moving into phase 7b to update the AGORA item in sprint-priorities with the sealed strategy and pause for EP05, then add a sprint note and finalize with the EP05 answer. I need to modify line 11 in the sprint-priorities file and insert a new v6.129.0 section before the existing v6.128.0 entry, keeping everything concise.
+
+</details>
+
+
+## 🤖 Claude *(14:59:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've pushed the commit (64688bd..06a49f6) and now moving into phase 7b to handle sprint hygiene.
+
+</details>
+
+
+## 🤖 Claude *(14:59:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "| \ud83c\udfaf **AGORA** | **Cortes e shorts ORG\u00c2NICOS (foco declarado pelo Sovereign 2026-07-29)** \u2014 o **EP03 master J\u00c1 est\u00e1 no YouTube**; a Track B \"f\u00e1brica\" cumpriu. Agora \u00e9 impulsionamento org\u00e2nico. **O Sovereign vai enviar 2 planos de deepsearch \u2014 a estrat\u00e9gia sai deles; n\u00e3o inventar antes.** Terreno medido (contagem viva, n\u00e3o claim): `docs/roadmap/organic-shorts-terrain-2026-07-29.md`. | \u23f3 **3 gaps p/ cad\u00eancia aut\u00f4noma:** (1) **zero plano de cad\u00eancia armado** (`autopilot_plans plan_kind='cadence'` vazio; tick */15 vivo sem o que despachar); (2) picker do YouTube filtra `source_module='external'` \u2192 os 48 cortes s\u00e3o invis\u00edveis; (3) `reshape-pillar` s\u00f3 dispara com `pillar_run_id`. Acervo: 48 cortes TODOS 9:16, todos do EP01; EP02 ingerido com 0 cortes; **EP03 nem est\u00e1 em `creative_assets`** (subir pelo menu Cortes). | \ud83d\udd12 **Sovereign:** enviar os 2 planos \u00b7 decidir se OTD-VR-008 (safe-area por formato nos 11 templates) entra, caso algum plano exija legenda cin\u00e9tica em 4:5 |",
+  "new_string": "| \ud83c\udfaf **AGORA (PAUSE)** | **Cria\u00e7\u00e3o do EP05 \u2014 formato TUTORIAL (decis\u00e3o na volta do Sovereign)** \u2014 parecer do agente no HANDOFF Record 2026-07-30b \u00a7EP05: tutorial h\u00edbrido RECOMENDADO (reten\u00e7\u00e3o EP02 perde 50% a 1:11 \u00b7 Ref#2 evergreen/watch-hours \u00b7 Ref#3 = template de tutorial VFX pronto \u00b7 funil de produto MCORCH); injetar brief PIPC no roteiro (FR-PIPC-017/018). Depois: cad\u00eancias planejadas + SEO/AEO. | \u2705 **Estrat\u00e9gia de shorts DEFINITIVA v1 SELADA 2026-07-30** (`docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md` \u00a7D \u2014 as 6 refs do Sovereign ERAM os deepsearches). Formato react PROVADO (asset `1a98cef3`) \u00b7 f\u00e1brica Spaces \"React Gabriel AI\" `024e1c03` armada \u00b7 8 cortes EP02 \u00b7 biblioteca 10 ganchos v1. Gaps de cad\u00eancia aut\u00f4noma seguem (plano armado=0 por design at\u00e9 GO; picker `source_module`; reshape `pillar_run_id`). | \ud83d\udd12 **Sovereign:** decidir formato EP05 (parecer pronto) \u00b7 subir master EP03 via menu Cortes \u00b7 testar projeto React Gabriel AI e virar p\u00fablicos os primeiros shorts (D2 medi\u00e7\u00e3o) \u00b7 GO+SOP nos 3 fixes de cad\u00eancia |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint v6.128.0 \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces (2026-07-30)**",
+  "new_string": "**Sprint v6.129.0 \u2014 Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica Spaces (2026-07-30b)** \u2014 corre\u00e7\u00e3o-m\u00e3e do Sovereign no meio da sess\u00e3o: as 6 refer\u00eancias coladas ERAM os deepsearches \u2192 estrat\u00e9gia promovida a DEFINITIVA v1 (\u00a7D1..D7). Workflow `wf_edbe2bc3-a59` (10 agentes, 3 planos adversariais) + loop de execu\u00e7\u00e3o 7/7: witness react `split_grid 2v` (asset `1a98cef3`, 12 mco, Vision QA \u2014 corte EP01 + Gabriel AI reagindo) \u00b7 8 cortes EP02 (detect 3 mco, beats reais) \u00b7 projeto Spaces \"React Gabriel AI\" `024e1c03` armado pelo engineer-spaces (13/13 vs factories, zero pago) \u00b7 tabela de v\u00eddeos restaurada no /dashboard/youtube (Short `bxGA7QWvH2I` 118 views > EP03 87 \u2014 1\u00aa evid\u00eancia do funil) \u00b7 pad TTS 0,5s (silencedetect 0,633s) \u00b7 smoke cad\u00eancia 7/7 + anticorpo FR-CAD-006 \u00b7 EP03 confirmado ausente (upload=Sovereign). Mem\u00f3ria nova: anexos de chat n\u00e3o chegam ao Sovereign \u2192 m\u00eddia via Spaces\u2192Assets. 6 commits `61022c3..06a49f6` \u00b7 tsc-app 0 \u00b7 SEAL ALLOWED (12/12) \u00b7 malha **19120** \u00b7 n\u00f3 `aa7e1dc9`. **Pr\u00f3ximo:** PAUSE \u2192 EP05 formato tutorial (parecer \u00a7EP05 no HANDOFF) \u2192 cad\u00eancias + SEO/AEO.\n\n**Sprint v6.128.0 \u2014 TikTok App Review destravado + pipeline de Publica\u00e7\u00f5es do Spaces (2026-07-30)**"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:59:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add .claude/context/sprint-priorities.md && git commit -q -m \"chore(sprint): registra v6.129.0 \u2014 estrat\u00e9gia definitiva selada + PAUSE p/ EP05 (parecer tutorial no HANDOFF)\" && git push origin main 2>&1 | tail -2 && (ls scratch/ 2>/dev/null | head -3; echo \"scratch: $(ls scratch/ 2>/dev/null | wc -l) arquivos\")",
+  "description": "Commit sprint + push + scratch check",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:59AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:59AM[0m [32mINF[0m scan completed in 8.34ms
+> [90m11:59AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    06a49f6..fa0888b  main -> main
+> scratch: 0 arquivos
+> ```
+
+## 🤖 Claude *(15:00:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tudo foi enviado (fa0888b), workspace limpo. Agora estou na fase final — preparando o relatório conclusivo e estruturando a resposta do EP05 em formato narrativo, já que o Sovereign pediu orientação para relembrar e decidir sobre os próximos passos.
+
+</details>
+
+
+## 🤖 Claude *(15:00:22)*
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — ESTRATÉGIA DEFINITIVA DE SHORTS ORGÂNICOS
+  + FORMATO REACT PROVADO · v6.129.0 (2026-07-30)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a secrets no diff ✅ · 1c coin-deduction client ✅ · 1e logs ⚠️ benigno
+  (strings de teste pré-existentes) · gitleaks limpo em TODOS os commits ✅
+
+📦 COMMITS (7 total, todos na main)
+  61022c3 — feat(voice): 0,5s de silêncio trailing no WAV sintetizado
+  a030f38 — fix(qa): smoke de cadência alinhado ao contrato FR-CAD-006
+  0b32c3f — docs(roadmap): estratégia DEFINITIVA v1 + biblioteca de ganchos v1
+  6fe1483 — feat(youtube): tabela de vídeos+métricas de volta à tela principal
+  abe2a12 — docs(readme): v6.129.0
+  06a49f6 — docs(handoff): seal
+  fa0888b — chore(sprint): registra v6.129.0
+
+⬡ KNOWLEDGE MESH
+  Milestone: aa7e1dc9 — session-handoff-20260730-organic-shorts-estrategia-definitiva-v1
+  Embedding: ✅ 768d (contrato novo node_id) · Malha: 18.985 → 19.120 nós
+
+📖 README.md — v6.128.0 → v6.129.0 · badge mesh 18985 → 19120 · seção What's New
+
+🧠 HANDOFF.md — Task State + Record 2026-07-30b + §EP05 (parecer) ·
+  size gate ✅ ~18,4k tokens · G5 legibilidade provada
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: SEAL ALLOWED — 12 verificadas · 2 skipped · 0 falhas
+
+🚀 PUSH — main → origin/main (64688bd..fa0888b) ✅
+
+📌 SPRINT — sprint-priorities v6.129.0 ✅ · scratch/ limpo ✅ · BoK: nenhum
+  módulo novo (exemption single-file) ✅
+
+⏭  PRÓXIMOS PASSOS
+  1. EP05 — decidir o formato (parecer abaixo) e roteirizar com o brief PIPC
+  2. Testar o projeto "React Gabriel AI" + virar públicos os 1ºs shorts (D2)
+  3. Subir o master EP03 pelo menu Cortes quando alinharmos os criativos
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+## Sobre o EP05: documentário → tutorial? **Sim — e os dados que já temos sustentam.**
+
+O que "já falamos" e o que medimos, consolidado (também gravado no HANDOFF §EP05 para a próxima sessão):
+
+**A favor do tutorial (4 evidências):**
+1. **Nosso próprio dado de retenção**: o brief PIPC do EP02 mostrou que o formato documentário **perde 50% da audiência a ~1:11** — o problema não é o tema, é o formato segurar pouco.
+2. **Seu deepsearch (Ref#2)** recomenda exatamente isso: conteúdo **evergreen** (guias/tutoriais) é o que acumula watch-hours por busca contínua — o caminho técnico para as 4.000h de monetização.
+3. **Seu deepsearch (Ref#3) já É o template**: o "AI VFX Workflow Engine" é literalmente um roteiro de tutorial com o Gabriel AI apresentando passo-a-passo, prompts copy-paste e o "por que funciona". O motor de roteiro do EP05 está pronto.
+4. **Funil de produto**: tutorial das ferramentas = marketing do MCORCH. Audiência de tutorial tem intenção alta — é quem vira usuário.
+
+**Duas ressalvas honestas:** tutorial tem teto de alcance menor que hype-doc (mas os **shorts continuam sendo o topo de funil** — o EP05 não precisa viralizar, precisa reter e converter); e não pode virar screencast seco — manter gancho forte + open loops.
+
+**Formato que recomendo:** "tutorial-documentado" de 8-12min — abertura narrativa de ~1min (gancho da biblioteca v1), 3-4 blocos de ferramenta com resultado real na tela, fechamento com CTA. Cada bloco rende 1-2 shorts de react pela fábrica que acabou de ficar pronta.
+
+Sessão selada. Bom teste no React Gabriel AI — quando voltar, começamos pelo roteiro do EP05. 🎬
 
 ---
 
