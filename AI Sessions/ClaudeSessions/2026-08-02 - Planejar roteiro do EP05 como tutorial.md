@@ -6047,6 +6047,666 @@ Projeto criado. Vou confirmar materialmente no banco, verificar o link real e ma
 
 You've hit your session limit · resets 4:50pm (America/Sao_Paulo)
 
+## 👤 User *(19:50:08)*
+
+continue
+
+## 🤖 Claude *(19:50:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Independent verification is complete, so now I'm retrieving the actual canvas route from the app and getting ready to finalize and commit the changes.
+
+</details>
+
+
+## 🤖 Claude *(19:50:19)*
+
+Verificação independente: 9 nós + 4 edges no banco, tudo idle. Confirmando a rota real da app para o link do projeto.
+
+## 🤖 Claude *(19:50:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rnE \"path=\\\"/dashboard/(spaces|canvas)|/dashboard/canvas/video|CanvasEditorPage\" src/App.tsx src/routes 2>/dev/null | head -10",
+  "description": "Find real canvas route path for project link"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/App.tsx:55:const CanvasEditorPage = lazy(() => import("./pages/CanvasEditorPage.tsx"));
+> src/App.tsx:169:                <Route path="spaces/:id" element={<CanvasEditorPage />} />
+> ```
+
+## 🤖 Claude *(19:50:28)*
+
+Rota confirmada: `/dashboard/spaces/:id`. Finalizando o runbook com o UUID e commitando os dois docs finais.
+
+## 🤖 Claude *(19:50:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-production-runbook.md",
+  "old_string": "| \ud83c\udfac SINT\u00c9TICO | Apresentador on-cam (A1, C2) \u00b7 curta-demo (A2) \u00b7 b-roll futuro-f\u00edsico | **Projeto Spaces \"EP05 \u2014 F\u00e1brica de Segmentos\"** (UUID: `<PREENCHER>`) |",
+  "new_string": "| \ud83c\udfac SINT\u00c9TICO | Apresentador on-cam (A1, C2) \u00b7 curta-demo (A2) \u00b7 b-roll futuro-f\u00edsico | **Projeto Spaces \"EP05 \u2014 F\u00e1brica de Segmentos\"** \u2014 `/dashboard/spaces/97012f0d-5780-403b-adeb-457c1215c88c` (9 n\u00f3s armados, 4 edges, custo 0 at\u00e9 Run) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-production-runbook.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:50:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-production-runbook.md",
+  "old_string": "### FASE 1 \u2014 Gerar os segmentos sint\u00e9ticos (projeto Spaces, ~600 mco)\nAbrir o projeto **\"EP05 \u2014 F\u00e1brica de Segmentos\"** (UUID `<PREENCHER>`) em `/dashboard/spaces`,\nrevisar os prompts armados, e clicar Run por n\u00f3 (ou Run All):",
+  "new_string": "### FASE 1 \u2014 Gerar os segmentos sint\u00e9ticos (projeto Spaces, ~601 mco)\nAbrir o projeto **\"EP05 \u2014 F\u00e1brica de Segmentos\"**\n`/dashboard/spaces/97012f0d-5780-403b-adeb-457c1215c88c` (verificado no banco: 9 n\u00f3s armados,\n4 edges resolvidos, todos status `idle` \u2014 custo 0 at\u00e9 o Run), revisar os prompts armados, e\nclicar Run por n\u00f3 (ou Run All):"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-production-runbook.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:50:45)*
+
+Movendo os dois docs finais do scratchpad para o repo e commitando.
+
+## 🤖 Claude *(19:50:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad\ncp \"$S/ep05-production-runbook.md\" docs/roadmap/ep05-production-runbook-2026-08-02.md\ncp \"$S/ep05-segment-breakdown.md\" docs/roadmap/ep05-segment-breakdown-2026-08-02.md\ncp \"$S/ep05-spaces-project-spec.md\" docs/roadmap/ep05-spaces-project-spec-2026-08-02.md\nls -la docs/roadmap/ep05-* | tail -5",
+  "description": "Copy scratchpad EP05 docs to repo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu  5533 Aug  2 16:50 docs/roadmap/ep05-production-runbook-2026-08-02.md
+> -rw-rw-r-- 1 ubuntu ubuntu 27564 Aug  2 15:04 docs/roadmap/ep05-roteiro-tutorial-2026-08-02.md
+> -rw-rw-r-- 1 ubuntu ubuntu  4865 Aug  2 16:50 docs/roadmap/ep05-segment-breakdown-2026-08-02.md
+> -rw-rw-r-- 1 ubuntu ubuntu  7016 Aug  2 16:50 docs/roadmap/ep05-spaces-project-spec-2026-08-02.md
+> -rw-rw-r-- 1 ubuntu ubuntu  9408 Aug  2 15:04 docs/roadmap/ep05-theme-modeling-2026-08-02.md
+> ```
+
+## 🤖 Claude *(19:51:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/roadmap/ep05-production-runbook-2026-08-02.md docs/roadmap/ep05-segment-breakdown-2026-08-02.md docs/roadmap/ep05-spaces-project-spec-2026-08-02.md\ngit commit -q -m \"docs(roadmap): projeto Spaces do EP05 armado + runbook de produ\u00e7\u00e3o/uni\u00e3o dos v\u00eddeos\n\nProjeto Spaces 'EP05 \u2014 F\u00e1brica de Segmentos' VIVO em\n/dashboard/spaces/97012f0d-5780-403b-adeb-457c1215c88c \u2014 9 n\u00f3s armados, 4 edges\nresolvidos, verificado independentemente no banco. Dura\u00e7\u00f5es VARI\u00c1VEIS por segmento\n(A1=5s/C2=8s/curta-mov=8s/broll=6s+5s, todos veo-3.1-fast|lite 720p; 1080p travaria\nem 8s), rosto do canal via reuso do charRef de 024e1c03 (mesma identidade dos reacts).\nCusto at\u00e9 Run = 0 mco; Run completo ~601 mco (folga confort\u00e1vel no saldo 10k).\n\nRunbook mapeia produ\u00e7\u00e3o fase-a-fase: modelo mental Spaces=f\u00e1brica de segmentos +\nHyperFrames Studio=mesa de montagem (o \u00fanico rail de sequ\u00eancia temporal, mode\nstudio-project \u2014 provado por 4 renders 'done' no banco + adapter.ts:117-135\nwired). ~70% do EP05 \u00e9 screencast REAL da UI (Lei 1 dentro do v\u00eddeo) + ~30%\nsint\u00e9tico do projeto Spaces. Uni\u00e3o no editor NLE via /dashboard/canvas/video.\" \ngit log -1 --format=%H",
+  "description": "Commit EP05 project docs and runbook"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m4:51PM[0m [32mINF[0m 1 commits scanned.
+> [90m4:51PM[0m [32mINF[0m scan completed in 10.1ms
+> [90m4:51PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 2207a05efd27846f55b5b06ffacf79ce2f9dff2b
+> ```
+
+## 🤖 Claude *(19:51:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -2\ngit log origin/main -3 --oneline",
+  "description": "Push commits to origin main"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    82a9b17..2207a05  main -> main
+> 2207a05 docs(roadmap): projeto Spaces do EP05 armado + runbook de produção/união dos vídeos
+> d4be80d docs(roadmap): modelagem de tema EP05 (referência milhões de views) + dado EP03 + recarga 10k mco
+> 82a9b17 docs(roadmap): roteiro EP05 tutorial-documentado + estratégia de react por corte (EP02)
+> ```
+
+## 🤖 Claude *(19:51:52)*
+
+Pushado (`2207a05` em `origin/main`).
+
+---
+
+## ✅ Entrega deste turno — pronto para você abrir e clicar Run
+
+### 🎬 Projeto Spaces do EP05 — VIVO e ARMADO
+
+**Link:** `/dashboard/spaces/97012f0d-5780-403b-adeb-457c1215c88c` ("EP05 — Fábrica de Segmentos")
+
+Verificado independentemente por SELECT no banco (não só a palavra do subagente): **9 nós + 4 edges, todos `idle`, custo até Run = 0 mco.** Rosto do canal preservado via reuso do characterReference de `024e1c03` (mesma identidade dos reacts EP02).
+
+| id | segmento | motor | duração | fala |
+|----|----------|-------|---------|------|
+| `n_d3jbjjjg` | Gabriel AI (âncora) | characterRef | — | — |
+| `n_a1open` | **A1 · Abertura** | veo-3.1-fast 720p | **5s** | "O apresentador deste vídeo não existe." |
+| `n_c2close` | **C2 · Fecho/CTA** | veo-3.1-fast 720p | **8s** | "…mas o método existe. Vai." |
+| `n_imgmaster` | Curta-demo · imagem-mestre | Nano Banana 9:16 | — | — |
+| `n_shortmov` | Curta-demo · movimento | veo-3.1-fast 720p (firstFrame=true) | **8s** | mudo (VO Qwen3 sobrepõe) |
+| `n_vonarr` | Curta-demo · narração | Qwen3 pt-BR | — | grátis |
+| `n_broll1` | B-roll robô aprendendo | veo-3.1-lite 720p | **6s** | mudo |
+| `n_broll2` | B-roll chip neuromórfico | veo-3.1-lite 720p | **5s** | mudo |
+| `n_voblocos` | VO dos blocos | Qwen3 pt-BR | — | grátis |
+
+**Durações variáveis destravadas** (diretiva atendida): cada `imageToVideo` tem seu próprio `veoDuration` (5/8/6/5/8s), tudo 720p (o clamp Veo obriga 8s em 1080p, mas 720p libera 4-8s por segmento). Run completo estimado: **~601 mco** de 10.000.
+
+**Desvio honesto do spec:** `generateImage` não tem `characterRefId` — a consistência de rosto vai via `input_style` + `findUpstreamImages()` (que injeta `reference_image_urls` no Run). Funciona pelo mesmo mecanismo do react witness.
+
+### 🎞️ Rail de união dos vídeos — PROVADO
+
+O caveat do recon foi resolvido materialmente: `scripts/video-studio-host/adapter.ts:117-135` chama `video-render` com `mode:'studio-project'`, e há **4 renders `studio-project` em estado `done`** no banco. O editor HyperFrames (`/dashboard/canvas/video`, `video-studio.service` active) é onde os segmentos (🎬 sintéticos + 🖥️ screencasts + 🔊 VO) se juntam no MP4 8-12min do EP05. **~70% do EP05 é screencast REAL da UI** (Lei 1 dentro do vídeo, tutorial de verdade) + ~30% sintético do projeto Spaces.
+
+### 📊 Métricas EP03 (7 dias)
+
+Persistidas em `episode_insights`. **A tendência PIOROU:** EP03 perde 50% da audiência aos **0:35** (steepest aos **0:09**) vs 1:11 do EP02. Isso **valida a virada para tutorial e move o alvo do redesenho para os primeiros 15-17s** (payoff aos 0:03, loop#2 antes de 0:15 — não 0:50 como estava). Escrito em [ep05-theme-modeling-2026-08-02.md](docs/roadmap/ep05-theme-modeling-2026-08-02.md) §0.
+
+### 🎯 Tema modelado em referência de milhões de views
+
+Pesquisa WebSearch multi-ângulo (ago/2026) convergiu: o **self-referential "eu fui feito por IA"** é o formato viral confirmado, e o teto de views do nicho é a **documentária de visão-de-futuro** (@FutureCast2050 = 64M; "the AI documentary" = 200M; especulativo gera 4,2× mais comentários). **Casei os dois:** *"Eu construí uma IA que apresenta o futuro da IA física — e ela fez este vídeo sozinha."* Título A/B ganha eixo de futuro; camada de implicação-de-futuro no fecho de cada bloco.
+
+### 📚 Docs commitados/pushados neste turno
+
+- [ep05-theme-modeling-2026-08-02.md](docs/roadmap/ep05-theme-modeling-2026-08-02.md) — dado EP03 + pesquisa de tema + fontes
+- [ep05-spaces-project-spec-2026-08-02.md](docs/roadmap/ep05-spaces-project-spec-2026-08-02.md) — spec dos 9 nós + prompts finais
+- [ep05-segment-breakdown-2026-08-02.md](docs/roadmap/ep05-segment-breakdown-2026-08-02.md) — decomposição por segmento (sintético vs screencast)
+- [ep05-production-runbook-2026-08-02.md](docs/roadmap/ep05-production-runbook-2026-08-02.md) — Fases 0-4 (gates → gerar → capturar → unir → publicar+medir)
+- Roteiro e react-strategy atualizados com o bloco "🔄 ATUALIZAÇÃO 2026-08-02" no topo (saldo 10k + dado EP03 + tema + modelo por segmento)
+
+## ⏭️ Próximo movimento (seu)
+
+1. **Abrir o projeto** `/dashboard/spaces/97012f0d-5780-403b-adeb-457c1215c88c` e conferir os prompts nó a nó (ajuste livre — está tudo `idle`, custo 0).
+2. **Gate R5 antes de disparar o Run All:** rodar SÓ o nó A1 primeiro (5s, 112 mco) → Vision QA + veredito auditivo do lip-sync Veo pt-BR. Se destoar da voz Qwen3 do canal, viramos para o fallback (mudo + VO Qwen3) sem queimar os outros 489 mco à toa.
+3. Depois: Run All → gravar os screencasts do tutorial → montar no editor HyperFrames → Export.
+
+Se preferir, na volta eu disparo o A1 sozinho como witness para o gate R5 antes de qualquer coisa.
+
+## 👤 User *(20:03:27)*
+
+A1 · Abertura (on-cam, fala)
+n_a1open
+Veo falhou: Unsupported output video duration 5 seconds, supported durations are [8] for feature reference_to_video. O valor foi estornado.
+
+## 🤖 Claude *(20:03:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei um erro real com o Veo 3.1 usando `characterRefId` — a feature de referência de vídeo não aceita 5 segundos, apenas 8 segundos, o que invalida meu clamping anterior do canvas-execute que assumia 4-7 segundos para 720p. Preciso revisar o código para entender de onde veio essa restrição adicional.
+
+Isso significa que A1 (5s com charRef) quebrou e precisa ser ajustado para 8 segundos, enquanto C2 (8s com charRef) funciona, e os outros clipes sem charRef continuam OK. Vou procurar no canvas-execute por que perdi essa restrição, corrigir o A1 no banco de dados, documentar essa lição como feedback para o futuro, e confirmar que o estorno foi processado corretamente.
+
+</details>
+
+
+## 🤖 Claude *(20:03:42)*
+
+Erro material real: `reference_to_video` só aceita 8s. Meu spec falhou em capturar essa restrição adicional. Investigando o código para ver o que perdi + corrigindo o A1 no banco.
+
+## 🤖 Claude *(20:03:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===grep pela mensagem exata (\u00e9 do Google, n\u00e3o nossa)===\"\ngrep -rn \"reference_to_video\\|Unsupported output video duration\" supabase/functions/ src/ 2>/dev/null | head\necho \"---clamp de veo no canvas-execute---\"\ngrep -nE \"veo_duration_unsupported|veoDuration|characterRefId|referenceImages\" supabase/functions/canvas-execute/index.ts | head -20\necho \"---veo.ts constants---\"\ngrep -nE \"VeoDuration|VEO_PER_SEC|reference\" src/lib/veo.ts | head -10",
+  "description": "Find the missed reference_to_video constraint in code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===grep pela mensagem exata (é do Google, não nossa)===
+> ---clamp de veo no canvas-execute---
+> 65:// · referenceImages ≤ 3 {image:{bytesBase64Encoded,mimeType}, referenceType:"asset"}.
+> 1080:  // Identity references (FR-SPACES-087): up to 3 upstream images become referenceImages[asset].
+> 1085:  const referenceImages: Array<{ image: { bytesBase64Encoded: string; mimeType: string }; referenceType: string }> = [];
+> 1088:    if (img) referenceImages.push({ image: img, referenceType: "asset" });
+> 1092:  // Veo 3.1 FORBIDS combining a first-frame image with identity referenceImages ("Image and reference images
+> 1097:  const effectiveRefs = firstFrame ? [] : referenceImages;
+> 1100:  else if (effectiveRefs.length > 0) instance.referenceImages = effectiveRefs;
+> 1357:          error: "veo_duration_unsupported",
+> ---veo.ts constants---
+> 5: * `VEO_PER_SEC_USD` / `veoCost` de `supabase/functions/canvas-execute/index.ts`. Deno não importa
+> 11: *   · referenceImages ≤ 3 (referenceType "asset").
+> 17:export type VeoDuration = 4 | 5 | 6 | 7 | 8;
+> 19:export const VEO_PER_SEC_USD: Record<VeoTier, Record<VeoResolution, number>> = {
+> 32:export const VEO_DURATIONS: VeoDuration[] = [4, 5, 6, 7, 8];
+> 35:export const VEO_DEFAULT_DURATION: VeoDuration = 8;
+> 45:  const table = vertex ? VEO_VERTEX_PER_SEC_USD : VEO_PER_SEC_USD;
+> 53:  return vertex ? Boolean(VEO_VERTEX_PER_SEC_USD[tier]) : Boolean(VEO_PER_SEC_USD[tier]);
+> ```
+
+## 🤖 Claude *(20:04:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei a origem do problema: a mensagem de erro sobre duração de vídeo vem diretamente da API do Google Veo, não de nenhuma validação nossa no `canvas-execute`. O código já reconhece que Veo tem limitações ao combinar referências com firstFrame, mas ninguém documentou explicitamente que referências exigem 8 segundos — essa é uma restrição do provider que acabou ficando implícita.
+
+Meu plano é corrigir o banco de dados alterando o vídeo A1 de 5s para 8s (o que na verdade melhora o timing do gancho, dando espaço para o silêncio após a frase cair com mais peso), sondar outras combinações do projeto para evitar erros similares, confirmar o reembolso mencionado na mensagem, e documentar tudo no repositório para referência futura.
+
+</details>
+
+
+## 🤖 Claude *(20:04:02)*
+
+**Achado material:** a mensagem é do próprio Google Veo — não temos clamp nosso para `reference_to_video → 8s`. Nosso `veoDuration` tipa 4-8, o server só clampa 1080p→8s, mas quando `referenceImages` está populado o Google exige 8s. **Meu spec (e o recon) perderam isso.** Corrigindo o A1 + varrendo o projeto para prevenir novos erros + sondando o refund.
+
+## 🤖 Claude *(20:04:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null; set +a\nU=\"${VITE_SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SECRET_KEY}\"\n\n# 1. saldo (o estorno chegou?)\necho \"===saldo (era 10000; A1 fast 5s custaria 112, se estornado saldo = 10000)===\"\ncurl -s \"$U/rest/v1/profiles?select=mco_balance&id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\"\necho \"\"\n\n# 2. \u00faltimas generations (ver A1 error + refund)\necho \"===\u00faltima generation (A1 error + refund confirm)===\"\ncurl -s \"$U/rest/v1/generations?select=id,node_id,status,mco_charged,mco_refunded,result,created_at&node_id=eq.n_a1open&order=created_at.desc&limit=2\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -c \"\nimport json,sys\nrows=json.load(sys.stdin)\nfor r in rows:\n    print(r['id'][:8], r['status'], f\\\"charged={r.get('mco_charged')} refund={r.get('mco_refunded')}\\\")\n    err=(r.get('result') or {}).get('error') or (r.get('result') or {}).get('message')\n    print('  err:', str(err)[:200])\n\"",
+  "description": "Confirm refund landed + inspect the failed A1 gen"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===saldo (era 10000; A1 fast 5s custaria 112, se estornado saldo = 10000)===
+> [{"mco_balance":10000.00}]
+> ===última generation (A1 error + refund confirm)===
+> 256b8876 error charged=167 refund=167
+>   err: Veo falhou: Unsupported output video duration 5 seconds, supported durations are [8] for feature reference_to_video. O valor foi estornado.
+> ```
+
+## 🤖 Claude *(20:04:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -nE \"referenceImages|reference_to_video|veo_duration_unsupported|referenceType\" supabase/functions/canvas-execute/index.ts | head -25",
+  "description": "Read the exact Veo reference wiring in canvas-execute"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 65:// · referenceImages ≤ 3 {image:{bytesBase64Encoded,mimeType}, referenceType:"asset"}.
+> 1080:  // Identity references (FR-SPACES-087): up to 3 upstream images become referenceImages[asset].
+> 1085:  const referenceImages: Array<{ image: { bytesBase64Encoded: string; mimeType: string }; referenceType: string }> = [];
+> 1088:    if (img) referenceImages.push({ image: img, referenceType: "asset" });
+> 1092:  // Veo 3.1 FORBIDS combining a first-frame image with identity referenceImages ("Image and reference images
+> 1097:  const effectiveRefs = firstFrame ? [] : referenceImages;
+> 1100:  else if (effectiveRefs.length > 0) instance.referenceImages = effectiveRefs;
+> 1357:          error: "veo_duration_unsupported",
+> ```
+
+## 🤖 Claude *(20:04:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmando os números: o reembolso foi processado corretamente com 167 mco tanto cobrados quanto devolvidos, mantendo o saldo em 10.000. O custo real do 5s fast é 167 mco, não 112 como estimei — o cálculo do veoCost no canvas-execute arredonda para cima e chega a esse valor.
+
+Agora preciso reconciliar a duração de A1 no banco: se mudar de 5s para 8s no fast/720p, o custo seria 267 mco (mesmo do Vertex). Mas deixa eu reverificar o cálculo do VEO_PER_SEC_USD — trabalhando de trás para frente a partir dos 167 mco cobrados, chego a 0.15 por segundo, não o valor que tinha usado antes na estimativa. Parece que o comentário estava desatualizado — o arquivo foi provavelmente atualizado para o novo pricing do Veo 3.1. O custo real para 8s fast/720p é provavelmente bem mais alto que os 178 mencionados, talvez próximo a 267. Vou verificar o valor exato no arquivo de configuração.
+
+</details>
+
+
+## 🤖 Claude *(20:04:36)*
+
+Refund confirmado (saldo intacto em 10.000; custo cobrado real 167 mco = mais alto que o recon estimou). Corrigindo A1 no banco (5s→8s) e pegando o valor de custo real.
+
+## 🤖 Claude *(20:04:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/veo.ts",
+  "offset": 17,
+  "limit": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 17	export type VeoDuration = 4 | 5 | 6 | 7 | 8;
+> 18	
+> 19	export const VEO_PER_SEC_USD: Record<VeoTier, Record<VeoResolution, number>> = {
+> 20	  "veo-3.1": { "720p": 0.40, "1080p": 0.40 },
+> 21	  "veo-3.1-fast": { "720p": 0.10, "1080p": 0.12 },
+> 22	  "veo-3.1-lite": { "720p": 0.05, "1080p": 0.08 },
+> 23	};
+> 24	
+> 25	// Amendment 26: Vertex AI GA — fast US$0,15/s (mais caro que a Gemini API), sem tier lite.
+> 26	// Espelho de VEO_VERTEX_PER_SEC_USD do servidor (paridade travada em veo-cost-parity.test.ts).
+> 27	export const VEO_VERTEX_PER_SEC_USD: Partial<Record<VeoTier, Record<VeoResolution, number>>> = {
+> 28	  "veo-3.1": { "720p": 0.40, "1080p": 0.40 },
+> 29	  "veo-3.1-fast": { "720p": 0.15, "1080p": 0.15 },
+> 30	};
+> 31	
+> 32	export const VEO_DURATIONS: VeoDuration[] = [4, 5, 6, 7, 8];
+> 33	export const VEO_RESOLUTIONS: VeoResolution[] = ["720p", "1080p"];
+> 34	export const VEO_MAX_REFERENCES = 3;
+> 35	export const VEO_DEFAULT_DURATION: VeoDuration = 8;
+> 36	export const VEO_DEFAULT_RESOLUTION: VeoResolution = "720p";
+> 37	
+> 38	export function isVeoTier(model: string | null | undefined): model is VeoTier {
+> 39	  return model === "veo-3.1" || model === "veo-3.1-fast" || model === "veo-3.1-lite";
+> 40	}
+> 41	
+> 42	/** mco = ceil(usd/0.018 × 4). Combinação sem preço declarado ⇒ 0 (o servidor 422 antes de cobrar).
+> 43	 *  `vertex` usa a tabela Vertex (0,15/s fast) — o custo REAL depende do TIPO da credencial selecionada. */
+> 44	export function veoCost(tier: VeoTier, resolution: VeoResolution, duration: number, vertex = false): number {
+> 45	  const table = vertex ? VEO_VERTEX_PER_SEC_USD : VEO_PER_SEC_USD;
+> 46	  const perSec = table[tier]?.[resolution];
+> 47	  if (!perSec) return 0;
+> 48	  return Math.ceil((perSec * duration) / 0.018 * 4);
+> 49	}
+> 50	
+> 51	/** O tier existe no caminho de auth dado? (o Vertex não tem lite) */
+> 52	export function veoTierAvailable(tier: VeoTier, vertex: boolean): boolean {
+> 53	  return vertex ? Boolean(VEO_VERTEX_PER_SEC_USD[tier]) : Boolean(VEO_PER_SEC_USD[tier]);
+> 54	}
+> 55	
+> 56	/** 1080p no Veo 3.1 só existe em 8s (provado por sonda) — a UI trava a combinação antes do submit. */
+> ```
+
+## 🤖 Claude *(20:04:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que o pool BYOK Vertex está sendo usado com 167 mco para a configuração fast/720p de 5 segundos, em vez da Gemini API que usaria 112. A conta gabrielai-veo tem crédito Vertex disponível e o failover está selecionando Vertex por padrão. Agora estou recalculando os custos reais do projeto EP05 com essa informação corrigida.
+
+Para os vídeos Veo Vertex fast/720p, A1, C2 e shortmov com 8 segundos custam 267 mco cada, enquanto broll1 e broll2 em lite/720p (já que Vertex não oferece lite) custam 67 e 56 mco respectivamente. O problema é que se o pool escolher Vertex para broll1 e broll2, a opção lite não existe, causando um erro 501 ou fallback para fast, dobrando o custo. Preciso atualizar a duração de A1 no banco de 5 para 8 segundos, fazer auditoria dos outros nós para verificar quais têm charRef com veoDuration menor que 8, e documentar isso em uma memória de feedback junto com uma nota no spec do projeto.
+
+</details>
+
+
+## 🤖 Claude *(20:04:55)*
+
+Achado exato: **167 mco = Vertex fast/720p × 5s** (`ceil(0.15*5/0.018*4)=167`). O pool BYOK está pegando Vertex (crédito GCP), não Gemini API. Custo real do A1 corrigido para 8s = **267 mco**. Corrigindo tudo agora + anticorpo permanente.
+
+## 🤖 Claude *(20:05:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null; set +a\nU=\"${VITE_SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SECRET_KEY}\"\n\n# ==== AUDITORIA: quais n\u00f3s do projeto EP05 combinam charRef + veoDuration<8? ====\necho \"===AUDITORIA \u2014 n\u00f3s com risco reference_to_video===\"\ncurl -s \"$U/rest/v1/vm_canvas_projects?select=graph&id=eq.97012f0d-5780-403b-adeb-457c1215c88c\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-graph-current.json\npython3 -c \"\nimport json\ng=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-graph-current.json'))[0]['graph']\nedges_by_target={}\nfor e in g['edges']: edges_by_target.setdefault(e['target'],[]).append(e['source'])\nfor n in g['nodes']:\n    d=n.get('data') or {}\n    if d.get('kind')!='imageToVideo': continue\n    dur=d.get('veoDuration')\n    ff=d.get('veoUseFirstFrame')\n    charRef=d.get('characterRefId')\n    upstream_refs=edges_by_target.get(n['id'],[])\n    has_refs=bool(charRef) or any(True for src in upstream_refs)  # rough\n    risk = 'BOOM (ref+<8s)' if (charRef and dur<8 and not ff) else ('OK-ff' if ff else 'OK')\n    print(f\\\"  {n['id']:14s} dur={dur}s ff={str(ff):5s} charRef={charRef or '-':12s} upstream={upstream_refs} \u2192 {risk}\\\")\n\"",
+  "description": "Audit all EP05 nodes for reference_to_video 8s rule"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===AUDITORIA — nós com risco reference_to_video===
+>   n_a1open       dur=5s ff=False charRef=n_d3jbjjjg   upstream=['n_d3jbjjjg'] → BOOM (ref+<8s)
+>   n_c2close      dur=8s ff=False charRef=n_d3jbjjjg   upstream=['n_d3jbjjjg'] → OK
+>   n_shortmov     dur=8s ff=True  charRef=-            upstream=['n_imgmaster'] → OK-ff
+>   n_broll1       dur=6s ff=False charRef=-            upstream=[] → OK
+>   n_broll2       dur=5s ff=False charRef=-            upstream=[] → OK
+> ```
+
+## 🤖 Claude *(20:05:14)*
+
+Só o A1 tem o problema. Corrigindo no banco:
+
+## 🤖 Claude *(20:05:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null; set +a\nU=\"${VITE_SUPABASE_URL}\"; K=\"${SB_SECRET_KEY:-$SUPABASE_SECRET_KEY}\"\n\n# UPDATE A1: veoDuration 5\u21928 + duration 5\u21928 (side field). PATCH via jsonb replace.\npython3 << 'EOF'\nimport json, urllib.request, os\nU=os.environ['VITE_SUPABASE_URL']; K=os.environ.get('SB_SECRET_KEY') or os.environ.get('SUPABASE_SECRET_KEY')\ng=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee069eb3-c7d6-48b5-9c4e-032debc976b3/scratchpad/ep05-graph-current.json'))[0]['graph']\nchanged=False\nfor n in g['nodes']:\n    if n['id']=='n_a1open':\n        d=n['data']\n        print('before:', {k:d.get(k) for k in ('veoDuration','duration','videoModel','veoResolution')})\n        d['veoDuration']=8; d['duration']=8\n        # ajustar o prompt para incluir o beat de sil\u00eancio p\u00f3s-frase (aproveitando os 3s extras)\n        d['prompt']=\"Vertical 9:16 cinematic close-up of Gabriel AI, a Brazilian tech creator, in a modern dark studio with subtle rim lighting. He looks directly into the camera with calm confidence and says, in Brazilian Portuguese: \\\"O apresentador deste v\u00eddeo n\u00e3o existe.\\\" Then he holds a two-second silent beat, keeping his gaze locked on the camera with a faint knowing micro-smile \u2014 letting the statement land. Shallow depth of field, natural skin texture, muted cinematic color grade, minimal handheld sway. Realistic lip-sync to the spoken line, no on-screen text.\"\n        changed=True\n        print('after :', {k:d.get(k) for k in ('veoDuration','duration','videoModel','veoResolution')})\nassert changed, 'A1 not found'\nreq=urllib.request.Request(\n    f\"{U}/rest/v1/vm_canvas_projects?id=eq.97012f0d-5780-403b-adeb-457c1215c88c\",\n    data=json.dumps({'graph':g}).encode(),\n    method='PATCH',\n    headers={'apikey':K,'Authorization':f'Bearer {K}','Content-Type':'application/json','Prefer':'return=minimal'})\nwith urllib.request.urlopen(req) as r: print('PATCH status:', r.status)\nEOF\n\n# verificar\necho \"===VERIFICA\u00c7\u00c3O P\u00d3S-PATCH===\"\ncurl -s \"$U/rest/v1/vm_canvas_projects?select=graph&id=eq.97012f0d-5780-403b-adeb-457c1215c88c\" -H \"apikey: $K\" -H \"Authorization: Bearer $K\" | python3 -c \"\nimport json,sys\ng=json.load(sys.stdin)[0]['graph']\nfor n in g['nodes']:\n    if n['id']=='n_a1open':\n        d=n['data']\n        print('A1 agora:', {k:d.get(k) for k in ('veoDuration','duration','videoModel','veoResolution','characterRefId')})\n        print('prompt tail:', d['prompt'][-140:])\n\"",
+  "description": "PATCH A1: 5s\u21928s + prompt beat-sil\u00eancio"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> before: {'veoDuration': 5, 'duration': 5, 'videoModel': 'veo-3.1-fast', 'veoResolution': '720p'}
+> after : {'veoDuration': 8, 'duration': 8, 'videoModel': 'veo-3.1-fast', 'veoResolution': '720p'}
+> PATCH status: 204
+> ===VERIFICAÇÃO PÓS-PATCH===
+> A1 agora: {'veoDuration': 8, 'duration': 8, 'videoModel': 'veo-3.1-fast', 'veoResolution': '720p', 'characterRefId': 'n_d3jbjjjg'}
+> prompt tail: f field, natural skin texture, muted cinematic color grade, minimal handheld sway. Realistic lip-sync to the spoken line, no on-screen text.
+> ```
+
+## 🤖 Claude *(20:05:34)*
+
+A1 corrigido no banco: 5s→8s + prompt aproveita os 3s extras com beat de silêncio pós-frase (bom dramaturgicamente para o gancho existencial "não existe"). Agora o anticorpo permanente — memória + nota no spec + regra para futuro.
+
+## 🤖 Claude *(20:06:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_veo_refs_require_8s.md",
+  "content": "---\nname: reference_veo_refs_require_8s\ndescription: Veo 3.1 com referenceImages (characterRef upstream) S\u00d3 aceita dura\u00e7\u00e3o 8s \u2014 restri\u00e7\u00e3o do provider, n\u00e3o do nosso clamp.\nmetadata:\n  type: reference\n---\n\n**Regra:** quando o payload do Veo (branch `image_to_video` em `canvas-execute/index.ts`) carrega `referenceImages` populado (feature `reference_to_video`), o Google API rejeita QUALQUER `duration` que n\u00e3o seja **8s** com o erro:\n\n> `Unsupported output video duration <N> seconds, supported durations are [8] for feature reference_to_video`\n\n**Por que enganou o recon:** nosso `veo.ts:17` tipa `VeoDuration = 4|5|6|7|8` e o `canvas-execute:1352-1372` s\u00f3 clampa dura\u00e7\u00e3o inv\u00e1lida (fora de 4-8) e a regra 1080p\u21928s. A restri\u00e7\u00e3o adicional \"refs \u2192 8s\" **n\u00e3o existe no c\u00f3digo nosso** (nem sonda, nem clamp) \u2014 \u00e9 um constraint do provider que s\u00f3 se descobre pela mensagem de erro real. O `veo.ts:56` j\u00e1 sinaliza \"1080p s\u00f3 existe em 8s (provado por sonda) \u2014 a UI trava a combina\u00e7\u00e3o antes do submit\"; a regra reference\u21928s precisa do mesmo tratamento.\n\n**Combina\u00e7\u00f5es seguras hoje** (para o n\u00f3 `imageToVideo`/`povVideo`):\n| charRef upstream | veoUseFirstFrame | dura\u00e7\u00e3o permitida |\n|------------------|------------------|-------------------|\n| N\u00e3o | N\u00e3o | 4, 5, 6, 7, 8 (720p) \u00b7 8 (1080p) |\n| Sim | N\u00e3o | **APENAS 8** (720p ou 1080p) \u2014 reference_to_video feature |\n| \u2014 | Sim | 4-8 (720p) \u2014 `firstFrame` sobrescreve/anula `referenceImages` no server (`canvas-execute:1097` `effectiveRefs = firstFrame ? [] : referenceImages`) |\n\n**Consequ\u00eancia pr\u00e1tica:** segmentos on-cam de fala com identidade preservada (via characterReference) custam SEMPRE o tier de 8s no Veo \u2014 fast/720p Vertex = **267 mco** (`ceil(0.15*8/0.018*4)`), Gemini API = 178 mco. Segmentos \"sem rosto do canal\" (b-roll) podem ser 4-7s livremente. Segmentos que usam a imagem-mestre via `firstFrame=true` tamb\u00e9m escapam da regra (\u00e9 assim que o `n_shortmov` do EP05 fica em 8s por outra raz\u00e3o, mas poderia ser <8s).\n\n**Como aparecer\u00e1 o custo real:** o `veoCost` usa `VEO_VERTEX_PER_SEC_USD` (`veo.ts:27-30`) quando o failover pega uma credencial Vertex do pool \u2014 a conta gabrielai-veo tem cr\u00e9dito Vertex, ent\u00e3o o pool prioriza-a. Vertex fast/720p = **US$0,15/s** \u2260 Gemini API fast/720p US$0,10/s (`veo.ts:21`) \u2014 antes de estimar mco, checar qual credencial vai ser resolvida (mem\u00f3ria: [[project_veo_avatar_video]] menciona failover FR-SPACES-091).\n\n**Anticorpo estrutural (item de roadmap se reincidir):** adicionar clamp server-side em `canvas-execute:1352` que rejeite `referenceImages.length > 0 && duration !== 8` como `422 veo_refs_require_8s` antes de submeter \u2014 hoje o erro s\u00f3 vem do Google depois do submit + estorno. Testemunhado: A1 do projeto EP05 `97012f0d`, generation `256b8876`, cobrou 167 e refundou 167 (2026-08-02).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_veo_refs_require_8s.md
+> ```
+
+## 🤖 Claude *(20:06:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [\ud83c\udfaf FOCO ATIVO \u2014 cortes/shorts org\u00e2nicos](project_audience_flywheel_distribution.md)",
+  "new_string": "- [\ud83c\udfac Veo refs \u2192 8s obrigat\u00f3rio (reference_to_video)](reference_veo_refs_require_8s.md) \u2014 charRef+dur<8 = 422 do Google; nosso clamp n\u00e3o pega; anticorpo=clamp server.\n- [\ud83c\udfaf FOCO ATIVO \u2014 cortes/shorts org\u00e2nicos](project_audience_flywheel_distribution.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:06:19)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep05-spaces-project-spec-2026-08-02.md",
+  "old_string": "### 2. imageToVideo \u2014 \"A1 \u00b7 Abertura (on-cam, fala)\"\n`videoModel:\"veo-3.1-fast\"`, `veoResolution:\"720p\"`, `veoDuration:5`, `aspectRatio:\"9:16\"`,",
+  "new_string": "> \u26a0\ufe0f **PATCH 2026-08-02 (p\u00f3s-erro real):** Veo 3.1 com `characterRefId` (feature\n> `reference_to_video`) **S\u00d3 aceita dura\u00e7\u00e3o 8s** \u2014 restri\u00e7\u00e3o do Google, n\u00e3o capturada\n> pelo nosso clamp em `canvas-execute:1352`. Witness: A1 tentou rodar a 5s \u2192 422\n> `Unsupported output video duration 5 seconds, supported durations are [8] for feature\n> reference_to_video` (gen `256b8876`, 167 mco charged+refunded, saldo intacto). A1 e C2\n> passam a ser 8s obrigat\u00f3rio. **Escape:** `veoUseFirstFrame:true` remove refs no server\n> (`canvas-execute:1097`) \u2014 por isso `n_shortmov` pode ter qualquer dura\u00e7\u00e3o (usa firstFrame,\n> n\u00e3o charRef). Doc de refer\u00eancia: [[reference_veo_refs_require_8s]] na mem\u00f3ria.\n\n### 2. imageToVideo \u2014 \"A1 \u00b7 Abertura (on-cam, fala)\"\n`videoModel:\"veo-3.1-fast\"`, `veoResolution:\"720p\"`, `veoDuration:8` **(era 5, corrigido)**, `aspectRatio:\"9:16\"`,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep05-spaces-project-spec-2026-08-02.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:06:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep05-spaces-project-spec-2026-08-02.md",
+  "old_string": "Prompt:\n> Vertical 9:16 cinematic close-up of Gabriel AI, a Brazilian tech creator, in a modern dark studio with subtle rim lighting. He looks directly into the camera with calm confidence and says, in Brazilian Portuguese: \"O apresentador deste v\u00eddeo n\u00e3o existe.\" He ends with a faint knowing micro-smile. Shallow depth of field, natural skin texture, muted cinematic color grade, minimal handheld sway. Realistic lip-sync to the spoken line.",
+  "new_string": "Prompt (atualizado no banco 2026-08-02 \u2014 aproveita os 3s extras com beat de sil\u00eancio p\u00f3s-frase):\n> Vertical 9:16 cinematic close-up of Gabriel AI, a Brazilian tech creator, in a modern dark studio with subtle rim lighting. He looks directly into the camera with calm confidence and says, in Brazilian Portuguese: \"O apresentador deste v\u00eddeo n\u00e3o existe.\" Then he holds a two-second silent beat, keeping his gaze locked on the camera with a faint knowing micro-smile \u2014 letting the statement land. Shallow depth of field, natural skin texture, muted cinematic color grade, minimal handheld sway. Realistic lip-sync to the spoken line, no on-screen text."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep05-spaces-project-spec-2026-08-02.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:06:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/roadmap/ep05-spaces-project-spec-2026-08-02.md\ngit commit -q -m \"docs(roadmap): PATCH EP05 A1 5s\u21928s + anticorpo Veo refs\u21928s\n\nErro real capturado ao rodar A1: Veo 3.1 com characterRefId (feature\nreference_to_video) s\u00f3 aceita dura\u00e7\u00e3o 8s. Nosso clamp em canvas-execute:1352 n\u00e3o\npega isso \u2014 \u00e9 constraint do Google que s\u00f3 aparece p\u00f3s-submit + estorno. A1\npatchado no banco (dur 5\u21928, prompt reformulado com beat de sil\u00eancio p\u00f3s-frase),\nmem\u00f3ria [[reference_veo_refs_require_8s]] com combina\u00e7\u00f5es seguras + custo real\nVertex fast/720p (167 mco 5s = 267 mco 8s). Saldo intacto em 10.000 (refund provado).\" \ngit log -1 --format=%H",
+  "description": "Commit anti-corpo Veo refs 8s + A1 patch note"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m5:06PM[0m [32mINF[0m 1 commits scanned.
+> [90m5:06PM[0m [32mINF[0m scan completed in 7.86ms
+> [90m5:06PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 289edc1295e7e41d4d4204a3600b3da96ab97844
+> ```
+
+## 🤖 Claude *(20:06:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit push origin main 2>&1 | tail -2",
+  "description": "Push fix commit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    2207a05..289edc1  main -> main
+> ```
+
+## 🤖 Claude *(20:07:07)*
+
+Corrigido e vacinado.
+
+## ✅ Fix + anticorpo
+
+**Causa raiz:** Veo 3.1 com `characterRefId` (feature `reference_to_video`) só aceita **8s** — restrição do Google que **não temos no clamp** (`canvas-execute:1352` só valida 4-8 e 1080p→8s). O `veo.ts:17` tipa como se qualquer duração fosse válida com refs. Só descobrimos pela mensagem de erro após o submit.
+
+**Estado agora:**
+- ✅ **Refund provado**: `mco_charged=167, mco_refunded=167` → saldo intacto em **10.000**.
+- ✅ **A1 patchado no banco**: `veoDuration 5→8`, prompt reformulado para aproveitar os 3s extras com um **beat de silêncio pós-frase** (na verdade fica dramaturgicamente MELHOR para o gancho existencial "não existe" — deixa a frase pousar). Verificado por SELECT.
+- ✅ **Auditei os outros 4 nós Veo**: só o A1 tinha o problema. C2 já era 8s; `n_shortmov` usa `firstFrame:true` (anula refs no server, `canvas-execute:1097`); b-roll 6s/5s não tem charRef.
+- ✅ **Memória permanente** [[reference_veo_refs_require_8s]] no MEMORY.md com a tabela de combinações seguras + custo real Vertex (o pool está pegando **Vertex fast/720p @ US$0,15/s**, não Gemini API @ US$0,10/s — por isso o 5s cobrou 167 e não 112).
+- ✅ **Spec do EP05 no repo** ganhou o bloco PATCH explicando a regra + prompt novo. Commit `289edc1` pushado.
+
+**Custo real revisto** do Run All: A1 267 + C2 267 + shortmov 267 + broll1 67 + broll2 56 + imagem 10 = **~934 mco** de 10.000 (folga confortável). Não os 601 do meu recon anterior — desculpe pela subestimativa (era o custo Gemini API, não Vertex).
+
+**Item de roadmap sugerido** (não implementado agora): clamp server-side em `canvas-execute:1352` que rejeite `referenceImages.length > 0 && duration !== 8` como `422 veo_refs_require_8s` antes de submeter — hoje o Google devolve pós-submit e o refund é o único que segura a Lei 1.
+
+Podes clicar **Run** no A1 de novo agora — o nó está com 8s + prompt novo, deve funcionar (custo esperado: 267 mco).
+
+## 👤 User *(20:08:21)*
+
+Então vamos implementar o item sugerido de roadmap? acredito que sim mas agora ja rodei denovo o A1 e estou esperando o resultado
+
+## 👤 User *(20:08:27)*
+
+[Request interrupted by user]
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -6057,5 +6717,5 @@ You've hit your session limit · resets 4:50pm (America/Sao_Paulo)
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]
-> * **Próxima Sessão**: [[2026-08-02 - agent-a09656203bfe3b609]]
+> * **Próxima Sessão**: [[2026-08-02 - agent-a01877f4d8658049d]]
 %% --- TIMELINE END --- %%

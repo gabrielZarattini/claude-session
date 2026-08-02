@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 107
-> * **Total de Sessões**: 3270
+> * **Total de Processos**: 108
+> * **Total de Sessões**: 3276
 
 ---
 
@@ -106,6 +106,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[trends-credential-resolution]]` - *Processo*
 *   `[[ux-ui-senior-loop]]` - *Processo*
 *   `[[veo-avatar-video]]` - *Processo*
+*   `[[veo-refs-8s-guard]]` - *Processo*
 *   `[[video-repurpose-source-probe]]` - *Processo*
 *   `[[video-repurpose-worker]]` - *Processo*
 *   `[[video-studio-editor-deploy-and-provision]]` - *Processo*
@@ -135,14 +136,20 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-08-02 - agent-abb3c09e146aea34a]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-ab68372f4a315f7cd]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-aaf2c64cbcdf4556e]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a97ef68eb95fe8e93]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a96bb21d81c3d9c9a]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a79d2a96989c8f15f]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a71b0ca9698f59fed]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a665e7d5157fa4089]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a51e1720cfa3c85db]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a475582a370a61d48]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a354ed479eeb36c15]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a2af4f8c082de7125]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a28d6e0259096d8d7]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a0d2c1fe402ff0c10]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a0d22044fc48c94af]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - agent-a09656203bfe3b609]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a01877f4d8658049d]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - Planejar roteiro do EP05 como tutorial]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions) - *2026-08-02*
 *   `[[2026-07-31 - agent-abd71c71c3f451c8e]]` (ClaudeSessions) - *2026-07-31*
