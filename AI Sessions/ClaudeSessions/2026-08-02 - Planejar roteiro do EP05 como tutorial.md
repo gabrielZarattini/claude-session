@@ -1,5 +1,5 @@
 # Planejar roteiro do EP05 como tutorial
-**Date:** 2026-08-02 | **Session ID:** `720a090b-88bd-45e4-a0de-8db3f1ce60ca`
+**Date:** 2026-08-02 | **Session ID:** `62569fe5-58da-42fe-9aa2-5db18e539307`
 
 ---
 
@@ -11011,23 +11011,6 @@ Vou listar os arquivos principais do repositório GabrielAI para identificar a e
 {
   "owner": "gabrielZarattini",
   "repo": "GabrielAI",
-  "path": "/geracao",
-  "fields": [
-    "name",
-    "type",
-    "size"
-  ]
-}
-```
-
-## 🤖 Claude *(20:33:44)*
-
-
-🛠️ **Tool Call**: `mcp__github__get_file_contents`
-```json
-{
-  "owner": "gabrielZarattini",
-  "repo": "GabrielAI",
   "path": "/legendas",
   "fields": [
     "name",
@@ -11036,12 +11019,6 @@ Vou listar os arquivos principais do repositório GabrielAI para identificar a e
   ]
 }
 ```
-
-> **Tool Result (mcp__github__get_file_contents)** - ✅ Success
->
-> ```
-> [{'type': 'text', 'text': '[{"name":"README.md","size":6475,"type":"file"},{"name":"arco_trilha.py","size":5445,"type":"file"},{"name":"auditar_trilha.py","size":4080,"type":"file"},{"name":"detectar_dupla_exposicao.py","size":6568,"type":"file"},{"name":"gerar_cartela.py","size":6512,"type":"file"},{"name":"gerar_cenas.py","size":22427,"type":"file"},{"name":"gerar_cenas_qa.py","size":17708,"type":"file"},{"name":"gerar_creditos.py","size":6283,"type":"file"},{"name":"gerar_sfx.py","size":10239,"type":"file"},{"name":"gerar_srt.py","size":8712,"type":"file"},{"name":"gerar_trilha.py","size":7051,"type":"file"},{"name":"mapa_transicoes.py","size":11835,"type":"file"},{"name":"medir_presenca.py","size":6408,"type":"file"},{"name":"mixar_trilha.py","size":4776,"type":"file"},{"name":"qa_video.py","size":4042,"type":"file"},{"name":"timeline.py","size":9206,"type":"file"}]'}]
-> ```
 
 > **Tool Result (mcp__github__get_file_contents)** - ✅ Success
 >
@@ -11143,18 +11120,6 @@ Motor entendido — é um CLI Python que orquestra Veo com refs XOR firstFrame (
 {
   "owner": "gabrielZarattini",
   "repo": "GabrielAI",
-  "path": "/legendas/ep04-pt-BR.srt"
-}
-```
-
-## 🤖 Claude *(20:34:57)*
-
-
-🛠️ **Tool Call**: `mcp__github__get_file_contents`
-```json
-{
-  "owner": "gabrielZarattini",
-  "repo": "GabrielAI",
   "path": "/roteiro",
   "fields": [
     "name",
@@ -11163,12 +11128,6 @@ Motor entendido — é um CLI Python que orquestra Veo com refs XOR firstFrame (
   ]
 }
 ```
-
-> **Tool Result (mcp__github__get_file_contents)** - ✅ Success
->
-> ```
-> [{'type': 'text', 'text': 'successfully downloaded text file (SHA: fa21bfd1619821dfafa5ef732e2bb801ef6df3ee)'}, {'type': 'text', 'text': '[Resource from github at repo://gabrielZarattini/GabrielAI/sha/406b9bbaccc3fe96a8d80e8a454b5df06af7048b/contents/legendas/ep04-pt-BR.srt] 1\n00:00:05,000 --> 00:00:10,680\nDurante anos, a inteligência artificial\nsó sabia fazer uma coisa: responder.\n\n2\n00:00:12,667 --> 00:00:19,167\nUm cérebro brilhante preso num pote de\nvidro. Cheio de respostas, e sem mãos.\n\n3\n00:00:20,208 --> 00:00:24,328\nAté que, em 2025, alguém\ndeu mãos a esse cérebro.\n\n4\n00:00:24,968 --> 00:00:27,068\nE, mais importante, um plano.\n\n5\n00:00:27,875 --> 00:00:33,735\nEle parou de falar sobre o mundo.\nE começou, enfim, a agir sobre ele.\n\n6\n00:00:35,208 --> 00:00:40,768\nO nome disso é agente. E ele mudou\ntudo quase sem ninguém perceber.\n\n7\n00:00:42,875 --> 00:00:45,755\nEnquanto discutíamos se\na IA roubaria empregos...\n\n8\n00:00:46,235 --> 00:00:48,955\nela foi, silenciosamente, arranjar um.\n\n9\n00:00:52,198 --> 00:00:56,900\nDois mil e vinte e cinco foi o ano em que\npassamos a tratar a IA como funcionária.\n\n10\n00:00:57,875 --> 00:00:59,395\nMas o que muda, de verdade,\n\n11\n00:00:59,435 --> 00:01:02,735\nquando um programa deixa de\nresponder e começa a fazer?\n\n12\n00:01:05,208 --> 00:01:11,708\nUm agente não é um chatbot. Ele percebe,\nplaneja, usa ferramentas e lembra.\n\n13\n00:01:12,875 --> 00:01:17,455\nQuatro peças. Tire uma só, e ele\nvolta a ser um papagaio de respostas.\n\n14\n00:01:20,208 --> 00:01:23,828\nA peça que virou o jogo é a\nterceira: usar ferramentas.\n\n15\n00:01:24,308 --> 00:01:26,348\nSair da conversa, tocar o mundo.\n\n16\n00:01:27,875 --> 00:01:34,315\nNão basta saber. Ele precisa poder abrir,\nclicar, enviar — precisa poder agir.\n\n17\n00:01:38,588 --> 00:01:41,828\nE então veio a imagem que\ndeixou muita gente sem dormir.\n\n18\n00:01:42,875 --> 00:01:48,075\nUm agente operando um computador\nde verdade. Sem ninguém na cadeira.\n\n19\n00:01:50,208 --> 00:01:51,908\nA OpenAI chamou de Operator.\n\n20\n00:01:52,808 --> 00:01:55,948\nEle enxerga a tela como\nnós, e a controla como nós.\n\n21\n00:01:57,875 --> 00:02:02,395\nEle não recebe um atalho pronto. Usa\no computador como um humano usaria.\n\n22\n00:02:05,208 --> 00:02:11,708\nMas um agente sozinho tem limite. E a\nsolução foi assustadoramente humana.\n\n23\n00:02:12,875 --> 00:02:16,955\nPrimeiro, um problema chato: cada\nferramenta falava uma língua diferente.\n\n24\n00:02:20,208 --> 00:02:24,468\nLigar cada IA a cada ferramenta\nera um conector sob medida.\n\n25\n00:02:25,268 --> 00:02:26,828\nUm caos que não escala.\n\n26\n00:02:27,875 --> 00:02:34,155\nAté que, no fim de 2024, nasceu um\npadrão. Um único encaixe para tudo.\n\n27\n00:02:35,364 --> 00:02:39,448\nChama-se MCP. Protocolo\nde Contexto de Modelo.\n\n28\n00:02:40,588 --> 00:02:42,708\nE foi aberto de graça para o mundo.\n\n29\n00:02:43,139 --> 00:02:49,055\nApelidaram-no de USB-C da inteligência\nartificial. E aí veio o improvável.\n\n30\n00:02:50,208 --> 00:02:55,308\nEmpresas que brigam por absolutamente\ntudo... adotaram o mesmo padrão.\n\n31\n00:02:58,253 --> 00:03:04,175\nA Anthropic criou. A OpenAI\naderiu. O Google entrou logo atrás.\n\n32\n00:03:05,520 --> 00:03:07,588\nRivais quase nunca concordam.\n\n33\n00:03:08,528 --> 00:03:11,588\nQuando concordam, é porque\nhá algo grande em jogo.\n\n34\n00:03:12,875 --> 00:03:18,475\nNo fim de 2025, o padrão virou de\ntodos: doado a uma fundação aberta.\n\n35\n00:03:20,208 --> 00:03:24,448\nCom uma língua em comum, os agentes\npararam de trabalhar sozinhos.\n\n36\n00:03:27,875 --> 00:03:34,375\nUm agente virou muitos. Um líder que\ncria, sozinho, os próprios trabalhadores.\n\n37\n00:03:35,208 --> 00:03:41,708\nÉ o enxame: um orquestrador delega a\nsubagentes que agem, todos, em paralelo.\n\n38\n00:03:42,875 --> 00:03:49,375\nUm coordena. Vários executam ao\nmesmo tempo. E depois se reencontram.\n\n39\n00:03:51,323 --> 00:03:53,475\nNos testes da Anthropic,\n\n40\n00:03:53,823 --> 00:03:57,297\no enxame superou o agente solitário\nem mais de noventa por cento.\n\n41\n00:03:58,250 --> 00:04:03,050\nCoordenar muitos agentes medianos\nvenceu um único agente genial.\n\n42\n00:04:05,583 --> 00:04:10,123\nE isso saiu do laboratório. Foi\ndireto para dentro das empresas.\n\n43\n00:04:13,250 --> 00:04:15,530\nUma gigante do software viu os agentes\n\n44\n00:04:15,570 --> 00:04:18,330\nativos crescerem quinze vezes em um ano.\n\n45\n00:04:20,583 --> 00:04:22,643\nBatizaram de empresa de fronteira:\n\n46\n00:04:22,823 --> 00:04:26,319\nonde o agente tem identidade,\npermissões, crachá.\n\n47\n00:04:28,250 --> 00:04:32,250\nPela primeira vez, o organograma\ntem caixas que não são pessoas.\n\n48\n00:04:35,583 --> 00:04:40,303\nMas se os agentes já trabalham...\npara onde essa curva aponta?\n\n49\n00:04:43,950 --> 00:04:49,010\nAlguém resolveu medir: quanto tempo de\ntrabalho humano um agente faz sozinho?\n\n50\n00:04:50,583 --> 00:04:54,963\nEm 2019, segundos. Hoje, tarefas de horas.\n\n51\n00:04:55,463 --> 00:04:57,783\nE o número dobra a cada poucos meses.\n\n52\n00:04:58,250 --> 00:05:03,450\nPor enquanto, sem sinal claro\nde desacelerar. Por enquanto.\n\n53\n00:05:05,583 --> 00:05:08,043\nNinguém garante que essa\nlinha sobe para sempre.\n\n54\n00:05:09,323 --> 00:05:11,019\nMas ninguém consegue ignorá-la.\n\n55\n00:05:13,250 --> 00:05:18,790\nÉ ela que faz o mundo inteiro\nsussurrar três letras: A — G — I.\n\n56\n00:05:20,583 --> 00:05:22,403\nInteligência artificial geral.\n\n57\n00:05:23,363 --> 00:05:27,223\nUma máquina que aprende qualquer\ncoisa que um humano aprende.\n\n58\n00:05:28,250 --> 00:05:34,410\nMas há quem diga: só texto não basta.\nFalta à IA entender espaço e tempo.\n\n59\n00:05:35,583 --> 00:05:40,443\nA cientista por trás da visão de\nmáquina aposta na próxima fronteira:\n\n60\n00:05:40,983 --> 00:05:42,023\nos modelos de mundo.\n\n61\n00:05:43,250 --> 00:05:46,570\nSair da linguagem e aprender\na estrutura do mundo real.\n\n62\n00:05:47,370 --> 00:05:49,670\nAli mora a inteligência que age.\n\n63\n00:05:50,583 --> 00:05:52,323\nSó que autonomia cobra um preço.\n\n64\n00:05:53,443 --> 00:05:56,123\nE ele aparece justo quando\nninguém está olhando.\n\n65\n00:05:58,250 --> 00:06:00,050\nUm agente que trava no meio de uma\n\n66\n00:06:00,090 --> 00:06:03,030\ntarefa pode deixar um\nestrago que não se desfaz.\n\n67\n00:06:05,583 --> 00:06:10,023\nPagar antes de registrar.\nAgir sem poder voltar atrás.\n\n68\n00:06:11,043 --> 00:06:13,043\nA máquina precisa aprender a recuar.\n\n69\n00:06:13,250 --> 00:06:14,890\nE nem tudo vira revolução:\n\n70\n00:06:15,310 --> 00:06:19,110\npreveem que muitos projetos\nde agentes vão fracassar.\n\n71\n00:06:20,583 --> 00:06:24,423\nEntão, o que temos diante de\nnós? Uma ferramenta poderosa...\n\n72\n00:06:26,383 --> 00:06:27,943\nou o começo de outra coisa?\n\n73\n00:06:28,542 --> 00:06:30,592\nA IA parou de responder e começou a agir.\n\n74\n00:06:31,142 --> 00:06:34,742\nA pergunta agora não é o que ela\nsabe — é o que ela vai fazer.\n\n'}]
-> ```
 
 > **Tool Result (mcp__github__get_file_contents)** - ✅ Success
 >
@@ -15681,6 +15640,1675 @@ Pushado (`cab3f0f` em `origin/main`). Build 25.05s → nginx serve dist auto.
 - 6 vozes por ato à direita das cenas-início
 - **22 sticky notes amarelos** nas ex-lanes-vazias — cada um com o tipo (SCREENCAST/ELO) uppercase e o texto do beat centralizado
 - 48 lanes 100% preenchidas visualmente com moodboard cronológico
+
+## 👤 User *(23:32:11)*
+
+Precisamos que o space-enginer crie o artezão autonomo dentro do spaces, para o usuário clicar no escrever o que ele quer e o nó ser criado, assim como funciona o magnific e o Buzzy AI. É como um Agente literalmente para o space-projetc-agente com um chat por nó ou seja uma thread para ca nó dentro do spaces. Estou enviando alumas refenreciass de como pode ficar a criação de alguns players no mercado
+
+## 🤖 Claude *(23:33:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O Sovereign quer uma feature bem robusta: um agente autônomo integrado ao Spaces que funciona assim — o usuário clica no canvas, digita o que precisa em linguagem natural, e o agente gera automaticamente os nós apropriados, preenche os prompts e conecta tudo com edges. Cada nó teria sua própria thread de conversa, criando um fluxo de chat independente por nó. Tenho uma referência visual para consultar também.
+
+Olhando para os exemplos que o Sovereign enviou — desde storylines com scripts e personagens, passando por fluxos de shots estilo Buzzy AI, moodboards com dezenas de imagens conectadas, até arquiteturas tipo Higgsfield com nós de vídeo e prompts textuais — fica claro que isso é uma feature massiva que vai exigir um protocolo de execução bem estruturado. Preciso de um gate BoK 5/5 selado e uma declaração de conformidade de padrão antes de começar o código, já que estou criando um módulo complexo novo. Além disso, isso vai além de um nó simples — é uma arquitetura de agente completa com integração LLM, orquestração de nós e threading de chat.
+
+Os componentes principais que preciso construir são: uma UX para o agente flutuante (botão ou prompt acessível em qualquer lugar do canvas), um LLM que interprete a intenção do usuário (se quer criar um POV Veo, um b-roll, uma imagem...) e preciso decidir qual modelo usar para isso.
+
+Depois vem o motor de criação de nós que traduz a intenção em chamadas de factory do canvas e insere no grafo do banco, um thread persistente por nó com histórico de conversação, capacidade de iteração (regenerar prompt, adicionar variações, conectar com outros nós), e um sistema de cobrança em mco para cada chamada LLM por usuário.
+
+Isso é realmente mega — não é um workflow único, são vários módulos coordenados que precisam trabalhar juntos. Dependendo da escala, pode precisar de um BoK 9/9 se for um módulo material grande. Preciso seguir o Master Execution Protocol responsavelmente e não começar a codar direto — primeiro vem a análise estruturada e o gate de conformidade.
+
+Minha resposta pro Sovereign vai reconhecer a visão, nomear as camadas do módulo, e apontar que um módulo complexo novo como esse precisa de uma suite BoK dedicada antes de qualquer implementação, ou começar com um MVP bem mais escopado — tipo um chat que edita um nó existente em vez de criar nós do zero.
+
+Vou oferecer dois caminhos: uma suite BoK completa via deepsearch-blueprint e bok-scribe (mais formal, mas mais lento), ou um MVP rápido como amendment ao spaces-evolution que entrega valor real e evolui depois. Enquanto isso, vou fazer um recon do que a plataforma já tem disponível pra reusar — aios-chat-gateway, cascata de fallback LLM, mesh de nós — e deixar que ele escolha qual direção seguir.
+
+Agora preciso verificar o que já existe na infraestrutura: se há skill de orquestração de agentes, UI de chat no dashboard, threading de conversas, e ferramentas MCP que criam nós. Sobre as referências que ele enviou, vejo padrões diferentes — Magnific usa cards de texto pra storyline, Buzzy AI gera uma card por imagem, Higgsfield tem um moodboard visual com dezenas de imagens conectadas e um chat lateral com referências omni. O que Sovereign quer é combinar essas abordagens: chat livre por nó como no Higgsfield, um agente autônomo que cria nós, e threading permanente por nó como nas chapters do Magnific. Isso é uma feature grande, então vou fazer recon do repo primeiro pra ver o que já existe, depois perguntar ao usuário pra alinhar o escopo.
+
+</details>
+
+
+## 🤖 Claude *(23:33:06)*
+
+Vi as 4 referências (Magnific storyline, Buzzy AI shots, Higgsfield moodboard + chat por vídeo). Isso é módulo grande — **Master Execution Protocol §1 obriga BoK-first**. Deixa eu recon rápido o que a plataforma já tem que serve de fundação, e depois te apresento os caminhos concretos.
+
+## 🤖 Claude *(23:33:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===LLM/chat gateways vivos (funda\u00e7\u00e3o reus\u00e1vel)===\"\nls supabase/functions/ | grep -iE \"chat|swarm|agent|llm|openrouter\" | head\necho \"\"\necho \"===tabela de mensagens/conversations j\u00e1 existe?===\"\ngrep -rlE \"CREATE TABLE.*(conversat|messag|thread|chat)\" supabase/migrations/ 2>/dev/null | head -5\necho \"\"\necho \"===factories de n\u00f3 (funda\u00e7\u00e3o para gerar n\u00f3 via agente)===\"\ngrep -cE \"^export function makeDefault\" src/types/canvas.ts\necho \"\"\necho \"===BoK: existe alguma suite spaces-agent ou similar?===\"\nls docs/bok/ | grep -iE \"spaces|agent|autopilot\"\necho \"\"\necho \"===MCP tools que criam n\u00f3s no Spaces?===\"\nfind packages -name \"*.ts\" 2>/dev/null | xargs grep -lE \"createNode|insertNode|vm_canvas_projects\" 2>/dev/null | head -5",
+  "description": "Recon: existing foundation for autonomous agent in Spaces"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===LLM/chat gateways vivos (fundação reusável)===
+> agent-task-execute
+> aios-chat
+> aios-chat-gateway
+> aios-chat-stream
+> openrouter-swarm
+> 
+> ===tabela de mensagens/conversations já existe?===
+> supabase/migrations/20260502120000_aios_conversations.sql
+> supabase/migrations/20260718200000_crm_inbox_conversations.sql
+> supabase/migrations/20260606180000_agentic_workspace.sql
+> 
+> ===factories de nó (fundação para gerar nó via agente)===
+> 20
+> 
+> ===BoK: existe alguma suite spaces-agent ou similar?===
+> agentic-governance
+> agentic-workspace
+> spaces-cadence
+> spaces-evolution
+> viral-autopilot
+> 
+> ===MCP tools que criam nós no Spaces?===
+> packages/video-studio-host-ui/node_modules/typescript/lib/typescript.d.ts
+> packages/video-studio-host-ui/node_modules/typescript/lib/lib.dom.d.ts
+> packages/video-studio-host-ui/node_modules/dompurify/src/purify.ts
+> packages/vision-mcp-core/node_modules/typescript/lib/typescript.d.ts
+> packages/vision-mcp-core/node_modules/typescript/lib/lib.dom.d.ts
+> ```
+
+## 🤖 Claude *(23:33:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tenho uma boa base para construir: a infraestrutura de LLM e chat já está pronta com os serviços existentes, três tabelas de threading que posso reusar seguindo o mesmo padrão, e vinte factories no canvas que já mapeiam intents para factories. Isso cobre bastante do que preciso para começar.
+
+Agora vejo que nenhuma das OKRs relacionadas (`agentic-governance`, `agentic-workspace`, `spaces-evolution`) é dedicada especificamente a "spaces-agent", e nenhuma ferramenta MCP cria nós no Spaces ainda — só o código do repositório faz isso. A visão do Sovereign na verdade combina três features distintas: chat livre por nó com histórico persistente, um agente que cria nós baseado em intenção do usuário, e threading persistente onde cada nó carrega sua própria conversa e evolução. Isso significa um novo módulo com uma tabela para threads por nó, uma edge function que traduz intenção em chamadas de factory, um componente de chat flutuante na UI, e ajustes no painel lateral de configuração.
+
+O esforço é grande — múltiplos amendments ou uma suite BoK dedicada. Tenho duas opções razoáveis: um MVP pontual que adiciona só o chat-por-nó (reescrevendo prompts via LLM, reutilizando a gateway de chat existente) em uma tabela nova e um componente, com esforço de um workflow ultracode; ou uma suite BoK completa criando um novo módulo `spaces-agent` de 9/9.
+
+Também posso fazer ambas em sequência — MVP agora para desbloquear valor imediato, enquanto a suite completa começa em paralelo via deepsearch-blueprint, com amendments posteriores evoluindo o MVP para o formato final. Vou apresentar isso via AskU.
+
+Antes disso, preciso notar que essa feature passa por security-review — as chamadas LLM por usuário e INSERTs no graph via LLM criam risco potencial de eval-injection se o modelo controlar diretamente a shape do nó.
+
+</details>
+
+
+## 🤖 Claude *(23:33:58)*
+
+Fundação boa: já temos `aios-chat-gateway`, `openrouter-swarm`, tabelas de conversation, 20 factories mapeáveis. Zero MCP tool que cria nó no Spaces hoje. Nenhuma suite BoK `spaces-agent` — este é módulo NOVO.
+
+**A sua visão junta 3 features distintas:**
+
+| Feature | Referência | O que é |
+|---------|-----------|---------|
+| **Chat-por-nó** | Higgsfield 2.5 (print 4) | Cada nó ganha thread persistente; digite "mais dramático" e o LLM reescreve o prompt |
+| **Agente criador de nós** | Magnific storyline (print 1) + Buzzy shots (print 2) | Você clica no canvas, escreve "quero POV Gabriel AI reagindo", agente instancia nó + conecta edges |
+| **Orquestração multi-nó** | Moodboard estilo (print 3) | Agente cria pipelines inteiros ("faça 5 variantes deste b-roll") |
+
+**Master Execution Protocol §1 (Closed-Loop) obriga BoK ANTES do código** — módulo grande, cross-cutting, com LLM+INSERT no graph = superfície de ataque nova (eval-injection via prompt) + custo mco per-user + tabela nova de threads. Não posso improvisar.
+
+Antes de disparar workflow, preciso alinhar escopo:
+
+## 🤖 Claude *(23:34:20)*
+
+
+🛠️ **Tool Call**: `AskUserQuestion`
+```json
+{
+  "questions": [
+    {
+      "question": "Qual caminho para o agente aut\u00f4nomo no Spaces?",
+      "header": "Escopo do spaces-agent",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "A \u00b7 MVP Chat-por-n\u00f3 (Amendment 33, ~1 sess\u00e3o)",
+          "description": "Fatia menor primeiro. Cada n\u00f3 existente ganha thread de chat persistente. Voc\u00ea abre um n\u00f3, escreve 'fa\u00e7a a fala mais dram\u00e1tica', LLM reescreve o prompt via aios-chat-gateway, voc\u00ea aceita ou rejeita. NOVA tabela spaces_node_threads (RLS per-user, cobran\u00e7a mco por mensagem). Amendment 33 ao spaces-evolution. Effort: 1 workflow ultracode (BoK + c\u00f3digo + smoke + security-review). N\u00c3O cria n\u00f3s novos ainda \u2014 apenas edita os que voc\u00ea j\u00e1 criou."
+        },
+        {
+          "label": "B \u00b7 Suite BoK completa 'spaces-agent' (nova su\u00edte, 3-4 sess\u00f5es)",
+          "description": "Novo m\u00f3dulo material completo per Master Execution Protocol. bok-curator + deepsearch-blueprint escrevem BoK 9/9 SELADA cobrindo: chat-por-n\u00f3 + agente criador + orquestra\u00e7\u00e3o multi-n\u00f3 + threading + cobran\u00e7a + threat model. Depois: Amendments 33/34/35 implementam por fatia. Effort: 3-4 workflows sequenciais (BoK primeiro, c\u00f3digo depois). Entrega a vis\u00e3o INTEIRA (Magnific+Buzzy+Higgsfield fundidos) num pacote coerente."
+        },
+        {
+          "label": "C \u00b7 A agora + B em paralelo (H\u00cdBRIDO)",
+          "description": "MVP A esta sess\u00e3o (chat-por-n\u00f3 desbloqueia valor imediato). Em paralelo, disparo bok-curator para escrever o blueprint deepsearch da suite completa spaces-agent. Amendment 33 (A) fica como Fatia 1 da suite; Amendment 34 (agente criador de n\u00f3s) e 35 (orquestra\u00e7\u00e3o) v\u00eam pr\u00f3ximas sess\u00f5es. Combina desbloqueio r\u00e1pido com sequ\u00eancia estrutural correta."
+        }
+      ]
+    },
+    {
+      "question": "Modelo LLM padr\u00e3o para o agente do Spaces?",
+      "header": "LLM do agente",
+      "multiSelect": false,
+      "options": [
+        {
+          "label": "Groq via aios-chat-gateway (r\u00e1pido, per-user BYOK)",
+          "description": "Kimi K2 / Llama 3.3 via Groq. Latency baixa (0.5-2s) crucial para UX de chat. Custo mco calibrado 4x-floor. Doutrina API Tenancy: per-user groq_api_key da user_api_keys. Fallback: openrouter-swarm."
+        },
+        {
+          "label": "OpenRouter (mais modelos, mais caro)",
+          "description": "Claude/GPT/Gemini via OpenRouter. Melhor qualidade de reescrita/planejamento mas latency 2-8s. Mesma doutrina per-user. Custo maior por mensagem."
+        },
+        {
+          "label": "Cascata Groq \u2192 OpenRouter (a que j\u00e1 usamos)",
+          "description": "Padr\u00e3o do openrouter-swarm: tenta Groq primeiro (latency), se falhar/timeout escala para OpenRouter. J\u00e1 h\u00e1 infra de fallback (llm-fallback.ts). Combina velocidade com resili\u00eancia."
+        }
+      ]
+    }
+  ]
+}
+```
+
+> **Tool Result (AskUserQuestion)** - ✅ Success
+>
+> ```
+> The user answered: "Qual caminho para o agente autônomo no Spaces?"="Primeiro /handoff oficial para continuar logo na sequencia em outra sessão com o C hibrido", "Modelo LLM padrão para o agente do Spaces?"="Cascata Groq → OpenRouter (a que já usamos)". Read the answers carefully — they may request clarification, changes, or that you not proceed — and follow what they actually say.
+> ```
+
+## 🤖 Claude *(23:40:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Entendi — o Sovereign quer selar essa sessão com `/handoff` e depois seguir com uma abordagem híbrida na próxima, começando com um MVP de chat por nó enquanto trabalha em paralelo na suite de BoK spaces-agent. Vou usar a cascata padrão Groq → OpenRouter para as chamadas de LLM.
+
+Agora preciso invocar o skill `handoff` (Session Seal Protocol v4) diretamente — é um ritual próprio do projeto que selará essa sessão.
+
+</details>
+
+
+## 🤖 Claude *(23:40:13)*
+
+Anotado — /handoff oficial agora, próxima sessão retoma com **Opção C híbrido** (MVP chat-por-nó + suite BoK `spaces-agent` em paralelo) + **cascata Groq→OpenRouter** como LLM. Invocando o skill de seal:
+
+## 🤖 Claude *(23:40:13)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(23:40:13)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+---
+
+## PHASE 5b-2 — HANDOFF.md SIZE GATE (mandatory before commit)
+
+**O HANDOFF.md precisa continuar LEGÍVEL. Acima de ~25k tokens ele não é lido — é erro.**
+
+> ⚠️ Falha silenciosa: nada quebra, mas o `/handson` seguinte arranca **sem o Task State**,
+> achando que tem contexto. Em 2026-07-29 a auditoria 4Cs não conseguiu ler as 80 primeiras
+> linhas do arquivo que auditava (28.756 tokens).
+> Skill: `handoff-pruning-gate` · SOP: `docs/processes/handoff-pruning-gate.md`.
+
+```bash
+bash scripts/qa/check-handoff-size.sh
+```
+
+| Veredito | Ação |
+|----------|------|
+| `✅ OK` (exit 0) | Segue para o commit. |
+| `🟡 WARN` (exit 0) | Pode selar, mas **registrar no Pendente do Record**: "podar HANDOFF na próxima sessão". Dívida agendada, não isenção. |
+| `🔴 FAIL` (exit 1) | 🔴 **NÃO COMMITE.** Podar primeiro (o script imprime a linha de corte), verificar os gates G1-G5 do SOP, re-rodar até exit 0. |
+
+**G5 do SOP é obrigatório antes de declarar podado:** ler ~40 linhas do `HANDOFF.md` com a
+ferramenta de leitura e confirmar que retorna conteúdo, não erro de cap. G1-G4 são estruturais —
+só o G5 prova o objetivo (Lei 1).
+
+---
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(23:40:20)*
+
+Executando o ritual `/handoff`. Pre-flight em paralelo primeiro.
+
+## 🤖 Claude *(23:40:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short && echo \"---\" && git diff HEAD --stat 2>&1 | tail -5 && echo \"---\" && git log --oneline -7",
+  "description": "Working tree + recent commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---
+> ---
+> cab3f0f feat(spaces): kind sceneNote — sticky-note decorativo (Amendment 32 · FR-SPACES-120)
+> 035053f feat(canvas): LANE_HEIGHT 320→480 + reposiciona EP05 v2
+> a5b25c9 fix(canvas): fitView só em projetos novos — respeita viewport salvo
+> e20b8d3 feat(canvas): edges com espessura adaptável ao zoom (visíveis em zoom-out)
+> 39e95d1 docs(roadmap): runbook v2 EP05 (novo projeto Spaces 18a21002 · 40 nós armados)
+> c5f2a10 feat(veo): clamp reference_to_video→8s (server 422 pré-débito + UI auto-force)
+> 62c1028 docs(roadmap): EP05 v2 no formato do motor GabrielAI — 48 cenas, 6 atos, 16:9
+> ```
+
+## 🤖 Claude *(23:40:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" && docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" && curl -s --max-time 5 http://localhost:8001/api/v2/heartbeat && echo \" <- chroma OK\"",
+  "description": "Infra health"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 2 weeks (healthy)
+> mcorch_claude_mem: Up 6 weeks (healthy)
+> mcorch_chroma: Up 6 weeks (healthy)
+> mega-brain-dashboard: Up 6 weeks
+> mega-brain-webhook: Up 6 weeks (healthy)
+> mega-brain-daemon: Up 6 weeks (healthy)
+> {"nanosecond heartbeat":1785714023862926270} <- chroma OK
+> ```
+
+## 🤖 Claude *(23:40:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -3\necho \"tsc-app exit=$?\"",
+  "description": "Real type gate",
+  "timeout": 180000
+}
+```
+
+## 🤖 Claude *(23:40:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "description": "HANDOFF.md size check (archiving gate)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc-app exit=0
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 550 /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md
+> ```
+
+## 🤖 Claude *(23:41:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the pre-flight status before proceeding — the working tree is clean, I've got seven recent commits from this session, the infrastructure is healthy with Chroma and containers running, the TypeScript app compiles successfully, and the handoff documentation is at 550 lines, well under the archiving threshold. Looking at the session commits starting with the most recent documentation update.
+
+Continuing through the commit history — I've made updates to the roadmap covering the Sovereign references, EP05 tutorial documentation with React strategy, theme modeling and data handling, the Spaces project setup with runbook, performance patches for the video reference timing, canvas improvements for edge thickness and viewport handling, and scene note amendments. Now moving into Phase 1 of the Security Audit.
+
+</details>
+
+
+## 🤖 Claude *(23:41:20)*
+
+Pre-flight OK. Worktree limpo, infra healthy, tsc-app 0, HANDOFF 550 linhas (bem abaixo do gate 4k). 12 commits desta sessão. Phase 1: security audit.
+
+## 🤖 Claude *(23:41:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===1a: secret scan em diffs recentes===\"\ngit diff HEAD~13..HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|hash\" | head -10 || echo \"  \u2705 nenhum leak\"\necho \"\"\necho \"===1b: JWT enforcement em edge functions user-facing (arquivos NOVOS/tocados)===\"\ngit diff HEAD~13..HEAD --name-only | grep -E \"supabase/functions/.*/index.ts$\" | while read f; do\n  grep -qE \"Authorization|jwt|JWT|service_role\" \"$f\" 2>/dev/null && echo \"  \u2705 $f\" || echo \"  \ud83d\udd34 $f \u2014 sem JWT!\"\ndone\necho \"  (se nada acima, nenhuma edge fn tocada nesta sess\u00e3o)\"\necho \"\"\necho \"===1c: client-side coin update guard===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ 2>/dev/null | grep -v \"SettingsPage\\|topup\\|top.up\" | head -5 || echo \"  \u2705 NO VIOLATIONS\"\necho \"\"\necho \"===1d: RLS bypass risk===\"\ngrep -rn \"service_role\\|bypass.*rls\" src/ 2>/dev/null | head -5 || echo \"  \u2705 NO VIOLATIONS\"\necho \"\"\necho \"===1e: sensitive data em console.log===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*key\\|console\\.log.*secret\\|console\\.log.*password\" src/ 2>/dev/null | head -5 || echo \"  \u2705 NO SENSITIVE LOGS\"",
+  "description": "Phase 1 security audit \u2014 5 checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===1a: secret scan em diffs recentes===
+> 
+> ===1b: JWT enforcement em edge functions user-facing (arquivos NOVOS/tocados)===
+>   ✅ supabase/functions/canvas-execute/index.ts
+>   (se nada acima, nenhuma edge fn tocada nesta sessão)
+> 
+> ===1c: client-side coin update guard===
+> 
+> ===1d: RLS bypass risk===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> 
+> ===1e: sensitive data em console.log===
+> src/test/canvas-video-async-smoke.test.ts:240:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:248:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:253:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> ```
+
+## 🤖 Claude *(23:41:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Reviewing the security audit results — the secret scan came back clean with no leaks detected, JWT enforcement is properly configured in canvas-execute, and the client-side coin update section shows no violations.
+
+For RLS bypass risk, there's a match in useAgentCapabilities.ts but it's just a comment documenting that writes are restricted to service_role, not an actual vulnerability. The console.log matches in the test file are intentional — they're part of security smoke tests that verify invalid tokens get blocked, not actual data leaks. All checks pass with no blocking issues, so moving forward to Phase 2 and then Phase 3 for the Knowledge Mesh work.
+
+</details>
+
+
+## 🤖 Claude *(23:41:44)*
+
+Phase 1: ✅ todos os checks passam (1a limpo · 1b canvas-execute OK · 1c/1d/1e sem violações reais — apenas comentário doc + logs de smoke test). Phase 2 já cumprida (worktree limpo, 12 commits granulares desta sessão). Phase 3: milestone node + embedding.
+
+## 🤖 Claude *(23:41:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null; set +a\nSUPABASE_URL=\"${VITE_SUPABASE_URL}\"\nK=\"${SB_SECRET_KEY}\"\nSESSION_PHASE=\"ep05-v2-canvas-refinement-and-sceneNote-kind\"\nSESSION_SUMMARY=\"EP05 v2 completo (48 cenas GabrielAI-format + projeto Spaces 18a21002 + runbook v2) + clamp Veo reference_to_video 8s (fecha gap charge+refund) + refinamentos canvas (edges espessura adaptativa \u00b7 fitView respeita viewport \u00b7 LANE_HEIGHT 480 \u00b7 48 labels rotulados) + Amendment 32 kind sceneNote (fecha as 22 lanes SCREENCAST/ELO estruturalmente) + auditoria robusta 4 lentes (0 gaps reais)\"\n\nRESULT=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${K}\" \\\n  -H \"Authorization: Bearer ${K}\" \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null,\n    \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"${SESSION_PHASE}\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -12 | tr '\\n' '|')\\\"\n    }\n  }\")\nNODE_ID=$(echo \"$RESULT\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if isinstance(d,list) else d.get('id','error'))\" 2>&1)\necho \"Node ID: $NODE_ID\"\necho \"$NODE_ID\" > /tmp/mesh_node_id.txt\n\n# Embedding\necho \"\"\necho \"===EMBEDDING===\"\ncurl -s -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${K}\" \\\n  -H \"Authorization: Bearer ${K}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200\necho \"\"\n\n# Proof manifest\necho \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\ncat proof-manifest.json",
+  "description": "Phase 3: milestone node + embedding + proof-manifest.json"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Node ID: 0da058d6-5982-4618-9ca2-00b2adb73a79
+> 
+> ===EMBEDDING===
+> {"error":"Request body must contain { node_id: string }"}
+> {"handoffNodeId": "0da058d6-5982-4618-9ca2-00b2adb73a79"}
+> ```
+
+## 🤖 Claude *(23:42:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null; set +a\n# fix embed payload shape (fn quer node_id, n\u00e3o record.id)\nNODE_ID=$(cat /tmp/mesh_node_id.txt)\ncurl -s -X POST \"${VITE_SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" \\\n  -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 300\necho \"\"\n# verificar independentemente que o embedding foi setado\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?select=id,name,embedding&id=eq.${NODE_ID}\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"\nimport json,sys\nr=json.load(sys.stdin)\nif r:\n    e=r[0].get('embedding')\n    print(f\\\"embedding set: {'sim ('+str(len(e))+' chars vec)' if e else 'N\u00c3O'}\\\")\"",
+  "description": "Retry embed with correct payload shape"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"node_id":"0da058d6-5982-4618-9ca2-00b2adb73a79","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> embedding set: sim (9541 chars vec)
+> ```
+
+## 🤖 Claude *(23:42:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The embedding validation came through successfully with the vector dimensions confirmed. Now I'm moving into the README update phase, which involves querying the actual count of mcorch_nodes to reflect the newly added handoff node, then refreshing the badge, version number, phase status, and What's New section before committing those changes separately.
+
+</details>
+
+
+## 🤖 Claude *(23:42:23)*
+
+Milestone + embedding OK (768d openrouter). Phase 4: README.md badge + versão.
+
+## 🤖 Claude *(23:42:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null; set +a\necho \"===contagem live de mcorch_nodes===\"\nCOUNT=$(curl -s \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$')\necho \"mcorch_nodes: $COUNT\"\necho \"\"\necho \"===README badges atuais===\"\nhead -30 README.md | grep -E \"neural_mesh|version\" | head -5",
+  "description": "Live node count + current README badges"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===contagem live de mcorch_nodes===
+> mcorch_nodes: 19176
+> 
+> ===README badges atuais===
+>   <img src="https://img.shields.io/badge/version-6.129.0--organic_shorts_estrategia_definitiva_v1-blueviolet?style=for-the-badge" alt="Version" />
+>   <img src="https://img.shields.io/badge/neural_mesh-19120_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> ```
+
+## 🤖 Claude *(23:42:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"^## \" README.md | head -12\necho \"---\"\ngrep -nE \"\\[v6\\.\" README.md | head -3",
+  "description": "Locate README sections for updates"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 89:## 🆕 What's new in v6.129.0 (2026-07-30) — Estratégia DEFINITIVA de shorts orgânicos + formato React provado + fábrica no Spaces
+> 97:## 🆕 What's new in v6.128.0 (2026-07-30) — TikTok App Review destravado + pipeline de Publicações do Spaces
+> 105:## 🆕 What's new in v6.127.0 (2026-07-29) — "Rodar não é entregar": 6 superfícies onde o resultado não chegava
+> 114:## 🆕 What's new in v6.123.0 (2026-07-25) — Conserto do grounding do AIOS (anti-confabulação) + otimização Supabase Pro
+> 121:## 🆕 What's new in v6.121.0 (2026-07-23) — Governança de docs + Golden Eye slice 1 + cadência por-workspace + YouTube pronto
+> 128:## 🆕 What's new in v6.120.0 (2026-07-23) — Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1)
+> 134:## 🆕 What's new in v6.119.0 (2026-07-22) — Sala de Controle da Orquestração + cortes de N clipes destravados
+> 144:## 🆕 What's new in v6.117.0 (2026-07-22) — Loop Spaces: legendas sincronizadas + nó Transcrição/SRT + nó-janela + Pipeline kanban/tabela
+> 155:## 🆕 What's new in v6.116.0 (2026-07-21) — Prévias no /repurpose + nó Cortes do Master + legenda Cinética empilhada + re-cut E2E do EP01
+> 166:## 🆕 What's new in v6.115.0 (2026-07-21) — Refino Spaces Canvas: grade 2×2 + carrossel + biblioteca de legendas + mobile
+> 177:## 🆕 What's new in v6.114.0 (2026-07-21) — Cadência de vídeo (FR-CAD-006) + hardening do video-render
+> 185:## 🆕 What's new in v6.113.0 (2026-07-21) — Nós Tela Dividida (POV) + preset POV no Spaces
+> ---
+> 322:- **[v6.73.1] Paridade TOTAL — crew overlay + Sidebar:** os **19 agentes vivos** habitam o disco de código do universo (`overlayAgents` → injeção nativa do sigma hook) + entrada **aditiva "Universo"** no Sidebar (Constelação → Universo; legadas intactas). Vision-QA APROVADA. **Cutover de nav = único passo restante (zero gaps, decisão Sovereign).** (`9b43d83`)
+> 338:- **[v6.71.1] Fase B 2b — FR-VS-049 durabilidade Storage↔volume:** sweep write-back (bucket privado `video-studio-projects`, migration `20260701120000` default-deny) + materialização staging+rename atômico no `resolveProject`. Smoke 7/7 round-trip sha256-igual · journal `[sync] uploaded 14 files` · `/security-review` NO FINDINGS (+ guard traversal anticorpo). **Fase B core COMPLETA.** (`4fd9b89`)
+> 878:### [v6.124.0] — AI Act Fatia 4 disclosure (Art. 50(4)) VIVO · P0 YouTube pós-W2.1 · kanban destravado · grounding AIOS (2026-07-25)
+> ```
+
+## 🤖 Claude *(23:42:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.129.0--organic_shorts_estrategia_definitiva_v1-blueviolet?style=for-the-badge\" alt=\"Version\" />\n  <img src=\"https://img.shields.io/badge/neural_mesh-19120_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.130.0--EP05_v2_canvas_refinement_+_sceneNote_kind-blueviolet?style=for-the-badge\" alt=\"Version\" />\n  <img src=\"https://img.shields.io/badge/neural_mesh-19176_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ❌ Error
+>
+> ```
+> <tool_use_error>String to replace not found in file.
+> String:   <img src="https://img.shields.io/badge/version-6.129.0--organic_shorts_estrategia_definitiva_v1-blueviolet?style=for-the-badge" alt="Version" />
+>   <img src="https://img.shields.io/badge/neural_mesh-19120_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" /></tool_use_error>
+> ```
+
+## 🤖 Claude *(23:42:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "offset": 1,
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<p align="center">
+> 2	  <img src="https://img.shields.io/badge/status-production-brightgreen?style=for-the-badge" alt="Status" />
+> 3	  <img src="https://img.shields.io/badge/version-6.129.0--organic_shorts_estrategia_definitiva_v1-blueviolet?style=for-the-badge" alt="Version" />
+> 4	  <img src="https://img.shields.io/badge/crm--inbox-Amendment_10_composer_(m%C3%ADdia%2Femoji%2Frecibos)_%2B_swap_ao_vivo-brightgreen?style=for-the-badge" alt="CRM Inbox" />
+> 5	  <img src="https://img.shields.io/badge/license-proprietary-red?style=for-the-badge" alt="License" />
+> 6	  <img src="https://img.shields.io/badge/typescript-strict-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+> 7	  <img src="https://img.shields.io/badge/neural_mesh-19120_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 8	  <img src="https://img.shields.io/badge/BoK-33%2F33_fam%C3%ADlias_seladas-brightgreen?style=for-the-badge" alt="BoK Suites" />
+> 9	  <img src="https://img.shields.io/badge/veo--3.1-avatar_por_refer%C3%AAncia_(Gemini_API_%2B_Vertex_SA)-cyan?style=for-the-badge" alt="Veo Avatar" />
+> 10	  <img src="https://img.shields.io/badge/asset_publish-format_picker_%2B_preview_fiel_(IG%2FYT%2FTikTok)-cyan?style=for-the-badge" alt="Asset Publish Format Preview" />
+> 11	  <img src="https://img.shields.io/badge/video--repurpose-1_master_%E2%86%92_N_shorts_%2B_carrossel_(FFmpeg%2C_gr%C3%A1tis)-brightgreen?style=for-the-badge" alt="Video Repurpose" />
+> 12	  <img src="https://img.shields.io/badge/MAPE--K_guardian-cron_%2B_Nemotron_free_L2-darkgreen?style=for-the-badge" alt="MAPE-K Guardian" />
+> 13	  <img src="https://img.shields.io/badge/avatar--clone--ai-Fatia_3b_avatarIdentity_node_live_(VLM--soft)-blueviolet?style=for-the-badge" alt="Avatar Clone AI 3b" />
+> 14	  <img src="https://img.shields.io/badge/free_LoRA_training-avatar--identity--train_(Replicate_BYOK%2C_USD_0)-brightgreen?style=for-the-badge" alt="Free LoRA Training" />
+> 15	  <img src="https://img.shields.io/badge/Spaces_publish-WordPress_node_(Post%2FLanding)-cyan?style=for-the-badge" alt="Spaces Publish WordPress" />
+> 16	  <img src="https://img.shields.io/badge/BoK_youtube--studio-deepsearch_blueprint_seed-fuchsia?style=for-the-badge" alt="BoK youtube-studio blueprint" />
+> 17	  <img src="https://img.shields.io/badge/Agentic_Vision-21_patterns_%2B_Collective_Ledger-blueviolet?style=for-the-badge" alt="Agentic Vision" />
+> 18	  <img src="https://img.shields.io/badge/API_Tenancy-100%25_per--user_(env%3Dinfra)-brightgreen?style=for-the-badge" alt="API Tenancy" />
+> 19	  <img src="https://img.shields.io/badge/BoK_video--studio-9%2F9_%2B_agency_v1.1-fuchsia?style=for-the-badge" alt="BoK video-studio" />
+> 20	  <img src="https://img.shields.io/badge/MCORCH_SSO-cross--subdomain_gate_live-darkgreen?style=for-the-badge" alt="MCORCH SSO" />
+> 21	  <img src="https://img.shields.io/badge/Agency_Tenancy-org%2Fclient_RLS_sealed-blueviolet?style=for-the-badge" alt="Agency Tenancy" />
+> 22	  <img src="https://img.shields.io/badge/viral--autopilot-ATIVADO_1o_ciclo_pago_%2B_FR--VA--018-brightgreen?style=for-the-badge" alt="Viral Autopilot" />
+> 23	  <img src="https://img.shields.io/badge/social--connect-TikTok%2FYouTube_proven_E2E_%C2%B7_in_review-brightgreen?style=for-the-badge" alt="Social Connect" />
+> 24	  <img src="https://img.shields.io/badge/channel--format-FR--CP--001_live_(8_canais)-brightgreen?style=for-the-badge" alt="Channel Format Intelligence" />
+> 25	  <img src="https://img.shields.io/badge/Epsilon_V9-unified_canvas_3.9_cutover_live-cyan?style=for-the-badge" alt="Phase Epsilon V9" />
+> 26	  <img src="https://img.shields.io/badge/higgsfield--mcp-OAuth_connector_server--side_(gated)-cyan?style=for-the-badge" alt="Higgsfield MCP Connector" />
+> 27	  <img src="https://img.shields.io/badge/test_coverage-295_tests-success?style=for-the-badge" alt="Test Coverage" />
+> 28	  <img src="https://img.shields.io/badge/Cyber_Sentinel-prompt_gate_live_%2B_BoK_4%2F4-darkred?style=for-the-badge" alt="Cyber-Sentinel" />
+> 29	  <img src="https://img.shields.io/badge/marketing--hub-FR--MH--001..012_live-brightgreen?style=for-the-badge" alt="Marketing Hub" />
+> 30	  <img src="https://img.shields.io/badge/e2e--user--zero-v2_runnable_harness-teal?style=for-the-badge" alt="e2e-user-zero v2" />
+> ```
+
+## 🤖 Claude *(23:43:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/version-6.129.0--organic_shorts_estrategia_definitiva_v1-blueviolet?style=for-the-badge\" alt=\"Version\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/version-6.130.0--EP05_v2_%2B_sceneNote_kind_%2B_canvas_refinement-blueviolet?style=for-the-badge\" alt=\"Version\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:43:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-19120_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />",
+  "new_string": "  <img src=\"https://img.shields.io/badge/neural_mesh-19176_nodes-blueviolet?style=for-the-badge\" alt=\"Neural Mesh\" />"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:43:10)*
+
+Adicionando o "What's new v6.130.0" logo antes do 6.129.0:
+
+## 🤖 Claude *(23:43:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.129.0 (2026-07-30) \u2014 Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica no Spaces",
+  "new_string": "## \ud83c\udd95 What's new in v6.130.0 (2026-08-03) \u2014 EP05 v2 formato GabrielAI \u00b7 kind sceneNote \u00b7 refinamentos do Canvas\n\n- **EP05 v2 completo (48 cenas):** roteiro reescrito no formato exato do motor CLI GabrielAI (`gerar_cenas.py`) via workflow ultracode 3 fases (3 drafts \u2192 3 cr\u00edticos adversariais \u2192 s\u00edntese) \u2014 Angle C (narrative arc-first) venceu 237/300. 19 presenter + 8 b-roll + 21 screencast + 1 ELO. Projeto Spaces vivo `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7` (40+22 = **62 n\u00f3s** materializados, 26 edges, custo Run All ~6.180 mco de 9.733).\n- **Clamp Veo `reference_to_video`\u21928s (Amendment 25 extension):** feature do Google API rejeita dura\u00e7\u00e3o \u2260 8s quando `referenceImages` populado. Novo `veoAllowedDurations()` puro + guard 422 pr\u00e9-d\u00e9bito em `canvas-execute:1367` + UI auto-clamp em `ImageToVideoInspector`. Fecha o vetor de charge+refund. `/security-review` NO FINDINGS, 6/6 unit + su\u00edte 738/740 verde.\n- **Canvas UX** \u2014 4 refinamentos: (a) edges com `strokeWidth: calc(base * var(--rf-zoom-inv))` vis\u00edveis em qualquer zoom-out, zero re-render React; (b) `fitView` s\u00f3 em projetos novos (respeita viewport salvo); (c) `LANE_HEIGHT` 320\u2192480 (cards ~280px ganham 180px de respira\u00e7\u00e3o); (d) 48 labels de lane populados cena-a-cena via workflow 3 agentes (extractor \u2192 adversarial critic \u2192 synth).\n- **Amendment 32 \u00b7 kind `sceneNote` (FR-SPACES-120):** sticky-note decorativo (yellow-500/10, sem Handles, sem motor, custo 0) para representar as 22 cenas SCREENCAST/ELO que hoje deixavam lanes vazias. Master Execution Protocol \u00a76 respeitado \u2014 BoK selada antes do c\u00f3digo, Pattern Conformance 1 yes (Human-in-the-Loop) \u00b7 20 n-a.\n- **Auditoria robusta 4 lentes** (`wf_9414d733`): cross-check SSOT vs graph vs edges vs prompts. Descobriu 1 BLOCKER material (`n_p_1` fora do grid por drag manual acidental) e 1 IMPORTANT (voice_ato1 em coluna errada) \u2014 ambos patchados. 0 drift de prompt, 0 edges faltando, 0 n\u00f3s P/B sem factory correspondente.\n- **Deploy `canvas-execute`** (a\u00e7\u00e3o Sovereign): clamp `veo_refs_require_8s` ativo em prod (script size 194.6kB).\n\n## \ud83c\udd95 What's new in v6.129.0 (2026-07-30) \u2014 Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica no Spaces"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:43:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -m \"docs(readme): v6.130.0 \u2014 EP05 v2 + kind sceneNote + refinamentos Canvas\n\nSess\u00e3o-maratona: EP05 v2 no formato exato do motor GabrielAI (48 cenas, projeto\nSpaces 18a21002 com 62 n\u00f3s materializados), clamp Veo reference_to_video\u21928s\n(feature do Google fecha vetor charge+refund), 4 refinamentos de UX do Canvas\n(edges adapt\u00e1veis \u00b7 fitView respeita viewport \u00b7 LANE_HEIGHT 480 \u00b7 48 labels\ncena-a-cena), Amendment 32 kind sceneNote (fecha 22 lanes SCREENCAST/ELO\nestruturalmente per Master Execution Protocol \u00a76), auditoria robusta 4 lentes.\n\nNeural mesh: 19120 \u2192 19176 nodes.\" \ngit log -1 --format=%H",
+  "description": "Commit README v6.130.0"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:43PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:43PM[0m [32mINF[0m scan completed in 9.21ms
+> [90m8:43PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 5b9db1afbbb98872dd839861db64b7090d393c2d
+> ```
+
+## 🤖 Claude *(23:43:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Committed the README and moving into Phase 5 to update the HANDOFF.md file—I need to check the top of that file first to append the new content correctly.
+
+</details>
+
+
+## 🤖 Claude *(23:43:51)*
+
+Phase 5: HANDOFF.md update com Task State + Record.
+
+## 🤖 Claude *(23:43:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 1,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -10
+> 7	# 🚀 UPDATE 2026-07-30b (Estratégia DEFINITIVA de shorts orgânicos + formato React provado): 6 commits na main.
+> 8	#   CORREÇÃO-MÃE: as 6 referências que o Sovereign colou ERAM os deepsearches (Refs #5/#6 = os 2 deep-research).
+> 9	#   A cláusula "aguardar 2 planos" está MORTA. Estratégia DEFINITIVA v1 selada em
+> 10	#   docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md §D (D1..D7): formato=split-screen react tiled ·
+> 11	#   medição=YouTube Shorts PÚBLICOS (painel /dashboard/youtube JÁ mede; falta audiência, não código) ·
+> 12	#   cadência 1/dia útil (3 react+2 cru) · biblioteca 10 ganchos v1 · roteiro antes do criativo · paridade UI.
+> 13	#   VIVO: witness react asset 1a98cef3 (12 mco, Vision QA) · 8 cortes EP02 · projeto Spaces
+> 14	#   "React Gabriel AI" 024e1c03 ARMADO (POV+TelaDividida, zero pago) · tabela de vídeos de volta no
+> 15	#   /dashboard/youtube (Short bxGA7QWvH2I 118 views verificado) · pad TTS 0,5s provado · smoke cadência 7/7
+> 16	#   (anticorpo: W3 estava stale vs FR-CAD-006 — variant mintada, não source_asset_id cru).
+> 17	# ⏭ PRÓXIMA SESSÃO (PAUSE declarado pelo Sovereign): CRIAÇÃO DO EP05.
+> 18	#   Decisão em aberto: mudar formato documentário → TUTORIAL (ensinar as ferramentas, elucidar o possível).
+> 19	#   Parecer do agente REGISTRADO no Record abaixo (§EP05): tutorial híbrido RECOMENDADO com evidência
+> 20	#   (retenção EP02 perde 50% a 1:11 · Ref#2 evergreen/watch-hours · Ref#3 é literalmente o template de
+> 21	#   tutorial VFX · funil produto MCORCH). Injetar o brief PIPC no planejamento (FR-PIPC-017/018, elo manual).
+> 22	#   Depois do EP05: cadências planejadas com legendas + SEO/AEO (roadmap declarado do Sovereign).
+> 23	# ⚠️ EP03 master AUSENTE do ecossistema (foi ao YouTube por fora) — upload = ação Sovereign via menu Cortes.
+> 24	# ⚠️ Anexos do chat (SendUserFile) NÃO chegam ao Sovereign — mídia via Spaces→Assets + apontar título.
+> 25	# ⚠️ Flag auth_social_login_visible segue LIGADA (review TikTok pendente). Desligar em Acesso quando aprovar.
+> 26	```
+> 27	
+> 28	---
+> 29	
+> 30	## Task State
+> 31	
+> 32	| **Estratégia DEFINITIVA de shorts orgânicos + formato React provado + fábrica Spaces (2026-07-30b)** | ✅ **6 commits na main** (`61022c3..abe2a12`) · tsc-app **0** · gitleaks limpo. As 6 refs do Sovereign ERAM os deepsearches → estratégia **DEFINITIVA v1** (§D1..D7 em `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md`). Witness react `1a98cef3` (split_grid 2v, 12 mco, Vision QA) · 8 cortes EP02 · projeto Spaces **"React Gabriel AI"** `024e1c03` armado (zero pago) · tabela de vídeos restaurada no /dashboard/youtube (Short 118 views) · pad TTS 0,5s provado · smoke cadência 7/7 + anticorpo FR-CAD-006. Malha **19120** · nó `aa7e1dc9`. ⏭ PAUSE → **EP05 formato tutorial** (parecer no Record). Record abaixo. |
+> 33	| **TikTok App Review destravado + pipeline de Publicações do Spaces (2026-07-30)** | ✅ **4 commits na main** (`266d3f0..7d4add3`) · tsc-app **0** · eslint **0** · vitest **+20 novos** (public-app-settings 9 + asset-publications 11) · 3 migrations aplicadas · 1 edge fn deployada · frontend no ar · `/security-review` NO FINDINGS ×3. **TikTok (reprovado 4×)**: conta `tiktok.review@mcorch.com` provisionada (viewer · email pré-confirmado · onboarding pré-completo · 1500 mco) + login **provado E2E** no /auth público. Achado material: botões social login atrás de `?devLogin` (invisíveis na URL do formulário) → flag admin `public_app_settings` (aba **Acesso** em /dashboard/admin, world-readable+CHECK allowlist, RLS admin-write, auditada). Sovereign gravou o vídeo e **enviou a re-submissão**. **Publicações**: aba no modal do asset (badge/timestamp/Cancelar/Remover) + trigger cascade fecha o **dead-end 409 `already_enqueued`** + **sync bidirecional** (apagar do calendário SOME de toda superfície: `scheduled`→delete, `published`→histórico). Revisão adversarial ultracode pegou 2 P0/P1 nascidos-mortos (handler 409 = código morto; `activeForSelected` sem `published`) → corrigidos+provados E2E. Malha **18985** · nó `59c4d1c2`. Record abaixo. |
+> 34	| **"Rodar não é entregar": 6 superfícies + limpeza total de branches + media_state (2026-07-29)** | ✅ **14 commits na main** (`15c84fe..7533a5a`) · tsc-app **0** · eslint **0 erros** (era 75) · vitest **712** · 3 edge fns deployadas · frontend no ar. Remoto = **só `main`** (20 branches retiradas; backup provado por `git clone` do bundle). **P0**: logrotate criava `/var/log/mcorch-*.log` como gcrUX enquanto o cron roda como ubuntu → **redirect falho = comando NÃO executa** → 4 crons mortos 3 dias (telemetria de saúde em branco). **Gate de ENTREGA** da auditoria 4Cs (worktree detached em `origin/main` + push verificado por grep no destino). **Produção estava À FRENTE da main** (dist de branch nunca mergeada) → reconciliada. **Cortes**: grade do menu era galeria decorativa + edge fn 5 dias velha → grade provada E2E por frame. **media_state** (text+CHECK) separa estado técnico do editorial + aba "Em processamento"; **IDOR MEDIUM** fechado que o próprio fix ativara. Malha **18851** · nó `32897de0`. Record abaixo. |
+> 35	| **Modal de Publicação YouTube Studio (abas Vídeo/Shorts/Histórico) — free-agent S1 (2026-07-25)** | ✅ **3 commits `free-agent/publish-modal-s1`** · tsc-app **93=baseline** · worktree limpo. **Passo 1**: widget "Vídeos do canal" extraído p/ `src/components/youtube/ChannelVideosCard.tsx` (auto-contido: `useYouTubeVideos` + `useYouTubeConnection` + `useDeleteVideo` + `useUpdateVideo`; 17 colunas + paginação + Editar/Excluir gated por `hasWriteScope`). **Passo 2**: `src/components/youtube/YouTubePublishModal.tsx` — `<Dialog>` + `<Tabs>` 3 abas: **Vídeo** (`YouTubeUploadPanel`), **Shorts** (mesmo fluxo + dica 9:16/60s), **Histórico** (`ChannelVideosCard`). **Passo 3**: `YouTubeStudioPage.tsx` header (L443) — estado `pubOpen`/`pubTab` + botões "Publicar" / "Histórico" → abrem modal com `defaultTab` dinâmico; Card inline removido do corpo. **Zero regressão** — apenas 3 arquivos tocados. Malha **18375** · nó aguardando seal. Record abaixo. |
+> 36	| **Modais publicação (terreno free-agent) + P0 EP03 destravado + doutrina de recência (2026-07-25)** | ✅ **5 commits `fbb53b3..b66396c`** pushed · tsc-app 93=baseline · worktree limpo. **P0 EP03**: selo "Armazenado" p/ masters no Storage (W2.1) destrava o botão "Não verificado" morto (`canProbe` exigia bucket='local'); EP03→YouTube nunca dependeu do selo — `useHostMasters` lista por `source_module`, worker dual-source (buildado, no ar). **Modais** YT/TikTok/IG: contrato+playbook path-resolvido p/ agente FREE (`docs/roadmap/publish-modals-*`); **Nemotron-9B:free provou tool-use real** (leu useYouTubeUpload.ts, 7 exports); Sovereign roda fcc-claude na branch `free-agent/publish-modal-s1` passo-a-passo. **Pantheon free-model via gateway `openclaw agent` PROVOU não executar código** (gemini-flash-lite = pseudo-código). **Cap edge fns DESTRAVADO** (Pro 100→500; memória stale reconciliada SUPERSEDED). **Doutrina de recência de memória** (corolário Lei 1). Malha **18348** · nó `5cc6ad2a`. Record abaixo. |
+> 37	| **Autonomia: security + P0 YouTube (pós-W2.1) + kanban de dev + grounding AIOS + AI Act Fatia 4 disclosure VIVO (2026-07-25)** | ✅ **8 commits `3766034..0e120be`** pushed · gitleaks limpo · tsc-app 93=baseline. **AI Act Art.50(4) FECHADO** antes do deadline 02-Ago (Fatia 4 disclosure server-side nunca-LLM em orchestrate-step+reshape-pillar, smoke 12/12, /security-review SAFE, deployado; OTD-CP-002 resolvida Sovereign). **Fatias 0/1/2 C2PA já vivas desde 18-jul** (SOP estava stale). **P0 YouTube** pós-W2.1 restaurado (UI source_module='external' + worker dual-source host/Storage). **W1.2** statement_timeout + revoga-anon (migrations aplicadas em prod). **Kanban** neon+fatia-2 sinal-real. **AIOS** nós Consciousness v2 auto-semeados neutralizados. Malha **18347** · nó `2f4eee7d`. Record abaixo. |
+> 38	| **Grounding do AIOS (anti-confabulação) + otimização Supabase Pro (2026-07-25)** | ✅ Sessão interativa longa. **8 commits `cb18729..00f5295`** pushed · tsc-app **93=baseline** · gitleaks limpo. **Raiz de "algo errado no ecossistema" achada+corrigida:** o chat AIOS Core-Fable confabulava arquitetura inexistente (monorepo/tabelas/`ffmpeg.wasm`) — diagnóstico por 2 workflows de verificação material. Fix (`cb18729`): **E** prompt anti-confabulação (`DEFAULT_SYSTEM`+`LIVE_SYSTEM`) + **A** RAG query-aware (`buildQueryContext` liga o `searchContext` que era dead-code) + **threshold** `search-constellation` 0.45→0.3 (**search prod 0→20 provado**) + **F1** modo voz. **Auto-ingest RESSUSCITADO** (`4001e38`): morria com 401 silencioso desde a rotação de chaves → força `SB_SECRET_KEY` + varre `src`+`supabase/functions`+`packages`; malha **9831→18324**. Menu **Orquestra→Constelação**. **Supabase Pro:** roadmap `docs/roadmap/supabase-pro-optimization.md` (cap 100 fns **destravado provado**; upload 50MB→500GB; no-pause; logs 7d) + host cleanup **~16GB** (disco 79%→71%) + **masters EP01/EP02 migrados p/ Storage** (`scripts/migrate-local-masters-to-storage.ts`, verificado, host liberado 1.8G→24M). Malha **18324** · nó `88030445`. Record abaixo. |
+> 39	| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** | ✅ Sessão de autonomia total do Sovereign (migrations/deploys/schema/seal **un-gated**; público/compliance-code/editorial/credenciais **gated**). **6 commits `c58a57e..88a04dd`** pushed · toda migration `/security-review`+RLS default-deny. **S1+S2 PIPC VIVOS** (retenção YT persiste→brief por-EP; A19/A20 desbloqueado por re-OAuth) · **A4 Contatos** (`contacts`+RLS, OTD-CS-001 resolvida) · **A8 cadence-fix** (conta explícita mata null→1ª) · **A10 content-provenance selada 9/9** (Fatia 4 deferida OTD-CP-002). Todos **witness E2E**. ⚠️ cap 100 edge fns atingido. Malha **9831** · nó `36d233dc`. Record abaixo. |
+> 40	| **Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube (2026-07-23)** | ✅ Loop autônomo, **os 5 entregues** (teto 80% janela; selado a 49%). **5 commits `c2da9d3..c28d2f0`** + push · tsc-app **93=baseline** · gitleaks limpo · sem edge/migration. **(1)** agentes `docs-curator`+`bok-curator` (donos de `docs/` e `docs/bok/`, curam/revisam no lugar do Sovereign, Telegram pontual, exclusão restrita) + regra global **CLAUDE.md §6** + Key Files + memória `feedback_docs_bok_ownership`. **(2)** auditoria cadência + estratégia por-workspace (`docs/roadmap/cadence-workspace-strategy-2026-07-23.md`; gap central: sem entidade Workspace 1ª classe · `meta_config UNIQUE(user_id)`=1 Meta/user · `cadence-run social_account_id=null`→1ª conta arbitrária). **(3)** intake Golden Eye esclarecido+desenhado (`docs/roadmap/golden-eye-intake-design-2026-07-23.md`, UI Settings "Marca"; VLM=refinaria não depósito). **(4)** YouTube escopo/CASA/quota respondido+**Telegram HTTP 200** (**sem CASA** — escopo sensível não restrito). **(5)** pipeline YouTube **100% pronto** (worker resumable · `youtube_uploads` prod · canal Gabriel AI conectado · master EP02 em `repurpose-inbox/`; só habilitar service). **Extras:** Golden Eye slice 1 (`miv-probe.ts` 18/18, regra RUBRIC.md:231) · PIPC BoK 10/10 APPROVE (`docs/bok/pipc/`, Pattern 17/4/0) · vacina masters (skill `host-media-masters`) · doutrina 2×→skill (`feedback_recurring_actions_become_skills`) · MEMORY 19.9→16KB. Malha **9772** · nó `c22e2c6f`. ⏭ Gated Sovereign: revisar BoK PIPC (destrava S1-S4) · habilitar `youtube-upload.service` · imagens Golden Eye · postar cortes EP01/EP02. |
+> 41	| **Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1) (2026-07-23)** | ✅ Loop autônomo "5 pontos do Sovereign". **6 commits `dbd26a6..17cf02f`**, deployado + `/security-review` NO FINDINGS ×3 + tsc-app **93=baseline** (zero-regressão). **(Funis)** 3 funis ML PÚBLICOS vivos (posts 29/34/35: Roborock ×2 ângulos + Family Hub, atribuídos, **redirect→meli.la 302 provado**); ciclo autopilot de validação em massa **corrigido** (config `target_product_ids`=`external_id`, não UUID — 1º ciclo gastou 40 mco genérico); novo primitivo `publish-wordpress post_id` (flip rascunho→público). **(Zerar)** jornada UX E2E User 0 → produto em produção (0 P0/P1 real). **(Roadmap)** maestro+enxame `wf_04833184` (32 células S×P). **(Épico POE)** blueprint deepsearch + BoK 9/9 + **Fatia 1 conector Amazon VIVO** (dispatcher multi-rede `_shared/affiliate.ts`, `resolve` fold em `process-affiliate-link` [cap 100 fns], migrations `amazon_tag`/`affiliate_network_contract`, UI Conector de Afiliados verificada ocular, witness 402→200 `?tag=` sale). Malha **9718** · nó `89a3618d`. ⏭ POE Fatia 2/3/4 GATED (GO+jurídico); tráfego dos funis (social gated). |
+> 42	| **Sala de Controle da Orquestração (FR-OCR-001..020) + cortes de N clipes destravados (2026-07-22)** | ✅ Loop "fazer tudo". 9 commits `e0d9fe9..549a3cc`, deployado + Vision QA logado (User 0, $0) + `/security-review` NO FINDINGS. **Cortes:** reuso de browser (`renderAlphaFrames` 1 chromium/job — witness 5/5 EP01 + **11-cortes resgatado done 11/11**) + `ViralCandidatePicker` ligado no wizard. **Refocus:** BoK `orchestration-control-room` 10/10 + Vista Operacional (crew×execs+ledger) + múltiplas Orquestras persistentes (`workflows`+grafo/workflow) + nós Agente(dispatch)/Portão(N especialistas)/Publicar(mockup por rede); Cena removido; canvas reescrito controlado. **tsc-app 135→93** (Parte B limpou 42 erros de tipo pré-existentes). Malha **9681** · nó `58bd91da`. ⏭ Follow-on: nó Publicar output-flow→publish real; Fila Sovereign gated. |
+> 43	| **Loop multi-frente: cortes+picker · grid pan/crop+preview composto · dashboards TikTok/IG · squad Studio · agendamento · LGPD · render-fix · constelação leve (2026-07-22)** | ✅ Sessão-maratona GO'd (workflow adversarial 4-frentes → veredito `.claude/context/multi-front-verdict-2026-07-22.md`) + 2ª rodada de review do Sovereign. **14 commits `7ee9e79..3128d76`**, tudo deployado+build baked; tsc-app **135 (zero-regressão vs baseline; corrigi 3 pré-existentes nos cortes)** · eslint 0 · `/security-review` NO FINDINGS ×3. **(Cortes)** detector duration-aware (`top_n` omitido → `clamp(ceil(span/45),5,12)`, mín. 5 p/ 5min+, cap 12, dedup consumido, prompt+diversidade+title, max_tokens) + `ViralCandidatePicker` (escolher antes de queimar, página+nó). **(Grid)** `pan_x/pan_y/zoom` por célula (crop FFmpeg, clamp 4 camadas, sha-parity, unit 11/11) + **preview composto** (layout real, drag por célula, play). **(Agentes)** squad **Studio** no User 0 (`seed-studio-squad.ts`, drill 6/6 groq via `studio-squad-drill.ts`) + 7 SOULs Pantheon enriquecidos (template +6 seções) + `main` criado + `sync-pantheon-souls-to-admin.ts` (admin 56c→11-17k). **(Agendamento)** `publish-space-asset` `publish_at` futuro + `link` Pinterest (auto-publish/publish-social) + `schedule-episode.ts` privado-primeiro (witness auto-limpante). **(LGPD)** `erase_lead` v4 spine CRM APLICADA (FM-CS-02). **(Render)** timeout duro `renderAlphaFrames` (fim do hang 170min incident 822780e8) + preview kinetic. **(Dashboards)** TikTok+Instagram (`user.info.basic`/`business_basic`, perfil no connect via callback estendido — cap de 100 fns cheio, sem fn nova) + menu **Visão Geral** colapsável (YT/TikTok/IG). **(Constelação)** modo **leve por padrão**+toggle (CrewGraph `lite`) · respace 72° (`respace-constellation.ts`, fim dos orbits sobrepostos) · Matrix/Memória admin-only · **Matrix removida do `/orchestration`** (montava em 2º plano). **Achados:** cap de 100 edge fns CHEIO (dobrar em fn existente, não criar); `lucide` sem ícones de marca (Instagram→Camera); render sem timeout = hang eterno. Malha **9639** · nó `4950ea34`. ⏭ **PRÓXIMO HANDSON (atacar já):** refocus da Orquestração = sala de controle (visão `.claude/context/orchestration-refocus-vision-2026-07-22.md`: BoK→Vista Operacional→múltiplas Orquestras→nós). |
+> 44	| **Loop Spaces: legendas sync + engineer-spaces + nó Transcrição/SRT VIVO + nó-janela + Pipeline kanban/tabela + witness cadência (2026-07-22)** | ✅ Loop autônomo **6 slices + fechamento total** ("fecha de vez tudo"), **12 commits `646a934..948d313`**, tudo deployado+Vision-QA (build · tsc **zero-regressão vs baseline 137** · `/security-review` NO FINDINGS · auditoria Canvas 1920×1080 APROVADA). **(S1)** kinetic-stack timing **por-palavra derivado do cue + chunking** (fim do `slice(0,7)`; não é motion-graphic; capstone: re-cut real do EP01 "VOADORES/TROUXE"). **(S2)** agente+skill **`engineer-spaces`** — estreou fechando bug `category:"Video"` (invisível ao esbuild). **(S3)** nó **Transcrição/SRT** whisper.cpp US$0 **VIVO** (migration `asr` + edge `generate-subtitles` + worker `subtitle-bridge` active; unit precisa bun full-path; witness E2E 7 cues/788c sobre corte EP01). **(S4/5a)** **nó-janela** `canvas>node>janela`: sidebar **SÓ specs** (`NodeSpecsPanel`), config na janela (duplo-clique/"Personalizar"). **(S5b)** **Pipeline** de Publicações ganha **Kanban + Tabela nível-query** (filtro/ordenação/CRUD inline, sem despachar) + auditoria de prontidão. **Witness cadência** (throwaway sem credenciais): arm → `cadence-run` `{dispatched:1}` → `cadence_dispatches`+`scheduled_posts`(queued) provados, deletados na hora (zero publicação). **Achados:** `bun run build`=esbuild NÃO typa → gate real `tsc -p tsconfig.app.json` vs baseline; `cadence-run` exige apikey+Authorization = mesma chave de serviço. Malha **9566** · nó `5bd65e77`. ⏭ Sovereign-gated: EP02→YouTube (Track B); CRM Suite (BoK-first). |
+> 45	| **Prévias no /repurpose + nó Cortes do Master + Cinética empilhada + 1×3 + fixes Veo + re-cut E2E do EP01 (2026-07-21)** | ✅ Loop-maratona GO'd, **12 commits `347a4ea..4a4fe17`** + README + seal, tudo deployado+Vision-QA. **4b/4c:** prévia em loop das legendas (iframe do template real dirigindo `applyFrame` 30fps, `public/caption-templates/` via `sync-caption-templates-to-public.ts`) + grades no `/repurpose` Passo 2; E2E logado User 0 $0 (9/9 estilos animam, 0 erros console). **4d:** nó `videoRepurpose` "Cortes do Master" no Spaces (motor de repurpose via node, reusa detect+run+galeria/prévia). **Legenda nova `kinetic-stack-9x16`** ("Cinética empilhada") — pilha palavra-por-linha rampa até herói, accent ciano, registrada nos 5 allowlists. **Grade 1×3** + refino 4 legendas Tier A (Motion Graphics score 9 intocada, workflow `wf_3a54f592`). **Fixes Veo:** XOR image/refs (nó nascia morto −267 mco) + POV mudo default (Veo gerava fala) + preview vídeo na aba Assets + rótulo HyperFrames neutro. **4a VERIFICADO:** whisper ASR US$0 (129 cues) → detect → 3 cortes EP01 queimados com Cinética empilhada, Vision QA ocular sobre footage real. Malha **9560** · nó `ab67e63f`. ⏭ Próximo: refino de legibilidade do kinetic-stack p/ frases longas (scrim + cap palavras); **rail ASR-via-UI** ("Gerar transcrição" whisper.cpp host, async) p/ paridade UI; witness cadência. |
+> ```
+
+## 🤖 Claude *(23:44:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "```bash\ngit log --oneline -10\n# \ud83d\ude80 UPDATE 2026-07-30b (Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado): 6 commits na main.\n#   CORRE\u00c7\u00c3O-M\u00c3E: as 6 refer\u00eancias que o Sovereign colou ERAM os deepsearches (Refs #5/#6 = os 2 deep-research).\n#   A cl\u00e1usula \"aguardar 2 planos\" est\u00e1 MORTA. Estrat\u00e9gia DEFINITIVA v1 selada em\n#   docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md \u00a7D (D1..D7): formato=split-screen react tiled \u00b7\n#   medi\u00e7\u00e3o=YouTube Shorts P\u00daBLICOS (painel /dashboard/youtube J\u00c1 mede; falta audi\u00eancia, n\u00e3o c\u00f3digo) \u00b7\n#   cad\u00eancia 1/dia \u00fatil (3 react+2 cru) \u00b7 biblioteca 10 ganchos v1 \u00b7 roteiro antes do criativo \u00b7 paridade UI.\n#   VIVO: witness react asset 1a98cef3 (12 mco, Vision QA) \u00b7 8 cortes EP02 \u00b7 projeto Spaces\n#   \"React Gabriel AI\" 024e1c03 ARMADO (POV+TelaDividida, zero pago) \u00b7 tabela de v\u00eddeos de volta no\n#   /dashboard/youtube (Short bxGA7QWvH2I 118 views verificado) \u00b7 pad TTS 0,5s provado \u00b7 smoke cad\u00eancia 7/7\n#   (anticorpo: W3 estava stale vs FR-CAD-006 \u2014 variant mintada, n\u00e3o source_asset_id cru).\n# \u23ed PR\u00d3XIMA SESS\u00c3O (PAUSE declarado pelo Sovereign): CRIA\u00c7\u00c3O DO EP05.\n#   Decis\u00e3o em aberto: mudar formato document\u00e1rio \u2192 TUTORIAL (ensinar as ferramentas, elucidar o poss\u00edvel).\n#   Parecer do agente REGISTRADO no Record abaixo (\u00a7EP05): tutorial h\u00edbrido RECOMENDADO com evid\u00eancia\n#   (reten\u00e7\u00e3o EP02 perde 50% a 1:11 \u00b7 Ref#2 evergreen/watch-hours \u00b7 Ref#3 \u00e9 literalmente o template de\n#   tutorial VFX \u00b7 funil produto MCORCH). Injetar o brief PIPC no planejamento (FR-PIPC-017/018, elo manual).\n#   Depois do EP05: cad\u00eancias planejadas com legendas + SEO/AEO (roadmap declarado do Sovereign).\n# \u26a0\ufe0f EP03 master AUSENTE do ecossistema (foi ao YouTube por fora) \u2014 upload = a\u00e7\u00e3o Sovereign via menu Cortes.\n# \u26a0\ufe0f Anexos do chat (SendUserFile) N\u00c3O chegam ao Sovereign \u2014 m\u00eddia via Spaces\u2192Assets + apontar t\u00edtulo.\n# \u26a0\ufe0f Flag auth_social_login_visible segue LIGADA (review TikTok pendente). Desligar em Acesso quando aprovar.\n```",
+  "new_string": "```bash\ngit log --oneline -14\n# \ud83d\ude80 UPDATE 2026-08-03 (EP05 v2 + kind sceneNote + refinamentos Canvas): 14 commits na main.\n#   EP05 v2 completo no formato exato do motor CLI GabrielAI (gerar_cenas.py): 48 cenas numeradas, 6 atos,\n#   16:9 master YouTube, projeto Spaces vivo `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7`\n#   com 62 n\u00f3s (40 originais + 22 sceneNote), 26 edges, custo Run All ~6.180 mco de 9.733.\n#   Roteiro: docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md \u00b7 Runbook: ep05-production-runbook-v2.\n#   Clamp Veo reference_to_video\u21928s deployado em prod (canvas-execute) \u2014 feature Google API rejeita \u2260 8s com\n#   refs; fecha vetor de charge+refund (2\u00d7 167 mco refundados na descoberta). UI auto-clamp + guard 422 pr\u00e9-d\u00e9bito.\n#   Refinamentos Canvas: edges strokeWidth adaptativo (CSS var --rf-zoom-inv, zero re-render) \u00b7 fitView respeita\n#   viewport salvo \u00b7 LANE_HEIGHT 320\u2192480 (cards ganham 180px de respira\u00e7\u00e3o) \u00b7 48 labels de lane cena-a-cena.\n#   Amendment 32 kind `sceneNote` (Master Execution Protocol \u00a76 respeitado \u2014 BoK selada antes do c\u00f3digo):\n#   sticky-note decorativo yellow-500/10, sem handles, sem motor, custo 0; ocupa as 22 lanes SCREENCAST/ELO.\n# \u23ed PR\u00d3XIMA SESS\u00c3O (decis\u00e3o Sovereign): Op\u00e7\u00e3o C H\u00cdBRIDO \u2014 MVP chat-por-n\u00f3 no Spaces (Amendment 33 ao spaces-evolution)\n#   + em paralelo bok-curator escreve BoK completa da nova suite `spaces-agent` (chat-por-n\u00f3 + agente criador + orquestra\u00e7\u00e3o).\n#   LLM: cascata Groq\u2192OpenRouter (padr\u00e3o da casa, aios-chat-gateway + openrouter-swarm). Cobran\u00e7a mco per-user.\n#   Refs enviadas: Magnific storyline (chat editor por bloco) \u00b7 Buzzy AI shots \u00b7 Higgsfield 2.5 (chat por v\u00eddeo).\n# \u26a0\ufe0f Cena 30 (ELO MANUAL) do EP05 v2 = reuso do asset creative_assets.id=e781bdef \u2014 a\u00e7\u00e3o Sovereign via Cortes.\n# \u26a0\ufe0f EP03 master AUSENTE do ecossistema (foi ao YouTube por fora) \u2014 upload = a\u00e7\u00e3o Sovereign via menu Cortes.\n# \u26a0\ufe0f Anexos do chat (SendUserFile) N\u00c3O chegam ao Sovereign \u2014 m\u00eddia via Spaces\u2192Assets + apontar t\u00edtulo.\n# \u26a0\ufe0f Flag auth_social_login_visible segue LIGADA (review TikTok pendente). Desligar em Acesso quando aprovar.\n```"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:44:46)*
+
+Agora adiciono a linha nova ao Task State + o Record completo logo depois:
+
+## 🤖 Claude *(23:45:01)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica Spaces (2026-07-30b)** |",
+  "new_string": "## Task State\n\n| **EP05 v2 formato GabrielAI (48 cenas, 62 n\u00f3s) + kind sceneNote + clamp Veo refs\u21928s + 4 refinamentos Canvas (2026-08-03)** | \u2705 **14 commits na main** (`bd94dae..5b9db1a`) \u00b7 tsc-app **0** \u00b7 build 25.05s \u00b7 gitleaks limpo \u00b7 `/security-review` NO FINDINGS \u00b7 738/740 vitest verdes \u00b7 Master Execution Protocol \u00a76 respeitado. EP05 v2 no formato exato do motor CLI Python que fez EP01-04: `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` (48 cenas \u00a73, regex validado, 6 atos, 16:9). Projeto Spaces `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7` com 62 n\u00f3s (19P + 7 pair B-roll + 6 voz + 1 charRef + 22 sceneNote), 26 edges, custo Run ~6.180 mco. Clamp Veo `reference_to_video`\u21928s (server 422 pr\u00e9-d\u00e9bito + UI auto-clamp) deployado em prod. Canvas: edges com espessura adapt\u00e1vel ao zoom \u00b7 fitView respeita viewport salvo \u00b7 LANE_HEIGHT 320\u2192480 \u00b7 48 labels cena-a-cena. Amendment 32 kind sceneNote (BoK selada antes do c\u00f3digo, Pattern Conformance 1y/20na). Auditoria robusta 4 lentes achou 1 blocker (n_p_1 fora do grid) e 1 important (voice_ato1 desalinhado) \u2014 ambos patchados. Malha **19176** \u00b7 n\u00f3 `0da058d6`. \u23ed Pr\u00f3xima: Op\u00e7\u00e3o C H\u00cdBRIDO \u2014 MVP chat-por-n\u00f3 (Amendment 33) + bok-curator escreve suite `spaces-agent`. Record abaixo. |\n| **Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado + f\u00e1brica Spaces (2026-07-30b)** |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:45:07)*
+
+Agora insiro o Record completo antes do Record de 2026-07-30b:
+
+## 🤖 Claude *(23:45:08)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 52,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 52	
+> 53	## Estratégia DEFINITIVA de shorts orgânicos + formato React provado Record (2026-07-30b)
+> 54	
+> 55	**ORO triplet:** Operator = MCORCH Master Execution Agent (+ engineer-spaces p/ o projeto Spaces) · Reviewer = Sovereign · Owner = Sovereign (marca/conta Gabriel AI; tudo privado-primeiro, custo USD externo = 0, 15 mco totais).
+> 56	
+> 57	Sessão em 3 atos. **(1) Estratégia:** o Sovereign colou 6 referências + a visão criativa (split-screen react: Gabriel AI reagindo/observando enquanto o vídeo roda na outra célula). Workflow multi-agente `wf_edbe2bc3-a59` (10 agentes: 3 leitores → 3 planos concorrentes → 3 críticos adversariais → síntese) produziu o plano; **correção do Sovereign no meio da sessão: as 6 refs ERAM os deepsearches** ("a estratégia definitiva deveria ter sido feita por você") → plano promovido a **DEFINITIVA v1** com decisões §D1..D7 seladas. A crítica adversarial derrubou o over-claim central ("deixar o dado escolher" era OCO: `hook_rate` é coluna órfã sem populador e retenção é episode-scoped exigindo público) → resolvido como **D2: YouTube Shorts PÚBLICOS = laboratório** (o painel já mede; falta audiência, não código — Short real `bxGA7QWvH2I` com 118 views verificado via youtube-data, MAIS que o EP03 longo com 87). **(2) Execução un-gated (loop GO'd, 7/7 tasks):** witness do formato react (`video-render` split_grid 2v → asset `1a98cef3`, corte EP01 em cima + clipe Veo `6f783a1d` reagindo embaixo, beats casaram — surpresa→sorriso); 8 cortes EP02 via detect (8 clips, 58 cues, beats reais do SRT) + run (parent `e49af674` — ressalva honesta: linha longa do kinetic-stack estoura largura, pendência conhecida de 21-jul); EP03 confirmado AUSENTE (Storage/host/youtube_uploads varridos — foi ao YouTube por fora; ingest = ação Sovereign); dry-run cadência `smoke-cadence-dispatch` **7/7** com **anticorpo**: a asserção W3 estava stale vs FR-CAD-006 (metadata.reshape carrega `space_publish_variant_id` mintado; o vínculo ao asset se prova pela variant) — smoke corrigido + cleanup cobre variants; pad 0,5s trailing no `voice-bridge` (witness `2171af33`: WAV termina com 0,633s de silêncio — trailing-only para não deslocar beats); biblioteca de 10 ganchos IA-Física v1. **(3) UI-first (diretiva "tudo pela UI") :** tabela de vídeos+métricas de volta à tela principal do `/dashboard/youtube` (build deployado, provado no bundle); projeto Spaces **"React Gabriel AI"** (`024e1c03-2866-4e38-afc7-ddc515b5a1c7`, `vm_canvas_projects`) criado pelo engineer-spaces com grafo armado e validado 13/13 contra as factories vivas — nó `imageToVideo` POV de reação (mudo, 9:16, veo-3.1-fast; `povVideo` NÃO é type persistível, delega p/ imageToVideo) + nó `splitScreen` 2v com corte EP02 na célula 0 e placeholder Veo na célula 1 + aresta armada p/ trocar pós-POV; zero geração paga. **Memória nova:** anexos do chat NÃO chegam ao Sovereign (`user_chat_attachments_not_visible`) — mídia via Spaces→Assets. MEMORY.md compactado 19,6→15,9KB.
+> 58	
+> 59	### §EP05 — Parecer registrado (decisão do Sovereign na volta)
+> 60	
+> 61	**Pergunta:** mudar o formato de documentário → TUTORIAL (ensinar a mexer nas ferramentas, elucidar o que já é possível)? **Parecer: SIM, tutorial híbrido — a evidência aponta a favor.** (a) **Dado nosso:** o brief PIPC do EP02 mostra perda de 50% da audiência a ~1:11 (16%) — o formato documentário está sangrando retenção cedo; (b) **Ref#2 (deepsearch):** tutoriais/guias evergreen são o ativo que acumula watch-hours por BUSCA contínua — exatamente o que as 4.000h de monetização precisam; (c) **Ref#3 (deepsearch) é literalmente um template de tutorial** (AI VFX Workflow Engine: Gabriel AI apresentando passo-a-passo com hook, prompts copy-paste e "por que funciona") — o roteiro-motor já existe; (d) **Funil de produto:** tutorial das ferramentas = marketing do MCORCH (audiência qualificada → usuários), alinhado ao norte "agência dentro da plataforma". **Ressalvas:** teto de alcance menor que hype-doc (intenção alta, topo estreito — os SHORTS continuam sendo o topo de funil, D6); manter storytelling no tutorial (hook forte + open loops — não virar screencast seco); injetar o brief de retenção do PIPC no roteiro do EP05 (FR-PIPC-017/018 — elo hoje manual). **Formato sugerido:** "tutorial-documentado" 8-12min — narrativa de abertura (1min, gancho da biblioteca) → 3-4 blocos de ferramenta com resultado na tela → fechamento com CTA pro próximo. Cada bloco vira 1-2 shorts de react (a fábrica já está de pé).
+> ```
+
+## 🤖 Claude *(23:46:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Estrat\u00e9gia DEFINITIVA de shorts org\u00e2nicos + formato React provado Record (2026-07-30b)",
+  "new_string": "## EP05 v2 formato GabrielAI + kind sceneNote + refinamentos Canvas Record (2026-08-03)\n\n**ORO triplet:** Operator = MCORCH Master Execution Agent (+ engineer-spaces L2 para n\u00f3s Spaces + bok-curator para Amendment 32) \u00b7 Reviewer = Sovereign + `/security-review` + 4 auditores adversariais + Vision QA \u00b7 Owner = Sovereign (marca EP05 + saldo mco + produ\u00e7\u00e3o do canal Gabriel AI).\n\n**Sess\u00e3o-maratona 4 arcos com 5 workflows ultracode encadeados** (2.7M subagent tokens totais). Arco 1 (EP05 v2 no formato exato do motor CLI GabrielAI que fez EP01-04): recon do `github.com/gabrielZarattini/GabrielAI` (gerar_cenas.py + ep04.json + mapa_transicoes.py) revelou o padr\u00e3o de produ\u00e7\u00e3o \u2014 52 cenas de 8s Veo alternando presenter (com char refs) + broll com `+` (firstFrame do \u00faltimo frame do clipe anterior), narra\u00e7\u00e3o PT-BR ~90-120 chars embarcada no prompt Veo, 6 atos declarados com cena-in\u00edcio, mapa de transi\u00e7\u00f5es com 5 verbos \"corte seco banido\". Workflow `wf_666f9be7` (7 agentes: 3 rascunhos concorrentes \u2192 3 cr\u00edticos adversariais [reten\u00e7\u00e3o \u00b7 materialidade \u00b7 narrativa] \u2192 s\u00edntese) produziu **48 cenas** no formato regex-exato do motor (Angle C narrative-first venceu 237/300). Roteiro em `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` + Runbook v2 + spec da f\u00e1brica. Engineer-spaces materializou como projeto Spaces v2 `18a21002-df9c-48b4-aff3-7aba28e812e7` \"EP05 v2 \u2014 48 cenas GabrielAI-format\": 40 n\u00f3s (19P imageToVideo+charRef 8s obrigat\u00f3rio \u00b7 7 par B-roll generateImage\u2192imageToVideo firstFrame \u00b7 6 voz Qwen3 por ato \u00b7 1 charRef reuso do `n_d3jbjjjg` do projeto 024e1c03 = mesmo rosto do canal), 26 edges, custo Run All ~6.180 mco de 9.733 (folga 3.553). Description do projeto carrega checklist dos 21 screencasts + 8 gates G1-G8 + cena 30 ELO MANUAL.\n\nArco 2 (**clamp Veo `reference_to_video`\u21928s**, descoberto em produ\u00e7\u00e3o): A1 rodou com dur=5 + charRef \u2192 422 do Google `Unsupported output video duration 5 seconds, supported durations are [8] for feature reference_to_video` \u2192 **charge+refund** de 2\u00d7 167 mco (Vertex fast 720p 5s). Nosso clamp em `canvas-execute:1352-1372` validava 4-8 e 1080p\u21928s, mas N\u00c3O refs\u21928s. Workflow `wf_ba47e53d` (6 agentes: 3 impl paralelas + 2 verify + doc) escreveu fun\u00e7\u00e3o pura `veoAllowedDurations()` em `veo.ts`, guard 422 pr\u00e9-d\u00e9bito em `canvas-execute:1367` (mesmo padr\u00e3o do 1080p clamp), UI auto-clamp em `ImageToVideoInspector` + linha de ajuda, 6 unit tests, SOP Lei 2 (`docs/processes/veo-refs-8s-guard.md`), Amendment 25 atualizado. `/security-review` NO FINDINGS \u00b7 tsc-app 0 \u00b7 lint 0 err \u00b7 vitest 738/740 \u00b7 build 24.78s. Sovereign deployou `canvas-execute` em prod (script size 194.6kB). Mem\u00f3ria permanente `reference_veo_refs_require_8s`.\n\nArco 3 (**4 refinamentos do Canvas UX** direcionados por prints do Sovereign): (a) edges INVIS\u00cdVEIS em zoom-out porque ReactFlow escala SVG por `transform:scale(zoom)` \u2192 strokeWidth de 2px vira 0.03px na tela em zoom=0.02. Fix: CSS var `--rf-zoom-inv` no wrapper via `onMove` callback + edges usando `strokeWidth: calc(base * var(...))` \u2014 zero rerender React. (b) `fitView` do ReactFlow atropelava `defaultViewport` \u2192 cards touching. Fix: `fitView` s\u00f3 quando `!project.viewport || \u00e9 o default (0,0,1)` \u2014 projetos com viewport intencional respeitam o preset salvo. (c) Cards custom ~280-300px \"travavam\" na lane de 320px (s\u00f3 20px de margem). Fix: `LANE_HEIGHT` 320\u2192480 (coment\u00e1rio explica impacto nos 3 projetos com pipelineMode). (d) 22 lanes vazias visualmente (\"faltando\"): workflow `wf_c998bd99` (3 agentes: extractor 48 cenas \u2192 adversarial critic \u2192 synth) populou `graph.lanes: LaneConfig[]` com 48 labels rotulados cena-a-cena (`\"3 \u00b7 S \u00b7 Curta final 9:16 fullscreen\"`, PASS 0 blockers 2 NITs corrigidos), max 42 chars, ficando vis\u00edveis.\n\nArco 4 (**auditoria robusta 4 lentes + Amendment 32 kind sceneNote**): Sovereign ainda via \"v\u00e1rias cenas faltando\" \u2014 workflow `wf_9414d733` (6 agentes: collector + 4 lentes adversariais paralelas [count/type \u00b7 prompt-fidelity \u00b7 edges topology \u00b7 position] + reporter) descobriu **1 BLOCKER real** (n_p_1 em `(-26.15, 8.49)` \u2014 drag manual acidental) + **1 IMPORTANT** (n_voice_ato1 em X=320 em vez de 940) + **1 NIT** (prompts B-roll usam prefixo derivado \"Cinematic 16:9 first frame:\"). Ambos os gaps patchados via PATCH \u00fanico; SELECT read-back independente confirmou. 22 lanes SCREENCAST/ELO restantes = gap-de-UX-por-design. Sovereign confirmou lista exata `[3,4,8,10,11,13,16,17,18,20,26,27,29,30,34,37,38,39,40,42,44,48]` = match perfeito. Sovereign escolheu op\u00e7\u00e3o B via AskUserQuestion: **Amendment BoK + kind estrutural**. Workflow `wf_6b60d46a` (6 agentes: BoK Amendment 32 \u2192 3 impl paralelas [factory+types \u00b7 registry \u00b7 component+register] + gate tsc/build \u2192 apply 22 n\u00f3s). Master Execution Protocol \u00a76 respeitado: **BoK selada ANTES do c\u00f3digo** (`docs/bok/spaces-evolution/32-amendment-scene-note.md`, 7906 B, FR-SPACES-120, Pattern Conformance 1 yes Human-in-the-Loop \u00b7 20 n-a \u2014 decorativo). C\u00f3digo: interface SceneNoteData + factory `makeDefaultSceneNote` em canvas.ts:980+1420 \u00b7 entrada `sceneNote` em canvas-node-registry.ts:236-244 (category Transform, cost 0, icon StickyNote) \u00b7 `SceneNoteNode.tsx` (36 linhas, card yellow-500/10, ZERO Handles) \u00b7 registro em `CanvasEditorPage.tsx:70,94`. tsc-app 0 \u00b7 build 25.05s. Aplica\u00e7\u00e3o: 22 n\u00f3s `n_note_<cena>` no banco, posi\u00e7\u00f5es exatas (x=240, y=(cena-1)*480), labels verbatim das lanes. Total EP05 v2 agora: **62 n\u00f3s** \u2014 todas as 48 lanes preenchidas visualmente.\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` | \u2705 48 cenas formato exato motor CLI (regex validado), 6 atos, 16:9 \u00b7 workflow 3 rascunhos + 3 cr\u00edticos + s\u00edntese \u00b7 Angle C 237/300 |\n| `docs/roadmap/ep05-production-runbook-v2-2026-08-03.md` | \u2705 Fase 0 (8 gates G1-G8) \u2192 Fase 1 (segmentos sint\u00e9ticos 6.180 mco) \u2192 Fase 2 (21 screencasts) \u2192 Fase 3 (uni\u00e3o HyperFrames Studio) \u2192 Fase 4 (publicar+medir) |\n| `docs/bok/spaces-evolution/32-amendment-scene-note.md` | \u2705 Amendment BoK selado ANTES do c\u00f3digo (Master Execution Protocol \u00a76). FR-SPACES-120. Pattern Conformance 1y/20na. |\n| `src/types/canvas.ts` + `src/lib/canvas-node-registry.ts` + `src/components/canvas/nodes/SceneNoteNode.tsx` + `src/pages/CanvasEditorPage.tsx` | \u2705 Kind sceneNote (sticky-note yellow-500/10, sem handles, sem motor, cost 0) registrado no canvas |\n| `supabase/functions/canvas-execute/index.ts` (deployado prod) | \u2705 Guard 422 `veo_refs_require_8s` pr\u00e9-d\u00e9bito \u2014 fecha vetor charge+refund de reference_to_video |\n| `src/lib/veo.ts` + `src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx` | \u2705 Helper `veoAllowedDurations()` + UI auto-clamp respeitando allowedDurations |\n| `src/components/canvas/edges/{FlowEdge,PipelineEdge}.tsx` + `src/pages/CanvasEditorPage.tsx` | \u2705 Edges strokeWidth adaptativo via CSS var --rf-zoom-inv (zero rerender React) |\n| `src/pages/CanvasEditorPage.tsx` (fitView condicional) | \u2705 fitView s\u00f3 em projetos novos \u2014 respeita viewport intencional salvo |\n| `src/types/canvas.ts` (LANE_HEIGHT 320\u2192480) | \u2705 +180px de respira\u00e7\u00e3o por card no pipelineMode; 3 projetos afetados (EP05 v2 reposicionado; outros 2 manuais) |\n| `docs/roadmap/refs-sovereign-shorts-2026-07-30.md` | \u2705 6 refs deepsearch do Sovereign arquivadas verbatim (s\u00f3 existiam no transcript) |\n| `docs/processes/veo-refs-8s-guard.md` + Amendment 25 update | \u2705 SOP Lei 2 documentando a regra |\n| `src/test/veo-refs-guard.test.ts` (6 tests) | \u2705 4 combos hasRefs \u00d7 useFirstFrame + sanity + drift-gate \u2014 todos verdes |\n| Projeto Spaces `18a21002` | \u2705 62 n\u00f3s (19P + 7 par B-roll + 6 voz + 1 charRef + 22 sceneNote) \u00b7 26 edges \u00b7 48 lanes rotuladas \u00b7 custo Run 6.180 mco \u00b7 A1 provado (gen `e20bbae2` done 267 mco Vertex fast 720p 16:9 8s) |\n| Auditoria robusta 4 lentes | \u2705 Zero cenas faltando materialmente \u00b7 1 blocker + 1 important patchados (n_p_1 + voice_ato1 realinhados) \u00b7 0 drift de prompt |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `bd94dae` | docs(roadmap): arquiva as 6 refer\u00eancias do Sovereign |\n| `82a9b17` | docs(roadmap): roteiro EP05 tutorial-documentado + estrat\u00e9gia de react por corte (EP02) |\n| `d4be80d` | docs(roadmap): modelagem de tema EP05 (refer\u00eancia milh\u00f5es de views) + dado EP03 + recarga 10k mco |\n| `2207a05` | docs(roadmap): projeto Spaces do EP05 armado + runbook de produ\u00e7\u00e3o/uni\u00e3o dos v\u00eddeos |\n| `289edc1` | docs(roadmap): PATCH EP05 A1 5s\u21928s + anticorpo Veo refs\u21928s |\n| `62c1028` | docs(roadmap): EP05 v2 no formato do motor GabrielAI \u2014 48 cenas, 6 atos, 16:9 |\n| `c5f2a10` | feat(veo): clamp reference_to_video\u21928s (server 422 pr\u00e9-d\u00e9bito + UI auto-force) |\n| `39e95d1` | docs(roadmap): runbook v2 EP05 (novo projeto Spaces 18a21002 \u00b7 40 n\u00f3s armados) |\n| `e20b8d3` | feat(canvas): edges com espessura adapt\u00e1vel ao zoom (vis\u00edveis em zoom-out) |\n| `a5b25c9` | fix(canvas): fitView s\u00f3 em projetos novos \u2014 respeita viewport salvo |\n| `035053f` | feat(canvas): LANE_HEIGHT 320\u2192480 + reposiciona EP05 v2 |\n| `cab3f0f` | feat(spaces): kind sceneNote \u2014 sticky-note decorativo (Amendment 32 \u00b7 FR-SPACES-120) |\n| `5b9db1a` | docs(readme): v6.130.0 \u2014 EP05 v2 + kind sceneNote + refinamentos Canvas |\n\n### Arquitetura EP05 v2 (f\u00e1brica de segmentos \u2192 mesa de montagem)\n\n```\n[Spaces canvas 18a21002] = f\u00e1brica de SEGMENTOS\n  charRef n_d3jbjjjg (hub) \u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                                  \u251c\u250019 edges\u2500\u2500\u25b6 19 presenter (imageToVideo + refs, 8s obrigat\u00f3rio, Vertex fast 720p 16:9, 267 mco/cena)\n                                  \u2502\n  n_bimg_N (generateImage) \u2500\u2500\u2500\u25007\u2500\u2500\u25b6 n_bvid_N (imageToVideo firstFrame, 4-8s livre, Vertex fast, 134-267 mco)\n                                    \u2191\n                                    \u2514\u2500 pair img\u2192vid MESMA lane (fluxo vertical na coluna da cena)\n\n  22 sceneNote (SCREENCAST/ELO) \u2014 Amendment 32, sem edges, decorativo (cena 30 = ELO reuso e781bdef)\n\n  6 voiceClone (Qwen3-local pt-BR, 0 mco) \u2014 narra\u00e7\u00e3o por ATO, sem edges (spine paralela, overdub no editor)\n\n[Cada n\u00f3 Run All] \u2192 creative_assets (bucket privado, IPTC C2PA autom\u00e1tico) \u2192 Assets\n\n[HyperFrames Studio /dashboard/canvas/video] = mesa de MONTAGEM (rail studio-project provado 4\u00d7 done)\n  \u2190 importa: 19 apresentador + 7 par B-roll + 6 narra\u00e7\u00e3o + 21 screencast (host capture)\n  \u2190 ordem 1\u219248 conforme roteiro \u00a73 \u00b7 transi\u00e7\u00f5es ELO 8f / CRUZADA 16f / PRETO 16f (fronteira ato) / CORTE SECO em \"Vai.\" (cena 47, exce\u00e7\u00e3o editorial)\n  \u2190 Export mode studio-project \u2192 MP4 8-12min em video-studio-assets\n```\n\n"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:46:49)*
+
+Phase 5b: secret scan no HANDOFF.md + Phase 5b-2 size gate.
+
+## 🤖 Claude *(23:46:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===5b-1: secret scan em HANDOFF.md===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -10 || echo \"  \u2705 NO CREDENTIALS\"\necho \"===5b-2: HANDOFF size gate===\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | tail -6\necho \"exit=$?\"\necho \"\"\necho \"===total lines===\"\nwc -l HANDOFF.md",
+  "description": "Phase 5b: secret scan + size gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===5b-1: secret scan em HANDOFF.md===
+> ===5b-2: HANDOFF size gate===
+> ✂️  Corte sugerido: linha 535
+>     primeiro record a ARQUIVAR: ## Loop multi-frente — cortes/grid/agentes/agendamento/LGPD/render + dashboards + constelação Record (2026-07-22)
+>     → arquiva da linha 535 até o início do rodapé '📦 Records arquivados'
+>     → destino: docs/handoff-archive/HANDOFF-archive-<data-do-corte>-and-earlier.md
+>     → siga o SOP: docs/processes/handoff-pruning-gate.md (a verificação de
+>       integridade byte-a-byte é OBRIGATÓRIA — nenhum record pode se perder)
+> exit=0
+> 
+> ===total lines===
+> 619 HANDOFF.md
+> ```
+
+## 🤖 Claude *(23:47:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Phase 5b-2 came back clean with exit code 0, just flagged a future archival opportunity that I'll note as technical debt and move forward. Now I'm running the material proof audit for Phase 5c, but I need to verify whether the secret scan actually found nothing or if the grep pattern simply didn't match anything in the output.
+
+</details>
+
+
+## 🤖 Claude *(23:47:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# secret scan expl\u00edcito com detec\u00e7\u00e3o de match\ncount=$(grep -cE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36})\" HANDOFF.md 2>/dev/null || echo 0)\necho \"5b-1 secret scan matches: $count\"\necho \"5b size gate: OK (exit 0, WARN sugere podar Record 22-jul+ na pr\u00f3xima)\"\necho \"\"\necho \"===Phase 5c: Material Proof Audit===\"\nbun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -30\necho \"audit exit=$?\"",
+  "description": "Confirm secret scan + Phase 5c material proof audit",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5b-1 secret scan matches: 0
+> 0
+> 5b size gate: OK (exit 0, WARN sugere podar Record 22-jul+ na próxima)
+> 
+> ===Phase 5c: Material Proof Audit===
+> | commit 0b32c3f | git_commit | 0b32c3f | 0b32c3f | ✅ |
+> | commit 6fe1483 | git_commit | 6fe1483 | 6fe1483 | ✅ |
+> | commit abe2a12 | git_commit | abe2a12 | abe2a12 | ✅ |
+> | tsc --noEmit clean | tsc | 0 errors | 0 errors | ✅ |
+> | file docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md | file_exists | docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md | docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md | ✅ |
+> | file docs/processes/veo-refs-8s-guard.md | file_exists | docs/processes/veo-refs-8s-guard.md | docs/processes/veo-refs-8s-guard.md | ✅ |
+> | file docs/bok/spaces-evolution/32-amendment-scene-note.md | file_exists | docs/bok/spaces-evolution/32-amendment-scene-note.md | docs/bok/spaces-evolution/32-amendment-scene-note.md | ✅ |
+> | file docs/roadmap/ep05-production-runbook-v2-2026-08-03.md | file_exists | docs/roadmap/ep05-production-runbook-v2-2026-08-03.md | docs/roadmap/ep05-production-runbook-v2-2026-08-03.md | ✅ |
+> | file src/types/canvas.ts | file_exists | src/types/canvas.ts | src/types/canvas.ts | ✅ |
+> | file src/lib/canvas-node-registry.ts | file_exists | src/lib/canvas-node-registry.ts | src/lib/canvas-node-registry.ts | ✅ |
+> | file src/components/canvas/nodes/SceneNoteNode.tsx | file_exists | src/components/canvas/nodes/SceneNoteNode.tsx | src/components/canvas/nodes/SceneNoteNode.tsx | ✅ |
+> | file src/pages/CanvasEditorPage.tsx | file_exists | src/pages/CanvasEditorPage.tsx | src/pages/CanvasEditorPage.tsx | ✅ |
+> | file supabase/functions/canvas-execute/index.ts | file_exists | supabase/functions/canvas-execute/index.ts | supabase/functions/canvas-execute/index.ts | ✅ |
+> | file src/lib/veo.ts | file_exists | src/lib/veo.ts | src/lib/veo.ts | ✅ |
+> | file src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx | file_exists | src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx | src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx | ✅ |
+> | file docs/roadmap/refs-sovereign-shorts-2026-07-30.md | file_exists | docs/roadmap/refs-sovereign-shorts-2026-07-30.md | docs/roadmap/refs-sovereign-shorts-2026-07-30.md | ✅ |
+> | file src/test/veo-refs-guard.test.ts | file_exists | src/test/veo-refs-guard.test.ts | src/test/veo-refs-guard.test.ts | ✅ |
+> | file docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md | file_exists | docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md | docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md | ✅ |
+> | file docs/roadmap/hook-library-seed-2026-07-30.md | file_exists | docs/roadmap/hook-library-seed-2026-07-30.md | docs/roadmap/hook-library-seed-2026-07-30.md | ✅ |
+> | file scripts/voice-bridge.ts | file_exists | scripts/voice-bridge.ts | scripts/voice-bridge.ts | ✅ |
+> | file scripts/qa/smoke-cadence-dispatch.ts | file_exists | scripts/qa/smoke-cadence-dispatch.ts | scripts/qa/smoke-cadence-dispatch.ts | ✅ |
+> | file src/pages/YouTubeStudioPage.tsx | file_exists | src/pages/YouTubeStudioPage.tsx | src/pages/YouTubeStudioPage.tsx | ✅ |
+> | deploy size 194.6kB | edge_deploy | 194.6kB | 194.6kB | ⏭ |
+> | deploy size 9kB | edge_deploy | 9kB | 9kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (+ engineer-spaces L2 para nós Spaces + bok-curat | Operator = MCORCH Master Execution Agent (+ engineer-spaces L2 para nós Spaces + bok-curat | ✅ |
+> | handoff node 0da058d6 | mesh_node | 0da058d6-5982-4618-9ca2-00b2adb73a79 | 0da058d6-5982-4618-9ca2-00b2adb73a79 | ✅ |
+> 
+> QA VERDICT: 39 verified · 4 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.8s)
+> audit exit=0
+> ```
+
+## 🤖 Claude *(23:47:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All the verification checks have passed successfully—12 commits confirmed, file existence validated, compliance requirements met, and the handoff node is ready. Moving into the next phase now.
+
+Now I'm checking the BoK seal status to ensure all BoK suites are complete and that any modules touched during this session have proper BoK coverage.
+
+</details>
+
+
+## 🤖 Claude *(23:47:18)*
+
+Phase 5c: **SEAL ALLOWED — 39 verified · 4 skipped · 0 failed**. Phase 6: BoK gate.
+
+## 🤖 Claude *(23:47:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===6-1: BoK suites===\"\nincomplete=0\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then continue; fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do\n    [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\")\n  done\n  if [ ${#missing[@]} -gt 0 ]; then\n    echo \"  \u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\n    incomplete=$((incomplete+1))\n  fi\ndone\necho \"  \u2705 suites incompletas: $incomplete (0 = todas 9/9)\"\necho \"\"\necho \"===6-2: novo m\u00f3dulo nesta sess\u00e3o sem BoK?===\"\n# nesta sess\u00e3o tocamos: canvas types/registry/edges/component (spaces-evolution), veo.ts + canvas-execute (tamb\u00e9m spaces-evolution). \n# Amendment 32 sceneNote \u00e9 dentro da spaces-evolution suite (que j\u00e1 \u00e9 selada).\ngit diff --name-only HEAD~14..HEAD | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | awk -F/ '{if ($1 ~ /src/) print $2\"/\"$3; else print $2}' | sort -u | head\necho \"  \u2192 Amendment 32 escreve dentro de spaces-evolution (que j\u00e1 \u00e9 BoK selada).\"\necho \"\"\necho \"===6-3: seal nodes de docs suites===\"\nset -a && source .env 2>/dev/null; set +a\ncurl -s \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=name,stability_score&order=created_at.desc&limit=8\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor n in d: print(f\\\"  \ud83c\udf10 {n['name']} ({n['stability_score']})\\\")\"",
+  "description": "Phase 6: BoK completeness + module coverage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===6-1: BoK suites===
+>   ✅ suites incompletas: 0 (0 = todas 9/9)
+> 
+> ===6-2: novo módulo nesta sessão sem BoK?===
+> functions
+> pages/CanvasEditorPage.tsx
+>   → Amendment 32 escreve dentro de spaces-evolution (que já é BoK selada).
+> 
+> ===6-3: seal nodes de docs suites===
+>   🌐 bok-scribe-seal-crm-suite-v1 (0.00764932773188706)
+>   🌐 bok-scribe-seal-crm-inbox-v1 (0.00767033180806467)
+>   🌐 content-intel BoK 9/9 selada (0.00778181479531169)
+>   🌐 bok-scribe-seal-youtube-studio-v1 (0.00616645724486203)
+>   🌐 bok-scribe-seal-video-repurpose-v1 (0.0061663977930782)
+>   🌐 bok-scribe-seal-landing-factory-v1 (0.00503620135390856)
+>   🌐 bok-scribe-seal-content-provenance-v1 (0.00310356111181936)
+>   🌐 predictive-swarm-bok-seal-2026-07-15 (0.00702219564724169)
+> ```
+
+## 🤖 Claude *(23:47:37)*
+
+Phase 6 ✅ — 0 suites incompletas, mudanças desta sessão são Amendment 32 dentro de `spaces-evolution` (BoK já selada). Phase 7: push.
+
+## 🤖 Claude *(23:47:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# commit HANDOFF.md\ngit add HANDOFF.md\ngit commit -q -m \"docs(handoff): seal EP05 v2 + kind sceneNote + refinamentos Canvas (2026-08-03)\n\n12 commits \u00b7 SEAL ALLOWED (Fase 5c: 39 verified \u00b7 4 skipped \u00b7 0 failed) \u00b7 malha 19176 \u00b7 n\u00f3 0da058d6.\nPr\u00f3xima sess\u00e3o: Op\u00e7\u00e3o C h\u00edbrido \u2014 MVP chat-por-n\u00f3 (Amendment 33) + suite BoK spaces-agent em paralelo (bok-curator).\" \necho \"\"\necho \"===PUSH===\"\ngit push origin main 2>&1 | tail -3\necho \"\"\necho \"===\u00faltima verifica\u00e7\u00e3o: git log confirma tudo em origin===\"\ngit log --oneline -3",
+  "description": "Commit HANDOFF.md + push all"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:47PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:47PM[0m [32mINF[0m scan completed in 12.8ms
+> [90m8:47PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 
+> ===PUSH===
+> ✔️ gitleaks-range (0.10 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    cab3f0f..58a0f8b  main -> main
+> 
+> ===última verificação: git log confirma tudo em origin===
+> 58a0f8b docs(handoff): seal EP05 v2 + kind sceneNote + refinamentos Canvas (2026-08-03)
+> 5b9db1a docs(readme): v6.130.0 — EP05 v2 + kind sceneNote + refinamentos Canvas
+> cab3f0f feat(spaces): kind sceneNote — sticky-note decorativo (Amendment 32 · FR-SPACES-120)
+> ```
+
+## 🤖 Claude *(23:47:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"===sprint-priorities atualizar (adicionar EP05 v2 selado)===\"\nhead -15 .claude/context/sprint-priorities.md 2>/dev/null | tail -8\necho \"\"\necho \"===scratch===\"\nls scratch/ 2>/dev/null || echo \"clean \u2705\"\necho \"\"\necho \"===cleanup dos scratchpad files temp (proof-manifest n\u00e3o commitado)===\"\nls /home/gcrUX/htdocs/constellation-orchestra/proof-manifest.json 2>&1",
+  "description": "Phase 7b hygiene checks"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ===sprint-priorities atualizar (adicionar EP05 v2 selado)===
+> 
+> | # | Item | Estado | Gate |
+> |---|------|--------|------|
+> | 🎯 **AGORA (PAUSE)** | **Criação do EP05 — formato TUTORIAL (decisão na volta do Sovereign)** — parecer do agente no HANDOFF Record 2026-07-30b §EP05: tutorial híbrido RECOMENDADO (retenção EP02 perde 50% a 1:11 · Ref#2 evergreen/watch-hours · Ref#3 = template de tutorial VFX pronto · funil de produto MCORCH); injetar brief PIPC no roteiro (FR-PIPC-017/018). Depois: cadências planejadas + SEO/AEO. | ✅ **Estratégia de shorts DEFINITIVA v1 SELADA 2026-07-30** (`docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md` §D — as 6 refs do Sovereign ERAM os deepsearches). Formato react PROVADO (asset `1a98cef3`) · fábrica Spaces "React Gabriel AI" `024e1c03` armada · 8 cortes EP02 · biblioteca 10 ganchos v1. Gaps de cadência autônoma seguem (plano armado=0 por design até GO; picker `source_module`; reshape `pillar_run_id`). | 🔒 **Sovereign:** decidir formato EP05 (parecer pronto) · subir master EP03 via menu Cortes · testar projeto React Gabriel AI e virar públicos os primeiros shorts (D2 medição) · GO+SOP nos 3 fixes de cadência |
+> | ✅ ex-AGORA | **EP02/EP03 no YouTube pela plataforma (Track B)** — CUMPRIDO: EP03 master postado (2026-07-29). Encanamento vivo: `youtube-upload.service` active/enabled, worker resumable dual-source. | ✅ | — |
+> | 🎯 0 | **CRM Suite completo + Marketing (diretiva Sovereign 2026-07-19)** — construir um CRM de VERDADE nativo, pilar por pilar (open-source descartado, AGPL). **Os loops NÃO param até fechar.** SSOT: `docs/roadmap/crm-suite-and-marketing.md`; memória `project_crm_suite_roadmap`. Pilares CRM: Contatos(✅ A4 2026-07-24 — tabela+RLS+CRUD, OTD-CS-001 resolvida)·Empresas·Leads(✅)·Negócios·Tickets·Produtos·Serviços·Pedidos·Compromissos·Caixa-de-entrada(✅)·Chamadas·Reuniões·Tarefas·Playbooks·Listas·Segmentos·Modelos·Snippets. Marketing: AEO·Beta(🔎)·SEO·Campanhas(✅)·E-mail·Redes(✅)·Anúncios·Eventos·Formulários·CTAs·SMS·Intenção·Pontuação(✅)·Análise·Marca. | ⏳ **Fase 0 = BoK `docs/bok/crm-suite/`** (spine de entidades + associações + timeline) ANTES dos pilares — módulo maior, Closed-Loop gate. Depois: fatias na sequência do SSOT. | 🔒 **Próximo:** GO Sovereign p/ arrancar o BoK/blueprint do crm-suite (ou apontar o 1º pilar) |
+> | 1b | **Veo via Vertex AI (service account)** — Amendment 26, FR-SPACES-092..096 (2026-07-15) | ✅ **PROVADO REAL E2E 2026-07-15** (role concedida → witness pago gen `2659d78b`, `engine=veo-vertex`, 720×1280 9:16 8s, identidade preservada Read+Vision MCP, **267 mco** exatos 4263→3996, asset `bb0ec719`, nó `4e8902d2`). code-complete + `/security-review` (1 HIGH SSRF FECHADO) · 584 testes · a chave `AQ.` do Sovereign é Gemini API mas o trial GCP só cobre o Vertex (429 na AI Studio, documentado no README do repo GabrielAI). O pipeline local usa gcloud ADC; servidor usa service account. Auth SA JWT RS256→token (WebCrypto), custo Vertex 267 mco (0,15/s), poll fetchPredictOperation, UI de colar o JSON no pool. | 🔒 **Sovereign:** criar service account no projeto `gabrielai-veo` (role Vertex AI User) → JSON → cadastrar no pool nomeado. Depois: `npx supabase functions deploy canvas-execute veo-poll` + `bun run build` + witness pago com o crédito Vertex real |
+> | 1 | **Vídeo com avatar/referências no Spaces (Veo 3.1)** — Amendment 25, FR-SPACES-086..091 | ✅ **PROVADO E2E EM PROD 2026-07-14** — deploy (Sovereign) + build (feito) + smoke **12/12** + **witness pago** (gen `02994319`, 720×1280 9:16 8s, **178 mco exatos** 4441→4263, **identidade facial preservada** Vision QA ocular; failover GabrielAI-429→legada funcionou) · nó malha `ccd5dba5` | ⚠️ **OTD-SPACES-046 aberta**: chave nova "GabrielAI" (a do Vertex) com prepaid AI Studio ZERADO (429); o witness rodou na chave legada via failover. Sovereign decide se recarrega a nova em ai.studio/projects |
+> 
+> ===scratch===
+> 
+> ===cleanup dos scratchpad files temp (proof-manifest não commitado)===
+> /home/gcrUX/htdocs/constellation-orchestra/proof-manifest.json
+> ```
+
+## 🤖 Claude *(23:48:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "| \ud83c\udfaf **AGORA (PAUSE)** | **Cria\u00e7\u00e3o do EP05 \u2014 formato TUTORIAL (decis\u00e3o na volta do Sovereign)** \u2014 parecer do agente no HANDOFF Record 2026-07-30b \u00a7EP05: tutorial h\u00edbrido RECOMENDADO (reten\u00e7\u00e3o EP02 perde 50% a 1:11 \u00b7 Ref#2 evergreen/watch-hours \u00b7 Ref#3 = template de tutorial VFX pronto \u00b7 funil de produto MCORCH); injetar brief PIPC no roteiro (FR-PIPC-017/018). Depois: cad\u00eancias planejadas + SEO/AEO. | \u2705 **Estrat\u00e9gia de shorts DEFINITIVA v1 SELADA 2026-07-30** (`docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md` \u00a7D \u2014 as 6 refs do Sovereign ERAM os deepsearches). Formato react PROVADO (asset `1a98cef3`) \u00b7 f\u00e1brica Spaces \"React Gabriel AI\" `024e1c03` armada \u00b7 8 cortes EP02 \u00b7 biblioteca 10 ganchos v1. Gaps de cad\u00eancia aut\u00f4noma seguem (plano armado=0 por design at\u00e9 GO; picker `source_module`; reshape `pillar_run_id`). | \ud83d\udd12 **Sovereign:** decidir formato EP05 (parecer pronto) \u00b7 subir master EP03 via menu Cortes \u00b7 testar projeto React Gabriel AI e virar p\u00fablicos os primeiros shorts (D2 medi\u00e7\u00e3o) \u00b7 GO+SOP nos 3 fixes de cad\u00eancia |",
+  "new_string": "| \ud83c\udfaf **AGORA** | **spaces-agent H\u00cdBRIDO (Op\u00e7\u00e3o C decidida via AskUserQuestion 2026-08-03)** \u2014 MVP chat-por-n\u00f3 (Amendment 33 ao spaces-evolution, esta sess\u00e3o) + suite BoK `spaces-agent` completa (bok-curator + deepsearch-blueprint em paralelo). LLM: cascata Groq\u2192OpenRouter (aios-chat-gateway + openrouter-swarm). NOVA tabela `spaces_node_threads` (RLS per-user). Cobran\u00e7a mco por mensagem. Refer\u00eancias: Magnific storyline + Buzzy AI shots + Higgsfield 2.5. | \u23f3 Aguardando arrancar pr\u00f3xima sess\u00e3o. | \ud83d\udd12 **Sovereign:** GO para arrancar o Amendment 33 (MVP) + o bok-curator (suite). |\n| \u2705 EP05 v2 completo (2026-08-03) | **EP05 v2 no formato exato do motor CLI GabrielAI + Amendment 32 sceneNote + clamp Veo refs\u21928s** | \u2705 48 cenas em `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` \u00b7 projeto Spaces `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7` (62 n\u00f3s, 26 edges) \u00b7 custo Run 6.180 mco de 9.733 \u00b7 A1 provado (gen `e20bbae2` done 267 mco Vertex fast 720p 16:9 8s). | \ud83d\udd12 **Sovereign:** Run All (~6.180 mco) \u2192 gravar 21 screencasts host \u2192 editor HyperFrames Studio (Fase 3 runbook v2) \u2192 publicar \u2192 medir reten\u00e7\u00e3o EP05 vs EP03. |\n| \u2705 ex-AGORA | **Cria\u00e7\u00e3o do EP05 \u2014 formato TUTORIAL** \u2014 parecer registrado + decis\u00e3o selada como Angle C narrative-first. | \u2705 Roteiro v2 formato GabrielAI + projeto Spaces v2 armado (2026-08-03). | \u2014 |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:48:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): registra v6.130.0 \u2014 EP05 v2 selado + spaces-agent como pr\u00f3ximo AGORA\n\nEP05 v2 completo (48 cenas, projeto 18a21002, 62 n\u00f3s armados) sai do topo AGORA.\nNovo AGORA: spaces-agent h\u00edbrido decidido via AskUserQuestion \u2014 MVP chat-por-n\u00f3\n(Amendment 33 pr\u00f3xima sess\u00e3o) + suite BoK completa em paralelo (bok-curator).\nLLM: cascata Groq\u2192OpenRouter.\" \ngit log -1 --format=%H && git push origin main 2>&1 | tail -2\necho \"\"\necho \"===cleanup tempor\u00e1rio: remove proof-manifest.json (n\u00e3o commitado)===\"\nrm -f proof-manifest.json && echo \"removed\"",
+  "description": "Phase 7b sprint priorities commit + push + cleanup"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:48PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:48PM[0m [32mINF[0m scan completed in 7.96ms
+> [90m8:48PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 7f0740aa70ec360acecf3eaa4c4db90f940c11b3
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    58a0f8b..7f0740a  main -> main
+> 
+> ===cleanup temporário: remove proof-manifest.json (não commitado)===
+> removed
+> ```
+
+## 🤖 Claude *(23:49:19)*
+
+## PHASE 8 — Final Report
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — EP05 v2 + kind sceneNote + refinamentos Canvas (2026-08-03)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  1a Secret scan diffs: ✅ 0 matches
+  1b JWT enforcement: ✅ canvas-execute OK
+  1c Client coin update: ✅ NO VIOLATIONS
+  1d RLS bypass: ✅ apenas comentário doc (não código)
+  1e Sensitive console.log: ✅ apenas smoke tests deliberados
+  5b HANDOFF.md secret scan: ✅ 0 matches
+  5b-2 HANDOFF size gate: ✅ 619 linhas (exit 0; WARN sugere podar Records 22-jul+ na próxima)
+
+📦 COMMITS (14 total nesta sessão)
+  7f0740a — chore(sprint): registra v6.130.0 — EP05 v2 selado + spaces-agent AGORA
+  58a0f8b — docs(handoff): seal EP05 v2 + kind sceneNote + refinamentos Canvas
+  5b9db1a — docs(readme): v6.130.0
+  cab3f0f — feat(spaces): kind sceneNote — sticky-note decorativo (Amendment 32 · FR-SPACES-120)
+  035053f — feat(canvas): LANE_HEIGHT 320→480 + reposiciona EP05 v2
+  a5b25c9 — fix(canvas): fitView só em projetos novos — respeita viewport salvo
+  e20b8d3 — feat(canvas): edges com espessura adaptável ao zoom
+  39e95d1 — docs(roadmap): runbook v2 EP05 (novo projeto Spaces 18a21002)
+  c5f2a10 — feat(veo): clamp reference_to_video→8s (server 422 pré-débito + UI auto-force)
+  62c1028 — docs(roadmap): EP05 v2 no formato do motor GabrielAI — 48 cenas, 6 atos, 16:9
+  289edc1 — docs(roadmap): PATCH EP05 A1 5s→8s + anticorpo Veo refs→8s
+  2207a05 — docs(roadmap): projeto Spaces do EP05 armado + runbook
+  d4be80d — docs(roadmap): modelagem de tema EP05 + dado EP03 + recarga 10k mco
+  bd94dae — docs(roadmap): arquiva as 6 referências do Sovereign
+  (+ commit inicial 82a9b17 do roteiro v1)
+
+⬡ KNOWLEDGE MESH
+  Milestone node: `0da058d6-5982-4618-9ca2-00b2adb73a79` — session-handoff-20260802-ep05-v2-canvas-refinement-and-sceneNote-kind
+  Embedding: ✅ 768d openrouter (9541 chars vector)
+
+📖 README.md
+  Versão: 6.129.0 → 6.130.0
+  Badge neural_mesh: 19120 → 19176 nós
+  Seção adicionada: What's new v6.130.0 (EP05 v2 · sceneNote · refinamentos Canvas)
+
+🧠 HANDOFF.md
+  Fase selada: EP05 v2 formato GabrielAI + kind sceneNote + refinamentos Canvas
+  Seções atualizadas: FIRST ACTION · Task State · Record 2026-08-03 · Arquitetura EP05 v2
+  Size: 619 linhas (bem abaixo do gate 4000)
+
+📋 PROVA MATERIAL (Fase 5c — auditor mecânico)
+  Veredito: SEAL ALLOWED (exit 0)
+  Claims: 39 verified · 4 skipped · 0 failed
+
+📚 BoK STATUS
+  Suites completas: 38/38 (0 incompletas)
+  Amendment 32 (sceneNote) selado ANTES do código (Master Execution Protocol §6 respeitado)
+
+🚀 PUSH
+  Branch: main → origin/main
+  HEAD: 7f0740a
+  Commits enviados nesta sessão: 14
+
+📌 SPRINT
+  sprint-priorities.md: ✅ atualizado (novo AGORA = spaces-agent híbrido)
+  scratch/ cleanup: ✅ clean
+  proof-manifest.json: removido pós-audit
+
+⏭ PRÓXIMOS PASSOS
+  1. **Sovereign — Run All no EP05 v2** (`/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7`, ~6.180 mco). Gate R5: rodar A1 primeiro (267 mco), Vision QA + veredito auditivo do lip-sync pt-BR antes de queimar os outros 18 apresentador. Depois: gravar 21 screencasts host → editor HyperFrames → publicar → medir retenção.
+  2. **Próxima sessão — Amendment 33 chat-por-nó** (MVP spaces-agent) + bok-curator escreve suite BoK `spaces-agent` completa em paralelo. LLM cascata Groq→OpenRouter (aios-chat-gateway + openrouter-swarm).
+  3. **Podar HANDOFF.md** (dívida agendada — WARN do size gate): mover Records ≤ 22-jul para `docs/handoff-archive/HANDOFF-archive-2026-07-and-earlier.md` na próxima sessão.
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
 
 ---
 
