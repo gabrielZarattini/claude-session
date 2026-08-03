@@ -11459,6 +11459,916 @@ v4b pronto. Aguardando a trilha (393s) concluir, depois rodo o v4b → master A4
 }
 ```
 
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 143
+> Command timed out after 9m 20s
+> ```
+
+## 🤖 Claude *(17:39:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -E \"OK trilha|attempt|failed|only .* generated|recv stopped|RESET|ato [0-9]\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/trilha4.log | tail -6\nkill -0 3430016 2>/dev/null && echo \"still RUNNING\" || echo \"exited\"\nT=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/trilha.wav\n[ -f \"$T\" ] && ffprobe -v error -show_entries format=duration -of csv=p=0 \"$T\" | xargs echo \"trilha dur:\" || echo \"no trilha yet\"",
+  "description": "Check trilha4 progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [108.0] RESET ato 3 (bpm 98)
+> [188.0] ato 4
+> [274.0] ato 5
+> [346.0] ato 6
+> recv stopped: 1011 None. The service is currently unavailable.
+> OK trilha.wav  393.0s
+> exited
+> trilha dur: 392.973333
+> ```
+
+## 🤖 Claude *(17:39:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Trilha4 is complete at 392.97 seconds with the resilience handling the drop correctly, and the act transitions are now at the expected offsets. Next I'll run v4b against master A4 and then deliver.
+
+</details>
+
+
+## 🤖 Claude *(17:39:30)*
+
+Trilha pronta: **393s** (bate com o novo total), atos nos novos offsets. Rodando o v4b → master A4 (áudio confinado, sem sobreposição):
+
+## 🤖 Claude *(17:39:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad && bun run v4b-audio.ts 2>&1 | tail -12",
+  "description": "Assemble master A4 (confined audio, no bleed)",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> base4.mp4 built
+> total: 393.0 s
+> deep narrations placed (confined): 28
+> speech4.wav built
+> trilha ducked under speech
+> 
+> === MASTER A4 ===
+> width=1280
+> height=720
+> duration=383.000000
+> [Parsed_volumedetect_0 @ 0xb536fe378fe0] mean_volume: -19.6 dB
+> [Parsed_volumedetect_0 @ 0xb536fe378fe0] max_volume: -1.0 dB
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(17:43:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Master A4 built in 383 seconds, though there's a discrepancy with the video duration being 393 seconds — the -shortest flag likely trimmed to the audio length, and I'm wondering if the loudnorm or the final4.wav file is slightly shorter than expected, accounting for that 10-second difference.
+
+The key improvements are solid: mute scenes now extend to fit narrations without overlap, presenter scenes use only Veo audio plus trilha, the trilha is ducked under speech, and loudnorm is set to -16 LUFS with a max of -1.0dB to prevent clipping. The levels look clean at mean -19.6dB.
+
+Now I need to verify the audio overlap is actually fixed by confirming that no narration extends past its scene boundary and that presenter scenes are properly isolated. I'm uploading A4 to Assets now. But I'm noticing a timing discrepancy — the base video should be 393 seconds based on the segment calculations, yet the master is coming in at 383 seconds. That's a 10-second gap I need to track down, possibly from the loudnorm processing or the shortest flag trimming the output. I'm worried the ending might be truncated by that 10-second discrepancy—if scenes 47 and 48 (the climax and call-to-action) are cut short, that's a real problem. But the audio overlap fix is the priority, so I'll deliver A4 now and note that I need to verify the ending hasn't been compromised. If it has, the Sovereign will catch it when they review.
+
+</details>
+
+
+## 🤖 Claude *(17:43:45)*
+
+Master A4 montado — narração **confinada** (28 narrações, trimadas à cena), presenter Veo audio only, trilha duckada, loudnorm −16 LUFS max −1,0dB (sem clipping). Mas notei **383s vs 393s esperado** — deixa eu verificar se o fim (clímax cena 47) não foi cortado:
+
+## 🤖 Claude *(17:43:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master\necho \"base4 video:\"; ffprobe -v error -show_entries format=duration -of csv=p=0 base4.mp4\necho \"final4 audio:\"; ffprobe -v error -show_entries format=duration -of csv=p=0 final4.wav\necho \"speech4:\"; ffprobe -v error -show_entries format=duration -of csv=p=0 speech4.wav\necho \"trilha:\"; ffprobe -v error -show_entries format=duration -of csv=p=0 trilha.wav\n# last frame of master (should be cena 47/48 - EU N\u00c3O EXISTO bookend)\nffmpeg -y -sseof -2 -i master_A4.mp4 -frames:v 1 a4_end.jpg -loglevel error && echo \"end frame ok\"",
+  "description": "Diagnose the 383 vs 393 duration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> base4 video:
+> 393.000000
+> final4 audio:
+> 354.815688
+> speech4:
+> 354.815688
+> trilha:
+> 392.973333
+> end frame ok
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(17:44:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing a timing mismatch — the speech and final audio files are only 354.8 seconds, but the video tracks are 393 seconds, meaning the audio is about 38 seconds short. The master file shows 383 seconds, which doesn't quite line up with the final output either, possibly due to loudness normalization padding. The core issue is that speech4 is significantly shorter than it should be, and I need to figure out why it's not matching the base4 audio duration. I'm wondering if base4's audio stream is actually shorter than its video—maybe the concat operation dropped some audio segments, leaving it at 354.8s instead of the expected 393s. Let me verify the actual audio duration of base4 to see if that's where the discrepancy is coming from. The master output came out to 383 seconds, which suggests the loudnorm processing may have altered the duration. The real issue is likely that the concat demuxer created a base4 file with mismatched audio parameters between the presenter Veo segments and the mute silent filler — this audio mismatch probably caused the concat to desync or truncate the audio stream. I need to check the base4 audio duration and compare the audio specs of a presenter segment versus a mute segment to pinpoint where the speech track got cut short.
+
+</details>
+
+
+## 🤖 Claude *(17:44:17)*
+
+**Bug achado:** `speech4.wav` = só **354,8s** (o vídeo é 393s) — o track de fala está 38s curto, então o fim (acts V-VI, o clímax) ficou sem fala. Causa provável: o concat da `base4` truncou o áudio (mismatch de params entre o áudio Veo dos apresentadores e o silêncio dos mudos). Deixa eu diagnosticar:
+
+## 🤖 Claude *(17:44:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master\necho \"=== base4 AUDIO stream duration ===\"; ffprobe -v error -select_streams a:0 -show_entries stream=duration,codec_name,sample_rate,channels -of default=noprint_wrappers=1 base4.mp4\necho \"=== presenter seg (seg_01) audio params ===\"; ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels,duration -of default=noprint_wrappers=1 seg_01.mp4\necho \"=== mute seg (seg_02, rebuilt) audio params ===\"; ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels,duration -of default=noprint_wrappers=1 seg_02.mp4\necho \"=== mute seg NOT rebuilt (seg_04) audio params ===\"; ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels,duration -of default=noprint_wrappers=1 seg_04.mp4\necho \"=== sum of all seg audio durations ===\"\nS=0; for n in $(seq -w 1 48); do f=seg_$n.mp4; [ -f \"$f\" ] && D=$(ffprobe -v error -select_streams a:0 -show_entries stream=duration -of csv=p=0 \"$f\" 2>/dev/null) && S=$(echo \"$S + ${D:-0}\" | bc); done; echo \"audio sum: $S\"",
+  "description": "Diagnose base4 audio truncation"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === base4 AUDIO stream duration ===
+> codec_name=aac
+> sample_rate=48000
+> channels=2
+> duration=384.994667
+> === presenter seg (seg_01) audio params ===
+> codec_name=aac
+> sample_rate=48000
+> channels=2
+> duration=8.000000
+> === mute seg (seg_02, rebuilt) audio params ===
+> codec_name=aac
+> sample_rate=48000
+> channels=2
+> duration=6.840000
+> === mute seg NOT rebuilt (seg_04) audio params ===
+> === sum of all seg audio durations ===
+> audio sum: 237.920000
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(17:45:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm looking at the audio stream analysis for the video segments. The base4 audio is nearly complete at about 385 seconds, matching the video length, but there's a critical issue: segment 04 has no audio stream at all, while the presenter and rebuilt mute segments both have proper audio tracks.
+
+The real problem is that the total audio across all segments only adds up to about 238 seconds when it should be around 393 seconds — meaning roughly 155 seconds worth of segments are missing audio entirely. This points back to the v3 build process: when the AAC muxing failed for certain mute segments, the fallback used the `-an` flag (no audio), so those segments never got an audio stream in the first place. Now when concatenating, those missing audio streams are causing the entire audio track to desync and truncate.
+
+The solution is straightforward: I need to ensure every single segment has an audio stream, even if it's silence.  Rather than trying to patch individual segments, I'll take a different approach — build the video track separately without audio, then construct the audio track independently by placing each presenter's Veo audio at the correct offset and filling the mute segments with silence. Building v4c now...
+
+For each presenter segment, I'll extract audio from seg_NN.mp4 and apply adelay to position it at the right offset — that's 19 inputs. Then for each mute scene, I'll add the deep narration audio with its own adelay — another 28 inputs. All 47 audio streams go into amix, then I duck the trilha underneath and mux everything together. It's a large filter graph but ffmpeg can handle it. I could split this into two passes (one for presenter audio, one for narration) and combine them afterward, but building it all at once programmatically might be simpler.
+
+Actually, the cleaner approach is to create a silent base track at the total duration, then layer each audio element (presenter and narration) on top of it using adelay to position them correctly, mix them all together, duck the trilha under the speech, and mux with the video. Let me code this up. Writing the audio extraction logic...
+
+</details>
+
+
+## 🤖 Claude *(17:45:05)*
+
+**Causa raiz real:** vários segmentos mudos (screencasts) **não têm stream de áudio** (o fallback `-an` do v3) — `seg_04` retornou áudio VAZIO, e a soma de áudio dos segs é só 237s (vs 393). O concat da `base4` quebrou o timeline de áudio.
+
+O fix robusto: **não depender do áudio do concat** — colocar cada elemento de áudio explicitamente no seu offset sobre uma base silenciosa. Vou reescrever (v4c):
+
+## 🤖 Claude *(17:45:28)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/v4c-audio.ts",
+  "content": "/**\n * EP05 v4c \u2014 robust audio: build the full audio track by placing each element at its EXACT offset\n * over a silent base (no reliance on the concat's broken audio). Presenter Veo audio + confined deep\n * narration \u2192 speech ; duck trilha under speech ; loudnorm \u2192 master_A4.mp4. video = pure concat (-an).\n */\nimport { execSync } from 'child_process';\nimport { existsSync } from 'fs';\nconst W = '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master';\nconst PRES = new Set([1,5,7,14,15,21,22,24,25,28,31,33,35,36,41,43,45,46,47]);\nconst dur = (f:string)=>parseFloat(execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 \"${f}\"`).toString().trim()||'0');\n\n// 1. pure video concat (-an) + offsets from seg durations\nconst segs:string[]=[]; for(let n=1;n<=48;n++){const s=`${W}/seg_${String(n).padStart(2,'0')}.mp4`; if(existsSync(s))segs.push(s);}\nrequire('fs').writeFileSync(`${W}/concat4c.txt`, segs.map(s=>`file '${s}'`).join('\\n'));\nexecSync(`ffmpeg -y -f concat -safe 0 -i ${W}/concat4c.txt -c:v libx264 -pix_fmt yuv420p -r 30 -an ${W}/video4.mp4 -loglevel error`);\nconst offset:Record<number,number>={}, segd:Record<number,number>={}; let acc=0;\nfor(let n=1;n<=48;n++){const s=`${W}/seg_${String(n).padStart(2,'0')}.mp4`; if(existsSync(s)){offset[n]=acc; segd[n]=dur(s); acc+=segd[n];}}\nconst TOTAL=acc; console.log('video4.mp4 built \u00b7 total', TOTAL.toFixed(1),'s');\n\n// 2. build speech track = silent base + presenter Veo audio (at offset) + confined deep narration (at offset)\nconst inputs:string[]=[`-f lavfi -t ${TOTAL.toFixed(2)} -i anullsrc=r=48000:cl=stereo`]; // [0] silent base\nconst filt:string[]=[]; const labels:string[]=['[0:a]']; let idx=1;\nfor(let n=1;n<=48;n++){\n  if (offset[n]==null) continue;\n  const off=Math.round(offset[n]*1000);\n  if (PRES.has(n)) {\n    // presenter: use the segment's Veo audio (8s)\n    const seg=`${W}/seg_${String(n).padStart(2,'0')}.mp4`;\n    inputs.push(`-i \"${seg}\"`);\n    filt.push(`[${idx}:a]adelay=${off}|${off}[p${idx}]`); labels.push(`[p${idx}]`); idx++;\n  } else {\n    const wav=`${W}/scene_${String(n).padStart(2,'0')}.wav`; if(!existsSync(wav)) continue;\n    const deep=`${W}/scene_${String(n).padStart(2,'0')}_deep.wav`;\n    const cap=Math.max(1,(segd[n]-0.15)).toFixed(2);\n    execSync(`ffmpeg -y -i \"${wav}\" -af \"asetrate=24000*0.90,aresample=48000,atempo=1/0.90,highpass=f=70,acompressor=threshold=-18dB:ratio=3:attack=8:release=180\" -t ${cap} -ar 48000 -ac 2 \"${deep}\" -loglevel error`);\n    inputs.push(`-i \"${deep}\"`);\n    filt.push(`[${idx}:a]adelay=${off}|${off}[n${idx}]`); labels.push(`[n${idx}]`); idx++;\n  }\n}\nconst speechMix = labels.join('') + `amix=inputs=${labels.length}:dropout_transition=0:normalize=0,atrim=0:${TOTAL.toFixed(2)}[speech]`;\nexecSync(`ffmpeg -y ${inputs.join(' ')} -filter_complex \"${filt.join(';')};${speechMix}\" -map \"[speech]\" -c:a pcm_s16le -ar 48000 ${W}/speech4c.wav -loglevel error`);\nconsole.log('speech4c.wav:', dur(`${W}/speech4c.wav`).toFixed(1),'s (', labels.length-1,'elements placed )');\n\n// 3. duck trilha under speech\nexecSync(`ffmpeg -y -i ${W}/trilha.wav -i ${W}/speech4c.wav -filter_complex \"[0:a]volume=-10dB[m];[m][1:a]sidechaincompress=threshold=0.04:ratio=8:attack=150:release=600[duck];[1:a][duck]amix=inputs=2:dropout_transition=0:normalize=0[out]\" -map \"[out]\" -c:a pcm_s16le -ar 48000 ${W}/final4c.wav -loglevel error`);\nconsole.log('final4c.wav:', dur(`${W}/final4c.wav`).toFixed(1),'s');\n\n// 4. mux + loudnorm\nexecSync(`ffmpeg -y -i ${W}/video4.mp4 -i ${W}/final4c.wav -map 0:v -map 1:a -af \"loudnorm=I=-16:TP=-1.5:LRA=11\" -c:v copy -c:a aac -ar 48000 -shortest ${W}/master_A4.mp4 -loglevel error`);\nconst d=execSync(`ffprobe -v error -show_entries stream=width,height -show_entries format=duration -of default=noprint_wrappers=1 ${W}/master_A4.mp4`).toString().trim();\nconsole.log('\\n=== MASTER A4 ===\\n'+d);\nexecSync(`ffmpeg -i ${W}/master_A4.mp4 -af volumedetect -f null /dev/null 2>&1 | grep -E \"mean_volume|max_volume\" || true`,{stdio:'inherit'});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/v4c-audio.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(17:45:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad && bun run v4c-audio.ts 2>&1 | tail -12",
+  "description": "Rebuild audio robustly (v4c) \u2192 master A4",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> video4.mp4 built · total 393.0 s
+> speech4c.wav: 393.0 s ( 47 elements placed )
+> final4c.wav: 393.0 s
+> 
+> === MASTER A4 ===
+> width=1280
+> height=720
+> duration=393.000000
+> [Parsed_volumedetect_0 @ 0xab9599e79fe0] mean_volume: -19.0 dB
+> [Parsed_volumedetect_0 @ 0xab9599e79fe0] max_volume: -0.9 dB
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(17:49:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The speech track is now properly synced at 393 seconds with all 47 audio elements positioned correctly—19 presenter clips and 28 narrations—with no overlap or missing sections. The master audio checks out at 393 seconds with a mean level of -19dB and peak of -0.9dB, so there's no clipping.
+
+This should resolve the issues: everything's accounted for, narrations stay confined to their scenes without bleeding into presenter segments, and the full ending is intact. I'm verifying the structure one more time to confirm no speech elements overlap, then I'll upload this corrected version as a new asset and report back.
+
+There are frozen frames on some extended mute scenes from the b-roll clone—a rough visual artifact that might catch attention, but the main audio fix addresses the core complaint. I'll note this honestly in my report and move forward with uploading the master file.
+
+</details>
+
+
+## 🤖 Claude *(17:49:36)*
+
+**Corrigido** — speech track agora **393,0s completo** (47 elementos colocados: 19 áudios Veo + 28 narrações), master **393s**, max −0,9dB. Os 3 problemas resolvidos:
+- ✅ Nada faltando (timeline completa até o clímax)
+- ✅ Sem sobreposição (narrações confinadas às cenas estendidas; apresentador = só áudio Veo + trilha)
+- ✅ Fim intacto
+
+Subindo o **Master A4** (o correto) à Biblioteca:
+
+## 🤖 Claude *(17:49:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source /home/gcrUX/htdocs/constellation-orchestra/.env && set +a && cat > /tmp/deliverA4.ts <<'EOF'\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync } from 'fs';\nconst admin = createClient(process.env.SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth:{persistSession:false}});\nconst U0='ada39fae-67e1-4e53-af1c-5a18e1c108e8';\nconst buf = readFileSync('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/master_A4.mp4');\nconst key=`${U0}/masters/ep05-v2-master-A4-synced-${Date.now()}.mp4`;\nawait admin.storage.from('canvas-assets').upload(key, buf, { contentType:'video/mp4', upsert:true });\nconst { data, error } = await admin.from('creative_assets').insert({\n  user_id:U0, kind:'video', storage_bucket:'canvas-assets', storage_key:key, mime_type:'video/mp4',\n  source_module:'spaces', is_public:false, duration_seconds:393, width:1280, height:720, file_size_bytes:buf.length,\n  title:'EP05 v2 \u2014 Master A4 (\u00e1udio SINCRONIZADO \u00b7 sem sobreposi\u00e7\u00e3o \u00b7 timeline dirigida por narra\u00e7\u00e3o)',\n  provider:'mcorch-ffmpeg', model:'ep05-assembler-v4c',\n  metadata:{ ep:'EP05', cut:'A4', fix:'narration-driven durations (no bleed) + robust per-offset audio placement', presenter:'veo-native+trilha only', narration:'qwen3-deep confined', soundtrack:'lyria-393s-ducked' },\n}).select('id').maybeSingle();\nconsole.log(error? ('ERR '+error.message):('\u2705 A4 registered '+data?.id+' \u00b7 '+(buf.length/1e6).toFixed(1)+'MB \u00b7 393s'));\nEOF\nbun run /tmp/deliverA4.ts 2>&1 | head",
+  "description": "Deliver master A4 (synced) to Assets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ A4 registered 88e43ade-9491-4702-a073-5e172fca609e · 39.4MB · 393s
+> ```
+
+## 🤖 Claude *(17:50:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A4 is now delivered with the audio sync issues resolved—I've confirmed all 19 presenters are intact, adjusted the mute scene durations to match the narration timing to prevent audio bleed, and fixed the per-offset audio placement bug that was causing missing audio at segment endings. There's still a video freeze issue during extended mute scenes that needs attention, but the core audio problems are sorted.
+
+</details>
+
+
+## 🤖 Claude *(17:50:09)*
+
+**Master A4 entregue** (`88e43ade`, 393s, 39MB) — na Biblioteca: **"EP05 v2 — Master A4 (áudio SINCRONIZADO · sem sobreposição)"**.
+
+**O que corrigi:**
+1. ✅ **Nada faltando** — os 19 apresentadores apontam para as versões com áudio (os mudos que você apagou eram os antigos).
+2. ✅ **Timeline dirigida pela narração** — estendi as 12 cenas mudas cuja narração era mais longa que a cena, então **nada mais vaza** para a cena seguinte.
+3. ✅ **Bug do fim-sem-fala corrigido** — vários segmentos de screencast estavam **sem stream de áudio** (fallback do v3) e quebravam o concat → agora coloco cada áudio no offset exato sobre uma base silenciosa (speech track 393s completo, 47 elementos).
+4. ✅ **Regra respeitada** — cena de apresentador = **só áudio Veo + trilha** (zero narração sobreposta); cena muda = narração grossa confinada + trilha.
+
+**Honestidade (Lei 1), o que ainda é rough:**
+- As 12 cenas mudas estendidas **congelam o último frame** por 1-3s (o b-roll segura enquanto a narração termina) — artefato visual de rough-cut. Posso trocar por **slow-motion** (mais suave) ou o agente-HyperFrames (B) refina.
+- O **balanço da mixagem** (profundidade do duck, nível da trilha) é meu melhor-esforço às cegas — **me diga se a trilha está alta/baixa** e eu afino em 1 render.
+
+**Assista o A4** e me diga: (a) o sync/sobreposição resolveu? (b) a trilha está no nível certo? (c) o freeze das cenas incomoda (troco por slow-mo)?
+
+## 👤 User *(18:16:19)*
+
+Quase ficou bem melhor, mas não gostei da trilha esta bem ruim, precisamos de algo mais Emocionante apos os 30 primeiros segundos. No motor MVP que construimos no https://github.com/gabrielZarattini/GabrielAI tem tambem a INTRO que é bem simples. GABRIEL AI APRESENTA... conforme no print do ultimo EP04 postado já no youtube, podemover com um smaecer com blur in e out, na entrada e saida por 4 segundos e no 5º entra já a primeira cena.  O segundo print é a segunda cena com o titulo e subtitulo do roteiro tambem com uma transição de entrada e saída. 
+
+Mas como agora estamos fazendo tudo pelo MCORCH, vamos aproveitar o HyperFramer para criar motion design profissional para essa abertura e titulo na primeira cena, faça algo o mais próximo possivel de um VFX cinematográfico.
+
+E por fim o encerramento você pode verificar como foi feito no repositório que enviei o link acima veja o print de referencia (3º print) do EP04 já postado no youtube. Esse encerramento não precisa ser em motion design profissional, mas deve seguir exatamente as mesmas fontes, conforme pode ser consultado no repositório https://github.com/gabrielZarattini/GabrielAI
+
+## 🤖 Claude *(18:18:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign provided detailed feedback with reference prints from an earlier episode, specifying that the opening title card should fade in with a blur effect, hold for 4 seconds, then blur out as it fades, with the first scene beginning on the 5th second.
+
+For the second element, the title and subtitle overlay on the first presenter scene needs professional motion design VFX using HyperFramer to match a cinematic quality, rather than static text. I need to pull EP05's actual title and subtitle from the roteiro header instead of using the EP04 example shown in the reference.
+
+The third reference print shows the ending credits structure, though the description cuts off mid-way. — the current mystery cues might be holding back the emotional impact for too long. I need to restructure the soundtrack to build intensity earlier, either by shortening that mysterious opening, ramping up the density and brightness sooner, or adding a sub-cue around the 30-second mark to shift the mood. The goal is to make the whole arc feel more cinematic and emotionally engaging, especially in that critical transition after the first half-minute.
+
+For the intro cartela, I'm creating a simple 4-second title card with "GABRIEL AI APRESENTA…" that fades in and out with a blur effect on a black background using white serif typography to match the print aesthetic, then scene 1 kicks in at the 5-second mark. I should check the existing cartela generation script to match the exact font and styling they've already established.
+
+The title and subtitle for the first scene—"A ERA DOS AGENTES" for this episode or the appropriate title for EP05—needs to be overlaid on the presenter with professional motion design using HyperFramer's cinematic VFX capabilities. The Sovereign specifically wants this to feel like high-end cinematographic visual effects, so I'm leveraging HyperFramer's render engine to create that polished motion design for both the opening and title reveal.
+
+For the credits, I'm using the same approach as the previous episode—pulling the fonts and styling from the GabrielAI repo's `gerar_creditos.py` and the episode JSON file to generate rolling credits that match the established look, without needing the extra motion design treatment.
+
+So the full polish involves four main pieces: refining the audio track to build emotional intensity after the 30-second mark, creating the intro cartela with the blur fade effect, layering the title and subtitle onto the first scene with cinematic motion design via HyperFrames, and finishing with properly formatted rolling credits. The title itself comes from the roteiro header—"Como Criar um Vídeo com IA do Zero, Sem Editor de Vídeo (Passo a Passo Completo)".
+
+Now I'm figuring out what the on-screen cartela title should be. The roteiro's main title is really the YouTube description, not the visual cartela that appears in the video like EP04's "A ERA DOS AGENTES". I need to find or create something punchy for EP05's on-screen title and subtitle that captures the essence of creating video with AI, but I should check if the Sovereign has a specific direction in mind for this.
+
+I'm prioritizing the work: the trilha is the most urgent fix since they explicitly said it was "bem ruim" — it needs more emotional weight after the 30-second mark. Then I'll tackle the intro cartela and work through the other elements, checking the existing code structure in gerar_cartela.py and gerar_creditos.py to match the style and fonts from EP04. For the title/subtitle motion design, I'd use HyperFrames to create a GSAP animation that reveals the text cinematically, then render and composite it over scene 1. The credits would follow a similar approach—either HTML/CSS or FFmpeg—using the same serif fonts from the repo's existing scripts.
+
+Let me pull the font specifications and structure from gerar_cartela.py and gerar_creditos.py to match the visual style. Given the scope here, I should prioritize fixing the trilha first since that's the main concern—adjusting the emotional cues after 30 seconds and regenerating—then move to the intro cartela and title/subtitle motion design once I have the repo's fonts locked in. Fetching the repo's cartela and credits scripts to match the fonts and structure, then re-tuning the trilha with more emotional intensity after the 30-second mark.
+
+For the music, the current act I (0-48s) sits at a mysterious, subtle level with low density and brightness. The Sovereign wants something warmer and more cinematic—building melodically with strings and piano rather than staying in mysterious drone territory. I'll adjust the cues to ramp up the emotion and intensity after 30 seconds.
+
+The challenge is that act I is a single cue, so to shift the mood at the 30-second mark, I'd need to split it into two sub-cues: one mysterious intro (0-30s) and then an emotional build (30s+). Or I could simplify and make the entire track after the intro more emotional overall, with richer orchestral elements throughout. odic), and add a mid-point steering within act I (a sub-cue at ~30s that ramps emotion). Let me modify the trilha script to support intra-act sub-cues, OR just make the cues more emotional and accept the act-boundary steering.
+
+Let me reconsider — the Sovereign's core complaint: "trilha esta bem ruim, precisamos de algo mais Emocionante apos os 30 primeiros segundos." So the first 30s can be as-is (mysterious intro), but AFTER 30s it should get more exciting/emotional. Currently, act I runs to ~48s (all mysterious), then act II. So at 30s it's still mysterious. The Sovereign wants excitement to kick in at 30s.
+
+The cleanest approach is to add a steering point at 30s within act I that ramps up the emotional intensity, rather than waiting for the act boundary. I'll modify the trilha script to include this mid-act emotional lift cue and revise all the cues themselves to be more cinematic and emotionally resonant.
+
+My plan: fetch the cartela and creditos generator scripts in parallel while I revise the trilha cues, then regenerate everything. The emotional ramp after 30s is the highest priority here. I'm being mindful of the context budget after ~200 tool calls, so I'll prioritize: fetch the two scripts from the repo to understand the fonts and structure, revise the trilha cues, then execute the cartela and credits generation before attempting the title motion design. Let me start with those fetches and the trilha revision.
+
+Looking at the screenshots, print 2 shows the presenter with the title and subtitle overlay looks really strong — that's actually EP04 footage with Gabriel and the brain-in-jar, which demonstrates the style I'm aiming for. For EP05, I'd apply the same overlay treatment but with Gabriel's cold open scene instead.
+
+The challenge is that EP05's opening already has "EU NÃO EXISTO" burned in from the Veo footage, so layering another title/subtitle on top could feel redundant or cluttered. Maybe the title cartela works better as a separate beat entirely, like how EP04 has its own distinct title card. I should focus on figuring out what EP05's actual title treatment should be rather than forcing it onto the cold open. I'm thinking through title and subtitle options for EP05 based on the roteiro's theme about creating video with AI. I could mirror EP04's structure with something like "A ESTEIRA / Como um rosto que não existe virou um filme inteiro" or "O APRESENTADOR SINTÉTICO" — I'll pick one that fits and mark it as editable since I can refine it once I review the full roteiro.
+
+Now I need to focus on execution: pulling the cartela and credits generation scripts, re-tuning the soundtrack to build more emotional intensity after the 30-second mark, then assembling the intro cartela and credits sequence.
+
+</details>
+
+
+## 🤖 Claude *(18:18:07)*
+
+Feedback rico — e os prints do EP04 no YouTube deixam o padrão claro. Vou tratar tudo, mas primeiro sua **queixa principal (a trilha)** + preciso dos scripts de cartela/créditos do repo (fontes exatas). Deixa eu buscar `gerar_cartela.py` + `gerar_creditos.py` e ver as fontes:
+
+## 🤖 Claude *(18:18:08)*
+
+
+🛠️ **Tool Call**: `mcp__github__get_file_contents`
+```json
+{
+  "owner": "gabrielZarattini",
+  "repo": "GabrielAI",
+  "path": "geracao/gerar_cartela.py"
+}
+```
+
+## 🤖 Claude *(18:18:09)*
+
+
+🛠️ **Tool Call**: `mcp__github__get_file_contents`
+```json
+{
+  "owner": "gabrielZarattini",
+  "repo": "GabrielAI",
+  "path": "geracao/gerar_creditos.py"
+}
+```
+
+> **Tool Result (mcp__github__get_file_contents)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'successfully downloaded text file (SHA: a9fbf21d29da5649683561daf4c7ff5b57e9cd24)'}, {'type': 'text', 'text': '[Resource from github at repo://gabrielZarattini/GabrielAI/sha/406b9bbaccc3fe96a8d80e8a454b5df06af7048b/contents/geracao/gerar_cartela.py] #!/usr/bin/env python3\n"""As duas cartelas de abertura, EM CÓDIGO. Genérico (lê episodios/epNN.json).\n\nPOR QUE ISTO EXISTE  (o porquê completo em docs/bok-producao.md)\nA cartela era o ÚLTIMO MOGRT do pipeline — e o texto de MOGRT **não é editável nem legível por\nscript** neste Premiere (`getMGTComponent()` → `null`; "Texto de origem" é um handle binário;\nescrever nela DESTRÓI a camada). Consequência prática: **alguém digitava o título à mão em todo\nepisódio.** No EP04 isso produziu exatamente o erro que a lei do canal existe para impedir:\n\n    a cartela dizia  "Quando a IA parou de PERGUNTAR e começou a agir"\n    os créditos e a narração diziam  "...parou de RESPONDER..."\n\nFoi pego renderizando 606 MB e ampliando um recorte de 130 px. Uma vez.\n\nAqui a cartela nasce dos MESMOS campos que os créditos (`titulo` / `subtitulo` do manifesto) e\nusa a MESMA tipografia (`gerar_creditos.ESTILO`). Cartela e créditos **não conseguem divergir**.\nNinguém digita nada. O título muda por episódio porque **o manifesto muda** — é lá que ele mora.\n\nSAÍDAS\n  1. `<ep>-cartela-apresenta.mov`  — 120f, OPACO (vai em V1, no frame 0; o fundo é preto de graça)\n  2. `<ep>-cartela-titulo.mov`     — 120f, **COM ALPHA** (vai em V2, SOBRE a primeira cena)\n     ProRes 4444: é o que o Premiere lê com canal alfa sem drama.\n     O título fica no TERÇO INFERIOR — centralizado ele cai em cima do rosto do apresentador.\n\n⚠️ A cartela empurra o filme +120f. Ela TEM de entrar ANTES das transições (BoK §13.5 e\nrecipes/07): mover clipes deixa as transições órfãs, e o DOM não avisa.\n\n    /home/linuxbrew/.linuxbrew/bin/python3 gerar_cartela.py --ep ep04 --saida <pasta>\n    (é o único interpretador com PIL — BoK §11)\n"""\nimport argparse\nimport json\nimport os\nimport subprocess\nimport tempfile\n\nfrom PIL import Image, ImageDraw\n\nfrom gerar_creditos import W, H, FPS, ESTILO, SERIF, SERIF_ITAL, BRANCO, CINZA, espacado\nfrom timeline import REPO\n\n# A cartela do título usa a família dos créditos, em corpo de cartela.\n# (fonte, tamanho, cor, entressaco, altura da linha)\n#\n# Os tamanhos e o Y saíram de COMPOR a cartela sobre o plano REAL e OLHAR, comparando com o\n# MOGRT que o dono havia posicionado à mão. A 1ª tentativa (título 64px em y=0,74) ficava\n# PEQUENA e ALTA: caía em cima do pote de vidro e sumia no fundo. Não adivinhe estes números —\n# eles são o resultado do render.\nESTILO_CARTELA = {\n    "apresenta":  (SERIF,      40, BRANCO, 14, 60),\n    "titulo":     (SERIF_ITAL, 92, BRANCO, 16, 120),\n    "legenda":    (SERIF_ITAL, 40, BRANCO,  4, 58),   # BRANCO, não cinza: fica SOBRE vídeo\n}\n\n# O título vai no TERÇO INFERIOR. Centralizado, ele cai no rosto do apresentador —\n# foi por isso que o dono reposicionou o MOGRT à mão no EP04.\nTERCO_INFERIOR_Y = 0.79      # onde a 1ª linha do título começa (fração da altura)\n\n\ndef _desenha(img, linhas, y0):\n    d = ImageDraw.Draw(img)\n    y = y0\n    for tipo, txt in linhas:\n        fonte, tam, cor, esp, lh = ESTILO_CARTELA[tipo]\n        espacado(d, y, txt, fonte, tam, cor, esp)\n        y += lh\n    return img\n\n\ndef _mov(png, dst, frames, alpha):\n    """PNG estático -> .mov com fade in/out. Com alpha => ProRes 4444."""\n    dur = frames / FPS\n    fade = "fade=t=in:st=0:d=0.6:alpha=%d,fade=t=out:st=%.3f:d=0.6:alpha=%d" % (\n        1 if alpha else 0, dur - 0.6, 1 if alpha else 0)\n    if alpha:\n        cod = ["-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le"]\n    else:\n        cod = ["-c:v", "libx264", "-crf", "16", "-preset", "medium", "-pix_fmt", "yuv420p"]\n    subprocess.run(\n        ["ffmpeg", "-nostdin", "-v", "error", "-y", "-loop", "1", "-framerate", str(FPS),\n         "-t", "%.5f" % dur, "-i", png, "-vf", fade, "-r", str(FPS)] + cod + [dst],\n        check=True)\n    return dst\n\n\ndef main():\n    ap = argparse.ArgumentParser()\n    ap.add_argument("--ep", required=True)\n    ap.add_argument("--saida", required=True, help="pasta de saída")\n    a = ap.parse_args()\n\n    ep = json.load(open(os.path.join(REPO, "episodios", "%s.json" % a.ep), encoding="utf-8"))\n    C = ep.get("cartela", {})\n    apresenta = C.get("apresenta", "GABRIEL AI APRESENTA")\n    frames = int(C.get("frames", 120))\n\n    # ⚠️ A FONTE DA VERDADE é a mesma dos créditos. Não duplique o texto aqui.\n    titulo = ep["titulo"]\n    subtitulo = ep["subtitulo"]\n\n    # confere que os créditos dizem O MESMO — a lei do título único, por construção\n    blocos = {b[0]: b[1] for b in ep["creditos"]["blocos"] if len(b) > 1}\n    if blocos.get("subtitulo") != titulo:\n        raise SystemExit(\n            "DIVERGÊNCIA: episodios/%s.json diz titulo=%r, mas o bloco \'subtitulo\' dos créditos\\n"\n            "diz %r. A cartela e os créditos TÊM de dizer o mesmo (o EP03 divergiu)."\n            % (a.ep, titulo, blocos.get("subtitulo")))\n    if blocos.get("legenda") != subtitulo:\n        raise SystemExit(\n            "DIVERGÊNCIA: subtitulo=%r, mas a \'legenda\' dos créditos diz %r."\n            % (subtitulo, blocos.get("legenda")))\n\n    os.makedirs(a.saida, exist_ok=True)\n    tmp = tempfile.mkdtemp()\n\n    # 1) "APRESENTA" — opaco, centralizado (V1, frame 0)\n    img = Image.new("RGB", (W, H), (0, 0, 0))\n    lh = ESTILO_CARTELA["apresenta"][4]\n    _desenha(img, [("apresenta", apresenta)], (H - lh) / 2)\n    p1 = os.path.join(tmp, "apresenta.png")\n    img.save(p1)\n    d1 = os.path.join(a.saida, "%s-cartela-apresenta.mov" % a.ep)\n    _mov(p1, d1, frames, alpha=False)\n\n    # 2) TÍTULO — com ALPHA, no terço inferior (V2, sobre a 1ª cena)\n    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))\n    _desenha(img, [("titulo", titulo), ("legenda", subtitulo)], H * TERCO_INFERIOR_Y)\n    p2 = os.path.join(tmp, "titulo.png")\n    img.save(p2)\n    d2 = os.path.join(a.saida, "%s-cartela-titulo.mov" % a.ep)\n    _mov(p2, d2, frames, alpha=True)\n\n    print("cartela \'apresenta\': %r" % apresenta)\n    print("cartela \'título\'   : %r" % titulo)\n    print("            legenda: %r" % subtitulo)\n    print("   [ok] batem com os créditos (a lei do título único, verificada por construção)")\n    print()\n    print("-> %s   (%df, OPACO, vai em V1 @0)" % (d1, frames))\n    print("-> %s   (%df, ALPHA, vai em V2 @%d)" % (d2, frames, frames))\n    print()\n    print("⚠️ Insira as duas ANTES de aplicar as transições (a cartela empurra o filme +%df e" % frames)\n    print("   move() deixa as transições órfãs — BoK §13.5).")\n\n\nif __name__ == "__main__":\n    main()\n'}]
+> ```
+
+> **Tool Result (mcp__github__get_file_contents)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'successfully downloaded text file (SHA: 0c9aa2280b1220993a65910caf830cd5bb8f5c94)'}, {'type': 'text', 'text': '[Resource from github at repo://gabrielZarattini/GabrielAI/sha/406b9bbaccc3fe96a8d80e8a454b5df06af7048b/contents/geracao/gerar_creditos.py] #!/usr/bin/env python3\n"""Bloco de encerramento: rolagem de créditos + pós-créditos. Genérico (lê episodios/epNN.json).\n\nPOR QUE NÃO O MOGRT "Créditos do filme" DA ADOBE  (o porquê em docs/bok-producao.md § Cartelas)\n1) Ele tem **7 campos FIXOS** com estrutura de ficha técnica de cinema ("EMPRESA APRESENTA /\n   EM ASSOCIAÇÃO COM / ELENCO..."), que não comporta uma lista de APIs, fontes e referências —\n   e creditar as fontes é decisão do dono do canal.\n2) O texto de MOGRT **não é editável por script** neste Premiere: `isMGT()` diz `true`, mas\n   `getMGTComponent()` devolve `null` e a propriedade "Texto de origem" guarda um **handle\n   binário** (1 caractere, code 388), não uma string. Escrever uma string nela **DESTRÓI a\n   camada** — o DOM continuava lendo o texto novo e o render não desenhava nada.\nAqui o texto é código: ninguém digita nada, e o conteúdo vive versionado no manifesto.\n\nffmpeg desta máquina **não tem `drawtext`** (não foi compilado com freetype) — o texto é\nrenderizado com PIL e o ffmpeg só compõe/rola/codifica.\n\nUso:\n    python3 gerar_creditos.py --ep ep03 --saida "EP03 - creditos.mov"\n"""\nimport argparse\nimport json\nimport os\nimport subprocess\nimport tempfile\n\nfrom PIL import Image, ImageDraw, ImageFont\n\nfrom timeline import REPO\n\nW, H, FPS = 1920, 1080, 24\nFONTES = "/mnt/c/Windows/Fonts"\nSERIF = os.path.join(FONTES, "times.ttf")\nSERIF_ITAL = os.path.join(FONTES, "timesi.ttf")\n\nBRANCO = (232, 230, 226)\nCINZA = (150, 148, 144)\nOURO = (198, 166, 100)\n\n# (fonte, tamanho, cor, entressaco, altura da linha) — casa com a família "Film" da Adobe\nESTILO = {\n    "titulo":    (SERIF,      86, BRANCO, 18, 118),\n    "subtitulo": (SERIF,      54, BRANCO, 10, 74),\n    "legenda":   (SERIF_ITAL, 30, CINZA,   2, 46),\n    "secao":     (SERIF,      24, OURO,    7, 40),\n    "nome":      (SERIF,      36, BRANCO,  1, 50),\n    "nota":      (SERIF_ITAL, 27, CINZA,   1, 42),\n    "ref_t":     (SERIF,      28, OURO,    4, 44),\n    "ref":       (SERIF,      26, CINZA,   1, 40),\n}\n\n# Velocidade de rolagem confortável. A 1ª versão do EP03 saiu a 153 px/s e as REFERÊNCIAS —\n# que são o ponto de creditá-las — ficaram apertadas. ~125 px/s é o alvo.\nPX_S_ALVO = 125\n\n\ndef espacado(d, y, txt, fonte, tam, cor, esp):\n    f = ImageFont.truetype(fonte, tam)\n    larg = sum(f.getlength(c) + esp for c in txt) - esp\n    x = (W - larg) / 2\n    for c in txt:\n        d.text((x, y), c, font=f, fill=cor)\n        x += f.getlength(c) + esp\n\n\ndef rolagem(blocos):\n    y = sum(v if t == "esp" else ESTILO[t][4] for t, v in blocos)\n    img = Image.new("RGB", (W, y + H), (0, 0, 0))\n    d = ImageDraw.Draw(img)\n    y = H                                    # começa fora da tela (embaixo)\n    for t, v in blocos:\n        if t == "esp":\n            y += v\n            continue\n        fonte, tam, cor, esp, lh = ESTILO[t]\n        espacado(d, y, v, fonte, tam, cor, esp)\n        y += lh\n    return img\n\n\ndef cartela(linhas, tmp, nome):\n    img = Image.new("RGB", (W, H), (0, 0, 0))\n    d = ImageDraw.Draw(img)\n    total = sum(ESTILO[t][4] for t, _ in linhas)\n    y = (H - total) / 2\n    for t, txt in linhas:\n        fonte, tam, cor, esp, lh = ESTILO[t]\n        espacado(d, y, txt, fonte, tam, cor, esp)\n        y += lh\n    p = os.path.join(tmp, nome)\n    img.save(p)\n    return p\n\n\ndef main():\n    ap = argparse.ArgumentParser()\n    ap.add_argument("--ep", required=True)\n    ap.add_argument("--saida", required=True)\n    a = ap.parse_args()\n    ep = json.load(open(os.path.join(REPO, "episodios", "%s.json" % a.ep), encoding="utf-8"))\n    C = ep["creditos"]\n\n    tmp = tempfile.mkdtemp()\n    rol = rolagem([tuple(b) for b in C["blocos"]])\n    prol = os.path.join(tmp, "rolagem.png")\n    rol.save(prol)\n    nf = C["rolagem_frames"]\n    px_s = (rol.height - H) / (nf / FPS)\n    print("rolagem: %dx%d — %d px em %.1fs = %.0f px/s%s" % (\n        rol.width, rol.height, rol.height - H, nf / FPS, px_s,\n        "   ⚠️ rápido demais p/ ler (alvo ~%d)" % PX_S_ALVO if px_s > PX_S_ALVO * 1.15 else ""))\n\n    partes = []\n    dur = nf / FPS\n    p1 = os.path.join(tmp, "p1.mov")\n    subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-loop", "1", "-framerate", str(FPS),\n                    "-t", "%.5f" % dur, "-i", prol,\n                    "-vf", "crop=%d:%d:0:\'(ih-%d)*t/%.5f\',fade=in:0:24,fade=out:st=%.3f:d=1,format=yuv420p"\n                           % (W, H, H, dur, dur - 1),\n                    "-r", str(FPS), "-c:v", "libx264", "-crf", "16", "-preset", "medium", p1], check=True)\n    partes.append(p1)\n\n    cards = [\n        (cartela([("subtitulo", l) for l in C["eco"]], tmp, "eco.png"), C["eco_frames"]),\n        (cartela([("secao", "NO PRÓXIMO EPISÓDIO"), ("nome", C["teaser"])], tmp, "teaser.png"),\n         C["teaser_frames"]),\n        (cartela([("titulo", C["assinatura"])], tmp, "assinatura.png"), C["assinatura_frames"]),\n    ]\n    for k, (png, n) in enumerate(cards):\n        p = os.path.join(tmp, "p%d.mov" % (k + 2))\n        d2 = n / FPS\n        subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-loop", "1", "-framerate", str(FPS),\n                        "-t", "%.5f" % d2, "-i", png,\n                        "-vf", "fade=in:0:12,fade=out:st=%.3f:d=0.5,format=yuv420p" % max(d2 - 0.5, 0.1),\n                        "-r", str(FPS), "-c:v", "libx264", "-crf", "16", "-preset", "medium", p], check=True)\n        partes.append(p)\n\n    lst = os.path.join(tmp, "lista.txt")\n    with open(lst, "w") as f:\n        for p in partes:\n            f.write("file \'%s\'\\n" % p)\n    subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-f", "concat", "-safe", "0",\n                    "-i", lst, "-c", "copy", a.saida], check=True)\n\n    total = nf + sum(n for _, n in cards)\n    got = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",\n                          "stream=nb_frames", "-of", "csv=p=0", a.saida],\n                         capture_output=True, text=True).stdout.strip()\n    print("-> %s   %s frames (esperado %d = %.2fs)" % (a.saida, got, total, total / FPS))\n    print("   os últimos %.0fs são a ZONA DOS CARDS de fim de vídeo do YouTube — deixe-a calma."\n          % (C["assinatura_frames"] / FPS))\n\n\nif __name__ == "__main__":\n    main()\n'}]
+> ```
+
+## 🤖 Claude *(18:19:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through the font selection for the cartela structure—I need to find a Times New Roman equivalent that's available on this Linux system, either using Liberation Serif as a metric-compatible substitute or another serif font like DejaVu that matches the classic Times aesthetic shown in the prints. The Sovereign wants a 4-second intro cartela with blur in/out (not the 5-second fade approach from the repo), then the title/subtitle as a professional motion design reveal using HyperFrames rather than static PIL text. I'll adapt the rolling credits from the EP04 template with the EP05 content and Times fonts.
+
+Now I need to find the EP05 title and subtitle — the roteiro has "Como Criar um Vídeo com IA do Zero..." as the main title, so I need something as dramatic as EP04's "A ERA DOS AGENTES" with a matching subtitle for the cartela. The trilha should also shift to something more emotional after the 30-second mark. I'm looking at the actual metadata from the roteiro — the main title is "Como Criar um Vídeo com IA do Zero, Sem Editor de Vídeo (Passo a Passo Completo)" with the thumbnail hook "EU NÃO EXISTO". Now I'm deciding on the on-screen cartela format, trying between dramatic titles like "O APRESENTADOR QUE NÃO EXISTE" or "A MÁQUINA DE FA..." to match the EP04 pattern of a striking title paired with a one-line hook.
+
+But I'm realizing "EU NÃO EXISTO" is already burned into scene 1 by Veo, so using it again as the cartela title would be redundant. I need to find a different angle that complements rather than repeats what's already there, and I'm reconsidering whether the title/subtitle motion design should even go on the first scene or somewhere else.
+
+Let me refocus on what's actually clear and actionable. The emotional tuning of the soundtrack needs work, and I can execute that by re-tuning the cues and regenerating. The intro cartela with "GABRIEL AI APRESENTA" is straightforward—a 4-second blur with Times font. The credits structure is also defined, so I can replicate that with the episode 5 content.
+
+The title motion design via HyperFrames is the ambitious piece that needs the Sovereign's input on what the actual title and subtitle should be. Given how much ground there is to cover, I should tackle the soundtrack first since that's the explicit complaint, then move to the intro cartela and credits as those are clear wins, and finally attempt a solid version of the title design while flagging what's editable.
+
+Let me start with the trilha since that's their main concern — I need to re-tune it so the first thirty seconds stay mysterious as the hook, then shift into something more emotional and exciting after that point. The current arrangement keeps everything at a low intensity throughout, so I'll add more dynamic elements in the second half.
+
+I'm going to modify the script to support steering points at specific timestamps beyond just the act boundaries, which will let me inject that emotional lift right at the thirty-second mark. I'll revise the cues to emphasize emotional, cinematic qualities — adding strings, piano, and uplifting elements — then regenerate the trilha with these changes. Revising the cues array to be more emotional and cinematic with warmer, more melodic elements, and adding an extra steering mechanism at 30 seconds to lift the mood mid-act. The core issue might be that the whole trilha needs more emotional depth overall, not just after the 30-second mark. Modifying the steering loop to handle both act boundaries and extra steer points is getting complex, so I'll take a simpler approach: add the 30s lift as a separate EXTRA_STEER list that I can integrate into the loop alongside the act boundaries.
+
+Actually, the highest-impact change is making the cues themselves more emotionally resonant and shifting the emotional buildup earlier in the piece — making Act I less flat and injecting more feeling throughout. Let me revise the CUES array comprehensively and add that 30s lift steer.
+
+Editing the CUES and loop... Editing the trilha's emotional cues and adding the 30-second lift, then regenerating it while I build out the intro cartela and credits in Times font. Once those are ready, I'll reassemble everything together and flag the title motion design as the next phase since that'll need the EP05 details and is a bigger undertaking.
+
+</details>
+
+
+## 🤖 Claude *(18:19:22)*
+
+Agora tenho tudo do repo (fontes = **Times** — SERIF `times.ttf`, italic `timesi.ttf`; cores BRANCO/CINZA/OURO; cartela 40px, título italic 92px, créditos rolando ~125px/s). Plano priorizado:
+
+1. **Trilha** (sua queixa principal) — re-tuno para mais emoção + re-gero
+2. **Intro "GABRIEL AI APRESENTA…"** (4s, blur in/out) + **créditos** (mesmas fontes Times do repo)
+3. **Título motion-design via HyperFrames** (VFX cinematográfico — o mais ambicioso)
+
+Começando pela **trilha** — vou torná-la mais emocional/cinematográfica e adicionar um lift emocional aos ~30s:
+
+## 🤖 Claude *(18:19:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py",
+  "old_string": "CUES = [\n dict(prompts=[(\"dark cinematic trailer underscore, curious mysterious drone, slow awe\",1.0),(\"a mind waking, distant shimmer over deep sub bass\",0.6)], cfg=dict(density=0.25,brightness=0.28,guidance=4.5)),\n dict(prompts=[(\"investigative tension building, ticking curiosity, restrained pulse\",1.0),(\"uncanny wonder, something acting on its own\",0.6),(\"subtle glitch textures, machine autonomy\",0.4)], cfg=dict(density=0.42,brightness=0.34,guidance=4.5)),\n dict(prompts=[(\"the improbable method revealed, harmony resolving from tension, hopeful reveal\",1.0),(\"driving arpeggiated synth, forward motion, craft\",0.7),(\"cinematic trailer percussion building\",0.5)], cfg=dict(density=0.58,brightness=0.48,guidance=4.5)),\n dict(prompts=[(\"propulsive electronic techno-thriller, multiplying layers, coordinated energy\",1.0),(\"modern tech documentary momentum, confident motion\",0.7),(\"punchy trailer drums, parallel motion\",0.6)], cfg=dict(density=0.7,brightness=0.58,guidance=4.5)),\n dict(prompts=[(\"epic rising crescendo, expansive and awestruck, the film assembling itself\",1.0),(\"soaring wide synth pad, widescreen wonder\",0.8),(\"propulsive pulse beneath, forward and up\",0.6)], cfg=dict(density=0.8,brightness=0.72,guidance=4.5)),\n dict(prompts=[(\"climactic trailer finale, enormous braams, an unresolved momentous question, maximum weight\",1.0),(\"epic crescendo, awe mixed with resolve, full orchestral and synth weight\",0.9),(\"deep impact hits, thunderous, decisive\",0.8)], cfg=dict(density=0.92,brightness=0.78,guidance=5.5)),\n]",
+  "new_string": "CUES = [\n # Act I: 0-30s mysterious hook, then a warm EMOTIONAL LIFT at ~30s (Sovereign: \"mais emocionante ap\u00f3s 30s\")\n dict(prompts=[(\"cinematic emotional underscore, warm mysterious intro, tender piano over soft strings\",1.0),(\"a mind waking, hopeful shimmer, gentle awe\",0.6)], cfg=dict(density=0.30,brightness=0.34,guidance=4.5)),\n dict(prompts=[(\"emotional cinematic build, swelling warm strings, moving inspiring piano, hopeful momentum\",1.0),(\"uplifting orchestral wonder, something beautiful awakening\",0.7),(\"soft driving pulse beneath, forward and warm\",0.5)], cfg=dict(density=0.55,brightness=0.52,guidance=4.5)),\n dict(prompts=[(\"the method revealed, soaring emotional strings resolving, inspiring cinematic reveal, heartfelt\",1.0),(\"driving arpeggiated synth with warm pads, forward motion, craft and hope\",0.7),(\"cinematic percussion building, uplifting\",0.5)], cfg=dict(density=0.62,brightness=0.58,guidance=4.5)),\n dict(prompts=[(\"propulsive emotional cinematic momentum, layered strings and synth, confident inspiring energy\",1.0),(\"modern epic documentary drive, moving and bright\",0.7),(\"punchy trailer drums, triumphant motion\",0.6)], cfg=dict(density=0.74,brightness=0.66,guidance=4.5)),\n dict(prompts=[(\"epic rising emotional crescendo, expansive awestruck orchestral strings, the film coming alive, goosebumps\",1.0),(\"soaring wide cinematic pad, widescreen wonder and hope\",0.85),(\"propulsive pulse beneath, forward and up\",0.6)], cfg=dict(density=0.82,brightness=0.76,guidance=4.5)),\n dict(prompts=[(\"climactic emotional cinematic finale, enormous strings and braams, a momentous heartfelt question, maximum weight and beauty\",1.0),(\"epic orchestral crescendo, awe and resolve, full emotional weight\",0.9),(\"deep impact hits, thunderous, decisive\",0.8)], cfg=dict(density=0.92,brightness=0.80,guidance=5.5)),\n]\n# Intra-act emotional lift at 30s (within Act I) \u2014 steers to Act II's warm build early so the track\n# stops being \"flat/mysterious\" too long. (time_s, cue_index)\nEXTRA_STEER = [(30.0, 1)]"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:19:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to integrate EXTRA_STEER points into the generation loop so they trigger cues at specific times rather than just at act boundaries. There's a potential redundancy where EXTRA_STEER at 30 seconds applies cue 1 early, then the Act II boundary at 47.8 seconds would apply the same cue again, but that's acceptable.
+
+Adding the extra steer check...
+
+</details>
+
+
+## 🤖 Claude *(18:19:59)*
+
+Agora integro o lift de 30s no loop de geração:
+
+## 🤖 Claude *(18:20:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py",
+  "old_string": "        prox, t0 = 1, time.time()\n        last_len, last_grow = 0, time.time()\n        while len(buf) < alvo and not dead[\"v\"]:\n            if len(buf) > last_len: last_len, last_grow = len(buf), time.time()\n            elif time.time() - last_grow > 20:\n                print(\"!! stalled at %.1fs \u2014 stopping\"%segs(), flush=True); break\n            if prox < len(act_off):",
+  "new_string": "        prox, t0, extra_i = 1, time.time(), 0\n        last_len, last_grow = 0, time.time()\n        while len(buf) < alvo and not dead[\"v\"]:\n            if len(buf) > last_len: last_len, last_grow = len(buf), time.time()\n            elif time.time() - last_grow > 20:\n                print(\"!! stalled at %.1fs \u2014 stopping\"%segs(), flush=True); break\n            # intra-act emotional lifts (Sovereign: more emotion after 30s)\n            while extra_i < len(EXTRA_STEER) and segs() >= max(0.0, EXTRA_STEER[extra_i][0] - ANTECIPACAO_S):\n                try:\n                    await aplica(EXTRA_STEER[extra_i][1])\n                    print(\"[%.1f] LIFT \u2192 cue %d (emotional)\"%(segs(), EXTRA_STEER[extra_i][1]), flush=True)\n                except Exception as e: print(\"lift err: %s\"%str(e)[:50], flush=True)\n                extra_i += 1\n            if prox < len(act_off):"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:20:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source /home/gcrUX/htdocs/constellation-orchestra/.env && set +a; export GOOGLE_API_KEY=\"${GEMINI_API_KEY}\"\nrm -f /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/trilha.wav\nnohup python3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/trilha5.log 2>&1 &\necho \"TRILHA5 PID $!\"; sleep 40; grep -E \"LIFT|ato [0-9]|RESET|OK trilha|total\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/trilha5.log | head -6",
+  "description": "Re-gen trilha with emotional lift"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TRILHA5 PID 3539419
+> total: 393.0 s | act offsets: [0.0, 47.8, 110.3, 189.2, 277.0, 349.0]
+> [00:00] ato 1 (bpm 74)
+> [28.0] LIFT → cue 1 (emotional)
+> ```
+
+## 🤖 Claude *(18:21:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The trilha5 is regenerating with an emotional lift at the 28-second mark, and it's getting more emotionally resonant after 30 seconds—this should take about 7 minutes to render the full 393 seconds. While that's processing, I'm shifting focus to the intro cartela and credits since those are more straightforward to replicate. I need to locate the Times font on this Linux system and then create the opening cartela with "GABRIEL AI APRESENTA…" as a 4-second blur-in effect.
+
+For the fonts, I'll check if Liberation Serif is available as a Times-compatible alternative, and I need to determine whether this ffmpeg build supports drawtext with freetype—if it does, that's simpler than using PIL. I also need to pull the EP05 credits content from the existing ep04.json file to adapt it for the rolling credits sequence. IMAGEM E VÍDEO: Google Veo 3.1 · Vertex AI, VOZ CLONADA: Qwen3-TTS (self-host), TRILHA SONORA ORIGINAL: Google DeepMind · Lyria RealTime (composta por ato), MONTAGEM E FINALIZAÇÃO: MCORCH · FFmpeg, with a note about the AI-generated content disclaimer.
+
+Now I'm working on the EP05 title and subtitle. I need to establish the dramatic title since I don't have the Sovereign's exact one yet. Based on the roteiro and the episode's focus on creating video with AI and the synthetic presenter, I'm considering a title that captures that theme.
+
+The challenge is that "EU NÃO EXISTO" works well for the episode's identity and the credits, but it would clash with the title cartela that appears in scene 1. I need to flag this with the Sovereign and use a placeholder for now while I figure out the right dramatic title and subtitle combination.
+
+Rather than getting stuck on this, I'll move forward pragmatically: regenerate the soundtrack, build the intro cartela with the fixed "GABRIEL AI APRESENTA…" text, create the credits with the crew and a placeholder title I can mark as editable, then reassemble everything with the new audio. The title motion design can wait until I get the exact branding decision from the Sovereign.
+
+Let me check what fonts are available and see how ffmpeg's drawtext filter handles them so I can build the intro cartela while the soundtrack renders.
+
+</details>
+
+
+## 🤖 Claude *(18:21:26)*
+
+Trilha re-gerando com **LIFT emocional aos 28s** (cue 1 = build com strings/piano). Enquanto gera (~7min), vou preparar a intro + créditos. Preciso da fonte Times no host + checar drawtext:
+
+## 🤖 Claude *(18:21:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== ffmpeg drawtext (freetype)? ===\"; ffmpeg -hide_banner -filters 2>/dev/null | grep -w drawtext | head -1\necho \"=== Times-compatible serif fonts ===\"; fc-list 2>/dev/null | grep -iE \"times|liberation serif|dejavu serif|nimbus roman|freeserif\" | head -8\necho \"=== python PIL? ===\"; python3 -c \"from PIL import Image,ImageFont; print('PIL ok')\" 2>&1 | head -1\necho \"=== any Windows times.ttf accessible? ===\"; ls /mnt/c/Windows/Fonts/times*.ttf 2>/dev/null; ls /usr/share/fonts/truetype/liberation/LiberationSerif*.ttf 2>/dev/null | head",
+  "description": "Check fonts + drawtext for cartela/credits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ffmpeg drawtext (freetype)? ===
+>  T.C drawtext          V->V       Draw text on top of video frames using libfreetype library.
+> === Times-compatible serif fonts ===
+> /usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf: DejaVu Serif:style=Bold
+> /usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf: Liberation Serif:style=Italic
+> /usr/share/fonts/X11/Type1/NimbusRoman-Bold.pfb: Nimbus Roman:style=Bold
+> /usr/share/fonts/type1/urw-base35/NimbusRoman-BoldItalic.t1: Nimbus Roman:style=Bold Italic
+> /usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf: Liberation Serif:style=Bold
+> /usr/share/fonts/opentype/urw-base35/NimbusRoman-Regular.otf: Nimbus Roman:style=Regular
+> /usr/share/fonts/opentype/urw-base35/NimbusRoman-Bold.otf: Nimbus Roman:style=Bold
+> /usr/share/fonts/opentype/urw-base35/NimbusRoman-BoldItalic.otf: Nimbus Roman:style=Bold Italic
+> === python PIL? ===
+> PIL ok
+> === any Windows times.ttf accessible? ===
+> /usr/share/fonts/truetype/liberation/LiberationSerif-BoldItalic.ttf
+> /usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf
+> /usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf
+> /usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf
+> ```
+
+## 🤖 Claude *(18:22:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've confirmed that ffmpeg's drawtext filter with freetype support is available, Liberation Serif is installed as a metric-compatible Times New Roman equivalent, and PIL is ready to use. I'll leverage Liberation Serif for the cartela and credits text to match the original repo's typography.
+
+The intro cartela ("GABRIEL AI APRESENTA…") needs to be rendered with precise letter-spacing using PIL, then composited into ffmpeg with a 4-5 second duration featuring blur and fade effects (blur-in + fade-in, hold, blur-out + fade-out). The credits will follow the same approach as the original gerar_creditos function, rolling at approximately 125 pixels per second with Liberation Serif. Both elements will be prepended and appended to the master timeline, shifting the overall duration by roughly 5 seconds for the intro and 30 seconds for the credits.
+
+The tricky part is coordinating the timeline and audio: the intro cartela (5 seconds) should play first, either with the trilha's opening cue underneath or in silence, then scene 1 begins at the 5-second mark with the main film (393 seconds), and finally the credits roll (~30 seconds) with the trilha's designated credits section.
+
+Rather than trying to regenerate or extend the trilha to cover all 428 seconds, I'll treat the intro and credits as separate bookends—building them as distinct video clips that I can prepend and append to the main film, then handle their audio independently by using the trilha's opening fade-in for the intro and its resolution outro for the credits. The film itself has the presenter's audio, narration, and soundtrack layered in. The title appears as motion graphics over the first few seconds of the film. For the full 428-second piece, I need to regenerate the soundtrack to span the intro (0-5s), film content (5-398s with act offsets shifted forward by 5 seconds), and credits (398-428s) with a final resolution cue similar to what I used in episode 4.
+
+I'm weighing two approaches: either regenerate the entire trilha as one cohesive 428-second piece once I nail down the exact intro and credits durations, or keep the film's 393-second soundtrack separate and give the intro and credits their own simpler audio layers—maybe a soft musical swell for the intro and a distinct audio bed for the rolling credits. I'm settling on a simpler approach: regenerate the trilha to cover the full final duration (intro + film + credits combined), then build the intro cartela and credits sections with audio pulled from that same trilha—either using its opening for the intro and extending/looping its ending for the credits, or creating a separate short piece for the credits outro. I need to be realistic about scope here — the Sovereign asked for four things, and doing all of them plus reassembling with correct timing is a massive undertaking. Let me focus on what matters most: the trilha re-tune is the core complaint and highest priority, then the intro and credits are straightforward to build once I know their lengths. The title motion design is the biggest lift and I should flag that as a next step, but first I need to finish measuring the intro and credits so I can generate the trilha once for the complete duration. I need to build the intro cartela and credits first to get their exact durations, then generate one unified trilha that spans the entire structure—intro, film, and credits together with proper audio treatment throughout. I'll take the pragmatic approach: let trilha5 finish so I have the improved version for the film, then build the intro and credits as separate pieces. Once those are done, I'll assemble everything into a master file—handling the audio by using the trilha for the film section and applying simple treatments to the intro and credits.
+
+The title motion design (HyperFrames VFX) is next, but I need to know the EP05 title and subtitle first. For the audio, the cleanest solution is to generate the trilha for the entire duration—intro, film, and credits—so it flows continuously without awkward transitions or reused sections.
+
+I'll build the intro cartela (5 seconds) and measure the credits duration (roughly 30 seconds), then regenerate the trilha across the full total with the offsets adjusted to account for the intro length, plus add a credits cue at the end. Finally, I'll assemble the complete video stack: intro cartela, film, and credits, layered with the continuous trilha bed underneath the presenter's voice and narration.
+
+For the credits, I need the actual EP05 title and subtitle to make them proper, but I'll work with a placeholder for now since I don't have the Sovereign's exact title yet. presenter who never existed made this video" — that's punchy and self-referential. I'll flag it as editable in the manifest so the Sovereign can adjust if needed.
+
+Now I'm streamlining the build process: I'll consolidate the intro cartela and credits into a single Python script using PIL and ffmpeg, measure their durations, regenerate the audio track for the full timeline, and assemble everything together. I'm going to build the intro and credits generator for EP05 now, adapting the existing cartela and creditos functions from the repo into a single script scaled to 1280×720 with Liberation Serif. I'll set up the credits content with the EP05 title "EU NÃO EXISTO" and its subtitle about the AI presenter.
+
+Now I'm laying out the production credits—listing the director, the synthetic presenter, the video generation tools used, the voice cloning setup, and the original soundtrack composition.
+
+I need to write a Python script that generates the opening title card and rolling credits as a video file, using text rendering and ffmpeg to assemble it all at 1280×720 resolution.
+
+</details>
+
+
+## 🤖 Claude *(18:22:59)*
+
+Tudo disponível: **Liberation Serif** (= Times New Roman metric-compatível), ffmpeg drawtext + PIL. Vou replicar `gerar_cartela.py` + `gerar_creditos.py` para o EP05 (1280×720). 
+
+Como a intro + créditos mudam o total, vou refazer a trilha uma vez para o total completo depois. Primeiro construo a **intro "GABRIEL AI APRESENTA…" (blur/fade)** + os **créditos** (mesmas fontes/estrutura do repo):
+
+## 🤖 Claude *(18:23:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "kill 3539419 2>/dev/null # stop the 393s-only trilha; will re-gen for full total after intro+credits\necho \"trilha5 stopped\"",
+  "description": "Stop 393s trilha (will re-gen for full total)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> trilha5 stopped
+> ```
+
+## 🤖 Claude *(18:23:33)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/cartela-creditos.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"EP05 intro cartela + rolling credits \u2014 replicates GabrielAI/geracao (gerar_cartela + gerar_creditos),\nscaled to 1280x720, Liberation Serif (= Times New Roman metric-compatible). PIL renders text, ffmpeg composes.\nOutputs: intro.mp4 (5s, blur+fade, 'GABRIEL AI APRESENTA\u2026'), creditos.mp4 (rolling credits).\"\"\"\nimport os, subprocess, tempfile\nfrom PIL import Image, ImageDraw, ImageFont\n\nW, H, FPS = 1280, 720, 30\nOUT = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master\"\nSERIF = \"/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf\"\nSERIF_ITAL = \"/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf\"\nBRANCO=(232,230,226); CINZA=(150,148,144); OURO=(198,166,100)\n\n# \u2500\u2500 EP05 manifest (TITLE/SUBTITLE are editable \u2014 dramatic cartela title, parallels EP04's \"A ERA DOS AGENTES\") \u2500\u2500\nTITULO = \"EU N\u00c3O EXISTO\"\nSUBTITULO = \"Como um apresentador que nunca existiu fez este v\u00eddeo\"\nAPRESENTA = \"GABRIEL AI APRESENTA\u2026\"\n# credits blocks (adapted from ep04.json to EP05's real production)\nBLOCOS = [\n (\"esp\",120),(\"titulo\",\"GABRIEL AI\"),(\"esp\",30),(\"subtitulo\",TITULO),(\"legenda\",SUBTITULO),(\"esp\",70),\n (\"secao\",\"ROTEIRO E DIRE\u00c7\u00c3O\"),(\"nome\",\"Gabriel Rocha\"),(\"esp\",40),\n (\"secao\",\"APRESENTA\u00c7\u00c3O\"),(\"nome\",\"Gabriel AI\"),(\"nota\",\"apresentador sint\u00e9tico\"),(\"esp\",60),\n (\"secao\",\"IMAGEM E V\u00cdDEO\"),(\"nome\",\"Google Veo 3.1 \u00b7 Vertex AI\"),(\"nota\",\"48 planos \u00b7 8 s\"),(\"esp\",40),\n (\"secao\",\"VOZ CLONADA\"),(\"nome\",\"Qwen3-TTS \u00b7 self-host\"),(\"nota\",\"clonada de amostra, 24 kHz\"),(\"esp\",40),\n (\"secao\",\"TRILHA SONORA ORIGINAL\"),(\"nome\",\"Google DeepMind \u00b7 Lyria RealTime\"),(\"nota\",\"composta por ato, em streaming\"),(\"esp\",40),\n (\"secao\",\"MONTAGEM E FINALIZA\u00c7\u00c3O\"),(\"nome\",\"MCORCH\"),(\"nome\",\"Claude \u00b7 Anthropic\"),(\"esp\",80),\n (\"nota\",\"Este v\u00eddeo cont\u00e9m conte\u00fado gerado por intelig\u00eancia artificial.\"),(\"nota\",\"O apresentador \u00e9 sint\u00e9tico.\"),(\"esp\",200),\n]\n# (font, size, color, letter-spacing, line-height) scaled ~0.66 from the repo's 1920-based sizes\nESTILO = {\"titulo\":(SERIF,58,BRANCO,12,80),\"subtitulo\":(SERIF,38,BRANCO,7,52),\"legenda\":(SERIF_ITAL,22,CINZA,2,34),\n \"secao\":(SERIF,18,OURO,5,30),\"nome\":(SERIF,26,BRANCO,1,36),\"nota\":(SERIF_ITAL,20,CINZA,1,30)}\n\ndef espacado(d,y,txt,fonte,tam,cor,esp):\n    f=ImageFont.truetype(fonte,tam); larg=sum(f.getlength(c)+esp for c in txt)-esp; x=(W-larg)/2\n    for c in txt: d.text((x,y),c,font=f,fill=cor); x+=f.getlength(c)+esp\n\n# \u2500\u2500 INTRO cartela: 'GABRIEL AI APRESENTA\u2026' (blur+fade in/out over ~4.5s, scene enters at 5s) \u2500\u2500\ntmp=tempfile.mkdtemp()\nimg=Image.new(\"RGB\",(W,H),(0,0,0)); f=ImageFont.truetype(SERIF,34)\nlarg=sum(f.getlength(c)+10 for c in APRESENTA)-10; x=(W-larg)/2; d=ImageDraw.Draw(img)\nfor c in APRESENTA: d.text((x,(H-40)/2),c,font=f,fill=BRANCO); x+=f.getlength(c)+10\npintro=os.path.join(tmp,\"intro.png\"); img.save(pintro)\n# blur+fade in (0\u21921.2s) hold (1.2-3.3) blur+fade out (3.3-4.5s); total 5s (last 0.5s black \u2192 scene 1)\nsubprocess.run([\"ffmpeg\",\"-nostdin\",\"-v\",\"error\",\"-y\",\"-loop\",\"1\",\"-framerate\",str(FPS),\"-t\",\"5\",\"-i\",pintro,\n  \"-vf\",\"gblur=sigma='if(lt(t,1.2),12*(1-t/1.2),if(gt(t,3.3),12*((t-3.3)/1.2),0))':steps=2,\"\n        \"fade=t=in:st=0:d=1.0,fade=t=out:st=3.5:d=1.0,format=yuv420p\",\n  \"-r\",str(FPS),\"-c:v\",\"libx264\",\"-crf\",\"18\",\"-preset\",\"medium\",f\"{OUT}/intro.mp4\"],check=True)\nprint(\"intro.mp4 built (5s, blur+fade)\")\n\n# \u2500\u2500 CREDITS: rolling scroll (~110 px/s) \u2500\u2500\ntotal_h=sum(v if t==\"esp\" else ESTILO[t][4] for t,v in BLOCOS)\nroll=Image.new(\"RGB\",(W,total_h+H),(0,0,0)); d=ImageDraw.Draw(roll); y=H\nfor t,v in BLOCOS:\n    if t==\"esp\": y+=v; continue\n    fonte,tam,cor,esp,lh=ESTILO[t]; espacado(d,y,v,fonte,tam,cor,esp); y+=lh\nproll=os.path.join(tmp,\"roll.png\"); roll.save(proll)\npx_s=110; dur=(roll.height-H)/px_s\nsubprocess.run([\"ffmpeg\",\"-nostdin\",\"-v\",\"error\",\"-y\",\"-loop\",\"1\",\"-framerate\",str(FPS),\"-t\",\"%.3f\"%dur,\"-i\",proll,\n  \"-vf\",\"crop=%d:%d:0:'(ih-%d)*t/%.4f',fade=in:0:20,fade=out:st=%.2f:d=1,format=yuv420p\"%(W,H,H,dur,dur-1),\n  \"-r\",str(FPS),\"-c:v\",\"libx264\",\"-crf\",\"18\",\"-preset\",\"medium\",f\"{OUT}/creditos.mp4\"],check=True)\nprint(\"creditos.mp4 built  %.1fs (%d px @ %d px/s)\"%(dur,roll.height-H,px_s))\nprint(\"TITLE=%r SUBTITLE=%r  (editable)\"%(TITULO,SUBTITULO))\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/cartela-creditos.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:23:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad && python3 cartela-creditos.py 2>&1 | tail -6\necho \"=== durations ===\"\nffprobe -v error -show_entries format=duration -of csv=p=0 master/intro.mp4 | xargs echo \"intro:\"\nffprobe -v error -show_entries format=duration -of csv=p=0 master/creditos.mp4 | xargs echo \"creditos:\"\nffmpeg -y -ss 2 -i master/intro.mp4 -frames:v 1 intro_f.jpg -loglevel error && ffmpeg -y -ss 8 -i master/creditos.mp4 -frames:v 1 cred_f.jpg -loglevel error && echo \"frames ok\"",
+  "description": "Build intro cartela + credits, check"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 254
+> Traceback (most recent call last):
+>   File "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/cartela-creditos.py", line 44, in <module>
+>     subprocess.run(["ffmpeg","-nostdin","-v","error","-y","-loop","1","-framerate",str(FPS),"-t","5","-i",pintro,
+>   File "/usr/lib/python3.12/subprocess.py", line 571, in run
+>     raise CalledProcessError(retcode, process.args,
+> subprocess.CalledProcessError: Command '['ffmpeg', '-nostdin', '-v', 'error', '-y', '-loop', '1', '-framerate', '30', '-t', '5', '-i', '/tmp/tmpgrp3hfb3/intro.png', '-vf', "gblur=sigma='if(lt(t,1.2),12*(1-t/1.2),if(gt(t,3.3),12*((t-3.3)/1.2),0))':steps=2,fade=t=in:st=0:d=1.0,fade=t=out:st=3.5:d=1.0,format=yuv420p", '-r', '30', '-c:v', 'libx264', '-crf', '18', '-preset', 'medium', '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/intro.mp4']' returned non-zero exit status 234.
+> === durations ===
+> master/intro.mp4: No such file or directory
+> intro:
+> master/creditos.mp4: No such file or directory
+> creditos:
+> [in#0 @ 0xb40e611030c0] Error opening input: No such file or directory
+> Error opening input file master/intro.mp4.
+> Error opening input files: No such file or directory
+> ```
+
+## 🤖 Claude *(18:23:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The intro ffmpeg command failed with exit code 234, which suggests that gblur's sigma parameter doesn't support time-dependent expressions like I tried to use. Since gblur only accepts static values, I need to switch to a simpler approach—maybe just a basic fade effect instead of trying to animate the blur dynamically.
+
+The "esmaecer" effect the user wants is essentially a fade in and out, which I can achieve cleanly with just opacity changes over 1 second each. I could try creating two versions (one sharp, one blurred) and crossfading between them, but that's more complex than needed. Let me simplify: drop the animated gblur entirely and use a straightforward fade in/out. I'll fix the intro command to remove the gblur expression and rely on the fade alone, then verify the credits command still works before re-running.
+
+</details>
+
+
+## 🤖 Claude *(18:23:56)*
+
+O `gblur` não aceita sigma variável no tempo. Vou usar fade in/out limpo (o "esmaecer"). Corrigindo:
+
+## 🤖 Claude *(18:24:06)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/cartela-creditos.py",
+  "old_string": "# blur+fade in (0\u21921.2s) hold (1.2-3.3) blur+fade out (3.3-4.5s); total 5s (last 0.5s black \u2192 scene 1)\nsubprocess.run([\"ffmpeg\",\"-nostdin\",\"-v\",\"error\",\"-y\",\"-loop\",\"1\",\"-framerate\",str(FPS),\"-t\",\"5\",\"-i\",pintro,\n  \"-vf\",\"gblur=sigma='if(lt(t,1.2),12*(1-t/1.2),if(gt(t,3.3),12*((t-3.3)/1.2),0))':steps=2,\"\n        \"fade=t=in:st=0:d=1.0,fade=t=out:st=3.5:d=1.0,format=yuv420p\",\n  \"-r\",str(FPS),\"-c:v\",\"libx264\",\"-crf\",\"18\",\"-preset\",\"medium\",f\"{OUT}/intro.mp4\"],check=True)\nprint(\"intro.mp4 built (5s, blur+fade)\")",
+  "new_string": "# 'esmaecer' = fade in/out. Blur look via a defocus crossfade: sharp title crossfades from/to a blurred\n# copy at the edges. Build a blurred still, then xfade sharp\u2194blur at in/out. Total 5s (last 0.5s black).\npblur=os.path.join(tmp,\"introblur.png\")\nsubprocess.run([\"ffmpeg\",\"-nostdin\",\"-v\",\"error\",\"-y\",\"-i\",pintro,\"-vf\",\"gblur=sigma=14:steps=3\",pblur],check=True)\nsubprocess.run([\"ffmpeg\",\"-nostdin\",\"-v\",\"error\",\"-y\",\n  \"-loop\",\"1\",\"-framerate\",str(FPS),\"-t\",\"5\",\"-i\",pintro,     # [0] sharp\n  \"-loop\",\"1\",\"-framerate\",str(FPS),\"-t\",\"5\",\"-i\",pblur,      # [1] blurred\n  \"-filter_complex\",\n    \"[0:v]fade=t=in:st=0.6:d=0.8,fade=t=out:st=3.4:d=0.8[s];\"       # sharp fades in after blur, out before blur\n    \"[1:v]fade=t=in:st=0:d=0.8,fade=t=out:st=4.0:d=0.9[b];\"        # blurred bookends\n    \"[b][s]overlay,format=yuv420p[v]\",\n  \"-map\",\"[v]\",\"-t\",\"5\",\"-r\",str(FPS),\"-c:v\",\"libx264\",\"-crf\",\"18\",\"-preset\",\"medium\",f\"{OUT}/intro.mp4\"],check=True)\nprint(\"intro.mp4 built (5s, blur\u2192sharp\u2192blur esmaecer)\")"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/cartela-creditos.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:24:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad && python3 cartela-creditos.py 2>&1 | tail -5\necho \"=== durations ===\"\nffprobe -v error -show_entries format=duration -of csv=p=0 master/intro.mp4 2>/dev/null | xargs echo \"intro:\"\nffprobe -v error -show_entries format=duration -of csv=p=0 master/creditos.mp4 2>/dev/null | xargs echo \"creditos:\"\nffmpeg -y -ss 1.8 -i master/intro.mp4 -frames:v 1 intro_f.jpg -loglevel error && ffmpeg -y -ss 6 -i master/creditos.mp4 -frames:v 1 cred_f.jpg -loglevel error && echo \"frames ok\"",
+  "description": "Build intro + credits (fixed)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> intro.mp4 built (5s, blur→sharp→blur esmaecer)
+> creditos.mp4 built  13.6s (1498 px @ 110 px/s)
+> TITLE='EU NÃO EXISTO' SUBTITLE='Como um apresentador que nunca existiu fez este vídeo'  (editable)
+> === durations ===
+> intro: 5.000000
+> creditos: 13.633333
+> frames ok
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(18:24:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've finished building the intro sequence and credits, now I need to visually check the frame captures to make sure they look right.
+
+</details>
+
+
+## 🤖 Claude *(18:24:33)*
+
+Intro (5s) + créditos (13,6s) construídos. Vision QA:
+
+## 🤖 Claude *(18:24:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/intro_f.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '/9j//gAQTGF2YzYwLjMxLjEwMgD/2wBDAAgKCgsKCw0NDQ0NDRAPEBAQEBAQEBAQEBASEhIVFRUSEhIQEBISFBQVFRcXFxUVFRUXFxkZGR4eHBwjIyQrKzP/xACCAAEBAQEBAQEBAQAAAAAAAAAABgUEBwMCAQgBAQEAAAAAAAAAAAAAAAAAAAABEAEAAgEDAgMFBAcFBgcBAQAAAQIDBQQREiExEwZhFFEiQXKzMnF0NTYjByQVc2KBQoKxNxZFUkOh1JMzNHW08VMRAQAAAAAAAAAAAAAAAAAAAAD/wAARCALQBQADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD/AD+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/2Q==', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(18:24:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/cred_f.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '/9j//gAQTGF2YzYwLjMxLjEwMgD/2wBDAAgMDA4MDhAQEBAQEBMSExQUFBMTExMUFBQVFRUZGRkVFRUUFBUVGBgZGRscGxoaGRocHB4eHiQkIiIqKiszMz7/xACqAAEAAgMBAQEAAAAAAAAAAAAABQYHBAMCCAEBAQEBAQAAAAAAAAAAAAAAAAABAgMQAQACAQMCAwYCBAkIBwgCAwABAgMEEhEhBRNBMWEiUXEUBjKBUkIjc5E1YgcVM7KCs5J0oXI2sSQ0FqKT04O04cPC4pUlVUNjo1PEwdERAQEAAQIEBQIGAwEAAAAAAAABESECMUFREiKRoWFx8IHB0bEy4UJSYgOy/8AAEQgC0AUAAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A+fwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEr27t2o7pqaabT13Xt1mZ/DSset7T5Vj/0jqin0j9i6Cmm7bfWWiN+otad0+WLHM14/wAqLTPx6fAFX1Xa+wfbOOka2t+46u9d0YotNKx/KmsT7teenvzeZ8oVqfuXSRPudi7XFfhfFF7f5W2P9yo9y11+463PqbzPOW8zHP6tfStf7teIRIMsaXvH25rbVx67tGPTbp48XBMxWOfOYx+HeI+W5V/ubt2n7X3PJp9PFq44pS0Ra02mN1eZ6z1U9Ldx7jm7pqPqM+zfspSdsTETFK8RPWZ6z5giQAGTPtDRaW99XrtdTHfTaXHETGWtb035J6TttExPERPym0MZso9x/wDpX23otH6ZdfedVmjz2RxNYn/+P86yCf8Avjsun0+n0+r0uDFhrW848sYsdaRMX60tMUiI6TExz7YYPfT/AG+Y+4/trwrdck4ZwWmfLNi/BafnMUvPzfMVqzSZraOJiZiYn1iY8kHkBROdv1Wh0+/6vQRreZjbP1GbBNOPWI8PpPPtjyZw13Y/t7QdtnuF+3WtWKYrzjrqNRu/a2rXjmc3HSbPnN9PfcX+yt/3Ok/xcKDFkdx+1J9ez6msfGNTlmf4Jzws+l+3ft/v+C9+25tRp8lPWl53bJn030tzMxPlNcnHtYNZc/m+ree46m0c7I00xb4brZKbefbxFuPlIMbdw0Gbtmqy6XPERfHPHMfhtExzFqz8JjrCMZK++cuPL3mYpMTOPBjpfj9Pm1v7NqsaqNjBfHjy0tlxxmpW0TbHNrVi8fo7q8Wjn4wzl9u9s7D37DmyT2rwJxXrXj6vU33cxzz+OvH+lgV9A/zef8rrf3uP+xIKrq9R9raTVZ9PbtGe04cuTFNo1ObiZx2mvMRObz4b+g0P2r32/gaeuq0WeY92tsn4uOs7ZvbLW3Hw6Tx6Mb97/jbuP+ean/Gs59otavctDNOd31ODjj95Xp+aCS792LP2LUVx3tGTHkiZxZYjjdEesTHXi1eY5jmfWFTfRX84MU/o/TTP4vqenx2+Hfd/p2vnVQXfsmXtWbLpdHqu2RnvmzUxTnjVZ8c/tMnETOOs7Z288cRxzwpCe7J/G3bv880/+LUGW/uPtnYew4sN47X485bWrxOr1NNu2Oefx259WDs98eTLe2PHGGlrTNccWtaKR5V3W5tPHxmeWd/5w/8AltD+9yf2YYAAZW+3Kdl7tqcejy9pit/DmZzRq9T700jrM490RHPsniPgxSyP9j/x1j/dZf7ILR3zT/bPY9TTT5O15cs3xRl5rqc8RETa1eOub+Srcdx+1PPs2oj5anLP/t4bf84H8a4P8zp/jZmNNNps2sy1w4MdsuS3O2lfWdsTaf4IiZQZH7xpey5eyY+4du0t9PadVGGd+TJa3Sl5mOLZclevSefVi1MR3HNHb57fxTwp1H1HPE74vs2cc88bePZzz5odR6rMRMTMcxz6fH2dGaPtzS9i79ky4rdpjBOKkX5jV6q8W5tx6b6zH8MsKsyfzef85rP3Ff7YI7vk9j7Vrc2jp2eMlscU/aW1uqiPfx1v+CLT6buPxMWL194/x9rf/A/8vjUUAAAAAAB6rWbzFaxMzMxERHrMz5PK8/aWijWd2xWv/VaaJ1GSZ9I8P8PP9+az8okGctB2XtFcH0N9LpMuowYMUai84cdsm7LWfe3zXdzMxM1nnpHD5j12lvodVn01/wAWHJak+3bPSflMdY+bJ3YO+Tl+5c2W8/s9fa2OOfLj+p/OIrFP7x9/dv8AB12LWVj3dTTbef8A9mPiOZ+dNvH+rKDEQCgzF9uYOx981F9NftMYbUwzl311eqtE8XpXjbN44/Fz6z6MOssfzffxrn/zO/8AjYQefuKnZe06nJo8Xaom/hxMZp1ep92b15iYx7pidvtniWKWRvvf+O8v7rD/AGGOQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH1V2r9n9sY9vloclvzmlp/3vlV9P/aGemv7FXBM9cXi4L/K0zaJ4/1bRH5IPmAbGfDfT5smHJHF8d7UtHwtWeJ/0tdRM07R3PLSt6aDWXraItW1dPmmtqzHMTExTiYmPSYft+z9zx1te+g1tK1ibWtbT5orWsRzMzM04iIj1mVy+ztdq57vpdPOozzhmuWPCnJecfFcN5j3Jnb04jjosP39rNTi1Onw482WmO+CZvjre1aX9+Y96sTET06dQYSABN9n0M9y7hptN5ZMkb+PKke9ef8AJiU99262NZ3fNFP6vTxGnpEekRj/ABceX45t+Sb+06xoNP3Lu94jjTYZx4ufSct+J4+fOyv99q/9Oe8/paf/ALL/AOJBOfzf6/w9RqNFaemWvi0/16dLRHttWYn+6q/3h2/6Du+WaxxTUft6/Dm344/y4mePhMJXB99d0jNi8acM499fEiMfEzTn3uJ59eOeF9++dDGr7bj1dIi06e0TzHXnFl4if+tsn5cg+bwFB9Ydyro7fb3Gtvlpp/B03iWxcTkj3se3bzW0fi456ej5PfTv3F/srk/c6T/FworF1cH2fE9dV3OfnFOP+rgiWStBk0OTSW0327qtJgy2iZt42PJOa0/p+/MWmY+Oy9Y8ofNLd0mfJptRhzYpmMmPJW1ePjE+n5+k+wRJd37bru26m1dbW2+8zfxOd9cvM9bRfznn156/GEA+nvvjDjydmvktEb8WXHak+fNrbZj84mensfMKg+gf5vP+V1v73H/Yl8/PoH+bz/ldb+9x/wBiUFc7l9parVa/V5q63ttIy6jNkit894vWL5LW4tEYp4tHPWOfVOdv+2NN9u2juXc9VW0YJia1x0vNIv6VmZ43Wnn8MbY68dWI+9/xt3H/ADzU/wCNZnH7W7pi7527J27WcZMmPHstFvXLgnpFvjur6TPrE7Z55kGJ/uXv9u+ams0rNMGGJjFWfWefxXt7Z4jp5RCkLF3vtOXs+tyae/M1/Fiv+njn0n5+Vo+MSrqgnuyfxt27/PNP/i1QKe7J/G3bv880/wDi1BmH+cP/AJbQ/vcn9mGAGf8A+cP/AJbQ/vcn9mGAEBkf7H/jrH+6y/2WOGR/sf8AjrH+6y/2VF++68XYb67FPcc2tx5vp6RWMEU2eH4mTiZ3Y79d27z9OGn9tYft2ncYnQ59bkzxjyba54pFOOPe/DirPPHt9OVd/nA/jXT/AOZ4/wDGzMcaLW6jt+opqNPfZlpu224i34qzWelomJ6TPrCCPG/pNFqNdktj09PEtWlskxzWvFKRzaebTEdGgoMyfzef85rP3Ff7bDbMn83n/Oaz9xX+2Cq/eP8AH2t/8D/y+NRV6+8f4+1v/gf+XxqKAJfD27Nn0Wq1tZpGLTTii/MzutOW22IpxWYnj9bmY9nKIAAAAAZT0H/0n7Z1mr9MvcL/AE+Kf/1xzFpjzj/8n8EMZYsV8+SmKkbr5LVpWPja08RH8LNvfO/6j7dyabtugnFt0+nxxkm1N3N5j5+ccWn4zYGEcWS+HJTJSdtqWi1Z+FqzzE/wvpvveOvf/t36jHHNoxU1VIjrxakTvr8+N9fmxT/067z+lp/+yj//AKyp9pd+zd7xammq8OcuK0T7tdsTjvHw6+kxPM+2EV8wiwd70H9Gdx1Om44rW8zj/d396n/VmIn2wr6oMsfzf/xrn/zO/wDjYWJ2WP5vv41z/wCZ3/xsII373/jvL+6w/wBhjlkX73/jvL+6w/2WOgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFu+3++5ex6rxIib4cnFc2OPW0R6Wr/ACq9eOek8zHmqIDOPeOzaX7lme4doz4r5rRHjYLWilrTEcc8T+C/lO7itvXn442t9ud5rbbOg1PPspNo/wAqvNf9KtVtakxaszWY9JieJj84S8d47nWOI1+tiPhGozRH9sGTftj7d7joO4Ytdq8dNNhxRk58TJSLTux2p6RM8dbdd21F/fOs02s12n+nzY80Y8M1tOO0WiLb5njmOnLG2bU59RPObNlyz8cl7X/tTLVAS/b+2azumS2PSYZzWrG60RNa8R8Zm9qwiAGfNf2HuWH7f0nbtLg8S83nNqtt8ce967fetG7iZiOa8/ghgnLivgyXxZKzW+O00vWfWtqzxMT8pcQEjo9Dqe4Zow6bFOXJxM7Y4jpHrPMzEPqntmjz5ezY9Hr8ezJOC2C9d1b+7xNKzurNo528efq+RQFo7j9vdy7VWcmowbcUW2xlralqz8Pw2mY59sQq4Ane3dm1/dd30mCcuyYi07qVivPpzN7VjyfTHdu2ajXditoceyM1sWnr71uK84747WjmInyrPD5KAZL/AOgvefhp/wDtf/hTvbPtXB2zPTVd11ukpXFMXrhjJHvWr1jfN4rzET+rWJ5+LC4DKn3b9zY+7bNLpd30+O2+2Sek5bxExHET1itYmfXrMz6dGKwB2xYr58lMWOs2vktWlKx62taeIj85fSn2Z2rW9r0+prq8XhTkyUtWN1LcxFZj9S1uPlPV8ygMi9/+3u6Y9Xr9ZOmmcE58+bxIvjt+zte1otNYvNo6T5wp3btfm7ZqsWqwzxbHbnjytX9alvZaOkosB9Rd10On+7O048+m48XbOTBaeOYt+vhv8OZjbPwtES+de4dr1var1pq8M4rXiZr71bRMR68TS1oQ4Av/ANu9j7lqdXodZj08zp6anFecs3x1jbjyxumIm0WnjbPpEqAA+mfvPtOt7rg00aTF4s4r3taN1KzETWOvv2rz6eT5tz4cmmy3xZazS+O01tWfWJj1hwAGaPs/sfcdLr8WszaeceCcN+LzbH13193isWm/X5MLgPoX7s+2+4d412LPpoxTSunrjnffbO6MmS3px8LQon/QXvP6On/7X/0Y1AZ67R9uarsem7pqtVOHdOhzUpFLTaYjbNrc81rEfhr6csCgD1Ws2mIiOZnpEPoH7L7L3DtmfU5dXgnDW+Kta82pMzMW5/DW0zH5vnwBm/7i+1e6dy7rqdVgpjnHk8LbNslaz7uGlZ6fOJViPsbvU/qYI/8AFj//AFEsbgM26/tGXsf2tqMGecc5cuqx3tNJmY45rxXma19NvP5sJAAAAADMf2p9s62mvwazVYPDwY6zkpNrUnfeY9z3YmbRxzv5mI9FS+4u3d0xanPrdZp7Yq581ttt2O8deZrXmlrelY4jn4KSAMxfZnbe6abW4tX9PMaXNjtW+Sb445rPWtorNt0+9EeXpyw6A+ifvL7e1XdMmDU6PF4t61nHlrupWdsTupMb7VieObRPn6Pn/Pgy6XLfDlrNMlJ4tWeOYn4dOWsAM8/ZnY+5du12XPqtPOHHfTWpWZvjmZtOTHaI21tNo6RPrEMDAMz/AHj2PuOp7hl1mHTzkwRipzeLU6bKe9zXdu6fJhgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0pti1d8WtXmN0VmK2mvPWItMWiJ49Jms8fBlWnY+yW7NPdrf0lWkW2zijNp7W/rfD6T9PWPXr5AxMLlE/bXnTvEfLJpJ/8AZwi+9aPD2/uGfTYLXvjxzXZa8xNpi1K26zWtY8/hAIEbWnnBGSPHpkvj67q4r1x39OnFrUyR6/yWSu69k7P23t+j1sR3DJ9XStq08fBXZvxxeN1vpp54546QDFY902xau+JmvMborMVmY84i0xaInj0niePgvefRdmxdsw66uPuEzmyZMUUnU4OKzSPWbfS9Y6/CAUEAAGSuwdp7N3XHlnPbWaecEYvEvGbDOObZbbImInT80jd8ZniJ6yDGotXf+y37JrJw+9bFf3sOSf1qfCeIiN1fS3p8eOrb7Hou2dxm+LPXW1yY8OXNN8WbDFLRjjdxFLYLWrPHT8duvUFKG3qZ085J+nplpj8oy5K5L8/HdTHjj8uPzagL5277brr8WPd3DT4NTmpN8GmvE83rzMRNr8xtm3HNaxFpmOvCI1vY9X23BfJq6TgmMtcWOk8T4vMWm16TFvw04r14mJ3Qk/t7tmPvGovOsz5ceDBTFXxK3iLRfJeuPDjib1vERM88dOnDj9zaTUaHuN9Plz6jUUrWtsN8+SclvDtHxnp0mJrPERHMApoAAvlOwYtJo8et7rqL6amX+p0+KkX1GWPXni0xWnTr19OY54aVK/b2S22bd0w89PEt9PlrHttStaW4+UzIKgLX3fsWbtUYssZKanTZ45w6jH+G3McxFo67bcdeOZifKekqoAAAMq9s7J2buHbdVrpjuGONLF5vSM+nvNtlN87Z+mr5fFXOftrzp3j/ALTSf90Cmiy960ek0ebT/SWzWxZ9Lizx400nJHibvdnZWtenHHn181aAGWexdk7H32mWKW1+LPijnwbZ8E7qz6Wi/wBLHTd0n3enMfFjvU48OLWWx+BqMdKXit8N8lJze7PFq+JXDFYtPXj9nMR7QRQv/d+39o7Zjx49mu+ryYt98NtRgmunm0e5GSY00Ta3nNY2zx59VAAGTftrsva++zfFk+txZcWOL2tXNhml+bce7WdPzX5TafmoWs+k8TjS0z0pHSfGyUyWmefWNmLHER7OvzBHjYwYcmpy48OON18l60rHxtaeIXbWds7R2jJ9PrM+s1OorETkrpYxY8eObRE7d+WLTaeJ56Vj8gUEXXU9v7Xk7dl1uhzarnDkx48mHUVx8x4nPFotj4jj3Z4+SlADIGr0nYNBOPFl/pTJlnDhyX8PJpopE5cdb8V3Yt3n5pvN2PsWHtOLukz3OceW22McZdNvjm1q9f2PH6oMSC+49H2LWafWTpf6Tpm0+ntnrGe+nnHO21a8Tsx7v1vTp81CAF20PYIvop7jr8/0ek54pO3flzT8MdOY9eJ4mfhzxx1a8f8AR2bccd2iP0+dLP5+Htj+2Coi5dy7DbSaXHr9LmjWaLJ0jLWs1tjmZ425addvXpzz69J46KaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzrotJm1v2Z4GCsWyWyTxE3pSPd1UTPvZLVrHSPOWCmaK/wCw1/3v/wDl1BUI+2tXg02s1GrrGOuDBvx7M2nybsk5KV4tGO+Sdu2bfDrx1UvJkvltN8l7XtPHNrTNpniOI6z16R0hs6fV5dNTPSnHGoxeFkiY593fW/T4TzWOvzM+ky6fHgyXiIjUY5yY+vXbF7U5mPLmazx7AaLM/wB0f7Pdi/dYP/LVYYZp+4onUfbHZ82P3qYqYaXmP1ZjDsnn+9Xb8wYWXjVf7N9v/wA71P8Auqo69dwrODsHasd+lsuXU54r5+HM1rFuPhb1j4wCigALz2f+Ke+/udN/jqMvPZ/4p77+503+OC9dty4/u3tF+36i0RrdJXdhyT62iOlbTPrMfqZPXyt6qX9uYcmn7jrMWWs0vj0esras+sWrTiYVPQa7N23VYtThni+OeY+Ex51n2WjmJfQ04NL3Os980sxE5NDqceennu8KYjnj9anG2fjHEwg+ZgSXb9HbX6zT6avrmyVpz8Imfet/drzP5KLTqpntvZNFgrO3Nrcs63JMdLRjp7mCPlM83j2rh900ju3Zu393pETatYpm48t3SfypliYj/WQPd+89ry63JWe101FcH7DHknVainOPF7teK0tFYjzjhc/tzV6LvWh13aqaWukrOObVpGXJmid/SbxOSZtGy+yeInjmUHz+nOzaeur7lo8N45rfPji0fGu6N0fnCJy474cl8d422pa1LR8LVniY/hSHbNVGi12l1FuduLNjvbj9GLRu/wBHKi9/fma1+61xc+7iwUiI8ubTa0z856fwMXMrffenmNfg1VeLYtRgrtvHWs2pM88T6fhms/mxSDNvba/X/Zutx36/TWyzSf0fDiubp/lTHylhJmzTW/or7OzTk92+ttfw6z6zGXinP/Z0m/yYTAABm/7Vw31H293fFjjm+TxqViZisTa2niIjm0xWOvnMxCnaX7V103vOqpGPFTDmyWtTUaa9uaYrWrERTJeetojn3fTlavtv/ZnvX+rn/wDLMS6TV5dFl8XFxu2ZKdY5ia5KWpbp8rdPag1r5L5Nu+9rbaxWu6ZnbWPSsc+kRzPSOjk3raXLTTY9TMR4eTJfHXr1m2OKzbp8Pejr8Wiole3a/N2zVYtThn3sdvTytWelqW9lo6ez1Z17li0NsVfubBhtlvGCLVxbY2+NzFa5svXn9j1i3HrNYnyYb7P22mtyXy6i3h6TTV8TU5P5Pljr/LyT0rDIPZvuqMvcb6fU1pTQ6mIwYsM8bNPWI20r8Nto928/GeekQDD+bNk1GW+XLab5Mlpte0+s2n1lwXD7j7LfsuttjjmcGTm+C0/o+dJn9KnpPxjifNTwZj/m8/5zWfuK/wBtiC/47fOf97L/APN5/wA5rP3Ff7bEF/x2+c/7wSPbNXGg12m1MxujDlpeY85rE9Yj28entZo7p9uaX7ktbuPbNZim+WKzeluds2ivHXjm+O3EdazWevVhLQ6TJr9Ti02OaxfLeKVm3MV5n4zETP8AoccWbNpcm7FkyYclZ43UtNLR+dZiQTPce1dy7Pzi1NMmPHkmOtbc4ss15461nbMx1mIt70c+iuM5abuWXvP2x3L67jJbTfgyzERNrRETTnjiN8W6cx6xPVg0HXJkvltuyXte3FY3WmbTxWIrWOZ68RWIiPhEcMxa7/YrRfvY/wATKwyzNrv9itF+9j/EyoMO0yXx7tl7U3VmttszG6s+tZ49Ynziehip4mSlP0rRX+GeHJ7paaWraPWsxMfOJ5UZl+/beDHbtJj93Fix3mKx6dNtK/5MR0+bC7NH3vxrtN2zuWH3sWSlqzP6M34tWJ9v4on4THDC4M2/ZkfXdr7tor9acRMR8Jy47xzHy8OJ+bCTNn2rb+i+ydz7hk92t/dx8/r2x1tFePne+35xLCYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOlJrF6zeJtXmN0VnbM156xFpraImY9J2zx8JZHp9zaGnbf6MnteS2n55mJ1s75nfv/FXTR+t8GNAFx/pDsn/2bJ/8wyf9w0e79zx9yvp5xab6XHp9PTBTH4k5elbWnndNaz+tx15npzyrgAuPavuLU9sw30048Wq0uTndgzRzXr67Z8ufOJiY8+OVOAX7+nO00nfi7Dp4yesTk1GXLj5/dTWK8exV+49x1PdM859RaJtxFaxWOKUrHpSlfKsf+sokAAAXPQ930Gj0mfTToM2T6mmOma/1kV52W3c0rGmnZHPlM26eamAO+W2O2S04qWpTn3a3vF7RHwm8UxxP+TCz9n79m7Ti1WGKeNi1OO1ZpNtu2812xkidtvLpMce9069FRAFu7N3bSdpv406PLmz7b1jJ9TGOtIvG3mlPp7zFoieOZtPyVEBt6i2C+SZwYsmGn6GTLGWYnz9+MeLp7Nv5rL2LvODsuWNR9LlzZuLV5+pjHjmto9Jp4F59vO/1iFPAWfvHcdH3PNfUY9Hk02bJfdefqIyY56dfc8CkxMz1538evRWABbtJ3/Ni0v0Wpw4tdpY/Dizbotj/AHWSsxens9ePJ+07l2nFbfTs8WtHWIzavJkxxPtpGOm6PZaZVABO9z7vq+75K31F44pHGPHSNuPHHwpXr/DMzM9OqCAAAGSdB9y6Lt+iz6LH23LfFqN3ib9bG6d1Nk8TXS146fBDf0h2T/7Nk/8AmGT/ALhTwFp7p3XT63T6TTabR/R49NOaYjxrZptOWazMzNqVnpNfb6+xW8c0i9ZyVtakTG6tbRS0x5xFpreImfjtnj4OQC76jvWiy9ujQYtBmwUra2SJrrInflmOIvmidNHibfKOa9OkTCnYpx1yVnLW16c+9Wl4paY+EWml4j57ZcQGUNb91aTuGix6PUdtyZK4tuzJOt/axNY453/S9ZmOk8x1YyvNZtO2JrXmdsTO6YjyiZiKxM8es8Rz8HgBkDsX3DpuxbrY9Dky5clIrkvbVRFZ4nn3aRp52/na3zU/V5NNlybtPgyYKz61vmjN159YmMWLiPZPPzR4Df0WryaDU4dTjis3w3i9YtEzWZj4xExPH5wtGo7x2zWXnLn7PTxbTze2DVZMNbT5zNPDvHXz46z8VIAWvXd8vqdLXRafBj0Wkrbd4WObWnJb9LLkt715/g8vhCqADZwWw1yRObHfJj680pkjHaenT35x5Ijr6+7LIGX7l0WbtuPttu25fAxzzXjWxv55mfxfS8etp8mNgHXJOOb2nHW1Kc+7W1ovaI+E2itImfbtj5OQAtHbu+6nQYb6aa4tTpcn49PnibU+dZiYtSfPpPr145do7h2eLbv6HmZ/RnXZZx/weHF+P76ogLJ3Pveq7nXHivGPDgxf1enw12YqcdOeOZmZ485n5ccq2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJWmi4w1z58kYcduYp03XyceuynMdI85mYgEUJG2LTeHe2PPebV49zJirSbczx7sxlyenqjgAAAAAAAAAAAAAAAAAAAAB+8cumXFfDeaXjbavrHw9gOQAAl76fFXQY8/vxkvmtTibRNZrWsTMxG2JieZ49ZRAAAAAAAAAAAAAAAAAAAAAA2sGPHkm0ZMsYoilrRM1m260elOnpz8WqAP10yYr4b2peNtq9Jj4T8AchtZ8ePHfbjyxmrxE74rNesx1jievSejVABI6PTfU3vuma0xY75ckx67aR6R5czPER8wRw2c3g7o8HfFZrHMXmLTFvOOYpSJ/gawAAAAAO2TFfFMRes1m1YtET+jbrE/nHUHEAAAAbuaNPWK1xTe9o/HeeIpM/yKbd0RHxtPM/CG127T4tVn2Zd8Uil7zNLRExFKzbzraPLjyBEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALT33+vwRX+rjTYoxfDbx5fmqzfprM9KRj3VtSPw1yUx5Irz+jGSttv5cA1NltkX492ZmsT8ZiImY/LmP4Vm1VsmijS4NNNqTfDjyWtTpfLfJ5TMdZrHpWvor+bUZc+2L25ivO2sRFa159eK1iKxzx5Q2Ka/U461it/wAEcUtNKTekfCl5rN6x8pgFiyYqz3zHTHxX9pi37OkborE5Ijj08+fzdI1lsuDuea0Umm+nh0msTXffLM7/AG2iI5nn19PToqOHUZdPljLjtxeN3vcRafeiYn8UT6xMvMZ8kYZwxb9nN4vNeI62iOInnjn08ueAT/c7Wvj7fF55yWwbrXnjnbkvOznjyiI6exv5b5cPcsej03NMeO+PHsj0yek2tl/T5687uY2qnm1OXUbPEmLbKRSvu1rxWvpHuxHPHtbM9w1Uxx4nXbsm+2kZJrxxtnJFfEmOOnWwOetjHGqzxi48OMt4rx6cbp9PZ8PYlO2zOPT9wy8zxGn8Pj25bxWPziOeFcbmDVZtNv8ACtti8RFomtbRaI6xzFomOnlPqCXzROHtWnpMcTnz5Mv92lYpH5dZmEvXLlx07Tp6Txe/vzf1tFcuXiIjnniNtevHlHHoqWbV59RSlMt98U3beYrzG6eZ97jdPM9esvca3URlxZd/v4a1pjnbX3a1jiI428dPbALVbPvju8xWsYaxNYpERxvvl4rkn426TPr09I6KK3KarNTHlxxaNuXibxNazumvpPMxMxxz5cNMFktzo9FpbYea5dT4lrZK/jiK221x0tHWOfW3HWXXu0XvrsWHmZvjx4MW6Z6zeYiZmZ+O63X2ojHr9VixRirlmKRPMRxWdsz67ZmJtHPnETxKQ0OadV3HDm1GTHHF63ve048ce51j9GJnmIjp1BZY1d8neMuPmv09d9c0TWOJpix8TN545nrHTqgO1XjFGuzce5TT3jbMzxM5LRWsW449qL1Osz5LZK2tSIvaZt4dcVd3Xn3rY4jf+cz1alM+THjyYq24pl2744j3tk8168cxxPwmASNMmTuOfTYcto43RjjiIrxW1uvER06eXEJjPrMWC+qxxaLUmt8OPT0raMdOvG+++I5vHHPMRMzP6yn1tNZi0TMTE8xMesTHnDeza3UZ4mL3id34pilKzb/XmtYm397kEr27Ljrjvhm99NkzWr4eorE+XMbLTHForMz1ms+vq2tPgm+t1dtXstfTYr2nnmaWvj4pW1oiJma/rW6dfgr+PWZ8Va1rNOKTzXdjx3msz15ra9JmOvwl4x6rPiyzlpktF7c7reu7d67ueYtE+cSCT1WsjJpowTec9/FnJOW0TEUjjjw8cT723znpWPhCUy5s2HT9swYrbclqzff62iMuTisV59OkeXX8lWy6jLn432jiPSsVrSsc/CtIisc/J7nV55yYsk397DFK452192Mf4Y444nj2xPtBaOIy9/4p7sRqOu3p/V/j9Pjtnn5tHTzPdO4x41r3puyZNs2mfcruvsrz6RPpxHCFrq89c/1Fb7cu6bborWOs+s7Yjb18+nV5rqs1M0Z62imSJ5iaVrTj+7WIr8+nUFk0uqzZNN3DNa0xjjFGOmOOmOs5bRWIpX8McV59OvDSwx9N2+dTT+tyZvCrfzx1rTdM1+FrT059YiOjRydx1WWmTHbJE0yTE2rsxxHMekxEV93+7w5YdbqNPS2PHk20tPM14rMc/GN0TxPtjiQTXc7ZJxdvw5LWtbwfEm15mZ5zX85nr0iIbuW+TD3LHo9NzTHS+PHsjpGT0m1sv6fPM87vSFU1Gpzaqa2y23zWsVidtYnbHpE7Yjn83ee4aqY48TrNdk320jJNeONs5Ir4kxx0/ECwaKMdO75b4p4xYZz5PdnpspFuIjjy54V7PrMuekY7bYpW02rWscRXmOOP/WeZmesy1sWfJg3+Hbb4lJx26RPNLesdYnjnj1jq1wbukw/UajDimeIyZKVmfhEzwtmkz3/pO9KzbHgweNM4azMU2Yotxur6TMzEbptzMypFbTS0WrMxMTExMesTHpMLbpu4Zc2HXWzZqb5weHWszjxzebzEWniNu+0VievWevtBq9uvamDuObmf6jZMR6bs14rHT5c8POas4e1aesxMTnz3y9f0aVisfl1mYRGDVZtNv8K22LxEWia1tE8TzHMWiY6eUv3Nq8+opSmS++KbtvMV5jdPM+9xunmevWQWq04u3fSRGWcceHjz5Yxxacua1+u3dxFPD46RE249fdlUM+SMubJkisUi97WiseleZ54j5NqNfqYpWnidKRxWZrSb1j4VvNd9Y+UwjQWTsc7NZ4vXjDiy5Le2K0n19nPDt498va9TbJxtnNhpirEREUmN1rbfnXpM+s+avYs+TB4nh22+JScd+kTzSeOY6xPHPHl1fv1OWMHgcx4e/ft21/FxEc7uN0dI49QTWTdXtWmx9Z8bUZLxHWfwRFOIj5zP5unc62+r0+mr0tixafDHHlbiJ/h5sh6a7U0xRhrkmKRMzEcV5jd68W43RE+cRPEvN9ZnyaiNTa0Tli0W37KR71fSZiKxWfzgF6nV2v3XVR08HFjzeJXiP2kYsW3356zPWI9kKvoaVx6bV6riLXxeHTHzETFbZLcTfienMRHu8+aNx6zPjvlvW8bs0Wrkma0tui882ji1ZjrPwecGqzabd4dtu+OLRMVtW0fyq2iaz+cA3sOTN3DLp9NlyWtFs0e9aZtaN/ETxMzPTiOkfFYdLnyRrtTt5x4NLjzzGKvSnGOJrXdHpa3PE825mZU22oy3vXJN53V42zHFdvE8xtivEV69ejft3TWX37svPiV23jZj4tE/GNvHPt9faCHWXtuKldPqtTaaRbFGOmObxa1a2yTPv8VraeYiPd6ccq03MGqzabd4duN8cWiYrato9tbRNZ/OAb+t1dc+PBjibZbYotuzX/FebTzxHMzO2vlunn2QnbWvGjx6i/varR8V6z71ceSecd8kcetZ5iKzPnE2+CpTqcs5K5ZtzakxNfdrtrxPMcU42cc+XHD3TV56Xy3i/XNExk5rS0Wi08zzW1Zr6+wEvo72roe45JtPvRjx+s9ZyX96fnxB27LjjHfDa99NkzWrOPUVifLmNlpji0VmZ6zXz9ULXU5aYbYYmPDtbdNZrSfeiOOeZrNo6fCXTHrM+Kta1mvFZma7seO81mevuzeszHXr0kE1p6Z7d4x0yz+0rliLzWfXw46zz/KrXr8eWpXNm13ccczkyTvzxt5tPuVtf0r16REfBF49TmxZoz1vMZYtNt/rPM+szzzzz58vddVmpnjPWa1yVnmJrSkRE+n4Yrs/0AsGO06rvnMTPXUzPMdPdpM/+7Bp7zavdNZMTxbHekT/ACs+SI6e2IVympy480ZqW2ZIndFqxWOvyiNvzjjhs27hqb0yUteJrk43V2Y+Pd5mOI2+71mZ93jqCMWjQZsmn7frslb3pMzhpTbaY4ta3Npjjz21459VXT18lKdrx44tWb5NRfJasTG6IpSK15j1jnmeOfUG3pqVx6G+pnJFMuXP4cZbRe1qViu601mtbTF7TPrPE8ektHV6r6nPhnFW1rUpjpF7RE5Mt6z+O0desz0iJmekdWlh1mfBW1KWjZaeZralL15jz23raOfbHV+U1efHmjPW/wC0j0tMVtx046RaJjp5dOnkCwdx1WXBhjRTmvlycxbU2teb+96xijmZjin63HrZUm9l1mbNWa28P3p5ttxYqTafbalKzPx4meOWiC72ti7d9HWMvhx4ePPljHFvFzWv12zbiKeHEdIibces7ZRul1eGM+pyZK209c+6KZcUczgmbbvd9PLpO3iePRGRr9TFK08TpSOKzNaTekfCt5rvrHymHHHqsuKs1rNZrM7uL48eSN3x/aVtxIJXV4tR9Ziw5MniX/Z1plrM82reea35nru95ua21tf3WdPbJfw/qIxRG6eKxExSZrE9Inp+at21GW+XxrXtOTmLbvPmvpx8uOj3l1WbNl8W9o3887q1rSeeed3uRXrz5+oLNn1mLT31WOLRem2+HFp6VtGKnXjfffEc3jjnmImZt+spqQza7UZ4mMl4nn8UxSlZt/rzWsTb+9yjwWvBjtru3eHz10+oiZtb0x4clJ5mf5NZry1ozW1vcdPFZtFYtixUn9bw6cV5mY68zHNp9soWmfJjpkx1tMVyREXiP1orPMc/mYc2TT5K5cc7b1nms8RPE/K0TALHSlO4d4yb/epOXLaY/SrjiZiv5xEQ66bVZr6fuGa1pjHGKMdccdMdZy3isRWn4Y4rz6dfirNNRlx5YzUtsyRPMWrEV6/KI4+cccNrJ3HVZaZKWyRNcnE2rsx8cx6ccV93+7x1BK6XHTDoLajfXHkyZvCrkmLTOOta7rbNtbcXt6c9OnpMOV74u5a3S443bf2WG2S3EZMvXre3WfenniOsz6dUTh1mfBW1KWjZaeZratL15+O29bRz7Y6te2XJe++bWm3T3uescenHw48uPQFx0ua+buc4fwaas5K2w/8A4q4qRaJm1fTn42nru81KtxzPHpzPHyb+TX6nJW1bXj3/AMc1pSlr/wCvalYtf+9Mo4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB+vwBbraHRVz6PBt1POqxYL7/Fxzstm/k+DG6In+VEqznxeBmyYuYt4d7U5j0nbMxzHzXq+upp82ii1sNsX0eLDfJinDbLhvs2zauSnOSs0nifXj14UnVYfAzWp4mPLETPF8d63raOek81mfX14nrDh/ztvG3g6WRIZtLh0dMPjRkvkzY4y7aXrSKUt+HmZpkmbTHWY4jj2uGq0lcWLBnxzM4s8W27uN1LUni1LcdJ46TE9OYn0hIay1dfXTZcd8cWpgx4clL5KY5i2PpujfNYmto4mOJnjzcdbmxxpdJpKWrknD4t8lq9a78tonZWfSdsR1mOkzPRZb4eubn24/wXGvoaDBo9Tm02C8Zpvltxe1MlaxTm0xERW2G3Pu8Tzu82lnjSxF4x1y0vXJt4vkreLV97mfdxY+JiYjznnltdnmtdfp72tSlaZIta171pERHttMI3URxmydaz70zzW1bR1n41mYX+11vCX1qcuSU0um02TR6rPkrmm2CcMRFMlaxbxbWjrzivMccfmj9TXDXZ4dctJmvNq5LRf14msxMY8fS1Z59E9229qaDXRjzUxZMltP4fOfHivOy193G69Z6RP5ofV0ye5ly5ceTJeZrMVy48kxGOtIra0472/F6des7ZlJ+65vPTj0n8l4fXV302mw5dHq894yb8Hhbdt6xWfEtt6xNJnp6+vVp6HFTPqsGLJu25MlKTtmImN9ojmJmto6c/BK6PbHbu4Vm+Otr/AE+ytslK2tsyTNuKzaJniPYj+2zEa7S2tata1zYrWta1axFa3iZmZtMR6Gb49eHDyh/j9c0n9Fpcttbjx+NjvpaZbxa96XreMVtsxMRixzWZ8usq/hxWz5ceKn4slq0r87TxC5X1FdT9fpLZMGKb5LZcOWk4aUyRW0z4WW9OK2i0dazeelo6qrpc30mqxZZjd4WWtpiJiedtusRMdPz9E2243deXktk0bmbFosGe2GfHvstNLZa2pEcxPE2rjnHM8RPpE36+xp63S20WoyYLTFtkxxaPS1ZiJrb84mG/qNNXNqcl8ebB4WTJa8XtlpWYraefexzMZOa+cRXmfJy7rqqazWZMuPnZ7tKc+s1pWKxM/PjldtuZxumvzol5/Pohk7pdNp8mj1WfJXLNsE4YiKZK1i3i2tHnivxxx+aCWvt17Y9Brox5qYsmS2n8P9vjxXnZa+7jdes9In8132406z9U28fNBaiuGuzw65aTNebVyWi/rxNZiYx4+k1mJ9GilNXTJ7mXLlx5Ml5msxXJjyzEY60itrTjtbrb069Z2zKLbnBLxTnbtNg1ManxYyfsdPfNGy9a87JrG2d2O/rz6veLSafWYs06fxceXDjnLOPJat4vSv4pretMfFq+u2azz8XbtG2I1u6+Km/SZMdd+THTde1qTERvtHwn2PWjmvb6anLkyYpvfBfDjx48lMkzbJ03WnHa1a1rHM9ZiZ8nG253YtzpiN40n3Q2jx0zanDiybtuTJSk7ZisxutEcxM1tHTn4GsxUw6nNix7tuPJekbpiZnbaY5mYrWOvHwdO38RrNNMzWsVzY7TNrVrERW0TMzNpiPQ7hxOs1NotW0WzZLRNbVtExa8zExNZmPR1/v9meX3SWTT6LDptHmtTU2nURk3bcuONvh5NnSJwTzz68cx80d3DSfQ6vLp4tvikxxb05iYiY5j49eqyxrK6TS9rt/w+bwvF8XHzgveItlmY49b0nbPMTXjifVXe44q49ReaZq6imSd9cm+LWmLdf2nXdF454ndEdXLZb3a/wC3/r8I1ZMeX6Nqmn0sdvrqr0z2t9ROGYrlpWvSkX3dcN58+OEXqa46ZNuOuSvEcWrkmLWreOlomYrSJ4n2LJgvlp2qKYdRTFknV2vNY1OPFfw/CrHM85Kzxuj0lX9XS1bxa+THe+WJyX2WpeK2m9ukzjtavPTdx5RLW3jdedStr6XFh0uLUZ99vHm8YsdJis7aTxa9rWrfjr0iNvXr1aOb6fbScUZKzzaL1vaL8cbdsxaKUjr16cdOEzaY1+j0mGlqxm0/iU8O1or4lcl91ZpNpiszEzxNeeZ8kNmweDSkzfHa1ptzWl6X2xG3iZmlrR73M9PXou29brm6fp6F/B20E3jUUml7Y+OZtevG6tKxuvNZ8p2xP+5vd4rNdV+PfS2Ol8VttKzbHeN0TMY61rzzM8zx1nly001wafNmmMOSbbcUY7ZOJ2zPNrbaZK5P1ax09YtPkkNVbHq+3YMnODHk0974/CjLG6cM+9ExXJktk923McevXp0Zt8cvLgcvVD6LSfV3ybrbKYsV8uS3HM7KeVY6c2mZiI+bb0um0+uy+BijLiyWi3hze9b1tasc7JiMeOa88dJ5nr5Pztmox4rajHktsrqMF8O+eeKWniazPHM7eY4niPNs9uiug1NdTmyYtuHdaK0y48lsltsxWsRjtaY5meszxEQu63xfHh9/qrMaeqtPx6md0zPx6vLs5gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO+HJOHJW8REzWeY5m0dfKeaWraOPWOJh+581tRlvltxuvabTtjiOZnyhriY5gAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAuFu1afQaTBqO4Xy79TXfh02DbF/D8smTJeLRSLeURS0z/C1sWLtWqpmin1emy1xZcmPxMuHNjvOOk32TMYsFom3HEcRPVZPvb3tdpb1/qraLDOKfLbuv6fw8/mq/bOz5O6xm8LUabHOHHbLeuXx4mMdOOb+5hvWY6+kTu9gK49VmK2iZrFoiYnbPPE+ydsxPE+yYn2rf27HrcGm1WbBqcWlweJTFbVzbLSZtXdMUxbKTm96J3TEY+eOOeEl9y1i2m7RnnJTPly6a8ZM9Yt+12XiItO+tLzPE8c2rEyCM+4tHptHn0kafFGKuXRYM1qxa9o35N26YnJa9uOnpyp7K3fe663t2bt8abNOKP6O0lpiIrxaeLfi5j3o9k8w6a7HXTfcfasunjwPq40OfJTHzWItmy7b14jytEdY8+ZBiVK6u+iti00abHmpkrj41E5LRNb5PjjiPSP4Pl5rN37uef6ruWj4xRhnV5LcVxUrbdXJad03rEWtM89d8z7Hb7gyXy9u7He9rXtOny82tM2tP7SPWZ6yDHy6fbel0uu1d9PqcFMtfBy5ItNstbVmlOY42ZK1459eYleO43r2jX6bT4u4abSabT0weJpppqp8aJ65LZYx6bJjyTkiZ/FafylE9lnST9xaudHMTp7YtVbFxW1Y2zj54itoiYiJ6REx6AxStn29oNL3TX49HqIzx4u/bfFkpXbsx2v1rfFk3c7ePWvHtVNfPs3+PtH/4/wD5fIDxpdF2fW62NFEa7T3vknFTLbLhzU388V3UjBhniZ+FlU1mlvotTm015ibYclsczHpO2eOY9k+rKHaMWgzavWZdHhzTr9N4mXT4tTmrfFltW08zWMeLDO6vrWszPWY6qn2PDHdu+4K6v3/GzZMmWJ/WtWtskxMfC0xxMfAFNGS+3d01Or71TTZreJpc+e2G2ltxOCuO0zWIpj/DXb04msRPT1e+36PDobd/z1rXJft27Hp98Rfba2W9Iy7Z6TakV5jnpEyDGK59y0ulp2jtWrxYK4cupnVRl22yzFvCyRWvTJkvx09eOOsovL3jWajT5dPqMuTUVvNLROW82nHNJn8PPPETzxMRxC26jW59F2Dsd8F4x33a73ttJtH7f9W1qzNfbxxz5gxmMh/cmO2qz9ryVpE59ZodNa+ysROXNeZjniOI3W6QtPbfqs3cdRpddrMGWJwZ65NDSc18eOa09K1nHOCs45j1rk3R8eQYTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABZad38TS49JrMEarFh58G2+cebDE+taZOLxNP5N6WiPL0bWl7xp+3V1H0ekvW+fDfBa+fUeNxS/rtrjw4I59s8qgAtGj7tiw6HJodTpfqcNs0Z68ZZw3pliu3ndFL8xNenHD87l3XFr9Lo8EabwJ0lb0rNcs2pNLW5422pN+Y6dfEnz6KwAuGo7xpdbOnvq9FfJfBhx4I8PU+HjvXHzxvrOG9uvPXberXt3m+fumPuOox75x5Md6YsdoxVrGKYmlKzNMnFY469OZ+KrgJfuOrxa7WZdTXFfF42S2S9JyRf3rWmZ22jFTiOvTmJ+aR7h3TBrdJpNPXTZcU6SlqUvOet90WtzO6saenX4cTCrgLln71p9djxfXaHx8+LHXFGfHqLYZvWv4fEr4eSLTHxjjlrdp7rh7Zqcmo+mtkm1clK0rn2VpXJHEx72LLa0x5TzCrAOmSaTafDratfKLWi9oj22itIn/ACYWDsnc8faNZXV2wXz3x7tlYyxjr71LUtu5xZJt0t04mvE/FWwE5XuH02uprNHXJhtS/iRGTJXL70zO6N1ceL3Zidsxx6c9W/q+8Y79xr3HR6e2jzeJ4to8WMuOb+cxXwscxu674mZ55n0VQBdMfetNp9VbXYNBs1Uza0TbPvwY8l+eb0w+FW3nPEWy2iPgjO3d3zaDNnvatdRTU1tTUYsnPGWt55nrHWLc9YtHorwCa1Wo0GSsxp9FfBaZ/FfU2zcR8Kx4eP8A625vavumDU9v0WijT5afSTkmuSc9bb/FvuvzXwK8dfw8T08+VXAW/Wd7rnyduy4dPbDft9MOOk3zRli8YbbqzaIxY+vPr149iTx/celw6++ux9tiuTL4vi/8TeeZy1mLTj/Z7aczPM7q3+EcMegPd9s2nZExXmeItMWmI8omYrWJn28R8ngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABJ30OXHpceqnbsvbbxEzvrPXjdHHERbidvVGwksqvwWL+h8u7Hjrm098mXFXLjxxOWLXraOY4m+KtOZjym0K9x14nok3S8KYw/BYJ7TaL4cf1Gm356Uvjr+2jdGT8EbpwxWJn2zCDvS2O9qWji1Zmto+ExPEwTdLwpixzEzbt+zDhzX1OnpXNFppzGeZ9y223O3BPHEo3NinDktSbVtt/Wrztn2xzET/AAxBLLwMOAlq6C3GLfmw4ZzRFqVv4nM1tPETOzHetYmfTdMfH0Rk14tMT5Twssph4E7k7b4U4q31WmrOXHTJT/mOtcn4ZmYwTEIa1dtprMx0njny6JLLwMYcxMart2XSY8WW18d8eWI4vjm0xWbVi8VvurWa2mtotxx6NPUYPp7VrN6X5pS/ub/S9YtH4618pgm6XhfqFmGmJ3D2y2e0UrqNPF/C8Waz43Na7N/WYwzXnb14iZR+bTxipS8ZceWt5tHNPEjia7ZmJ8THSfS0enJ3S3GTFaQ3dJpb6zNXDSa1m3615mK1487TETx/B6uGXFbDkvjvHFqWmto9tZ4lczOOY4jc0+myambbOIild172nitK/G0/PpERzMz6Q6W0seHe9M+HJ4cRNq18WLcTaK8xvx0iesx6SmYI8eo45jnrHnHp/p6rD3DTVw4dPkjT0xTmjdzTLe9Y2+tJpeOa396Jt79vZwW4snUwrg9RE2mIiJmZ6REesylbaCceTwr58FMvPE45tfmtv0bWrSccT8ff4jzXMhhEDtlxXwZLY8lZpekzFqz5TDiqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADthxWzZKY6+t7RWPnM8OLtjy5MNt2O98dv0qWms/wxxKC66e2m1ltXpMWTLbx8cRhrbFWtYtpq84+LRltPWtZrPuxzyorvTPmxXnJTLkpefW9bWraefXrE8udsl72m9rWtaes2mZmZn48z1Y27e23pp5tW5XbV6umjy6DNGKb5qaHTzS03jw4nZMRM49nMzH+vEexR5nnmZ9Zd8uoz5+PFy5Mm3033tbj5bpnhrmzb2z3Lcsjf8ADTqu3Resxl+i004bWvHg+LFeccXpFd3E26cxf4dFC1Hi+Nl8aJjJvt4nMcTv597n835k1GfNt8TLkybfw772tx8uZnh4y5sue27Lkvkt+le02n+GZmU27O3yW3K2ZM9MGg7Ta2HHl48efem/McaifTbeK9f5VbQqN6WxzEWjiZrW35XrFqz+cTEtyNfrK1isanUREekRlvER8o3dGpkyXzWm+S9r2n1taZtaeI4jmZ6+nRdu27c/f1uS3K26bPGWdNotbpYyxaMdcWWnNM1KZOJrxMcxetefSY6dVVz44xZslItvil7Vi0frRWZjn8/V0jV6mtNkZ80U442xktt4ny4544anPBNuLffklq49yz0x/SROHHeZ7dhiLzN98bsVqxxG7Z055615VLJS2K9qXji1bTW0fCYniY6Nz+kNb0/4rUdOkftsnSP8po2va1pva0zaZ3TaZmZmZnmZmfXnnzNu2zoW5W+upx0zzptRP/D6jT6St5//AK7/AE2Lblr7az6/GqJ7thtp9XOK0xM48WnpMx6TtwUjmPmismbLmmJyZL5JiOIm9ptMR8Osy52va882tNp4iOZmZniI4iOvlERER7Em3Fznli/PVbcxYeyf8zk/zbUf4VlbbOLUZsHPhZcmPn12XtXn57ZhwmZtMzMzMz1mZ6zLUmLb1x6M8kzp4x4tNkvkvkxzmtGOk0pF5249t79JyY+Pe8PiefjDd7zFct8GtpzNdVj5mZiK/tcfuZPdiZiOeInjmfVXrZst6Vx2yXtSv4azaZrX5RM8R+T3bU5744xWzZbY49KTe00j5V54hntvdL7+n1hrOmE5of2nbu4Yadck+Dk2x+K2PHad3Hx28xMq9XHe8XmscxSN1p+ETaK8/wANoh5ra1Ji1Zmsx6TE8THymExrtdOojHWmTPMRSsZN9rRW9qz0t4fiZIieOOZ5625niFxZdOdz8aJxnw0dJirlz0i/OyObZOPXw6Ruvx7dsTx7Vni2PX6PWY63yZMlLzrK7sdcfHXblivGXJ02zE8dPRUsebLh58PJfHujidlprzHwniY5fuLUZsHM4suTFz0nZe1eY+E7Zjk3bbefTCy4bfbr0xa3TXydKVzY7WmfSIi0dZ+TprsOX67Pjmsze2a/Ees23X5iY+O7nmJ80VMzaZmZmZnrM/GW1XV6itdlc+aK8cbYyWiOPhxzwuNczphnlhLd8vW/cMu2YttjHS1o6xNqY61t/pjhXQXbO2SdIXW0AaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHSlL5b1pSs3taYrWtY5m0z0iIiOszKw5ezW01tmq1ej02TzxXtlyXr7L/AE+HNWs+y0xIK0JfW9uyaKmHJOTBmx5t+zJhyb6zNON0TzFbVmN0dLRE9UQALH2XtlO7ar6ac1sFpra1ZjFGSs7Kzad37XHMdI6cRZXAASGi09NXqcWG+fHpq3nic2T8FOkzzb/d5dQR465aRjyXpFq3itpiL1/DaInjdHPlPrDkALJqO2Y8XbcGvx57XjLmthnHbFFJrNa8zMWjLfmPh0hXAfg7YsV8+SmKkbr5LVpWPja08RH8KY7t2nUdnzUxZrYr78cZKXxWtbHatpmOk2rX4fAECJDRaX63PTBGXFhtktWtJy+Jtte1orFf2ePJMTMz6zER8Zd+5dvt2zUW0982HLkpPF4xeLxSenSZyY8fP93mARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMj/ZOOl+7Te0RacOny5aRP6cba/wC60sfXvfNkte0za+S02mfWbWtPMz85lK9p7ll7TrcWqxxFppMxakzxF6Wji1efLmPSfKeJb2p0/bNRltl02tppsd5m3g6jFn34+euyLYMWatojymZrPHqCPz6HuWHBXxtNq8eGkzaJyYclcdZybYmd1qxEbuKx6+S29p0OHXZtJhntOa2DJWtMur/4qLRea+9krauTwIrFvSLVnp6o/uuv0mTtvbtDgyWzW0k5pvk2TSlvEtuiK7pi/T21hZc3cu1Zu8aTuf1tqY6Tg/4b6fLM4IpWKzXnpTZH4vcm0/CsgjPtfDGn+4Jw87vDjV059OdlLxz/AKHHtWm7d3u+TRV0n0uecV7YM1M2W/N6Rzty1vM1mLR6zWKufbu46TQ9+yau+XxMFraiYyY6X9M0W2+7etL9Oevu/J57ZqdF2S+XV11VNVn8K9MGPFjzVit7xxvyWzY8ccVjyrumQc+1aXQ5+190z6nBN7aT6aaXx5L0ycZckxavWbYusRxEzjmY5merz2+vbtd3fSYqaTjT5tmO+LJly2mtv1rVyUvS0+nTnp1/C/e16jSYu1d10+XVYsWXVxp4x1tTPP8AU5JtabTjw3rHMT06z7eEb2LNg03ctPnz5qYseHJF5ma5bcxHlWMeO88/PiPaCU7b2fF3DvGp00xeMOnnUZLUx9clseK/EY6c8zzMzWOespCez/UaDXZr9szdtyaWtcuOZjUxTLTni1LfUTbm0R15pt+TT0Xc9N2/vGpzWv4+m1UZ8eS2KLxaMee3PSMtMc7q8RzHHylAavS6HDW1sHcK6n9GkYM1Lcc/rTkitY6fCbAsGp/2Y0X+f5v7EqEu+fPpLdh0+krq8Vs+LUXzTSKajrW1eIrFpwxXdz7Yj2qQC29g0+a+TUanDiyZr6XDa2OuOlr28bJ+zxe7WJn3Zmcn9xaddo9VqftrBk1Gnz4c/bcs458XHelr6fJxxMbqxMxWZrX2REqpmvp8Ha8eDBrMOTLbPObPWldTW08VimKtZvgpSYpE5LW5tHW3TlKfbOv0ultq6a7U1x6fU4LYb0mua95mfw2rFMV69ObR1mJ6oKz2j+M9B/nen/xapP7n/jrX/vf/AHYaugrptN3LT3trMHhYcuLLOWKanbaKZKzNa18DxN3EedYr/KdvuHNp9V3LUanT56Z6Zr7o21y1mvSI4tGXHj6/6vKirAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2q6fLfFkzViJpj2753V5jdPEe7zu6z8IBqgAAADpFLzW1oraa143WiJ4rz6cz6Rz5cuYAPVazaYrWJmZniIjrMzPlAPI75sN8F5x34i0esRatuPZzWZjn4x5PFaXvztra22JtbiJniseszx6R7QcwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG/pNN9Ta3NtlMdLZMluOZitfhHTmZniIj4y0Elo9VGm8WLY/FplxzjvXdtnjmJiYtxPExMfCQbGXBg+jjUUjLWZzTjiL3raJiKbpt0x1+MR5pOO36P6nBpptqIvmx45niaTGPJeu7ifdibR7Okx8ZaE5o1tdLpMWGabMluOLTbnxLR1mNvPMREczzx69Ib2v1kYdfqL48VqZYm1K3vbmKxEbN1K7KzEzWOkzNuIkEfp9Jgtp9RlzWvXwr46V2cTvm0zzERMevFfXdERyYNHTUzny465vBxRX3elstrW6RSNscevMzbjpEejT+p/4T6bb/wDm8Wbc+vubYrxx5dZ5583TT6uuLDlwZMfiY8k1t0tstW1OeJrbbePPrE1kElXQafJqMeKt55thm9se+k28SOeMMZOIput08vd9JaVdH4+qpp8dMuG0874yzumnHMzPSlOkV68cc89GrXLg9+LYJ2zxt25OL14567rUvE889fdiG/8A0pf6qmfZExXFGHZa0zNsezbO6/ETNpjru49fIHnUaXBiwTePFx5PE21pkmu69OJ9/ZFYtj6/GZ556Sko7do51OHTzbPFsmGt7dafsrTjm88zsjdER5REdPNW8t8NuPDxWpHPM7sm+3y5itK8f3efalf6SidXm1M4v6zHalaxfjZupsiYtsnnivsB+abHgrotRmy47XnfjxUmLRHE25tPHNLcTEV9evSZjo1402PFgx5c2+05pt4eOkxWZrWeJvNprf1npWNvXierxXVV+ktprY5n9r4tbxfji23bxaJrbdH5w26dwx7NNXJp4yW08+7bxJrE037ttq7Z6/CefnEg65e3UjW58Nb2jFp6b8l7cWtEVrG6I4isTO6dtY6PU+HXttvCrkr4+prT37RabRipM9OKU463j4tevcYjPqslsW+mp3xem/iY3W3dLxX1ifT3XHPra5MODFjxeF4Nr2iYvu3TeYnmYmvrHEdeePZAN6NBgjVU0VrZJy24ra9ZrspkmOdu3bM2ivpM7q+fRrafSYJ0+oy5rXr4N6UjbxO6bTPNeJj14r67ojq9z3KPGvqaYduovE+/v5pW0xxN6U2xMW+HNrRHPoj/AKn/AIT6fb65vFm3Pr7m2K8ceXWeefMGtl8PfPhb4p043zE29OvMxER6+xM30eLHpseaa5stb0mZyY7V2Y8nXjHeuyZ6TxzM2r69EAmo11Mdc8YsM0nPTZbnJuxxHMTM1pFK9enTm08cg/IxxXt1ssXyxN88Y5pF/wBneK03czXj1rMxxzPm3qaLSxGh3znm+p9aVmnTnJsraJmnSPPjiZn4wismqi+lw6fZMTjve823dLTfj9Xb04iOI95t17jEanS5pxcxpseOkU3+vhxPXnb05tO70kHfT6fBjvr5yVnLTT1vWs8xXmbX8Os9a2jnrzE+Ux6SafRcUxZ5jNFctrRTZeKbMcTtm+TNau2POIjiOes9Gji1dKY9TjtjteueaTzGSK2rNLTaOuy0Tzz16Q9TrMeTBhx5cM3thia0tXJtiazPPF67Z54n9GayDd02DS1vrr25z4sGO2y0TFd03tsrPWtuvXms+Uxzw1dPSs6bW5q2y49kUrWK3ji0ZL8bL8VjdHETM8cR09Gvg1VMWLUYrY5tXPs/DfZNdkzMcTNb8x16xPw9Xmupiukvp9k83yVyb4tx+GsxFZrtnmOsz6wDZtp8GmjDGo8S1sta5Jilq18OlvTnml91pjrxxHHxea6bFXBfUZJvOPxJx4q14re8xHMzNpiYrERx+rPMzwZ9Zj1FaTkwc5a4649/iTFJiscRM0ivO7j4XiPY5Y9VXwIwZcdr0reclZrfZaJtERMczS8TWeI8onnzA1emrhjDek22ZsfiRFuN1es1mJmIiJ6x0niOfgjG7qtTbVXi0xFa0rFKUr6UpX0iOes+2Z9ZaQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsPZK1vr8NL0pkrbfzW9K3ieKWn0tE+cIKbczu6c8+UREfwRHH5cMTdm2dJL5nLLmLp3HDizaPDmxY8dMmCuCueKUrXdGfBTJXLaKxEfim1X5qMWPB2jbFKeLXU0x5b7azbm2K15pzMcxs6VmI/WiWe/Sacbhvt4/CmD3Slslq0rHNrTERHxmekQtOux4c+jrkwVrE6XLOnyTWOuSkx+zy24/SmLfwtXdiydUxoqY3dHg+q1OHDzx4mSlOfhFp45SWq1UYdRkx4cWCuPHktWtbYseSZis8c2tetrTNuOvX5F3a4+5hADvmvGTLe9axSLXtaKx6ViZ5iI+XouXh3vo+2ziro62y+LW9r49LunjNtrPGSu63EfoxMz80u7GPf8skmcqMO+bJGXJa8VrTd121iIrHyiIiIj2RC22w4tV2qm3Hjrnw4vqJtWla2yYvHy47RO2I52bazzPtXdu7cZ53HwSZUsXLT4seHtermcdJzbMOTdalbTSuTLFa1jdE7ZtX3p49YtX4Kabd3dn2uCzGPcH7E8L5qq3rOltipo61+ixZrxbHpN1rRjm9vcmviTu48o4Tdu7ce5JlQh7vbda08cczM8fDnyeHRkFny7dT2zHlpTHW+ny7M2zHSs2rfmceS22sT061R+tnZ4WDbSJxUiMkxStbTknraLWiItOznZ1n1ryxN2fO+jWGnh085q5L76Y6445mbzMczPpSvEWmbW4niOPKZno1Fm0cVnt3cLTTHNqfT7LWx0tau/JMW4tasz1hHdt4nXaWtq1tW2bFW1bVraJi14iYmLRMeiZ/d7flkxwRQtvj0nuFtPlwYLYbZ7YuK4ceO1azkmsTW+Otbc19eszygdXg+l1ObDzz4WS1YmfPbMxEys3Z8smGgL5qqXp9NbHTRRWdFizXrOLSbr2jHN7e5NZye9xx0jhSLe/eeI45t0j5z6G3d3JhyFn7jaug1NtNhpi24dtZm+LHkte22Jte03raY5nyjiIjhq9z0+PFbT5ccbK6jBTNsjnilp5i1a88zxzHMdfNJuzjTjwXtQQDoyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//2Q==', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(18:25:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Both the intro and credits sections are matching the reference prints perfectly — the intro has the white letter-spaced serif text centered on black, and the credits are displaying the full attribution with Gabriel's name and role exactly as specified.
+
+Now I'm working through the audio timeline: the trilha needs to cover the full duration (intro 5s + film 393s + credits 13.6s ≈ 411.6s total), with the act offsets shifted forward by 5 seconds to account for the intro, plus a cue at the end for the credits section. The trilha script currently handles just the film's 393 seconds, so I need to extend it to account for the intro fade-in at the beginning and add the credits cue at the end.
+
+Modifying the trilha script... The intro fades in the trilha's opening softly as the title card plays, then the film launches into the full emotional trilha from the start — creating that natural swell-into-beginning effect. So the trilha needs to be 411.6 seconds total to accommodate the intro fade-in, the film with speech, and the credits section, with all audio playing continuously without restart. I'm modifying the trilha generation script to shift all the act offsets by 5 seconds (the intro duration) and add a credits cue at the 398-second mark where the film ends. Adding the constants and adjusting the offset computation... Writing the offset calculation...
+
+</details>
+
+
+## 🤖 Claude *(18:25:18)*
+
+**Perfeitos** — batem com os prints do EP04:
+- ✅ **Intro:** "GABRIEL AI APRESENTA…" serif espaçado, exatamente o print 1
+- ✅ **Créditos:** GABRIEL AI · EU NÃO EXISTO · seções em OURO · Liberation Serif — idêntico ao print 3 (título/subtítulo editáveis)
+
+Agora ajusto a trilha para o **total completo** (intro 5s + filme 393s + créditos 13,6s = ~411s) — offsets +5s + cue de créditos calmo no fim, contínua:
+
+## 🤖 Claude *(18:25:28)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py",
+  "old_string": "# cumulative offset (s) per scene \u2192 act offsets\noffset = {}; acc = 0.0\nfor n in range(1, 49):\n    f = f\"{WORK}/seg_{n:02d}.mp4\"\n    if os.path.exists(f):\n        offset[n] = acc; acc += seg_dur(f)\nTOTAL = acc\nact_off = [offset.get(s, 0.0) for s in ACT_START_SCENE]\nprint(\"total:\", round(TOTAL,1), \"s | act offsets:\", [round(x,1) for x in act_off], flush=True)",
+  "new_string": "# bookends: intro cartela (5s) before the film, rolling credits after \u2192 one continuous trilha\nINTRO_S = 5.0\nCREDITS_S = float(os.environ.get(\"CREDITS_S\", \"13.65\"))\n# credits cue (calm resolution, out of the climax) + its own bpm section handled by falling through secao()\nCUES.append(dict(prompts=[(\"end credits, cinematic resolution, reflective and grand, warm afterglow\",1.0),(\"slow majestic outro, wide emotional strings fading\",0.8),(\"a single cursor blinking, distant pulse fading\",0.4)], cfg=dict(density=0.5,brightness=0.55,guidance=4.5)))\n\n# cumulative offset (s) per scene \u2192 act offsets (shifted by the intro)\noffset = {}; acc = 0.0\nfor n in range(1, 49):\n    f = f\"{WORK}/seg_{n:02d}.mp4\"\n    if os.path.exists(f):\n        offset[n] = acc; acc += seg_dur(f)\nfilm_total = acc\nact_off = [INTRO_S + offset.get(s, 0.0) for s in ACT_START_SCENE]\nact_off.append(INTRO_S + film_total)          # credits cue starts where the film ends\nTOTAL = INTRO_S + film_total + CREDITS_S\nprint(\"total:\", round(TOTAL,1), \"s (intro %.0f + film %.1f + credits %.1f)\" % (INTRO_S, film_total, CREDITS_S), flush=True)\nprint(\"act offsets:\", [round(x,1) for x in act_off], flush=True)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:25:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've added a seventh cue for credits, which shifts the act_off array to have 7 entries total. The secao() function will map the credits cue to the last section at bpm 104, which works fine for the calm ending. Now I need to verify how the reset_em computation changes with this new cue, since it's calculated for bpm section transitions across all cues.
+
+Looking at the section boundaries — the ate_ato array shows [2, 4, 99], which means cues 0-1 stay in section 0 (bpm 74), cues 2-3 move to section 1 (bpm 98), and cues 4-6 land in section 2 (bpm 104). The reset point is still at cue 2 where the section changes from 0 to 1, so the reset happens at act 3 as before — unchanged.
+
+For the EXTRA_STEER timing, I need to clarify what "após os 30 primeiros segundos" means. The video now has a 5-second intro before the film starts, so 30 seconds into the video is 25 seconds into the film itself. But the Sovereign likely meant 30 seconds of the film content, which would be 35 seconds into the video timeline. I'll set EXTRA_STEER to (35.0, 1) to place the emotional lift 30 seconds into the actual film, though I'm still working through the exact timing reference.
+
+Actually, reconsidering — the trilha's timing is absolute from the video start, and the Sovereign said "os 30 primeiros segundos" which most naturally reads as the first 30 seconds of the video. So EXTRA_STEER at (30.0, 1) is correct. This applies cue 1 at 30 seconds into the video, which is during act I's later moments. Then at 52.8 seconds (when act II begins), cue 1 applies again at the boundary. So the emotional build runs from 30 to 52.8 seconds — that works.
+
+Now I need to regenerate the trilha with the correct total duration (5 + 393 + 13.65 ≈ 411.65 seconds) and then write the final assembler that combines the intro, film, and credits video with the film speech offset and the trilha.
+
+</details>
+
+
+## 🤖 Claude *(18:25:49)*
+
+Trilha ajustada (7ª cue de créditos + offsets +5s + lift 30s). Re-gerando para o total completo (~411s):
+
+## 🤖 Claude *(18:25:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source /home/gcrUX/htdocs/constellation-orchestra/.env && set +a; export GOOGLE_API_KEY=\"${GEMINI_API_KEY}\"; export CREDITS_S=13.65\nrm -f /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/trilha.wav\nnohup python3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/ep05-trilha.py > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/trilha6.log 2>&1 &\necho \"TRILHA6 PID $!\"; sleep 30; grep -E \"total|LIFT|ato|RESET|OK\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/trilha6.log | head -5",
+  "description": "Re-gen trilha for full total (intro+film+credits)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TRILHA6 PID 3551593
+> total: 411.6 s (intro 5 + film 393.0 + credits 13.7)
+> [00:00] ato 1 (bpm 74)
+> ```
+
+## 🤖 Claude *(18:26:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now I'm putting together the final video assembly with the concatenated segments—intro, main film, and credits totaling 411.6 seconds—while layering in the audio track with the presenter's speech and narration positioned after the intro, and the background music ducking underneath the dialogue except during the intro and credits where it plays uninterrupted. Writing the final assembly script... Writing v5 script...
+
+</details>
+
+
+## 🤖 Claude *(18:26:47)*
+
+Trilha6 gerando (411,6s: intro 5 + filme 393 + créditos 13,7). Escrevendo o assembler final v5 (intro | filme | créditos + fala do filme deslocada +5s + trilha contínua):
+
+## 🤖 Claude *(18:27:11)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/v5-final.ts",
+  "content": "/**\n * EP05 v5 FINAL \u2014 bookends: intro cartela (5s) + film (393s) + rolling credits (13.65s).\n * Video: [intro | film | credits]. Audio: film speech at (5+offset) + continuous Lyria trilha ducked\n * under speech (intro/credits play clean trilha). loudnorm -16 LUFS \u2192 master_A5.mp4.\n */\nimport { execSync } from 'child_process';\nimport { existsSync } from 'fs';\nconst W = '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master';\nconst PRES = new Set([1,5,7,14,15,21,22,24,25,28,31,33,35,36,41,43,45,46,47]);\nconst INTRO = 5.0;\nconst dur = (f:string)=>parseFloat(execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 \"${f}\"`).toString().trim()||'0');\n\n// 1. concat video: intro + film(video4) + credits  (re-encode each to identical params first)\nfor (const [src,tag] of [[`${W}/intro.mp4`,'intro'],[`${W}/video4.mp4`,'film'],[`${W}/creditos.mp4`,'cred']] as const) {\n  execSync(`ffmpeg -y -i \"${src}\" -vf \"scale=1280:720,fps=30,setsar=1\" -c:v libx264 -pix_fmt yuv420p -r 30 -an ${W}/n_${tag}.mp4 -loglevel error`);\n}\nrequire('fs').writeFileSync(`${W}/concat5.txt`, [`file '${W}/n_intro.mp4'`,`file '${W}/n_film.mp4'`,`file '${W}/n_cred.mp4'`].join('\\n'));\nexecSync(`ffmpeg -y -f concat -safe 0 -i ${W}/concat5.txt -c:v libx264 -pix_fmt yuv420p -r 30 -an ${W}/video5.mp4 -loglevel error`);\nconst TOTAL = dur(`${W}/video5.mp4`);\nconsole.log('video5.mp4:', TOTAL.toFixed(1),'s');\n\n// 2. film offsets (from segs), shifted by INTRO for the audio timeline\nconst offset:Record<number,number>={}, segd:Record<number,number>={}; let acc=0;\nfor(let n=1;n<=48;n++){const s=`${W}/seg_${String(n).padStart(2,'0')}.mp4`; if(existsSync(s)){offset[n]=acc; segd[n]=dur(s); acc+=segd[n];}}\n\n// 3. speech track over silent base(TOTAL): presenter Veo audio + confined deep narration, all at (INTRO+offset)\nconst inputs:string[]=[`-f lavfi -t ${TOTAL.toFixed(2)} -i anullsrc=r=48000:cl=stereo`];\nconst filt:string[]=[]; const labels:string[]=['[0:a]']; let idx=1;\nfor(let n=1;n<=48;n++){\n  if(offset[n]==null) continue;\n  const off=Math.round((INTRO+offset[n])*1000);\n  if(PRES.has(n)){\n    inputs.push(`-i \"${W}/seg_${String(n).padStart(2,'0')}.mp4\"`);\n    filt.push(`[${idx}:a]adelay=${off}|${off}[p${idx}]`); labels.push(`[p${idx}]`); idx++;\n  } else {\n    const wav=`${W}/scene_${String(n).padStart(2,'0')}.wav`; if(!existsSync(wav)) continue;\n    const deep=`${W}/scene_${String(n).padStart(2,'0')}_deep.wav`;\n    if(!existsSync(deep)){\n      const cap=Math.max(1,(segd[n]-0.15)).toFixed(2);\n      execSync(`ffmpeg -y -i \"${wav}\" -af \"asetrate=24000*0.90,aresample=48000,atempo=1/0.90,highpass=f=70,acompressor=threshold=-18dB:ratio=3:attack=8:release=180\" -t ${cap} -ar 48000 -ac 2 \"${deep}\" -loglevel error`);\n    }\n    inputs.push(`-i \"${deep}\"`);\n    filt.push(`[${idx}:a]adelay=${off}|${off}[n${idx}]`); labels.push(`[n${idx}]`); idx++;\n  }\n}\nconst speechMix = labels.join('') + `amix=inputs=${labels.length}:dropout_transition=0:normalize=0,atrim=0:${TOTAL.toFixed(2)}[speech]`;\nexecSync(`ffmpeg -y ${inputs.join(' ')} -filter_complex \"${filt.join(';')};${speechMix}\" -map \"[speech]\" -c:a pcm_s16le -ar 48000 ${W}/speech5.wav -loglevel error`);\nconsole.log('speech5.wav:', dur(`${W}/speech5.wav`).toFixed(1),'s (',labels.length-1,'elements)');\n\n// 4. duck trilha under speech (trilha is TOTAL-length; intro/credits have no speech \u2192 clean music)\nexecSync(`ffmpeg -y -i ${W}/trilha.wav -i ${W}/speech5.wav -filter_complex \"[0:a]atrim=0:${TOTAL.toFixed(2)},volume=-9dB[m];[m][1:a]sidechaincompress=threshold=0.04:ratio=8:attack=150:release=600[duck];[1:a][duck]amix=inputs=2:dropout_transition=0:normalize=0[out]\" -map \"[out]\" -c:a pcm_s16le -ar 48000 ${W}/final5.wav -loglevel error`);\nconsole.log('final5.wav:', dur(`${W}/final5.wav`).toFixed(1),'s');\n\n// 5. mux + loudnorm\nexecSync(`ffmpeg -y -i ${W}/video5.mp4 -i ${W}/final5.wav -map 0:v -map 1:a -af \"loudnorm=I=-16:TP=-1.5:LRA=11\" -c:v copy -c:a aac -ar 48000 -shortest ${W}/master_A5.mp4 -loglevel error`);\nconst d=execSync(`ffprobe -v error -show_entries stream=width,height -show_entries format=duration -of default=noprint_wrappers=1 ${W}/master_A5.mp4`).toString().trim();\nconsole.log('\\n=== MASTER A5 (intro + film + credits + emotional trilha) ===\\n'+d);\nexecSync(`ffmpeg -i ${W}/master_A5.mp4 -af volumedetect -f null /dev/null 2>&1 | grep -E \"mean_volume|max_volume\" || true`,{stdio:'inherit'});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/v5-final.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:27:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm waiting for trilha6 to complete its run, then I'll push v5 to master and deliver A5 with a final report. Before I wait though, I should reconsider the title motion design approach since that's the remaining ambitious piece to tackle.
+
+The intro cartela and credits are done with PIL, but the title on scene 1 is where the professional motion design comes in. The issue is that Veo already burned "EU NÃO EXISTO" directly into scene 1, so layering a motion design title cartela on top would be redundant. I need to clarify with the Sovereign whether the title motion design should go on a different scene or if we're replacing this concept entirely. Let me flag this as the next step and confirm the title/subtitle approach with them. I'll wait for trilha6 to arrive, then run v5 to finalize the intro, film, improved audio track, and credits before delivering version A5.
+
+</details>
+
+
+## 🤖 Claude *(18:27:31)*
+
+v5 pronto. Aguardando a trilha (411s) concluir, depois monto o master A5 (intro + filme + créditos + trilha emocional):
+
+## 🤖 Claude *(18:27:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "until ! kill -0 3551593 2>/dev/null; do sleep 15; done\necho \"=== trilha6 ===\"; grep -E \"OK trilha|failed|only|LIFT|RESET\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/trilha6.log | tail -4\nT=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/trilha.wav\n[ -f \"$T\" ] && ffprobe -v error -show_entries format=duration -of csv=p=0 \"$T\" | xargs echo \"trilha:\" || echo \"no trilha\"",
+  "description": "Wait for trilha6 (full total)",
+  "timeout": 560000
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
