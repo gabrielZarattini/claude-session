@@ -14071,5 +14071,6 @@ Descansa — na próxima a gente lapida. 🎬
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]
+> * **Sessão Anterior**: [[2026-08-03 - Calibrar gravações de tela e adicionar trilha sonora]]
+> * **Próxima Sessão**: [[2026-08-03 - agent-a575f41c59d70f794]]
 %% --- TIMELINE END --- %%
