@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 101
-> * **Total de Sessões**: 3098
+> * **Total de Processos**: 109
+> * **Total de Sessões**: 3345
 
 ---
 
@@ -25,6 +25,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[agent-browser-install]]` - *Processo*
 *   `[[amazon-credential-resolution]]` - *Processo*
 *   `[[asr-master-to-srt]]` - *Processo*
+*   `[[audit-delivery-gate]]` - *Processo*
 *   `[[autonomic-loop-mape-k]]` - *Processo*
 *   `[[autopilot-cron-identity]]` - *Processo*
 *   `[[autopilot-video-9x16]]` - *Processo*
@@ -60,12 +61,14 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[external-video-ingest]]` - *Processo*
 *   `[[great-reset-sovereign]]` - *Processo*
 *   `[[handoff-material-proof-audit]]` - *Processo*
+*   `[[handoff-pruning-gate]]` - *Processo*
 *   `[[intent-plan-execution]]` - *Processo*
 *   `[[kanban-roadmap-reconciler]]` - *Processo*
 *   `[[landing-bundler]]` - *Processo*
 *   `[[llm-cascading-fallback]]` - *Processo*
 *   `[[mcoin-cost-calibration]]` - *Processo*
 *   `[[mcoins-ledger-reconciliation]]` - *Processo*
+*   `[[media-state-lifecycle]]` - *Processo*
 *   `[[meta-credential-resolution]]` - *Processo*
 *   `[[meta-reels-publish]]` - *Processo*
 *   `[[ml-affiliate-attribution]]` - *Processo*
@@ -81,11 +84,15 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[pmo-curator]]` - *Processo*
 *   `[[predictive-swarm-tier1-gates]]` - *Processo*
 *   `[[private-bucket-asset-signing]]` - *Processo*
+*   `[[public-auth-visibility-flags]]` - *Processo*
 *   `[[publication-metrics-collection]]` - *Processo*
 *   `[[repurpose-host-infra-provisioning]]` - *Processo*
 *   `[[revenue-opportunity-pauta]]` - *Processo*
 *   `[[schema-drift-audit]]` - *Processo*
+*   `[[scratchpad-harvest]]` - *Processo*
+*   `[[security-definer-views-accepted]]` - *Processo*
 *   `[[smart-delete-remote]]` - *Processo*
+*   `[[space-asset-publish-lifecycle]]` - *Processo*
 *   `[[space-publish-format-preview]]` - *Processo*
 *   `[[space-publish-variants]]` - *Processo*
 *   `[[spaces-canvas-persistence]]` - *Processo*
@@ -100,6 +107,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[trends-credential-resolution]]` - *Processo*
 *   `[[ux-ui-senior-loop]]` - *Processo*
 *   `[[veo-avatar-video]]` - *Processo*
+*   `[[veo-refs-8s-guard]]` - *Processo*
 *   `[[video-repurpose-source-probe]]` - *Processo*
 *   `[[video-repurpose-worker]]` - *Processo*
 *   `[[video-studio-editor-deploy-and-provision]]` - *Processo*
@@ -124,21 +132,268 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-afed6d2846d4f2d75]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-af88a92e8664682e8]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-af80d13d0dfcdcf92]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-af70e1ea8d4f250af]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-aee9299d4dd30b561]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-aed00a3a41c90e8a0]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ae9dd658d62293630]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ae8cee0c8d020f87c]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ae86c948a66f76fb5]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ae70f8c6c82dfa7fb]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ae4aa682fd104f65f]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ad80d1c7236dfafa7]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ad3cd88c83e31d2e4]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ac6b77ebdd3c4c4e2]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ac08dd7f3f93948c3]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ab6850f7cb04dc52e]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-ab48c65ee8364ef61]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-aa597a260079a6d7d]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-aa0cb8954fe56b28c]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a96cc67a3b10c50c8]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a9647b324dbb99eb6]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a96138cf9f2ea9267]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a8eb0f6e6397956e5]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a84f6190b1741da1c]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a73ad63652ff07e0d]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a6cfc5ae2ca88c12f]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a6adce82c0754c219]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a60cae86a494b98aa]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a5ab32ebfd39ef024]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a592031870e56050b]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a515bf82e8b1d54cf]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a487baca26faaecd6]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a35ce9c31dbf03446]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a34850b069388a4f3]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a2be724e1c7cf06fd]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a2b9ff7b607521b70]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a22a34b9351b3a198]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a1edeafc79c76053b]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a1d94b1c6cec5885d]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - agent-a1cfd5cc701a2bb6b]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - Calibrar gravações de tela e adicionar trilha sonora]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-03 - agent-a575f41c59d70f794]]` (ClaudeSessions) - *2026-08-03*
+*   `[[2026-08-03 - Finalizar vídeo tutorial e funil financeiro]]` (ClaudeSessions) - *2026-08-03*
+*   `[[2026-08-03 - Calibrar gravações de tela e adicionar trilha sonora]]` (ClaudeSessions) - *2026-08-03*
+*   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-afc140c712641e0bc]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-af678b79b875a6ffd]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-af50219d8dcb902e4]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-af2ef6b52a6b0a1db]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-aeb26e4f3da47d874]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-adc12510ca70a47be]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-ad60f7193c2f97ae3]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-ad43f4c2c89f4a9b4]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-ad23950e3cf5f5580]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-acf426e0bdc44380c]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-acdf8d2a8c8911079]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-ac284a09e7be91f20]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-abb3c09e146aea34a]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-ab68372f4a315f7cd]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-aafbc156d86c71859]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-aaf2c64cbcdf4556e]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a9c399662f13d2a84]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a9ae0da78a20e9f7f]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a97ef68eb95fe8e93]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a96bb21d81c3d9c9a]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a8701ef032d8c46b1]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a85132e76e2dc0208]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a83013540e34f40ae]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a7ae694f6acb564e2]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a7a224a82942dc158]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a79d2a96989c8f15f]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a71b0ca9698f59fed]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a6b39472f1765305c]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a6886bff872e0f0a0]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a665e7d5157fa4089]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a51e1720cfa3c85db]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a50ec321e979fc67b]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a4b15e36a743449d5]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a475582a370a61d48]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a354ed479eeb36c15]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a2af4f8c082de7125]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a28d6e0259096d8d7]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a0d2c1fe402ff0c10]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a0d22044fc48c94af]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a09656203bfe3b609]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - agent-a01877f4d8658049d]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - Planejar roteiro do EP05 como tutorial]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-08-02 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions) - *2026-08-02*
+*   `[[2026-07-31 - agent-abd71c71c3f451c8e]]` (ClaudeSessions) - *2026-07-31*
+*   `[[2026-07-31 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions) - *2026-07-31*
+*   `[[2026-07-30 - fec402e3-0895-46ec-bc69-5abd4863c72a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-af98b8c32fe8e108c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-af7fb84e05c1dd4ce]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-af2e642b694b2d2d2]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aed0797d02cc03ff6]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ae45a8c9da7cdb004]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ae29b00990252aef9]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ae1a40968d7805668]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ae199d28d87e571e2]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ae024139f54422c05]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ad0d9d2408bf26e5e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ad0691ffb948d32fd]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ad0296ad45d7f5da5]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-acfb68521fe456696]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-acf858577fa218656]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-acc56110ce9deecc5]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-acb6cf594c0f75c0e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-acb037a1d34974277]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ac69a6c834abcadc6]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ac613b78d49aa39f3]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ac37d410047d62a5a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ac12e105b1d58e72d]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-abf69d0d413666dc4]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-abc378521811b3601]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aba5cb38012c69149]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ab9a17aa25dcd44a1]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ab80d713d812e7b0e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-ab24ebfe442718db2]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aae3ad2e066c0d652]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aaa2a1ec4d02f1e5c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aaa0ec0142637ac01]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aa82018296f272a8a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aa7a8b964452217a9]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-aa0fd50f82a74da8f]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a9acf7359825b25b1]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a9aa752895e18efb7]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a9aa5e65771d1fc1e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a994148df4f4b18f4]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a981ab858de47c6b4]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a95b1b694bea9283c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a940363112917aeb8]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a92f476345d6abddc]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a9112535380ce2c73]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a8c08883913def9ba]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a85d3c9cb316d97f1]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a858bd2e674883da2]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a84ac82a0a164fc87]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a817da1cdc524327c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7e52a701fc1864e7]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7d46ee00a6bf612c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7d27680621a9f52b]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7b399edc999e2f62]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7acfdcf0b618b339]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7a1d7c9a42ba4d89]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a783e1b22dcc8f51e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a781a9e7a2c28884a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a771416df235f9af5]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a76b6ddddf467e788]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7454a88c7507d267]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a7296ac02fcf89761]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a6ed8cdc4d2326867]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a6e891320eee8ea61]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a6c869ab4dbc10e4f]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a6a32d3e53a54d91e]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a692b90d4d02e18ea]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a69267a670df946bf]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a67fe70355985bed6]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a67bbdd27d09e3b56]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a672b4fe5b71a7e52]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a6729b00c0667611c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a66d594ec5c04b118]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a65855e3094396c99]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a5fc1fc5f3938cdc3]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a5f38260ce20f18dd]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a58da78dffd631ec6]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a5378666232230cff]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a4e18f58e6e2a499a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a4c6fb7ce99524175]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a49d9e4c287daabeb]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a46df0f9353790a47]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a411ce266ade02959]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a3ede5de98079e7cd]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a3c7b14a9c2d8575d]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a3aa53e2df5315000]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a38b95465a2f6528a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a386089c310e6789c]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a378842f0ee978ba5]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a343ef2271d60b312]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a30b0a583f2722f73]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a2fa9cb56a4a1222a]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a2be415a227dff69b]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a28d5940217da74ab]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a21bd0cfaac5410a7]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a20b40a5b57a75365]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a1f446de624818403]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a19d6df083b79fa67]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a197ca7a91ef627a6]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a1968b3e6ce54af4d]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a189d8d75c472c0e7]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a12117b4c5f38ffdb]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a1044843029730bdb]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a0e129de2afb25fbd]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a0dfcd864d9acd938]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a0de0b92b98a97875]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a0a83f8379af0c3a4]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a06cd7395e916db57]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a051a315c2863ddcf]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - agent-a030b8570a303d856]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - Resolver rejeição TikTok API com credenciais de teste]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - Estratégia de crescimento acelerado pipeline sintético e otimização de retenção]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-30 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions) - *2026-07-30*
+*   `[[2026-07-29 - agent-af6351738d1c8d840]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-aea230efd23f8f527]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-ae49d659842e3ab0e]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-ada86f8b83e56b028]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a8d72129d7a5b86d8]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a79ed1aad9a42e9c1]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a67c165e85724d0dc]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a395af2c35333ed78]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a2da9826f0bd4e06c]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a192c55023c43280b]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a1429a4f6a000ea2e]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - agent-a01d5790f26706897]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-29 - Auditoria 4Cs recuperar branches órfãs e resolver merge gate]]` (ClaudeSessions) - *2026-07-29*
+*   `[[2026-07-27 - handson]]` (GeminiSessions) - *2026-07-27*
+*   `[[2026-07-26 - pmo-curator next-steps]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - handson]]` (GeminiSessions) - *2026-07-26*
+*   `[[2026-07-26 - configure-effort-mode]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - agent-a37e3f470d931cd93]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - Criar modal de publicação para YouTube, TikTok e Instagram]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - 63f7e01c-957d-42bc-93d4-90dc11ab6ad2]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - 6241b4a2-a021-42fd-b450-cf7633b8134c]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - 4f92b00e-068a-4c9e-8194-1f8903f1e14d]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-26 - 4f48ec0f-681d-44f5-a594-9c677e454c31]]` (ClaudeSessions) - *2026-07-26*
+*   `[[2026-07-25 - agent-af5b8a3be60c951f9]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-af0102ab02815a3c7]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-aeea2cb9a88814523]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-aec0a888106722ce4]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-ae933299c2ec5f87b]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-ae699d94ba7b5d068]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-ae568186fb61c741a]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-add104ea7319711cb]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-acc5edbe0829978f5]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-ac28b432c8ffe95ef]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-abecc18e54e087b14]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-abba74fa08957cf12]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-aba899aec51fd954c]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a743c2f64a7e30b49]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a6bca962f65af218f]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a6b9e6526819a6d72]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a68b944cb80a2306e]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a593f1f30787595fc]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a4146066a72f17d6f]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a39e531c3cf5f8e11]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a3870391c45ac2bb8]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a327ccaec1e24fc6d]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a318678291b606231]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a2317364a621cbeb9]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a1da5514c9f2bd98e]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a13e5bba3f642217d]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a10f6d92d4549f668]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a05a3a57726e848da]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - agent-a02ace0eb100aadb3]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a02267c6f4c65a0dc]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - agent-a01abefe4e42f1fd4]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - Implementar AI Act Fatia 23 — disclosure, watermark e consent]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - Criar modal de publicação para YouTube, TikTok e Instagram]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-25 - Copiar engenharia de harness e shakehands para outro repositório]]` (ClaudeSessions) - *2026-07-25*
+*   `[[2026-07-25 - Análise de segurança em views com SECURITY DEFINER no Postgres]]` (ClaudeSessions) - *2026-07-25*
 *   `[[2026-07-24 - agent-afbe2dc4ab4a0bbbc]]` (ClaudeSessions) - *2026-07-24*
 *   `[[2026-07-24 - agent-af410f604e92a8461]]` (ClaudeSessions) - *2026-07-24*
 *   `[[2026-07-24 - agent-ae19f50f11f0a3aac]]` (ClaudeSessions) - *2026-07-24*
