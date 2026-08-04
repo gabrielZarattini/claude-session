@@ -1,5 +1,5 @@
-# [[2026-08-04 - Calibrar gravações de tela e adicionar trilha sonora|Calibrar gravações de tela e adicionar trilha sonora]]
-**Date:** 2026-08-03 | **Session ID:** `3f7d28b7-c49d-499c-8107-083d3f48925c`
+# [[2026-08-03 - Calibrar gravações de tela e adicionar trilha sonora|Calibrar gravações de tela e adicionar trilha sonora]]
+**Date:** 2026-08-04 | **Session ID:** `3f7d28b7-c49d-499c-8107-083d3f48925c`
 
 ---
 
@@ -7665,6 +7665,882 @@ Found a timing drift in film8 (385.47s vs expected 393s) and I'm auditing the re
 > cta: 18.2 s (créditos 13.6s)
 > ```
 
+## 🤖 Claude *(23:30:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the audit for segment 8 — the 22 segments are exact with zero drift, but there's a discrepancy where film8 shows 385.47 instead of the expected 393, which was the original film count. I'm adding up all the individual segment durations to verify where the difference comes from. Os segs antigos tinham durações estendidas para acomodar a narração, enquanto meus segs de 8 segundos são estritos — isso explica por que o filme antigo tem 7,5 segundos a mais. O problema é que o áudio dos apresentadores está alinhado com a timeline antiga (393s), mas meus offsets para IVC vêm dos segs do filme novo (385s), criando um desalinhamento entre quando o áudio deveria tocar e quando realmente toca.
+
+A solução é reconstruir a base de áudio dos apresentadores usando o filme novo, já que ele já contém os áudios dos presenters — preciso extrair e realinhar esse áudio para a timeline corrigida.
+
+Mas há outro problema: 11 cenas com falas do IVC extrapolam a duração da cena em 0.5s, e 5 delas colidem com os segmentos dos apresentadores. Além disso, o CTA de 18.2s é mais longo que os créditos de 13.6s, cortando o final.
+
+A solução é estender as cenas mudas para acomodar a fala — deixar a timeline ser guiada pela narração. Para cada cena sem apresentador que tem áudio IVC, vou calcular a duração efetiva como o máximo entre a duração original e a duração do áudio mais 0.4s. Isso reposiciona tudo automaticamente, e como o áudio dos apresentadores agora vem do film8, fica tudo alinhado. As cenas SCREEN se esticam com congelamento de frame; as cenas b-roll antigas mudas precisam ser recortadas e renormalizadas com o novo timing.
+
+Para os créditos, a regra é a mesma — estender até ~19.2s com congelamento de frame para acomodar o CTA de 18.2s, mantendo a timeline dirigida pela narração. Updating the assembly file with the new offsets and CTA values, then running it again.
+
+</details>
+
+
+## 🤖 Claude *(23:30:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A auditoria encontrou três problemas: sincronização perfeita mas com cenas mudas cortadas para caber a narração Qwen3, áudio dos presenters dessincronizado dos lábios, e 11 falas IVC vazando da cena com o CTA estourando os créditos. Vou corrigir estendendo as cenas mudas para acomodar a fala e usando o áudio do filme como base.
+
+</details>
+
+
+## 🤖 Claude *(23:30:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts",
+  "old_string": "// 1. re-normalize the 22 screencast segments from the v3 takes (freeze last frame to fill SECS)\nfor (const [nStr, take] of Object.entries(SCREEN)) {\n  const n = Number(nStr);\n  const seg = `${W}/seg8_${String(n).padStart(2, '0')}.mp4`;\n  sh(`ffmpeg -y -i ${SC3}/${take}.mp4 -f lavfi -t ${SECS[n]} -i anullsrc=r=48000:cl=stereo -vf \"scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,fps=30,setsar=1,tpad=stop_mode=clone:stop_duration=20\" -t ${SECS[n]} -c:v libx264 -pix_fmt yuv420p -r 30 -c:a aac -map 0:v -map 1:a \"${seg}\" -loglevel error`);\n}\nconsole.log('22 screencast segments re-cut');\n\n// 2. film8 concat: seg8_NN where re-cut, else the original seg_NN\nconst segs: string[] = [];\nfor (let n = 1; n <= 48; n++) {\n  const v8 = `${W}/seg8_${String(n).padStart(2, '0')}.mp4`;\n  const v0 = `${W}/seg_${String(n).padStart(2, '0')}.mp4`;\n  if (existsSync(v8)) segs.push(v8);\n  else if (existsSync(v0)) segs.push(v0);\n}",
+  "new_string": "// narration-driven timeline (house recipe): every mute scene stretches to fit its IVC line\nconst NARR = [2, 3, 4, 6, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 26, 27, 29, 30, 32, 34, 37, 38, 39, 40, 42, 44];\nconst eff: Record<number, number> = { ...SECS };\nfor (const n of NARR) {\n  const f = `${IVC}/ivc_scene_${String(n).padStart(2, '0')}.mp3`;\n  if (existsSync(f)) eff[n] = Math.max(SECS[n], dur(f) + 0.4);\n}\n\n// 1. re-cut screencast scenes from v3 takes AND mute b-roll scenes from old segs, both to eff[n]\nconst NORM_VF = 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,fps=30,setsar=1,tpad=stop_mode=clone:stop_duration=30';\nfor (let n = 1; n <= 48; n++) {\n  if (PRES.includes(n)) continue;\n  const seg = `${W}/seg8_${String(n).padStart(2, '0')}.mp4`;\n  const src = SCREEN[n] ? `${SC3}/${SCREEN[n]}.mp4` : `${W}/seg_${String(n).padStart(2, '0')}.mp4`;\n  if (!existsSync(src)) continue;\n  sh(`ffmpeg -y -i \"${src}\" -f lavfi -t ${eff[n].toFixed(2)} -i anullsrc=r=48000:cl=stereo -vf \"${NORM_VF}\" -t ${eff[n].toFixed(2)} -c:v libx264 -pix_fmt yuv420p -r 30 -c:a aac -map 0:v -map 1:a \"${seg}\" -loglevel error`);\n}\nconsole.log('mute scenes re-cut to narration-driven lengths');\n\n// 2. film8 concat: seg8_NN (mute, stretched) + original seg_NN (presenters keep Veo audio)\nconst segs: string[] = [];\nfor (let n = 1; n <= 48; n++) {\n  const v8 = `${W}/seg8_${String(n).padStart(2, '0')}.mp4`;\n  const v0 = `${W}/seg_${String(n).padStart(2, '0')}.mp4`;\n  if (!PRES.includes(n) && existsSync(v8)) segs.push(v8);\n  else if (existsSync(v0)) segs.push(v0);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:30:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts",
+  "old_string": "// 3. video8 = title + film8 + credits (single re-encode)\nwriteFileSync(`${W}/concat8.txt`, [`file '${T}/title10s_final.mp4'`, `file '${W}/film8.mp4'`, `file '${W}/n_cred.mp4'`].join('\\n'));",
+  "new_string": "// 3. credits stretched so the CTA fits; then video8 = title + film8 + credits\nconst ctaDur = dur(`${IVC}/ivc_scene_99.mp3`);\nconst credLen = Math.max(dur(`${W}/n_cred.mp4`), ctaDur + 1.2);\nsh(`ffmpeg -y -i ${W}/n_cred.mp4 -vf \"tpad=stop_mode=clone:stop_duration=30\" -t ${credLen.toFixed(2)} -an -c:v libx264 -pix_fmt yuv420p -r 30 ${W}/n_cred8.mp4 -loglevel error`);\nwriteFileSync(`${W}/concat8.txt`, [`file '${T}/title10s_final.mp4'`, `file '${W}/film8.mp4'`, `file '${W}/n_cred8.mp4'`].join('\\n'));"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:31:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preciso revisar a ordem das variáveis de duração no script — o cálculo de `FILM` e `CRED` está acontecendo antes do bloco de créditos, mas `CRED` deveria usar a duração de `n_cred8` que só existe depois da concatenação com `film8`. Preciso reorganizar isso para que as durações sejam calculadas na sequência correta.
+
+Também há uma redeclaração de `NARR` no passo 4 que vai gerar erro de sintaxe, então preciso remover essa duplicação. E o áudio do presenter está usando `base3.mp4` como fonte quando deveria estar usando `film8.mp4`.
+
+</details>
+
+
+## 🤖 Claude *(23:31:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Vou fazer os ajustes finais de consistência, incluindo a ordem do CRED, remover o NARR duplicado e corrigir a base de áudio para film8.
+
+</details>
+
+
+## 🤖 Claude *(23:31:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts",
+  "old_string": "const FILM = dur(`${W}/film8.mp4`), CRED = dur(`${W}/n_cred.mp4`), TOTAL = TITLE + FILM + CRED;\nconsole.log(`film8 ${FILM.toFixed(2)}s \u00b7 total ${TOTAL.toFixed(2)}s`);",
+  "new_string": "const FILM = dur(`${W}/film8.mp4`);\nconsole.log(`film8 ${FILM.toFixed(2)}s (narration-driven)`);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:31:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts",
+  "old_string": "sh(`ffmpeg -y -f concat -safe 0 -i ${W}/concat8.txt -an -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -r 30 ${W}/video8.mp4 -loglevel error`);\nconsole.log(`video8 ${dur(`${W}/video8.mp4`).toFixed(2)}s`);\n\n// 4. speech8 = presenter Veo audio (film8 has none for screencasts; presenters come from base3) + IVC scenes + CTA\nconst NARR = [2, 3, 4, 6, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19, 20, 23, 26, 27, 29, 30, 32, 34, 37, 38, 39, 40, 42, 44];\nconst inputs = [`-i ${W}/base3.mp4`];",
+  "new_string": "sh(`ffmpeg -y -f concat -safe 0 -i ${W}/concat8.txt -an -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -r 30 ${W}/video8.mp4 -loglevel error`);\nconst CRED = credLen, TOTAL = TITLE + FILM + CRED;\nconsole.log(`video8 ${dur(`${W}/video8.mp4`).toFixed(2)}s \u00b7 total target ${TOTAL.toFixed(2)}s`);\n\n// 4. speech8 \u2014 presenter Veo audio comes from film8 ITSELF (new timeline), plus IVC scenes + CTA\nconst inputs = [`-i ${W}/film8.mp4`];"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:31:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/assemble-v8.ts 2>&1 | tail -12",
+  "description": "Assemble master A8 v2 (narration-driven timeline)",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mute scenes re-cut to narration-driven lengths
+> film8 395.61s (narration-driven)
+> video8 425.00s · total target 424.97s
+> speech8 424.97s · IVC scenes 28 + CTA
+> 
+> === MASTER A8 === 425.00s 52.4MB
+> vol[title]: [Parsed_volumedetect_0 @ 0xaf17445f9fe0] mean_volume: -17.4 dB
+> vol[open]: [Parsed_volumedetect_0 @ 0xbf622b8c9fe0] mean_volume: -20.2 dB
+> vol[scene16]: [Parsed_volumedetect_0 @ 0xbf54fa776fe0] mean_volume: -21.8 dB
+> vol[cta/credits]: [Parsed_volumedetect_0 @ 0xb52ccb535fe0] mean_volume: -22.6 dB
+> QA frames written (qa8_*.jpg)
+> ```
+
+## 🤖 Claude *(23:39:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the master A8 v2 assembly at 425 seconds total with the narration-driven timeline properly aligned—film runs 395.61 seconds plus title and credits, speech synced to match the total without overflow, and the loudness levels are good. Now I'm reviewing the visual QA frames to spot any critical issues, particularly in scene 16.
+
+</details>
+
+
+## 🤖 Claude *(23:39:45)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A8 v2 fechou alinhado com 425 segundos, com a narração e speech sincronizados e CTA nos créditos estendidos. Vou fazer a verificação de visão nos frames críticos.
+
+</details>
+
+
+## 🤖 Claude *(23:39:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_*.jpg",
+  "description": "List A8 QA frames"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_12.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_130.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_131.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_205.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_212.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_23.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_2.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_355.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_366.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_400.jpg
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_411.jpg
+> ```
+
+## 🤖 Claude *(23:39:50)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_212.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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9P8AE70Y7MJ43Wzad9kb9023WuDUEza82Ab+lo0zTere2PJ0+HTK+l+SnqVyzebRbHb6fW9ERGHzZumZn8WMI8nT4dMnk6fDplaunNNOF7dX1omK+9a9t2K7iJn4keTp8OmTydPh0ymIqvG2fdjpVy1TGN9sb/FnEG/4v3T5Onw6ZPJ0+HTKJiu84zbrbERZcRsZmZj/AC/dg8nT4dMp8mjh0yjLVTE2vtmdu7FXLXeerjhsg/hd8/5L+Tp8OmUeVp8OllovbH9IYppwqi18b/8AhcRsMz8R5Wnw6ZPJ053dMpimYqibbsdnDZG9eiLUx+m9MRsJmficTqU5Kphgbev+efcajhL6Fm+2AZ6aotETa0T64+DAjYJhaZ3YAoJQAL02hMTEVQDGMt4xvit3fTwBgGWZj9Ota8XnYDAL1TG6FAQAA2Yim2zdffi1mSK6owiZBFWEqoSCFlUgkAAQAkQXBIqAsKgLCoCQAAAAuXAEAJAAAAAASguAFy4JFUgkVSCRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRACRVIAFwAAAuXAC5cAQAkLlwAuABcuAFy4AXLg29PWmiLbYZ/fH3en4nG3LtZlymnbM5w5L3x93p+I98fd6ficbcuZlO6s2OS98fd6fiPfH3en4nG3LrmU7qzY5P3z93p+I98/d6ficaHVK91Zscl75+70/Ee+fu9PxONE6pO6s2OS98/d6fiPfP3en4nGi9UndWbHI++Pu9PxHvmf1en4nG3Lp1SndWbF6qpqm8qFy6O0bgLyXlFAvJeQAvJeQAvJeQAvJeQAvJiAJQCAAExEyhni0UzN8Z9fUGBKEghMISDboppy4xf3Z42Yq4iNnCCmuYi0eyJVqquDEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACSy2yyLzxkEW9C3om88ZLzxkEWktKbzxlF54yBb0Leibz6l54yCLSWkvPGS88ZAsWTefUvPGQRaS0pvPGS88ZBFiybz6l59QRYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBYsXniXniBY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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(23:39:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master/qa8_411.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '/9j//gAQTGF2YzYwLjMxLjEwMgD/2wBDAAgMDA4MDhAQEBAQEBMSExQUFBMTExMUFBQVFRUZGRkVFRUUFBUVGBgZGRscGxoaGRocHB4eHiQkIiIqKiszMz7/xACmAAEAAwEBAQEBAAAAAAAAAAAABQYHBAMIAgEBAQEBAQAAAAAAAAAAAAAAAAABAgMQAQACAQMCAwUDBQwGCAUEAwACAQMRBBIFITETQQZRYSIUMnGBIzWhUnNishV0cpKRs7E0B0KUFrQzgjai01Qlk4MkwUTS0eFVw1NDwqNj8BEBAQACAQIFBQEBAQAAAAAAAAERAiFRQXESYZGhgTHBIrGS0UL/wAARCALQBQADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD5/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(23:40:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the Vision QA results for the modal interface — the personalization modal is open on master with all three identity references, the cost badge showing 267 mco as required, and the panel hidden at 85% zoom for 720p legibility, with a new screencast confirmed.
+
+Now I need to push A8 to the Library and finalize everything — writing up the transcription playbook, collecting the assets, and committing. I'm uploading the master A8 version while A7 stays as the previous iteration in the Library. I'll document the two transcriptions into an actionable synthesis while the upload processes, then gather the screencast and batch generation scripts into the episode folder, update the memory notes about the voice settings and screencast specs, and push the commit.
+
+</details>
+
+
+## 🤖 Claude *(23:40:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O visual do QA foi aprovado — o modal com referências de identidade e o badge estão legíveis no master a 85%, créditos confirmados. Agora vou subir o A8 e escrever o playbook das transcrições em paralelo.
+
+</details>
+
+
+## 🤖 Claude *(23:40:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad; W=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2cf8e553-9753-4c9c-9148-90a20004effe/scratchpad/master; set -a && source .env && set +a && cat > $SC/upload-a8.ts << 'EOF'\nimport { createClient } from '@supabase/supabase-js';\nimport { readFileSync, statSync } from 'fs';\nconst admin = createClient(process.env.SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst UID = 'ada39fae-67e1-4e53-af1c-5a18e1c108e8';\nconst f = process.env.W_DIR + '/master_A8.mp4';\nconst key = `${UID}/masters/ep05-master-A8-${Date.now()}.mp4`;\nconst up = await admin.storage.from('canvas-assets').upload(key, readFileSync(f), { contentType: 'video/mp4', upsert: false });\nif (up.error) throw new Error(up.error.message);\nconst { data, error } = await admin.rpc('register_creative_asset', {\n  p_user_id: UID, p_kind: 'video', p_storage_bucket: 'canvas-assets', p_storage_key: key, p_source_module: 'spaces',\n  p_is_public: false, p_mime_type: 'video/mp4', p_file_size_bytes: statSync(f).size, p_width: 1280, p_height: 720,\n  p_duration_seconds: 425, p_provider: 'ffmpeg-assembly', p_model: 'master-a8',\n  p_title: 'EP05 \u2014 MASTER A8 (screencasts v3 85% + narra\u00e7\u00e3o IVC SUA VOZ entusiasmada + CTA final \"o que voc\u00ea criaria?\") \u2014 para parecer',\n  p_metadata: { take: true, master: 'A8', narration: 'ivc-gabriel-h8e1Indc-enthusiastic', screencasts: 'v3-85pct-fast-straight-to-modal', cta: 'audience-question-over-credits', timeline: 'narration-driven', for: 'validation' },\n});\nif (error) throw new Error(error.message);\nconsole.log('\u2705 A8 asset:', data);\nEOF\nW_DIR=$W bun run $SC/upload-a8.ts",
+  "description": "Upload master A8 to Library",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ A8 asset: b10736ed-7ff9-49f6-a9d7-6766b75e9584
+> ```
+
+## 🤖 Claude *(23:41:00)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/dark-channel-script-playbook-2026-08-03.md",
+  "content": "# Playbook de roteiro & canal \u2014 s\u00edntese das refer\u00eancias \"Canal Dark 2026\" (Sovereign 2026-08-03)\n\n> Fonte: 2 transcri\u00e7\u00f5es compartilhadas pelo Sovereign (\"CANAL DARK - DA CRIA\u00c7\u00c3O A MONETIZA\u00c7\u00c3O\" +\n> \"COMO CRIAR UM CANAL DARK DO ZERO EM 2026\"). Este doc destila as regras ACION\u00c1VEIS para o canal\n> Gabriel AI e para os roteiros dos EPs. Complementa (n\u00e3o substitui) a estrat\u00e9gia DEFINITIVA de\n> shorts org\u00e2nicos (`organic-shorts-strategy-inicial-2026-07-30.md`) e o PIPC (reten\u00e7\u00e3o\u2192brief).\n> \u26a0\ufe0f Claims de terceiros (RPMs, estudos citados) = refer\u00eancia de mercado, n\u00e3o verdade verificada.\n\n## 1. O que o algoritmo mede (e o roteiro deve servir)\n\n- **CTR \u00b7 reten\u00e7\u00e3o \u00b7 satisfa\u00e7\u00e3o/retorno** \u2014 rosto N\u00c3O entra na conta. O Gabriel AI (apresentador\n  sint\u00e9tico consistente) compete de igual com canais de rosto.\n- Os \"3 comportamentos nos primeiros 2 minutos\" decidem a distribui\u00e7\u00e3o \u2192 TODO roteiro abre com\n  gancho forte nos **primeiros 7 segundos** (nosso VFX t\u00edtulo 10s deve ser SEGUIDO de gancho\n  falado imediato \u2014 nunca 10s de logo + intro lenta).\n\n## 2. Estrutura de roteiro (aplicar em todo EP)\n\n1. **Gancho \u22647s** com promessa concreta + tens\u00e3o (\"Existe um tipo de canal que fatura\u2026\").\n2. **Loops de curiosidade**: abrir pergunta cedo, fechar no meio, abrir outra \u2014 cliffhangers\n   internos a cada ato (o EP05 v2 j\u00e1 usa LOOPs #1-4; manter como padr\u00e3o de TODOS os EPs).\n3. **Quebras de padr\u00e3o** a cada ~30-45s (troca de cena 3-5s no visual; b-roll/screencast/apresentador).\n4. **Payoff declarado no final** + **CTA de engajamento din\u00e2mico**: pergunta DIRETA \u00e0 audi\u00eancia\n   (\"O que VOC\u00ca criaria com a IA? Comenta \u2014 eu leio todos\") \u2014 o A8 j\u00e1 implementa sobre os cr\u00e9ditos.\n5. **Decis\u00e3o humana vis\u00edvel** (anti \"conte\u00fado inaut\u00eantico\" jan/2026): \u00e2ngulo pr\u00f3prio, curadoria,\n   edi\u00e7\u00e3o com identidade \u2014 a \"impress\u00e3o digital criativa\". Nosso pipeline J\u00c1 marca AI Act/C2PA;\n   a defesa editorial \u00e9 o roteiro autoral + dire\u00e7\u00e3o Sovereign por take.\n\n## 3. Voz (bate com a calibra\u00e7\u00e3o de hoje)\n\n- **A voz \u00e9 o rosto do canal dark \u2192 NUNCA trocar** entre v\u00eddeos. Decis\u00e3o selada: apresentador =\n  Veo nativo; TODA narra\u00e7\u00e3o restante = **IVC da voz do Sovereign** (ElevenLabs, settings\n  entusiasmados stability 0.38 \u00b7 style 0.55 \u00b7 speed 1.07). Voz \"crua de IA\" sem edi\u00e7\u00e3o = sinal\n  de inaut\u00eantico \u2192 nosso duck/loudnorm + timeline dirigida pela narra\u00e7\u00e3o s\u00e3o a edi\u00e7\u00e3o.\n\n## 4. Empacotamento (thumb/t\u00edtulo/dura\u00e7\u00e3o)\n\n- **Thumb**: clara e brilhante > escura; cores que performam: **ciano** (=nosso MIV!), verde,\n  amarelo, laranja; evitar vermelho (l\u00ea-se \"j\u00e1 assistido\"); **texto \u22647% da \u00e1rea** ou zero.\n- **T\u00edtulo**: 5-8 palavras; carga emocional negativa/contradit\u00f3ria > positiva (\"EU N\u00c3O EXISTO\" \u2713).\n- **Dura\u00e7\u00e3o**: sweet spot 15-25min (zona de risco 30-60); 2h+ = compila\u00e7\u00f5es p/ TV (watch time).\n  EPs atuais ~7min: ok para constru\u00e7\u00e3o; considerar EPs 15min+ quando a reten\u00e7\u00e3o sustentar\n  (PIPC brief por-EP decide com dado, n\u00e3o opini\u00e3o).\n- **Shorts = motor de descoberta** \u2192 cortes dos EPs (rail de repurpose J\u00c1 VIVO) apontando pro longo.\n\n## 5. Minera\u00e7\u00e3o de nicho/outliers (vira rotina PIPC)\n\n- Demanda > oferta: Google Trends com filtro **YouTube search** + busca com filtros\n  `>20min \u00b7 esta semana` (revela os darks do nicho) + aba \"populares\" dos concorrentes.\n- **Outlier**: v\u00eddeo 3-10\u00d7 acima da m\u00e9dia do canal (pequeno > grande p/ sinal limpo) \u2192 estudar\n  estrutura/gancho/\u00e2ngulo (nunca copiar texto) \u2192 replicar no timing.\n- **Outlier multil\u00edngue**: tema que estourou num idioma sem vers\u00e3o boa noutro = mina. O Gabriel AI\n  \u00e9 apresentador sint\u00e9tico \u2192 dublar/reapresentar em EN/ES sem barreira de rosto/sotaque \u00e9 o\n  caminho de multiplica\u00e7\u00e3o de receita (fase futura; YouTube multi-audio quando abrir).\n\n## 6. Monetiza\u00e7\u00e3o (mapa de fases)\n\n- Faixa 1: 500 subs + uploads recentes \u2192 monetiza\u00e7\u00e3o de comunidade.\n- Faixa 2: 1.000 subs + 4.000h/12m (ou 10M views shorts/90d) \u2192 AdSense real.\n- Preparar AdSense/2FA ANTES de bater a meta (trava burocr\u00e1tica comum).\n- Diversificar por view: afiliados (rail ML/Amazon VIVO) \u00b7 produto digital pr\u00f3prio \u00b7 YouTube\n  Shopping \u00b7 membros. **Meta da casa: mais fontes de receita por view, n\u00e3o s\u00f3 mais views.**\n\n## 7. Amarra\u00e7\u00f5es internas\n\n- Reten\u00e7\u00e3o por-EP: `youtube-data audience_retention` \u2192 brief (PIPC S1/S2) \u2192 pr\u00f3xima itera\u00e7\u00e3o de\n  roteiro (FR-PIPC-017/018 pendente = injetar brief no planejamento).\n- Screencast calibrado v3 (85%, direto ao modal) = padr\u00e3o de demo de UI em EPs.\n- CTA din\u00e2mico final = padr\u00e3o de encerramento de TODOS os EPs a partir do A8.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/dark-channel-script-playbook-2026-08-03.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(23:41:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Finalizando a tarefa A8 na Biblioteca: preciso promover os arquivos de script (assemble-v8.ts, screencast-v3.ts, gen-ivc-batch.py, upload-a8.ts) para scripts/ep05/, atualizar a memória com as decisões sobre IVC e configurações, e depois fazer commit e push, além de limpar o arquivo .elk. Também preciso atualizar a referência de opções TTS na memória, confirmando que IVC assume não-Veo com as configurações finalizadas.
+
+</details>
+
+
+## 🤖 Claude *(23:41:10)*
+
+A8 na Biblioteca ✅. Colheita final (runners → repo, memória, commit):
+
+## 🤖 Claude *(23:41:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad; cp $SC/assemble-v8.ts $SC/screencast-v3.ts $SC/gen-ivc-batch.py $SC/gen-el-narration.py $SC/upload-a8.ts scripts/ep05/ 2>/dev/null; rm -f $SC/.elk; ls scripts/ep05/ | wc -l",
+  "description": "Harvest session runners into scripts/ep05 and clean key file"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 17
+> ```
+
+## 🤖 Claude *(23:41:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tts_free_options.md",
+  "old_string": "- `generate-voice` ganhou **preset Narrador** server-side (stability 0.55 \u00b7 similarity 0.85 \u00b7\n  style 0.25 \u00b7 speaker_boost; override clamped via `body.voice_settings`) \u2014 deployado.",
+  "new_string": "- `generate-voice` ganhou **preset Narrador** server-side (stability 0.55 \u00b7 similarity 0.85 \u00b7\n  style 0.25 \u00b7 speaker_boost; override clamped via `body.voice_settings`) \u2014 deployado.\n- **DECIS\u00c3O SELADA (Sovereign 2026-08-03, Creator assinado):** \"minha voz IVC assume tudo que\n  n\u00e3o esteja no Veo\" \u2014 apresentador = \u00e1udio Veo nativo; TODA narra\u00e7\u00e3o restante = **IVC da voz\n  do Sovereign** (`h8e1IndcuPEDvGukCNRb`, Creator comercial). Parecer \"muito lenta\" \u2192 settings\n  ENTUSIASMADOS p/ narra\u00e7\u00e3o dele: **stability 0.38 \u00b7 style 0.55 \u00b7 speed 1.07** (similarity 0.85).\n  Brian (premade) foi a r\u00e9gua de qualidade, N\u00c3O virou narrador. Pool de cr\u00e9ditos EL \u00e9 \u00daNICO\n  (Creative/Agents/API \u2014 provado por contador 0\u21923.643 via API). Runners: `scripts/ep05/\n  gen-ivc-batch.py` (batch por cena + CTA) e `assemble-v8.ts` (timeline dirigida pela narra\u00e7\u00e3o)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_tts_free_options.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(23:41:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add scripts/ep05/ docs/roadmap/dark-channel-script-playbook-2026-08-03.md && git commit -q -m \"feat(ep05): master A8 \u2014 screencasts v3 85% + narra\u00e7\u00e3o IVC do Sovereign + CTA din\u00e2mico + playbook dark\n\nAuditoria do Sovereign confirmada: o A7 carregava screencasts ANTIGOS (720p) \u2014\no take calibrado era s\u00f3 amostra. A8 corrige com a rodada completa:\n- screencast-v3.ts: zoom 85% (2259\u00d71271\u21921080p), ritmo r\u00e1pido, sem passeio no\n  painel, clique\u2192duplo-clique direto ao modal (6 takes cobrem as 22 cenas)\n- Diretiva mid-turn 'minha voz IVC assume tudo que n\u00e3o \u00e9 Veo': gen-ivc-batch.py\n  regera as 28 narra\u00e7\u00f5es + CTA na voz IVC do Sovereign com settings\n  entusiasmados (stability .38/style .55/speed 1.07 \u2014 parecer 'muito lenta')\n- assemble-v8.ts: timeline dirigida pela narra\u00e7\u00e3o (auditoria pegou drift de\n  7.5s + dessincronia dos presenters + 11 bleeds + CTA estourando cr\u00e9ditos \u2014\n  cenas mudas esticam at\u00e9 a fala caber; \u00e1udio presenter vem do pr\u00f3prio film8)\n- CTA final de engajamento sobre cr\u00e9ditos estendidos ('o que VOC\u00ca criaria?')\n- playbook de roteiro/canal destilado das 2 transcri\u00e7\u00f5es Canal Dark 2026\nMaster A8 asset b10736ed (425s) na Biblioteca para parecer.\" && git log -1 --oneline && git push origin main 2>&1 | tail -1",
+  "description": "Commit and push A8 round"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:41PM[0m [32mINF[0m 1 commits scanned.
+> [90m8:41PM[0m [32mINF[0m scan completed in 13.9ms
+> [90m8:41PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.07 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 57cd4a2 feat(ep05): master A8 — screencasts v3 85% + narração IVC do Sovereign + CTA dinâmico + playbook dark
+>    d68d4b3..57cd4a2  main -> main
+> ```
+
+## 🤖 Claude *(23:41:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tudo confirmado e enviado — a auditoria passou, screencast v3 está pronto, a voz IVC segue sem Veo, as configurações foram aprovadas mid-turn, o CTA dinâmico funciona, o playbook de transcrições está completo, e o A8 foi finalizado.
+
+</details>
+
+
+## 🤖 Claude *(23:41:55)*
+
+Auditoria concluída e rodada completa selada (`57cd4a2` pushed). Consolidação:
+
+═══════════════════════════════════════════════
+
+## 🔍 Sua auditoria estava CERTA — e o que ela revelou
+
+O take calibrado v2 era só **amostra na Biblioteca** — o A7 carregava os screencasts **antigos** (720p, sem calibração). E ao corrigir, a auditoria material pegou mais 3 defeitos que ninguém tinha visto: o corte a seco encolhia o filme em 7,5s, **dessincronizava a fala Veo dos apresentadores dos lábios**, e 11 narrações vazavam da cena (5 colidindo com fala de apresentador). Tudo corrigido com a receita da casa: **timeline dirigida pela narração** (cada cena muda estica até a fala caber).
+
+## 🎬 MASTER A8 na Biblioteca — a rodada completa dos seus pareceres
+
+**"EP05 — MASTER A8"** (425s), incorporando as 4 direções que você deu neste turno:
+
+1. **Screencasts v3 em TODAS as 22 cenas**: zoom **85%**, ritmo rápido, **sem passeio do mouse ao painel** — clique (painel abre) → **duplo-clique direto no nó** → modal de apresentação. O QA de frame confirma o modal com as referências de identidade e o badge "Gerar vídeo · 267 mco" legíveis no master.
+2. **Sua voz IVC assume tudo que não é Veo**: as 28 narrações regeradas com a sua voz clonada.
+3. **"Muito lenta" → settings entusiasmados**: stability 0.38 · style 0.55 · **speed 1.07** — mais vivo e expressivo.
+4. **CTA dinâmico no final**: sobre os créditos (estendidos para caber), sua voz pergunta *"O que VOCÊ gostaria de criar com a inteligência artificial? Escreve nos comentários — eu leio todos"* + convite de inscrição.
+
+Gasto ElevenLabs do dia inteiro: **3.643 de 131.000 créditos** (2,8%).
+
+## 📜 Playbook das transcrições — destilado e amarrado ao ecossistema
+
+[dark-channel-script-playbook-2026-08-03.md](docs/roadmap/dark-channel-script-playbook-2026-08-03.md) — as regras acionáveis dos 2 vídeos: gancho ≤7s após o VFX (nunca logo+intro lenta), loops/cliffhangers por ato, **voz nunca troca** (nossa decisão IVC sela isso), thumb clara com **ciano** (= nosso MIV) e texto ≤7%, título 5-8 palavras com carga negativa ("EU NÃO EXISTO" ✓), 15-25min como alvo futuro guiado pelo PIPC, shorts como motor de descoberta (rail vivo), mineração de outliers multilíngues (o Gabriel AI não tem rosto nem sotaque — internacionalização é multiplicador), e "decisão humana visível" contra a política de conteúdo inautêntico (nosso roteiro autoral + sua direção por take É a impressão digital criativa).
+
+**Seu gate:** assistir ao **A8** — é o primeiro master com a rodada completa (sua voz entusiasmada + screencasts calibrados + CTA). Os pontos de atenção para o seu ouvido: o ritmo da sua voz IVC nas cenas 2-6 (as primeiras narrações) e o CTA sobre os créditos.
+
+## 👤 User *(00:24:24)*
+
+ótimo preciso que melhore o tom de voz clonado vamos precisar que ele seja mais rápido e com todas as características e personalidades e sentimentos que o playbook pede.
+
+As vozes geradas pelo Veo Automaticamente estão sendo dubladas perfeitamente então acredito que usando elevenlabs agora com a minha voz de Gabriel AI deveria ter ficado melhor mas não ficou. Talvez o roteiro saiu do contexto e não ficou t~~ao bom quanto estava no plano. Porém agora temos o contexto melhor e aprendemos bastante coisa. Vamos auditar por completo, use o QA Vision para o veridito e pode gerar mais takes e retakes para melhorar esse video deixando ele profissional de verdade, ainda esta muito amador. 
+
+Dicas, colocar a tela gravada em 4x ou mais para ficar rápido, sugiro quando abrir o nó narrar de fato o que tem lá e as possibilidades de coisas que se podem ser feitas por lá. Mas tudo isso dentro de uma HUD / moldura stream no MIV do MCORCH.
+
+Uma dica para regrar no browser do projeto https://login.mcorch.com/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7 iniciar assim 
+
+21:20:17.346 Setting up Realtime for user: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+21:20:17.355 Cleaning up Realtime channel
+21:20:17.355 Realtime Status: CLOSED
+21:20:17.356 Setting up Realtime for user: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+21:20:17.807 Realtime Status: SUBSCRIBED
+
+[ Zoom monitor iniciado ]
+
+21:20:54.941 Zoom atual: 214%
+21:20:58.935 Zoom atual: 207%
+21:20:59.431 Zoom atual: 181%
+21:20:59.934 Zoom atual: 140%
+21:21:00.444 Zoom atual: 133%
+
+[ Zoom permaneceu em 133% por um longo período ]
+
+21:21:04.095 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+21:21:30.122 Cleaning up Realtime channel
+21:21:30.122 Realtime Status: CLOSED
+21:21:30.123 Setting up Realtime for user: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+21:21:30.278 Realtime Status: SUBSCRIBED
+
+[ Zoom continua em 133% ]
+
+21:21:37.804 Cleaning up Realtime channel
+21:21:37.804 Realtime Status: CLOSED
+21:21:37.807 Setting up Realtime for user: ada39fae-67e1-4e53-af1c-5a18e1c108e8
+21:21:38.111 Realtime Status: SUBSCRIBED
+
+21:21:39.430 Zoom atual: 111%
+21:21:40.114 Zoom atual: 81%
+
+[ Zoom permaneceu em 81% daqui em diante ]
+
+21:21:45.304 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+## 🤖 Claude *(00:25:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A voz clonada precisa ser mais rápida e capturar toda a energia, emoção e entonação que o playbook exige — nada de monótono. O IVC atual não acompanhou a qualidade das dublagens Veo, então estou investigando se os settings estão muito conservadores ou se o material de referência usado para criar a voz é insuficiente.
+
+Para melhorar, preciso recriar o IVC com amostras muito melhores — verificando quais fontes de áudio da voz dele estão disponíveis no bucket e ajustando os parâmetros para velocidade mais rápida (1.12-1.15), estilo mais expressivo (0.6-0.7) e estabilidade reduzida (~0.3).
+
+Quanto ao screencast, preciso acelerar a gravação de tela em 4x ou mais, adicionar narração descritiva específica que explique o que está acontecendo em cada nó e suas possibilidades, e envolver tudo numa moldura estilo stream com design neon/glass em cyan para manter a identidade visual. Ele gravou no próprio navegador mostrando o projeto com zoom variável — começando bem próximo no nó Personagem e afastando gradualmente.
+
+Preciso auditar tudo com Vision QA para garantir qualidade profissional e gerar quantos takes forem necessários, já que ele autorizou iterações pagas.
+
+Para a voz, vou recriar com IVC v2 buscando mais amostras no bucket — se temos só 11.6s, vou compensar melhorando a prosódia através de pontuação expressiva e frases mais curtas, além de aumentar os settings de energia com eleven_multilingual_v2. Também preciso verificar se o modelo v3 está disponível na conta (que tem tags de emoção como [excited]), consultando os modelos disponíveis na API.
+
+Para as narrações de screencast, o roteiro é a fonte de verdade, mas o feedback pede que eu reescreva as falas das cenas de modal para narrar de fato o que aparece na tela — vou adaptar só as cenas de screencast-modal que abrem nós (8, 10, 11, 13...).
+
+Agora preciso trabalhar no screencast v4, implementando um movimento de câmera que começa com zoom alto no nó relevante e faz zoom-out gradual usando a API de viewport do ReactFlow. Criando a moldura visual com overlay — vou gerar um PNG de moldura neon com borda cyan, cantos em glass morphism e badge "● REC MCORCH", depois compor o screencast escalado dentro dela usando ffmpeg overlay. Depois monto o A9 com as novas narrações, screencasts v4 emoldurados e validação de frames com Vision antes de subir. Preciso priorizar: primeiro sondo os modelos EL com amostras extras para fechar o IVC v2 rapidinho.
+
+Reescrever as 11 falas das cenas-modal de forma concisa baseado no que a UI mostra nos screenshots, depois gero os screencasts v4 com zoom-motion seguindo o padrão do log dele (começando em ~180-214% no nó-modal), aplicar a moldura HUD, regenerar o IVC com as falas novas e settings atualizados, montar o A9 com QA Vision e fazer upload.
+
+Também preciso usar o screenshot que ele enviou como referência — mostra o nó Personagem em zoom alto, que será o frame inicial da cena de abertura do canvas. Vou começar sondando os modelos EL e as amostras de voz disponíveis no bucket para o IVC v2.
+
+</details>
+
+
+## 🤖 Claude *(00:25:23)*
+
+Direção absorvida — e o seu log de gravação é ouro: ele me dá a **linguagem de câmera do canvas** (abrir com zoom ~214% no nó Personagem → segurar em 133% → assentar em 81%), que era exatamente o que faltava para sair do amador. Rodada A9: voz IVC v2 (mais rápida/expressiva, com mais material seu), narração descritiva dentro dos nós, screencast com movimento de câmera + **4x** + **moldura HUD stream no MIV**, e Vision QA como veredito. Sondando primeiro o que a conta EL oferece de modelo expressivo e que material de voz sua temos para recriar o IVC:
+
+## 🤖 Claude *(00:25:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad; set -a && source .env && set +a && curl -s \"$SUPABASE_URL/rest/v1/decrypted_user_api_keys?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=elevenlabs_api_key\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['elevenlabs_api_key'])\" > $SC/.elk && curl -s \"https://api.elevenlabs.io/v1/models\" -H \"xi-api-key: $(cat $SC/.elk)\" | python3 -c \"\nimport json,sys\nfor m in json.load(sys.stdin):\n    print(m['model_id'], '| tts:', m.get('can_do_text_to_speech'), '| langs:', len(m.get('languages',[])))\" | head -12",
+  "description": "Probe available ElevenLabs models (looking for expressive v3)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> eleven_v3 | tts: True | langs: 74
+> eleven_multilingual_v2 | tts: True | langs: 29
+> eleven_flash_v2_5 | tts: True | langs: 32
+> eleven_turbo_v2_5 | tts: True | langs: 32
+> eleven_turbo_v2 | tts: True | langs: 1
+> eleven_flash_v2 | tts: True | langs: 1
+> eleven_english_sts_v2 | tts: False | langs: 1
+> eleven_multilingual_sts_v2 | tts: False | langs: 29
+> ```
+
+## 🤖 Claude *(00:25:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && python3 - << 'EOF'\nimport json, urllib.request, os\nURL=os.environ['SUPABASE_URL']; KEY=os.environ['SB_SECRET_KEY']\ndef api(path):\n    req=urllib.request.Request(f\"{URL}{path}\"); req.add_header(\"apikey\",KEY); req.add_header(\"Authorization\",f\"Bearer {KEY}\")\n    return json.load(urllib.request.urlopen(req))\n# voice sample uploads from the multi-sample clone (FR-SPACES-059) live in video-studio-assets\nrows=api(\"/storage/v1/object/list/video-studio-assets?prefix=ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice-samples\")\nprint(\"voice-samples:\", rows if isinstance(rows,dict) else [r['name'] for r in rows][:12])\nEOF",
+  "description": "List Sovereign voice sample files in storage for IVC v2"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<stdin>", line 7, in <module>
+>   File "<stdin>", line 5, in api
+>   File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+>     return opener.open(url, data, timeout)
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+>     response = meth(req, response)
+>                ^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+>     response = self.parent.error(
+>                ^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+>     return self._call_chain(*args)
+>            ^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+>     result = func(*args)
+>              ^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+>     raise HTTPError(req.full_url, code, msg, hdrs, fp)
+> urllib.error.HTTPError: HTTP Error 400: Bad Request
+> ```
+
+## 🤖 Claude *(00:25:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The `eleven_v3` model is now available across 74 languages with audio tags for emotion and expression like excitement, laughter, and whispers, plus pause controls—exactly what's needed for the character-driven narration. I also spotted an issue with the storage API: the list endpoint requires a POST request to `/storage/v1/object/list/{bucket}` with a prefix in the body, not a GET call.
+
+For the voice strategy, I'm planning to use `eleven_v3` with Gabriel's voice and emotion tags embedded in the rewritten dialogue, adjusting stability settings for expressiveness (lower stability = more creative delivery). Since v3 doesn't support speed control, I'll validate with a small test clip first, measuring duration and dynamic range via ffmpeg to assess expressiveness without being able to listen directly. I also need to check if there are additional voice samples to rebuild the IVC v2 clone with multiple recordings for better quality.
+
+Next I'm setting up a pipeline: listing available samples, rewriting the node dialogue, and generating a v3 validation take to compare against the target.
+
+</details>
+
+
+## 🤖 Claude *(00:25:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O modelo `eleven_v3` está disponível e suporta as tags de emoção que precisamos. Vou refazer a listagem de amostras com o método correto e validar o v3 com um teste.
+
+</details>
+
+
+## 🤖 Claude *(00:25:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad; set -a && source .env && set +a && bun -e \"\nconst { createClient } = await import('@supabase/supabase-js');\nconst admin = createClient(process.env.SUPABASE_URL, process.env.SB_SECRET_KEY, { auth: { persistSession: false } });\nfor (const prefix of ['ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice-samples', 'ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice', 'ada39fae-67e1-4e53-af1c-5a18e1c108e8']) {\n  const { data, error } = await admin.storage.from('video-studio-assets').list(prefix, { limit: 20 });\n  console.log(prefix, '\u2192', error ? error.message : data.map(d => d.name + ' ' + (d.metadata?.size ?? '')).join(' \u00b7 ').slice(0, 300));\n}\"",
+  "description": "List voice sample material in storage (correct POST list API)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice-samples → 
+> ada39fae-67e1-4e53-af1c-5a18e1c108e8/voice → 164ccf75-8f9a-4d10-89d0-f72a3ba92c9f.wav 317772 · 1b6ef077-4ea6-4c9c-857f-02cbae831145.wav 348492 · 1bcd96a1-2684-42b3-8d94-55bf6dc7e060.wav 2748492 · 2171af33-76bb-4629-8432-343091cee5f4.wav 294732 · 27535a57-6604-482c-bf05-4a07112f1647.wav 256332 · 394ba77b-71dd-4787-93cd-7c1dd5b473b0.wav 402252 ·
+> ada39fae-67e1-4e53-af1c-5a18e1c108e8 → 020e9bef-7f4a-48f1-8d3a-c5450ac019c0.mp4 389682 · 02eeb719-6fa9-40d6-8f5d-f1deb22c9215.mp4 377312 · 0dd35f5d-5fa1-406a-978e-8d0e1776923e.mp4 857558 · 3095cd8f-d16f-4082-bb58-250ac4db3b5a.mp4 3630345 · 33bebbce-c730-4a97-82f4-a94f3f2871ff.mp4 1031077 · 3d83ed7e-1b7c-4378-8c09-7068fdc467dc.mp4 600209
+> ```
+
+## 🤖 Claude *(00:26:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad; python3 - << 'EOF'\nimport json, urllib.request\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad\"\nKEY=open(f\"{SC}/.elk\").read().strip()\ntext=(\"[excited] Olha isso! Todo \u00e1udio e v\u00eddeo sint\u00e9tico desta esteira sai carimbado como intelig\u00eancia artificial. \"\n      \"[short pause] A lei manda. Esconder... [confident] seria trair. E aqui dentro? Nasce cada pe\u00e7a. E nasce medida!\")\npayload=json.dumps({\"text\":text,\"model_id\":\"eleven_v3\",\"voice_settings\":{\"stability\":0.0,\"similarity_boost\":0.85,\"style\":0.6,\"use_speaker_boost\":True}}).encode()\nreq=urllib.request.Request(\"https://api.elevenlabs.io/v1/text-to-speech/h8e1IndcuPEDvGukCNRb?output_format=mp3_44100_192\",data=payload)\nreq.add_header(\"xi-api-key\",KEY); req.add_header(\"Content-Type\",\"application/json\")\ntry:\n    with urllib.request.urlopen(req,timeout=120) as r:\n        open(f\"{SC}/v3_probe.mp3\",\"wb\").write(r.read()); print(\"v3 OK\")\nexcept urllib.error.HTTPError as e:\n    print(\"v3 err\", e.code, e.read()[:300])\nEOF\nffprobe -v error -show_entries format=duration -of csv=p=0 $SC/v3_probe.mp3 2>/dev/null",
+  "description": "Probe eleven_v3 with emotion audio tags on the IVC voice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> v3 OK
+> 17.789388
+> ```
+
+## 🤖 Claude *(00:27:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou vendo que a pasta `voice/` contém os arquivos WAV gerados pela síntese do Qwen3, não amostras da voz real — o arquivo de 2.7MB pode ser uma amostra de referência. Os arquivos em `<uid>/voice/` são os outputs produzidos, conforme indicado pelos audioStorageKeys dos nós.
+
+A voz real dele continua sendo ref_pt_24k.wav (11.6s), e esse arquivo de 2.7MB parece ser uma amostra longa (cerca de 57s em 24kHz mono). Vale investigar baixando e analisando com ffprobe para confirmar se é material genuíno ou sintetizado — seria valioso se for autêntico. Os WAVs de output do Qwen3 contêm a voz clonada, então usá-los como amostra para IVC degradaria a qualidade. Vou manter ref_pt_24k para o IVC atual e não recriar por enquanto — o ganho maior agora é o eleven_v3, que funcionou bem com 17.8s de áudio com tags de emoção. Para melhorar o IVC v2 depois, seria ideal pedir ao Sovereign gravar 1-3 minutos de material novo.
+
+Agora preciso reescrever as 28 narrações inteiras com tags v3 para as cenas de nó-modal, considerando o custo de créditos (v3 cobra 1 crédito por caractere, e tenho 127k disponíveis). Vou mesclar o roteiro narrativo com as descrições concretas da interface — mantendo o arco das 48 cenas mas inserindo detalhes de motor, formato e custo em cada passo modal, sem perder o beat emocional. São 28 textos densos, mas é o núcleo do que precisa ser feito.
+
+Meu plano: reescrever as 11 cenas-modal principais com narrativa expandida e aplicar tags leves nas outras 17, depois gerar um novo JSON com essas falas v2 usando um script Python que já tenho os textos do ivc-scenes.json.
+
+Para o screencast v4, vou implementar o zoom dinâmico com controle de roda (passando por 214%, 133% e 81%), acelerar a gravação 4x e aplicar a moldura HUD MIV na pós-produção.
+
+Criando a moldura PNG (1280×720 com transparência): borda neon cyan dupla, cantos com efeito glass, badge "● REC · MCORCH" no canto superior esquerdo, "login.mcorch.com" na base, mantendo genérica para todas as cenas. Vou usar Playwright com screenshot omitBackground para gerar com alpha.
+
+Compondo com ffmpeg: redimensionar o screencast para 1200×675 (93.75%) e sobrepor centrado sob a moldura PNG, acelerar 4x via setpts, e simular o zoom-motion disparando WheelEvent com ctrlKey no .react-flow__pane...
+
+Mas na verdade o ReactFlow já faz zoom com scroll por padrão (zoomOnScroll ativado), então posso simplesmente usar mouse.wheel() sobre o pane — muito mais simples. Vou testar isso na gravação, começando cada take com o nó já em zoom alto (~200%) centrado no cursor.
+
+Para a sequência: segurar por 1.5s, depois fazer zoom out lento até ~90%, mover para o nó, clicar, duplo-clique para abrir o modal — que aparece em overlay sem escalar com o canvas. Dentro do modal há scroll interno com referências, áudio e botões. Para a versão 4x acelerada: gravar tudo em ritmo natural e acelerar depois, mas preciso cuidado com o dwell no modal — a 4x, 12 segundos viram apenas 3 segundos, o que pode ficar muito rápido. O Sovereign quer a aceleração 4x na tela com narração em tempo normal por cima.
+
+Agora vejo que o vídeo acelera enquanto a narração roda em tempo real sobre ele — é o padrão de screencast narrado. A cena final é dirigida pela narração, então o screencast 4x com freeze cobre isso. Vou montar a versão A9 com as novas narrações v3, screencasts v4 com moldura e zoom-motion, depois fazer QA visual, verificar LUFS e fazer upload. Como são 3 artefatos de código — as falas em JSON, o gerador da moldura HUD e o screencast v4 — vou escrevê-los em sequência compacta.
+
+Há ruído conhecido nas reconexões CLOSED→SUBSCRIBED que não bloqueia nada, e um aviso de acessibilidade no DialogContent que vou anotar para depois. Preciso dos textos originais das 28 cenas do ivc-scenes.json para reescrever — vou usar um script Python com overrides para as 11 cenas-modal e injetar tags leves nas demais, depois escrever os 11 textos agora fundindo beat e descrição.
+
+</details>
+
+
+## 🤖 Claude *(00:27:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've validated `eleven_v3` with your IVC voice (17.8s sample with emotion tags confirmed), and the WAV files in the bucket are synthesized outputs rather than clone samples—real IVC improvement will come once you record 1-3 minutes of clean audio. Now I'm reading the original dialogue from the modal scenes to blend the script beats with the UI's descriptive narration.
+
+</details>
+
+
+## 🤖 Claude *(00:27:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"\nimport json\nd=json.load(open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/ivc-scenes.json'))\nfor n in [8,10,11,13,16,17,18,20,26,27,29,30,34,44]:\n    print(n, '\u00b7', d[str(n)])\n    print()\"",
+  "description": "Read original narration for screencast-modal scenes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 8 · O prompt não pede uma imagem bonita. Ele dirige uma foto.
+> 
+> 10 · A palavra que trava tudo é uma só: consistência. O rosto não muda entre um plano e outro.
+> 
+> 11 · A referência de personagem é a âncora. Sem ela, cada geração é um estranho.
+> 
+> 13 · Dez créditos. Foi isso. Único preço que eu vou dizer em voz alta.
+> 
+> 16 · O motor roda em casa. Zero por frase. E o formato importa: amostra ruim entra, clone ruim sai.
+> 
+> 17 · Vinte e quatro quilohertz. Sem compressão. Diferença entre um clone que respira e um que raspa.
+> 
+> 18 · Uma frase nova, digitada agora. Sem ensaio. Sem retake.
+> 
+> 20 · Se você chegou até aqui, já sabe mais de produção com IA do que a maioria dos estúdios.
+> 
+> 26 · A imagem-mestre entra como primeiro frame. Ela é o âncora que o motor vai respeitar.
+> 
+> 27 · Duzentos e sessenta e sete créditos. Oito segundos. É o teto que a esteira cobra por movimento.
+> 
+> 29 · O prompt não descreve um vídeo. Descreve uma atuação: surpresa, intriga, aceno lento.
+> 
+> 30 · Mesmo personagem. Mesma referência. Este prompt gerou exatamente este clipe.
+> 
+> 34 · Os clipes que eu já gerei? Reuso em todos os shorts deste canal. Gere pouco. Reaproveite muito.
+> 
+> 44 · Este é o painel deste canal. Essa é a curva de retenção do episódio anterior.
+> ```
+
+## 🤖 Claude *(00:27:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Os originais têm impacto mas faltam detalhes visuais — vou manter a força das frases curtas e adicionar uma descrição do que aparece na tela, junto com marcadores leves de emoção. Como as cenas são conduzidas por narração, textos mais longos podem estender a duração, mas o screencast em 4x e os freezes cobrem isso. Agora vou reescrever as 14 falas com essa abordagem. Continuando com os detalhes técnicos: qualidade de áudio em 24kHz sem compressão faz toda a diferença entre um clone que soa natural e um que fica robótico. [excited] Posso gerar uma frase nova direto no roteiro do nó, sem ensaio ou retake. [confident] Quem chegar até aqui já entende mais sobre produção com IA do que a maioria dos estúdios. No nó de vídeo, as três referências de identidade e o primeiro frame ficam num painel só, com a imagem-mestre como âncora que o motor respeita. [short pause] O preço aparece antes de gastar: duzentos e sessenta e sete créditos por oito segundos — é o teto que a esteira cobra por movimento.
+
+O prompt não descreve um vídeo, descreve uma ATUAÇÃO — surpresa, intriga, aceno lento. [confident] Mesmo personagem, mesma referência, e este prompt gerou exatamente este clipe. [excited] A Biblioteca é onde cada clipe que já gerei fica pronto pra reusar em todos os shorts do canal — gero pouco, reaproveito MUITO. [curious] No painel do canal ao vivo, a curva de retenção do episódio anterior decide o próximo corte. Agora preciso trabalhar as demais catorze cenas.
+
+Vou injetar tags leves no início de algumas e manter o texto, mapeando contextos específicos para cada uma — algumas com pausa, outras com confiança ou curiosidade. Na CTA final, crio um tom quente e convidativo, pedindo que o espectador compartilhe suas ideias nos comentários e se inscreva para o próximo episódio que já está em desenvolvimento.
+
+Para a narração, stability 0.0 oferece máxima expressividade com as tags contextuais, e similarity 0.85 mantém a consistência vocal entre takes. Agora preciso montar a moldura HUD e fazer o screencast em v4, convertendo o HTML para PNG em 1280×720 com transparência...
+
+Designing the frame with neon cyan glow, glass-effect corners, and badges positioned at top-left ("● REC — MCORCH·STUDIO"), bottom-right ("login.mcorch.com"), and top-right ("LIVE PIPELINE" or EP05), keeping it minimal with a 12px glowing border. The overlay strategy is to layer the HUD frame on top of the fullscreen video—the frame draws the borders and badges with a transparent center, so the video stays full 1280×720 underneath as a complete overlay effect.
+
+For the screencast v4, I'm capturing natural-paced recording with more interaction like modal scrolling, then speeding it up with setpts to create a snappy final clip. The zoom-motion sequence starts with setup collapsing and zooming into the node up to ~200%, then the take begins with a hold, followed by a gradual zoom-out through three stages (around 133%, hold, then ~90%).
+
+The full node take flows from zoom-out back to the node, then a click, double-click to open the modal, scrolling within it, and finally ending—totaling about 25-35 seconds of real time that becomes 7-9 seconds at 4x speed. For canvas tours and asset/YouTube takes, I'm zooming out from 133 to 81 on the canvas and scrolling the page for assets/YouTube. The browser stays at 85% zoom via viewport scaling, which is separate from the canvas zoom that ReactFlow monitors. After this, I'll assemble A9 using v8 as the base but with the new screencast 4 takes framed and the v3 narrations.
+
+Now I need to write three files in parallel: the HUD frame HTML with Playwright screenshot generation, the v2 dialogue plus v3 batch processing in the background, and the screencast v4 TypeScript file. I'll tackle all three at once while running the voice batch in the background.
+
+</details>
+
+
+## 🤖 Claude *(00:28:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Lendo os beats originais com ritmo forte, vou manter esse beat e adicionar a narração descritiva da UI com tags de emoção v3. Agora escrevo os 3 artefatos: falas v2 com gerador de batch v3, moldura HUD MIV, e screencast v4 com movimento de câmera.
+
+</details>
+
+
+## 🤖 Claude *(00:28:18)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/gen-ivc-v3.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"EP05 narration v3 \u2014 eleven_v3 (expressive audio tags) on the Sovereign's IVC voice.\nSovereign 2026-08-03: faster, with the personality/feeling the playbook demands; screencast-modal\nscenes now NARRATE what the UI shows + the possibilities. Fusion: original beat + UI description.\"\"\"\nimport json, os, time, urllib.request\n\nSC = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad\"\nOUT = f\"{SC}/ivc-v3\"; os.makedirs(OUT, exist_ok=True)\nKEY = open(f\"{SC}/.elk\").read().strip()\nVOICE = \"h8e1IndcuPEDvGukCNRb\"\nSET = {\"stability\": 0.0, \"similarity_boost\": 0.85, \"use_speaker_boost\": True}\n\nbase = {int(k): v for k, v in json.load(open(f\"{SC}/ivc-scenes.json\")).items()}\n\n# screencast-modal scenes: beat + what the screen ACTUALLY shows + v3 emotion tags\nOVERRIDES = {\n    8:  \"[curious] Abre o n\u00f3 de imagem e olha o que tem aqui: o prompt inteiro da cena, o motor, o formato. [confident] O prompt n\u00e3o pede uma imagem bonita \u2014 ele DIRIGE uma foto.\",\n    10: \"[confident] Aqui dentro, a palavra que trava tudo \u00e9 uma s\u00f3: consist\u00eancia. O rosto que voc\u00ea viu no mood board n\u00e3o muda entre um plano e outro. \u00c9 esse painel que garante.\",\n    11: \"A refer\u00eancia de personagem \u00e9 a \u00e2ncora \u2014 t\u00e1 ali, conectada no topo do grafo. [short pause] Sem ela, cada gera\u00e7\u00e3o \u00e9 um estranho.\",\n    13: \"[excited] E o pre\u00e7o aparece ANTES do clique: dez cr\u00e9ditos. Foi isso. \u00danico pre\u00e7o que eu vou dizer em voz alta.\",\n    16: \"[impressed] Esse \u00e9 o n\u00f3 de voz. O motor roda em casa \u2014 zero por frase. E d\u00e1 pra escolher: clone local gr\u00e1tis, ou ElevenLabs quando quiser mais brilho. [short pause] Amostra ruim entra, clone ruim sai.\",\n    17: \"Vinte e quatro quilohertz. Sem compress\u00e3o. [whispers] \u00c9 a diferen\u00e7a entre um clone que respira... e um que raspa.\",\n    18: \"[excited] Uma frase nova, digitada AGORA, aqui no roteiro do n\u00f3. Sem ensaio. Sem retake.\",\n    20: \"[confident] Se voc\u00ea chegou at\u00e9 aqui, j\u00e1 sabe mais de produ\u00e7\u00e3o com IA do que a maioria dos est\u00fadios.\",\n    26: \"[curious] Duplo clique no n\u00f3 de v\u00eddeo, e olha isso: as tr\u00eas refer\u00eancias de identidade, o primeiro frame, tudo num painel s\u00f3. [confident] A imagem-mestre entra como a \u00e2ncora que o motor vai respeitar.\",\n    27: \"E de novo o pre\u00e7o na tela, antes de gastar: duzentos e sessenta e sete cr\u00e9ditos por oito segundos. [short pause] \u00c9 o teto que a esteira cobra por movimento.\",\n    29: \"[impressed] L\u00ea o prompt comigo: ele n\u00e3o descreve um v\u00eddeo. Descreve uma ATUA\u00c7\u00c3O \u2014 surpresa, intriga, aceno lento.\",\n    30: \"Mesmo personagem. Mesma refer\u00eancia. [confident] Este prompt gerou exatamente este clipe.\",\n    34: \"[excited] Essa \u00e9 a Biblioteca: cada clipe que eu j\u00e1 gerei, pronto pra reusar em todos os shorts deste canal. Gere pouco. Reaproveite MUITO.\",\n    44: \"[curious] Este \u00e9 o painel do canal, ao vivo. E essa... [short pause] \u00e9 a curva de reten\u00e7\u00e3o do epis\u00f3dio anterior. [confident] Ela decide o pr\u00f3ximo corte.\",\n    99: \"[warm] Agora eu quero ouvir VOC\u00ca. [excited] O que voc\u00ea gostaria de criar com a intelig\u00eancia artificial? Escreve nos coment\u00e1rios \u2014 eu leio todos. [confident] E se esse epis\u00f3dio te mostrou algo novo, se inscreve. O pr\u00f3ximo j\u00e1 est\u00e1 nascendo aqui dentro.\",\n}\n# light emotion tags for the remaining scenes (keep the sealed script text)\nPREFIX = {2: \"[curious] \", 3: \"\", 4: \"[confident] \", 6: \"[excited] \", 9: \"\", 12: \"[curious] \",\n          19: \"\", 23: \"[confident] \", 32: \"[impressed] \", 37: \"[excited] \", 38: \"\", 39: \"[curious] \",\n          40: \"[confident] \", 42: \"[excited] \", 48: \"[warm] \"}\n\nscenes = {}\nfor n, t in base.items():\n    scenes[n] = OVERRIDES.get(n, PREFIX.get(n, \"\") + t)\n\ndef tts(text, out):\n    payload = json.dumps({\"text\": text, \"model_id\": \"eleven_v3\", \"voice_settings\": SET}).encode()\n    req = urllib.request.Request(f\"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}?output_format=mp3_44100_192\", data=payload)\n    req.add_header(\"xi-api-key\", KEY); req.add_header(\"Content-Type\", \"application/json\")\n    with urllib.request.urlopen(req, timeout=180) as r: open(out, \"wb\").write(r.read())\n\nfor n in sorted(scenes):\n    out = f\"{OUT}/ivc_scene_{n:02d}.mp3\"\n    if os.path.exists(out): continue\n    try:\n        tts(scenes[n], out); print(f\"scene {n:02d} ok\", flush=True)\n    except Exception as e:\n        print(f\"scene {n:02d} FAILED: {str(e)[:120]}\", flush=True)\n    time.sleep(0.35)\nreq = urllib.request.Request(\"https://api.elevenlabs.io/v1/user/subscription\"); req.add_header(\"xi-api-key\", KEY)\nd = json.load(urllib.request.urlopen(req))\nprint(f\"credits: {d['character_count']}/{d['character_limit']}\", flush=True)\nprint(\"DONE\", flush=True)\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/gen-ivc-v3.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:31)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/hud-frame.html",
+  "content": "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><style>\n  * { margin: 0; padding: 0; box-sizing: border-box; }\n  html, body { width: 1280px; height: 720px; background: transparent; overflow: hidden;\n    font-family: 'JetBrains Mono', 'Fira Mono', monospace; }\n  /* MIV stream HUD \u2014 neon cyan + glass, fully transparent center */\n  .edge { position: absolute; inset: 0; border: 2px solid rgba(34,211,238,.85); border-radius: 14px;\n    box-shadow: 0 0 10px rgba(34,211,238,.55), inset 0 0 14px rgba(34,211,238,.22); }\n  .edge2 { position: absolute; inset: 7px; border: 1px solid rgba(34,211,238,.35); border-radius: 10px; }\n  .corner { position: absolute; width: 34px; height: 34px; border: 3px solid #22d3ee;\n    filter: drop-shadow(0 0 6px #22d3ee); }\n  .tl { top: 3px; left: 3px; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }\n  .tr { top: 3px; right: 3px; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }\n  .bl { bottom: 3px; left: 3px; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }\n  .br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }\n  .badge { position: absolute; top: 14px; left: 20px; display: flex; align-items: center; gap: 8px;\n    background: rgba(8,12,20,.62); backdrop-filter: blur(6px); border: 1px solid rgba(34,211,238,.5);\n    border-radius: 8px; padding: 6px 12px; color: #e8fdff; font-size: 15px; letter-spacing: .08em;\n    box-shadow: 0 0 12px rgba(34,211,238,.35); }\n  .dot { width: 10px; height: 10px; border-radius: 50%; background: #f43f5e;\n    box-shadow: 0 0 8px #f43f5e; }\n  .brand { position: absolute; bottom: 14px; right: 20px; background: rgba(8,12,20,.62);\n    backdrop-filter: blur(6px); border: 1px solid rgba(34,211,238,.5); border-radius: 8px;\n    padding: 5px 12px; color: #a5f3fc; font-size: 14px; letter-spacing: .1em;\n    box-shadow: 0 0 12px rgba(34,211,238,.3); }\n  .live { position: absolute; top: 14px; right: 20px; background: rgba(8,12,20,.62);\n    backdrop-filter: blur(6px); border: 1px solid rgba(250,204,21,.55); border-radius: 8px;\n    padding: 5px 12px; color: #fde68a; font-size: 13px; letter-spacing: .14em;\n    box-shadow: 0 0 10px rgba(250,204,21,.25); }\n</style></head><body>\n  <div class=\"edge\"></div><div class=\"edge2\"></div>\n  <div class=\"corner tl\"></div><div class=\"corner tr\"></div>\n  <div class=\"corner bl\"></div><div class=\"corner br\"></div>\n  <div class=\"badge\"><span class=\"dot\"></span>REC \u00b7 MCORCH STUDIO</div>\n  <div class=\"live\">PIPELINE AO VIVO</div>\n  <div class=\"brand\">login.mcorch.com</div>\n</body></html>\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/hud-frame.html (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:28:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Vou disparar o processamento de voz v3 em background enquanto gero a moldura PNG e escrevo o screencast v4, paralelizando tudo para otimizar o tempo.
+
+</details>
+
+
+## 🤖 Claude *(00:28:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/gen-ivc-v3.py",
+  "description": "Generate v3 expressive narration batch (background)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bferm2ep1. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/tasks/bferm2ep1.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(00:28:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad; bun -e \"\nconst { chromium } = await import('playwright');\nconst b = await chromium.launch({ headless: true, executablePath: '/home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome' });\nconst p = await (await b.newContext({ viewport: { width: 1280, height: 720 } })).newPage();\nawait p.goto('file://$SC/hud-frame.html');\nawait p.waitForTimeout(400);\nawait p.screenshot({ path: '$SC/hud-frame.png', omitBackground: true });\nawait b.close();\nconsole.log('hud png ok');\n\" && python3 -c \"from PIL import Image; im=Image.open('$SC/hud-frame.png'); print(im.size, im.mode)\" 2>/dev/null || file $SC/hud-frame.png",
+  "description": "Render HUD frame overlay PNG with alpha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> hud png ok
+> (1280, 720) RGBA
+> ```
+
+## 🤖 Claude *(00:29:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Voz v3 está renderizando em background enquanto a moldura HUD (1280×720 RGBA) fica pronta. Agora vou focar no screencast v4, que é o núcleo da coisa — pego o v3 como base e adiciono zoom-motion no canvas (o padrão do log dele): a setup faz zoom-in até uns 200% centrado no nó, depois a gravação captura o hold seguido de zoom-out em etapas (133% → 90%) e aí vem a interação com clique/dblclick e scroll dentro do modal.
+
+A gravação roda em ritmo natural mas acelerada 4x na pós-produção (sem áudio), com a moldura HUD aplicada como overlay depois, e tomo telas do YouTube com scroll de página e movimento. No ReactFlow, o wheel sobre o pane faz zoom automático; vou usar page.mouse.wheel com o mouse no nó para zoom centrado no cursor. Como o zoom não é exposto direto, vou medir a boundingBox do nó como proxy — cresce com o zoom — e calibrar uns 6 ticks de wheel para zoom-in forte, depois 2 etapas de 3 ticks para sair. Dá pra verificar visualmente no take final.
+
+Para cada take de nó (sc_gen/sc_voice/sc_i2v): setup vai até o nó, colapsa tudo, localiza-o, move o mouse pra lá, faz wheel-in forte (zoom ~200%), reposiciona o cursor no nó (a boundingBox muda após zoom, então preciso re-localizar), e aí começa o hold de 1.2s...
+
+Depois wheel-out em dois estágios de 3 ticks com pausa de 0.8s entre eles (volta pra ~120%), re-localiza o nó, desliza até ele, clica (painel abre em 0.8s), re-localiza de novo (o painel não move o canvas), double-click (modal em 1s), scroll dentro do modal com wheel lento pra mostrar refs e botão, hold de 1.5s, e aí termina. Tudo junto dá uns 18-24s reais, que a 4x vira 4.5-6s finais — as cenas têm 5-9s de narração (às vezes esticam pra 8-12s), então a 4x fica 5s + freeze pro resto, o que é aceitável pro Sovereign que pediu 4x explícito. Talvez gravar mais ação pra encher melhor.
+
+Pensando em fazer um scroll maior no modal com conteúdo longo e fechar ele no fim, esticando o take real pra uns 28-35s (7-9s finais). Os takes de tela tipo tour com zoom-out ou scroll em assets/youtube também ficam em torno de 30s reais, que vira 7.5s. Depois aplico ffmpeg pra acelerar 4x, redimensionar pra 1280×720, sobrepor o HUD (que fica estático pra não tremer com a aceleração), e codificar em h264. Aí monto a versão final juntando tudo com os takes emoldurados.
+
+Preciso checar se o assemble-v8 é parametrizável — tá hardcoded com paths do SC3 e IVC. Vou copiar pra assemble-v9 atualizando os paths pro sc4-out e ivc-v3, depois escrever o screencast-v4.
+
+</details>
+
+
+## 🤖 Claude *(00:29:13)*
+
+HUD pronto (RGBA ✓), voz v3 gerando. Escrevendo o screencast v4 com a linguagem de câmera do seu log:
+
+## 🤖 Claude *(00:29:51)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/screencast-v4.ts",
+  "content": "/**\n * EP05 screencast v4 \u2014 the Sovereign's own recording language (log 2026-08-03):\n *   \u2022 canvas CAMERA MOVEMENT: open zoomed ~200% on the hero node \u2192 hold \u2192 staged zoom-out (~133% \u2192 ~90%)\n *   \u2022 node takes: glide \u2192 click (panel opens) \u2192 double-click \u2192 modal \u2192 SCROLL inside the modal\n *   \u2022 recorded at natural pace then sped up 4\u00d7 (setpts=PTS/4)\n *   \u2022 MIV stream HUD overlay (hud-frame.png) composited on top\n * Output: sc4-out/<take>.mp4 (1280\u00d7720@30, framed, 4\u00d7) ready for assemble-v9.\n */\nimport { chromium } from 'playwright';\nimport { createClient } from '@supabase/supabase-js';\nimport { execSync } from 'child_process';\n\nconst URL = process.env.SUPABASE_URL!;\nconst SVC = process.env.SB_SECRET_KEY!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY)!;\nconst REF = URL.match(/https:\\/\\/([a-z0-9]+)\\.supabase/)![1];\nconst STORAGE_KEY = `sb-${REF}-auth-token`;\nconst APP = 'http://localhost:4173';\nconst EP05 = '18a21002-df9c-48b4-aff3-7aba28e812e7';\nconst SC = '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad';\nconst OUT = `${SC}/sc4-out`;\nconst CHROME = '/home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome';\nconst VW = 2259, VH = 1271; // browser at 85%\n\ninterface Take { id: string; url: string; wait?: number; nodeText?: RegExp; pageScroll?: boolean; }\nconst TAKES: Take[] = [\n  { id: 'sc_canvas', url: `/dashboard/spaces/${EP05}`, wait: 3500, nodeText: /Personagem/i }, // hero mood board, zoom-out reveal, no modal\n  { id: 'sc_assets', url: `/dashboard/spaces/assets`, wait: 4500, pageScroll: true },\n  { id: 'sc_youtube', url: `/dashboard/youtube`, wait: 5500, pageScroll: true },\n  { id: 'sc_gen', url: `/dashboard/spaces/${EP05}`, wait: 3500, nodeText: /Frame/i },\n  { id: 'sc_voice', url: `/dashboard/spaces/${EP05}`, wait: 3500, nodeText: /Narra\u00e7\u00e3o/i },\n  { id: 'sc_i2v', url: `/dashboard/spaces/${EP05}`, wait: 3500, nodeText: /Apresentador/i },\n];\nconst want = process.argv.slice(2);\nconst takes = want.length ? TAKES.filter(t => want.includes(t.id)) : TAKES;\n\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst { data: link } = await admin.auth.admin.generateLink({ type: 'magiclink', email: 'gabrielcall@gmail.com' });\nlet session: unknown = null;\nfor (const type of ['magiclink', 'email'] as const) {\n  const { data: s } = await anon.auth.verifyOtp({ token_hash: link!.properties!.hashed_token, type });\n  if (s?.session?.access_token) { session = s.session; break; }\n}\nif (!session) { console.error('no session'); process.exit(1); }\nexecSync(`mkdir -p ${OUT}`);\nconst browser = await chromium.launch({ headless: true, executablePath: CHROME });\n\nfor (const tk of takes) {\n  const raw = `${OUT}/${tk.id}-raw`;\n  execSync(`mkdir -p ${raw} && rm -f ${raw}/*.webm`);\n  const ctx = await browser.newContext({\n    viewport: { width: VW, height: VH },\n    recordVideo: { dir: raw, size: { width: 1920, height: 1080 } },\n    deviceScaleFactor: 1,\n  });\n  const page = await ctx.newPage();\n  await page.addInitScript(([k, v]) => localStorage.setItem(k, v), [STORAGE_KEY, JSON.stringify(session)]);\n  await page.addInitScript(() => {\n    (window as any).__cx = 1129; (window as any).__cy = 635;\n    const ensure = () => {\n      let c = document.getElementById('__fakecur') as HTMLDivElement | null;\n      if (!c) { c = document.createElement('div'); c.id = '__fakecur';\n        c.style.cssText = 'position:fixed;width:30px;height:30px;border-radius:50%;background:rgba(56,189,248,.30);border:3px solid #38bdf8;box-shadow:0 0 18px #38bdf8,0 0 5px #fff;z-index:2147483647;pointer-events:none;left:0;top:0;transform:translate(-50%,-50%)';\n        (document.documentElement || document.body).appendChild(c); }\n      c.style.left = ((window as any).__cx) + 'px'; c.style.top = ((window as any).__cy) + 'px';\n    };\n    (window as any).__setCur = (x: number, y: number) => { (window as any).__cx = x; (window as any).__cy = y; ensure(); };\n    setInterval(ensure, 100);\n  });\n  const t0 = Date.now();\n  const el = () => (Date.now() - t0) / 1000;\n\n  try { await page.goto(`${APP}${tk.url}`, { waitUntil: 'networkidle', timeout: 60000 }); } catch { /* settles */ }\n  await page.waitForTimeout(tk.wait ?? 3000);\n  for (const sel of ['[data-sidebar=\"trigger\"]', 'button[aria-label=\"Ocultar biblioteca\"]', 'button[aria-label=\"Ocultar propriedades\"]']) {\n    const loc = page.locator(sel).first();\n    if (await loc.count()) await loc.click({ timeout: 3000 }).catch(() => {});\n    await page.waitForTimeout(220);\n  }\n\n  let cx = VW / 2, cy = VH / 2;\n  const setCur = async (x: number, y: number) => { cx = x; cy = y; await page.evaluate(([a, b]) => (window as any).__setCur(a, b), [x, y]); await page.mouse.move(x, y); };\n  const move = async (x: number, y: number, steps = 26) => {\n    const sx = cx, sy = cy;\n    for (let i = 1; i <= steps; i++) {\n      const t = i / steps, e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;\n      await setCur(sx + (x - sx) * e, sy + (y - sy) * e);\n      await page.waitForTimeout(13);\n    }\n  };\n  const nodeCenter = async (re: RegExp) => {\n    const node = page.locator('.react-flow__node').filter({ hasText: re }).first();\n    const b = await node.boundingBox();\n    return b ? { node, x: b.x + b.width / 2, y: b.y + Math.min(b.height / 2, 90), b } : null;\n  };\n  const wheel = async (dy: number, ticks: number, gapMs = 90) => {\n    for (let i = 0; i < ticks; i++) { await page.mouse.wheel(0, dy); await page.waitForTimeout(gapMs); }\n  };\n\n  let TAKE_START = 0;\n  if (tk.nodeText) {\n    // SETUP: zoom IN on the hero node (~200%) before the take starts\n    let nc = await nodeCenter(tk.nodeText);\n    if (!nc) { console.log(`${tk.id}: node not found`); await ctx.close(); continue; }\n    await setCur(nc.x, nc.y);\n    await wheel(-120, 7, 60);                       // zoom in centred on cursor\n    await page.waitForTimeout(600);\n    nc = await nodeCenter(tk.nodeText);              // re-locate after zoom\n    if (nc) await setCur(nc.x, nc.y);\n    TAKE_START = el();\n    await page.waitForTimeout(1400);                 // hold on the hero (Sovereign: open tight)\n    await wheel(120, 3, 220); await page.waitForTimeout(900);   // stage 1 \u2192 ~133%\n    await wheel(120, 3, 220); await page.waitForTimeout(900);   // stage 2 \u2192 ~90%\n    nc = await nodeCenter(tk.nodeText);\n    if (nc) {\n      await move(nc.x, nc.y);\n      await page.waitForTimeout(300);\n      await nc.node.click({ position: { x: nc.b.width / 2, y: Math.min(nc.b.height / 2, 90) } }).catch(() => {});\n      await page.waitForTimeout(1000);               // panel opens \u2014 beat\n      if (tk.id !== 'sc_canvas') {\n        await nc.node.dblclick({ position: { x: nc.b.width / 2, y: Math.min(nc.b.height / 2, 90) } }).catch(() => {});\n        await page.waitForTimeout(1600);             // modal opens\n        const dlg = page.locator('[role=\"dialog\"]').last();\n        const db = await dlg.boundingBox();\n        if (db) {\n          await move(db.x + db.width / 2, db.y + db.height * 0.45, 20);\n          await wheel(140, 5, 420);                  // scroll the modal content (refs, audio, price)\n          await page.waitForTimeout(1400);\n          await wheel(-140, 3, 300);                 // back up to the result/header\n          await page.waitForTimeout(1200);\n        }\n      } else {\n        await page.waitForTimeout(1800);             // canvas tour: rest on the opened panel state\n      }\n    }\n  } else {\n    TAKE_START = el();\n    await page.waitForTimeout(1000);\n    const tgt = page.locator('table, [class*=\"grid\"]').first();\n    const b = await tgt.boundingBox().catch(() => null);\n    if (b) await move(b.x + Math.min(b.width / 2, 700), b.y + Math.min(b.height / 2, 300));\n    await page.waitForTimeout(600);\n    if (tk.pageScroll) {\n      await wheel(160, 6, 380);                      // page tour down\n      await page.waitForTimeout(900);\n      await wheel(-160, 4, 320);                     // and back\n      await page.waitForTimeout(900);\n    }\n  }\n  const TAKE_END = el();\n  await ctx.close();\n\n  const webm = execSync(`ls -t ${raw}/*.webm | head -1`).toString().trim();\n  // trim setup \u2192 4\u00d7 speed \u2192 1280\u00d7720 \u2192 HUD overlay\n  execSync(`ffmpeg -y -ss ${TAKE_START.toFixed(2)} -to ${TAKE_END.toFixed(2)} -i \"${webm}\" -i ${SC}/hud-frame.png -filter_complex \"[0:v]setpts=PTS/4,scale=1280:720,fps=30[v];[v][1:v]overlay=0:0[out]\" -map \"[out]\" -c:v libx264 -pix_fmt yuv420p -r 30 ${OUT}/${tk.id}.mp4 -loglevel error`);\n  execSync(`ffmpeg -y -ss 1.5 -i ${OUT}/${tk.id}.mp4 -frames:v 1 ${OUT}/${tk.id}_f.jpg -loglevel error`);\n  const d = execSync(`ffprobe -v error -show_entries format=duration -of csv=p=0 ${OUT}/${tk.id}.mp4`).toString().trim();\n  console.log(`\u2705 ${tk.id} ${parseFloat(d).toFixed(1)}s (4\u00d7, framed)`);\n}\nawait browser.close();\nconsole.log('v4 batch done');\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/screencast-v4.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:29:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a && source .env && set +a && bun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad/screencast-v4.ts 2>&1 | tail -8",
+  "description": "Record all v4 screencast takes (camera movement + 4x + HUD)",
+  "timeout": 540000
+}
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -7674,6 +8550,5 @@ Found a timing drift in film8 (385.47s vs expected 393s) and I'm auditing the re
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]
-> * **Próxima Sessão**: [[2026-08-03 - Finalizar vídeo tutorial e funil financeiro]]
+> * **Sessão Anterior**: [[2026-08-03 - agent-a575f41c59d70f794]]
 %% --- TIMELINE END --- %%
