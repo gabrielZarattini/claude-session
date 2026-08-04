@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3310
-> * **Sessões do Claude**: 3260
+> * **Total de Sessões Registradas**: 3349
+> * **Sessões do Claude**: 3299
 > * **Sessões do Gemini**: 50
 
 ---
@@ -77,17 +77,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Other Sessions
 *   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` - *2026-08-04*
 *   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` - *2026-08-04*
-*   `[[2026-08-04 - Calibrar gravações de tela e adicionar trilha sonora]]` - *2026-08-04*
-*   `[[2026-08-03 - agent-a575f41c59d70f794]]` - *2026-08-03*
-*   `[[2026-08-03 - Finalizar vídeo tutorial e funil financeiro]]` - *2026-08-03*
-*   `[[2026-08-03 - Calibrar gravações de tela e adicionar trilha sonora]]` - *2026-08-03*
-*   `[[2026-08-02 - ee069eb3-c7d6-48b5-9c4e-032debc976b3]]` - *2026-08-02*
-*   `[[2026-08-02 - agent-afc140c712641e0bc]]` - *2026-08-02*
-*   `[[2026-08-02 - agent-af678b79b875a6ffd]]` - *2026-08-02*
-*   `[[2026-08-02 - agent-af50219d8dcb902e4]]` - *2026-08-02*
-*   `[[2026-08-02 - agent-af2ef6b52a6b0a1db]]` - *2026-08-02*
-*   `[[2026-08-02 - agent-aeb26e4f3da47d874]]` - *2026-08-02*
-*   *... e mais 3252 sessões nessa categoria.*
+*   `[[2026-08-04 - agent-afed6d2846d4f2d75]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-af88a92e8664682e8]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-af80d13d0dfcdcf92]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-af70e1ea8d4f250af]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-aee9299d4dd30b561]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-aed00a3a41c90e8a0]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-ae9dd658d62293630]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-ae8cee0c8d020f87c]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-ae86c948a66f76fb5]]` - *2026-08-04*
+*   `[[2026-08-04 - agent-ae4aa682fd104f65f]]` - *2026-08-04*
+*   *... e mais 3291 sessões nessa categoria.*
 
 ---
 
@@ -3316,6 +3316,45 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 ### Agosto 2026
 *   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` (ClaudeSessions)
 *   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-afed6d2846d4f2d75]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-af88a92e8664682e8]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-af80d13d0dfcdcf92]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-af70e1ea8d4f250af]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-aee9299d4dd30b561]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-aed00a3a41c90e8a0]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ae9dd658d62293630]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ae8cee0c8d020f87c]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ae86c948a66f76fb5]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ae4aa682fd104f65f]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ad80d1c7236dfafa7]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ad3cd88c83e31d2e4]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ac6b77ebdd3c4c4e2]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ac08dd7f3f93948c3]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ab6850f7cb04dc52e]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-ab48c65ee8364ef61]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-aa597a260079a6d7d]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-aa0cb8954fe56b28c]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a96cc67a3b10c50c8]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a9647b324dbb99eb6]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a96138cf9f2ea9267]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a8eb0f6e6397956e5]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a84f6190b1741da1c]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a73ad63652ff07e0d]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a6cfc5ae2ca88c12f]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a6adce82c0754c219]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a60cae86a494b98aa]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a5ab32ebfd39ef024]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a592031870e56050b]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a515bf82e8b1d54cf]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a487baca26faaecd6]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a35ce9c31dbf03446]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a34850b069388a4f3]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a2be724e1c7cf06fd]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a2b9ff7b607521b70]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a22a34b9351b3a198]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a1edeafc79c76053b]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a1d94b1c6cec5885d]]` (ClaudeSessions)
+*   `[[2026-08-04 - agent-a1cfd5cc701a2bb6b]]` (ClaudeSessions)
 *   `[[2026-08-04 - Calibrar gravações de tela e adicionar trilha sonora]]` (ClaudeSessions)
 *   `[[2026-08-03 - agent-a575f41c59d70f794]]` (ClaudeSessions)
 *   `[[2026-08-03 - Finalizar vídeo tutorial e funil financeiro]]` (ClaudeSessions)
