@@ -7097,6 +7097,635 @@ To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.clau
 
 You've hit your session limit · resets 4am (America/Sao_Paulo)
 
+## 👤 User *(12:25:33)*
+
+esbarramos no limite continue por favor
+
+## 🤖 Claude *(12:26:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O workflow parou no meio: 10 agentes completaram, mas 12 encerraram quando atingiram o limite de sessão (reset às 4am). Encontrei um problema confirmado — no `MotionSceneInspector.tsx` na linha 94, o código tenta acessar `row.output_url` da tabela `video_renders`, mas essa coluna não existe; o valor real está armazenado em `storage_key`. Isso vai causar problemas se o inspector estiver aberto durante a execução do Run All.
+
+Os três findings HIGH que marquei como refutados já foram corrigidos — o validador confirmou que os guards estão no lugar. Mas 12 confirmações falharam por session limit, deixando alguns achados HIGH/MEDIUM sem validação (das lentes worker-ffmpeg, voice-chain, ui-console, ghost-reconciler). Preciso revisar o journal completo para não perder os findings materiais que não apareceram no resultado truncado.
+
+O plano agora é: corrigir o `output_url` → `storage_key` no MotionSceneInspector (linha 82-96, onde o reconcile lê a propriedade errada), depois verificar se SoundDesignInspector e EpisodeAssemblerInspector têm o mesmo padrão de bug com useRenderStatus, e finalmente extrair manualmente do journal os findings não-confirmados das outras lentes.
+
+</details>
+
+
+## 🤖 Claude *(12:26:04)*
+
+Limite de sessão atingiu os **subagentes** (reset 4h) — mas o main loop segue vivo e o workflow já entregou o que importa antes de morrer: **1 finding CONFIRMADO** (e os meus 2 fixes anteriores foram validados de forma independente pelos refutadores). Continuando:
+
+O confirmado: `MotionSceneInspector` reconcilia lendo `row.output_url` — **coluna que não existe** em `video_renders` (o resultado vive em `storage_key`). Inspector aberto durante o Run All + corrida ganha = cena `success` sem vídeo → o montador **descarta a cena em silêncio** (master com 7/8). Verificando se os inspectors irmãos têm o mesmo defeito:
+
+## 🤖 Claude *(12:26:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"output_url\\|storage_key\" src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx src/components/canvas/RightPanel/inspectors/SoundDesignInspector.tsx src/components/canvas/RightPanel/inspectors/EpisodeAssemblerInspector.tsx 2>/dev/null; echo \"---useRenderStatus select---\"; sed -n '440,470p' src/hooks/useVideoRepurpose.ts | grep -n \"select\\|from\" ",
+  "description": "Mapeia o bug output_url nos 3 inspectors + shape do poll"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/components/canvas/RightPanel/inspectors/EpisodeAssemblerInspector.tsx:36:            storage_keys: clips.map((c) => c.key),
+> src/components/canvas/RightPanel/inspectors/SoundDesignInspector.tsx:87:        asset_id: string; storage_key: string; duration_sec: number; new_balance: number;
+> src/components/canvas/RightPanel/inspectors/SoundDesignInspector.tsx:112:          audioUrl: data!.storage_key,
+> src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx:89:    const row = render.data as { state?: string; output_url?: string; error?: string } | undefined;
+> src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx:94:        output: { videoUrl: row.output_url, generatedAt: new Date().toISOString() },
+> ---useRenderStatus select---
+> 17:        .from('video_renders')
+> 18:        .select('*')
+> ```
+
+## 🤖 Claude *(12:26:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Só o MotionSceneInspector tem esse bug — SoundDesign já usa a resposta síncrona corretamente, e EpisodeAssemblerInspector tem o reconcile via useMotionRenderSync. Preciso corrigir as linhas 89-96 do MotionSceneInspector.
+
+Na verdade, pensando melhor: o inspector nem deveria ter seu próprio reconcile porque o useMotionRenderSync já faz isso para todos os nós motion na página, aberto ou fechado o painel. Esse reconcile duplicado é exatamente o que causa a corrida. Melhor remover o useEffect de reconcile do inspector inteiro — elimina o problema por construção e deixa o hook da página como único reconciliador. Os toasts "Cena motion pronta" ficariam perdidos, mas o console já mostra "pronto", então é aceitável. Preciso verificar se useRenderStatus está sendo usado em outro lugar do inspector além do reconcile, ou se também é código morto que pode ser removido.
+
+</details>
+
+
+## 🤖 Claude *(12:26:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Identifiquei que apenas o `MotionSceneInspector` tem o defeito, e a solução é estrutural: remover o reconciliador duplicado do inspector, já que o `useMotionRenderSync` da página já reconcilia todos os nós motion.
+
+</details>
+
+
+## 🤖 Claude *(12:26:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx",
+  "old_string": "  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const d = node.data;\n  const render = useRenderStatus(d.renderId ?? null);\n  const [busy, setBusy] = useState(false);",
+  "new_string": "  const updateNodeData = useCanvasStore((s) => s.updateNodeData);\n  const d = node.data;\n  const [busy, setBusy] = useState(false);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx",
+  "old_string": "  // Reconcilia pelo poll da fila: done \u2192 success, failed \u2192 failed.\n  useEffect(() => {\n    const row = render.data as { state?: string; output_url?: string; error?: string } | undefined;\n    if (!row?.state || d.status !== \"running\") return;\n    if (row.state === \"done\") {\n      patch({\n        status: \"success\",\n        output: { videoUrl: row.output_url, generatedAt: new Date().toISOString() },\n        renderId: undefined,\n      });\n      toast.success(\"Cena motion pronta.\");\n    } else if (row.state === \"failed\" || row.state === \"error\") {\n      patch({ status: \"failed\", error: row.error ?? \"Falha no render.\", renderId: undefined });\n      toast.error(\"A anima\u00e7\u00e3o falhou.\");\n    }\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [render.data, d.status, node.id]);",
+  "new_string": "  // SEM reconcile pr\u00f3prio: o useMotionRenderSync (n\u00edvel da p\u00e1gina) \u00e9 o \u00daNICO reconciliador dos\n  // n\u00f3s motion \u2014 aberto ou fechado o inspector. O reconcile duplicado que vivia aqui corria contra\n  // o hook da p\u00e1gina E lia `row.output_url`, coluna que N\u00c3O existe em video_renders (o resultado\n  // vive em `storage_key`) \u2014 quando o inspector vencia a corrida, o n\u00f3 virava success com\n  // videoUrl undefined e o montador descartava a cena EM SIL\u00caNCIO (revis\u00e3o adversarial 2026-08-05)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"useRenderStatus\\|useEffect\" src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx | head -5",
+  "description": "Limpa imports mortos do inspector"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1:import { useEffect, useState } from "react";
+> 13:import { useRenderStatus } from "@/hooks/useVideoRepurpose";
+> ```
+
+## 🤖 Claude *(12:26:48)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx",
+  "old_string": "import { useEffect, useState } from \"react\";",
+  "new_string": "import { useState } from \"react\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx",
+  "old_string": "import { resolveVoiceAssetId } from \"@/lib/canvas-voice\";\nimport { useRenderStatus } from \"@/hooks/useVideoRepurpose\";",
+  "new_string": "import { resolveVoiceAssetId } from \"@/lib/canvas-voice\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:26:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso examinar o journal para identificar os findings das lentes cujos confirmations falharam no session limit — worker-ffmpeg, voice-chain, ui-console e ghost-reconciler — verificando os alertas HIGH e MEDIUM no loop principal. Vou revisar o output completo do arquivo e os resultados registrados no journal.
+
+</details>
+
+
+## 🤖 Claude *(12:26:58)*
+
+Agora recupero os findings das lentes cujos confirmadores morreram no limite — eu mesmo os verifico no main loop:
+
+## 🤖 Claude *(12:27:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep '\"type\":\"result\"' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/journal.jsonl | python3 -c \"\nimport json,sys\nfor line in sys.stdin:\n    j=json.loads(line)\n    r=j.get('result')\n    if isinstance(r,dict) and 'findings' in r:\n        for f in r['findings']:\n            if f.get('severity') in ('HIGH','MEDIUM'):\n                print(f\\\"[{f['severity']}] {f['file']}:{f.get('line','?')} \u2014 {f['claim'][:260]}\\\")\n        print('---')\n\"",
+  "description": "Extrai todos os findings HIGH/MEDIUM das lentes conclu\u00eddas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [HIGH] /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts:108 — The continue-fix (line 87) makes STALE done rows clobber in-flight re-renders: reconciliation is keyed only by composition.node_id with no tie to the node's current renderId or to the newest row, so an OLD done row from a previous run (>5min, previously skippe
+> [HIGH] /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts:204 — Run All on EP06 still deadlocks born-dead BEFORE any motionScene dispatches: the 9 voiceClone nodes pass the generic prompt runnable gate, resolve a null payload, hit the surviving silent `if (!payload) return`, and stay 'queued' forever — and the ghost antibo
+> [MEDIUM] /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts:61 — The ghost antibody trusts a truncated window as 'the whole queue': `.limit(40)` newest-first with the project filter applied CLIENT-side means a genuinely-running row evicted by 40 newer rows (retry storms; other projects' rows count against the budget) makes 
+> [MEDIUM] /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts:150 — soundDesign with engine='elevenlabs' NEVER has a video_renders row (sfx-generate's IA path is synchronous — only the ffmpeg path inserts), yet soundDesign is in MOTION_KINDS: a legitimate IA generation longer than ~8s is indistinguishable from a ghost and gets
+> ---
+> [HIGH] src/hooks/useCanvasPipeline.ts:78 — voiceClone ainda vaza para o conjunto `runnable` e trava o Run All para sempre — a MESMA classe born-dead que o fix quis matar. O gate generico (linhas 78-85) qualifica qualquer no com `prompt` nao-vazio; VoiceCloneData tem `prompt: string` (canvas.ts:572) e o
+> [HIGH] src/hooks/useMotionRenderSync.ts:108 — REGRESSAO do fix do `continue` (commit bc012d9): a reconciliacao agora processa TODAS as linhas de um node_id (sem dedup por linha mais recente e sem casar `d.renderId === r.id`). Uma linha `done` de um run ANTERIOR flipa um no em voo para success com o storag
+> [MEDIUM] src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx:94 — O reconcile do inspector le `row.output_url` de uma linha de video_renders — coluna que NAO existe nessa tabela (o resultado vive em `storage_key`). Quando o inspector esta montado (no selecionado) e o poll dele (useRenderStatus, 4s) vence a corrida contra o u
+> ---
+> [HIGH] scripts/motion-bridge.ts:327 — processAssemble descarta cenas em silêncio: falha de download de um clipe vira `console.error` + `continue`, e o MASTER é finalizado 'done' faltando cenas, sem logHealth e sem marcador em qa.
+> [MEDIUM] scripts/motion-bridge.ts:134 — O caminho da voz é fail-soft DUPLAMENTE silencioso: voiceDuration engole qualquer erro (download 5xx, ffprobe falho, arquivo corrompido) com `catch { return null }` sem telemetria, e o clipe renderiza MUDO com state='done' — a reedição exata do bug que o commi
+> [MEDIUM] scripts/motion-bridge.ts:32 — RUNNING_TIMEOUT_MS (30 min) é MENOR que o timeout do ffmpeg do assemble (40 min, linha 351) e processAssemble/processSfx não têm heartbeat — um master legitimamente em encode >30 min fica elegível ao reaper; qualquer segunda instância (o modo `--once` document
+> [MEDIUM] scripts/motion-bridge.ts:321 — `loudnorm_lufs` chega do cliente sem clamp em nenhuma camada (assemble-master linha 82 faz só `Number(...) || -16`; worker linha 321 idem; assemble-graph.ts:47 interpola direto em `loudnorm=I=${lufs}`) e o range válido do loudnorm é [-70,-5] — valor fora do ra
+> ---
+> [HIGH] /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts:19 — findConnectedVoice picks the first voiceClone edge with audio, but the REAL EP06 graph wires a shared 'Voz do Apresentador' voiceClone (n_f9pbxfas) to ALL 8 scenes on the same input_voice handle, and its edge precedes each scene's own narration edge in the edg
+> [HIGH] /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts:204 — The born-dead class the fix addressed is still open for voiceClone: a voiceClone with a non-empty prompt qualifies as runnable (generic prompt gate, line 78-79), gets marked 'queued' by runPipeline (line 401), then runSingleNode hits resolveExecutePayload → nu
+> [MEDIUM] /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts:99 — When the client explicitly sends voice_asset_id but the owner-scoped lookup or the prefix check fails, the edge fn silently nulls the voice: 202 'queued' with no response field, no pulse metadata, nothing on the node — the requested narration is dropped with z
+> [MEDIUM] /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:143 — The qwen3-local poll path persists output.audioUrl as a SIGNED URL (https://…?token=…), so when qa.creative_asset_id is null the resolveVoiceAssetId fallback queries creative_assets.storage_key against a full signed URL and can never match — the inspector play
+> ---
+> [HIGH] src/hooks/useMotionRenderSync.ts:120 — O card do motion/master NUNCA renderiza o vídeo pronto: a reconciliação grava a storage KEY crua ('<uid>/motion/<renderId>.mp4', motion-bridge.ts:216) em output.videoUrl, e StorageVideo→useDisplayUrl passa strings não-parseáveis adiante sem assinar (src/lib/as
+> [MEDIUM] src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx:94 — O poll do inspector lê row.output_url de uma linha de video_renders — coluna que NÃO EXISTE na tabela (ela tem storage_key; migration 20260622040000:47) — e no 'done' grava success com videoUrl:undefined + renderId:undefined, cortando para sempre a reconciliaç
+> ---
+> ```
+
+## 🤖 Claude *(12:28:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Filtrando os findings que ainda não foram tratados, removendo aqueles que já foram corrigidos ou refutados. Já resolvi o problema de stale-done clobber, voiceClone runnable e inspector output_url — todos validados e corrigidos. Agora preciso revisar os que ainda restam.
+
+Há um risco potencial em canvas-voice.ts onde findConnectedVoice pega a primeira edge de voz conectada — no EP06 real, o "Voz do Apresentador" estaria ligado a todas as 8 cenas no mesmo handle input_voice e sua edge precederia a da narração da cena. Atualmente isso não é um problema porque esse voice clone não tem audioUrl e é pulado, mas se ganhar áudio no futuro, a cena pegaria a voz errada. Preciso verificar se essa é uma situação real no grafo e considerar uma heurística mais determinística, como preferir edges com targetHandle específico ou ordenar por prioridade.
+
+Para useMotionRenderSync.ts, o limit(40) client-filtered pode truncar a janela e deixar a linha running de um projeto invisível durante storms de outros projetos, causando um reset fantasma. A mitigação seria filtrar server-side pelo project_id usando a sintaxe JSONB do Supabase para evitar esse problema.
+
+Também há uma questão com o soundDesign engine elevenlabs: é síncrono mas está listado em MOTION_KINDS, então uma geração IA que leva 8-15 segundos seria marcada como sucesso imediatamente enquanto o invoke ainda está em voo, deixando o nó em um estado inconsistente. plicar ambos os tipos de retorno — então a solução é não marcar "running" no dispatch inicial para operações síncronas, deixando o runSingleNode controlar esse estado, e verificar se o ffmpeg soundDesign é realmente síncrono ou se enfileira como async.
+
+O antibody está contando 3 misses em 12 segundos, o que é borderline para invokes de IA típicos (ElevenLabs SFX leva 2-8s). A fix pragmática é fazer o antibody ignorar soundDesign sem renderId — esses são síncronos e resolvem sozinhos, ou falham com try/catch — enquanto mantém a verificação normal para soundDesign com renderId (caminho ffmpeg async).
+
+Mas pensando melhor: um soundDesign "running" sem renderId após reload nunca vai completar porque o invoke morreu com a aba. Então o antibody deveria resetar nesses casos. A solução é diferenciar o limite de misses: 3 polls para soundDesign com renderId, mas 8 polls (32 segundos) para sem renderId — isso cobre invokes de IA em voo e ainda cura reloads.
+
+Agora vejo um problema grave no processAssemble: quando um clipe falha no download, o código só loga um erro e continua, finalizando o master como "done" mesmo faltando cenas. Isso é silencioso e perigoso — preciso fazer o download falhar de verdade com um throw, para que o run marque como failed e o usuário veja o problema. Um master incompleto não é um master válido.
+
+Tem também um segundo problema: quando a voz é pedida mas voiceDuration falha, o clipe fica mudo sem avisar. Mesma lógica — se a narração foi solicitada, um erro silencioso é um falso-sucesso. Preciso fazer throw ali também para que a falha seja visível.
+
+E tem um terceiro problema de timing: o RUNNING_TIMEOUT_MS de 30 minutos é menor que o timeout do ffmpeg assemble de 40 minutos, então o reaper pode re-enfileirar o master enquanto ele ainda está sendo processado, causando colisão. Preciso verificar os valores reais e sincronizá-los.
+
+Fixing the loudnorm_lufs validation... Vou corrigir a função motion-render para retornar 422 se o voice_asset_id foi enviado mas não resolveu — é uma mudança simples que evita silenciar a falha. Preciso fazer deploy dessa função única. Depois tem a questão do VoiceCloneInspector que persiste URLs assinadas quando o creative_asset_id é null.
+
+O problema é que o lookup por storage_key nunca casa quando a voz é nova sem creativeAssetId, então a cena muda (falha silenciosa). Vou melhorar o resolveVoiceAssetId tentando extrair o path do bucket direto da URL assinada — provavelmente existe um parser em asset-url.ts que já faz isso, então vou reusar em vez de criar regex novo.
+
+Agora vejo outro problema crítico: o useMotionRenderSync está passando a storage KEY crua para o StorageVideo, que não consegue assinar a URL, então o vídeo nunca renderiza no card — o snapshot do E2E mostrou a cena sem o vídeo de fato renderizado. Então o StorageAudio também pode estar usando keys cruas não assinadas, o que explicaria o player mostrando 0:00/0:00 no screenshot inicial — mesmo que o áudio tenha tocado, a resolução da URL pode estar falhando. Preciso verificar como `toDisplayUrl` em asset-url.ts lida com strings sem esquema, e depois checar o grafo real e a implementação do asset-url antes de prosseguir com as outras correções.
+
+</details>
+
+
+## 🤖 Claude *(12:28:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei 8 findings pendentes no espólio das lentes, sendo que dois precisam de verificação material antes de qualquer edição: a fiação real da voz no EP06 e se StorageVideo consegue assinar uma storage key crua. Vou checá-los agora.
+
+</details>
+
+
+## 🤖 Claude *(12:28:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cat > check-edges.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst { data: p } = await sb.from(\"vm_canvas_projects\").select(\"graph\").eq(\"id\", \"d0d82aeb-8c98-4e36-b526-b6bba64a4db5\").single();\nconst nodes: any[] = p!.graph.nodes, edges: any[] = p!.graph.edges;\nconst label = (id: string) => nodes.find((n) => n.id === id)?.data?.label ?? id;\nconst kind = (id: string) => nodes.find((n) => n.id === id)?.data?.kind ?? \"?\";\n// todas as edges que ENTRAM em cenas motion\nfor (const e of edges) {\n  if (kind(e.target) === \"motionScene\") {\n    console.log(`${label(e.source)} (${kind(e.source)}) --[${e.targetHandle ?? \"?\"}]--> ${label(e.target)}`);\n  }\n}\nconsole.log(\"\\nApresentador (n_f9pbxfas) edges de sa\u00edda:\", edges.filter((e: any) => e.source === \"n_f9pbxfas\").length);\nEOF\nbun run check-edges.ts 2>&1 | head -25",
+  "description": "Fia\u00e7\u00e3o real das entradas das cenas motion no EP06"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Voz do Apresentador (voiceClone) --[input_voice]--> Gancho
+> Voz do Apresentador (voiceClone) --[input_voice]--> Kimi K3
+> Voz do Apresentador (voiceClone) --[input_voice]--> Qwen3.8-Max
+> Voz do Apresentador (voiceClone) --[input_voice]--> Claude Mythos
+> Voz do Apresentador (voiceClone) --[input_voice]--> Aceleração
+> Voz do Apresentador (voiceClone) --[input_voice]--> Amazon
+> Voz do Apresentador (voiceClone) --[input_voice]--> Incidentes
+> Voz do Apresentador (voiceClone) --[input_voice]--> MCP
+> Narração · Gancho (voiceClone) --[input_voice]--> Gancho
+> Narração · Kimi K3 (voiceClone) --[input_voice]--> Kimi K3
+> Narração · Qwen3.8-Max (voiceClone) --[input_voice]--> Qwen3.8-Max
+> Narração · Claude Mythos (voiceClone) --[input_voice]--> Claude Mythos
+> Narração · Aceleração (voiceClone) --[input_voice]--> Aceleração
+> Narração · Amazon (voiceClone) --[input_voice]--> Amazon
+> Narração · Incidentes (voiceClone) --[input_voice]--> Incidentes
+> Narração · MCP (voiceClone) --[input_voice]--> MCP
+> 
+> Apresentador (n_f9pbxfas) edges de saída: 8
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(12:28:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"export function toDisplayUrl\\|export function useDisplayUrl\\|function parseStorage\\|const looksLike\\|startsWith(\\\"http\" src/lib/asset-url.ts | head; sed -n \"$(grep -n 'export async function toDisplayUrl' src/lib/asset-url.ts | head -1 | cut -d: -f1),+40p\" src/lib/asset-url.ts",
+  "description": "Como toDisplayUrl trata storage key crua"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 28:export function parseStorageRef(url: string): { bucket: string; key: string } | null {
+> 145:export function useDisplayUrl(input: string | null | undefined): string | null {
+> export async function toDisplayUrl(input: string | null | undefined): Promise<string | null> {
+>   if (!input) return null;
+>   const ref = parseStorageRef(input);
+>   if (!ref) return input; // external / data: / blob: — not ours to sign
+>   return signStorageRef(ref.bucket, ref.key, input);
+> }
+> 
+> /**
+>  * Re-resolve a batch of stored media values to FRESH viewable URLs, dropping any that fail.
+>  *
+>  * Used before handing upstream reference images to a server that will DOWNLOAD them (e.g. the Veo
+>  * branch of canvas-execute fetches each reference_image_url → base64). Node outputs persist a URL
+>  * that was signed/public at generation time; weeks later a `/object/public/<private-bucket>/…` URL is
+>  * dead (400) and a signed URL has expired — so the server download fails silently and the model gets
+>  * ZERO references. Re-signing owner-scoped here (the caller can only sign their own objects) makes the
+>  * refs fetchable again. SOP: docs/processes/private-bucket-asset-signing.md.
+>  */
+> export async function toDisplayUrls(inputs: (string | null | undefined)[]): Promise<string[]> {
+>   const resolved = await Promise.all(inputs.map((u) => toDisplayUrl(u)));
+>   return resolved.filter((u): u is string => Boolean(u));
+> }
+> 
+> /**
+>  * React hook: sign a RAW storage KEY in the owner-scoped private `crm-media` bucket (CRM Inbox media).
+>  *
+>  * Unlike `useDisplayUrl`, the input here is a bare key (`<uid>/<conv>/<msg>.jpg` from
+>  * messages.media_asset_path), NOT a full storage URL — so it goes straight to `signStorageRef`
+>  * (skipping `parseStorageRef`). Owner-scoped: the RLS SELECT policy on crm-media lets only the owner
+>  * sign their own object. Cached + auto-refreshed before the signed TTL, same as useDisplayUrl.
+>  */
+> export function useSignedMediaUrl(key: string | null | undefined): string | null {
+>   const { data } = useQuery({
+>     queryKey: ["crm-media-sign", key],
+>     enabled: !!key,
+>     staleTime: SIGNED_TTL_SECONDS * 1000 - REFRESH_MARGIN_MS,
+>     gcTime: SIGNED_TTL_SECONDS * 1000,
+>     queryFn: () => signStorageRef("crm-media", key as string),
+>   });
+>   return data ?? null;
+> }
+> ```
+
+## 🤖 Claude *(12:29:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmei o risco real: o nó "Voz do Apresentador" está conectado às 8 cenas através de `input_voice` e suas edges aparecem primeiro na lista, precedendo as das narrações. Atualmente sem áudio (`audio=NO`), o skip funciona, mas quando o Sovereign clonar a voz nele, todas as 8 cenas passariam a usar esse áudio clonado automaticamente.
+
+Preciso de uma regra determinística melhor. O "Voz do Apresentador" é o nó de clone (perfil de voz, upstream conceitual), enquanto as "Narração · X" são o áudio específico por cena. A heurística mais sólida seria preferir o voiceClone que tem `output.audioUrl` com conteúdo específico da narração, mas isso é impossível de determinar semanticamente. Estou considerando uma abordagem pragmática: quando há múltiplos voiceClones com áudio conectados, preferir o de edge mais recente, ou estruturalmente reconhecer que o nó de clone (perfil) tipicamente não teria `output.audioUrl` de narração — apenas `sampleAudioUrl` ou `voiceProfileId`.
+
+Agora vejo que as narrações EP06 têm `prompt` vazio (semeadas pelo runner), então usar "prompt não-vazio" como critério excluiria as narrações atuais. A solução mais simples e determinística é preferir a edge cujo source está exclusivamente ligado a esta cena (fan-out 1) sobre um source compartilhado com outras cenas.
+
+Isso resolve o EP06 estruturalmente — o Apresentador tem fan-out 8 enquanto a Narração tem fan-out 1 — e tem semântica clara: uma narração é 1:1 com a cena. Vou ordenar os candidatos por fan-out ascendente e pegar o primeiro com áudio, documentando a lógica no comentário.
+
+Agora preciso verificar o que `parseStorageRef` faz com uma key crua como "uid/motion/x.mp4" na linha 28.
+
+</details>
+
+
+## 🤖 Claude *(12:29:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que o "Voz do Apresentador" está ligado às 8 cenas no mesmo handle com as edges antes das narrações, o que causará um problema real quando o clone for feito. Agora preciso verificar o `parseStorageRef` para fechar outro achado.
+
+</details>
+
+
+## 🤖 Claude *(12:29:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '20,60p' src/lib/asset-url.ts",
+  "description": "parseStorageRef \u2014 aceita storage key crua?"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> // driver was a fresh token per render busting that cache. Owner-display only — the owner can already read
+> // these objects, so a reusable 24h URL is a conservative tradeoff (client refs already sign for 365d).
+> const SIGNED_TTL_SECONDS = 24 * 60 * 60; // 24h
+> const REFRESH_MARGIN_MS = 10 * 60 * 1000; // re-sign when a cached URL is within 10 min of expiry
+> const SIGN_CACHE_PREFIX = "mco-sign:v2:"; // v2 invalidates stale entries minted under the old 1h scheme
+> 
+> /** Parse a Supabase Storage URL — public `/object/public/<bucket>/<key>` or signed `/object/sign/<bucket>/<key>?token=`
+>  *  — into { bucket, key }. Returns null for anything else (external provider URL, data:/blob: URI, plain string). */
+> export function parseStorageRef(url: string): { bucket: string; key: string } | null {
+>   const m = url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/([^?]+)/);
+>   if (!m) return null;
+>   return { bucket: decodeURIComponent(m[1]), key: decodeURIComponent(m[2]) };
+> }
+> 
+> /** Persistent signed-URL cache (localStorage), namespaced by the current user so a signed URL is never reused
+>  *  across accounts on a shared device. A signed URL is a bearer grant, so it is cached only for the owner who
+>  *  minted it, only for its own object, and only until ~10 min before expiry. Best-effort (private mode → skip). */
+> function readSignCache(cacheKey: string): string | null {
+>   try {
+>     const raw = localStorage.getItem(cacheKey);
+>     if (!raw) return null;
+>     const parsed = JSON.parse(raw) as { u?: unknown; e?: unknown };
+>     if (typeof parsed.u === "string" && typeof parsed.e === "number" && parsed.e - Date.now() > REFRESH_MARGIN_MS) {
+>       return parsed.u;
+>     }
+>   } catch { /* localStorage disabled / malformed — fall through to a fresh sign */ }
+>   return null;
+> }
+> function writeSignCache(cacheKey: string, url: string, ttlSeconds: number): void {
+>   try {
+>     localStorage.setItem(cacheKey, JSON.stringify({ u: url, e: Date.now() + ttlSeconds * 1000 }));
+>   } catch { /* storage full / disabled — caching is best-effort */ }
+> }
+> 
+> /** Drop every persisted signed-URL entry (any version). Call on sign-out so 24h bearer URLs to the user's
+>  *  own private media do not outlive the session on a shared device (defense-in-depth beyond uid-namespacing). */
+> export function clearSignCache(): void {
+>   try {
+>     const stale: string[] = [];
+>     for (let i = 0; i < localStorage.length; i++) {
+>       const k = localStorage.key(i);
+> ```
+
+## 🤖 Claude *(12:29:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o problema confirmado: quando `parseStorageRef` recebe um caminho relativo como "uid/motion/x.mp4", retorna null porque espera uma URL completa de storage, então `toDisplayUrl` passa a chave bruta direto, gerando um src relativo que resulta em 404 — por isso o vídeo fica preto e o inspector também. O teste passou porque só validava o servidor e status, não capturou o que realmente acontece na renderização.
+
+Agora vejo que o sistema consome `output.videoUrl` em dois lugares: no card/inspector onde quebra (chave bruta não assinada), e no `collectMasterClips` onde funciona perfeitamente (a função `assemble-master` espera exatamente uma chave prefixada com uid/). O fix não é persistir URL assinada no output porque quebraria o assemble e expiraria — preciso ensinar o consumo a assinar chaves brutas quando detecta o padrão owner-prefixed, generalizando `toDisplayUrl`/`useDisplayUrl`. Mas a chave bruta não carrega informação de bucket, e o vídeo vive em `video-studio-assets` enquanto o `useSignedMediaUrl` existente tem bucket fixo para crm-media.
+
+Tenho duas opções: (a) persistir `output.videoUrl` como URL pseudo-completa sem token (formato sign/bucket/key) para que `parseStorageRef` entenda e `useDisplayUrl` re-assine no render, mas isso força `collectMasterClips` a extrair a chave antes de mandar pro assemble — mexe em dois pontos; (b) deixar output como chave brua mantendo o contrato atual e ensinar `StorageVideo`/`StorageAudio` a assinar chaves brutas contra um bucket padrão.
+
+O problema é que diferentes rails usam o mesmo bucket (video-studio-assets) — motion, sfx, assemble, qwen3 voice — então hardcodificar o bucket em `useDisplayUrl` não funciona para outros rails como canvas-assets.
+
+Mas analisando quem persiste a key crua hoje: todos os produtores atuais (motion, sfx, assemble, voice) usam video-studio-assets, então é um default correto. Vou documentar isso e implementar a solução em um único ponto (asset-url) com um regex que identifica UUIDs crus para aplicar `signStorageRef` automaticamente.
+
+Defining the UUID pattern matcher... Normalizing the audioUrl key in the lookup, then implementing the full fix across all five areas: fan-out preference and key normalization in canvas-voice, signing raw keys for video assets, adding the soundDesign antibody for useMotionRenderSync, filtering by composition project server-side, and adding error handling for download and voice duration failures in motion-bridge.
+
+</details>
+
+
+## 🤖 Claude *(12:29:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o problema: `parseStorageRef` só funciona com URLs completas, então a key crua que o reconciler grava não é assinável, causando os cards e inspectors pretos e os players zerados. Vou implementar a rodada final de fixes com 7 itens.
+
+</details>
+
+
+## 🤖 Claude *(12:29:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '145,170p' src/lib/asset-url.ts",
+  "description": "Implementa\u00e7\u00e3o do useDisplayUrl (para o edit certo)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> export function useDisplayUrl(input: string | null | undefined): string | null {
+>   const { data } = useQuery({
+>     queryKey: ["display-url", input],
+>     enabled: !!input,
+>     // Refresh comfortably before the signed URL expires so a long-open tab never shows a stale 400.
+>     staleTime: SIGNED_TTL_SECONDS * 1000 - REFRESH_MARGIN_MS,
+>     gcTime: SIGNED_TTL_SECONDS * 1000,
+>     queryFn: () => toDisplayUrl(input),
+>   });
+>   // While resolving, echo a non-storage input straight through (data:/external render immediately).
+>   if (data !== undefined) return data;
+>   return input && parseStorageRef(input) ? null : (input ?? null);
+> }
+> ```
+
+## 🤖 Claude *(12:29:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see the issue now — `useDisplayUrl` calls `toDisplayUrl`, but the echo-through logic returns the raw key when `parseStorageRef` is null, which causes a momentary invalid source before the signed data arrives. I need to create a helper function to parse raw owner keys and apply it consistently in both places so the raw key doesn't get echoed back.
+
+</details>
+
+
+## 🤖 Claude *(12:30:05)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/asset-url.ts",
+  "old_string": "export function parseStorageRef(url: string): { bucket: string; key: string } | null {\n  const m = url.match(/\\/storage\\/v1\\/object\\/(?:public|sign)\\/([^/]+)\\/([^?]+)/);\n  if (!m) return null;\n  return { bucket: decodeURIComponent(m[1]), key: decodeURIComponent(m[2]) };\n}",
+  "new_string": "export function parseStorageRef(url: string): { bucket: string; key: string } | null {\n  const m = url.match(/\\/storage\\/v1\\/object\\/(?:public|sign)\\/([^/]+)\\/([^?]+)/);\n  if (!m) return null;\n  return { bucket: decodeURIComponent(m[1]), key: decodeURIComponent(m[2]) };\n}\n\n/** RAW owner-prefixed storage KEY (`<uid>/motion/<id>.mp4`) \u2014 what the host rails (motion \u00b7 sfx \u00b7\n *  assemble \u00b7 qwen3 voice) persist in node outputs, because their server seams (assemble-master,\n *  subtitle source resolution) expect the bare key, not a URL. All raw-key producers write to the\n *  `video-studio-assets` bucket, so a bare key can be signed against it. Without this, a finished\n *  motion card rendered `<video src=\"<uid>/motion/\u2026.mp4\">` \u2014 a relative 404, black card forever\n *  (adversarial review 2026-08-05). */\nconst RAW_OWNER_KEY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\//i;\nconst RAW_KEY_BUCKET = \"video-studio-assets\";\nexport function isRawOwnerKey(input: string): boolean {\n  return RAW_OWNER_KEY_RE.test(input) && !input.includes(\"://\");\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/asset-url.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:30:08)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/asset-url.ts",
+  "old_string": "export async function toDisplayUrl(input: string | null | undefined): Promise<string | null> {\n  if (!input) return null;\n  const ref = parseStorageRef(input);\n  if (!ref) return input; // external / data: / blob: \u2014 not ours to sign\n  return signStorageRef(ref.bucket, ref.key, input);\n}",
+  "new_string": "export async function toDisplayUrl(input: string | null | undefined): Promise<string | null> {\n  if (!input) return null;\n  const ref = parseStorageRef(input);\n  if (!ref) {\n    if (isRawOwnerKey(input)) return signStorageRef(RAW_KEY_BUCKET, input); // host-rail bare key\n    return input; // external / data: / blob: \u2014 not ours to sign\n  }\n  return signStorageRef(ref.bucket, ref.key, input);\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/asset-url.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:30:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/asset-url.ts",
+  "old_string": "  // While resolving, echo a non-storage input straight through (data:/external render immediately).\n  if (data !== undefined) return data;\n  return input && parseStorageRef(input) ? null : (input ?? null);\n}",
+  "new_string": "  // While resolving, echo a non-storage input straight through (data:/external render immediately).\n  // A raw owner key must NOT echo \u2014 as a relative src it 404s; hold null until signed.\n  if (data !== undefined) return data;\n  if (!input) return null;\n  return parseStorageRef(input) || isRawOwnerKey(input) ? null : input;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/asset-url.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:30:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei dois problemas em `canvas-voice.ts`: a voz compartilhada com fan-out 8 não corresponde à narração 1:1, e a audioUrl assinada não bate no lookup. Vou investigar essas discrepâncias.
+
+</details>
+
+
+## 🤖 Claude *(12:30:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts",
+  "old_string": "/** N\u00f3 de voz conectado (qualquer aresta de entrada cujo source seja um voiceClone com \u00e1udio pronto). */\nexport function findConnectedVoice(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: CanvasEdge[],\n): { audioUrl: string; creativeAssetId?: string } | null {\n  for (const e of edges) {\n    if (e.target !== nodeId) continue;\n    const src = nodes.find((n) => n.id === e.source);\n    const d = src?.data as unknown as VoiceCloneData | undefined;\n    if (d?.kind !== \"voiceClone\") continue;\n    const audioUrl = d.output?.audioUrl;\n    if (!audioUrl) continue;\n    return { audioUrl, creativeAssetId: d.output?.creativeAssetId };\n  }\n  return null;\n}",
+  "new_string": "/**\n * N\u00f3 de voz conectado. Entre v\u00e1rios voiceClone com \u00e1udio ligados \u00e0 mesma cena, vence o de MENOR\n * fan-out: a narra\u00e7\u00e3o da cena \u00e9 1:1 por constru\u00e7\u00e3o, enquanto um n\u00f3 de voz ligado a N cenas \u00e9 o\n * PERFIL do apresentador (identidade), n\u00e3o a fala desta cena. No EP06 real o \"Voz do Apresentador\"\n * alimenta as 8 cenas E as arestas dele PRECEDEM as das narra\u00e7\u00f5es \u2014 \"primeira aresta vence\" trocaria\n * as 8 narra\u00e7\u00f5es pela voz errada no dia em que o clone ganhar \u00e1udio (revis\u00e3o adversarial 2026-08-05).\n */\nexport function findConnectedVoice(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: CanvasEdge[],\n): { audioUrl: string; creativeAssetId?: string } | null {\n  const candidates: Array<{ audioUrl: string; creativeAssetId?: string; fanOut: number }> = [];\n  for (const e of edges) {\n    if (e.target !== nodeId) continue;\n    const src = nodes.find((n) => n.id === e.source);\n    const d = src?.data as unknown as VoiceCloneData | undefined;\n    if (d?.kind !== \"voiceClone\") continue;\n    const audioUrl = d.output?.audioUrl;\n    if (!audioUrl) continue;\n    const fanOut = edges.filter((x) => x.source === e.source).length;\n    candidates.push({ audioUrl, creativeAssetId: d.output?.creativeAssetId, fanOut });\n  }\n  if (!candidates.length) return null;\n  candidates.sort((a, b) => a.fanOut - b.fanOut);\n  const { audioUrl, creativeAssetId } = candidates[0];\n  return { audioUrl, creativeAssetId };\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:30:32)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts",
+  "old_string": "  const voice = findConnectedVoice(nodeId, nodes, edges);\n  if (!voice) return undefined;\n  if (voice.creativeAssetId) return voice.creativeAssetId;\n  const { data, error } = await supabase\n    .from(\"creative_assets\")\n    .select(\"id\")\n    .eq(\"storage_key\", voice.audioUrl)\n    .maybeSingle();",
+  "new_string": "  const voice = findConnectedVoice(nodeId, nodes, edges);\n  if (!voice) return undefined;\n  if (voice.creativeAssetId) return voice.creativeAssetId;\n  // N\u00f3s antigos persistiam output.audioUrl como URL ASSINADA (com ?token=) \u2014 normalizar para a\n  // storage key antes do lookup, sen\u00e3o o match nunca acontece e a cena renderiza muda.\n  const key = parseStorageRef(voice.audioUrl)?.key ?? voice.audioUrl;\n  const { data, error } = await supabase\n    .from(\"creative_assets\")\n    .select(\"id\")\n    .eq(\"storage_key\", key)\n    .maybeSingle();"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:30:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts",
+  "old_string": "import { supabase } from \"@/integrations/supabase/client\";\nimport type { CanvasEdge, CanvasNode, VoiceCloneData } from \"@/types/canvas\";",
+  "new_string": "import { supabase } from \"@/integrations/supabase/client\";\nimport { parseStorageRef } from \"@/lib/asset-url\";\nimport type { CanvasEdge, CanvasNode, VoiceCloneData } from \"@/types/canvas\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
